@@ -9,6 +9,7 @@ import { AuthProvider } from '@/contexts/auth';
 import { LoggingProvider } from '@/hooks/useLogging';
 import { AppRoutes } from '@/routes';
 import { SEOWrapper } from '@/components/seo/SEOWrapper';
+import EmergencyFallback from '@/components/debug/EmergencyFallback';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -21,33 +22,39 @@ const queryClient = new QueryClient({
 
 function App() {
   console.log("🚀 [APP] Iniciando aplicação...");
+  console.log("🚀 [APP] React renderizando App component");
   
-  return (
-    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <LoggingProvider>
-            {/* SecurityEnforcementProvider temporariamente removido para debug de loop */}
-            <Router>
-              <SEOWrapper>
-                <div className="App">
-                  <AppRoutes />
-                  <Toaster 
-                    position="top-right"
-                    theme="dark"
-                    richColors
-                    expand
-                    visibleToasts={3}
-                  />
-                  <ReactQueryDevtools initialIsOpen={false} />
-                </div>
-              </SEOWrapper>
-            </Router>
-          </LoggingProvider>
-        </AuthProvider>
-      </QueryClientProvider>
-    </ThemeProvider>
-  );
+  try {
+    return (
+      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <LoggingProvider>
+              {/* SecurityEnforcementProvider temporariamente removido para debug de loop */}
+              <Router>
+                <SEOWrapper>
+                  <div className="App">
+                    <AppRoutes />
+                    <Toaster 
+                      position="top-right"
+                      theme="dark"
+                      richColors
+                      expand
+                      visibleToasts={3}
+                    />
+                    <ReactQueryDevtools initialIsOpen={false} />
+                  </div>
+                </SEOWrapper>
+              </Router>
+            </LoggingProvider>
+          </AuthProvider>
+        </QueryClientProvider>
+      </ThemeProvider>
+    );
+  } catch (error) {
+    console.error("🚨 [APP] Erro crítico na renderização:", error);
+    return <EmergencyFallback />;
+  }
 }
 
 export default App;

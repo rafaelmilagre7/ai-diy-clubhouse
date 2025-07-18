@@ -49,21 +49,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Initialize session manager
   useSessionManager();
 
-  // Circuit breaker sincronizado - timeout de 6 segundos (SINCRONIZADO)
+  // TIMEOUT ABSOLUTO AGRESSIVO - 2 segundos
   useEffect(() => {
-    if (isLoading) {
-      timeoutRef.current = setTimeout(() => {
-        console.warn("⚠️ [AUTH] Timeout ativado - finalizando loading");
-        setIsLoading(false);
-      }, 6000); // REDUZIDO PARA 6s - SINCRONIZADO
-    }
-
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, [isLoading]);
+    console.log("🔐 [AUTH] Configurando timeout absoluto de 2s");
+    const timeout = setTimeout(() => {
+      console.warn("⚠️ [AUTH] TIMEOUT ABSOLUTO - Parando loading");
+      setIsLoading(false);
+    }, 2000);
+    
+    return () => clearTimeout(timeout);
+  }, []);
 
   // Computar isAdmin APENAS via role - sem hardcoded emails
   const isAdmin = React.useMemo(() => {
@@ -80,83 +75,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return Boolean(profile?.onboarding_completed);
   }, [profile]);
 
-  // INICIALIZAÇÃO ULTRA SIMPLIFICADA - QUEBRAR LOOP
+  // INICIALIZAÇÃO SUPER SIMPLIFICADA - APENAS O ESSENCIAL
   useEffect(() => {
     if (isInitialized.current) return;
-    console.log('🚀 [AUTH] INICIALIZAÇÃO SIMPLIFICADA para quebrar loop');
+    console.log('🚀 [AUTH] INICIALIZAÇÃO SUPER SIMPLIFICADA');
     
-    const initializeAuth = async () => {
+    const initAuth = async () => {
       try {
-        // VERIFICAÇÃO RÁPIDA: Apenas obter sessão atual
         const { data: { session } } = await supabase.auth.getSession();
+        console.log('🔐 [AUTH] Sessão obtida:', { hasSession: !!session });
         
         if (session?.user) {
-          console.log('✅ [AUTH] Sessão ativa - configurando...');
           setUser(session.user);
           setSession(session);
-          // Carregar perfil em background para não bloquear
-          setTimeout(() => {
-            setupAuthSession().catch(() => {
-              console.warn('⚠️ [AUTH] Erro ao carregar perfil - continuando...');
-              setIsLoading(false);
-            });
-          }, 0);
-        } else {
-          console.log('🔓 [AUTH] SEM SESSÃO - PARANDO loading IMEDIATAMENTE');
-          setUser(null);
-          setProfile(null);
-          setSession(null);
-          setIsLoading(false); // PARAR LOADING IMEDIATAMENTE
         }
-
-        // Listener simplificado
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          (event, session) => {
-            console.log(`🔄 [AUTH] Evento: ${event}, tem sessão: ${!!session}`);
-            
-            if (event === 'SIGNED_IN' && session?.user) {
-              setUser(session.user);
-              setSession(session);
-              setTimeout(() => setupAuthSession(), 0);
-            } else if (event === 'SIGNED_OUT') {
-              clearProfileCache();
-              setUser(null);
-              setProfile(null);
-              setSession(null);
-              setAuthError(null);
-              setIsLoading(false);
-            } else if (!session) {
-              // SEM SESSÃO = PARAR LOADING
-              console.log('🔓 [AUTH] Sem sessão - PARANDO loading');
-              setUser(null);
-              setProfile(null);
-              setSession(null);
-              setIsLoading(false);
-            }
-          }
-        );
         
-        authListenerRef.current = subscription;
-        isInitialized.current = true;
+        // PARAR LOADING IMEDIATAMENTE
+        setIsLoading(false);
         
       } catch (error) {
-        console.error('❌ [AUTH] Erro crítico - PARANDO loading:', error);
-        setAuthError(error instanceof Error ? error : new Error('Erro crítico'));
+        console.error('❌ [AUTH] Erro:', error);
         setIsLoading(false);
       }
     };
 
-    initializeAuth();
-
-    return () => {
-      if (authListenerRef.current) {
-        authListenerRef.current.unsubscribe();
-      }
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, [setupAuthSession]);
+    initAuth();
+    isInitialized.current = true;
+  }, []);
 
   const value: AuthContextType = {
     user,

@@ -8,103 +8,41 @@ import { getUserRoleName } from "@/lib/supabase/types";
 const RootRedirect = () => {
   const location = useLocation();
   const { user, profile, isLoading: authLoading } = useAuth();
-  const [timeoutReached, setTimeoutReached] = useState(false);
-  const [redirectCount, setRedirectCount] = useState(0);
-  const [emergencyTimeout, setEmergencyTimeout] = useState(false);
-  const timeoutRef = useRef<NodeJS.Timeout>();
-  const emergencyRef = useRef<NodeJS.Timeout>();
-  const MAX_REDIRECTS = 3;
+  const [emergencyRedirect, setEmergencyRedirect] = useState(false);
   
   console.log("🔄 [ROOT-REDIRECT] RENDER:", {
     path: location.pathname,
     hasUser: !!user,
     hasProfile: !!profile,
     authLoading,
-    timeoutReached,
-    redirectCount,
-    emergencyTimeout
+    timestamp: new Date().toISOString()
   });
   
-  // TIMEOUT SINCRONIZADO: 6 segundos (MESMO EM TODOS OS COMPONENTES)
+  // TIMEOUT DE EMERGÊNCIA - 3 segundos
   useEffect(() => {
-    if (authLoading) {
-      timeoutRef.current = setTimeout(() => {
-        console.warn("⏰ [ROOT-REDIRECT] Timeout de loading atingido - forçando redirecionamento");
-        setTimeoutReached(true);
-      }, 6000); // SINCRONIZADO EM 6s
-    } else {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-      setTimeoutReached(false);
-    }
-
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, [authLoading]);
-
-  // TIMEOUT DE EMERGÊNCIA ABSOLUTO: Se nada funcionar em 10s, forçar login
-  useEffect(() => {
-    emergencyRef.current = setTimeout(() => {
-      console.error("🚨 [ROOT-REDIRECT] TIMEOUT DE EMERGÊNCIA - Forçando login absoluto");
-      setEmergencyTimeout(true);
-    }, 10000); // 10s timeout de emergência
-
-    return () => {
-      if (emergencyRef.current) {
-        clearTimeout(emergencyRef.current);
-      }
-    };
+    console.log("🔄 [ROOT-REDIRECT] Configurando timeout de emergência");
+    const timeout = setTimeout(() => {
+      console.error("🚨 [ROOT-REDIRECT] TIMEOUT DE EMERGÊNCIA");
+      setEmergencyRedirect(true);
+    }, 3000);
+    
+    return () => clearTimeout(timeout);
   }, []);
 
-  // EMERGÊNCIA ABSOLUTA: Quebrar qualquer loop
-  if (emergencyTimeout) {
-    console.error("🆘 [ROOT-REDIRECT] EMERGÊNCIA ATIVADA - Redirecionamento forçado");
+  // REDIRECIONAMENTO DE EMERGÊNCIA
+  if (emergencyRedirect) {
+    console.error("🚨 [ROOT-REDIRECT] Redirecionamento de emergência ativado");
     return <Navigate to="/login" replace />;
   }
 
-  // PROTEÇÃO ANTI-LOOP: Contar redirecionamentos
-  useEffect(() => {
-    setRedirectCount(prev => prev + 1);
-  }, [location.pathname]);
-
-  console.log("🔍 [ROOT-REDIRECT] Estado:", {
-    path: location.pathname,
-    hasUser: !!user,
-    hasProfile: !!profile,
-    onboardingCompleted: profile?.onboarding_completed,
-    loading: authLoading,
-    timeoutReached,
-    redirectCount
-  });
-
-  // PROTEÇÃO ANTI-LOOP: Se muitos redirecionamentos, forçar login
-  if (redirectCount > MAX_REDIRECTS) {
-    console.error("🔥 [ROOT-REDIRECT] LOOP DETECTADO - Forçando login");
-    return <Navigate to="/login" replace />;
+  // LÓGICA SUPER SIMPLIFICADA
+  if (authLoading) {
+    console.log("⏳ [ROOT-REDIRECT] Ainda carregando...");
+    return <LoadingScreen message="Carregando..." />;
   }
 
-  // LOADING NORMAL: Mostrar tela de carregamento (prioridade)
-  if (authLoading && !timeoutReached) {
-    return <LoadingScreen message="Verificando sessão..." />;
-  }
-
-  // TIMEOUT ATINGIDO OU SEM USUÁRIO: Fallback ABSOLUTO para login
-  if (timeoutReached || !user) {
-    console.warn(`⚠️ [ROOT-REDIRECT] ${timeoutReached ? 'Timeout' : 'Sem usuário'} - FORÇANDO login`);
-    return <Navigate to="/login" replace />;
-  }
-
-  // SEM PERFIL: Erro crítico - forçar login imediatamente
-  if (!profile) {
-    if (authLoading && !timeoutReached) {
-      return <LoadingScreen message="Carregando perfil..." />;
-    }
-    
-    console.error("💥 [ROOT-REDIRECT] ERRO CRÍTICO: Usuário sem perfil - FORÇANDO login");
+  if (!user) {
+    console.log("↩️ [ROOT-REDIRECT] Sem usuário - Indo para login");
     return <Navigate to="/login" replace />;
   }
 
