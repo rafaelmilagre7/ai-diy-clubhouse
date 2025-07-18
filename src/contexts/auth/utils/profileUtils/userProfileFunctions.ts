@@ -9,28 +9,42 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
 
 export const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
   try {
+    console.log('🔍 [FETCH-PROFILE-DEBUG] fetchUserProfile iniciado', { userId });
     logger.info('[PROFILE] 🔄 Buscando perfil via função de cache segura', { userId });
     
     // LIMPAR CACHE CORROMPIDO
     profileCache.clear();
+    console.log('🧹 [FETCH-PROFILE-DEBUG] Cache local limpo');
     logger.info('[PROFILE] 🧹 Cache local limpo');
 
+    console.log('📞 [FETCH-PROFILE-DEBUG] Chamando get_cached_profile RPC...');
     // USAR APENAS A FUNÇÃO DE CACHE OTIMIZADA - NÃO ACESSAR TABELAS DIRETAMENTE
     const { data: cacheData, error: cacheError } = await supabase.rpc('get_cached_profile', {
       target_user_id: userId
     });
+    
+    console.log('📋 [FETCH-PROFILE-DEBUG] RPC response:', { cacheData, cacheError });
 
     if (cacheError) {
+      console.error('❌ [FETCH-PROFILE-DEBUG] Erro na função de cache:', cacheError);
       logger.error('[PROFILE] Erro na função de cache', { userId, error: cacheError });
       return null;
     }
 
     if (!cacheData) {
+      console.log('⚠️ [FETCH-PROFILE-DEBUG] Nenhum dado retornado pela função de cache');
       logger.warn('[PROFILE] Perfil não encontrado', { userId });
       return null;
     }
 
     const profile = cacheData as UserProfile;
+    
+    console.log('✅ [FETCH-PROFILE-DEBUG] Perfil encontrado via cache:', {
+      name: profile.name,
+      email: profile.email,
+      hasRole: !!profile.user_roles,
+      roleName: profile.user_roles?.name
+    });
     
     logger.info('[PROFILE] ✅ Perfil carregado com sucesso via cache', { 
       userId, 
@@ -44,6 +58,7 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
     
     return profile;
   } catch (error) {
+    console.error('💥 [FETCH-PROFILE-DEBUG] Erro inesperado no fetchUserProfile:', error);
     logger.error('[PROFILE] Erro inesperado ao buscar perfil', { userId, error });
     return null;
   }

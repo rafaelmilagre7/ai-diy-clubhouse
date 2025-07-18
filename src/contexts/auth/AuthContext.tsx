@@ -24,21 +24,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // Função simplificada para carregar perfil
   const loadUserProfile = useCallback(async (userId: string) => {
     try {
+      console.log('🔄 [AUTH-DEBUG] loadUserProfile iniciado', { userId });
       logger.info('[AUTH] 🔄 Carregando perfil do usuário', { userId });
       
       const userProfile = await fetchUserProfile(userId);
+      console.log('📋 [AUTH-DEBUG] fetchUserProfile retornou:', { userProfile });
       
       if (userProfile) {
         setProfile(userProfile);
+        console.log('✅ [AUTH-DEBUG] Perfil definido no estado:', { 
+          name: userProfile.name,
+          role: userProfile.user_roles?.name 
+        });
         logger.info('[AUTH] ✅ Perfil carregado com sucesso', { 
           name: userProfile.name,
           role: userProfile.user_roles?.name 
         });
       } else {
+        console.log('⚠️ [AUTH-DEBUG] Perfil não encontrado, definindo como null');
         logger.warn('[AUTH] ⚠️ Perfil não encontrado', { userId });
         setProfile(null);
       }
     } catch (error) {
+      console.error('❌ [AUTH-DEBUG] Erro no loadUserProfile:', error);
       logger.error('[AUTH] ❌ Erro ao carregar perfil', { userId, error });
       setAuthError(error as Error);
       setProfile(null);
@@ -105,33 +113,43 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const setupAuth = async () => {
       try {
+        console.log('🏗️ [AUTH-DEBUG] setupAuth iniciado');
+        
         // Configurar listener de mudanças de autenticação
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (event, session) => {
             if (!mounted) return;
 
+            console.log('🔄 [AUTH-DEBUG] onAuthStateChange triggered:', { event, hasSession: !!session, userId: session?.user?.id });
             logger.info('[AUTH] 🔄 Estado de auth mudou', { event, hasSession: !!session });
             
             setSession(session);
             setUser(session?.user ?? null);
             
             if (event === 'SIGNED_IN' && session?.user) {
+              console.log('🔐 [AUTH-DEBUG] SIGNED_IN event, carregando perfil...');
               await loadUserProfile(session.user.id);
             } else if (event === 'SIGNED_OUT') {
+              console.log('🚪 [AUTH-DEBUG] SIGNED_OUT event, limpando perfil');
               setProfile(null);
             }
           }
         );
 
+        console.log('🔍 [AUTH-DEBUG] Verificando sessão existente...');
         // Verificar sessão existente
         const { data: { session: currentSession } } = await supabase.auth.getSession();
+        console.log('📋 [AUTH-DEBUG] Sessão existente:', { hasSession: !!currentSession, userId: currentSession?.user?.id });
         
         if (mounted) {
           setSession(currentSession);
           setUser(currentSession?.user ?? null);
           
           if (currentSession?.user) {
+            console.log('👤 [AUTH-DEBUG] Usuário encontrado na sessão, carregando perfil...');
             await loadUserProfile(currentSession.user.id);
+          } else {
+            console.log('🚫 [AUTH-DEBUG] Nenhum usuário na sessão');
           }
         }
 
@@ -140,12 +158,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         };
         
       } catch (error) {
+        console.error('💥 [AUTH-DEBUG] Erro no setupAuth:', error);
         logger.error('[AUTH] Erro no setup:', error);
         if (mounted) {
           setAuthError(error as Error);
         }
       } finally {
         if (mounted) {
+          console.log('✅ [AUTH-DEBUG] Finalizando setupAuth, setIsLoading(false)');
           setIsLoading(false);
         }
       }
