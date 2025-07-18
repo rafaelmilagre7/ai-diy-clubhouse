@@ -23,15 +23,8 @@ const OnboardingNewPage = () => {
     return <Navigate to="/login" replace />;
   }
 
-  // 🎯 VERIFICAR SE É REGISTRO RECENTE (PRIORIDADE) OU USUÁRIO NOVO
-  const registroRecente = sessionStorage.getItem('registro_recente') === 'true';
-  const isNewUser = profile.created_at && new Date(profile.created_at) > new Date('2025-07-16');
-  
-  // 🎯 PERMITIR ONBOARDING SE: registro recente OU usuário novo que não completou
-  const shouldShowOnboarding = registroRecente || (isNewUser && !profile.onboarding_completed);
-  
-  // Usuário legacy ou que já completou - redirecionar para dashboard
-  if (!shouldShowOnboarding) {
+  // SIMPLIFICAÇÃO: Usar apenas profile.onboarding_completed
+  if (profile.onboarding_completed) {
     const roleName = profile.user_roles?.name;
     return <Navigate to={roleName === 'formacao' ? '/formacao' : '/dashboard'} replace />;
   }
