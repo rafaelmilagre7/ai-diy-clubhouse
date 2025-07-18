@@ -29,7 +29,7 @@ export const CommunityRedirects = () => {
     // Anti-loop: Verificar se já redirecionamos recentemente (mecanismo de cooldown)
     const now = Date.now();
     const timeSinceLastRedirect = now - lastRedirectTimeRef.current;
-    if (timeSinceLastRedirect < 1500) { // 1.5 segundos de cooldown
+    if (timeSinceLastRedirect < 2500) { // 2.5 segundos de cooldown aumentado
       console.warn(`CommunityRedirects: Cooldown ativado (${timeSinceLastRedirect}ms), ignorando redirecionamento`);
       return;
     }
@@ -52,7 +52,7 @@ export const CommunityRedirects = () => {
     redirectAttemptCountRef.current[location.pathname] = 
       (redirectAttemptCountRef.current[location.pathname] || 0) + 1;
     
-    if (redirectAttemptCountRef.current[location.pathname] > 3) {
+    if (redirectAttemptCountRef.current[location.pathname] > 2) {
       console.error("CommunityRedirects: Muitas tentativas para redirecionar o mesmo caminho, abortando:", location.pathname);
       processingRef.current = false;
       return;

@@ -10,8 +10,8 @@ export const useLayoutAuthentication = () => {
   const [redirectChecked, setRedirectChecked] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const isMounted = useRef(true);
-  const maxRetries = 2;
-  const authTimeout = 8000;
+  const maxRetries = 1;
+  const authTimeout = 4000;
 
   // Setup component lifecycle
   useEffect(() => {
@@ -22,26 +22,19 @@ export const useLayoutAuthentication = () => {
     };
   }, []);
   
-  // Setup loading timeout com proteção melhorada
+  // Timeout simplificado
   useEffect(() => {
     if (isLoading && isMounted.current) {
       const timeoutId = setTimeout(() => {
         if (isMounted.current && isLoading) {
-          if (retryCount < maxRetries) {
-            console.warn(`⚠️ [AUTH] Timeout na autenticação - retry ${retryCount + 1}/${maxRetries}`);
-            setRetryCount(prev => prev + 1);
-            toast.warning(`Verificando autenticação... (${retryCount + 1}/${maxRetries})`);
-          } else {
-            console.error("❌ [AUTH] Timeout final na autenticação");
-            setIsLoading(false);
-            toast.error("Problema na verificação de autenticação");
-          }
+          console.warn("⚠️ [AUTH] Timeout na autenticação");
+          setIsLoading(false);
         }
       }, authTimeout);
       
       return () => clearTimeout(timeoutId);
     }
-  }, [isLoading, retryCount, setIsLoading]);
+  }, [isLoading, setIsLoading]);
 
   // MUDANÇA PRINCIPAL: Remover redirecionamento automático para admin
   // Permitir que usuários naveguem livremente, sem forçar redirecionamento para admin

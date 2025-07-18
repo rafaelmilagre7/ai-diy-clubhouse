@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
@@ -50,14 +49,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Initialize session manager
   useSessionManager();
 
-  // Circuit breaker - timeout de 5 segundos para inicialização
+  // Circuit breaker simplificado - timeout de 3 segundos
   useEffect(() => {
-    timeoutRef.current = setTimeout(() => {
-      if (isLoading) {
-        console.warn("⚠️ [AUTH] Circuit breaker ativado - forçando fim do loading");
+    if (isLoading) {
+      timeoutRef.current = setTimeout(() => {
+        console.warn("⚠️ [AUTH] Timeout ativado - finalizando loading");
         setIsLoading(false);
-      }
-    }, 5000);
+      }, 3000);
+    }
 
     return () => {
       if (timeoutRef.current) {
@@ -88,41 +87,36 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return Boolean(profile?.onboarding_completed);
   }, [profile]);
 
-  // Inicialização única otimizada
+  // Inicialização simplificada - uma única vez
   useEffect(() => {
     if (isInitialized.current) return;
     
     const initializeAuth = async () => {
-      console.log('🚀 [AUTH] Inicializando sistema de autenticação');
+      console.log('🚀 [AUTH] Inicializando autenticação');
       
       try {
-        // CORREÇÃO: Configurar listener ANTES de tentar setup
+        // Configurar listener primeiro
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          async (event, session) => {
+          (event, session) => {
             console.log(`🔄 [AUTH] Evento: ${event}`);
             
+            // Limpar cache se mudou usuário
             const currentUserId = session?.user?.id;
             if (lastUserId.current && lastUserId.current !== currentUserId) {
-              console.log('👤 [AUTH] Mudança de usuário - limpando cache');
               clearProfileCache();
             }
             lastUserId.current = currentUserId;
             
             if (event === 'SIGNED_IN' && session?.user) {
-              console.log(`🎉 [AUTH] Login: ${session.user.email}`);
-              
-              // Defer a busca do perfil para evitar deadlock
-              setTimeout(async () => {
-                try {
-                  await setupAuthSession();
-                } catch (error) {
-                  console.error('❌ [AUTH] Erro no setup pós-login:', error);
+              console.log(`✅ [AUTH] Login: ${session.user.email}`);
+              // Usar timeout para evitar deadlock
+              setTimeout(() => {
+                setupAuthSession().catch(error => {
+                  console.error('❌ [AUTH] Erro no setup:', error);
                   setAuthError(error instanceof Error ? error : new Error('Erro no setup'));
-                  setUser(session.user);
-                  setSession(session);
                   setIsLoading(false);
-                }
-              }, 0);
+                });
+              }, 100);
             } else if (event === 'SIGNED_OUT') {
               console.log('👋 [AUTH] Logout');
               clearProfileCache();
@@ -137,11 +131,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         
         authListenerRef.current = subscription;
         
-        // DEPOIS de configurar o listener, tentar setup inicial
+        // Setup inicial
         await setupAuthSession();
-        
         isInitialized.current = true;
-        console.log('✅ [AUTH] Inicialização concluída');
         
       } catch (error) {
         console.error('❌ [AUTH] Erro na inicialização:', error);
@@ -160,7 +152,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         clearTimeout(timeoutRef.current);
       }
     };
-  }, []); // Sem dependências para evitar re-inicialização
+  }, [setupAuthSession]);
 
   const value: AuthContextType = {
     user,

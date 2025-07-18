@@ -2923,6 +2923,99 @@ export type Database = {
         }
         Relationships: []
       }
+      quick_onboarding: {
+        Row: {
+          ai_knowledge_level: string | null
+          annual_revenue_range: string | null
+          birth_date: string | null
+          company_name: string | null
+          company_segment: string | null
+          company_size: string | null
+          company_website: string | null
+          country_code: string | null
+          created_at: string | null
+          current_step: number | null
+          desired_ai_areas: string[] | null
+          email: string
+          has_implemented: string | null
+          how_found_us: string | null
+          id: string
+          instagram_url: string | null
+          is_completed: boolean | null
+          linkedin_url: string | null
+          main_challenge: string | null
+          main_goal: string | null
+          name: string | null
+          previous_tools: string[] | null
+          referred_by: string | null
+          role: string | null
+          updated_at: string | null
+          user_id: string
+          uses_ai: string | null
+          whatsapp: string | null
+        }
+        Insert: {
+          ai_knowledge_level?: string | null
+          annual_revenue_range?: string | null
+          birth_date?: string | null
+          company_name?: string | null
+          company_segment?: string | null
+          company_size?: string | null
+          company_website?: string | null
+          country_code?: string | null
+          created_at?: string | null
+          current_step?: number | null
+          desired_ai_areas?: string[] | null
+          email: string
+          has_implemented?: string | null
+          how_found_us?: string | null
+          id?: string
+          instagram_url?: string | null
+          is_completed?: boolean | null
+          linkedin_url?: string | null
+          main_challenge?: string | null
+          main_goal?: string | null
+          name?: string | null
+          previous_tools?: string[] | null
+          referred_by?: string | null
+          role?: string | null
+          updated_at?: string | null
+          user_id: string
+          uses_ai?: string | null
+          whatsapp?: string | null
+        }
+        Update: {
+          ai_knowledge_level?: string | null
+          annual_revenue_range?: string | null
+          birth_date?: string | null
+          company_name?: string | null
+          company_segment?: string | null
+          company_size?: string | null
+          company_website?: string | null
+          country_code?: string | null
+          created_at?: string | null
+          current_step?: number | null
+          desired_ai_areas?: string[] | null
+          email?: string
+          has_implemented?: string | null
+          how_found_us?: string | null
+          id?: string
+          instagram_url?: string | null
+          is_completed?: boolean | null
+          linkedin_url?: string | null
+          main_challenge?: string | null
+          main_goal?: string | null
+          name?: string | null
+          previous_tools?: string[] | null
+          referred_by?: string | null
+          role?: string | null
+          updated_at?: string | null
+          user_id?: string
+          uses_ai?: string | null
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
       rate_limit_attempts: {
         Row: {
           attempts: number | null
