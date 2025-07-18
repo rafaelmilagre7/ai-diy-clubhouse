@@ -3,6 +3,7 @@ import React from 'react';
 import { ThemeProvider } from 'next-themes';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/contexts/auth';
+import { LoggingProvider } from '@/hooks/useLogging';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -18,9 +19,11 @@ function App() {
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <div style={{ padding: 40, color: "green", fontSize: "24px" }}>
-            APP funcionando com AuthProvider
-          </div>
+          <LoggingProvider>
+            <div style={{ padding: 40, color: "green", fontSize: "24px" }}>
+              APP funcionando com LoggingProvider
+            </div>
+          </LoggingProvider>
         </AuthProvider>
       </QueryClientProvider>
     </ThemeProvider>
