@@ -18,13 +18,13 @@ const RootRedirect = () => {
     timestamp: new Date().toISOString()
   });
   
-  // TIMEOUT DE EMERGÊNCIA - 3 segundos
+  // TIMEOUT DE EMERGÊNCIA - 2 segundos  
   useEffect(() => {
     console.log("🔄 [ROOT-REDIRECT] Configurando timeout de emergência");
     const timeout = setTimeout(() => {
-      console.error("🚨 [ROOT-REDIRECT] TIMEOUT DE EMERGÊNCIA");
+      console.error("🚨 [ROOT-REDIRECT] TIMEOUT DE EMERGÊNCIA - Redirecionando para login");
       setEmergencyRedirect(true);
-    }, 3000);
+    }, 2000);
     
     return () => clearTimeout(timeout);
   }, []);

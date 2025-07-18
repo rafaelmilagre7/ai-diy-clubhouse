@@ -30,7 +30,6 @@ function App() {
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
             <LoggingProvider>
-              {/* SecurityEnforcementProvider temporariamente removido para debug de loop */}
               <Router>
                 <SEOWrapper>
                   <div className="App">

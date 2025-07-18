@@ -25,7 +25,7 @@ export const AdminProtectedRoutes = ({ children }: AdminProtectedRoutesProps) =>
       
       timeoutRef.current = window.setTimeout(() => {
         setLoadingTimeout(true);
-      }, 5000); // 5 segundos para maior tolerância
+      }, 2000); // 2 segundos sincronizado
     }
     
     return () => {

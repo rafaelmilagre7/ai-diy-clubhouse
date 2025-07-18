@@ -20,11 +20,13 @@ const AdminProtectedRoutes = ({ children }: AdminProtectedRoutesProps) => {
   }
 
   if (!user) {
+    console.log("⚠️ [ADMIN-PROTECTED] Usuário não autenticado - redirecionando para login");
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   if (!isAdmin) {
-    return <Navigate to="/dashboard" replace />;
+    console.log("⚠️ [ADMIN-PROTECTED] Usuário não é admin - redirecionando para dashboard");
+    return <Navigate to="/login" replace />;
   }
 
   return <>{children}</>;

@@ -49,15 +49,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Initialize session manager
   useSessionManager();
 
-  // TIMEOUT ABSOLUTO AGRESSIVO - 2 segundos
+  // TIMEOUT SINCRONIZADO - 2 segundos
   useEffect(() => {
-    console.log("🔐 [AUTH] Configurando timeout absoluto de 2s");
-    const timeout = setTimeout(() => {
-      console.warn("⚠️ [AUTH] TIMEOUT ABSOLUTO - Parando loading");
+    console.log("🔐 [AUTH] Configurando timeout de emergência de 2 segundos");
+    const emergencyTimeout = setTimeout(() => {
+      console.error("🚨 [AUTH-PROVIDER] TIMEOUT DE EMERGÊNCIA - Forçando parada do loading");
       setIsLoading(false);
     }, 2000);
     
-    return () => clearTimeout(timeout);
+    return () => clearTimeout(emergencyTimeout);
   }, []);
 
   // Computar isAdmin APENAS via role - sem hardcoded emails
