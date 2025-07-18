@@ -4,6 +4,7 @@ import { ThemeProvider } from 'next-themes';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/contexts/auth';
 import { LoggingProvider } from '@/hooks/useLogging';
+import { SecurityEnforcementProvider } from '@/components/security/SecurityEnforcementProvider';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -20,9 +21,11 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <LoggingProvider>
-            <div style={{ padding: 40, color: "green", fontSize: "24px" }}>
-              APP funcionando com LoggingProvider
-            </div>
+            <SecurityEnforcementProvider>
+              <div style={{ padding: 40, color: "green", fontSize: "24px" }}>
+                APP funcionando com SecurityEnforcementProvider
+              </div>
+            </SecurityEnforcementProvider>
           </LoggingProvider>
         </AuthProvider>
       </QueryClientProvider>
