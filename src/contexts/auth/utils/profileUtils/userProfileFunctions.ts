@@ -8,10 +8,10 @@ const profileCache = new Map<string, { profile: UserProfile | null; timestamp: n
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
 
 export const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
+  console.log('🔍 [FETCH-PROFILE-DEBUG] fetchUserProfile iniciado', { userId });
+  logger.info('[PROFILE] 🔄 Buscando perfil via função de cache segura', { userId });
+  
   try {
-    console.log('🔍 [FETCH-PROFILE-DEBUG] fetchUserProfile iniciado', { userId });
-    logger.info('[PROFILE] 🔄 Buscando perfil via função de cache segura', { userId });
-    
     // LIMPAR CACHE CORROMPIDO
     profileCache.clear();
     console.log('🧹 [FETCH-PROFILE-DEBUG] Cache local limpo');
@@ -23,12 +23,16 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
       target_user_id: userId
     });
     
-    console.log('📋 [FETCH-PROFILE-DEBUG] RPC response:', { cacheData, cacheError });
+    console.log('📋 [FETCH-PROFILE-DEBUG] RPC response:', { 
+      hasData: !!cacheData, 
+      error: cacheError,
+      dataKeys: cacheData ? Object.keys(cacheData) : []
+    });
 
     if (cacheError) {
       console.error('❌ [FETCH-PROFILE-DEBUG] Erro na função de cache:', cacheError);
       logger.error('[PROFILE] Erro na função de cache', { userId, error: cacheError });
-      return null;
+      throw new Error(`RPC get_cached_profile falhou: ${cacheError.message}`);
     }
 
     if (!cacheData) {
@@ -43,7 +47,8 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
       name: profile.name,
       email: profile.email,
       hasRole: !!profile.user_roles,
-      roleName: profile.user_roles?.name
+      roleName: profile.user_roles?.name,
+      onboardingCompleted: profile.onboarding_completed
     });
     
     logger.info('[PROFILE] ✅ Perfil carregado com sucesso via cache', { 
@@ -60,7 +65,40 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
   } catch (error) {
     console.error('💥 [FETCH-PROFILE-DEBUG] Erro inesperado no fetchUserProfile:', error);
     logger.error('[PROFILE] Erro inesperado ao buscar perfil', { userId, error });
-    return null;
+    
+    // 🎯 FALLBACK DIRETO: Se RPC falhar, tentar query direta como último recurso
+    try {
+      console.log('🆘 [FETCH-PROFILE-DEBUG] Tentando fallback com query direta...');
+      const { data: directData, error: directError } = await supabase
+        .from('profiles')
+        .select(`
+          *,
+          user_roles (
+            id,
+            name,
+            permissions
+          )
+        `)
+        .eq('id', userId)
+        .maybeSingle();
+        
+      if (directError) {
+        console.error('❌ [FETCH-PROFILE-DEBUG] Fallback direto também falhou:', directError);
+        throw directError;
+      }
+      
+      if (directData) {
+        console.log('🆘✅ [FETCH-PROFILE-DEBUG] Fallback direto funcionou!', { name: directData.name });
+        return directData as UserProfile;
+      }
+      
+      console.log('🆘⚠️ [FETCH-PROFILE-DEBUG] Fallback direto não encontrou perfil');
+      return null;
+      
+    } catch (fallbackError) {
+      console.error('💥 [FETCH-PROFILE-DEBUG] Fallback direto também falhou:', fallbackError);
+      throw error; // Relançar o erro original
+    }
   }
 };
 

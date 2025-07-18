@@ -23,10 +23,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Função simplificada para carregar perfil
   const loadUserProfile = useCallback(async (userId: string) => {
+    console.log('🔄 [AUTH-DEBUG] loadUserProfile iniciado', { userId });
+    logger.info('[AUTH] 🔄 Carregando perfil do usuário', { userId });
+    
     try {
-      console.log('🔄 [AUTH-DEBUG] loadUserProfile iniciado', { userId });
-      logger.info('[AUTH] 🔄 Carregando perfil do usuário', { userId });
-      
       const userProfile = await fetchUserProfile(userId);
       console.log('📋 [AUTH-DEBUG] fetchUserProfile retornou:', { userProfile });
       
@@ -50,6 +50,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       logger.error('[AUTH] ❌ Erro ao carregar perfil', { userId, error });
       setAuthError(error as Error);
       setProfile(null);
+      
+      // 🎯 FALLBACK CRÍTICO: Tentar criar perfil se não existir
+      try {
+        console.log('🔧 [AUTH-DEBUG] Tentando criar perfil como fallback...');
+        const { data: createResult } = await supabase.rpc('create_missing_profile_safe', {
+          target_user_id: userId
+        });
+        
+        if (createResult?.success) {
+          console.log('🆕 [AUTH-DEBUG] Perfil criado via fallback, recarregando...');
+          const newProfile = await fetchUserProfile(userId);
+          setProfile(newProfile);
+        }
+      } catch (fallbackError) {
+        console.error('💥 [AUTH-DEBUG] Fallback também falhou:', fallbackError);
+        // Continuar mesmo se o fallback falhar
+      }
     }
   }, []);
 
@@ -112,9 +129,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     let mounted = true;
 
     const setupAuth = async () => {
+      console.log('🏗️ [AUTH-DEBUG] setupAuth iniciado');
+      
       try {
-        console.log('🏗️ [AUTH-DEBUG] setupAuth iniciado');
-        
         // Configurar listener de mudanças de autenticação
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (event, session) => {
@@ -128,7 +145,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             
             if (event === 'SIGNED_IN' && session?.user) {
               console.log('🔐 [AUTH-DEBUG] SIGNED_IN event, carregando perfil...');
-              await loadUserProfile(session.user.id);
+              // 🎯 CRÍTICO: Não aguardar loadUserProfile no listener para evitar travamento
+              loadUserProfile(session.user.id).catch(error => {
+                console.error('💥 [AUTH-DEBUG] Erro no loadUserProfile (listener):', error);
+                setProfile(null);
+              });
             } else if (event === 'SIGNED_OUT') {
               console.log('🚪 [AUTH-DEBUG] SIGNED_OUT event, limpando perfil');
               setProfile(null);
@@ -147,7 +168,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           
           if (currentSession?.user) {
             console.log('👤 [AUTH-DEBUG] Usuário encontrado na sessão, carregando perfil...');
-            await loadUserProfile(currentSession.user.id);
+            // 🎯 CRÍTICO: Também não aguardar aqui para garantir que setIsLoading(false) seja chamado
+            loadUserProfile(currentSession.user.id).catch(error => {
+              console.error('💥 [AUTH-DEBUG] Erro no loadUserProfile (inicial):', error);
+              setProfile(null);
+            });
           } else {
             console.log('🚫 [AUTH-DEBUG] Nenhum usuário na sessão');
           }
@@ -164,6 +189,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setAuthError(error as Error);
         }
       } finally {
+        // 🎯 CRÍTICO: SEMPRE finalizar o loading, independente de sucesso ou erro
         if (mounted) {
           console.log('✅ [AUTH-DEBUG] Finalizando setupAuth, setIsLoading(false)');
           setIsLoading(false);
