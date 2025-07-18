@@ -1,9 +1,16 @@
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/auth';
-import { UserProfile } from '@/contexts/auth/types';
 
-// Cache de permissões com TTL de 5 minutos
-const PERMISSIONS_CACHE_TTL = 5 * 60 * 1000;
+interface UserProfile {
+  id: string;
+  email: string;
+  name?: string;
+  role_id?: string;
+  user_roles?: {
+    name: string;
+    permissions?: any;
+  };
+}
 
 export interface UserPermissions {
   isAdmin: boolean;
