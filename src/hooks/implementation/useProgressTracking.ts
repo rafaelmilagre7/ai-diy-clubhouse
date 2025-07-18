@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import { Progress } from "@/lib/supabase";
@@ -17,27 +17,35 @@ export const useProgressTracking = (
   const { id, moduleIndex } = useParams<{ id: string; moduleIndex: string }>();
   const moduleIdx = parseInt(moduleIndex || "0");
   const { user } = useAuth();
+
+  // FASE 3: Memoizar cálculos pesados
+  const progressData = useMemo(() => ({
+    progressId: progress?.id,
+    solutionId: id,
+    moduleIdx,
+    currentProgress: calculateProgressPercentage(completedModules, modulesLength)
+  }), [progress?.id, id, moduleIdx, completedModules, modulesLength]);
   
   // State for tracking user interactions
   const [hasInteracted, setHasInteracted] = useState(false);
   const [requireUserConfirmation, setRequireUserConfirmation] = useState(true);
 
-  // Track module changes for progress updates
+  // Track module changes for progress updates (usando dados memoizados)
   useModuleChangeTracking(
-    moduleIdx, 
-    progress?.id, 
-    id
+    progressData.moduleIdx, 
+    progressData.progressId, 
+    progressData.solutionId
   );
   
-  // Module completion functionality
+  // Module completion functionality (usando dados memoizados)
   const {
     handleMarkAsCompleted,
     showConfirmationModal,
     setShowConfirmationModal
   } = useModuleCompletion({
-    moduleIdx,
-    progressId: progress?.id,
-    solutionId: id,
+    moduleIdx: progressData.moduleIdx,
+    progressId: progressData.progressId,
+    solutionId: progressData.solutionId,
     completedModules,
     setCompletedModules,
     modulesLength,
@@ -45,14 +53,14 @@ export const useProgressTracking = (
     requireUserConfirmation
   });
   
-  // Solution implementation completion
+  // Solution implementation completion (usando dados memoizados)
   const {
     isCompleting,
     handleConfirmImplementation
   } = useSolutionCompletion({
-    progressId: progress?.id,
-    solutionId: id,
-    moduleIdx,
+    progressId: progressData.progressId,
+    solutionId: progressData.solutionId,
+    moduleIdx: progressData.moduleIdx,
     completedModules,
     setCompletedModules
   });
@@ -62,17 +70,20 @@ export const useProgressTracking = (
     setHasInteracted(interacted);
   };
   
+  // FASE 3: Retornar dados otimizados e memoizados
   return {
-    moduleIdx,
+    moduleIdx: progressData.moduleIdx,
     isCompleting,
     hasInteracted,
     showConfirmationModal,
     setShowConfirmationModal,
     handleMarkAsCompleted,
     handleConfirmImplementation,
-    calculateProgress: () => calculateProgressPercentage(completedModules, modulesLength),
+    calculateProgress: () => progressData.currentProgress,
     setModuleInteraction,
     requireUserConfirmation,
-    setRequireUserConfirmation
+    setRequireUserConfirmation,
+    // Dados memoizados para componentes filhos
+    progressData
   };
 };
