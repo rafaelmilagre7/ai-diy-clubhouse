@@ -25,16 +25,25 @@ export const useUser = (): UseUserReturn => {
     
     setIsLoading(true);
     try {
+      // Usar a função get_cached_profile corrigida
       const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
+        .rpc('get_cached_profile', { target_user_id: user.id });
 
       if (error) throw error;
-      setProfile(data);
+      
+      if (data) {
+        setProfile(data);
+        console.log('🔍 [PROFILE] Perfil carregado:', {
+          name: data.name,
+          role: data.user_roles?.name,
+          hasUserRoles: !!data.user_roles
+        });
+      } else {
+        console.warn('⚠️ [PROFILE] Nenhum perfil encontrado para o usuário');
+        setProfile(null);
+      }
     } catch (err) {
-      console.error("Erro ao carregar perfil:", err);
+      console.error("❌ [PROFILE] Erro ao carregar perfil:", err);
       setError(err);
     } finally {
       setIsLoading(false);
