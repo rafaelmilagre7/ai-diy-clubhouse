@@ -13,7 +13,7 @@ export const formacaoRoutes = [
   {
     path: "/formacao",
     element: (
-      <ProtectedRoute requiredRole="formacao">
+      <ProtectedRoute requireFormacao={true}>
         <FormacaoLayout>
           <FormacaoDashboard />
         </FormacaoLayout>
@@ -23,7 +23,7 @@ export const formacaoRoutes = [
   {
     path: "/formacao/members",
     element: (
-      <ProtectedRoute requiredRole="formacao">
+      <ProtectedRoute requireFormacao={true}>
         <FormacaoLayout>
           <AdminRoles />
         </FormacaoLayout>
@@ -33,7 +33,7 @@ export const formacaoRoutes = [
   {
     path: "/formacao/events",
     element: (
-      <ProtectedRoute requiredRole="formacao">
+      <ProtectedRoute requireFormacao={true}>
         <FormacaoLayout>
           <AdminEvents />
         </FormacaoLayout>
@@ -43,7 +43,7 @@ export const formacaoRoutes = [
   {
     path: "/formacao/content",
     element: (
-      <ProtectedRoute requiredRole="formacao">
+      <ProtectedRoute requireFormacao={true}>
         <FormacaoLayout>
           <AdminSolutions />
         </FormacaoLayout>
