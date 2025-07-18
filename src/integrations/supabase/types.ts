@@ -2923,6 +2923,99 @@ export type Database = {
         }
         Relationships: []
       }
+      quick_onboarding: {
+        Row: {
+          ai_knowledge_level: string | null
+          annual_revenue_range: string | null
+          birth_date: string | null
+          company_name: string | null
+          company_segment: string | null
+          company_size: string | null
+          company_website: string | null
+          country_code: string | null
+          created_at: string | null
+          current_step: number | null
+          desired_ai_areas: string[] | null
+          email: string
+          has_implemented: string | null
+          how_found_us: string | null
+          id: string
+          instagram_url: string | null
+          is_completed: boolean | null
+          linkedin_url: string | null
+          main_challenge: string | null
+          main_goal: string | null
+          name: string | null
+          previous_tools: string[] | null
+          referred_by: string | null
+          role: string | null
+          updated_at: string | null
+          user_id: string
+          uses_ai: string | null
+          whatsapp: string | null
+        }
+        Insert: {
+          ai_knowledge_level?: string | null
+          annual_revenue_range?: string | null
+          birth_date?: string | null
+          company_name?: string | null
+          company_segment?: string | null
+          company_size?: string | null
+          company_website?: string | null
+          country_code?: string | null
+          created_at?: string | null
+          current_step?: number | null
+          desired_ai_areas?: string[] | null
+          email: string
+          has_implemented?: string | null
+          how_found_us?: string | null
+          id?: string
+          instagram_url?: string | null
+          is_completed?: boolean | null
+          linkedin_url?: string | null
+          main_challenge?: string | null
+          main_goal?: string | null
+          name?: string | null
+          previous_tools?: string[] | null
+          referred_by?: string | null
+          role?: string | null
+          updated_at?: string | null
+          user_id: string
+          uses_ai?: string | null
+          whatsapp?: string | null
+        }
+        Update: {
+          ai_knowledge_level?: string | null
+          annual_revenue_range?: string | null
+          birth_date?: string | null
+          company_name?: string | null
+          company_segment?: string | null
+          company_size?: string | null
+          company_website?: string | null
+          country_code?: string | null
+          created_at?: string | null
+          current_step?: number | null
+          desired_ai_areas?: string[] | null
+          email?: string
+          has_implemented?: string | null
+          how_found_us?: string | null
+          id?: string
+          instagram_url?: string | null
+          is_completed?: boolean | null
+          linkedin_url?: string | null
+          main_challenge?: string | null
+          main_goal?: string | null
+          name?: string | null
+          previous_tools?: string[] | null
+          referred_by?: string | null
+          role?: string | null
+          updated_at?: string | null
+          user_id?: string
+          uses_ai?: string | null
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
       rate_limit_attempts: {
         Row: {
           attempts: number | null
@@ -4461,7 +4554,31 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      admin_analytics_overview: {
+        Row: {
+          active_learners: number | null
+          active_users_7d: number | null
+          completed_onboarding: number | null
+          completion_rate: number | null
+          growth_rate: number | null
+          new_solutions_30d: number | null
+          new_users_30d: number | null
+          total_lessons: number | null
+          total_solutions: number | null
+          total_users: number | null
+        }
+        Relationships: []
+      }
+      user_segmentation_analytics: {
+        Row: {
+          avg_completion_rate: number | null
+          completed_count: number | null
+          new_users_30d: number | null
+          segment_name: string | null
+          user_count: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       accept_invite: {
@@ -4718,6 +4835,10 @@ export type Database = {
       create_learning_certificate_if_eligible: {
         Args: { p_user_id: string; p_course_id: string }
         Returns: string
+      }
+      create_missing_profile_safe: {
+        Args: { target_user_id: string }
+        Returns: Json
       }
       create_onboarding_backup: {
         Args: { p_user_id: string; p_backup_type?: string }
@@ -5280,11 +5401,11 @@ export type Database = {
             }
           | {
               violation_type: string
-              resource_type: string
-              resource_id?: string
-              details?: Json
+              resource_table: string
+              attempted_action: string
+              user_context?: Json
             }
-        Returns: string
+        Returns: undefined
       }
       log_unauthorized_access: {
         Args: { attempted_action: string; resource_details?: Json }
