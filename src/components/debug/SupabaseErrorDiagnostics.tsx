@@ -1,9 +1,9 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import { 
   AlertTriangle, 
   CheckCircle, 
@@ -12,7 +12,8 @@ import {
   Shield,
   Activity,
   Server,
-  Clock
+  Clock,
+  RefreshCw
 } from 'lucide-react';
 import { useSupabaseHealthCheck } from '@/hooks/supabase/useSupabaseHealthCheck';
 import { RoleSyncPanel } from '@/components/admin/roles/RoleSyncPanel';
@@ -26,15 +27,15 @@ export const SupabaseErrorDiagnostics: React.FC = () => {
       case 'operational':
       case 'connected':
       case 'authenticated':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
+        return <CheckCircle className="h-4 w-4 text-success" />;
       case 'slow':
-        return <Clock className="h-4 w-4 text-yellow-500" />;
+        return <Clock className="h-4 w-4 text-warning" />;
       case 'error':
       case 'disconnected':
       case 'unauthenticated':
-        return <AlertTriangle className="h-4 w-4 text-red-500" />;
+        return <AlertTriangle className="h-4 w-4 text-destructive" />;
       default:
-        return <Activity className="h-4 w-4 text-gray-500" />;
+        return <Activity className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
@@ -43,15 +44,15 @@ export const SupabaseErrorDiagnostics: React.FC = () => {
       case 'operational':
       case 'connected':
       case 'authenticated':
-        return 'bg-green-500/10 text-green-700 border-green-500/20';
+        return 'bg-success/10 text-success border-success/20';
       case 'slow':
-        return 'bg-yellow-500/10 text-yellow-700 border-yellow-500/20';
+        return 'bg-warning/10 text-warning border-warning/20';
       case 'error':
       case 'disconnected':
       case 'unauthenticated':
-        return 'bg-red-500/10 text-red-700 border-red-500/20';
+        return 'bg-destructive/10 text-destructive border-destructive/20';
       default:
-        return 'bg-gray-500/10 text-gray-700 border-gray-500/20';
+        return 'bg-muted/10 text-muted-foreground border-muted/20';
     }
   };
 
@@ -70,21 +71,33 @@ export const SupabaseErrorDiagnostics: React.FC = () => {
                 Monitoramento em tempo real da saúde do sistema
               </CardDescription>
             </div>
-            <Badge
-              className={healthStatus.isHealthy 
-                ? getStatusColor('operational') 
-                : getStatusColor('error')
-              }
-            >
-              {healthStatus.isHealthy ? 'Saudável' : 'Problemas Detectados'}
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge
+                className={healthStatus.isHealthy 
+                  ? getStatusColor('operational') 
+                  : getStatusColor('error')
+                }
+              >
+                {healthStatus.isHealthy ? 'Saudável' : 'Problemas Detectados'}
+              </Badge>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={performHealthCheck}
+                disabled={isChecking}
+                className="flex items-center gap-2"
+              >
+                <RefreshCw className={`h-4 w-4 ${isChecking ? 'animate-spin' : ''}`} />
+                {isChecking ? 'Verificando...' : 'Atualizar'}
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Status da Conexão */}
-            <div className="flex items-center gap-3 p-3 border rounded-lg">
-              <Wifi className="h-6 w-6 text-blue-600" />
+            <div className="flex items-center gap-3 p-3 border rounded-lg bg-card">
+              <Wifi className="h-6 w-6 text-primary" />
               <div>
                 <div className="flex items-center gap-2">
                   {getStatusIcon(healthStatus.connectionStatus)}
@@ -97,8 +110,8 @@ export const SupabaseErrorDiagnostics: React.FC = () => {
             </div>
 
             {/* Status da Autenticação */}
-            <div className="flex items-center gap-3 p-3 border rounded-lg">
-              <Shield className="h-6 w-6 text-purple-600" />
+            <div className="flex items-center gap-3 p-3 border rounded-lg bg-card">
+              <Shield className="h-6 w-6 text-primary" />
               <div>
                 <div className="flex items-center gap-2">
                   {getStatusIcon(healthStatus.authStatus)}
@@ -111,8 +124,8 @@ export const SupabaseErrorDiagnostics: React.FC = () => {
             </div>
 
             {/* Status do Banco */}
-            <div className="flex items-center gap-3 p-3 border rounded-lg">
-              <Database className="h-6 w-6 text-green-600" />
+            <div className="flex items-center gap-3 p-3 border rounded-lg bg-card">
+              <Database className="h-6 w-6 text-primary" />
               <div>
                 <div className="flex items-center gap-2">
                   {getStatusIcon(healthStatus.databaseStatus)}
@@ -125,8 +138,8 @@ export const SupabaseErrorDiagnostics: React.FC = () => {
             </div>
 
             {/* Status do Storage */}
-            <div className="flex items-center gap-3 p-3 border rounded-lg">
-              <Server className="h-6 w-6 text-orange-600" />
+            <div className="flex items-center gap-3 p-3 border rounded-lg bg-card">
+              <Server className="h-6 w-6 text-primary" />
               <div>
                 <div className="flex items-center gap-2">
                   {getStatusIcon(healthStatus.storageStatus)}
@@ -145,7 +158,7 @@ export const SupabaseErrorDiagnostics: React.FC = () => {
               <h4 className="font-medium mb-3">Problemas Detectados:</h4>
               <div className="space-y-2">
                 {healthStatus.issues.map((issue, index) => (
-                  <Alert key={index} className="border-red-200">
+                  <Alert key={index} variant="destructive">
                     <AlertTriangle className="h-4 w-4" />
                     <AlertDescription>{issue}</AlertDescription>
                   </Alert>
@@ -153,6 +166,29 @@ export const SupabaseErrorDiagnostics: React.FC = () => {
               </div>
             </div>
           )}
+
+          {/* Informações do Sistema */}
+          <div className="mt-6 p-4 bg-muted/50 rounded-lg">
+            <h4 className="font-medium mb-2">Informações do Sistema</h4>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <div>
+                <span className="text-muted-foreground">Políticas RLS:</span>
+                <span className="ml-2 font-mono">{healthStatus.rlsPoliciesCount || 'N/A'}</span>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Funções:</span>
+                <span className="ml-2 font-mono">{healthStatus.functionsCount || 'N/A'}</span>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Tabelas:</span>
+                <span className="ml-2 font-mono">{healthStatus.tablesCount || 'N/A'}</span>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Storage Buckets:</span>
+                <span className="ml-2 font-mono">{healthStatus.storageBuckets || 'N/A'}</span>
+              </div>
+            </div>
+          </div>
 
           {/* Última Verificação */}
           <div className="mt-4 pt-4 border-t text-sm text-muted-foreground">
@@ -179,24 +215,31 @@ export const SupabaseErrorDiagnostics: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex items-center justify-between p-4 border rounded-lg bg-card">
                   <span>Status da API</span>
                   <Badge className={getStatusColor(healthStatus.databaseStatus)}>
                     {healthStatus.databaseStatus}
                   </Badge>
                 </div>
                 
-                <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex items-center justify-between p-4 border rounded-lg bg-card">
                   <span>Latência da Conexão</span>
                   <Badge className={getStatusColor(healthStatus.connectionStatus)}>
                     {healthStatus.connectionStatus === 'slow' ? 'Alta' : 'Normal'}
                   </Badge>
                 </div>
 
-                <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex items-center justify-between p-4 border rounded-lg bg-card">
                   <span>Políticas RLS</span>
                   <Badge className={getStatusColor('operational')}>
-                    Ativas
+                    {healthStatus.rlsPoliciesCount || 0} Ativas
+                  </Badge>
+                </div>
+
+                <div className="flex items-center justify-between p-4 border rounded-lg bg-card">
+                  <span>Views Analíticas</span>
+                  <Badge className={getStatusColor('operational')}>
+                    Disponíveis
                   </Badge>
                 </div>
               </div>

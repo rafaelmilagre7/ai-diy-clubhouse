@@ -46,25 +46,43 @@ export const useAdminStatsData = () => {
         setLoading(true);
         setError(null);
 
-        // Buscar overview consolidado
+        // Buscar overview consolidado usando a nova view
         const { data: overviewData, error: overviewError } = await supabase
           .from('admin_analytics_overview')
           .select('*')
-          .single();
+          .maybeSingle();
 
-        if (overviewError && overviewError.code !== 'PGRST116') {
+        if (overviewError) {
           console.warn('Erro ao buscar overview:', overviewError);
+          // Fallback para dados básicos se a view não existir
         }
 
-        // Buscar segmentação de usuários
-        const { data: segmentationData, error: segmentationError } = await supabase
-          .from('user_segmentation_analytics')
-          .select('*')
-          .order('user_count', { ascending: false });
+        // Buscar usuários por role usando join direto
+        const { data: userRolesData, error: userRolesError } = await supabase
+          .from('profiles')
+          .select(`
+            id,
+            user_roles:role_id (
+              name
+            )
+          `);
 
-        if (segmentationError) {
-          console.warn('Erro ao buscar segmentação:', segmentationError);
+        if (userRolesError) {
+          console.warn('Erro ao buscar usuários por role:', userRolesError);
         }
+
+        // Processar contagem por role
+        const rolesCounts = (userRolesData || []).reduce((acc: Record<string, number>, user) => {
+          const roleData = user.user_roles as any;
+          const roleName = roleData?.name || 'member';
+          acc[roleName] = (acc[roleName] || 0) + 1;
+          return acc;
+        }, {});
+
+        const segmentationData = Object.entries(rolesCounts).map(([role_name, user_count]) => ({
+          role_name,
+          user_count
+        }));
 
         // Buscar contagem de aulas
         const { count: totalLessons } = await supabase
