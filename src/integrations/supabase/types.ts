@@ -4779,6 +4779,15 @@ export type Database = {
             }
         Returns: boolean
       }
+      check_rate_limit_advanced: {
+        Args: {
+          p_action: string
+          p_limit_per_hour?: number
+          p_limit_per_minute?: number
+          p_identifier?: string
+        }
+        Returns: Json
+      }
       check_rate_limit_safe: {
         Args: {
           p_action: string
