@@ -65,17 +65,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
   }, [isLoading]);
 
-  // Verificação imediata de admin baseada em email
-  const isAdminByEmail = user?.email && [
-    'rafael@viverdeia.ai',
-    'admin@viverdeia.ai',
-    'admin@teste.com'
-  ].includes(user.email.toLowerCase());
-
-  // Computar isAdmin com cache
+  // Computar isAdmin APENAS via role - sem hardcoded emails
   const isAdmin = React.useMemo(() => {
-    return isAdminRole(profile) || isAdminByEmail;
-  }, [profile, isAdminByEmail]);
+    return isAdminRole(profile);
+  }, [profile]);
 
   // Computar isFormacao
   const isFormacao = React.useMemo(() => {
