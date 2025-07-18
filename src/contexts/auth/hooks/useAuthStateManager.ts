@@ -55,7 +55,7 @@ export const useAuthStateManager = ({
       setSession(session);
       setUser(user);
 
-      // TERCEIRO: Buscar perfil com timeout
+      // TERCEIRO: Buscar perfil (removido acesso direto ao auth.users)
       const profilePromise = supabase
         .from('profiles')
         .select(`
