@@ -11,7 +11,7 @@ export const useLayoutAuthentication = () => {
   const [retryCount, setRetryCount] = useState(0);
   const isMounted = useRef(true);
   const maxRetries = 1;
-  const authTimeout = 4000;
+  const authTimeout = 7000; // Aumentado para 7s para sincronizar com RootRedirect
 
   // Setup component lifecycle
   useEffect(() => {

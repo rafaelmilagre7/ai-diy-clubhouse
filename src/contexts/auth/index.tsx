@@ -49,13 +49,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Initialize session manager
   useSessionManager();
 
-  // Circuit breaker simplificado - timeout de 3 segundos
+  // Circuit breaker sincronizado - timeout de 7 segundos
   useEffect(() => {
     if (isLoading) {
       timeoutRef.current = setTimeout(() => {
         console.warn("⚠️ [AUTH] Timeout ativado - finalizando loading");
         setIsLoading(false);
-      }, 3000);
+      }, 7000);
     }
 
     return () => {

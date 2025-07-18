@@ -11,13 +11,13 @@ const RootRedirect = () => {
   const [timeoutReached, setTimeoutReached] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout>();
   
-  // TIMEOUT DE SEGURANÇA: Reduzido para 3 segundos máximo
+  // TIMEOUT DE SEGURANÇA: Aumentado para 8 segundos para permitir autenticação completa
   useEffect(() => {
     if (authLoading) {
       timeoutRef.current = setTimeout(() => {
         console.warn("⏰ [ROOT-REDIRECT] Timeout de loading atingido - forçando redirecionamento");
         setTimeoutReached(true);
-      }, 3000); // Reduzido de 8s para 3s
+      }, 8000); // Aumentado para 8s para dar tempo da auth completar
     } else {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
@@ -41,15 +41,15 @@ const RootRedirect = () => {
     timeoutReached
   });
 
-  // TIMEOUT ATINGIDO: Redirecionar para login
+  // LOADING NORMAL: Mostrar tela de carregamento (prioridade)
+  if (authLoading && !timeoutReached) {
+    return <LoadingScreen message="Verificando sessão..." />;
+  }
+
+  // TIMEOUT ATINGIDO: Fallback para login apenas se não há usuário
   if (timeoutReached && !user) {
     console.warn("⚠️ [ROOT-REDIRECT] Timeout - redirecionando para login");
     return <Navigate to="/login" replace />;
-  }
-
-  // LOADING NORMAL: Mostrar tela de carregamento
-  if (authLoading && !timeoutReached) {
-    return <LoadingScreen message="Verificando sessão..." />;
   }
 
   // SEM USUÁRIO: Redirecionar para login
