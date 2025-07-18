@@ -106,42 +106,18 @@ export const getUserPermissions = async (userId: string): Promise<string[]> => {
     } catch (auditError) {
       // Ignorar erros de auditoria silenciosamente
     }
-    
-    const { data, error } = await supabase.from('profiles')
-      .select(`
-        role_id,
-        user_roles:role_id (
-          name,
-          permissions
-        )
-      `)
-      .eq('id', userId)
-      .single();
+
+    // Usar a nova função RPC implementada no banco
+    const { data, error } = await supabase.rpc('get_user_permissions', {
+      user_id: userId
+    });
     
     if (error) {
-      console.error('[SECURITY] Permissions fetch error:', error.message);
+      console.error('[SECURITY] Erro ao buscar permissões do usuário:', error);
       return [];
     }
-    
-    let permissions: string[] = [];
-    
-    // CORREÇÃO: Acesso correto ao campo permissions
-    if (data?.user_roles) {
-      try {
-        // user_roles pode ser um objeto único ou array, verificar ambos os casos
-        const roleData = Array.isArray(data.user_roles) ? data.user_roles[0] : data.user_roles;
-        
-        if (roleData?.permissions) {
-          const permObj = roleData.permissions;
-          if (typeof permObj === 'object') {
-            const permKeys = Object.keys(permObj).filter(key => permObj[key] === true);
-            permissions = permKeys;
-          }
-        }
-      } catch (parseError) {
-        console.error('[SECURITY] Permission parsing error:', parseError);
-      }
-    }
+
+    const permissions = data || [];
     
     // Cache apenas se bem-sucedido
     permissionCache.set(userId, { 
@@ -151,7 +127,7 @@ export const getUserPermissions = async (userId: string): Promise<string[]> => {
     
     return permissions;
   } catch (error) {
-    console.error('[SECURITY] Permissions error:', error);
+    console.error('[SECURITY] Erro crítico ao buscar permissões:', error);
     return [];
   }
 };

@@ -1,7 +1,7 @@
 
 import { useEffect } from 'react';
 import { useAuth } from '@/contexts/auth';
-import { advancedSecurityUtils, logSecurityActivity } from '@/utils/advancedSecurityUtils';
+import { securityLogger } from '@/utils/securityLogger';
 import { logger } from '@/utils/logger';
 
 /**
@@ -13,14 +13,15 @@ export const useSecurityEnforcement = () => {
 
   useEffect(() => {
     if (!isLoading && !user) {
-      // Log de tentativa de acesso não autorizado com sistema avançado
-      logSecurityActivity({
-        action: 'unauthorized_access_attempt',
-        timestamp: new Date().toISOString(),
-        ipAddress: undefined, // Será preenchido pelo sistema
-        userAgent: navigator.userAgent,
-        resource: window.location.pathname
-      });
+      // Log de tentativa de acesso não autorizado
+      securityLogger.logUnauthorizedAccess(
+        window.location.pathname,
+        'page_access',
+        {
+          url: window.location.href,
+          referrer: document.referrer
+        }
+      );
 
       logger.warn('[SECURITY] Tentativa de acesso sem autenticação detectada', {
         timestamp: new Date().toISOString(),
@@ -36,15 +37,7 @@ export const useSecurityEnforcement = () => {
     if (!user) return;
 
     try {
-      // Log através do sistema avançado
-      await logSecurityActivity({
-        userId: user.id,
-        action: `data_${operation}`,
-        resource: tableName,
-        timestamp: new Date().toISOString(),
-        ipAddress: undefined, // Será detectado automaticamente
-        userAgent: navigator.userAgent
-      });
+      await securityLogger.logDataAccess(tableName, operation, resourceId);
 
       logger.debug('[SECURITY] Acesso a dados registrado', { 
         tableName, 
@@ -60,12 +53,11 @@ export const useSecurityEnforcement = () => {
   // Função aprimorada para verificar permissões
   const enforceUserDataAccess = async (dataUserId: string, operation: string = 'read') => {
     if (!user) {
-      await logSecurityActivity({
-        action: 'unauthorized_data_access_attempt',
-        resource: 'user_data',
-        timestamp: new Date().toISOString(),
-        userAgent: navigator.userAgent
-      });
+      await securityLogger.logUnauthorizedAccess(
+        'user_data',
+        'data_access_attempt',
+        { operation, dataUserId }
+      );
 
       logger.error('[SECURITY] Tentativa de acesso a dados sem autenticação', {
         operation,
@@ -76,12 +68,10 @@ export const useSecurityEnforcement = () => {
     }
 
     if (user.id !== dataUserId) {
-      await logSecurityActivity({
-        userId: user.id,
-        action: 'cross_user_data_access_attempt',
-        resource: 'user_data',
-        timestamp: new Date().toISOString(),
-        userAgent: navigator.userAgent
+      await securityLogger.logSecurityViolation('cross_user_data_access', {
+        currentUserId: user.id,
+        targetUserId: dataUserId,
+        operation
       });
 
       logger.error('[SECURITY] Tentativa de acesso a dados de outro usuário', {
@@ -94,37 +84,17 @@ export const useSecurityEnforcement = () => {
     }
 
     // Log de acesso autorizado
-    await logSecurityActivity({
-      userId: user.id,
-      action: `authorized_${operation}`,
-      resource: 'user_data',
-      timestamp: new Date().toISOString(),
-      userAgent: navigator.userAgent
-    });
-  };
-
-  // Nova função para análise comportamental
-  const analyzeUserBehavior = async () => {
-    if (!user) return null;
-
-    try {
-      return await advancedSecurityUtils.analyzeUserBehavior(user.id);
-    } catch (error) {
-      logger.error('[SECURITY] Erro na análise comportamental:', error);
-      return null;
-    }
+    await securityLogger.logDataAccess('user_data', `authorized_${operation}`, dataUserId);
   };
 
   // Nova função para reportar evento de segurança
   const reportSecurityEvent = async (eventType: string, details: Record<string, any> = {}) => {
     if (!user) return;
 
-    await logSecurityActivity({
+    await securityLogger.logSecurityViolation(eventType, {
+      ...details,
       userId: user.id,
-      action: eventType,
-      timestamp: new Date().toISOString(),
-      userAgent: navigator.userAgent,
-      resource: details.resource
+      timestamp: new Date().toISOString()
     });
 
     logger.info('[SECURITY] Evento de segurança reportado', {
@@ -137,7 +107,6 @@ export const useSecurityEnforcement = () => {
   return {
     logDataAccess,
     enforceUserDataAccess,
-    analyzeUserBehavior,
     reportSecurityEvent,
     isAuthenticated: !!user
   };
