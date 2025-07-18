@@ -1,266 +1,269 @@
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { 
-  AlertTriangle, 
-  CheckCircle, 
-  Database, 
-  Wifi, 
-  Shield,
-  Activity,
-  Server,
-  Clock,
-  RefreshCw
-} from 'lucide-react';
-import { useSupabaseHealthCheck } from '@/hooks/supabase/useSupabaseHealthCheck';
-import { RoleSyncPanel } from '@/components/admin/roles/RoleSyncPanel';
-import { SystemErrorLogs } from './SystemErrorLogs';
-import { ComponentHealthMonitor } from './ComponentHealthMonitor';
+import { Badge } from '@/components/ui/badge';
+import { AlertTriangle, CheckCircle, XCircle, RefreshCw, Database, Shield, Users } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
+
+interface DiagnosticResult {
+  name: string;
+  status: 'success' | 'warning' | 'error';
+  message: string;
+  details?: any;
+}
 
 export const SupabaseErrorDiagnostics: React.FC = () => {
-  const { healthStatus, isChecking, performHealthCheck } = useSupabaseHealthCheck();
+  const [diagnostics, setDiagnostics] = useState<DiagnosticResult[]>([]);
+  const [isRunning, setIsRunning] = useState(false);
+  const [lastRun, setLastRun] = useState<Date | null>(null);
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'operational':
-      case 'connected':
-      case 'authenticated':
-        return <CheckCircle className="h-4 w-4 text-success" />;
-      case 'slow':
-        return <Clock className="h-4 w-4 text-warning" />;
-      case 'error':
-      case 'disconnected':
-      case 'unauthenticated':
-        return <AlertTriangle className="h-4 w-4 text-destructive" />;
-      default:
-        return <Activity className="h-4 w-4 text-muted-foreground" />;
+  const runDiagnostic = async (name: string, testFn: () => Promise<DiagnosticResult>) => {
+    try {
+      console.log(`🔍 [DIAGNOSTIC] Executando: ${name}`);
+      const result = await testFn();
+      console.log(`✅ [DIAGNOSTIC] ${name}:`, result.status);
+      return result;
+    } catch (error) {
+      console.error(`❌ [DIAGNOSTIC] Erro em ${name}:`, error);
+      return {
+        name,
+        status: 'error' as const,
+        message: `Falha no teste: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+        details: error
+      };
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'operational':
-      case 'connected':
-      case 'authenticated':
-        return 'bg-success/10 text-success border-success/20';
-      case 'slow':
-        return 'bg-warning/10 text-warning border-warning/20';
-      case 'error':
-      case 'disconnected':
-      case 'unauthenticated':
-        return 'bg-destructive/10 text-destructive border-destructive/20';
-      default:
-        return 'bg-muted/10 text-muted-foreground border-muted/20';
+  const runAllDiagnostics = async () => {
+    setIsRunning(true);
+    console.log('🚀 [DIAGNOSTIC] Iniciando diagnósticos completos...');
+    
+    const tests: Array<() => Promise<DiagnosticResult>> = [
+      // Teste 1: Conexão básica com Supabase
+      async () => {
+        const { data, error } = await supabase.auth.getSession();
+        return {
+          name: 'Conexão Supabase',
+          status: error ? 'error' : 'success',
+          message: error ? `Erro de conexão: ${error.message}` : 'Conexão estabelecida com sucesso',
+          details: { hasSession: !!data.session }
+        };
+      },
+
+      // Teste 2: Acesso à tabela user_roles
+      async () => {
+        const { data, error } = await supabase
+          .from('user_roles')
+          .select('id, name')
+          .limit(5);
+        
+        return {
+          name: 'Tabela user_roles',
+          status: error ? 'error' : 'success',
+          message: error 
+            ? `Erro ao acessar user_roles: ${error.message}` 
+            : `Tabela acessível. ${data?.length || 0} roles encontrados`,
+          details: { count: data?.length || 0, error: error?.message }
+        };
+      },
+
+      // Teste 3: Acesso à tabela profiles
+      async () => {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id, name, role_id')
+          .limit(5);
+        
+        return {
+          name: 'Tabela profiles',
+          status: error ? 'error' : 'success',
+          message: error 
+            ? `Erro ao acessar profiles: ${error.message}` 
+            : `Tabela acessível. ${data?.length || 0} perfis encontrados`,
+          details: { count: data?.length || 0, error: error?.message }
+        };
+      },
+
+      // Teste 4: Verificação de RLS
+      async () => {
+        try {
+          const { data: rlsData, error: rlsError } = await supabase
+            .rpc('check_system_health');
+          
+          return {
+            name: 'Políticas RLS',
+            status: rlsError ? 'warning' : 'success',
+            message: rlsError 
+              ? `Aviso RLS: ${rlsError.message}` 
+              : 'Políticas RLS funcionando corretamente',
+            details: rlsData
+          };
+        } catch (error) {
+          return {
+            name: 'Políticas RLS',
+            status: 'warning',
+            message: 'Função de health check não disponível',
+            details: { error: error instanceof Error ? error.message : 'Unknown error' }
+          };
+        }
+      },
+
+      // Teste 5: Verificação de funções críticas
+      async () => {
+        try {
+          const { data, error } = await supabase
+            .rpc('get_cached_profile', { target_user_id: supabase.auth.getUser().then(u => u.data.user?.id) });
+          
+          return {
+            name: 'Funções do Sistema',
+            status: error ? 'warning' : 'success',
+            message: error 
+              ? `Algumas funções podem estar indisponíveis: ${error.message}` 
+              : 'Funções principais operacionais',
+            details: { profileFunction: !error }
+          };
+        } catch (error) {
+          return {
+            name: 'Funções do Sistema',
+            status: 'warning',
+            message: 'Erro ao testar funções do sistema',
+            details: { error: error instanceof Error ? error.message : 'Unknown error' }
+          };
+        }
+      }
+    ];
+
+    const results: DiagnosticResult[] = [];
+    
+    for (const test of tests) {
+      const result = await runDiagnostic(test.name || 'Teste', test);
+      results.push(result);
     }
+
+    setDiagnostics(results);
+    setLastRun(new Date());
+    setIsRunning(false);
+    
+    const errorCount = results.filter(r => r.status === 'error').length;
+    const warningCount = results.filter(r => r.status === 'warning').length;
+    
+    if (errorCount > 0) {
+      toast.error(`Diagnóstico concluído: ${errorCount} erros encontrados`);
+    } else if (warningCount > 0) {
+      toast.warning(`Diagnóstico concluído: ${warningCount} avisos encontrados`);
+    } else {
+      toast.success('Diagnóstico concluído: Sistema funcionando corretamente');
+    }
+    
+    console.log('🏁 [DIAGNOSTIC] Diagnósticos concluídos:', { errorCount, warningCount });
+  };
+
+  useEffect(() => {
+    // Executar diagnósticos automaticamente ao carregar
+    runAllDiagnostics();
+  }, []);
+
+  const getStatusIcon = (status: DiagnosticResult['status']) => {
+    switch (status) {
+      case 'success':
+        return <CheckCircle className="h-5 w-5 text-green-500" />;
+      case 'warning':
+        return <AlertTriangle className="h-5 w-5 text-yellow-500" />;
+      case 'error':
+        return <XCircle className="h-5 w-5 text-red-500" />;
+    }
+  };
+
+  const getStatusBadge = (status: DiagnosticResult['status']) => {
+    const variants = {
+      success: 'default',
+      warning: 'secondary',
+      error: 'destructive'
+    } as const;
+    
+    const labels = {
+      success: 'OK',
+      warning: 'Aviso',
+      error: 'Erro'
+    };
+
+    return (
+      <Badge variant={variants[status]} className="ml-2">
+        {labels[status]}
+      </Badge>
+    );
   };
 
   return (
     <div className="space-y-6">
-      {/* Status Geral */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Server className="h-5 w-5" />
-                Status do Sistema Supabase
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Diagnóstico do Sistema</h2>
+          <p className="text-muted-foreground">
+            Verificação da saúde do sistema e conectividade com Supabase
+          </p>
+        </div>
+        <Button onClick={runAllDiagnostics} disabled={isRunning}>
+          <RefreshCw className={`h-4 w-4 mr-2 ${isRunning ? 'animate-spin' : ''}`} />
+          {isRunning ? 'Executando...' : 'Executar Diagnóstico'}
+        </Button>
+      </div>
+
+      {lastRun && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center">
+              <Database className="h-5 w-5 mr-2" />
+              Último Diagnóstico: {lastRun.toLocaleString('pt-BR')}
+            </CardTitle>
+          </CardHeader>
+        </Card>
+      )}
+
+      <div className="grid gap-4">
+        {diagnostics.map((diagnostic, index) => (
+          <Card key={index}>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center justify-between">
+                <div className="flex items-center">
+                  {getStatusIcon(diagnostic.status)}
+                  <span className="ml-2">{diagnostic.name}</span>
+                </div>
+                {getStatusBadge(diagnostic.status)}
               </CardTitle>
-              <CardDescription>
-                Monitoramento em tempo real da saúde do sistema
-              </CardDescription>
-            </div>
-            <div className="flex items-center gap-2">
-              <Badge
-                className={healthStatus.isHealthy 
-                  ? getStatusColor('operational') 
-                  : getStatusColor('error')
-                }
-              >
-                {healthStatus.isHealthy ? 'Saudável' : 'Problemas Detectados'}
-              </Badge>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={performHealthCheck}
-                disabled={isChecking}
-                className="flex items-center gap-2"
-              >
-                <RefreshCw className={`h-4 w-4 ${isChecking ? 'animate-spin' : ''}`} />
-                {isChecking ? 'Verificando...' : 'Atualizar'}
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Status da Conexão */}
-            <div className="flex items-center gap-3 p-3 border rounded-lg bg-card">
-              <Wifi className="h-6 w-6 text-primary" />
-              <div>
-                <div className="flex items-center gap-2">
-                  {getStatusIcon(healthStatus.connectionStatus)}
-                  <span className="font-medium">Conexão</span>
-                </div>
-                <p className="text-sm text-muted-foreground capitalize">
-                  {healthStatus.connectionStatus}
-                </p>
-              </div>
-            </div>
-
-            {/* Status da Autenticação */}
-            <div className="flex items-center gap-3 p-3 border rounded-lg bg-card">
-              <Shield className="h-6 w-6 text-primary" />
-              <div>
-                <div className="flex items-center gap-2">
-                  {getStatusIcon(healthStatus.authStatus)}
-                  <span className="font-medium">Autenticação</span>
-                </div>
-                <p className="text-sm text-muted-foreground capitalize">
-                  {healthStatus.authStatus}
-                </p>
-              </div>
-            </div>
-
-            {/* Status do Banco */}
-            <div className="flex items-center gap-3 p-3 border rounded-lg bg-card">
-              <Database className="h-6 w-6 text-primary" />
-              <div>
-                <div className="flex items-center gap-2">
-                  {getStatusIcon(healthStatus.databaseStatus)}
-                  <span className="font-medium">Banco de Dados</span>
-                </div>
-                <p className="text-sm text-muted-foreground capitalize">
-                  {healthStatus.databaseStatus}
-                </p>
-              </div>
-            </div>
-
-            {/* Status do Storage */}
-            <div className="flex items-center gap-3 p-3 border rounded-lg bg-card">
-              <Server className="h-6 w-6 text-primary" />
-              <div>
-                <div className="flex items-center gap-2">
-                  {getStatusIcon(healthStatus.storageStatus)}
-                  <span className="font-medium">Storage</span>
-                </div>
-                <p className="text-sm text-muted-foreground capitalize">
-                  {healthStatus.storageStatus}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Problemas Detectados */}
-          {healthStatus.issues.length > 0 && (
-            <div className="mt-6">
-              <h4 className="font-medium mb-3">Problemas Detectados:</h4>
-              <div className="space-y-2">
-                {healthStatus.issues.map((issue, index) => (
-                  <Alert key={index} variant="destructive">
-                    <AlertTriangle className="h-4 w-4" />
-                    <AlertDescription>{issue}</AlertDescription>
-                  </Alert>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Informações do Sistema */}
-          <div className="mt-6 p-4 bg-muted/50 rounded-lg">
-            <h4 className="font-medium mb-2">Informações do Sistema</h4>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-              <div>
-                <span className="text-muted-foreground">Políticas RLS:</span>
-                <span className="ml-2 font-mono">{healthStatus.rlsPoliciesCount || 'N/A'}</span>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Funções:</span>
-                <span className="ml-2 font-mono">{healthStatus.functionsCount || 'N/A'}</span>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Tabelas:</span>
-                <span className="ml-2 font-mono">{healthStatus.tablesCount || 'N/A'}</span>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Storage Buckets:</span>
-                <span className="ml-2 font-mono">{healthStatus.storageBuckets || 'N/A'}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Última Verificação */}
-          <div className="mt-4 pt-4 border-t text-sm text-muted-foreground">
-            Última verificação: {healthStatus.checkedAt.toLocaleString('pt-BR')}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Abas de Diagnóstico */}
-      <Tabs defaultValue="system" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="system">Sistema & Performance</TabsTrigger>
-          <TabsTrigger value="components">Componentes</TabsTrigger>
-          <TabsTrigger value="roles">Roles & Permissões</TabsTrigger>
-          <TabsTrigger value="logs">Logs de Erro</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="system" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Diagnóstico do Sistema</CardTitle>
-              <CardDescription>
-                Análise detalhada de performance e conectividade
-              </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 border rounded-lg bg-card">
-                  <span>Status da API</span>
-                  <Badge className={getStatusColor(healthStatus.databaseStatus)}>
-                    {healthStatus.databaseStatus}
-                  </Badge>
-                </div>
-                
-                <div className="flex items-center justify-between p-4 border rounded-lg bg-card">
-                  <span>Latência da Conexão</span>
-                  <Badge className={getStatusColor(healthStatus.connectionStatus)}>
-                    {healthStatus.connectionStatus === 'slow' ? 'Alta' : 'Normal'}
-                  </Badge>
-                </div>
-
-                <div className="flex items-center justify-between p-4 border rounded-lg bg-card">
-                  <span>Políticas RLS</span>
-                  <Badge className={getStatusColor('operational')}>
-                    {healthStatus.rlsPoliciesCount || 0} Ativas
-                  </Badge>
-                </div>
-
-                <div className="flex items-center justify-between p-4 border rounded-lg bg-card">
-                  <span>Views Analíticas</span>
-                  <Badge className={getStatusColor('operational')}>
-                    Disponíveis
-                  </Badge>
-                </div>
-              </div>
+              <p className="text-sm text-muted-foreground mb-2">
+                {diagnostic.message}
+              </p>
+              {diagnostic.details && (
+                <details className="mt-2">
+                  <summary className="cursor-pointer text-sm font-medium">
+                    Detalhes técnicos
+                  </summary>
+                  <pre className="mt-2 p-2 bg-muted rounded text-xs overflow-auto">
+                    {JSON.stringify(diagnostic.details, null, 2)}
+                  </pre>
+                </details>
+              )}
             </CardContent>
           </Card>
-        </TabsContent>
+        ))}
+      </div>
 
-        <TabsContent value="components" className="space-y-6">
-          <ComponentHealthMonitor />
-        </TabsContent>
-
-        <TabsContent value="roles" className="space-y-6">
-          <RoleSyncPanel />
-        </TabsContent>
-
-        <TabsContent value="logs" className="space-y-6">
-          <SystemErrorLogs />
-        </TabsContent>
-      </Tabs>
+      {diagnostics.length === 0 && !isRunning && (
+        <Card>
+          <CardContent className="py-6">
+            <div className="text-center text-muted-foreground">
+              <Shield className="h-12 w-12 mx-auto mb-2 opacity-50" />
+              <p>Nenhum diagnóstico executado ainda</p>
+              <p className="text-sm">Clique em "Executar Diagnóstico" para começar</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

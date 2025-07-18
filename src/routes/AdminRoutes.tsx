@@ -10,6 +10,7 @@ import InvitesManagement from '@/pages/admin/invites/InvitesManagement';
 import AdminRoles from '@/pages/admin/AdminRoles';
 import AdminCommunicationCenter from '@/pages/admin/AdminCommunicationCenter';
 import AdminSolutions from '@/pages/admin/AdminSolutions';
+import SupabaseDiagnostics from '@/pages/admin/SupabaseDiagnostics';
 
 export const adminRoutes = [
   {
@@ -68,6 +69,16 @@ export const adminRoutes = [
       <ProtectedRoute requireAdmin={true}>
         <AdminLayout>
           <AdminSolutions />
+        </AdminLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/admin/diagnostics",
+    element: (
+      <ProtectedRoute requireAdmin={true}>
+        <AdminLayout>
+          <SupabaseDiagnostics />
         </AdminLayout>
       </ProtectedRoute>
     ),

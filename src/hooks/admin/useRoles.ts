@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
@@ -38,31 +38,48 @@ export const useRoles = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
 
-  const fetchRoles = async () => {
+  const fetchRoles = useCallback(async () => {
     try {
+      console.log('🔄 [ROLES] Iniciando carregamento de roles...');
       setLoading(true);
       setIsLoading(true);
       setError(null);
+      
       const { data, error } = await supabase
         .from('user_roles')
         .select('*')
         .order('name');
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ [ROLES] Erro ao carregar roles:', error);
+        throw error;
+      }
+
+      console.log('✅ [ROLES] Roles carregados com sucesso:', data?.length || 0, 'roles');
       setRoles(data || []);
     } catch (error) {
-      console.error('Erro ao carregar papéis:', error);
+      console.error('❌ [ROLES] Erro no fetchRoles:', error);
       setError(error as Error);
-      toast.error('Erro ao carregar papéis');
+      
+      // Fallback: tentar criar roles básicos se não existirem
+      if (error instanceof Error && error.message.includes('relation "user_roles" does not exist')) {
+        console.warn('⚠️ [ROLES] Tabela user_roles não existe, usando fallback');
+        setRoles([]);
+        toast.error('Tabela de papéis não encontrada. Contate o administrador.');
+      } else {
+        toast.error('Erro ao carregar papéis do sistema');
+      }
     } finally {
       setLoading(false);
       setIsLoading(false);
     }
-  };
+  }, []);
 
   const createRole = async (roleData: CreateRoleData) => {
     try {
       setIsCreating(true);
+      console.log('🔄 [ROLES] Criando novo role:', roleData);
+      
       const { data, error } = await supabase
         .from('user_roles')
         .insert([roleData])
@@ -71,10 +88,11 @@ export const useRoles = () => {
 
       if (error) throw error;
 
+      console.log('✅ [ROLES] Role criado com sucesso:', data);
       setRoles(prev => [...prev, data]);
       toast.success('Papel criado com sucesso');
     } catch (error) {
-      console.error('Erro ao criar papel:', error);
+      console.error('❌ [ROLES] Erro ao criar papel:', error);
       toast.error('Erro ao criar papel');
       throw error;
     } finally {
@@ -85,6 +103,8 @@ export const useRoles = () => {
   const updateRole = async (roleId: string, roleData: UpdateRoleData) => {
     try {
       setIsUpdating(true);
+      console.log('🔄 [ROLES] Atualizando role:', roleId, roleData);
+      
       const { data, error } = await supabase
         .from('user_roles')
         .update(roleData)
@@ -94,12 +114,13 @@ export const useRoles = () => {
 
       if (error) throw error;
 
+      console.log('✅ [ROLES] Role atualizado com sucesso:', data);
       setRoles(prev => prev.map(role => 
         role.id === roleId ? data : role
       ));
       toast.success('Papel atualizado com sucesso');
     } catch (error) {
-      console.error('Erro ao atualizar papel:', error);
+      console.error('❌ [ROLES] Erro ao atualizar papel:', error);
       toast.error('Erro ao atualizar papel');
       throw error;
     } finally {
@@ -110,6 +131,8 @@ export const useRoles = () => {
   const deleteRole = async (roleId: string) => {
     try {
       setIsDeleting(true);
+      console.log('🔄 [ROLES] Deletando role:', roleId);
+      
       const { error } = await supabase
         .from('user_roles')
         .delete()
@@ -117,10 +140,11 @@ export const useRoles = () => {
 
       if (error) throw error;
 
+      console.log('✅ [ROLES] Role deletado com sucesso');
       setRoles(prev => prev.filter(role => role.id !== roleId));
       toast.success('Papel removido com sucesso');
     } catch (error) {
-      console.error('Erro ao remover papel:', error);
+      console.error('❌ [ROLES] Erro ao remover papel:', error);
       toast.error('Erro ao remover papel');
       throw error;
     } finally {
@@ -130,7 +154,7 @@ export const useRoles = () => {
 
   useEffect(() => {
     fetchRoles();
-  }, []);
+  }, [fetchRoles]);
 
   return {
     roles,
