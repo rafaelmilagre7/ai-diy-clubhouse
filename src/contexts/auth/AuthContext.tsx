@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { fetchUserProfile, signOutUser } from './utils';
@@ -15,32 +15,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [authError, setAuthError] = useState<Error | null>(null);
-  
-  // Flags de controle para evitar loops
-  const hasTriedProfileLoad = useRef(false);
-  const isCurrentlyLoading = useRef(false);
 
   // Memoizar informações derivadas do perfil
   const isAdmin = profile?.user_roles?.name === 'admin';
   const isFormacao = profile?.user_roles?.name === 'formacao';
   const hasCompletedOnboarding = profile?.onboarding_completed || false;
 
-  // Função estável para carregar perfil - sem dependências instáveis
+  // Função simplificada para carregar perfil
   const loadUserProfile = useCallback(async (userId: string) => {
-    if (isCurrentlyLoading.current) {
-      logger.info('[AUTH] 🔄 Carregamento já em progresso, ignorando');
-      return;
-    }
-
     try {
-      isCurrentlyLoading.current = true;
       logger.info('[AUTH] 🔄 Carregando perfil do usuário', { userId });
       
       const userProfile = await fetchUserProfile(userId);
       
       if (userProfile) {
         setProfile(userProfile);
-        hasTriedProfileLoad.current = true;
         logger.info('[AUTH] ✅ Perfil carregado com sucesso', { 
           name: userProfile.name,
           role: userProfile.user_roles?.name 
@@ -53,12 +42,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       logger.error('[AUTH] ❌ Erro ao carregar perfil', { userId, error });
       setAuthError(error as Error);
       setProfile(null);
-    } finally {
-      isCurrentlyLoading.current = false;
     }
-  }, []); // SEM dependências instáveis
+  }, []);
 
-  // Função para forçar reload do perfil - estável
+  // Função para forçar reload do perfil
   const forceReloadProfile = useCallback(async () => {
     if (!user?.id) {
       logger.warn('[AUTH] 🚫 Não é possível recarregar perfil sem usuário');
@@ -66,14 +53,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     logger.info('[AUTH] 🔄 FORÇA RELOAD iniciado');
-    
-    // Limpar cache e flags
     clearProfileCache(user.id);
-    hasTriedProfileLoad.current = false;
-    
-    // Recarregar
     await loadUserProfile(user.id);
-  }, []); // SEM user?.id nas dependências
+  }, [user?.id, loadUserProfile]);
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -110,7 +92,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(null);
       setProfile(null);
       setAuthError(null);
-      hasTriedProfileLoad.current = false;
       
       return { success: true };
     } catch (error) {
@@ -118,7 +99,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // Setup da autenticação
+  // Setup da autenticação simplificado
   useEffect(() => {
     let mounted = true;
 
@@ -135,19 +116,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             setUser(session?.user ?? null);
             
             if (event === 'SIGNED_IN' && session?.user) {
-              // Reset flags para novo usuário
-              hasTriedProfileLoad.current = false;
-              
-              // Aguardar um pouco antes de carregar perfil (evitar conflitos)
-              setTimeout(() => {
-                if (mounted && !hasTriedProfileLoad.current) {
-                  loadUserProfile(session.user.id);
-                }
-              }, 100);
-              
+              await loadUserProfile(session.user.id);
             } else if (event === 'SIGNED_OUT') {
               setProfile(null);
-              hasTriedProfileLoad.current = false;
             }
           }
         );
@@ -159,7 +130,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setSession(currentSession);
           setUser(currentSession?.user ?? null);
           
-          if (currentSession?.user && !hasTriedProfileLoad.current) {
+          if (currentSession?.user) {
             await loadUserProfile(currentSession.user.id);
           }
         }
@@ -185,20 +156,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => {
       mounted = false;
     };
-  }, []); // SEM dependências
-
-  // Tentar carregar perfil se usuário existe mas perfil não (SIMPLIFICADO)
-  useEffect(() => {
-    if (user?.id && !profile && !isLoading && !hasTriedProfileLoad.current && !isCurrentlyLoading.current) {
-      logger.info('[AUTH] 🔄 Tentando carregar perfil ausente');
-      // Delay para evitar conflitos
-      const timer = setTimeout(() => {
-        loadUserProfile(user.id);
-      }, 200);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [user?.id, profile, isLoading]);
+  }, [loadUserProfile]);
 
   const value: AuthContextType = {
     session,
