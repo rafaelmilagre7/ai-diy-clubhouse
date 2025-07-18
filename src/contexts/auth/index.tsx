@@ -49,13 +49,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Initialize session manager
   useSessionManager();
 
-  // Circuit breaker sincronizado - timeout de 7 segundos
+  // Circuit breaker sincronizado - timeout de 6 segundos (SINCRONIZADO)
   useEffect(() => {
     if (isLoading) {
       timeoutRef.current = setTimeout(() => {
         console.warn("⚠️ [AUTH] Timeout ativado - finalizando loading");
         setIsLoading(false);
-      }, 7000);
+      }, 6000); // REDUZIDO PARA 6s - SINCRONIZADO
     }
 
     return () => {
@@ -117,6 +117,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               setProfile(null);
               setSession(null);
               setAuthError(null);
+              setIsLoading(false);
+            } else if (event === 'INITIAL_SESSION' && !session) {
+              // CRÍTICO: Se não há sessão inicial, parar loading imediatamente
+              console.log('🔓 [AUTH] Sem sessão inicial - parando loading');
               setIsLoading(false);
             }
           }

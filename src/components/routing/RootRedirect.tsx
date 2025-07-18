@@ -9,15 +9,17 @@ const RootRedirect = () => {
   const location = useLocation();
   const { user, profile, isLoading: authLoading } = useAuth();
   const [timeoutReached, setTimeoutReached] = useState(false);
+  const [redirectCount, setRedirectCount] = useState(0);
   const timeoutRef = useRef<NodeJS.Timeout>();
+  const MAX_REDIRECTS = 3;
   
-  // TIMEOUT DE SEGURANÇA: Aumentado para 8 segundos para permitir autenticação completa
+  // TIMEOUT SINCRONIZADO: 6 segundos (MESMO EM TODOS OS COMPONENTES)
   useEffect(() => {
     if (authLoading) {
       timeoutRef.current = setTimeout(() => {
         console.warn("⏰ [ROOT-REDIRECT] Timeout de loading atingido - forçando redirecionamento");
         setTimeoutReached(true);
-      }, 8000); // Aumentado para 8s para dar tempo da auth completar
+      }, 6000); // SINCRONIZADO EM 6s
     } else {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
@@ -32,39 +34,45 @@ const RootRedirect = () => {
     };
   }, [authLoading]);
 
+  // PROTEÇÃO ANTI-LOOP: Contar redirecionamentos
+  useEffect(() => {
+    setRedirectCount(prev => prev + 1);
+  }, [location.pathname]);
+
   console.log("🔍 [ROOT-REDIRECT] Estado:", {
     path: location.pathname,
     hasUser: !!user,
     hasProfile: !!profile,
     onboardingCompleted: profile?.onboarding_completed,
     loading: authLoading,
-    timeoutReached
+    timeoutReached,
+    redirectCount
   });
+
+  // PROTEÇÃO ANTI-LOOP: Se muitos redirecionamentos, forçar login
+  if (redirectCount > MAX_REDIRECTS) {
+    console.error("🔥 [ROOT-REDIRECT] LOOP DETECTADO - Forçando login");
+    return <Navigate to="/login" replace />;
+  }
 
   // LOADING NORMAL: Mostrar tela de carregamento (prioridade)
   if (authLoading && !timeoutReached) {
     return <LoadingScreen message="Verificando sessão..." />;
   }
 
-  // TIMEOUT ATINGIDO: Fallback para login apenas se não há usuário
-  if (timeoutReached && !user) {
-    console.warn("⚠️ [ROOT-REDIRECT] Timeout - redirecionando para login");
+  // TIMEOUT ATINGIDO OU SEM USUÁRIO: Fallback ABSOLUTO para login
+  if (timeoutReached || !user) {
+    console.warn(`⚠️ [ROOT-REDIRECT] ${timeoutReached ? 'Timeout' : 'Sem usuário'} - FORÇANDO login`);
     return <Navigate to="/login" replace />;
   }
 
-  // SEM USUÁRIO: Redirecionar para login
-  if (!user) {
-    console.log("🔄 [ROOT-REDIRECT] Sem usuário - redirecionando para login");
-    return <Navigate to="/login" replace />;
-  }
-
-  // SEM PERFIL: Erro crítico - não deveria acontecer
+  // SEM PERFIL: Erro crítico - forçar login imediatamente
   if (!profile) {
-    if (authLoading) {
+    if (authLoading && !timeoutReached) {
       return <LoadingScreen message="Carregando perfil..." />;
     }
     
-    console.error("💥 [ROOT-REDIRECT] ERRO CRÍTICO: Usuário sem perfil após loading");
+    console.error("💥 [ROOT-REDIRECT] ERRO CRÍTICO: Usuário sem perfil - FORÇANDO login");
     return <Navigate to="/login" replace />;
   }
 
