@@ -3443,6 +3443,39 @@ export type Database = {
         }
         Relationships: []
       }
+      security_linter_history: {
+        Row: {
+          baseline_comparison: Json | null
+          created_by: string | null
+          critical_warnings: number
+          execution_date: string
+          id: string
+          improvement_percentage: number | null
+          total_warnings: number
+          warning_details: Json
+        }
+        Insert: {
+          baseline_comparison?: Json | null
+          created_by?: string | null
+          critical_warnings?: number
+          execution_date?: string
+          id?: string
+          improvement_percentage?: number | null
+          total_warnings?: number
+          warning_details?: Json
+        }
+        Update: {
+          baseline_comparison?: Json | null
+          created_by?: string | null
+          critical_warnings?: number
+          execution_date?: string
+          id?: string
+          improvement_percentage?: number | null
+          total_warnings?: number
+          warning_details?: Json
+        }
+        Relationships: []
+      }
       security_logs: {
         Row: {
           action: string
@@ -4698,6 +4731,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      automated_security_monitor: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       backup_all_onboarding_data: {
         Args: Record<PropertyKey, never>
         Returns: Json
@@ -5072,6 +5109,10 @@ export type Database = {
       }
       detect_navigation_loop: {
         Args: { p_user_id: string; p_path: string; p_session_id?: string }
+        Returns: Json
+      }
+      detect_security_changes: {
+        Args: Record<PropertyKey, never>
         Returns: Json
       }
       diagnose_auth_state: {
@@ -5827,6 +5868,10 @@ export type Database = {
           warning_issues: number
           recommendations: string
         }[]
+      }
+      security_improvement_report: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
       }
       send_direct_message: {
         Args: { p_recipient_id: string; p_content: string; p_metadata?: Json }
