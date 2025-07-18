@@ -18,6 +18,7 @@ import {
 import { useSupabaseHealthCheck } from '@/hooks/supabase/useSupabaseHealthCheck';
 import { RoleSyncPanel } from '@/components/admin/roles/RoleSyncPanel';
 import { SystemErrorLogs } from './SystemErrorLogs';
+import { ComponentHealthMonitor } from './ComponentHealthMonitor';
 
 export const SupabaseErrorDiagnostics: React.FC = () => {
   const { healthStatus, isChecking, performHealthCheck } = useSupabaseHealthCheck();
@@ -199,8 +200,9 @@ export const SupabaseErrorDiagnostics: React.FC = () => {
 
       {/* Abas de Diagnóstico */}
       <Tabs defaultValue="system" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="system">Sistema & Performance</TabsTrigger>
+          <TabsTrigger value="components">Componentes</TabsTrigger>
           <TabsTrigger value="roles">Roles & Permissões</TabsTrigger>
           <TabsTrigger value="logs">Logs de Erro</TabsTrigger>
         </TabsList>
@@ -245,6 +247,10 @@ export const SupabaseErrorDiagnostics: React.FC = () => {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="components" className="space-y-6">
+          <ComponentHealthMonitor />
         </TabsContent>
 
         <TabsContent value="roles" className="space-y-6">

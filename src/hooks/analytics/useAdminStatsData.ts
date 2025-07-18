@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
+import { useDatabaseErrorHandler } from '@/hooks/useDatabaseErrorHandler';
 
 interface AdminStatsData {
   totalUsers: number;
@@ -25,6 +26,7 @@ interface AdminStatsData {
 
 export const useAdminStatsData = () => {
   const { toast } = useToast();
+  const { executeWithErrorHandling } = useDatabaseErrorHandler();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<AdminStatsData>({
@@ -42,9 +44,12 @@ export const useAdminStatsData = () => {
 
   useEffect(() => {
     const fetchAdminStats = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+      const result = await executeWithErrorHandling(
+        'fetchAdminStats',
+        async () => {
+          try {
+            setLoading(true);
+            setError(null);
 
         // Buscar overview consolidado usando a nova view
         const { data: overviewData, error: overviewError } = await supabase
@@ -117,29 +122,50 @@ export const useAdminStatsData = () => {
           ]
         };
 
-        setData(processedData);
-        
-        console.log('📈 Admin Stats carregados:', {
-          totalUsers: processedData.totalUsers,
-          activeUsers: processedData.activeUsersLast7Days,
-          usersByRole: processedData.usersByRole.length
-        });
+            setData(processedData);
+            
+            console.log('📈 Admin Stats carregados:', {
+              totalUsers: processedData.totalUsers,
+              activeUsers: processedData.activeUsersLast7Days,
+              usersByRole: processedData.usersByRole.length
+            });
 
-      } catch (error: any) {
-        console.error('Erro ao carregar admin stats:', error);
-        setError(error.message || 'Erro ao carregar estatísticas administrativas');
-        toast({
-          title: "Erro ao carregar estatísticas",
-          description: "Não foi possível carregar os dados. Verifique sua conexão.",
-          variant: "destructive"
-        });
-      } finally {
-        setLoading(false);
+            return processedData;
+
+          } catch (error: any) {
+            console.error('Erro ao carregar admin stats:', error);
+            setError(error.message || 'Erro ao carregar estatísticas administrativas');
+            throw error;
+          } finally {
+            setLoading(false);
+          }
+        },
+        {
+          showToast: true,
+          retryEnabled: true,
+          retryAttempts: 2,
+          fallbackData: {
+            totalUsers: 0,
+            totalSolutions: 0,
+            totalLearningLessons: 0,
+            completedImplementations: 0,
+            averageImplementationTime: 0,
+            usersByRole: [],
+            lastMonthGrowth: 0,
+            activeUsersLast7Days: 0,
+            contentEngagementRate: 0,
+            recentActivity: []
+          }
+        }
+      );
+
+      if (result) {
+        setData(result);
       }
     };
 
     fetchAdminStats();
-  }, [toast]);
+  }, [toast, executeWithErrorHandling]);
 
   return { data, loading, error };
 };
