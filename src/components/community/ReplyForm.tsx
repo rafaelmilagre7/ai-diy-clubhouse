@@ -4,6 +4,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Loader2 } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useReplyForm } from "@/hooks/useReplyForm";
+import { useFormState } from "@/hooks/useFormState";
 import { getInitials } from "@/utils/user";
 
 interface ReplyFormProps {
@@ -23,10 +24,9 @@ export const ReplyForm = ({
 }: ReplyFormProps) => {
   const {
     content,
-    isSubmitting,
     textareaRef,
     handleTextareaInput,
-    handleSubmit,
+    handleSubmit: originalHandleSubmit,
     handleCancel,
     user
   } = useReplyForm({
@@ -35,9 +35,23 @@ export const ReplyForm = ({
     onSuccess,
     onCancel
   });
+
+  const { isSubmitting, handleSubmit } = useFormState({
+    debounceMs: 200,
+    onSuccess
+  });
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!content.trim()) return;
+    
+    await handleSubmit(async () => {
+      await originalHandleSubmit(e);
+    }, "Resposta enviada com sucesso!");
+  };
   
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={onSubmit} className="space-y-4">
       <div className="flex gap-3">
         <Avatar className="h-10 w-10 mt-1">
           <AvatarImage src={user?.user_metadata?.avatar_url || undefined} />

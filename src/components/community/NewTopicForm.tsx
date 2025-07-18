@@ -114,11 +114,11 @@ export const NewTopicForm = ({ categoryId, categorySlug }: NewTopicFormProps) =>
       
       <div className="space-y-2">
         <label htmlFor="category" className="block text-sm font-medium">Categoria</label>
-        <Select 
-          value={selectedCategoryId} 
-          onValueChange={setSelectedCategoryId}
-          disabled={isSubmitting || loadingCategories}
-        >
+            <Select 
+              value={selectedCategoryId} 
+              onValueChange={setSelectedCategoryId}
+              disabled={isSubmitting || loadingCategories}
+            >
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Selecione uma categoria" />
           </SelectTrigger>
@@ -135,9 +135,9 @@ export const NewTopicForm = ({ categoryId, categorySlug }: NewTopicFormProps) =>
                 </SelectItem>
               ))
             )}
-          </SelectContent>
-        </Select>
-      </div>
+              </SelectContent>
+            </Select>
+          </div>
       
       <div className="space-y-2">
         <label className="block text-sm font-medium">Conteúdo</label>
