@@ -5131,17 +5131,30 @@ export type Database = {
         }[]
       }
       get_cached_profile: {
-        Args: { target_user_id?: string }
+        Args: { target_user_id: string }
         Returns: {
-          id: string
-          email: string
-          name: string
-          role_name: string
-          role_id: string
-          permissions: Json
-          onboarding_completed: boolean
+          available_for_networking: boolean | null
+          avatar_url: string | null
+          company_name: string | null
           created_at: string
-          cached_at: string
+          current_position: string | null
+          email: string
+          id: string
+          industry: string | null
+          last_active: string | null
+          linkedin_url: string | null
+          name: string | null
+          onboarding_completed: boolean
+          onboarding_completed_at: string | null
+          professional_bio: string | null
+          referrals_count: number
+          role: string
+          role_id: string | null
+          skills: string[] | null
+          status: string | null
+          successful_referrals_count: number
+          updated_at: string | null
+          whatsapp_number: string | null
         }[]
       }
       get_courses_with_stats: {
