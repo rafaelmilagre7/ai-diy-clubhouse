@@ -15,6 +15,13 @@ const MemberLayout = memo<MemberLayoutProps>(({ children }) => {
   const { profile, signOut } = useAuth();
   const { sidebarOpen, setSidebarOpen, toggleSidebar, isMobile } = useSidebarControl();
 
+  // DEBUG: Log para rastrear renderização do MemberLayout
+  console.log("🏗️ [MEMBER-LAYOUT] Renderizando MemberLayout:", {
+    hasProfile: !!profile,
+    profileName: profile?.name,
+    sidebarOpen,
+    isMobile
+  });
 
   // Memoizar função para obter iniciais
   const getInitials = useCallback((name: string | null) => {
@@ -49,6 +56,8 @@ const MemberLayout = memo<MemberLayoutProps>(({ children }) => {
   }), [profile?.name, profile?.email, profile?.avatar_url]);
 
   try {
+    console.log("✅ [MEMBER-LAYOUT] Tentando renderizar BaseLayout");
+    
     return (
       <>
         {/* Backdrop para mobile quando sidebar aberto */}
@@ -77,6 +86,7 @@ const MemberLayout = memo<MemberLayoutProps>(({ children }) => {
       </>
     );
   } catch (error) {
+    console.error("❌ [MEMBER-LAYOUT] Erro ao renderizar:", error);
     return (
       <div className="flex h-screen bg-background items-center justify-center">
         <div className="text-center">

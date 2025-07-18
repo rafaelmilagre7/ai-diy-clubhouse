@@ -23,7 +23,17 @@ export const memberRoutes: RouteObject[] = [
     children: [
       // Dashboard principal
       { path: "/", element: <Dashboard /> },
-      { path: "/dashboard", element: <Dashboard /> },
+      
+      // TESTE TEMPORÁRIO: Dashboard sem proteção ou layout
+      { 
+        path: "/dashboard", 
+        element: (
+          <div style={{ padding: "20px", background: "#f0f0f0" }}>
+            <h1 style={{ color: "green", fontSize: "24px" }}>🚀 TESTE: Dashboard sem ProtectedRoute nem MemberLayout</h1>
+            <Dashboard />
+          </div>
+        )
+      },
       
       // Redirecionar /solutions para dashboard onde as soluções são exibidas
       { path: "/solutions", element: <Navigate to="/dashboard" replace /> },
