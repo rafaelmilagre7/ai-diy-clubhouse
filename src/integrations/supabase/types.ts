@@ -5280,11 +5280,11 @@ export type Database = {
             }
           | {
               violation_type: string
-              resource_type: string
-              resource_id?: string
-              details?: Json
+              resource_table: string
+              attempted_action: string
+              user_context?: Json
             }
-        Returns: string
+        Returns: undefined
       }
       log_unauthorized_access: {
         Args: { attempted_action: string; resource_details?: Json }
