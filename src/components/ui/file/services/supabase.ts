@@ -25,7 +25,7 @@ export const uploadFileToSupabase = async (
       publicUrl: result.publicUrl,
       fileName: result.fileName
     };
-  } catch (error: any) {
+  } catch (uploadError: any) {
     console.error('❌ [UNIFIED_UPLOAD] Fallback para método legado...');
     
     // FALLBACK: Método original se o principal falhar
@@ -40,7 +40,7 @@ export const uploadFileToSupabase = async (
 
     if (onProgressUpdate) onProgressUpdate(10);
 
-    const { data, error } = await supabase.storage
+    const { data, error: fallbackError } = await supabase.storage
       .from(normalizedBucket)
       .upload(filePath, file, {
         upsert: true,
@@ -48,9 +48,9 @@ export const uploadFileToSupabase = async (
         contentType: file.type
       });
 
-    if (error) {
-      console.error('❌ [FALLBACK_UPLOAD] Erro no upload:', error);
-      throw new Error(`Falha no upload: ${error.message}`);
+    if (fallbackError) {
+      console.error('❌ [FALLBACK_UPLOAD] Erro no upload:', fallbackError);
+      throw new Error(`Falha no upload: ${fallbackError.message}`);
     }
 
     console.log('✅ [FALLBACK_UPLOAD] Upload realizado com sucesso:', data);

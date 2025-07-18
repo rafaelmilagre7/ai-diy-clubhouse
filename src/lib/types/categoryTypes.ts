@@ -35,7 +35,6 @@ export function getCategoryDetails(category: string | SolutionCategory) {
   const categoryStr = typeof category === 'string' ? category : category;
   
   switch (categoryStr) {
-    case 'Receita':
     case SolutionCategory.RECEITA:
       return {
         name: 'Receita',
@@ -44,7 +43,6 @@ export function getCategoryDetails(category: string | SolutionCategory) {
         icon: '💰',
         description: 'Estratégias para aumentar receita'
       };
-    case 'Operacional':
     case SolutionCategory.OPERACIONAL:
       return {
         name: 'Operacional',
@@ -53,7 +51,6 @@ export function getCategoryDetails(category: string | SolutionCategory) {
         icon: '⚙️',
         description: 'Otimização de processos operacionais'
       };
-    case 'Estratégia':
     case SolutionCategory.ESTRATEGIA:
       return {
         name: 'Estratégia',
