@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { useAuth } from '@/contexts/auth';
+import { useSidebarStats } from '@/hooks/useSidebarStats';
 import { 
   Home, 
   Settings, 
@@ -25,6 +26,7 @@ interface MemberSidebarNavItemsProps {
 
 export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ sidebarOpen }) => {
   const { user, profile, isAdmin } = useAuth();
+  const { data: stats, isLoading } = useSidebarStats();
   
   console.log('🔍 [SIDEBAR-NAV] Componente renderizado');
   
@@ -33,7 +35,8 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
       hasUser: !!user,
       hasProfile: !!profile,
       isAdmin,
-      userEmail: user?.email
+      userEmail: user?.email,
+      stats
     });
 
     return (
@@ -60,13 +63,14 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
             label="Soluções"
             icon={BookOpen}
             sidebarOpen={sidebarOpen}
-            badge="12"
+            badge={isLoading ? "..." : stats?.solutions?.toString()}
           />
           <TooltipNavItem
             to="/learning"
             label="Formação"
             icon={GraduationCap}
             sidebarOpen={sidebarOpen}
+            badge={isLoading ? "..." : stats?.courses?.toString()}
             isNew={true}
           />
           <TooltipNavItem
@@ -89,20 +93,21 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
             label="Ferramentas"
             icon={Wrench}
             sidebarOpen={sidebarOpen}
-            badge="8"
+            badge={isLoading ? "..." : stats?.tools?.toString()}
           />
           <TooltipNavItem
             to="/networking"
             label="Networking"
             icon={Network}
             sidebarOpen={sidebarOpen}
+            isNew={true}
           />
           <TooltipNavItem
             to="/comunidade"
             label="Comunidade"
             icon={MessageSquare}
             sidebarOpen={sidebarOpen}
-            badge="3"
+            badge={isLoading ? "..." : stats?.forumTopics?.toString()}
           />
         </SidebarNavigationGroup>
 
@@ -118,13 +123,14 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
             label="Eventos"
             icon={Calendar}
             sidebarOpen={sidebarOpen}
-            badge="2"
+            badge={isLoading ? "..." : stats?.monthlyEvents?.toString()}
           />
           <TooltipNavItem
             to="/benefits"
             label="Benefícios"
             icon={Trophy}
             sidebarOpen={sidebarOpen}
+            badge={isLoading ? "..." : stats?.benefits?.toString()}
           />
           <TooltipNavItem
             to="/suggestions"
