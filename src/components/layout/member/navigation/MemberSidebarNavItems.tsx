@@ -95,6 +95,13 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
             badge={isLoading ? "..." : stats?.tools?.toString()}
           />
           <TooltipNavItem
+            to="/benefits"
+            label="Benefícios"
+            icon={Trophy}
+            sidebarOpen={sidebarOpen}
+            badge={isLoading ? "..." : stats?.benefits?.toString()}
+          />
+          <TooltipNavItem
             to="/networking"
             label="Networking"
             icon={Network}
@@ -115,7 +122,7 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
           <div className="mx-3 border-t border-border/50" />
         )}
 
-        {/* Grupo: Eventos & Benefícios */}
+        {/* Grupo: Eventos */}
         <SidebarNavigationGroup title="Eventos" sidebarOpen={sidebarOpen}>
           <TooltipNavItem
             to="/events"
@@ -123,13 +130,6 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
             icon={Calendar}
             sidebarOpen={sidebarOpen}
             badge={isLoading ? "..." : stats?.monthlyEvents?.toString()}
-          />
-          <TooltipNavItem
-            to="/benefits"
-            label="Benefícios"
-            icon={Trophy}
-            sidebarOpen={sidebarOpen}
-            badge={isLoading ? "..." : stats?.benefits?.toString()}
           />
           <TooltipNavItem
             to="/suggestions"
