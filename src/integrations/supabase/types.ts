@@ -5051,6 +5051,10 @@ export type Database = {
         Args: { bucket_name: string }
         Returns: Json
       }
+      create_storage_public_policy_v2: {
+        Args: { bucket_name: string }
+        Returns: Json
+      }
       create_user_backup: {
         Args: { p_user_id: string; p_backup_type?: string }
         Returns: Json
@@ -6006,6 +6010,15 @@ export type Database = {
       validate_email: {
         Args: { email: string }
         Returns: boolean
+      }
+      validate_file_upload: {
+        Args: {
+          file_name: string
+          file_size: number
+          file_type: string
+          bucket_name: string
+        }
+        Returns: Json
       }
       validate_input_security: {
         Args: { p_input: string; p_type?: string }

@@ -15,8 +15,17 @@ export {
   ensureBucketExists,
   extractPandaVideoInfo,
   uploadFileWithFallback
-  // Adicione outras funções que precisam ser exportadas
 } from './storage';
+
+// Exportação das funções de storage unificado
+export {
+  BUCKET_CONFIGS,
+  validateFileForBucket,
+  checkBucketExists,
+  uploadFileUnified,
+  removeFileUnified,
+  listFilesUnified
+} from './storage-unified';
 
 // Exportação explícita das funções de RPC
 export {
