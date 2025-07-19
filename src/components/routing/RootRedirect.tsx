@@ -2,24 +2,22 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
-import { useEffect, useState, useRef } from "react";
 import { getUserRoleName } from "@/lib/supabase/types";
 
 const RootRedirect = () => {
   const location = useLocation();
-  const { user, profile, isLoading: authLoading } = useAuth();
+  const { user, profile, isLoading } = useAuth();
   
   console.log("🔍 [ROOT-REDIRECT] Estado:", {
     path: location.pathname,
     hasUser: !!user,
     hasProfile: !!profile,
-    onboardingCompleted: true, // Onboarding removido
-    loading: authLoading
+    isLoading
   });
 
-  // Loading direto - sem timeouts
-  if (authLoading) {
-    return <LoadingScreen message="Verificando sessão..." />;
+  // Ainda carregando
+  if (isLoading) {
+    return <LoadingScreen message="Verificando sessão" showProgress />;
   }
 
   // Sem usuário = login
@@ -28,29 +26,25 @@ const RootRedirect = () => {
     return <Navigate to="/login" replace />;
   }
 
-  // Sem perfil = erro crítico
-  if (!profile) {
-    console.error("💥 [ROOT-REDIRECT] ERRO CRÍTICO: Usuário sem perfil");
-    throw new Error(`Usuário ${user.id} não possui perfil. Estado de auth corrompido.`);
-  }
-
-  // Redirecionamento de login para usuários autenticados
+  // Usuário logado tentando acessar login
   if (location.pathname === '/login') {
-    const roleName = getUserRoleName(profile);
-    console.log("✅ [ROOT-REDIRECT] Usuário logado, redirecionando para dashboard");
-    return <Navigate to={roleName === 'formacao' ? '/formacao' : '/dashboard'} replace />;
+    const targetRoute = profile && getUserRoleName(profile) === 'formacao' 
+      ? '/formacao' 
+      : '/dashboard';
+    console.log("✅ [ROOT-REDIRECT] Usuário logado - redirecionando para", targetRoute);
+    return <Navigate to={targetRoute} replace />;
   }
 
-  // Onboarding removido - redirecionar para dashboard se estiver na rota de onboarding
-  if (location.pathname.startsWith('/onboarding')) {
-    console.log("✅ [ROOT-REDIRECT] Onboarding completo - redirecionando");
-    const roleName = getUserRoleName(profile);
-    return <Navigate to={roleName === 'formacao' ? '/formacao' : '/dashboard'} replace />;
+  // Redirecionamento padrão para root
+  if (location.pathname === '/') {
+    const targetRoute = profile && getUserRoleName(profile) === 'formacao' 
+      ? '/formacao' 
+      : '/dashboard';
+    console.log("🔄 [ROOT-REDIRECT] Root redirect para", targetRoute);
+    return <Navigate to={targetRoute} replace />;
   }
-  
-  // CORREÇÃO: Todos os usuários vão para /dashboard por padrão
-  // Admin pode acessar /admin separadamente se quiser
-  console.log("🔄 [ROOT-REDIRECT] Redirecionando para dashboard padrão");
+
+  // Página não encontrada ou outras situações
   return <Navigate to="/dashboard" replace />;
 };
 

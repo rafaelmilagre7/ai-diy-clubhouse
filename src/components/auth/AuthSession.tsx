@@ -5,12 +5,9 @@ import LoadingScreen from '@/components/common/LoadingScreen';
 const AuthSession = () => {
   const { isLoading } = useAuth();
 
-  // CORREÇÃO: Remover chamada duplicada de setupAuthSession
-  // O AuthContext já gerencia toda a lógica de autenticação
-  // Este componente agora apenas mostra loading se necessário
-  
+  // Componente simplificado - toda lógica está no AuthContext
   if (isLoading) {
-    return <LoadingScreen />;
+    return <LoadingScreen message="Inicializando sessão" showProgress />;
   }
   
   return null;
