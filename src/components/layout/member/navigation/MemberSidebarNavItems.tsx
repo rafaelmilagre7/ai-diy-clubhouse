@@ -14,8 +14,7 @@ import {
   Wrench,
   Lightbulb,
   Calendar,
-  Trophy,
-  Separator
+  Trophy
 } from 'lucide-react';
 import { SidebarNavigationGroup } from './SidebarNavigationGroup';
 import { TooltipNavItem } from './TooltipNavItem';
