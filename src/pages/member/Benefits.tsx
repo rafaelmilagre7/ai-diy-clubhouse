@@ -133,57 +133,104 @@ const Benefits = () => {
   }
 
   return (
-    <div className="container py-8">
-      <div className="space-y-8">
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-bold text-white">Benefícios Exclusivos</h1>
-              <p className="text-neutral-300 mt-1">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-background/95">
+      <div className="container mx-auto py-8 space-y-8">
+        {/* Header com gradiente e efeito visual */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-card via-card to-muted/50 border border-border/50 p-8">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent"></div>
+          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-primary/10 to-transparent rounded-full blur-2xl"></div>
+          
+          <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-primary/20 rounded-lg blur-lg"></div>
+                  <Gift className="relative h-8 w-8 text-primary" />
+                </div>
+                <h1 className="text-4xl font-heading font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+                  Benefícios Exclusivos
+                </h1>
+              </div>
+              <p className="text-lg text-muted-foreground max-w-2xl">
                 Acesse ofertas e descontos exclusivos para membros do VIVER DE IA Club
               </p>
             </div>
-            <div className="relative w-full md:w-72">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-neutral-400" />
-              <Input
-                type="search"
-                placeholder="Buscar benefício..."
-                className="pl-9 bg-[#1A1E2E] border-neutral-700 text-white"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+
+            <div className="relative group">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-primary to-primary/60 rounded-xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
+              <div className="relative bg-background/95 backdrop-blur border border-border/50 rounded-xl p-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="search"
+                    placeholder="Buscar benefício..."
+                    className="w-80 pl-10 bg-background/50 border-border/50 focus:border-primary/50 transition-colors"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+              </div>
             </div>
           </div>
+        </div>
 
+        {/* Filtros com design moderno */}
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-primary/10 rounded-2xl blur-xl"></div>
           <Tabs defaultValue="all" className="w-full" onValueChange={setBenefitType}>
-            <TabsList className="bg-[#1A1E2E] border-neutral-700 w-full overflow-x-auto scrollbar-hide flex-nowrap">
-              <TabsTrigger value="all" className="text-white">Todos</TabsTrigger>
-              <TabsTrigger value="discount" className="text-white">Descontos</TabsTrigger>
-              <TabsTrigger value="exclusive" className="text-white">Acesso Exclusivo</TabsTrigger>
-              <TabsTrigger value="free" className="text-white">Versão Gratuita</TabsTrigger>
-              <TabsTrigger value="trial" className="text-white">Trial Estendido</TabsTrigger>
+            <TabsList className="relative bg-card/95 backdrop-blur border border-border/50 p-2 rounded-2xl w-full flex-wrap justify-center shadow-lg">
+              <TabsTrigger value="all" className="relative px-6 py-3 text-sm font-medium transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg hover:bg-accent/50 rounded-xl">
+                Todos
+              </TabsTrigger>
+              <TabsTrigger value="discount" className="relative px-6 py-3 text-sm font-medium transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg hover:bg-accent/50 rounded-xl">
+                Descontos
+              </TabsTrigger>
+              <TabsTrigger value="exclusive" className="relative px-6 py-3 text-sm font-medium transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg hover:bg-accent/50 rounded-xl">
+                Acesso Exclusivo
+              </TabsTrigger>
+              <TabsTrigger value="free" className="relative px-6 py-3 text-sm font-medium transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg hover:bg-accent/50 rounded-xl">
+                Versão Gratuita
+              </TabsTrigger>
+              <TabsTrigger value="trial" className="relative px-6 py-3 text-sm font-medium transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg hover:bg-accent/50 rounded-xl">
+                Trial Estendido
+              </TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
 
+        {/* Conteúdo dos benefícios */}
         {filteredTools && filteredTools.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredTools.map((tool) => (
-              <BenefitCard key={tool.id} tool={tool} />
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 animate-fade-in">
+            {filteredTools.map((tool, index) => (
+              <div 
+                key={tool.id} 
+                className="animate-scale-in"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                <BenefitCard tool={tool} />
+              </div>
             ))}
           </div>
         ) : (
-          <Card className="p-8 text-center bg-[#151823]/80 border-neutral-700">
-            <div className="flex justify-center mb-4">
-              <Gift className="h-12 w-12 text-neutral-400 opacity-50" />
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-card/50 to-muted/30 border border-dashed border-border/50 p-12">
+            <div className="absolute inset-0 bg-dot-pattern opacity-5"></div>
+            <div className="relative flex flex-col items-center text-center space-y-4">
+              <div className="relative">
+                <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl"></div>
+                <Gift className="relative h-16 w-16 text-primary/60" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-xl font-heading font-semibold text-foreground">
+                  Nenhum benefício encontrado
+                </h3>
+                <p className="text-muted-foreground max-w-md">
+                  {searchQuery || benefitType !== 'all'
+                    ? "Nenhum benefício corresponde aos seus filtros. Tente ajustar sua busca."
+                    : "Não há benefícios disponíveis no momento. Volte em breve para novas ofertas."}
+                </p>
+              </div>
             </div>
-            <CardTitle className="text-lg mb-2 text-white">Nenhum benefício encontrado</CardTitle>
-            <CardDescription className="text-neutral-300">
-              {searchQuery || benefitType !== 'all'
-                ? "Nenhum benefício corresponde aos seus filtros. Tente ajustar sua busca."
-                : "Não há benefícios disponíveis no momento. Volte em breve para novas ofertas."}
-            </CardDescription>
-          </Card>
+          </div>
         )}
       </div>
     </div>
@@ -197,57 +244,76 @@ const BenefitCard = ({ tool }: { tool: Tool }) => {
   const hasAccess = tool.has_access !== false;
   
   return (
-    <Card className={cn(
-      "h-full flex flex-col overflow-hidden transition-all duration-300",
-      "hover:shadow-md hover:translate-y-[-2px]",
-      "bg-gradient-to-br from-[#1A1E2E] to-[#151823] border-neutral-700",
-      isRestricted && !hasAccess ? 'border-l-4 border-l-amber-600' : '',
-      "hubla-border-glow"
-    )}>
-      <CardHeader className="pb-2 pt-6">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="h-10 w-10 rounded bg-[#252842] border border-neutral-700 flex items-center justify-center overflow-hidden">
-            {tool.logo_url ? (
-              <img 
-                src={tool.logo_url} 
-                alt={tool.name} 
-                className="h-full w-full object-contain" 
-              />
-            ) : (
-              <span className="text-lg font-bold text-viverblue">
-                {tool.name.substring(0, 2).toUpperCase()}
-              </span>
-            )}
-          </div>
-          <div>
-            <CardTitle className="text-lg text-white">{tool.name}</CardTitle>
-            <div className="flex flex-wrap gap-2">
-              {tool.benefit_type && (
-                <BenefitBadge type={tool.benefit_type} className="mt-1" />
-              )}
-              {isRestricted && !hasAccess && (
-                <Badge variant="outline" className="badge-dark-warning">
-                  Acesso Restrito
-                </Badge>
-              )}
+    <div className="group relative">
+      {/* Glow effect */}
+      <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition duration-500"></div>
+      
+      <Card className={cn(
+        "relative h-full flex flex-col overflow-hidden transition-all duration-500",
+        "bg-gradient-to-br from-card via-card to-muted/50 border border-border/50",
+        "group-hover:shadow-2xl group-hover:scale-[1.02] group-hover:border-primary/30",
+        isRestricted && !hasAccess ? 'border-l-4 border-l-amber-500/70' : '',
+        "backdrop-blur-sm"
+      )}>
+        {/* Card header com gradiente sutil */}
+        <CardHeader className="relative pb-4 pt-6">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent rounded-t-xl"></div>
+          
+          <div className="relative flex items-start gap-4">
+            {/* Logo com efeito glassmorphism */}
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-primary/10 rounded-xl blur-lg"></div>
+              <div className="relative h-12 w-12 rounded-xl bg-background/80 backdrop-blur border border-border/50 flex items-center justify-center overflow-hidden">
+                {tool.logo_url ? (
+                  <img 
+                    src={tool.logo_url} 
+                    alt={tool.name} 
+                    className="h-8 w-8 object-contain" 
+                  />
+                ) : (
+                  <span className="text-sm font-bold text-primary">
+                    {tool.name.substring(0, 2).toUpperCase()}
+                  </span>
+                )}
+              </div>
+            </div>
+            
+            <div className="flex-1 min-w-0">
+              <CardTitle className="text-lg font-heading text-foreground mb-2 group-hover:text-primary transition-colors">
+                {tool.name}
+              </CardTitle>
+              <div className="flex flex-wrap gap-2">
+                {tool.benefit_type && (
+                  <BenefitBadge type={tool.benefit_type} />
+                )}
+                {isRestricted && !hasAccess && (
+                  <Badge variant="outline" className="text-xs border-amber-500/50 text-amber-400 bg-amber-500/10">
+                    Acesso Restrito
+                  </Badge>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-        <CardDescription className="line-clamp-2 h-10 text-neutral-300">
-          {tool.benefit_title || "Benefício exclusivo para membros"}
-        </CardDescription>
-      </CardHeader>
-      
-      <CardContent className="pt-2 pb-6 flex-1 flex flex-col">
-        <p className="text-sm text-neutral-300 line-clamp-3 mb-4 flex-1">
-          {tool.benefit_description || tool.description}
-        </p>
+
+          <CardDescription className="relative line-clamp-2 text-muted-foreground mt-3">
+            {tool.benefit_title || "Benefício exclusivo para membros"}
+          </CardDescription>
+        </CardHeader>
         
-        <div className="mt-auto">
-          <MemberBenefitModal tool={tool} />
-        </div>
-      </CardContent>
-    </Card>
+        {/* Card content */}
+        <CardContent className="relative pt-0 pb-6 flex-1 flex flex-col">
+          <p className="text-sm text-muted-foreground line-clamp-3 mb-6 flex-1 leading-relaxed">
+            {tool.benefit_description || tool.description}
+          </p>
+          
+          {/* Button com efeito glassmorphism */}
+          <div className="relative mt-auto">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg blur-xl opacity-0 group-hover:opacity-100 transition duration-300"></div>
+            <MemberBenefitModal tool={tool} />
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
