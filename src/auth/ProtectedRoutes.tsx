@@ -17,7 +17,6 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
   console.log("[PROTECTED] Estado atual:", {
     hasUser: !!user,
     hasProfile: !!profile,
-    onboardingCompleted: profile?.onboarding_completed,
     currentPath: location.pathname
   });
 
@@ -32,22 +31,10 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
-  // Rotas permitidas sem verificação
-  const allowedWithoutOnboarding = ['/login', '/onboarding', '/auth'];
-  const isOnboardingRoute = allowedWithoutOnboarding.some(route => 
-    location.pathname.startsWith(route)
-  );
-
-  // Sem perfil = erro crítico (exceto em rotas de onboarding)
-  if (!profile && !isOnboardingRoute) {
+  // Sem perfil = erro crítico
+  if (!profile) {
     console.error("[PROTECTED] ERRO CRÍTICO: Usuário sem perfil");
     throw new Error(`Usuário ${user.id} não possui perfil válido. Dados corrompidos.`);
-  }
-
-  // Onboarding não completo = redirecionar para step 1 diretamente
-  if (profile && !profile.onboarding_completed && !isOnboardingRoute) {
-    console.log("[PROTECTED] Onboarding não completo - redirecionando para step 1");
-    return <Navigate to="/onboarding/step/1" replace />;
   }
 
   // Tudo ok - renderizar conteúdo
