@@ -81,7 +81,7 @@ const InvitePage = () => {
   if (user && user.email === validationResult.invite?.email) {
     // Usuário já está logado com o email correto do convite
     // Redirecionar direto para onboarding se não completou
-    const isOnboardingCompleted = user.user_metadata?.onboarding_completed;
+    const isOnboardingCompleted = true; // Onboarding removido
     
     if (!isOnboardingCompleted) {
       console.log('🎯 [INVITE] Usuário logado, redirecionando para onboarding');

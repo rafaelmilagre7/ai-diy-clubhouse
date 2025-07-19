@@ -41,7 +41,7 @@ const ProtectedRoute = ({
     console.log("[PROTECTED-ROUTE] Onboarding obrigatório não completado, redirecionando...", {
       hasProfile: !!profile,
       profileId: profile?.id,
-      onboardingCompleted: profile?.onboarding_completed,
+      onboardingCompleted: true, // Onboarding removido
       currentPath: location.pathname
     });
     

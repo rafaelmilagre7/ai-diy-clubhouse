@@ -99,8 +99,6 @@ export function useUsers() {
         created_at: user.created_at,
         role_id: user.role_id,
         user_roles: user.user_roles as any,
-        onboarding_completed: false,
-        onboarding_completed_at: null
       }));
 
       setUsers(mappedUsers);

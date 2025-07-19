@@ -20,8 +20,6 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
         company_name,
         industry,
         created_at,
-        onboarding_completed,
-        onboarding_completed_at,
         user_roles:role_id (
           id,
           name,
@@ -58,8 +56,6 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
       company_name: data.company_name,
       industry: data.industry,
       created_at: data.created_at,
-      onboarding_completed: data.onboarding_completed,
-      onboarding_completed_at: data.onboarding_completed_at,
       user_roles: data.user_roles as any
     };
     
@@ -103,8 +99,6 @@ export const createUserProfileIfNeeded = async (
         avatar_url: null,
         company_name: null,
         industry: null,
-        onboarding_completed: false,
-        onboarding_completed_at: null
       })
       .select(`
         id,
@@ -115,8 +109,6 @@ export const createUserProfileIfNeeded = async (
         company_name,
         industry,
         created_at,
-        onboarding_completed,
-        onboarding_completed_at,
         user_roles:role_id (
           id,
           name,
@@ -148,8 +140,6 @@ export const createUserProfileIfNeeded = async (
       company_name: newProfile.company_name,
       industry: newProfile.industry,
       created_at: newProfile.created_at,
-      onboarding_completed: newProfile.onboarding_completed,
-      onboarding_completed_at: newProfile.onboarding_completed_at,
       user_roles: newProfile.user_roles as any
     };
     
@@ -182,7 +172,5 @@ const createFallbackProfile = (
     company_name: null,
     industry: null,
     created_at: new Date().toISOString(),
-    onboarding_completed: false,
-    onboarding_completed_at: null
   };
 };

@@ -13,7 +13,7 @@ const RootRedirect = () => {
     path: location.pathname,
     hasUser: !!user,
     hasProfile: !!profile,
-    onboardingCompleted: profile?.onboarding_completed,
+    onboardingCompleted: true, // Onboarding removido
     loading: authLoading
   });
 
@@ -41,14 +41,8 @@ const RootRedirect = () => {
     return <Navigate to={roleName === 'formacao' ? '/formacao' : '/dashboard'} replace />;
   }
 
-  // Onboarding não completo = onboarding obrigatório
-  if (!profile.onboarding_completed && !location.pathname.startsWith('/onboarding')) {
-    console.log("🔄 [ROOT-REDIRECT] Onboarding obrigatório");
-    return <Navigate to="/onboarding" replace />;
-  }
-  
-  // Onboarding completo em rota de onboarding = redirecionar
-  if (profile.onboarding_completed && location.pathname.startsWith('/onboarding')) {
+  // Onboarding removido - redirecionar para dashboard se estiver na rota de onboarding
+  if (location.pathname.startsWith('/onboarding')) {
     console.log("✅ [ROOT-REDIRECT] Onboarding completo - redirecionando");
     const roleName = getUserRoleName(profile);
     return <Navigate to={roleName === 'formacao' ? '/formacao' : '/dashboard'} replace />;

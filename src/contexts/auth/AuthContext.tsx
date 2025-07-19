@@ -69,7 +69,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   );
 
   // VERIFICAÇÃO DE ONBOARDING COMPLETO
-  const hasCompletedOnboarding = Boolean(profile?.onboarding_completed);
+  const hasCompletedOnboarding = true; // Onboarding removido
 
   // OTIMIZAÇÃO: Configurar sessão na inicialização - APENAS UMA VEZ
   useEffect(() => {

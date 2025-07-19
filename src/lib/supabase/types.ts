@@ -175,8 +175,6 @@ export type Profile = Database['public']['Tables'] extends { profiles: any }
       industry: string | null;
       role_id: string | null;
       role: string | null;
-      onboarding_completed: boolean;
-      onboarding_completed_at: string | null;
       created_at: string;
       updated_at: string;
     };
@@ -218,8 +216,6 @@ export interface UserProfile {
   role?: UserRole; // Campo legado - deprecado, mas mantido para compatibilidade
   user_roles?: UserRoleData | null; // Dados da role via join
   created_at: string;
-  onboarding_completed: boolean;
-  onboarding_completed_at: string | null;
 }
 
 // Função utilitária para obter o nome da role
