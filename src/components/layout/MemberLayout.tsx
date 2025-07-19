@@ -1,17 +1,18 @@
 
 import React, { memo, useMemo, useCallback } from "react";
+import { Outlet } from "react-router-dom";
+import { toast } from "sonner";
 import { useAuth } from "@/contexts/auth";
 import BaseLayout from "./BaseLayout";
 import { MemberSidebar } from "./member/MemberSidebar";
 import { MemberContent } from "./member/MemberContent";
 import { useSidebarControl } from "@/hooks/useSidebarControl";
-import { toast } from "sonner";
 
 interface MemberLayoutProps {
-  children: React.ReactNode;
+  // Layout para rotas protegidas - usa Outlet em vez de children
 }
 
-const MemberLayout = memo<MemberLayoutProps>(({ children }) => {
+const MemberLayout = memo<MemberLayoutProps>(() => {
   const { profile, signOut } = useAuth();
   const { sidebarOpen, setSidebarOpen, toggleSidebar, isMobile } = useSidebarControl();
 
@@ -81,7 +82,7 @@ const MemberLayout = memo<MemberLayoutProps>(({ children }) => {
           sidebarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
         >
-          {children}
+          <Outlet />
         </BaseLayout>
       </>
     );
