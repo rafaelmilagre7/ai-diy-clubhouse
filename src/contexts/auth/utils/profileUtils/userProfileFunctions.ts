@@ -3,67 +3,133 @@ import { supabase, UserProfile } from '@/lib/supabase';
 import { getUserRoleName } from '@/lib/supabase/types';
 
 /**
- * Fetch user profile from Supabase com join para user_roles
+ * Função robusta para buscar perfil do usuário com múltiplas estratégias
  */
 export const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
   try {
-    console.log(`Buscando perfil para usuário: ${userId}`);
+    console.log(`🔍 [PROFILE-FETCH] Iniciando busca robusta para usuário: ${userId}`);
     
-    const { data, error } = await supabase
-      .from('profiles')
-      .select(`
-        id,
-        email,
-        name,
-        role_id,
-        avatar_url,
-        company_name,
-        industry,
-        created_at,
-        user_roles:role_id (
+    // ESTRATÉGIA 1: Tentar busca com JOIN (método preferido)
+    try {
+      console.log('📊 [PROFILE-FETCH] Tentativa 1: Busca com JOIN');
+      
+      const { data: profileWithJoin, error: joinError } = await supabase
+        .from('profiles')
+        .select(`
           id,
+          email,
           name,
-          description,
-          permissions,
-          is_system
-        )
-      `)
+          role_id,
+          avatar_url,
+          company_name,
+          industry,
+          created_at,
+          user_roles:role_id (
+            id,
+            name,
+            description,
+            permissions,
+            is_system
+          )
+        `)
+        .eq('id', userId)
+        .single();
+
+      if (!joinError && profileWithJoin) {
+        console.log('✅ [PROFILE-FETCH] JOIN bem-sucedido');
+        const profile: UserProfile = {
+          id: profileWithJoin.id,
+          email: profileWithJoin.email,
+          name: profileWithJoin.name,
+          role_id: profileWithJoin.role_id,
+          avatar_url: profileWithJoin.avatar_url,
+          company_name: profileWithJoin.company_name,
+          industry: profileWithJoin.industry,
+          created_at: profileWithJoin.created_at,
+          user_roles: profileWithJoin.user_roles as any
+        };
+        
+        console.log('🎯 [PROFILE-FETCH] Perfil completo carregado:', {
+          id: profile.id,
+          name: profile.name,
+          role: profile.user_roles?.name
+        });
+        
+        return profile;
+      } else {
+        console.warn('⚠️ [PROFILE-FETCH] JOIN falhou:', joinError?.message);
+      }
+    } catch (joinError) {
+      console.warn('⚠️ [PROFILE-FETCH] Erro no JOIN:', joinError);
+    }
+
+    // ESTRATÉGIA 2: Busca básica do perfil + role separadamente
+    console.log('📊 [PROFILE-FETCH] Tentativa 2: Busca separada');
+    
+    const { data: basicProfile, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
       .eq('id', userId)
       .single();
 
-    if (error) {
-      // Handle infinite recursion policy error specially
-      if (error.message.includes('infinite recursion')) {
-        console.warn('Detectada recursão infinita na política. Tentando criar perfil como solução alternativa.');
-        return null;
-      }
-      console.error('Error fetching user profile:', error);
-      return null; // Retornar null ao invés de lançar erro
-    }
-    
-    if (!data) {
-      console.warn(`Nenhum perfil encontrado para o usuário ${userId}`);
+    if (profileError) {
+      console.error('❌ [PROFILE-FETCH] Erro ao buscar perfil básico:', profileError);
       return null;
     }
     
-    // Mapear corretamente o resultado da query
+    if (!basicProfile) {
+      console.warn('⚠️ [PROFILE-FETCH] Perfil não encontrado');
+      return null;
+    }
+
+    console.log('✅ [PROFILE-FETCH] Perfil básico encontrado:', basicProfile.name);
+
+    // Buscar role separadamente se existe role_id
+    let userRole = null;
+    if (basicProfile.role_id) {
+      try {
+        const { data: roleData, error: roleError } = await supabase
+          .from('user_roles')
+          .select('*')
+          .eq('id', basicProfile.role_id)
+          .single();
+        
+        if (!roleError && roleData) {
+          userRole = roleData;
+          console.log('✅ [PROFILE-FETCH] Role encontrado:', roleData.name);
+        } else {
+          console.warn('⚠️ [PROFILE-FETCH] Role não encontrado:', roleError?.message);
+        }
+      } catch (roleError) {
+        console.warn('⚠️ [PROFILE-FETCH] Erro ao buscar role:', roleError);
+      }
+    }
+
+    // ESTRATÉGIA 3: Construir perfil com dados disponíveis
     const profile: UserProfile = {
-      id: data.id,
-      email: data.email,
-      name: data.name,
-      role_id: data.role_id,
-      avatar_url: data.avatar_url,
-      company_name: data.company_name,
-      industry: data.industry,
-      created_at: data.created_at,
-      user_roles: data.user_roles as any
+      id: basicProfile.id,
+      email: basicProfile.email,
+      name: basicProfile.name,
+      role_id: basicProfile.role_id,
+      avatar_url: basicProfile.avatar_url,
+      company_name: basicProfile.company_name,
+      industry: basicProfile.industry,
+      created_at: basicProfile.created_at,
+      user_roles: userRole
     };
-    
-    console.log('Perfil encontrado:', profile);
+
+    console.log('🎯 [PROFILE-FETCH] Perfil montado com sucesso:', {
+      id: profile.id,
+      name: profile.name,
+      hasRole: !!userRole,
+      roleName: userRole?.name
+    });
+
     return profile;
+
   } catch (error) {
-    console.error('Unexpected error fetching profile:', error);
-    return null; // Retornar null ao invés de lançar erro
+    console.error('💥 [PROFILE-FETCH] Erro crítico na busca do perfil:', error);
+    return null;
   }
 };
 
@@ -76,7 +142,7 @@ export const createUserProfileIfNeeded = async (
   name: string = 'Usuário'
 ): Promise<UserProfile | null> => {
   try {
-    console.log(`Tentando criar perfil para ${email}`);
+    console.log(`🔨 [PROFILE-CREATE] Tentando criar perfil para ${email}`);
     
     // Buscar role_id padrão para membro_club
     const { data: defaultRole } = await supabase
@@ -120,17 +186,10 @@ export const createUserProfileIfNeeded = async (
       .single();
       
     if (insertError) {
-      // If insertion fails due to policies, try using fallback
-      if (insertError.message.includes('policy') || insertError.message.includes('permission denied')) {
-        console.warn('Erro de política ao criar perfil. Continuando com perfil alternativo:', insertError);
-        return createFallbackProfile(userId, email, name, defaultRoleId);
-      }
-      
-      console.error('Erro ao criar perfil:', insertError);
+      console.error('❌ [PROFILE-CREATE] Erro ao criar perfil:', insertError);
       return createFallbackProfile(userId, email, name, defaultRoleId);
     }
     
-    // Mapear corretamente o resultado da query
     const profile: UserProfile = {
       id: newProfile.id,
       email: newProfile.email,
@@ -143,11 +202,10 @@ export const createUserProfileIfNeeded = async (
       user_roles: newProfile.user_roles as any
     };
     
-    console.log('Perfil criado com sucesso:', profile);
+    console.log('✅ [PROFILE-CREATE] Perfil criado com sucesso:', profile);
     return profile;
   } catch (error) {
-    console.error('Erro inesperado ao criar perfil:', error);
-    // Return minimal profile in case of error to not block application
+    console.error('💥 [PROFILE-CREATE] Erro inesperado ao criar perfil:', error);
     return createFallbackProfile(userId, email, name, null);
   }
 };
@@ -161,7 +219,7 @@ const createFallbackProfile = (
   name: string, 
   roleId: string | null
 ): UserProfile => {
-  console.log(`Criando perfil alternativo para ${email}`);
+  console.log(`🆘 [PROFILE-FALLBACK] Criando perfil alternativo para ${email}`);
   return {
     id: userId,
     email,
