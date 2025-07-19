@@ -11,7 +11,10 @@ export const MemberSidebar = ({
   return (
     <aside
       className={cn(
-        "fixed inset-y-0 left-0 z-50 flex h-full flex-col bg-card border-r border-border transition-all duration-300 ease-in-out backdrop-blur-sm",
+        "fixed inset-y-0 left-0 z-50 flex h-full flex-col transition-all duration-300 ease-in-out",
+        "bg-gradient-to-b from-background via-background to-background/95",
+        "border-r border-border/50 backdrop-blur-xl",
+        "shadow-xl shadow-black/5",
         // Largura responsiva
         sidebarOpen ? "w-64" : "w-16",
         // Visibilidade mobile vs desktop
@@ -27,18 +30,25 @@ export const MemberSidebar = ({
       }}
     >
       <div className="flex flex-col h-full overflow-hidden">
-        {/* Área do logo */}
-        <SidebarLogo sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-        
-        {/* Divisor visual */}
-        <div className="my-1 px-3">
-          <div className="h-px bg-border"></div>
+        {/* Área do logo com gradiente sutil */}
+        <div className="bg-gradient-to-r from-primary/5 to-primary/10 border-b border-border/30">
+          <SidebarLogo sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
         </div>
 
-        {/* Navegação */}
-        <div className="flex-1 overflow-y-auto">
+        {/* Navegação com scroll suave */}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
           <MemberSidebarNav sidebarOpen={sidebarOpen} />
         </div>
+
+        {/* Footer da sidebar */}
+        {sidebarOpen && (
+          <div className="p-4 border-t border-border/30 bg-gradient-to-r from-muted/30 to-muted/10">
+            <div className="text-xs text-muted-foreground text-center">
+              <p className="font-medium">VIVER DE IA Club</p>
+              <p className="mt-1 opacity-70">v2.0.0</p>
+            </div>
+          </div>
+        )}
       </div>
     </aside>
   );

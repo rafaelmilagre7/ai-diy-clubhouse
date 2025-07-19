@@ -13,25 +13,50 @@ export const SidebarLogo = ({ sidebarOpen, setSidebarOpen }: SidebarLogoProps) =
   const isMobile = useIsMobile();
 
   return (
-    <div className="flex h-16 shrink-0 items-center justify-between px-3">
-      <div className="flex items-center overflow-hidden min-w-0">
-        <img
-          src="https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif"
-          alt="VIVER DE IA Club"
-          className={cn(
-            "transition-all duration-300 object-contain",
-            sidebarOpen 
-              ? "h-8 w-auto max-w-[160px]" // Logo completo quando aberto
-              : "h-8 w-8" // Logo compacto quando fechado
-          )}
-        />
+    <div className="flex h-16 shrink-0 items-center justify-between px-4 py-3">
+      <div className={cn(
+        "flex items-center overflow-hidden min-w-0",
+        "transition-all duration-300 ease-in-out"
+      )}>
+        <div className={cn(
+          "relative overflow-hidden rounded-lg",
+          "bg-gradient-to-br from-primary/10 to-primary/20",
+          "p-1",
+          sidebarOpen ? "w-auto" : "w-8 h-8 flex items-center justify-center"
+        )}>
+          <img
+            src="https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif"
+            alt="VIVER DE IA Club"
+            className={cn(
+              "transition-all duration-300 object-contain",
+              sidebarOpen 
+                ? "h-8 w-auto max-w-[160px]" // Logo completo quando aberto
+                : "h-6 w-6" // Logo compacto quando fechado
+            )}
+          />
+        </div>
+        
+        {sidebarOpen && (
+          <div className="ml-3 min-w-0 opacity-0 animate-fade-in">
+            <h1 className="font-bold text-sm text-foreground truncate">
+              VIVER DE IA
+            </h1>
+            <p className="text-xs text-muted-foreground truncate">
+              Club Premium
+            </p>
+          </div>
+        )}
       </div>
       
       <Button
         variant="ghost"
         size="icon"
         className={cn(
-          "shrink-0 text-muted-foreground hover:text-foreground hover:bg-accent/50",
+          "shrink-0 h-8 w-8",
+          "text-muted-foreground hover:text-foreground",
+          "hover:bg-primary/10 hover:scale-105",
+          "transition-all duration-200",
+          "focus-visible:ring-2 focus-visible:ring-primary/20",
           // Mostrar diferentes ícones baseado no contexto
           isMobile ? "md:hidden" : "hidden md:flex"
         )}
