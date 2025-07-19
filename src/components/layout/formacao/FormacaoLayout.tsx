@@ -26,12 +26,8 @@ const FormacaoLayout = ({ children }: { children: React.ReactNode }) => {
   // Handler para signOut com tratamento seguro
   const handleSignOut = async () => {
     try {
-      const result = await signOut();
-      if (result.success) {
-        toast.success("Logout realizado com sucesso");
-      } else {
-        toast.error("Erro ao fazer logout");
-      }
+      await signOut();
+      toast.success("Logout realizado com sucesso");
     } catch (error) {
       toast.error("Erro ao fazer logout");
     }

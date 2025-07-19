@@ -4,6 +4,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { UserProfile } from '@/lib/supabase';
 import { AuthContextType } from './types';
+import { getUserRoleName } from '@/lib/supabase/types';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -24,61 +25,104 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [authError, setAuthError] = useState<Error | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [isFormacao, setIsFormacao] = useState<boolean>(false);
 
-  // Função otimizada para buscar perfil usando a nova função do banco
-  const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
+  // Função robusta para buscar perfil com timeout e retry
+  const fetchUserProfile = async (userId: string, retries = 2): Promise<UserProfile | null> => {
+    console.log(`[AUTH] 🔍 Buscando perfil para usuário: ${userId} (tentativas restantes: ${retries})`);
+    
     try {
-      console.log('🔍 [AUTH] Buscando perfil otimizado para:', userId);
-      
-      const { data, error } = await supabase.rpc('get_user_profile_optimized', {
+      // Timeout de 5 segundos
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout ao buscar perfil')), 5000)
+      );
+
+      const profilePromise = supabase.rpc('get_user_profile_optimized', {
         target_user_id: userId
       });
 
+      const { data, error } = await Promise.race([profilePromise, timeoutPromise]) as any;
+
       if (error) {
-        console.error('❌ [AUTH] Erro ao buscar perfil:', error);
+        console.error('[AUTH] ❌ Erro ao buscar perfil:', error);
+        throw error;
+      }
+
+      if (!data) {
+        console.warn('[AUTH] ⚠️ Perfil não encontrado para usuário:', userId);
         return null;
       }
 
-      if (data) {
-        console.log('✅ [AUTH] Perfil carregado:', data.name || data.email);
-        return data as UserProfile;
-      }
+      console.log('[AUTH] ✅ Perfil carregado com sucesso:', {
+        email: data.email,
+        name: data.name,
+        role: data.user_roles?.name
+      });
 
-      return null;
-    } catch (error) {
-      console.error('💥 [AUTH] Erro crítico ao buscar perfil:', error);
+      return data;
+    } catch (error: any) {
+      console.error(`[AUTH] ❌ Erro na busca do perfil (tentativa ${3 - retries}):`, error);
+      
+      if (retries > 0 && !error.message.includes('Timeout')) {
+        console.log(`[AUTH] 🔄 Tentando novamente... (${retries} tentativas restantes)`);
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Aguardar 1s
+        return fetchUserProfile(userId, retries - 1);
+      }
+      
       return null;
     }
   };
 
-  // Função para verificar se é admin usando a nova função otimizada
+  // Função para verificar se é admin com timeout
   const checkIsAdmin = async (userId: string): Promise<boolean> => {
     try {
-      const { data } = await supabase.rpc('is_user_admin_fast', {
+      console.log('[AUTH] 🔐 Verificando permissões de admin para:', userId);
+      
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout na verificação de admin')), 3000)
+      );
+
+      const adminPromise = supabase.rpc('is_user_admin_fast', {
         target_user_id: userId
       });
-      return data || false;
+
+      const { data, error } = await Promise.race([adminPromise, timeoutPromise]) as any;
+
+      if (error) {
+        console.error('[AUTH] ❌ Erro ao verificar admin:', error);
+        return false;
+      }
+
+      const isAdminResult = data || false;
+      console.log('[AUTH] 🔐 Status admin:', isAdminResult);
+      return isAdminResult;
     } catch (error) {
-      console.error('❌ [AUTH] Erro ao verificar admin:', error);
+      console.error('[AUTH] ❌ Erro na verificação de admin:', error);
       return false;
     }
   };
 
-  // Derivar estados computados do perfil
-  const isAdmin = profile?.role === 'admin' || profile?.user_roles?.name === 'admin' || 
-                  (profile?.email && profile.email.includes('@viverdeia.ai')) || false;
-  
-  const isFormacao = profile?.role === 'formacao' || profile?.user_roles?.name === 'formacao' || false;
-
-  // Funções de autenticação
   const signIn = async (email: string, password: string) => {
+    console.log('[AUTH] 🚀 Iniciando login para:', email);
+    setIsLoading(true);
+    setAuthError(null);
+    
     try {
-      setIsLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      return { error };
-    } catch (error) {
-      return { error };
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+      
+      console.log('[AUTH] ✅ Login realizado com sucesso');
+      return { data, error: null };
+    } catch (error: any) {
+      console.error('[AUTH] ❌ Erro no login:', error);
+      setAuthError(error.message);
+      return { data: null, error };
     } finally {
       setIsLoading(false);
     }
@@ -93,77 +137,106 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   const signOut = async () => {
+    console.log('[AUTH] 🚪 Fazendo logout...');
+    setIsLoading(true);
     try {
-      setIsLoading(true);
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
       
-      // Limpar estado local primeiro
+      // Limpar estados
       setUser(null);
       setSession(null);
       setProfile(null);
-      
-      const { error } = await supabase.auth.signOut();
-      return { success: !error, error };
-    } catch (error) {
-      return { success: false, error };
+      setIsAdmin(false);
+      setIsFormacao(false);
+      console.log('[AUTH] ✅ Logout realizado com sucesso');
+    } catch (error: any) {
+      console.error('[AUTH] ❌ Erro ao fazer logout:', error);
+      setAuthError(error.message);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Configurar listener de mudanças de autenticação
   useEffect(() => {
-    console.log('🚀 [AUTH] Inicializando AuthProvider');
-
-    // Listener para mudanças de estado de autenticação
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('🔄 [AUTH] Evento de autenticação:', event);
-      
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        // Buscar perfil quando usuário faz login
-        const userProfile = await fetchUserProfile(session.user.id);
-        setProfile(userProfile);
-      } else {
-        // Limpar perfil quando usuário faz logout
-        setProfile(null);
-      }
-      
-      setIsLoading(false);
-    });
-
-    // Verificar sessão existente
-    const checkExistingSession = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
+    console.log('[AUTH] 🔧 Configurando listener de autenticação...');
+    
+    // Listener para mudanças de autenticação
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log(`[AUTH] 📡 Estado mudou: ${event}`, session ? `usuário ${session.user.email}` : 'sem sessão');
         
-        if (error) {
-          console.error('❌ [AUTH] Erro ao obter sessão:', error);
-          setIsLoading(false);
-          return;
-        }
+        setSession(session);
+        setUser(session?.user ?? null);
 
         if (session?.user) {
-          console.log('✅ [AUTH] Sessão existente encontrada:', session.user.email);
-          setSession(session);
-          setUser(session.user);
+          console.log('[AUTH] 👤 Usuário autenticado, carregando dados...');
+          setIsLoading(true);
           
-          const userProfile = await fetchUserProfile(session.user.id);
-          setProfile(userProfile);
+          try {
+            // Buscar dados em paralelo com timeout total
+            const loadUserDataPromise = Promise.all([
+              fetchUserProfile(session.user.id),
+              checkIsAdmin(session.user.id)
+            ]);
+
+            const timeoutPromise = new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('Timeout geral no carregamento')), 10000)
+            );
+
+            const [profileData, adminStatus] = await Promise.race([
+              loadUserDataPromise,
+              timeoutPromise
+            ]) as [UserProfile | null, boolean];
+
+            console.log('[AUTH] 📊 Dados carregados:', {
+              profile: !!profileData,
+              admin: adminStatus,
+              email: profileData?.email
+            });
+
+            setProfile(profileData);
+            setIsAdmin(adminStatus);
+            
+            // Verificar se é formação
+            if (profileData?.user_roles?.name) {
+              const roleName = getUserRoleName(profileData);
+              setIsFormacao(roleName === 'formacao');
+              console.log('[AUTH] 🎓 Role detectado:', roleName);
+            }
+
+            console.log('[AUTH] ✅ Carregamento de dados concluído com sucesso');
+          } catch (error) {
+            console.error('[AUTH] ❌ Erro ao carregar dados do usuário:', error);
+            setAuthError('Erro ao carregar dados do usuário');
+            
+            // Em caso de erro, definir valores padrão para não bloquear
+            setProfile(null);
+            setIsAdmin(false);
+            setIsFormacao(false);
+          }
+        } else {
+          console.log('[AUTH] 🚫 Sem usuário, limpando estados...');
+          // Limpar estados quando não há usuário
+          setProfile(null);
+          setIsAdmin(false);
+          setIsFormacao(false);
         }
-      } catch (error) {
-        console.error('💥 [AUTH] Erro crítico ao verificar sessão:', error);
-      } finally {
+
         setIsLoading(false);
+        console.log('[AUTH] 🏁 Processamento do evento de auth concluído');
       }
+    );
+
+    // Verificar sessão inicial
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('[AUTH] 🔍 Verificando sessão inicial:', session ? `encontrada para ${session.user.email}` : 'não encontrada');
+    });
+
+    return () => {
+      console.log('[AUTH] 🧹 Limpando listener de autenticação');
+      subscription.unsubscribe();
     };
-
-    checkExistingSession();
-
-    return () => subscription.unsubscribe();
   }, []);
 
   const value: AuthContextType = {

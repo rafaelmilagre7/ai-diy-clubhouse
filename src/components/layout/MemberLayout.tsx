@@ -40,12 +40,8 @@ const MemberLayout = memo<MemberLayoutProps>(({ children }) => {
   // Memoizar handler de signOut com tratamento seguro
   const handleSignOut = useCallback(async () => {
     try {
-      const result = await signOut();
-      if (result.success) {
-        toast.success("Logout realizado com sucesso");
-      } else {
-        toast.error("Erro ao fazer logout");
-      }
+      await signOut();
+      toast.success("Logout realizado com sucesso");
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
         console.error('[MemberLayout] Erro no signOut:', error);

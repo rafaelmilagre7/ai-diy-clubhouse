@@ -5477,17 +5477,8 @@ export type Database = {
         Returns: string[]
       }
       get_user_profile_optimized: {
-        Args: { target_user_id?: string }
-        Returns: {
-          id: string
-          email: string
-          name: string
-          role_name: string
-          role_id: string
-          permissions: Json
-          onboarding_completed: boolean
-          created_at: string
-        }[]
+        Args: { target_user_id: string }
+        Returns: Json
       }
       get_user_profile_safe: {
         Args: { target_user_id: string }
@@ -5641,6 +5632,10 @@ export type Database = {
       }
       is_user_admin_enhanced: {
         Args: { user_id?: string }
+        Returns: boolean
+      }
+      is_user_admin_fast: {
+        Args: { target_user_id: string }
         Returns: boolean
       }
       is_user_admin_safe: {
