@@ -34,10 +34,7 @@ export const useProfileFallback = ({
     id: user.id,
     email: user.email || '',
     name: user.user_metadata?.name || user.user_metadata?.full_name || 'Usuário',
-    role: 'member', // Role básico como fallback
-    onboarding_completed: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
+    created_at: new Date().toISOString()
   } : null;
 
   useEffect(() => {
