@@ -107,7 +107,7 @@ export const RealStatsOverview = ({ data, loading }: RealStatsOverviewProps) => 
         icon={<Activity className="h-5 w-5" />}
         percentageChange={data.periodEngagementRate}
         percentageText="taxa de engajamento"
-        colorScheme="purple"
+        colorScheme="blue"
       />
       
       <StatCard
