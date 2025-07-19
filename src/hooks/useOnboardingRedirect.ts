@@ -20,14 +20,6 @@ export const useOnboardingRedirect = () => {
       return;
     }
 
-    // 🎯 VERIFICAR SE É REGISTRO RECENTE - PRIORIDADE MÁXIMA
-    const registroRecente = sessionStorage.getItem('registro_recente');
-    if (registroRecente === 'true') {
-      console.log('🆕 [ONBOARDING-REDIRECT] Registro recente detectado - forçando onboarding');
-      navigate('/onboarding', { replace });
-      return;
-    }
-
     // Prevenir múltiplos redirecionamentos simultâneos
     if (isRedirectingRef.current) {
       console.warn('🔄 [ONBOARDING-REDIRECT] Redirecionamento já em andamento, ignorando...');

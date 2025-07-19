@@ -1,218 +1,295 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { Session, User } from '@supabase/supabase-js';
+
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
+import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
-import { fetchUserProfile, signOutUser } from './utils';
-import { AuthContextType } from './types';
 import { UserProfile } from '@/lib/supabase';
 import { logger } from '@/utils/logger';
-import { clearProfileCache } from './utils/profileUtils/userProfileFunctions';
+import { useAuthStateManager } from './hooks/useAuthStateManager';
+import { clearProfileCache } from '@/hooks/auth/utils/authSessionUtils';
+// onboardingFixer removido - causava loops
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+interface AuthContextType {
+  user: User | null;
+  session: Session | null;
+  profile: UserProfile | null;
+  isAdmin: boolean;
+  isFormacao: boolean;
+  hasCompletedOnboarding: boolean;
+  isLoading: boolean;
+  authError: Error | null;
+  signIn: (email: string, password: string) => Promise<{ error?: Error }>;
+  signOut: () => Promise<{ success: boolean; error?: string }>;
+  signInAsMember: (email: string, password: string) => Promise<{ error?: Error }>;
+  signInAsAdmin: (email: string, password: string) => Promise<{ error?: Error }>;
+  setSession: React.Dispatch<React.SetStateAction<Session | null>>;
+  setUser: React.Dispatch<React.SetStateAction<User | null>>;
+  setProfile: (profile: UserProfile | null) => void;
+  setIsLoading: (loading: boolean) => void;
+  refreshProfile: () => Promise<void>;
+  validatePermissions: () => Promise<{ isAdmin: boolean; profile: UserProfile | null }>;
+}
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+const AuthContext = createContext<AuthContextType | null>(null);
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth deve ser usado dentro de um AuthProvider');
+  }
+  return context;
+};
+
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [authError, setAuthError] = useState<Error | null>(null);
 
-  // Memoizar informações derivadas do perfil
-  const isAdmin = profile?.user_roles?.name === 'admin';
-  const isFormacao = profile?.user_roles?.name === 'formacao';
-  const hasCompletedOnboarding = profile?.onboarding_completed || false;
+  // Usar o hook de gerenciamento de estado otimizado
+  const { setupAuthSession } = useAuthStateManager({
+    setSession,
+    setUser,
+    setProfile,
+    setIsLoading,
+  });
 
-  // Função simplificada para carregar perfil
-  const loadUserProfile = useCallback(async (userId: string) => {
-    console.log('🔄 [AUTH-DEBUG] loadUserProfile iniciado', { userId });
-    logger.info('[AUTH] 🔄 Carregando perfil do usuário', { userId });
-    
-    try {
-      const userProfile = await fetchUserProfile(userId);
-      console.log('📋 [AUTH-DEBUG] fetchUserProfile retornou:', { userProfile });
-      
-      if (userProfile) {
-        setProfile(userProfile);
-        console.log('✅ [AUTH-DEBUG] Perfil definido no estado:', { 
-          name: userProfile.name,
-          role: userProfile.user_roles?.name 
-        });
-        logger.info('[AUTH] ✅ Perfil carregado com sucesso', { 
-          name: userProfile.name,
-          role: userProfile.user_roles?.name 
-        });
-      } else {
-        console.log('⚠️ [AUTH-DEBUG] Perfil não encontrado, definindo como null');
-        logger.warn('[AUTH] ⚠️ Perfil não encontrado', { userId });
-        setProfile(null);
-      }
-    } catch (error) {
-      console.error('❌ [AUTH-DEBUG] Erro no loadUserProfile:', error);
-      logger.error('[AUTH] ❌ Erro ao carregar perfil', { userId, error });
-      setAuthError(error as Error);
-      setProfile(null);
-      
-      // 🎯 FALLBACK CRÍTICO: Tentar criar perfil se não existir
-      try {
-        console.log('🔧 [AUTH-DEBUG] Tentando criar perfil como fallback...');
-        const { data: createResult } = await supabase.rpc('create_missing_profile_safe', {
-          target_user_id: userId
-        });
-        
-        if (createResult?.success) {
-          console.log('🆕 [AUTH-DEBUG] Perfil criado via fallback, recarregando...');
-          const newProfile = await fetchUserProfile(userId);
-          setProfile(newProfile);
-        }
-      } catch (fallbackError) {
-        console.error('💥 [AUTH-DEBUG] Fallback também falhou:', fallbackError);
-        // Continuar mesmo se o fallback falhar
-      }
-    }
-  }, []);
+  // SEGURANÇA: Usar apenas user_roles table (novo sistema seguro)
+  const isAdmin = Boolean(
+    profile?.user_roles?.name === 'admin' ||
+    (profile?.user_roles?.permissions as any)?.all === true
+  );
 
-  // Função para forçar reload do perfil
-  const forceReloadProfile = useCallback(async () => {
-    if (!user?.id) {
-      logger.warn('[AUTH] 🚫 Não é possível recarregar perfil sem usuário');
-      return;
-    }
+  const isFormacao = Boolean(
+    profile?.user_roles?.name === 'formacao'
+  );
 
-    logger.info('[AUTH] 🔄 FORÇA RELOAD iniciado');
-    clearProfileCache(user.id);
-    await loadUserProfile(user.id);
-  }, [user?.id, loadUserProfile]);
+  // VERIFICAÇÃO DE ONBOARDING COMPLETO
+  const hasCompletedOnboarding = Boolean(profile?.onboarding_completed);
 
-  const signIn = async (email: string, password: string) => {
-    try {
-      setAuthError(null);
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw error;
-
-      return { error: undefined };
-    } catch (error) {
-      const authError = error as Error;
-      setAuthError(authError);
-      return { error: authError };
-    }
-  };
-
-  const signInAsMember = async (email: string, password: string) => {
-    return signIn(email, password);
-  };
-
-  const signInAsAdmin = async (email: string, password: string) => {
-    return signIn(email, password);
-  };
-
-  const signOut = async () => {
-    try {
-      await signOutUser();
-      
-      // Limpar estado local
-      setSession(null);
-      setUser(null);
-      setProfile(null);
-      setAuthError(null);
-      
-      return { success: true };
-    } catch (error) {
-      return { success: false, error: error as Error };
-    }
-  };
-
-  // Setup da autenticação simplificado
+  // OTIMIZAÇÃO: Configurar sessão na inicialização - APENAS UMA VEZ
   useEffect(() => {
     let mounted = true;
+    let authListener: any = null;
 
-    const setupAuth = async () => {
-      console.log('🏗️ [AUTH-DEBUG] setupAuth iniciado');
+    const initializeAuth = async () => {
+      if (!mounted) return;
+
+      logger.info('[AUTH-CONTEXT] Inicializando AuthProvider');
       
       try {
-        // Configurar listener de mudanças de autenticação
+        // PRIMEIRO: Configurar listener para mudanças de auth
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (event, session) => {
             if (!mounted) return;
 
-            console.log('🔄 [AUTH-DEBUG] onAuthStateChange triggered:', { event, hasSession: !!session, userId: session?.user?.id });
-            logger.info('[AUTH] 🔄 Estado de auth mudou', { event, hasSession: !!session });
+            logger.info('[AUTH-CONTEXT] Auth state change:', { event });
             
-            setSession(session);
-            setUser(session?.user ?? null);
-            
-            if (event === 'SIGNED_IN' && session?.user) {
-              console.log('🔐 [AUTH-DEBUG] SIGNED_IN event, carregando perfil...');
-              // 🎯 CRÍTICO: Não aguardar loadUserProfile no listener para evitar travamento
-              loadUserProfile(session.user.id).catch(error => {
-                console.error('💥 [AUTH-DEBUG] Erro no loadUserProfile (listener):', error);
-                setProfile(null);
-              });
-            } else if (event === 'SIGNED_OUT') {
-              console.log('🚪 [AUTH-DEBUG] SIGNED_OUT event, limpando perfil');
+            if (event === 'SIGNED_OUT' || !session) {
+              setSession(null);
+              setUser(null);
               setProfile(null);
+              setIsLoading(false);
+              clearProfileCache();
+            } else if (session?.user) {
+              setSession(session);
+              setUser(session.user);
+              
+              // CORREÇÃO: Defer setup para evitar deadlock
+              if (event === 'SIGNED_IN') {
+                setTimeout(() => {
+                  if (mounted) {
+                    setupAuthSession();
+                    // Onboarding check removido - causava loops
+                  }
+                }, 0);
+              }
             }
           }
         );
-
-        console.log('🔍 [AUTH-DEBUG] Verificando sessão existente...');
-        // Verificar sessão existente
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
-        console.log('📋 [AUTH-DEBUG] Sessão existente:', { hasSession: !!currentSession, userId: currentSession?.user?.id });
         
-        if (mounted) {
-          setSession(currentSession);
-          setUser(currentSession?.user ?? null);
-          
-          if (currentSession?.user) {
-            console.log('👤 [AUTH-DEBUG] Usuário encontrado na sessão, carregando perfil...');
-            // 🎯 CRÍTICO: Também não aguardar aqui para garantir que setIsLoading(false) seja chamado
-            loadUserProfile(currentSession.user.id).catch(error => {
-              console.error('💥 [AUTH-DEBUG] Erro no loadUserProfile (inicial):', error);
-              setProfile(null);
-            });
-          } else {
-            console.log('🚫 [AUTH-DEBUG] Nenhum usuário na sessão');
-          }
-        }
+        authListener = subscription;
 
-        return () => {
-          subscription.unsubscribe();
-        };
-        
+        // SEGUNDO: Verificar sessão existente (APENAS uma vez)
+        await setupAuthSession();
+
       } catch (error) {
-        console.error('💥 [AUTH-DEBUG] Erro no setupAuth:', error);
-        logger.error('[AUTH] Erro no setup:', error);
+        logger.error('[AUTH-CONTEXT] Erro na inicialização:', error);
         if (mounted) {
-          setAuthError(error as Error);
-        }
-      } finally {
-        // 🎯 CRÍTICO: SEMPRE finalizar o loading, independente de sucesso ou erro
-        if (mounted) {
-          console.log('✅ [AUTH-DEBUG] Finalizando setupAuth, setIsLoading(false)');
           setIsLoading(false);
         }
       }
     };
 
-    setupAuth();
+    initializeAuth();
 
+    // Cleanup
     return () => {
       mounted = false;
+      if (authListener) {
+        authListener.unsubscribe();
+      }
     };
-  }, [loadUserProfile]);
+  }, []); // IMPORTANTE: Array vazio para executar apenas uma vez
 
-  const value: AuthContextType = {
-    session,
+  // Função de logout otimizada
+  const signOut = useCallback(async (): Promise<{ success: boolean; error?: string }> => {
+    try {
+      logger.info('[AUTH-CONTEXT] Iniciando logout');
+      
+      // Limpar cache primeiro
+      clearProfileCache();
+      
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        logger.error('[AUTH-CONTEXT] Erro no logout:', error);
+        return { success: false, error: error.message };
+      }
+      
+      // Limpar estado local
+      setSession(null);
+      setUser(null);
+      setProfile(null);
+      setIsLoading(false);
+      
+      logger.info('[AUTH-CONTEXT] Logout realizado com sucesso');
+      return { success: true };
+      
+    } catch (error) {
+      logger.error('[AUTH-CONTEXT] Erro crítico no logout:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Erro desconhecido' 
+      };
+    }
+  }, []);
+
+  // Método signIn
+  const signIn = useCallback(async (email: string, password: string): Promise<{ error?: Error }> => {
+    try {
+      setAuthError(null);
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        setAuthError(error);
+        return { error };
+      }
+      return {};
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error('Erro desconhecido');
+      setAuthError(err);
+      return { error: err };
+    }
+  }, []);
+
+  // Método signInAsMember (alias para signIn)
+  const signInAsMember = useCallback(async (email: string, password: string): Promise<{ error?: Error }> => {
+    return signIn(email, password);
+  }, [signIn]);
+
+  // Método signInAsAdmin (alias para signIn)
+  const signInAsAdmin = useCallback(async (email: string, password: string): Promise<{ error?: Error }> => {
+    return signIn(email, password);
+  }, [signIn]);
+
+  // NOVA FUNÇÃO: Revalidar perfil forçadamente
+  const refreshProfile = useCallback(async (): Promise<void> => {
+    if (!user?.id) return;
+    
+    logger.info('[AUTH-CONTEXT] Revalidando perfil manualmente');
+    
+    try {
+      // Limpar cache primeiro
+      clearProfileCache(user.id);
+      
+      // Buscar perfil atualizado
+      const { data: profileData, error } = await supabase
+        .from('profiles')
+        .select(`
+          *,
+          user_roles (
+            id,
+            name,
+            description,
+            permissions
+          )
+        `)
+        .eq('id', user.id)
+        .single();
+      
+      if (error) {
+        logger.error('[AUTH-CONTEXT] Erro ao revalidar perfil:', error);
+        return;
+      }
+      
+      setProfile(profileData as UserProfile);
+      logger.info('[AUTH-CONTEXT] Perfil revalidado com sucesso');
+      
+    } catch (error) {
+      logger.error('[AUTH-CONTEXT] Erro crítico na revalidação:', error);
+    }
+  }, [user?.id]);
+
+  // NOVA FUNÇÃO: Validar permissões em tempo real
+  const validatePermissions = useCallback(async (): Promise<{ isAdmin: boolean; profile: UserProfile | null }> => {
+    if (!user?.id) {
+      return { isAdmin: false, profile: null };
+    }
+    
+    try {
+      const { data: profileData, error } = await supabase
+        .from('profiles')
+        .select(`
+          *,
+          user_roles (
+            id,
+            name,
+            description,
+            permissions
+          )
+        `)
+        .eq('id', user.id)
+        .single();
+      
+      if (error || !profileData) {
+        logger.error('[AUTH-CONTEXT] Erro na validação de permissões:', error);
+        return { isAdmin: false, profile: null };
+      }
+      
+      const userProfile = profileData as UserProfile;
+      const adminCheck = Boolean(
+        userProfile?.user_roles?.name === 'admin' ||
+        (userProfile?.user_roles?.permissions as any)?.all === true
+      );
+      
+      logger.info('[AUTH-CONTEXT] Validação de permissões:', {
+        userId: user.id.substring(0, 8) + '***',
+        isAdmin: adminCheck,
+        roleName: userProfile?.user_roles?.name,
+        permissions: userProfile?.user_roles?.permissions
+      });
+      
+      return { isAdmin: adminCheck, profile: userProfile };
+      
+    } catch (error) {
+      logger.error('[AUTH-CONTEXT] Erro crítico na validação:', error);
+      return { isAdmin: false, profile: null };
+    }
+  }, [user?.id]);
+
+  const contextValue: AuthContextType = {
     user,
+    session,
     profile,
     isAdmin,
     isFormacao,
+    hasCompletedOnboarding,
     isLoading,
     authError,
-    hasCompletedOnboarding,
     signIn,
     signOut,
     signInAsMember,
@@ -221,16 +298,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setUser,
     setProfile,
     setIsLoading,
-    forceReloadProfile,
+    refreshProfile,
+    validatePermissions,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={contextValue}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
+export default AuthProvider;

@@ -1,5 +1,5 @@
 
-import React, { useMemo, useCallback } from "react";
+import React from "react";
 import { Module } from "@/lib/supabase";
 import { ModuleContentText } from "./ModuleContentText";
 import { ContentTypeSwitcher } from "./ContentTypeSwitcher";
@@ -11,26 +11,25 @@ interface ModuleContentRendererProps {
 }
 
 export const ModuleContentRenderer = ({ module, onInteraction }: ModuleContentRendererProps) => {
-  // FASE 3: Early return para módulos sem conteúdo
   if (!module.content) {
     return (
       <div className="p-8 text-center">
-        <p className="text-textSecondary">Nenhum conteúdo disponível para este módulo.</p>
+        <p className="text-muted-foreground">Nenhum conteúdo disponível para este módulo.</p>
       </div>
     );
   }
 
-  // FASE 3: Memoizar cálculo do tipo de conteúdo
-  const contentType = useMemo(() => getContentType(module), [module]);
+  // Determine the content type based on module.type or content structure
+  const contentType = getContentType(module);
 
-  // FASE 3: Memoizar handler de interação
-  const handleInteraction = useCallback(() => {
+  // Track user interaction with content
+  const handleInteraction = () => {
     onInteraction();
-  }, [onInteraction]);
+  };
 
-  // FASE 3: Render otimizado com dados memoizados
+  // Render appropriate content based on content type
   return (
-    <div onClick={handleInteraction} className="space-y-8 animate-fade-in">
+    <div onClick={handleInteraction} className="space-y-8">
       {/* Main content text from module */}
       <ModuleContentText content={module.content} />
 

@@ -3,8 +3,6 @@ import React from 'react';
 import { SecurityViolationsMonitor } from '@/components/admin/security/SecurityViolationsMonitor';
 import { SecurityDashboard } from '@/components/security/SecurityDashboard';
 import { SecurityAlertsWidget } from '@/components/security/SecurityAlertsWidget';
-import { SecurityValidationDashboard } from '@/components/admin/security/SecurityValidationDashboard';
-import { SecurityMonitoringDashboard } from '@/components/admin/security/SecurityMonitoringDashboard';
 
 const AdminSecurity: React.FC = () => {
   return (
@@ -22,12 +20,6 @@ const AdminSecurity: React.FC = () => {
         
         {/* Dashboard Principal */}
         <SecurityDashboard />
-        
-        {/* Sistema de Validação e Teste - Etapa 3 */}
-        <SecurityValidationDashboard />
-        
-        {/* Sistema de Monitoramento - Etapa 4 */}
-        <SecurityMonitoringDashboard />
         
         <SecurityViolationsMonitor />
       </div>

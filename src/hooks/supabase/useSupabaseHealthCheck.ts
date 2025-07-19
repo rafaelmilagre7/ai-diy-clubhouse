@@ -11,10 +11,6 @@ interface HealthStatus {
   storageStatus: 'operational' | 'slow' | 'error';
   issues: string[];
   checkedAt: Date;
-  rlsPoliciesCount?: number;
-  functionsCount?: number;
-  tablesCount?: number;
-  storageBuckets?: number;
 }
 
 export const useSupabaseHealthCheck = () => {
@@ -71,27 +67,6 @@ export const useSupabaseHealthCheck = () => {
         issues.push(`Erro no storage: ${storageTest.error.message}`);
       }
 
-      // Obter estatísticas do sistema (se admin)
-      let systemInfo = {};
-      if (authStatus === 'authenticated') {
-        try {
-          const { data: diagnostics } = await supabase
-            .rpc('get_supabase_diagnostics');
-
-          if (diagnostics && typeof diagnostics === 'object') {
-            systemInfo = {
-              rlsPoliciesCount: diagnostics.rls_policies_count,
-              functionsCount: diagnostics.functions_count,
-              tablesCount: diagnostics.tables_count,
-              storageBuckets: diagnostics.storage_buckets
-            };
-          }
-        } catch (error: any) {
-          // Não é admin ou função não existe - não é erro crítico
-          console.warn('Não foi possível obter estatísticas do sistema:', error.message);
-        }
-      }
-
       setHealthStatus({
         isHealthy: issues.length === 0,
         connectionStatus,
@@ -99,8 +74,7 @@ export const useSupabaseHealthCheck = () => {
         databaseStatus,
         storageStatus,
         issues,
-        checkedAt: new Date(),
-        ...systemInfo
+        checkedAt: new Date()
       });
 
     } catch (error) {

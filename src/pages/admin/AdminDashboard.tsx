@@ -2,8 +2,6 @@
 import { useState } from "react";
 import { useRealAdminDashboardData } from "@/hooks/useRealAdminDashboardData";
 import { RealAdminDashboardLayout } from "@/components/admin/dashboard/RealAdminDashboardLayout";
-import { SystemHealthCheck } from "@/components/admin/system/SystemHealthCheck";
-import { EmergencyActions } from "@/components/admin/emergency/EmergencyActions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -70,22 +68,13 @@ const AdminDashboard = () => {
     });
 
     return (
-      <div className="space-y-6">
-        {/* Emergency Actions */}
-        <EmergencyActions />
-        
-        {/* System Health Check */}
-        <SystemHealthCheck />
-        
-        {/* Main Dashboard */}
-        <RealAdminDashboardLayout
-          timeRange={timeRange}
-          setTimeRange={setTimeRange}
-          statsData={statsData}
-          activityData={activityData}
-          loading={loading}
-        />
-      </div>
+      <RealAdminDashboardLayout
+        timeRange={timeRange}
+        setTimeRange={setTimeRange}
+        statsData={statsData}
+        activityData={activityData}
+        loading={loading}
+      />
     );
   } catch (error) {
     logger.error("Erro crítico no AdminDashboard", { 

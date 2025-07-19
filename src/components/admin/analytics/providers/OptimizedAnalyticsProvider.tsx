@@ -1,7 +1,6 @@
 
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { useOptimizedAnalyticsCache } from '@/hooks/analytics/useOptimizedAnalyticsCache';
-import conditionalLogger from "@/utils/conditionalLogger";
 
 interface OptimizedAnalyticsContextType {
   isOptimizationEnabled: boolean;
@@ -29,7 +28,7 @@ export const OptimizedAnalyticsProvider = ({ children }: OptimizedAnalyticsProvi
 
   const toggleOptimization = useCallback(() => {
     setIsOptimizationEnabled(prev => !prev);
-    conditionalLogger.debug('🔧 [ANALYTICS] Otimização:', { status: !isOptimizationEnabled ? 'ATIVADA' : 'DESATIVADA' });
+    console.log('🔧 [ANALYTICS] Otimização:', !isOptimizationEnabled ? 'ATIVADA' : 'DESATIVADA');
   }, [isOptimizationEnabled]);
 
   const toggleCache = useCallback(() => {
@@ -37,12 +36,12 @@ export const OptimizedAnalyticsProvider = ({ children }: OptimizedAnalyticsProvi
     if (!cacheEnabled) {
       invalidateCache();
     }
-    conditionalLogger.debug('🗄️ [ANALYTICS] Cache:', { status: !cacheEnabled ? 'ATIVADO' : 'DESATIVADO' });
+    console.log('🗄️ [ANALYTICS] Cache:', !cacheEnabled ? 'ATIVADO' : 'DESATIVADO');
   }, [cacheEnabled, invalidateCache]);
 
   const invalidateAllCache = useCallback(() => {
     invalidateCache();
-    conditionalLogger.debug('🗑️ [ANALYTICS] Cache invalidado globalmente');
+    console.log('🗑️ [ANALYTICS] Cache invalidado globalmente');
   }, [invalidateCache]);
 
   const value: OptimizedAnalyticsContextType = {

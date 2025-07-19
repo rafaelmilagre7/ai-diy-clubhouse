@@ -8,7 +8,6 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useAuth } from "@/contexts/auth";
 import SignUpForm from "./SignUpForm";
 
 const AuthLayout = () => {
@@ -19,9 +18,8 @@ const AuthLayout = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [localUser, setLocalUser] = useState(null);
+  const [user, setUser] = useState(null);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
-  const { user: authUser } = useAuth();
 
   // Verificar se há token de convite na URL para mostrar registro
   useEffect(() => {
@@ -35,25 +33,11 @@ const AuthLayout = () => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // 🎯 LIMPAR QUALQUER REDIRECIONAMENTO INVÁLIDO DO SESSIONSTORAGE
-        try {
-          const invalidKeys = ['redirectTo', 'redirect_path', 'last_route'];
-          invalidKeys.forEach(key => {
-            const value = sessionStorage.getItem(key);
-            if (value && (value.includes('/83') || value === '83' || !value.startsWith('/'))) {
-              console.warn(`[AUTH-LAYOUT] Removendo redirecionamento inválido: ${key}=${value}`);
-              sessionStorage.removeItem(key);
-            }
-          });
-        } catch (storageError) {
-          console.warn('[AUTH-LAYOUT] Erro ao limpar storage:', storageError);
-        }
-
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
-          setLocalUser(session.user);
-          console.log("[AUTH-LAYOUT] Usuário já autenticado, aguardando contexto de auth para redirecionamento");
-          // Não redirecionar imediatamente - deixar o contexto de auth decidir
+          setUser(session.user);
+          console.log("[AUTH-LAYOUT] Usuário já autenticado, redirecionando para /");
+          navigate('/', { replace: true });
         }
       } catch (error) {
         console.error("[AUTH-LAYOUT] Erro ao verificar autenticação:", error);
@@ -64,27 +48,6 @@ const AuthLayout = () => {
 
     checkAuth();
   }, [navigate]);
-
-  // Monitorar quando o contexto de auth reconhece o usuário logado
-  useEffect(() => {
-    if (authUser && !isCheckingAuth) {
-      console.log("[AUTH-LAYOUT] Usuário autenticado pelo contexto, redirecionando para /dashboard");
-      
-      // 🎯 LIMPAR QUALQUER ESTADO DE REDIRECIONAMENTO INVÁLIDO ANTES DO REDIRECT
-      try {
-        const currentUrl = window.location.pathname;
-        if (currentUrl.includes('/83') || currentUrl === '/83') {
-          console.warn('[AUTH-LAYOUT] URL inválida detectada, corrigindo para /dashboard');
-          window.history.replaceState(null, '', '/dashboard');
-        }
-      } catch (error) {
-        console.warn('[AUTH-LAYOUT] Erro ao corrigir URL:', error);
-      }
-      
-      // 🎯 CORREÇÃO: Redirecionar diretamente para /dashboard ao invés de /
-      navigate('/dashboard', { replace: true });
-    }
-  }, [authUser, isCheckingAuth, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -116,11 +79,12 @@ const AuthLayout = () => {
         console.log("[AUTH-LAYOUT] Login bem-sucedido:", data.user.email);
         toast({
           title: "Login realizado com sucesso",
-          description: "Redirecionando para dashboard...",
+          description: "Redirecionando...",
         });
         
-        // Aguardar o contexto de auth processar e redirecionar automaticamente
-        console.log("[AUTH-LAYOUT] Login bem-sucedido, aguardando redirecionamento automático para /dashboard");
+        // Redirecionar para a raiz após login
+        console.log("[AUTH-LAYOUT] Redirecionando para /");
+        navigate('/', { replace: true });
       }
       
     } catch (error: any) {
@@ -171,11 +135,11 @@ const AuthLayout = () => {
 
         {/* Título Principal */}
         <div className="mb-8 text-center">
-          <h1 className="text-2xl font-semibold text-white mb-2">
-            Acesse sua conta
+          <h1 className="text-3xl font-bold text-white mb-2">
+            Potencialize com IA
           </h1>
-          <p className="text-gray-400">
-            Entre para acessar a plataforma
+          <p className="text-gray-300 text-lg">
+            Transforme seu negócio com inteligência artificial
           </p>
         </div>
 

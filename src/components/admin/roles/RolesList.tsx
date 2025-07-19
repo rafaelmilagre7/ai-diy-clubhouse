@@ -1,150 +1,165 @@
 
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Edit, Trash2, Shield, Users, Settings, Loader2, RefreshCw, AlertTriangle } from 'lucide-react';
-import { Role } from '@/hooks/admin/useRoles';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Role } from "@/hooks/admin/useRoles";
+import { Button } from "@/components/ui/button";
+import { Edit2, Shield, Trash, BookOpen } from "lucide-react";
+import { PermissionGuard } from "@/components/auth/PermissionGuard";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
 
 interface RolesListProps {
   roles: Role[];
   isLoading: boolean;
-  error?: Error | null;
   onEditRole: (role: Role) => void;
-  onDeleteRole: (role: Role) => void;
-  onManagePermissions: (role: Role) => void;
-  onManageCourseAccess: (role: Role) => void;
-  onRefresh?: () => void;
+  onDeleteRole?: (role: Role) => void;
+  onManagePermissions?: (role: Role) => void;
+  onManageCourseAccess?: (role: Role) => void;
 }
 
-export const RolesList: React.FC<RolesListProps> = ({
+export function RolesList({
   roles,
   isLoading,
-  error,
   onEditRole,
   onDeleteRole,
   onManagePermissions,
   onManageCourseAccess,
-  onRefresh
-}) => {
+}: RolesListProps) {
   if (isLoading) {
-    return (
-      <Card>
-        <CardContent className="py-6">
-          <div className="flex items-center justify-center">
-            <Loader2 className="h-6 w-6 animate-spin text-viverblue mr-2" />
-            <span>Carregando papéis...</span>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card>
-        <CardContent className="py-6">
-          <div className="text-center">
-            <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-destructive opacity-50" />
-            <p className="text-destructive font-medium mb-2">Erro ao carregar papéis</p>
-            <p className="text-sm text-muted-foreground mb-4">
-              {error.message || 'Erro desconhecido'}
-            </p>
-            {onRefresh && (
-              <Button onClick={onRefresh} variant="outline" size="sm">
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Tentar novamente
-              </Button>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    );
+    return <div className="flex justify-center py-8">Carregando papéis...</div>;
   }
 
   if (roles.length === 0) {
     return (
-      <Card>
-        <CardContent className="py-6">
-          <div className="text-center text-muted-foreground">
-            <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
-            <p>Nenhum papel encontrado</p>
-            <p className="text-sm">Crie o primeiro papel para o sistema</p>
-            {onRefresh && (
-              <Button onClick={onRefresh} variant="outline" size="sm" className="mt-4">
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Recarregar
-              </Button>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+      <div className="text-center py-8 text-muted-foreground">
+        Nenhum papel encontrado no sistema.
+      </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {roles.map((role) => (
-        <Card key={role.id}>
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <Shield className="h-5 w-5 text-viverblue" />
-                <CardTitle className="text-lg">{role.name}</CardTitle>
-                {role.is_system && (
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[200px]">Nome</TableHead>
+            <TableHead>Descrição</TableHead>
+            <TableHead className="w-[120px]">Tipo</TableHead>
+            <TableHead className="text-right w-[180px]">Ações</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {roles.map((role) => (
+            <TableRow key={role.id}>
+              <TableCell className="font-medium">
+                <div className="flex items-center gap-2">
+                  <Shield className="h-4 w-4 text-primary" />
+                  {role.name}
+                </div>
+              </TableCell>
+              <TableCell>{role.description || "-"}</TableCell>
+              <TableCell>
+                {role.is_system ? (
                   <Badge variant="secondary">Sistema</Badge>
+                ) : (
+                  <Badge variant="outline">Personalizado</Badge>
                 )}
-              </div>
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onManagePermissions(role)}
-                >
-                  <Settings className="h-4 w-4 mr-1" />
-                  Permissões
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onManageCourseAccess(role)}
-                >
-                  <Users className="h-4 w-4 mr-1" />
-                  Cursos
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onEditRole(role)}
-                  disabled={role.is_system}
-                >
-                  <Edit className="h-4 w-4 mr-1" />
-                  Editar
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => onDeleteRole(role)}
-                  disabled={role.is_system}
-                >
-                  <Trash2 className="h-4 w-4 mr-1" />
-                  Excluir
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-          {role.description && (
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                {role.description}
-              </p>
-              <div className="mt-2 text-xs text-muted-foreground">
-                Criado em: {new Date(role.created_at).toLocaleDateString('pt-BR')}
-              </div>
-            </CardContent>
-          )}
-        </Card>
-      ))}
+              </TableCell>
+              <TableCell className="text-right">
+                <div className="flex justify-end gap-2">
+                  <TooltipProvider>
+                    <PermissionGuard permission="roles.manage">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => onEditRole(role)}
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Editar papel</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </PermissionGuard>
+
+                    {onManagePermissions && (
+                      <PermissionGuard permission="permissions.manage">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => onManagePermissions(role)}
+                            >
+                              <Shield className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Gerenciar permissões</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </PermissionGuard>
+                    )}
+
+                    {onManageCourseAccess && (
+                      <PermissionGuard permission="courses.manage">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => onManageCourseAccess(role)}
+                            >
+                              <BookOpen className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Gerenciar acesso a cursos</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </PermissionGuard>
+                    )}
+
+                    {!role.is_system && onDeleteRole && (
+                      <PermissionGuard permission="roles.manage">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => onDeleteRole(role)}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <Trash className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Remover papel</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </PermissionGuard>
+                    )}
+                  </TooltipProvider>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   );
-};
+}

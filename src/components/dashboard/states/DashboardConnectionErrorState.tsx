@@ -15,8 +15,8 @@ export const DashboardConnectionErrorState: React.FC<DashboardConnectionErrorSta
     if (onRetry) {
       onRetry();
     } else {
-      // CORREÇÃO FASE 2: Evitar reload forçado - usar location.reload() mais suave
-      window.location.reload();
+      // Fallback: refresh da página atual em vez de reload
+      window.location.href = window.location.pathname;
     }
   };
 

@@ -4,7 +4,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Activity, Clock, Users, Award } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { Skeleton } from '@/components/ui/skeleton';
-import conditionalLogger from "@/utils/conditionalLogger";
 
 interface RealtimeStatsData {
   activeUsers24h: number;
@@ -61,7 +60,7 @@ export const OptimizedRealtimeStats = () => {
         });
 
       } catch (error: any) {
-        conditionalLogger.error("Erro ao buscar estatísticas em tempo real:", error);
+        console.error("Erro ao buscar estatísticas em tempo real:", error);
         setError(error.message || 'Erro ao carregar estatísticas');
       } finally {
         setLoading(false);

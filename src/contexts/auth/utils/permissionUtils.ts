@@ -23,5 +23,20 @@ export const checkUserPermission = async (
   }
 };
 
-// Consolidado em securityUtils.ts - importar de lá para evitar duplicação
-export { getUserPermissions } from './securityUtils';
+export const getUserPermissions = async (userId: string): Promise<string[]> => {
+  try {
+    const { data, error } = await supabase.rpc('get_user_permissions', {
+      user_id: userId
+    });
+    
+    if (error) {
+      console.error('Erro ao buscar permissões do usuário:', error);
+      return [];
+    }
+    
+    return data || [];
+  } catch (error) {
+    console.error('Erro ao buscar permissões do usuário:', error);
+    return [];
+  }
+};

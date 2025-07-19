@@ -13,49 +13,31 @@ export const useLessonsByModule = (moduleId: string) => {
     queryFn: async (): Promise<LearningLesson[]> => {
       try {
         if (!moduleId) {
-          console.log("❌ useLessonsByModule: moduleId não fornecido");
+          console.log("useLessonsByModule: moduleId não fornecido");
           return [];
         }
 
-        console.log(`🔍 [RLS-DEBUG] Buscando aulas para módulo ${moduleId}...`);
+        console.log(`Buscando aulas para o módulo ${moduleId}...`);
 
-        // TENTATIVA 1: Query principal com políticas RLS limpas
-        const { data: lessonsData, error: lessonsError } = await supabase
+        // Buscar todas as aulas do módulo (incluindo não publicadas para debug)
+        const { data: allLessonsData, error } = await supabase
           .from("learning_lessons")
           .select("*, videos:learning_lesson_videos(*)")
           .eq("module_id", moduleId)
           .order("order_index", { ascending: true });
           
-        if (lessonsError) {
-          console.error("❌ [RLS-ERROR] Erro na query principal:", lessonsError);
-          console.log("🔄 [FALLBACK] Tentando query direta sem RLS...");
-          
-          // FALLBACK: Query direta como service role se RLS falhar
-          try {
-            const fallbackResponse = await supabase.rpc('get_module_lessons_fallback', {
-              p_module_id: moduleId
-            });
-            
-            if (fallbackResponse.error) {
-              console.error("❌ [FALLBACK-ERROR] Fallback também falhou:", fallbackResponse.error);
-              return [];
-            }
-            
-            console.log("✅ [FALLBACK-SUCCESS] Dados obtidos via fallback");
-            return sortLessonsByNumber(fallbackResponse.data || []);
-          } catch (fallbackErr) {
-            console.error("❌ [FALLBACK-EXCEPTION] Exceção no fallback:", fallbackErr);
-            return [];
-          }
+        if (error) {
+          console.error("Erro ao buscar lições do módulo:", error);
+          return [];
         }
         
-        // Query principal funcionou - processar dados
-        const allLessons = Array.isArray(lessonsData) ? lessonsData : [];
+        // Garantir que data é sempre um array
+        const allLessons = Array.isArray(allLessonsData) ? allLessonsData : [];
         
-        console.log(`📊 [SUCCESS] Total de aulas encontradas: ${allLessons.length}`);
-        console.log("📋 [LESSONS-DEBUG] Detalhes das aulas:", 
+        console.log(`Total de aulas encontradas no módulo ${moduleId}:`, allLessons.length);
+        console.log("Status das aulas:", 
           allLessons.map(l => ({
-            id: l.id.substring(0, 8), 
+            id: l.id, 
             title: l.title, 
             order_index: l.order_index,
             published: l.published
@@ -65,25 +47,28 @@ export const useLessonsByModule = (moduleId: string) => {
         // Filtrar apenas aulas publicadas
         const publishedLessons = allLessons.filter(lesson => lesson.published);
         
-        console.log(`✅ [PUBLISHED] Aulas publicadas: ${publishedLessons.length}`);
+        console.log(`Aulas publicadas no módulo ${moduleId}:`, publishedLessons.length);
         
-        // Ordenar as aulas e retornar
+        // Ordenar as aulas por número no título e garantir consistência
         const sortedLessons = sortLessonsByNumber(publishedLessons);
         
-        console.log(`🎯 [FINAL] Aulas ordenadas retornadas: ${sortedLessons.length}`);
+        console.log(`Aulas ordenadas para o módulo ${moduleId}:`, 
+          sortedLessons.map(l => ({
+            id: l.id, 
+            title: l.title, 
+            order_index: l.order_index
+          }))
+        );
         
         return sortedLessons;
       } catch (err) {
-        console.error("💥 [EXCEPTION] Erro inesperado ao buscar lições:", err);
+        console.error("Erro inesperado ao buscar lições:", err);
         return [];
       }
     },
     enabled: !!moduleId,
-    staleTime: 30000, // Cache por 30 segundos para evitar requests excessivos
-    refetchOnWindowFocus: true,
-    retry: (failureCount, error) => {
-      console.log(`🔄 [RETRY] Tentativa ${failureCount + 1} para módulo ${moduleId}:`, error);
-      return failureCount < 2; // Máximo 2 tentativas
-    }
+    // Forçar refetch para garantir dados atualizados
+    staleTime: 0,
+    refetchOnWindowFocus: true
   });
 };

@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
-import { useDatabaseErrorHandler } from '@/hooks/useDatabaseErrorHandler';
 
 interface AdminStatsData {
   totalUsers: number;
@@ -26,7 +25,6 @@ interface AdminStatsData {
 
 export const useAdminStatsData = () => {
   const { toast } = useToast();
-  const { executeWithErrorHandling } = useDatabaseErrorHandler();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<AdminStatsData>({
@@ -44,50 +42,29 @@ export const useAdminStatsData = () => {
 
   useEffect(() => {
     const fetchAdminStats = async () => {
-      const result = await executeWithErrorHandling(
-        'fetchAdminStats',
-        async () => {
-          try {
-            setLoading(true);
-            setError(null);
+      try {
+        setLoading(true);
+        setError(null);
 
-        // Buscar overview consolidado usando a nova view
+        // Buscar overview consolidado
         const { data: overviewData, error: overviewError } = await supabase
           .from('admin_analytics_overview')
           .select('*')
-          .maybeSingle();
+          .single();
 
-        if (overviewError) {
+        if (overviewError && overviewError.code !== 'PGRST116') {
           console.warn('Erro ao buscar overview:', overviewError);
-          // Fallback para dados básicos se a view não existir
         }
 
-        // Buscar usuários por role usando join direto
-        const { data: userRolesData, error: userRolesError } = await supabase
-          .from('profiles')
-          .select(`
-            id,
-            user_roles:role_id (
-              name
-            )
-          `);
+        // Buscar segmentação de usuários
+        const { data: segmentationData, error: segmentationError } = await supabase
+          .from('user_segmentation_analytics')
+          .select('*')
+          .order('user_count', { ascending: false });
 
-        if (userRolesError) {
-          console.warn('Erro ao buscar usuários por role:', userRolesError);
+        if (segmentationError) {
+          console.warn('Erro ao buscar segmentação:', segmentationError);
         }
-
-        // Processar contagem por role
-        const rolesCounts = (userRolesData || []).reduce((acc: Record<string, number>, user) => {
-          const roleData = user.user_roles as any;
-          const roleName = roleData?.name || 'member';
-          acc[roleName] = (acc[roleName] || 0) + 1;
-          return acc;
-        }, {});
-
-        const segmentationData = Object.entries(rolesCounts).map(([role_name, user_count]) => ({
-          role_name,
-          user_count
-        }));
 
         // Buscar contagem de aulas
         const { count: totalLessons } = await supabase
@@ -122,50 +99,29 @@ export const useAdminStatsData = () => {
           ]
         };
 
-            setData(processedData);
-            
-            console.log('📈 Admin Stats carregados:', {
-              totalUsers: processedData.totalUsers,
-              activeUsers: processedData.activeUsersLast7Days,
-              usersByRole: processedData.usersByRole.length
-            });
+        setData(processedData);
+        
+        console.log('📈 Admin Stats carregados:', {
+          totalUsers: processedData.totalUsers,
+          activeUsers: processedData.activeUsersLast7Days,
+          usersByRole: processedData.usersByRole.length
+        });
 
-            return processedData;
-
-          } catch (error: any) {
-            console.error('Erro ao carregar admin stats:', error);
-            setError(error.message || 'Erro ao carregar estatísticas administrativas');
-            throw error;
-          } finally {
-            setLoading(false);
-          }
-        },
-        {
-          showToast: true,
-          retryEnabled: true,
-          retryAttempts: 2,
-          fallbackData: {
-            totalUsers: 0,
-            totalSolutions: 0,
-            totalLearningLessons: 0,
-            completedImplementations: 0,
-            averageImplementationTime: 0,
-            usersByRole: [],
-            lastMonthGrowth: 0,
-            activeUsersLast7Days: 0,
-            contentEngagementRate: 0,
-            recentActivity: []
-          }
-        }
-      );
-
-      if (result) {
-        setData(result);
+      } catch (error: any) {
+        console.error('Erro ao carregar admin stats:', error);
+        setError(error.message || 'Erro ao carregar estatísticas administrativas');
+        toast({
+          title: "Erro ao carregar estatísticas",
+          description: "Não foi possível carregar os dados. Verifique sua conexão.",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchAdminStats();
-  }, [toast, executeWithErrorHandling]);
+  }, [toast]);
 
   return { data, loading, error };
 };

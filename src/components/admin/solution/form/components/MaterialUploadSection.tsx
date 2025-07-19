@@ -19,119 +19,78 @@ const MaterialUploadSection: React.FC<MaterialUploadSectionProps> = ({
 }) => {
   const { toast } = useToast();
 
-  // FASE 3: Correção Panda Video - Regex e extração melhoradas
-  const extractPandaVideoInfo = (url: string) => {
-    console.log('🎬 [PANDA_EXTRACT] Extraindo info do Panda Video:', url);
-    
-    // Padrões atualizados para diferentes formatos do Panda Video
-    const patterns = [
-      // Embed direto - padrão mais comum
-      /embed\.pandavideo\.com\.br\/([a-f0-9-]+)/i,
-      // Player direto com variações de subdomínio
-      /player(?:-[^.]+)?\.tv\.pandavideo\.com\.br\/embed\/\?v=([a-f0-9-]+)/i,
-      // URLs completas com parâmetros
-      /(?:www\.)?pandavideo\.com\.br.*[?&]v=([a-f0-9-]+)/i,
-      // URLs de compartilhamento
-      /share\.pandavideo\.com\.br\/([a-f0-9-]+)/i,
-      // IDs diretos (formato UUID)
-      /^([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$/i,
-      // IDs sem hífen
-      /^([a-f0-9]{32})$/i
-    ];
-
-    for (let i = 0; i < patterns.length; i++) {
-      const pattern = patterns[i];
-      const match = url.match(pattern);
-      if (match && match[1]) {
-        const videoId = match[1];
-        console.log(`✅ [PANDA_EXTRACT] Video ID encontrado (padrão ${i + 1}):`, videoId);
-        
-        // Normalizar videoId para formato com hífens se necessário
-        const normalizedVideoId = videoId.length === 32 && !videoId.includes('-') 
-          ? `${videoId.substr(0,8)}-${videoId.substr(8,4)}-${videoId.substr(12,4)}-${videoId.substr(16,4)}-${videoId.substr(20,12)}`
-          : videoId;
-        
-        return {
-          videoId: normalizedVideoId,
-          embedUrl: `https://player-primevoltz.tv.pandavideo.com.br/embed/?v=${normalizedVideoId}`,
-          thumbnailUrl: `https://b-vz-944bf9ba-e45.tv.pandavideo.com.br/${normalizedVideoId}/thumbs/001.jpg`
-        };
-      }
+  // Manipulador para URL do YouTube
+  const handleYoutubeUrlSubmit = async (url: string) => {
+    if (!solutionId) {
+      toast({
+        title: "Erro",
+        description: "É necessário salvar a solução antes de adicionar materiais.",
+        variant: "destructive",
+      });
+      return;
     }
 
-    console.error('❌ [PANDA_EXTRACT] Padrão não reconhecido para URL:', url);
-    console.error('❌ [PANDA_EXTRACT] Formatos suportados: embed.pandavideo.com.br, player-*.tv.pandavideo.com.br, share.pandavideo.com.br, UUID direto');
-    return null;
-  };
-
-  const handleYoutubeUrlSubmit = async (url: string) => {
     try {
-      console.log('🎬 [PANDA_SUBMIT] Processando URL do Panda Video:', url);
-      
-      if (!solutionId) {
-        console.error('❌ [PANDA_SUBMIT] Solution ID não fornecido');
+      // Extrair ID do vídeo do YouTube
+      let videoId = "";
+      if (url.includes("youtube.com/watch")) {
+        videoId = new URL(url).searchParams.get("v") || "";
+      } else if (url.includes("youtu.be/")) {
+        videoId = url.split("youtu.be/")[1]?.split("?")[0] || "";
+      } else if (url.includes("youtube.com/embed/")) {
+        videoId = url.split("youtube.com/embed/")[1]?.split("?")[0] || "";
+      }
+
+      if (!videoId) {
         toast({
-          title: "Erro interno",
-          description: "ID da solução não encontrado. Recarregue a página.",
+          title: "Erro",
+          description: "URL do YouTube inválida.",
           variant: "destructive",
         });
         return;
       }
 
-      const videoInfo = extractPandaVideoInfo(url);
+      // Criar uma URL de incorporação padrão
+      const embedUrl = `https://www.youtube.com/embed/${videoId}`;
       
-      if (!videoInfo) {
-        console.error('❌ [PANDA_SUBMIT] Falha na extração de videoInfo para URL:', url);
-        toast({
-          title: "URL inválida do Panda Video",
-          description: "Formatos aceitos: embed.pandavideo.com.br, player-*.tv.pandavideo.com.br, share.pandavideo.com.br ou ID direto",
-          variant: "destructive",
-        });
-        return;
-      }
+      const metadata: ResourceMetadata = {
+        title: `Vídeo do YouTube (${videoId})`,
+        description: `Vídeo incorporado do YouTube`,
+        url: embedUrl,
+        type: "video",
+        format: "YouTube",
+        tags: [],
+        order: 0,
+        downloads: 0,
+        size: 0,
+        version: "1.0"
+      };
 
-      console.log('📹 [PANDA_INFO] Informações extraídas:', videoInfo);
-      console.log('💾 [PANDA_SAVE] Salvando no solution_resources...');
-
-      // Inserir recurso no banco
+      // Criar o recurso no banco de dados
       const { data, error } = await supabase
-        .from('solution_resources')
+        .from("solution_resources")
         .insert({
           solution_id: solutionId,
-          name: `Vídeo Panda - ${videoInfo.videoId}`,
-          url: videoInfo.embedUrl,
-          type: 'video',
-          file_size: 0,
-          video_id: videoInfo.videoId,
-          video_type: 'panda',
-          thumbnail_url: videoInfo.thumbnailUrl
+          name: `Vídeo do YouTube (${videoId})`,
+          url: embedUrl,
+          type: "video",
+          format: "YouTube",
+          metadata: JSON.stringify(metadata)
         })
         .select()
         .single();
 
-      if (error) {
-        console.error('❌ [PANDA_SAVE] Erro ao salvar no banco:', error);
-        console.error('❌ [PANDA_SAVE] Detalhes do erro:', JSON.stringify(error, null, 2));
-        throw new Error(`Erro ao salvar vídeo: ${error.message}`);
+      if (error) throw error;
+
+      if (data) {
+        // Se bem-sucedido, chame onUploadComplete para atualizar a UI
+        await onUploadComplete(embedUrl, `Vídeo do YouTube (${videoId})`, 0);
       }
-
-      console.log('✅ [PANDA_SAVE] Vídeo salvo com sucesso:', data);
-      console.log('🔄 [PANDA_CALLBACK] Chamando onUploadComplete...');
-
-      // Chamar callback de sucesso
-      await onUploadComplete(videoInfo.embedUrl, `video-${videoInfo.videoId}`, 0);
-      
-      toast({
-        title: "✅ Vídeo Panda adicionado",
-        description: `Vídeo ${videoInfo.videoId} foi adicionado com sucesso aos recursos.`,
-      });
-
     } catch (error: any) {
-      console.error('❌ [PANDA_SUBMIT] Erro completo:', error);
-      console.error('❌ [PANDA_SUBMIT] Stack trace:', error.stack);
+      console.error("Erro ao adicionar vídeo do YouTube:", error);
       toast({
-        title: "Erro ao adicionar vídeo Panda",
-        description: error.message || "Erro desconhecido ao processar o vídeo do Panda.",
+        title: "Erro ao adicionar vídeo",
+        description: error.message || "Ocorreu um erro ao tentar adicionar o vídeo do YouTube.",
         variant: "destructive",
       });
     }

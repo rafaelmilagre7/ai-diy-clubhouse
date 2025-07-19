@@ -25,7 +25,7 @@ export const navigationCache = {
         userId
       };
       sessionStorage.setItem(CACHE_KEY, JSON.stringify(cache));
-      
+      console.log(`🚀 [NAV-CACHE] Cache definido para ${area}:`, { userId: userId.substring(0, 8) + '***' });
     } catch (error) {
       console.warn('[NAV-CACHE] Erro ao definir cache:', error);
     }
@@ -47,6 +47,11 @@ export const navigationCache = {
         return null;
       }
       
+      console.log(`✅ [NAV-CACHE] Cache válido encontrado:`, { 
+        userId: userId.substring(0, 8) + '***',
+        adminVerified: cache.adminVerified,
+        formacaoVerified: cache.formacaoVerified
+      });
       
       return cache;
     } catch (error) {
@@ -58,7 +63,7 @@ export const navigationCache = {
   clear: () => {
     try {
       sessionStorage.removeItem(CACHE_KEY);
-      
+      console.log('🧹 [NAV-CACHE] Cache limpo');
     } catch (error) {
       console.warn('[NAV-CACHE] Erro ao limpar cache:', error);
     }

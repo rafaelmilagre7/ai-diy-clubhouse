@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useCleanOnboarding } from '@/hooks/useCleanOnboarding';
+import { useSimpleOnboarding as useCleanOnboarding } from '@/hooks/useSimpleOnboarding';
 
 // Import dos steps simplificados (versões corrigidas)
 import { SimpleOnboardingStep1 } from './steps/SimpleOnboardingStep1';
@@ -77,10 +77,10 @@ export const SimpleOnboardingWizard: React.FC = () => {
 
   // Sincronizar step local com dados do hook
   useEffect(() => {
-    if (onboarding.currentStep) {
-      setCurrentStep(onboarding.currentStep);
+    if (onboarding.data.current_step) {
+      setCurrentStep(onboarding.data.current_step);
     }
-  }, [onboarding.currentStep]);
+  }, [onboarding.data.current_step]);
 
   // Gerenciar reset via URL e inicialização com dados do convite
   useEffect(() => {
@@ -94,9 +94,9 @@ export const SimpleOnboardingWizard: React.FC = () => {
         // 🎯 CORREÇÃO: Simplificar inicialização
         // O hook useCleanOnboarding já cuida da inicialização automaticamente
         // Só precisamos aguardar o carregamento dos dados
-        console.log('🔍 [ONBOARDING] Dados carregados:', {
-          hasData: !!onboarding.data.id,
-          currentStep: onboarding.currentStep,
+         console.log('🔍 [ONBOARDING] Dados carregados:', {
+           hasData: !!onboarding.data.id,
+           currentStep: onboarding.data.current_step,
           inviteToken: inviteToken ? inviteToken.substring(0, 6) + '***' : 'none'
         });
       }
@@ -131,16 +131,8 @@ export const SimpleOnboardingWizard: React.FC = () => {
     console.log('➡️ [ONBOARDING] stepData recebido:', stepData);
     console.log('➡️ [ONBOARDING] currentStep:', currentStep);
     
-    // 🎯 CORREÇÃO: Validar step access antes de salvar
-    if (!onboarding.canAccessStep(currentStep)) {
-      console.error('❌ [ONBOARDING] Sem acesso ao step atual:', currentStep);
-      toast({
-        title: "Acesso negado",
-        description: "Você não tem permissão para acessar esta etapa.",
-        variant: "destructive",
-      });
-      return;
-    }
+     // Simplificado - sem verificação de canAccessStep
+     // Permitir navegação livre entre steps
     
     if (!stepData || Object.keys(stepData).length === 0) {
       console.log('⚠️ [ONBOARDING] Nenhum dado para salvar, mas tentando avançar');

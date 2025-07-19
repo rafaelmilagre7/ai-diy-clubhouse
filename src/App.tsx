@@ -1,12 +1,16 @@
 
 import React from 'react';
-import { BrowserRouter } from 'react-router-dom';
-import { ThemeProvider } from 'next-themes';
+import { BrowserRouter as Router } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { Toaster } from 'sonner';
+import { ThemeProvider } from 'next-themes';
 import { AuthProvider } from '@/contexts/auth';
-import { LoggingProvider } from '@/hooks/useLogging';
+import { LoggingProvider } from '@/contexts/logging';
 import { SecurityEnforcementProvider } from '@/components/security/SecurityEnforcementProvider';
 import { AppRoutes } from '@/routes';
+import { SEOWrapper } from '@/components/seo/SEOWrapper';
+// OnboardingFixer removido - causava loops infinitos
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -19,19 +23,31 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
-    <BrowserRouter>
-      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
-        <QueryClientProvider client={queryClient}>
-          <AuthProvider>
-            <LoggingProvider>
-              <SecurityEnforcementProvider>
-                <AppRoutes />
-              </SecurityEnforcementProvider>
-            </LoggingProvider>
-          </AuthProvider>
-        </QueryClientProvider>
-      </ThemeProvider>
-    </BrowserRouter>
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <LoggingProvider>
+            <SecurityEnforcementProvider>
+              <Router>
+                <SEOWrapper>
+                  <div className="App">
+                    <AppRoutes />
+                    <Toaster 
+                      position="top-right"
+                      theme="dark"
+                      richColors
+                      expand
+                      visibleToasts={3}
+                    />
+                    <ReactQueryDevtools initialIsOpen={false} />
+                  </div>
+                </SEOWrapper>
+              </Router>
+            </SecurityEnforcementProvider>
+          </LoggingProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
   );
 }
 

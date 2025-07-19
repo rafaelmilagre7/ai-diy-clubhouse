@@ -11,6 +11,8 @@ export const useDashboardData = () => {
   const [loading, setLoading] = useState(true);
   const [solutions, setSolutions] = useState<Solution[]>([]);
   const [progressData, setProgressData] = useState<any[]>([]);
+  const [analyticsData, setAnalyticsData] = useState<any[]>([]);
+  const [profilesData, setProfilesData] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
   const isAdmin = profile?.role === 'admin';
 
@@ -32,21 +34,43 @@ export const useDashboardData = () => {
           throw solutionsError;
         }
         
-        setSolutions(solutionsData as Solution[] || []);
+        // Ensure solutions array is type-safe
+        setSolutions(solutionsData as Solution[]);
         
-        // Fetch user progress from implementation_checkpoints (tabela que realmente existe)
-        if (user?.id) {
-          const { data: checkpoints, error: checkpointsError } = await supabase
-            .from("implementation_checkpoints")
-            .select("*")
-            .eq("user_id", user.id);
-          
-          if (checkpointsError && !checkpointsError.message.includes('does not exist')) {
-            console.warn("Erro ao buscar checkpoints:", checkpointsError);
-          } else {
-            setProgressData(checkpoints || []);
-          }
+        // Fetch all progress data
+        const { data: progress, error: progressError } = await supabase
+          .from("progress")
+          .select("*");
+        
+        if (progressError) {
+          throw progressError;
         }
+        
+        setProgressData(progress || []);
+        
+        // Fetch analytics data
+        const { data: analytics, error: analyticsError } = await supabase
+          .from("analytics")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(50);
+        
+        if (analyticsError && !analyticsError.message.includes('does not exist')) {
+          console.warn("Erro ao buscar analytics:", analyticsError);
+        } else {
+          setAnalyticsData(analytics || []);
+        }
+        
+        // Fetch profiles data
+        const { data: profiles, error: profilesError } = await supabase
+          .from("profiles")
+          .select("*");
+        
+        if (profilesError) {
+          throw profilesError;
+        }
+        
+        setProfilesData(profiles || []);
         
       } catch (error: any) {
         console.error("Erro no carregamento de dados do dashboard:", error);
@@ -61,16 +85,14 @@ export const useDashboardData = () => {
       }
     };
     
-    if (user) {
-      fetchData();
-    } else {
-      setLoading(false);
-    }
-  }, [user, isAdmin, toast]);
+    fetchData();
+  }, [toast, isAdmin, profile?.role]);
   
   return { 
     solutions, 
-    progressData,
+    progressData, 
+    analyticsData,
+    profilesData,
     loading, 
     error 
   };

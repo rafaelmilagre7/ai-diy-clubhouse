@@ -14,9 +14,6 @@ const CourseDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   
-  // Log para verificar se o id está sendo capturado corretamente
-  console.log("CourseDetails - parâmetro id da URL:", id);
-  
   // Usar nossos hooks customizados
   const { course, modules, allLessons, userProgress, isLoading, accessDenied } = useCourseDetails(id);
   const { courseStats, firstLessonId, courseProgress } = useCourseStats({ 

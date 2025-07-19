@@ -1,77 +1,67 @@
 
-import { ReactNode } from "react";
-import { Navigate, useLocation } from "react-router-dom";
+import React from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
-import { logger } from "@/utils/logger";
+import { toast } from "sonner";
 
 interface ProtectedRouteProps {
-  children: ReactNode;
-  requireAuth?: boolean;
+  children: React.ReactNode;
   requireAdmin?: boolean;
-  requireFormacao?: boolean;
+  requiredRole?: string;
 }
 
-/**
- * ProtectedRoute simplificado - remove loops de navegação
- */
 const ProtectedRoute = ({ 
   children, 
-  requireAuth = true,
   requireAdmin = false,
-  requireFormacao = false
+  requiredRole
 }: ProtectedRouteProps) => {
-  const { user, profile, isAdmin, isFormacao, isLoading } = useAuth();
+  const { user, profile, isAdmin, hasCompletedOnboarding, isLoading } = useAuth();
   const location = useLocation();
-
-  // DEBUG: Log para rastrear o fluxo
-  console.log("🔍 [PROTECTED-ROUTE] Debug:", {
-    pathname: location.pathname,
-    isLoading,
-    user: !!user,
-    profile: !!profile,
-    isAdmin,
-    isFormacao,
-    requireAuth,
-    requireAdmin,
-    requireFormacao
-  });
-
-  // Loading simples sem circuit breaker
+  
+  // Se estiver carregando, mostra tela de loading com timeout aumentado
   if (isLoading) {
-    console.log("⏳ [PROTECTED-ROUTE] Showing loading screen");
-    return <LoadingScreen message="Verificando acesso..." />;
+    return <LoadingScreen message="Verificando sua autenticação..." />;
   }
 
-  // Verificação de autenticação
-  if (requireAuth && !user) {
-    console.log("🔒 [PROTECTED-ROUTE] No user, redirecting to login");
-    logger.info("[PROTECTED] Usuário não autenticado, redirecionando para login");
+  // Se não houver usuário autenticado, redireciona para login
+  if (!user) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Verificação de perfil
-  if (requireAuth && user && !profile) {
-    console.log("⚠️ [PROTECTED-ROUTE] User without profile, redirecting to login");
-    logger.warn("[PROTECTED] Usuário sem perfil, redirecionando para login");
-    return <Navigate to="/login" replace />;
-  }
+  // VERIFICAÇÃO OBRIGATÓRIA DE ONBOARDING
+  // Rotas permitidas sem onboarding completo
+  const allowedWithoutOnboarding = ['/login', '/onboarding', '/auth'];
+  const isOnboardingRoute = allowedWithoutOnboarding.some(route => 
+    location.pathname.startsWith(route)
+  );
 
-  // Verificação de admin
-  if (requireAdmin && !isAdmin) {
-    console.log("🚫 [PROTECTED-ROUTE] Admin required but user is not admin");
-    logger.warn("[PROTECTED] Acesso negado - admin necessário");
+  // Se usuário não completou onboarding E não está em rota permitida
+  if (!hasCompletedOnboarding && !isOnboardingRoute) {
+    console.log("[PROTECTED-ROUTE] Onboarding obrigatório não completado, redirecionando...", {
+      hasProfile: !!profile,
+      profileId: profile?.id,
+      onboardingCompleted: profile?.onboarding_completed,
+      currentPath: location.pathname
+    });
+    
+    // Fallback: Se não há perfil mas há usuário, dar mais tempo
+    if (user && !profile) {
+      console.log("[PROTECTED-ROUTE] Aguardando criação do perfil...");
+      return <LoadingScreen message="Configurando sua conta..." />;
+    }
+    
+    // Redirecionar para onboarding
+    return <Navigate to="/onboarding" replace />;
+  }
+  
+  // Verificar se requer admin e usuário não é admin
+  if ((requiredRole === 'admin' || requireAdmin) && !isAdmin) {
+    toast.error("Você não tem permissão para acessar esta área");
     return <Navigate to="/dashboard" replace />;
   }
 
-  // Verificação de formação
-  if (requireFormacao && !(isFormacao || isAdmin)) {
-    console.log("🚫 [PROTECTED-ROUTE] Formacao required but user doesn't have access");
-    logger.warn("[PROTECTED] Acesso negado - formação necessário");
-    return <Navigate to="/dashboard" replace />;
-  }
-
-  console.log("✅ [PROTECTED-ROUTE] All checks passed, rendering children");
+  // Usuário está autenticado, tem onboarding completo e permissões necessárias
   return <>{children}</>;
 };
 

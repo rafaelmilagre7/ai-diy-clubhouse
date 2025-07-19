@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Activity, Clock, Users, Award } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import conditionalLogger from "@/utils/conditionalLogger";
 
 export const RealtimeStats = () => {
   const [stats, setStats] = useState({
@@ -90,7 +89,7 @@ export const RealtimeStats = () => {
         });
         
       } catch (error) {
-        conditionalLogger.error("Erro ao buscar estatísticas em tempo real:", error);
+        console.error("Erro ao buscar estatísticas em tempo real:", error);
       } finally {
         setLoading(false);
       }

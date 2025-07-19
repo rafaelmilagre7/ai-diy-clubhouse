@@ -6,8 +6,7 @@ import { supabase } from '@/lib/supabase';
  */
 export const validateUserRole = async (userId: string): Promise<string> => {
   try {
-    // Usar timeout para evitar travamentos
-    const fetchPromise = supabase
+    const { data: profile, error } = await supabase
       .from('profiles')
       .select(`
         role_id,
@@ -17,22 +16,11 @@ export const validateUserRole = async (userId: string): Promise<string> => {
         )
       `)
       .eq('id', userId)
-      .maybeSingle(); // Usar maybeSingle para evitar erros se não encontrar
+      .single();
 
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Timeout validating role')), 5000)
-    );
-
-    const { data: profile, error } = await Promise.race([fetchPromise, timeoutPromise]) as any;
-
-    if (error) {
+    if (error || !profile) {
       console.error('Erro ao validar papel do usuário:', error);
       return 'member'; // Default fallback
-    }
-
-    if (!profile) {
-      console.warn('Perfil não encontrado para usuário:', userId);
-      return 'member';
     }
 
     // Return the role name from the database via join
@@ -53,8 +41,7 @@ export const validateUserRole = async (userId: string): Promise<string> => {
  */
 export const isSuperAdmin = async (userId: string): Promise<boolean> => {
   try {
-    // Usar timeout para evitar travamentos
-    const fetchPromise = supabase
+    const { data: profile, error } = await supabase
       .from('profiles')
       .select(`
         role_id,
@@ -64,16 +51,9 @@ export const isSuperAdmin = async (userId: string): Promise<boolean> => {
         )
       `)
       .eq('id', userId)
-      .maybeSingle(); // Usar maybeSingle para evitar erros se não encontrar
-
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Timeout checking admin')), 5000)
-    );
-
-    const { data: profile, error } = await Promise.race([fetchPromise, timeoutPromise]) as any;
+      .single();
 
     if (error || !profile) {
-      console.error('Erro ao verificar super admin:', error);
       return false;
     }
 

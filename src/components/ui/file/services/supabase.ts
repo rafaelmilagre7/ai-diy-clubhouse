@@ -1,72 +1,54 @@
 
 import { supabase } from "@/lib/supabase";
 
-// SERVIÇO UNIFICADO DE UPLOAD - Usar uploadFileToStorage como padrão
 export const uploadFileToSupabase = async (
   file: File,
-  bucketName: string = 'profile_images',
-  folderPath: string = '',
+  bucketName: string,
+  folderPath: string,
   onProgressUpdate?: (progress: number) => void
 ) => {
-  // Importar dinamicamente para evitar circular dependency
-  const { uploadFileToStorage } = await import('../uploadUtils');
-  
   try {
-    console.log('🔄 [UNIFIED_UPLOAD] Redirecionando para serviço principal...');
-    
-    const result = await uploadFileToStorage(
-      file,
-      bucketName,
-      folderPath,
-      onProgressUpdate
-    );
-    
-    return {
-      publicUrl: result.publicUrl,
-      fileName: result.fileName
-    };
-  } catch (primaryUploadError: any) {
-    console.error('❌ [UNIFIED_UPLOAD] Fallback para método legado...');
-    
-    // FALLBACK: Método original se o principal falhar
-    const normalizedBucket = bucketName.replace(/-/g, '_').toLowerCase();
-    console.log('🔧 [FALLBACK_UPLOAD] Bucket normalizado:', { original: bucketName, normalized: normalizedBucket });
-
     const timestamp = new Date().getTime();
     const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
     const filePath = folderPath 
       ? `${folderPath}/${timestamp}-${sanitizedFileName}` 
       : `${timestamp}-${sanitizedFileName}`;
 
-    if (onProgressUpdate) onProgressUpdate(10);
-
-    const { data: uploadResult, error: storageError } = await supabase.storage
-      .from(normalizedBucket)
-      .upload(filePath, file, {
-        upsert: true,
-        cacheControl: '3600',
-        contentType: file.type
+    const { data: buckets } = await supabase.storage.listBuckets();
+    const bucketExists = buckets?.some(bucket => bucket.name === bucketName);
+    
+    if (!bucketExists) {
+      await supabase.storage.createBucket(bucketName, {
+        public: true
       });
-
-    if (storageError) {
-      console.error('❌ [FALLBACK_UPLOAD] Erro no upload:', storageError);
-      throw new Error(`Falha no upload: ${storageError.message}`);
     }
 
-    console.log('✅ [FALLBACK_UPLOAD] Upload realizado com sucesso:', uploadResult);
+    if (onProgressUpdate) onProgressUpdate(10);
+
+    const { data, error } = await supabase.storage
+      .from(bucketName)
+      .upload(filePath, file, {
+        upsert: true,
+        cacheControl: '3600'
+      });
+
+    if (error) throw error;
+
     if (onProgressUpdate) onProgressUpdate(80);
 
     const { data: { publicUrl } } = supabase.storage
-      .from(normalizedBucket)
-      .getPublicUrl(uploadResult.path);
+      .from(bucketName)
+      .getPublicUrl(data.path);
 
-    console.log('🔗 [FALLBACK_UPLOAD] URL pública gerada:', publicUrl);
     if (onProgressUpdate) onProgressUpdate(100);
 
     return {
       publicUrl,
       fileName: file.name
     };
+  } catch (error) {
+    console.error("Erro ao fazer upload do arquivo:", error);
+    throw error;
   }
 };
 

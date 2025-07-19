@@ -1,23 +1,20 @@
 
 import { supabase } from './client';
-import { logger } from '@/utils/logger';
 
 export const setupCertificatesStorage = async () => {
   try {
-    // CORREÇÃO FASE 1: Usar método mais seguro que evita RLS em listBuckets
-    logger.info('[CERTIFICATES-STORAGE] Configurando storage de certificados...');
+    // Verificar se o bucket já existe
+    const { data: buckets, error: listError } = await supabase.storage.listBuckets();
     
-    // Tentar acessar bucket diretamente em vez de listar todos
-    const { data: bucketData, error: bucketError } = await supabase.storage.getBucket('certificates');
-    
-    if (bucketError && !bucketError.message.includes('not found')) {
-      logger.error('[CERTIFICATES-STORAGE] Erro ao verificar bucket:', bucketError);
+    if (listError) {
+      console.error('Erro ao listar buckets:', listError);
       return false;
     }
     
-    // Se bucket não existe, tentar criar
-    if (bucketError?.message.includes('not found')) {
-      logger.info('[CERTIFICATES-STORAGE] Criando bucket certificates...');
+    const certificatesBucketExists = buckets?.some(bucket => bucket.name === 'certificates');
+    
+    if (!certificatesBucketExists) {
+      console.log('Criando bucket certificates...');
       
       const { error: createError } = await supabase.storage.createBucket('certificates', {
         public: true,
@@ -25,22 +22,16 @@ export const setupCertificatesStorage = async () => {
       });
       
       if (createError) {
-        if (createError.message.includes('already exists')) {
-          logger.info('[CERTIFICATES-STORAGE] Bucket certificates já existe');
-          return true;
-        }
-        logger.error('[CERTIFICATES-STORAGE] Erro ao criar bucket certificates:', createError);
+        console.error('Erro ao criar bucket certificates:', createError);
         return false;
       }
       
-      logger.info('[CERTIFICATES-STORAGE] Bucket certificates criado com sucesso');
-    } else {
-      logger.info('[CERTIFICATES-STORAGE] Bucket certificates já existe');
+      console.log('Bucket certificates criado com sucesso');
     }
     
     return true;
   } catch (error) {
-    logger.error('[CERTIFICATES-STORAGE] Erro ao configurar storage de certificados:', error);
+    console.error('Erro ao configurar storage de certificados:', error);
     return false;
   }
 };

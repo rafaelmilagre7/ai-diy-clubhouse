@@ -25,34 +25,17 @@ export const useUser = (): UseUserReturn => {
     
     setIsLoading(true);
     try {
-      // Usar a função get_cached_profile corrigida que agora funciona sem recursão
       const { data, error } = await supabase
-        .rpc('get_cached_profile', { target_user_id: user.id });
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
 
-      if (error) {
-        console.error("❌ [PROFILE] Erro na RPC get_cached_profile:", error);
-        throw error;
-      }
-      
-      if (data) {
-        setProfile(data);
-        console.log('🔍 [PROFILE] Perfil carregado com sucesso:', {
-          name: data.name,
-          role: data.user_roles?.name,
-          hasUserRoles: !!data.user_roles,
-          fullProfile: data
-        });
-      } else {
-        console.warn('⚠️ [PROFILE] Nenhum perfil encontrado para o usuário');
-        setProfile(null);
-      }
-      
-      // Limpar erro se sucesso
-      setError(null);
+      if (error) throw error;
+      setProfile(data);
     } catch (err) {
-      console.error("❌ [PROFILE] Erro ao carregar perfil:", err);
+      console.error("Erro ao carregar perfil:", err);
       setError(err);
-      setProfile(null);
     } finally {
       setIsLoading(false);
     }

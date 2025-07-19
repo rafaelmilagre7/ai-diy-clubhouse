@@ -88,12 +88,12 @@ export const useRealAdminStats = (timeRange: string) => {
           .eq('published', true)
           .gte('created_at', startDateISO),
         
-        // Implementações completadas no período usando checkpoints
+        // Implementações completadas no período com timing
         supabase
-          .from('implementation_checkpoints')
-          .select('id, user_id, updated_at, created_at, progress_percentage', { count: 'exact' })
-          .eq('progress_percentage', 100)
-          .gte('updated_at', startDateISO)
+          .from('progress')
+          .select('id, user_id, completed_at, created_at, last_activity', { count: 'exact' })
+          .eq('is_completed', true)
+          .gte('completed_at', startDateISO)
       ]);
 
       // Processar roles dos usuários com fallback
@@ -127,18 +127,18 @@ export const useRealAdminStats = (timeRange: string) => {
       // Contar usuários únicos ativos
       const uniqueActiveUsers = new Set(recentActivities?.map(a => a.user_id) || []);
 
-      // Calcular tempo médio de implementação usando checkpoints
+      // Calcular tempo médio de implementação com dados mais precisos
       let averageImplementationTime = 0;
       if (progressResult.data && progressResult.data.length > 0) {
         const implementationsWithTime = progressResult.data.filter(p => 
-          p.updated_at && p.created_at
+          p.completed_at && p.created_at
         );
         
         if (implementationsWithTime.length > 0) {
           const validImplementations = implementationsWithTime
             .map(p => {
               const start = new Date(p.created_at);
-              const end = new Date(p.updated_at);
+              const end = new Date(p.completed_at);
               const diffMinutes = Math.round((end.getTime() - start.getTime()) / (1000 * 60));
               return diffMinutes;
             })

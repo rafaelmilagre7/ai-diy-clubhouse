@@ -15,9 +15,9 @@ interface LoadingConfig {
 }
 
 const DEFAULT_CONFIG: LoadingConfig = {
-  timeout: 8000, // Timeout mais alto
-  enableCircuitBreaker: false, // Desabilitar circuit breaker por padrão
-  retryAttempts: 1 // Reduzir tentativas
+  timeout: 4000, // 4 segundos unificado
+  enableCircuitBreaker: true,
+  retryAttempts: 2
 };
 
 export const useGlobalLoading = (config: LoadingConfig = DEFAULT_CONFIG) => {
@@ -33,7 +33,7 @@ export const useGlobalLoading = (config: LoadingConfig = DEFAULT_CONFIG) => {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const startTimeRef = useRef<number>(Date.now());
 
-  // Circuit breaker simplificado
+  // Circuit breaker para prevenir loading infinito
   useEffect(() => {
     if (config.enableCircuitBreaker && loadingState.global) {
       if (timeoutRef.current) {
@@ -42,17 +42,18 @@ export const useGlobalLoading = (config: LoadingConfig = DEFAULT_CONFIG) => {
       
       timeoutRef.current = setTimeout(() => {
         if (retryCount < (config.retryAttempts || 0)) {
-          console.warn(`[GLOBAL-LOADING] Timeout - retry ${retryCount + 1}`);
+          console.warn(`[GLOBAL-LOADING] Circuit breaker - retry ${retryCount + 1}`);
           setRetryCount(prev => prev + 1);
         } else {
-          console.warn('[GLOBAL-LOADING] Forçando fim do loading');
+          console.warn('[GLOBAL-LOADING] Circuit breaker ativado - forçando fim do loading');
           setCircuitBreakerActive(true);
-          setLoadingState({
+          setLoadingState(prev => ({
+            ...prev,
             auth: false,
             data: false,
             navigation: false,
             global: false
-          });
+          }));
         }
       }, config.timeout);
     }
@@ -67,8 +68,10 @@ export const useGlobalLoading = (config: LoadingConfig = DEFAULT_CONFIG) => {
   const setLoading = useCallback((type: keyof LoadingState, value: boolean) => {
     setLoadingState(prev => {
       const newState = { ...prev, [type]: value };
+      // Global loading é verdadeiro se qualquer um dos outros for verdadeiro
       newState.global = newState.auth || newState.data || newState.navigation;
       
+      // Reset circuit breaker quando loading para
       if (!newState.global && circuitBreakerActive) {
         setCircuitBreakerActive(false);
         setRetryCount(0);
@@ -79,7 +82,7 @@ export const useGlobalLoading = (config: LoadingConfig = DEFAULT_CONFIG) => {
   }, [circuitBreakerActive]);
 
   const forceComplete = useCallback(() => {
-    console.log('[GLOBAL-LOADING] Forçando finalização');
+    console.log('[GLOBAL-LOADING] Forçando finalização de todos os loadings');
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
@@ -94,7 +97,7 @@ export const useGlobalLoading = (config: LoadingConfig = DEFAULT_CONFIG) => {
   }, []);
 
   const reset = useCallback(() => {
-    console.log('[GLOBAL-LOADING] Reset');
+    console.log('[GLOBAL-LOADING] Reset do sistema de loading');
     setLoadingState({
       auth: true,
       data: false,

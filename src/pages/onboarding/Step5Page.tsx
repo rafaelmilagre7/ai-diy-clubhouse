@@ -4,39 +4,22 @@ import { OnboardingLayout } from '@/components/layout/OnboardingLayout';
 import { SimpleOnboardingStep5 } from '@/components/onboarding/steps/SimpleOnboardingStep5';
 import { SimpleStepNavigation } from '@/components/onboarding/SimpleStepNavigation';
 import { DataRestoreNotification } from '@/components/onboarding/DataRestoreNotification';
-import { useCleanOnboarding as useOnboarding } from '@/hooks/useCleanOnboarding';
+import { useSimpleOnboarding } from '@/hooks/useSimpleOnboarding';
 
 const OnboardingStep5Page: React.FC = () => {
   const navigate = useNavigate();
-  const { data, saveAndNavigate, canAccessStep, isSaving, updateData, dataRestored } = useOnboarding();
+  const { data, saveAndNavigate, isSaving, updateData, dataRestored } = useSimpleOnboarding();
   const stepRef = useRef<{ getData: () => any; isValid: () => boolean }>(null);
 
-  // 🎯 CORREÇÃO PREVENTIVA: Verificar se pode acessar esta etapa com proteção contra reset
+  // Simplificado - apenas verificar se onboarding já foi completado
   useEffect(() => {
-    // Prevenir execução durante operações de save
-    if (isSaving) {
-      console.log('⏸️ [STEP5] Pulando verificação de acesso durante save');
-      return;
-    }
+    if (isSaving) return;
     
-    const checkAccess = () => {
-      if (data.is_completed) {
-        console.log('✅ [STEP5] Onboarding completo, redirecionando para dashboard');
-        navigate('/dashboard', { replace: true });
-        return;
-      }
-      
-      if (!canAccessStep(5)) {
-        console.log('🔄 [STEP5] Sem acesso ao step 5, redirecionando para step 1');
-        navigate('/onboarding/step/1', { replace: true });
-      }
-    };
-    
-    // Executar apenas se houver dados carregados e não estiver salvando
-    if (data.user_id && !isSaving) {
-      checkAccess();
+    if (data.is_completed) {
+      console.log('✅ [STEP5] Onboarding completo, redirecionando para dashboard');
+      navigate('/dashboard', { replace: true });
     }
-  }, [data.is_completed, data.user_id, navigate, isSaving]); // Incluir isSaving
+  }, [data.is_completed, navigate, isSaving]);
 
   const handleNext = async (stepData?: any) => {
     console.log('➡️ [STEP5] handleNext chamado com:', stepData);

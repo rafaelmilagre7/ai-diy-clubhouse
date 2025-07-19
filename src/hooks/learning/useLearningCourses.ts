@@ -15,56 +15,13 @@ export const useLearningCourses = () => {
   } = useQuery({
     queryKey: ["learning-courses", user?.id],
     queryFn: async () => {
-      console.log("🔍 HOOK: Iniciando busca de cursos...");
-      
-      // Primeira tentativa: usar a function SQL
+      // Usar a function SQL para buscar cursos com estatísticas
       const { data, error } = await supabase.rpc('get_courses_with_stats');
 
       if (error) {
-        console.error("⚠️ HOOK: Erro na função RPC, tentando fallback direto:", error);
-        
-        // FALLBACK DE EMERGÊNCIA: Query direta na tabela
-        const { data: fallbackData, error: fallbackError } = await supabase
-          .from('learning_courses')
-          .select(`
-            id,
-            title,
-            description,
-            cover_image_url,
-            slug,
-            published,
-            created_at,
-            updated_at,
-            created_by,
-            order_index
-          `)
-          .eq('published', true)
-          .order('order_index');
-
-        if (fallbackError) {
-          console.error("❌ HOOK: Fallback também falhou:", fallbackError);
-          throw fallbackError;
-        }
-
-        console.log("✅ HOOK: Fallback funcionou, cursos encontrados:", fallbackData?.length || 0);
-        
-        // Converter para formato com stats zeradas
-        const coursesWithStats = (fallbackData || []).map(course => ({
-          ...course,
-          module_count: 0,
-          lesson_count: 0,
-          is_restricted: false
-        }));
-        
-        if (!coursesWithStats || coursesWithStats.length === 0) {
-          return [];
-        }
-
-        console.log("📊 HOOK: Retornando cursos via fallback:", coursesWithStats.length);
-        return coursesWithStats;
+        console.error("Erro ao buscar cursos:", error);
+        throw error;
       }
-
-      console.log("✅ HOOK: RPC funcionou, cursos encontrados:", data?.length || 0);
 
       if (!data || data.length === 0) {
         return [];

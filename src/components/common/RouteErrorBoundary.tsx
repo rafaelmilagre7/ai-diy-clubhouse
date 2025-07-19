@@ -76,35 +76,16 @@ class RouteErrorBoundary extends Component<RouteErrorBoundaryProps, RouteErrorBo
   }
 
   handleGoBack = () => {
-    // CORREÇÃO FASE 2: Usar navegação programática em vez de redirecionamento forçado
     if (window.history.length > 1) {
       window.history.back();
     } else {
-      // Usar React Router em vez de window.location.href
-      import('@/App').then(() => {
-        // Trigger uma re-renderização da aplicação
-        this.handleRetry();
-      });
+      window.location.href = '/dashboard';
     }
   };
 
   handleGoHome = () => {
-    // CORREÇÃO FASE 2: Evitar loops de redirecionamento
-    this.setState({
-      hasError: false,
-      error: null,
-      isRouteError: false,
-    });
-    
-    // Tentar navegar programaticamente primeiro
-    try {
-      window.history.pushState({}, '', '/dashboard');
-      this.handleRetry();
-    } catch {
-      // Fallback apenas se necessário
-      const { fallbackRoute } = this.props;
-      window.location.href = fallbackRoute || '/dashboard';
-    }
+    const { fallbackRoute } = this.props;
+    window.location.href = fallbackRoute || '/dashboard';
   };
 
   handleRetry = () => {

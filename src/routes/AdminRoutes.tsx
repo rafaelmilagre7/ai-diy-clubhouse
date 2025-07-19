@@ -1,108 +1,64 @@
 
 import { RouteObject } from "react-router-dom";
-import ProtectedRoute from '@/components/routing/ProtectedRoute';
+import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
 import AdminLayout from '@/components/layout/admin/AdminLayout';
 
-// Admin Pages
+// Admin pages
 import AdminDashboard from '@/pages/admin/AdminDashboard';
-import AdminAnalytics from '@/pages/admin/AdminAnalytics';
-import InvitesManagement from '@/pages/admin/invites/InvitesManagement';
-import AdminRoles from '@/pages/admin/AdminRoles';
-import AdminCommunicationCenter from '@/pages/admin/AdminCommunicationCenter';
-import AdminSolutions from '@/pages/admin/AdminSolutions';
+import AdminUsers from '@/pages/admin/AdminUsers';
 import AdminTools from '@/pages/admin/AdminTools';
 import AdminToolEdit from '@/pages/admin/AdminToolEdit';
+import AdminSolutions from '@/pages/admin/AdminSolutions';
+import AdminSolutionCreate from '@/pages/admin/AdminSolutionCreate';
+import SolutionEditor from '@/pages/admin/SolutionEditor';
+import AdminAnalytics from '@/pages/admin/AdminAnalytics';
+import AdminSuggestions from '@/pages/admin/AdminSuggestions';
+import AdminEvents from '@/pages/admin/AdminEvents';
+import AdminRoles from '@/pages/admin/AdminRoles';
+import InvitesManagement from '@/pages/admin/invites/InvitesManagement';
+import InviteDebug from '@/pages/admin/InviteDebug';
+import BenefitStats from '@/pages/admin/BenefitStats';
+import WhatsAppDebug from '@/pages/admin/WhatsAppDebug';
+import AdminCommunications from '@/pages/admin/AdminCommunications';
 import SupabaseDiagnostics from '@/pages/admin/SupabaseDiagnostics';
+import AdminSecurity from '@/pages/admin/AdminSecurity';
+import OnboardingPreview from '@/pages/admin/OnboardingPreview';
+import NPSAnalytics from '@/pages/admin/NPSAnalytics';
+import CertificateTemplates from '@/pages/admin/CertificateTemplates';
+
+// Função helper para criar rotas protegidas com AdminLayout (sempre aberto)
+const createAdminRoute = (path: string, Component: React.ComponentType<any>) => ({
+  path,
+  element: (
+    <ProtectedRoutes>
+      <AdminLayout>
+        <Component />
+      </AdminLayout>
+    </ProtectedRoutes>
+  )
+});
 
 export const adminRoutes: RouteObject[] = [
-  {
-    path: "/admin",
-    element: (
-      <ProtectedRoute requireAdmin={true}>
-        <AdminLayout>
-          <AdminDashboard />
-        </AdminLayout>
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/admin/analytics",
-    element: (
-      <ProtectedRoute requireAdmin={true}>
-        <AdminLayout>
-          <AdminAnalytics />
-        </AdminLayout>
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/admin/invites",
-    element: (
-      <ProtectedRoute requireAdmin={true}>
-        <AdminLayout>
-          <InvitesManagement />
-        </AdminLayout>
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/admin/users",
-    element: (
-      <ProtectedRoute requireAdmin={true}>
-        <AdminLayout>
-          <AdminRoles />
-        </AdminLayout>
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/admin/communication",
-    element: (
-      <ProtectedRoute requireAdmin={true}>
-        <AdminLayout>
-          <AdminCommunicationCenter />
-        </AdminLayout>
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/admin/solutions",
-    element: (
-      <ProtectedRoute requireAdmin={true}>
-        <AdminLayout>
-          <AdminSolutions />
-        </AdminLayout>
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/admin/tools",
-    element: (
-      <ProtectedRoute requireAdmin={true}>
-        <AdminLayout>
-          <AdminTools />
-        </AdminLayout>
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/admin/tools/:id",
-    element: (
-      <ProtectedRoute requireAdmin={true}>
-        <AdminLayout>
-          <AdminToolEdit />
-        </AdminLayout>
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/admin/diagnostics",
-    element: (
-      <ProtectedRoute requireAdmin={true}>
-        <AdminLayout>
-          <SupabaseDiagnostics />
-        </AdminLayout>
-      </ProtectedRoute>
-    ),
-  },
+  createAdminRoute("/admin", AdminDashboard),
+  createAdminRoute("/admin/users", AdminUsers),
+  createAdminRoute("/admin/tools", AdminTools),
+  createAdminRoute("/admin/tools/new", AdminToolEdit),
+  createAdminRoute("/admin/tools/:id", AdminToolEdit),
+  createAdminRoute("/admin/benefits", BenefitStats),
+  createAdminRoute("/admin/solutions", AdminSolutions),
+  createAdminRoute("/admin/solutions/new", AdminSolutionCreate),
+  createAdminRoute("/admin/solutions/:id", SolutionEditor),
+  createAdminRoute("/admin/analytics", AdminAnalytics),
+  createAdminRoute("/admin/suggestions", AdminSuggestions),
+  createAdminRoute("/admin/events", AdminEvents),
+  createAdminRoute("/admin/roles", AdminRoles),
+  createAdminRoute("/admin/invites", InvitesManagement),
+  createAdminRoute("/admin/invite-debug", InviteDebug),
+  createAdminRoute("/admin/communications", AdminCommunications),
+  createAdminRoute("/admin/security", AdminSecurity),
+  createAdminRoute("/admin/whatsapp-debug", WhatsAppDebug),
+  createAdminRoute("/admin/diagnostics", SupabaseDiagnostics),
+  createAdminRoute("/admin/onboarding-preview", OnboardingPreview),
+  createAdminRoute("/admin/nps", NPSAnalytics),
+  createAdminRoute("/admin/certificate-templates", CertificateTemplates),
 ];

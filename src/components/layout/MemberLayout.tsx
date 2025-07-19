@@ -1,28 +1,30 @@
 
 import React, { memo, useMemo, useCallback } from "react";
-import { Outlet } from "react-router-dom";
-import { toast } from "sonner";
 import { useAuth } from "@/contexts/auth";
 import BaseLayout from "./BaseLayout";
 import { MemberSidebar } from "./member/MemberSidebar";
 import { MemberContent } from "./member/MemberContent";
 import { useSidebarControl } from "@/hooks/useSidebarControl";
+import { toast } from "sonner";
 
 interface MemberLayoutProps {
-  // Layout para rotas protegidas - usa Outlet em vez de children
+  children: React.ReactNode;
 }
 
-const MemberLayout = memo<MemberLayoutProps>(() => {
+const MemberLayout = memo<MemberLayoutProps>(({ children }) => {
   const { profile, signOut } = useAuth();
   const { sidebarOpen, setSidebarOpen, toggleSidebar, isMobile } = useSidebarControl();
 
-  // DEBUG: Log para rastrear renderização do MemberLayout
-  console.log("🏗️ [MEMBER-LAYOUT] Renderizando MemberLayout:", {
-    hasProfile: !!profile,
-    profileName: profile?.name,
-    sidebarOpen,
-    isMobile
-  });
+  // Log apenas em desenvolvimento
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[MemberLayout] Renderizando com:', {
+      profile: !!profile,
+      profileName: profile?.name,
+      hasChildren: !!children,
+      sidebarOpen,
+      isMobile
+    });
+  }
 
   // Memoizar função para obter iniciais
   const getInitials = useCallback((name: string | null) => {
@@ -45,6 +47,9 @@ const MemberLayout = memo<MemberLayoutProps>(() => {
         toast.error("Erro ao fazer logout");
       }
     } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[MemberLayout] Erro no signOut:', error);
+      }
       toast.error("Erro ao fazer logout");
     }
   }, [signOut]);
@@ -57,8 +62,6 @@ const MemberLayout = memo<MemberLayoutProps>(() => {
   }), [profile?.name, profile?.email, profile?.avatar_url]);
 
   try {
-    console.log("✅ [MEMBER-LAYOUT] Tentando renderizar BaseLayout");
-    
     return (
       <>
         {/* Backdrop para mobile quando sidebar aberto */}
@@ -82,12 +85,14 @@ const MemberLayout = memo<MemberLayoutProps>(() => {
           sidebarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
         >
-          <Outlet />
+          {children}
         </BaseLayout>
       </>
     );
   } catch (error) {
-    console.error("❌ [MEMBER-LAYOUT] Erro ao renderizar:", error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[MemberLayout] Erro ao renderizar:', error);
+    }
     return (
       <div className="flex h-screen bg-background items-center justify-center">
         <div className="text-center">

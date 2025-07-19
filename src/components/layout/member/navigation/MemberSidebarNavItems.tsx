@@ -87,7 +87,7 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
     },
     {
       title: "Comunidade",
-      href: "/community",
+      href: "/comunidade",
       icon: MessageSquare,
       type: "regular"
     },
