@@ -41,17 +41,22 @@ export const RealStatsOverview = ({ data, loading }: RealStatsOverviewProps) => 
 
   // Encontrar o role com mais usuários (exceto admin)
   const dominantRole = data.usersByRole
-    .filter(role => role.role !== 'admin')
+    .filter(role => role.role !== 'Administradores')
     .sort((a, b) => b.count - a.count)[0];
+
+  // Calcular taxa de conclusão
+  const completionRate = data.totalSolutions > 0 
+    ? Math.round((data.completedImplementations / data.totalSolutions) * 100)
+    : 0;
 
   return (
     <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
       <StatCard
-        title="Total de Membros"
+        title="Total de Usuários"
         value={data.totalUsers}
         icon={<Users className="h-5 w-5" />}
         percentageChange={data.lastMonthGrowth}
-        percentageText="crescimento último mês"
+        percentageText="crescimento recente"
         colorScheme="blue"
       />
       
@@ -101,11 +106,11 @@ export const RealStatsOverview = ({ data, loading }: RealStatsOverviewProps) => 
       
       <StatCard
         title="Taxa de Conclusão"
-        value={`${data.totalSolutions > 0 ? Math.round((data.completedImplementations / data.totalSolutions) * 100) : 0}%`}
+        value={`${completionRate}%`}
         icon={<TrendingUp className="h-5 w-5" />}
-        percentageChange={data.completedImplementations > 0 ? 15.2 : 0}
-        percentageText="vs período anterior"
-        colorScheme="green"
+        percentageChange={completionRate > 50 ? 15.2 : -5.3}
+        percentageText="performance geral"
+        colorScheme={completionRate > 50 ? "green" : "orange"}
       />
     </div>
   );

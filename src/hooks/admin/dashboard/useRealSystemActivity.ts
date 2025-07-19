@@ -1,236 +1,142 @@
 
 import { useState, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
 
-interface SystemActivity {
+interface ActivityData {
   totalLogins: number;
   newUsers: number;
   activeImplementations: number;
   completedSolutions: number;
-  forumActivity: number;
-  learningProgress: number;
-  benefitClicks: number;
   systemHealth: 'healthy' | 'warning' | 'critical';
-  peakUsageHours: Array<{ hour: number; users: number }>;
   recentActivities: Array<{
-    id: string;
     type: string;
-    description: string;
-    timestamp: string;
-    user_id?: string;
+    count: number;
+    period: string;
   }>;
+  forumActivity: number;
 }
 
-// Função para calcular data de início baseada no timeRange
-const getStartDate = (timeRange: string): Date => {
-  const now = new Date();
-  
-  switch (timeRange) {
-    case '7d':
-      now.setDate(now.getDate() - 7);
-      break;
-    case '30d':
-      now.setDate(now.getDate() - 30);
-      break;
-    case '90d':
-      now.setDate(now.getDate() - 90);
-      break;
-    case 'all':
-    default:
-      now.setFullYear(2020); // Data muito antiga para pegar todos os dados
-      break;
-  }
-  
-  return now;
-};
-
 export const useRealSystemActivity = (timeRange: string) => {
-  const [activityData, setActivityData] = useState<SystemActivity>({
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(true);
+  const [activityData, setActivityData] = useState<ActivityData>({
     totalLogins: 0,
     newUsers: 0,
     activeImplementations: 0,
     completedSolutions: 0,
-    forumActivity: 0,
-    learningProgress: 0,
-    benefitClicks: 0,
     systemHealth: 'healthy',
-    peakUsageHours: [],
-    recentActivities: []
+    recentActivities: [],
+    forumActivity: 0
   });
-  const [loading, setLoading] = useState(true);
 
-  const fetchSystemActivity = async () => {
+  const refetch = async () => {
     try {
       setLoading(true);
       
+      console.log(`🔄 Carregando atividade do sistema para período: ${timeRange}`);
+      
       // Calcular data de início baseada no timeRange
-      const startDate = getStartDate(timeRange);
-      const startDateISO = startDate.toISOString();
+      const daysMap: { [key: string]: number } = {
+        '7d': 7,
+        '30d': 30,
+        '90d': 90,
+        '1y': 365
+      };
       
-      // Buscar atividades do sistema com queries otimizadas
-      const [
-        analyticsResult,
-        profilesResult,
-        progressResult,
-        forumTopicsResult,
-        forumPostsResult,
-        learningProgressResult,
-        benefitClicksResult
-      ] = await Promise.all([
-        // Atividades de analytics (logins, etc)
-        supabase
-          .from('analytics')
-          .select('event_type, created_at, user_id', { count: 'exact' })
-          .gte('created_at', startDateISO),
-        
-        // Novos usuários
-        supabase
-          .from('profiles')
-          .select('id, created_at', { count: 'exact' })
-          .gte('created_at', startDateISO),
-        
-        // Implementações ativas e completas
-        supabase
-          .from('progress')
-          .select('id, is_completed, created_at, completed_at', { count: 'exact' })
-          .gte('created_at', startDateISO),
-        
-        // Atividade do fórum - tópicos
-        supabase
-          .from('forum_topics')
-          .select('id, created_at', { count: 'exact' })
-          .gte('created_at', startDateISO),
-        
-        // Atividade do fórum - posts
-        supabase
-          .from('forum_posts')
-          .select('id, created_at', { count: 'exact' })
-          .gte('created_at', startDateISO),
-        
-        // Progresso de aprendizagem
-        supabase
-          .from('learning_progress')
-          .select('id, progress_percentage, created_at', { count: 'exact' })
-          .gte('created_at', startDateISO),
-        
-        // Cliques em benefícios
-        supabase
-          .from('benefit_clicks')
-          .select('id, clicked_at', { count: 'exact' })
-          .gte('clicked_at', startDateISO)
-      ]);
+      const daysBack = daysMap[timeRange] || 30;
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - daysBack);
 
-      // Processar dados de login
-      const loginEvents = (analyticsResult.data || []).filter(
-        event => event.event_type === 'login' || event.event_type === 'session_start'
-      );
+      // 1. NOVOS USUÁRIOS NO PERÍODO
+      const { count: newUsers } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', startDate.toISOString());
 
-      // Implementações ativas vs completas
-      const progressData = progressResult.data || [];
-      const activeImplementations = progressData.filter(p => !p.is_completed).length;
-      const completedSolutions = progressData.filter(p => p.is_completed).length;
+      // 2. IMPLEMENTAÇÕES ATIVAS (em progresso)
+      const { count: activeImplementations } = await supabase
+        .from('progress')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_completed', false)
+        .gte('last_activity', startDate.toISOString());
 
-      // Progresso de aprendizagem significativo (>= 50%)
-      const learningData = learningProgressResult.data || [];
-      const significantProgress = learningData.filter(
-        lp => (lp.progress_percentage || 0) >= 50
-      ).length;
+      // 3. SOLUÇÕES COMPLETADAS NO PERÍODO
+      const { count: completedSolutions } = await supabase
+        .from('progress')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_completed', true)
+        .gte('completed_at', startDate.toISOString());
 
-      // Calcular horas de pico de uso baseado nos analytics
-      const hourlyUsage = new Map<number, Set<string>>();
-      (analyticsResult.data || []).forEach(event => {
-        if (event.user_id) {
-          const hour = new Date(event.created_at).getHours();
-          if (!hourlyUsage.has(hour)) {
-            hourlyUsage.set(hour, new Set());
-          }
-          hourlyUsage.get(hour)?.add(event.user_id);
-        }
-      });
+      // 4. ATIVIDADE DO FÓRUM NO PERÍODO
+      const { count: forumActivity } = await supabase
+        .from('forum_posts')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', startDate.toISOString());
 
-      const peakUsageHours = Array.from(hourlyUsage.entries())
-        .map(([hour, users]) => ({ hour, users: users.size }))
-        .sort((a, b) => b.users - a.users)
-        .slice(0, 6);
+      // 5. EVENTOS DE LOGIN (usando analytics se disponível)
+      const { count: totalLogins } = await supabase
+        .from('analytics')
+        .select('*', { count: 'exact', head: true })
+        .eq('event_type', 'login')
+        .gte('created_at', startDate.toISOString());
 
-      // Atividades recentes diversificadas
-      const recentActivities = [
-        ...(forumTopicsResult.data || []).slice(0, 3).map(topic => ({
-          id: topic.id,
-          type: 'forum',
-          description: 'Novo tópico criado no fórum',
-          timestamp: topic.created_at
-        })),
-        ...(progressResult.data || [])
-          .filter(p => p.completed_at)
-          .slice(0, 2)
-          .map(progress => ({
-            id: progress.id,
-            type: 'implementation',
-            description: 'Solução implementada com sucesso',
-            timestamp: progress.completed_at
-          })),
-        ...(learningData || [])
-          .filter(lp => lp.progress_percentage === 100)
-          .slice(0, 2)
-          .map(lesson => ({
-            id: lesson.id,
-            type: 'learning',
-            description: 'Aula concluída',
-            timestamp: lesson.created_at
-          }))
-      ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-        .slice(0, 10);
-
-      // Determinar saúde do sistema
-      const totalActivity = loginEvents.length + progressData.length + 
-                           (forumTopicsResult.count || 0) + (forumPostsResult.count || 0);
-      
+      // 6. CALCULAR SAÚDE DO SISTEMA
       let systemHealth: 'healthy' | 'warning' | 'critical' = 'healthy';
-      if (totalActivity < 10) {
+      
+      if (newUsers === 0 && activeImplementations === 0) {
         systemHealth = 'critical';
-      } else if (totalActivity < 50) {
+      } else if (newUsers && newUsers < 5) {
         systemHealth = 'warning';
       }
 
-      setActivityData({
-        totalLogins: loginEvents.length,
-        newUsers: profilesResult.count || 0,
-        activeImplementations,
-        completedSolutions,
-        forumActivity: (forumTopicsResult.count || 0) + (forumPostsResult.count || 0),
-        learningProgress: significantProgress,
-        benefitClicks: benefitClicksResult.count || 0,
-        systemHealth,
-        peakUsageHours,
-        recentActivities
-      });
+      // 7. ATIVIDADES RECENTES ESTRUTURADAS
+      const recentActivities = [
+        {
+          type: 'Novos usuários',
+          count: newUsers || 0,
+          period: `últimos ${daysBack} dias`
+        },
+        {
+          type: 'Implementações',
+          count: (activeImplementations || 0) + (completedSolutions || 0),
+          period: `últimos ${daysBack} dias`
+        },
+        {
+          type: 'Usuários ativos',
+          count: activeImplementations || 0,
+          period: 'em implementação'
+        }
+      ];
 
-      console.log(`✅ Atividade do sistema otimizada para período ${timeRange}:`, {
-        totalLogins: loginEvents.length,
-        newUsers: profilesResult.count || 0,
-        activeImplementations,
-        completedSolutions,
+      const finalActivityData: ActivityData = {
+        totalLogins: totalLogins || 0,
+        newUsers: newUsers || 0,
+        activeImplementations: activeImplementations || 0,
+        completedSolutions: completedSolutions || 0,
         systemHealth,
-        period: timeRange,
-        startDate: startDateISO
-      });
+        recentActivities,
+        forumActivity: forumActivity || 0
+      };
 
-    } catch (error) {
-      console.error('Erro ao buscar atividade do sistema:', error);
+      setActivityData(finalActivityData);
       
-      // Fallback com dados estruturados
-      setActivityData({
-        totalLogins: 0,
-        newUsers: 0,
-        activeImplementations: 0,
-        completedSolutions: 0,
-        forumActivity: 0,
-        learningProgress: 0,
-        benefitClicks: 0,
-        systemHealth: 'critical',
-        peakUsageHours: [],
-        recentActivities: []
+      console.log('✅ Atividade do sistema carregada:', {
+        totalLogins: finalActivityData.totalLogins,
+        newUsers: finalActivityData.newUsers,
+        activeImplementations: finalActivityData.activeImplementations,
+        completedSolutions: finalActivityData.completedSolutions,
+        systemHealth: finalActivityData.systemHealth,
+        period: timeRange,
+        startDate: startDate.toISOString()
+      });
+
+    } catch (error: any) {
+      console.error("❌ Erro ao carregar atividade do sistema:", error);
+      toast({
+        title: "Erro ao carregar atividade",
+        description: "Ocorreu um erro ao carregar os dados de atividade do sistema.",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -238,8 +144,8 @@ export const useRealSystemActivity = (timeRange: string) => {
   };
 
   useEffect(() => {
-    fetchSystemActivity();
+    refetch();
   }, [timeRange]);
 
-  return { activityData, loading, refetch: fetchSystemActivity };
+  return { activityData, loading, refetch };
 };
