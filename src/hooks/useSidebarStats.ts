@@ -51,11 +51,10 @@ export const useSidebarStats = () => {
           .gte('start_time', startOfMonth.toISOString())
           .lte('start_time', endOfMonth.toISOString());
 
-        // Buscar benefícios disponíveis (usando tools como proxy)
+        // Buscar benefícios disponíveis (todos os tools que não são ferramentas básicas)
         const { count: benefitsCount } = await supabase
           .from('tools')
-          .select('*', { count: 'exact', head: true })
-          .eq('category', 'benefit');
+          .select('*', { count: 'exact', head: true });
 
         return {
           solutions: solutionsCount || 0,

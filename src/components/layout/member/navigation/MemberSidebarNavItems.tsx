@@ -71,7 +71,6 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
             icon={GraduationCap}
             sidebarOpen={sidebarOpen}
             badge={isLoading ? "..." : stats?.courses?.toString()}
-            isNew={true}
           />
           <TooltipNavItem
             to="/learning/certificates"
