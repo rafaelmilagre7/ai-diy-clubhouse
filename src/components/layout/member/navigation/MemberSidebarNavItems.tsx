@@ -47,7 +47,6 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
       { to: '/learning/certificates', label: 'Certificados', icon: Award },
       { to: '/benefits', label: 'Benefícios', icon: Trophy },
       { to: '/profile', label: 'Perfil', icon: Settings },
-      { to: '/support', label: 'Suporte', icon: HelpCircle },
     ];
 
     // Adicionar item de admin apenas se for admin
