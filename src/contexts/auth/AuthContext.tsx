@@ -28,37 +28,30 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     profile?.user_roles?.name === 'formacao' || isAdmin
   );
 
-  // Função para buscar perfil com retry e timeout
+  // Função para buscar perfil com retry e timeout otimizado
   const fetchUserProfile = async (userId: string, retryCount = 0): Promise<UserProfile | null> => {
-    const maxRetries = 3;
-    const timeoutMs = 5000; // 5 segundos de timeout
+    const maxRetries = 2; // Reduzido para 2 tentativas
+    const timeoutMs = 3000; // Reduzido para 3 segundos
 
     try {
       console.log(`[AUTH] Buscando perfil (tentativa ${retryCount + 1}/${maxRetries + 1})...`);
       
-      // Criar promise com timeout
-      const profilePromise = supabase.rpc('get_user_profile_optimized', {
-        target_user_id: userId
-      });
+      // Usar fetchUserProfileSecurely que tem cache e é mais robusto
+      const { fetchUserProfileSecurely } = await import('./utils/authSessionUtils');
+      const profile = await Promise.race([
+        fetchUserProfileSecurely(userId),
+        new Promise<null>((_, reject) => {
+          setTimeout(() => reject(new Error('Timeout ao buscar perfil')), timeoutMs);
+        })
+      ]);
 
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Timeout ao buscar perfil')), timeoutMs);
-      });
-
-      const { data, error } = await Promise.race([profilePromise, timeoutPromise]) as any;
-
-      if (error) {
-        console.error(`[AUTH] Erro ao buscar perfil:`, error);
-        throw error;
-      }
-
-      if (!data) {
+      if (!profile) {
         console.warn(`[AUTH] Perfil não encontrado para usuário: ${userId}`);
         
         // Se não encontrou perfil e ainda temos retries, tentar novamente
         if (retryCount < maxRetries) {
-          console.log(`[AUTH] Tentando novamente em 2 segundos...`);
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          console.log(`[AUTH] Tentando novamente em 1 segundo...`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
           return fetchUserProfile(userId, retryCount + 1);
         }
         
@@ -66,20 +59,20 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       }
 
       console.log(`[AUTH] Perfil carregado com sucesso:`, {
-        name: data.name,
-        email: data.email,
-        role: data.user_roles?.name || 'sem role'
+        name: profile.name,
+        email: profile.email,
+        role: profile.user_roles?.name || 'sem role'
       });
 
-      return data;
+      return profile;
 
     } catch (error) {
       console.error(`[AUTH] Erro na tentativa ${retryCount + 1}:`, error);
       
       // Se ainda temos retries disponíveis, tentar novamente
       if (retryCount < maxRetries) {
-        console.log(`[AUTH] Tentando novamente em ${(retryCount + 1) * 2} segundos...`);
-        await new Promise(resolve => setTimeout(resolve, (retryCount + 1) * 2000));
+        console.log(`[AUTH] Tentando novamente em 1 segundo...`);
+        await new Promise(resolve => setTimeout(resolve, 1000));
         return fetchUserProfile(userId, retryCount + 1);
       }
       
@@ -124,12 +117,40 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setAuthError(null);
 
         if (event === 'SIGNED_IN' && session?.user) {
-          // Usuário logado - buscar perfil
+          // Usuário logado - buscar perfil com fallback
           setIsLoading(true);
           setProfileLoadAttempts(prev => prev + 1);
           
-          const userProfile = await fetchUserProfile(session.user.id);
-          setProfile(userProfile);
+          try {
+            const userProfile = await fetchUserProfile(session.user.id);
+            if (userProfile) {
+              setProfile(userProfile);
+            } else {
+              // Fallback: Criar perfil básico se não conseguir carregar
+              console.warn('[AUTH] Criando perfil básico como fallback');
+              const basicProfile = {
+                id: session.user.id,
+                email: session.user.email || '',
+                name: session.user.user_metadata?.name || 'Usuário',
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+                user_roles: { name: 'member' }
+              };
+              setProfile(basicProfile as any);
+            }
+          } catch (error) {
+            console.error('[AUTH] Erro crítico ao buscar perfil, usando fallback:', error);
+            // Criar perfil de emergência para não quebrar a aplicação
+            const emergencyProfile = {
+              id: session.user.id,
+              email: session.user.email || '',
+              name: 'Usuário',
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+              user_roles: { name: 'member' }
+            };
+            setProfile(emergencyProfile as any);
+          }
           setIsLoading(false);
           
         } else if (event === 'SIGNED_OUT') {
@@ -159,9 +180,35 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           setSession(session);
           setUser(session.user);
           
-          // Buscar perfil para sessão existente
-          const userProfile = await fetchUserProfile(session.user.id);
-          setProfile(userProfile);
+          // Buscar perfil para sessão existente com fallback
+          try {
+            const userProfile = await fetchUserProfile(session.user.id);
+            if (userProfile) {
+              setProfile(userProfile);
+            } else {
+              // Fallback básico
+              const basicProfile = {
+                id: session.user.id,
+                email: session.user.email || '',
+                name: session.user.user_metadata?.name || 'Usuário',
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+                user_roles: { name: 'member' }
+              };
+              setProfile(basicProfile as any);
+            }
+          } catch (error) {
+            console.error('[AUTH] Erro ao buscar perfil na inicialização, usando fallback');
+            const emergencyProfile = {
+              id: session.user.id,
+              email: session.user.email || '',
+              name: 'Usuário',
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+              user_roles: { name: 'member' }
+            };
+            setProfile(emergencyProfile as any);
+          }
         } else {
           console.log('[AUTH] Nenhuma sessão existente');
         }

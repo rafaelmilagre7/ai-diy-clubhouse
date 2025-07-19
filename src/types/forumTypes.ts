@@ -27,6 +27,14 @@ export interface Profile {
   role_id?: string;
   company_name?: string;
   industry?: string;
+  created_at: string;
+  updated_at: string;
+  user_roles?: {
+    id: string;
+    name: string;
+    description?: string | null;
+    permissions?: any;
+  } | null;
 }
 
 export interface Topic {

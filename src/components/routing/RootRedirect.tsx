@@ -48,14 +48,9 @@ const RootRedirect = () => {
     return <Navigate to={roleName === 'formacao' ? '/formacao' : '/dashboard'} replace />;
   }
   
-  // Redirecionamento baseado em role
-  const roleName = getUserRoleName(profile);
-  
-  if (roleName === 'formacao') {
-    return <Navigate to="/formacao" replace />;
-  }
-  
-  // Padrão: dashboard
+  // CORREÇÃO: Todos os usuários vão para /dashboard por padrão
+  // Admin pode acessar /admin separadamente se quiser
+  console.log("🔄 [ROOT-REDIRECT] Redirecionando para dashboard padrão");
   return <Navigate to="/dashboard" replace />;
 };
 

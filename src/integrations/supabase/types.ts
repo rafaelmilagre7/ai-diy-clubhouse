@@ -2862,8 +2862,6 @@ export type Database = {
           last_active: string | null
           linkedin_url: string | null
           name: string | null
-          onboarding_completed: boolean
-          onboarding_completed_at: string | null
           professional_bio: string | null
           referrals_count: number
           role: string
@@ -2886,8 +2884,6 @@ export type Database = {
           last_active?: string | null
           linkedin_url?: string | null
           name?: string | null
-          onboarding_completed?: boolean
-          onboarding_completed_at?: string | null
           professional_bio?: string | null
           referrals_count?: number
           role?: string
@@ -2910,8 +2906,6 @@ export type Database = {
           last_active?: string | null
           linkedin_url?: string | null
           name?: string | null
-          onboarding_completed?: boolean
-          onboarding_completed_at?: string | null
           professional_bio?: string | null
           referrals_count?: number
           role?: string
@@ -4678,16 +4672,6 @@ export type Database = {
         }
         Relationships: []
       }
-      user_segmentation_analytics: {
-        Row: {
-          completed_onboarding: number | null
-          new_users_30d: number | null
-          new_users_7d: number | null
-          role_name: string | null
-          user_count: number | null
-        }
-        Relationships: []
-      }
     }
     Functions: {
       accept_invite: {
@@ -5402,8 +5386,6 @@ export type Database = {
           last_active: string | null
           linkedin_url: string | null
           name: string | null
-          onboarding_completed: boolean
-          onboarding_completed_at: string | null
           professional_bio: string | null
           referrals_count: number
           role: string
