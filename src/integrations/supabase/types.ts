@@ -4755,6 +4755,10 @@ export type Database = {
         Args: { user_id: string; course_id: string }
         Returns: boolean
       }
+      can_access_learning_content: {
+        Args: { target_user_id?: string }
+        Returns: boolean
+      }
       can_assign_role: {
         Args: { admin_user_id: string; target_role_id: string }
         Returns: boolean
@@ -5504,6 +5508,10 @@ export type Database = {
         Args: { user_id?: string }
         Returns: string
       }
+      get_user_role_secure: {
+        Args: { target_user_id?: string }
+        Returns: string
+      }
       get_user_security_permissions: {
         Args: { user_id: string }
         Returns: string[]
@@ -5633,6 +5641,10 @@ export type Database = {
       }
       is_user_admin_safe: {
         Args: { user_id: string }
+        Returns: boolean
+      }
+      is_user_admin_secure: {
+        Args: { target_user_id?: string }
         Returns: boolean
       }
       is_valid_url: {

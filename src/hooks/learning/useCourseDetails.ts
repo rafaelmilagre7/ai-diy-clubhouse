@@ -2,9 +2,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
+import { canAccessLearningContent } from "@/utils/roleValidation";
 
 export const useCourseDetails = (courseId: string | undefined) => {
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
 
   const {
     data: courseData,
@@ -13,29 +14,22 @@ export const useCourseDetails = (courseId: string | undefined) => {
   } = useQuery({
     queryKey: ["course-details", courseId],
     queryFn: async () => {
-      if (!courseId) {
-        throw new Error("Course ID is required");
+      if (!courseId || !user) {
+        throw new Error("Course ID and user are required");
       }
 
-      // Log para debug - verificar role do usuário
-      console.log("🔍 Verificando acesso ao curso:", {
-        userId: user?.id,
-        userEmail: user?.email,
-        profileRole: profile?.role,
-        courseId
-      });
-
-      // Verificar se o usuário tem permissão para acessar cursos
-      const isAdmin = profile?.role === 'admin';
-      const isMembroClub = profile?.role === 'membro_club';
-      const isFormacao = profile?.role === 'formacao';
+      // Verificar acesso usando função SECURITY DEFINER
+      const hasAccess = await canAccessLearningContent(user.id);
       
-      if (!isAdmin && !isMembroClub && !isFormacao) {
-        console.log("❌ Acesso negado - Role insuficiente:", profile?.role);
+      // Fallback para admin por email @viverdeia.ai
+      const isAdminByEmail = user.email?.endsWith('@viverdeia.ai');
+      
+      if (!hasAccess && !isAdminByEmail) {
+        console.log("❌ Acesso negado ao curso");
         throw new Error("Acesso negado - Role insuficiente");
       }
 
-      console.log("✅ Acesso permitido para role:", profile?.role);
+      console.log("✅ Acesso permitido ao curso");
 
       // Buscar dados do curso
       const { data: course, error: courseError } = await supabase
@@ -97,7 +91,7 @@ export const useCourseDetails = (courseId: string | undefined) => {
         userProgress
       };
     },
-    enabled: !!courseId && !!user && !!profile,
+    enabled: !!courseId && !!user,
     retry: 1
   });
 
