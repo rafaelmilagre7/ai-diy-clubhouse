@@ -5,37 +5,41 @@ import { CourseDetailsSkeleton } from "@/components/learning/member/CourseDetail
 import { CourseModules } from "@/components/learning/member/CourseModules";
 import { CourseHeader } from "@/components/learning/member/CourseHeader";
 import { CourseProgress } from "@/components/learning/member/CourseProgress";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, AlertCircle } from "lucide-react";
 import { useCourseDetails } from "@/hooks/learning/useCourseDetails";
 import { useCourseStats } from "@/hooks/learning/useCourseStats";
-import { AccessDenied } from "@/components/learning/member/AccessDenied";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const CourseDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   
-  // Usar nossos hooks customizados
-  const { course, modules, allLessons, userProgress, isLoading, accessDenied } = useCourseDetails(id);
+  const { course, modules, allLessons, userProgress, isLoading, error } = useCourseDetails(id);
   const { courseStats, firstLessonId, courseProgress } = useCourseStats({ 
     modules, 
     allLessons, 
     userProgress 
   });
 
-  // Log para depuração
-  console.log("CourseDetails - Dados do curso carregados:", {
-    courseId: id,
-    courseTitle: course?.title,
-    modulesCount: modules?.length || 0,
-    allLessonsCount: allLessons?.length || 0,
-    firstLessonId,
-    accessDenied,
-    isLoading
-  });
+  // Se ainda está carregando, mostrar skeleton
+  if (isLoading) {
+    return (
+      <div className="container pt-6 pb-12">
+        <Button
+          variant="ghost"
+          className="mb-4"
+          onClick={() => navigate("/learning")}
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Voltar para Cursos
+        </Button>
+        <CourseDetailsSkeleton />
+      </div>
+    );
+  }
 
-  // Se o acesso foi negado, mostrar o componente específico
-  if (accessDenied) {
-    console.log("Acesso negado - exibindo componente AccessDenied");
+  // Se houve erro ou curso não encontrado
+  if (error || !course) {
     return (
       <div className="container pt-6 pb-12">
         <Button
@@ -47,18 +51,18 @@ const CourseDetails = () => {
           Voltar para Cursos
         </Button>
         
-        <AccessDenied courseId={id} />
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Curso não encontrado</AlertTitle>
+          <AlertDescription>
+            {error?.message || "Não foi possível carregar os dados deste curso. Você será redirecionado em alguns segundos."}
+          </AlertDescription>
+        </Alert>
       </div>
     );
   }
 
-  // Se o curso não foi encontrado, o hook de useCourseDetails já fará o redirecionamento
-  if (!id || !course) {
-    console.log("Curso não encontrado, redirecionando...");
-    return null;
-  }
-
-  // Definir quais módulos devem ser expandidos por padrão (primeiro módulo)
+  // Definir módulos expandidos (primeiro módulo)
   const expandedModules = modules && modules.length > 0 ? [modules[0].id] : [];
 
   return (
@@ -72,35 +76,29 @@ const CourseDetails = () => {
         Voltar para Cursos
       </Button>
       
-      {isLoading ? (
-        <CourseDetailsSkeleton />
-      ) : (
-        <>
-          <CourseHeader 
-            title={course.title} 
-            description={course.description} 
-            coverImage={course.cover_image_url}
-            stats={courseStats}
-            firstLessonId={firstLessonId}
-            courseId={id}
-          />
-          
-          <div className="mt-6">
-            <CourseProgress 
-              percentage={courseProgress} 
-              className="mb-6"
-            />
-            
-            <CourseModules 
-              modules={modules || []} 
-              courseId={id} 
-              userProgress={userProgress || []}
-              course={course}
-              expandedModules={expandedModules}
-            />
-          </div>
-        </>
-      )}
+      <CourseHeader 
+        title={course.title} 
+        description={course.description} 
+        coverImage={course.cover_image_url}
+        stats={courseStats}
+        firstLessonId={firstLessonId}
+        courseId={id}
+      />
+      
+      <div className="mt-6">
+        <CourseProgress 
+          percentage={courseProgress} 
+          className="mb-6"
+        />
+        
+        <CourseModules 
+          modules={modules} 
+          courseId={id} 
+          userProgress={userProgress}
+          course={course}
+          expandedModules={expandedModules}
+        />
+      </div>
     </div>
   );
 };

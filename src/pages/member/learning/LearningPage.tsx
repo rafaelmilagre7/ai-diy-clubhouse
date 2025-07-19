@@ -25,13 +25,6 @@ export default function LearningPage() {
     keywords: 'cursos IA, aprendizado inteligência artificial, formação IA, educação AI'
   });
 
-  console.log('[LEARNING-PAGE] Estado atual:', {
-    coursesCount: courses?.length || 0,
-    isLoading,
-    hasError: !!error,
-    userProgressCount: userProgress?.length || 0
-  });
-
   return (
     <div className="space-y-6">
       <MemberLearningHeader />
