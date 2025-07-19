@@ -14,7 +14,7 @@ export const useDashboardData = () => {
   const [analyticsData, setAnalyticsData] = useState<any[]>([]);
   const [profilesData, setProfilesData] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const isAdmin = profile?.role === 'admin';
+  const isAdmin = profile?.user_roles?.name === 'admin';
 
   useEffect(() => {
     const fetchData = async () => {
@@ -86,7 +86,7 @@ export const useDashboardData = () => {
     };
     
     fetchData();
-  }, [toast, isAdmin, profile?.role]);
+  }, [toast, isAdmin, profile?.user_roles?.name]);
   
   return { 
     solutions, 

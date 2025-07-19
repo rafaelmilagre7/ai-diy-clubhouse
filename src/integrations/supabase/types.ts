@@ -348,13 +348,6 @@ export type Database = {
             foreignKeyName: "benefit_access_control_tool_id_fkey"
             columns: ["tool_id"]
             isOneToOne: false
-            referencedRelation: "benefits"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "benefit_access_control_tool_id_fkey"
-            columns: ["tool_id"]
-            isOneToOne: false
             referencedRelation: "tools"
             referencedColumns: ["id"]
           },
@@ -383,13 +376,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "benefit_clicks_tool_id_fkey"
-            columns: ["tool_id"]
-            isOneToOne: false
-            referencedRelation: "benefits"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "benefit_clicks_tool_id_fkey"
             columns: ["tool_id"]
@@ -1114,6 +1100,45 @@ export type Database = {
           },
         ]
       }
+      implementation_checkpoints: {
+        Row: {
+          checkpoint_data: Json
+          completed_steps: string[] | null
+          created_at: string
+          id: string
+          last_completed_step: string | null
+          progress_percentage: number | null
+          solution_id: string
+          total_steps: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          checkpoint_data?: Json
+          completed_steps?: string[] | null
+          created_at?: string
+          id?: string
+          last_completed_step?: string | null
+          progress_percentage?: number | null
+          solution_id: string
+          total_steps?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          checkpoint_data?: Json
+          completed_steps?: string[] | null
+          created_at?: string
+          id?: string
+          last_completed_step?: string | null
+          progress_percentage?: number | null
+          solution_id?: string
+          total_steps?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       implementation_trails: {
         Row: {
           created_at: string | null
@@ -1668,13 +1693,6 @@ export type Database = {
             foreignKeyName: "learning_lesson_tools_tool_id_fkey"
             columns: ["tool_id"]
             isOneToOne: false
-            referencedRelation: "benefits"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "learning_lesson_tools_tool_id_fkey"
-            columns: ["tool_id"]
-            isOneToOne: false
             referencedRelation: "tools"
             referencedColumns: ["id"]
           },
@@ -2121,6 +2139,36 @@ export type Database = {
           },
         ]
       }
+      navigation_events: {
+        Row: {
+          id: string
+          ip_address: string | null
+          path: string
+          session_id: string | null
+          timestamp: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          id?: string
+          ip_address?: string | null
+          path: string
+          session_id?: string | null
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          id?: string
+          ip_address?: string | null
+          path?: string
+          session_id?: string | null
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       network_connections: {
         Row: {
           created_at: string
@@ -2453,168 +2501,6 @@ export type Database = {
         }
         Relationships: []
       }
-      onboarding: {
-        Row: {
-          ai_implementation_budget: string | null
-          ai_implementation_objective: string | null
-          ai_implementation_urgency: string | null
-          ai_knowledge_level: string | null
-          ai_main_challenge: string | null
-          ai_tools_used: string[] | null
-          annual_revenue: string | null
-          area_to_impact: string | null
-          best_days: string[] | null
-          best_periods: string[] | null
-          birth_date: string | null
-          business_sector: string | null
-          city: string | null
-          community_interaction_style: string | null
-          company_name: string | null
-          company_size: string | null
-          company_website: string | null
-          completed_at: string | null
-          completed_steps: number[] | null
-          content_frequency: string | null
-          content_preference: string[] | null
-          country: string | null
-          created_at: string | null
-          curiosity: string | null
-          current_step: number | null
-          email: string | null
-          expected_result_90_days: string | null
-          follow_up_type: string | null
-          has_implemented_ai: string | null
-          id: string
-          instagram: string | null
-          is_completed: boolean | null
-          linkedin: string | null
-          main_objective: string | null
-          main_obstacle: string | null
-          motivation_sharing: string | null
-          name: string | null
-          phone: string | null
-          position: string | null
-          preferred_communication_channel: string | null
-          preferred_support: string | null
-          profile_picture: string | null
-          state: string | null
-          success_metric: string | null
-          timezone: string | null
-          updated_at: string | null
-          urgency_level: string | null
-          user_id: string
-          wants_networking: string | null
-          weekly_learning_time: string | null
-          who_will_implement: string | null
-        }
-        Insert: {
-          ai_implementation_budget?: string | null
-          ai_implementation_objective?: string | null
-          ai_implementation_urgency?: string | null
-          ai_knowledge_level?: string | null
-          ai_main_challenge?: string | null
-          ai_tools_used?: string[] | null
-          annual_revenue?: string | null
-          area_to_impact?: string | null
-          best_days?: string[] | null
-          best_periods?: string[] | null
-          birth_date?: string | null
-          business_sector?: string | null
-          city?: string | null
-          community_interaction_style?: string | null
-          company_name?: string | null
-          company_size?: string | null
-          company_website?: string | null
-          completed_at?: string | null
-          completed_steps?: number[] | null
-          content_frequency?: string | null
-          content_preference?: string[] | null
-          country?: string | null
-          created_at?: string | null
-          curiosity?: string | null
-          current_step?: number | null
-          email?: string | null
-          expected_result_90_days?: string | null
-          follow_up_type?: string | null
-          has_implemented_ai?: string | null
-          id?: string
-          instagram?: string | null
-          is_completed?: boolean | null
-          linkedin?: string | null
-          main_objective?: string | null
-          main_obstacle?: string | null
-          motivation_sharing?: string | null
-          name?: string | null
-          phone?: string | null
-          position?: string | null
-          preferred_communication_channel?: string | null
-          preferred_support?: string | null
-          profile_picture?: string | null
-          state?: string | null
-          success_metric?: string | null
-          timezone?: string | null
-          updated_at?: string | null
-          urgency_level?: string | null
-          user_id: string
-          wants_networking?: string | null
-          weekly_learning_time?: string | null
-          who_will_implement?: string | null
-        }
-        Update: {
-          ai_implementation_budget?: string | null
-          ai_implementation_objective?: string | null
-          ai_implementation_urgency?: string | null
-          ai_knowledge_level?: string | null
-          ai_main_challenge?: string | null
-          ai_tools_used?: string[] | null
-          annual_revenue?: string | null
-          area_to_impact?: string | null
-          best_days?: string[] | null
-          best_periods?: string[] | null
-          birth_date?: string | null
-          business_sector?: string | null
-          city?: string | null
-          community_interaction_style?: string | null
-          company_name?: string | null
-          company_size?: string | null
-          company_website?: string | null
-          completed_at?: string | null
-          completed_steps?: number[] | null
-          content_frequency?: string | null
-          content_preference?: string[] | null
-          country?: string | null
-          created_at?: string | null
-          curiosity?: string | null
-          current_step?: number | null
-          email?: string | null
-          expected_result_90_days?: string | null
-          follow_up_type?: string | null
-          has_implemented_ai?: string | null
-          id?: string
-          instagram?: string | null
-          is_completed?: boolean | null
-          linkedin?: string | null
-          main_objective?: string | null
-          main_obstacle?: string | null
-          motivation_sharing?: string | null
-          name?: string | null
-          phone?: string | null
-          position?: string | null
-          preferred_communication_channel?: string | null
-          preferred_support?: string | null
-          profile_picture?: string | null
-          state?: string | null
-          success_metric?: string | null
-          timezone?: string | null
-          updated_at?: string | null
-          urgency_level?: string | null
-          user_id?: string
-          wants_networking?: string | null
-          weekly_learning_time?: string | null
-          who_will_implement?: string | null
-        }
-        Relationships: []
-      }
       onboarding_abandonment_points: {
         Row: {
           abandoned_at: string
@@ -2867,84 +2753,6 @@ export type Database = {
         }
         Relationships: []
       }
-      onboarding_users: {
-        Row: {
-          areas_interesse: string[] | null
-          cidade: string
-          como_conheceu: string | null
-          created_at: string | null
-          email: string
-          estado: string
-          experiencia_anterior: string | null
-          id: string
-          interesse_entrevista: boolean | null
-          interesse_networking: boolean | null
-          nivel_conhecimento: string | null
-          nome_completo: string
-          nome_empresa: string | null
-          objetivos: string[] | null
-          observacoes: string | null
-          perfil_usuario: string
-          permite_case: boolean | null
-          preferencia_horario: string[] | null
-          quem_indicou: string | null
-          segmento_empresa: string | null
-          telefone: string | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          areas_interesse?: string[] | null
-          cidade: string
-          como_conheceu?: string | null
-          created_at?: string | null
-          email: string
-          estado: string
-          experiencia_anterior?: string | null
-          id?: string
-          interesse_entrevista?: boolean | null
-          interesse_networking?: boolean | null
-          nivel_conhecimento?: string | null
-          nome_completo: string
-          nome_empresa?: string | null
-          objetivos?: string[] | null
-          observacoes?: string | null
-          perfil_usuario: string
-          permite_case?: boolean | null
-          preferencia_horario?: string[] | null
-          quem_indicou?: string | null
-          segmento_empresa?: string | null
-          telefone?: string | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          areas_interesse?: string[] | null
-          cidade?: string
-          como_conheceu?: string | null
-          created_at?: string | null
-          email?: string
-          estado?: string
-          experiencia_anterior?: string | null
-          id?: string
-          interesse_entrevista?: boolean | null
-          interesse_networking?: boolean | null
-          nivel_conhecimento?: string | null
-          nome_completo?: string
-          nome_empresa?: string | null
-          objetivos?: string[] | null
-          observacoes?: string | null
-          perfil_usuario?: string
-          permite_case?: boolean | null
-          preferencia_horario?: string[] | null
-          quem_indicou?: string | null
-          segmento_empresa?: string | null
-          telefone?: string | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
       permission_audit_logs: {
         Row: {
           action_type: string
@@ -3017,6 +2825,27 @@ export type Database = {
           id?: string
           name?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      profile_cache: {
+        Row: {
+          cached_at: string
+          expires_at: string
+          profile_data: Json
+          user_id: string
+        }
+        Insert: {
+          cached_at?: string
+          expires_at?: string
+          profile_data: Json
+          user_id: string
+        }
+        Update: {
+          cached_at?: string
+          expires_at?: string
+          profile_data?: Json
+          user_id?: string
         }
         Relationships: []
       }
@@ -3145,6 +2974,99 @@ export type Database = {
         }
         Relationships: []
       }
+      quick_onboarding: {
+        Row: {
+          ai_knowledge_level: string | null
+          annual_revenue_range: string | null
+          birth_date: string | null
+          company_name: string | null
+          company_segment: string | null
+          company_size: string | null
+          company_website: string | null
+          country_code: string | null
+          created_at: string | null
+          current_step: number | null
+          desired_ai_areas: string[] | null
+          email: string
+          has_implemented: string | null
+          how_found_us: string | null
+          id: string
+          instagram_url: string | null
+          is_completed: boolean | null
+          linkedin_url: string | null
+          main_challenge: string | null
+          main_goal: string | null
+          name: string | null
+          previous_tools: string[] | null
+          referred_by: string | null
+          role: string | null
+          updated_at: string | null
+          user_id: string
+          uses_ai: string | null
+          whatsapp: string | null
+        }
+        Insert: {
+          ai_knowledge_level?: string | null
+          annual_revenue_range?: string | null
+          birth_date?: string | null
+          company_name?: string | null
+          company_segment?: string | null
+          company_size?: string | null
+          company_website?: string | null
+          country_code?: string | null
+          created_at?: string | null
+          current_step?: number | null
+          desired_ai_areas?: string[] | null
+          email: string
+          has_implemented?: string | null
+          how_found_us?: string | null
+          id?: string
+          instagram_url?: string | null
+          is_completed?: boolean | null
+          linkedin_url?: string | null
+          main_challenge?: string | null
+          main_goal?: string | null
+          name?: string | null
+          previous_tools?: string[] | null
+          referred_by?: string | null
+          role?: string | null
+          updated_at?: string | null
+          user_id: string
+          uses_ai?: string | null
+          whatsapp?: string | null
+        }
+        Update: {
+          ai_knowledge_level?: string | null
+          annual_revenue_range?: string | null
+          birth_date?: string | null
+          company_name?: string | null
+          company_segment?: string | null
+          company_size?: string | null
+          company_website?: string | null
+          country_code?: string | null
+          created_at?: string | null
+          current_step?: number | null
+          desired_ai_areas?: string[] | null
+          email?: string
+          has_implemented?: string | null
+          how_found_us?: string | null
+          id?: string
+          instagram_url?: string | null
+          is_completed?: boolean | null
+          linkedin_url?: string | null
+          main_challenge?: string | null
+          main_goal?: string | null
+          name?: string | null
+          previous_tools?: string[] | null
+          referred_by?: string | null
+          role?: string | null
+          updated_at?: string | null
+          user_id?: string
+          uses_ai?: string | null
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
       rate_limit_attempts: {
         Row: {
           attempts: number | null
@@ -3175,6 +3097,30 @@ export type Database = {
           id?: string
           identifier?: string
           last_attempt?: string | null
+        }
+        Relationships: []
+      }
+      rate_limit_blocks: {
+        Row: {
+          action: string
+          blocked_until: string
+          created_at: string | null
+          id: string
+          identifier: string
+        }
+        Insert: {
+          action: string
+          blocked_until: string
+          created_at?: string | null
+          id?: string
+          identifier: string
+        }
+        Update: {
+          action?: string
+          blocked_until?: string
+          created_at?: string | null
+          id?: string
+          identifier?: string
         }
         Relationships: []
       }
@@ -3494,6 +3440,39 @@ export type Database = {
           status?: string
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      security_linter_history: {
+        Row: {
+          baseline_comparison: Json | null
+          created_by: string | null
+          critical_warnings: number
+          execution_date: string
+          id: string
+          improvement_percentage: number | null
+          total_warnings: number
+          warning_details: Json
+        }
+        Insert: {
+          baseline_comparison?: Json | null
+          created_by?: string | null
+          critical_warnings?: number
+          execution_date?: string
+          id?: string
+          improvement_percentage?: number | null
+          total_warnings?: number
+          warning_details?: Json
+        }
+        Update: {
+          baseline_comparison?: Json | null
+          created_by?: string | null
+          critical_warnings?: number
+          execution_date?: string
+          id?: string
+          improvement_percentage?: number | null
+          total_warnings?: number
+          warning_details?: Json
         }
         Relationships: []
       }
@@ -4123,13 +4102,6 @@ export type Database = {
             referencedRelation: "suggestions"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "suggestion_votes_suggestion_id_fkey"
-            columns: ["suggestion_id"]
-            isOneToOne: false
-            referencedRelation: "suggestions_with_profiles"
-            referencedColumns: ["id"]
-          },
         ]
       }
       suggestions: {
@@ -4568,180 +4540,6 @@ export type Database = {
           },
         ]
       }
-      user_onboarding: {
-        Row: {
-          accepts_case_study: string | null
-          ai_challenges: Json | null
-          ai_experience: string | null
-          ai_implementation_budget: string | null
-          ai_knowledge_level: string | null
-          ai_tools_used: Json | null
-          annual_revenue: string | null
-          area_to_impact: string | null
-          best_days: string[] | null
-          best_periods: string[] | null
-          birth_date: string | null
-          business_area: string | null
-          business_sector: string | null
-          business_stage: string | null
-          city: string | null
-          communication_style: string | null
-          company_name: string | null
-          company_size: string | null
-          company_website: string | null
-          completed_at: string | null
-          content_preference: string | null
-          content_types: Json | null
-          created_at: string | null
-          curiosity: string | null
-          current_tools: Json | null
-          daily_tools: string[] | null
-          education_level: string | null
-          email: string | null
-          expected_result_90_days: string | null
-          has_implemented_ai: string | null
-          id: string
-          instagram: string | null
-          institution: string | null
-          learning_preference: string | null
-          linkedin: string | null
-          main_challenges: Json | null
-          main_objective: string | null
-          member_type: string | null
-          name: string | null
-          nickname: string | null
-          phone: string | null
-          position: string | null
-          primary_goals: Json | null
-          started_at: string | null
-          state: string | null
-          study_area: string | null
-          success_metrics: Json | null
-          target_market: string | null
-          team_size: string | null
-          timeframe: string | null
-          updated_at: string | null
-          user_id: string
-          wants_networking: string | null
-          weekly_learning_time: string | null
-          who_will_implement: string | null
-        }
-        Insert: {
-          accepts_case_study?: string | null
-          ai_challenges?: Json | null
-          ai_experience?: string | null
-          ai_implementation_budget?: string | null
-          ai_knowledge_level?: string | null
-          ai_tools_used?: Json | null
-          annual_revenue?: string | null
-          area_to_impact?: string | null
-          best_days?: string[] | null
-          best_periods?: string[] | null
-          birth_date?: string | null
-          business_area?: string | null
-          business_sector?: string | null
-          business_stage?: string | null
-          city?: string | null
-          communication_style?: string | null
-          company_name?: string | null
-          company_size?: string | null
-          company_website?: string | null
-          completed_at?: string | null
-          content_preference?: string | null
-          content_types?: Json | null
-          created_at?: string | null
-          curiosity?: string | null
-          current_tools?: Json | null
-          daily_tools?: string[] | null
-          education_level?: string | null
-          email?: string | null
-          expected_result_90_days?: string | null
-          has_implemented_ai?: string | null
-          id?: string
-          instagram?: string | null
-          institution?: string | null
-          learning_preference?: string | null
-          linkedin?: string | null
-          main_challenges?: Json | null
-          main_objective?: string | null
-          member_type?: string | null
-          name?: string | null
-          nickname?: string | null
-          phone?: string | null
-          position?: string | null
-          primary_goals?: Json | null
-          started_at?: string | null
-          state?: string | null
-          study_area?: string | null
-          success_metrics?: Json | null
-          target_market?: string | null
-          team_size?: string | null
-          timeframe?: string | null
-          updated_at?: string | null
-          user_id: string
-          wants_networking?: string | null
-          weekly_learning_time?: string | null
-          who_will_implement?: string | null
-        }
-        Update: {
-          accepts_case_study?: string | null
-          ai_challenges?: Json | null
-          ai_experience?: string | null
-          ai_implementation_budget?: string | null
-          ai_knowledge_level?: string | null
-          ai_tools_used?: Json | null
-          annual_revenue?: string | null
-          area_to_impact?: string | null
-          best_days?: string[] | null
-          best_periods?: string[] | null
-          birth_date?: string | null
-          business_area?: string | null
-          business_sector?: string | null
-          business_stage?: string | null
-          city?: string | null
-          communication_style?: string | null
-          company_name?: string | null
-          company_size?: string | null
-          company_website?: string | null
-          completed_at?: string | null
-          content_preference?: string | null
-          content_types?: Json | null
-          created_at?: string | null
-          curiosity?: string | null
-          current_tools?: Json | null
-          daily_tools?: string[] | null
-          education_level?: string | null
-          email?: string | null
-          expected_result_90_days?: string | null
-          has_implemented_ai?: string | null
-          id?: string
-          instagram?: string | null
-          institution?: string | null
-          learning_preference?: string | null
-          linkedin?: string | null
-          main_challenges?: Json | null
-          main_objective?: string | null
-          member_type?: string | null
-          name?: string | null
-          nickname?: string | null
-          phone?: string | null
-          position?: string | null
-          primary_goals?: Json | null
-          started_at?: string | null
-          state?: string | null
-          study_area?: string | null
-          success_metrics?: Json | null
-          target_market?: string | null
-          team_size?: string | null
-          timeframe?: string | null
-          updated_at?: string | null
-          user_id?: string
-          wants_networking?: string | null
-          weekly_learning_time?: string | null
-          who_will_implement?: string | null
-        }
-        Relationships: []
-      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -4864,67 +4662,31 @@ export type Database = {
       }
     }
     Views: {
-      benefits: {
+      admin_analytics_overview: {
         Row: {
-          benefit_badge_url: string | null
-          benefit_clicks: number | null
-          benefit_description: string | null
-          benefit_link: string | null
-          benefit_title: string | null
-          benefit_type: string | null
-          category: string | null
-          created_at: string | null
-          description: string | null
-          has_member_benefit: boolean | null
-          id: string | null
-          logo_url: string | null
-          name: string | null
-          official_url: string | null
-          status: boolean | null
-          tags: string[] | null
-          updated_at: string | null
-          video_tutorials: Json | null
-          video_type: string | null
-          video_url: string | null
+          active_learners: number | null
+          active_users_7d: number | null
+          completed_implementations: number | null
+          completed_onboarding: number | null
+          completion_rate: number | null
+          growth_rate: number | null
+          new_solutions_30d: number | null
+          new_users_30d: number | null
+          total_lessons: number | null
+          total_solutions: number | null
+          total_users: number | null
         }
         Relationships: []
       }
-      suggestions_with_profiles: {
+      user_segmentation_analytics: {
         Row: {
-          author_avatar: string | null
-          author_company: string | null
-          author_name: string | null
-          category_id: string | null
-          comment_count: number | null
-          created_at: string | null
-          description: string | null
-          downvotes: number | null
-          id: string | null
-          image_url: string | null
-          is_hidden: boolean | null
-          is_pinned: boolean | null
-          status: string | null
-          title: string | null
-          updated_at: string | null
-          upvotes: number | null
-          user_id: string | null
+          completed_onboarding: number | null
+          new_users_30d: number | null
+          new_users_7d: number | null
+          role_name: string | null
+          user_count: number | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "suggestions_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "suggestion_categories"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "suggestions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
     }
     Functions: {
@@ -4965,9 +4727,25 @@ export type Database = {
           policy_definition: string
         }[]
       }
+      audit_legacy_references: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      automated_security_monitor: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      backup_all_onboarding_data: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       backup_table_data: {
         Args: { p_table_name: string; p_reason?: string }
         Returns: Json
+      }
+      calculate_average_score: {
+        Args: { scores: number[] }
+        Returns: number
       }
       can_access_benefit: {
         Args: { user_id: string; tool_id: string }
@@ -4989,11 +4767,15 @@ export type Database = {
         Args:
           | { invite_token: string; user_email: string }
           | { p_user_id: string; p_token: string }
-        Returns: boolean
+        Returns: Json
       }
       change_user_role: {
         Args: { target_user_id: string; new_role_id: string }
         Returns: Json
+      }
+      check_admin_access: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
       }
       check_and_fix_onboarding_data: {
         Args: { user_id_param: string }
@@ -5025,6 +4807,7 @@ export type Database = {
               max_attempts: number
               time_window: unknown
             }
+          | { p_action: string; p_limit_per_hour?: number }
           | {
               p_identifier: string
               p_action_type: string
@@ -5032,6 +4815,24 @@ export type Database = {
               p_window_minutes?: number
             }
         Returns: boolean
+      }
+      check_rate_limit_advanced: {
+        Args: {
+          p_action: string
+          p_limit_per_hour?: number
+          p_limit_per_minute?: number
+          p_identifier?: string
+        }
+        Returns: Json
+      }
+      check_rate_limit_safe: {
+        Args: {
+          p_action: string
+          p_limit_per_hour?: number
+          p_limit_per_minute?: number
+          p_identifier?: string
+        }
+        Returns: Json
       }
       check_referral: {
         Args: { p_token: string }
@@ -5072,6 +4873,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      clean_html_tags: {
+        Args: { input_text: string }
+        Returns: string
+      }
       clean_old_data: {
         Args: { p_table_name: string; p_retention_period?: unknown }
         Returns: Json
@@ -5080,9 +4885,21 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: Json
       }
+      cleanup_expired_cache: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      cleanup_expired_invites: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       cleanup_expired_invites_enhanced: {
         Args: Record<PropertyKey, never>
         Returns: Json
+      }
+      cleanup_expired_rate_limits: {
+        Args: Record<PropertyKey, never>
+        Returns: number
       }
       cleanup_expired_sessions: {
         Args: Record<PropertyKey, never>
@@ -5091,6 +4908,10 @@ export type Database = {
       cleanup_expired_sessions_enhanced: {
         Args: Record<PropertyKey, never>
         Returns: number
+      }
+      cleanup_old_analytics: {
+        Args: { p_days_old?: number }
+        Returns: Json
       }
       cleanup_old_audit_logs: {
         Args: Record<PropertyKey, never> | { retention_period?: unknown }
@@ -5156,6 +4977,10 @@ export type Database = {
         }
         Returns: Json
       }
+      create_invite_batch: {
+        Args: { p_emails: string[]; p_role_id: string; p_expires_in?: unknown }
+        Returns: Json
+      }
       create_invite_hybrid: {
         Args:
           | {
@@ -5179,6 +5004,28 @@ export type Database = {
         Args: { p_user_id: string; p_course_id: string }
         Returns: string
       }
+      create_metadata_snapshot: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      create_missing_profile_safe: {
+        Args: { target_user_id: string }
+        Returns: Json
+      }
+      create_network_connection: {
+        Args: { p_recipient_id: string; p_message?: string }
+        Returns: Json
+      }
+      create_notification: {
+        Args: {
+          p_user_id: string
+          p_title: string
+          p_message: string
+          p_type?: string
+          p_metadata?: Json
+        }
+        Returns: Json
+      }
       create_onboarding_backup: {
         Args: { p_user_id: string; p_backup_type?: string }
         Returns: string
@@ -5200,9 +5047,17 @@ export type Database = {
         Args: { bucket_name: string }
         Returns: Json
       }
+      create_user_backup: {
+        Args: { p_user_id: string; p_backup_type?: string }
+        Returns: Json
+      }
       create_user_badge: {
         Args: { user_id: string; badge_id: string }
         Returns: string
+      }
+      createstoragepublicpolicy: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
       }
       current_user_is_admin: {
         Args: Record<PropertyKey, never>
@@ -5236,6 +5091,14 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: Json
       }
+      deleteforumpost: {
+        Args: { post_id: string }
+        Returns: Json
+      }
+      deleteforumtopic: {
+        Args: { topic_id: string }
+        Returns: Json
+      }
       detect_at_risk_users: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -5243,6 +5106,14 @@ export type Database = {
       detect_login_anomaly: {
         Args: { p_user_id: string; p_ip_address: string }
         Returns: boolean
+      }
+      detect_navigation_loop: {
+        Args: { p_user_id: string; p_path: string; p_session_id?: string }
+        Returns: Json
+      }
+      detect_security_changes: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
       }
       diagnose_auth_state: {
         Args: { target_user_id?: string }
@@ -5273,6 +5144,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      ensure_bucket_exists: {
+        Args: { p_bucket_name: string }
+        Returns: Json
+      }
       fix_existing_users_onboarding: {
         Args: Record<PropertyKey, never>
         Returns: Json
@@ -5285,9 +5160,29 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      format_currency: {
+        Args: { amount: number }
+        Returns: string
+      }
+      format_phone: {
+        Args: { phone: string }
+        Returns: string
+      }
+      format_relative_time: {
+        Args: { target_date: string }
+        Returns: string
+      }
       generate_certificate_validation_code: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      generate_compatibility_score: {
+        Args: { user1_id: string; user2_id: string }
+        Returns: number
+      }
+      generate_email_template: {
+        Args: { template_type: string; user_data: Json }
+        Returns: Json
       }
       generate_final_security_report: {
         Args: Record<PropertyKey, never>
@@ -5322,9 +5217,17 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      generate_secure_token: {
+        Args: { token_length?: number }
+        Returns: string
+      }
       generate_security_metrics: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      generate_slug: {
+        Args: { input_text: string }
+        Returns: string
       }
       get_admin_analytics_overview: {
         Args: Record<PropertyKey, never>
@@ -5349,8 +5252,31 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      get_age_from_date: {
+        Args: { birth_date: string }
+        Returns: number
+      }
       get_analytics_overview: {
         Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      get_benefits_safe: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          name: string
+          description: string
+          category: string
+          benefit_type: string
+          benefit_title: string
+          benefit_description: string
+          benefit_link: string
+          logo_url: string
+          status: boolean
+        }[]
+      }
+      get_cached_profile: {
+        Args: { target_user_id: string }
         Returns: Json
       }
       get_courses_with_stats: {
@@ -5446,6 +5372,37 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: Json
       }
+      get_onboarding_progress: {
+        Args: { p_user_id: string }
+        Returns: Json
+      }
+      get_profile_safe: {
+        Args: { target_user_id?: string }
+        Returns: {
+          available_for_networking: boolean | null
+          avatar_url: string | null
+          company_name: string | null
+          created_at: string
+          current_position: string | null
+          email: string
+          id: string
+          industry: string | null
+          last_active: string | null
+          linkedin_url: string | null
+          name: string | null
+          onboarding_completed: boolean
+          onboarding_completed_at: string | null
+          professional_bio: string | null
+          referrals_count: number
+          role: string
+          role_id: string | null
+          skills: string[] | null
+          status: string | null
+          successful_referrals_count: number
+          updated_at: string | null
+          whatsapp_number: string | null
+        }[]
+      }
       get_progress_analytics: {
         Args: Record<PropertyKey, never>
         Returns: Json
@@ -5454,13 +5411,35 @@ export type Database = {
         Args: { p_user_id?: string; p_days?: number }
         Returns: Json
       }
+      get_standardized_buckets: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          bucket_id: string
+          bucket_name: string
+          created_at: string
+          updated_at: string
+          public: boolean
+        }[]
+      }
       get_stats_overview: {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      get_system_health_check: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      get_system_setting: {
+        Args: { setting_key: string }
+        Returns: string
+      }
       get_total_referrals: {
         Args: { p_user_id: string }
         Returns: number
+      }
+      get_user_analytics_summary: {
+        Args: { p_user_id: string; p_days_back?: number }
+        Returns: Json
       }
       get_user_badges: {
         Args: { p_user_id: string }
@@ -5477,9 +5456,26 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: Json
       }
-      get_user_permissions: {
-        Args: { user_id: string }
+      get_user_learning_stats: {
+        Args: { target_user_id: string }
         Returns: Json
+      }
+      get_user_permissions: {
+        Args: { p_user_id: string }
+        Returns: string[]
+      }
+      get_user_profile_optimized: {
+        Args: { target_user_id?: string }
+        Returns: {
+          id: string
+          email: string
+          name: string
+          role_name: string
+          role_id: string
+          permissions: Json
+          onboarding_completed: boolean
+          created_at: string
+        }[]
       }
       get_user_profile_safe: {
         Args: { target_user_id: string }
@@ -5497,7 +5493,7 @@ export type Database = {
         }[]
       }
       get_user_role: {
-        Args: { user_id: string }
+        Args: Record<PropertyKey, never> | { user_id: string }
         Returns: string
       }
       get_user_role_safe: {
@@ -5557,6 +5553,10 @@ export type Database = {
         Args: { role_name: string; check_user_id?: string }
         Returns: boolean
       }
+      hash_sensitive_data: {
+        Args: { input_data: string }
+        Returns: string
+      }
       increment: {
         Args: { row_id: string; table_name: string; column_name: string }
         Returns: undefined
@@ -5574,11 +5574,11 @@ export type Database = {
         Returns: Json
       }
       increment_topic_replies: {
-        Args: { p_topic_id: string }
+        Args: { topic_id: string }
         Returns: undefined
       }
       increment_topic_views: {
-        Args: { p_topic_id: string }
+        Args: { topic_id: string }
         Returns: undefined
       }
       initialize_onboarding_for_all_users: {
@@ -5590,6 +5590,10 @@ export type Database = {
           | { p_user_id: string; p_invite_data?: Json }
           | { p_user_id: string; p_invite_token?: string }
         Returns: Json
+      }
+      invalidate_profile_cache: {
+        Args: { user_id?: string }
+        Returns: undefined
       }
       is_admin: {
         Args: Record<PropertyKey, never>
@@ -5603,13 +5607,41 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      is_legacy_user: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
+      is_new_user: {
+        Args: { check_user_id?: string }
+        Returns: boolean
+      }
+      is_owner: {
+        Args: { resource_user_id: string }
+        Returns: boolean
+      }
       is_user_admin: {
-        Args: { user_id?: string }
+        Args: Record<PropertyKey, never> | { user_id: string }
         Returns: boolean
       }
       is_user_admin_enhanced: {
         Args: { user_id?: string }
         Returns: boolean
+      }
+      is_valid_url: {
+        Args: { url: string }
+        Returns: boolean
+      }
+      issue_solution_certificate: {
+        Args: {
+          p_user_id: string
+          p_solution_id: string
+          p_implementation_data?: Json
+        }
+        Returns: Json
+      }
+      log_critical_action: {
+        Args: { p_action: string; p_details?: Json }
+        Returns: undefined
       }
       log_invite_delivery: {
         Args: {
@@ -5678,6 +5710,7 @@ export type Database = {
               p_old_values?: string
               p_new_values?: string
             }
+          | { p_event_type: string; p_details?: Json; p_severity?: string }
           | {
               p_event_type: string
               p_severity?: string
@@ -5703,14 +5736,25 @@ export type Database = {
             }
           | {
               violation_type: string
-              resource_type: string
-              resource_id?: string
-              details?: Json
+              resource_table: string
+              attempted_action: string
+              user_context?: Json
             }
-        Returns: string
+        Returns: undefined
       }
       log_unauthorized_access: {
         Args: { attempted_action: string; resource_details?: Json }
+        Returns: undefined
+      }
+      log_upload_activity: {
+        Args: {
+          p_bucket_name: string
+          p_file_path: string
+          p_file_size: number
+          p_file_type: string
+          p_success: boolean
+          p_error_message?: string
+        }
         Returns: undefined
       }
       log_user_action: {
@@ -5726,6 +5770,10 @@ export type Database = {
         }
         Returns: string
       }
+      mark_notifications_read: {
+        Args: { p_user_id: string; p_notification_ids?: string[] }
+        Returns: Json
+      }
       merge_json_data: {
         Args: { target: Json; source: Json }
         Returns: Json
@@ -5738,9 +5786,23 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      moderate_content: {
+        Args: {
+          p_content_type: string
+          p_content_id: string
+          p_action: string
+          p_reason: string
+          p_duration_hours?: number
+        }
+        Returns: Json
+      }
       monitor_onboarding_flow: {
         Args: Record<PropertyKey, never>
         Returns: Json
+      }
+      normalize_bucket_name: {
+        Args: { bucket_name: string }
+        Returns: string
       }
       process_referral: {
         Args: { p_token: string; p_user_id: string }
@@ -5767,6 +5829,10 @@ export type Database = {
         Returns: Json
       }
       reset_user_complete: {
+        Args: { target_user_id: string }
+        Returns: Json
+      }
+      reset_user_onboarding: {
         Args: { target_user_id: string }
         Returns: Json
       }
@@ -5803,6 +5869,14 @@ export type Database = {
           recommendations: string
         }[]
       }
+      security_improvement_report: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      send_direct_message: {
+        Args: { p_recipient_id: string; p_content: string; p_metadata?: Json }
+        Returns: Json
+      }
       send_invite_email: {
         Args: { p_invite_id: string }
         Returns: Json
@@ -5823,12 +5897,36 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      track_onboarding_step: {
+        Args: { p_user_id: string; p_step_name: string; p_step_data?: Json }
+        Returns: Json
+      }
+      track_tool_usage: {
+        Args: { p_tool_id: string; p_action?: string; p_metadata?: Json }
+        Returns: Json
+      }
+      track_user_event: {
+        Args: { p_event_type: string; p_event_data?: Json }
+        Returns: Json
+      }
+      truncate_text: {
+        Args: { input_text: string; max_length: number }
+        Returns: string
+      }
       update_invite_send_attempt: {
         Args: { invite_id: string }
         Returns: undefined
       }
       update_onboarding_step: {
         Args: { p_user_id: string; p_step: number; p_data?: Json }
+        Returns: Json
+      }
+      update_user_preferences: {
+        Args: { p_user_id: string; p_preferences: Json }
+        Returns: Json
+      }
+      update_user_progress: {
+        Args: { p_user_id: string; p_lesson_id: string; p_progress_data?: Json }
         Returns: Json
       }
       use_invite: {
@@ -5851,13 +5949,25 @@ export type Database = {
         Args: { user_id: string; permission_code: string }
         Returns: boolean
       }
-      validate_admin_access: {
-        Args: { user_id: string }
+      validate_auth_integrity: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      validate_bucket_name: {
+        Args: { bucket_name: string }
+        Returns: boolean
+      }
+      validate_certificate: {
+        Args: { p_validation_code: string }
         Returns: Json
       }
       validate_certificate_code: {
         Args: { p_validation_code: string }
         Returns: Json
+      }
+      validate_cnpj: {
+        Args: { cnpj: string }
+        Returns: boolean
       }
       validate_complete_rls_security: {
         Args: Record<PropertyKey, never>
@@ -5868,6 +5978,14 @@ export type Database = {
           security_status: string
           risk_level: string
         }[]
+      }
+      validate_cpf: {
+        Args: { cpf: string }
+        Returns: boolean
+      }
+      validate_email: {
+        Args: { email: string }
+        Returns: boolean
       }
       validate_input_security: {
         Args: { p_input: string; p_type?: string }
@@ -5946,6 +6064,10 @@ export type Database = {
             }
         Returns: boolean
       }
+      validate_security_fixes: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       validate_solution_certificate: {
         Args: { p_validation_code: string }
         Returns: Json
@@ -5956,6 +6078,10 @@ export type Database = {
       }
       validate_user_password: {
         Args: { password: string }
+        Returns: Json
+      }
+      validate_user_role: {
+        Args: { p_user_id: string }
         Returns: Json
       }
       verify_permissions_integrity: {
