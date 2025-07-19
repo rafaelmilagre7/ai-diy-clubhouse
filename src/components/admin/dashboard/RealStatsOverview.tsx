@@ -24,6 +24,9 @@ interface RealStatsOverviewProps {
     periodEngagementRate: number;
     periodCompletionRate: number;
     
+    // Identificador do período
+    timeRange?: string;
+    
     // Compatibilidade
     lastMonthGrowth: number;
     activeUsersLast7Days: number;
@@ -59,7 +62,7 @@ export const RealStatsOverview = ({ data, loading }: RealStatsOverviewProps) => 
     .sort((a, b) => b.count - a.count)[0];
 
   return (
-    <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+    <div key={`stats-${data.timeRange || 'default'}`} className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
       {/* Linha 1: Dados cumulativos */}
       <StatCard
         title="Total de Usuários"
@@ -93,36 +96,37 @@ export const RealStatsOverview = ({ data, loading }: RealStatsOverviewProps) => 
       
       {/* Linha 2: Dados específicos do período */}
       <StatCard
-        title="Novos Usuários"
+        title="Novos Usuários (Período)"
         value={data.newUsersInPeriod}
         icon={<UserPlus className="h-5 w-5" />}
         percentageChange={data.periodGrowthRate}
-        percentageText="taxa de crescimento"
+        percentageText="crescimento no período"
         colorScheme="green"
       />
       
       <StatCard
-        title="Usuários Ativos"
+        title="Usuários Ativos (Período)"
         value={data.activeUsersInPeriod}
         icon={<Activity className="h-5 w-5" />}
         percentageChange={data.periodEngagementRate}
-        percentageText="taxa de engajamento"
+        percentageText="engajamento no período"
         colorScheme="blue"
       />
       
       <StatCard
-        title="Implementações do Período"
+        title="Implementações (Período)"
         value={data.implementationsInPeriod}
         icon={<Zap className="h-5 w-5" />}
+        percentageText="implementações no período"
         colorScheme="orange"
       />
       
       <StatCard
-        title="Taxa de Conclusão"
-        value={`${data.periodCompletionRate}%`}
+        title="Taxa de Conclusão (%)"
+        value={`${data.periodCompletionRate.toFixed(1)}%`}
         icon={<TrendingUp className="h-5 w-5" />}
         percentageChange={data.periodCompletionRate > 50 ? 15.2 : -5.3}
-        percentageText="performance do período"
+        percentageText="taxa no período"
         colorScheme={data.periodCompletionRate > 50 ? "green" : "orange"}
       />
     </div>
