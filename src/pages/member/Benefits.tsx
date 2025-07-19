@@ -175,28 +175,40 @@ const Benefits = () => {
         </div>
 
         {/* Filtros com design moderno */}
-        <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-primary/10 rounded-2xl blur-xl"></div>
-          <Tabs defaultValue="all" className="w-full" onValueChange={setBenefitType}>
-            <TabsList className="relative bg-card/95 backdrop-blur border border-border/50 p-2 rounded-2xl w-full flex-wrap justify-center shadow-lg">
-              <TabsTrigger value="all" className="relative px-6 py-3 text-sm font-medium transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg hover:bg-accent/50 rounded-xl">
-                Todos
-              </TabsTrigger>
-              <TabsTrigger value="discount" className="relative px-6 py-3 text-sm font-medium transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg hover:bg-accent/50 rounded-xl">
-                Descontos
-              </TabsTrigger>
-              <TabsTrigger value="exclusive" className="relative px-6 py-3 text-sm font-medium transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg hover:bg-accent/50 rounded-xl">
-                Acesso Exclusivo
-              </TabsTrigger>
-              <TabsTrigger value="free" className="relative px-6 py-3 text-sm font-medium transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg hover:bg-accent/50 rounded-xl">
-                Versão Gratuita
-              </TabsTrigger>
-              <TabsTrigger value="trial" className="relative px-6 py-3 text-sm font-medium transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg hover:bg-accent/50 rounded-xl">
-                Trial Estendido
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
+        <Tabs defaultValue="all" className="w-full" onValueChange={setBenefitType}>
+          <TabsList className="grid w-full grid-cols-5 bg-card/50 backdrop-blur border border-border/50 rounded-xl p-1 h-12">
+            <TabsTrigger 
+              value="all" 
+              className="text-sm font-medium transition-all duration-300 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm hover:bg-accent/50 rounded-lg"
+            >
+              Todos
+            </TabsTrigger>
+            <TabsTrigger 
+              value="discount" 
+              className="text-sm font-medium transition-all duration-300 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm hover:bg-accent/50 rounded-lg"
+            >
+              Descontos
+            </TabsTrigger>
+            <TabsTrigger 
+              value="exclusive" 
+              className="text-sm font-medium transition-all duration-300 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm hover:bg-accent/50 rounded-lg"
+            >
+              Exclusivo
+            </TabsTrigger>
+            <TabsTrigger 
+              value="free" 
+              className="text-sm font-medium transition-all duration-300 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm hover:bg-accent/50 rounded-lg"
+            >
+              Gratuita
+            </TabsTrigger>
+            <TabsTrigger 
+              value="trial" 
+              className="text-sm font-medium transition-all duration-300 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm hover:bg-accent/50 rounded-lg"
+            >
+              Trial
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
 
         {/* Conteúdo dos benefícios */}
         {filteredTools && filteredTools.length > 0 ? (

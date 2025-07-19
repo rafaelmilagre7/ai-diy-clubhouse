@@ -64,19 +64,20 @@ export const MemberBenefitModal = ({
       <DialogTrigger asChild>
         <Button 
           className={cn(
-            "w-full",
+            "w-full group relative overflow-hidden",
             variant === 'default' 
-              ? 'bg-viverblue hover:bg-viverblue-dark text-white' 
-              : 'bg-[#1A1E2E] text-viverblue border-viverblue hover:bg-viverblue/10'
+              ? 'bg-gradient-to-r from-primary to-primary/80 hover:from-primary hover:to-primary text-primary-foreground shadow-lg hover:shadow-xl' 
+              : 'bg-card/50 text-primary border border-primary/30 hover:bg-primary/10 backdrop-blur'
           )}
           size={size}
         >
-          <Gift className="mr-2 h-4 w-4" />
-          Benefício Membro
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <Gift className="mr-2 h-4 w-4 relative z-10" />
+          <span className="relative z-10">Benefício Membro</span>
         </Button>
       </DialogTrigger>
       
-      <DialogContent className="sm:max-w-md bg-[#151823] border-neutral-700 text-white">
+      <DialogContent className="sm:max-w-lg bg-gradient-to-br from-card via-card to-muted/50 border border-border/50 backdrop-blur text-foreground">
         {hasAccessRestriction && !hasAccess ? (
           <BenefitAccessDenied 
             tool={tool} 
@@ -84,69 +85,100 @@ export const MemberBenefitModal = ({
           />
         ) : (
           <>
-            <DialogHeader>
-              <div className="flex items-center gap-2 mb-1">
-                <Badge className="bg-viverblue text-white">Benefício Exclusivo</Badge>
+            <DialogHeader className="space-y-4">
+              <div className="flex items-center justify-center">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-primary/20 rounded-full blur-lg"></div>
+                  <Badge className="relative bg-gradient-to-r from-primary to-primary/80 text-primary-foreground border-0 px-4 py-1">
+                    Benefício Exclusivo
+                  </Badge>
+                </div>
               </div>
-              <DialogTitle className="text-xl text-white">
-                {tool.benefit_title}
-              </DialogTitle>
-              <DialogDescription className="text-neutral-300">
-                Oferta exclusiva para membros do VIVER DE IA Club
-              </DialogDescription>
+              
+              <div className="text-center space-y-2">
+                <DialogTitle className="text-2xl font-heading font-bold text-foreground">
+                  {tool.benefit_title || `Benefício ${tool.name}`}
+                </DialogTitle>
+                <DialogDescription className="text-muted-foreground">
+                  Oferta exclusiva para membros do VIVER DE IA Club
+                </DialogDescription>
+              </div>
             </DialogHeader>
             
-            <div className="flex flex-col items-center py-4">
-              {tool.benefit_badge_url ? (
-                <img 
-                  src={tool.benefit_badge_url} 
-                  alt="Badge" 
-                  className="w-24 h-24 object-contain mb-4" 
-                />
-              ) : (
-                <div className="w-20 h-20 rounded-full bg-viverblue/10 flex items-center justify-center mb-4">
-                  <Gift className="h-10 w-10 text-viverblue" />
-                </div>
-              )}
-              
-              <div className="prose max-w-full w-full">
-                <p className="text-center whitespace-pre-line text-neutral-100">
-                  {tool.benefit_description}
-                </p>
+            <div className="flex flex-col items-center py-6 space-y-6">
+              {/* Badge ou ícone do benefício */}
+              <div className="relative">
+                {tool.benefit_badge_url ? (
+                  <>
+                    <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl"></div>
+                    <img 
+                      src={tool.benefit_badge_url} 
+                      alt="Badge do benefício" 
+                      className="relative w-24 h-24 object-contain" 
+                    />
+                  </>
+                ) : (
+                  <>
+                    <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl"></div>
+                    <div className="relative w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/30 flex items-center justify-center">
+                      <Gift className="h-10 w-10 text-primary" />
+                    </div>
+                  </>
+                )}
               </div>
               
-              {promoCode && (
-                <div className="mt-4 p-3 bg-[#1A1E2E] border border-neutral-700 rounded-md flex items-center justify-between w-full">
-                  <code className="font-mono font-bold text-viverblue">{promoCode}</code>
-                  <Button 
-                    size="sm" 
-                    variant="ghost" 
-                    onClick={handleCopyCode}
-                    className="text-viverblue hover:text-viverblue-light hover:bg-viverblue/10"
-                  >
-                    {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                  </Button>
+              {/* Descrição do benefício */}
+              <div className="w-full space-y-4">
+                <div className="bg-card/50 backdrop-blur border border-border/50 rounded-xl p-4">
+                  <p className="text-center whitespace-pre-line text-foreground leading-relaxed">
+                    {tool.benefit_description || "Acesse este benefício exclusivo para membros."}
+                  </p>
                 </div>
-              )}
+                
+                {/* Código promocional */}
+                {promoCode && (
+                  <div className="bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/30 rounded-xl p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <p className="text-sm text-muted-foreground mb-1">Código promocional:</p>
+                        <code className="font-mono font-bold text-lg text-primary">{promoCode}</code>
+                      </div>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={handleCopyCode}
+                        className="ml-4 border-primary/30 text-primary hover:bg-primary/10"
+                      >
+                        {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
             
-            <DialogFooter className="flex flex-col sm:flex-row gap-2">
+            <DialogFooter className="flex flex-col sm:flex-row gap-3 pt-4">
               <Button
                 variant="outline"
                 onClick={() => setOpen(false)}
-                className="sm:w-auto flex-1 border-neutral-700 text-white hover:bg-[#1A1E2E]"
+                className="sm:w-auto flex-1 border-border/50 hover:bg-accent"
               >
                 Fechar
               </Button>
               
-              <Button 
-                className="bg-viverblue hover:bg-viverblue-dark text-white sm:w-auto flex-1"
-                onClick={handleAccessBenefit}
-                disabled={isProcessing}
-              >
-                <ExternalLink className="mr-2 h-4 w-4" />
-                Acessar Benefício
-              </Button>
+              {tool.benefit_link && (
+                <Button 
+                  className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary hover:to-primary text-primary-foreground shadow-lg hover:shadow-xl sm:w-auto flex-1 group"
+                  onClick={handleAccessBenefit}
+                  disabled={isProcessing}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <ExternalLink className="mr-2 h-4 w-4 relative z-10" />
+                  <span className="relative z-10">
+                    {isProcessing ? 'Acessando...' : 'Acessar Benefício'}
+                  </span>
+                </Button>
+              )}
             </DialogFooter>
           </>
         )}
