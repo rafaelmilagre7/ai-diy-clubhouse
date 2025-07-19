@@ -81,23 +81,13 @@ export const MemberCoursesList: React.FC<MemberCoursesListProps> = ({
     );
   }
 
-  // Separar cursos por categoria (se houver)
+  // Para futuras categorizações por dificuldade, precisaríamos analisar as aulas de cada curso
+  // ou adicionar difficulty_level na tabela learning_courses
   const allCourses = courses;
-  const beginnerCourses = courses.filter(course => 
-    course.difficulty_level === 'beginner' || 
-    course.title?.toLowerCase().includes('iniciante') ||
-    course.description?.toLowerCase().includes('básico')
-  );
-  const advancedCourses = courses.filter(course => 
-    course.difficulty_level === 'advanced' || 
-    course.title?.toLowerCase().includes('avançado') ||
-    course.description?.toLowerCase().includes('avançado')
-  );
 
-  console.log('[COURSES-LIST] Cursos categorizados:', {
+  console.log('[COURSES-LIST] Cursos disponíveis:', {
     total: allCourses.length,
-    beginner: beginnerCourses.length,
-    advanced: advancedCourses.length
+    titles: allCourses.map(c => c.title)
   });
 
   return (
@@ -110,25 +100,8 @@ export const MemberCoursesList: React.FC<MemberCoursesListProps> = ({
         showEmptyMessage={false}
       />
 
-      {/* Cursos para iniciantes (se houver) */}
-      {beginnerCourses.length > 0 && (
-        <CourseCarousel
-          title="Para Iniciantes"
-          courses={beginnerCourses}
-          userProgress={userProgress}
-          showEmptyMessage={false}
-        />
-      )}
-
-      {/* Cursos avançados (se houver) */}
-      {advancedCourses.length > 0 && (
-        <CourseCarousel
-          title="Nível Avançado"
-          courses={advancedCourses}
-          userProgress={userProgress}
-          showEmptyMessage={false}
-        />
-      )}
+      {/* Categorização por dificuldade removida temporariamente - 
+          não existe difficulty_level na tabela learning_courses */}
 
       {/* Info para debug (apenas em desenvolvimento) */}
       {process.env.NODE_ENV === 'development' && courses.length > 0 && (

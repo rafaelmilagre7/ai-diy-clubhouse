@@ -5301,6 +5301,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_current_user_role_safe: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_learning_courses_with_stats: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -5625,6 +5629,10 @@ export type Database = {
       }
       is_user_admin_enhanced: {
         Args: { user_id?: string }
+        Returns: boolean
+      }
+      is_user_admin_safe: {
+        Args: { user_id: string }
         Returns: boolean
       }
       is_valid_url: {
