@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Activity, TrendingUp, Users, FileText, MessageSquare, CheckCircle } from "lucide-react";
+import { Activity, TrendingUp, Users, FileText, MessageSquare, CheckCircle, UserPlus, Zap } from "lucide-react";
 
 interface ActivityData {
   totalLogins: number;
@@ -51,15 +51,15 @@ export const RealSystemActivity = ({ activityData, loading }: RealSystemActivity
   const getActivityIcon = (type: string) => {
     switch (type.toLowerCase()) {
       case 'novos usuários':
-        return <Users className="h-5 w-5 text-blue-500" />;
-      case 'implementações':
-        return <FileText className="h-5 w-5 text-green-500" />;
-      case 'usuários ativos':
-        return <Activity className="h-5 w-5 text-purple-500" />;
-      case 'fórum':
-        return <MessageSquare className="h-5 w-5 text-orange-500" />;
-      case 'conclusões':
+        return <UserPlus className="h-5 w-5 text-blue-500" />;
+      case 'implementações ativas':
+        return <Zap className="h-5 w-5 text-orange-500" />;
+      case 'implementações concluídas':
         return <CheckCircle className="h-5 w-5 text-emerald-500" />;
+      case 'atividade do fórum':
+        return <MessageSquare className="h-5 w-5 text-purple-500" />;
+      case 'usuários ativos':
+        return <Activity className="h-5 w-5 text-green-500" />;
       default:
         return <TrendingUp className="h-5 w-5 text-gray-500" />;
     }
@@ -83,29 +83,14 @@ export const RealSystemActivity = ({ activityData, loading }: RealSystemActivity
     }
   };
 
-  // Construir lista de atividades incluindo dados específicos
-  const allActivities = [
-    ...activityData.recentActivities,
-    {
-      type: 'Conclusões',
-      count: activityData.completedSolutions,
-      period: 'no período'
-    },
-    {
-      type: 'Fórum',
-      count: activityData.forumActivity,
-      period: 'posts recentes'
-    }
-  ].filter(activity => activity.count > 0);
-
   return (
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle>Atividade Recente do Sistema</CardTitle>
+            <CardTitle>Atividade do Período</CardTitle>
             <CardDescription>
-              Principais métricas de atividade da plataforma
+              Principais métricas de atividade para o período selecionado
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">
@@ -117,8 +102,8 @@ export const RealSystemActivity = ({ activityData, loading }: RealSystemActivity
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {allActivities.length > 0 ? (
-          allActivities.map((activity, index) => (
+        {activityData.recentActivities.length > 0 ? (
+          activityData.recentActivities.map((activity, index) => (
             <div key={index} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
               <div className="flex items-center gap-3">
                 {getActivityIcon(activity.type)}
@@ -137,8 +122,8 @@ export const RealSystemActivity = ({ activityData, loading }: RealSystemActivity
         ) : (
           <div className="text-center py-8 text-muted-foreground">
             <Activity className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Nenhuma atividade recente encontrada</p>
-            <p className="text-sm mt-2">Os dados aparecerão conforme a atividade dos usuários</p>
+            <p>Nenhuma atividade encontrada para este período</p>
+            <p className="text-sm mt-2">Tente selecionar um período maior ou aguarde mais atividade dos usuários</p>
           </div>
         )}
       </CardContent>

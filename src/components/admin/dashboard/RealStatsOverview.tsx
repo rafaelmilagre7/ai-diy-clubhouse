@@ -1,16 +1,30 @@
 
 import { StatCard } from "./StatCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, FileText, GraduationCap, CheckCircle, Clock, TrendingUp, Activity, Target } from "lucide-react";
+import { Users, FileText, GraduationCap, CheckCircle, Clock, TrendingUp, Activity, Target, UserPlus, Zap } from "lucide-react";
 
 interface RealStatsOverviewProps {
   data: {
+    // Dados cumulativos
     totalUsers: number;
     totalSolutions: number;
     totalLearningLessons: number;
     completedImplementations: number;
     averageImplementationTime: number;
     usersByRole: { role: string; count: number }[];
+    
+    // Dados específicos do período
+    newUsersInPeriod: number;
+    activeUsersInPeriod: number;
+    implementationsInPeriod: number;
+    completedInPeriod: number;
+    
+    // Métricas calculadas
+    periodGrowthRate: number;
+    periodEngagementRate: number;
+    periodCompletionRate: number;
+    
+    // Compatibilidade
     lastMonthGrowth: number;
     activeUsersLast7Days: number;
     contentEngagementRate: number;
@@ -44,29 +58,16 @@ export const RealStatsOverview = ({ data, loading }: RealStatsOverviewProps) => 
     .filter(role => role.role !== 'Administradores')
     .sort((a, b) => b.count - a.count)[0];
 
-  // Calcular taxa de conclusão
-  const completionRate = data.totalSolutions > 0 
-    ? Math.round((data.completedImplementations / data.totalSolutions) * 100)
-    : 0;
-
   return (
     <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+      {/* Linha 1: Dados cumulativos */}
       <StatCard
         title="Total de Usuários"
         value={data.totalUsers}
         icon={<Users className="h-5 w-5" />}
-        percentageChange={data.lastMonthGrowth}
-        percentageText="crescimento recente"
+        percentageChange={data.periodGrowthRate}
+        percentageText="crescimento no período"
         colorScheme="blue"
-      />
-      
-      <StatCard
-        title="Usuários Ativos (7d)"
-        value={data.activeUsersLast7Days}
-        icon={<Activity className="h-5 w-5" />}
-        percentageChange={data.contentEngagementRate}
-        percentageText="taxa de engajamento"
-        colorScheme="green"
       />
       
       <StatCard
@@ -84,33 +85,45 @@ export const RealStatsOverview = ({ data, loading }: RealStatsOverviewProps) => 
       />
       
       <StatCard
-        title="Implementações Completas"
+        title="Total Implementações"
         value={data.completedImplementations}
         icon={<CheckCircle className="h-5 w-5" />}
         colorScheme="green"
       />
       
+      {/* Linha 2: Dados específicos do período */}
       <StatCard
-        title="Tempo Médio Implementação"
-        value={formatTime(data.averageImplementationTime)}
-        icon={<Clock className="h-5 w-5" />}
-        colorScheme="blue"
+        title="Novos Usuários"
+        value={data.newUsersInPeriod}
+        icon={<UserPlus className="h-5 w-5" />}
+        percentageChange={data.periodGrowthRate}
+        percentageText="taxa de crescimento"
+        colorScheme="green"
       />
       
       <StatCard
-        title="Role Predominante"
-        value={`${dominantRole?.role || 'N/A'} (${dominantRole?.count || 0})`}
-        icon={<Target className="h-5 w-5" />}
-        colorScheme="blue"
+        title="Usuários Ativos"
+        value={data.activeUsersInPeriod}
+        icon={<Activity className="h-5 w-5" />}
+        percentageChange={data.periodEngagementRate}
+        percentageText="taxa de engajamento"
+        colorScheme="purple"
+      />
+      
+      <StatCard
+        title="Implementações do Período"
+        value={data.implementationsInPeriod}
+        icon={<Zap className="h-5 w-5" />}
+        colorScheme="orange"
       />
       
       <StatCard
         title="Taxa de Conclusão"
-        value={`${completionRate}%`}
+        value={`${data.periodCompletionRate}%`}
         icon={<TrendingUp className="h-5 w-5" />}
-        percentageChange={completionRate > 50 ? 15.2 : -5.3}
-        percentageText="performance geral"
-        colorScheme={completionRate > 50 ? "green" : "orange"}
+        percentageChange={data.periodCompletionRate > 50 ? 15.2 : -5.3}
+        percentageText="performance do período"
+        colorScheme={data.periodCompletionRate > 50 ? "green" : "orange"}
       />
     </div>
   );

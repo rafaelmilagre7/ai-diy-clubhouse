@@ -4,17 +4,20 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
 
 interface ActivityData {
+  // Dados do período
   totalLogins: number;
   newUsers: number;
   activeImplementations: number;
   completedSolutions: number;
+  forumActivity: number;
   systemHealth: 'healthy' | 'warning' | 'critical';
+  
+  // Atividades estruturadas por período
   recentActivities: Array<{
     type: string;
     count: number;
     period: string;
   }>;
-  forumActivity: number;
 }
 
 export const useRealSystemActivity = (timeRange: string) => {
@@ -34,7 +37,7 @@ export const useRealSystemActivity = (timeRange: string) => {
     try {
       setLoading(true);
       
-      console.log(`🔄 Carregando atividade do sistema para período: ${timeRange}`);
+      console.log(`🔄 [ACTIVITY] Carregando atividade para período: ${timeRange}`);
       
       // Calcular data de início baseada no timeRange
       const daysMap: { [key: string]: number } = {
@@ -47,67 +50,84 @@ export const useRealSystemActivity = (timeRange: string) => {
       const daysBack = daysMap[timeRange] || 30;
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - daysBack);
+      
+      console.log(`📅 [ACTIVITY] Período: ${daysBack} dias, desde: ${startDate.toISOString()}`);
 
-      // 1. NOVOS USUÁRIOS NO PERÍODO
+      // === DADOS ESPECÍFICOS DO PERÍODO ===
+
+      // Novos usuários no período
       const { count: newUsers } = await supabase
         .from('profiles')
         .select('*', { count: 'exact', head: true })
         .gte('created_at', startDate.toISOString());
 
-      // 2. IMPLEMENTAÇÕES ATIVAS (em progresso)
+      // Implementações ativas no período
       const { count: activeImplementations } = await supabase
         .from('progress')
         .select('*', { count: 'exact', head: true })
         .eq('is_completed', false)
         .gte('last_activity', startDate.toISOString());
 
-      // 3. SOLUÇÕES COMPLETADAS NO PERÍODO
+      // Soluções completadas no período
       const { count: completedSolutions } = await supabase
         .from('progress')
         .select('*', { count: 'exact', head: true })
         .eq('is_completed', true)
         .gte('completed_at', startDate.toISOString());
 
-      // 4. ATIVIDADE DO FÓRUM NO PERÍODO
+      // Atividade do fórum no período
       const { count: forumActivity } = await supabase
         .from('forum_posts')
         .select('*', { count: 'exact', head: true })
         .gte('created_at', startDate.toISOString());
 
-      // 5. EVENTOS DE LOGIN (usando analytics se disponível)
+      // Total de implementações (ativas + completadas) para calcular engajamento
+      const totalImplementationsInPeriod = (activeImplementations || 0) + (completedSolutions || 0);
+
+      // Eventos de login no período
       const { count: totalLogins } = await supabase
         .from('analytics')
         .select('*', { count: 'exact', head: true })
         .eq('event_type', 'login')
         .gte('created_at', startDate.toISOString());
 
-      // 6. CALCULAR SAÚDE DO SISTEMA
+      // === CALCULAR SAÚDE DO SISTEMA ===
       let systemHealth: 'healthy' | 'warning' | 'critical' = 'healthy';
       
-      if (newUsers === 0 && activeImplementations === 0) {
+      if ((newUsers || 0) === 0 && (activeImplementations || 0) === 0) {
         systemHealth = 'critical';
-      } else if (newUsers && newUsers < 5) {
+      } else if ((newUsers || 0) < 2 || (totalImplementationsInPeriod || 0) < 3) {
         systemHealth = 'warning';
       }
 
-      // 7. ATIVIDADES RECENTES ESTRUTURADAS
+      // === ESTRUTURAR ATIVIDADES RECENTES ===
+      const periodLabel = daysBack === 7 ? '7 dias' :
+                         daysBack === 30 ? '30 dias' :
+                         daysBack === 90 ? '90 dias' :
+                         daysBack === 365 ? '1 ano' : `${daysBack} dias`;
+
       const recentActivities = [
         {
           type: 'Novos usuários',
           count: newUsers || 0,
-          period: `últimos ${daysBack} dias`
+          period: `últimos ${periodLabel}`
         },
         {
-          type: 'Implementações',
-          count: (activeImplementations || 0) + (completedSolutions || 0),
-          period: `últimos ${daysBack} dias`
-        },
-        {
-          type: 'Usuários ativos',
+          type: 'Implementações Ativas',
           count: activeImplementations || 0,
-          period: 'em implementação'
+          period: `em andamento nos ${periodLabel}`
+        },
+        {
+          type: 'Implementações Concluídas',
+          count: completedSolutions || 0,
+          period: `finalizadas nos ${periodLabel}`
+        },
+        {
+          type: 'Atividade do Fórum',
+          count: forumActivity || 0,
+          period: `posts nos ${periodLabel}`
         }
-      ];
+      ].filter(activity => activity.count > 0);
 
       const finalActivityData: ActivityData = {
         totalLogins: totalLogins || 0,
@@ -121,18 +141,19 @@ export const useRealSystemActivity = (timeRange: string) => {
 
       setActivityData(finalActivityData);
       
-      console.log('✅ Atividade do sistema carregada:', {
-        totalLogins: finalActivityData.totalLogins,
+      console.log('✅ [ACTIVITY] Atividade carregada:', {
+        periodo: periodLabel,
         newUsers: finalActivityData.newUsers,
         activeImplementations: finalActivityData.activeImplementations,
         completedSolutions: finalActivityData.completedSolutions,
+        forumActivity: finalActivityData.forumActivity,
         systemHealth: finalActivityData.systemHealth,
-        period: timeRange,
-        startDate: startDate.toISOString()
+        activitiesCount: finalActivityData.recentActivities.length,
+        timeRange
       });
 
     } catch (error: any) {
-      console.error("❌ Erro ao carregar atividade do sistema:", error);
+      console.error("❌ [ACTIVITY] Erro ao carregar atividade:", error);
       toast({
         title: "Erro ao carregar atividade",
         description: "Ocorreu um erro ao carregar os dados de atividade do sistema.",
@@ -144,6 +165,7 @@ export const useRealSystemActivity = (timeRange: string) => {
   };
 
   useEffect(() => {
+    console.log(`🔄 [ACTIVITY] TimeRange mudou para: ${timeRange}`);
     refetch();
   }, [timeRange]);
 
