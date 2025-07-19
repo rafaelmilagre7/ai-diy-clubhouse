@@ -20,44 +20,32 @@ export const SidebarLogo = ({ sidebarOpen, setSidebarOpen }: SidebarLogoProps) =
       )}>
         <div className={cn(
           "relative overflow-hidden rounded-lg",
-          "bg-gradient-to-br from-primary/10 to-primary/20",
           "p-1",
-          sidebarOpen ? "w-auto" : "w-8 h-8 flex items-center justify-center"
+          sidebarOpen ? "w-auto" : "w-10 h-10 flex items-center justify-center"
         )}>
           <img
-            src="/lovable-uploads/21d33edc-743c-46f1-8095-e87992a2b3a4.png"
+            src="/lovable-uploads/fe3733f5-092e-4a4e-bdd7-650b71aaa801.png"
             alt="VIVER DE IA Club"
             className={cn(
               "transition-all duration-300 object-contain",
               sidebarOpen 
-                ? "h-10 w-auto max-w-[180px]" // Logo completo quando aberto
+                ? "h-12 w-auto max-w-[200px]" // Logo maior quando aberto
                 : "h-8 w-8 object-cover" // Logo compacto quando fechado
             )}
             onError={(e) => {
-              // Fallback: mostrar texto se a imagem não carregar
+              // Fallback: mostrar inicial se a imagem não carregar
               const target = e.currentTarget;
               target.style.display = 'none';
               if (target.parentElement) {
                 target.parentElement.innerHTML = `
-                  <div class="flex items-center justify-center h-full w-full bg-primary/20 rounded text-primary font-bold text-sm">
-                    ${sidebarOpen ? 'VIVER DE IA' : 'VIA'}
+                  <div class="flex items-center justify-center h-full w-full bg-primary/20 rounded text-primary font-bold text-lg">
+                    V
                   </div>
                 `;
               }
             }}
           />
         </div>
-        
-        {sidebarOpen && (
-          <div className="ml-3 min-w-0 animate-fade-in">
-            <h1 className="font-bold text-sm text-foreground truncate">
-              VIVER DE IA
-            </h1>
-            <p className="text-xs text-muted-foreground truncate">
-              Club Premium
-            </p>
-          </div>
-        )}
       </div>
       
       <Button
