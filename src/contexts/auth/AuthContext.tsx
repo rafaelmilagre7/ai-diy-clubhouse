@@ -1,27 +1,24 @@
 
-import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
-import { UserProfile, getUserRoleName, isAdminRole, isFormacaoRole } from '@/lib/supabase';
-import { useAuthMethods } from './hooks/useAuthMethods';
-import { useAuthStateManager } from '@/hooks/auth/useAuthStateManager';
-import { clearProfileCache } from '@/hooks/auth/utils/authSessionUtils';
-import { AuthContextType } from './types';
-import { useSessionManager } from '@/hooks/security/useSessionManager';
+import { toast } from '@/hooks/use-toast';
+import { signOutUser } from './utils/sessionUtils';
+import type { AuthContextType } from './types';
+import { UserProfile } from '@/lib/supabase';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    console.error('❌ [AUTH] useAuth chamado fora do AuthProvider');
+  if (!context) {
     throw new Error('useAuth deve ser usado dentro de um AuthProvider');
   }
   return context;
 };
 
 interface AuthProviderProps {
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
@@ -30,137 +27,176 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [authError, setAuthError] = useState<Error | null>(null);
-  
-  const authListenerRef = useRef<any>(null);
-  const isInitialized = useRef(false);
-  const lastUserId = useRef<string | null>(null);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [initializationAttempts, setInitializationAttempts] = useState(0);
+  const maxRetries = 3;
 
-  console.log('🔧 [AUTH-PROVIDER] Componente renderizado');
+  // CORREÇÃO: Removido useSessionManager() daqui para quebrar dependência circular
+  // Session management agora será tratado pelo SessionManagerWrapper
 
-  // Inicializar useAuthStateManager com os setters como parâmetros
-  const { setupAuthSession } = useAuthStateManager({
-    setSession,
-    setUser,
-    setProfile,
-    setIsLoading,
-  });
+  // Função para buscar perfil do usuário
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select(`
+          *,
+          user_roles (
+            id,
+            name,
+            permissions
+          )
+        `)
+        .eq('id', userId)
+        .single();
 
-  const { signIn, signOut, signInAsMember, signInAsAdmin } = useAuthMethods({
-    setIsLoading,
-  });
-
-  // Initialize session manager
-  useSessionManager();
-
-  // Circuit breaker - timeout de 5 segundos para inicialização
-  useEffect(() => {
-    timeoutRef.current = setTimeout(() => {
-      if (isLoading) {
-        console.warn("⚠️ [AUTH] Circuit breaker ativado - forçando fim do loading");
-        setIsLoading(false);
+      if (error) {
+        console.warn(`[AUTH] Perfil não encontrado para usuário ${userId}:`, error.message);
+        return null;
       }
-    }, 5000);
 
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
+      return data;
+    } catch (error) {
+      console.error('[AUTH] Erro ao buscar perfil:', error);
+      return null;
+    }
+  };
+
+  // Função para processar mudanças de autenticação
+  const processAuthChange = async (session: Session | null) => {
+    console.log('[AUTH] Processando mudança de autenticação:', {
+      hasSession: !!session,
+      userId: session?.user?.id
+    });
+
+    setSession(session);
+    setUser(session?.user ?? null);
+
+    if (session?.user) {
+      try {
+        const userProfile = await fetchUserProfile(session.user.id);
+        setProfile(userProfile);
+        
+        if (!userProfile) {
+          console.warn('[AUTH] Usuário sem perfil, mas continuando autenticado');
+        }
+      } catch (error) {
+        console.error('[AUTH] Erro ao processar perfil do usuário:', error);
+        setProfile(null);
       }
-    };
-  }, [isLoading]);
+    } else {
+      setProfile(null);
+    }
+  };
 
-  // Verificação imediata de admin baseada em email
-  const isAdminByEmail = user?.email && [
-    'rafael@viverdeia.ai',
-    'admin@viverdeia.ai',
-    'admin@teste.com'
-  ].includes(user.email.toLowerCase());
-
-  // Computar isAdmin com cache
-  const isAdmin = React.useMemo(() => {
-    return isAdminRole(profile) || isAdminByEmail;
-  }, [profile, isAdminByEmail]);
-
-  // Computar isFormacao
-  const isFormacao = React.useMemo(() => {
-    return isFormacaoRole(profile);
-  }, [profile]);
-
-  // Inicialização única otimizada
+  // Inicialização da autenticação com circuit breaker aprimorado
   useEffect(() => {
-    if (isInitialized.current) return;
+    let mounted = true;
     
     const initializeAuth = async () => {
-      console.log('🚀 [AUTH] Inicializando sistema de autenticação');
-      
       try {
-        // CORREÇÃO: Configurar listener ANTES de tentar setup
+        console.log(`[AUTH] Inicializando autenticação (tentativa ${initializationAttempts + 1}/${maxRetries})`);
+        
+        // Configurar listener de mudanças de auth
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (event, session) => {
-            console.log(`🔄 [AUTH] Evento: ${event}`);
+            if (!mounted) return;
             
-            const currentUserId = session?.user?.id;
-            if (lastUserId.current && lastUserId.current !== currentUserId) {
-              console.log('👤 [AUTH] Mudança de usuário - limpando cache');
-              clearProfileCache();
-            }
-            lastUserId.current = currentUserId;
-            
-            if (event === 'SIGNED_IN' && session?.user) {
-              console.log(`🎉 [AUTH] Login: ${session.user.email}`);
-              
-              // Defer a busca do perfil para evitar deadlock
-              setTimeout(async () => {
-                try {
-                  await setupAuthSession();
-                } catch (error) {
-                  console.error('❌ [AUTH] Erro no setup pós-login:', error);
-                  setAuthError(error instanceof Error ? error : new Error('Erro no setup'));
-                  setUser(session.user);
-                  setSession(session);
-                  setIsLoading(false);
-                }
-              }, 0);
-            } else if (event === 'SIGNED_OUT') {
-              console.log('👋 [AUTH] Logout');
-              clearProfileCache();
-              setUser(null);
-              setProfile(null);
-              setSession(null);
-              setAuthError(null);
-              setIsLoading(false);
-            }
+            console.log('[AUTH] Evento de auth:', event);
+            await processAuthChange(session);
           }
         );
+
+        // Verificar sessão existente
+        const { data: { session }, error } = await supabase.auth.getSession();
         
-        authListenerRef.current = subscription;
-        
-        // DEPOIS de configurar o listener, tentar setup inicial
-        await setupAuthSession();
-        
-        isInitialized.current = true;
-        console.log('✅ [AUTH] Inicialização concluída');
-        
-      } catch (error) {
-        console.error('❌ [AUTH] Erro na inicialização:', error);
-        setAuthError(error instanceof Error ? error : new Error('Erro na inicialização'));
+        if (error) {
+          console.error('[AUTH] Erro ao obter sessão:', error);
+          setAuthError(error);
+          if (initializationAttempts < maxRetries - 1) {
+            setInitializationAttempts(prev => prev + 1);
+            return; // Tentar novamente
+          }
+        } else {
+          await processAuthChange(session);
+          setAuthError(null);
+        }
+
         setIsLoading(false);
+
+        return () => {
+          subscription.unsubscribe();
+          mounted = false;
+        };
+
+      } catch (error: any) {
+        console.error('[AUTH] Erro crítico na inicialização:', error);
+        setAuthError(error);
+        
+        if (initializationAttempts < maxRetries - 1) {
+          setInitializationAttempts(prev => prev + 1);
+          setTimeout(() => {
+            if (mounted) initializeAuth();
+          }, 1000 * (initializationAttempts + 1)); // Backoff exponencial
+        } else {
+          setIsLoading(false);
+          toast({
+            title: 'Erro de inicialização',
+            description: 'Não foi possível inicializar a autenticação. Recarregue a página.',
+            variant: 'destructive',
+          });
+        }
       }
     };
 
     initializeAuth();
 
     return () => {
-      if (authListenerRef.current) {
-        authListenerRef.current.unsubscribe();
-      }
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
+      mounted = false;
     };
-  }, []); // Sem dependências para evitar re-inicialização
+  }, [initializationAttempts]);
 
-  const value: AuthContextType = {
+  // Função de login
+  const signIn = async (email: string, password: string) => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        console.error('[AUTH] Erro no login:', error);
+        return { error };
+      }
+
+      console.log('[AUTH] Login realizado com sucesso');
+      return { error: null };
+    } catch (error: any) {
+      console.error('[AUTH] Erro crítico no login:', error);
+      return { error };
+    }
+  };
+
+  // Função de logout com tratamento robusto
+  const signOut = async () => {
+    try {
+      console.log('[AUTH] Iniciando logout...');
+      await signOutUser();
+      return { success: true, error: null };
+    } catch (error: any) {
+      console.error('[AUTH] Erro no logout:', error);
+      return { success: false, error };
+    }
+  };
+
+  // Funções específicas (mantidas para compatibilidade)
+  const signInAsMember = signIn;
+  const signInAsAdmin = signIn;
+
+  // Derivar propriedades baseadas no profile
+  const isAdmin = profile?.user_roles?.name === 'admin' || false;
+  const isFormacao = profile?.user_roles?.name === 'formacao' || false;
+
+  const contextValue: AuthContextType = {
     user,
     session,
     profile,
@@ -178,16 +214,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsLoading,
   };
 
-  console.log('🎯 [AUTH-PROVIDER] Fornecendo contexto:', {
-    hasUser: !!user,
-    hasProfile: !!profile,
-    isAdmin,
-    isFormacao,
-    isLoading
-  });
-
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

@@ -10,10 +10,18 @@ interface SessionSecurityOptions {
   autoLogoutWarning?: number; // em minutos antes do logout
 }
 
+/**
+ * useSecureSession - Hook otimizado para segurança de sessão
+ * 
+ * MELHORIAS DA FASE 2:
+ * - Menos agressivo nas verificações
+ * - Melhor tratamento de erros
+ * - Performance otimizada
+ */
 export const useSecureSession = (options: SessionSecurityOptions = {}) => {
   const {
-    maxIdleTime = 45, // Aumentado para 45 minutos
-    checkInterval = 120, // Verificar a cada 2 minutos ao invés de 1
+    maxIdleTime = 60, // Aumentado para 60 minutos
+    checkInterval = 300, // Verificar a cada 5 minutos
     autoLogoutWarning = 10 // Avisar 10 minutos antes
   } = options;
 
@@ -21,16 +29,19 @@ export const useSecureSession = (options: SessionSecurityOptions = {}) => {
   const [lastActivity, setLastActivity] = useState(Date.now());
   const [warningShown, setWarningShown] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout>();
-  const timeoutRef = useRef<NodeJS.Timeout>();
   const validationInProgress = useRef(false);
 
-  // Atualizar última atividade
+  // Atualizar última atividade com throttling
   const updateActivity = useCallback(() => {
-    setLastActivity(Date.now());
-    setWarningShown(false);
-  }, []);
+    const now = Date.now();
+    // Throttling: só atualizar se passou mais de 30 segundos
+    if (now - lastActivity > 30000) {
+      setLastActivity(now);
+      setWarningShown(false);
+    }
+  }, [lastActivity]);
 
-  // Verificar se a sessão ainda é válida (com throttling)
+  // Verificar se a sessão ainda é válida (otimizado)
   const validateSession = useCallback(async () => {
     if (!user || validationInProgress.current) return true;
 
@@ -45,11 +56,11 @@ export const useSecureSession = (options: SessionSecurityOptions = {}) => {
         return false;
       }
 
-      // Verificar se o token não está próximo da expiração
+      // Verificar se o token não está próximo da expiração (com mais tempo de buffer)
       const now = Math.floor(Date.now() / 1000);
       const expiresAt = session.expires_at || 0;
       
-      if (expiresAt - now < 600) { // 10 minutos para expirar
+      if (expiresAt - now < 1800) { // 30 minutos para expirar
         console.info('[SECURITY] Token próximo da expiração, renovando...');
         try {
           const { error: refreshError } = await supabase.auth.refreshSession();
@@ -97,7 +108,7 @@ export const useSecureSession = (options: SessionSecurityOptions = {}) => {
       );
     }
 
-    // Logout automático por inatividade (menos frequente)
+    // Logout automático por inatividade
     if (inactiveMinutes >= maxIdleTime) {
       console.warn('[SECURITY] Logout automático por inatividade');
       toast.error('Sessão expirada por inatividade');
@@ -105,17 +116,17 @@ export const useSecureSession = (options: SessionSecurityOptions = {}) => {
       return;
     }
 
-    // Validar sessão apenas se necessário
+    // Validar sessão apenas ocasionalmente
     if (inactiveMinutes < (maxIdleTime - autoLogoutWarning)) {
       await validateSession();
     }
   }, [user, lastActivity, maxIdleTime, autoLogoutWarning, warningShown, updateActivity, validateSession, signOut]);
 
-  // Configurar listeners de atividade
+  // Configurar listeners de atividade (menos eventos)
   useEffect(() => {
     if (!user) return;
 
-    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+    const events = ['mousedown', 'keypress', 'scroll', 'touchstart'];
     
     events.forEach(event => {
       document.addEventListener(event, updateActivity, { passive: true });
@@ -150,7 +161,6 @@ export const useSecureSession = (options: SessionSecurityOptions = {}) => {
   useEffect(() => {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
   }, []);
 
