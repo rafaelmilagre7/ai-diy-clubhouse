@@ -119,22 +119,31 @@ const Solutions = () => {
 
         {/* Filtros com design moderno */}
         <Tabs defaultValue={activeCategory} onValueChange={setActiveCategory} className="w-full">
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-primary/10 rounded-2xl blur-xl"></div>
-            <TabsList className="relative bg-card/95 backdrop-blur border border-border/50 p-2 rounded-2xl w-full flex-wrap justify-center shadow-lg">
-              {categories.map((category) => (
-                <TabsTrigger 
-                  key={category.id}
-                  value={category.id}
-                  className="relative px-6 py-3 text-sm font-medium transition-all duration-300 
-                           data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/80 
-                           data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg
-                           hover:bg-accent/50 rounded-xl"
-                >
-                  {category.name}
-                </TabsTrigger>
-              ))}
-            </TabsList>
+          <div className="relative group">
+            {/* Fundo com gradiente sutil */}
+            <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 rounded-3xl blur-lg opacity-75 group-hover:opacity-100 transition-opacity duration-500"></div>
+            
+            {/* Container das tabs com glassmorphism */}
+            <div className="relative bg-card/80 backdrop-blur-xl border border-border/30 rounded-2xl p-1.5 shadow-2xl">
+              <TabsList className="bg-transparent p-0 h-auto w-full grid grid-cols-4 gap-1">
+                {categories.map((category) => (
+                  <TabsTrigger 
+                    key={category.id}
+                    value={category.id}
+                    className="relative px-4 py-3 text-sm font-medium transition-all duration-300 rounded-xl
+                             data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/90 
+                             data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg data-[state=active]:shadow-primary/25
+                             data-[state=active]:scale-105 data-[state=active]:border-0
+                             hover:bg-muted/50 hover:scale-102 hover:text-foreground
+                             text-muted-foreground border border-transparent"
+                  >
+                    <span className="relative z-10">{category.name}</span>
+                    {/* Indicador de foco */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent opacity-0 data-[state=active]:opacity-100 rounded-xl transition-opacity duration-300"></div>
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </div>
           </div>
 
           {/* Conteúdo com animações */}

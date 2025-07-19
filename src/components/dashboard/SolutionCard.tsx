@@ -53,41 +53,73 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution, onClick })
   };
 
   return (
-    <Card 
-      className={cn(
-        "h-full cursor-pointer group transition-all duration-300 overflow-hidden transform hover:-translate-y-1 bg-card border-border hover:border-primary/30 hover:shadow-lg hover:shadow-primary/10",
-        getCategoryStyle(solution.category)
-      )}
-      onClick={onClick}
-    >
-      <div className="h-36 overflow-hidden relative">
-        {solution.thumbnail_url ? (
-          <img 
-            src={solution.thumbnail_url}
-            alt={solution.title}
-            className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-muted">
-            <span className="text-4xl font-bold text-muted-foreground">
-              {solution.title.charAt(0)}
-            </span>
-          </div>
+    <div className="group relative">
+      {/* Efeito de glow no hover */}
+      <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/20 via-transparent to-primary/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+      
+      <Card 
+        className={cn(
+          "relative h-full cursor-pointer transition-all duration-500 overflow-hidden",
+          "bg-card/95 backdrop-blur-sm border border-border/50",
+          "hover:border-primary/40 hover:shadow-2xl hover:shadow-primary/10",
+          "hover:scale-[1.02] hover:-translate-y-2",
+          "transform-gpu will-change-transform",
+          getCategoryStyle(solution.category)
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent opacity-90"></div>
-      </div>
-      
-      <CardContent className="p-4 pb-2">
-        <CardContentSection title={solution.title} description={solution.description} />
-      </CardContent>
-      
-      <CardFooter className="px-4 py-3 flex items-center justify-between border-t border-border">
-        <div className="flex items-center space-x-1 text-xs text-muted-foreground">
-          {getCategoryIcon(solution.category)}
-          <span>{solution.category}</span>
+        onClick={onClick}
+      >
+        {/* Thumbnail com overlay gradiente */}
+        <div className="h-40 overflow-hidden relative">
+          {solution.thumbnail_url ? (
+            <img 
+              src={solution.thumbnail_url}
+              alt={solution.title}
+              className="w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-700 ease-out"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50">
+              <div className="relative">
+                <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl"></div>
+                <span className="relative text-5xl font-bold text-primary/70">
+                  {solution.title.charAt(0)}
+                </span>
+              </div>
+            </div>
+          )}
+          {/* Overlay com gradiente mais sofisticado */}
+          <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/20 to-transparent"></div>
+          
+          {/* Badge de categoria flutuante */}
+          <div className="absolute top-3 left-3 flex items-center space-x-1 px-2.5 py-1 bg-background/90 backdrop-blur-sm rounded-full border border-border/50 shadow-lg">
+            {getCategoryIcon(solution.category)}
+            <span className="text-xs font-medium text-foreground">{solution.category}</span>
+          </div>
         </div>
-        {getDifficultyBadge(solution.difficulty)}
-      </CardFooter>
-    </Card>
+        
+        {/* Conteúdo do card */}
+        <CardContent className="p-5 pb-3 space-y-3">
+          <div className="space-y-2">
+            <h3 className="font-heading font-semibold text-lg text-foreground group-hover:text-primary transition-colors duration-300 line-clamp-2">
+              {solution.title}
+            </h3>
+            <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+              {solution.description}
+            </p>
+          </div>
+        </CardContent>
+        
+        {/* Footer com badge de dificuldade */}
+        <CardFooter className="px-5 py-4 flex items-center justify-between border-t border-border/30 bg-muted/20">
+          <div className="flex items-center space-x-2">
+            <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+            <span className="text-xs text-muted-foreground font-medium">Disponível</span>
+          </div>
+          {getDifficultyBadge(solution.difficulty)}
+        </CardFooter>
+
+        {/* Indicador de hover */}
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-primary/80 to-primary scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
+      </Card>
+    </div>
   );
 };
