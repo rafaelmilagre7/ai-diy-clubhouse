@@ -55,8 +55,7 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
       navigationItems.push({
         to: '/admin',
         label: 'Admin',
-        icon: Users,
-        adminOnly: true
+        icon: Users
       });
     }
 
@@ -69,7 +68,6 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
             label={item.label}
             icon={item.icon}
             sidebarOpen={sidebarOpen}
-            adminOnly={item.adminOnly}
           />
         ))}
       </div>
