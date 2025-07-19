@@ -1,20 +1,33 @@
 
 import React from 'react';
 import { useAuth } from '@/contexts/auth';
-import { Home, Settings, Users, BookOpen, Award, HelpCircle } from 'lucide-react';
-import { SidebarNavItem } from './SidebarNavItem';
+import { 
+  Home, 
+  Settings, 
+  Users, 
+  BookOpen, 
+  Award, 
+  HelpCircle,
+  GraduationCap,
+  Network,
+  MessageSquare,
+  Wrench,
+  Lightbulb,
+  Calendar,
+  Trophy
+} from 'lucide-react';
+import { MemberSidebarNavItem } from './MemberSidebarNavItem';
 
 interface MemberSidebarNavItemsProps {
   sidebarOpen: boolean;
 }
 
 export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ sidebarOpen }) => {
-  // Adicionar debugging para identificar o problema
+  const { user, profile, isAdmin } = useAuth();
+  
   console.log('🔍 [SIDEBAR-NAV] Componente renderizado');
   
   try {
-    const { user, profile, isAdmin } = useAuth();
-    
     console.log('✅ [SIDEBAR-NAV] Contexto obtido com sucesso:', {
       hasUser: !!user,
       hasProfile: !!profile,
@@ -23,31 +36,40 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
     });
 
     const navigationItems = [
-      { href: '/dashboard', label: 'Dashboard', icon: Home },
-      { href: '/solutions', label: 'Soluções', icon: BookOpen },
-      { href: '/certificates', label: 'Certificados', icon: Award },
-      { href: '/profile', label: 'Perfil', icon: Settings },
-      { href: '/support', label: 'Suporte', icon: HelpCircle },
+      { to: '/dashboard', label: 'Dashboard', icon: Home },
+      { to: '/solutions', label: 'Soluções', icon: BookOpen },
+      { to: '/learning', label: 'Formação', icon: GraduationCap },
+      { to: '/tools', label: 'Ferramentas', icon: Wrench },
+      { to: '/networking', label: 'Networking', icon: Network },
+      { to: '/comunidade', label: 'Comunidade', icon: MessageSquare },
+      { to: '/suggestions', label: 'Sugestões', icon: Lightbulb },
+      { to: '/events', label: 'Eventos', icon: Calendar },
+      { to: '/learning/certificates', label: 'Certificados', icon: Award },
+      { to: '/benefits', label: 'Benefícios', icon: Trophy },
+      { to: '/profile', label: 'Perfil', icon: Settings },
+      { to: '/support', label: 'Suporte', icon: HelpCircle },
     ];
 
     // Adicionar item de admin apenas se for admin
     if (isAdmin) {
       navigationItems.push({
-        href: '/admin',
+        to: '/admin',
         label: 'Admin',
-        icon: Users
+        icon: Users,
+        adminOnly: true
       });
     }
 
     return (
-      <div className="space-y-2">
+      <div className="space-y-1 px-3 py-4">
         {navigationItems.map((item) => (
-          <SidebarNavItem
-            key={item.href}
-            href={item.href}
+          <MemberSidebarNavItem
+            key={item.to}
+            to={item.to}
             label={item.label}
             icon={item.icon}
             sidebarOpen={sidebarOpen}
+            adminOnly={item.adminOnly}
           />
         ))}
       </div>
@@ -55,14 +77,13 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
   } catch (error) {
     console.error('❌ [SIDEBAR-NAV] Erro ao obter contexto de autenticação:', error);
     
-    // Fallback: renderizar navegação básica sem contexto
     return (
-      <div className="space-y-2">
+      <div className="space-y-2 px-3 py-4">
         <div className="p-4 text-red-500 text-sm">
           Erro no contexto de autenticação
         </div>
-        <SidebarNavItem
-          href="/dashboard"
+        <MemberSidebarNavItem
+          to="/dashboard"
           label="Dashboard"
           icon={Home}
           sidebarOpen={sidebarOpen}

@@ -1,45 +1,70 @@
 
-import { cn } from "@/lib/utils";
+import { FC, memo } from "react";
+import { Button } from "@/components/ui/button";
+import { ArrowRight, Sparkles } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-/**
- * Cabeçalho moderno para o dashboard do membro com design glassmorphism.
- */
-export function ModernDashboardHeader({ userName }: { userName: string }) {
+interface ModernDashboardHeaderProps {
+  userName: string;
+}
+
+export const ModernDashboardHeader: FC<ModernDashboardHeaderProps> = memo(({ userName }) => {
+  const navigate = useNavigate();
+
+  const handleExploreClick = () => {
+    navigate('/solutions');
+  };
+
   return (
-    <div
-      className={cn(
-        "relative mb-6 md:mb-8 overflow-hidden rounded-xl shadow-md animate-fade-in",
-        "bg-gradient-to-br from-[#151823] to-[#1A1E2E]/90 backdrop-blur-sm border border-white/5"
-      )}
-    >
-      {/* Elemento decorativo - removido para evitar 404 */}
+    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600/10 via-purple-600/10 to-pink-600/10 border border-white/10 backdrop-blur-sm">
+      {/* Background decoration */}
+      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5" />
+      <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-blue-400/10 to-transparent rounded-full blur-3xl" />
+      <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-purple-400/10 to-transparent rounded-full blur-2xl" />
       
-      {/* Elementos decorativos */}
-      <div className="absolute top-0 left-0 w-24 h-24 bg-viverblue/5 rounded-full filter blur-3xl"></div>
-      <div className="absolute bottom-0 right-0 w-32 h-32 bg-strategy/5 rounded-full filter blur-3xl"></div>
-      
-      {/* Conteúdo do banner */}
-      <div className="relative z-10 flex flex-row items-center gap-6 px-6 md:px-8 py-6 md:py-8">
-        {/* Avatar Milagrinho - usando fallback */}
-        <div className="flex-shrink-0 h-16 w-16 md:h-20 md:w-20 rounded-full shadow-md border border-white/10 bg-gradient-to-br from-viverblue to-strategy overflow-hidden group transition-transform duration-300 hover:scale-105">
-          <div className="w-full h-full flex items-center justify-center text-white font-bold text-xl">
-            🤖
-          </div>
-        </div>
+      <div className="relative px-8 py-12">
+        <div className="flex items-start justify-between">
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-6 w-6 text-blue-400" />
+              <span className="text-sm font-medium text-blue-400 uppercase tracking-wider">
+                Bem-vindo de volta
+              </span>
+            </div>
+            
+            <div>
+              <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">
+                Olá, {userName}! 👋
+              </h1>
+              <p className="text-xl text-gray-300 max-w-2xl">
+                Continue sua jornada de crescimento. Explore novas soluções e desenvolva seu negócio.
+              </p>
+            </div>
 
-        {/* Texto à direita do avatar */}
-        <div>
-          <span className="font-medium text-white/70 text-sm tracking-wide block mb-1 animate-slide-in">
-            Bem-vindo ao VIVER DE IA Hub
-          </span>
-          <h1 className="text-xl md:text-2xl font-bold leading-tight text-white font-heading animate-slide-in" style={{ animationDelay: '0.1s' }}>
-            Olá, {userName || "Membro"}
-          </h1>
-          <div className="mt-1 text-white/60 text-sm md:text-base animate-slide-in" style={{ animationDelay: '0.2s' }}>
-            Acesse suas ferramentas e recursos de IA
+            <Button 
+              onClick={handleExploreClick}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 hover:scale-105 shadow-lg"
+            >
+              Explorar Soluções
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
+
+          {/* Stats Cards */}
+          <div className="hidden lg:flex gap-4">
+            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 text-center min-w-[100px]">
+              <div className="text-2xl font-bold text-white">12</div>
+              <div className="text-sm text-gray-400">Soluções</div>
+            </div>
+            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 text-center min-w-[100px]">
+              <div className="text-2xl font-bold text-white">85%</div>
+              <div className="text-sm text-gray-400">Progresso</div>
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
-}
+});
+
+ModernDashboardHeader.displayName = 'ModernDashboardHeader';

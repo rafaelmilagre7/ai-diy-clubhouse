@@ -1,45 +1,38 @@
 
-import { Card, CardContent } from "@/components/ui/card";
-import { BookOpen, Lightbulb, Zap } from "lucide-react";
+import { FC } from "react";
+import { BookOpen, ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
-export const NoSolutionsPlaceholder = () => {
+export const NoSolutionsPlaceholder: FC = () => {
+  const navigate = useNavigate();
+
+  const handleExploreSolutions = () => {
+    navigate('/solutions');
+  };
+
   return (
-    <div className="text-center py-12">
-      <div className="mb-8">
-        <div className="flex justify-center space-x-4 mb-6">
-          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-            <BookOpen className="w-8 h-8 text-blue-600" />
-          </div>
-          <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center">
-            <Lightbulb className="w-8 h-8 text-purple-600" />
-          </div>
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-            <Zap className="w-8 h-8 text-green-600" />
-          </div>
-        </div>
-        
-        <h3 className="text-2xl font-bold text-gray-900 mb-3">
-          Bem-vindo à plataforma!
-        </h3>
-        <p className="text-gray-600 max-w-md mx-auto">
-          Suas soluções de IA aparecerão aqui assim que estiverem disponíveis. 
-          Em breve você terá acesso a conteúdos personalizados para transformar seu negócio.
+    <div className="flex flex-col items-center justify-center min-h-[50vh] text-center space-y-6">
+      <div className="flex items-center justify-center w-20 h-20 bg-blue-500/10 rounded-full">
+        <BookOpen className="h-10 w-10 text-blue-400" />
+      </div>
+      
+      <div className="space-y-2">
+        <h2 className="text-2xl font-bold text-white">
+          Bem-vindo à sua jornada!
+        </h2>
+        <p className="text-gray-400 max-w-md">
+          Comece explorando nossas soluções personalizadas para fazer seu negócio crescer.
         </p>
       </div>
 
-      <Card className="max-w-lg mx-auto">
-        <CardContent className="p-6">
-          <h4 className="font-semibold text-gray-900 mb-2">
-            O que você pode fazer enquanto isso:
-          </h4>
-          <ul className="text-sm text-gray-600 space-y-2 text-left">
-            <li>• Complete seu perfil para receber recomendações personalizadas</li>
-            <li>• Explore a comunidade e conecte-se com outros membros</li>
-            <li>• Acesse ferramentas disponíveis na seção Tools</li>
-            <li>• Participe de eventos e webinars</li>
-          </ul>
-        </CardContent>
-      </Card>
+      <Button 
+        onClick={handleExploreSolutions}
+        className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+      >
+        Explorar Soluções
+        <ArrowRight className="ml-2 h-4 w-4" />
+      </Button>
     </div>
   );
 };

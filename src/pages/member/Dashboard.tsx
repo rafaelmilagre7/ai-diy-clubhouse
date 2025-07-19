@@ -2,76 +2,64 @@
 import React from 'react';
 import { useAuth } from '@/contexts/auth';
 import { useDashboardData } from '@/hooks/dashboard/useDashboardData';
+import { useOptimizedDashboardProgress } from '@/hooks/dashboard/useOptimizedDashboardProgress';
 import LoadingScreen from '@/components/common/LoadingScreen';
-import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
-import { ActiveSolutions } from '@/components/dashboard/ActiveSolutions';
-import { CompletedSolutions } from '@/components/dashboard/CompletedSolutions';
-import { RecommendedSolutions } from '@/components/dashboard/RecommendedSolutions';
+import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useNavigate } from 'react-router-dom';
 import { Solution } from '@/lib/supabase';
+import { useState } from 'react';
 
 const Dashboard = () => {
   const { user, profile } = useAuth();
   const { solutions, loading, error } = useDashboardData();
   const navigate = useNavigate();
+  const [selectedCategory, setSelectedCategory] = useState('all');
 
-  if (loading) {
+  // Usar o hook otimizado de progresso
+  const {
+    active,
+    completed,
+    recommended,
+    loading: progressLoading,
+    error: progressError
+  } = useOptimizedDashboardProgress(solutions);
+
+  const isLoading = loading || progressLoading;
+  const hasError = error || progressError;
+
+  if (isLoading) {
     return <LoadingScreen message="Carregando dashboard..." />;
   }
 
-  if (error) {
+  if (hasError) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-red-600 mb-4">Erro ao carregar dashboard</h2>
-          <p className="text-gray-600">{error}</p>
+          <p className="text-gray-600">{error || progressError}</p>
         </div>
       </div>
     );
   }
 
-  // Separar soluções por status
-  const activeSolutions = solutions.filter(solution => {
-    // Lógica para determinar soluções ativas - por enquanto retornamos algumas como exemplo
-    return solution.published;
-  }).slice(0, 3);
-
-  const completedSolutions = solutions.filter(solution => {
-    // Lógica para soluções completadas - por enquanto vazio
-    return false;
-  });
-
-  const recommendedSolutions = solutions.filter(solution => {
-    return solution.published;
-  }).slice(0, 6);
-
   const handleSolutionClick = (solution: Solution) => {
     navigate(`/solution/${solution.id}`);
   };
 
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategory(category);
+  };
+
   return (
-    <div className="space-y-6 animate-fade-in">
-      <DashboardHeader />
-      
-      <RecommendedSolutions 
-        solutions={recommendedSolutions}
-        onSolutionClick={handleSolutionClick}
-      />
-      
-      {activeSolutions.length > 0 && (
-        <ActiveSolutions 
-          solutions={activeSolutions}
-          onSolutionClick={handleSolutionClick}
-        />
-      )}
-      
-      {completedSolutions.length > 0 && (
-        <CompletedSolutions 
-          solutions={completedSolutions}
-          onSolutionClick={handleSolutionClick}
-        />
-      )}
-    </div>
+    <DashboardLayout
+      active={active}
+      completed={completed}
+      recommended={recommended}
+      category={selectedCategory}
+      onCategoryChange={handleCategoryChange}
+      onSolutionClick={handleSolutionClick}
+      isLoading={isLoading}
+    />
   );
 };
 

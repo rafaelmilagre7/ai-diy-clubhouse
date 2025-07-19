@@ -1,37 +1,41 @@
 
-import React from 'react';
-import { Skeleton } from '@/components/ui/skeleton';
+import { FC } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface SolutionsGridLoaderProps {
   title: string;
-  count?: number;
+  count: number;
 }
 
-export const SolutionsGridLoader: React.FC<SolutionsGridLoaderProps> = ({ 
-  title, 
-  count = 3 
-}) => {
+export const SolutionsGridLoader: FC<SolutionsGridLoaderProps> = ({ title, count }) => {
   return (
-    <div className="space-y-4">
-      <div className="space-y-2">
-        <Skeleton className="h-8 w-64" />
-        <Skeleton className="h-4 w-96" />
+    <div className="mb-8">
+      <div className="mb-6">
+        <Skeleton className="h-8 w-48 mb-2 bg-gray-800" />
+        <Skeleton className="h-4 w-96 bg-gray-800" />
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {Array.from({ length: count }).map((_, index) => (
-          <div key={index} className="space-y-3">
-            <Skeleton className="h-48 w-full rounded-lg" />
-            <div className="space-y-2">
-              <Skeleton className="h-5 w-3/4" />
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-2/3" />
-            </div>
-            <div className="flex justify-between items-center">
-              <Skeleton className="h-6 w-20" />
-              <Skeleton className="h-9 w-24" />
-            </div>
-          </div>
+          <Card key={index} className="bg-gray-900/50 border-gray-800">
+            <CardContent className="p-6">
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-12 w-12 rounded-lg bg-gray-800" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-32 bg-gray-800" />
+                    <Skeleton className="h-3 w-24 bg-gray-800" />
+                  </div>
+                </div>
+                <Skeleton className="h-16 w-full bg-gray-800" />
+                <div className="flex gap-2">
+                  <Skeleton className="h-6 w-16 rounded-full bg-gray-800" />
+                  <Skeleton className="h-6 w-20 rounded-full bg-gray-800" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         ))}
       </div>
     </div>

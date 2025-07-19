@@ -1,8 +1,8 @@
 
-import { CheckCircle, Clock, TrendingUp } from "lucide-react";
+import { FC, memo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { TrendingUp, Target, CheckCircle, Clock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
 
 interface KpiGridProps {
   completed: number;
@@ -11,95 +11,99 @@ interface KpiGridProps {
   isLoading?: boolean;
 }
 
-export const KpiGrid: React.FC<KpiGridProps> = ({ 
+export const KpiGrid: FC<KpiGridProps> = memo(({ 
   completed, 
   inProgress, 
-  total,
+  total, 
   isLoading = false 
 }) => {
+  const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+  const kpis = [
+    {
+      title: "Soluções Completadas",
+      value: completed,
+      icon: CheckCircle,
+      color: "text-green-400",
+      bgColor: "bg-green-500/10",
+      borderColor: "border-green-500/20"
+    },
+    {
+      title: "Em Andamento",
+      value: inProgress,
+      icon: Clock,
+      color: "text-blue-400",
+      bgColor: "bg-blue-500/10",
+      borderColor: "border-blue-500/20"
+    },
+    {
+      title: "Taxa de Conclusão",
+      value: `${completionRate}%`,
+      icon: Target,
+      color: "text-purple-400",
+      bgColor: "bg-purple-500/10",
+      borderColor: "border-purple-500/20"
+    },
+    {
+      title: "Total Disponível",
+      value: total,
+      icon: TrendingUp,
+      color: "text-orange-400",
+      bgColor: "bg-orange-500/10",
+      borderColor: "border-orange-500/20"
+    }
+  ];
+
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {[1, 2, 3].map((i) => (
-          <Skeleton key={i} className="h-28 rounded-xl" />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[1, 2, 3, 4].map((i) => (
+          <Card key={i} className="bg-gray-900/50 border-gray-800">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-24 bg-gray-800" />
+                  <Skeleton className="h-8 w-16 bg-gray-800" />
+                </div>
+                <Skeleton className="h-12 w-12 rounded-lg bg-gray-800" />
+              </div>
+            </CardContent>
+          </Card>
         ))}
       </div>
     );
   }
 
-  const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
-
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-      <Card className="border border-viverblue/10 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden group">
-        <CardContent className="p-4 flex items-start gap-4">
-          <div className="rounded-full bg-viverblue/5 border border-viverblue/10 p-3 group-hover:bg-viverblue/10 transition-colors duration-300">
-            <CheckCircle className="h-5 w-5 text-viverblue" />
-          </div>
-          <div className="w-full">
-            <h3 className="text-sm text-neutral-400 mb-1">Implementações Completas</h3>
-            <div className="flex items-baseline">
-              <p className="text-xl font-medium text-white">{completed}</p>
-              <span className="text-xs ml-1.5 text-neutral-500">de {total}</span>
-            </div>
-            <div className="w-full h-1.5 bg-white/5 rounded-full mt-2 overflow-hidden">
-              <div 
-                className="h-full bg-viverblue/50 rounded-full transition-all duration-1000 ease-in-out"
-                style={{ width: `${percent}%` }}
-              ></div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-      
-      <Card className="border border-operational/10 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden group">
-        <CardContent className="p-4 flex items-start gap-4">
-          <div className="rounded-full bg-operational/5 border border-operational/10 p-3 group-hover:bg-operational/10 transition-colors duration-300">
-            <Clock className="h-5 w-5 text-operational" />
-          </div>
-          <div className="w-full">
-            <h3 className="text-sm text-neutral-400 mb-1">Em Andamento</h3>
-            <div className="flex items-baseline">
-              <p className="text-xl font-medium text-white">{inProgress}</p>
-              <span className="text-xs ml-1.5 text-neutral-500">projetos</span>
-            </div>
-            <div className="flex space-x-1 mt-2">
-              {[...Array(Math.min(5, inProgress || 0))].map((_, i) => (
-                <div 
-                  key={i} 
-                  className={cn(
-                    "h-1.5 rounded-full bg-operational/60", 
-                    i < 3 ? "w-6" : "w-3"
-                  )}
-                ></div>
-              ))}
-              {inProgress === 0 && (
-                <div className="h-1.5 w-full rounded-full bg-white/5"></div>
-              )}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-      
-      <Card className="border border-strategy/10 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden group">
-        <CardContent className="p-4 flex items-start gap-4">
-          <div className="rounded-full bg-strategy/5 border border-strategy/10 p-3 group-hover:bg-strategy/10 transition-colors duration-300">
-            <TrendingUp className="h-5 w-5 text-strategy" />
-          </div>
-          <div className="w-full">
-            <h3 className="text-sm text-neutral-400 mb-1">Seu Progresso</h3>
-            <div className="relative">
-              <p className="text-xl font-medium text-white">{percent}%</p>
-            </div>
-            <div className="w-full h-1.5 bg-white/5 rounded-full mt-2 overflow-hidden">
-              <div 
-                className="h-full bg-strategy/60 rounded-full transition-all duration-1000 ease-in-out"
-                style={{ width: `${percent}%` }}
-              ></div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in">
+      {kpis.map((kpi, index) => {
+        const Icon = kpi.icon;
+        return (
+          <Card 
+            key={kpi.title} 
+            className={`${kpi.bgColor} ${kpi.borderColor} border backdrop-blur-sm hover:scale-105 transition-all duration-200 animate-fade-in`}
+            style={{ animationDelay: `${index * 0.1}s` }}
+          >
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-400 mb-1">
+                    {kpi.title}
+                  </p>
+                  <p className="text-3xl font-bold text-white">
+                    {kpi.value}
+                  </p>
+                </div>
+                <div className={`${kpi.bgColor} p-3 rounded-lg`}>
+                  <Icon className={`h-6 w-6 ${kpi.color}`} />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
-}
+});
+
+KpiGrid.displayName = 'KpiGrid';

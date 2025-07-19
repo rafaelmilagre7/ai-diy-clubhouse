@@ -1,53 +1,35 @@
 
-import React from 'react';
-import { AlertTriangle, RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { FC } from "react";
+import { AlertTriangle, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
-interface DashboardConnectionErrorStateProps {
-  onRetry?: () => void;
-}
-
-export const DashboardConnectionErrorState: React.FC<DashboardConnectionErrorStateProps> = ({
-  onRetry
-}) => {
+export const DashboardConnectionErrorState: FC = () => {
   const handleRefresh = () => {
-    if (onRetry) {
-      onRetry();
-    } else {
-      // Fallback: refresh da página atual em vez de reload
-      window.location.href = window.location.pathname;
-    }
+    window.location.reload();
   };
 
   return (
-    <div className="min-h-[60vh] flex items-center justify-center">
-      <Card className="max-w-md w-full mx-4">
-        <CardContent className="p-6 text-center space-y-4">
-          <div className="w-16 h-16 mx-auto bg-red-100 rounded-full flex items-center justify-center">
-            <AlertTriangle className="w-8 h-8 text-red-600" />
-          </div>
-          
-          <div className="space-y-2">
-            <h3 className="text-lg font-semibold text-gray-900">
-              Erro de Conexão
-            </h3>
-            <p className="text-gray-600">
-              Não foi possível carregar os dados do dashboard. 
-              Verifique sua conexão e tente novamente.
-            </p>
-          </div>
-          
-          <Button 
-            onClick={handleRefresh}
-            className="w-full"
-            variant="outline"
-          >
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Tentar Novamente
-          </Button>
-        </CardContent>
-      </Card>
+    <div className="flex flex-col items-center justify-center min-h-[50vh] text-center space-y-6">
+      <div className="flex items-center justify-center w-16 h-16 bg-red-500/10 rounded-full">
+        <AlertTriangle className="h-8 w-8 text-red-400" />
+      </div>
+      
+      <div className="space-y-2">
+        <h2 className="text-2xl font-bold text-white">
+          Erro de Conexão
+        </h2>
+        <p className="text-gray-400 max-w-md">
+          Não foi possível carregar seus dados. Verifique sua conexão e tente novamente.
+        </p>
+      </div>
+
+      <Button 
+        onClick={handleRefresh}
+        className="bg-red-600 hover:bg-red-700 text-white"
+      >
+        <RefreshCw className="mr-2 h-4 w-4" />
+        Tentar Novamente
+      </Button>
     </div>
   );
 };
