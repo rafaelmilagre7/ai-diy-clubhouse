@@ -16,7 +16,7 @@ const ProtectedRoute = ({
   requireAdmin = false,
   requiredRole
 }: ProtectedRouteProps) => {
-  const { user, profile, isAdmin, hasCompletedOnboarding, isLoading } = useAuth();
+  const { user, profile, isAdmin, isLoading } = useAuth();
   const location = useLocation();
   
   // Se estiver carregando, mostra tela de loading com timeout aumentado
@@ -36,23 +36,11 @@ const ProtectedRoute = ({
     location.pathname.startsWith(route)
   );
 
-  // Se usuário não completou onboarding E não está em rota permitida
-  if (!hasCompletedOnboarding && !isOnboardingRoute) {
-    console.log("[PROTECTED-ROUTE] Onboarding obrigatório não completado, redirecionando...", {
-      hasProfile: !!profile,
-      profileId: profile?.id,
-      onboardingCompleted: true, // Onboarding removido
-      currentPath: location.pathname
-    });
-    
-    // Fallback: Se não há perfil mas há usuário, dar mais tempo
-    if (user && !profile) {
-      console.log("[PROTECTED-ROUTE] Aguardando criação do perfil...");
-      return <LoadingScreen message="Configurando sua conta..." />;
-    }
-    
-    // Redirecionar para onboarding
-    return <Navigate to="/onboarding" replace />;
+  // Onboarding foi removido - verificação desnecessária
+  // Se não há perfil mas há usuário, dar mais tempo para carregar
+  if (user && !profile) {
+    console.log("[PROTECTED-ROUTE] Aguardando criação do perfil...");
+    return <LoadingScreen message="Configurando sua conta..." />;
   }
   
   // Verificar se requer admin e usuário não é admin
