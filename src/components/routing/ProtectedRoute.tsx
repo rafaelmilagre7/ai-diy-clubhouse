@@ -16,10 +16,10 @@ const ProtectedRoute = ({
   requireAdmin = false,
   requiredRole
 }: ProtectedRouteProps) => {
-  const { user, profile, isAdmin, hasCompletedOnboarding, isLoading } = useAuth();
+  const { user, profile, isAdmin, isLoading } = useAuth();
   const location = useLocation();
   
-  // Se estiver carregando, mostra tela de loading com timeout aumentado
+  // Se estiver carregando, mostra tela de loading
   if (isLoading) {
     return <LoadingScreen message="Verificando sua autenticação..." />;
   }
@@ -29,30 +29,10 @@ const ProtectedRoute = ({
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // VERIFICAÇÃO OBRIGATÓRIA DE ONBOARDING
-  // Rotas permitidas sem onboarding completo
-  const allowedWithoutOnboarding = ['/login', '/onboarding', '/auth'];
-  const isOnboardingRoute = allowedWithoutOnboarding.some(route => 
-    location.pathname.startsWith(route)
-  );
-
-  // Se usuário não completou onboarding E não está em rota permitida
-  if (!hasCompletedOnboarding && !isOnboardingRoute) {
-    console.log("[PROTECTED-ROUTE] Onboarding obrigatório não completado, redirecionando...", {
-      hasProfile: !!profile,
-      profileId: profile?.id,
-      onboardingCompleted: true, // Onboarding removido
-      currentPath: location.pathname
-    });
-    
-    // Fallback: Se não há perfil mas há usuário, dar mais tempo
-    if (user && !profile) {
-      console.log("[PROTECTED-ROUTE] Aguardando criação do perfil...");
-      return <LoadingScreen message="Configurando sua conta..." />;
-    }
-    
-    // Redirecionar para onboarding
-    return <Navigate to="/onboarding" replace />;
+  // Se não há perfil mas há usuário, aguarda um pouco mais
+  if (user && !profile) {
+    console.log("[PROTECTED-ROUTE] Aguardando criação do perfil...");
+    return <LoadingScreen message="Configurando sua conta..." />;
   }
   
   // Verificar se requer admin e usuário não é admin
@@ -61,7 +41,7 @@ const ProtectedRoute = ({
     return <Navigate to="/dashboard" replace />;
   }
 
-  // Usuário está autenticado, tem onboarding completo e permissões necessárias
+  // Usuário está autenticado e tem permissões necessárias
   return <>{children}</>;
 };
 
