@@ -107,7 +107,8 @@ export const useRealAdminStats = (timeRange: string) => {
       const roleStats: { [key: string]: number } = {};
       
       roleDistribution?.forEach(profile => {
-        const roleName = profile.user_roles?.name || 'member';
+        const userRole = profile.user_roles as any;
+        const roleName = userRole?.name || 'member';
         roleStats[roleName] = (roleStats[roleName] || 0) + 1;
       });
 
