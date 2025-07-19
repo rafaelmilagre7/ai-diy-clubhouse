@@ -25,13 +25,13 @@ export const SidebarLogo = ({ sidebarOpen, setSidebarOpen }: SidebarLogoProps) =
           sidebarOpen ? "w-auto" : "w-8 h-8 flex items-center justify-center"
         )}>
           <img
-            src="https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif"
+            src="/lovable-uploads/52a5febe-59c9-44ef-8255-d9f2f0982044.png"
             alt="VIVER DE IA Club"
             className={cn(
               "transition-all duration-300 object-contain",
               sidebarOpen 
-                ? "h-8 w-auto max-w-[160px]" // Logo completo quando aberto
-                : "h-6 w-6" // Logo compacto quando fechado
+                ? "h-10 w-auto max-w-[180px]" // Logo completo quando aberto (aumentado)
+                : "h-8 w-8" // Logo compacto quando fechado (aumentado)
             )}
           />
         </div>
