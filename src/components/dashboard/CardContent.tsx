@@ -10,12 +10,12 @@ export const CardContentSection = ({ title, description }: CardContentProps) => 
   return (
     <div className="space-y-2">
       <h3 className={cn(
-        "font-medium text-lg line-clamp-2 text-neutral-100",
-        "group-hover:text-white transition-colors duration-300"
+        "font-heading font-semibold text-lg line-clamp-2 text-foreground",
+        "group-hover:text-primary transition-colors duration-300"
       )}>
         {title}
       </h3>
-      <p className="text-neutral-300 text-sm line-clamp-2 leading-relaxed">
+      <p className="text-muted-foreground text-sm line-clamp-2 leading-relaxed">
         {description}
       </p>
     </div>

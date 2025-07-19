@@ -42,11 +42,11 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution, onClick })
   const getDifficultyBadge = (difficulty: string) => {
     switch (difficulty) {
       case 'easy':
-        return <Badge variant="outline" className="bg-green-900/40 text-green-300 border-green-700">Fácil</Badge>;
+        return <Badge variant="outline" className="bg-viverblue/20 text-viverblue border-viverblue/50">Fácil</Badge>;
       case 'medium':
-        return <Badge variant="outline" className="bg-amber-900/40 text-amber-300 border-amber-700">Médio</Badge>;
+        return <Badge variant="outline" className="bg-primary/20 text-primary border-primary/50">Médio</Badge>;
       case 'advanced':
-        return <Badge variant="outline" className="bg-red-900/40 text-red-300 border-red-700">Avançado</Badge>;
+        return <Badge variant="outline" className="bg-destructive/20 text-destructive border-destructive/50">Avançado</Badge>;
       default:
         return null;
     }
@@ -55,7 +55,7 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution, onClick })
   return (
     <Card 
       className={cn(
-        "h-full cursor-pointer group transition-all duration-300 overflow-hidden transform hover:-translate-y-1 bg-[#151823] border-neutral-700",
+        "h-full cursor-pointer group transition-all duration-300 overflow-hidden transform hover:-translate-y-1 bg-card border-border hover:border-primary/30 hover:shadow-lg hover:shadow-primary/10",
         getCategoryStyle(solution.category)
       )}
       onClick={onClick}
@@ -68,21 +68,21 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution, onClick })
             className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-[#1A1E2E]">
-            <span className="text-4xl font-bold text-neutral-400">
+          <div className="w-full h-full flex items-center justify-center bg-muted">
+            <span className="text-4xl font-bold text-muted-foreground">
               {solution.title.charAt(0)}
             </span>
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0F111A] via-transparent to-transparent opacity-90"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent opacity-90"></div>
       </div>
       
       <CardContent className="p-4 pb-2">
         <CardContentSection title={solution.title} description={solution.description} />
       </CardContent>
       
-      <CardFooter className="px-4 py-3 flex items-center justify-between border-t border-neutral-800">
-        <div className="flex items-center space-x-1 text-xs text-neutral-300">
+      <CardFooter className="px-4 py-3 flex items-center justify-between border-t border-border">
+        <div className="flex items-center space-x-1 text-xs text-muted-foreground">
           {getCategoryIcon(solution.category)}
           <span>{solution.category}</span>
         </div>

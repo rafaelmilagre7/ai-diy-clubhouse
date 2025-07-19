@@ -14,8 +14,8 @@ export const CompletedSolutions: FC<CompletedSolutionsProps> = ({
 }) => {
   return (
     <div className="mb-8 animate-fade-in" style={{ animationDelay: '0.2s' }}>
-      <h2 className="text-2xl font-bold mb-2 text-white">Implementações concluídas</h2>
-      <p className="text-neutral-400 mb-6">
+      <h2 className="text-2xl font-heading font-bold mb-2 text-foreground">Implementações concluídas</h2>
+      <p className="text-muted-foreground mb-6">
         Projetos que você já implementou com sucesso
       </p>
       <SolutionsGrid solutions={solutions} onSolutionClick={onSolutionClick} />

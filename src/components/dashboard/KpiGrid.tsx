@@ -24,33 +24,33 @@ export const KpiGrid: FC<KpiGridProps> = memo(({
       title: "Soluções Completadas",
       value: completed,
       icon: CheckCircle,
-      color: "text-green-400",
-      bgColor: "bg-green-500/10",
-      borderColor: "border-green-500/20"
+      color: "text-viverblue",
+      bgColor: "bg-viverblue/10",
+      borderColor: "border-viverblue/20"
     },
     {
       title: "Em Andamento",
       value: inProgress,
       icon: Clock,
-      color: "text-blue-400",
-      bgColor: "bg-blue-500/10",
-      borderColor: "border-blue-500/20"
+      color: "text-primary",
+      bgColor: "bg-primary/10",
+      borderColor: "border-primary/20"
     },
     {
       title: "Taxa de Conclusão",
       value: `${completionRate}%`,
       icon: Target,
-      color: "text-purple-400",
-      bgColor: "bg-purple-500/10",
-      borderColor: "border-purple-500/20"
+      color: "text-secondary",
+      bgColor: "bg-secondary/10",
+      borderColor: "border-secondary/20"
     },
     {
       title: "Total Disponível",
       value: total,
       icon: TrendingUp,
-      color: "text-orange-400",
-      bgColor: "bg-orange-500/10",
-      borderColor: "border-orange-500/20"
+      color: "text-accent",
+      bgColor: "bg-accent/10",
+      borderColor: "border-accent/20"
     }
   ];
 
@@ -58,14 +58,14 @@ export const KpiGrid: FC<KpiGridProps> = memo(({
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[1, 2, 3, 4].map((i) => (
-          <Card key={i} className="bg-gray-900/50 border-gray-800">
+          <Card key={i} className="bg-card/50 border-border">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div className="space-y-2">
-                  <Skeleton className="h-4 w-24 bg-gray-800" />
-                  <Skeleton className="h-8 w-16 bg-gray-800" />
+                  <Skeleton className="h-4 w-24 bg-muted" />
+                  <Skeleton className="h-8 w-16 bg-muted" />
                 </div>
-                <Skeleton className="h-12 w-12 rounded-lg bg-gray-800" />
+                <Skeleton className="h-12 w-12 rounded-lg bg-muted" />
               </div>
             </CardContent>
           </Card>
@@ -87,10 +87,10 @@ export const KpiGrid: FC<KpiGridProps> = memo(({
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-400 mb-1">
+                  <p className="text-sm font-medium text-muted-foreground mb-1">
                     {kpi.title}
                   </p>
-                  <p className="text-3xl font-bold text-white">
+                  <p className="text-3xl font-bold text-foreground">
                     {kpi.value}
                   </p>
                 </div>

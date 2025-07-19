@@ -31,7 +31,7 @@ export const SidebarLogo = ({ sidebarOpen, setSidebarOpen }: SidebarLogoProps) =
         variant="ghost"
         size="icon"
         className={cn(
-          "shrink-0 text-white/70 hover:text-white hover:bg-white/10",
+          "shrink-0 text-muted-foreground hover:text-foreground hover:bg-accent/50",
           // Mostrar diferentes ícones baseado no contexto
           isMobile ? "md:hidden" : "hidden md:flex"
         )}

@@ -11,7 +11,7 @@ export const MemberSidebar = ({
   return (
     <aside
       className={cn(
-        "fixed inset-y-0 left-0 z-50 flex h-full flex-col bg-[#0F111A] border-r border-white/5 transition-all duration-300 ease-in-out",
+        "fixed inset-y-0 left-0 z-50 flex h-full flex-col bg-card border-r border-border transition-all duration-300 ease-in-out backdrop-blur-sm",
         // Largura responsiva
         sidebarOpen ? "w-64" : "w-16",
         // Visibilidade mobile vs desktop
@@ -32,7 +32,7 @@ export const MemberSidebar = ({
         
         {/* Divisor visual */}
         <div className="my-1 px-3">
-          <div className="h-px bg-white/5"></div>
+          <div className="h-px bg-border"></div>
         </div>
 
         {/* Navegação */}
