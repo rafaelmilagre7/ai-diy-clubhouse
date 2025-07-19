@@ -27,43 +27,38 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [authError, setAuthError] = useState<Error | null>(null);
-  const [initializationAttempts, setInitializationAttempts] = useState(0);
-  const maxRetries = 3;
+  // Autenticação otimizada - removidas complexidades desnecessárias
 
-  // CORREÇÃO: Removido useSessionManager() daqui para quebrar dependência circular
-  // Session management agora será tratado pelo SessionManagerWrapper
-
-  // Função para buscar perfil do usuário
-  const fetchUserProfile = async (userId: string) => {
+  // Função otimizada para buscar perfil usando nova função do banco
+  const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select(`
-          *,
-          user_roles (
-            id,
-            name,
-            permissions
-          )
-        `)
-        .eq('id', userId)
-        .single();
+      console.log(`[AUTH-OPT] Buscando perfil otimizado para: ${userId}`);
+      
+      const { data, error } = await supabase.rpc('get_user_profile_optimized', {
+        target_user_id: userId
+      });
 
       if (error) {
-        console.warn(`[AUTH] Perfil não encontrado para usuário ${userId}:`, error.message);
+        console.error('[AUTH-OPT] Erro na função RPC:', error);
         return null;
       }
 
-      return data;
+      if (!data) {
+        console.warn('[AUTH-OPT] Nenhum dado retornado');
+        return null;
+      }
+
+      console.log('[AUTH-OPT] Perfil carregado com sucesso:', data.name || data.email);
+      return data as UserProfile;
     } catch (error) {
-      console.error('[AUTH] Erro ao buscar perfil:', error);
+      console.error('[AUTH-OPT] Erro crítico ao buscar perfil:', error);
       return null;
     }
   };
 
-  // Função para processar mudanças de autenticação
+  // Função otimizada para processar mudanças de autenticação
   const processAuthChange = async (session: Session | null) => {
-    console.log('[AUTH] Processando mudança de autenticação:', {
+    console.log('[AUTH-OPT] Processando mudança de autenticação:', {
       hasSession: !!session,
       userId: session?.user?.id
     });
@@ -73,14 +68,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     if (session?.user) {
       try {
+        // Usar função otimizada do banco que cria perfil automaticamente se necessário
         const userProfile = await fetchUserProfile(session.user.id);
         setProfile(userProfile);
         
-        if (!userProfile) {
-          console.warn('[AUTH] Usuário sem perfil, mas continuando autenticado');
-        }
+        console.log('[AUTH-OPT] Perfil processado:', {
+          hasProfile: !!userProfile,
+          userName: userProfile?.name,
+          userRole: userProfile?.user_roles?.name
+        });
       } catch (error) {
-        console.error('[AUTH] Erro ao processar perfil do usuário:', error);
+        console.error('[AUTH-OPT] Erro ao processar perfil:', error);
         setProfile(null);
       }
     } else {
@@ -88,63 +86,58 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  // Inicialização da autenticação com circuit breaker aprimorado
+  // Inicialização simplificada e otimizada da autenticação
   useEffect(() => {
     let mounted = true;
+    let authSubscription: any = null;
     
     const initializeAuth = async () => {
       try {
-        console.log(`[AUTH] Inicializando autenticação (tentativa ${initializationAttempts + 1}/${maxRetries})`);
+        console.log('[AUTH-OPT] Inicializando autenticação otimizada...');
         
-        // Configurar listener de mudanças de auth
+        // Configurar listener PRIMEIRO (evita perder eventos)
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (event, session) => {
             if (!mounted) return;
             
-            console.log('[AUTH] Evento de auth:', event);
-            await processAuthChange(session);
+            console.log('[AUTH-OPT] Evento de auth:', event);
+            
+            // Usar setTimeout para evitar deadlocks
+            setTimeout(async () => {
+              if (mounted) {
+                await processAuthChange(session);
+              }
+            }, 0);
           }
         );
+        
+        authSubscription = subscription;
 
-        // Verificar sessão existente
+        // DEPOIS verificar sessão existente
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error('[AUTH] Erro ao obter sessão:', error);
+          console.error('[AUTH-OPT] Erro ao obter sessão:', error);
           setAuthError(error);
-          if (initializationAttempts < maxRetries - 1) {
-            setInitializationAttempts(prev => prev + 1);
-            return; // Tentar novamente
-          }
         } else {
+          console.log('[AUTH-OPT] Sessão obtida:', !!session);
           await processAuthChange(session);
           setAuthError(null);
         }
 
         setIsLoading(false);
-
-        return () => {
-          subscription.unsubscribe();
-          mounted = false;
-        };
+        console.log('[AUTH-OPT] Inicialização completa');
 
       } catch (error: any) {
-        console.error('[AUTH] Erro crítico na inicialização:', error);
+        console.error('[AUTH-OPT] Erro crítico na inicialização:', error);
         setAuthError(error);
+        setIsLoading(false);
         
-        if (initializationAttempts < maxRetries - 1) {
-          setInitializationAttempts(prev => prev + 1);
-          setTimeout(() => {
-            if (mounted) initializeAuth();
-          }, 1000 * (initializationAttempts + 1)); // Backoff exponencial
-        } else {
-          setIsLoading(false);
-          toast({
-            title: 'Erro de inicialização',
-            description: 'Não foi possível inicializar a autenticação. Recarregue a página.',
-            variant: 'destructive',
-          });
-        }
+        toast({
+          title: 'Erro de autenticação',
+          description: 'Falha na inicialização. Tente recarregar a página.',
+          variant: 'destructive',
+        });
       }
     };
 
@@ -152,8 +145,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     return () => {
       mounted = false;
+      if (authSubscription) {
+        authSubscription.unsubscribe();
+      }
     };
-  }, [initializationAttempts]);
+  }, []);
 
   // Função de login
   const signIn = async (email: string, password: string) => {
