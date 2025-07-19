@@ -47,20 +47,11 @@ export const useSidebarStats = () => {
           .gte('start_time', startOfMonth.toISOString())
           .lte('start_time', endOfMonth.toISOString());
 
-        // Buscar benefícios disponíveis
-        // Vou tentar diferentes abordagens para encontrar a fonte correta
-        let benefitsCount = 0;
-        
-        // Primeiro, tentar buscar de uma possível tabela benefits
-        try {
-          const { count } = await supabase
-            .from('benefits')
-            .select('*', { count: 'exact', head: true });
-          benefitsCount = count || 0;
-        } catch {
-          // Se não existir, usar valor padrão baseado no que o usuário vê
-          benefitsCount = 7; // Valor que o usuário reporta ver
-        }
+        // Buscar ferramentas que têm benefícios cadastrados
+        const { count: benefitsCount } = await supabase
+          .from('tools')
+          .select('*', { count: 'exact', head: true })
+          .eq('has_member_benefit', true);
 
         return {
           solutions: solutionsCount || 0,
