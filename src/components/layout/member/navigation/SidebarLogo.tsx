@@ -25,14 +25,18 @@ export const SidebarLogo = ({ sidebarOpen, setSidebarOpen }: SidebarLogoProps) =
           sidebarOpen ? "w-auto" : "w-8 h-8 flex items-center justify-center"
         )}>
           <img
-            src="/lovable-uploads/52a5febe-59c9-44ef-8255-d9f2f0982044.png"
+            src="/lovable-uploads/0e212cea-2950-4e8e-b43c-21ed5871630b.png"
             alt="VIVER DE IA Club"
             className={cn(
               "transition-all duration-300 object-contain",
               sidebarOpen 
-                ? "h-10 w-auto max-w-[180px]" // Logo completo quando aberto (aumentado)
-                : "h-8 w-8" // Logo compacto quando fechado (aumentado)
+                ? "h-10 w-auto max-w-[180px]" // Logo completo quando aberto
+                : "h-8 w-8" // Logo compacto quando fechado
             )}
+            onError={(e) => {
+              // Fallback para caso a imagem não carregue
+              e.currentTarget.style.display = 'none';
+            }}
           />
         </div>
         
