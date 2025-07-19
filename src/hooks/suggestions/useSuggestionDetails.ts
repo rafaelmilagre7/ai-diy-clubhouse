@@ -22,9 +22,16 @@ export const useSuggestionDetails = () => {
       setIsLoading(true);
       console.log('Buscando detalhes da sugestão:', id);
       
+      // Buscar sugestão com dados do perfil do usuário usando JOIN
       const { data, error } = await supabase
-        .from('suggestions_with_profiles')
-        .select('*')
+        .from('suggestions')
+        .select(`
+          *,
+          profiles!suggestions_user_id_fkey (
+            name,
+            avatar_url
+          )
+        `)
         .eq('id', id)
         .single();
       
@@ -34,7 +41,16 @@ export const useSuggestionDetails = () => {
         return;
       }
       
-      setSuggestion(data as Suggestion);
+      // Mapear dados para incluir user_name e user_avatar do perfil
+      const mappedSuggestion = {
+        ...data,
+        user_name: data.profiles?.name || 'Usuário',
+        user_avatar: data.profiles?.avatar_url || null,
+        // Remover o objeto profiles aninhado para manter compatibilidade
+        profiles: undefined
+      };
+      
+      setSuggestion(mappedSuggestion as Suggestion);
       
       // Buscar o voto do usuário atual, se estiver autenticado
       if (user) {

@@ -21,10 +21,16 @@ export const useSuggestions = () => {
       console.log('Buscando sugestões...', { filter, searchQuery });
       
       try {
-        // Usamos a view suggestions_with_profiles que já conecta os dados de perfil
+        // Buscar sugestões com dados do perfil do usuário usando JOIN
         let query = supabase
-          .from('suggestions_with_profiles')
-          .select('*')
+          .from('suggestions')
+          .select(`
+            *,
+            profiles!suggestions_user_id_fkey (
+              name,
+              avatar_url
+            )
+          `)
           .eq('is_hidden', false); // Apenas sugestões não ocultas
 
         // Filtragem por termo de busca
@@ -56,18 +62,26 @@ export const useSuggestions = () => {
           throw error;
         }
 
+        // Mapear dados para incluir user_name e user_avatar do perfil
+        let mappedData = (data || []).map(suggestion => ({
+          ...suggestion,
+          user_name: suggestion.profiles?.name || 'Usuário',
+          user_avatar: suggestion.profiles?.avatar_url || null,
+          // Remover o objeto profiles aninhado para manter compatibilidade
+          profiles: undefined
+        }));
+
         // Ordenar por votos líquidos no frontend para garantir precisão
-        let sortedData = data || [];
         if (filter === 'popular' || filter === 'new' || filter === 'in_development' || filter === 'implemented') {
-          sortedData = sortedData.sort((a, b) => {
+          mappedData = mappedData.sort((a, b) => {
             const aNetVotes = (a.upvotes || 0) - (a.downvotes || 0);
             const bNetVotes = (b.upvotes || 0) - (b.downvotes || 0);
             return bNetVotes - aNetVotes; // Ordem decrescente
           });
         }
 
-        console.log('Sugestões encontradas:', sortedData.length, sortedData);
-        return sortedData;
+        console.log('Sugestões encontradas:', mappedData.length, mappedData);
+        return mappedData;
       } catch (error) {
         console.error('Erro na consulta de sugestões:', error);
         throw error;

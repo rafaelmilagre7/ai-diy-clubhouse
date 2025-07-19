@@ -15,10 +15,16 @@ export const useSuggestionsList = (categoryId?: string, filter: 'popular' | 'rec
       console.log('Buscando sugestões...', { categoryId, filter });
       
       try {
-        // Usamos a view suggestions_with_profiles que já conecta os dados de perfil
+        // Buscar sugestões com dados do perfil do usuário usando JOIN
         let query = supabase
-          .from('suggestions_with_profiles')
-          .select('*')
+          .from('suggestions')
+          .select(`
+            *,
+            profiles!suggestions_user_id_fkey (
+              name,
+              avatar_url
+            )
+          `)
           .eq('is_hidden', false); // Apenas sugestões não ocultas
 
         if (categoryId) {
@@ -38,8 +44,17 @@ export const useSuggestionsList = (categoryId?: string, filter: 'popular' | 'rec
           throw error;
         }
 
-        console.log('Sugestões encontradas:', data?.length, data);
-        return data || [];
+        // Mapear dados para incluir user_name e user_avatar do perfil
+        const mappedData = (data || []).map(suggestion => ({
+          ...suggestion,
+          user_name: suggestion.profiles?.name || 'Usuário',
+          user_avatar: suggestion.profiles?.avatar_url || null,
+          // Remover o objeto profiles aninhado para manter compatibilidade
+          profiles: undefined
+        }));
+
+        console.log('Sugestões encontradas:', mappedData?.length, mappedData);
+        return mappedData || [];
       } catch (error) {
         console.error('Erro na consulta de sugestões:', error);
         throw error;
