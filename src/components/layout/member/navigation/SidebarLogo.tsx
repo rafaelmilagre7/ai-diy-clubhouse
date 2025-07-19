@@ -25,23 +25,31 @@ export const SidebarLogo = ({ sidebarOpen, setSidebarOpen }: SidebarLogoProps) =
           sidebarOpen ? "w-auto" : "w-8 h-8 flex items-center justify-center"
         )}>
           <img
-            src="/lovable-uploads/0e212cea-2950-4e8e-b43c-21ed5871630b.png"
+            src="/lovable-uploads/21d33edc-743c-46f1-8095-e87992a2b3a4.png"
             alt="VIVER DE IA Club"
             className={cn(
               "transition-all duration-300 object-contain",
               sidebarOpen 
                 ? "h-10 w-auto max-w-[180px]" // Logo completo quando aberto
-                : "h-8 w-8" // Logo compacto quando fechado
+                : "h-8 w-8 object-cover" // Logo compacto quando fechado
             )}
             onError={(e) => {
-              // Fallback para caso a imagem não carregue
-              e.currentTarget.style.display = 'none';
+              // Fallback: mostrar texto se a imagem não carregar
+              const target = e.currentTarget;
+              target.style.display = 'none';
+              if (target.parentElement) {
+                target.parentElement.innerHTML = `
+                  <div class="flex items-center justify-center h-full w-full bg-primary/20 rounded text-primary font-bold text-sm">
+                    ${sidebarOpen ? 'VIVER DE IA' : 'VIA'}
+                  </div>
+                `;
+              }
             }}
           />
         </div>
         
         {sidebarOpen && (
-          <div className="ml-3 min-w-0 opacity-0 animate-fade-in">
+          <div className="ml-3 min-w-0 animate-fade-in">
             <h1 className="font-bold text-sm text-foreground truncate">
               VIVER DE IA
             </h1>
