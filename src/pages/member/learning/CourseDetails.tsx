@@ -53,9 +53,18 @@ const CourseDetails = () => {
         
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Curso não encontrado</AlertTitle>
+          <AlertTitle>Erro ao carregar curso</AlertTitle>
           <AlertDescription>
-            {error?.message || "Não foi possível carregar os dados deste curso. Você será redirecionado em alguns segundos."}
+            {error?.message || "Não foi possível carregar os dados deste curso."}
+            <br />
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="mt-2"
+              onClick={() => window.location.reload()}
+            >
+              Tentar novamente
+            </Button>
           </AlertDescription>
         </Alert>
       </div>

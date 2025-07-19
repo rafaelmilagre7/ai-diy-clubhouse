@@ -2,12 +2,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
-import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
 
 export const useCourseDetails = (courseId: string | undefined) => {
   const { user, profile } = useAuth();
-  const navigate = useNavigate();
 
   const {
     data: courseData,
@@ -20,13 +17,25 @@ export const useCourseDetails = (courseId: string | undefined) => {
         throw new Error("Course ID is required");
       }
 
-      // Para admin e membro_club, permitir acesso a todos os cursos
-      const isAdmin = profile?.role === 'admin' || user?.email?.includes('@viverdeia.ai');
-      const isMember = profile?.role === 'membro_club' || profile?.role === 'member';
+      // Log para debug - verificar role do usuário
+      console.log("🔍 Verificando acesso ao curso:", {
+        userId: user?.id,
+        userEmail: user?.email,
+        profileRole: profile?.role,
+        courseId
+      });
+
+      // Verificar se o usuário tem permissão para acessar cursos
+      const isAdmin = profile?.role === 'admin';
+      const isMembroClub = profile?.role === 'membro_club';
+      const isFormacao = profile?.role === 'formacao';
       
-      if (!isAdmin && !isMember) {
+      if (!isAdmin && !isMembroClub && !isFormacao) {
+        console.log("❌ Acesso negado - Role insuficiente:", profile?.role);
         throw new Error("Acesso negado - Role insuficiente");
       }
+
+      console.log("✅ Acesso permitido para role:", profile?.role);
 
       // Buscar dados do curso
       const { data: course, error: courseError } = await supabase
@@ -36,9 +45,11 @@ export const useCourseDetails = (courseId: string | undefined) => {
         .single();
 
       if (courseError) {
-        console.error("Erro ao buscar curso:", courseError);
+        console.error("❌ Erro ao buscar curso:", courseError);
         throw new Error("Curso não encontrado");
       }
+
+      console.log("✅ Curso encontrado:", course?.title);
 
       // Buscar módulos do curso
       const { data: modules, error: modulesError } = await supabase
@@ -48,9 +59,10 @@ export const useCourseDetails = (courseId: string | undefined) => {
         .order("order_index");
 
       if (modulesError) {
-        console.error("Erro ao buscar módulos:", modulesError);
-        // Não falhar se não tiver módulos, apenas retornar array vazio
+        console.error("⚠️ Erro ao buscar módulos:", modulesError);
       }
+
+      console.log("📚 Módulos encontrados:", modules?.length || 0);
 
       // Buscar todas as aulas do curso
       const { data: allLessons, error: lessonsError } = await supabase
@@ -60,9 +72,10 @@ export const useCourseDetails = (courseId: string | undefined) => {
         .order("order_index");
 
       if (lessonsError) {
-        console.error("Erro ao buscar aulas:", lessonsError);
-        // Não falhar se não tiver aulas, apenas retornar array vazio
+        console.error("⚠️ Erro ao buscar aulas:", lessonsError);
       }
+
+      console.log("🎓 Aulas encontradas:", allLessons?.length || 0);
 
       // Buscar progresso do usuário
       let userProgress = [];
@@ -75,6 +88,8 @@ export const useCourseDetails = (courseId: string | undefined) => {
         userProgress = progressData || [];
       }
 
+      console.log("📊 Progresso do usuário:", userProgress.length, "registros");
+
       return {
         course,
         modules: modules || [],
@@ -82,21 +97,9 @@ export const useCourseDetails = (courseId: string | undefined) => {
         userProgress
       };
     },
-    enabled: !!courseId && !!user,
+    enabled: !!courseId && !!user && !!profile,
     retry: 1
   });
-
-  // Redirecionar apenas se realmente não encontrou o curso após carregar
-  useEffect(() => {
-    if (!isLoading && error && courseId) {
-      console.log("Erro ao carregar curso:", error.message);
-      // Aguardar um pouco antes de redirecionar para dar chance ao usuário ver o erro
-      const timer = setTimeout(() => {
-        navigate("/learning");
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [error, isLoading, courseId, navigate]);
 
   return {
     course: courseData?.course,
@@ -104,7 +107,6 @@ export const useCourseDetails = (courseId: string | undefined) => {
     allLessons: courseData?.allLessons || [],
     userProgress: courseData?.userProgress || [],
     isLoading,
-    accessDenied: false, // Simplificado - se chegou até aqui, tem acesso
     error
   };
 };
