@@ -10,6 +10,12 @@ import Dashboard from "@/pages/member/Dashboard";
 import SolutionDetails from "@/pages/member/SolutionDetails";
 import SolutionImplementation from "@/pages/member/SolutionImplementation";
 
+// Páginas principais
+import Solutions from "@/pages/member/Solutions";
+import Learning from "@/pages/member/Learning";
+import Tools from "@/pages/member/Tools";
+import Benefits from "@/pages/member/Benefits";
+
 export const memberRoutes: RouteObject[] = [
   {
     path: "/",
@@ -25,12 +31,14 @@ export const memberRoutes: RouteObject[] = [
       { path: "/", element: <Dashboard /> },
       { path: "/dashboard", element: <Dashboard /> },
       
-      // Redirecionar /solutions para dashboard onde as soluções são exibidas
-      { path: "/solutions", element: <Navigate to="/dashboard" replace /> },
+      // Páginas principais
+      { path: "/solutions", element: <Solutions /> },
+      { path: "/learning", element: <Learning /> },
+      { path: "/tools", element: <Tools /> },
+      { path: "/benefits", element: <Benefits /> },
       
       // Redirecionamentos para rotas antigas/removidas
       { path: "/trilha-implementacao", element: <Navigate to="/dashboard" replace /> },
-      { path: "/learning", element: <Navigate to="/dashboard" replace /> },
       { path: "/forum", element: <Navigate to="/dashboard" replace /> },
       { path: "/forum/*", element: <Navigate to="/dashboard" replace /> },
       { path: "/comunidade", element: <Navigate to="/dashboard" replace /> },
