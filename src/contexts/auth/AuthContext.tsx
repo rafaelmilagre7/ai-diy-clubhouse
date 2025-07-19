@@ -121,6 +121,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  // Função de login
+  const signIn = async (email: string, password: string): Promise<{ error?: any }> => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      if (error) {
+        return { error };
+      }
+      
+      return { error: null };
+    } catch (error) {
+      return { error };
+    }
+  };
+
   // Função de logout
   const signOut = async (): Promise<void> => {
     try {
@@ -154,7 +172,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isAdmin,
     isFormacao,
     refetchProfile,
-    signOut
+    signOut,
+    signIn,
+    setProfile
   };
 
   return (

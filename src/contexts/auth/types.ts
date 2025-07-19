@@ -16,4 +16,6 @@ export interface AuthContextType {
   // Métodos
   refetchProfile: () => Promise<void>;
   signOut: () => Promise<void>;
+  signIn: (email: string, password: string) => Promise<{ error?: any }>;
+  setProfile: (profile: UserProfile | null) => void;
 }
