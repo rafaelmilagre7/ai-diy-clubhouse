@@ -24,8 +24,9 @@ interface RealStatsOverviewProps {
     periodEngagementRate: number;
     periodCompletionRate: number;
     
-    // Identificador do período
-    timeRange?: string;
+    // Identificadores do período
+    timeRange: string;
+    lastUpdated: string;
     
     // Compatibilidade
     lastMonthGrowth: number;
@@ -61,74 +62,109 @@ export const RealStatsOverview = ({ data, loading }: RealStatsOverviewProps) => 
     .filter(role => role.role !== 'Administradores')
     .sort((a, b) => b.count - a.count)[0];
 
+  // Calcular período atual para labels
+  const periodDays = data.timeRange === '7d' ? 7 :
+                    data.timeRange === '30d' ? 30 :
+                    data.timeRange === '90d' ? 90 :
+                    data.timeRange === '1y' ? 365 : 30;
+
+  const periodLabel = periodDays === 7 ? '7 dias' :
+                     periodDays === 30 ? '30 dias' :
+                     periodDays === 90 ? '90 dias' :
+                     periodDays === 365 ? '1 ano' : `${periodDays} dias`;
+
   return (
-    <div key={`stats-${data.timeRange || 'default'}`} className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
-      {/* Linha 1: Dados cumulativos */}
-      <StatCard
-        title="Total de Usuários"
-        value={data.totalUsers}
-        icon={<Users className="h-5 w-5" />}
-        percentageChange={data.periodGrowthRate}
-        percentageText="crescimento no período"
-        colorScheme="blue"
-      />
-      
-      <StatCard
-        title="Soluções Publicadas"
-        value={data.totalSolutions}
-        icon={<FileText className="h-5 w-5" />}
-        colorScheme="blue"
-      />
-      
-      <StatCard
-        title="Aulas Publicadas"
-        value={data.totalLearningLessons}
-        icon={<GraduationCap className="h-5 w-5" />}
-        colorScheme="blue"
-      />
-      
-      <StatCard
-        title="Total Implementações"
-        value={data.completedImplementations}
-        icon={<CheckCircle className="h-5 w-5" />}
-        colorScheme="green"
-      />
-      
-      {/* Linha 2: Dados específicos do período */}
-      <StatCard
-        title="Novos Usuários (Período)"
-        value={data.newUsersInPeriod}
-        icon={<UserPlus className="h-5 w-5" />}
-        percentageChange={data.periodGrowthRate}
-        percentageText="crescimento no período"
-        colorScheme="green"
-      />
-      
-      <StatCard
-        title="Usuários Ativos (Período)"
-        value={data.activeUsersInPeriod}
-        icon={<Activity className="h-5 w-5" />}
-        percentageChange={data.periodEngagementRate}
-        percentageText="engajamento no período"
-        colorScheme="blue"
-      />
-      
-      <StatCard
-        title="Implementações (Período)"
-        value={data.implementationsInPeriod}
-        icon={<Zap className="h-5 w-5" />}
-        percentageText="implementações no período"
-        colorScheme="orange"
-      />
-      
-      <StatCard
-        title="Taxa de Conclusão (%)"
-        value={`${data.periodCompletionRate.toFixed(1)}%`}
-        icon={<TrendingUp className="h-5 w-5" />}
-        percentageChange={data.periodCompletionRate > 50 ? 15.2 : -5.3}
-        percentageText="taxa no período"
-        colorScheme={data.periodCompletionRate > 50 ? "green" : "orange"}
-      />
+    <div className="space-y-6">
+      {/* Indicador do período ativo */}
+      <div className="bg-muted/50 rounded-lg p-3 border">
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-muted-foreground">
+            Período ativo: <strong>{periodLabel}</strong>
+          </span>
+          <span className="text-muted-foreground">
+            Última atualização: {new Date(data.lastUpdated).toLocaleTimeString('pt-BR')}
+          </span>
+        </div>
+      </div>
+
+      {/* Seção 1: Dados Totais (Cumulativos) */}
+      <div>
+        <h3 className="text-lg font-semibold mb-4 text-muted-foreground">📊 Dados Totais da Plataforma</h3>
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+          <StatCard
+            title="Total de Usuários"
+            value={data.totalUsers}
+            icon={<Users className="h-5 w-5" />}
+            percentageChange={data.periodGrowthRate}
+            percentageText="crescimento no período"
+            colorScheme="blue"
+          />
+          
+          <StatCard
+            title="Soluções Publicadas"
+            value={data.totalSolutions}
+            icon={<FileText className="h-5 w-5" />}
+            colorScheme="blue"
+          />
+          
+          <StatCard
+            title="Aulas Publicadas"
+            value={data.totalLearningLessons}
+            icon={<GraduationCap className="h-5 w-5" />}
+            colorScheme="blue"
+          />
+          
+          <StatCard
+            title="Total Implementações"
+            value={data.completedImplementations}
+            icon={<CheckCircle className="h-5 w-5" />}
+            colorScheme="green"
+          />
+        </div>
+      </div>
+
+      {/* Seção 2: Dados do Período Selecionado */}
+      <div>
+        <h3 className="text-lg font-semibold mb-4 text-muted-foreground">
+          📈 Atividade nos Últimos {periodLabel}
+        </h3>
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+          <StatCard
+            title={`Novos Usuários (${periodLabel})`}
+            value={data.newUsersInPeriod}
+            icon={<UserPlus className="h-5 w-5" />}
+            percentageChange={data.periodGrowthRate}
+            percentageText="crescimento no período"
+            colorScheme="green"
+          />
+          
+          <StatCard
+            title={`Usuários Ativos (${periodLabel})`}
+            value={data.activeUsersInPeriod}
+            icon={<Activity className="h-5 w-5" />}
+            percentageChange={data.periodEngagementRate}
+            percentageText="engajamento no período"
+            colorScheme="blue"
+          />
+          
+          <StatCard
+            title={`Implementações (${periodLabel})`}
+            value={data.implementationsInPeriod}
+            icon={<Zap className="h-5 w-5" />}
+            percentageText="implementações no período"
+            colorScheme="orange"
+          />
+          
+          <StatCard
+            title="Taxa de Conclusão (%)"
+            value={`${data.periodCompletionRate.toFixed(1)}%`}
+            icon={<TrendingUp className="h-5 w-5" />}
+            percentageChange={data.periodCompletionRate > 50 ? 15.2 : -5.3}
+            percentageText="taxa no período"
+            colorScheme={data.periodCompletionRate > 50 ? "green" : "orange"}
+          />
+        </div>
+      </div>
     </div>
   );
 };

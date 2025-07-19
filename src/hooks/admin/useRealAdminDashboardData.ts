@@ -7,16 +7,33 @@ export const useRealAdminDashboardData = (timeRange: string) => {
   const { activityData, loading: activityLoading, refetch: refetchActivity } = useRealSystemActivity(timeRange);
 
   const refetch = async () => {
-    await Promise.all([
-      refetchStats?.(),
-      refetchActivity?.()
-    ]);
+    console.log(`🔄 Atualizando dashboard administrativo para período: ${timeRange}...`);
+    
+    try {
+      await Promise.all([
+        refetchStats?.(),
+        refetchActivity?.()
+      ]);
+      
+      console.log('✅ Dashboard atualizado com sucesso');
+    } catch (error) {
+      console.error('❌ Erro ao atualizar dashboard:', error);
+    }
   };
 
   return {
     statsData,
     activityData,
     loading: statsLoading || activityLoading,
-    refetch
+    refetch,
+    // Informações adicionais para debugging
+    debug: {
+      hasStatsData: !!statsData,
+      hasActivityData: !!activityData,
+      timeRange,
+      lastUpdate: new Date().toISOString(),
+      statsTimeRange: statsData?.timeRange,
+      activityTimeRange: activityData?.timeRange
+    }
   };
 };

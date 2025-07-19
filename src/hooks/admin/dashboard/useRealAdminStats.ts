@@ -4,33 +4,28 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
 
 interface StatsData {
-  // Dados cumulativos (sempre totais)
+  // Dados cumulativos
   totalUsers: number;
   totalSolutions: number;
   totalLearningLessons: number;
   completedImplementations: number;
   averageImplementationTime: number;
-  usersByRole: Array<{
-    role: string;
-    count: number;
-  }>;
+  usersByRole: { role: string; count: number }[];
   
-  // Dados específicos do período selecionado
+  // Dados específicos do período
   newUsersInPeriod: number;
   activeUsersInPeriod: number;
   implementationsInPeriod: number;
   completedInPeriod: number;
-  forumActivityInPeriod: number;
   
-  // Métricas calculadas para o período
+  // Métricas calculadas
   periodGrowthRate: number;
   periodEngagementRate: number;
   periodCompletionRate: number;
   
-  // Para compatibilidade com componentes existentes
-  lastMonthGrowth: number;
-  activeUsersLast7Days: number;
-  contentEngagementRate: number;
+  // Identificador do período para forçar re-render
+  timeRange: string;
+  lastUpdated: string;
 }
 
 export const useRealAdminStats = (timeRange: string) => {
@@ -41,19 +36,17 @@ export const useRealAdminStats = (timeRange: string) => {
     totalSolutions: 0,
     totalLearningLessons: 0,
     completedImplementations: 0,
-    averageImplementationTime: 0,
+    averageImplementationTime: 240,
     usersByRole: [],
     newUsersInPeriod: 0,
     activeUsersInPeriod: 0,
     implementationsInPeriod: 0,
     completedInPeriod: 0,
-    forumActivityInPeriod: 0,
     periodGrowthRate: 0,
     periodEngagementRate: 0,
     periodCompletionRate: 0,
-    lastMonthGrowth: 0,
-    activeUsersLast7Days: 0,
-    contentEngagementRate: 0
+    timeRange: timeRange,
+    lastUpdated: new Date().toISOString()
   });
 
   const refetch = async () => {
@@ -76,46 +69,53 @@ export const useRealAdminStats = (timeRange: string) => {
       
       console.log(`📅 [STATS] Período: ${daysBack} dias, desde: ${startDate.toISOString()}`);
 
-      // === DADOS CUMULATIVOS (sempre totais) ===
+      // === DADOS CUMULATIVOS (não mudam com período) ===
       
       // Total de usuários
       const { count: totalUsers } = await supabase
         .from('profiles')
         .select('*', { count: 'exact', head: true });
 
-      // Total de soluções publicadas
+      // Total de soluções
       const { count: totalSolutions } = await supabase
         .from('solutions')
         .select('*', { count: 'exact', head: true })
         .eq('published', true);
 
-      // Total de aulas publicadas
-      const { count: totalLessons } = await supabase
+      // Total de aulas
+      const { count: totalLearningLessons } = await supabase
         .from('learning_lessons')
         .select('*', { count: 'exact', head: true })
         .eq('published', true);
 
-      // Total de implementações completas (acumulado)
+      // Total de implementações completas
       const { count: completedImplementations } = await supabase
         .from('progress')
         .select('*', { count: 'exact', head: true })
         .eq('is_completed', true);
 
+      // Segmentação de usuários por role
+      const { data: userSegmentation } = await supabase
+        .from('user_segmentation_analytics')
+        .select('*')
+        .order('user_count', { ascending: false });
+
       // === DADOS ESPECÍFICOS DO PERÍODO ===
-      
+
       // Novos usuários no período
       const { count: newUsersInPeriod } = await supabase
         .from('profiles')
         .select('*', { count: 'exact', head: true })
         .gte('created_at', startDate.toISOString());
 
-      // Usuários ativos no período (com atividade)
-      const { count: activeUsersInPeriod } = await supabase
+      // Implementações ativas no período
+      const { count: activeImplementationsInPeriod } = await supabase
         .from('progress')
-        .select('user_id', { count: 'exact', head: true })
+        .select('*', { count: 'exact', head: true })
+        .eq('is_completed', false)
         .gte('last_activity', startDate.toISOString());
 
-      // Implementações iniciadas no período
+      // Novas implementações iniciadas no período
       const { count: implementationsInPeriod } = await supabase
         .from('progress')
         .select('*', { count: 'exact', head: true })
@@ -128,85 +128,62 @@ export const useRealAdminStats = (timeRange: string) => {
         .eq('is_completed', true)
         .gte('completed_at', startDate.toISOString());
 
-      // Atividade do fórum no período
-      const { count: forumActivityInPeriod } = await supabase
-        .from('forum_posts')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', startDate.toISOString());
+      // Usuários ativos no período (que fizeram alguma atividade)
+      const { data: activeUsersData } = await supabase
+        .from('analytics')
+        .select('user_id')
+        .gte('created_at', startDate.toISOString())
+        .not('user_id', 'is', null);
 
-      // === DISTRIBUIÇÃO POR ROLES ===
-      const { data: roleDistribution } = await supabase
-        .from('profiles')
-        .select(`
-          id,
-          user_roles!left (
-            name
-          )
-        `);
-      
-      const roleStats: { [key: string]: number } = {};
-      
-      roleDistribution?.forEach(profile => {
-        const userRole = profile.user_roles as any;
-        const roleName = userRole?.name || 'member';
-        roleStats[roleName] = (roleStats[roleName] || 0) + 1;
-      });
+      const activeUsersInPeriod = new Set(activeUsersData?.map(a => a.user_id) || []).size;
 
-      const usersByRole = Object.entries(roleStats).map(([role, count]) => ({
-        role: role === 'admin' ? 'Administradores' : 
-              role === 'member' ? 'Membros' :
-              role === 'membro_club' ? 'Membros Club' :
-              role === 'formacao' ? 'Formação' : role,
-        count
-      }));
-
-      // === CÁLCULOS DE MÉTRICAS DO PERÍODO ===
+      // === CALCULAR MÉTRICAS ===
       
       // Taxa de crescimento do período
-      const periodGrowthRate = totalUsers && totalUsers > 0 
-        ? Math.round((newUsersInPeriod || 0) / totalUsers * 100)
-        : 0;
+      const periodGrowthRate = totalUsers && totalUsers > 0 ? 
+        Math.round(((newUsersInPeriod || 0) / totalUsers) * 100) : 0;
 
       // Taxa de engajamento do período
-      const periodEngagementRate = totalUsers && totalUsers > 0
-        ? Math.round((activeUsersInPeriod || 0) / totalUsers * 100)
-        : 0;
+      const periodEngagementRate = totalUsers && totalUsers > 0 ? 
+        Math.round((activeUsersInPeriod / totalUsers) * 100) : 0;
 
       // Taxa de conclusão do período
-      const periodCompletionRate = implementationsInPeriod && implementationsInPeriod > 0
-        ? Math.round((completedInPeriod || 0) / implementationsInPeriod * 100)
-        : 0;
+      const totalImplementationsInPeriod = (implementationsInPeriod || 0);
+      const periodCompletionRate = totalImplementationsInPeriod > 0 ? 
+        ((completedInPeriod || 0) / totalImplementationsInPeriod) * 100 : 0;
 
-      // Para compatibilidade com componentes existentes
-      const lastMonthGrowth = periodGrowthRate;
-      const activeUsersLast7Days = activeUsersInPeriod || 0;
-      const contentEngagementRate = periodEngagementRate;
+      // Processar roles
+      const usersByRole = (userSegmentation || []).map(item => ({
+        role: item.role_name === 'member' ? 'Membros Club' : 
+              item.role_name === 'admin' ? 'Administradores' :
+              item.role_name === 'formacao' ? 'Formação' : 
+              item.role_name || 'Outros',
+        count: item.user_count || 0
+      }));
 
       const finalStats: StatsData = {
-        // Cumulativos
+        // Dados cumulativos
         totalUsers: totalUsers || 0,
         totalSolutions: totalSolutions || 0,
-        totalLearningLessons: totalLessons || 0,
+        totalLearningLessons: totalLearningLessons || 0,
         completedImplementations: completedImplementations || 0,
-        averageImplementationTime: 240,
+        averageImplementationTime: 240, // 4 horas em minutos
         usersByRole,
         
-        // Específicos do período
+        // Dados específicos do período
         newUsersInPeriod: newUsersInPeriod || 0,
         activeUsersInPeriod: activeUsersInPeriod || 0,
         implementationsInPeriod: implementationsInPeriod || 0,
         completedInPeriod: completedInPeriod || 0,
-        forumActivityInPeriod: forumActivityInPeriod || 0,
         
         // Métricas calculadas
         periodGrowthRate,
         periodEngagementRate,
         periodCompletionRate,
         
-        // Compatibilidade
-        lastMonthGrowth,
-        activeUsersLast7Days,
-        contentEngagementRate
+        // Identificadores para forçar re-render
+        timeRange,
+        lastUpdated: new Date().toISOString()
       };
 
       setStatsData(finalStats);
@@ -220,14 +197,14 @@ export const useRealAdminStats = (timeRange: string) => {
         completedInPeriod: finalStats.completedInPeriod,
         periodGrowthRate: finalStats.periodGrowthRate,
         periodEngagementRate: finalStats.periodEngagementRate,
-        timeRange
+        timeRange: finalStats.timeRange
       });
 
     } catch (error: any) {
       console.error("❌ [STATS] Erro ao carregar estatísticas:", error);
       toast({
-        title: "Erro ao carregar dados",
-        description: "Ocorreu um erro ao carregar as estatísticas do dashboard.",
+        title: "Erro ao carregar estatísticas",
+        description: "Ocorreu um erro ao carregar os dados estatísticos.",
         variant: "destructive",
       });
     } finally {

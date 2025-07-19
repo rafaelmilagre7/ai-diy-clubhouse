@@ -7,7 +7,7 @@ export const useRealAdminDashboardData = (timeRange: string) => {
   const { activityData, loading: activityLoading, refetch: refetchActivity } = useRealSystemActivity(timeRange);
 
   const refetch = async () => {
-    console.log('🔄 Atualizando dashboard administrativo...');
+    console.log(`🔄 Atualizando dashboard administrativo para período: ${timeRange}...`);
     
     try {
       await Promise.all([
@@ -31,7 +31,11 @@ export const useRealAdminDashboardData = (timeRange: string) => {
       hasStatsData: !!statsData,
       hasActivityData: !!activityData,
       timeRange,
-      lastUpdate: new Date().toISOString()
+      lastUpdate: new Date().toISOString(),
+      statsTimeRange: statsData?.timeRange,
+      activityTimeRange: activityData?.timeRange,
+      statsLastUpdated: statsData?.lastUpdated,
+      activityLastUpdated: activityData?.lastUpdated
     }
   };
 };

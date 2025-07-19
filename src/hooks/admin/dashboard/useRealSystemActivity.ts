@@ -18,6 +18,10 @@ interface ActivityData {
     count: number;
     period: string;
   }>;
+  
+  // Identificadores para forçar re-render
+  timeRange: string;
+  lastUpdated: string;
 }
 
 export const useRealSystemActivity = (timeRange: string) => {
@@ -30,7 +34,9 @@ export const useRealSystemActivity = (timeRange: string) => {
     completedSolutions: 0,
     systemHealth: 'healthy',
     recentActivities: [],
-    forumActivity: 0
+    forumActivity: 0,
+    timeRange,
+    lastUpdated: new Date().toISOString()
   });
 
   const refetch = async () => {
@@ -136,7 +142,9 @@ export const useRealSystemActivity = (timeRange: string) => {
         completedSolutions: completedSolutions || 0,
         systemHealth,
         recentActivities,
-        forumActivity: forumActivity || 0
+        forumActivity: forumActivity || 0,
+        timeRange,
+        lastUpdated: new Date().toISOString()
       };
 
       setActivityData(finalActivityData);
@@ -149,7 +157,7 @@ export const useRealSystemActivity = (timeRange: string) => {
         forumActivity: finalActivityData.forumActivity,
         systemHealth: finalActivityData.systemHealth,
         activitiesCount: finalActivityData.recentActivities.length,
-        timeRange
+        timeRange: finalActivityData.timeRange
       });
 
     } catch (error: any) {
