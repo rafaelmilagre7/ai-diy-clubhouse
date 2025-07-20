@@ -1,265 +1,205 @@
 
-import React, { memo, useMemo, useCallback, Suspense } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ForumLayout } from "@/components/community/ForumLayout";
-import { CategoryList } from "@/components/community/CategoryList";
-import { TopicList } from "@/components/community/TopicList";
+import { Plus, Users, MessageSquare, CheckCircle } from "lucide-react";
+import { Link } from "react-router-dom";
 import { ForumSearch } from "@/components/community/ForumSearch";
-import { Badge } from "@/components/ui/badge";
-import { Loader2, MessageSquare, Users, TrendingUp, PlusCircle } from "lucide-react";
-import { useForumTopics, TopicFilterType } from "@/hooks/community/useForumTopics";
 import { useForumStats } from "@/hooks/useForumStats";
+import { useForumTopics, TopicFilterType } from "@/hooks/community/useForumTopics";
 
-// Componente simplificado para estatísticas sem memo para debug
+console.log("CommunityHome: Componente iniciando...");
+
 const ForumStatsComponent = () => {
-  console.log("ForumStatsComponent renderizando...");
+  console.log("ForumStatsComponent: Renderizando...");
   
-  const { topicCount, postCount, activeUserCount, solvedCount, isLoading } = useForumStats();
-  
-  console.log("Stats carregadas:", { topicCount, postCount, activeUserCount, solvedCount, isLoading });
+  const { stats, isLoading } = useForumStats();
+  console.log("ForumStatsComponent: Stats recebidas", { stats, isLoading });
 
   if (isLoading) {
+    console.log("ForumStatsComponent: Carregando stats...");
     return (
-      <Card className="mb-6">
-        <CardContent className="p-4 flex justify-center">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Card key={i}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Carregando...</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-8 bg-muted animate-pulse rounded"></div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     );
   }
 
+  console.log("ForumStatsComponent: Renderizando stats finais", stats);
+
   return (
-    <Card className="mb-6">
-      <CardContent className="p-4">
-        <h3 className="text-lg font-medium mb-3">Estatísticas do Fórum</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="flex flex-col items-center">
-            <div className="flex items-center justify-center mb-2 h-10 w-10 rounded-full bg-primary/10">
-              <MessageSquare className="h-5 w-5 text-primary" />
-            </div>
-            <span className="text-xl font-bold">{topicCount}</span>
-            <span className="text-sm text-muted-foreground">Tópicos</span>
-          </div>
-          
-          <div className="flex flex-col items-center">
-            <div className="flex items-center justify-center mb-2 h-10 w-10 rounded-full bg-primary/10">
-              <Users className="h-5 w-5 text-primary" />
-            </div>
-            <span className="text-xl font-bold">{postCount}</span>
-            <span className="text-sm text-muted-foreground">Respostas</span>
-          </div>
-          
-          <div className="flex flex-col items-center">
-            <div className="flex items-center justify-center mb-2 h-10 w-10 rounded-full bg-primary/10">
-              <TrendingUp className="h-5 w-5 text-primary" />
-            </div>
-            <span className="text-xl font-bold">{activeUserCount}</span>
-            <span className="text-sm text-muted-foreground">Participantes</span>
-          </div>
-          
-          <div className="flex flex-col items-center">
-            <div className="flex items-center justify-center mb-2 h-10 w-10 rounded-full bg-green-500/10">
-              <MessageSquare className="h-5 w-5 text-green-500" />
-            </div>
-            <span className="text-xl font-bold">{solvedCount}</span>
-            <span className="text-sm text-muted-foreground">Resolvidos</span>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Total de Membros</CardTitle>
+          <Users className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{stats?.totalMembers || 0}</div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Tópicos Ativos</CardTitle>
+          <MessageSquare className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{stats?.activeTopics || 0}</div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Problemas Resolvidos</CardTitle>
+          <CheckCircle className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{stats?.solvedCount || 0}</div>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
-// Componente principal simplificado para debug
 const CommunityHome = () => {
-  console.log("CommunityHome renderizando...");
+  console.log("CommunityHome: Componente principal renderizando...");
   
-  const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
-  
-  // Estados simplificados
-  const searchQuery = searchParams.get("q") || "";
-  const selectedFilter: TopicFilterType = (searchParams.get("filter") as TopicFilterType) || "recentes";
-  const activeTab = searchParams.get("tab") || "todos";
+  const [activeTab, setActiveTab] = useState<"all" | "my-topics">("all");
+  const [selectedFilter, setSelectedFilter] = useState<TopicFilterType>("recentes");
+  const [searchQuery, setSearchQuery] = useState("");
 
-  // Hooks
+  console.log("CommunityHome: Estado atual", { activeTab, selectedFilter, searchQuery });
+
   const { topics, isLoading, error, refetch } = useForumTopics({
-    searchQuery,
-    filter: selectedFilter,
-    categorySlug: activeTab !== "todos" ? activeTab : undefined,
+    activeTab,
+    selectedFilter,
+    searchQuery
   });
 
-  console.log("Topics carregados:", { topics: topics?.length, isLoading, error });
+  console.log("CommunityHome: Dados dos tópicos", { topics: topics?.length, isLoading, error });
 
-  // Handlers
-  const handleSearchChange = useCallback((value: string) => {
-    console.log("Search mudou:", value);
-    const newParams = new URLSearchParams(searchParams);
-    if (value) {
-      newParams.set("q", value);
-    } else {
-      newParams.delete("q");
-    }
-    setSearchParams(newParams);
-  }, [searchParams, setSearchParams]);
-
-  const handleFilterChange = useCallback((filter: TopicFilterType) => {
-    console.log("Filter mudou:", filter);
-    const newParams = new URLSearchParams(searchParams);
-    newParams.set("filter", filter);
-    setSearchParams(newParams);
-  }, [searchParams, setSearchParams]);
-
-  const handleTabChange = useCallback((value: string) => {
-    console.log("Tab mudou:", value);
-    const newParams = new URLSearchParams(searchParams);
-    newParams.set("tab", value);
-    newParams.delete("q"); // Limpar busca ao mudar tab
-    newParams.set("filter", "recentes"); // Reset filter
-    setSearchParams(newParams);
-  }, [setSearchParams]);
-
-  const handleNewTopic = useCallback(() => {
-    console.log("Novo tópico clicado");
-    navigate("/comunidade/novo-topico");
-  }, [navigate]);
-
-  // Sidebar content
-  const sidebarContent = useMemo(() => (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-medium mb-4">Categorias</h3>
-        <Suspense fallback={<div>Carregando categorias...</div>}>
-          <CategoryList />
-        </Suspense>
-      </div>
-    </div>
-  ), []);
-
-  console.log("Renderizando CommunityHome completo");
+  const handleRetry = () => {
+    console.log("CommunityHome: Tentando recarregar tópicos...");
+    refetch();
+  };
 
   return (
-    <ForumLayout sidebar={sidebarContent}>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              Comunidade VIA
-            </h1>
-            <p className="text-muted-foreground mt-2">
-              Compartilhe conhecimento, faça perguntas e conecte-se com outros membros.
-            </p>
-          </div>
-          
-          <div className="mt-4 md:mt-0">
-            <Button onClick={handleNewTopic} className="flex items-center gap-2">
-              <PlusCircle className="h-4 w-4" />
-              <span>Novo Tópico</span>
-            </Button>
-          </div>
+    <div className="container mx-auto px-4 py-6">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-3xl font-bold">Comunidade</h1>
+          <p className="text-muted-foreground mt-2">
+            Conecte-se com outros membros, compartilhe experiências e encontre soluções
+          </p>
         </div>
-
-        {/* Estatísticas */}
-        <ForumStatsComponent />
-
-        {/* Busca */}
-        <ForumSearch
-          searchQuery={searchQuery}
-          onSearchChange={handleSearchChange}
-          selectedFilter={selectedFilter}
-          setSelectedFilter={handleFilterChange}
-        />
-
-        {/* Tabs e Conteúdo */}
-        <Tabs value={activeTab} onValueChange={handleTabChange}>
-          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4">
-            <TabsTrigger value="todos">Todos os Tópicos</TabsTrigger>
-            <TabsTrigger value="geral">Geral</TabsTrigger>
-            <TabsTrigger value="suporte">Suporte</TabsTrigger>
-            <TabsTrigger value="recursos">Recursos</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="todos" className="mt-6">
-            <div className="space-y-4">
-              {isLoading ? (
-                <div className="flex justify-center py-8">
-                  <Loader2 className="h-8 w-8 animate-spin" />
-                </div>
-              ) : error ? (
-                <Card className="p-6 text-center">
-                  <p className="text-muted-foreground mb-4">Erro ao carregar tópicos</p>
-                  <Button onClick={refetch} variant="outline">
-                    Tentar novamente
-                  </Button>
-                </Card>
-              ) : (
-                <div>
-                  {topics && topics.length > 0 ? (
-                    topics.map((topic) => (
-                      <Card key={topic.id} className="p-4 hover:shadow-md transition-shadow">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <h3 className="font-medium text-lg mb-2">{topic.title}</h3>
-                            <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
-                              {topic.content}
-                            </p>
-                            <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                              <span>Por {topic.user?.name || 'Usuário'}</span>
-                              <span>•</span>
-                              <span>{new Date(topic.created_at).toLocaleDateString()}</span>
-                              {topic.category && (
-                                <>
-                                  <span>•</span>
-                                  <Badge variant="secondary">{topic.category.name}</Badge>
-                                </>
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex flex-col items-end gap-2">
-                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                              <MessageSquare className="h-4 w-4" />
-                              <span>{topic.posts_count || 0}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </Card>
-                    ))
-                  ) : (
-                    <Card className="p-8 text-center">
-                      <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                      <h3 className="text-lg font-medium mb-2">Nenhum tópico encontrado</h3>
-                      <p className="text-muted-foreground mb-4">
-                        Seja o primeiro a iniciar uma discussão!
-                      </p>
-                      <Button onClick={handleNewTopic}>
-                        Criar primeiro tópico
-                      </Button>
-                    </Card>
-                  )}
-                </div>
-              )}
-            </div>
-          </TabsContent>
-
-          {/* Outras tabs usam TopicList quando disponível */}
-          {["geral", "suporte", "recursos"].map((tab) => (
-            <TabsContent key={tab} value={tab} className="mt-6">
-              <Suspense fallback={<div>Carregando tópicos...</div>}>
-                <TopicList 
-                  categoryId={tab} 
-                  categorySlug={tab}
-                />
-              </Suspense>
-            </TabsContent>
-          ))}
-        </Tabs>
+        <Button asChild>
+          <Link to="/comunidade/novo-topico/geral">
+            <Plus className="h-4 w-4 mr-2" />
+            Novo Tópico
+          </Link>
+        </Button>
       </div>
-    </ForumLayout>
+
+      <ForumStatsComponent />
+
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "all" | "my-topics")}>
+        <TabsList>
+          <TabsTrigger value="all">Todos os Tópicos</TabsTrigger>
+          <TabsTrigger value="my-topics">Meus Tópicos</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="all" className="space-y-4">
+          <ForumSearch
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            selectedFilter={selectedFilter}
+            setSelectedFilter={setSelectedFilter}
+          />
+
+          {isLoading ? (
+            <div className="space-y-4">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Card key={i}>
+                  <CardContent className="p-4">
+                    <div className="space-y-2">
+                      <div className="h-4 bg-muted animate-pulse rounded w-3/4"></div>
+                      <div className="h-3 bg-muted animate-pulse rounded w-1/2"></div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : error ? (
+            <Card>
+              <CardContent className="p-6 text-center">
+                <p className="text-red-500 mb-4">Erro ao carregar tópicos</p>
+                <Button onClick={handleRetry}>Tentar Novamente</Button>
+              </CardContent>
+            </Card>
+          ) : topics.length === 0 ? (
+            <Card>
+              <CardContent className="p-6 text-center">
+                <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Nenhum tópico encontrado</h3>
+                <p className="text-muted-foreground mb-4">
+                  Seja o primeiro a criar um tópico na comunidade!
+                </p>
+                <Button asChild>
+                  <Link to="/comunidade/novo-topico/geral">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Criar Primeiro Tópico
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {topics.map((topic: any) => (
+                <Card key={topic.id} className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <Link 
+                          to={`/comunidade/topico/${topic.id}`}
+                          className="font-semibold hover:text-primary transition-colors"
+                        >
+                          {topic.title}
+                        </Link>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Por {topic.profiles?.name || 'Usuário'} • {topic.reply_count} respostas • {topic.view_count} visualizações
+                        </p>
+                      </div>
+                      {topic.is_solved && (
+                        <CheckCircle className="h-5 w-5 text-green-500 ml-2" />
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="my-topics">
+          <Card>
+            <CardContent className="p-6 text-center">
+              <p className="text-muted-foreground">Seus tópicos aparecerão aqui</p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 };
 

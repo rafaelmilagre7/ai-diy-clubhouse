@@ -12,7 +12,7 @@ interface UseForumTopicsParams {
 }
 
 export const useForumTopics = ({ activeTab, selectedFilter, searchQuery }: UseForumTopicsParams) => {
-  const { data: topics, isLoading, error } = useQuery({
+  const { data: topics, isLoading, error, refetch } = useQuery({
     queryKey: ['forumTopics', activeTab, selectedFilter, searchQuery],
     queryFn: async () => {
       try {
@@ -72,6 +72,7 @@ export const useForumTopics = ({ activeTab, selectedFilter, searchQuery }: UseFo
   return {
     topics: topics || [],
     isLoading,
-    error
+    error,
+    refetch
   };
 };
