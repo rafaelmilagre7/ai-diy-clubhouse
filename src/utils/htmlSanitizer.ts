@@ -21,6 +21,25 @@ const createSafeHTMLConfig = {
 };
 
 /**
+ * Configuração para certificados - mais permissiva
+ */
+const certificateHTMLConfig = {
+  ALLOWED_TAGS: [
+    'div', 'span', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+    'strong', 'em', 'b', 'i', 'u', 'br', 'img', 'svg', 'path',
+    'g', 'rect', 'circle', 'text', 'tspan'
+  ],
+  ALLOWED_ATTR: [
+    'class', 'style', 'src', 'alt', 'width', 'height',
+    'viewBox', 'fill', 'stroke', 'stroke-width', 'd',
+    'x', 'y', 'dx', 'dy', 'text-anchor', 'font-family',
+    'font-size', 'font-weight'
+  ],
+  FORBID_TAGS: ['script', 'object', 'embed', 'form', 'input'],
+  FORBID_ATTR: ['onclick', 'onload', 'onerror'],
+};
+
+/**
  * Cria HTML seguro para renderização no fórum
  * Remove elementos perigosos mas mantém formatação e imagens
  */
@@ -50,6 +69,83 @@ export const createSafeHTML = (htmlString: string) => {
   console.log('🧹 HTML sanitizado:', cleanHTML);
   
   return { __html: cleanHTML };
+};
+
+/**
+ * Sanitiza HTML específico para certificados
+ */
+export const sanitizeCertificateHTML = (htmlString: string) => {
+  if (!htmlString) return '';
+  
+  const cleanHTML = DOMPurify.sanitize(htmlString, certificateHTMLConfig);
+  console.log('📄 HTML de certificado sanitizado');
+  
+  return cleanHTML;
+};
+
+/**
+ * Sanitiza estilos CSS removendo propriedades perigosas
+ */
+export const sanitizeCSS = (cssString: string) => {
+  if (!cssString) return '';
+  
+  // Lista de propriedades perigosas a serem removidas
+  const dangerousProperties = [
+    'javascript:', 'expression(', 'behavior:', 'binding:',
+    '@import', 'url(javascript:', 'url(data:', 'url(vbscript:'
+  ];
+  
+  let cleanCSS = cssString;
+  
+  // Remover propriedades perigosas
+  dangerousProperties.forEach(prop => {
+    const regex = new RegExp(prop.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+    cleanCSS = cleanCSS.replace(regex, '');
+  });
+  
+  // Remover comentários que podem conter código malicioso
+  cleanCSS = cleanCSS.replace(/\/\*[\s\S]*?\*\//g, '');
+  
+  console.log('🎨 CSS sanitizado');
+  
+  return cleanCSS;
+};
+
+/**
+ * Escreve HTML de forma segura em uma nova janela
+ */
+export const safeDocumentWrite = (doc: Document, htmlContent: string) => {
+  if (!doc || !htmlContent) return;
+  
+  try {
+    // Sanitizar o HTML antes de escrever
+    const safeHTML = DOMPurify.sanitize(htmlContent, {
+      ALLOWED_TAGS: [
+        'html', 'head', 'body', 'title', 'meta', 'link', 'style',
+        'div', 'span', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+        'strong', 'em', 'b', 'i', 'u', 'br', 'img', 'svg', 'path',
+        'g', 'rect', 'circle', 'text', 'tspan'
+      ],
+      ALLOWED_ATTR: [
+        'class', 'style', 'src', 'alt', 'width', 'height',
+        'viewBox', 'fill', 'stroke', 'stroke-width', 'd',
+        'x', 'y', 'dx', 'dy', 'text-anchor', 'font-family',
+        'font-size', 'font-weight', 'charset', 'name', 'content',
+        'rel', 'href', 'type'
+      ],
+      WHOLE_DOCUMENT: true,
+      FORBID_TAGS: ['script', 'object', 'embed', 'form', 'input'],
+      FORBID_ATTR: ['onclick', 'onload', 'onerror'],
+    });
+    
+    doc.open();
+    doc.write(safeHTML);
+    doc.close();
+    
+    console.log('📝 HTML escrito de forma segura no documento');
+  } catch (error) {
+    console.error('❌ Erro ao escrever HTML no documento:', error);
+  }
 };
 
 /**
