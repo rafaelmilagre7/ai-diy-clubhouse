@@ -1,87 +1,65 @@
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
 import { Solution } from "@/lib/supabase";
-import { useQuery } from '@tanstack/react-query';
-
-// Cache local otimizado
-const progressCache = new Map<string, { data: any[], timestamp: number }>();
-const CACHE_TTL = 2 * 60 * 1000; // 2 minutos
 
 export const useOptimizedDashboardProgress = (solutions: Solution[] = []) => {
   const { user } = useAuth();
-  
-  // Hash estável das soluções para otimização
-  const solutionsHash = useMemo(() => {
-    if (!solutions || !Array.isArray(solutions) || solutions.length === 0) {
-      return 'empty';
-    }
-    return solutions.map(s => s.id).sort().join(',');
-  }, [solutions]);
-  
-  // Função de busca otimizada
-  const fetchProgress = useCallback(async () => {
-    if (!user?.id) {
-      throw new Error("Usuário não autenticado");
-    }
-    
-    // Verificar cache local primeiro
-    const cacheKey = `progress_${user.id}`;
-    const cached = progressCache.get(cacheKey);
-    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-      return cached.data;
-    }
-    
-    try {
-      // Query otimizada com batch
-      const { data, error } = await supabase
-        .from("progress")
-        .select("solution_id, is_completed, completed_at, last_activity, created_at")
-        .eq("user_id", user.id);
-        
-      if (error) {
-        console.error("useOptimizedDashboardProgress: Erro na query:", error);
-        throw error;
-      }
-      
-      const result = data || [];
-      
-      // Atualizar cache local
-      progressCache.set(cacheKey, {
-        data: result,
-        timestamp: Date.now()
-      });
-      
-      return result;
-    } catch (error) {
-      console.error("useOptimizedDashboardProgress: Erro na execução:", error);
-      throw error;
-    }
-  }, [user?.id]);
-  
-  // Query React Query super otimizada para evitar loops
-  const { 
-    data: progressData,
-    isLoading,
-    error
-  } = useQuery({
-    queryKey: ['dashboard-progress', user?.id],
-    queryFn: fetchProgress,
-    staleTime: 5 * 60 * 1000, // 5 minutos
-    gcTime: 10 * 60 * 1000, // 10 minutos
-    enabled: !!(user?.id),
-    refetchOnWindowFocus: false,
-    refetchOnMount: false, // Importante: não refetch no mount
-    refetchOnReconnect: false,
-    retry: 1,
-    retryDelay: 2000
+  const [loading, setLoading] = useState(false);
+  const [progressData, setProgressData] = useState<any[]>([]);
+  const [error, setError] = useState<any | null>(null);
+
+  console.log('🔍 [PROGRESS] Estado:', {
+    hasUser: !!user,
+    solutionsCount: solutions.length,
+    loading,
+    progressCount: progressData.length
   });
 
-  // Processamento otimizado com memoização
+  // Buscar dados de progresso
+  useEffect(() => {
+    if (!user?.id || solutions.length === 0) {
+      console.log('⏳ [PROGRESS] Aguardando user e solutions...');
+      setProgressData([]);
+      setLoading(false);
+      return;
+    }
+
+    const fetchProgress = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        console.log('🔄 [PROGRESS] Buscando progresso...');
+
+        const { data, error: progressError } = await supabase
+          .from("progress")
+          .select("solution_id, is_completed, completed_at, last_activity, created_at")
+          .eq("user_id", user.id);
+          
+        if (progressError) {
+          throw progressError;
+        }
+
+        console.log('✅ [PROGRESS] Progresso carregado:', data?.length || 0);
+        setProgressData(data || []);
+        
+      } catch (error) {
+        console.error("❌ [PROGRESS] Erro:", error);
+        setError(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProgress();
+  }, [user?.id, solutions.length]);
+
+  // Processamento dos dados (síncrono)
   const processedData = useMemo(() => {
-    // Validação de entrada
-    if (!solutions || !Array.isArray(solutions) || solutions.length === 0) {
+    if (solutions.length === 0) {
+      console.log('📊 [PROGRESS] Sem solutions - retornando vazio');
       return { 
         active: [], 
         completed: [], 
@@ -90,7 +68,8 @@ export const useOptimizedDashboardProgress = (solutions: Solution[] = []) => {
       };
     }
 
-    if (!progressData || !Array.isArray(progressData)) {
+    if (progressData.length === 0) {
+      console.log('📊 [PROGRESS] Sem progresso - todas recomendadas');
       return { 
         active: [], 
         completed: [], 
@@ -100,13 +79,12 @@ export const useOptimizedDashboardProgress = (solutions: Solution[] = []) => {
     }
 
     try {
-      // Criar mapa de progresso para lookup O(1)
+      // Criar mapa de progresso
       const progressMap = new Map();
       progressData.forEach(progress => {
         progressMap.set(progress.solution_id, progress);
       });
 
-      // Categorização otimizada
       const active: Solution[] = [];
       const completed: Solution[] = [];
       const recommended: Solution[] = [];
@@ -123,6 +101,12 @@ export const useOptimizedDashboardProgress = (solutions: Solution[] = []) => {
         }
       });
 
+      console.log('📊 [PROGRESS] Processamento concluído:', {
+        active: active.length,
+        completed: completed.length,
+        recommended: recommended.length
+      });
+
       return {
         active,
         completed,
@@ -130,7 +114,7 @@ export const useOptimizedDashboardProgress = (solutions: Solution[] = []) => {
         isEmpty: false
       };
     } catch (err) {
-      console.error("useOptimizedDashboardProgress: Erro no processamento:", err);
+      console.error("❌ [PROGRESS] Erro no processamento:", err);
       return { 
         active: [], 
         completed: [], 
@@ -144,7 +128,7 @@ export const useOptimizedDashboardProgress = (solutions: Solution[] = []) => {
     active: processedData.active,
     completed: processedData.completed,
     recommended: processedData.recommended,
-    loading: isLoading,
+    loading,
     error,
     isEmpty: processedData.isEmpty
   };
