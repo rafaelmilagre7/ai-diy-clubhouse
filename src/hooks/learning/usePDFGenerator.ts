@@ -218,7 +218,7 @@ export const usePDFGenerator = () => {
       // Abrir em nova aba usando método seguro
       const newWindow = window.open('', '_blank');
       if (newWindow) {
-        safeDocumentWrite(fullHtml, newWindow);
+        safeDocumentWrite(newWindow.document, fullHtml);
         console.log('✅ Página de impressão aberta em nova aba (método seguro)');
       } else {
         throw new Error('Não foi possível abrir nova aba');
