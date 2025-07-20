@@ -57,64 +57,91 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution }) => {
   const categoryDetails = getCategoryDetailsWithIcon(solution.category);
 
   return (
-    <Link to={`/solution/${solution.id}`} className="block">
-      <Card className="h-full overflow-hidden transition-shadow hover:shadow-md bg-[#151823] border-neutral-700">
+    <Link to={`/solution/${solution.id}`} className="block group">
+      <Card className="h-full overflow-hidden transition-all duration-300 
+                     bg-card/90 backdrop-blur-sm border border-border/40 
+                     hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/10 
+                     hover:scale-105 hover:bg-card/95 
+                     group-hover:translate-y-[-4px]">
         <CardHeader className="p-0">
-          <div className="aspect-video bg-[#0F111A] relative overflow-hidden">
+          <div className="aspect-video relative overflow-hidden">
             {solution.thumbnail_url ? (
               <img 
                 src={solution.thumbnail_url} 
                 alt={solution.title} 
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#1A1E2E] to-[#0F111A]">
-                <div className="text-viverblue text-2xl font-medium">{solution.title.charAt(0)}</div>
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 via-primary/5 to-background">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl"></div>
+                  <div className="relative text-primary text-3xl font-bold">{solution.title.charAt(0)}</div>
+                </div>
               </div>
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0F111A] via-transparent to-transparent opacity-70"></div>
+            
+            {/* Aurora overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity duration-300"></div>
+            
+            {/* Glow effect on hover */}
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            
             <Badge 
               variant="outline"
-              className={`absolute top-2 left-2 ${categoryDetails.color}`}
+              className={`absolute top-3 left-3 backdrop-blur-sm bg-card/90 border-border/40 shadow-lg ${categoryDetails.color}`}
             >
-              <span className="flex items-center">
+              <span className="flex items-center gap-1.5">
                 {categoryDetails.icon}
-                <span className="ml-1">{categoryDetails.name}</span>
+                <span className="font-medium">{categoryDetails.name}</span>
               </span>
             </Badge>
           </div>
         </CardHeader>
-        <CardContent className="p-4">
-          <h3 className="font-semibold text-lg mb-1 line-clamp-1 text-white">{solution.title}</h3>
+        
+        <CardContent className="p-5 space-y-3">
+          <h3 className="font-semibold text-lg line-clamp-1 text-foreground group-hover:text-primary transition-colors duration-300">
+            {solution.title}
+          </h3>
           <ScrollArea className="h-14 w-full">
-            <p className="text-sm text-neutral-300 line-clamp-2">
+            <p className="text-sm text-muted-foreground/80 line-clamp-2">
               {solution.description}
             </p>
           </ScrollArea>
         </CardContent>
-        <CardFooter className="p-4 pt-0 flex gap-2 flex-wrap justify-between text-xs text-neutral-400">
-          <div className="flex items-center">
+        
+        <CardFooter className="p-5 pt-0 flex gap-2 flex-wrap justify-between items-center">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground/70">
             {categoryDetails.icon}
-            <span className="ml-1">{categoryDetails.name}</span>
+            <span>{categoryDetails.name}</span>
           </div>
-          <Badge
-            variant="outline"
-            className={`font-medium ${getDifficultyBadgeStyle(solution.difficulty)}`}
-          >
-            {solution.difficulty === "easy"
-              ? "Fácil"
-              : solution.difficulty === "medium"
-              ? "Médio"
-              : solution.difficulty === "advanced"
-              ? "Avançado"
-              : solution.difficulty}
-          </Badge>
-          {typeof solution.success_rate === "number" && solution.success_rate > 0 && (
-            <Badge variant="outline" className="bg-blue-900/40 text-blue-300 border-blue-700">
-              {solution.success_rate}% sucesso
+          
+          <div className="flex gap-2">
+            <Badge
+              variant="outline"
+              className={`font-medium text-xs backdrop-blur-sm ${getDifficultyBadgeStyle(solution.difficulty)}`}
+            >
+              {solution.difficulty === "easy"
+                ? "Fácil"
+                : solution.difficulty === "medium"
+                ? "Médio"
+                : solution.difficulty === "advanced"
+                ? "Avançado"
+                : solution.difficulty}
             </Badge>
-          )}
+            
+            {typeof solution.success_rate === "number" && solution.success_rate > 0 && (
+              <Badge 
+                variant="outline" 
+                className="bg-primary/10 text-primary border-primary/30 backdrop-blur-sm text-xs font-medium"
+              >
+                {solution.success_rate}% sucesso
+              </Badge>
+            )}
+          </div>
         </CardFooter>
+        
+        {/* Bottom glow indicator */}
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-primary/30 via-primary/60 to-primary/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
       </Card>
     </Link>
   );
