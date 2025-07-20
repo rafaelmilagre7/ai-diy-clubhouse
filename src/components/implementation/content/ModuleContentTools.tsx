@@ -97,26 +97,36 @@ export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
 
   return (
     <div className="space-y-6 mt-8">
-      <div>
-        <h3 className="text-lg font-semibold bg-gradient-to-r from-white via-cyan-200 to-blue-200 bg-clip-text text-transparent">
-          Ferramentas Necessárias
-        </h3>
-        <p className="text-muted-foreground mt-1">
-          Para implementar esta solução, você precisará das seguintes ferramentas:
-        </p>
+      {/* Enhanced Header */}
+      <div className="relative">
+        <div className="absolute -inset-1 bg-gradient-to-r from-viverblue/20 to-viverblue-dark/20 rounded-lg blur opacity-25"></div>
+        <div className="relative bg-white/5 backdrop-blur-sm border border-white/10 p-4 rounded-lg">
+          <h3 className="text-lg font-semibold bg-gradient-to-r from-white via-viverblue-light to-viverblue bg-clip-text text-transparent">
+            Ferramentas Necessárias
+          </h3>
+          <p className="text-neutral-300 mt-1 text-sm">
+            Para implementar esta solução, você precisará das seguintes ferramentas:
+          </p>
+        </div>
       </div>
       
+      {/* Enhanced Tools Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {tools.map((tool) => (
-          <ToolItem 
-            key={tool.id} 
-            toolName={tool.tool_name}
-            toolUrl={tool.tool_url || ""}
-            toolId={tool.details?.id}
-            isRequired={tool.is_required} 
-            hasBenefit={tool.details?.has_member_benefit}
-            benefitType={tool.details?.benefit_type as any}
-          />
+          <div key={tool.id} className="relative group">
+            {/* Tool card glow effect */}
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-viverblue/10 to-viverblue-dark/10 rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-300"></div>
+            <div className="relative">
+              <ToolItem 
+                toolName={tool.tool_name}
+                toolUrl={tool.tool_url || ""}
+                toolId={tool.details?.id}
+                isRequired={tool.is_required} 
+                hasBenefit={tool.details?.has_member_benefit}
+                benefitType={tool.details?.benefit_type as any}
+              />
+            </div>
+          </div>
         ))}
       </div>
     </div>

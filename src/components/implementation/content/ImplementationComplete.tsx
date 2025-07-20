@@ -1,328 +1,161 @@
-
-import React, { useRef, useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
+import { Module } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
-import { Solution } from "@/lib/supabase";
-import { CheckCircle, Loader2, Award, Share2, ArrowRight } from "lucide-react";
-import confetti from "canvas-confetti";
+import { ArrowLeft, ArrowRight, CheckCircle2, Loader2, Trophy } from "lucide-react";
 import { motion } from "framer-motion";
-import { FadeTransition } from "@/components/transitions/FadeTransition";
+import { useSolutionProgress } from "@/hooks/useSolutionProgress";
+import { useParams, useNavigate } from "react-router-dom";
 
 interface ImplementationCompleteProps {
-  solution: Solution;
-  onComplete: () => Promise<void>;
-  isCompleting: boolean;
-  isCompleted?: boolean;
+  module: Module;
+  onComplete: () => void;
+  onPrevious: () => void;
 }
 
-export const ImplementationComplete: React.FC<ImplementationCompleteProps> = ({
-  solution,
-  onComplete,
-  isCompleting,
-  isCompleted = false
-}) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [animationComplete, setAnimationComplete] = useState(false);
+export const ImplementationComplete = ({ module, onComplete, onPrevious }: ImplementationCompleteProps) => {
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [completing, setCompleting] = useState(false);
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { progress: currentProgress } = useSolutionProgress(id || "");
 
   useEffect(() => {
-    if (isCompleted && containerRef.current) {
-      // Adiciona efeito de destaque
-      containerRef.current.classList.add("highlight-flash");
-      
-      // Dispara confetes ao concluir
-      confetti({
-        particleCount: 150,
-        spread: 70,
-        origin: { y: 0.6 }
-      });
-      
-      // Remove classe após animação
-      setTimeout(() => {
-        containerRef.current?.classList.remove("highlight-flash");
-        // Marca que a animação inicial está completa
-        setAnimationComplete(true);
-      }, 1200);
-    }
-  }, [isCompleted]);
+    // Simulate confetti effect on mount
+    setShowConfetti(true);
+    const timer = setTimeout(() => {
+      setShowConfetti(false);
+    }, 3000); // Adjust timing as needed
 
-  const handleComplete = async () => {
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleContinue = async () => {
+    setCompleting(true);
     try {
-      // Primeira explosão de confetes ao clicar
-      confetti({
-        particleCount: 100,
-        spread: 60,
-        origin: { y: 0.7 },
-        colors: ['#0ABAB5', '#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1']
-      });
-      
       await onComplete();
-      
-      // Segunda explosão de confetes após completar
-      setTimeout(() => {
-        confetti({
-          particleCount: 200,
-          spread: 80,
-          origin: { y: 0.6 },
-          colors: ['#0ABAB5', '#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1']
-        });
-        
-        // Confetes laterais
-        setTimeout(() => {
-          confetti({
-            particleCount: 50,
-            angle: 60,
-            spread: 55,
-            origin: { x: 0 }
-          });
-          confetti({
-            particleCount: 50,
-            angle: 120,
-            spread: 55,
-            origin: { x: 1 }
-          });
-        }, 300);
-      }, 500);
-      
     } catch (error) {
-      console.error('Erro ao concluir implementação:', error);
+      console.error("Erro ao completar o módulo:", error);
+      // Lidar com erros aqui, como exibir uma mensagem de erro
+    } finally {
+      setCompleting(false);
     }
   };
-  
-  if (isCompleted) {
-    return (
-      <div ref={containerRef} className="text-center py-8 space-y-6 animate-fade-in">
-        <div className="relative bg-white/5 backdrop-blur-sm p-8 rounded-xl border border-white/10 shadow-2xl mx-auto max-w-xl group hover:bg-white/10 transition-all duration-500">
-          {/* Subtle dots pattern */}
-          <div className="absolute inset-0 opacity-5 pointer-events-none rounded-xl">
-            <div className="absolute inset-0 rounded-xl" style={{
-              backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.3) 1px, transparent 0)',
-              backgroundSize: '20px 20px'
-            }} />
-          </div>
-          
-          {/* Glow effect */}
-          <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-1000"></div>
-          
+  return (
+    <div className="relative min-h-[400px] flex items-center justify-center">
+      {/* Background Aurora Effect */}
+      <div className="absolute inset-0 overflow-hidden rounded-xl">
+        <div className="absolute inset-0 bg-gradient-to-br from-viverblue/10 via-transparent to-viverblue-dark/15" />
+        <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-viverblue/20 rounded-full blur-2xl animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-32 h-32 bg-viverblue-dark/20 rounded-full blur-2xl animate-pulse" style={{animationDelay: '1s'}} />
+      </div>
+
+      {/* Content */}
+      <div className="relative text-center space-y-8 p-8">
+        {/* Animated Success Icon */}
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ 
+            type: "spring", 
+            stiffness: 200, 
+            damping: 15,
+            delay: 0.2 
+          }}
+          className="mx-auto w-24 h-24 bg-gradient-to-br from-viverblue/20 to-viverblue-dark/25 rounded-full flex items-center justify-center border border-viverblue/30 shadow-2xl shadow-viverblue/20"
+        >
+          <CheckCircle2 className="h-12 w-12 text-viverblue-light drop-shadow-[0_0_8px_rgba(0,188,212,0.4)]" />
+        </motion.div>
+
+        {/* Success Message */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="space-y-4"
+        >
+          <h2 className="text-3xl font-bold bg-gradient-to-r from-white via-viverblue-light to-viverblue bg-clip-text text-transparent">
+            Módulo Concluído!
+          </h2>
+          <p className="text-lg text-neutral-300 max-w-md mx-auto leading-relaxed">
+            Parabéns! Você completou este módulo com sucesso. 
+            {currentProgress < 100 ? " Continue para o próximo passo da sua jornada." : " Você concluiu toda a implementação!"}
+          </p>
+        </motion.div>
+
+        {/* Progress Display */}
+        {currentProgress > 0 && (
           <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", stiffness: 400, damping: 15 }}
-            className="relative w-20 h-20 mx-auto mb-6"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.6 }}
+            className="space-y-3"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/30 to-blue-500/30 rounded-full animate-ping opacity-30"></div>
-            <div className="relative flex items-center justify-center bg-gradient-to-r from-cyan-500/20 to-blue-500/20 w-20 h-20 rounded-full border border-cyan-500/30">
-              <CheckCircle className="h-10 w-10 text-cyan-400" />
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-neutral-400">Progresso Total</span>
+              <span className="text-viverblue-light font-medium">{Math.round(currentProgress)}%</span>
+            </div>
+            <div className="w-full bg-neutral-700/50 rounded-full h-2 overflow-hidden">
+              <motion.div 
+                className="h-full bg-gradient-to-r from-viverblue to-viverblue-dark rounded-full shadow-lg shadow-viverblue/30"
+                initial={{ width: 0 }}
+                animate={{ width: `${currentProgress}%` }}
+                transition={{ delay: 0.8, duration: 0.8, ease: "easeOut" }}
+              />
             </div>
           </motion.div>
-          
-          <motion.h2 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="text-2xl font-bold bg-gradient-to-r from-white via-cyan-200 to-blue-200 bg-clip-text text-transparent mb-3"
+        )}
+
+        {/* Action Buttons */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.0 }}
+          className="flex flex-col sm:flex-row gap-4 justify-center"
+        >
+          <Button
+            variant="outline"
+            onClick={onPrevious}
+            className="text-neutral-300 border-neutral-600 hover:border-viverblue/50 hover:text-viverblue-light hover:bg-viverblue/10 transition-all duration-300"
           >
-            Parabéns!
-          </motion.h2>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Módulo Anterior
+          </Button>
           
-          <motion.p 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="text-neutral-200 mb-6 text-lg"
+          <Button
+            onClick={handleContinue}
+            disabled={completing}
+            className="bg-gradient-to-r from-viverblue to-viverblue-dark hover:from-viverblue-light hover:to-viverblue text-white border-0 shadow-lg hover:shadow-viverblue/25 transition-all duration-300 px-8"
           >
-            Você concluiu com sucesso a implementação da solução <span className="font-semibold bg-gradient-to-r from-cyan-300 to-blue-300 bg-clip-text text-transparent">"{solution.title}"</span>.
-          </motion.p>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 my-8">
-            {[
-              { value: "1", label: "Solução Implementada", delay: 0.5 },
-              { value: "8", label: "Módulos Concluídos", delay: 0.6 },
-              { value: "+30%", label: "Eficiência Esperada", delay: 0.7 }
-            ].map((stat, index) => (
-              <motion.div 
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: stat.delay }}
-                className="bg-white/5 backdrop-blur-sm p-4 rounded-lg shadow-sm text-center border border-white/10 hover:border-purple-500/30 hover:bg-white/10 transition-all duration-300"
-              >
-                <motion.div 
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: stat.delay + 0.1, type: "spring", stiffness: 300 }}
-                  className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent"
-                >
-                  {stat.value}
-                </motion.div>
-                <div className="text-sm text-neutral-400">{stat.label}</div>
-              </motion.div>
-            ))}
-          </div>
-          
-          <div className="flex flex-col sm:flex-row gap-3 justify-center mt-6">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.8 }}
-            >
-              <Button 
-                onClick={() => window.location.href = "/solutions"}
-                className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 border-0 shadow-lg hover:shadow-cyan-500/25 transition-all duration-300 gap-2"
-              >
-                <Award className="h-4 w-4" />
-                Ver conquista
-              </Button>
-            </motion.div>
-            
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.9 }}
-            >
-              <Button 
-                onClick={() => window.location.href = "/dashboard"}
-                variant="outline"
-                className="bg-white/5 hover:bg-white/10 backdrop-blur-sm border-white/10 hover:border-white/20 transition-all duration-300 gap-2"
-              >
-                Voltar ao Dashboard
-              </Button>
-            </motion.div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-  
-  return (
-    <FadeTransition className="py-6 space-y-6">
-      <div className="relative bg-white/5 backdrop-blur-sm p-6 rounded-xl border border-white/10 shadow-2xl group hover:bg-white/10 transition-all duration-500">
-        {/* Subtle dots pattern */}
-        <div className="absolute inset-0 opacity-5 pointer-events-none rounded-xl">
-          <div className="absolute inset-0 rounded-xl" style={{
-            backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.3) 1px, transparent 0)',
-            backgroundSize: '20px 20px'
-          }} />
-        </div>
-        
-        {/* Glow effect */}
-        <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-1000"></div>
-        
-        <h3 className="relative text-xl font-semibold bg-gradient-to-r from-white via-cyan-200 to-blue-200 bg-clip-text text-transparent mb-3 flex items-center gap-2">
-          <Award className="h-5 w-5 text-cyan-400" />
-          Conclusão da Implementação
-        </h3>
-        
-        <p className="text-neutral-200 mb-4">
-          Você completou todos os passos necessários para implementar a solução <span className="font-medium bg-gradient-to-r from-cyan-300 to-blue-300 bg-clip-text text-transparent">"{solution.title}"</span>?
-        </p>
-        
-        <div className="bg-white/5 backdrop-blur-sm rounded-lg p-4 border border-white/10 mb-6">
-          <p className="text-neutral-300 mb-2 text-sm">
-            <span className="font-medium">Ao confirmar, você:</span>
-          </p>
-          <ul className="space-y-2 text-sm text-neutral-400">
-            <li className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-cyan-400 flex-shrink-0" />
-              <span>Receberá uma conquista no seu perfil</span>
-            </li>
-            <li className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-cyan-400 flex-shrink-0" />
-              <span>Terá acesso a materiais exclusivos de otimização</span>
-            </li>
-            <li className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-cyan-400 flex-shrink-0" />
-              <span>Poderá compartilhar seu sucesso com outros membros</span>
-            </li>
-          </ul>
-        </div>
-        
-        <div className="flex flex-col sm:flex-row gap-3">
-          <Button 
-            onClick={handleComplete} 
-            disabled={isCompleting}
-            className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 border-0 shadow-lg hover:shadow-cyan-500/25 transition-all duration-300 gap-2"
-          >
-            {isCompleting ? (
+            {completing ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Confirmando...
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Processando...
+              </>
+            ) : currentProgress >= 100 ? (
+              <>
+                <Trophy className="h-4 w-4 mr-2" />
+                Finalizar Implementação
               </>
             ) : (
               <>
-                <CheckCircle className="h-4 w-4" />
-                Confirmar Implementação
+                <ArrowRight className="h-4 w-4 mr-2" />
+                Próximo Módulo
               </>
             )}
           </Button>
-          
-          <Button 
-            variant="outline" 
-            onClick={() => window.location.href = "/dashboard"}
-            className="bg-white/5 hover:bg-white/10 backdrop-blur-sm border-white/10 hover:border-white/20 transition-all duration-300"
+        </motion.div>
+
+        {/* Celebration Confetti Effect */}
+        {showConfetti && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="absolute inset-0 pointer-events-none"
           >
-            Voltar depois
-          </Button>
-        </div>
+            {/* Add confetti animation or particles here if needed */}
+          </motion.div>
+        )}
       </div>
-      
-      {/* Seção de próximos passos */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        className="relative bg-white/5 backdrop-blur-sm p-6 rounded-xl border border-white/10 shadow-2xl group hover:bg-white/10 transition-all duration-500"
-      >
-        {/* Subtle dots pattern */}
-        <div className="absolute inset-0 opacity-5 pointer-events-none rounded-xl">
-          <div className="absolute inset-0 rounded-xl" style={{
-            backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.3) 1px, transparent 0)',
-            backgroundSize: '20px 20px'
-          }} />
-        </div>
-        
-        {/* Glow effect */}
-        <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-1000"></div>
-        
-        <h3 className="relative text-lg font-medium mb-4 flex items-center gap-2 bg-gradient-to-r from-white via-cyan-200 to-blue-200 bg-clip-text text-transparent">
-          <ArrowRight className="h-5 w-5 text-cyan-400" />
-          Próximos passos
-        </h3>
-        
-        <div className="relative space-y-4">
-          <motion.div 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.4 }}
-            className="flex items-start gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors"
-          >
-            <div className="bg-gradient-to-r from-cyan-600/20 to-blue-600/20 p-2 rounded-full mr-1 flex-shrink-0 border border-cyan-500/30">
-              <Share2 className="h-4 w-4 text-cyan-400" />
-            </div>
-            <div>
-              <h4 className="font-medium text-sm text-neutral-200">Compartilhe seus resultados</h4>
-              <p className="text-xs text-neutral-400">
-                Inspire outros membros compartilhando sua experiência de implementação
-              </p>
-            </div>
-          </motion.div>
-          
-          <motion.div 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.5 }}
-            className="flex items-start gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors"
-          >
-            <div className="bg-gradient-to-r from-cyan-600/20 to-blue-600/20 p-2 rounded-full mr-1 flex-shrink-0 border border-cyan-500/30">
-              <Award className="h-4 w-4 text-cyan-400" />
-            </div>
-            <div>
-              <h4 className="font-medium text-sm text-neutral-200">Explore mais soluções</h4>
-              <p className="text-xs text-neutral-400">
-                Continue sua transformação descobrindo novas soluções para o seu negócio
-              </p>
-            </div>
-          </motion.div>
-        </div>
-      </motion.div>
-    </FadeTransition>
+    </div>
   );
 };
