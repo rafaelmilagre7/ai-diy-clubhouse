@@ -37,6 +37,7 @@ export const useNetworkingStats = () => {
       };
     },
     staleTime: 0, // Sempre buscar dados atualizados
+    refetchInterval: 5000, // Refetch a cada 5 segundos também
   });
 
   // Realtime updates para refetch automático
@@ -50,7 +51,10 @@ export const useNetworkingStats = () => {
           schema: 'public',
           table: 'network_matches'
         },
-        () => refetch()
+        () => {
+          console.log('Network matches changed, refetching stats...');
+          refetch();
+        }
       )
       .on(
         'postgres_changes',
@@ -59,7 +63,10 @@ export const useNetworkingStats = () => {
           schema: 'public',
           table: 'member_connections'
         },
-        () => refetch()
+        () => {
+          console.log('Member connections changed, refetching stats...');
+          refetch();
+        }
       )
       .on(
         'postgres_changes',
@@ -68,7 +75,10 @@ export const useNetworkingStats = () => {
           schema: 'public',
           table: 'connection_notifications'
         },
-        () => refetch()
+        () => {
+          console.log('Connection notifications changed, refetching stats...');
+          refetch();
+        }
       )
       .subscribe();
 
