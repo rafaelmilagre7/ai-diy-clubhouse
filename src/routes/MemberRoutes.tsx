@@ -1,4 +1,3 @@
-
 import { RouteObject } from "react-router-dom";
 import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
 import MemberLayout from '@/components/layout/MemberLayout';
@@ -30,17 +29,14 @@ import LessonView from '@/pages/member/learning/LessonView';
 import CertificatesPage from '@/pages/member/learning/CertificatesPage';
 import MemberCertificates from '@/pages/member/learning/MemberCertificates';
 
-
 // Member Community pages
-import CommunityHome from '@/pages/member/community/CommunityHome';
+import { CommunityHome } from '@/pages/member/community/CommunityHome';
 import TopicView from '@/pages/member/community/TopicView';
 import CategoryView from '@/pages/member/community/CategoryView';
 import NewTopic from '@/pages/member/community/NewTopic';
 
-
 // Profile pages
 import NotificationSettingsPage from '@/pages/profile/NotificationSettingsPage';
-
 
 // Função helper para criar rotas protegidas com MemberLayout
 const createProtectedRoute = (path: string, Component: React.ComponentType<any>) => ({
