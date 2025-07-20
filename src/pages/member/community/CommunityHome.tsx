@@ -67,7 +67,15 @@ export default function CommunityHome() {
         .limit(20);
 
       if (error) throw error;
-      setTopics(data || []);
+      
+      // Transformar dados para o formato correto do tipo Topic
+      const transformedData = (data || []).map(topic => ({
+        ...topic,
+        profiles: Array.isArray(topic.profiles) ? topic.profiles[0] || null : topic.profiles,
+        category: Array.isArray(topic.category) ? topic.category[0] || null : topic.category
+      }));
+      
+      setTopics(transformedData);
     } catch (error) {
       console.error("Erro ao carregar tópicos:", error);
     } finally {
