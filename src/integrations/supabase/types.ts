@@ -592,6 +592,13 @@ export type Database = {
             referencedRelation: "community_topics"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "community_posts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       community_reactions: {
@@ -622,6 +629,13 @@ export type Database = {
             columns: ["post_id"]
             isOneToOne: false
             referencedRelation: "community_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_reactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -751,6 +765,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "community_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_topics_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
