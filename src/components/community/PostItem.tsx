@@ -40,10 +40,17 @@ export const PostItem = ({ post, onSuccess }: PostItemProps) => {
   return (
     <div className="p-4 border rounded-lg bg-card relative">
       {/* Badge de Solução */}
-      {isSolutionPost && <SolutionBadge />}
+      {isSolutionPost && <SolutionBadge isSolved={isSolutionPost} />}
       
       {/* Header do Post */}
-      <PostHeader post={post} />
+      <PostHeader 
+        profile={post.profiles}
+        createdAt={post.created_at}
+        isTopicAuthor={false}
+        userId={post.user_id}
+        isAdmin={false}
+        isSolution={isSolutionPost}
+      />
       
       {/* Conteúdo */}
       <div className="mt-4">
@@ -59,12 +66,16 @@ export const PostItem = ({ post, onSuccess }: PostItemProps) => {
         </div>
         
         <PostActions
-          post={post}
+          postId={post.id}
           isOwner={isOwner}
+          isAdmin={false}
+          isReply={true}
+          onReply={() => {}}
+          canMarkAsSolved={false}
           isSolutionPost={isSolutionPost}
           isSubmitting={isSubmitting}
-          onMarkSolution={handleMarkAsSolution}
-          onUnmarkSolution={handleUnmarkAsSolution}
+          onMarkAsSolved={handleMarkAsSolution}
+          onUnmarkAsSolved={handleUnmarkAsSolution}
           onDelete={handleDeletePost}
         />
       </div>
