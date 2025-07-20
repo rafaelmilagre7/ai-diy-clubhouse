@@ -18,8 +18,8 @@ export const PostItem = ({ post, onSuccess }: PostItemProps) => {
     isOwner,
     isSolutionPost,
     isSubmitting,
-    handleMarkAsSolution,
-    handleUnmarkAsSolution,
+    handleMarkAsSolved,
+    handleUnmarkAsSolved,
     handleDeletePost
   } = usePostItem({ post, topicId: post.topic_id, onSuccess });
 
@@ -74,8 +74,8 @@ export const PostItem = ({ post, onSuccess }: PostItemProps) => {
           canMarkAsSolved={false}
           isSolutionPost={isSolutionPost}
           isSubmitting={isSubmitting}
-          onMarkAsSolved={handleMarkAsSolution}
-          onUnmarkAsSolved={handleUnmarkAsSolution}
+          onMarkAsSolved={handleMarkAsSolved}
+          onUnmarkAsSolved={handleUnmarkAsSolved}
           onDelete={handleDeletePost}
         />
       </div>

@@ -20,7 +20,7 @@ export const usePostItem = ({ post, topicId, onSuccess }: UsePostItemProps) => {
   const isOwner = post.user_id === user?.id;
   const isSolutionPost = post.is_accepted_solution || post.is_solution;
 
-  const handleMarkAsSolution = async () => {
+  const handleMarkAsSolved = async () => {
     if (!user?.id || !topicId) return;
     
     try {
@@ -63,7 +63,7 @@ export const usePostItem = ({ post, topicId, onSuccess }: UsePostItemProps) => {
     }
   };
 
-  const handleUnmarkAsSolution = async () => {
+  const handleUnmarkAsSolved = async () => {
     if (!user?.id || !topicId) return;
     
     try {
@@ -132,8 +132,8 @@ export const usePostItem = ({ post, topicId, onSuccess }: UsePostItemProps) => {
     isOwner,
     isSolutionPost,
     isSubmitting,
-    handleMarkAsSolution,
-    handleUnmarkAsSolution,
+    handleMarkAsSolved,
+    handleUnmarkAsSolved,
     handleDeletePost
   };
 };
