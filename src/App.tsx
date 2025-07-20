@@ -1,54 +1,42 @@
 
-import React from 'react';
-import { BrowserRouter as Router } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { Toaster } from 'sonner';
-import { ThemeProvider } from 'next-themes';
-import { AuthProvider } from '@/contexts/auth';
-import { LoggingProvider } from '@/contexts/logging';
-import { SecurityEnforcementProvider } from '@/components/security/SecurityEnforcementProvider';
-import { AppRoutes } from '@/routes';
-import { SEOWrapper } from '@/components/seo/SEOWrapper';
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/contexts/auth";
+import { LoggingProvider } from "@/hooks/useLogging";
+import { AppRoutes } from "@/routes";
+import { PerformanceDashboard } from "@/components/dev/PerformanceDashboard";
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000,
-      retry: 2
-    }
-  }
+      staleTime: 5 * 60 * 1000, // 5 minutos
+      gcTime: 10 * 60 * 1000, // 10 minutos
+    },
+  },
 });
 
 function App() {
-  console.log('🚀 [APP] Componente App renderizado');
-  
   return (
-    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <LoggingProvider>
-            <SecurityEnforcementProvider>
-              <Router>
-                <SEOWrapper>
-                  <div className="App">
-                    <AppRoutes />
-                    <Toaster 
-                      position="top-right"
-                      theme="dark"
-                      richColors
-                      expand
-                      visibleToasts={3}
-                    />
-                    <ReactQueryDevtools initialIsOpen={false} />
-                  </div>
-                </SEOWrapper>
-              </Router>
-            </SecurityEnforcementProvider>
-          </LoggingProvider>
-        </AuthProvider>
-      </QueryClientProvider>
-    </ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <LoggingProvider>
+          <AuthProvider>
+            <BrowserRouter>
+              <div className="min-h-screen bg-background font-sans antialiased">
+                <AppRoutes />
+                <Toaster />
+                <Sonner />
+                {/* Dashboard de performance apenas em desenvolvimento */}
+                <PerformanceDashboard />
+              </div>
+            </BrowserRouter>
+          </AuthProvider>
+        </LoggingProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
   );
 }
 
