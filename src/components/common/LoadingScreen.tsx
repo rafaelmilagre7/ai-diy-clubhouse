@@ -4,14 +4,30 @@ import { Loader2 } from "lucide-react";
 
 interface LoadingScreenProps {
   message?: string;
-  showProgress?: boolean; // Readicionando para compatibilidade
+  showProgress?: boolean;
 }
 
 const LoadingScreen = ({ 
   message = "Carregando...",
-  showProgress = false // Prop opcional para manter compatibilidade
+  showProgress = false 
 }: LoadingScreenProps) => {
+  const [progress, setProgress] = useState(0);
   const [dots, setDots] = useState('');
+
+  // Animação de progresso simulado
+  useEffect(() => {
+    if (!showProgress) return;
+    
+    const interval = setInterval(() => {
+      setProgress(prev => {
+        const increment = Math.random() * 10 + 5; // 5-15% por vez
+        const newProgress = prev + increment;
+        return newProgress > 85 ? 85 : newProgress; // Parar em 85%
+      });
+    }, 300);
+    
+    return () => clearInterval(interval);
+  }, [showProgress]);
 
   // Animação de dots
   useEffect(() => {
@@ -45,19 +61,25 @@ const LoadingScreen = ({
           </span>
         </div>
         
-        {/* Mensagem de contexto */}
-        <p className="text-sm text-muted-foreground">
-          Aguarde um momento...
-        </p>
-
-        {/* Barra de progresso opcional (apenas visual) */}
+        {/* Barra de progresso */}
         {showProgress && (
-          <div className="w-64 mx-auto mt-4">
-            <div className="bg-muted rounded-full h-2 overflow-hidden">
-              <div className="bg-primary h-full animate-pulse w-3/4" />
+          <div className="w-full max-w-xs mx-auto">
+            <div className="bg-secondary rounded-full h-2">
+              <div 
+                className="bg-primary h-2 rounded-full transition-all duration-500 ease-out"
+                style={{ width: `${progress}%` }}
+              />
             </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              {Math.round(progress)}% concluído
+            </p>
           </div>
         )}
+        
+        {/* Mensagem de contexto */}
+        <p className="text-sm text-muted-foreground">
+          Preparando sua experiência personalizada...
+        </p>
       </div>
     </div>
   );

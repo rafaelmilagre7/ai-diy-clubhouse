@@ -1,188 +1,197 @@
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { UserProfile } from '@/lib/supabase';
+import { profileFetcher } from '@/lib/auth/profileFetcher';
 import { AuthContextType } from './types';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  console.log('🔍 [AUTH-SIMPLE] Estado atual:', {
-    hasUser: !!user,
-    hasProfile: !!profile,
-    isLoading,
-    userEmail: user?.email
-  });
+  // Estados derivados memoizados para evitar re-renders
+  const isAdmin = React.useMemo(() => 
+    profile?.user_roles?.name === 'admin' || profile?.email?.includes('@viverdeia.ai') || false, 
+    [profile?.user_roles?.name, profile?.email]
+  );
+  const isFormacao = React.useMemo(() => 
+    profile?.user_roles?.name === 'formacao' || false, 
+    [profile?.user_roles?.name]
+  );
 
-  // Buscar perfil do usuário
-  const fetchUserProfile = useCallback(async (userId: string) => {
+  // Flag para evitar fetches múltiplos
+  const fetchingProfile = React.useRef(false);
+  
+  const fetchProfile = React.useCallback(async (userId: string): Promise<void> => {
+    // Evitar múltiplos fetches simultâneos
+    if (fetchingProfile.current) return;
+    
     try {
-      console.log('🔄 [AUTH-SIMPLE] Buscando perfil para:', userId);
+      fetchingProfile.current = true;
+      console.log('🔄 [AUTH] Buscando perfil para:', userId);
       
-      const { data, error } = await supabase
-        .from('profiles')
-        .select(`
-          *,
-          user_roles (
-            id,
-            name,
-            description,
-            permissions
-          )
-        `)
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        console.error('❌ [AUTH-SIMPLE] Erro ao buscar perfil:', error);
-        return null;
+      const fetchedProfile = await profileFetcher.fetchProfile(userId);
+      
+      if (fetchedProfile) {
+        console.log('✅ [AUTH] Perfil carregado:', {
+          name: fetchedProfile.name,
+          email: fetchedProfile.email,
+          role: fetchedProfile.user_roles?.name || 'N/A'
+        });
+        
+        setProfile(fetchedProfile);
+      } else {
+        console.warn('⚠️ [AUTH] Perfil não encontrado');
+        setProfile(null);
       }
-
-      console.log('✅ [AUTH-SIMPLE] Perfil carregado:', {
-        name: data?.name,
-        email: data?.email,
-        role: data?.user_roles?.name
-      });
-
-      return data;
     } catch (error) {
-      console.error('❌ [AUTH-SIMPLE] Erro crítico ao buscar perfil:', error);
-      return null;
+      console.error('❌ [AUTH] Erro ao buscar perfil:', error);
+      setProfile(null);
+    } finally {
+      fetchingProfile.current = false;
     }
   }, []);
 
-  // Inicialização simplificada
+  // Setup inicial da autenticação simplificado
   useEffect(() => {
+    console.log('🚀 [AUTH] Inicializando AuthContext');
+    
     let mounted = true;
-    let timeoutId: NodeJS.Timeout;
-
+    let subscription: { unsubscribe: () => void } | null = null;
+    
     const initAuth = async () => {
       try {
-        console.log('🚀 [AUTH-SIMPLE] Inicializando autenticação...');
-        
-        // Timeout de segurança de 2 segundos
-        timeoutId = setTimeout(() => {
-          if (mounted) {
-            console.warn('⏰ [AUTH-SIMPLE] Timeout de 2s atingido - finalizando loading');
-            setIsLoading(false);
+        // 1. Configurar listener simplificado (sem async na callback)
+        const { data } = supabase.auth.onAuthStateChange(
+          (event, newSession) => {
+            if (!mounted) return;
+            
+            console.log(`🔄 [AUTH] Evento: ${event}`, {
+              hasSession: !!newSession,
+              hasUser: !!newSession?.user
+            });
+            
+            // Atualizações síncronas
+            setSession(newSession);
+            setUser(newSession?.user ?? null);
+            
+            // Fetch de perfil diferido para evitar deadlocks
+            if (newSession?.user && event === 'SIGNED_IN') {
+              setTimeout(() => {
+                if (mounted) {
+                  fetchProfile(newSession.user.id);
+                }
+              }, 100);
+            } else if (!newSession?.user) {
+              setProfile(null);
+            }
+            
+            // Finalizar loading
+            if (mounted) {
+              setIsLoading(false);
+            }
           }
-        }, 2000);
-
-        // Verificar sessão atual
-        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
+        );
         
-        if (error) {
-          console.error('❌ [AUTH-SIMPLE] Erro ao obter sessão:', error);
-          if (mounted) {
-            setIsLoading(false);
-          }
-          return;
-        }
+        subscription = data.subscription;
 
-        if (currentSession && mounted) {
-          console.log('✅ [AUTH-SIMPLE] Sessão encontrada');
+        // 2. Verificar sessão atual
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        if (mounted && currentSession?.user) {
           setSession(currentSession);
           setUser(currentSession.user);
-
-          // Buscar perfil
-          const userProfile = await fetchUserProfile(currentSession.user.id);
-          if (mounted && userProfile) {
-            setProfile(userProfile);
-          }
+          
+          // Fetch diferido do perfil
+          setTimeout(() => {
+            if (mounted) {
+              fetchProfile(currentSession.user.id);
+            }
+          }, 100);
         }
-
-        // Limpar timeout se chegou até aqui
-        if (timeoutId) {
-          clearTimeout(timeoutId);
-        }
-
-        if (mounted) {
-          setIsLoading(false);
-        }
-
-      } catch (error) {
-        console.error('❌ [AUTH-SIMPLE] Erro na inicialização:', error);
-        if (mounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    // Listener de mudanças de auth
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
-      console.log('🔄 [AUTH-SIMPLE] Evento:', event, { hasSession: !!newSession });
-
-      if (mounted) {
-        setSession(newSession);
-        setUser(newSession?.user ?? null);
-
-        if (newSession?.user) {
-          const userProfile = await fetchUserProfile(newSession.user.id);
+        
+        // 3. Timeout de segurança reduzido
+        setTimeout(() => {
           if (mounted) {
-            setProfile(userProfile);
             setIsLoading(false);
           }
-        } else {
-          setProfile(null);
+        }, 4000); // 4 segundos máximo
+        
+      } catch (error) {
+        console.error('❌ [AUTH] Erro na inicialização:', error);
+        if (mounted) {
           setIsLoading(false);
         }
       }
-    });
+    };
 
     initAuth();
-
+    
     return () => {
       mounted = false;
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-      subscription.unsubscribe();
+      subscription?.unsubscribe();
     };
-  }, [fetchUserProfile]);
+  }, [fetchProfile]);
 
-  // Sign out simplificado
-  const signOut = useCallback(async () => {
+  // Função para refetch de perfil
+  const refetchProfile = async (): Promise<void> => {
+    if (user?.id) {
+      await fetchProfile(user.id);
+    }
+  };
+
+  // Função de login
+  const signIn = async (email: string, password: string): Promise<{ error?: any }> => {
     try {
-      console.log('🚪 [AUTH-SIMPLE] Fazendo logout...');
-      await supabase.auth.signOut();
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      if (error) {
+        return { error };
+      }
+      
+      return { error: null };
+    } catch (error) {
+      return { error };
+    }
+  };
+
+  // Função de logout
+  const signOut = async (): Promise<void> => {
+    try {
+      console.log('🚪 [AUTH] Fazendo logout');
+      
+      // Limpar cache
+      profileFetcher.clearCache();
+      
+      // Logout do Supabase
+      await supabase.auth.signOut({ scope: 'global' });
+      
+      // Limpar estado local
       setSession(null);
       setUser(null);
       setProfile(null);
+      
+      // Redirecionar
+      window.location.href = '/login';
     } catch (error) {
-      console.error('❌ [AUTH-SIMPLE] Erro no logout:', error);
-      throw error;
+      console.error('❌ [AUTH] Erro no logout:', error);
+      // Forçar limpeza mesmo com erro
+      window.location.href = '/login';
     }
-  }, []);
+  };
 
-  // Sign in simplificado
-  const signIn = useCallback(async (email: string, password: string) => {
-    try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      return { error };
-    } catch (error) {
-      return { error };
-    }
-  }, []);
-
-  // Refetch profile
-  const refetchProfile = useCallback(async () => {
-    if (user?.id) {
-      const userProfile = await fetchUserProfile(user.id);
-      setProfile(userProfile);
-    }
-  }, [user?.id, fetchUserProfile]);
-
-  // Estados derivados
-  const isAdmin = profile?.user_roles?.name === 'admin';
-  const isFormacao = profile?.user_roles?.name === 'formacao';
-
-  const value: AuthContextType = {
+  const contextValue: AuthContextType = {
     session,
     user,
     profile,
@@ -196,7 +205,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

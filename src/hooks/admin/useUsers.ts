@@ -1,73 +1,200 @@
 
-import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
-import { toast } from '@/hooks/use-toast';
-import type { Database } from '@/integrations/supabase/types';
+import { UserProfile, getUserRoleName } from '@/lib/supabase';
+import { useAuth } from '@/contexts/auth';
+import { toast } from 'sonner';
+import { usePermissions, Role } from '@/hooks/auth/usePermissions';
+import { useGlobalLoading } from '@/hooks/useGlobalLoading';
 
-type Profile = Database['public']['Tables']['profiles']['Row'];
+export function useUsers() {
+  const { user, isAdmin } = useAuth();
+  const { hasPermission } = usePermissions();
+  const { setLoading } = useGlobalLoading();
+  
+  const [users, setUsers] = useState<UserProfile[]>([]);
+  const [availableRoles, setAvailableRoles] = useState<Role[]>([]);
+  const [loading, setLocalLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
+  const [error, setError] = useState<Error | null>(null);
+  
+  // Cache e refs para evitar loops
+  const lastSearchQuery = useRef<string>('');
+  const fetchInProgress = useRef(false);
+  const fetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-export const useUsers = () => {
-  const [localLoading, setLocalLoading] = useState(false);
+  // Verificações de permissão (memoizadas)
+  const canManageUsers = isAdmin || hasPermission('users.manage');
+  const canAssignRoles = isAdmin || hasPermission('roles.assign');
+  const canDeleteUsers = isAdmin || hasPermission('users.delete');
+  const canResetPasswords = isAdmin || hasPermission('users.reset_password');
 
-  const {
-    data: users,
-    isLoading: queryLoading,
-    error,
-    refetch
-  } = useQuery({
-    queryKey: ['admin-users'],
-    queryFn: async (): Promise<Profile[]> => {
-      setLocalLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .order('created_at', { ascending: false });
+  // Função de busca otimizada com debounce interno
+  const fetchUsers = useCallback(async (forceRefresh = false) => {
+    if (!canManageUsers || (fetchInProgress.current && !forceRefresh)) {
+      console.warn('[USERS] Busca cancelada - sem permissão ou em progresso');
+      return;
+    }
 
-        if (error) throw error;
-        return data || [];
-      } finally {
-        setLocalLoading(false);
+    // Debounce interno para busca
+    if (searchQuery !== lastSearchQuery.current && !forceRefresh) {
+      if (fetchTimeoutRef.current) {
+        clearTimeout(fetchTimeoutRef.current);
       }
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutos
-  });
+      
+      fetchTimeoutRef.current = setTimeout(() => {
+        lastSearchQuery.current = searchQuery;
+        fetchUsers(true);
+      }, 300);
+      return;
+    }
 
-  const isLoading = queryLoading || localLoading;
-
-  const updateUserRole = async (userId: string, newRole: string) => {
+    console.log(`[USERS] Iniciando busca: "${searchQuery}"`);
+    fetchInProgress.current = true;
     setLocalLoading(true);
+    setLoading('data', true);
+    setError(null);
+    
     try {
-      const { error } = await supabase
+      let query = supabase
         .from('profiles')
-        .update({ role: newRole })
-        .eq('id', userId);
+        .select(`
+          id,
+          email,
+          name,
+          avatar_url,
+          company_name,
+          industry,
+          created_at,
+          role_id,
+          user_roles:role_id (
+            id,
+            name,
+            description,
+            permissions,
+            is_system
+          )
+        `)
+        .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (searchQuery.trim()) {
+        query = query.or(`name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%,company_name.ilike.%${searchQuery}%`);
+      }
 
-      toast({
-        title: 'Sucesso',
-        description: 'Perfil do usuário atualizado com sucesso',
-      });
+      const { data, error: queryError } = await query;
 
-      refetch();
-    } catch (error: any) {
-      toast({
-        title: 'Erro',
-        description: error.message || 'Erro ao atualizar usuário',
-        variant: 'destructive',
+      if (queryError) {
+        throw new Error(`Erro ao buscar usuários: ${queryError.message}`);
+      }
+
+      const mappedUsers: UserProfile[] = (data || []).map(user => ({
+        id: user.id,
+        email: user.email || '',
+        name: user.name,
+        avatar_url: user.avatar_url,
+        company_name: user.company_name,
+        industry: user.industry,
+        created_at: user.created_at,
+        role_id: user.role_id,
+        user_roles: user.user_roles as any,
+      }));
+
+      setUsers(mappedUsers);
+      console.log(`[USERS] ✅ ${mappedUsers.length} usuários carregados`);
+      
+    } catch (err: any) {
+      console.error('[USERS] Erro ao buscar usuários:', err);
+      setError(err);
+      
+      toast.error('Erro ao carregar usuários', {
+        description: err.message || 'Não foi possível carregar a lista de usuários.',
       });
     } finally {
+      fetchInProgress.current = false;
       setLocalLoading(false);
+      setLoading('data', false);
+      setIsRefreshing(false);
     }
-  };
+  }, [canManageUsers, searchQuery, setLoading]);
+
+  const fetchAvailableRoles = useCallback(async () => {
+    if (!canAssignRoles) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('*')
+        .order('name');
+
+      if (error) {
+        throw new Error(`Erro ao buscar roles: ${error.message}`);
+      }
+
+      setAvailableRoles(data || []);
+      console.log(`[USERS] ✅ ${data?.length || 0} roles carregadas`);
+      
+    } catch (err: any) {
+      console.error('[USERS] Erro ao buscar roles:', err);
+      toast.error('Erro ao carregar roles', {
+        description: err.message
+      });
+    }
+  }, [canAssignRoles]);
+
+  // Carregar dados iniciais apenas uma vez
+  useEffect(() => {
+    if (canManageUsers) {
+      console.log('[USERS] Carregamento inicial');
+      fetchUsers(true);
+    }
+  }, [canManageUsers]); // Apenas esta dependência
+
+  // Carregar roles disponíveis
+  useEffect(() => {
+    if (canAssignRoles) {
+      fetchAvailableRoles();
+    }
+  }, [canAssignRoles, fetchAvailableRoles]);
+
+  // Cleanup
+  useEffect(() => {
+    return () => {
+      if (fetchTimeoutRef.current) {
+        clearTimeout(fetchTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Função para refresh manual
+  const handleRefresh = useCallback(() => {
+    console.log('[USERS] Refresh manual');
+    setIsRefreshing(true);
+    fetchUsers(true);
+  }, [fetchUsers]);
+
+  // Update search query sem trigger automático
+  const updateSearchQuery = useCallback((query: string) => {
+    setSearchQuery(query);
+    // O debounce acontece dentro do fetchUsers
+    fetchUsers(false);
+  }, [fetchUsers]);
 
   return {
-    users: users || [],
-    isLoading,
-    error,
-    refetch,
-    updateUserRole
+    users,
+    availableRoles,
+    loading,
+    isRefreshing,
+    searchQuery,
+    setSearchQuery: updateSearchQuery,
+    selectedUser,
+    setSelectedUser,
+    fetchUsers: handleRefresh,
+    canManageUsers,
+    canAssignRoles,
+    canDeleteUsers,
+    canResetPasswords,
+    error
   };
-};
+}
