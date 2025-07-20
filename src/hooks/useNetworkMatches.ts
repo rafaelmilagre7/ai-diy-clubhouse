@@ -30,6 +30,9 @@ export const useNetworkMatches = () => {
   const query = useQuery({
     queryKey: ['network-matches'],
     queryFn: async () => {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) return [];
+
       const query = supabase
         .from('network_matches')
         .select(`
@@ -43,6 +46,7 @@ export const useNetworkMatches = () => {
             avatar_url
           )
         `)
+        .eq('user_id', user.user.id)
         .eq('status', 'pending')
         .order('created_at', { ascending: false });
 
