@@ -42,15 +42,42 @@ export const PostItem = ({ post, showTopicContext = false }: PostItemProps) => {
     console.log('Queries invalidadas após ação de moderação no post');
   };
 
-  // Processar conteúdo para imagens
+  // Processar conteúdo para imagens - versão melhorada
   const processContentForImages = (content: string) => {
     if (!content) return content;
     
-    // Melhorar a regex para capturar URLs de imagem mais precisamente
-    const imageRegex = /(https?:\/\/[^\s]+\.(?:jpg|jpeg|png|gif|webp|svg)(?:\?[^\s]*)?)/gi;
+    let processedContent = content;
+    const processedUrls = new Set<string>();
     
-    return content.replace(imageRegex, (url) => {
-      console.log('🖼️ Processando imagem:', url);
+    // PRIMEIRO: Processar sintaxe Markdown ![alt](url)
+    const markdownImageRegex = /!\[([^\]]*)\]\((https?:\/\/[^\s\)]+\.(?:jpg|jpeg|png|gif|webp|svg)(?:\?[^\s\)]*)?)\)/gi;
+    
+    processedContent = processedContent.replace(markdownImageRegex, (match, alt, url) => {
+      console.log('🖼️ Processando Markdown de imagem:', { alt, url });
+      processedUrls.add(url);
+      
+      return `<img 
+        src="${url}" 
+        alt="${alt || 'Imagem'}" 
+        class="max-w-full h-auto rounded-lg shadow-md border border-border cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02]" 
+        style="max-height: 500px; object-fit: contain;" 
+        loading="lazy"
+        data-image-src="${url}"
+      />`;
+    });
+    
+    // SEGUNDO: Processar URLs diretas que não foram processadas ainda
+    const directImageRegex = /(https?:\/\/[^\s]+\.(?:jpg|jpeg|png|gif|webp|svg)(?:\?[^\s]*)?)/gi;
+    
+    processedContent = processedContent.replace(directImageRegex, (url) => {
+      // Se já foi processada como Markdown, pular
+      if (processedUrls.has(url)) {
+        console.log('🔄 URL já processada, pulando:', url);
+        return url;
+      }
+      
+      console.log('🖼️ Processando URL direta de imagem:', url);
+      processedUrls.add(url);
       
       return `<img 
         src="${url}" 
@@ -61,6 +88,8 @@ export const PostItem = ({ post, showTopicContext = false }: PostItemProps) => {
         data-image-src="${url}"
       />`;
     });
+    
+    return processedContent;
   };
 
   // Inicializar tratamento de clique em imagens quando o componente montar
@@ -91,6 +120,7 @@ export const PostItem = ({ post, showTopicContext = false }: PostItemProps) => {
   console.log('PostItem renderizando:', {
     id: post.id,
     hasContent: !!post.content,
+    originalLength: post.content?.length || 0,
     processedLength: processedContent.length,
     safeHTMLLength: safeHTML.__html.length
   });
