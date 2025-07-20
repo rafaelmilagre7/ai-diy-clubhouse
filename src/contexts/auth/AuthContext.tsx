@@ -1,217 +1,111 @@
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
+import { fetchUserProfile } from './utils';
 import { UserProfile } from '@/lib/supabase';
-import { profileFetcher } from '@/lib/auth/profileFetcher';
-import { AuthContextType } from './types';
+
+interface AuthContextType {
+  user: User | null;
+  profile: UserProfile | null;
+  session: Session | null;
+  loading: boolean;
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string) => Promise<void>;
+  signOut: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
+}
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-interface AuthProviderProps {
-  children: ReactNode;
-}
-
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [session, setSession] = useState<Session | null>(null);
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Estados derivados memoizados para evitar re-renders
-  const isAdmin = React.useMemo(() => 
-    profile?.user_roles?.name === 'admin' || profile?.email?.includes('@viverdeia.ai') || false, 
-    [profile?.user_roles?.name, profile?.email]
-  );
-  const isFormacao = React.useMemo(() => 
-    profile?.user_roles?.name === 'formacao' || false, 
-    [profile?.user_roles?.name]
-  );
-
-  // Flag para evitar fetches múltiplos
-  const fetchingProfile = React.useRef(false);
-  
-  const fetchProfile = React.useCallback(async (userId: string): Promise<void> => {
-    // Evitar múltiplos fetches simultâneos
-    if (fetchingProfile.current) return;
-    
+  const loadUserProfile = useCallback(async (userId: string) => {
     try {
-      fetchingProfile.current = true;
-      console.log('🔄 [AUTH] Buscando perfil para:', userId);
-      
-      const fetchedProfile = await profileFetcher.fetchProfile(userId);
-      
-      if (fetchedProfile) {
-        console.log('✅ [AUTH] Perfil carregado:', {
-          name: fetchedProfile.name,
-          email: fetchedProfile.email,
-          role: fetchedProfile.user_roles?.name || 'N/A'
-        });
-        
-        setProfile(fetchedProfile);
-      } else {
-        console.warn('⚠️ [AUTH] Perfil não encontrado');
-        setProfile(null);
-      }
+      const profileData = await fetchUserProfile(userId);
+      setProfile(profileData as UserProfile);
     } catch (error) {
-      console.error('❌ [AUTH] Erro ao buscar perfil:', error);
-      setProfile(null);
-    } finally {
-      fetchingProfile.current = false;
+      console.error('Erro ao carregar perfil:', error);
     }
   }, []);
 
-  // Setup inicial da autenticação simplificado
-  useEffect(() => {
-    console.log('🚀 [AUTH] Inicializando AuthContext');
-    
-    let mounted = true;
-    let subscription: { unsubscribe: () => void } | null = null;
-    
-    const initAuth = async () => {
-      try {
-        // 1. Configurar listener simplificado (sem async na callback)
-        const { data } = supabase.auth.onAuthStateChange(
-          (event, newSession) => {
-            if (!mounted) return;
-            
-            console.log(`🔄 [AUTH] Evento: ${event}`, {
-              hasSession: !!newSession,
-              hasUser: !!newSession?.user
-            });
-            
-            // Atualizações síncronas
-            setSession(newSession);
-            setUser(newSession?.user ?? null);
-            
-            // Fetch de perfil diferido para evitar deadlocks
-            if (newSession?.user && event === 'SIGNED_IN') {
-              setTimeout(() => {
-                if (mounted) {
-                  fetchProfile(newSession.user.id);
-                }
-              }, 100);
-            } else if (!newSession?.user) {
-              setProfile(null);
-            }
-            
-            // Finalizar loading
-            if (mounted) {
-              setIsLoading(false);
-            }
-          }
-        );
-        
-        subscription = data.subscription;
-
-        // 2. Verificar sessão atual
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
-        if (mounted && currentSession?.user) {
-          setSession(currentSession);
-          setUser(currentSession.user);
-          
-          // Fetch diferido do perfil
-          setTimeout(() => {
-            if (mounted) {
-              fetchProfile(currentSession.user.id);
-            }
-          }, 100);
-        }
-        
-        // 3. Timeout de segurança reduzido
-        setTimeout(() => {
-          if (mounted) {
-            setIsLoading(false);
-          }
-        }, 4000); // 4 segundos máximo
-        
-      } catch (error) {
-        console.error('❌ [AUTH] Erro na inicialização:', error);
-        if (mounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    initAuth();
-    
-    return () => {
-      mounted = false;
-      subscription?.unsubscribe();
-    };
-  }, [fetchProfile]);
-
-  // Função para refetch de perfil
-  const refetchProfile = async (): Promise<void> => {
+  const refreshProfile = useCallback(async () => {
     if (user?.id) {
-      await fetchProfile(user.id);
+      await loadUserProfile(user.id);
     }
-  };
+  }, [user?.id, loadUserProfile]);
 
-  // Função de login
-  const signIn = async (email: string, password: string): Promise<{ error?: any }> => {
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
+  useEffect(() => {
+    // Configurar listener de mudanças de autenticação
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+
+        if (session?.user?.id) {
+          await loadUserProfile(session.user.id);
+        } else {
+          setProfile(null);
+        }
+
+        setLoading(false);
+      }
+    );
+
+    // Verificar sessão atual
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
       
-      if (error) {
-        return { error };
+      if (session?.user?.id) {
+        loadUserProfile(session.user.id);
       }
       
-      return { error: null };
-    } catch (error) {
-      return { error };
-    }
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [loadUserProfile]);
+
+  const signIn = async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
   };
 
-  // Função de logout
-  const signOut = async (): Promise<void> => {
-    try {
-      console.log('🚪 [AUTH] Fazendo logout');
-      
-      // Limpar cache
-      profileFetcher.clearCache();
-      
-      // Logout do Supabase
-      await supabase.auth.signOut({ scope: 'global' });
-      
-      // Limpar estado local
-      setSession(null);
-      setUser(null);
-      setProfile(null);
-      
-      // Redirecionar
-      window.location.href = '/login';
-    } catch (error) {
-      console.error('❌ [AUTH] Erro no logout:', error);
-      // Forçar limpeza mesmo com erro
-      window.location.href = '/login';
-    }
+  const signUp = async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signUp({ 
+      email, 
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/`
+      }
+    });
+    if (error) throw error;
   };
 
-  const contextValue: AuthContextType = {
-    session,
+  const signOut = async () => {
+    await supabase.auth.signOut();
+  };
+
+  const value: AuthContextType = {
     user,
     profile,
-    isLoading,
-    isAdmin,
-    isFormacao,
-    refetchProfile,
-    signOut,
+    session,
+    loading,
     signIn,
-    setProfile
+    signUp,
+    signOut,
+    refreshProfile,
   };
 
-  return (
-    <AuthContext.Provider value={contextValue}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-export const useAuth = (): AuthContextType => {
+export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
