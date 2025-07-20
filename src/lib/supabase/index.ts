@@ -32,7 +32,7 @@ export {
   createStoragePublicPolicy,
   incrementTopicViews,
   incrementTopicReplies,
-  deleteForumTopic,
-  deleteForumPost
+  deleteCommunityTopic,
+  deleteCommunityPost
   // Adicionar outras funções de RPC conforme necessário
 } from './rpc';
