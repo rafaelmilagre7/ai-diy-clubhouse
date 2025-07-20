@@ -32,237 +32,287 @@ const CommunityHome = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-aurora-50/30 to-aurora-100/20">
-      <div className="container mx-auto px-4 py-8 space-y-8">
+    <div className="relative min-h-screen overflow-hidden">
+      {/* Background com gradientes avançados */}
+      <div className="absolute inset-0 bg-gradient-to-br from-background via-aurora-50/40 to-viverblue-50/30"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--aurora-500)_0%,_transparent_50%)] opacity-10"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--viverblue-500)_0%,_transparent_50%)] opacity-5"></div>
+      
+      <div className="relative container mx-auto px-4 py-12 space-y-12">
         
-        {/* Header da Comunidade */}
-        <div className="text-center space-y-4">
-          <div className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-aurora-500/10 via-aurora-400/10 to-aurora-600/10 rounded-full border border-aurora-200/30">
-            <MessageSquare className="h-6 w-6 text-aurora-600" />
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-aurora-600 via-aurora-700 to-aurora-800 bg-clip-text text-transparent">
-              Comunidade VIVER DE IA
-            </h1>
-          </div>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Conecte-se com outros profissionais, compartilhe experiências e acelere sua jornada com Inteligência Artificial.
-          </p>
-        </div>
-
-        {/* Estatísticas da Comunidade */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="group hover:shadow-lg transition-all duration-300 border-aurora-200/30 hover:border-aurora-300/50 bg-gradient-to-br from-background to-aurora-50/20">
-            <CardContent className="p-6 text-center">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-r from-aurora-500/20 to-aurora-600/20 mb-4 group-hover:scale-110 transition-transform duration-300">
-                <MessageSquare className="h-6 w-6 text-aurora-600" />
-              </div>
-              <div className="text-2xl font-bold text-aurora-700 mb-1">
-                {statsLoading ? "..." : topicCount}
-              </div>
-              <div className="text-sm text-muted-foreground">Tópicos Ativos</div>
-            </CardContent>
-          </Card>
-
-          <Card className="group hover:shadow-lg transition-all duration-300 border-aurora-200/30 hover:border-aurora-300/50 bg-gradient-to-br from-background to-aurora-50/20">
-            <CardContent className="p-6 text-center">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-r from-aurora-500/20 to-aurora-600/20 mb-4 group-hover:scale-110 transition-transform duration-300">
-                <Users className="h-6 w-6 text-aurora-600" />
-              </div>
-              <div className="text-2xl font-bold text-aurora-700 mb-1">
-                {statsLoading ? "..." : activeUserCount}
-              </div>
-              <div className="text-sm text-muted-foreground">Membros Ativos</div>
-            </CardContent>
-          </Card>
-
-          <Card className="group hover:shadow-lg transition-all duration-300 border-aurora-200/30 hover:border-aurora-300/50 bg-gradient-to-br from-background to-aurora-50/20">
-            <CardContent className="p-6 text-center">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-r from-aurora-500/20 to-aurora-600/20 mb-4 group-hover:scale-110 transition-transform duration-300">
-                <TrendingUp className="h-6 w-6 text-aurora-600" />
-              </div>
-              <div className="text-2xl font-bold text-aurora-700 mb-1">
-                {statsLoading ? "..." : postCount}
-              </div>
-              <div className="text-sm text-muted-foreground">Discussões</div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Conteúdo Principal */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        {/* Hero Section Premium */}
+        <div className="text-center space-y-8">
+          {/* Glow effect backdrop */}
+          <div className="absolute left-1/2 top-20 -translate-x-1/2 w-96 h-96 bg-gradient-to-r from-aurora-500/20 to-viverblue-500/20 rounded-full blur-3xl opacity-30"></div>
           
-          {/* Área de Tópicos */}
-          <div className="lg:col-span-3">
-            <Card className="border-aurora-200/30 bg-gradient-to-br from-background to-aurora-50/10">
-              <CardHeader className="border-b border-aurora-200/20">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                  <div>
-                    <CardTitle className="text-aurora-800">Discussões da Comunidade</CardTitle>
-                    <CardDescription>Participe das conversas e compartilhe conhecimento</CardDescription>
+          <div className="relative">
+            {/* Badge de destaque */}
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-aurora-500/10 via-viverblue-500/10 to-aurora-600/10 rounded-full border border-aurora-200/40 backdrop-blur-sm mb-6">
+              <div className="w-2 h-2 rounded-full bg-gradient-to-r from-aurora-500 to-viverblue-500 animate-pulse"></div>
+              <span className="text-sm font-medium bg-gradient-to-r from-aurora-600 to-viverblue-600 bg-clip-text text-transparent">
+                Centro de Conhecimento IA
+              </span>
+            </div>
+            
+            {/* Título principal */}
+            <h1 className="text-5xl md:text-6xl font-bold leading-tight mb-6">
+              <span className="block bg-gradient-to-r from-aurora-600 via-viverblue-600 to-aurora-700 bg-clip-text text-transparent">
+                Comunidade
+              </span>
+              <span className="block text-3xl md:text-4xl font-semibold text-aurora-800 mt-2">
+                VIVER DE IA
+              </span>
+            </h1>
+            
+            {/* Subtitle */}
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed mb-8">
+              Conecte-se com uma rede exclusiva de profissionais de IA, compartilhe insights valiosos e acelere sua transformação digital.
+            </p>
+            
+            {/* CTA Button */}
+            <Link to="/comunidade/novo-topico/geral">
+              <Button size="lg" className="group relative bg-gradient-to-r from-aurora-500 to-viverblue-500 hover:from-aurora-600 hover:to-viverblue-600 text-white shadow-2xl hover:shadow-aurora-500/25 transition-all duration-500 px-8 py-4 text-lg font-semibold rounded-xl">
+                <div className="absolute inset-0 bg-gradient-to-r from-aurora-400 to-viverblue-400 rounded-xl blur opacity-30 group-hover:opacity-50 transition-opacity duration-500"></div>
+                <span className="relative flex items-center gap-3">
+                  <Plus className="h-5 w-5" />
+                  Iniciar Nova Discussão
+                </span>
+              </Button>
+            </Link>
+          </div>
+        </div>
+
+        {/* Estatísticas Premium com glassmorphism */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {[
+            { 
+              icon: MessageSquare, 
+              value: statsLoading ? "..." : topicCount, 
+              label: "Tópicos Ativos",
+              gradient: "from-aurora-500/20 to-aurora-600/20",
+              glow: "shadow-aurora-500/10"
+            },
+            { 
+              icon: Users, 
+              value: statsLoading ? "..." : activeUserCount, 
+              label: "Experts Conectados",
+              gradient: "from-viverblue-500/20 to-viverblue-600/20",
+              glow: "shadow-viverblue-500/10"
+            },
+            { 
+              icon: TrendingUp, 
+              value: statsLoading ? "..." : postCount, 
+              label: "Casos de Sucesso",
+              gradient: "from-aurora-500/20 to-viverblue-500/20",
+              glow: "shadow-aurora-500/10"
+            }
+          ].map((stat, index) => (
+            <div key={index} className="group relative">
+              {/* Glow effect */}
+              <div className={`absolute inset-0 bg-gradient-to-r ${stat.gradient} rounded-2xl blur opacity-20 group-hover:opacity-40 transition-all duration-500`}></div>
+              
+              <Card className={`relative h-full bg-card/60 backdrop-blur-xl border-aurora-200/30 hover:border-aurora-300/50 ${stat.glow} hover:shadow-2xl transition-all duration-500`}>
+                <CardContent className="p-8 text-center">
+                  <div className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-r ${stat.gradient} mb-6 group-hover:scale-110 transition-transform duration-500`}>
+                    <stat.icon className="h-8 w-8 text-aurora-600" />
+                  </div>
+                  <div className="text-4xl font-bold bg-gradient-to-r from-aurora-600 to-viverblue-600 bg-clip-text text-transparent mb-2">
+                    {stat.value}
+                  </div>
+                  <div className="text-base font-medium text-muted-foreground">{stat.label}</div>
+                </CardContent>
+              </Card>
+            </div>
+          ))}
+        </div>
+
+        {/* Layout Principal sem sidebar extra */}
+        <div className="max-w-6xl mx-auto">
+          <Card className="relative bg-card/60 backdrop-blur-xl border-aurora-200/30 overflow-hidden">
+            {/* Header premium */}
+            <div className="relative bg-gradient-to-r from-aurora-500/5 via-viverblue-500/5 to-aurora-600/5 border-b border-aurora-200/20">
+              <div className="absolute inset-0 bg-gradient-to-r from-aurora-500/10 to-viverblue-500/10 opacity-50"></div>
+              <CardHeader className="relative">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+                  <div className="space-y-2">
+                    <CardTitle className="text-2xl font-bold bg-gradient-to-r from-aurora-600 to-viverblue-600 bg-clip-text text-transparent">
+                      Discussões da Comunidade
+                    </CardTitle>
+                    <CardDescription className="text-base">
+                      Participe das conversas mais relevantes do mercado de IA
+                    </CardDescription>
                   </div>
                   <Link to="/comunidade/novo-topico/geral">
-                    <Button className="bg-gradient-to-r from-aurora-500 to-aurora-600 hover:from-aurora-600 hover:to-aurora-700 text-white shadow-lg hover:shadow-xl transition-all duration-300">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Novo Tópico
+                    <Button size="lg" className="group bg-gradient-to-r from-aurora-500 to-viverblue-500 hover:from-aurora-600 hover:to-viverblue-600 text-white shadow-xl hover:shadow-2xl transition-all duration-300 px-6 py-3 rounded-xl">
+                      <Plus className="h-5 w-5 mr-2 group-hover:rotate-90 transition-transform duration-300" />
+                      <span className="font-semibold">Novo Tópico</span>
                     </Button>
                   </Link>
                 </div>
               </CardHeader>
-              
-              <CardContent className="p-6">
-                {/* Busca e Filtros */}
-                <div className="flex flex-col sm:flex-row gap-4 mb-6">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                    <Input
-                      placeholder="Buscar discussões..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 border-aurora-200/50 focus:border-aurora-400 focus:ring-aurora-400/20"
-                    />
-                  </div>
-                  <div className="flex gap-2">
-                    {filters.map((filter) => (
-                      <Button
-                        key={filter.key}
-                        variant={selectedFilter === filter.key ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setSelectedFilter(filter.key)}
-                        className={selectedFilter === filter.key 
-                          ? "bg-gradient-to-r from-aurora-500 to-aurora-600 text-white" 
-                          : "border-aurora-200 text-aurora-700 hover:bg-aurora-50"
-                        }
-                      >
-                        <filter.icon className="h-4 w-4 mr-1" />
-                        {filter.label}
-                      </Button>
-                    ))}
+            </div>
+            
+            <CardContent className="p-8">
+              {/* Controles aprimorados */}
+              <div className="space-y-6 mb-8">
+                {/* Busca premium */}
+                <div className="relative max-w-2xl">
+                  <div className="absolute inset-0 bg-gradient-to-r from-aurora-500/20 to-viverblue-500/20 rounded-xl blur opacity-30"></div>
+                  <div className="relative bg-background/80 backdrop-blur-sm rounded-xl border border-aurora-200/50 p-1">
+                    <div className="relative">
+                      <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-aurora-500 h-5 w-5" />
+                      <Input
+                        placeholder="Buscar discussões, tópicos, especialistas..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-12 pr-4 py-3 text-lg bg-transparent border-0 focus:ring-2 focus:ring-aurora-400/20 rounded-lg"
+                      />
+                    </div>
                   </div>
                 </div>
 
-                {/* Tabs */}
-                <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "all" | "my-topics")}>
-                  <TabsList className="bg-aurora-50 border-aurora-200/50">
-                    <TabsTrigger value="all" className="data-[state=active]:bg-aurora-500 data-[state=active]:text-white">
-                      Todos os Tópicos
-                    </TabsTrigger>
-                    <TabsTrigger value="my-topics" className="data-[state=active]:bg-aurora-500 data-[state=active]:text-white">
-                      Meus Tópicos
-                    </TabsTrigger>
-                  </TabsList>
+                {/* Filtros modernos */}
+                <div className="flex flex-wrap gap-3">
+                  {filters.map((filter) => (
+                    <Button
+                      key={filter.key}
+                      variant={selectedFilter === filter.key ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setSelectedFilter(filter.key)}
+                      className={`group transition-all duration-300 ${
+                        selectedFilter === filter.key 
+                          ? "bg-gradient-to-r from-aurora-500 to-viverblue-500 text-white shadow-lg hover:shadow-xl border-0" 
+                          : "border-aurora-200/50 text-aurora-700 hover:bg-aurora-50/50 hover:border-aurora-300/50 hover:shadow-md"
+                      }`}
+                    >
+                      <filter.icon className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform duration-200" />
+                      <span className="font-medium">{filter.label}</span>
+                    </Button>
+                  ))}
+                </div>
+              </div>
 
-                  <TabsContent value="all" className="mt-6">
-                    {topicsLoading ? (
-                      <div className="text-center py-8">
-                        <div className="animate-spin w-8 h-8 border-2 border-aurora-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-                        <p className="text-muted-foreground">Carregando discussões...</p>
+              {/* Tabs refinadas */}
+              <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "all" | "my-topics")}>
+                <TabsList className="bg-aurora-50/50 border border-aurora-200/30 p-1 rounded-xl backdrop-blur-sm">
+                  <TabsTrigger 
+                    value="all" 
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-aurora-500 data-[state=active]:to-viverblue-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 rounded-lg px-6 py-2 font-medium"
+                  >
+                    Todos os Tópicos
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="my-topics" 
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-aurora-500 data-[state=active]:to-viverblue-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 rounded-lg px-6 py-2 font-medium"
+                  >
+                    Meus Tópicos
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="all" className="mt-8">
+                  {topicsLoading ? (
+                    <div className="text-center py-16">
+                      <div className="relative mx-auto w-12 h-12 mb-6">
+                        <div className="absolute inset-0 rounded-full bg-gradient-to-r from-aurora-500 to-viverblue-500 opacity-20"></div>
+                        <div className="animate-spin w-12 h-12 border-2 border-transparent border-t-aurora-500 border-r-viverblue-500 rounded-full"></div>
                       </div>
-                    ) : topics.length === 0 ? (
-                      <div className="text-center py-8">
-                        <MessageSquare className="w-16 h-16 text-aurora-300 mx-auto mb-4" />
-                        <p className="text-muted-foreground">Nenhuma discussão encontrada.</p>
+                      <p className="text-lg text-muted-foreground">Carregando discussões da comunidade...</p>
+                    </div>
+                  ) : topics.length === 0 ? (
+                    <div className="text-center py-16">
+                      <div className="relative mx-auto w-24 h-24 mb-6">
+                        <div className="absolute inset-0 rounded-full bg-gradient-to-r from-aurora-500/20 to-viverblue-500/20"></div>
+                        <MessageSquare className="w-24 h-24 text-aurora-300 mx-auto" />
                       </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {topics.map((topic) => (
-                          <Link key={topic.id} to={`/comunidade/topico/${topic.id}`}>
-                            <Card className="group hover:shadow-md transition-all duration-300 border-aurora-200/30 hover:border-aurora-300/50 cursor-pointer">
-                              <CardContent className="p-4">
-                                <div className="flex items-start justify-between">
-                                  <div className="flex-1">
-                                    <h3 className="font-semibold text-aurora-800 group-hover:text-aurora-600 transition-colors mb-2">
+                      <h3 className="text-xl font-semibold text-aurora-700 mb-2">Nenhuma discussão encontrada</h3>
+                      <p className="text-muted-foreground mb-6">Seja o primeiro a iniciar uma conversa!</p>
+                      <Link to="/comunidade/novo-topico/geral">
+                        <Button className="bg-gradient-to-r from-aurora-500 to-viverblue-500 text-white">
+                          <Plus className="h-4 w-4 mr-2" />
+                          Criar Primeiro Tópico
+                        </Button>
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="grid gap-6">
+                      {topics.map((topic, index) => (
+                        <Link key={topic.id} to={`/comunidade/topico/${topic.id}`}>
+                          <div className="group relative animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
+                            {/* Glow effect hover */}
+                            <div className="absolute inset-0 bg-gradient-to-r from-aurora-500/10 to-viverblue-500/10 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                            
+                            <Card className="relative bg-card/80 backdrop-blur-sm border-aurora-200/30 hover:border-aurora-300/50 hover:shadow-xl transition-all duration-500 cursor-pointer overflow-hidden">
+                              {/* Header gradient */}
+                              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-aurora-500 via-viverblue-500 to-aurora-600"></div>
+                              
+                              <CardContent className="p-6">
+                                <div className="flex items-start justify-between gap-4">
+                                  <div className="flex-1 space-y-3">
+                                    <h3 className="text-xl font-bold text-aurora-800 group-hover:text-aurora-600 transition-colors line-clamp-2">
                                       {topic.title}
                                     </h3>
-                                    <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                                    <p className="text-muted-foreground line-clamp-2 leading-relaxed">
                                       {topic.content}
                                     </p>
-                                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                                      <span className="flex items-center gap-1">
-                                        <Users className="h-3 w-3" />
-                                        {topic.profiles?.name || 'Usuário'}
-                                      </span>
-                                      <span className="flex items-center gap-1">
-                                        <MessageSquare className="h-3 w-3" />
-                                        {topic.reply_count || 0} respostas
-                                      </span>
+                                    
+                                    {/* Metadata com design premium */}
+                                    <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                                      <div className="flex items-center gap-2">
+                                        <div className="w-6 h-6 rounded-full bg-gradient-to-r from-aurora-400 to-viverblue-400 flex items-center justify-center text-white text-xs font-semibold">
+                                          {(topic.profiles?.name || 'U').charAt(0).toUpperCase()}
+                                        </div>
+                                        <span className="font-medium">{topic.profiles?.name || 'Usuário'}</span>
+                                      </div>
+                                      
+                                      <div className="flex items-center gap-1">
+                                        <MessageSquare className="h-4 w-4 text-aurora-500" />
+                                        <span>{topic.reply_count || 0} respostas</span>
+                                      </div>
+                                      
                                       <span>{new Date(topic.created_at).toLocaleDateString('pt-BR')}</span>
                                     </div>
                                   </div>
-                                  <div className="flex flex-col items-end gap-2">
+                                  
+                                  {/* Badges laterais */}
+                                  <div className="flex flex-col items-end gap-3">
                                     {topic.is_solved && (
-                                      <Badge className="bg-gradient-to-r from-green-500/20 to-green-600/20 text-green-700 border-green-300/50">
-                                        Resolvido
+                                      <Badge className="bg-gradient-to-r from-green-500/20 to-green-600/20 text-green-700 border-green-300/50 font-medium px-3 py-1">
+                                        ✓ Resolvido
                                       </Badge>
                                     )}
-                                    <Badge className="bg-gradient-to-r from-aurora-500/20 to-aurora-600/20 text-aurora-700 border-aurora-300/50">
+                                    <Badge className="bg-gradient-to-r from-aurora-500/20 to-viverblue-500/20 text-aurora-700 border-aurora-300/50 font-medium px-3 py-1">
                                       {topic.view_count || 0} visualizações
                                     </Badge>
                                   </div>
                                 </div>
                               </CardContent>
                             </Card>
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-                  </TabsContent>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
 
-                  <TabsContent value="my-topics" className="mt-6">
-                    <div className="text-center py-8">
-                      <MessageSquare className="w-16 h-16 text-aurora-300 mx-auto mb-4" />
-                      <p className="text-muted-foreground">Seus tópicos aparecerão aqui.</p>
+                <TabsContent value="my-topics" className="mt-8">
+                  <div className="text-center py-16">
+                    <div className="relative mx-auto w-24 h-24 mb-6">
+                      <div className="absolute inset-0 rounded-full bg-gradient-to-r from-aurora-500/20 to-viverblue-500/20"></div>
+                      <MessageSquare className="w-24 h-24 text-aurora-300 mx-auto" />
                     </div>
-                  </TabsContent>
-                </Tabs>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Categorias Populares */}
-            <Card className="border-aurora-200/30 bg-gradient-to-br from-background to-aurora-50/10">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg text-aurora-800">Categorias Populares</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {[
-                  { name: "Implementação de IA", count: 12, color: "aurora" },
-                  { name: "Ferramentas", count: 8, color: "blue" },
-                  { name: "Estratégia", count: 6, color: "green" },
-                  { name: "Automação", count: 4, color: "purple" }
-                ].map((category) => (
-                  <Link key={category.name} to={`/comunidade/categoria/${category.name.toLowerCase()}`}>
-                    <div className="flex items-center justify-between p-2 rounded-lg hover:bg-aurora-50/50 transition-colors cursor-pointer group">
-                      <span className="text-sm text-aurora-700 group-hover:text-aurora-600">{category.name}</span>
-                      <Badge variant="secondary" className="text-xs bg-aurora-100 text-aurora-600">
-                        {category.count}
-                      </Badge>
-                    </div>
-                  </Link>
-                ))}
-              </CardContent>
-            </Card>
-
-            {/* Membros Ativos */}
-            <Card className="border-aurora-200/30 bg-gradient-to-br from-background to-aurora-50/10">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg text-aurora-800">Membros Ativos</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {[1, 2, 3].map((member) => (
-                  <div key={member} className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-aurora-400 to-aurora-500 flex items-center justify-center text-white text-sm font-semibold">
-                      M{member}
-                    </div>
-                    <div className="flex-1">
-                      <div className="text-sm font-medium text-aurora-700">Membro {member}</div>
-                      <div className="text-xs text-muted-foreground">Online agora</div>
-                    </div>
+                    <h3 className="text-xl font-semibold text-aurora-700 mb-2">Seus tópicos aparecerão aqui</h3>
+                    <p className="text-muted-foreground mb-6">Comece compartilhando seu conhecimento com a comunidade</p>
+                    <Link to="/comunidade/novo-topico/geral">
+                      <Button className="bg-gradient-to-r from-aurora-500 to-viverblue-500 text-white">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Criar Meu Primeiro Tópico
+                      </Button>
+                    </Link>
                   </div>
-                ))}
-              </CardContent>
-            </Card>
-          </div>
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
