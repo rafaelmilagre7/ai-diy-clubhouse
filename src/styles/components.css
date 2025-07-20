@@ -68,7 +68,7 @@
 
 /* Topic item styling */
 .topic-item {
-  @apply community-card p-4 cursor-pointer;
+  @apply community-card p-4 cursor-pointer group;
 }
 
 .topic-item:hover {
