@@ -106,10 +106,11 @@ serve(async (req) => {
 
     // Se há usuários conectados, excluí-los da busca
     if (connectedUserIds.size > 0) {
-      query = query.not('id', 'in', `(${Array.from(connectedUserIds).map(id => `'${id}'`).join(',')})`);
+      const connectedIds = Array.from(connectedUserIds);
+      for (const connectedId of connectedIds) {
+        query = query.neq('id', connectedId);
+      }
     }
-
-    query = query.limit(maxMatches);
 
     // Aplicar filtros de indústria se especificados
     if (preferredIndustries.length > 0) {
@@ -118,8 +119,12 @@ serve(async (req) => {
 
     // Aplicar filtros de exclusão de setores
     if (excludedSectors.length > 0) {
-      query = query.not('industry', 'in', `(${excludedSectors.map(s => `'${s}'`).join(',')})`);
+      for (const sector of excludedSectors) {
+        query = query.neq('industry', sector);
+      }
     }
+
+    query = query.limit(maxMatches);
 
     const { data: potentialMatches, error: matchesError } = await query;
 
