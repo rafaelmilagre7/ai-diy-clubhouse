@@ -1,286 +1,219 @@
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+import { ForumHeader } from "@/components/community/ForumHeader";
+import { ForumLayout } from "@/components/community/ForumLayout";
+import { ForumStatistics } from "@/components/community/ForumStatistics";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Plus, MessageSquare, Eye, Calendar, CheckCircle2, Users, BookOpen } from "lucide-react";
 import { useForumStats } from "@/hooks/useForumStats";
-import { useForumTopics, TopicFilterType } from "@/hooks/community/useForumTopics";
+import { useForumTopics } from "@/hooks/useForumTopics";
+import { PlusCircle, MessageSquare, Users, TrendingUp, Clock, Pin } from "lucide-react";
+import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Skeleton } from "@/components/ui/skeleton";
 
-const CommunityHome = () => {
-  const { topicCount, postCount, activeUserCount, solvedCount, isLoading: statsLoading } = useForumStats();
-  const [activeTab, setActiveTab] = useState<"all" | "my-topics">("all");
-  const [selectedFilter, setSelectedFilter] = useState<TopicFilterType>("recentes");
-  const [searchQuery, setSearchQuery] = useState("");
+export const CommunityHome = () => {
+  const [showNewTopicDialog, setShowNewTopicDialog] = useState(false);
+  const { topicCount, postCount, activeUserCount, solvedCount } = useForumStats();
+  const { data: topics = [], isLoading } = useForumTopics();
 
-  const { topics, isLoading: topicsLoading, refetch } = useForumTopics({
-    activeTab,
-    selectedFilter,
-    searchQuery
-  });
-
-  const formatTimeAgo = (dateString: string) => {
-    try {
-      return formatDistanceToNow(new Date(dateString), {
-        addSuffix: true,
-        locale: ptBR
-      });
-    } catch {
-      return "Data inválida";
-    }
+  const handleNewTopicClick = () => {
+    setShowNewTopicDialog(true);
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-aurora-50 to-white">
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
-        {/* Header */}
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-aurora-900 mb-2">
-              Comunidade VIA Aurora
-            </h1>
-            <p className="text-aurora-600">
-              Conecte-se, compartilhe conhecimento e construa junto
-            </p>
+  const sidebar = (
+    <div className="space-y-6">
+      {/* Estatísticas Rápidas */}
+      <Card className="bg-gradient-to-br from-aurora/10 to-aurora-light/5 border-aurora/20">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-aurora" />
+            Estatísticas
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-muted-foreground">Tópicos</span>
+            <Badge variant="secondary" className="bg-aurora/10 text-aurora border-aurora/20">
+              {topicCount}
+            </Badge>
           </div>
-          <Button className="bg-aurora-600 hover:bg-aurora-700 text-white">
-            <Plus className="h-4 w-4 mr-2" />
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-muted-foreground">Posts</span>
+            <Badge variant="secondary" className="bg-aurora/10 text-aurora border-aurora/20">
+              {postCount}
+            </Badge>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-muted-foreground">Usuários Ativos</span>
+            <Badge variant="secondary" className="bg-aurora/10 text-aurora border-aurora/20">
+              {activeUserCount}
+            </Badge>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-muted-foreground">Resolvidos</span>
+            <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-500/20">
+              {solvedCount}
+            </Badge>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Ações Rápidas */}
+      <Card className="bg-gradient-to-br from-primary/5 to-accent/5 border-primary/10">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg">Ações Rápidas</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <Button 
+            onClick={handleNewTopicClick}
+            className="w-full bg-gradient-to-r from-aurora to-aurora-light hover:from-aurora-dark hover:to-aurora text-white shadow-lg hover:shadow-xl transition-all duration-200"
+          >
+            <PlusCircle className="h-4 w-4 mr-2" />
             Novo Tópico
           </Button>
-        </div>
+          <Button variant="outline" className="w-full border-aurora/20 hover:bg-aurora/5">
+            <Users className="h-4 w-4 mr-2" />
+            Ver Membros
+          </Button>
+        </CardContent>
+      </Card>
 
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="border-aurora-200 hover:shadow-lg transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-aurora-600 text-sm font-medium">Membros Ativos</p>
-                  {statsLoading ? (
-                    <Skeleton className="h-8 w-16 mt-1" />
-                  ) : (
-                    <p className="text-2xl font-bold text-aurora-900">{activeUserCount}</p>
-                  )}
-                </div>
-                <div className="h-12 w-12 bg-aurora-100 rounded-lg flex items-center justify-center">
-                  <Users className="h-6 w-6 text-aurora-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-aurora-200 hover:shadow-lg transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-aurora-600 text-sm font-medium">Tópicos Ativos</p>
-                  {statsLoading ? (
-                    <Skeleton className="h-8 w-16 mt-1" />
-                  ) : (
-                    <p className="text-2xl font-bold text-aurora-900">{topicCount}</p>
-                  )}
-                </div>
-                <div className="h-12 w-12 bg-aurora-100 rounded-lg flex items-center justify-center">
-                  <MessageSquare className="h-6 w-6 text-aurora-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-aurora-200 hover:shadow-lg transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-aurora-600 text-sm font-medium">Respostas</p>
-                  {statsLoading ? (
-                    <Skeleton className="h-8 w-16 mt-1" />
-                  ) : (
-                    <p className="text-2xl font-bold text-aurora-900">{postCount}</p>
-                  )}
-                </div>
-                <div className="h-12 w-12 bg-aurora-100 rounded-lg flex items-center justify-center">
-                  <BookOpen className="h-6 w-6 text-aurora-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-aurora-200 hover:shadow-lg transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-aurora-600 text-sm font-medium">Resolvidos</p>
-                  {statsLoading ? (
-                    <Skeleton className="h-8 w-16 mt-1" />
-                  ) : (
-                    <p className="text-2xl font-bold text-aurora-900">{solvedCount}</p>
-                  )}
-                </div>
-                <div className="h-12 w-12 bg-green-50 rounded-lg flex items-center justify-center">
-                  <CheckCircle2 className="h-6 w-6 text-green-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Forum Content */}
-        <Card className="border-aurora-200">
-          <CardHeader className="border-b border-aurora-100">
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-              <CardTitle className="text-xl text-aurora-900">Discussões</CardTitle>
-              
-              {/* Search and Filters */}
-              <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-                <div className="relative flex-1 lg:w-80">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-aurora-400 h-4 w-4" />
-                  <Input
-                    placeholder="Buscar discussões..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 border-aurora-200 focus:border-aurora-500"
-                  />
-                </div>
-                
-                <Select value={selectedFilter} onValueChange={(value) => setSelectedFilter(value as TopicFilterType)}>
-                  <SelectTrigger className="w-full sm:w-48 border-aurora-200">
-                    <SelectValue placeholder="Filtrar por..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="recentes">Mais Recentes</SelectItem>
-                    <SelectItem value="populares">Mais Populares</SelectItem>
-                    <SelectItem value="sem-respostas">Sem Respostas</SelectItem>
-                    <SelectItem value="resolvidos">Resolvidos</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </CardHeader>
-
-          <CardContent className="p-0">
-            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "all" | "my-topics")}>
-              <TabsList className="grid w-full grid-cols-2 bg-aurora-50 border-b border-aurora-100 rounded-none h-12">
-                <TabsTrigger 
-                  value="all" 
-                  className="data-[state=active]:bg-white data-[state=active]:text-aurora-900 data-[state=active]:border-b-2 data-[state=active]:border-aurora-600"
-                >
-                  Todas as Discussões
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="my-topics" 
-                  className="data-[state=active]:bg-white data-[state=active]:text-aurora-900 data-[state=active]:border-b-2 data-[state=active]:border-aurora-600"
-                >
-                  Minhas Discussões
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="all" className="mt-0">
-                <div className="divide-y divide-aurora-100">
-                  {topicsLoading ? (
-                    <div className="space-y-4 p-6">
-                      {[...Array(5)].map((_, i) => (
-                        <div key={i} className="flex items-start space-x-4">
-                          <Skeleton className="h-10 w-10 rounded-full" />
-                          <div className="space-y-2 flex-1">
-                            <Skeleton className="h-4 w-3/4" />
-                            <Skeleton className="h-3 w-1/2" />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : topics.length > 0 ? (
-                    topics.map((topic: any) => (
-                      <div key={topic.id} className="p-6 hover:bg-aurora-25 transition-colors cursor-pointer">
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex items-start space-x-4 flex-1">
-                            <Avatar className="h-10 w-10">
-                              <AvatarImage src={topic.profiles?.avatar_url} />
-                              <AvatarFallback className="bg-aurora-100 text-aurora-700">
-                                {topic.profiles?.name?.charAt(0) || "?"}
-                              </AvatarFallback>
-                            </Avatar>
-                            
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1">
-                                <h3 className="font-semibold text-aurora-900 hover:text-aurora-700 truncate">
-                                  {topic.title}
-                                </h3>
-                                {topic.is_solved && (
-                                  <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-100">
-                                    <CheckCircle2 className="h-3 w-3 mr-1" />
-                                    Resolvido
-                                  </Badge>
-                                )}
-                              </div>
-                              
-                              <p className="text-aurora-600 text-sm mb-2 line-clamp-2">
-                                {topic.content}
-                              </p>
-                              
-                              <div className="flex items-center gap-4 text-xs text-aurora-500">
-                                <span className="flex items-center gap-1">
-                                  <Calendar className="h-3 w-3" />
-                                  {formatTimeAgo(topic.created_at)}
-                                </span>
-                                <span className="flex items-center gap-1">
-                                  <MessageSquare className="h-3 w-3" />
-                                  {topic.reply_count || 0} respostas
-                                </span>
-                                <span className="flex items-center gap-1">
-                                  <Eye className="h-3 w-3" />
-                                  {topic.view_count || 0} visualizações
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="p-12 text-center">
-                      <MessageSquare className="h-12 w-12 text-aurora-300 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-aurora-900 mb-2">
-                        Nenhuma discussão encontrada
-                      </h3>
-                      <p className="text-aurora-600 mb-4">
-                        {searchQuery ? "Tente ajustar sua busca ou criar um novo tópico." : "Seja o primeiro a iniciar uma discussão!"}
-                      </p>
-                      <Button className="bg-aurora-600 hover:bg-aurora-700 text-white">
-                        <Plus className="h-4 w-4 mr-2" />
-                        Criar Primeiro Tópico
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </TabsContent>
-
-              <TabsContent value="my-topics" className="mt-0">
-                <div className="p-12 text-center">
-                  <MessageSquare className="h-12 w-12 text-aurora-300 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-aurora-900 mb-2">
-                    Suas discussões aparecerão aqui
-                  </h3>
-                  <p className="text-aurora-600 mb-4">
-                    Você ainda não criou nenhuma discussão.
-                  </p>
-                  <Button className="bg-aurora-600 hover:bg-aurora-700 text-white">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Criar Primeira Discussão
-                  </Button>
-                </div>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Regras da Comunidade */}
+      <Card className="bg-gradient-to-br from-muted/30 to-muted/10 border-muted/20">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg">Regras da Comunidade</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <div className="text-sm text-muted-foreground space-y-1">
+            <p>• Seja respeitoso com todos os membros</p>
+            <p>• Use títulos descritivos nos tópicos</p>
+            <p>• Pesquise antes de criar novos tópicos</p>
+            <p>• Compartilhe conhecimento e experiências</p>
+            <p>• Mantenha discussões construtivas</p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
-};
 
-export default CommunityHome;
+  return (
+    <ForumLayout sidebar={sidebar}>
+      <div className="space-y-6">
+        <ForumHeader 
+          title="Comunidade VIVER DE IA"
+          description="Compartilhe conhecimento, faça perguntas e conecte-se com outros membros da comunidade de Inteligência Artificial."
+          showNewTopicButton={true}
+          onNewTopicClick={handleNewTopicClick}
+        />
+
+        {/* Tópicos em Destaque */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold">Tópicos Recentes</h2>
+            <Button variant="outline" size="sm">
+              Ver Todos
+            </Button>
+          </div>
+
+          {isLoading ? (
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <Card key={i} className="animate-pulse">
+                  <CardContent className="p-6">
+                    <div className="space-y-3">
+                      <div className="h-4 bg-muted rounded w-3/4"></div>
+                      <div className="h-3 bg-muted rounded w-1/2"></div>
+                      <div className="flex gap-2">
+                        <div className="h-6 bg-muted rounded w-16"></div>
+                        <div className="h-6 bg-muted rounded w-20"></div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {topics.slice(0, 5).map((topic) => (
+                <Card key={topic.id} className="group hover:shadow-lg transition-all duration-200 hover:border-aurora/30 bg-gradient-to-r from-card via-card to-card/95">
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 space-y-2">
+                        <div className="flex items-center gap-2">
+                          {topic.is_pinned && (
+                            <Pin className="h-4 w-4 text-aurora" />
+                          )}
+                          <h3 className="font-semibold text-lg group-hover:text-aurora transition-colors">
+                            {topic.title}
+                          </h3>
+                        </div>
+                        
+                        <p className="text-muted-foreground line-clamp-2">
+                          {topic.content}
+                        </p>
+                        
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <MessageSquare className="h-4 w-4" />
+                            <span>{topic.reply_count || 0} respostas</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Clock className="h-4 w-4" />
+                            <span>
+                              {formatDistanceToNow(new Date(topic.created_at), {
+                                addSuffix: true,
+                                locale: ptBR
+                              })}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        <div className="flex gap-2">
+                          <Badge variant="secondary" className="bg-aurora/10 text-aurora border-aurora/20">
+                            {topic.category}
+                          </Badge>
+                          {topic.is_solved && (
+                            <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-500/20">
+                              Resolvido
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="ml-4 text-right">
+                        <div className="text-sm font-medium">{topic.author?.name}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {new Date(topic.created_at).toLocaleDateString('pt-BR')}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+          
+          {!isLoading && topics.length === 0 && (
+            <Card className="border-dashed border-2 border-muted">
+              <CardContent className="p-12 text-center">
+                <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <CardTitle className="mb-2">Nenhum tópico ainda</CardTitle>
+                <CardDescription className="mb-4">
+                  Seja o primeiro a iniciar uma discussão na comunidade!
+                </CardDescription>
+                <Button 
+                  onClick={handleNewTopicClick}
+                  className="bg-gradient-to-r from-aurora to-aurora-light hover:from-aurora-dark hover:to-aurora text-white"
+                >
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  Criar Primeiro Tópico
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </div>
+    </ForumLayout>
+  );
+};
