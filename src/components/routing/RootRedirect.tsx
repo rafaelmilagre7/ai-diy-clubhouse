@@ -15,7 +15,7 @@ const RootRedirect = () => {
     isLoading
   });
 
-  // Ainda carregando
+  // Ainda carregando - mostrar loading apenas por tempo limitado
   if (isLoading) {
     return <LoadingScreen message="Verificando sessão" showProgress />;
   }
@@ -26,9 +26,15 @@ const RootRedirect = () => {
     return <Navigate to="/login" replace />;
   }
 
+  // Usuário logado mas ainda sem perfil - aguardar um pouco mais
+  if (user && !profile) {
+    console.log("⏳ [ROOT-REDIRECT] Aguardando perfil...");
+    return <LoadingScreen message="Carregando seu perfil..." />;
+  }
+
   // Usuário logado tentando acessar login
-  if (location.pathname === '/login') {
-    const targetRoute = profile && getUserRoleName(profile) === 'formacao' 
+  if (location.pathname === '/login' && user && profile) {
+    const targetRoute = getUserRoleName(profile) === 'formacao' 
       ? '/formacao' 
       : '/dashboard';
     console.log("✅ [ROOT-REDIRECT] Usuário logado - redirecionando para", targetRoute);
@@ -36,15 +42,15 @@ const RootRedirect = () => {
   }
 
   // Redirecionamento padrão para root
-  if (location.pathname === '/') {
-    const targetRoute = profile && getUserRoleName(profile) === 'formacao' 
+  if (location.pathname === '/' && user && profile) {
+    const targetRoute = getUserRoleName(profile) === 'formacao' 
       ? '/formacao' 
       : '/dashboard';
     console.log("🔄 [ROOT-REDIRECT] Root redirect para", targetRoute);
     return <Navigate to={targetRoute} replace />;
   }
 
-  // Página não encontrada ou outras situações
+  // Fallback para dashboard
   return <Navigate to="/dashboard" replace />;
 };
 

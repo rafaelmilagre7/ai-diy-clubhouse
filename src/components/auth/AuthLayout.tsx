@@ -1,268 +1,151 @@
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
-import { toast } from "@/hooks/use-toast";
-import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import SignUpForm from "./SignUpForm";
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useAuth } from '@/contexts/auth';
+import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
+import { getUserRoleName } from '@/lib/supabase/types';
 
 const AuthLayout = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [searchParams] = useSearchParams();
+  const { signIn, user, profile, isLoading } = useAuth();
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isSigningIn, setIsSigningIn] = useState(false);
+  const [redirectHandled, setRedirectHandled] = useState(false);
 
-  // Verificar se há token de convite na URL para mostrar registro
+  // Redirecionamento controlado após login bem-sucedido
   useEffect(() => {
-    const token = searchParams.get('token');
-    if (token) {
-      setIsSignUp(true);
+    if (user && profile && !isLoading && !redirectHandled) {
+      console.log("✅ [AUTH-LAYOUT] Usuário logado, redirecionando...", {
+        user: user.email,
+        role: getUserRoleName(profile)
+      });
+      
+      setRedirectHandled(true);
+      
+      // Pequeno delay para garantir estabilidade
+      setTimeout(() => {
+        const targetRoute = getUserRoleName(profile) === 'formacao' ? '/formacao' : '/dashboard';
+        console.log("🔄 [AUTH-LAYOUT] Redirecionando para:", targetRoute);
+        navigate(targetRoute, { replace: true });
+      }, 100);
     }
-  }, [searchParams]);
+  }, [user, profile, isLoading, navigate, redirectHandled]);
 
-  // Verificar se usuário já está logado e redirecionar
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          setUser(session.user);
-          console.log("[AUTH-LAYOUT] Usuário já autenticado, redirecionando para /");
-          navigate('/', { replace: true });
-        }
-      } catch (error) {
-        console.error("[AUTH-LAYOUT] Erro ao verificar autenticação:", error);
-      } finally {
-        setIsCheckingAuth(false);
-      }
-    };
-
-    checkAuth();
-  }, [navigate]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!email || !password) {
-      toast({
-        title: "Campos obrigatórios",
-        description: "Por favor, preencha email e senha.",
-        variant: "destructive",
-      });
+      toast.error('Por favor, preencha todos os campos');
       return;
     }
-    
+
     try {
-      setIsLoading(true);
-      console.log("[AUTH-LAYOUT] Iniciando processo de login");
+      setIsSigningIn(true);
+      console.log('🔄 [AUTH-LAYOUT] Tentando fazer login:', email);
       
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
+      const { error } = await signIn(email, password);
       
       if (error) {
-        console.error("[AUTH-LAYOUT] Erro de autenticação:", error);
-        throw error;
+        console.error('❌ [AUTH-LAYOUT] Erro no login:', error.message);
+        toast.error('Erro no login', {
+          description: error.message === 'Invalid login credentials' 
+            ? 'Email ou senha incorretos' 
+            : error.message
+        });
+        return;
       }
+
+      console.log('✅ [AUTH-LAYOUT] Login realizado com sucesso');
+      toast.success('Login realizado com sucesso!');
       
-      if (data.user) {
-        console.log("[AUTH-LAYOUT] Login bem-sucedido:", data.user.email);
-        toast({
-          title: "Login realizado com sucesso",
-          description: "Redirecionando...",
-        });
-        
-        // Redirecionar para a raiz após login
-        console.log("[AUTH-LAYOUT] Redirecionando para /");
-        navigate('/', { replace: true });
-      }
-      
-    } catch (error: any) {
-      console.error("[AUTH-LAYOUT] Erro no processo de login:", error);
-      
-      // Tratar diferentes tipos de erro
-      if (error.message?.includes('Invalid login credentials')) {
-        toast({
-          title: "Credenciais inválidas",
-          description: "Email ou senha incorretos. Verifique e tente novamente.",
-          variant: "destructive",
-        });
-      } else if (error.message?.includes('Email not confirmed')) {
-        toast({
-          title: "Email não confirmado",
-          description: "Verifique sua caixa de entrada e confirme seu email.",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Erro de autenticação",
-          description: error.message || "Não foi possível fazer login. Tente novamente.",
-          variant: "destructive",
-        });
-      }
+    } catch (err) {
+      console.error('❌ [AUTH-LAYOUT] Erro inesperado:', err);
+      toast.error('Erro inesperado no login');
     } finally {
-      setIsLoading(false);
+      setIsSigningIn(false);
     }
   };
 
+  // Não mostrar formulário se usuário já está logado
+  if (user && profile) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black flex items-center justify-center p-4">
+        <div className="text-center text-white">
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#0ABAB5] mx-auto mb-4"></div>
+          <p>Redirecionando...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-b from-gray-900 to-black p-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -20 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-md"
-      >
-        {/* Logo */}
-        <div className="mb-8 text-center">
-          <img
-            src="https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif"
-            alt="VIVER DE IA Club"
-            className="mx-auto h-20 w-auto"
-          />
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-white mb-2">VIVER DE IA</h1>
+          <p className="text-gray-400">Acesse sua conta</p>
         </div>
 
-        {/* Título Principal */}
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-white mb-2">
-            Potencialize com IA
-          </h1>
-          <p className="text-gray-300 text-lg">
-            Transforme seu negócio com inteligência artificial
-          </p>
-        </div>
-
-        {/* Card de Login/Registro */}
-        <AnimatePresence mode="wait">
-          {!isSignUp ? (
-            <motion.div
-              key="login"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              className="bg-gray-800 border border-gray-700 rounded-lg shadow-xl p-6 mb-8"
-            >
-              <div className="text-center pb-4">
-                <h2 className="text-2xl text-white mb-2">
-                  Acesse sua conta
-                </h2>
-                <p className="text-gray-300">
-                  Entre para acessar suas soluções de IA exclusivas
-                </p>
-              </div>
-              
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-gray-200">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="seu@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    disabled={isLoading}
-                    required
-                    className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="password" className="text-gray-200">Senha</Label>
-                    <Button
-                      type="button"
-                      variant="link"
-                      onClick={() => console.log("[AUTH-LAYOUT] Reset password clicked")}
-                      className="text-xs text-blue-400 hover:text-blue-300 p-0 h-auto"
-                    >
-                      Esqueceu a senha?
-                    </Button>
+        <Tabs defaultValue="login" className="w-full">
+          <TabsList className="grid w-full grid-cols-1 bg-gray-800 border-gray-700">
+            <TabsTrigger value="login" className="text-white">Entrar</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="login">
+            <Card className="bg-gray-800 border-gray-700">
+              <CardHeader>
+                <CardTitle className="text-white">Bem-vindo de volta</CardTitle>
+                <CardDescription className="text-gray-400">
+                  Entre com suas credenciais para acessar o club
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <form onSubmit={handleSignIn} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email" className="text-white">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="seu@email.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                      disabled={isSigningIn}
+                      required
+                    />
                   </div>
-                  <div className="relative">
+                  <div className="space-y-2">
+                    <Label htmlFor="password" className="text-white">Senha</Label>
                     <Input
                       id="password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="********"
+                      type="password"
+                      placeholder="Sua senha"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      disabled={isLoading}
+                      className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                      disabled={isSigningIn}
                       required
-                      className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
                     />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-gray-400 hover:text-gray-300"
-                      onClick={() => setShowPassword(!showPassword)}
-                      disabled={isLoading}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </Button>
                   </div>
-                </div>
-
-                <Button 
-                  type="submit" 
-                  className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-semibold uppercase tracking-wide" 
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Entrando...
-                    </>
-                  ) : (
-                    "ENTRAR"
-                  )}
-                </Button>
-
-                {/* Botão para registro */}
-                <Button 
-                  type="button" 
-                  variant="ghost"
-                  className="w-full text-gray-300 hover:text-white"
-                  onClick={() => setIsSignUp(true)}
-                  disabled={isLoading}
-                >
-                  Não tenho conta - Criar conta
-                </Button>
-              </form>
-            </motion.div>
-          ) : (
-            <SignUpForm onBackToLogin={() => setIsSignUp(false)} />
-          )}
-        </AnimatePresence>
-
-        {/* Seção Inferior - Acesso Exclusivo */}
-        <div className="text-center bg-gray-800/50 border border-gray-700/50 rounded-lg p-4">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <span className="text-xl">🔒</span>
-            <span className="text-white font-semibold">
-              Acesso exclusivo para membros convidados
-            </span>
-          </div>
-          <p className="text-gray-400 text-sm">
-            Esta plataforma é restrita apenas para membros que receberam um convite oficial. 
-            Entre em contato conosco se precisar de acesso.
-          </p>
-        </div>
-      </motion.div>
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-[#0ABAB5] hover:bg-[#0ABAB5]/90 text-white"
+                    disabled={isSigningIn || isLoading}
+                  >
+                    {isSigningIn ? 'Entrando...' : 'Entrar'}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 };

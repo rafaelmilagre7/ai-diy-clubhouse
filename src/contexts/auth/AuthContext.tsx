@@ -42,6 +42,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const initializeAuth = useCallback(async () => {
     if (authInitialized) return;
     
+    console.log('🔄 [AUTH] Inicializando autenticação...');
+    
     try {
       setAuthInitialized(true);
       await setupAuthSession();
@@ -55,49 +57,64 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     initializeAuth();
   }, [initializeAuth]);
 
-  // Listener para mudanças de autenticação - executa apenas uma vez
+  // Listener para mudanças de autenticação - simplificado
   useEffect(() => {
+    console.log('🔧 [AUTH] Configurando listener de mudanças de auth');
+    
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (event === 'SIGNED_IN' && session) {
-          // Buscar perfil após login
-          try {
-            const { data: profileData, error } = await supabase
-              .from('profiles')
-              .select(`
-                *,
-                user_roles (
-                  id,
-                  name,
-                  description,
-                  permissions
-                )
-              `)
-              .eq('id', session.user.id)
-              .single();
+        console.log('🔔 [AUTH] Evento de auth:', event, session ? 'com sessão' : 'sem sessão');
+        
+        // Atualizar estados básicos
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (event === 'SIGNED_IN' && session?.user) {
+          console.log('✅ [AUTH] Usuário logado, buscando perfil...');
+          
+          // Buscar perfil após login - com delay para evitar conflitos
+          setTimeout(async () => {
+            try {
+              const { data: profileData, error } = await supabase
+                .from('profiles')
+                .select(`
+                  *,
+                  user_roles (
+                    id,
+                    name,
+                    description,
+                    permissions
+                  )
+                `)
+                .eq('id', session.user.id)
+                .single();
 
-            if (!error && profileData) {
-              setProfile(profileData);
+              if (!error && profileData) {
+                console.log('👤 [AUTH] Perfil carregado:', profileData.name);
+                setProfile(profileData);
+              } else {
+                console.warn('⚠️ [AUTH] Erro ao buscar perfil:', error);
+              }
+            } catch (error) {
+              console.error('❌ [AUTH] Erro ao buscar perfil:', error);
             }
-          } catch (error) {
-            console.error('❌ [AUTH] Erro ao buscar perfil:', error);
-          }
+          }, 100);
         }
 
         if (event === 'SIGNED_OUT') {
+          console.log('🚪 [AUTH] Usuário deslogado');
           setSession(null);
           setUser(null);
           setProfile(null);
           setAuthInitialized(false);
         }
-
-        // Atualizar estados básicos
-        setSession(session);
-        setUser(session?.user ?? null);
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      console.log('🧹 [AUTH] Limpando listener de auth');
+      subscription.unsubscribe();
+    };
   }, []);
 
   const contextValue: AuthContextType = useMemo(() => ({
