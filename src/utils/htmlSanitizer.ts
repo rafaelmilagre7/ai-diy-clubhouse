@@ -12,7 +12,7 @@ const createSafeHTMLConfig = {
   ],
   ALLOWED_ATTR: [
     'href', 'target', 'rel', 'class', 'style',
-    'src', 'alt', 'loading', 'onclick', 'onerror'
+    'src', 'alt', 'loading', 'data-image-src'
   ],
   ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|sms|cid|xmpp|blob):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
   ADD_ATTR: ['target'],
@@ -49,22 +49,17 @@ export const createSafeHTML = (htmlString: string) => {
   // Primeira passada: sanitização básica
   let cleanHTML = DOMPurify.sanitize(htmlString, createSafeHTMLConfig);
   
-  // Segunda passada: tratar eventos inline de forma mais segura
-  cleanHTML = cleanHTML
-    // Remover eventos inline perigosos
-    .replace(/on\w+="[^"]*"/gi, '')
-    .replace(/on\w+='[^']*'/gi, '')
-    // Adicionar abertura de imagem em nova aba de forma segura
-    .replace(/<img([^>]*?)>/gi, (match, attrs) => {
-      // Extrair src da imagem
-      const srcMatch = attrs.match(/src="([^"]*?)"/);
-      if (srcMatch && srcMatch[1]) {
-        const src = srcMatch[1];
-        // Adicionar click handler seguro via data attribute
-        return `<img${attrs} data-image-src="${src}" style="cursor: pointer;">`;
-      }
-      return match;
-    });
+  // Segunda passada: processar imagens de forma mais segura
+  cleanHTML = cleanHTML.replace(/<img([^>]*?)>/gi, (match, attrs) => {
+    // Extrair src da imagem
+    const srcMatch = attrs.match(/src="([^"]*?)"/);
+    if (srcMatch && srcMatch[1]) {
+      const src = srcMatch[1];
+      // Gerar tag limpa sem eventos inline
+      return `<img${attrs} data-image-src="${src}" style="cursor: pointer;">`;
+    }
+    return match;
+  });
   
   console.log('🧹 HTML sanitizado:', cleanHTML);
   
@@ -158,6 +153,8 @@ export const initializeImageViewer = () => {
   
   // Adicionar novo listener
   document.addEventListener('click', handleImageClick);
+  
+  console.log('🖼️ Visualizador de imagens inicializado');
 };
 
 const handleImageClick = (event: Event) => {
@@ -167,7 +164,29 @@ const handleImageClick = (event: Event) => {
     event.preventDefault();
     const src = target.getAttribute('data-image-src');
     if (src) {
+      console.log('🖼️ Abrindo imagem:', src);
       window.open(src, '_blank');
     }
   }
+};
+
+/**
+ * Adicionar tratamento de erro para imagens quebradas
+ */
+export const initializeImageErrorHandling = () => {
+  document.addEventListener('error', (event: Event) => {
+    const target = event.target as HTMLImageElement;
+    
+    if (target.tagName === 'IMG') {
+      console.warn('⚠️ Erro ao carregar imagem:', target.src);
+      
+      // Adicionar classe de erro visual
+      target.style.border = '2px dashed #ccc';
+      target.style.padding = '20px';
+      target.style.backgroundColor = '#f9f9f9';
+      target.alt = 'Imagem não pôde ser carregada';
+    }
+  }, true);
+  
+  console.log('🛡️ Tratamento de erro de imagens inicializado');
 };
