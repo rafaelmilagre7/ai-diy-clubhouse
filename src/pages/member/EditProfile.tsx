@@ -4,10 +4,9 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
-import { FileUpload } from "@/components/ui/file-upload";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ProfileImageUpload } from "@/components/profile/ProfileImageUpload";
 
 const EditProfile = () => {
   const { profile, user, setProfile } = useAuth();
@@ -25,42 +24,12 @@ const EditProfile = () => {
     }
   }, [profile]);
 
-  // Função para validar a URL da imagem
-  const isValidImageUrl = (url: string | undefined | null): boolean => {
-    if (!url) return false;
-    return url.startsWith('http://') || url.startsWith('https://');
-  };
-
-  // Verificar se a URL da imagem é válida
-  const validAvatarUrl = isValidImageUrl(avatarUrl) ? avatarUrl : undefined;
-
-  const getInitials = (name: string | null) => {
-    if (!name) return "U";
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .substring(0, 2);
-  };
-
-  const handleProfileImageUpload = async (filePath: string, fileName: string, fileSize: number) => {
-    try {
-      if (!user) return;
-
-      setAvatarUrl(filePath);
-      toast({
-        title: "Imagem de perfil atualizada",
-        description: "Sua imagem de perfil foi alterada. Clique em Salvar Alterações para confirmar.",
-      });
-    } catch (error) {
-      console.error("Erro ao atualizar imagem de perfil:", error);
-      toast({
-        title: "Erro ao atualizar imagem",
-        description: "Não foi possível atualizar sua imagem de perfil.",
-        variant: "destructive",
-      });
-    }
+  const handleImageUpdate = (newImageUrl: string) => {
+    setAvatarUrl(newImageUrl);
+    toast({
+      title: "Imagem atualizada",
+      description: "Sua imagem de perfil foi alterada. Clique em Salvar para confirmar.",
+    });
   };
 
   const handleUpdateProfile = async () => {
@@ -70,8 +39,8 @@ const EditProfile = () => {
       setIsLoading(true);
 
       const updateData = {
-        name: name,
-        avatar_url: avatarUrl
+        name: name.trim(),
+        avatar_url: avatarUrl || null
       };
 
       const { data, error } = await supabase
@@ -90,7 +59,7 @@ const EditProfile = () => {
 
       toast({
         title: "Perfil atualizado",
-        description: "Suas informações de perfil foram atualizadas com sucesso.",
+        description: "Suas informações foram atualizadas com sucesso.",
       });
 
       navigate("/profile");
@@ -107,38 +76,34 @@ const EditProfile = () => {
   };
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto p-6 max-w-4xl">
       <h1 className="text-3xl font-bold mb-6">Editar Perfil</h1>
 
-      <div className="grid md:grid-cols-3 gap-6">
+      <div className="grid md:grid-cols-3 gap-8">
         {/* Imagem de Perfil */}
-        <div className="md:col-span-1 flex flex-col items-center">
-          <Avatar className="w-40 h-40 mb-4">
-            <AvatarImage src={validAvatarUrl} />
-            <AvatarFallback>{getInitials(name)}</AvatarFallback>
-          </Avatar>
-          <FileUpload
-            bucketName="profile_images"
-            folder={user?.id}
-            onUploadComplete={handleProfileImageUpload}
-            accept="image/*"
-            maxSize={5}
-            buttonText="Alterar Foto"
-            fieldLabel="Selecione uma imagem de perfil"
+        <div className="md:col-span-1">
+          <ProfileImageUpload
+            currentImageUrl={avatarUrl}
+            userName={name}
+            userId={user?.id}
+            onImageUpdate={handleImageUpdate}
+            disabled={isLoading}
           />
         </div>
 
         {/* Formulário de Edição */}
-        <div className="md:col-span-2 space-y-4">
+        <div className="md:col-span-2 space-y-6">
           <div>
             <label htmlFor="name" className="block mb-2 text-sm font-medium">
-              Nome
+              Nome Completo
             </label>
             <Input
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Digite seu nome"
+              placeholder="Digite seu nome completo"
+              maxLength={100}
+              disabled={isLoading}
             />
           </div>
 
@@ -151,20 +116,25 @@ const EditProfile = () => {
               value={profile?.email || ""}
               disabled
               placeholder="Email não pode ser alterado"
+              className="bg-muted cursor-not-allowed"
             />
+            <p className="text-xs text-muted-foreground mt-1">
+              Para alterar o email, entre em contato com o suporte
+            </p>
           </div>
 
-          <div className="flex space-x-4 mt-6">
+          <div className="flex space-x-4 pt-4">
             <Button 
-              variant="default" 
               onClick={handleUpdateProfile} 
-              disabled={isLoading}
+              disabled={isLoading || !name.trim()}
+              className="min-w-[140px]"
             >
               {isLoading ? "Salvando..." : "Salvar Alterações"}
             </Button>
             <Button 
               variant="outline" 
               onClick={() => navigate("/profile")}
+              disabled={isLoading}
             >
               Cancelar
             </Button>

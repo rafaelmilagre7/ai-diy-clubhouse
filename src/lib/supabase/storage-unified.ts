@@ -1,83 +1,86 @@
-import { supabase } from "./client";
-import { STORAGE_BUCKETS } from "./config";
+import { supabase } from './client';
+import { MAX_UPLOAD_SIZES, STORAGE_BUCKETS } from './config';
 
-/**
- * Configuração unificada de buckets de storage
- */
+// Configurações de buckets unificados
 export const BUCKET_CONFIGS = {
+  // Buckets para o LMS
   [STORAGE_BUCKETS.LEARNING_MATERIALS]: {
-    maxSize: 200 * 1024 * 1024, // 200MB
-    allowedTypes: ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'text/plain', 'image/jpeg', 'image/png', 'image/webp'],
-    folder: 'materials'
+    maxSize: MAX_UPLOAD_SIZES.DOCUMENT,
+    allowedTypes: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'],
+    description: 'Materiais de aprendizado'
   },
   [STORAGE_BUCKETS.COURSE_IMAGES]: {
-    maxSize: 5 * 1024 * 1024, // 5MB
+    maxSize: MAX_UPLOAD_SIZES.IMAGE,
     allowedTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
-    folder: 'images'
+    description: 'Imagens de cursos'
   },
   [STORAGE_BUCKETS.LEARNING_VIDEOS]: {
-    maxSize: 300 * 1024 * 1024, // 300MB
-    allowedTypes: ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime'],
-    folder: 'videos'
+    maxSize: MAX_UPLOAD_SIZES.VIDEO,
+    allowedTypes: ['video/mp4', 'video/webm', 'video/quicktime'],
+    description: 'Vídeos de aprendizado'
   },
   [STORAGE_BUCKETS.SOLUTION_FILES]: {
-    maxSize: 50 * 1024 * 1024, // 50MB
-    allowedTypes: ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'text/plain', 'image/jpeg', 'image/png', 'image/webp'],
-    folder: 'files'
+    maxSize: MAX_UPLOAD_SIZES.DOCUMENT,
+    allowedTypes: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain', 'application/zip'],
+    description: 'Arquivos de soluções'
   },
+  
+  // Bucket para imagens de perfil
+  'profile-pictures': {
+    maxSize: MAX_UPLOAD_SIZES.AVATAR,
+    allowedTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
+    description: 'Imagens de perfil dos usuários'
+  },
+  
+  // Bucket de fallback
   [STORAGE_BUCKETS.FALLBACK]: {
-    maxSize: 100 * 1024 * 1024, // 100MB
-    allowedTypes: null, // Aceita qualquer tipo
-    folder: 'general'
+    maxSize: MAX_UPLOAD_SIZES.DOCUMENT,
+    allowedTypes: ['*'],
+    description: 'Storage geral para emergências'
   }
-} as const;
+};
 
-/**
- * Valida um arquivo contra as configurações do bucket
- */
-export const validateFileForBucket = (file: File, bucketName: string): { valid: boolean; error?: string } => {
-  const config = BUCKET_CONFIGS[bucketName as keyof typeof BUCKET_CONFIGS];
+export const validateFileForBucket = (file: File, bucketName: string) => {
+  const config = BUCKET_CONFIGS[bucketName];
   
   if (!config) {
-    return { valid: false, error: `Bucket ${bucketName} não reconhecido` };
+    return {
+      valid: false,
+      error: `Bucket ${bucketName} não está configurado no sistema`
+    };
   }
-
+  
   // Verificar tamanho
-  if (file.size > config.maxSize) {
-    const maxSizeMB = config.maxSize / (1024 * 1024);
-    return { valid: false, error: `Arquivo muito grande. Máximo: ${maxSizeMB}MB` };
+  const maxSizeBytes = config.maxSize * 1024 * 1024;
+  if (file.size > maxSizeBytes) {
+    return {
+      valid: false,
+      error: `Arquivo muito grande. Máximo permitido: ${config.maxSize}MB`
+    };
   }
-
-  // Verificar tipo MIME
-  if (config.allowedTypes && !config.allowedTypes.includes(file.type)) {
-    return { valid: false, error: `Tipo de arquivo não permitido: ${file.type}` };
+  
+  // Verificar tipo
+  if (config.allowedTypes[0] !== '*' && !config.allowedTypes.includes(file.type)) {
+    return {
+      valid: false,
+      error: `Tipo de arquivo não permitido. Tipos aceitos: ${config.allowedTypes.join(', ')}`
+    };
   }
-
-  // Verificar extensões perigosas
-  const dangerousExtensions = /\.(exe|bat|cmd|scr|com|pif|jar|war)$/i;
-  if (dangerousExtensions.test(file.name)) {
-    return { valid: false, error: 'Tipo de arquivo executável não permitido' };
-  }
-
+  
   return { valid: true };
 };
 
-/**
- * Verifica se um bucket existe e está acessível
- */
 export const checkBucketExists = async (bucketName: string): Promise<boolean> => {
   try {
-    const { data, error } = await supabase.storage.getBucket(bucketName);
-    return !error && !!data;
+    const { data: buckets, error } = await supabase.storage.listBuckets();
+    if (error) throw error;
+    return buckets?.some(bucket => bucket.name === bucketName) || false;
   } catch (error) {
-    console.warn(`Erro ao verificar bucket ${bucketName}:`, error);
+    console.error(`[STORAGE] Erro ao verificar bucket ${bucketName}:`, error);
     return false;
   }
 };
 
-/**
- * Upload unificado com fallback automático
- */
 export const uploadFileUnified = async (
   file: File,
   bucketName: string,
@@ -87,127 +90,85 @@ export const uploadFileUnified = async (
   // Validar arquivo
   const validation = validateFileForBucket(file, bucketName);
   if (!validation.valid) {
-    throw new Error(validation.error || 'Arquivo inválido');
+    throw new Error(validation.error);
   }
-
-  onProgress?.(5);
-
-  // Gerar nome único
-  const fileExt = file.name.split('.').pop();
-  const uniqueFileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-  const config = BUCKET_CONFIGS[bucketName as keyof typeof BUCKET_CONFIGS];
-  const basePath = folder || config?.folder || '';
-  const filePath = basePath ? `${basePath}/${uniqueFileName}` : uniqueFileName;
-
+  
   onProgress?.(10);
-
-  try {
-    // Tentativa principal
-    const { data, error } = await supabase.storage
-      .from(bucketName)
-      .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: true,
-      });
-
-    if (data && !error) {
-      onProgress?.(80);
-      
-      const { data: publicUrlData } = supabase.storage
-        .from(bucketName)
-        .getPublicUrl(data.path);
-
-      onProgress?.(100);
-      
-      return {
-        publicUrl: publicUrlData.publicUrl,
-        path: data.path
-      };
-    }
-
-    // Se falhou, tentar fallback
-    console.warn(`Upload principal falhou para ${bucketName}, tentando fallback:`, error);
-    onProgress?.(30);
-
-    const fallbackPath = `fallback/${bucketName}/${filePath}`;
-    const { data: fallbackData, error: fallbackError } = await supabase.storage
-      .from(STORAGE_BUCKETS.FALLBACK)
-      .upload(fallbackPath, file, {
-        cacheControl: '3600',
-        upsert: true,
-      });
-
-    if (fallbackError || !fallbackData) {
-      throw new Error(fallbackError?.message || 'Falha no upload com fallback');
-    }
-
-    onProgress?.(80);
+  
+  // Verificar se bucket existe
+  const bucketExists = await checkBucketExists(bucketName);
+  if (!bucketExists) {
+    // Tentar criar bucket se não existir
+    const { error: createError } = await supabase.storage.createBucket(bucketName, {
+      public: true,
+      fileSizeLimit: BUCKET_CONFIGS[bucketName].maxSize * 1024 * 1024,
+      allowedMimeTypes: BUCKET_CONFIGS[bucketName].allowedTypes.filter(type => type !== '*')
+    });
     
-    const { data: fallbackUrlData } = supabase.storage
-      .from(STORAGE_BUCKETS.FALLBACK)
-      .getPublicUrl(fallbackData.path);
+    if (createError) {
+      throw new Error(`Erro ao criar bucket: ${createError.message}`);
+    }
+  }
+  
+  onProgress?.(30);
+  
+  // Gerar nome único para o arquivo
+  const timestamp = Date.now();
+  const randomId = Math.random().toString(36).substring(2);
+  const fileExtension = file.name.split('.').pop() || '';
+  const fileName = `${timestamp}-${randomId}.${fileExtension}`;
+  const filePath = folder ? `${folder}/${fileName}` : fileName;
+  
+  onProgress?.(50);
+  
+  // Upload do arquivo
+  const { data, error } = await supabase.storage
+    .from(bucketName)
+    .upload(filePath, file, {
+      cacheControl: '3600',
+      upsert: true
+    });
+  
+  if (error) {
+    throw new Error(`Erro no upload: ${error.message}`);
+  }
+  
+  onProgress?.(80);
+  
+  // Obter URL pública
+  const { data: { publicUrl } } = supabase.storage
+    .from(bucketName)
+    .getPublicUrl(data.path);
+  
+  onProgress?.(100);
+  
+  return {
+    publicUrl,
+    path: data.path
+  };
+};
 
-    onProgress?.(100);
-    
-    return {
-      publicUrl: fallbackUrlData.publicUrl,
-      path: fallbackData.path
-    };
-
-  } catch (error) {
-    console.error('Erro no upload unificado:', error);
-    throw error instanceof Error ? error : new Error('Erro desconhecido no upload');
+export const removeFileUnified = async (bucketName: string, filePath: string): Promise<void> => {
+  const { error } = await supabase.storage
+    .from(bucketName)
+    .remove([filePath]);
+  
+  if (error) {
+    throw new Error(`Erro ao remover arquivo: ${error.message}`);
   }
 };
 
-/**
- * Remove um arquivo do storage
- */
-export const removeFileUnified = async (
-  bucketName: string,
-  filePath: string
-): Promise<boolean> => {
-  try {
-    const { error } = await supabase.storage
-      .from(bucketName)
-      .remove([filePath]);
-
-    if (error) {
-      console.warn(`Erro ao remover arquivo de ${bucketName}:`, error);
-      return false;
-    }
-
-    return true;
-  } catch (error) {
-    console.error('Erro ao remover arquivo:', error);
-    return false;
-  }
-};
-
-/**
- * Lista arquivos de um bucket/pasta
- */
 export const listFilesUnified = async (
-  bucketName: string,
-  folder?: string,
-  limit = 100
-) => {
-  try {
-    const { data, error } = await supabase.storage
-      .from(bucketName)
-      .list(folder, {
-        limit,
-        sortBy: { column: 'created_at', order: 'desc' }
-      });
-
-    if (error) {
-      console.error(`Erro ao listar arquivos de ${bucketName}:`, error);
-      return [];
-    }
-
-    return data || [];
-  } catch (error) {
-    console.error('Erro ao listar arquivos:', error);
-    return [];
+  bucketName: string, 
+  folder?: string
+): Promise<any[]> => {
+  const { data, error } = await supabase.storage
+    .from(bucketName)
+    .list(folder);
+  
+  if (error) {
+    throw new Error(`Erro ao listar arquivos: ${error.message}`);
   }
+  
+  return data || [];
 };
