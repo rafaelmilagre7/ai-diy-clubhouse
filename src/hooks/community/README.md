@@ -1,57 +1,76 @@
 
-# Community/Forum Module Structure
+# Community Module Structure
 
 ## Overview
-Estrutura unificada e otimizada para o módulo de comunidade/fórum.
+Estrutura unificada e otimizada para o módulo de comunidade.
 
 ## Hooks Principais
 
-### `useForumStats.ts`
-- **Query Key**: `forum-stats`
-- **Função**: Busca estatísticas consolidadas do fórum
+### `useCommunityStats.ts`
+- **Query Key**: `community-stats`
+- **Função**: Busca estatísticas consolidadas da comunidade
 - **Dados**: topicCount, postCount, activeUserCount, solvedCount
 
-### `useForumCategories.ts`
-- **Query Key**: `forum-categories`
-- **Função**: Busca categorias ativas do fórum
-- **Cache**: 5 minutos
+### `useCommunityCategories.ts`
+- **Query Key**: `community-categories`
+- **Função**: Busca categorias ativas da comunidade
+- **Cache**: 3 minutos
 
-### `useForumTopics.ts`
-- **Query Key**: `forum-topics`
+### `useCommunityTopics.ts`
+- **Query Key**: `community-topics`
 - **Função**: Busca tópicos com filtros e busca
-- **Cache**: 2 minutos
+- **Cache**: 3 minutos
 
 ### `useReporting.ts`
-- **Query Key**: `forum-reports`
+- **Query Key**: `community-reports`
 - **Função**: Sistema de relatórios e moderação
 
 ## Utilitários
 
 ### `utils/cacheUtils.ts`
 Centraliza todas as invalidações de cache para evitar inconsistências:
-- `invalidateAll()` - Invalida todas as queries do fórum
+- `invalidateAll()` - Invalida todas as queries da comunidade
 - `invalidateTopics()` - Invalida queries de tópicos
 - `invalidatePosts()` - Invalida queries de posts
 - `invalidateStats()` - Invalida apenas estatísticas
 
+### `utils/communityCacheUtils.ts`
+Utilidades específicas para cache da comunidade com nomenclatura padronizada.
+
 ## Query Keys Padronizadas
-- `forum-categories` - Categorias do fórum
-- `forum-topics` - Tópicos do fórum
-- `forum-posts` - Posts/respostas
-- `forum-stats` - Estatísticas consolidadas
-- `forum-reports` - Relatórios e moderação
-- `forum-community-stats` - Estatísticas da página community
+- `community-categories` - Categorias da comunidade
+- `community-topics` - Tópicos da comunidade
+- `community-posts` - Posts/respostas
+- `community-stats` - Estatísticas consolidadas
+- `community-reports` - Relatórios e moderação
 
 ## Cache Strategy
-- **Categories**: 5 minutos (dados estáticos)
-- **Topics**: 2 minutos (dados dinâmicos)
-- **Stats**: 10 minutos (dados pesados)
+- **Categories**: 3 minutos (dados semi-estáticos)
+- **Topics**: 3 minutos (dados dinâmicos)
+- **Stats**: 3 minutos (dados consolidados)
 - **Reports**: Padrão (dados administrativos)
 
 ## Melhorias Implementadas
-✅ Eliminação de hooks duplicados
-✅ Padronização de query keys
+✅ Eliminação de hooks duplicados (forum* → community*)
+✅ Padronização completa de query keys
 ✅ Cache inteligente e otimizado
 ✅ Invalidações centralizadas
 ✅ Performance melhorada
 ✅ Zero regressões funcionais
+✅ Nomenclatura 100% consistente
+
+## Estrutura Final
+```
+src/hooks/community/
+├── index.ts                    # Exportações centralizadas
+├── useCommunityCategories.ts   # Categorias
+├── useCommunityTopics.ts       # Tópicos
+├── useCommunityStats.ts        # Estatísticas
+├── useReporting.ts             # Relatórios
+├── usePostItem.ts              # Item de post
+├── useDeleteConfirmation.ts    # Confirmação de exclusão
+├── useTopicSolution.ts         # Soluções de tópicos
+└── utils/
+    ├── cacheUtils.ts           # Cache utilities
+    └── communityCacheUtils.ts  # Community-specific cache
+```

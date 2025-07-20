@@ -2,68 +2,68 @@
 import { QueryClient } from "@tanstack/react-query";
 
 /**
- * Utility para centralizar invalidações de cache do fórum
+ * Utility para centralizar invalidações de cache da comunidade
  * Evita duplicação e inconsistências nas invalidações
  */
-export const createForumCacheUtils = (queryClient: QueryClient) => {
+export const createCommunityCacheUtils = (queryClient: QueryClient) => {
   return {
     /**
-     * Invalida todas as queries relacionadas ao fórum
+     * Invalida todas as queries relacionadas à comunidade
      */
     invalidateAll: () => {
-      queryClient.invalidateQueries({ queryKey: ['forum-categories'] });
-      queryClient.invalidateQueries({ queryKey: ['forum-topics'] });
-      queryClient.invalidateQueries({ queryKey: ['forum-posts'] });
-      queryClient.invalidateQueries({ queryKey: ['forum-stats'] });
-      queryClient.invalidateQueries({ queryKey: ['forum-reports'] });
+      queryClient.invalidateQueries({ queryKey: ['community-categories'] });
+      queryClient.invalidateQueries({ queryKey: ['community-topics'] });
+      queryClient.invalidateQueries({ queryKey: ['community-posts'] });
+      queryClient.invalidateQueries({ queryKey: ['community-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['community-reports'] });
     },
 
     /**
      * Invalida queries específicas de categorias
      */
     invalidateCategories: () => {
-      queryClient.invalidateQueries({ queryKey: ['forum-categories'] });
-      queryClient.invalidateQueries({ queryKey: ['forum-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['community-categories'] });
+      queryClient.invalidateQueries({ queryKey: ['community-stats'] });
     },
 
     /**
      * Invalida queries específicas de tópicos
      */
     invalidateTopics: () => {
-      queryClient.invalidateQueries({ queryKey: ['forum-topics'] });
-      queryClient.invalidateQueries({ queryKey: ['forum-stats'] });
-      queryClient.invalidateQueries({ queryKey: ['forum-categories'] });
+      queryClient.invalidateQueries({ queryKey: ['community-topics'] });
+      queryClient.invalidateQueries({ queryKey: ['community-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['community-categories'] });
     },
 
     /**
      * Invalida queries específicas de posts
      */
     invalidatePosts: () => {
-      queryClient.invalidateQueries({ queryKey: ['forum-posts'] });
-      queryClient.invalidateQueries({ queryKey: ['forum-topics'] });
-      queryClient.invalidateQueries({ queryKey: ['forum-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['community-posts'] });
+      queryClient.invalidateQueries({ queryKey: ['community-topics'] });
+      queryClient.invalidateQueries({ queryKey: ['community-stats'] });
     },
 
     /**
      * Invalida apenas estatísticas
      */
     invalidateStats: () => {
-      queryClient.invalidateQueries({ queryKey: ['forum-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['community-stats'] });
     },
 
     /**
      * Invalida queries relacionadas a relatórios/moderação
      */
     invalidateReports: () => {
-      queryClient.invalidateQueries({ queryKey: ['forum-reports'] });
+      queryClient.invalidateQueries({ queryKey: ['community-reports'] });
     }
   };
 };
 
 /**
- * Hook para usar as utilidades de cache do fórum
+ * Hook para usar as utilidades de cache da comunidade
  */
-export const useForumCache = () => {
+export const useCommunityCacheUtils = () => {
   const queryClient = new QueryClient();
-  return createForumCacheUtils(queryClient);
+  return createCommunityCacheUtils(queryClient);
 };
