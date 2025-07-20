@@ -7,8 +7,8 @@ import { CommunityFilters } from "@/components/community/CommunityFilters";
 import { CategoryTabs } from "@/components/community/CategoryTabs";
 import { CommunitySidebar } from "@/components/community/CommunitySidebar";
 import { UnifiedTopicList } from "@/components/community/UnifiedTopicList";
-import { useForumCategories } from "@/hooks/community/useForumCategories";
-import { useForumTopics } from "@/hooks/community/useForumTopics";
+import { useCommunityCategories } from "@/hooks/community/useCommunityCategories";
+import { useCommunityTopics } from "@/hooks/community/useCommunityTopics";
 import { CommunityFilterType } from "@/types/communityTypes";
 
 export default function CommunityHome() {
@@ -16,9 +16,9 @@ export default function CommunityHome() {
   const [selectedFilter, setSelectedFilter] = useState<CommunityFilterType>("recentes");
   const [activeTab, setActiveTab] = useState("todos");
 
-  const { categories, isLoading: categoriesLoading } = useForumCategories();
+  const { categories, isLoading: categoriesLoading } = useCommunityCategories();
   
-  const { topics, isLoading, error, refetch } = useForumTopics({
+  const { topics, isLoading, error, refetch } = useCommunityTopics({
     activeTab: "all",
     selectedFilter,
     searchQuery,

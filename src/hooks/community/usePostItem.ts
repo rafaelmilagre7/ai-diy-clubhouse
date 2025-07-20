@@ -4,10 +4,10 @@ import { useAuth } from '@/contexts/auth';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
-import { Post } from '@/types/forumTypes';
+import { CommunityPost } from '@/types/communityTypes';
 
 interface UsePostItemProps {
-  post: Post;
+  post: CommunityPost;
   topicId?: string;
   onSuccess?: () => void;
 }
@@ -49,9 +49,9 @@ export const usePostItem = ({ post, topicId, onSuccess }: UsePostItemProps) => {
       
       toast.success('Post marcado como solução!');
       
-      // Invalidar cache
-      queryClient.invalidateQueries({ queryKey: ['forumTopic', topicId] });
-      queryClient.invalidateQueries({ queryKey: ['forumPosts', topicId] });
+      // Invalidar cache da comunidade
+      queryClient.invalidateQueries({ queryKey: ['community-topics'] });
+      queryClient.invalidateQueries({ queryKey: ['community-posts', topicId] });
       
       if (onSuccess) onSuccess();
       
@@ -85,9 +85,9 @@ export const usePostItem = ({ post, topicId, onSuccess }: UsePostItemProps) => {
       
       toast.success('Solução removida!');
       
-      // Invalidar cache
-      queryClient.invalidateQueries({ queryKey: ['forumTopic', topicId] });
-      queryClient.invalidateQueries({ queryKey: ['forumPosts', topicId] });
+      // Invalidar cache da comunidade
+      queryClient.invalidateQueries({ queryKey: ['community-topics'] });
+      queryClient.invalidateQueries({ queryKey: ['community-posts', topicId] });
       
       if (onSuccess) onSuccess();
       
@@ -118,9 +118,9 @@ export const usePostItem = ({ post, topicId, onSuccess }: UsePostItemProps) => {
       
       toast.success('Post excluído com sucesso!');
       
-      // Invalidar cache
-      queryClient.invalidateQueries({ queryKey: ['forumTopic', topicId] });
-      queryClient.invalidateQueries({ queryKey: ['forumPosts', topicId] });
+      // Invalidar cache da comunidade
+      queryClient.invalidateQueries({ queryKey: ['community-topics'] });
+      queryClient.invalidateQueries({ queryKey: ['community-posts', topicId] });
       
       if (onSuccess) onSuccess();
       

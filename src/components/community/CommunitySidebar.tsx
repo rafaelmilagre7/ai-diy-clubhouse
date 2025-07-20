@@ -10,7 +10,7 @@ import { MessageSquare, Users, TrendingUp, Plus, Clock } from "lucide-react";
 
 export const CommunitySidebar = () => {
   const { data: categories } = useQuery({
-    queryKey: ['sidebarCategories'],
+    queryKey: ['community-sidebar-categories'],
     queryFn: async () => {
       const { data } = await supabase
         .from('forum_categories')
@@ -22,11 +22,12 @@ export const CommunitySidebar = () => {
         .order('order_index');
       
       return data || [];
-    }
+    },
+    staleTime: 1000 * 60 * 3 // 3 minutos
   });
 
   const { data: activeMembers } = useQuery({
-    queryKey: ['activeMembers'],
+    queryKey: ['community-active-members'],
     queryFn: async () => {
       const { data } = await supabase
         .from('profiles')
@@ -35,11 +36,12 @@ export const CommunitySidebar = () => {
         .limit(5);
       
       return data || [];
-    }
+    },
+    staleTime: 1000 * 60 * 3 // 3 minutos
   });
 
   const { data: recentActivity } = useQuery({
-    queryKey: ['recentActivity'],
+    queryKey: ['community-recent-activity'],
     queryFn: async () => {
       const { data } = await supabase
         .from('forum_topics')
@@ -48,7 +50,8 @@ export const CommunitySidebar = () => {
         .limit(3);
       
       return data || [];
-    }
+    },
+    staleTime: 1000 * 60 * 3 // 3 minutos
   });
 
   const categoryColors = {
