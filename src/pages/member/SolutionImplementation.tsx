@@ -135,14 +135,22 @@ const SolutionImplementation: React.FC = () => {
         });
       }}
     >
-      <div className="min-h-screen bg-gradient-to-br from-[#0A0B14] to-[#1A1E2E] text-white">
+      {/* Aurora Background */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-600/5 via-transparent to-blue-600/5" />
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}} />
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-cyan-500/5 rounded-full blur-2xl animate-pulse" style={{animationDelay: '4s'}} />
+      </div>
+
+      <div className="relative min-h-screen text-white">
         <div className="container mx-auto px-4 py-6">
           {/* Header */}
           <div className="mb-8">
             {/* Botão de voltar */}
             <Button
               variant="ghost"
-              className="text-gray-400 hover:text-white mb-6"
+              className="text-gray-400 hover:text-white mb-6 bg-white/5 hover:bg-white/10 backdrop-blur-sm border border-white/10 hover:border-white/20 transition-all duration-300"
               onClick={() => navigate("/solutions")}
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
@@ -150,22 +158,33 @@ const SolutionImplementation: React.FC = () => {
             </Button>
 
             {/* Título e informações da solução */}
-            <div className="bg-gradient-to-r from-[#151823]/90 to-[#1A1E2E]/90 backdrop-blur-sm border border-neutral-700/50 rounded-xl p-6 mb-6">
-              <div className="flex items-start justify-between">
+            <div className="relative bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 mb-6 group hover:bg-white/10 transition-all duration-500">
+              {/* Subtle dots pattern */}
+              <div className="absolute inset-0 opacity-5 pointer-events-none rounded-xl">
+                <div className="absolute inset-0 rounded-xl" style={{
+                  backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.3) 1px, transparent 0)',
+                  backgroundSize: '20px 20px'
+                }} />
+              </div>
+              
+              {/* Glow effect */}
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500/20 to-blue-500/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-1000"></div>
+              
+              <div className="relative flex items-start justify-between">
                 <div className="space-y-4">
                   <div>
-                    <h1 className="text-3xl font-bold text-white mb-3">
+                    <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-purple-200 to-blue-200 bg-clip-text text-transparent mb-3">
                       {solution.title}
                     </h1>
                   </div>
                   
                   <div className="flex items-center gap-4">
-                    <Badge variant="secondary" className="bg-viverblue/20 text-viverblue border-viverblue/30">
+                    <Badge variant="secondary" className="bg-purple-500/20 text-purple-200 border-purple-500/30 hover:bg-purple-500/30 transition-all duration-300">
                       {solution.category}
                     </Badge>
                     <DifficultyBadge difficulty={solution.difficulty} />
                     {solution.estimated_time && (
-                      <Badge variant="outline" className="text-gray-300 border-gray-600">
+                      <Badge variant="outline" className="text-blue-300 border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 transition-all duration-300">
                         {solution.estimated_time} min
                       </Badge>
                     )}
@@ -173,7 +192,7 @@ const SolutionImplementation: React.FC = () => {
                 </div>
                 
                 <div className="text-right">
-                  <div className="flex items-center gap-2 text-viverblue mb-2">
+                  <div className="flex items-center gap-2 text-purple-400 mb-2">
                     <Target className="h-5 w-5" />
                     <span className="font-medium">Implementação</span>
                   </div>
@@ -183,8 +202,19 @@ const SolutionImplementation: React.FC = () => {
           </div>
 
           {/* Wizard de implementação */}
-          <Card className="bg-[#151823]/80 backdrop-blur-sm border-neutral-700/50">
-            <CardContent className="p-8">
+          <Card className="relative bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl shadow-2xl group hover:bg-white/10 transition-all duration-500">
+            {/* Subtle dots pattern */}
+            <div className="absolute inset-0 opacity-5 pointer-events-none rounded-xl">
+              <div className="absolute inset-0 rounded-xl" style={{
+                backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.3) 1px, transparent 0)',
+                backgroundSize: '20px 20px'
+              }} />
+            </div>
+            
+            {/* Glow effect */}
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500/20 to-blue-500/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-1000"></div>
+            
+            <CardContent className="relative p-8">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <ImplementationTabsNavigation
                   activeTab={activeTab}

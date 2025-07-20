@@ -98,7 +98,9 @@ export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
   return (
     <div className="space-y-6 mt-8">
       <div>
-        <h3 className="text-lg font-semibold">Ferramentas Necessárias</h3>
+        <h3 className="text-lg font-semibold bg-gradient-to-r from-white via-purple-200 to-blue-200 bg-clip-text text-transparent">
+          Ferramentas Necessárias
+        </h3>
         <p className="text-muted-foreground mt-1">
           Para implementar esta solução, você precisará das seguintes ferramentas:
         </p>

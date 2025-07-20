@@ -24,14 +24,16 @@ export const ImplementationTabsNavigation = ({
   ];
 
   return (
-    <TabsList className="grid grid-cols-3 md:grid-cols-6 p-1 mb-4 bg-[#1A1E2E] overflow-x-auto scrollbar-hide">
+    <TabsList className="grid grid-cols-3 md:grid-cols-6 p-1 mb-4 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl overflow-x-auto scrollbar-hide">
       {tabs.map((tab) => (
         <TabsTrigger
           key={tab.id}
           value={tab.id}
           className={cn(
-            "flex items-center gap-2 py-2 px-3 transition-all duration-200 relative",
-            activeTab === tab.id ? "text-viverblue font-medium" : "text-neutral-400"
+            "flex items-center gap-2 py-2 px-3 transition-all duration-300 relative rounded-lg",
+            activeTab === tab.id 
+              ? "text-white font-medium bg-gradient-to-r from-purple-600/30 to-blue-600/30 border border-purple-500/30" 
+              : "text-neutral-400 hover:text-white hover:bg-white/5"
           )}
           onClick={() => setActiveTab(tab.id)}
         >
@@ -39,7 +41,7 @@ export const ImplementationTabsNavigation = ({
           <span className="hidden md:inline">{tab.label}</span>
           {activeTab === tab.id && (
             <motion.span
-              className="absolute -bottom-1 left-0 right-0 h-0.5 bg-viverblue after:animate-enter"
+              className="absolute -bottom-1 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full"
               layoutId="activeTabIndicator" 
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
             />
