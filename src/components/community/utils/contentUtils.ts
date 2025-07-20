@@ -1,79 +1,25 @@
 
-/**
- * Processa conteúdo de tópicos para exibição em prévias
- */
-
-/**
- * Cria uma prévia limpa do conteúdo removendo markdown, HTML e URLs feias
- */
-export const getContentPreview = (content: string, maxLength: number = 120): string => {
-  if (!content) return '';
+export const getContentPreview = (content: string, maxLength: number = 150) => {
+  if (!content) return "";
   
-  let processedContent = content;
+  // Remove HTML tags se houver
+  const plainText = content.replace(/<[^>]*>/g, '');
   
-  // Remove sintaxe markdown de imagens ![alt](url)
-  processedContent = processedContent.replace(/!\[([^\]]*)\]\([^)]+\)/g, '');
-  
-  // Remove URLs específicas do Supabase Storage (mais específico)
-  processedContent = processedContent.replace(/https:\/\/zotzvtepvpnkcoobdubt\.supabase\.co\/storage\/v1\/object\/public\/[^\s\)]+/g, '');
-  
-  // Remove URLs de storage/CDN que começam com https://
-  processedContent = processedContent.replace(/https:\/\/[^\s]+\.(webp|jpg|jpeg|png|gif|pdf|doc|docx)/gi, '');
-  
-  // Remove outros URLs longos do Supabase
-  processedContent = processedContent.replace(/https:\/\/[a-zA-Z0-9\-\.]+\.supabase\.co\/[^\s\)]+/g, '');
-  
-  // Remove URLs genéricos longos
-  processedContent = processedContent.replace(/https?:\/\/[^\s]{50,}/g, '');
-  
-  // Remove qualquer HTML/markdown restante
-  processedContent = processedContent.replace(/<[^>]*>/g, '');
-  processedContent = processedContent.replace(/\*\*([^*]+)\*\*/g, '$1'); // Bold
-  processedContent = processedContent.replace(/\*([^*]+)\*/g, '$1'); // Italic
-  processedContent = processedContent.replace(/`([^`]+)`/g, '$1'); // Code
-  
-  // Remove espaços extras e quebras de linha
-  processedContent = processedContent.replace(/\s+/g, ' ').trim();
-  
-  // Remove pontuações duplas que podem ter ficado após remoção de URLs
-  processedContent = processedContent.replace(/\.\s*\./g, '.');
-  processedContent = processedContent.replace(/\s+\./g, '.');
-  
-  // Remove linhas vazias ou com apenas espaços
-  processedContent = processedContent.replace(/^\s*$/gm, '');
-  
-  // Trunca o texto se necessário
-  if (processedContent.length > maxLength) {
-    processedContent = processedContent.substring(0, maxLength);
-    // Procura o último espaço para não cortar palavras
-    const lastSpace = processedContent.lastIndexOf(' ');
-    if (lastSpace > maxLength * 0.8) {
-      processedContent = processedContent.substring(0, lastSpace);
-    }
-    processedContent += '...';
+  if (plainText.length <= maxLength) {
+    return plainText;
   }
   
-  return processedContent;
+  return plainText.slice(0, maxLength).trim() + "...";
 };
 
-/**
- * Verifica se o conteúdo contém imagens
- */
-export const hasImages = (content: string): boolean => {
-  return /!\[([^\]]*)\]\([^)]+\)/.test(content);
+export const sanitizeContent = (content: string) => {
+  // Básica sanitização - remover scripts e tags perigosas
+  return content
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '');
 };
 
-/**
- * Extrai URLs de imagens do conteúdo markdown
- */
-export const extractImageUrls = (content: string): string[] => {
-  const imageRegex = /!\[([^\]]*)\]\(([^)]+)\)/g;
-  const urls: string[] = [];
-  let match;
-  
-  while ((match = imageRegex.exec(content)) !== null) {
-    urls.push(match[2]);
-  }
-  
-  return urls;
+export const formatContent = (content: string) => {
+  // Converter quebras de linha para <br>
+  return content.replace(/\n/g, '<br>');
 };

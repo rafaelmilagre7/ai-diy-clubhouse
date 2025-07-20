@@ -1,54 +1,19 @@
 
-import { useState } from 'react';
-import { useModeration } from '@/hooks/admin/useModeration';
-
-type ReportType = 'spam' | 'inappropriate' | 'harassment' | 'misinformation' | 'other';
+import { useState } from "react";
+import { toast } from "sonner";
 
 export const useReporting = () => {
-  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
-  const [reportTarget, setReportTarget] = useState<{
-    type: 'topic' | 'post';
-    id: string;
-    userId?: string;
-  } | null>(null);
-  
-  const { createReport } = useModeration();
+  const [isOpen, setIsOpen] = useState(false);
 
-  const openReportModal = (type: 'topic' | 'post', id: string, userId?: string) => {
-    setReportTarget({ type, id, userId });
-    setIsReportModalOpen(true);
-  };
-
-  const closeReportModal = () => {
-    setIsReportModalOpen(false);
-    setReportTarget(null);
-  };
-
-  const submitReport = async (reportData: {
-    report_type: ReportType;
-    reason: string;
-    description?: string;
-  }) => {
-    if (!reportTarget) return;
-
-    const payload = {
-      ...reportData,
-      ...(reportTarget.type === 'topic' 
-        ? { topic_id: reportTarget.id } 
-        : { post_id: reportTarget.id }
-      ),
-      ...(reportTarget.userId && { reported_user_id: reportTarget.userId })
-    };
-
-    await createReport(payload);
-    closeReportModal();
+  const openReportModal = (type: "topic" | "post", itemId: string, userId: string) => {
+    // Por enquanto, apenas mostrar um toast
+    toast.info("Funcionalidade de reportar em desenvolvimento");
+    console.log("Report:", { type, itemId, userId });
   };
 
   return {
-    isReportModalOpen,
-    reportTarget,
-    openReportModal,
-    closeReportModal,
-    submitReport
+    isOpen,
+    setIsOpen,
+    openReportModal
   };
 };

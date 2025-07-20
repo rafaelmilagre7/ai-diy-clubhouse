@@ -6,9 +6,9 @@ import { Separator } from "@/components/ui/separator";
 import { TopicItem } from "./TopicItem";
 import { TopicListSkeleton } from "./TopicListSkeleton";
 import { TopicListError } from "./TopicListError";
-import { EmptyTopicList } from "./EmptyTopicList";
-import { TopicPagination } from "./TopicPagination";
-import { useTopicList } from "@/hooks/useTopicList";
+import { EmptyTopicsState } from "./EmptyTopicsState";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
 
 interface TopicListProps {
   categoryId: string;
@@ -16,28 +16,39 @@ interface TopicListProps {
 }
 
 export const TopicList = ({ categoryId, categorySlug }: TopicListProps) => {
-  const {
-    pinnedTopics,
-    regularTopics,
-    totalPages,
-    currentPage,
-    hasTopics,
-    isLoading,
-    error,
-    handleRetry,
-    handlePageChange
-  } = useTopicList({ categoryId });
+  const { data: topics, isLoading, error, refetch } = useQuery({
+    queryKey: ['categoryTopics', categoryId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('forum_topics')
+        .select(`
+          *,
+          profiles:user_id(name, avatar_url),
+          forum_categories:category_id(name, slug)
+        `)
+        .eq('category_id', categoryId)
+        .order('is_pinned', { ascending: false })
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
+  const pinnedTopics = topics?.filter(topic => topic.is_pinned) || [];
+  const regularTopics = topics?.filter(topic => !topic.is_pinned) || [];
+  const hasTopics = topics && topics.length > 0;
 
   if (isLoading) {
     return <TopicListSkeleton />;
   }
 
   if (error) {
-    return <TopicListError onRetry={handleRetry} />;
+    return <TopicListError onRetry={refetch} />;
   }
 
   if (!hasTopics) {
-    return <EmptyTopicList categorySlug={categorySlug} />;
+    return <EmptyTopicsState searchQuery="" />;
   }
 
   return (
@@ -75,12 +86,6 @@ export const TopicList = ({ categoryId, categorySlug }: TopicListProps) => {
           ))}
         </>
       )}
-
-      <TopicPagination 
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={handlePageChange}
-      />
     </div>
   );
 };
