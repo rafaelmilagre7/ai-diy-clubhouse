@@ -60,20 +60,22 @@ export const useOptimizedDashboardProgress = (solutions: Solution[] = []) => {
     }
   }, [user?.id]);
   
-  // Query React Query otimizada
+  // Query React Query super otimizada para evitar loops
   const { 
     data: progressData,
     isLoading,
     error
   } = useQuery({
-    queryKey: ['optimized-dashboard-progress', user?.id, solutionsHash],
+    queryKey: ['dashboard-progress', user?.id],
     queryFn: fetchProgress,
-    staleTime: 90 * 1000, // 90 segundos
-    gcTime: 5 * 60 * 1000, // 5 minutos
-    enabled: !!(user?.id && Array.isArray(solutions) && solutions.length > 0),
+    staleTime: 5 * 60 * 1000, // 5 minutos
+    gcTime: 10 * 60 * 1000, // 10 minutos
+    enabled: !!(user?.id),
     refetchOnWindowFocus: false,
-    refetchOnMount: 'always',
-    retry: 2
+    refetchOnMount: false, // Importante: não refetch no mount
+    refetchOnReconnect: false,
+    retry: 1,
+    retryDelay: 2000
   });
 
   // Processamento otimizado com memoização

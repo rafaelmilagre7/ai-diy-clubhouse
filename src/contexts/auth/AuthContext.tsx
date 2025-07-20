@@ -18,23 +18,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Estados derivados
-  const isAdmin = profile?.user_roles?.name === 'admin' || profile?.email?.includes('@viverdeia.ai') || false;
-  const isFormacao = profile?.user_roles?.name === 'formacao' || false;
+  // Estados derivados memoizados para evitar re-renders
+  const isAdmin = React.useMemo(() => 
+    profile?.user_roles?.name === 'admin' || profile?.email?.includes('@viverdeia.ai') || false, 
+    [profile?.user_roles?.name, profile?.email]
+  );
+  const isFormacao = React.useMemo(() => 
+    profile?.user_roles?.name === 'formacao' || false, 
+    [profile?.user_roles?.name]
+  );
 
-  // Cache para evitar fetches repetitivos
-  const profileCache = React.useRef<{[key: string]: {profile: UserProfile, timestamp: number}}>({});
+  // Flag para evitar fetches múltiplos
+  const fetchingProfile = React.useRef(false);
   
-  const fetchProfile = async (userId: string): Promise<void> => {
+  const fetchProfile = React.useCallback(async (userId: string): Promise<void> => {
+    // Evitar múltiplos fetches simultâneos
+    if (fetchingProfile.current) return;
+    
     try {
-      // Verificar cache (5 minutos)
-      const cached = profileCache.current[userId];
-      if (cached && Date.now() - cached.timestamp < 5 * 60 * 1000) {
-        setProfile(cached.profile);
-        return;
-      }
-
+      fetchingProfile.current = true;
       console.log('🔄 [AUTH] Buscando perfil para:', userId);
+      
       const fetchedProfile = await profileFetcher.fetchProfile(userId);
       
       if (fetchedProfile) {
@@ -44,12 +48,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           role: fetchedProfile.user_roles?.name || 'N/A'
         });
         
-        // Armazenar no cache
-        profileCache.current[userId] = {
-          profile: fetchedProfile,
-          timestamp: Date.now()
-        };
-        
         setProfile(fetchedProfile);
       } else {
         console.warn('⚠️ [AUTH] Perfil não encontrado');
@@ -58,20 +56,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch (error) {
       console.error('❌ [AUTH] Erro ao buscar perfil:', error);
       setProfile(null);
+    } finally {
+      fetchingProfile.current = false;
     }
-  };
+  }, []);
 
-  // Setup inicial da autenticação
+  // Setup inicial da autenticação simplificado
   useEffect(() => {
     console.log('🚀 [AUTH] Inicializando AuthContext');
     
     let mounted = true;
+    let subscription: { unsubscribe: () => void } | null = null;
     
     const initAuth = async () => {
       try {
-        // 1. Configurar listener de auth state (apenas uma vez)
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          async (event, newSession) => {
+        // 1. Configurar listener simplificado (sem async na callback)
+        const { data } = supabase.auth.onAuthStateChange(
+          (event, newSession) => {
             if (!mounted) return;
             
             console.log(`🔄 [AUTH] Evento: ${event}`, {
@@ -79,40 +80,51 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               hasUser: !!newSession?.user
             });
             
+            // Atualizações síncronas
             setSession(newSession);
             setUser(newSession?.user ?? null);
             
-            // Buscar perfil apenas quando necessário (evitar TOKEN_REFRESHED)
-            if (newSession?.user && event !== 'TOKEN_REFRESHED') {
-              await fetchProfile(newSession.user.id);
+            // Fetch de perfil diferido para evitar deadlocks
+            if (newSession?.user && event === 'SIGNED_IN') {
+              setTimeout(() => {
+                if (mounted) {
+                  fetchProfile(newSession.user.id);
+                }
+              }, 100);
             } else if (!newSession?.user) {
               setProfile(null);
             }
             
+            // Finalizar loading
             if (mounted) {
               setIsLoading(false);
             }
           }
         );
+        
+        subscription = data.subscription;
 
         // 2. Verificar sessão atual
         const { data: { session: currentSession } } = await supabase.auth.getSession();
         if (mounted && currentSession?.user) {
           setSession(currentSession);
           setUser(currentSession.user);
-          await fetchProfile(currentSession.user.id);
+          
+          // Fetch diferido do perfil
+          setTimeout(() => {
+            if (mounted) {
+              fetchProfile(currentSession.user.id);
+            }
+          }, 100);
         }
         
-        // 3. Finalizar loading após timeout máximo
+        // 3. Timeout de segurança reduzido
         setTimeout(() => {
           if (mounted) {
             setIsLoading(false);
           }
-        }, 8000); // 8 segundos máximo
+        }, 4000); // 4 segundos máximo
         
-        return () => {
-          subscription.unsubscribe();
-        };
       } catch (error) {
         console.error('❌ [AUTH] Erro na inicialização:', error);
         if (mounted) {
@@ -121,13 +133,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     };
 
-    const cleanup = initAuth();
+    initAuth();
     
     return () => {
       mounted = false;
-      cleanup.then(cleanupFn => cleanupFn?.());
+      subscription?.unsubscribe();
     };
-  }, []);
+  }, [fetchProfile]);
 
   // Função para refetch de perfil
   const refetchProfile = async (): Promise<void> => {

@@ -1,16 +1,18 @@
-import React, { Component, ReactNode } from 'react';
-import { ErrorFallback } from './ErrorFallback';
-import { logger } from '@/utils/logger';
+import React from 'react';
 
-export interface ErrorInfo {
-  componentStack: string;
-  errorBoundary?: string;
-  errorBoundaryStack?: string;
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error?: Error;
+}
+
+interface ErrorBoundaryProps {
+  children: React.ReactNode;
+  fallback?: React.ComponentType<{ error?: Error; retry?: () => void }>;
 }
 
 export interface ErrorFallbackProps {
-  error: Error;
-  errorInfo: ErrorInfo;
+  error: Error | null;
+  errorInfo: React.ErrorInfo | null;
   onRetry: () => void;
   onGoHome: () => void;
   retryCount: number;
@@ -18,137 +20,56 @@ export interface ErrorFallbackProps {
   showDetails?: boolean;
 }
 
-interface Props {
-  children: ReactNode;
-  fallback?: React.ComponentType<ErrorFallbackProps>;
-  onError?: (error: Error, errorInfo: ErrorInfo) => void;
-  maxRetries?: number;
-  showDetails?: boolean;
-  resetOnLocationChange?: boolean;
-}
-
-interface State {
-  hasError: boolean;
-  error: Error | null;
-  errorInfo: ErrorInfo | null;
-  retryCount: number;
-}
-
-class ErrorBoundary extends Component<Props, State> {
-  private retryTimeoutId: number | null = null;
-
-  constructor(props: Props) {
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
     super(props);
-    this.state = {
-      hasError: false,
-      error: null,
-      errorInfo: null,
-      retryCount: 0
-    };
+    this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError(error: Error): Partial<State> {
-    return {
-      hasError: true,
-      error
-    };
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    this.setState({ errorInfo });
-
-    // Log do erro sempre, mesmo em produção (para erros críticos)
-    logger.error('React Error Boundary caught an error', {
-      message: error.message,
-      stack: error.stack,
-      componentStack: errorInfo.componentStack,
-      timestamp: new Date().toISOString()
-    });
-
-    // Callback customizado se fornecido
-    if (this.props.onError) {
-      this.props.onError(error, errorInfo);
-    }
-
-    // Em produção, logar erro crítico para monitoramento
-    if (process.env.NODE_ENV === 'production') {
-      console.log('[CRITICAL] React Error Boundary:', {
-        message: error.message,
-        timestamp: new Date().toISOString()
-      });
-    }
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('🚨 [ERROR-BOUNDARY] Erro capturado:', error, errorInfo);
   }
 
-  componentDidUpdate(prevProps: Props) {
-    // Reset error boundary quando a localização muda (se habilitado)
-    if (this.props.resetOnLocationChange && this.state.hasError) {
-      if (window.location.pathname !== (prevProps as any).location?.pathname) {
-        this.setState({
-          hasError: false,
-          error: null,
-          errorInfo: null,
-          retryCount: 0
-        });
-      }
-    }
-  }
-
-  handleRetry = () => {
-    const { maxRetries = 3 } = this.props;
-    
-    if (this.state.retryCount >= maxRetries) {
-      logger.error('Max retry attempts reached', {
-        retryCount: this.state.retryCount,
-        maxRetries
-      });
-      return;
-    }
-
-    this.setState(prevState => ({
-      hasError: false,
-      error: null,
-      errorInfo: null,
-      retryCount: prevState.retryCount + 1
-    }));
-
-    // Auto-retry com delay
-    this.retryTimeoutId = window.setTimeout(() => {
-      if (this.state.hasError) {
-        logger.info('Auto-retry failed, component still in error state');
-      }
-    }, 1000);
+  retry = () => {
+    this.setState({ hasError: false, error: undefined });
   };
-
-  handleGoHome = () => {
-    window.location.href = '/dashboard';
-  };
-
-  componentWillUnmount() {
-    if (this.retryTimeoutId) {
-      clearTimeout(this.retryTimeoutId);
-    }
-  }
 
   render() {
-    if (this.state.hasError && this.state.error && this.state.errorInfo) {
-      const FallbackComponent = this.props.fallback || ErrorFallback;
-      const { maxRetries = 3, showDetails = process.env.NODE_ENV === 'development' } = this.props;
-
-      return (
-        <FallbackComponent
-          error={this.state.error}
-          errorInfo={this.state.errorInfo}
-          onRetry={this.handleRetry}
-          onGoHome={this.handleGoHome}
-          retryCount={this.state.retryCount}
-          maxRetries={maxRetries}
-          showDetails={showDetails}
-        />
-      );
+    if (this.state.hasError) {
+      const FallbackComponent = this.props.fallback || DefaultErrorFallback;
+      return <FallbackComponent error={this.state.error} retry={this.retry} />;
     }
 
     return this.props.children;
   }
 }
+
+const DefaultErrorFallback: React.FC<{ error?: Error; retry?: () => void }> = ({ 
+  error, 
+  retry 
+}) => (
+  <div className="min-h-[200px] flex items-center justify-center">
+    <div className="text-center space-y-4">
+      <div className="text-red-500 text-lg font-semibold">
+        Algo deu errado
+      </div>
+      <div className="text-gray-600 text-sm max-w-md">
+        {error?.message || 'Ocorreu um erro inesperado'}
+      </div>
+      {retry && (
+        <button
+          onClick={retry}
+          className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+        >
+          Tentar novamente
+        </button>
+      )}
+    </div>
+  </div>
+);
 
 export default ErrorBoundary;

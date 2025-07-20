@@ -3,9 +3,15 @@ import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, Home, AlertTriangle } from 'lucide-react';
-import { ErrorFallbackProps } from './ErrorBoundary';
 
-interface CustomErrorFallbackProps extends ErrorFallbackProps {
+interface CustomErrorFallbackProps {
+  error?: Error | null;
+  errorInfo?: React.ErrorInfo | null;
+  onRetry?: () => void;
+  onGoHome?: () => void;
+  retryCount?: number;
+  maxRetries?: number;
+  showDetails?: boolean;
   title?: string;
   description?: string;
   icon?: React.ReactNode;
@@ -17,8 +23,8 @@ export const ErrorFallback: React.FC<CustomErrorFallbackProps> = ({
   errorInfo,
   onRetry,
   onGoHome,
-  retryCount,
-  maxRetries,
+  retryCount = 0,
+  maxRetries = 3,
   showDetails = false,
   title = "Algo deu errado",
   description = "Ocorreu um erro inesperado. Tente novamente ou volte para o dashboard.",
@@ -26,6 +32,15 @@ export const ErrorFallback: React.FC<CustomErrorFallbackProps> = ({
   variant = 'default'
 }) => {
   const canRetry = retryCount < maxRetries;
+  
+  const handleRetry = () => onRetry?.();
+  const handleGoHome = () => {
+    if (onGoHome) {
+      onGoHome();
+    } else {
+      window.location.href = '/dashboard';
+    }
+  };
 
   if (variant === 'minimal') {
     return (
@@ -35,12 +50,12 @@ export const ErrorFallback: React.FC<CustomErrorFallbackProps> = ({
         <p className="text-muted-foreground mb-4">{description}</p>
         <div className="flex gap-2">
           {canRetry && (
-            <Button size="sm" onClick={onRetry}>
+            <Button size="sm" onClick={handleRetry}>
               <RefreshCw className="w-4 h-4 mr-1" />
               Tentar novamente
             </Button>
           )}
-          <Button size="sm" variant="outline" onClick={onGoHome}>
+          <Button size="sm" variant="outline" onClick={handleGoHome}>
             <Home className="w-4 h-4 mr-1" />
             Dashboard
           </Button>
@@ -88,13 +103,13 @@ export const ErrorFallback: React.FC<CustomErrorFallbackProps> = ({
 
           <div className="flex gap-3 justify-center">
             {canRetry && (
-              <Button onClick={onRetry} className="flex items-center gap-2">
+              <Button onClick={handleRetry} className="flex items-center gap-2">
                 <RefreshCw className="w-4 h-4" />
                 Tentar novamente
               </Button>
             )}
             
-            <Button variant="outline" onClick={onGoHome} className="flex items-center gap-2">
+            <Button variant="outline" onClick={handleGoHome} className="flex items-center gap-2">
               <Home className="w-4 h-4" />
               Dashboard
             </Button>

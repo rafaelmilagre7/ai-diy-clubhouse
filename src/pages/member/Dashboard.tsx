@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/auth';
 import { useDashboardData } from '@/hooks/dashboard/useDashboardData';
 import { useOptimizedDashboardProgress } from '@/hooks/dashboard/useOptimizedDashboardProgress';
 import LoadingScreen from '@/components/common/LoadingScreen';
+import ErrorBoundary from '@/components/common/ErrorBoundary';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useNavigate } from 'react-router-dom';
 import { Solution } from '@/lib/supabase';
@@ -51,15 +52,17 @@ const Dashboard = () => {
   };
 
   return (
-    <DashboardLayout
-      active={active}
-      completed={completed}
-      recommended={recommended}
-      category={selectedCategory}
-      onCategoryChange={handleCategoryChange}
-      onSolutionClick={handleSolutionClick}
-      isLoading={isLoading}
-    />
+    <ErrorBoundary>
+      <DashboardLayout
+        active={active}
+        completed={completed}
+        recommended={recommended}
+        category={selectedCategory}
+        onCategoryChange={handleCategoryChange}
+        onSolutionClick={handleSolutionClick}
+        isLoading={isLoading}
+      />
+    </ErrorBoundary>
   );
 };
 
