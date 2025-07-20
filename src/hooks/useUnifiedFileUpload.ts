@@ -2,6 +2,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { uploadFileUnified, validateFileForBucket } from '@/lib/supabase/storage-unified';
+import { STORAGE_BUCKETS } from '@/lib/supabase/config';
 
 interface UseUnifiedFileUploadProps {
   bucketName: string;
@@ -33,8 +34,17 @@ export const useUnifiedFileUpload = ({
   const uploadFile = useCallback(async (file: File) => {
     console.log(`[UNIFIED_UPLOAD] Iniciando upload para bucket: ${bucketName}`);
     
+    // Validar se bucket é válido
+    const validBucket = Object.values(STORAGE_BUCKETS).includes(bucketName) 
+      ? bucketName 
+      : STORAGE_BUCKETS.FALLBACK;
+    
+    if (validBucket !== bucketName) {
+      console.warn(`[UNIFIED_UPLOAD] Bucket ${bucketName} não configurado, usando ${validBucket}`);
+    }
+    
     // Validação inicial
-    const validation = validateFileForBucket(file, bucketName);
+    const validation = validateFileForBucket(file, validBucket);
     if (!validation.valid) {
       const errorMsg = validation.error || 'Arquivo inválido';
       console.error(`[UNIFIED_UPLOAD] Validação falhou: ${errorMsg}`);
@@ -58,7 +68,7 @@ export const useUnifiedFileUpload = ({
 
       const result = await uploadFileUnified(
         file,
-        bucketName,
+        validBucket,
         folder,
         (progress) => {
           console.log(`[UNIFIED_UPLOAD] Progresso: ${progress}%`);

@@ -2,9 +2,10 @@
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Image, LinkIcon, UploadCloud } from "lucide-react";
-import { uploadFileToStorage } from "@/components/ui/file/uploadUtils";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { useUnifiedFileUpload } from "@/hooks/useUnifiedFileUpload";
+import { STORAGE_BUCKETS } from "@/lib/supabase/config";
 
 interface ImageBlockProps {
   data: {
@@ -17,8 +18,33 @@ interface ImageBlockProps {
 
 const ImageBlock: React.FC<ImageBlockProps> = ({ data, onChange }) => {
   const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
   const { toast } = useToast();
+
+  const { uploadFile, isUploading, progress } = useUnifiedFileUpload({
+    bucketName: STORAGE_BUCKETS.SOLUTION_FILES,
+    folder: "content_images",
+    onUploadComplete: (url, fileName) => {
+      console.log('[IMAGE_BLOCK] Upload concluído:', url);
+      onChange({ 
+        ...data, 
+        url: url,
+        alt: data.alt || fileName
+      });
+      
+      toast({
+        title: "Upload concluído",
+        description: "A imagem foi enviada com sucesso."
+      });
+    },
+    onUploadError: (error) => {
+      console.error('[IMAGE_BLOCK] Erro no upload:', error);
+      toast({
+        title: "Erro ao fazer upload",
+        description: error || "Ocorreu um erro ao tentar enviar a imagem.",
+        variant: "destructive",
+      });
+    }
+  });
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
@@ -34,47 +60,8 @@ const ImageBlock: React.FC<ImageBlockProps> = ({ data, onChange }) => {
       return;
     }
     
-    if (file.size > 5 * 1024 * 1024) {
-      toast({
-        title: "Arquivo muito grande",
-        description: "A imagem deve ter menos de 5MB",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    try {
-      setUploading(true);
-      setUploadProgress(0);
-      
-      const result = await uploadFileToStorage(
-        file,
-        "solution_files",
-        "content_images",
-        (progress) => setUploadProgress(progress)
-      );
-      
-      onChange({ 
-        ...data, 
-        url: result.publicUrl,
-        alt: data.alt || file.name
-      });
-      
-      toast({
-        title: "Upload concluído",
-        description: "A imagem foi enviada com sucesso."
-      });
-    } catch (error: any) {
-      console.error("Erro ao fazer upload:", error);
-      toast({
-        title: "Erro ao fazer upload",
-        description: error.message || "Ocorreu um erro ao tentar enviar a imagem.",
-        variant: "destructive",
-      });
-    } finally {
-      setUploading(false);
-      setUploadProgress(0);
-    }
+    console.log('[IMAGE_BLOCK] Iniciando upload:', file.name);
+    await uploadFile(file);
   };
 
   return (
@@ -91,13 +78,13 @@ const ImageBlock: React.FC<ImageBlockProps> = ({ data, onChange }) => {
           <Button 
             type="button" 
             variant="outline" 
-            disabled={uploading}
+            disabled={isUploading}
             className="shrink-0"
           >
-            {uploading ? (
+            {isUploading ? (
               <>
                 <div className="h-4 w-4 mr-2 animate-spin border-2 border-current border-t-transparent rounded-full" />
-                {uploadProgress}%
+                {progress}%
               </>
             ) : (
               <>
@@ -110,7 +97,7 @@ const ImageBlock: React.FC<ImageBlockProps> = ({ data, onChange }) => {
               className="absolute inset-0 opacity-0 cursor-pointer"
               accept="image/*"
               onChange={handleFileChange}
-              disabled={uploading}
+              disabled={isUploading}
             />
           </Button>
         </div>

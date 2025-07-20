@@ -1,102 +1,147 @@
 
-import { useState, useEffect } from 'react';
-import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from '@/components/ui/form';
-import { FileUpload } from '@/components/ui/file-upload';
+import React, { useState } from 'react';
 import { UseFormReturn } from 'react-hook-form';
-import { ToolFormValues } from '../../types/toolFormTypes';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { X } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Upload, X, ExternalLink } from 'lucide-react';
+import { useUnifiedFileUpload } from '@/hooks/useUnifiedFileUpload';
 import { STORAGE_BUCKETS } from '@/lib/supabase/config';
+import { ToolFormValues } from '../../types/toolFormTypes';
 
 interface LogoUploadProps {
   form: UseFormReturn<ToolFormValues>;
 }
 
 export const LogoUpload = ({ form }: LogoUploadProps) => {
-  const [logoUrl, setLogoUrl] = useState<string | undefined>(form.getValues('logo_url'));
+  const [logoUrl, setLogoUrl] = useState(form.watch('logo_url') || '');
   
-  useEffect(() => {
-    setLogoUrl(form.getValues('logo_url'));
-  }, [form]);
-  
-  const handleUploadComplete = (url: string) => {
-    console.log('Logo enviado com sucesso:', url);
-    
-    // Atualizar o estado local
+  const { uploadFile, isUploading, progress } = useUnifiedFileUpload({
+    bucketName: STORAGE_BUCKETS.TOOL_LOGOS,
+    folder: 'logos',
+    onUploadComplete: (url) => {
+      console.log('[LOGO_UPLOAD] Upload concluído:', url);
+      setLogoUrl(url);
+      form.setValue('logo_url', url, { shouldDirty: true });
+    },
+    onUploadError: (error) => {
+      console.error('[LOGO_UPLOAD] Erro no upload:', error);
+    }
+  });
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    console.log('[LOGO_UPLOAD] Arquivo selecionado:', file.name);
+    await uploadFile(file);
+  };
+
+  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const url = e.target.value;
     setLogoUrl(url);
-    
-    // Atualizar o valor no formulário
-    form.setValue('logo_url', url, { 
-      shouldDirty: true,
-      shouldTouch: true,
-      shouldValidate: true 
-    });
-    
-    // Marcar o formulário como modificado
-    form.setValue('formModified', true);
-    
-    // Notificar o formulário que houve mudança
-    form.trigger('logo_url');
+    form.setValue('logo_url', url, { shouldDirty: true });
   };
 
   const handleRemoveLogo = () => {
-    setLogoUrl(undefined);
-    form.setValue('logo_url', '', { 
-      shouldDirty: true,
-      shouldTouch: true,
-      shouldValidate: true 
-    });
-    form.setValue('formModified', true);
-    form.trigger('logo_url');
+    setLogoUrl('');
+    form.setValue('logo_url', '', { shouldDirty: true });
   };
 
   return (
-    <FormField
-      control={form.control}
-      name="logo_url"
-      render={({ field }) => (
-        <FormItem>
-          <div className="space-y-4">
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-xl">Logo da Ferramenta</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="logo_url">URL do Logo</Label>
+          <div className="flex gap-2">
+            <Input
+              id="logo_url"
+              value={logoUrl}
+              onChange={handleUrlChange}
+              placeholder="https://exemplo.com/logo.png"
+              className="flex-1"
+            />
             {logoUrl && (
-              <div className="flex items-center gap-4">
-                <div className="relative">
-                  <Avatar className="h-16 w-16 border">
-                    <AvatarImage src={logoUrl} alt="Logo da ferramenta" />
-                    <AvatarFallback>Logo</AvatarFallback>
-                  </Avatar>
-                  <Button 
-                    type="button"
-                    size="icon"
-                    variant="destructive"
-                    className="absolute -top-2 -right-2 h-5 w-5 rounded-full"
-                    onClick={handleRemoveLogo}
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
-                </div>
-                <p className="text-sm text-muted-foreground">Logo atual</p>
-              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => window.open(logoUrl, '_blank')}
+              >
+                <ExternalLink className="h-4 w-4" />
+              </Button>
             )}
-            <FormControl>
-              <FileUpload
-                bucketName={STORAGE_BUCKETS.TOOL_LOGOS}
-                folder="logos"
-                onUploadComplete={handleUploadComplete}
-                accept="image/*"
-                maxSize={5}
-                buttonText={logoUrl ? "Trocar logo" : "Upload do Logo"}
-                fieldLabel="Selecione uma imagem para o logo"
-                initialFileUrl={logoUrl}
-              />
-            </FormControl>
           </div>
-          <FormDescription>
-            Logo da ferramenta (formato quadrado recomendado, PNG ou JPG, máximo 5MB)
-          </FormDescription>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
+        </div>
+
+        <div className="text-center">
+          <p className="text-sm text-muted-foreground mb-2">ou</p>
+          <div className="relative">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isUploading}
+              className="w-full"
+            >
+              {isUploading ? (
+                <>
+                  <div className="h-4 w-4 mr-2 animate-spin border-2 border-current border-t-transparent rounded-full" />
+                  Enviando... {progress}%
+                </>
+              ) : (
+                <>
+                  <Upload className="h-4 w-4 mr-2" />
+                  Fazer upload do logo
+                </>
+              )}
+            </Button>
+            <Input
+              type="file"
+              className="absolute inset-0 opacity-0 cursor-pointer"
+              accept="image/*"
+              onChange={handleFileSelect}
+              disabled={isUploading}
+            />
+          </div>
+        </div>
+
+        {logoUrl && (
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <Label>Preview do Logo</Label>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleRemoveLogo}
+                className="text-destructive hover:text-destructive"
+              >
+                <X className="h-4 w-4 mr-1" />
+                Remover
+              </Button>
+            </div>
+            <div className="border rounded-md p-4 bg-slate-50 flex items-center justify-center min-h-[120px]">
+              <img
+                src={logoUrl}
+                alt="Preview do logo"
+                className="max-h-20 max-w-full object-contain"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = "https://placehold.co/200x80?text=Logo+não+encontrado";
+                }}
+              />
+            </div>
+          </div>
+        )}
+
+        <p className="text-xs text-muted-foreground">
+          Formatos aceitos: JPG, PNG, WebP, SVG, GIF. Tamanho máximo: 5MB.
+        </p>
+      </CardContent>
+    </Card>
   );
 };

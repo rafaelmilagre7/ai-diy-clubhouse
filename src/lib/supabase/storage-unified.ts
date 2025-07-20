@@ -2,7 +2,7 @@
 import { supabase } from './client';
 import { MAX_UPLOAD_SIZES, STORAGE_BUCKETS } from './config';
 
-// Configurações de buckets unificados
+// Configurações de buckets unificados com todos os buckets essenciais
 export const BUCKET_CONFIGS = {
   // Buckets para o LMS
   [STORAGE_BUCKETS.LEARNING_MATERIALS]: {
@@ -43,6 +43,18 @@ export const BUCKET_CONFIGS = {
     description: 'Imagens de perfil dos usuários'
   },
   
+  // Buckets para comunidade e certificados
+  [STORAGE_BUCKETS.COMMUNITY_IMAGES]: {
+    maxSize: MAX_UPLOAD_SIZES.IMAGE,
+    allowedTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
+    description: 'Imagens para posts da comunidade'
+  },
+  [STORAGE_BUCKETS.CERTIFICATES]: {
+    maxSize: MAX_UPLOAD_SIZES.CERTIFICATE,
+    allowedTypes: ['application/pdf', 'image/png', 'image/jpeg'],
+    description: 'Certificados de cursos e implementações'
+  },
+  
   // Bucket de fallback
   [STORAGE_BUCKETS.FALLBACK]: {
     maxSize: MAX_UPLOAD_SIZES.DOCUMENT,
@@ -55,10 +67,8 @@ export const validateFileForBucket = (file: File, bucketName: string) => {
   const config = BUCKET_CONFIGS[bucketName];
   
   if (!config) {
-    return {
-      valid: false,
-      error: `Bucket ${bucketName} não está configurado no sistema`
-    };
+    console.warn(`[STORAGE] Bucket ${bucketName} não configurado, usando fallback`);
+    return validateFileForBucket(file, STORAGE_BUCKETS.FALLBACK);
   }
   
   // Verificar tamanho
@@ -98,6 +108,8 @@ export const uploadFileUnified = async (
   folder?: string,
   onProgress?: (progress: number) => void
 ): Promise<{ publicUrl: string; path: string }> => {
+  console.log(`[STORAGE_UNIFIED] Iniciando upload para bucket: ${bucketName}`);
+  
   // Validar arquivo
   const validation = validateFileForBucket(file, bucketName);
   if (!validation.valid) {
@@ -106,18 +118,28 @@ export const uploadFileUnified = async (
   
   onProgress?.(10);
   
-  // Verificar se bucket existe
+  // Verificar se bucket existe, senão usar fallback
+  let targetBucket = bucketName;
   const bucketExists = await checkBucketExists(bucketName);
+  
   if (!bucketExists) {
-    // Tentar criar bucket se não existir
-    const { error: createError } = await supabase.storage.createBucket(bucketName, {
-      public: true,
-      fileSizeLimit: BUCKET_CONFIGS[bucketName].maxSize * 1024 * 1024,
-      allowedMimeTypes: BUCKET_CONFIGS[bucketName].allowedTypes.filter(type => type !== '*')
-    });
+    console.warn(`[STORAGE_UNIFIED] Bucket ${bucketName} não existe, usando fallback`);
+    targetBucket = STORAGE_BUCKETS.FALLBACK;
     
-    if (createError) {
-      throw new Error(`Erro ao criar bucket: ${createError.message}`);
+    // Verificar se fallback existe
+    const fallbackExists = await checkBucketExists(targetBucket);
+    if (!fallbackExists) {
+      // Tentar criar bucket original
+      const { error: createError } = await supabase.storage.createBucket(bucketName, {
+        public: true,
+        fileSizeLimit: BUCKET_CONFIGS[bucketName]?.maxSize * 1024 * 1024 || 50 * 1024 * 1024,
+        allowedMimeTypes: BUCKET_CONFIGS[bucketName]?.allowedTypes.filter(type => type !== '*') || undefined
+      });
+      
+      if (!createError) {
+        targetBucket = bucketName;
+        console.log(`[STORAGE_UNIFIED] Bucket ${bucketName} criado com sucesso`);
+      }
     }
   }
   
@@ -134,13 +156,14 @@ export const uploadFileUnified = async (
   
   // Upload do arquivo
   const { data, error } = await supabase.storage
-    .from(bucketName)
+    .from(targetBucket)
     .upload(filePath, file, {
       cacheControl: '3600',
       upsert: true
     });
   
   if (error) {
+    console.error(`[STORAGE_UNIFIED] Erro no upload:`, error);
     throw new Error(`Erro no upload: ${error.message}`);
   }
   
@@ -148,10 +171,12 @@ export const uploadFileUnified = async (
   
   // Obter URL pública
   const { data: { publicUrl } } = supabase.storage
-    .from(bucketName)
+    .from(targetBucket)
     .getPublicUrl(data.path);
   
   onProgress?.(100);
+  
+  console.log(`[STORAGE_UNIFIED] Upload concluído: ${publicUrl}`);
   
   return {
     publicUrl,
