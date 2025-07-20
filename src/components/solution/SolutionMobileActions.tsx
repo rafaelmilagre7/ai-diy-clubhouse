@@ -39,14 +39,14 @@ export const SolutionMobileActions = ({
       {progress?.is_completed ? (
         <div className="space-y-3">
           <Button 
-            className="w-full bg-green-600 hover:bg-green-700" 
+            className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 border-0 shadow-lg hover:shadow-green-500/25 transition-all duration-300" 
             onClick={() => navigate(`/solution/${solutionId}/certificate`)}
           >
             <Award className="mr-2 h-5 w-5" />
             Ver Certificado
           </Button>
           <Button 
-            className="w-full"
+            className="w-full bg-white/5 hover:bg-white/10 backdrop-blur-sm border-white/10 hover:border-white/20 transition-all duration-300"
             variant="outline" 
             onClick={handleImplementation}
           >
@@ -56,7 +56,7 @@ export const SolutionMobileActions = ({
         </div>
       ) : (
         <Button 
-          className="w-full" 
+          className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 border-0 shadow-lg hover:shadow-purple-500/25 transition-all duration-300" 
           onClick={handleImplementation} 
           disabled={initializing}
         >

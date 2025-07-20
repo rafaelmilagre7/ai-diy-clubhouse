@@ -36,12 +36,25 @@ export const SolutionSidebar = ({
   };
   
   return (
-    <div className="bg-[#151823] border border-white/5 p-6 rounded-lg shadow-sm space-y-6 hidden sm:block">
-      <div>
-        <h3 className="font-medium mb-2 text-neutral-100">Status de Implementação</h3>
+    <div className="relative bg-white/5 backdrop-blur-sm border border-white/10 p-6 rounded-xl shadow-2xl space-y-6 hidden sm:block group hover:bg-white/10 transition-all duration-500">
+      {/* Subtle dots pattern */}
+      <div className="absolute inset-0 opacity-5 pointer-events-none rounded-xl">
+        <div className="absolute inset-0 rounded-xl" style={{
+          backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.3) 1px, transparent 0)',
+          backgroundSize: '20px 20px'
+        }} />
+      </div>
+      
+      {/* Glow effect */}
+      <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500/20 to-blue-500/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-1000"></div>
+      
+      <div className="relative">
+        <h3 className="font-medium mb-2 bg-gradient-to-r from-white via-purple-200 to-blue-200 bg-clip-text text-transparent">
+          Status de Implementação
+        </h3>
         {progress ? (
           progress.is_completed ? (
-            <div className="flex items-center text-green-500">
+            <div className="flex items-center text-green-400">
               <CheckCircle className="h-5 w-5 mr-2" />
               <span>Implementação concluída</span>
             </div>
@@ -59,18 +72,18 @@ export const SolutionSidebar = ({
         )}
       </div>
       
-      <div className="pt-4 border-t border-white/5">
+      <div className="pt-4 border-t border-white/10 relative">
         {progress?.is_completed ? (
           <div className="space-y-3">
             <Button 
-              className="w-full bg-green-600 hover:bg-green-700"
+              className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 border-0 shadow-lg hover:shadow-green-500/25 transition-all duration-300"
               onClick={() => navigate(`/solution/${solution.id}/certificate`)}
             >
               <Award className="mr-2 h-5 w-5" />
               Ver Certificado
             </Button>
             <Button 
-              className="w-full" 
+              className="w-full bg-white/5 hover:bg-white/10 backdrop-blur-sm border-white/10 hover:border-white/20 transition-all duration-300" 
               onClick={handleImplementation}
               variant="outline"
             >
@@ -80,7 +93,7 @@ export const SolutionSidebar = ({
           </div>
         ) : (
           <Button 
-            className="w-full" 
+            className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 border-0 shadow-lg hover:shadow-purple-500/25 transition-all duration-300" 
             onClick={handleImplementation} 
             disabled={initializing}
           >
@@ -90,8 +103,10 @@ export const SolutionSidebar = ({
         )}
       </div>
       
-      <div className="pt-4 border-t border-white/5">
-        <h3 className="font-medium mb-2 text-neutral-100">Informações</h3>
+      <div className="pt-4 border-t border-white/10 relative">
+        <h3 className="font-medium mb-2 bg-gradient-to-r from-white via-purple-200 to-blue-200 bg-clip-text text-transparent">
+          Informações
+        </h3>
         <div className="space-y-2">
           {solution.category && (
             <div className="flex justify-between text-sm">
@@ -131,13 +146,15 @@ export const SolutionSidebar = ({
       </div>
       
       {solution.tags && solution.tags.length > 0 && (
-        <div className="pt-4 border-t border-white/5">
-          <h3 className="font-medium mb-2 text-neutral-100">Tags</h3>
+        <div className="pt-4 border-t border-white/10 relative">
+          <h3 className="font-medium mb-2 bg-gradient-to-r from-white via-purple-200 to-blue-200 bg-clip-text text-transparent">
+            Tags
+          </h3>
           <div className="flex flex-wrap gap-2">
             {solution.tags.map((tag, index) => (
               <span 
                 key={index}
-                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-900/40 text-blue-200 border border-blue-700/30"
+                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-500/20 text-blue-200 border border-blue-500/30 hover:bg-blue-500/30 transition-all duration-300"
               >
                 {tag}
               </span>

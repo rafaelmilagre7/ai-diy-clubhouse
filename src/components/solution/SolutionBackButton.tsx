@@ -16,7 +16,7 @@ export const SolutionBackButton = () => {
     <Button 
       variant="ghost" 
       size="sm" 
-      className="mb-6" 
+      className="mb-6 bg-white/5 hover:bg-white/10 backdrop-blur-sm border border-white/10 hover:border-white/20 transition-all duration-300" 
       onClick={handleBack}
     >
       <ChevronLeft className="mr-2 h-4 w-4" />
