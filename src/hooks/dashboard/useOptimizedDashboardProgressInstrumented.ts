@@ -4,87 +4,67 @@ import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
 import { Solution } from "@/lib/supabase";
 import { useQuery } from '@tanstack/react-query';
-import { perfMonitor, measureAsync } from "@/utils/performanceMonitor";
+import { perfMonitor, measureAsync } from '@/utils/performanceMonitor';
 
-// Cache local otimizado com instrumentação
+// Cache local otimizado
 const progressCache = new Map<string, { data: any[], timestamp: number }>();
 const CACHE_TTL = 2 * 60 * 1000; // 2 minutos
+
+interface SupabaseResponse<T> {
+  data: T | null;
+  error: any;
+}
 
 export const useOptimizedDashboardProgress = (solutions: Solution[] = []) => {
   const { user } = useAuth();
   
-  // Métricas de diagnóstico
-  const [hookStartTime] = useState(() => performance.now());
-  
   // Hash estável das soluções para otimização
   const solutionsHash = useMemo(() => {
-    const startTime = performance.now();
-    
     if (!solutions || !Array.isArray(solutions) || solutions.length === 0) {
-      perfMonitor.logEvent('useOptimizedDashboardProgress', 'solutions_empty');
       return 'empty';
     }
-    
-    const hash = solutions.map(s => s.id).sort().join(',');
-    const duration = performance.now() - startTime;
-    
-    perfMonitor.logEvent('useOptimizedDashboardProgress', 'solutions_hash_computed', {
-      solutionsCount: solutions.length,
-      duration,
-      hashLength: hash.length
-    });
-    
-    return hash;
+    return solutions.map(s => s.id).sort().join(',');
   }, [solutions]);
   
   // Função de busca otimizada
   const fetchProgress = useCallback(async () => {
-    perfMonitor.startTimer('useOptimizedDashboardProgress', 'fetchProgress', {
-      userId: user?.id,
-      solutionsCount: solutions.length
-    });
-    
     if (!user?.id) {
-      perfMonitor.logEvent('useOptimizedDashboardProgress', 'no_user');
       throw new Error("Usuário não autenticado");
     }
+    
+    perfMonitor.startTimer('useOptimizedDashboardProgress', 'fetchProgress', { userId: user.id });
     
     // Verificar cache local primeiro
     const cacheKey = `progress_${user.id}`;
     const cached = progressCache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-      perfMonitor.logEvent('useOptimizedDashboardProgress', 'cache_hit', {
-        cacheAge: Date.now() - cached.timestamp,
-        dataCount: cached.data.length
-      });
-      
-      perfMonitor.endTimer('useOptimizedDashboardProgress', 'fetchProgress', {
-        fromCache: true,
-        dataCount: cached.data.length
-      });
-      
+      perfMonitor.logEvent('useOptimizedDashboardProgress', 'cache_hit', { userId: user.id });
+      perfMonitor.endTimer('useOptimizedDashboardProgress', 'fetchProgress', { userId: user.id, fromCache: true });
       return cached.data;
     }
     
     try {
-      perfMonitor.logEvent('useOptimizedDashboardProgress', 'cache_miss');
-      
-      // Query otimizada com batch
+      // Query otimizada com batch usando measureAsync
       const result = await measureAsync(
         'useOptimizedDashboardProgress',
-        'supabase_query',
-        () => supabase
-          .from("progress")
-          .select("solution_id, is_completed, completed_at, last_activity, created_at")
-          .eq("user_id", user.id),
+        'supabaseQuery',
+        async () => {
+          const response = await supabase
+            .from("progress")
+            .select("solution_id, is_completed, completed_at, last_activity, created_at")
+            .eq("user_id", user.id);
+          return response;
+        },
         { userId: user.id }
-      );
+      ) as SupabaseResponse<any[]>;
         
       if (result.error) {
-        perfMonitor.logEvent('useOptimizedDashboardProgress', 'query_error', { 
-          error: result.error.message 
-        });
         console.error("useOptimizedDashboardProgress: Erro na query:", result.error);
+        perfMonitor.endTimer('useOptimizedDashboardProgress', 'fetchProgress', { 
+          userId: user.id, 
+          success: false, 
+          error: result.error 
+        });
         throw result.error;
       }
       
@@ -92,31 +72,28 @@ export const useOptimizedDashboardProgress = (solutions: Solution[] = []) => {
       
       // Atualizar cache local
       progressCache.set(cacheKey, {
-        data,
+        data: data,
         timestamp: Date.now()
       });
       
-      perfMonitor.endTimer('useOptimizedDashboardProgress', 'fetchProgress', {
-        fromCache: false,
-        dataCount: data.length,
-        cacheUpdated: true
+      perfMonitor.endTimer('useOptimizedDashboardProgress', 'fetchProgress', { 
+        userId: user.id, 
+        success: true, 
+        recordCount: data.length,
+        fromCache: false 
       });
       
       return data;
     } catch (error) {
-      perfMonitor.logEvent('useOptimizedDashboardProgress', 'fetch_error', {
-        error: error instanceof Error ? error.message : 'Unknown error'
-      });
-      
-      perfMonitor.endTimer('useOptimizedDashboardProgress', 'fetchProgress', {
-        fromCache: false,
-        hasError: true
-      });
-      
       console.error("useOptimizedDashboardProgress: Erro na execução:", error);
+      perfMonitor.endTimer('useOptimizedDashboardProgress', 'fetchProgress', { 
+        userId: user.id, 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
       throw error;
     }
-  }, [user?.id, solutions.length]);
+  }, [user?.id]);
   
   // Query React Query super otimizada para evitar loops
   const { 
@@ -138,11 +115,14 @@ export const useOptimizedDashboardProgress = (solutions: Solution[] = []) => {
 
   // Processamento otimizado com memoização
   const processedData = useMemo(() => {
-    const startTime = performance.now();
+    perfMonitor.startTimer('useOptimizedDashboardProgress', 'processData', { 
+      solutionsCount: solutions?.length || 0,
+      progressCount: progressData?.length || 0
+    });
     
     // Validação de entrada
     if (!solutions || !Array.isArray(solutions) || solutions.length === 0) {
-      perfMonitor.logEvent('useOptimizedDashboardProgress', 'processing_empty_solutions');
+      perfMonitor.endTimer('useOptimizedDashboardProgress', 'processData', { isEmpty: true });
       return { 
         active: [], 
         completed: [], 
@@ -152,8 +132,9 @@ export const useOptimizedDashboardProgress = (solutions: Solution[] = []) => {
     }
 
     if (!progressData || !Array.isArray(progressData)) {
-      perfMonitor.logEvent('useOptimizedDashboardProgress', 'processing_no_progress', {
-        solutionsCount: solutions.length
+      perfMonitor.endTimer('useOptimizedDashboardProgress', 'processData', { 
+        noProgressData: true,
+        recommendedCount: solutions.length
       });
       return { 
         active: [], 
@@ -187,31 +168,27 @@ export const useOptimizedDashboardProgress = (solutions: Solution[] = []) => {
         }
       });
 
-      const duration = performance.now() - startTime;
-      
-      perfMonitor.logEvent('useOptimizedDashboardProgress', 'processing_complete', {
-        duration,
-        solutionsCount: solutions.length,
-        progressCount: progressData.length,
-        activeCount: active.length,
-        completedCount: completed.length,
-        recommendedCount: recommended.length,
-        totalTime: performance.now() - hookStartTime
-      });
-
-      return {
+      const result = {
         active,
         completed,
         recommended,
         isEmpty: false
       };
-    } catch (err) {
-      perfMonitor.logEvent('useOptimizedDashboardProgress', 'processing_error', {
-        error: err instanceof Error ? err.message : 'Unknown error',
-        solutionsCount: solutions.length
+
+      perfMonitor.endTimer('useOptimizedDashboardProgress', 'processData', { 
+        activeCount: active.length,
+        completedCount: completed.length,
+        recommendedCount: recommended.length,
+        success: true
       });
-      
+
+      return result;
+    } catch (err) {
       console.error("useOptimizedDashboardProgress: Erro no processamento:", err);
+      perfMonitor.endTimer('useOptimizedDashboardProgress', 'processData', { 
+        success: false,
+        error: err instanceof Error ? err.message : 'Unknown error'
+      });
       return { 
         active: [], 
         completed: [], 
@@ -219,7 +196,7 @@ export const useOptimizedDashboardProgress = (solutions: Solution[] = []) => {
         isEmpty: false
       };
     }
-  }, [solutions, progressData, hookStartTime]);
+  }, [solutions, progressData]);
 
   return {
     active: processedData.active,
