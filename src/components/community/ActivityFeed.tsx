@@ -1,69 +1,35 @@
 
-import React from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { MessageSquare, TrendingUp, Eye, Clock } from "lucide-react";
-import { Link } from "react-router-dom";
-import { formatDistanceToNow } from "date-fns";
-import { ptBR } from "date-fns/locale";
-
-interface ActivityItem {
-  id: string;
-  type: 'topic' | 'post';
-  created_at: string;
-  profiles?: Array<{
-    name: string;
-    avatar_url?: string;
-  }>;
-  forum_topics?: Array<{
-    id: string;
-    title: string;
-  }>;
-  title?: string;
-  content?: string;
-}
+import React from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { MessageSquare, Eye, Clock } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export const ActivityFeed = () => {
-  const { data: activities, isLoading } = useQuery({
-    queryKey: ['communityActivity'],
+  const { data: topics, isLoading } = useQuery({
+    queryKey: ['forum-topics'],
     queryFn: async () => {
-      // Buscar tópicos recentes
-      const { data: topics } = await supabase
+      const { data, error } = await supabase
         .from('forum_topics')
         .select(`
           id,
           title,
           content,
           created_at,
-          profiles:user_id(name, avatar_url)
+          view_count,
+          reply_count,
+          user_id,
+          profiles:user_id(name),
+          forum_categories:category_id(name, color)
         `)
         .order('created_at', { ascending: false })
-        .limit(5);
+        .limit(10);
 
-      // Buscar posts recentes
-      const { data: posts } = await supabase
-        .from('forum_posts')
-        .select(`
-          id,
-          content,
-          created_at,
-          profiles:user_id(name, avatar_url),
-          forum_topics:topic_id(id, title)
-        `)
-        .order('created_at', { ascending: false })
-        .limit(5);
-
-      // Combinar e ordenar atividades
-      const allActivities: ActivityItem[] = [
-        ...(topics?.map(topic => ({ ...topic, type: 'topic' as const })) || []),
-        ...(posts?.map(post => ({ ...post, type: 'post' as const })) || [])
-      ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-       .slice(0, 8);
-
-      return allActivities;
+      if (error) throw error;
+      return data || [];
     }
   });
 
@@ -71,110 +37,89 @@ export const ActivityFeed = () => {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <TrendingUp className="h-5 w-5" />
-            Atividade Recente
-          </CardTitle>
+          <CardTitle>Atividade Recente</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="animate-pulse">
-              <div className="flex items-center gap-3">
-                <div className="h-8 w-8 bg-muted rounded-full"></div>
-                <div className="flex-1">
-                  <div className="h-4 bg-muted rounded w-3/4 mb-1"></div>
-                  <div className="h-3 bg-muted rounded w-1/2"></div>
-                </div>
+        <CardContent>
+          <div className="space-y-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="animate-pulse">
+                <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
+                <div className="h-3 bg-muted rounded w-1/2"></div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </CardContent>
       </Card>
     );
   }
 
-  const getActivityIcon = (type: string) => {
-    switch (type) {
-      case 'topic':
-        return <MessageSquare className="h-3 w-3" />;
-      case 'post':
-        return <Eye className="h-3 w-3" />;
-      default:
-        return <Clock className="h-3 w-3" />;
-    }
-  };
-
-  const getActivityText = (activity: ActivityItem) => {
-    const userName = activity.profiles?.[0]?.name || 'Usuário';
-    
-    if (activity.type === 'topic') {
-      return `${userName} criou um novo tópico`;
-    } else {
-      const topicTitle = activity.forum_topics?.[0]?.title || 'tópico';
-      return `${userName} respondeu em "${topicTitle}"`;
-    }
-  };
-
-  const getActivityLink = (activity: ActivityItem) => {
-    if (activity.type === 'topic') {
-      return `/comunidade/topico/${activity.id}`;
-    } else {
-      const topicId = activity.forum_topics?.[0]?.id;
-      return topicId ? `/comunidade/topico/${topicId}` : '#';
-    }
-  };
-
   return (
-    <Card className="bg-card/60 backdrop-blur-sm border-border/50">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex items-center gap-2">
-          <TrendingUp className="h-5 w-5 text-viverblue" />
-          Atividade Recente
-        </CardTitle>
+    <Card>
+      <CardHeader>
+        <CardTitle>Atividade Recente</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {activities?.length ? (
-          activities.map((activity) => (
-            <Link
-              key={activity.id}
-              to={getActivityLink(activity)}
-              className="block group hover:bg-muted/50 rounded-lg p-2 -m-2 transition-colors"
-            >
-              <div className="flex items-start gap-3">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={activity.profiles?.[0]?.avatar_url} />
-                  <AvatarFallback className="text-xs">
-                    {activity.profiles?.[0]?.name?.[0]?.toUpperCase() || 'U'}
-                  </AvatarFallback>
-                </Avatar>
-                
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Badge variant="secondary" className="text-xs px-2 py-0.5">
-                      {getActivityIcon(activity.type)}
-                      <span className="ml-1 capitalize">{activity.type === 'topic' ? 'Tópico' : 'Resposta'}</span>
-                    </Badge>
+      <CardContent>
+        <div className="space-y-4">
+          {topics?.map((topic) => (
+            <div key={topic.id} className="border-b pb-4 last:border-b-0">
+              <Link 
+                to={`/comunidade/topico/${topic.id}`}
+                className="block hover:bg-muted/50 rounded-lg p-2 -m-2 transition-colors"
+              >
+                <div className="flex items-start gap-3">
+                  <Avatar className="w-8 h-8">
+                    <AvatarFallback>
+                      {topic.profiles?.name?.charAt(0) || '?'}
+                    </AvatarFallback>
+                  </Avatar>
+                  
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-medium text-sm line-clamp-2 mb-1">
+                      {topic.title}
+                    </h4>
+                    
+                    <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
+                      {topic.content}
+                    </p>
+                    
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {new Date(topic.created_at).toLocaleDateString('pt-BR')}
+                      </span>
+                      
+                      <span className="flex items-center gap-1">
+                        <Eye className="h-3 w-3" />
+                        {topic.view_count || 0}
+                      </span>
+                      
+                      <span className="flex items-center gap-1">
+                        <MessageSquare className="h-3 w-3" />
+                        {topic.reply_count || 0}
+                      </span>
+                    </div>
+                    
+                    {topic.forum_categories && (
+                      <Badge 
+                        variant="outline" 
+                        className="mt-2 text-xs"
+                        style={{ borderColor: topic.forum_categories.color }}
+                      >
+                        {topic.forum_categories.name}
+                      </Badge>
+                    )}
                   </div>
-                  
-                  <p className="text-sm font-medium group-hover:text-viverblue transition-colors line-clamp-1">
-                    {getActivityText(activity)}
-                  </p>
-                  
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {formatDistanceToNow(new Date(activity.created_at), {
-                      addSuffix: true,
-                      locale: ptBR
-                    })}
-                  </p>
                 </div>
-              </div>
-            </Link>
-          ))
-        ) : (
-          <p className="text-muted-foreground text-sm text-center py-4">
-            Nenhuma atividade recente
-          </p>
-        )}
+              </Link>
+            </div>
+          ))}
+          
+          {!topics?.length && (
+            <p className="text-center text-muted-foreground py-8">
+              Nenhuma atividade recente encontrada
+            </p>
+          )}
+        </div>
       </CardContent>
     </Card>
   );

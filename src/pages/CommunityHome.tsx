@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,10 +10,10 @@ import { MessageSquare, Users, TrendingUp, Plus } from 'lucide-react';
 import { SearchBox } from '@/components/community/SearchBox';
 import { ActivityFeed } from '@/components/community/ActivityFeed';
 import { TrendingWidget } from '@/components/community/TrendingWidget';
-import { StatsCard } from '@/components/community/StatsCard';
+import { EngagementMetrics } from '@/components/community/EngagementMetrics';
 import { CreateTopicDialog } from '@/components/community/CreateTopicDialog';
 
-export const CommunityHome = () => {
+const CommunityHome = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isCreateTopicOpen, setIsCreateTopicOpen] = useState(false);
 
@@ -73,27 +74,8 @@ export const CommunityHome = () => {
         </Button>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <StatsCard
-          title="Tópicos"
-          value={stats?.topics || 0}
-          icon={MessageSquare}
-          trend="+12%"
-        />
-        <StatsCard
-          title="Discussões"
-          value={stats?.posts || 0}
-          icon={TrendingUp}
-          trend="+8%"
-        />
-        <StatsCard
-          title="Membros Ativos"
-          value={stats?.users || 0}
-          icon={Users}
-          trend="+5%"
-        />
-      </div>
+      {/* Engagement Metrics */}
+      <EngagementMetrics />
 
       {/* Search Bar */}
       <div className="max-w-md">
@@ -107,7 +89,7 @@ export const CommunityHome = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Activity Feed */}
         <div className="lg:col-span-2">
-          <ActivityFeed searchQuery={searchQuery} />
+          <ActivityFeed />
         </div>
 
         {/* Sidebar */}
@@ -160,9 +142,11 @@ export const CommunityHome = () => {
 
       {/* Create Topic Dialog */}
       <CreateTopicDialog
-        isOpen={isCreateTopicOpen}
-        onClose={() => setIsCreateTopicOpen(false)}
+        open={isCreateTopicOpen}
+        onOpenChange={setIsCreateTopicOpen}
       />
     </div>
   );
 };
+
+export default CommunityHome;
