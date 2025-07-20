@@ -4,10 +4,12 @@ import { Loader2 } from "lucide-react";
 
 interface LoadingScreenProps {
   message?: string;
+  showProgress?: boolean; // Readicionando para compatibilidade
 }
 
 const LoadingScreen = ({ 
-  message = "Carregando..."
+  message = "Carregando...",
+  showProgress = false // Prop opcional para manter compatibilidade
 }: LoadingScreenProps) => {
   const [dots, setDots] = useState('');
 
@@ -47,6 +49,15 @@ const LoadingScreen = ({
         <p className="text-sm text-muted-foreground">
           Aguarde um momento...
         </p>
+
+        {/* Barra de progresso opcional (apenas visual) */}
+        {showProgress && (
+          <div className="w-64 mx-auto mt-4">
+            <div className="bg-muted rounded-full h-2 overflow-hidden">
+              <div className="bg-primary h-full animate-pulse w-3/4" />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
