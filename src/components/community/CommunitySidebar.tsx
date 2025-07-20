@@ -29,14 +29,12 @@ export const CommunitySidebar = () => {
     queryKey: ['activeMembers'],
     queryFn: async () => {
       const { data } = await supabase
-        .from('forum_topics')
-        .select(`
-          profiles:user_id(name, avatar_url)
-        `)
+        .from('profiles')
+        .select('name, avatar_url')
         .order('created_at', { ascending: false })
         .limit(5);
       
-      return data?.map(topic => topic.profiles).filter(Boolean) || [];
+      return data || [];
     }
   });
 
