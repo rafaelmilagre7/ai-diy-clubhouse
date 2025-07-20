@@ -301,3 +301,5 @@ export const TopicView = () => {
     </div>
   );
 };
+
+export default TopicView;
