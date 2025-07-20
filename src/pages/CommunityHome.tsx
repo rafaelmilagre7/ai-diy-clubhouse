@@ -22,7 +22,7 @@ import { CommunityStats } from "@/components/community/CommunityStats";
 import { CommunitySidebar } from "@/components/community/CommunitySidebar";
 import { CategoryTabs } from "@/components/community/CategoryTabs";
 import { CommunityFilters, FilterType } from "@/components/community/CommunityFilters";
-import { ForumTopic, ForumCategory } from "@/types/forumTypes";
+import { Topic, ForumCategory } from "@/types/forumTypes";
 
 const CommunityHome = () => {
   const [searchQuery, setSearchQuery] = useState("");
