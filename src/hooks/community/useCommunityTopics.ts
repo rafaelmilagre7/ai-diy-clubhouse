@@ -31,7 +31,21 @@ export const useCommunityTopics = ({
 
         // Filtrar por categoria específica se informada
         if (categorySlug && categorySlug !== "todos") {
-          query = query.eq('community_categories.slug', categorySlug);
+          // Primeiro buscar o ID da categoria pelo slug
+          const { data: categoryData, error: categoryError } = await supabase
+            .from('community_categories')
+            .select('id')
+            .eq('slug', categorySlug)
+            .single();
+          
+          if (categoryError) {
+            console.error("Erro ao buscar categoria:", categoryError.message);
+            throw new Error(`Categoria '${categorySlug}' não encontrada`);
+          }
+          
+          if (categoryData) {
+            query = query.eq('category_id', categoryData.id);
+          }
         }
 
         // Filtrar por tópicos do usuário atual se necessário
