@@ -2354,6 +2354,39 @@ export type Database = {
           },
         ]
       }
+      networking_metrics: {
+        Row: {
+          active_connections: number | null
+          compatibility_score: number | null
+          created_at: string | null
+          id: string
+          last_activity_at: string | null
+          total_matches: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          active_connections?: number | null
+          compatibility_score?: number | null
+          created_at?: string | null
+          id?: string
+          last_activity_at?: string | null
+          total_matches?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          active_connections?: number | null
+          compatibility_score?: number | null
+          created_at?: string | null
+          id?: string
+          last_activity_at?: string | null
+          total_matches?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       networking_preferences: {
         Row: {
           created_at: string
