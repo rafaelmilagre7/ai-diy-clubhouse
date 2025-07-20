@@ -1,12 +1,12 @@
 
-import { useCategories } from "@/hooks/useCategories";
+import { useForumCategories } from "@/hooks/community/useForumCategories";
 import { CategoryCard } from "./CategoryCard";
 import { CategoryLoading } from "./CategoryLoading";
 import { CategoryError } from "./CategoryError";
 import { EmptyCategories } from "./EmptyCategories";
 
 export const CategoryList = () => {
-  const { categories, isLoading, error } = useCategories();
+  const { categories, isLoading, error } = useForumCategories();
 
   if (isLoading) {
     return <CategoryLoading />;
