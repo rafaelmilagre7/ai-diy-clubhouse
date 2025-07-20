@@ -3,8 +3,10 @@ import React, { createContext, useContext, useEffect, useState, ReactNode } from
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { UserProfile } from '@/lib/supabase';
-import { profileFetcher } from '@/lib/auth/profileFetcher';
 import { AuthContextType } from './types';
+import { useAuthSession } from '@/hooks/auth/useAuthSession';
+import { useAuthMethods } from './hooks/useAuthMethods';
+import { useAuthStateManager } from '@/hooks/auth/useAuthStateManager';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -13,183 +15,102 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  // Estados principais
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Estados derivados memoizados para evitar re-renders
-  const isAdmin = React.useMemo(() => 
-    profile?.user_roles?.name === 'admin' || profile?.email?.includes('@viverdeia.ai') || false, 
-    [profile?.user_roles?.name, profile?.email]
-  );
-  const isFormacao = React.useMemo(() => 
-    profile?.user_roles?.name === 'formacao' || false, 
-    [profile?.user_roles?.name]
-  );
-
-  // Flag para evitar fetches múltiplos
-  const fetchingProfile = React.useRef(false);
+  // Hook para gerenciamento de sessão inicial
+  const { isInitializing } = useAuthSession();
   
-  const fetchProfile = React.useCallback(async (userId: string): Promise<void> => {
-    // Evitar múltiplos fetches simultâneos
-    if (fetchingProfile.current) return;
-    
-    try {
-      fetchingProfile.current = true;
-      console.log('🔄 [AUTH] Buscando perfil para:', userId);
-      
-      const fetchedProfile = await profileFetcher.fetchProfile(userId);
-      
-      if (fetchedProfile) {
-        console.log('✅ [AUTH] Perfil carregado:', {
-          name: fetchedProfile.name,
-          email: fetchedProfile.email,
-          role: fetchedProfile.user_roles?.name || 'N/A'
-        });
-        
-        setProfile(fetchedProfile);
-      } else {
-        console.warn('⚠️ [AUTH] Perfil não encontrado');
-        setProfile(null);
-      }
-    } catch (error) {
-      console.error('❌ [AUTH] Erro ao buscar perfil:', error);
-      setProfile(null);
-    } finally {
-      fetchingProfile.current = false;
-    }
-  }, []);
+  // Hook para métodos de autenticação
+  const { signIn, signOut } = useAuthMethods({ setIsLoading });
+  
+  // Hook para gerenciamento de estado
+  const { setupAuthSession } = useAuthStateManager({
+    setSession,
+    setUser,
+    setProfile,
+    setIsLoading,
+  });
 
-  // Setup inicial da autenticação simplificado
+  // Estados derivados
+  const isAdmin = profile?.user_roles?.name === 'admin' || false;
+  const isFormacao = profile?.user_roles?.name === 'formacao' || false;
+
+  // Configurar autenticação na inicialização
   useEffect(() => {
-    console.log('🚀 [AUTH] Inicializando AuthContext');
-    
-    let mounted = true;
-    let subscription: { unsubscribe: () => void } | null = null;
-    
-    const initAuth = async () => {
-      try {
-        // 1. Configurar listener simplificado (sem async na callback)
-        const { data } = supabase.auth.onAuthStateChange(
-          (event, newSession) => {
-            if (!mounted) return;
-            
-            console.log(`🔄 [AUTH] Evento: ${event}`, {
-              hasSession: !!newSession,
-              hasUser: !!newSession?.user
-            });
-            
-            // Atualizações síncronas
-            setSession(newSession);
-            setUser(newSession?.user ?? null);
-            
-            // Fetch de perfil diferido para evitar deadlocks
-            if (newSession?.user && event === 'SIGNED_IN') {
-              setTimeout(() => {
-                if (mounted) {
-                  fetchProfile(newSession.user.id);
-                }
-              }, 100);
-            } else if (!newSession?.user) {
-              setProfile(null);
-            }
-            
-            // Finalizar loading
-            if (mounted) {
-              setIsLoading(false);
-            }
-          }
-        );
-        
-        subscription = data.subscription;
+    if (!isInitializing) {
+      setupAuthSession();
+    }
+  }, [isInitializing, setupAuthSession]);
 
-        // 2. Verificar sessão atual
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
-        if (mounted && currentSession?.user) {
-          setSession(currentSession);
-          setUser(currentSession.user);
-          
-          // Fetch diferido do perfil
-          setTimeout(() => {
-            if (mounted) {
-              fetchProfile(currentSession.user.id);
+  // Listener para mudanças de autenticação
+  useEffect(() => {
+    console.log('🔄 [AUTH] Configurando listener de mudanças de estado');
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log(`🔄 [AUTH] Evento: ${event}`, {
+          hasSession: !!session,
+          hasUser: !!session?.user
+        });
+
+        if (event === 'SIGNED_IN' && session) {
+          // Buscar perfil do usuário após login
+          setTimeout(async () => {
+            try {
+              console.log('🔄 [AUTH] Buscando perfil para:', session.user.id);
+              
+              const { data: profileData, error } = await supabase
+                .from('profiles')
+                .select(`
+                  *,
+                  user_roles (
+                    id,
+                    name,
+                    description,
+                    permissions
+                  )
+                `)
+                .eq('id', session.user.id)
+                .single();
+
+              if (error) {
+                console.error('❌ [AUTH] Erro ao buscar perfil:', error);
+              } else if (profileData) {
+                console.log('✅ [AUTH] Perfil carregado:', {
+                  name: profileData.name,
+                  email: profileData.email,
+                  role: profileData.user_roles?.name
+                });
+                setProfile(profileData);
+              }
+            } catch (error) {
+              console.error('❌ [AUTH] Erro crítico ao buscar perfil:', error);
             }
-          }, 100);
+          }, 0);
         }
-        
-        // 3. Timeout de segurança reduzido
-        setTimeout(() => {
-          if (mounted) {
-            setIsLoading(false);
-          }
-        }, 4000); // 4 segundos máximo
-        
-      } catch (error) {
-        console.error('❌ [AUTH] Erro na inicialização:', error);
-        if (mounted) {
-          setIsLoading(false);
+
+        if (event === 'SIGNED_OUT') {
+          console.log('🔄 [AUTH] Limpando estado após logout');
+          setSession(null);
+          setUser(null);
+          setProfile(null);
         }
+
+        // Atualizar estados básicos
+        setSession(session);
+        setUser(session?.user ?? null);
       }
-    };
+    );
 
-    initAuth();
-    
     return () => {
-      mounted = false;
-      subscription?.unsubscribe();
+      console.log('🔄 [AUTH] Removendo listener');
+      subscription.unsubscribe();
     };
-  }, [fetchProfile]);
-
-  // Função para refetch de perfil
-  const refetchProfile = async (): Promise<void> => {
-    if (user?.id) {
-      await fetchProfile(user.id);
-    }
-  };
-
-  // Função de login
-  const signIn = async (email: string, password: string): Promise<{ error?: any }> => {
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-      
-      if (error) {
-        return { error };
-      }
-      
-      return { error: null };
-    } catch (error) {
-      return { error };
-    }
-  };
-
-  // Função de logout
-  const signOut = async (): Promise<void> => {
-    try {
-      console.log('🚪 [AUTH] Fazendo logout');
-      
-      // Limpar cache
-      profileFetcher.clearCache();
-      
-      // Logout do Supabase
-      await supabase.auth.signOut({ scope: 'global' });
-      
-      // Limpar estado local
-      setSession(null);
-      setUser(null);
-      setProfile(null);
-      
-      // Redirecionar
-      window.location.href = '/login';
-    } catch (error) {
-      console.error('❌ [AUTH] Erro no logout:', error);
-      // Forçar limpeza mesmo com erro
-      window.location.href = '/login';
-    }
-  };
+  }, []);
 
   const contextValue: AuthContextType = {
     session,
@@ -198,10 +119,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isLoading,
     isAdmin,
     isFormacao,
-    refetchProfile,
-    signOut,
     signIn,
-    setProfile
+    signOut,
+    setProfile,
   };
 
   return (
@@ -214,7 +134,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useAuth deve ser usado dentro de um AuthProvider');
   }
   return context;
 };

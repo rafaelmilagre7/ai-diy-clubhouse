@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -32,7 +33,7 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
       if (data.user) {
         console.log('✅ [AUTH] Login realizado com sucesso:', data.user.email);
         
-        // CORREÇÃO CRÍTICA: Buscar role do usuário e atualizar metadata imediatamente
+        // Buscar e atualizar role do usuário no metadata
         try {
           const { data: profile } = await supabase
             .from('profiles')
@@ -46,7 +47,6 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
             .single();
 
           if (profile?.user_roles) {
-            // Correção de tipagem: garantir que user_roles seja tratado corretamente
             let roleName: string | null = null;
             
             if (Array.isArray(profile.user_roles)) {
@@ -56,16 +56,13 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
             }
 
             if (roleName) {
-              console.log(`🔄 [AUTH] Atualizando user_metadata no login: role=${roleName}`);
               await supabase.auth.updateUser({
                 data: { role: roleName }
               });
-              console.log(`✅ [AUTH] User_metadata atualizado no login: role=${roleName}`);
             }
           }
         } catch (metadataError) {
-          console.warn('⚠️ [AUTH] Erro ao atualizar metadata no login:', metadataError);
-          // Não bloquear o login por erro de metadata
+          console.warn('⚠️ [AUTH] Erro ao atualizar metadata:', metadataError);
         }
 
         toast.success('Login realizado com sucesso!');
@@ -112,28 +109,9 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
     }
   };
 
-  // Métodos específicos para diferentes tipos de usuário
-  const signInAsMember = async (email: string, password: string) => {
-    const result = await signIn(email, password);
-    if (!result.error) {
-      console.log('👤 [AUTH] Login como membro realizado');
-    }
-    return result;
-  };
-
-  const signInAsAdmin = async (email: string, password: string) => {
-    const result = await signIn(email, password);
-    if (!result.error) {
-      console.log('🔑 [AUTH] Login como admin realizado');
-    }
-    return result;
-  };
-
   return {
     signIn,
     signOut,
-    signInAsMember,
-    signInAsAdmin,
     isSigningIn
   };
 };
