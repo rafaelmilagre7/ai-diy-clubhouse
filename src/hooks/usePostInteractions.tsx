@@ -3,10 +3,10 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { deleteForumPost } from "@/lib/supabase/rpc";
-import { Post } from "@/types/forumTypes";
+import { CommunityPost } from "@/types/communityTypes";
 
 interface UsePostInteractionsProps {
-  post: Post;
+  post: CommunityPost;
   topicId: string;
   onReplyAdded?: () => void;
 }
@@ -27,19 +27,19 @@ export const usePostInteractions = ({
   };
 
   const handleDeletePost = async () => {
-    if (!post.id || !topicId) return;
+    if (!post.id) return;
     
     try {
       setIsDeleting(true);
       
-      const { success, error } = await deleteForumPost(post.id, topicId);
+      const { success, error } = await deleteForumPost(post.id);
       
       if (!success) {
         throw new Error(error || "Erro desconhecido ao excluir resposta");
       }
       
-      queryClient.invalidateQueries({ queryKey: ['forumPosts', topicId] });
-      queryClient.invalidateQueries({ queryKey: ['forumTopic', topicId] });
+      queryClient.invalidateQueries({ queryKey: ['community-posts', topicId] });
+      queryClient.invalidateQueries({ queryKey: ['community-topic', topicId] });
       toast.success("Resposta excluída com sucesso");
       
       if (onReplyAdded) {

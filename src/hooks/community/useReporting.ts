@@ -36,7 +36,19 @@ export const useReporting = () => {
     }
 
     try {
-      const reportData = {
+      // Definir tipo base do relatório
+      interface BaseReportData {
+        reporter_id: string;
+        reported_user_id: string | null;
+        report_type: string;
+        reason: string;
+        description?: string;
+        status: string;
+        topic_id?: string;
+        post_id?: string;
+      }
+
+      const reportData: BaseReportData = {
         reporter_id: user.id,
         reported_user_id: reportingUserId,
         report_type: data.report_type,
@@ -45,6 +57,7 @@ export const useReporting = () => {
         status: 'pending'
       };
 
+      // Adicionar ID específico baseado no tipo
       if (reportingItemType === 'topic') {
         reportData.topic_id = reportingItemId;
       } else {

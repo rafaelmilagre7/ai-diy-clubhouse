@@ -45,9 +45,9 @@ export async function incrementTopicReplies(topicId: string): Promise<void> {
 }
 
 /**
- * Deleta um tópico do fórum
+ * Deleta um tópico da comunidade
  */
-export async function deleteForumTopic(topicId: string): Promise<{ success: boolean, error?: string }> {
+export async function deleteCommunityTopic(topicId: string): Promise<{ success: boolean, error?: string }> {
   try {
     const { data, error } = await supabase.rpc('delete_forum_topic', {
       topic_id: topicId
@@ -73,9 +73,9 @@ export async function deleteForumTopic(topicId: string): Promise<{ success: bool
 }
 
 /**
- * Deleta um post do fórum
+ * Deleta um post da comunidade
  */
-export async function deleteForumPost(postId: string): Promise<{ success: boolean, error?: string }> {
+export async function deleteCommunityPost(postId: string): Promise<{ success: boolean, error?: string }> {
   try {
     const { data, error } = await supabase.rpc('delete_forum_post', {
       post_id: postId
@@ -99,3 +99,7 @@ export async function deleteForumPost(postId: string): Promise<{ success: boolea
     };
   }
 }
+
+// Manter aliases para compatibilidade com código existente
+export const deleteForumTopic = deleteCommunityTopic;
+export const deleteForumPost = deleteCommunityPost;
