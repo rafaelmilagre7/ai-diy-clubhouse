@@ -12,7 +12,9 @@ interface TrendingTopic {
   title: string;
   view_count: number;
   reply_count: number;
-  category_name?: string;
+  forum_categories?: Array<{
+    name: string;
+  }>;
   engagement_score: number;
 }
 
@@ -40,7 +42,7 @@ export const TrendingWidget = () => {
         title: topic.title,
         view_count: topic.view_count || 0,
         reply_count: topic.reply_count || 0,
-        category_name: topic.forum_categories?.name,
+        forum_categories: topic.forum_categories,
         engagement_score: (topic.view_count || 0) + (topic.reply_count || 0) * 5
       }))
       .filter(topic => topic.engagement_score > 0)
@@ -144,9 +146,9 @@ export const TrendingWidget = () => {
                   </div>
                 </div>
 
-                {topic.category_name && (
+                {topic.forum_categories?.[0]?.name && (
                   <Badge variant="outline" className="mt-2 text-xs">
-                    {topic.category_name}
+                    {topic.forum_categories[0].name}
                   </Badge>
                 )}
               </div>
