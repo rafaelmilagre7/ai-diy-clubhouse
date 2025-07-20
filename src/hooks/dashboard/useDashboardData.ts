@@ -85,8 +85,10 @@ export const useDashboardData = () => {
       }
     };
     
-    fetchData();
-  }, [toast, isAdmin, profile?.user_roles?.name]);
+    if (user?.id && profile) {
+      fetchData();
+    }
+  }, [user?.id, profile?.user_roles?.name]); // Dependências estáveis sem toast
   
   return { 
     solutions, 

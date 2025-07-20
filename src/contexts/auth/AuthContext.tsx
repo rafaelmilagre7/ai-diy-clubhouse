@@ -22,19 +22,34 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const isAdmin = profile?.user_roles?.name === 'admin' || profile?.email?.includes('@viverdeia.ai') || false;
   const isFormacao = profile?.user_roles?.name === 'formacao' || false;
 
-  // Função para buscar perfil
+  // Cache para evitar fetches repetitivos
+  const profileCache = React.useRef<{[key: string]: {profile: UserProfile, timestamp: number}}>({});
+  
   const fetchProfile = async (userId: string): Promise<void> => {
     try {
-      console.log(`🔄 [AUTH] Buscando perfil para: ${userId}`);
-      
+      // Verificar cache (5 minutos)
+      const cached = profileCache.current[userId];
+      if (cached && Date.now() - cached.timestamp < 5 * 60 * 1000) {
+        setProfile(cached.profile);
+        return;
+      }
+
+      console.log('🔄 [AUTH] Buscando perfil para:', userId);
       const fetchedProfile = await profileFetcher.fetchProfile(userId);
       
       if (fetchedProfile) {
-        console.log(`✅ [AUTH] Perfil carregado:`, {
+        console.log('✅ [AUTH] Perfil carregado:', {
           name: fetchedProfile.name,
           email: fetchedProfile.email,
-          role: fetchedProfile.user_roles?.name || 'sem role'
+          role: fetchedProfile.user_roles?.name || 'N/A'
         });
+        
+        // Armazenar no cache
+        profileCache.current[userId] = {
+          profile: fetchedProfile,
+          timestamp: Date.now()
+        };
+        
         setProfile(fetchedProfile);
       } else {
         console.warn('⚠️ [AUTH] Perfil não encontrado');
@@ -54,7 +69,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     
     const initAuth = async () => {
       try {
-        // 1. Configurar listener de auth state
+        // 1. Configurar listener de auth state (apenas uma vez)
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (event, newSession) => {
             if (!mounted) return;
@@ -67,10 +82,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             setSession(newSession);
             setUser(newSession?.user ?? null);
             
-            // Buscar perfil se há usuário
-            if (newSession?.user) {
+            // Buscar perfil apenas quando necessário (evitar TOKEN_REFRESHED)
+            if (newSession?.user && event !== 'TOKEN_REFRESHED') {
               await fetchProfile(newSession.user.id);
-            } else {
+            } else if (!newSession?.user) {
               setProfile(null);
             }
             

@@ -91,11 +91,11 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
     isLoading,
     error
   } = useQuery({
-    queryKey: ['dashboard-progress', user?.id, solutionsHash],
+    queryKey: ['dashboard-progress', user?.id],
     queryFn: fetchProgress,
-    staleTime: 2 * 60 * 1000, // 2 minutos de cache no React Query
-    gcTime: 5 * 60 * 1000, // 5 minutos antes de garbage collection
-    enabled: !!(user?.id && Array.isArray(solutions) && solutions.length > 0),
+    staleTime: 5 * 60 * 1000, // 5 minutos de cache
+    gcTime: 10 * 60 * 1000, // 10 minutos antes de garbage collection
+    enabled: !!(user?.id),
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchInterval: false,
