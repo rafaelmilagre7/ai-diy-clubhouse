@@ -113,7 +113,7 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
             label="Comunidade"
             icon={MessageSquare}
             sidebarOpen={sidebarOpen}
-            badge={isLoading ? "..." : stats?.forumTopics?.toString()}
+            badge={isLoading ? "..." : stats?.communityTopics?.toString()}
           />
         </SidebarNavigationGroup>
 

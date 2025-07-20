@@ -1,21 +1,21 @@
 
-import { ForumStatistics } from "./ForumStatistics";
+import { CommunityStatistics } from "./CommunityStatistics";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 
-interface ForumHeaderProps {
+interface CommunityHeaderProps {
   title?: string;
   description?: string;
   showNewTopicButton?: boolean;
   onNewTopicClick?: () => void;
 }
 
-export const ForumHeader = ({
+export const CommunityHeader = ({
   title = "Comunidade",
   description = "Compartilhe conhecimento, faça perguntas e conecte-se com outros membros da comunidade.",
   showNewTopicButton = true,
   onNewTopicClick
-}: ForumHeaderProps) => {
+}: CommunityHeaderProps) => {
   return (
     <div className="mb-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-4">
@@ -37,7 +37,7 @@ export const ForumHeader = ({
         )}
       </div>
       
-      <ForumStatistics />
+      <CommunityStatistics />
     </div>
   );
 };

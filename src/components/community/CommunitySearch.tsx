@@ -5,19 +5,19 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { CommunityFilterType } from "@/types/communityTypes";
 
-interface ForumSearchProps {
+interface CommunitySearchProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
   selectedFilter: CommunityFilterType;
   setSelectedFilter: (filter: CommunityFilterType) => void;
 }
 
-export const ForumSearch = ({
+export const CommunitySearch = ({
   searchQuery,
   onSearchChange,
   selectedFilter,
   setSelectedFilter
-}: ForumSearchProps) => {
+}: CommunitySearchProps) => {
   return (
     <div className="flex flex-col sm:flex-row gap-3 mb-4">
       <div className="relative flex-1">
