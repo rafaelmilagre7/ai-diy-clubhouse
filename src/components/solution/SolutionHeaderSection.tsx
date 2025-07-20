@@ -83,21 +83,21 @@ export const SolutionHeaderSection = ({ solution }: SolutionHeaderSectionProps) 
       </div>
       
       <div className="relative">
-        <h1 className="text-2xl md:text-3xl font-bold font-heading bg-gradient-to-r from-white via-purple-200 to-blue-200 bg-clip-text text-transparent">
+        <h1 className="text-2xl md:text-3xl font-bold font-heading bg-gradient-to-r from-white via-cyan-200 to-blue-200 bg-clip-text text-transparent">
           {solution.title}
         </h1>
-        <div className="absolute -inset-1 bg-gradient-to-r from-purple-500/20 to-blue-500/20 rounded-lg blur opacity-30 group-hover:opacity-50 transition duration-1000"></div>
+        <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-lg blur opacity-30 group-hover:opacity-50 transition duration-1000"></div>
       </div>
       
       {solution.thumbnail_url && (
         <div className="mt-6 relative overflow-hidden rounded-xl shadow-2xl max-h-[400px] group">
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-1000 group-hover:blur-xl"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-1000 group-hover:blur-xl"></div>
           <img 
             src={solution.thumbnail_url} 
             alt={solution.title} 
             className="relative w-full object-cover transition-all duration-700 hover:scale-105 rounded-xl border border-white/10"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-purple-500/10 opacity-60 rounded-xl"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-cyan-500/5 opacity-60 rounded-xl"></div>
           <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-blue-500/10 rounded-xl"></div>
         </div>
       )}

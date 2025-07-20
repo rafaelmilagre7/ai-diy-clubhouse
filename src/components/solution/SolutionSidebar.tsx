@@ -46,10 +46,10 @@ export const SolutionSidebar = ({
       </div>
       
       {/* Glow effect */}
-      <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500/20 to-blue-500/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-1000"></div>
+      <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-1000"></div>
       
       <div className="relative">
-        <h3 className="font-medium mb-2 bg-gradient-to-r from-white via-purple-200 to-blue-200 bg-clip-text text-transparent">
+        <h3 className="font-medium mb-2 bg-gradient-to-r from-white via-cyan-200 to-blue-200 bg-clip-text text-transparent">
           Status de Implementação
         </h3>
         {progress ? (
@@ -92,19 +92,19 @@ export const SolutionSidebar = ({
             </Button>
           </div>
         ) : (
-          <Button 
-            className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 border-0 shadow-lg hover:shadow-purple-500/25 transition-all duration-300" 
-            onClick={handleImplementation} 
-            disabled={initializing}
-          >
-            <PlayCircle className="mr-2 h-5 w-5" />
-            {initializing ? 'Preparando...' : 'Implementar solução'}
-          </Button>
+            <Button 
+              className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 border-0 shadow-lg hover:shadow-cyan-500/25 transition-all duration-300" 
+              onClick={handleImplementation} 
+              disabled={initializing}
+            >
+              <PlayCircle className="mr-2 h-5 w-5" />
+              {initializing ? 'Preparando...' : 'Implementar solução'}
+            </Button>
         )}
       </div>
       
       <div className="pt-4 border-t border-white/10 relative">
-        <h3 className="font-medium mb-2 bg-gradient-to-r from-white via-purple-200 to-blue-200 bg-clip-text text-transparent">
+        <h3 className="font-medium mb-2 bg-gradient-to-r from-white via-cyan-200 to-blue-200 bg-clip-text text-transparent">
           Informações
         </h3>
         <div className="space-y-2">
@@ -147,7 +147,7 @@ export const SolutionSidebar = ({
       
       {solution.tags && solution.tags.length > 0 && (
         <div className="pt-4 border-t border-white/10 relative">
-          <h3 className="font-medium mb-2 bg-gradient-to-r from-white via-purple-200 to-blue-200 bg-clip-text text-transparent">
+          <h3 className="font-medium mb-2 bg-gradient-to-r from-white via-cyan-200 to-blue-200 bg-clip-text text-transparent">
             Tags
           </h3>
           <div className="flex flex-wrap gap-2">

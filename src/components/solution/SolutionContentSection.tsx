@@ -23,10 +23,10 @@ export const SolutionContentSection = ({ solution }: SolutionContentSectionProps
       </div>
       
       {/* Glow effect */}
-      <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500/20 to-blue-500/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-1000"></div>
+      <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-1000"></div>
       
       <div className="relative prose max-w-none prose-invert">
-        <h2 className="text-xl font-semibold mb-4 bg-gradient-to-r from-white via-purple-200 to-blue-200 bg-clip-text text-transparent">
+        <h2 className="text-xl font-semibold mb-4 bg-gradient-to-r from-white via-cyan-200 to-blue-200 bg-clip-text text-transparent">
           Sobre esta solução
         </h2>
         

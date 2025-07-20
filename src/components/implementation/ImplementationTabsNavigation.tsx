@@ -24,30 +24,61 @@ export const ImplementationTabsNavigation = ({
   ];
 
   return (
-    <TabsList className="grid grid-cols-3 md:grid-cols-6 p-1 mb-4 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl overflow-x-auto scrollbar-hide">
-      {tabs.map((tab) => (
-        <TabsTrigger
-          key={tab.id}
-          value={tab.id}
-          className={cn(
-            "flex items-center gap-2 py-2 px-3 transition-all duration-300 relative rounded-lg",
-            activeTab === tab.id 
-              ? "text-white font-medium bg-gradient-to-r from-purple-600/30 to-blue-600/30 border border-purple-500/30" 
-              : "text-neutral-400 hover:text-white hover:bg-white/5"
-          )}
-          onClick={() => setActiveTab(tab.id)}
-        >
-          {tab.icon}
-          <span className="hidden md:inline">{tab.label}</span>
-          {activeTab === tab.id && (
-            <motion.span
-              className="absolute -bottom-1 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full"
-              layoutId="activeTabIndicator" 
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            />
-          )}
-        </TabsTrigger>
-      ))}
-    </TabsList>
+    <div className="relative mb-6">
+      {/* Background with glassmorphism */}
+      <div className="absolute inset-0 bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl"></div>
+      
+      {/* Subtle dots pattern */}
+      <div className="absolute inset-0 opacity-5 pointer-events-none rounded-2xl">
+        <div className="absolute inset-0 rounded-2xl" style={{
+          backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.3) 1px, transparent 0)',
+          backgroundSize: '15px 15px'
+        }} />
+      </div>
+      
+      <TabsList className="relative w-full grid grid-cols-3 md:grid-cols-6 p-2 bg-transparent border-0 h-auto gap-1">
+        {tabs.map((tab) => (
+          <TabsTrigger
+            key={tab.id}
+            value={tab.id}
+            className={cn(
+              "relative flex flex-col items-center gap-1 py-3 px-2 transition-all duration-300 rounded-xl border-0 h-auto min-h-[60px]",
+              "data-[state=active]:bg-gradient-to-br data-[state=active]:from-cyan-500/20 data-[state=active]:to-blue-500/20",
+              "data-[state=active]:border data-[state=active]:border-cyan-500/30",
+              "data-[state=active]:text-white data-[state=active]:font-medium",
+              "data-[state=active]:shadow-lg data-[state=active]:shadow-cyan-500/10",
+              "data-[state=inactive]:text-neutral-400 data-[state=inactive]:hover:text-white data-[state=inactive]:hover:bg-white/5",
+              "group"
+            )}
+            onClick={() => setActiveTab(tab.id)}
+          >
+            {/* Icon with glow effect when active */}
+            <div className={cn(
+              "transition-all duration-300",
+              activeTab === tab.id ? "text-cyan-400 drop-shadow-sm" : "text-neutral-400"
+            )}>
+              {tab.icon}
+            </div>
+            
+            {/* Label */}
+            <span className="text-xs font-medium leading-none">
+              {tab.label}
+            </span>
+            
+            {/* Active indicator with gradient */}
+            {activeTab === tab.id && (
+              <motion.div
+                className="absolute -bottom-0.5 left-2 right-2 h-0.5 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full"
+                layoutId="activeTabIndicator" 
+                transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              />
+            )}
+            
+            {/* Subtle glow effect on hover */}
+            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-blue-500/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          </TabsTrigger>
+        ))}
+      </TabsList>
+    </div>
   );
 };

@@ -56,7 +56,7 @@ export const SolutionMobileActions = ({
         </div>
       ) : (
         <Button 
-          className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 border-0 shadow-lg hover:shadow-purple-500/25 transition-all duration-300" 
+          className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 border-0 shadow-lg hover:shadow-cyan-500/25 transition-all duration-300" 
           onClick={handleImplementation} 
           disabled={initializing}
         >

@@ -100,7 +100,7 @@ export const ImplementationComplete: React.FC<ImplementationCompleteProps> = ({
           </div>
           
           {/* Glow effect */}
-          <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500/20 to-blue-500/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-1000"></div>
+          <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-1000"></div>
           
           <motion.div
             initial={{ scale: 0 }}
@@ -108,9 +108,9 @@ export const ImplementationComplete: React.FC<ImplementationCompleteProps> = ({
             transition={{ type: "spring", stiffness: 400, damping: 15 }}
             className="relative w-20 h-20 mx-auto mb-6"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/30 to-blue-500/30 rounded-full animate-ping opacity-30"></div>
-            <div className="relative flex items-center justify-center bg-gradient-to-r from-purple-500/20 to-blue-500/20 w-20 h-20 rounded-full border border-purple-500/30">
-              <CheckCircle className="h-10 w-10 text-purple-400" />
+            <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/30 to-blue-500/30 rounded-full animate-ping opacity-30"></div>
+            <div className="relative flex items-center justify-center bg-gradient-to-r from-cyan-500/20 to-blue-500/20 w-20 h-20 rounded-full border border-cyan-500/30">
+              <CheckCircle className="h-10 w-10 text-cyan-400" />
             </div>
           </motion.div>
           
@@ -118,7 +118,7 @@ export const ImplementationComplete: React.FC<ImplementationCompleteProps> = ({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="text-2xl font-bold bg-gradient-to-r from-white via-purple-200 to-blue-200 bg-clip-text text-transparent mb-3"
+            className="text-2xl font-bold bg-gradient-to-r from-white via-cyan-200 to-blue-200 bg-clip-text text-transparent mb-3"
           >
             Parabéns!
           </motion.h2>
@@ -129,7 +129,7 @@ export const ImplementationComplete: React.FC<ImplementationCompleteProps> = ({
             transition={{ delay: 0.4 }}
             className="text-neutral-200 mb-6 text-lg"
           >
-            Você concluiu com sucesso a implementação da solução <span className="font-semibold bg-gradient-to-r from-purple-300 to-blue-300 bg-clip-text text-transparent">"{solution.title}"</span>.
+            Você concluiu com sucesso a implementação da solução <span className="font-semibold bg-gradient-to-r from-cyan-300 to-blue-300 bg-clip-text text-transparent">"{solution.title}"</span>.
           </motion.p>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 my-8">
@@ -149,7 +149,7 @@ export const ImplementationComplete: React.FC<ImplementationCompleteProps> = ({
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: stat.delay + 0.1, type: "spring", stiffness: 300 }}
-                  className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent"
+                  className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent"
                 >
                   {stat.value}
                 </motion.div>
@@ -166,7 +166,7 @@ export const ImplementationComplete: React.FC<ImplementationCompleteProps> = ({
             >
               <Button 
                 onClick={() => window.location.href = "/solutions"}
-                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 border-0 shadow-lg hover:shadow-purple-500/25 transition-all duration-300 gap-2"
+                className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 border-0 shadow-lg hover:shadow-cyan-500/25 transition-all duration-300 gap-2"
               >
                 <Award className="h-4 w-4" />
                 Ver conquista
@@ -204,15 +204,15 @@ export const ImplementationComplete: React.FC<ImplementationCompleteProps> = ({
         </div>
         
         {/* Glow effect */}
-        <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500/20 to-blue-500/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-1000"></div>
+        <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-1000"></div>
         
-        <h3 className="relative text-xl font-semibold bg-gradient-to-r from-white via-purple-200 to-blue-200 bg-clip-text text-transparent mb-3 flex items-center gap-2">
-          <Award className="h-5 w-5 text-purple-400" />
+        <h3 className="relative text-xl font-semibold bg-gradient-to-r from-white via-cyan-200 to-blue-200 bg-clip-text text-transparent mb-3 flex items-center gap-2">
+          <Award className="h-5 w-5 text-cyan-400" />
           Conclusão da Implementação
         </h3>
         
         <p className="text-neutral-200 mb-4">
-          Você completou todos os passos necessários para implementar a solução <span className="font-medium bg-gradient-to-r from-purple-300 to-blue-300 bg-clip-text text-transparent">"{solution.title}"</span>?
+          Você completou todos os passos necessários para implementar a solução <span className="font-medium bg-gradient-to-r from-cyan-300 to-blue-300 bg-clip-text text-transparent">"{solution.title}"</span>?
         </p>
         
         <div className="bg-white/5 backdrop-blur-sm rounded-lg p-4 border border-white/10 mb-6">
@@ -221,15 +221,15 @@ export const ImplementationComplete: React.FC<ImplementationCompleteProps> = ({
           </p>
           <ul className="space-y-2 text-sm text-neutral-400">
             <li className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-purple-400 flex-shrink-0" />
+              <CheckCircle className="h-4 w-4 text-cyan-400 flex-shrink-0" />
               <span>Receberá uma conquista no seu perfil</span>
             </li>
             <li className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-purple-400 flex-shrink-0" />
+              <CheckCircle className="h-4 w-4 text-cyan-400 flex-shrink-0" />
               <span>Terá acesso a materiais exclusivos de otimização</span>
             </li>
             <li className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-purple-400 flex-shrink-0" />
+              <CheckCircle className="h-4 w-4 text-cyan-400 flex-shrink-0" />
               <span>Poderá compartilhar seu sucesso com outros membros</span>
             </li>
           </ul>
@@ -239,7 +239,7 @@ export const ImplementationComplete: React.FC<ImplementationCompleteProps> = ({
           <Button 
             onClick={handleComplete} 
             disabled={isCompleting}
-            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 border-0 shadow-lg hover:shadow-purple-500/25 transition-all duration-300 gap-2"
+            className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 border-0 shadow-lg hover:shadow-cyan-500/25 transition-all duration-300 gap-2"
           >
             {isCompleting ? (
               <>
@@ -280,10 +280,10 @@ export const ImplementationComplete: React.FC<ImplementationCompleteProps> = ({
         </div>
         
         {/* Glow effect */}
-        <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500/20 to-blue-500/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-1000"></div>
+        <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-1000"></div>
         
-        <h3 className="relative text-lg font-medium mb-4 flex items-center gap-2 bg-gradient-to-r from-white via-purple-200 to-blue-200 bg-clip-text text-transparent">
-          <ArrowRight className="h-5 w-5 text-purple-400" />
+        <h3 className="relative text-lg font-medium mb-4 flex items-center gap-2 bg-gradient-to-r from-white via-cyan-200 to-blue-200 bg-clip-text text-transparent">
+          <ArrowRight className="h-5 w-5 text-cyan-400" />
           Próximos passos
         </h3>
         
@@ -294,8 +294,8 @@ export const ImplementationComplete: React.FC<ImplementationCompleteProps> = ({
             transition={{ delay: 0.4 }}
             className="flex items-start gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors"
           >
-            <div className="bg-gradient-to-r from-purple-600/20 to-blue-600/20 p-2 rounded-full mr-1 flex-shrink-0 border border-purple-500/30">
-              <Share2 className="h-4 w-4 text-purple-400" />
+            <div className="bg-gradient-to-r from-cyan-600/20 to-blue-600/20 p-2 rounded-full mr-1 flex-shrink-0 border border-cyan-500/30">
+              <Share2 className="h-4 w-4 text-cyan-400" />
             </div>
             <div>
               <h4 className="font-medium text-sm text-neutral-200">Compartilhe seus resultados</h4>
@@ -311,8 +311,8 @@ export const ImplementationComplete: React.FC<ImplementationCompleteProps> = ({
             transition={{ delay: 0.5 }}
             className="flex items-start gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors"
           >
-            <div className="bg-gradient-to-r from-purple-600/20 to-blue-600/20 p-2 rounded-full mr-1 flex-shrink-0 border border-purple-500/30">
-              <Award className="h-4 w-4 text-purple-400" />
+            <div className="bg-gradient-to-r from-cyan-600/20 to-blue-600/20 p-2 rounded-full mr-1 flex-shrink-0 border border-cyan-500/30">
+              <Award className="h-4 w-4 text-cyan-400" />
             </div>
             <div>
               <h4 className="font-medium text-sm text-neutral-200">Explore mais soluções</h4>
