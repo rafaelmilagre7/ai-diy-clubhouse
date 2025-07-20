@@ -14,11 +14,17 @@ export const getContentPreview = (content: string, maxLength: number = 120): str
   // Remove sintaxe markdown de imagens ![alt](url)
   processedContent = processedContent.replace(/!\[([^\]]*)\]\([^)]+\)/g, '');
   
-  // Remove URLs longos de storage/CDN que começam com https://
-  processedContent = processedContent.replace(/https:\/\/[^\s]+\.(webp|jpg|jpeg|png|gif)/gi, '');
+  // Remove URLs específicas do Supabase Storage (mais específico)
+  processedContent = processedContent.replace(/https:\/\/zotzvtepvpnkcoobdubt\.supabase\.co\/storage\/v1\/object\/public\/[^\s\)]+/g, '');
   
-  // Remove outros URLs longos desnecessários
-  processedContent = processedContent.replace(/https:\/\/[a-zA-Z0-9\-\.]+\.supabase\.co\/[^\s]+/g, '');
+  // Remove URLs de storage/CDN que começam com https://
+  processedContent = processedContent.replace(/https:\/\/[^\s]+\.(webp|jpg|jpeg|png|gif|pdf|doc|docx)/gi, '');
+  
+  // Remove outros URLs longos do Supabase
+  processedContent = processedContent.replace(/https:\/\/[a-zA-Z0-9\-\.]+\.supabase\.co\/[^\s\)]+/g, '');
+  
+  // Remove URLs genéricos longos
+  processedContent = processedContent.replace(/https?:\/\/[^\s]{50,}/g, '');
   
   // Remove qualquer HTML/markdown restante
   processedContent = processedContent.replace(/<[^>]*>/g, '');
@@ -32,6 +38,9 @@ export const getContentPreview = (content: string, maxLength: number = 120): str
   // Remove pontuações duplas que podem ter ficado após remoção de URLs
   processedContent = processedContent.replace(/\.\s*\./g, '.');
   processedContent = processedContent.replace(/\s+\./g, '.');
+  
+  // Remove linhas vazias ou com apenas espaços
+  processedContent = processedContent.replace(/^\s*$/gm, '');
   
   // Trunca o texto se necessário
   if (processedContent.length > maxLength) {
