@@ -1,136 +1,77 @@
 
-import { supabase } from './client';
+import { supabase } from "./client";
 
-/**
- * Cria uma política pública para um bucket de armazenamento
- */
-export async function createStoragePublicPolicy(bucketName: string): Promise<{ success: boolean, error?: string }> {
-  try {
-    const { data, error } = await supabase.rpc('create_storage_public_policy', {
-      bucket_name: bucketName
-    });
-    
-    if (error) {
-      console.error(`Erro ao criar políticas para ${bucketName}:`, error);
-      return { success: false, error: error.message };
-    }
-    
-    return { success: true };
-  } catch (error: any) {
-    console.error(`Erro ao criar políticas para ${bucketName}:`, error);
-    return { success: false, error: error.message };
+export const incrementTopicViews = async (topicId: string) => {
+  const { error } = await supabase.rpc('increment_topic_views', {
+    topic_id: topicId
+  });
+  
+  if (error) {
+    console.error('Erro ao incrementar visualizações:', error);
+    throw error;
   }
-}
+};
 
-/**
- * Incrementa as visualizações de um tópico
- */
-export async function incrementTopicViews(topicId: string): Promise<void> {
-  try {
-    await supabase.rpc('increment_topic_views', { topic_id: topicId });
-  } catch (error) {
-    console.error('Erro ao incrementar visualizações do tópico:', error);
+export const incrementTopicReplies = async (topicId: string) => {
+  const { error } = await supabase.rpc('increment_topic_replies', {
+    topic_id: topicId
+  });
+  
+  if (error) {
+    console.error('Erro ao incrementar respostas:', error);
+    throw error;
   }
-}
+};
 
-/**
- * Incrementa o contador de respostas de um tópico
- */
-export async function incrementTopicReplies(topicId: string): Promise<void> {
-  try {
-    await supabase.rpc('increment_topic_replies', { topic_id: topicId });
-  } catch (error) {
-    console.error('Erro ao incrementar respostas do tópico:', error);
-  }
-}
-
-/**
- * Deleta um tópico da comunidade
- */
-export async function deleteCommunityTopic(topicId: string): Promise<{ success: boolean, error?: string }> {
-  try {
-    const { data, error } = await supabase.rpc('delete_community_topic', {
-      topic_id: topicId
-    });
-
-    if (error) {
-      console.error('Erro ao deletar tópico:', error);
-      return { success: false, error: error.message };
-    }
-
-    if (!data?.success) {
-      return { success: false, error: data?.error || 'Erro ao deletar tópico' };
-    }
-
-    return { success: true };
-  } catch (error: any) {
+export const deleteCommunityTopic = async (topicId: string) => {
+  const { data, error } = await supabase.rpc('delete_community_topic', {
+    topic_id: topicId
+  });
+  
+  if (error) {
     console.error('Erro ao deletar tópico:', error);
-    return { 
-      success: false, 
-      error: error.message 
-    };
+    throw error;
   }
-}
+  
+  return data;
+};
 
-/**
- * Deleta um post da comunidade
- */
-export async function deleteCommunityPost(postId: string): Promise<{ success: boolean, error?: string }> {
-  try {
-    const { data, error } = await supabase.rpc('delete_community_post', {
-      post_id: postId
-    });
-
-    if (error) {
-      console.error('Erro ao deletar post:', error);
-      return { success: false, error: error.message };
-    }
-
-    if (!data?.success) {
-      return { success: false, error: data?.error || 'Erro ao deletar post' };
-    }
-
-    return { success: true };
-  } catch (error: any) {
+export const deleteCommunityPost = async (postId: string) => {
+  const { data, error } = await supabase.rpc('delete_community_post', {
+    post_id: postId
+  });
+  
+  if (error) {
     console.error('Erro ao deletar post:', error);
-    return { 
-      success: false, 
-      error: error.message 
-    };
+    throw error;
   }
-}
+  
+  return data;
+};
 
-/**
- * Marcar/desmarcar tópico como resolvido
- */
-export async function toggleTopicSolved(topicId: string): Promise<{ success: boolean, error?: string, is_solved?: boolean }> {
-  try {
-    const { data, error } = await supabase.rpc('toggle_topic_solved', {
-      p_topic_id: topicId
-    });
-
-    if (error) {
-      console.error('Erro ao alterar status do tópico:', error);
-      return { success: false, error: error.message };
-    }
-
-    if (!data?.success) {
-      return { success: false, error: data?.error || 'Erro ao alterar status do tópico' };
-    }
-
-    return { 
-      success: true, 
-      is_solved: data.is_solved 
-    };
-  } catch (error: any) {
+export const toggleTopicSolved = async (topicId: string, userId?: string) => {
+  const { data, error } = await supabase.rpc('toggle_topic_solved', {
+    p_topic_id: topicId,
+    p_user_id: userId
+  });
+  
+  if (error) {
     console.error('Erro ao alterar status do tópico:', error);
-    return { 
-      success: false, 
-      error: error.message 
-    };
+    throw error;
   }
-}
+  
+  return data;
+};
 
-// Manter aliases para compatibilidade com código existente  
-export const deleteForumTopic = deleteCommunityTopic;
-export const deleteForumPost = deleteCommunityPost;
+export const createStoragePublicPolicy = async (bucketName: string) => {
+  const { data, error } = await supabase.rpc('create_storage_public_policy_v2', {
+    bucket_name: bucketName
+  });
+  
+  if (error) {
+    console.error('Erro ao criar política de storage:', error);
+    throw error;
+  }
+  
+  return data;
+};

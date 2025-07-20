@@ -26,12 +26,12 @@ export const useCommunityTopics = ({
           .select(`
             *,
             profiles:user_id(name, avatar_url),
-            forum_categories:category_id(name, slug)
+            community_categories:category_id(name, slug)
           `);
 
         // Filtrar por categoria específica se informada
         if (categorySlug && categorySlug !== "todos") {
-          query = query.eq('forum_categories.slug', categorySlug);
+          query = query.eq('community_categories.slug', categorySlug);
         }
 
         // Filtrar por tópicos do usuário atual se necessário
