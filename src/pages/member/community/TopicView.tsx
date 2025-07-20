@@ -1,297 +1,365 @@
-import React, { useState, useEffect } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { formatDistanceToNow } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Separator } from "@/components/ui/separator";
-import { Shell } from "@/components/Shell";
-import { ReplyForm } from "@/components/community/ReplyForm";
-import {
-  MessageSquare,
-  ThumbsUp,
-  MoreVertical,
-  ArrowLeft,
-  CheckCircle2,
-  Loader2,
-  Pin,
-  Lock,
-  Flag,
-  Trash2,
-} from "lucide-react";
+import { useParams, Link } from "react-router-dom";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import { useAuth } from "@/contexts/auth";
+import { Loader2, ArrowLeft, Lock, Pin, CheckCircle, MessageCircle, Eye } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
+import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { PostItem } from "@/components/community/PostItem";
-import { Post, Topic } from "@/types/forumTypes";
+import { ReplyForm } from "@/components/community/ReplyForm";
+import { ModerationActions } from "@/components/community/ModerationActions";
+import { useAuth } from "@/contexts/auth";
+import { useReporting } from "@/hooks/community/useReporting";
+import { Topic, Post, UserProfile } from "@/types/forumTypes";
 
-const TopicView = () => {
+export default function TopicView() {
   const { topicId } = useParams<{ topicId: string }>();
-  const [replyingTo, setReplyingTo] = useState<string | null>(null);
-  const [isTopicOwner, setIsTopicOwner] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
+  const { openReportModal } = useReporting();
+
+  const fetchTopic = async (topicId: string) => {
+    const { data, error } = await supabase
+      .from('forum_topics')
+      .select(`
+        *,
+        profiles (
+          id,
+          name,
+          avatar_url
+        ),
+        category (
+          id,
+          name
+        )
+      `)
+      .eq('id', topicId)
+      .single();
+
+    if (error) {
+      console.error("Erro ao buscar tópico:", error);
+      throw new Error(error.message);
+    }
+
+    return data as Topic;
+  };
+
+  const fetchPosts = async (topicId: string) => {
+    const { data, error } = await supabase
+      .from('forum_posts')
+      .select(`
+        *,
+        profiles (
+          id,
+          name,
+          avatar_url
+        )
+      `)
+      .eq('topic_id', topicId)
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.error("Erro ao buscar posts:", error);
+      throw new Error(error.message);
+    }
+
+    return data as Post[];
+  };
 
   const {
     data: topic,
-    isLoading: topicLoading,
-    error: topicError,
+    isLoading: topicsLoading,
+    error: topicsError
   } = useQuery({
-    queryKey: ["forumTopic", topicId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("forum_topics")
-        .select(
-          `
-          *,
-          profiles(
-            id,
-            name,
-            avatar_url
-          )
-        `
-        )
-        .eq("id", topicId)
-        .single();
-
-      if (error) throw error;
-      return data as Topic;
-    },
-    enabled: !!topicId,
+    queryKey: ['forumTopic', topicId],
+    queryFn: () => fetchTopic(topicId!),
+    onSuccess: (data) => {
+      if (data) {
+        handleViewIncrement(data.id, data.view_count);
+      }
+    }
   });
 
   const {
     data: posts,
     isLoading: postsLoading,
-    error: postsError,
-    refetch: refetchPosts,
+    error: postsError
   } = useQuery({
-    queryKey: ["forumPosts", topicId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("forum_posts")
-        .select(
-          `
-          *,
-          profiles(
-            id,
-            name,
-            avatar_url
-          )
-        `
-        )
-        .eq("topic_id", topicId)
-        .order("created_at", { ascending: true });
-
-      if (error) throw error;
-      return data as Post[];
-    },
-    enabled: !!topicId,
+    queryKey: ['forumPosts', topicId],
+    queryFn: () => fetchPosts(topicId!)
   });
 
-  useEffect(() => {
-    if (topic && user) {
-      setIsTopicOwner(topic.user_id === user.id);
-      setIsAdmin(user?.user_metadata?.role === "admin");
-    }
-  }, [topic, user]);
+  const handleViewIncrement = async (topicId: string, currentViewCount: number) => {
+    // Verifica se o usuário já viu este tópico (pode usar localStorage ou cookies)
+    const hasViewed = localStorage.getItem(`topicViewed_${topicId}`);
 
-  const handleReplyToPost = (postId: string) => {
-    setReplyingTo(postId);
-  };
+    if (!hasViewed) {
+      // Incrementa a contagem de visualizações no Supabase
+      const { error } = await supabase
+        .from('forum_topics')
+        .update({ view_count: currentViewCount + 1 })
+        .eq('id', topicId);
 
-  const handleCancelReply = () => {
-    setReplyingTo(null);
-  };
-
-  const handlePostSuccess = () => {
-    setReplyingTo(null);
-    refetchPosts();
-  };
-
-  const handleMarkAsSolution = async (postId: string) => {
-    if (!user?.id) return;
-
-    try {
-      // Remover solução anterior se existir
-      await supabase
-        .from("forum_posts")
-        .update({ is_accepted_solution: false })
-        .eq("topic_id", topicId)
-        .eq("is_accepted_solution", true);
-
-      // Marcar novo post como solução
-      await supabase
-        .from("forum_posts")
-        .update({ is_accepted_solution: true })
-        .eq("id", postId);
-
-      // Marcar tópico como resolvido
-      await supabase
-        .from("forum_topics")
-        .update({ is_solved: true })
-        .eq("id", topicId);
-
-      toast.success("Post marcado como solução!");
-      queryClient.invalidateQueries({ queryKey: ["forumTopic", topicId] });
-      queryClient.invalidateQueries({ queryKey: ["forumPosts", topicId] });
-    } catch (error: any) {
-      console.error("Erro ao marcar como solução:", error);
-      toast.error("Erro ao marcar como solução");
+      if (error) {
+        console.error("Erro ao incrementar visualização:", error);
+        toast.error("Erro ao atualizar visualização do tópico.");
+      } else {
+        // Define um indicador de que o usuário viu o tópico
+        localStorage.setItem(`topicViewed_${topicId}`, 'true');
+      }
     }
   };
 
-  const handleUnmarkAsSolution = async (postId: string) => {
-    if (!user?.id) return;
-
-    try {
-      // Remover como solução
-      await supabase
-        .from("forum_posts")
-        .update({ is_accepted_solution: false })
-        .eq("id", postId);
-
-      // Desmarcar tópico como resolvido
-      await supabase
-        .from("forum_topics")
-        .update({ is_solved: false })
-        .eq("id", topicId);
-
-      toast.success("Solução removida!");
-      queryClient.invalidateQueries({ queryKey: ["forumTopic", topicId] });
-      queryClient.invalidateQueries({ queryKey: ["forumPosts", topicId] });
-    } catch (error: any) {
-      console.error("Erro ao remover solução:", error);
-      toast.error("Erro ao remover solução");
-    }
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit', 
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
-  const handleDeletePost = async (postId: string) => {
-    if (!user?.id) return;
-
-    try {
-      await supabase.from("forum_posts").delete().eq("id", postId);
-
-      toast.success("Post excluído com sucesso!");
-      queryClient.invalidateQueries({ queryKey: ["forumTopic", topicId] });
-      queryClient.invalidateQueries({ queryKey: ["forumPosts", topicId] });
-    } catch (error: any) {
-      console.error("Erro ao excluir post:", error);
-      toast.error("Erro ao excluir post");
-    }
+  const getInitials = (name: string) => {
+    return name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'U';
   };
 
-  const renderPost = (post: Post, isMainPost = false) => {
-    const isPostOwner = post.user_id === user?.id;
-    const canUserMarkAsSolved = isTopicOwner || isAdmin;
-    
+  const handleModerationSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: ['forumTopic', topicId] });
+    queryClient.invalidateQueries({ queryKey: ['forumPosts', topicId] });
+  };
+
+  const handleReplySuccess = () => {
+    queryClient.invalidateQueries({ queryKey: ['forumPosts', topicId] });
+    queryClient.invalidateQueries({ queryKey: ['forumTopic', topicId] });
+  };
+
+  if (topicsLoading || postsLoading) {
     return (
-      <PostItem
-        key={post.id}
-        post={post}
-        variant={isMainPost ? "detailed" : "default"}
-        showActions={true}
-        showContextMenu={isPostOwner || isAdmin}
-        showModerationActions={isAdmin}
-        showSolutionBadge={true}
-        isReply={!isMainPost}
-        isTopicAuthor={post.user_id === topic?.user_id}
-        isAdmin={isAdmin}
-        canMarkAsSolved={canUserMarkAsSolved && !isMainPost}
-        onReply={() => handleReplyToPost(post.id)}
-        onMarkAsSolved={() => handleMarkAsSolution(post.id)}
-        onUnmarkAsSolved={() => handleUnmarkAsSolution(post.id)}
-        onDelete={() => handleDeletePost(post.id)}
-        className="mb-4"
-      />
-    );
-  };
-
-  if (topicLoading) {
-    return (
-      <Shell>
-        <div className="animate-pulse">
-          <div className="h-8 bg-muted rounded-md w-1/4 mb-4"></div>
-          <div className="h-4 bg-muted rounded-md w-1/2 mb-8"></div>
-          <div className="bg-card shadow-sm border-none p-6 rounded-lg">
-            <div className="h-6 bg-muted rounded-md w-1/3 mb-6"></div>
-            <div className="space-y-4">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="p-4 border rounded-md">
-                  <div className="flex justify-between">
-                    <div className="h-6 bg-muted rounded-md w-1/3"></div>
-                    <div className="h-6 bg-muted rounded-md w-20"></div>
-                  </div>
-                  <div className="h-4 bg-muted rounded-md w-1/2 mt-2"></div>
-                </div>
-              ))}
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="flex items-center gap-2">
+              <Loader2 className="h-6 w-6 animate-spin" />
+              <span>Carregando tópico...</span>
             </div>
           </div>
         </div>
-      </Shell>
+      </div>
     );
   }
 
-  if (topicError || !topic) {
+  if (topicsError || postsError) {
     return (
-      <Shell>
-        <div className="text-center py-10">
-          <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground" />
-          <h1 className="text-2xl font-bold mt-4">Tópico não encontrado</h1>
-          <p className="text-muted-foreground mt-2 mb-6">
-            O tópico que você está procurando não existe ou foi removido.
-          </p>
-          <Button asChild>
-            <Link to="/comunidade">Voltar para a Comunidade</Link>
-          </Button>
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-6">
+          <div className="text-center py-12">
+            <h2 className="text-2xl font-semibold mb-2">Erro ao carregar tópico</h2>
+            <p className="text-muted-foreground mb-4">
+              Não foi possível carregar o tópico solicitado.
+            </p>
+            <Link to="/comunidade">
+              <Button>Voltar para Comunidade</Button>
+            </Link>
+          </div>
         </div>
-      </Shell>
+      </div>
     );
   }
 
-  return (
-    <Shell>
-      <Button variant="ghost" size="sm" asChild className="p-0 mb-4">
-        <Link to="/comunidade" className="flex items-center">
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Voltar para a Comunidade
-        </Link>
-      </Button>
+  if (!topic) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-6">
+          <div className="text-center py-12">
+            <h2 className="text-2xl font-semibold mb-2">Tópico não encontrado</h2>
+            <p className="text-muted-foreground mb-4">
+              O tópico que você está procurando não existe ou foi removido.
+            </p>
+            <Link to="/comunidade">
+              <Button>Voltar para Comunidade</Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-      {renderPost({ ...topic, profiles: topic.profiles }, true)}
+  // Renderizar o tópico principal como um card especial
+  const renderTopicPost = (topic: Topic) => {
+    return (
+      <Card className="mb-6">
+        <CardContent className="p-6">
+          <div className="flex items-start gap-4">
+            <Avatar className="h-12 w-12">
+              <AvatarImage src={topic.profiles?.avatar_url || ''} />
+              <AvatarFallback className="bg-viverblue text-white">
+                {getInitials(topic.profiles?.name || 'Usuário')}
+              </AvatarFallback>
+            </Avatar>
 
-      <Separator className="my-4" />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2 flex-wrap">
+                    <h1 className="text-2xl font-bold text-foreground">{topic.title}</h1>
+                    
+                    {topic.is_pinned && (
+                      <Badge variant="secondary" className="gap-1 bg-blue-100 text-blue-700">
+                        <Pin className="h-3 w-3" />
+                        Fixado
+                      </Badge>
+                    )}
+                    
+                    {topic.is_locked && (
+                      <Badge variant="secondary" className="gap-1 bg-red-100 text-red-700">
+                        <Lock className="h-3 w-3" />
+                        Travado
+                      </Badge>
+                    )}
+                    
+                    {topic.is_solved && (
+                      <Badge variant="secondary" className="gap-1 bg-green-100 text-green-700">
+                        <CheckCircle className="h-3 w-3" />
+                        Resolvido
+                      </Badge>
+                    )}
+                  </div>
 
-      <div className="space-y-4">
-        {posts?.map((post) => (
-          <React.Fragment key={post.id}>
-            {renderPost(post)}
-            {replyingTo === post.id && (
-              <div className="ml-8">
-                <ReplyForm
-                  topicId={topicId!}
-                  parentId={post.id}
-                  onSuccess={handlePostSuccess}
-                  onCancel={handleCancelReply}
+                  <div className="flex items-center text-sm text-muted-foreground gap-4 mb-4">
+                    <span>Por {topic.profiles?.name || 'Usuário'}</span>
+                    <span>{formatDate(topic.created_at)}</span>
+                    {topic.category && (
+                      <Badge variant="outline" className="text-xs">
+                        {topic.category.name}
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+
+                <ModerationActions
+                  type="topic"
+                  itemId={topic.id}
+                  currentState={{
+                    isPinned: topic.is_pinned,
+                    isLocked: topic.is_locked,
+                    isHidden: false
+                  }}
+                  onReport={() => openReportModal('topic', topic.id, topic.user_id)}
+                  onSuccess={handleModerationSuccess}
                 />
               </div>
-            )}
-          </React.Fragment>
-        ))}
+
+              <div className="prose max-w-none mb-4">
+                <div className="text-foreground whitespace-pre-wrap">
+                  {topic.content}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <div className="flex items-center gap-1">
+                  <MessageCircle className="h-4 w-4" />
+                  <span>{topic.reply_count || 0} respostas</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Eye className="h-4 w-4" />
+                  <span>{topic.view_count || 0} visualizações</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-6">
+        {/* Breadcrumb */}
+        <div className="flex items-center gap-2 mb-6">
+          <Link 
+            to="/comunidade" 
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Voltar para Comunidade
+          </Link>
+        </div>
+
+        {/* Tópico Principal */}
+        {renderTopicPost(topic)}
+
+        {/* Separador */}
+        <Separator className="my-8" />
+
+        {/* Seção de Respostas */}
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold">
+              Respostas ({posts?.length || 0})
+            </h2>
+          </div>
+
+          {/* Lista de Posts/Respostas */}
+          {posts && posts.length > 0 ? (
+            <div className="space-y-4">
+              {posts.map((post) => (
+                <PostItem
+                  key={post.id}
+                  post={post}
+                  topicId={topicId}
+                  onSuccess={handleReplySuccess}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground mb-4">
+                Ainda não há respostas para este tópico.
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Seja o primeiro a responder!
+              </p>
+            </div>
+          )}
+
+          {/* Formulário de Resposta */}
+          {!topic.is_locked && user && (
+            <div className="mt-8">
+              <h3 className="text-lg font-semibold mb-4">Sua Resposta</h3>
+              <ReplyForm
+                topicId={topicId!}
+                onSuccess={handleReplySuccess}
+                placeholder="Compartilhe sua resposta ou dúvida..."
+              />
+            </div>
+          )}
+
+          {topic.is_locked && (
+            <div className="mt-8 p-4 bg-muted rounded-lg">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Lock className="h-4 w-4" />
+                <span>Este tópico está travado e não aceita novas respostas.</span>
+              </div>
+            </div>
+          )}
+
+          {!user && (
+            <div className="mt-8 p-4 bg-muted rounded-lg">
+              <p className="text-muted-foreground text-center">
+                <Link to="/login" className="text-viverblue hover:underline">
+                  Faça login
+                </Link>
+                {' '}para participar da discussão.
+              </p>
+            </div>
+          )}
+        </div>
       </div>
-
-      <Separator className="my-4" />
-
-      <ReplyForm topicId={topicId!} onSuccess={handlePostSuccess} />
-    </Shell>
+    </div>
   );
-};
-
-export default TopicView;
+}
