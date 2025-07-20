@@ -12,9 +12,10 @@ import { useEffect } from "react";
 
 interface PostItemProps {
   post: Post;
+  showTopicContext?: boolean;
 }
 
-export const PostItem = ({ post }: PostItemProps) => {
+export const PostItem = ({ post, showTopicContext = false }: PostItemProps) => {
   const queryClient = useQueryClient();
   const { openReportModal } = useReporting();
   
@@ -114,17 +115,10 @@ export const PostItem = ({ post }: PostItemProps) => {
               {formatDate(post.created_at)}
             </span>
             
-            {post.is_pinned && (
-              <Badge variant="secondary" className="gap-1 bg-blue-100 text-blue-700 text-xs">
-                <Pin className="h-3 w-3" />
-                Fixado
-              </Badge>
-            )}
-            
-            {post.is_best_answer && (
+            {post.is_solution && (
               <Badge variant="secondary" className="gap-1 bg-green-100 text-green-700 text-xs">
                 <CheckCircle className="h-3 w-3" />
-                Melhor Resposta
+                Solução
               </Badge>
             )}
           </div>
@@ -144,15 +138,8 @@ export const PostItem = ({ post }: PostItemProps) => {
         <div className="flex items-center gap-4 text-sm text-muted-foreground">
           <div className="flex items-center gap-1">
             <Heart className="h-4 w-4" />
-            <span>{post.reaction_count || 0}</span>
+            <span>0</span>
           </div>
-          
-          {post.reply_count !== undefined && (
-            <div className="flex items-center gap-1">
-              <MessageCircle className="h-4 w-4" />
-              <span>{post.reply_count} respostas</span>
-            </div>
-          )}
         </div>
 
         {/* Ações de Moderação */}
@@ -161,9 +148,9 @@ export const PostItem = ({ post }: PostItemProps) => {
             type="post" 
             itemId={post.id}
             currentState={{
-              isPinned: post.is_pinned,
-              isLocked: false, // Posts não têm campo is_locked diretamente
-              isHidden: false // Posts não têm campo is_hidden diretamente
+              isPinned: false,
+              isLocked: false,
+              isHidden: false
             }}
             onReport={() => openReportModal('post', post.id, post.user_id)}
             onSuccess={handleModerationSuccess}
