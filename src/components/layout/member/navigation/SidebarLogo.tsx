@@ -14,39 +14,16 @@ export const SidebarLogo = ({ sidebarOpen, setSidebarOpen }: SidebarLogoProps) =
 
   return (
     <div className="flex h-16 shrink-0 items-center justify-between px-4 py-3">
-      <div className={cn(
-        "flex items-center overflow-hidden min-w-0",
-        "transition-all duration-300 ease-in-out"
-      )}>
-        <div className={cn(
-          "relative overflow-hidden rounded-lg",
-          "p-1",
-          sidebarOpen ? "w-auto" : "w-10 h-10 flex items-center justify-center"
-        )}>
-          <img
-            src="/lovable-uploads/fe3733f5-092e-4a4e-bdd7-650b71aaa801.png"
-            alt="VIVER DE IA Club"
-            className={cn(
-              "transition-all duration-300 object-contain",
-              sidebarOpen 
-                ? "h-12 w-auto max-w-[200px]" // Logo maior quando aberto
-                : "h-8 w-8 object-cover" // Logo compacto quando fechado
-            )}
-            onError={(e) => {
-              // Fallback: mostrar inicial se a imagem não carregar
-              const target = e.currentTarget;
-              target.style.display = 'none';
-              if (target.parentElement) {
-                target.parentElement.innerHTML = `
-                  <div class="flex items-center justify-center h-full w-full bg-primary/20 rounded text-primary font-bold text-lg">
-                    V
-                  </div>
-                `;
-              }
-            }}
-          />
-        </div>
-      </div>
+      <img
+        src="/lovable-uploads/fe3733f5-092e-4a4e-bdd7-650b71aaa801.png"
+        alt="VIVER DE IA Club"
+        className={cn(
+          "transition-all duration-300 object-contain",
+          sidebarOpen 
+            ? "h-12 w-auto max-w-[200px]" // Logo maior quando aberto
+            : "h-10 w-10 object-cover" // Logo compacto quando fechado
+        )}
+      />
       
       <Button
         variant="ghost"
