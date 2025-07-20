@@ -56,8 +56,8 @@ export const ActivityFeed = () => {
         activities.push({
           id: `topic-${topic.id}`,
           type: topic.is_solved ? 'topic_solved' : 'new_topic',
-          user_name: topic.profiles?.name || 'Usuário',
-          user_avatar: topic.profiles?.avatar_url,
+          user_name: (topic.profiles as any)?.name || 'Usuário',
+          user_avatar: (topic.profiles as any)?.avatar_url,
           content: topic.title,
           created_at: topic.created_at,
           topic_title: topic.title,
@@ -70,12 +70,12 @@ export const ActivityFeed = () => {
         activities.push({
           id: `post-${post.id}`,
           type: 'new_reply',
-          user_name: post.profiles?.name || 'Usuário',
-          user_avatar: post.profiles?.avatar_url,
-          content: `Respondeu em "${post.forum_topics?.title}"`,
+          user_name: (post.profiles as any)?.name || 'Usuário',
+          user_avatar: (post.profiles as any)?.avatar_url,
+          content: `Respondeu em "${(post.forum_topics as any)?.title}"`,
           created_at: post.created_at,
-          topic_title: post.forum_topics?.title,
-          topic_id: post.forum_topics?.id
+          topic_title: (post.forum_topics as any)?.title,
+          topic_id: (post.forum_topics as any)?.id
         });
       });
 

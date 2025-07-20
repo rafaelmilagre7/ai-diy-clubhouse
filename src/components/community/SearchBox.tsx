@@ -73,7 +73,7 @@ export const SearchBox = ({
         id: topic.id,
         title: topic.title,
         content_preview: topic.content.substring(0, 100) + '...',
-        category_name: topic.forum_categories?.name,
+        category_name: (topic.forum_categories as any)?.name,
         view_count: topic.view_count || 0
       })) || [];
     },

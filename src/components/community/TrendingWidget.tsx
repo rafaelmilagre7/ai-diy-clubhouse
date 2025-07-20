@@ -40,7 +40,7 @@ export const TrendingWidget = () => {
         title: topic.title,
         view_count: topic.view_count || 0,
         reply_count: topic.reply_count || 0,
-        category_name: topic.forum_categories?.name,
+        category_name: (topic.forum_categories as any)?.name,
         engagement_score: (topic.view_count || 0) + (topic.reply_count || 0) * 5
       }))
       .filter(topic => topic.engagement_score > 0)
