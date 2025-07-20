@@ -1,168 +1,205 @@
-import React, { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import { MessageSquare, Users, TrendingUp, Plus } from 'lucide-react';
-import { SearchBox } from '@/components/community/SearchBox';
-import { ActivityFeed } from '@/components/community/ActivityFeed';
-import { TrendingWidget } from '@/components/community/TrendingWidget';
-import { StatsCard } from '@/components/community/StatsCard';
-import { CreateTopicDialog } from '@/components/community/CreateTopicDialog';
 
-export const CommunityHome = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isCreateTopicOpen, setIsCreateTopicOpen] = useState(false);
+import { useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CommunityHero } from "@/components/community/CommunityHero";
+import { EngagementMetrics } from "@/components/community/EngagementMetrics";
+import { SearchBox } from "@/components/community/SearchBox";
+import { CategoryTabs } from "@/components/community/CategoryTabs";
+import { ActivityFeed } from "@/components/community/ActivityFeed";
+import { TrendingWidget } from "@/components/community/TrendingWidget";
+import { CommunitySidebar } from "@/components/community/CommunitySidebar";
+import { TopicCardModern } from "@/components/community/TopicCardModern";
+import { TopicListSkeleton } from "@/components/community/TopicListSkeleton";
+import { TopicListError } from "@/components/community/TopicListError";
+import { EmptyTopicsState } from "@/components/community/EmptyTopicsState";
+import { useForumCategories } from "@/hooks/community/useForumCategories";
+import { useForumTopics } from "@/hooks/community/useForumTopics";
+import { CommunityFilterType } from "@/types/communityTypes";
+import { Button } from "@/components/ui/button";
+import { SlidersHorizontal, Grid, List } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 
-  const { data: stats } = useQuery({
-    queryKey: ['community-stats'],
-    queryFn: async () => {
-      const [topicsResult, postsResult, usersResult] = await Promise.all([
-        supabase.from('forum_topics').select('*', { count: 'exact', head: true }),
-        supabase.from('forum_posts').select('*', { count: 'exact', head: true }),
-        supabase.from('profiles').select('*', { count: 'exact', head: true })
-      ]);
+export default function CommunityHome() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedFilter, setSelectedFilter] = useState<CommunityFilterType>("recentes");
+  const [activeTab, setActiveTab] = useState("todos");
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
 
-      return {
-        topics: topicsResult.count || 0,
-        posts: postsResult.count || 0,
-        users: usersResult.count || 0
-      };
-    }
+  const { categories, isLoading: categoriesLoading } = useForumCategories();
+  
+  const { topics, isLoading, error, refetch } = useForumTopics({
+    activeTab: "all",
+    selectedFilter,
+    searchQuery,
+    categorySlug: activeTab
   });
 
-  const { data: categories } = useQuery({
-    queryKey: ['forum-categories'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('forum_categories')
-        .select('*')
-        .order('name');
-      
-      if (error) throw error;
-      return data || [];
-    }
-  });
+  const pinnedTopics = topics.filter(topic => topic.is_pinned);
+  const regularTopics = topics.filter(topic => !topic.is_pinned);
 
-  const { data: activeUsers } = useQuery({
-    queryKey: ['active-users'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, name, avatar_url')
-        .limit(8);
-      
-      if (error) throw error;
-      return data || [];
-    }
-  });
+  const TopicsList = ({ topics: topicsList, showPinned = false }: { topics: typeof topics, showPinned?: boolean }) => {
+    if (isLoading) return <TopicListSkeleton />;
+    if (error) return <TopicListError onRetry={refetch} />;
+    if (!topicsList || topicsList.length === 0) return <EmptyTopicsState searchQuery={searchQuery} />;
+
+    return (
+      <div className={viewMode === 'grid' ? 'grid grid-cols-1 lg:grid-cols-2 gap-6' : 'space-y-4'}>
+        {topicsList.map((topic) => (
+          <TopicCardModern 
+            key={topic.id} 
+            topic={topic} 
+            showPreview={true}
+            compact={viewMode === 'grid'}
+          />
+        ))}
+      </div>
+    );
+  };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Comunidade</h1>
-          <p className="text-gray-600">Conecte-se, compartilhe e aprenda com outros membros</p>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+      {/* Background decorativo */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -inset-10 opacity-20">
+          <div className="absolute top-0 -left-4 w-96 h-96 bg-viverblue/20 rounded-full mix-blend-multiply filter blur-3xl animate-blob"></div>
+          <div className="absolute top-0 -right-4 w-96 h-96 bg-revenue/20 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000"></div>
+          <div className="absolute -bottom-8 left-20 w-96 h-96 bg-operational/20 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-4000"></div>
         </div>
-        <Button onClick={() => setIsCreateTopicOpen(true)} className="gap-2">
-          <Plus className="w-4 h-4" />
-          Novo Tópico
-        </Button>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <StatsCard
-          title="Tópicos"
-          value={stats?.topics || 0}
-          icon={MessageSquare}
-          trend="+12%"
-        />
-        <StatsCard
-          title="Discussões"
-          value={stats?.posts || 0}
-          icon={TrendingUp}
-          trend="+8%"
-        />
-        <StatsCard
-          title="Membros Ativos"
-          value={stats?.users || 0}
-          icon={Users}
-          trend="+5%"
-        />
-      </div>
+      <div className="relative z-10 container mx-auto px-4 py-6 max-w-7xl">
+        {/* Hero Section */}
+        <CommunityHero />
 
-      {/* Search Bar */}
-      <div className="max-w-md">
-        <SearchBox
-          value={searchQuery}
-          onChange={setSearchQuery}
-        />
-      </div>
+        {/* Métricas de Engajamento */}
+        <EngagementMetrics />
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Activity Feed */}
-        <div className="lg:col-span-2">
-          <ActivityFeed searchQuery={searchQuery} />
-        </div>
-
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Trending Topics */}
-          <TrendingWidget />
-
-          {/* Categories */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Categorias</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {categories?.map((category) => (
-                <div key={category.id} className="flex items-center justify-between">
-                  <Badge variant="outline">{category.name}</Badge>
-                  <span className="text-sm text-gray-500">
-                    {category.topic_count || 0} tópicos
-                  </span>
+        {/* Layout Principal */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* Conteúdo Principal */}
+          <div className="lg:col-span-3 space-y-6">
+            {/* Pesquisa Global */}
+            <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+              <SearchBox
+                value={searchQuery}
+                onValueChange={setSearchQuery}
+                placeholder="Pesquisar discussões, categorias, usuários..."
+              />
+              
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <SlidersHorizontal className="h-4 w-4" />
+                  Filtros
+                </Button>
+                
+                <div className="flex items-center border rounded-lg p-1">
+                  <Button
+                    variant={viewMode === 'list' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewMode('list')}
+                    className="h-8 w-8 p-0"
+                  >
+                    <List className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewMode('grid')}
+                    className="h-8 w-8 p-0"
+                  >
+                    <Grid className="h-4 w-4" />
+                  </Button>
                 </div>
-              ))}
-            </CardContent>
-          </Card>
+              </div>
+            </div>
 
-          {/* Active Users */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Membros Ativos</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-4 gap-2">
-                {activeUsers?.map((user) => (
-                  <div key={user.id} className="flex flex-col items-center text-center">
-                    <Avatar className="w-10 h-10">
-                      <AvatarImage src={user.avatar_url} />
-                      <AvatarFallback>
-                        {user.name?.charAt(0) || '?'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="text-xs mt-1 truncate w-full">
-                      {user.name}
-                    </span>
-                  </div>
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              {/* Tabs de Categoria Redesigned */}
+              <CategoryTabs categories={categories} isLoading={categoriesLoading} />
+
+              {/* Filtros de Ordenação */}
+              <div className="flex gap-2 my-4 overflow-x-auto pb-2">
+                {(['recentes', 'populares', 'sem-respostas', 'resolvidos'] as CommunityFilterType[]).map((filter) => (
+                  <Button
+                    key={filter}
+                    variant={selectedFilter === filter ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setSelectedFilter(filter)}
+                    className="whitespace-nowrap"
+                  >
+                    {filter === 'recentes' && '🕒 Recentes'}
+                    {filter === 'populares' && '🔥 Populares'}  
+                    {filter === 'sem-respostas' && '❓ Sem Respostas'}
+                    {filter === 'resolvidos' && '✅ Resolvidos'}
+                  </Button>
                 ))}
               </div>
-            </CardContent>
-          </Card>
+
+              {/* Conteúdo das Tabs */}
+              <TabsContent value="todos" className="mt-6">
+                <div className="space-y-6">
+                  {/* Tópicos Fixados */}
+                  {pinnedTopics.length > 0 && (
+                    <div>
+                      <div className="flex items-center gap-2 mb-4">
+                        <h3 className="text-lg font-semibold text-foreground">📌 Tópicos Fixados</h3>
+                        <Separator className="flex-1" />
+                      </div>
+                      <TopicsList topics={pinnedTopics} showPinned={true} />
+                    </div>
+                  )}
+
+                  {/* Tópicos Regulares */}
+                  {regularTopics.length > 0 && (
+                    <div>
+                      {pinnedTopics.length > 0 && (
+                        <div className="flex items-center gap-2 mb-4">
+                          <h3 className="text-lg font-semibold text-foreground">💬 Todas as Discussões</h3>
+                          <Separator className="flex-1" />
+                        </div>
+                      )}
+                      <TopicsList topics={regularTopics} />
+                    </div>
+                  )}
+
+                  {/* Estado vazio */}
+                  {topics.length === 0 && !isLoading && (
+                    <EmptyTopicsState searchQuery={searchQuery} />
+                  )}
+                </div>
+              </TabsContent>
+
+              {categories?.map((category) => (
+                <TabsContent key={category.slug} value={category.slug} className="mt-6">
+                  <div className="space-y-6">
+                    <div className="flex items-center gap-3 mb-6">
+                      <span className="text-2xl">{category.icon || '📁'}</span>
+                      <div>
+                        <h2 className="text-2xl font-bold text-foreground">{category.name}</h2>
+                        {category.description && (
+                          <p className="text-muted-foreground">{category.description}</p>
+                        )}
+                      </div>
+                    </div>
+                    <TopicsList topics={topics} />
+                  </div>
+                </TabsContent>
+              ))}
+            </Tabs>
+          </div>
+
+          {/* Sidebar Redesigned */}
+          <div className="lg:col-span-1 space-y-6">
+            <CommunitySidebar />
+            <ActivityFeed />
+            <TrendingWidget />
+          </div>
         </div>
       </div>
-
-      {/* Create Topic Dialog */}
-      <CreateTopicDialog
-        isOpen={isCreateTopicOpen}
-        onClose={() => setIsCreateTopicOpen(false)}
-      />
     </div>
   );
-};
+}
