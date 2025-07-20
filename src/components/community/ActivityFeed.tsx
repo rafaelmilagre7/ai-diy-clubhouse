@@ -22,8 +22,8 @@ export const ActivityFeed = () => {
           view_count,
           reply_count,
           user_id,
-          profiles:user_id(name),
-          forum_categories:category_id(name, color)
+          profiles!inner(name),
+          forum_categories(name, color)
         `)
         .order('created_at', { ascending: false })
         .limit(10);
@@ -68,9 +68,10 @@ export const ActivityFeed = () => {
               >
                 <div className="flex items-start gap-3">
                   <Avatar className="w-8 h-8">
-                    <AvatarFallback>
-                      {topic.profiles?.name?.charAt(0) || '?'}
-                    </AvatarFallback>
+                     <AvatarFallback>
+                       {Array.isArray(topic.profiles) && topic.profiles[0]?.name?.charAt(0) || 
+                        (topic.profiles as any)?.name?.charAt(0) || '?'}
+                     </AvatarFallback>
                   </Avatar>
                   
                   <div className="flex-1 min-w-0">
@@ -99,15 +100,21 @@ export const ActivityFeed = () => {
                       </span>
                     </div>
                     
-                    {topic.forum_categories && (
-                      <Badge 
-                        variant="outline" 
-                        className="mt-2 text-xs"
-                        style={{ borderColor: topic.forum_categories.color }}
-                      >
-                        {topic.forum_categories.name}
-                      </Badge>
-                    )}
+                     {topic.forum_categories && (
+                       <Badge 
+                         variant="outline" 
+                         className="mt-2 text-xs"
+                         style={{ 
+                           borderColor: Array.isArray(topic.forum_categories) 
+                             ? topic.forum_categories[0]?.color 
+                             : (topic.forum_categories as any)?.color 
+                         }}
+                       >
+                         {Array.isArray(topic.forum_categories) 
+                           ? topic.forum_categories[0]?.name 
+                           : (topic.forum_categories as any)?.name}
+                       </Badge>
+                     )}
                   </div>
                 </div>
               </Link>

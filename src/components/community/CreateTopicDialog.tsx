@@ -7,11 +7,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/auth';
 
 interface CreateTopicDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  preselectedCategory?: string;
 }
 
 export const CreateTopicDialog = ({ open, onOpenChange }: CreateTopicDialogProps) => {
