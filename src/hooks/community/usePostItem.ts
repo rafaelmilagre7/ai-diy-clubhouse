@@ -18,7 +18,7 @@ export const usePostItem = ({ post, topicId, onSuccess }: UsePostItemProps) => {
   const queryClient = useQueryClient();
 
   const isOwner = post.user_id === user?.id;
-  const isSolutionPost = post.is_accepted_solution || post.is_solution;
+  const isSolutionPost = post.is_accepted_solution || false;
 
   const handleMarkAsSolved = async () => {
     if (!user?.id || !topicId) return;
@@ -105,12 +105,16 @@ export const usePostItem = ({ post, topicId, onSuccess }: UsePostItemProps) => {
     try {
       setIsSubmitting(true);
       
-      const { error } = await supabase
-        .from('forum_posts')
-        .delete()
-        .eq('id', post.id);
+      // Usar função RPC para deletar com toda a lógica no backend
+      const { data, error } = await supabase.rpc('delete_forum_post', {
+        post_id: post.id
+      });
       
       if (error) throw error;
+      
+      if (!data?.success) {
+        throw new Error(data?.error || 'Erro ao excluir post');
+      }
       
       toast.success('Post excluído com sucesso!');
       

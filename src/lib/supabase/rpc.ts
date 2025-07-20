@@ -49,32 +49,26 @@ export async function incrementTopicReplies(topicId: string): Promise<void> {
  */
 export async function deleteForumTopic(topicId: string): Promise<{ success: boolean, error?: string }> {
   try {
-    // Primeiro exclui todos os posts associados ao tópico
-    const { error: postsError } = await supabase
-      .from('forum_posts')
-      .delete()
-      .eq('topic_id', topicId);
-      
-    if (postsError) {
-      console.error("Erro ao excluir posts do tópico:", postsError);
-      return { success: false, error: postsError.message };
+    const { data, error } = await supabase.rpc('delete_forum_topic', {
+      topic_id: topicId
+    });
+
+    if (error) {
+      console.error('Erro ao deletar tópico:', error);
+      return { success: false, error: error.message };
     }
-    
-    // Depois exclui o tópico
-    const { error: topicError } = await supabase
-      .from('forum_topics')
-      .delete()
-      .eq('id', topicId);
-      
-    if (topicError) {
-      console.error("Erro ao excluir tópico:", topicError);
-      return { success: false, error: topicError.message };
+
+    if (!data?.success) {
+      return { success: false, error: data?.error || 'Erro ao deletar tópico' };
     }
-    
+
     return { success: true };
   } catch (error: any) {
-    console.error("Erro ao excluir tópico:", error);
-    return { success: false, error: error.message };
+    console.error('Erro ao deletar tópico:', error);
+    return { 
+      success: false, 
+      error: error.message 
+    };
   }
 }
 
@@ -83,50 +77,25 @@ export async function deleteForumTopic(topicId: string): Promise<{ success: bool
  */
 export async function deleteForumPost(postId: string): Promise<{ success: boolean, error?: string }> {
   try {
-    // Verificar se o post é uma solução marcada
-    const { data: postData } = await supabase
-      .from('forum_posts')
-      .select('topic_id, is_solution')
-      .eq('id', postId)
-      .single();
-      
-    // Excluir o post
-    const { error } = await supabase
-      .from('forum_posts')
-      .delete()
-      .eq('id', postId);
-      
+    const { data, error } = await supabase.rpc('delete_forum_post', {
+      post_id: postId
+    });
+
     if (error) {
+      console.error('Erro ao deletar post:', error);
       return { success: false, error: error.message };
     }
-    
-    // Se o post era uma solução, atualizar o tópico
-    if (postData?.is_solution) {
-      await supabase
-        .from('forum_topics')
-        .update({ is_solved: false })
-        .eq('id', postData.topic_id);
+
+    if (!data?.success) {
+      return { success: false, error: data?.error || 'Erro ao deletar post' };
     }
-    
-    // Decrementar contagem de respostas no tópico
-    if (postData?.topic_id) {
-      const { data } = await supabase
-        .from('forum_topics')
-        .select('reply_count')
-        .eq('id', postData.topic_id)
-        .single();
-        
-      if (data && data.reply_count > 0) {
-        await supabase
-          .from('forum_topics')
-          .update({ reply_count: data.reply_count - 1 })
-          .eq('id', postData.topic_id);
-      }
-    }
-    
+
     return { success: true };
   } catch (error: any) {
-    console.error("Erro ao excluir post:", error);
-    return { success: false, error: error.message };
+    console.error('Erro ao deletar post:', error);
+    return { 
+      success: false, 
+      error: error.message 
+    };
   }
 }
