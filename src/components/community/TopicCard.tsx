@@ -8,6 +8,7 @@ import { MessageSquare, Eye, ThumbsUp, Pin, Lock, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Topic } from "@/types/forumTypes";
 import { getInitials } from "@/utils/user";
+import { getContentPreview } from "./utils/contentUtils";
 
 interface TopicCardProps {
   topic: Topic;
@@ -16,13 +17,6 @@ interface TopicCardProps {
 }
 
 export const TopicCard = ({ topic, className = "", compact = false }: TopicCardProps) => {
-  // Extrair uma prévia do conteúdo
-  const getContentPreview = (content: string) => {
-    // Remove qualquer HTML/markdown para ter texto puro
-    const plainText = content.replace(/<[^>]*>/g, '');
-    return plainText.length > 120 ? plainText.substring(0, 120) + "..." : plainText;
-  };
-  
   // Calcular tempo relativo
   const getRelativeTime = (date: string) => {
     return formatDistance(new Date(date), new Date(), {
