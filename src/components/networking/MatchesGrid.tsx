@@ -56,69 +56,86 @@ export const MatchesGrid = () => {
 
   if (!matches.length) {
     return (
-      <div className="text-center py-16 space-y-4">
-        <div className="flex justify-center">
-          <div className="bg-viverblue/10 rounded-full p-4">
-            <Sparkles className="h-8 w-8 text-viverblue" />
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-card/50 to-muted/30 border border-dashed border-border/50 p-12">
+        <div className="absolute inset-0 bg-dot-pattern opacity-5"></div>
+        <div className="relative flex flex-col items-center text-center space-y-6">
+          <div className="relative group">
+            <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl group-hover:blur-2xl transition-all duration-500"></div>
+            <div className="relative bg-primary/10 rounded-full p-6">
+              <Sparkles className="h-12 w-12 text-primary" />
+            </div>
           </div>
-        </div>
-        <div>
-          <h3 className="text-lg font-semibold text-textPrimary mb-2">Nenhum match encontrado</h3>
-          <p className="text-textSecondary mb-4">
-            Gere matches personalizados com nossa IA para encontrar as melhores oportunidades de networking
-          </p>
-          <Button 
-            onClick={handleGenerateMatches}
-            disabled={isGenerating || !user?.id}
-            className="bg-viverblue hover:bg-viverblue/90 text-white"
-          >
-            {isGenerating ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Gerando Matches...
-              </>
-            ) : (
-              <>
-                <Sparkles className="h-4 w-4 mr-2" />
-                Gerar Matches IA
-              </>
-            )}
-          </Button>
+          
+          <div className="space-y-3">
+            <h3 className="text-2xl font-heading font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+              Nenhum match encontrado
+            </h3>
+            <p className="text-muted-foreground max-w-md leading-relaxed">
+              Gere matches personalizados com nossa IA para encontrar as melhores oportunidades de networking
+            </p>
+          </div>
+          
+          <div className="relative group">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-primary to-primary/60 rounded-xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
+            <button 
+              onClick={handleGenerateMatches}
+              disabled={isGenerating || !user?.id}
+              className="relative bg-gradient-to-r from-primary to-primary/90 text-primary-foreground px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-primary/25 hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+            >
+              {isGenerating ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  Gerando Matches...
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5" />
+                  Gerar Matches IA
+                </div>
+              )}
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-semibold text-textPrimary flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-viverblue" />
+        <div className="space-y-2">
+          <h2 className="text-2xl font-heading font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent flex items-center gap-3">
+            <div className="relative">
+              <div className="absolute inset-0 bg-primary/20 rounded-full blur-lg"></div>
+              <Sparkles className="relative h-6 w-6 text-primary" />
+            </div>
             Matches IA
           </h2>
-          <p className="text-sm text-textSecondary">
+          <p className="text-muted-foreground">
             Conexões estratégicas personalizadas pela IA baseadas no seu perfil
           </p>
         </div>
-        <Button 
-          size="sm" 
-          className="bg-viverblue hover:bg-viverblue/90 text-white"
-          onClick={handleGenerateMatches}
-          disabled={isGenerating || !user?.id}
-        >
-          {isGenerating ? (
-            <>
-              <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-              Gerando...
-            </>
-          ) : (
-            <>
-              <Sparkles className="h-4 w-4 mr-1" />
-              Gerar Matches IA
-            </>
-          )}
-        </Button>
+        
+        <div className="relative group">
+          <div className="absolute -inset-0.5 bg-gradient-to-r from-primary to-primary/60 rounded-xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
+          <button 
+            onClick={handleGenerateMatches}
+            disabled={isGenerating || !user?.id}
+            className="relative bg-gradient-to-r from-primary to-primary/90 text-primary-foreground px-4 py-2 rounded-xl font-medium shadow-lg hover:shadow-primary/25 hover:scale-105 transition-all duration-300 disabled:opacity-50"
+          >
+            {isGenerating ? (
+              <div className="flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Gerando...
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4" />
+                Gerar Matches IA
+              </div>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Grid de Matches */}
@@ -209,96 +226,109 @@ const MatchCard = ({ match, onOpenChat }: MatchCardProps) => {
     `https://ui-avatars.com/api/?name=${encodeURIComponent(match.matched_user.name)}&background=0D8ABC&color=fff`;
 
   return (
-    <Card className="h-full overflow-hidden hover:shadow-md hover:translate-y-[-2px] transition-all duration-300 border-neutral-800/50 bg-[#151823] group">
-      <CardHeader className="pb-4 pt-6 px-6">
-        {/* Header com foto maior e compatibility */}
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              <div className="h-16 w-16 rounded-full border-2 border-neutral-700 shadow-lg overflow-hidden bg-neutral-800 flex-shrink-0">
-                <img 
-                  src={avatar} 
-                  alt={match.matched_user.name}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(match.matched_user.name)}&background=0D8ABC&color=fff&size=64`;
-                  }}
-                />
+    <div className="group relative">
+      {/* Efeito de glow no hover */}
+      <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/20 via-transparent to-primary/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+      
+      <Card className="relative h-full overflow-hidden bg-card/95 backdrop-blur-sm border border-border/50 hover:border-primary/40 hover:shadow-2xl hover:shadow-primary/10 hover:scale-[1.02] hover:-translate-y-2 transition-all duration-500 transform-gpu will-change-transform">
+        <CardHeader className="pb-4 pt-6 px-6">
+          {/* Header com foto e compatibility */}
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex items-center gap-4">
+              <div className="relative group/avatar">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/40 to-transparent rounded-full blur opacity-75 group-hover/avatar:opacity-100 transition duration-300"></div>
+                <div className="relative h-16 w-16 rounded-full border-2 border-border/50 shadow-lg overflow-hidden bg-muted flex-shrink-0">
+                  <img 
+                    src={avatar} 
+                    alt={match.matched_user.name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(match.matched_user.name)}&background=0D8ABC&color=fff&size=64`;
+                    }}
+                  />
+                </div>
+                <div className="absolute -bottom-1 -right-1 bg-primary rounded-full p-1.5 shadow-lg">
+                  <Sparkles className="h-4 w-4 text-primary-foreground" />
+                </div>
               </div>
-              <div className="absolute -bottom-1 -right-1 bg-viverblue rounded-full p-1.5">
-                <Sparkles className="h-4 w-4 text-white" />
+              <div className="flex-1">
+                <h3 className="font-heading font-semibold text-foreground line-clamp-1 text-base">{match.matched_user.name}</h3>
+                <p className="text-sm text-muted-foreground line-clamp-1">{match.matched_user.current_position || 'Profissional'}</p>
               </div>
             </div>
+            <div className="flex flex-col items-end">
+              <div className="flex items-center gap-1 text-xs text-primary bg-primary/10 px-3 py-1.5 rounded-full border border-primary/20">
+                <Brain className="h-3 w-3" />
+                {Math.round(match.compatibility_score)}%
+              </div>
+            </div>
+          </div>
+
+          {/* Company e Type */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Building2 className="h-4 w-4" />
+              <span className="line-clamp-1">{match.matched_user.company_name || 'Empresa'}</span>
+            </div>
+            <div className={`w-fit text-xs px-3 py-1.5 rounded-full border ${getTypeColor(translatedType)}`}>
+              <div className="flex items-center gap-1">
+                <TypeIcon className="h-3 w-3" />
+                {translatedType}
+              </div>
+            </div>
+          </div>
+        </CardHeader>
+
+        <CardContent className="px-6 pb-6 space-y-4">
+          {/* AI Analysis */}
+          <div className="relative overflow-hidden bg-muted/50 backdrop-blur rounded-xl p-4 border border-border/30">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent"></div>
+            <p className="relative text-xs text-muted-foreground leading-relaxed">
+              <span className="text-primary font-medium">IA diz:</span> {match.match_reason || match.ai_analysis?.recommended_approach || `${match.matched_user.name} tem alta compatibilidade com seu perfil profissional. Recomendo iniciar uma conversa sobre ${match.match_type === 'customer' ? 'oportunidades de negócio' : match.match_type === 'partner' ? 'possíveis parcerias estratégicas' : 'colaboração mútua'}.`}
+            </p>
+          </div>
+
+          {/* Strengths */}
+          <div>
+            <p className="text-xs text-muted-foreground mb-2">Pontos fortes:</p>
+            <div className="flex flex-wrap gap-1">
+              {match.ai_analysis.strengths.map((strength, i) => (
+                <div 
+                  key={i} 
+                  className="text-xs bg-muted/80 text-muted-foreground border border-border/50 px-2 py-1 rounded-lg"
+                >
+                  {strength}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Industry */}
+          <p className="text-xs text-muted-foreground/80">{match.matched_user.industry || 'Tecnologia'}</p>
+
+          {/* Actions */}
+          <div className="flex gap-2 pt-2">
             <div className="flex-1">
-              <h3 className="font-semibold text-white line-clamp-1 text-base">{match.matched_user.name}</h3>
-              <p className="text-sm text-neutral-400 line-clamp-1">{match.matched_user.current_position || 'Profissional'}</p>
+              <ConnectionButton 
+                userId={match.matched_user_id}
+                className="w-full text-xs bg-gradient-to-r from-primary to-primary/90 hover:shadow-lg hover:shadow-primary/25 transition-all duration-300"
+              />
             </div>
-          </div>
-          <div className="flex flex-col items-end">
-            <div className="flex items-center gap-1 text-xs text-viverblue bg-viverblue/10 px-2 py-1 rounded-full">
-              <Brain className="h-3 w-3" />
-              {Math.round(match.compatibility_score)}%
-            </div>
-          </div>
-        </div>
-
-        {/* Company e Type */}
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 text-sm text-neutral-300">
-            <Building2 className="h-4 w-4" />
-            <span className="line-clamp-1">{match.matched_user.company_name || 'Empresa'}</span>
-          </div>
-          <Badge className={`w-fit text-xs ${getTypeColor(translatedType)}`}>
-            <TypeIcon className="h-3 w-3 mr-1" />
-            {translatedType}
-          </Badge>
-        </div>
-      </CardHeader>
-
-      <CardContent className="px-6 pb-6 space-y-4">
-        {/* AI Analysis */}
-        <div className="bg-neutral-800/50 rounded-lg p-3 border border-neutral-700/50">
-          <p className="text-xs text-neutral-300 leading-relaxed">
-            <span className="text-viverblue font-medium">IA diz:</span> {match.match_reason || match.ai_analysis?.recommended_approach || `${match.matched_user.name} tem alta compatibilidade com seu perfil profissional. Recomendo iniciar uma conversa sobre ${match.match_type === 'customer' ? 'oportunidades de negócio' : match.match_type === 'partner' ? 'possíveis parcerias estratégicas' : 'colaboração mútua'}.`}
-          </p>
-        </div>
-
-        {/* Strengths */}
-        <div>
-          <p className="text-xs text-neutral-400 mb-2">Pontos fortes:</p>
-          <div className="flex flex-wrap gap-1">
-            {match.ai_analysis.strengths.map((strength, i) => (
-              <Badge 
-                key={i} 
-                variant="outline" 
-                className="text-xs bg-neutral-800 text-neutral-300 border-neutral-700"
+            <div className="relative group/chat">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-muted to-transparent rounded-lg blur opacity-0 group-hover/chat:opacity-100 transition duration-300"></div>
+              <button 
+                onClick={onOpenChat}
+                className="relative px-3 py-2 bg-muted/80 backdrop-blur border border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-300 rounded-lg text-xs"
               >
-                {strength}
-              </Badge>
-            ))}
+                <MessageCircle className="h-3 w-3" />
+              </button>
+            </div>
           </div>
-        </div>
+        </CardContent>
 
-        {/* Industry */}
-        <p className="text-xs text-neutral-500">{match.matched_user.industry || 'Tecnologia'}</p>
-
-        {/* Actions */}
-        <div className="flex gap-2">
-          <ConnectionButton 
-            userId={match.matched_user_id}
-            className="flex-1 text-xs"
-          />
-          <Button 
-            size="sm" 
-            variant="outline" 
-            className="border-neutral-700 text-neutral-300 hover:bg-neutral-800/50 text-xs"
-            onClick={onOpenChat}
-          >
-            <MessageCircle className="h-3 w-3 mr-1" />
-            Chat
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+        {/* Indicador de hover */}
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-primary/80 to-primary scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
+      </Card>
+    </div>
   );
 };

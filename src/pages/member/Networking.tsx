@@ -14,15 +14,27 @@ const Networking = () => {
   });
 
   return (
-    <div className="space-y-6">
-      <NetworkingHeader 
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-      />
-      
-      <div className="min-h-[400px]">
-        {activeTab === 'matches' && <MatchesGrid />}
-        {activeTab === 'connections' && <ConnectionsGrid />}
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-background/95">
+      <div className="container mx-auto py-8 space-y-8">
+        {/* Header com glassmorphism */}
+        <div className="relative overflow-hidden rounded-2xl bg-card/95 backdrop-blur-xl border border-border/30 p-8 shadow-2xl shadow-primary/5">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent"></div>
+          <div className="relative">
+            <NetworkingHeader 
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+            />
+          </div>
+        </div>
+        
+        {/* Conteúdo com VIA Aurora Style */}
+        <div className="relative overflow-hidden rounded-2xl bg-card/80 backdrop-blur-sm border border-border/50 min-h-[500px]">
+          <div className="absolute inset-0 bg-dot-pattern opacity-5"></div>
+          <div className="relative p-6">
+            {activeTab === 'matches' && <MatchesGrid />}
+            {activeTab === 'connections' && <ConnectionsGrid />}
+          </div>
+        </div>
       </div>
     </div>
   );
