@@ -2,11 +2,11 @@
 import React from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ForumCategory } from "@/types/forumTypes";
+import { CommunityCategory } from "@/types/communityTypes";
 import { MessageSquare } from "lucide-react";
 
 interface CategoryTabsProps {
-  categories: ForumCategory[] | undefined;
+  categories: CommunityCategory[] | undefined;
   isLoading: boolean;
 }
 

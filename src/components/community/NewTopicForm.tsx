@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -15,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useForumCategories } from "@/hooks/community/useForumCategories";
+import { useCommunityCategories } from "@/hooks/community/useCommunityCategories";
 
 interface NewTopicFormProps {
   categoryId?: string;
@@ -30,7 +31,7 @@ export const NewTopicForm = ({ categoryId, categorySlug }: NewTopicFormProps) =>
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { categories, isLoading: loadingCategories } = useForumCategories();
+  const { categories, isLoading: loadingCategories } = useCommunityCategories();
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -3,11 +3,11 @@ import { TopicItem } from "./TopicItem";
 import { TopicListSkeleton } from "./TopicListSkeleton";
 import { TopicListError } from "./TopicListError";
 import { EmptyTopicsState } from "./EmptyTopicsState";
-import { Topic } from "@/types/forumTypes";
+import { CommunityTopic } from "@/types/communityTypes";
 import { Separator } from "@/components/ui/separator";
 
 interface UnifiedTopicListProps {
-  topics: Topic[];
+  topics: CommunityTopic[];
   isLoading: boolean;
   error: any;
   refetch: () => void;

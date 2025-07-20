@@ -3,13 +3,13 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Pin, Lock, CheckCircle, MessageCircle, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Topic } from "@/types/forumTypes";
+import { CommunityTopic } from "@/types/communityTypes";
 import { ModerationActions } from "./ModerationActions";
 import { useReporting } from "@/hooks/community/useReporting";
 import { useQueryClient } from "@tanstack/react-query";
 
 interface TopicItemProps {
-  topic: Topic;
+  topic: CommunityTopic;
 }
 
 export const TopicItem = ({ topic }: TopicItemProps) => {
@@ -32,11 +32,9 @@ export const TopicItem = ({ topic }: TopicItemProps) => {
 
   const handleModerationSuccess = () => {
     // Invalidar queries relacionadas para atualizar a UI e estatísticas
-    queryClient.invalidateQueries({ queryKey: ['communityTopics'] });
-    queryClient.invalidateQueries({ queryKey: ['topics'] });
-    queryClient.invalidateQueries({ queryKey: ['forumTopics'] });
-    queryClient.invalidateQueries({ queryKey: ['forumCategories'] });
-    queryClient.invalidateQueries({ queryKey: ['forumStats'] });
+    queryClient.invalidateQueries({ queryKey: ['community-topics'] });
+    queryClient.invalidateQueries({ queryKey: ['community-categories'] });
+    queryClient.invalidateQueries({ queryKey: ['community-stats'] });
     
     console.log('Queries invalidadas após ação de moderação');
   };
@@ -96,9 +94,9 @@ export const TopicItem = ({ topic }: TopicItemProps) => {
               <div className="flex items-center text-sm text-muted-foreground gap-4 flex-wrap">
                 <span>Por {topic.profiles?.name || 'Usuário'}</span>
                 <span>{formatDate(topic.created_at)}</span>
-                {topic.category && (
+                {(topic.category || topic.forum_categories) && (
                   <Badge variant="outline" className="text-xs">
-                    {topic.category.name}
+                    {topic.category?.name || topic.forum_categories?.name}
                   </Badge>
                 )}
               </div>
@@ -132,7 +130,7 @@ export const TopicItem = ({ topic }: TopicItemProps) => {
           currentState={{
             isPinned: topic.is_pinned,
             isLocked: topic.is_locked,
-            isHidden: false // Topics não têm campo is_hidden diretamente
+            isHidden: false
           }}
           onReport={() => openReportModal('topic', topic.id, topic.user_id)}
           onSuccess={handleModerationSuccess}

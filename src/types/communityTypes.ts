@@ -25,27 +25,23 @@ export interface CommunityCategory {
   color?: string;
   icon?: string;
   order?: number;
+  is_active?: boolean;
+  order_index?: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface UserProfile {
   id: string;
-  name: string;
+  name: string | null;
   avatar_url?: string | null;
   role?: string;
   user_id?: string;
-}
-
-export interface Profile {
-  id: string;
-  name: string;
-  avatar_url?: string | null;
   email?: string;
-  role?: string;
-  role_id?: string;
   company_name?: string;
   industry?: string;
-  created_at: string;
-  updated_at: string;
+  created_at?: string;
+  updated_at?: string;
   user_roles?: {
     id: string;
     name: string;
@@ -53,6 +49,9 @@ export interface Profile {
     permissions?: any;
   } | null;
 }
+
+// Alias para compatibilidade
+export type Profile = UserProfile;
 
 export interface CommunityTopic {
   id: string;
@@ -70,7 +69,11 @@ export interface CommunityTopic {
   last_activity_at: string;
   profiles?: UserProfile | null;
   category?: CommunityCategory | null;
+  forum_categories?: CommunityCategory | null;
 }
+
+// Alias para compatibilidade
+export type Topic = CommunityTopic;
 
 export interface CommunityPost {
   id: string;
@@ -81,5 +84,10 @@ export interface CommunityPost {
   updated_at: string;
   profiles?: UserProfile | null;
   is_accepted_solution?: boolean;
+  is_solution?: boolean; // Alias para compatibilidade
   parent_id?: string | null;
+  is_hidden?: boolean;
 }
+
+// Alias para compatibilidade
+export type Post = CommunityPost;

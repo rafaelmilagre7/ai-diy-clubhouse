@@ -2,14 +2,14 @@
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CheckCircle } from "lucide-react";
-import { Post } from "@/types/forumTypes";
+import { CommunityPost } from "@/types/communityTypes";
 import { PostHeader } from "./PostHeader";
 import { PostActions } from "./PostActions";
 import { SolutionBadge } from "./SolutionBadge";
 import { usePostItem } from "@/hooks/community/usePostItem";
 
 export interface PostItemProps {
-  post: Post;
+  post: CommunityPost;
   onSuccess?: () => void;
 }
 

@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { UnifiedTopicList } from "./UnifiedTopicList";
-import { useForumTopics } from "@/hooks/community/useForumTopics";
+import { useCommunityTopics } from "@/hooks/community/useCommunityTopics";
 
 interface TopicListProps {
   categoryId: string;
@@ -11,7 +11,7 @@ interface TopicListProps {
 }
 
 export const TopicList = ({ categoryId, categorySlug }: TopicListProps) => {
-  const { topics, isLoading, error, refetch } = useForumTopics({
+  const { topics, isLoading, error, refetch } = useCommunityTopics({
     activeTab: "all",
     selectedFilter: "recentes",
     searchQuery: "",
