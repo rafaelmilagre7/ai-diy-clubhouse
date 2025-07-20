@@ -107,9 +107,7 @@ serve(async (req) => {
     // Se há usuários conectados, excluí-los da busca
     if (connectedUserIds.size > 0) {
       const connectedIds = Array.from(connectedUserIds);
-      for (const connectedId of connectedIds) {
-        query = query.neq('id', connectedId);
-      }
+      query = query.not('id', 'in', `(${connectedIds.join(',')})`);
     }
 
     // Aplicar filtros de indústria se especificados
@@ -119,9 +117,7 @@ serve(async (req) => {
 
     // Aplicar filtros de exclusão de setores
     if (excludedSectors.length > 0) {
-      for (const sector of excludedSectors) {
-        query = query.neq('industry', sector);
-      }
+      query = query.not('industry', 'in', `(${excludedSectors.join(',')})`);
     }
 
     query = query.limit(maxMatches);
