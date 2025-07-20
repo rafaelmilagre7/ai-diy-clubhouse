@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
@@ -10,7 +10,7 @@ interface AuthMethodsParams {
 export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
   const [isSigningIn, setIsSigningIn] = useState(false);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = useCallback(async (email: string, password: string) => {
     try {
       setIsLoading(true);
       setIsSigningIn(true);
@@ -80,9 +80,9 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
       setIsSigningIn(false);
       setIsLoading(false);
     }
-  };
+  }, [setIsLoading]);
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     try {
       setIsLoading(true);
       
@@ -104,7 +104,7 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [setIsLoading]);
 
   return {
     signIn,

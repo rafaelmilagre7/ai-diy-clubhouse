@@ -1,4 +1,5 @@
 
+import { useCallback } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { UserProfile } from '@/lib/supabase';
 import { fetchUserProfileSecurely, validateUserSession, processUserProfile } from '@/hooks/auth/utils/authSessionUtils';
@@ -17,7 +18,7 @@ export const useAuthStateManager = ({
   setIsLoading,
 }: UseAuthStateManagerParams) => {
 
-  const setupAuthSession = async (): Promise<void> => {
+  const setupAuthSession = useCallback(async (): Promise<void> => {
     try {
       console.log('🔄 [AUTH-STATE] Iniciando setup da sessão');
       setIsLoading(true);
@@ -83,7 +84,7 @@ export const useAuthStateManager = ({
       setIsLoading(false);
       console.log('🏁 [AUTH-STATE] Setup concluído');
     }
-  };
+  }, [setSession, setUser, setProfile, setIsLoading]);
 
   return {
     setupAuthSession,
