@@ -1,28 +1,13 @@
 
-import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { Card, CardContent } from "@/components/ui/card";
+import { ForumLayout } from "@/components/community/ForumLayout";
+import { TopicCard } from "@/components/community/TopicCard";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { 
-  Users, 
-  MessageSquare, 
-  BookOpen, 
-  Search, 
-  TrendingUp,
-  Clock,
-  Eye,
-  MessageCircle,
-  Pin,
-  Lock,
-  User
-} from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
-import { getContentPreview } from "@/components/community/utils/contentUtils";
-import { formatDistanceToNow } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { PlusCircle, TrendingUp, MessageSquare, Users } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card } from "@/components/ui/card";
 
 interface TopicWithDetails {
   id: string;
@@ -36,317 +21,275 @@ interface TopicWithDetails {
   last_activity_at: string;
   profiles: {
     name: string;
-    avatar_url: string | null;
+    avatar_url: string;
   } | null;
   forum_categories: {
     id: string;
     name: string;
     slug: string;
-    description: string;
     color: string;
   } | null;
 }
 
+interface CommunityStats {
+  totalTopics: number;
+  totalMessages: number;
+  totalMembers: number;
+}
+
 const CommunityHome = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const navigate = useNavigate();
-
-  // Buscar estatísticas
-  const { data: stats } = useQuery({
-    queryKey: ['community-stats'],
-    queryFn: async () => {
-      const [topicsResult, postsResult, usersResult] = await Promise.all([
-        supabase.from('forum_topics').select('*', { count: 'exact', head: true }),
-        supabase.from('forum_posts').select('*', { count: 'exact', head: true }),
-        supabase.from('profiles').select('*', { count: 'exact', head: true })
-      ]);
-
-      return {
-        topics: topicsResult.count || 0,
-        posts: postsResult.count || 0,
-        users: usersResult.count || 0
-      };
-    }
+  const [topics, setTopics] = useState<TopicWithDetails[]>([]);
+  const [stats, setStats] = useState<CommunityStats>({
+    totalTopics: 0,
+    totalMessages: 0,
+    totalMembers: 0
   });
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Buscar tópicos recentes
-  const { data: recentTopics, isLoading: topicsLoading } = useQuery({
-    queryKey: ['recent-topics', searchQuery],
-    queryFn: async () => {
-      let query = supabase
-        .from('forum_topics')
-        .select(`
-          id,
-          title,
-          content,
-          created_at,
-          view_count,
-          reply_count,
-          is_pinned,
-          is_locked,
-          last_activity_at,
-          profiles!forum_topics_user_id_fkey (
-            name,
-            avatar_url
-          ),
-          forum_categories!forum_topics_category_id_fkey (
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Buscar tópicos recentes
+        const { data: topicsData, error: topicsError } = await supabase
+          .from('forum_topics')
+          .select(`
             id,
-            name,
-            slug,
-            description,
-            color
-          )
-        `)
-        .order('created_at', { ascending: false })
-        .limit(10);
+            title,
+            content,
+            created_at,
+            view_count,
+            reply_count,
+            is_pinned,
+            is_locked,
+            last_activity_at,
+            profiles!forum_topics_user_id_fkey (
+              name,
+              avatar_url
+            ),
+            forum_categories!forum_topics_category_id_fkey (
+              id,
+              name,
+              slug,
+              color
+            )
+          `)
+          .order('created_at', { ascending: false })
+          .limit(10);
 
-      if (searchQuery.trim()) {
-        query = query.or(`title.ilike.%${searchQuery}%,content.ilike.%${searchQuery}%`);
+        if (topicsError) {
+          console.error('Erro ao buscar tópicos:', topicsError);
+        } else {
+          // Transformar os dados para o formato esperado
+          const transformedTopics: TopicWithDetails[] = (topicsData || []).map(topic => ({
+            ...topic,
+            profiles: Array.isArray(topic.profiles) 
+              ? (topic.profiles.length > 0 ? topic.profiles[0] : null)
+              : topic.profiles,
+            forum_categories: Array.isArray(topic.forum_categories)
+              ? (topic.forum_categories.length > 0 ? topic.forum_categories[0] : null)
+              : topic.forum_categories
+          }));
+          
+          setTopics(transformedTopics);
+        }
+
+        // Buscar estatísticas
+        const [
+          { count: topicsCount },
+          { count: postsCount },
+          { count: membersCount }
+        ] = await Promise.all([
+          supabase.from('forum_topics').select('*', { count: 'exact', head: true }),
+          supabase.from('forum_posts').select('*', { count: 'exact', head: true }),
+          supabase.from('profiles').select('*', { count: 'exact', head: true })
+        ]);
+
+        setStats({
+          totalTopics: topicsCount || 0,
+          totalMessages: postsCount || 0,
+          totalMembers: membersCount || 0
+        });
+
+      } catch (error) {
+        console.error('Erro ao carregar dados da comunidade:', error);
+      } finally {
+        setIsLoading(false);
       }
+    };
 
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as TopicWithDetails[];
-    }
-  });
+    fetchData();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <ForumLayout>
+        <div className="space-y-8">
+          {/* Header Skeleton */}
+          <div className="text-center space-y-4">
+            <Skeleton className="h-12 w-64 mx-auto" />
+            <Skeleton className="h-6 w-96 mx-auto" />
+          </div>
+
+          {/* Stats Skeleton */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[...Array(3)].map((_, i) => (
+              <Card key={i} className="p-6">
+                <Skeleton className="h-8 w-8 mb-4" />
+                <Skeleton className="h-8 w-16 mb-2" />
+                <Skeleton className="h-4 w-24" />
+              </Card>
+            ))}
+          </div>
+
+          {/* Topics Skeleton */}
+          <div className="space-y-4">
+            {[...Array(5)].map((_, i) => (
+              <Card key={i} className="p-6">
+                <Skeleton className="h-6 w-3/4 mb-2" />
+                <Skeleton className="h-4 w-full mb-4" />
+                <div className="flex gap-4">
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-4 w-32" />
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </ForumLayout>
+    );
+  }
 
   return (
-    <div className="min-h-screen">
-      {/* Aurora Background */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -inset-10 opacity-50">
-          <div className="absolute top-0 -left-4 w-72 h-72 bg-primary/30 rounded-full mix-blend-multiply filter blur-xl animate-blob"></div>
-          <div className="absolute top-0 -right-4 w-72 h-72 bg-accent/30 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-2000"></div>
-          <div className="absolute -bottom-8 left-20 w-72 h-72 bg-secondary/30 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-4000"></div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="relative z-10 container mx-auto px-4 py-8">
+    <ForumLayout>
+      <div className="space-y-8">
         {/* Header */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 backdrop-blur-sm border border-white/10 mb-6">
-            <Users className="w-10 h-10 text-primary" />
+        <div className="text-center">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 backdrop-blur-sm border border-white/10 mb-6 glow-card">
+            <MessageSquare className="w-10 h-10 text-primary" />
           </div>
           
           <h1 className="text-4xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent mb-4">
-            Comunidade
+            Comunidade Viver de IA
           </h1>
           
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-            Conecte-se, compartilhe conhecimento e cresça junto com outros profissionais de IA
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
+            Conecte-se com outros membros, compartilhe experiências e tire suas dúvidas sobre IA
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Button 
-              onClick={() => navigate('/comunidade/novo-topico')}
-              className="bg-gradient-to-r from-primary to-accent hover:from-primary/80 hover:to-accent/80 text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
-            >
-              <MessageSquare className="w-5 h-5 mr-2" />
-              Iniciar Discussão
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button asChild size="lg" className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white shadow-lg hover:shadow-xl transition-all duration-300">
+              <Link to="/comunidade/novo-topico">
+                <PlusCircle className="w-5 h-5 mr-2" />
+                Criar Tópico
+              </Link>
             </Button>
             
-            <Button 
-              variant="outline" 
-              onClick={() => navigate('/comunidade/categorias')}
-              className="border-primary/20 hover:bg-primary/5 px-6 py-3 rounded-xl"
-            >
-              <BookOpen className="w-5 h-5 mr-2" />
-              Ver Categorias
+            <Button asChild variant="outline" size="lg" className="border-primary/20 hover:bg-primary/5">
+              <Link to="/comunidade/categorias">
+                Ver Categorias
+              </Link>
             </Button>
           </div>
         </div>
 
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <Card className="bg-card/60 backdrop-blur-sm border-border/50 hover:bg-card/80 transition-all duration-300">
-            <CardContent className="p-6 text-center">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 text-primary mb-4">
-                <MessageSquare className="w-6 h-6" />
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Card className="p-6 bg-card/60 backdrop-blur-sm border-border/50 hover:bg-card/80 transition-all duration-300 glow-card">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/20 to-blue-600/20">
+                <TrendingUp className="w-6 h-6 text-blue-500" />
               </div>
-              <div className="text-3xl font-bold text-foreground mb-1">
-                {stats?.topics || 0}
+              <div>
+                <p className="text-2xl font-bold text-foreground">{stats.totalTopics}</p>
+                <p className="text-sm text-muted-foreground">Tópicos</p>
               </div>
-              <div className="text-sm text-muted-foreground">Tópicos Ativos</div>
-            </CardContent>
+            </div>
           </Card>
 
-          <Card className="bg-card/60 backdrop-blur-sm border-border/50 hover:bg-card/80 transition-all duration-300">
-            <CardContent className="p-6 text-center">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-accent/10 text-accent mb-4">
-                <MessageCircle className="w-6 h-6" />
+          <Card className="p-6 bg-card/60 backdrop-blur-sm border-border/50 hover:bg-card/80 transition-all duration-300 glow-card">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-green-500/20 to-green-600/20">
+                <MessageSquare className="w-6 h-6 text-green-500" />
               </div>
-              <div className="text-3xl font-bold text-foreground mb-1">
-                {stats?.posts || 0}
+              <div>
+                <p className="text-2xl font-bold text-foreground">{stats.totalMessages}</p>
+                <p className="text-sm text-muted-foreground">Mensagens</p>
               </div>
-              <div className="text-sm text-muted-foreground">Mensagens</div>
-            </CardContent>
+            </div>
           </Card>
 
-          <Card className="bg-card/60 backdrop-blur-sm border-border/50 hover:bg-card/80 transition-all duration-300">
-            <CardContent className="p-6 text-center">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-secondary/10 text-secondary mb-4">
-                <Users className="w-6 h-6" />
+          <Card className="p-6 bg-card/60 backdrop-blur-sm border-border/50 hover:bg-card/80 transition-all duration-300 glow-card">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500/20 to-purple-600/20">
+                <Users className="w-6 h-6 text-purple-500" />
               </div>
-              <div className="text-3xl font-bold text-foreground mb-1">
-                {stats?.users || 0}
+              <div>
+                <p className="text-2xl font-bold text-foreground">{stats.totalMembers}</p>
+                <p className="text-sm text-muted-foreground">Membros</p>
               </div>
-              <div className="text-sm text-muted-foreground">Membros</div>
-            </CardContent>
+            </div>
           </Card>
         </div>
 
-        {/* Search and Filters */}
-        <Card className="bg-card/60 backdrop-blur-sm border-border/50 mb-8">
-          <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                <Input
-                  placeholder="Buscar discussões..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 bg-background/50 border-border/50"
-                />
-              </div>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" className="border-border/50">
-                  <TrendingUp className="w-4 h-4 mr-1" />
-                  Populares
-                </Button>
-                <Button variant="outline" size="sm" className="border-border/50">
-                  <Clock className="w-4 h-4 mr-1" />
-                  Recentes
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Recent Topics */}
-        <Card className="bg-card/60 backdrop-blur-sm border-border/50">
-          <CardContent className="p-6">
-            <h2 className="text-2xl font-semibold mb-6 flex items-center">
-              <MessageSquare className="w-6 h-6 mr-2 text-primary" />
-              Discussões Recentes
-            </h2>
+        <div>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-semibold text-foreground">Tópicos Recentes</h2>
+            <Button asChild variant="outline">
+              <Link to="/comunidade/populares">Ver Populares</Link>
+            </Button>
+          </div>
 
-            {topicsLoading ? (
-              <div className="space-y-4">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="animate-pulse">
-                    <div className="flex gap-4 p-4 rounded-lg bg-muted/50">
-                      <div className="w-10 h-10 bg-muted rounded-full"></div>
-                      <div className="flex-1">
-                        <div className="h-5 bg-muted rounded-md w-3/4 mb-2"></div>
-                        <div className="h-4 bg-muted rounded-md w-full mb-2"></div>
-                        <div className="h-3 bg-muted rounded-md w-1/2"></div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : recentTopics && recentTopics.length > 0 ? (
-              <div className="space-y-4">
-                {recentTopics.map((topic) => (
-                  <Link
-                    key={topic.id}
-                    to={`/comunidade/topico/${topic.id}`}
-                    className="block group"
-                  >
-                    <Card className="bg-background/50 border-border/50 hover:bg-background/80 hover:border-border/80 transition-all duration-300 hover:shadow-lg">
-                      <CardContent className="p-6">
-                        <div className="flex gap-4">
-                          {/* Avatar */}
-                          <div className="flex-shrink-0">
-                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                              <User className="w-5 h-5 text-primary" />
-                            </div>
-                          </div>
-
-                          {/* Content */}
-                          <div className="flex-1">
-                            <div className="flex items-start justify-between mb-2">
-                              <div className="flex items-center gap-2">
-                                {topic.is_pinned && (
-                                  <Pin className="w-4 h-4 text-primary" />
-                                )}
-                                {topic.is_locked && (
-                                  <Lock className="w-4 h-4 text-muted-foreground" />
-                                )}
-                                <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
-                                  {topic.title}
-                                </h3>
-                              </div>
-                              
-                              {topic.forum_categories && (
-                                <Badge 
-                                  variant="secondary" 
-                                  className="text-xs"
-                                  style={{ 
-                                    backgroundColor: `${topic.forum_categories.color}20`,
-                                    color: topic.forum_categories.color,
-                                    borderColor: `${topic.forum_categories.color}40`
-                                  }}
-                                >
-                                  {topic.forum_categories.name}
-                                </Badge>
-                              )}
-                            </div>
-
-                            <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
-                              {getContentPreview(topic.content, 150)}
-                            </p>
-
-                            <div className="flex items-center justify-between text-xs text-muted-foreground">
-                              <div className="flex items-center gap-4">
-                                <span className="flex items-center gap-1">
-                                  <User className="w-3 h-3" />
-                                  {topic.profiles?.name || 'Usuário'}
-                                </span>
-                                
-                                <span className="flex items-center gap-1">
-                                  <Eye className="w-3 h-3" />
-                                  {topic.view_count}
-                                </span>
-                                
-                                <span className="flex items-center gap-1">
-                                  <MessageCircle className="w-3 h-3" />
-                                  {topic.reply_count}
-                                </span>
-                              </div>
-
-                              <span>
-                                {formatDistanceToNow(new Date(topic.created_at), {
-                                  addSuffix: true,
-                                  locale: ptBR
-                                })}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <MessageSquare className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-xl font-semibold mb-2">Nenhuma discussão encontrada</h3>
-                <p className="text-muted-foreground mb-6">
-                  {searchQuery ? 'Tente usar termos diferentes na sua busca.' : 'Seja o primeiro a iniciar uma discussão!'}
-                </p>
-                <Button onClick={() => navigate('/comunidade/novo-topico')}>
-                  <MessageSquare className="w-4 h-4 mr-2" />
+          {topics.length === 0 ? (
+            <Card className="p-12 text-center bg-card/60 backdrop-blur-sm border-border/50">
+              <MessageSquare className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-50" />
+              <h3 className="text-xl font-semibold text-foreground mb-2">Nenhum tópico ainda</h3>
+              <p className="text-muted-foreground mb-6">Seja o primeiro a iniciar uma discussão na comunidade!</p>
+              <Button asChild>
+                <Link to="/comunidade/novo-topico">
+                  <PlusCircle className="w-4 h-4 mr-2" />
                   Criar Primeiro Tópico
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                </Link>
+              </Button>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {topics.map((topic) => (
+                <TopicCard
+                  key={topic.id}
+                  topic={{
+                    id: topic.id,
+                    title: topic.title,
+                    content: topic.content,
+                    created_at: topic.created_at,
+                    updated_at: topic.created_at,
+                    user_id: '',
+                    category_id: topic.forum_categories?.id || '',
+                    view_count: topic.view_count,
+                    reply_count: topic.reply_count,
+                    is_pinned: topic.is_pinned,
+                    is_locked: topic.is_locked,
+                    is_solved: false,
+                    last_activity_at: topic.last_activity_at,
+                    profiles: topic.profiles ? {
+                      id: '',
+                      name: topic.profiles.name,
+                      avatar_url: topic.profiles.avatar_url
+                    } : null,
+                    category: topic.forum_categories ? {
+                      id: topic.forum_categories.id,
+                      name: topic.forum_categories.name,
+                      slug: topic.forum_categories.slug
+                    } : null
+                  }}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </ForumLayout>
   );
 };
 
