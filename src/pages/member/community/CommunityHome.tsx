@@ -1,199 +1,185 @@
+
 import { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Search, Plus, TrendingUp, Users, MessageSquare, BookOpen, CheckCircle2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Filter } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useForumCategories } from "@/hooks/community/useForumCategories";
-import { useForumTopics, TopicFilterType } from "@/hooks/community/useForumTopics";
+import { useTopics } from "@/hooks/community/useTopics";
+import { useForumStats } from "@/hooks/useForumStats";
 import { TopicItem } from "@/components/community/TopicItem";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ForumHeader } from "@/components/community/ForumHeader";
-import { ForumBreadcrumbs } from "@/components/community/ForumBreadcrumbs";
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { CreateTopicDialog } from "@/components/community/CreateTopicDialog";
-import { useReporting } from "@/hooks/community/useReporting";
-import { ReportModal } from "@/components/community/ReportModal";
+import { Loader2 } from "lucide-react";
 
 export default function CommunityHome() {
-  const [activeTab, setActiveTab] = useState("todos");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedFilter, setSelectedFilter] = useState<TopicFilterType>("recentes");
-  const [createTopicOpen, setCreateTopicOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   
-  // Buscar categorias
-  const { categories, isLoading: loadingCategories } = useForumCategories();
-  
-  // Buscar tópicos com base nos filtros
-  const { data: topics, isLoading: loadingTopics } = useForumTopics({
-    activeTab,
-    selectedFilter,
-    searchQuery,
-    categories
-  });
+  const { categories, isLoading: categoriesLoading } = useForumCategories();
+  const { topics, isLoading: topicsLoading } = useTopics(selectedCategory, searchTerm);
+  const { topicCount, postCount, activeUserCount, solvedCount, isLoading: statsLoading } = useForumStats();
 
-  // Opções do filtro
-  const filterOptions = [
-    { value: "recentes", label: "Mais Recentes" },
-    { value: "populares", label: "Mais Populares" },
-    { value: "sem-respostas", label: "Sem Respostas" },
-    { value: "resolvidos", label: "Resolvidos" }
-  ];
-
-  // Obter o ID da categoria a partir do slug
-  const getDefaultCategoryId = () => {
-    if (activeTab !== "todos") {
-      const category = categories?.find(cat => cat.slug === activeTab);
-      if (category) return category.id;
-    }
-    return categories && categories.length > 0 ? categories[0].id : "";
+  const handleCategoryFilter = (categoryId: string | null) => {
+    setSelectedCategory(categoryId);
   };
 
-  const { 
-    isReportModalOpen, 
-    closeReportModal, 
-    submitReport 
-  } = useReporting();
-
-  const handleNewTopicClick = () => {
-    setCreateTopicOpen(true);
-  };
+  if (categoriesLoading || topicsLoading) {
+    return (
+      <div className="container mx-auto py-6">
+        <div className="flex justify-center items-center min-h-[400px]">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-6xl">
-      <ForumBreadcrumbs categorySlug={activeTab !== "todos" ? activeTab : undefined} />
-      
-      <ForumHeader 
-        showNewTopicButton={true}
-        onNewTopicClick={handleNewTopicClick}
-      />
-      
-      <div className="flex flex-col md:flex-row gap-4 mb-6">
-        <div className="relative flex-grow">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-          <Input
-            placeholder="Pesquisar tópicos..."
-            className="pl-9"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+    <div className="container mx-auto py-6 space-y-6">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold">Comunidade</h1>
+          <p className="text-muted-foreground">
+            Conecte-se, compartilhe conhecimento e cresça junto com outros profissionais
+          </p>
         </div>
-        
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="gap-1.5">
-              <Filter className="h-4 w-4" />
-              <span>
-                {filterOptions.find(option => option.value === selectedFilter)?.label}
-              </span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuRadioGroup
-              value={selectedFilter}
-              onValueChange={(value) => setSelectedFilter(value as TopicFilterType)}
-            >
-              {filterOptions.map((option) => (
-                <DropdownMenuRadioItem key={option.value} value={option.value}>
-                  {option.label}
-                </DropdownMenuRadioItem>
-              ))}
-            </DropdownMenuRadioGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <Button>
+          <Plus className="h-4 w-4 mr-2" />
+          Novo Tópico
+        </Button>
       </div>
-      
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="mb-8 w-full flex flex-wrap gap-1 sm:gap-0">
-          <TabsTrigger value="todos" className="flex-1">
-            Todos os tópicos
-          </TabsTrigger>
-          
-          {loadingCategories ? (
-            <>
-              <TabsTrigger value="loading1" disabled className="flex-1">
-                <Skeleton className="h-4 w-20" />
-              </TabsTrigger>
-              <TabsTrigger value="loading2" disabled className="flex-1">
-                <Skeleton className="h-4 w-20" />
-              </TabsTrigger>
-            </>
+
+      {/* Enhanced Statistics Section */}
+      <Card className="mb-6">
+        <CardContent className="p-4">
+          <h3 className="text-lg font-medium mb-3">Estatísticas do Fórum</h3>
+          {statsLoading ? (
+            <div className="flex justify-center py-4">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
           ) : (
-            categories?.map((category) => (
-              <TabsTrigger 
-                key={category.id} 
-                value={category.slug}
-                className="flex-1"
-              >
-                {category.name}
-              </TabsTrigger>
-            ))
-          )}
-        </TabsList>
-        
-        <TabsContent value={activeTab} className="space-y-4">
-          {loadingTopics ? (
-            Array(5).fill(0).map((_, i) => (
-              <div key={i} className="p-4 border rounded-md mb-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Skeleton className="h-10 w-10 rounded-full" />
-                  <div>
-                    <Skeleton className="h-5 w-40 mb-1" />
-                    <Skeleton className="h-4 w-20" />
-                  </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="flex flex-col items-center">
+                <div className="flex items-center justify-center mb-2 h-10 w-10 rounded-full bg-primary/10">
+                  <MessageSquare className="h-5 w-5 text-primary" />
                 </div>
-                <Skeleton className="h-4 w-full mt-2" />
-                <Skeleton className="h-4 w-full mt-1" />
+                <span className="text-xl font-bold">{topicCount}</span>
+                <span className="text-sm text-muted-foreground">Tópicos</span>
               </div>
-            ))
-          ) : topics && topics.length > 0 ? (
-            topics.map((topic) => (
-              <TopicItem
-                key={topic.id}
-                topic={topic}
-              />
-            ))
-          ) : (
-            <div className="text-center py-8">
-              <h3 className="text-xl font-medium mb-2">Nenhum tópico encontrado</h3>
-              <p className="text-muted-foreground mb-4">
-                {searchQuery 
-                  ? "Não encontramos resultados para sua busca." 
-                  : "Ainda não há tópicos nesta categoria."}
-              </p>
-              <Button 
-                onClick={handleNewTopicClick}
-              >
-                Criar o primeiro tópico
-              </Button>
+              
+              <div className="flex flex-col items-center">
+                <div className="flex items-center justify-center mb-2 h-10 w-10 rounded-full bg-primary/10">
+                  <BookOpen className="h-5 w-5 text-primary" />
+                </div>
+                <span className="text-xl font-bold">{postCount}</span>
+                <span className="text-sm text-muted-foreground">Respostas</span>
+              </div>
+              
+              <div className="flex flex-col items-center">
+                <div className="flex items-center justify-center mb-2 h-10 w-10 rounded-full bg-primary/10">
+                  <Users className="h-5 w-5 text-primary" />
+                </div>
+                <span className="text-xl font-bold">{activeUserCount}</span>
+                <span className="text-sm text-muted-foreground">Participantes</span>
+              </div>
+              
+              <div className="flex flex-col items-center">
+                <div className="flex items-center justify-center mb-2 h-10 w-10 rounded-full bg-green-500/10">
+                  <CheckCircle2 className="h-5 w-5 text-green-500" />
+                </div>
+                <span className="text-xl font-bold">{solvedCount}</span>
+                <span className="text-sm text-muted-foreground">Resolvidos</span>
+              </div>
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Search and Filters */}
+      <div className="flex flex-col md:flex-row gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Input
+            placeholder="Pesquisar tópicos..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+      </div>
+
+      {/* Categories */}
+      <div className="flex flex-wrap gap-2">
+        <Badge 
+          variant={selectedCategory === null ? "default" : "secondary"}
+          className="cursor-pointer"
+          onClick={() => handleCategoryFilter(null)}
+        >
+          Todas as Categorias
+        </Badge>
+        {categories.map((category) => (
+          <Badge
+            key={category.id}
+            variant={selectedCategory === category.id ? "default" : "secondary"}
+            className="cursor-pointer"
+            onClick={() => handleCategoryFilter(category.id)}
+          >
+            {category.name}
+          </Badge>
+        ))}
+      </div>
+
+      {/* Content Tabs */}
+      <Tabs defaultValue="topics" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="topics">Tópicos Recentes</TabsTrigger>
+          <TabsTrigger value="trending">Em Alta</TabsTrigger>
+          <TabsTrigger value="solved">Resolvidos</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="topics" className="mt-6">
+          <div className="space-y-4">
+            {topics.length === 0 ? (
+              <Card>
+                <CardContent className="p-6 text-center">
+                  <p className="text-muted-foreground">Nenhum tópico encontrado.</p>
+                </CardContent>
+              </Card>
+            ) : (
+              topics.map((topic) => (
+                <TopicItem key={topic.id} topic={topic} />
+              ))
+            )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="trending" className="mt-6">
+          <div className="space-y-4">
+            <Card>
+              <CardContent className="p-6 text-center">
+                <TrendingUp className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                <p className="text-muted-foreground">
+                  Tópicos em alta serão exibidos aqui em breve.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="solved" className="mt-6">
+          <div className="space-y-4">
+            <Card>
+              <CardContent className="p-6 text-center">
+                <CheckCircle2 className="h-12 w-12 mx-auto mb-4 text-green-500" />
+                <p className="text-muted-foreground">
+                  Tópicos resolvidos serão filtrados aqui.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
-
-      {/* CreateTopicDialog - centralizado aqui */}
-      <CreateTopicDialog 
-        open={createTopicOpen} 
-        onOpenChange={setCreateTopicOpen}
-        preselectedCategory={getDefaultCategoryId()}
-        onTopicCreated={() => {
-          setCreateTopicOpen(false);
-          // Opcional: recarregar tópicos
-        }}
-      />
-
-      {/* Report Modal */}
-      <ReportModal
-        open={isReportModalOpen}
-        onOpenChange={closeReportModal}
-        onSubmit={submitReport}
-        targetType="topic"
-      />
     </div>
   );
 }
