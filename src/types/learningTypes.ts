@@ -1,4 +1,3 @@
-
 export interface Certificate {
   id: string;
   user_id: string;
@@ -59,4 +58,22 @@ export interface Comment {
     role: string;
   } | null;
   replies?: Comment[];
+}
+
+export interface LearningCourseFormData {
+  title: string;
+  description?: string;
+  cover_image_url?: string;
+  published: boolean;
+  video_lessons?: VideoLesson[];
+}
+
+export interface VideoLesson {
+  id: string;
+  title: string;
+  video_url: string;
+  description?: string;
+  duration?: number;
+  order_index: number;
+  thumbnail_url?: string;
 }
