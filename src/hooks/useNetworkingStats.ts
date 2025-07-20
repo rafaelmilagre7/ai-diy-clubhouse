@@ -1,8 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useEffect } from 'react';
 
 export const useNetworkingStats = () => {
-  const { data: stats, isLoading } = useQuery({
+  const { data: stats, isLoading, refetch } = useQuery({
     queryKey: ['networking-stats'],
     queryFn: async () => {
       const { data: user } = await supabase.auth.getUser();
@@ -35,9 +36,46 @@ export const useNetworkingStats = () => {
         notifications: notificationsCount || 0
       };
     },
-    refetchInterval: 30000, // Atualizar a cada 30 segundos
     staleTime: 0, // Sempre buscar dados atualizados
   });
+
+  // Realtime updates para refetch automático
+  useEffect(() => {
+    const channel = supabase
+      .channel('networking-stats-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'network_matches'
+        },
+        () => refetch()
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'member_connections'
+        },
+        () => refetch()
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'connection_notifications'
+        },
+        () => refetch()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [refetch]);
 
   return {
     data: stats || { matches: 0, connections: 0, notifications: 0 },
