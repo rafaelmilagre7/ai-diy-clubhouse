@@ -33,6 +33,6 @@ export {
   incrementTopicViews,
   incrementTopicReplies,
   deleteCommunityTopic,
-  deleteCommunityPost
-  // Adicionar outras funções de RPC conforme necessário
+  deleteCommunityPost,
+  toggleTopicSolved
 } from './rpc';
