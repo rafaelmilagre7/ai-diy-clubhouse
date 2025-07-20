@@ -11,7 +11,7 @@ import { Separator } from '@/components/ui/separator';
 import { PostItem, ReplyForm } from '@/components/community';
 import { ArrowLeft, Pin, Lock, CheckCircle, MessageCircle, Eye } from 'lucide-react';
 import { toast } from 'sonner';
-import { Topic, Post } from '@/types/forumTypes';
+import { Topic, Post } from '@/types/communityTypes';
 
 export const TopicView = () => {
   const { id } = useParams<{ id: string }>();

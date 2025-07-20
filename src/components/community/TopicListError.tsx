@@ -2,7 +2,7 @@
 import { CircleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { useForumCategories } from "@/hooks/community/useForumCategories";
+import { useCommunityCategories } from "@/hooks/community/useCommunityCategories";
 import { useState } from "react";
 import { CreateTopicDialog } from "./CreateTopicDialog";
 
@@ -13,7 +13,7 @@ interface TopicListErrorProps {
 
 export const TopicListError = ({ onRetry, categorySlug }: TopicListErrorProps) => {
   const [createTopicOpen, setCreateTopicOpen] = useState(false);
-  const { categories } = useForumCategories();
+  const { categories } = useCommunityCategories();
   
   const getValidCategoryId = () => {
     if (categorySlug) {

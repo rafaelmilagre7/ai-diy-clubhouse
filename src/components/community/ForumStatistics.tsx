@@ -1,10 +1,10 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, MessageSquare, Users, BookOpen, CheckCircle2 } from "lucide-react";
-import { useForumStats } from "@/hooks/community/useForumStats";
+import { useCommunityStats } from "@/hooks/community/useCommunityStats";
 
 export const ForumStatistics = () => {
-  const { topicCount, postCount, activeUserCount, solvedCount, isLoading } = useForumStats();
+  const { topicCount, postCount, activeUserCount, solvedCount, isLoading } = useCommunityStats();
 
   if (isLoading) {
     return (

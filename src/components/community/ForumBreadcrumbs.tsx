@@ -8,7 +8,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { useForumCategories } from "@/hooks/community/useForumCategories";
+import { useCommunityCategories } from "@/hooks/community/useCommunityCategories";
 
 interface ForumBreadcrumbsProps {
   categorySlug?: string;
@@ -16,7 +16,7 @@ interface ForumBreadcrumbsProps {
 }
 
 export const ForumBreadcrumbs = ({ categorySlug, topicTitle }: ForumBreadcrumbsProps) => {
-  const { categories } = useForumCategories();
+  const { categories } = useCommunityCategories();
   
   // Encontrar a categoria atual com base no slug
   const currentCategory = categorySlug 

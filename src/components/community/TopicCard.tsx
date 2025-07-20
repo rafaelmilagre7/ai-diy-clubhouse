@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MessageSquare, Eye, ThumbsUp, Pin, Lock, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Topic } from "@/types/forumTypes";
+import { Topic } from "@/types/communityTypes";
 import { getInitials } from "@/utils/user";
 import { getContentPreview } from "./utils/contentUtils";
 

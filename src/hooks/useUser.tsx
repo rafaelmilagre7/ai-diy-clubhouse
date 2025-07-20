@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
-import { Profile } from "@/types/forumTypes";
+import { Profile } from "@/types/communityTypes";
 
 interface UseUserReturn {
   profile: Profile | null;
