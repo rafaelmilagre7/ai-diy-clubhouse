@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, MessageSquare, Users, TrendingUp, PlusCircle } from "lucide-react";
 import { useForumTopics, TopicFilterType } from "@/hooks/community/useForumTopics";
-import { useForumStats } from "@/hooks/community/useForumStats";
+import { useForumStats } from "@/hooks/useForumStats";
 
 // Componente otimizado para estatísticas em tempo real
 const OptimizedForumStats = memo(() => {
