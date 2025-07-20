@@ -1,3 +1,4 @@
+
 import { RouteObject } from "react-router-dom";
 import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
 import MemberLayout from '@/components/layout/MemberLayout';
@@ -29,8 +30,8 @@ import LessonView from '@/pages/member/learning/LessonView';
 import CertificatesPage from '@/pages/member/learning/CertificatesPage';
 import MemberCertificates from '@/pages/member/learning/MemberCertificates';
 
-// Member Community pages - CORRIGIDA IMPORTAÇÃO
-import CommunityHome from '@/pages/CommunityHome'; // Nova página unificada
+// Member Community pages - SISTEMA UNIFICADO
+import CommunityHome from '@/pages/CommunityHome';
 import TopicView from '@/pages/member/community/TopicView';
 import CategoryView from '@/pages/member/community/CategoryView';
 import NewTopic from '@/pages/member/community/NewTopic';
@@ -46,7 +47,7 @@ const createProtectedRoute = (path: string, Component: React.ComponentType<any>)
 });
 
 // Log para diagnóstico
-console.log("Carregando rotas de membros com RootRedirect corrigido");
+console.log("Carregando rotas de membros com sistema de comunidade unificado");
 
 export const memberRoutes: RouteObject[] = [
   // Rota raiz agora usa RootRedirect em vez de Dashboard direto
@@ -54,7 +55,6 @@ export const memberRoutes: RouteObject[] = [
     path: "/", 
     element: <RootRedirect />
   },
-  
   
   createProtectedRoute("/dashboard", Dashboard),
   
@@ -86,12 +86,11 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/suggestions/:id", SuggestionDetails),
   createProtectedRoute("/suggestions/new", NewSuggestion),
   
-  // Comunidade Routes - CORRIGIDAS E AMPLIADAS
+  // Comunidade Routes - SISTEMA UNIFICADO E LIMPO
   createProtectedRoute("/comunidade", CommunityHome),
   createProtectedRoute("/comunidade/categorias", CategoryListPage),
   createProtectedRoute("/comunidade/topico/:topicId", TopicView),
   createProtectedRoute("/comunidade/categoria/:slug", CategoryView),
   createProtectedRoute("/comunidade/novo-topico/:categorySlug", NewTopic),
   createProtectedRoute("/comunidade/novo-topico", NewTopic),
-  
 ];
