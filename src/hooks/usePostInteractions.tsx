@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
-import { deleteForumPost } from "@/lib/supabase/rpc";
+import { deleteCommunityPost } from "@/lib/supabase/rpc";
 import { CommunityPost } from "@/types/communityTypes";
 
 interface UsePostInteractionsProps {
@@ -32,7 +32,7 @@ export const usePostInteractions = ({
     try {
       setIsDeleting(true);
       
-      const { success, error } = await deleteForumPost(post.id);
+      const { success, error } = await deleteCommunityPost(post.id);
       
       if (!success) {
         throw new Error(error || "Erro desconhecido ao excluir resposta");

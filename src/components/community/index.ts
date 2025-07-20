@@ -23,3 +23,5 @@ export { CommunityBreadcrumbs } from './CommunityBreadcrumbs';
 export { CommunityHeader } from './CommunityHeader';
 export { CommunitySearch } from './CommunitySearch';
 export { CommunityStatistics } from './CommunityStatistics';
+export { QuickPostEditor } from './QuickPostEditor';
+export { TopicEditor } from './TopicEditor';

@@ -72,6 +72,6 @@ export const checkCommunityRedirect = (currentPath: string): {
   return null;
 };
 
-// Manter alias para compatibilidade
+// Manter aliases para compatibilidade
 export const forumRouteMapping = communityRouteMapping;
 export const checkForumRedirect = checkCommunityRedirect;
