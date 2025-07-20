@@ -1,154 +1,18 @@
-/* VIA Aurora Style - Notifications and Toasts */
+/* ===== NOTIFICAÇÕES E ALERTAS ===== */
 
-/* Toast container */
-.toast-container {
-  @apply fixed top-4 right-4 z-50 space-y-2;
+.alert {
+  padding: 1rem 1.5rem;
+  border-radius: 0.75rem;
+  margin: 1rem 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  position: relative;
+  overflow: hidden;
 }
 
-/* Aurora toast styling */
-.aurora-toast {
-  @apply aurora-card p-4 max-w-sm;
-  background: hsl(var(--card));
-  animation: toast-slide-in 0.3s ease-out;
-}
-
-@keyframes toast-slide-in {
-  from {
-    opacity: 0;
-    transform: translateX(100%);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-.aurora-toast.success {
-  border-left: 4px solid hsl(var(--revenue));
-}
-
-.aurora-toast.error {
-  border-left: 4px solid hsl(var(--destructive));
-}
-
-.aurora-toast.warning {
-  border-left: 4px solid hsl(var(--operational));
-}
-
-.aurora-toast.info {
-  border-left: 4px solid hsl(var(--viverblue));
-}
-
-/* Notification bell */
-.notification-bell {
-  @apply relative p-2 rounded-lg hover:bg-accent/50 transition-colors;
-}
-
-.notification-bell.has-notifications {
-  animation: notification-pulse 2s infinite;
-}
-
-@keyframes notification-pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-}
-
-/* Community notifications */
-.community-notification {
-  @apply aurora-card p-3 mb-2 last:mb-0;
-}
-
-.notification-header {
-  @apply flex items-start justify-between mb-2;
-}
-
-.notification-title {
-  @apply font-medium text-sm text-foreground;
-}
-
-.notification-time {
-  @apply text-xs text-muted-foreground;
-}
-
-.notification-content {
-  @apply text-sm text-muted-foreground;
-}
-
-.notification-actions {
-  @apply flex gap-2 mt-3;
-}
-
-/* Real-time indicators */
-.live-indicator {
-  @apply inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs;
-  background: hsl(var(--revenue) / 0.1);
-  color: hsl(var(--revenue));
-}
-
-.live-indicator::before {
-  content: '';
-  @apply w-2 h-2 bg-current rounded-full;
-  animation: live-pulse 1.5s infinite;
-}
-
-@keyframes live-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
-}
-
-/* Activity feed */
-.activity-feed {
-  @apply space-y-4;
-}
-
-.activity-item {
-  @apply flex items-start gap-3 p-3 rounded-lg hover:bg-accent/50 transition-colors;
-}
-
-.activity-avatar {
-  @apply w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0;
-}
-
-.activity-content {
-  @apply flex-1 min-w-0;
-}
-
-.activity-title {
-  @apply font-medium text-sm text-foreground;
-}
-
-.activity-description {
-  @apply text-sm text-muted-foreground mt-1;
-}
-
-.activity-time {
-  @apply text-xs text-muted-foreground flex-shrink-0;
-}
-
-/* Connection status */
-.connection-status {
-  @apply fixed bottom-4 left-4 px-3 py-2 rounded-lg text-sm font-medium;
-  background: hsl(var(--card));
-  border: 1px solid hsl(var(--border));
-}
-
-.connection-status.connected {
-  @apply text-green-600;
-  border-color: hsl(var(--revenue));
-}
-
-.connection-status.disconnected {
-  @apply text-red-600;
-  border-color: hsl(var(--destructive));
-}
-
-.connection-status.reconnecting {
-  @apply text-yellow-600;
-  border-color: hsl(var(--operational));
-  animation: reconnecting-pulse 1s infinite;
-}
-
-@keyframes reconnecting-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+.alert-info {
+  background: hsl(var(--viverblue) / 0.1);
+  border: 1px solid hsl(var(--viverblue) / 0.3);
+  color: hsl(var(--viverblue-dark));
 }

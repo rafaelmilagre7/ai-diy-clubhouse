@@ -74,61 +74,49 @@ const NewTopic = () => {
   }
 
   return (
-    <div className="min-h-screen community-header">
-      <div className="content-section">
-        <div className="content-container">
-          <Breadcrumb className="mb-6">
-            <BreadcrumbList>
+    <div className="container px-4 py-6 mx-auto max-w-7xl">
+      <Breadcrumb className="mb-6">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link to="/comunidade">Comunidade</Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          {category && (
+            <>
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link to="/comunidade">Comunidade</Link>
+                  <Link to={`/comunidade/categoria/${category.slug}`}>{category.name}</Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
-              {category && (
-                <>
-                  <BreadcrumbItem>
-                    <BreadcrumbLink asChild>
-                      <Link to={`/comunidade/categoria/${category.slug}`}>{category.name}</Link>
-                    </BreadcrumbLink>
-                  </BreadcrumbItem>
-                  <BreadcrumbSeparator />
-                </>
-              )}
-              <BreadcrumbItem>
-                <BreadcrumbLink>Novo Tópico</BreadcrumbLink>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-          
-          <div className="text-center space-y-4 mb-8">
-            <div className="flex items-center justify-center gap-3">
-              <div className="category-icon glow-primary">
-                <Pencil className="h-6 w-6" />
-              </div>
-              <h1 className="text-responsive-xl font-heading text-aurora glow-text">
-                Criar novo tópico
-              </h1>
-            </div>
-            
-            {category ? (
-              <p className="text-responsive-base text-muted-foreground">
-                Você está criando um tópico na categoria <strong className="text-aurora">{category.name}</strong>
-              </p>
-            ) : (
-              <p className="text-responsive-base text-muted-foreground">
-                Selecione uma categoria para seu tópico
-              </p>
-            )}
-          </div>
-          
-          <div className="animate-slide-up">
-            <ForumLayout>
-              <NewTopicForm categoryId={category?.id} categorySlug={category?.slug} />
-            </ForumLayout>
-          </div>
-        </div>
+            </>
+          )}
+          <BreadcrumbItem>
+            <BreadcrumbLink>Novo Tópico</BreadcrumbLink>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+      
+      <div className="flex items-center gap-2 mb-1">
+        <Pencil className="h-6 w-6 text-primary" />
+        <h1 className="text-3xl font-bold">Criar novo tópico</h1>
       </div>
+      
+      {category ? (
+        <p className="text-muted-foreground mb-6">
+          Você está criando um tópico na categoria <strong>{category.name}</strong>
+        </p>
+      ) : (
+        <p className="text-muted-foreground mb-6">
+          Selecione uma categoria para seu tópico
+        </p>
+      )}
+      
+      <ForumLayout>
+        <NewTopicForm categoryId={category?.id} categorySlug={category?.slug} />
+      </ForumLayout>
     </div>
   );
 };

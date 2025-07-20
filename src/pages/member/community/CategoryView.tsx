@@ -31,15 +31,11 @@ const CategoryView = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen community-header">
-        <div className="content-section">
-          <div className="content-container">
-            <div className="animate-pulse space-y-6">
-              <div className="aurora-skeleton h-8 w-1/4 mb-4"></div>
-              <div className="aurora-skeleton h-4 w-1/2 mb-8"></div>
-              <div className="aurora-skeleton h-[400px] rounded-xl"></div>
-            </div>
-          </div>
+      <div className="container px-4 py-6 mx-auto max-w-7xl">
+        <div className="animate-pulse">
+          <div className="h-8 bg-muted rounded-md w-1/4 mb-4"></div>
+          <div className="h-4 bg-muted rounded-md w-1/2 mb-8"></div>
+          <div className="h-[400px] bg-card shadow-sm rounded-lg"></div>
         </div>
       </div>
     );
@@ -47,72 +43,57 @@ const CategoryView = () => {
 
   if (error || !category) {
     return (
-      <div className="min-h-screen community-header">
-        <div className="content-section">
-          <div className="content-container">
-            <div className="empty-state">
-              <AlertCircle className="empty-state-icon" />
-              <h1 className="empty-state-title">Categoria não encontrada</h1>
-              <p className="empty-state-description mb-6">
-                A categoria que você está procurando não existe ou foi removida.
-              </p>
-              <button className="aurora-button">
-                <Link to="/comunidade">Voltar para a Comunidade</Link>
-              </button>
-            </div>
-          </div>
+      <div className="container px-4 py-6 mx-auto max-w-7xl">
+        <div className="text-center py-10">
+          <AlertCircle className="h-12 w-12 mx-auto text-muted-foreground" />
+          <h1 className="text-2xl font-bold mt-4">Categoria não encontrada</h1>
+          <p className="text-muted-foreground mt-2 mb-6">A categoria que você está procurando não existe ou foi removida.</p>
+          <Button asChild>
+            <Link to="/comunidade">Voltar para a Comunidade</Link>
+          </Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen community-header">
-      <div className="content-section">
-        <div className="content-container">
-          {/* Navegação de volta */}
-          <div className="flex items-center gap-2 mb-6">
-            <Button variant="ghost" size="sm" asChild className="aurora-button p-2">
-              <Link to="/comunidade" className="flex items-center gap-2">
-                <ChevronLeft className="h-4 w-4" />
-                <span>Voltar para a comunidade</span>
-              </Link>
-            </Button>
-          </div>
-          
-          {/* Header da categoria com estilo Aurora */}
-          <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-6 mb-8">
-            <div className="space-y-4">
-              <h1 className="text-responsive-xl font-heading text-aurora glow-text">
-                {category.name}
-              </h1>
-              {category.description && (
-                <p className="text-responsive-base text-muted-foreground max-w-2xl">
-                  {category.description}
-                </p>
-              )}
-            </div>
-            
-            <button className="aurora-button hidden md:flex items-center gap-2">
-              <Link to={`/comunidade/novo-topico/${category.slug}`} className="flex items-center gap-2">
-                <PlusCircle className="h-4 w-4" />
-                <span>Novo tópico</span>
-              </Link>
-            </button>
-          </div>
-          
-          {/* Lista de tópicos com layout Aurora */}
-          <div className="animate-slide-up">
-            <ForumLayout>
-              {category && <TopicList categoryId={category.id} categorySlug={category.slug} />}
-            </ForumLayout>
-          </div>
-          
-          {/* FAB para mobile */}
-          <Link to={`/comunidade/novo-topico/${category.slug}`} className="aurora-fab md:hidden">
-            <PlusCircle className="h-6 w-6" />
+    <div className="container px-4 py-6 mx-auto max-w-7xl">
+      <div className="flex items-center gap-2 mb-4">
+        <Button variant="ghost" size="sm" asChild className="p-0">
+          <Link to="/comunidade" className="flex items-center">
+            <ChevronLeft className="h-4 w-4" />
+            <span>Voltar para a comunidade</span>
           </Link>
+        </Button>
+      </div>
+      
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-3xl font-bold">{category.name}</h1>
+          {category.description && (
+            <p className="text-muted-foreground mt-1">{category.description}</p>
+          )}
         </div>
+        
+        <Button asChild className="hidden sm:flex gap-2">
+          <Link to={`/comunidade/novo-topico/${category.slug}`}>
+            <PlusCircle className="h-4 w-4" />
+            <span>Novo tópico</span>
+          </Link>
+        </Button>
+      </div>
+      
+      <ForumLayout>
+        {category && <TopicList categoryId={category.id} categorySlug={category.slug} />}
+      </ForumLayout>
+      
+      <div className="mt-6 sm:hidden">
+        <Button asChild className="w-full">
+          <Link to={`/comunidade/novo-topico/${category.slug}`}>
+            <PlusCircle className="h-4 w-4 mr-2" />
+            <span>Novo tópico</span>
+          </Link>
+        </Button>
       </div>
     </div>
   );

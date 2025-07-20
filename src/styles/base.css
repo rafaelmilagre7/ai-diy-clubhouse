@@ -1,79 +1,77 @@
-/* VIA Aurora Style - Base Variables and Global Styles */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
 
 :root {
-  /* Core semantic colors */
-  --background: 240 10% 3.9%;
+  /* --- Design System Colors (HSL) - Dark Theme como padrão --- */
+  --background: 216 28% 7%;
   --foreground: 0 0% 98%;
-  --card: 240 10% 3.9%;
+  --card: 217 32% 9%;
   --card-foreground: 0 0% 98%;
-  --popover: 240 10% 3.9%;
+  --popover: 217 32% 9%;
   --popover-foreground: 0 0% 98%;
-  --primary: 200 98% 39%;
-  --primary-foreground: 0 0% 98%;
-  --secondary: 240 3.7% 15.9%;
+  --primary: 173 100% 46%;
+  --primary-foreground: 240 10% 3.9%;
+  --secondary: 217 32% 12%;
   --secondary-foreground: 0 0% 98%;
-  --muted: 240 3.7% 15.9%;
-  --muted-foreground: 240 5% 64.9%;
-  --accent: 240 3.7% 15.9%;
+  --muted: 217 32% 12%;
+  --muted-foreground: 240 4% 70%;
+  --accent: 217 32% 12%;
   --accent-foreground: 0 0% 98%;
   --destructive: 0 62.8% 30.6%;
   --destructive-foreground: 0 0% 98%;
-  --border: 240 3.7% 15.9%;
-  --input: 240 3.7% 15.9%;
-  --ring: 200 98% 39%;
-  --radius: 0.75rem;
+  --border: 217 32% 15%;
+  --input: 217 32% 12%;
+  --ring: 173 100% 46%;
+  --radius: 0.5rem;
 
-  /* VIA Brand Colors - Aurora Palette */
-  --viverblue: 200 98% 39%;
-  --viverblue-light: 200 98% 50%;
-  --viverblue-lighter: 200 98% 65%;
-  --viverblue-dark: 200 98% 30%;
-  --viverblue-darker: 200 98% 20%;
-
-  /* Track Colors with Aurora Feel */
-  --revenue: 155 100% 45%;
-  --revenue-light: 155 100% 55%;
-  --revenue-lighter: 155 100% 65%;
-  --revenue-dark: 155 100% 35%;
-  --revenue-darker: 155 100% 25%;
-
-  --operational: 45 100% 60%;
-  --operational-light: 45 100% 70%;
-  --operational-lighter: 45 100% 80%;
-  --operational-dark: 45 100% 50%;
-  --operational-darker: 45 100% 40%;
-
-  --strategy: 280 100% 65%;
-  --strategy-light: 280 100% 75%;
-  --strategy-lighter: 280 100% 85%;
-  --strategy-dark: 280 100% 55%;
-  --strategy-darker: 280 100% 45%;
-
-  /* Aurora Gradients */
-  --aurora-primary: linear-gradient(135deg, hsl(var(--viverblue)), hsl(var(--strategy-light)));
-  --aurora-secondary: linear-gradient(135deg, hsl(var(--revenue)), hsl(var(--operational)));
-  --aurora-accent: linear-gradient(135deg, hsl(var(--viverblue-dark)), hsl(var(--viverblue-light)));
+  /* --- Custom Design Tokens --- */
+  --viverblue: 173 100% 46%;
+  --viverblue-light: 175 81% 69%;
+  --viverblue-lighter: 177 82% 80%;
+  --viverblue-dark: 169 100% 36%;
+  --viverblue-darker: 166 100% 27%;
   
-  /* Glass morphism effects */
-  --glass-bg: rgba(255, 255, 255, 0.05);
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  /* --- Track Colors --- */
+  --revenue: 231 44% 48%;
+  --revenue-light: 231 44% 68%;
+  --revenue-lighter: 231 44% 88%;
+  --revenue-dark: 231 65% 25%;
+  --revenue-darker: 231 82% 13%;
   
-  /* Community specific colors */
-  --community-bg: 240 8% 5%;
-  --community-card: 240 8% 8%;
-  --community-accent: 200 100% 45%;
-  --community-muted: 240 5% 25%;
+  --operational: 202 100% 36%;
+  --operational-light: 202 81% 55%;
+  --operational-lighter: 202 100% 88%;
+  --operational-dark: 202 100% 28%;
+  --operational-darker: 202 100% 22%;
+  
+  --strategy: 174 100% 27%;
+  --strategy-light: 174 51% 44%;
+  --strategy-lighter: 174 51% 74%;
+  --strategy-dark: 174 100% 13%;
+  --strategy-darker: 174 100% 7%;
+
+  /* --- Onboarding Specific --- */
+  --onboarding-bg: 216 28% 7%;
+  --onboarding-card: 217 32% 9%;
+  --onboarding-card-hover: 217 32% 12%;
+  --onboarding-text: 0 0% 98%;
+  --onboarding-text-muted: 240 4% 70%;
+  --onboarding-border: 217 32% 15%;
+  --onboarding-accent: 173 100% 46%;
+
+  /* --- Animations --- */
+  --transition-base: all 0.2s ease-out;
+  --transition-slow: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-bounce: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
-[data-theme="light"] {
+.light {
   --background: 0 0% 100%;
   --foreground: 240 10% 3.9%;
   --card: 0 0% 100%;
   --card-foreground: 240 10% 3.9%;
   --popover: 0 0% 100%;
   --popover-foreground: 240 10% 3.9%;
-  --primary: 200 98% 39%;
+  --primary: 173 100% 46%;
   --primary-foreground: 0 0% 98%;
   --secondary: 240 4.8% 95.9%;
   --secondary-foreground: 240 5.9% 10%;
@@ -85,21 +83,9 @@
   --destructive-foreground: 0 0% 98%;
   --border: 240 5.9% 90%;
   --input: 240 5.9% 90%;
-  --ring: 200 98% 39%;
-
-  /* Glass morphism for light mode */
-  --glass-bg: rgba(255, 255, 255, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.2);
-  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  
-  /* Community light mode */
-  --community-bg: 240 20% 98%;
-  --community-card: 0 0% 100%;
-  --community-accent: 200 100% 45%;
-  --community-muted: 240 5% 85%;
+  --ring: 173 100% 46%;
 }
 
-/* Global styles */
 * {
   border-color: hsl(var(--border));
 }
@@ -107,24 +93,13 @@
 body {
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
-  font-feature-settings: "rlig" 1, "calt" 1;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  font-family: 'Inter', system-ui, sans-serif;
+  line-height: 1.6;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
 }
 
-/* Scrollbar styling */
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: hsl(var(--muted));
-}
-
-::-webkit-scrollbar-thumb {
-  background: hsl(var(--viverblue));
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--viverblue-light));
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Outfit', system-ui, sans-serif;
+  font-weight: 600;
+  line-height: 1.2;
 }

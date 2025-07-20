@@ -171,32 +171,26 @@ const TopicView = () => {
     topicTitle: topic?.title
   });
   if (isLoading) {
-    return (
-      <div className="min-h-screen community-header">
-        <div className="content-section">
-          <div className="content-container max-w-4xl">
-            <div className="animate-pulse space-y-6">
-              <div className="aurora-skeleton h-4 w-1/4"></div>
-              <div className="aurora-skeleton h-8 w-3/4"></div>
-              <div className="community-card p-6 space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="aurora-skeleton h-10 w-10 rounded-full"></div>
-                  <div className="space-y-2">
-                    <div className="aurora-skeleton h-4 w-24"></div>
-                    <div className="aurora-skeleton h-3 w-32"></div>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="aurora-skeleton h-4"></div>
-                  <div className="aurora-skeleton h-4"></div>
-                  <div className="aurora-skeleton h-4 w-3/4"></div>
-                </div>
+    return <div className="container mx-auto px-4 py-6 max-w-4xl">
+        <div className="animate-pulse space-y-6">
+          <div className="h-4 bg-muted rounded w-1/4"></div>
+          <div className="h-8 bg-muted rounded w-3/4"></div>
+          <div className="bg-card border rounded-lg p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 bg-muted rounded-full"></div>
+              <div className="space-y-2">
+                <div className="h-4 bg-muted rounded w-24"></div>
+                <div className="h-3 bg-muted rounded w-32"></div>
               </div>
+            </div>
+            <div className="space-y-2">
+              <div className="h-4 bg-muted rounded"></div>
+              <div className="h-4 bg-muted rounded"></div>
+              <div className="h-4 bg-muted rounded w-3/4"></div>
             </div>
           </div>
         </div>
-      </div>
-    );
+      </div>;
   }
   if (error || !topic) {
     console.error("TopicView: renderizando estado de erro:", {

@@ -1,173 +1,44 @@
-/* VIA Aurora Style - Utility Classes */
+/* ===== UTILITIES E HELPERS ===== */
 
-/* Text gradients */
-.text-aurora {
-  background: var(--aurora-primary);
+/* --- Layout Utilities --- */
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* --- Text Utilities --- */
+.text-gradient {
+  background: linear-gradient(135deg, hsl(var(--viverblue)), hsl(var(--viverblue-light)));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-.text-aurora-secondary {
-  background: var(--aurora-secondary);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+/* --- Animation Utilities --- */
+.animate-bounce-in {
+  animation: bounce-in 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
-/* Glow effects */
-.glow-primary {
-  box-shadow: 0 0 20px hsl(var(--viverblue) / 0.3);
-}
-
-.glow-primary:hover {
-  box-shadow: 0 0 30px hsl(var(--viverblue) / 0.5);
-}
-
-.glow-text {
-  text-shadow: 0 0 10px hsl(var(--viverblue) / 0.5);
-}
-
-/* Animation utilities */
-.animate-aurora {
-  animation: aurora-pulse 3s ease-in-out infinite;
-}
-
-@keyframes aurora-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
-}
-
-.animate-float {
-  animation: float 6s ease-in-out infinite;
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-}
-
-.animate-slide-up {
-  animation: slide-up 0.5s ease-out;
-}
-
-@keyframes slide-up {
-  from {
+@keyframes bounce-in {
+  0% {
+    transform: scale(0.3);
     opacity: 0;
-    transform: translateY(20px);
   }
-  to {
+  50% {
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
     opacity: 1;
-    transform: translateY(0);
   }
-}
-
-/* Backdrop blur utilities */
-.backdrop-aurora {
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-}
-
-/* Border gradients */
-.border-aurora {
-  position: relative;
-}
-
-.border-aurora::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  padding: 1px;
-  background: var(--aurora-primary);
-  border-radius: inherit;
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask-composite: exclude;
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-}
-
-/* Interactive states */
-.interactive-hover {
-  @apply transition-all duration-300;
-}
-
-.interactive-hover:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px hsl(var(--viverblue) / 0.2);
-}
-
-/* Content sections */
-.content-section {
-  @apply py-8 px-4;
-}
-
-.content-container {
-  @apply max-w-7xl mx-auto;
-}
-
-/* Community specific utilities */
-.community-grid {
-  @apply grid gap-6;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-}
-
-.community-sidebar {
-  @apply w-80 bg-card border-r border-border;
-}
-
-.community-main {
-  @apply flex-1 min-w-0;
-}
-
-/* Responsive text */
-.text-responsive-xl {
-  @apply text-2xl md:text-3xl lg:text-4xl;
-}
-
-.text-responsive-lg {
-  @apply text-lg md:text-xl lg:text-2xl;
-}
-
-.text-responsive-base {
-  @apply text-sm md:text-base lg:text-lg;
-}
-
-/* Status indicators */
-.status-online {
-  @apply w-2 h-2 bg-green-500 rounded-full;
-}
-
-.status-away {
-  @apply w-2 h-2 bg-yellow-500 rounded-full;
-}
-
-.status-offline {
-  @apply w-2 h-2 bg-gray-500 rounded-full;
-}
-
-/* Notification badges */
-.notification-badge {
-  @apply absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center;
-}
-
-/* Loading overlays */
-.loading-overlay {
-  @apply absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50;
-}
-
-/* Empty states */
-.empty-state {
-  @apply flex flex-col items-center justify-center py-12 text-center;
-}
-
-.empty-state-icon {
-  @apply w-16 h-16 text-muted-foreground mb-4;
-}
-
-.empty-state-title {
-  @apply text-xl font-semibold mb-2;
-}
-
-.empty-state-description {
-  @apply text-muted-foreground max-w-md;
 }

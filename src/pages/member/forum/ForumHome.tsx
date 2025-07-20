@@ -10,79 +10,64 @@ const ForumHome = () => {
   const { topicCount, postCount, activeUserCount, isLoading } = useForumStats();
 
   return (
-    <div className="min-h-screen community-header">
-      <div className="content-section">
-        <div className="content-container">
-          <div className="flex flex-col gap-6">
-            {/* Header com efeito aurora */}
-            <div className="text-center space-y-4 py-12">
-              <div className="flex items-center justify-center gap-3 mb-4">
-                <div className="category-icon glow-primary">
-                  <MessageSquare className="h-6 w-6" />
-                </div>
-                <h1 className="text-responsive-xl font-heading text-aurora glow-text">
-                  Comunidade VIA
-                </h1>
-              </div>
-              
-              <p className="text-responsive-base text-muted-foreground max-w-2xl mx-auto">
-                Bem-vindo à comunidade! Aqui você pode discutir tópicos, fazer perguntas e compartilhar conhecimento com outros membros da jornada VIA.
-              </p>
-            </div>
-            
-            {/* Stats cards com design Aurora */}
-            <div className="community-grid max-w-4xl mx-auto">
-              <div className="community-card p-6 text-center interactive-hover">
-                <div className="category-icon mx-auto mb-4">
-                  <MessageSquare className="h-8 w-8" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-2">Tópicos</p>
-                  {isLoading ? (
-                    <div className="aurora-skeleton h-8 w-16 mx-auto" />
-                  ) : (
-                    <p className="text-responsive-lg font-bold text-aurora">{topicCount}</p>
-                  )}
-                </div>
-              </div>
-              
-              <div className="community-card p-6 text-center interactive-hover">
-                <div className="category-icon mx-auto mb-4">
-                  <BarChart className="h-8 w-8" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-2">Mensagens</p>
-                  {isLoading ? (
-                    <div className="aurora-skeleton h-8 w-16 mx-auto" />
-                  ) : (
-                    <p className="text-responsive-lg font-bold text-aurora">{postCount}</p>
-                  )}
-                </div>
-              </div>
-              
-              <div className="community-card p-6 text-center interactive-hover">
-                <div className="category-icon mx-auto mb-4">
-                  <Users className="h-8 w-8" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-2">Membros ativos</p>
-                  {isLoading ? (
-                    <div className="aurora-skeleton h-8 w-16 mx-auto" />
-                  ) : (
-                    <p className="text-responsive-lg font-bold text-aurora">{activeUserCount}</p>
-                  )}
-                </div>
-              </div>
-            </div>
-            
-            {/* Forum layout com estilo Aurora */}
-            <div className="animate-slide-up">
-              <ForumLayout title="Categorias">
-                <CategoryList />
-              </ForumLayout>
-            </div>
-          </div>
+    <div className="container px-4 py-6 mx-auto max-w-7xl">
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center gap-2">
+          <MessageSquare className="h-6 w-6 text-primary" />
+          <h1 className="text-3xl font-bold">Comunidade</h1>
         </div>
+        
+        <p className="text-muted-foreground mb-2">
+          Bem-vindo à comunidade! Aqui você pode discutir tópicos, fazer perguntas e compartilhar conhecimento com outros membros.
+        </p>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <Card className="p-4 flex items-center gap-3">
+            <div className="bg-primary/20 p-3 rounded-full">
+              <MessageSquare className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Tópicos</p>
+              {isLoading ? (
+                <Skeleton className="h-8 w-16" />
+              ) : (
+                <p className="text-2xl font-bold">{topicCount}</p>
+              )}
+            </div>
+          </Card>
+          
+          <Card className="p-4 flex items-center gap-3">
+            <div className="bg-primary/20 p-3 rounded-full">
+              <BarChart className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Mensagens</p>
+              {isLoading ? (
+                <Skeleton className="h-8 w-16" />
+              ) : (
+                <p className="text-2xl font-bold">{postCount}</p>
+              )}
+            </div>
+          </Card>
+          
+          <Card className="p-4 flex items-center gap-3">
+            <div className="bg-primary/20 p-3 rounded-full">
+              <Users className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Membros ativos</p>
+              {isLoading ? (
+                <Skeleton className="h-8 w-16" />
+              ) : (
+                <p className="text-2xl font-bold">{activeUserCount}</p>
+              )}
+            </div>
+          </Card>
+        </div>
+        
+        <ForumLayout title="Categorias">
+          <CategoryList />
+        </ForumLayout>
       </div>
     </div>
   );
