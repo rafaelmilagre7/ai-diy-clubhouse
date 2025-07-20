@@ -122,7 +122,20 @@ export const useNotifications = () => {
           
           // Mostrar toast para notificações importantes
           const newNotification = payload.new as Notification;
-          if (newNotification.type === 'admin_communication' || newNotification.type === 'urgent') {
+          if (newNotification.type === 'community_reply') {
+            toast.info(newNotification.title, {
+              description: newNotification.message,
+              action: {
+                label: 'Ver',
+                onClick: () => {
+                  const topicId = newNotification.data?.topic_id;
+                  if (topicId) {
+                    window.location.href = `/community/topic/${topicId}`;
+                  }
+                }
+              }
+            });
+          } else if (newNotification.type === 'admin_communication' || newNotification.type === 'urgent') {
             toast.info(newNotification.title, {
               description: newNotification.message,
             });

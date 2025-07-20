@@ -100,6 +100,37 @@ export async function deleteCommunityPost(postId: string): Promise<{ success: bo
   }
 }
 
+/**
+ * Marcar/desmarcar tópico como resolvido
+ */
+export async function toggleTopicSolved(topicId: string): Promise<{ success: boolean, error?: string, is_solved?: boolean }> {
+  try {
+    const { data, error } = await supabase.rpc('toggle_topic_solved', {
+      p_topic_id: topicId
+    });
+
+    if (error) {
+      console.error('Erro ao alterar status do tópico:', error);
+      return { success: false, error: error.message };
+    }
+
+    if (!data?.success) {
+      return { success: false, error: data?.error || 'Erro ao alterar status do tópico' };
+    }
+
+    return { 
+      success: true, 
+      is_solved: data.is_solved 
+    };
+  } catch (error: any) {
+    console.error('Erro ao alterar status do tópico:', error);
+    return { 
+      success: false, 
+      error: error.message 
+    };
+  }
+}
+
 // Manter aliases para compatibilidade com código existente  
 export const deleteForumTopic = deleteCommunityTopic;
 export const deleteForumPost = deleteCommunityPost;
