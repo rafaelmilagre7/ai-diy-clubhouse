@@ -1,65 +1,219 @@
+/* VIA Aurora Style - Component Styles */
 
-/* Sidebar específicos */
-.scrollbar-thin {
-  scrollbar-width: thin;
+/* Glass Card Effect */
+.aurora-card {
+  @apply relative overflow-hidden rounded-xl;
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
 }
 
-.scrollbar-thumb-border {
-  scrollbar-color: hsl(var(--border)) transparent;
+.aurora-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, hsl(var(--viverblue) / 0.5), transparent);
 }
 
-.scrollbar-track-transparent {
-  scrollbar-track-color: transparent;
+/* Aurora Gradient Backgrounds */
+.aurora-gradient {
+  background: var(--aurora-primary);
 }
 
-/* Webkit scrollbar customization */
-.scrollbar-thin::-webkit-scrollbar {
-  width: 4px;
+.aurora-gradient-secondary {
+  background: var(--aurora-secondary);
 }
 
-.scrollbar-thin::-webkit-scrollbar-track {
-  background: transparent;
+.aurora-gradient-accent {
+  background: var(--aurora-accent);
 }
 
-.scrollbar-thin::-webkit-scrollbar-thumb {
-  background-color: hsl(var(--border));
-  border-radius: 2px;
+/* Community specific components */
+.community-header {
+  @apply relative overflow-hidden;
+  background: linear-gradient(135deg, 
+    hsl(var(--community-bg)) 0%, 
+    hsl(var(--viverblue) / 0.1) 50%, 
+    hsl(var(--community-bg)) 100%
+  );
 }
 
-.scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background-color: hsl(var(--border) / 0.8);
+.community-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 20%, hsl(var(--viverblue) / 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, hsl(var(--strategy) / 0.1) 0%, transparent 50%);
+  pointer-events: none;
 }
 
-/* Animação de fade-in customizada */
-@keyframes fade-in {
-  from {
-    opacity: 0;
-    transform: translateX(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+.community-card {
+  @apply aurora-card transition-all duration-300 hover:scale-[1.02];
+  background: hsl(var(--community-card));
+  border: 1px solid hsl(var(--border));
 }
 
-.animate-fade-in {
-  animation: fade-in 0.3s ease-out forwards;
+.community-card:hover {
+  border-color: hsl(var(--viverblue) / 0.3);
+  box-shadow: 0 8px 32px hsl(var(--viverblue) / 0.1);
 }
 
-/* Hover effects para navegação */
-.nav-item-hover {
-  @apply hover:bg-gradient-to-r hover:from-primary/10 hover:to-primary/5;
-  @apply hover:scale-[1.02] hover:shadow-sm;
-  @apply transition-all duration-200 ease-out;
+/* Topic item styling */
+.topic-item {
+  @apply community-card p-4 cursor-pointer group;
 }
 
-/* Estados de focus aprimorados */
-.focus-ring {
-  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-2;
+.topic-item:hover {
+  transform: translateY(-2px);
 }
 
-/* Badge styles */
-.badge-glow {
-  box-shadow: 0 0 0 1px hsl(var(--primary) / 0.1), 
-              0 0 8px hsl(var(--primary) / 0.2);
+.topic-title {
+  @apply font-semibold text-foreground group-hover:text-primary transition-colors;
+}
+
+.topic-meta {
+  @apply text-sm text-muted-foreground;
+}
+
+.topic-stats {
+  @apply flex items-center gap-4 text-xs text-muted-foreground;
+}
+
+/* Category styling */
+.category-item {
+  @apply community-card p-6 hover:bg-accent/50 transition-all duration-300;
+  border-left: 3px solid hsl(var(--viverblue));
+}
+
+.category-header {
+  @apply flex items-start justify-between mb-3;
+}
+
+.category-icon {
+  @apply w-10 h-10 rounded-lg flex items-center justify-center;
+  background: hsl(var(--viverblue) / 0.1);
+  color: hsl(var(--viverblue));
+}
+
+.category-title {
+  @apply text-lg font-semibold text-foreground;
+}
+
+.category-description {
+  @apply text-sm text-muted-foreground mt-1;
+}
+
+.category-stats {
+  @apply text-xs text-muted-foreground;
+}
+
+/* Aurora buttons */
+.aurora-button {
+  @apply relative overflow-hidden rounded-lg px-6 py-3 font-medium transition-all duration-300;
+  background: var(--aurora-primary);
+  color: hsl(var(--primary-foreground));
+  border: none;
+}
+
+.aurora-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.aurora-button:hover::before {
+  left: 100%;
+}
+
+.aurora-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px hsl(var(--viverblue) / 0.3);
+}
+
+/* Search and filter components */
+.aurora-search {
+  @apply aurora-card p-4;
+  background: hsl(var(--community-card));
+}
+
+.aurora-input {
+  @apply w-full bg-transparent border-0 outline-none text-foreground placeholder:text-muted-foreground;
+}
+
+/* Floating action button */
+.aurora-fab {
+  @apply fixed bottom-6 right-6 z-50 aurora-button rounded-full w-14 h-14 flex items-center justify-center;
+  background: var(--aurora-primary);
+  box-shadow: 0 8px 25px hsl(var(--viverblue) / 0.4);
+}
+
+/* Tag styling */
+.aurora-tag {
+  @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
+  background: hsl(var(--viverblue) / 0.1);
+  color: hsl(var(--viverblue));
+  border: 1px solid hsl(var(--viverblue) / 0.2);
+}
+
+/* Avatar styling */
+.aurora-avatar {
+  @apply relative;
+}
+
+.aurora-avatar::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: var(--aurora-primary);
+  border-radius: inherit;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.aurora-avatar:hover::after {
+  opacity: 1;
+}
+
+/* Navigation active states */
+.nav-active {
+  @apply relative;
+  color: hsl(var(--viverblue));
+}
+
+.nav-active::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: hsl(var(--viverblue));
+  border-radius: 1px;
+}
+
+/* Loading states */
+.aurora-skeleton {
+  @apply animate-pulse rounded;
+  background: linear-gradient(90deg, hsl(var(--muted)), hsl(var(--muted-foreground) / 0.1), hsl(var(--muted)));
+  background-size: 200% 100%;
+  animation: aurora-shimmer 1.5s infinite;
+}
+
+@keyframes aurora-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
