@@ -8,11 +8,12 @@ export const useNetworkingStats = () => {
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) return { matches: 0, connections: 0, notifications: 0 };
 
-      // Buscar quantidade de matches
+      // Buscar quantidade de matches pendentes (mesma condição do grid)
       const { count: matchesCount } = await supabase
         .from('network_matches')
         .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.user.id);
+        .eq('user_id', user.user.id)
+        .eq('status', 'pending');
 
       // Buscar quantidade de conexões
       const { count: connectionsCount } = await supabase
@@ -35,6 +36,7 @@ export const useNetworkingStats = () => {
       };
     },
     refetchInterval: 30000, // Atualizar a cada 30 segundos
+    staleTime: 0, // Sempre buscar dados atualizados
   });
 
   return {

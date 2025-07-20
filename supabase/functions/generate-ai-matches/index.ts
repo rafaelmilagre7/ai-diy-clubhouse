@@ -77,20 +77,39 @@ serve(async (req) => {
     const preferredIndustries = userPreferences?.looking_for?.industries || [];
     const excludedSectors = userPreferences?.exclude_sectors || [];
 
-    // Construir query para buscar potenciais matches com base nas preferências
+    // Primeiro buscar IDs de usuários já conectados
+    const { data: existingConnections, error: connectionsError } = await supabase
+      .from('member_connections')
+      .select('requester_id, recipient_id')
+      .or(`requester_id.eq.${user_id},recipient_id.eq.${user_id}`);
+
+    if (connectionsError) {
+      console.error('Erro ao buscar conexões existentes:', connectionsError);
+      throw new Error('Erro ao buscar conexões existentes: ' + connectionsError.message);
+    }
+
+    // Extrair IDs dos usuários já conectados
+    const connectedUserIds = new Set<string>();
+    existingConnections?.forEach(conn => {
+      if (conn.requester_id === user_id) {
+        connectedUserIds.add(conn.recipient_id);
+      } else {
+        connectedUserIds.add(conn.requester_id);
+      }
+    });
+
+    // Construir query para buscar potenciais matches excluindo usuários já conectados
     let query = supabase
       .from('profiles')
       .select('id, name, company_name, current_position, industry, role')
-      .neq('id', user_id)
-      .not('id', 'in', `(
-        SELECT CASE 
-          WHEN requester_id = '${user_id}' THEN recipient_id 
-          ELSE requester_id 
-        END 
-        FROM member_connections 
-        WHERE (requester_id = '${user_id}' OR recipient_id = '${user_id}')
-      )`)
-      .limit(maxMatches);
+      .neq('id', user_id);
+
+    // Se há usuários conectados, excluí-los da busca
+    if (connectedUserIds.size > 0) {
+      query = query.not('id', 'in', `(${Array.from(connectedUserIds).map(id => `'${id}'`).join(',')})`);
+    }
+
+    query = query.limit(maxMatches);
 
     // Aplicar filtros de indústria se especificados
     if (preferredIndustries.length > 0) {

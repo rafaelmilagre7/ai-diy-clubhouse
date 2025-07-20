@@ -62,7 +62,7 @@ export const MatchesGrid = () => {
           <div className="relative group">
             <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl group-hover:blur-2xl transition-all duration-500"></div>
             <div className="relative bg-primary/10 rounded-full p-6">
-              <Sparkles className="h-12 w-12 text-primary" />
+              <Brain className="h-12 w-12 text-primary" />
             </div>
           </div>
           
@@ -88,10 +88,10 @@ export const MatchesGrid = () => {
                   Gerando Matches...
                 </div>
               ) : (
-                <div className="flex items-center gap-2">
-                  <Sparkles className="h-5 w-5" />
-                  Gerar Matches IA
-                </div>
+              <div className="flex items-center gap-2">
+                <Brain className="h-5 w-5" />
+                Gerar Matches IA
+              </div>
               )}
             </button>
           </div>
@@ -107,7 +107,7 @@ export const MatchesGrid = () => {
           <h2 className="text-2xl font-heading font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent flex items-center gap-3">
             <div className="relative">
               <div className="absolute inset-0 bg-primary/20 rounded-full blur-lg"></div>
-              <Sparkles className="relative h-6 w-6 text-primary" />
+              <Brain className="relative h-6 w-6 text-primary" />
             </div>
             Matches IA
           </h2>
@@ -129,10 +129,10 @@ export const MatchesGrid = () => {
                 Gerando...
               </div>
             ) : (
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4" />
-                Gerar Matches IA
-              </div>
+            <div className="flex items-center gap-2">
+              <Brain className="h-4 w-4" />
+              Gerar Matches IA
+            </div>
             )}
           </button>
         </div>
@@ -248,7 +248,7 @@ const MatchCard = ({ match, onOpenChat }: MatchCardProps) => {
                   />
                 </div>
                 <div className="absolute -bottom-1 -right-1 bg-primary rounded-full p-1.5 shadow-lg">
-                  <Sparkles className="h-4 w-4 text-primary-foreground" />
+                  <Brain className="h-4 w-4 text-primary-foreground" />
                 </div>
               </div>
               <div className="flex-1">
