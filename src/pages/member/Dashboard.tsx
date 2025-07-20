@@ -1,26 +1,29 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useAuth } from '@/contexts/auth';
 import { useDashboardData } from '@/hooks/dashboard/useDashboardData';
-import { useDashboardProgress } from '@/hooks/dashboard/useDashboardProgress';
+import { useOptimizedDashboardProgress } from '@/hooks/dashboard/useOptimizedDashboardProgress';
 import LoadingScreen from '@/components/common/LoadingScreen';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useNavigate } from 'react-router-dom';
 import { Solution } from '@/lib/supabase';
+import { useState } from 'react';
 
 const Dashboard = () => {
+  const { user, profile } = useAuth();
   const { solutions, loading, error } = useDashboardData();
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState('all');
 
+  // Usar o hook otimizado de progresso
   const {
     active,
     completed,
     recommended,
     loading: progressLoading,
     error: progressError
-  } = useDashboardProgress(solutions);
+  } = useOptimizedDashboardProgress(solutions);
 
   const isLoading = loading || progressLoading;
   const hasError = error || progressError;

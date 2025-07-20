@@ -4,6 +4,12 @@ import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { Solution } from "@/lib/supabase";
+import { perfMonitor, measureAsync } from '@/utils/performanceMonitor';
+
+interface SupabaseResponse<T> {
+  data: T | null;
+  error: any;
+}
 
 export const useDashboardData = () => {
   const { user, profile } = useAuth();
@@ -36,6 +42,7 @@ export const useDashboardData = () => {
     if (!debouncedUserId || !profile) return;
     
     try {
+      perfMonitor.startTimer('useDashboardData', 'fetchData', { userId: debouncedUserId, isAdmin });
       setLoading(true);
       setError(null);
       
@@ -69,10 +76,15 @@ export const useDashboardData = () => {
       }
       
       // Executar queries em paralelo com timeout
-      const results = await Promise.allSettled(queries);
+      const results = await measureAsync(
+        'useDashboardData',
+        'parallelQueries',
+        () => Promise.allSettled(queries),
+        { queryCount: queries.length, isAdmin }
+      );
       
       // Processar resultados
-      const [solutionsResult, progressResult, analyticsResult, profilesResult] = results;
+      const [solutionsResult, progressResult, analyticsResult, profilesResult] = results as PromiseSettledResult<SupabaseResponse<any>>[];
       
       if (solutionsResult.status === 'fulfilled' && !solutionsResult.value.error) {
         setSolutions(solutionsResult.value.data as Solution[]);
@@ -86,13 +98,28 @@ export const useDashboardData = () => {
         setAnalyticsData(analyticsResult.value.data || []);
       }
       
-      if (profilesResult && profilesResult.status === 'fulfilled' && !profilesResult.value.error) {
-        setProfilesData(profilesResult.value.data || []);
+      if (profilesResult && profilesResult.status === 'fulfilled' && !(profilesResult.value as SupabaseResponse<any>).error) {
+        setProfilesData((profilesResult.value as SupabaseResponse<any>).data || []);
       }
+      
+      perfMonitor.endTimer('useDashboardData', 'fetchData', { 
+        userId: debouncedUserId, 
+        isAdmin, 
+        success: true,
+        solutionsCount: solutions.length,
+        progressCount: progressData.length
+      });
       
     } catch (error: any) {
       console.error("Erro no carregamento de dados do dashboard:", error);
       setError(error.message || "Erro inesperado ao carregar dados");
+      
+      perfMonitor.endTimer('useDashboardData', 'fetchData', { 
+        userId: debouncedUserId, 
+        isAdmin, 
+        success: false,
+        error: error.message
+      });
     } finally {
       setLoading(false);
     }
