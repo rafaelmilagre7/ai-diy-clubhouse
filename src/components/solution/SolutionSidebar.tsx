@@ -2,9 +2,6 @@ import React from "react";
 import { Solution } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Loader2, PlayCircle } from "lucide-react";
-import { SolutionProgressDisplay } from "./SolutionProgressDisplay";
-import { SolutionQuickActions } from "./SolutionQuickActions";
-import { SolutionDetailsCard } from "./SolutionDetailsCard";
 
 interface SolutionSidebarProps {
   solution: Solution;
@@ -39,7 +36,14 @@ export const SolutionSidebar = ({
           </h3>
           
           {progress ? (
-            <SolutionProgressDisplay progress={progress} />
+            <div className="space-y-3">
+              <div className="text-center">
+                <p className="text-sm text-neutral-400 mb-2">Progresso atual</p>
+                <div className="bg-viverblue/10 rounded-lg p-3">
+                  <p className="text-viverblue-light font-medium">Em andamento</p>
+                </div>
+              </div>
+            </div>
           ) : (
             <div className="text-center py-4">
               <p className="text-neutral-300 mb-4">
@@ -80,7 +84,14 @@ export const SolutionSidebar = ({
           <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-white to-viverblue-light bg-clip-text text-transparent">
             Ações Rápidas
           </h3>
-          <SolutionQuickActions solution={solution} />
+          <div className="space-y-3">
+            <button className="w-full p-3 bg-viverblue/10 hover:bg-viverblue/15 rounded-lg border border-viverblue/20 text-viverblue-light transition-colors">
+              Adicionar aos Favoritos
+            </button>
+            <button className="w-full p-3 bg-viverblue/10 hover:bg-viverblue/15 rounded-lg border border-viverblue/20 text-viverblue-light transition-colors">
+              Baixar Materiais
+            </button>
+          </div>
         </div>
       </div>
 
@@ -97,7 +108,22 @@ export const SolutionSidebar = ({
           <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-white to-viverblue-light bg-clip-text text-transparent">
             Detalhes da Solução
           </h3>
-          <SolutionDetailsCard solution={solution} />
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between">
+              <span className="text-neutral-400">Categoria:</span>
+              <span className="text-viverblue-light">{solution.category}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-neutral-400">Dificuldade:</span>
+              <span className="text-viverblue-light capitalize">{solution.difficulty}</span>
+            </div>
+            {solution.estimated_time && (
+              <div className="flex justify-between">
+                <span className="text-neutral-400">Tempo estimado:</span>
+                <span className="text-viverblue-light">{solution.estimated_time} min</span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

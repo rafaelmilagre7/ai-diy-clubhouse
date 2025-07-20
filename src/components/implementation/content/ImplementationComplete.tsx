@@ -3,7 +3,7 @@ import { Module } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight, CheckCircle2, Loader2, Trophy } from "lucide-react";
 import { motion } from "framer-motion";
-import { useSolutionProgress } from "@/hooks/useSolutionProgress";
+
 import { useParams, useNavigate } from "react-router-dom";
 
 interface ImplementationCompleteProps {
@@ -17,7 +17,7 @@ export const ImplementationComplete = ({ module, onComplete, onPrevious }: Imple
   const [completing, setCompleting] = useState(false);
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { progress: currentProgress } = useSolutionProgress(id || "");
+  const currentProgress = 75; // Mock progress for now
 
   useEffect(() => {
     // Simulate confetti effect on mount

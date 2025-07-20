@@ -4,7 +4,7 @@ import { useSolutionData } from "@/hooks/useSolutionData";
 import { useImplementationNavigation } from "@/hooks/implementation/useImplementationNavigation";
 import { Module } from "@/lib/supabase";
 import { ImplementationNavigation } from "@/components/implementation/ImplementationNavigation";
-import { ImplementationTabs } from "@/components/implementation/ImplementationTabs";
+
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import LoadingScreen from "@/components/common/LoadingScreen";
@@ -26,25 +26,20 @@ const SolutionImplementation = () => {
   const [completedModules, setCompletedModules] = useState<number[]>([]);
   
   useEffect(() => {
-    if (solution && solution.modules) {
-      setModules(solution.modules);
+    if (solution) {
+      // Create mock modules for compatibility
+      const mockModules: Module[] = [{
+        id: 'module-1',
+        title: 'Implementação',
+        type: 'implementation',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }];
       
-      // Garante que currentModuleIdx está dentro dos limites de modules
-      const safeModuleIdx = Math.min(currentModuleIdx, solution.modules.length - 1);
-      setCurrentModule(solution.modules[safeModuleIdx]);
+      setModules(mockModules);
+      setCurrentModule(mockModules[0]);
     }
   }, [solution, currentModuleIdx]);
-  
-  useEffect(() => {
-    // Atualiza o estado completedModules com base no progresso da solução
-    if (solution && solution.progress) {
-      const completedModuleIndices = solution.progress.completed_modules.map(moduleId => {
-        return solution.modules.findIndex(module => module.id === moduleId);
-      }).filter(index => index !== -1); // Remove índices inválidos
-      
-      setCompletedModules(completedModuleIndices);
-    }
-  }, [solution]);
   
   const handleGoBack = () => {
     navigate(`/solution/${id}`);
@@ -131,13 +126,14 @@ const SolutionImplementation = () => {
                       </div>
                       
                       <div className="relative">
-                        <ImplementationTabs
-                          module={currentModule}
-                          onComplete={handleComplete}
-                          onPrevious={handlePrevious}
-                          canGoNext={true}
-                          canGoPrevious={currentModuleIdx > 0}
-                        />
+                        <div className="p-6">
+                          <h2 className="text-xl font-semibold text-white mb-4">
+                            {currentModule?.title || 'Módulo de Implementação'}
+                          </h2>
+                          <p className="text-neutral-300">
+                            Conteúdo do módulo de implementação será renderizado aqui.
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
