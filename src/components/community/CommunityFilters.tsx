@@ -18,15 +18,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-export type FilterType = "recentes" | "populares" | "sem-respostas" | "resolvidos";
-
-interface CommunityFiltersProps {
-  searchQuery: string;
-  onSearchChange: (query: string) => void;
-  activeFilter: FilterType;
-  onFilterChange: (filter: FilterType) => void;
-}
+import { CommunityFilterType, CommunityFiltersProps } from "@/types/communityTypes";
 
 export const CommunityFilters = ({
   searchQuery,
@@ -34,29 +26,27 @@ export const CommunityFilters = ({
   activeFilter,
   onFilterChange
 }: CommunityFiltersProps) => {
-  const [showFilters, setShowFilters] = useState(false);
-
   const filters = [
     {
-      key: "recentes" as FilterType,
+      key: "recentes" as CommunityFilterType,
       label: "Recentes",
       icon: Clock,
       description: "Tópicos mais novos primeiro"
     },
     {
-      key: "populares" as FilterType,
+      key: "populares" as CommunityFilterType,
       label: "Populares",
       icon: TrendingUp,
       description: "Mais visualizados e comentados"
     },
     {
-      key: "sem-respostas" as FilterType,
+      key: "sem-respostas" as CommunityFilterType,
       label: "Sem Respostas",
       icon: MessageSquareX,
       description: "Tópicos que precisam de ajuda"
     },
     {
-      key: "resolvidos" as FilterType,
+      key: "resolvidos" as CommunityFilterType,
       label: "Resolvidos",
       icon: CheckCircle2,
       description: "Tópicos com solução"

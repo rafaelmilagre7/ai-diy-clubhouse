@@ -3,13 +3,13 @@ import React from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { TopicFilterType } from "@/hooks/community/useForumTopics";
+import { CommunityFilterType } from "@/types/communityTypes";
 
 interface ForumSearchProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
-  selectedFilter: TopicFilterType;
-  setSelectedFilter: (filter: TopicFilterType) => void;
+  selectedFilter: CommunityFilterType;
+  setSelectedFilter: (filter: CommunityFilterType) => void;
 }
 
 export const ForumSearch = ({
