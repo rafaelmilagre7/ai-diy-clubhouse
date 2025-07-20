@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { uploadFileUnified, validateFileForBucket } from '@/lib/supabase/storage-unified';
@@ -30,10 +31,13 @@ export const useUnifiedFileUpload = ({
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const uploadFile = useCallback(async (file: File) => {
+    console.log(`[UNIFIED_UPLOAD] Iniciando upload para bucket: ${bucketName}`);
+    
     // Validação inicial
     const validation = validateFileForBucket(file, bucketName);
     if (!validation.valid) {
       const errorMsg = validation.error || 'Arquivo inválido';
+      console.error(`[UNIFIED_UPLOAD] Validação falhou: ${errorMsg}`);
       setError(errorMsg);
       onUploadError?.(errorMsg);
       toast({
@@ -56,7 +60,10 @@ export const useUnifiedFileUpload = ({
         file,
         bucketName,
         folder,
-        (progress) => setProgress(progress)
+        (progress) => {
+          console.log(`[UNIFIED_UPLOAD] Progresso: ${progress}%`);
+          setProgress(progress);
+        }
       );
 
       const uploadedFileData = {
@@ -65,6 +72,7 @@ export const useUnifiedFileUpload = ({
         size: file.size,
       };
 
+      console.log(`[UNIFIED_UPLOAD] Upload concluído: ${result.publicUrl}`);
       setUploadedFile(uploadedFileData);
       onUploadComplete?.(result.publicUrl, file.name, file.size);
 
@@ -75,6 +83,7 @@ export const useUnifiedFileUpload = ({
 
     } catch (error: any) {
       const errorMsg = error.message || 'Erro ao fazer upload';
+      console.error(`[UNIFIED_UPLOAD] Erro: ${errorMsg}`, error);
       setError(errorMsg);
       onUploadError?.(errorMsg);
 

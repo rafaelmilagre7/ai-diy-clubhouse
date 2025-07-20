@@ -1,3 +1,4 @@
+
 import { supabase } from './client';
 import { MAX_UPLOAD_SIZES, STORAGE_BUCKETS } from './config';
 
@@ -19,14 +20,24 @@ export const BUCKET_CONFIGS = {
     allowedTypes: ['video/mp4', 'video/webm', 'video/quicktime'],
     description: 'Vídeos de aprendizado'
   },
+  [STORAGE_BUCKETS.LEARNING_COVERS]: {
+    maxSize: MAX_UPLOAD_SIZES.COVER,
+    allowedTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'],
+    description: 'Capas de cursos e lições'
+  },
   [STORAGE_BUCKETS.SOLUTION_FILES]: {
     maxSize: MAX_UPLOAD_SIZES.DOCUMENT,
     allowedTypes: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain', 'application/zip'],
     description: 'Arquivos de soluções'
   },
   
-  // Bucket para imagens de perfil
-  'profile-pictures': {
+  // Buckets para ferramentas e perfis
+  [STORAGE_BUCKETS.TOOL_LOGOS]: {
+    maxSize: MAX_UPLOAD_SIZES.LOGO,
+    allowedTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml', 'image/gif'],
+    description: 'Logos de ferramentas'
+  },
+  [STORAGE_BUCKETS.PROFILE_PICTURES]: {
     maxSize: MAX_UPLOAD_SIZES.AVATAR,
     allowedTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
     description: 'Imagens de perfil dos usuários'

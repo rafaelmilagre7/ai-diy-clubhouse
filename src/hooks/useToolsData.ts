@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useLogging } from "@/hooks/useLogging";
+import { STORAGE_BUCKETS } from "@/lib/supabase/config";
 
 export const useToolsData = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -40,10 +41,10 @@ export const useToolsData = () => {
         return;
       }
       
-      const bucketExists = buckets?.find(bucket => bucket.name === 'tool_logos');
+      const bucketExists = buckets?.find(bucket => bucket.name === STORAGE_BUCKETS.TOOL_LOGOS);
       
       if (!bucketExists) {
-        log("Bucket tool_logos não encontrado, mas será criado pelo administrador", {});
+        log(`Bucket ${STORAGE_BUCKETS.TOOL_LOGOS} não encontrado, mas será criado pelo administrador`, {});
         // Não tentamos criar o bucket aqui para evitar erros de RLS
       }
     } catch (err) {

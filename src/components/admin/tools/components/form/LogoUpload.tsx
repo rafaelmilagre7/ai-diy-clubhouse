@@ -7,6 +7,7 @@ import { ToolFormValues } from '../../types/toolFormTypes';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
+import { STORAGE_BUCKETS } from '@/lib/supabase/config';
 
 interface LogoUploadProps {
   form: UseFormReturn<ToolFormValues>;
@@ -79,11 +80,11 @@ export const LogoUpload = ({ form }: LogoUploadProps) => {
             )}
             <FormControl>
               <FileUpload
-                bucketName="tool_logos"
+                bucketName={STORAGE_BUCKETS.TOOL_LOGOS}
                 folder="logos"
                 onUploadComplete={handleUploadComplete}
                 accept="image/*"
-                maxSize={2}
+                maxSize={5}
                 buttonText={logoUrl ? "Trocar logo" : "Upload do Logo"}
                 fieldLabel="Selecione uma imagem para o logo"
                 initialFileUrl={logoUrl}
@@ -91,7 +92,7 @@ export const LogoUpload = ({ form }: LogoUploadProps) => {
             </FormControl>
           </div>
           <FormDescription>
-            Logo da ferramenta (formato quadrado recomendado, PNG ou JPG)
+            Logo da ferramenta (formato quadrado recomendado, PNG ou JPG, máximo 5MB)
           </FormDescription>
           <FormMessage />
         </FormItem>
