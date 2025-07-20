@@ -35,6 +35,7 @@ import CommunityHome from '@/pages/member/community/CommunityHome';
 import TopicView from '@/pages/member/community/TopicView';
 import CategoryView from '@/pages/member/community/CategoryView';
 import NewTopic from '@/pages/member/community/NewTopic';
+import CategoryListPage from '@/pages/member/community/CategoryListPage';
 
 // Profile pages
 import NotificationSettingsPage from '@/pages/profile/NotificationSettingsPage';
@@ -86,10 +87,12 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/suggestions/:id", SuggestionDetails),
   createProtectedRoute("/suggestions/new", NewSuggestion),
   
-  // Comunidade Routes
+  // Comunidade Routes - CORRIGIDAS E AMPLIADAS
   createProtectedRoute("/comunidade", CommunityHome),
+  createProtectedRoute("/comunidade/categorias", CategoryListPage),
   createProtectedRoute("/comunidade/topico/:topicId", TopicView),
   createProtectedRoute("/comunidade/categoria/:slug", CategoryView),
   createProtectedRoute("/comunidade/novo-topico/:categorySlug", NewTopic),
+  createProtectedRoute("/comunidade/novo-topico", NewTopic),
   
 ];
