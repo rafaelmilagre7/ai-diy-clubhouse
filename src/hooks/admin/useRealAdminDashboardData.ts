@@ -4,7 +4,7 @@ import { useRealSystemActivity } from "./dashboard/useRealSystemActivity";
 
 export const useRealAdminDashboardData = (timeRange: string) => {
   const { statsData, loading: statsLoading, refetch: refetchStats } = useRealAdminStats(timeRange);
-  const { activityData, loading: activityLoading, refetch: refetchActivity } = useRealSystemActivity(timeRange);
+  const { data: activityData, isLoading: activityLoading, refetch: refetchActivity } = useRealSystemActivity(timeRange);
 
   const refetch = async () => {
     console.log(`🔄 Atualizando dashboard administrativo para período: ${timeRange}...`);

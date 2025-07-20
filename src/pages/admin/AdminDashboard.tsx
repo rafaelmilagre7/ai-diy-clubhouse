@@ -55,7 +55,7 @@ const AdminDashboard = () => {
 
     // Calcular totalEvents a partir das propriedades disponíveis
     const totalEvents = (activityData?.totalLogins || 0) + 
-                       (activityData?.forumActivity || 0) + 
+                       (activityData?.communityActivity || 0) + 
                        (activityData?.completedSolutions || 0) + 
                        (activityData?.activeImplementations || 0);
 
