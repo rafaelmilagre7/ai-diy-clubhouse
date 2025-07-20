@@ -1,304 +1,296 @@
-import React from 'react';
-import { useParams, useNavigate } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import React, { useState, useEffect } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Pin, Lock, CheckCircle, MessageCircle, Eye, ArrowLeft, Calendar } from "lucide-react";
-import { PostItem } from "@/components/community/PostItem";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
+import { Shell } from "@/components/Shell";
 import { ReplyForm } from "@/components/community/ReplyForm";
-import { ModerationActions } from "@/components/community/ModerationActions";
-import { useReporting } from "@/hooks/community/useReporting";
-import { Topic, Post } from "@/types/forumTypes";
+import {
+  MessageSquare,
+  ThumbsUp,
+  MoreVertical,
+  ArrowLeft,
+  CheckCircle2,
+  Loader2,
+  Pin,
+  Lock,
+  Flag,
+  Trash2,
+} from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/auth";
+import { toast } from "sonner";
+import { PostItem } from "@/components/community/PostItem";
+import { Post, Topic } from "@/types/forumTypes";
 
-export const TopicView = () => {
+const TopicView = () => {
   const { topicId } = useParams<{ topicId: string }>();
-  const navigate = useNavigate();
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [isTopicOwner, setIsTopicOwner] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { openReportModal } = useReporting();
+  const navigate = useNavigate();
 
-  const { data: topic, isLoading: topicLoading, error: topicError } = useQuery({
-    queryKey: ['communityTopic', topicId],
+  const {
+    data: topic,
+    isLoading: topicLoading,
+    error: topicError,
+  } = useQuery({
+    queryKey: ["forumTopic", topicId],
     queryFn: async () => {
-      if (!topicId) throw new Error('Topic ID is required');
-      
       const { data, error } = await supabase
-        .from('forum_topics')
-        .select(`
+        .from("forum_topics")
+        .select(
+          `
           *,
-          profiles!forum_topics_user_id_fkey (
+          profiles(
             id,
             name,
             avatar_url
-          ),
-          category:forum_categories!forum_topics_category_id_fkey (
-            id,
-            name,
-            color
           )
-        `)
-        .eq('id', topicId)
+        `
+        )
+        .eq("id", topicId)
         .single();
 
       if (error) throw error;
       return data as Topic;
     },
-    enabled: !!topicId
+    enabled: !!topicId,
   });
 
-  const { data: posts = [], isLoading: postsLoading } = useQuery({
-    queryKey: ['communityTopicPosts', topicId],
+  const {
+    data: posts,
+    isLoading: postsLoading,
+    error: postsError,
+    refetch: refetchPosts,
+  } = useQuery({
+    queryKey: ["forumPosts", topicId],
     queryFn: async () => {
-      if (!topicId) return [];
-      
       const { data, error } = await supabase
-        .from('forum_posts')
-        .select(`
+        .from("forum_posts")
+        .select(
+          `
           *,
-          profiles!forum_posts_user_id_fkey (
+          profiles(
             id,
             name,
             avatar_url
           )
-        `)
-        .eq('topic_id', topicId)
-        .order('created_at', { ascending: true });
+        `
+        )
+        .eq("topic_id", topicId)
+        .order("created_at", { ascending: true });
 
       if (error) throw error;
       return data as Post[];
     },
-    enabled: !!topicId
+    enabled: !!topicId,
   });
 
-  React.useEffect(() => {
-    if (topic && topicId) {
-      // Incrementar contador de visualizações
-      const incrementViews = async () => {
-        await supabase.rpc('increment_topic_views', { topic_id: topicId });
-      };
-      incrementViews();
+  useEffect(() => {
+    if (topic && user) {
+      setIsTopicOwner(topic.user_id === user.id);
+      setIsAdmin(user?.user_metadata?.role === "admin");
     }
-  }, [topic, topicId]);
+  }, [topic, user]);
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+  const handleReplyToPost = (postId: string) => {
+    setReplyingTo(postId);
   };
 
-  const getInitials = (name: string) => {
-    return name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'U';
+  const handleCancelReply = () => {
+    setReplyingTo(null);
   };
 
-  const handleReplySuccess = () => {
-    // Invalidar queries para atualizar a lista de posts
-    queryClient.invalidateQueries({ queryKey: ['communityTopicPosts', topicId] });
-    queryClient.invalidateQueries({ queryKey: ['communityTopic', topicId] });
-    queryClient.invalidateQueries({ queryKey: ['communityTopics'] });
+  const handlePostSuccess = () => {
+    setReplyingTo(null);
+    refetchPosts();
   };
 
-  const handleModerationSuccess = () => {
-    // Invalidar queries relacionadas para atualizar a UI
-    queryClient.invalidateQueries({ queryKey: ['communityTopic', topicId] });
-    queryClient.invalidateQueries({ queryKey: ['communityTopics'] });
-    queryClient.invalidateQueries({ queryKey: ['forumTopics'] });
+  const handleMarkAsSolution = async (postId: string) => {
+    if (!user?.id) return;
+
+    try {
+      // Remover solução anterior se existir
+      await supabase
+        .from("forum_posts")
+        .update({ is_accepted_solution: false })
+        .eq("topic_id", topicId)
+        .eq("is_accepted_solution", true);
+
+      // Marcar novo post como solução
+      await supabase
+        .from("forum_posts")
+        .update({ is_accepted_solution: true })
+        .eq("id", postId);
+
+      // Marcar tópico como resolvido
+      await supabase
+        .from("forum_topics")
+        .update({ is_solved: true })
+        .eq("id", topicId);
+
+      toast.success("Post marcado como solução!");
+      queryClient.invalidateQueries({ queryKey: ["forumTopic", topicId] });
+      queryClient.invalidateQueries({ queryKey: ["forumPosts", topicId] });
+    } catch (error: any) {
+      console.error("Erro ao marcar como solução:", error);
+      toast.error("Erro ao marcar como solução");
+    }
+  };
+
+  const handleUnmarkAsSolution = async (postId: string) => {
+    if (!user?.id) return;
+
+    try {
+      // Remover como solução
+      await supabase
+        .from("forum_posts")
+        .update({ is_accepted_solution: false })
+        .eq("id", postId);
+
+      // Desmarcar tópico como resolvido
+      await supabase
+        .from("forum_topics")
+        .update({ is_solved: false })
+        .eq("id", topicId);
+
+      toast.success("Solução removida!");
+      queryClient.invalidateQueries({ queryKey: ["forumTopic", topicId] });
+      queryClient.invalidateQueries({ queryKey: ["forumPosts", topicId] });
+    } catch (error: any) {
+      console.error("Erro ao remover solução:", error);
+      toast.error("Erro ao remover solução");
+    }
+  };
+
+  const handleDeletePost = async (postId: string) => {
+    if (!user?.id) return;
+
+    try {
+      await supabase.from("forum_posts").delete().eq("id", postId);
+
+      toast.success("Post excluído com sucesso!");
+      queryClient.invalidateQueries({ queryKey: ["forumTopic", topicId] });
+      queryClient.invalidateQueries({ queryKey: ["forumPosts", topicId] });
+    } catch (error: any) {
+      console.error("Erro ao excluir post:", error);
+      toast.error("Erro ao excluir post");
+    }
+  };
+
+  const renderPost = (post: Post, isMainPost = false) => {
+    const isPostOwner = post.user_id === user?.id;
+    const canUserMarkAsSolved = isTopicOwner || isAdmin;
     
-    console.log('Queries invalidadas após ação de moderação no tópico');
+    return (
+      <PostItem
+        key={post.id}
+        post={post}
+        variant={isMainPost ? "detailed" : "default"}
+        showActions={true}
+        showContextMenu={isPostOwner || isAdmin}
+        showModerationActions={isAdmin}
+        showSolutionBadge={true}
+        isReply={!isMainPost}
+        isTopicAuthor={post.user_id === topic?.user_id}
+        isAdmin={isAdmin}
+        canMarkAsSolved={canUserMarkAsSolved && !isMainPost}
+        onReply={() => handleReplyToPost(post.id)}
+        onMarkAsSolved={() => handleMarkAsSolution(post.id)}
+        onUnmarkAsSolved={() => handleUnmarkAsSolution(post.id)}
+        onDelete={() => handleDeletePost(post.id)}
+        className="mb-4"
+      />
+    );
   };
 
   if (topicLoading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-3/4"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-          <div className="h-32 bg-gray-200 rounded"></div>
+      <Shell>
+        <div className="animate-pulse">
+          <div className="h-8 bg-muted rounded-md w-1/4 mb-4"></div>
+          <div className="h-4 bg-muted rounded-md w-1/2 mb-8"></div>
+          <div className="bg-card shadow-sm border-none p-6 rounded-lg">
+            <div className="h-6 bg-muted rounded-md w-1/3 mb-6"></div>
+            <div className="space-y-4">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="p-4 border rounded-md">
+                  <div className="flex justify-between">
+                    <div className="h-6 bg-muted rounded-md w-1/3"></div>
+                    <div className="h-6 bg-muted rounded-md w-20"></div>
+                  </div>
+                  <div className="h-4 bg-muted rounded-md w-1/2 mt-2"></div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
-      </div>
+      </Shell>
     );
   }
 
   if (topicError || !topic) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center">
-          <h2 className="text-2xl font-semibold mb-4">Tópico não encontrado</h2>
-          <Button onClick={() => navigate('/comunidade')}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar para Comunidade
+      <Shell>
+        <div className="text-center py-10">
+          <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground" />
+          <h1 className="text-2xl font-bold mt-4">Tópico não encontrado</h1>
+          <p className="text-muted-foreground mt-2 mb-6">
+            O tópico que você está procurando não existe ou foi removido.
+          </p>
+          <Button asChild>
+            <Link to="/comunidade">Voltar para a Comunidade</Link>
           </Button>
         </div>
-      </div>
+      </Shell>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-6">
-      {/* Header com botão voltar */}
-      <div className="flex items-center gap-4">
-        <Button 
-          variant="ghost" 
-          onClick={() => navigate('/comunidade')}
-          className="flex items-center gap-2"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Voltar
-        </Button>
-      </div>
+    <Shell>
+      <Button variant="ghost" size="sm" asChild className="p-0 mb-4">
+        <Link to="/comunidade" className="flex items-center">
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Voltar para a Comunidade
+        </Link>
+      </Button>
 
-      {/* Informações do Tópico */}
-      <div className="bg-white rounded-lg border p-6 space-y-4">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            {/* Título com badges */}
-            <div className="flex items-center gap-2 mb-4 flex-wrap">
-              <h1 className="text-2xl font-bold text-foreground flex-1">
-                {topic.title}
-              </h1>
-              
-              {topic.is_pinned && (
-                <Badge variant="secondary" className="gap-1 bg-blue-100 text-blue-700">
-                  <Pin className="h-3 w-3" />
-                  Fixado
-                </Badge>
-              )}
-              
-              {topic.is_locked && (
-                <Badge variant="secondary" className="gap-1 bg-red-100 text-red-700">
-                  <Lock className="h-3 w-3" />
-                  Travado
-                </Badge>
-              )}
-              
-              {topic.is_solved && (
-                <Badge variant="secondary" className="gap-1 bg-green-100 text-green-700">
-                  <CheckCircle className="h-3 w-3" />
-                  Resolvido
-                </Badge>
-              )}
-            </div>
+      {renderPost({ ...topic, profiles: topic.profiles }, true)}
 
-            {/* Meta informações */}
-            <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
-              <div className="flex items-center gap-2">
-                <Avatar className="h-6 w-6">
-                  <AvatarImage src={topic.profiles?.avatar_url || ''} />
-                  <AvatarFallback className="bg-viverblue text-white text-xs">
-                    {getInitials(topic.profiles?.name || 'Usuário')}
-                  </AvatarFallback>
-                </Avatar>
-                <span>Por {topic.profiles?.name || 'Usuário'}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Calendar className="h-4 w-4" />
-                <span>{formatDate(topic.created_at)}</span>
-              </div>
-              {topic.category && (
-                <Badge variant="outline" className="text-xs">
-                  {topic.category.name}
-                </Badge>
-              )}
-            </div>
+      <Separator className="my-4" />
 
-            {/* Estatísticas */}
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <div className="flex items-center gap-1">
-                <MessageCircle className="h-4 w-4" />
-                <span>{topic.reply_count || 0} respostas</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Eye className="h-4 w-4" />
-                <span>{topic.view_count || 0} visualizações</span>
-              </div>
-              {topic.last_activity_at && (
-                <span className="text-xs">
-                  Última atividade: {formatDate(topic.last_activity_at)}
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* Ações de Moderação */}
-          <div className="flex-shrink-0">
-            <ModerationActions
-              type="topic"
-              itemId={topic.id}
-              currentState={{
-                isPinned: topic.is_pinned,
-                isLocked: topic.is_locked,
-                isHidden: false
-              }}
-              onReport={() => openReportModal('topic', topic.id, topic.user_id)}
-              onSuccess={handleModerationSuccess}
-            />
-          </div>
-        </div>
-
-        {/* Conteúdo do tópico se houver */}
-        {topic.content && (
-          <div className="prose max-w-none pt-4 border-t">
-            <div dangerouslySetInnerHTML={{ __html: topic.content }} />
-          </div>
-        )}
-      </div>
-
-      {/* Lista de Posts/Respostas */}
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold">
-          Respostas ({posts.length})
-        </h2>
-        
-        {postsLoading ? (
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="animate-pulse bg-white rounded-lg border p-4">
-                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+        {posts?.map((post) => (
+          <React.Fragment key={post.id}>
+            {renderPost(post)}
+            {replyingTo === post.id && (
+              <div className="ml-8">
+                <ReplyForm
+                  topicId={topicId!}
+                  parentId={post.id}
+                  onSuccess={handlePostSuccess}
+                  onCancel={handleCancelReply}
+                />
               </div>
-            ))}
-          </div>
-        ) : posts.length > 0 ? (
-          <div className="space-y-4">
-            {posts.map((post) => (
-              <PostItem
-                key={post.id}
-                post={post}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-8 text-muted-foreground">
-            <MessageCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Nenhuma resposta ainda. Seja o primeiro a responder!</p>
-          </div>
-        )}
+            )}
+          </React.Fragment>
+        ))}
       </div>
 
-      {/* Formulário de Nova Resposta */}
-      {!topic.is_locked && (
-        <div className="bg-white rounded-lg border p-6">
-          <h3 className="text-lg font-semibold mb-4">Adicionar Resposta</h3>
-          <ReplyForm
-            topicId={topic.id}
-            onSuccess={handleReplySuccess}
-          />
-        </div>
-      )}
+      <Separator className="my-4" />
 
-      {topic.is_locked && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
-          <Lock className="h-5 w-5 mx-auto mb-2 text-yellow-600" />
-          <p className="text-yellow-800">
-            Este tópico está travado e não aceita novas respostas.
-          </p>
-        </div>
-      )}
-    </div>
+      <ReplyForm topicId={topicId!} onSuccess={handlePostSuccess} />
+    </Shell>
   );
 };
 
