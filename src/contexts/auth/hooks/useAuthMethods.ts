@@ -85,7 +85,6 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
   const signOut = async () => {
     try {
       setIsLoading(true);
-      console.log('🔄 [AUTH] Iniciando logout');
       
       const { error } = await supabase.auth.signOut();
       
@@ -94,16 +93,14 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
         toast.error('Erro ao fazer logout', {
           description: error.message
         });
-        return { success: false, error };
+        throw error;
       }
 
-      console.log('✅ [AUTH] Logout realizado com sucesso');
       toast.success('Logout realizado com sucesso!');
-      return { success: true, error: null };
     } catch (err) {
       console.error('❌ [AUTH] Erro inesperado no logout:', err);
       const error = err instanceof Error ? err : new Error('Erro inesperado');
-      return { success: false, error };
+      throw error;
     } finally {
       setIsLoading(false);
     }
