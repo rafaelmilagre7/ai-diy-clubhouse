@@ -1,47 +1,38 @@
 
-import { useState } from 'react';
-
-interface DeleteAction {
-  type: 'topic' | 'post';
-  itemId: string;
-  action: () => Promise<void>;
-  title?: string;
-  description?: string;
-}
+import { useState } from "react";
 
 export const useDeleteConfirmation = () => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteCallback, setDeleteCallback] = useState<(() => void) | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [pendingAction, setPendingAction] = useState<DeleteAction | null>(null);
 
-  const openDeleteDialog = (action: DeleteAction) => {
-    setPendingAction(action);
-    setIsOpen(true);
+  const openDeleteDialog = (callback: () => void) => {
+    setDeleteCallback(() => callback);
+    setShowDeleteDialog(true);
   };
 
   const closeDeleteDialog = () => {
-    setIsOpen(false);
-    setPendingAction(null);
+    setShowDeleteDialog(false);
+    setDeleteCallback(null);
     setIsDeleting(false);
   };
 
   const confirmDelete = async () => {
-    if (!pendingAction) return;
-
+    if (!deleteCallback) return;
+    
     setIsDeleting(true);
     try {
-      await pendingAction.action();
+      await deleteCallback();
       closeDeleteDialog();
     } catch (error) {
-      console.error('Erro ao excluir:', error);
+      console.error("Erro ao deletar:", error);
       setIsDeleting(false);
     }
   };
 
   return {
-    isOpen,
+    showDeleteDialog,
     isDeleting,
-    pendingAction,
     openDeleteDialog,
     closeDeleteDialog,
     confirmDelete

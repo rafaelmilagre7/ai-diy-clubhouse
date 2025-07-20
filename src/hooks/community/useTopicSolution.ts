@@ -1,110 +1,100 @@
 
 import { useState } from "react";
-import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/auth";
+import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
 
 interface UseTopicSolutionProps {
   topicId: string;
   topicAuthorId: string;
-  initialSolvedState: boolean;
 }
 
-export const useTopicSolution = ({
-  topicId,
-  topicAuthorId,
-  initialSolvedState = false
-}: UseTopicSolutionProps) => {
-  const [isSolved, setIsSolved] = useState<boolean>(initialSolvedState);
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+export const useTopicSolution = ({ topicId, topicAuthorId }: UseTopicSolutionProps) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  
+  const canMarkAsSolved = user?.id === topicAuthorId;
 
-  // Verificar se o usuário atual é o autor do tópico ou um administrador
-  const canMarkAsSolved = async (): Promise<boolean> => {
+  const markPostAsSolution = async (postId: string) => {
+    if (!canMarkAsSolved || !user) return;
+    
+    setIsSubmitting(true);
     try {
-      // Obter usuário atual
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) return false;
-      
-      // Se é o autor do tópico
-      if (user.id === topicAuthorId) return true;
-      
-      // Se é admin
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-        
-      return profile?.role === 'admin';
-    } catch (error) {
-      console.error("Erro ao verificar permissões:", error);
-      return false;
-    }
-  };
+      // Primeiro, desmarcar qualquer solução existente no tópico
+      await supabase
+        .from('forum_posts')
+        .update({ is_solution: false })
+        .eq('topic_id', topicId);
 
-  // Marcar tópico como resolvido
-  const markAsSolved = async () => {
-    try {
-      setIsSubmitting(true);
-      
-      // Atualizar o tópico para ser marcado como resolvido
-      const { error } = await supabase
+      // Marcar o post específico como solução
+      const { error: postError } = await supabase
+        .from('forum_posts')
+        .update({ is_solution: true })
+        .eq('id', postId);
+
+      if (postError) throw postError;
+
+      // Marcar o tópico como resolvido
+      const { error: topicError } = await supabase
         .from('forum_topics')
         .update({ is_solved: true })
         .eq('id', topicId);
-        
-      if (error) throw error;
+
+      if (topicError) throw topicError;
+
+      toast.success("Post marcado como solução!");
       
-      setIsSolved(true);
-      toast.success("Tópico marcado como resolvido");
-      
+      // Invalidar caches
+      queryClient.invalidateQueries({ queryKey: ['community-posts', topicId] });
+      queryClient.invalidateQueries({ queryKey: ['community-topic', topicId] });
     } catch (error: any) {
-      console.error("Erro ao marcar tópico como resolvido:", error);
-      toast.error(`Não foi possível marcar o tópico como resolvido: ${error.message}`);
+      console.error("Erro ao marcar como solução:", error);
+      toast.error("Erro ao marcar como solução");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Remover marcação de resolvido
-  const unmarkAsSolved = async () => {
+  const unmarkPostAsSolution = async (postId: string) => {
+    if (!canMarkAsSolved || !user) return;
+    
+    setIsSubmitting(true);
     try {
-      setIsSubmitting(true);
-      
-      // Atualizar o tópico para não estar resolvido
+      // Desmarcar post como solução
+      const { error: postError } = await supabase
+        .from('forum_posts')
+        .update({ is_solution: false })
+        .eq('id', postId);
+
+      if (postError) throw postError;
+
+      // Desmarcar tópico como resolvido
       const { error: topicError } = await supabase
         .from('forum_topics')
         .update({ is_solved: false })
         .eq('id', topicId);
-        
+
       if (topicError) throw topicError;
+
+      toast.success("Solução removida!");
       
-      // Também remover a marcação de solução de todos os posts relacionados
-      const { error: postsError } = await supabase
-        .from('forum_posts')
-        .update({ is_solution: false })
-        .eq('topic_id', topicId);
-        
-      if (postsError) {
-        console.error("Erro ao limpar soluções dos posts:", postsError);
-      }
-      
-      setIsSolved(false);
-      toast.success("Marcação de solução removida");
-      
+      // Invalidar caches
+      queryClient.invalidateQueries({ queryKey: ['community-posts', topicId] });
+      queryClient.invalidateQueries({ queryKey: ['community-topic', topicId] });
     } catch (error: any) {
-      console.error("Erro ao desmarcar tópico como resolvido:", error);
-      toast.error(`Não foi possível remover a marcação: ${error.message}`);
+      console.error("Erro ao remover solução:", error);
+      toast.error("Erro ao remover solução");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return {
-    isSolved,
+    canMarkAsSolved,
     isSubmitting,
-    canMarkAsSolved: canMarkAsSolved(),
-    markAsSolved,
-    unmarkAsSolved
+    markPostAsSolution,
+    unmarkPostAsSolution
   };
 };
