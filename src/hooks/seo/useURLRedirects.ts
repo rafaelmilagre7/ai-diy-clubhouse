@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
@@ -14,7 +13,7 @@ export const useURLRedirects = () => {
 
   useEffect(() => {
     const redirectRules: RedirectRule[] = [
-      // Old forum URLs to new community URLs - SISTEMA UNIFICADO
+      // Old forum URLs to new community URLs
       {
         from: /^\/forum\/(.+)$/,
         to: (match) => `/comunidade/${match.split('/')[1]}`,

@@ -62,7 +62,7 @@ export const checkForumRedirect = (currentPath: string): {
       return {
         path: redirectPath,
         options: { 
-          replace: true // Substitui a entrada no histórico para redirecionar permanentemente
+          replace: true // Substitui a entrada no histórico
         }
       };
     }
