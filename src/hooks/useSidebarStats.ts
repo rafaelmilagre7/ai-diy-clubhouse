@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -5,7 +6,7 @@ interface SidebarStats {
   solutions: number;
   courses: number;
   tools: number;
-  forumTopics: number;
+  communityTopics: number;
   monthlyEvents: number;
   benefits: number;
   networkingActive: boolean;
@@ -32,7 +33,7 @@ export const useSidebarStats = () => {
           .select('*', { count: 'exact', head: true });
 
         // Buscar tópicos da comunidade (todos)
-        const { count: forumTopicsCount } = await supabase
+        const { count: communityTopicsCount } = await supabase
           .from('forum_topics')
           .select('*', { count: 'exact', head: true });
 
@@ -57,7 +58,7 @@ export const useSidebarStats = () => {
           solutions: solutionsCount || 0,
           courses: coursesCount || 0,
           tools: toolsCount || 0,
-          forumTopics: forumTopicsCount || 0,
+          communityTopics: communityTopicsCount || 0,
           monthlyEvents: eventsCount || 0,
           benefits: benefitsCount,
           networkingActive: true // Sempre ativo para membros
@@ -69,7 +70,7 @@ export const useSidebarStats = () => {
           solutions: 12,
           courses: 8,
           tools: 82,
-          forumTopics: 3,
+          communityTopics: 3,
           monthlyEvents: 4,
           benefits: 7,
           networkingActive: true

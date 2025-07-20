@@ -1,13 +1,13 @@
 
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ForumLayout } from "@/components/community/ForumLayout";
+import { CommunityLayout } from "@/components/community/CommunityLayout";
 import { NewTopicForm } from "@/components/community/NewTopicForm";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, Pencil } from "lucide-react";
 
-interface ForumCategory {
+interface CommunityCategory {
   id: string;
   name: string;
   slug: string;
@@ -17,7 +17,7 @@ const NewTopic = () => {
   const { categorySlug } = useParams<{ categorySlug?: string }>();
 
   const { data: category, isLoading, error } = useQuery({
-    queryKey: ['forumCategory', categorySlug],
+    queryKey: ['community-category', categorySlug],
     queryFn: async () => {
       if (!categorySlug) return null;
       
@@ -28,7 +28,7 @@ const NewTopic = () => {
         .single();
       
       if (error) throw error;
-      return data as ForumCategory;
+      return data as CommunityCategory;
     },
     enabled: !!categorySlug
   });
@@ -90,7 +90,7 @@ const NewTopic = () => {
         </p>
       )}
       
-      <ForumLayout>
+      <CommunityLayout>
         {category ? (
           <NewTopicForm categoryId={category.id} categorySlug={category.slug} />
         ) : (
@@ -104,7 +104,7 @@ const NewTopic = () => {
             </Button>
           </div>
         )}
-      </ForumLayout>
+      </CommunityLayout>
     </div>
   );
 };

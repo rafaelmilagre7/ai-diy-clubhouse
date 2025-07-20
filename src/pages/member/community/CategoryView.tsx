@@ -1,13 +1,13 @@
 
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ForumLayout } from "@/components/community/ForumLayout";
+import { CommunityLayout } from "@/components/community/CommunityLayout";
 import { TopicList } from "@/components/community/TopicList";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, MessageSquare } from "lucide-react";
 
-interface ForumCategory {
+interface CommunityCategory {
   id: string;
   name: string;
   description: string;
@@ -19,7 +19,7 @@ const CategoryView = () => {
   const { slug } = useParams<{ slug: string }>();
 
   const { data: category, isLoading, error } = useQuery({
-    queryKey: ['forumCategory', slug],
+    queryKey: ['community-category', slug],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('forum_categories')
@@ -28,7 +28,7 @@ const CategoryView = () => {
         .single();
       
       if (error) throw error;
-      return data as ForumCategory;
+      return data as CommunityCategory;
     }
   });
 
@@ -92,9 +92,9 @@ const CategoryView = () => {
         <p className="text-muted-foreground mb-6">{category.description}</p>
       )}
       
-      <ForumLayout>
+      <CommunityLayout>
         <TopicList categoryId={category.id} categorySlug={category.slug} />
-      </ForumLayout>
+      </CommunityLayout>
     </div>
   );
 };

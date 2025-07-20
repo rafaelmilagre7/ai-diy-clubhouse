@@ -19,3 +19,7 @@ export { CategoryList } from './CategoryList';
 export { NewTopicForm } from './NewTopicForm';
 export { CreateTopicDialog } from './CreateTopicDialog';
 export { QuickPostInput } from './QuickPostInput';
+export { CommunityBreadcrumbs } from './CommunityBreadcrumbs';
+export { CommunityHeader } from './CommunityHeader';
+export { CommunitySearch } from './CommunitySearch';
+export { CommunityStatistics } from './CommunityStatistics';

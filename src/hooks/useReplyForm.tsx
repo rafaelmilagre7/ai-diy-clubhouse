@@ -93,10 +93,10 @@ export const useReplyForm = ({
       
       toast.success("Resposta enviada com sucesso!");
       
-      // Atualizar cache do React Query
-      queryClient.invalidateQueries({ queryKey: ['forumTopic', topicId] });
-      queryClient.invalidateQueries({ queryKey: ['forumPosts', topicId] });
-      queryClient.invalidateQueries({ queryKey: ['communityTopics'] });
+      // Atualizar cache do React Query com nomenclatura padronizada
+      queryClient.invalidateQueries({ queryKey: ['community-topic', topicId] });
+      queryClient.invalidateQueries({ queryKey: ['community-posts', topicId] });
+      queryClient.invalidateQueries({ queryKey: ['community-topics'] });
       
       if (onSuccess) {
         onSuccess();

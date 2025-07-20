@@ -4,7 +4,7 @@ import { NavigateOptions } from "react-router-dom";
 /**
  * Mapeia rotas antigas do fórum para novas rotas da comunidade
  */
-export const forumRouteMapping: Record<string, string> = {
+export const communityRouteMapping: Record<string, string> = {
   '/forum': '/comunidade',
   '/forum/category': '/comunidade/categoria',
   '/forum/topic': '/comunidade/topico',
@@ -48,16 +48,16 @@ export const isActiveRoute = (currentPath: string, routeToCheck: string): boolea
  * @param currentPath Rota atual
  * @returns Objeto com informações de redirecionamento ou null se não precisar redirecionar
  */
-export const checkForumRedirect = (currentPath: string): { 
+export const checkCommunityRedirect = (currentPath: string): { 
   path: string, 
   options: NavigateOptions 
 } | null => {
   // Verificar se o caminho atual começa com algum dos prefixos antigos
-  for (const [oldPath, newPath] of Object.entries(forumRouteMapping)) {
+  for (const [oldPath, newPath] of Object.entries(communityRouteMapping)) {
     if (currentPath === oldPath || currentPath.startsWith(oldPath + '/')) {
       // Substitui apenas o prefixo, mantendo o resto da URL
       const redirectPath = currentPath.replace(oldPath, newPath);
-      console.log(`checkForumRedirect: Convertendo ${oldPath} para ${newPath} -> ${redirectPath}`);
+      console.log(`checkCommunityRedirect: Convertendo ${oldPath} para ${newPath} -> ${redirectPath}`);
       
       return {
         path: redirectPath,
@@ -68,6 +68,10 @@ export const checkForumRedirect = (currentPath: string): {
     }
   }
   
-  console.log(`checkForumRedirect: Nenhum redirecionamento necessário para ${currentPath}`);
+  console.log(`checkCommunityRedirect: Nenhum redirecionamento necessário para ${currentPath}`);
   return null;
 };
+
+// Manter alias para compatibilidade
+export const forumRouteMapping = communityRouteMapping;
+export const checkForumRedirect = checkCommunityRedirect;
