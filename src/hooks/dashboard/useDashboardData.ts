@@ -1,13 +1,11 @@
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
 import { Solution } from "@/lib/supabase";
 
 export const useDashboardData = () => {
   const { user, profile } = useAuth();
-  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [solutions, setSolutions] = useState<Solution[]>([]);
   const [progressData, setProgressData] = useState<any[]>([]);
@@ -16,24 +14,13 @@ export const useDashboardData = () => {
   const [error, setError] = useState<string | null>(null);
   
   // Memoizar isAdmin para evitar re-computações
-  const isAdmin = React.useMemo(() => 
+  const isAdmin = useMemo(() => 
     profile?.user_roles?.name === 'admin', 
     [profile?.user_roles?.name]
   );
-  
-  // Debounce para evitar fetches excessivos
-  const [debouncedUserId, setDebouncedUserId] = useState(user?.id);
-  
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedUserId(user?.id);
-    }, 300);
-    
-    return () => clearTimeout(timer);
-  }, [user?.id]);
 
-  const fetchData = React.useCallback(async () => {
-    if (!debouncedUserId || !profile) return;
+  const fetchData = useCallback(async () => {
+    if (!user?.id || !profile) return;
     
     try {
       setLoading(true);
@@ -49,12 +36,12 @@ export const useDashboardData = () => {
       }
       queries.push(solutionsQuery);
       
-      // Query progress apenas se necessário
+      // Query progress
       queries.push(
         supabase.from("progress").select("*").limit(100)
       );
       
-      // Query analytics com timeout
+      // Query analytics
       queries.push(
         supabase
           .from("analytics")
@@ -68,7 +55,7 @@ export const useDashboardData = () => {
         queries.push(supabase.from("profiles").select("*").limit(50));
       }
       
-      // Executar queries em paralelo com timeout
+      // Executar queries em paralelo
       const results = await Promise.allSettled(queries);
       
       // Processar resultados
@@ -96,7 +83,7 @@ export const useDashboardData = () => {
     } finally {
       setLoading(false);
     }
-  }, [debouncedUserId, profile, isAdmin]);
+  }, [user?.id, profile, isAdmin]);
 
   useEffect(() => {
     fetchData();

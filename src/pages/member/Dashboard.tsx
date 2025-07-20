@@ -1,8 +1,7 @@
 
-import React from 'react';
 import { useAuth } from '@/contexts/auth';
 import { useDashboardData } from '@/hooks/dashboard/useDashboardData';
-import { useOptimizedDashboardProgress } from '@/hooks/dashboard/useOptimizedDashboardProgress';
+import { useDashboardProgress } from '@/hooks/dashboard/useDashboardProgress';
 import LoadingScreen from '@/components/common/LoadingScreen';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
@@ -16,14 +15,14 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState('all');
 
-  // Usar o hook otimizado de progresso
+  // Usar o hook consolidado de progresso
   const {
     active,
     completed,
     recommended,
     loading: progressLoading,
     error: progressError
-  } = useOptimizedDashboardProgress(solutions);
+  } = useDashboardProgress(solutions);
 
   const isLoading = loading || progressLoading;
   const hasError = error || progressError;

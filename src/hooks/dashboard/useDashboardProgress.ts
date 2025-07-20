@@ -1,78 +1,53 @@
 
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
 import { Solution } from "@/lib/supabase";
 import { useQuery } from '@tanstack/react-query';
-import { toast } from "sonner";
 
-// Cache simples para evitar recálculos desnecessários
-const progressCache = new Map<string, any>();
+// Cache local otimizado
+const progressCache = new Map<string, { data: any[], timestamp: number }>();
+const CACHE_TTL = 2 * 60 * 1000; // 2 minutos
 
 export const useDashboardProgress = (solutions: Solution[] = []) => {
   const { user } = useAuth();
-  const executionCountRef = useRef(0);
-  const lastSolutionsHashRef = useRef<string>("");
   
-  // Incrementar contador apenas em desenvolvimento
-  if (process.env.NODE_ENV === 'development') {
-    executionCountRef.current++;
-  }
-  
-  // Criar hash estável das soluções para cache inteligente
+  // Hash estável das soluções para otimização
   const solutionsHash = useMemo(() => {
     if (!solutions || !Array.isArray(solutions) || solutions.length === 0) {
       return 'empty';
     }
-    
-    // Usar apenas os IDs das soluções para o hash
-    const ids = solutions.map(s => s.id).sort().join(',');
-    return `${ids}_${solutions.length}`;
+    return solutions.map(s => s.id).sort().join(',');
   }, [solutions]);
-
-  // Log apenas quando o hash muda (evita spam)
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'development' && solutionsHash !== lastSolutionsHashRef.current) {
-      console.log('[useDashboardProgress] Hook executado:', {
-        execCount: executionCountRef.current,
-        userId: user?.id?.substring(0, 8) + '***' || 'N/A',
-        solutionsCount: solutions?.length || 0,
-        solutionsHash,
-        hasValidSolutions: Array.isArray(solutions) && solutions.length > 0
-      });
-      lastSolutionsHashRef.current = solutionsHash;
-    }
-  }, [solutionsHash, user?.id, solutions?.length]);
   
-  // Função para buscar o progresso - memoizada com dependências estáveis
+  // Função de busca otimizada
   const fetchProgress = useCallback(async () => {
     if (!user?.id) {
       throw new Error("Usuário não autenticado");
     }
     
-    // Verificar cache primeiro
+    // Verificar cache local primeiro
     const cacheKey = `progress_${user.id}`;
-    if (progressCache.has(cacheKey)) {
-      const cached = progressCache.get(cacheKey);
-      if (Date.now() - cached.timestamp < 30000) { // 30 segundos de cache
-        return cached.data;
-      }
+    const cached = progressCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      return cached.data;
     }
     
     try {
+      // Query otimizada com batch
       const { data, error } = await supabase
         .from("progress")
-        .select("*")
+        .select("solution_id, is_completed, completed_at, last_activity, created_at")
         .eq("user_id", user.id);
         
       if (error) {
-        console.error("useDashboardProgress: Erro ao buscar progresso:", error);
+        console.error("useDashboardProgress: Erro na query:", error);
         throw error;
       }
       
       const result = data || [];
       
-      // Armazenar no cache
+      // Atualizar cache local
       progressCache.set(cacheKey, {
         data: result,
         timestamp: Date.now()
@@ -80,12 +55,12 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
       
       return result;
     } catch (error) {
-      console.error("useDashboardProgress: Exception ao buscar progresso:", error);
+      console.error("useDashboardProgress: Erro na execução:", error);
       throw error;
     }
-  }, [user?.id]); // Apenas user.id como dependência
+  }, [user?.id]);
   
-  // Query otimizada com cache inteligente
+  // Query React Query otimizada
   const { 
     data: progressData,
     isLoading,
@@ -93,23 +68,19 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
   } = useQuery({
     queryKey: ['dashboard-progress', user?.id],
     queryFn: fetchProgress,
-    staleTime: 5 * 60 * 1000, // 5 minutos de cache
-    gcTime: 10 * 60 * 1000, // 10 minutos antes de garbage collection
+    staleTime: 5 * 60 * 1000, // 5 minutos
+    gcTime: 10 * 60 * 1000, // 10 minutos
     enabled: !!(user?.id),
     refetchOnWindowFocus: false,
     refetchOnMount: false,
-    refetchInterval: false,
+    refetchOnReconnect: false,
     retry: 1,
-    meta: {
-      onError: (err: any) => {
-        console.error("[useDashboardProgress] Erro no React Query:", err);
-      }
-    }
+    retryDelay: 2000
   });
 
-  // Processar dados com memoização otimizada
+  // Processamento otimizado com memoização
   const processedData = useMemo(() => {
-    // Se não há soluções válidas, retornar estado vazio
+    // Validação de entrada
     if (!solutions || !Array.isArray(solutions) || solutions.length === 0) {
       return { 
         active: [], 
@@ -119,7 +90,6 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
       };
     }
 
-    // Se não há dados de progresso, todas as soluções são recomendadas
     if (!progressData || !Array.isArray(progressData)) {
       return { 
         active: [], 
@@ -130,13 +100,13 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
     }
 
     try {
-      // Criar maps para performance otimizada
+      // Criar mapa de progresso para lookup O(1)
       const progressMap = new Map();
       progressData.forEach(progress => {
         progressMap.set(progress.solution_id, progress);
       });
 
-      // Categorizar soluções de forma eficiente
+      // Categorização otimizada
       const active: Solution[] = [];
       const completed: Solution[] = [];
       const recommended: Solution[] = [];
@@ -160,7 +130,7 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
         isEmpty: false
       };
     } catch (err) {
-      console.error("useDashboardProgress: Erro ao processar dados:", err);
+      console.error("useDashboardProgress: Erro no processamento:", err);
       return { 
         active: [], 
         completed: [], 
@@ -168,7 +138,7 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
         isEmpty: false
       };
     }
-  }, [solutions, progressData]); // Dependências mínimas e estáveis
+  }, [solutions, progressData]);
 
   return {
     active: processedData.active,
@@ -179,3 +149,21 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
     isEmpty: processedData.isEmpty
   };
 };
+
+// Manter exportação do hook otimizado para compatibilidade
+export const useOptimizedDashboardProgress = useDashboardProgress;
+
+// Tipos para compatibilidade
+export interface Dashboard {
+  active: Solution[];
+  completed: Solution[];
+  recommended: Solution[];
+}
+
+export interface UserProgress {
+  solution_id: string;
+  is_completed: boolean;
+  completed_at?: string;
+  last_activity?: string;
+  created_at: string;
+}

@@ -1,3 +1,4 @@
 
 export { useDashboardProgress } from './useDashboardProgress';
-export type { Dashboard, UserProgress, RecentActivity, Solution } from './types';
+export { useDashboardData } from './useDashboardData';
+export type { Dashboard, UserProgress } from './useDashboardProgress';
