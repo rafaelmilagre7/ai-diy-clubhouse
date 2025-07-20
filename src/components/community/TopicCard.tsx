@@ -16,20 +16,10 @@ interface TopicCardProps {
 }
 
 export const TopicCard = ({ topic, className = "", compact = false }: TopicCardProps) => {
-  // Extrair uma prévia do conteúdo - versão melhorada
+  // Extrair uma prévia do conteúdo
   const getContentPreview = (content: string) => {
-    if (!content) return '';
-    
-    let processedContent = content;
-    
-    // PRIMEIRO: Remover sintaxe Markdown de imagem ![alt](url)
-    const markdownImageRegex = /!\[([^\]]*)\]\((https?:\/\/[^\s\)]+\.(?:jpg|jpeg|png|gif|webp|svg)(?:\?[^\s\)]*)?)\)/gi;
-    processedContent = processedContent.replace(markdownImageRegex, '');
-    
-    // SEGUNDO: Remove qualquer HTML/markdown para ter texto puro
-    const plainText = processedContent.replace(/<[^>]*>/g, '');
-    
-    // TERCEIRO: Aplicar limitação de caracteres
+    // Remove qualquer HTML/markdown para ter texto puro
+    const plainText = content.replace(/<[^>]*>/g, '');
     return plainText.length > 120 ? plainText.substring(0, 120) + "..." : plainText;
   };
   
