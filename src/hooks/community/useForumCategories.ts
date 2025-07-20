@@ -6,7 +6,7 @@ import { ForumCategory } from "@/types/forumTypes";
 
 export const useForumCategories = () => {
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['forumCategories'],
+    queryKey: ['forum-categories'],
     queryFn: async (): Promise<ForumCategory[]> => {
       try {
         console.log('Buscando categorias do fórum...');

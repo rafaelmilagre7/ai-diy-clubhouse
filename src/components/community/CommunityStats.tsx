@@ -6,7 +6,7 @@ import { MessageSquare, Users, TrendingUp, CheckCircle2 } from "lucide-react";
 
 export const CommunityStats = () => {
   const { data: stats, isLoading } = useQuery({
-    queryKey: ['communityStats'],
+    queryKey: ['forum-community-stats'],
     queryFn: async () => {
       const [topicsResult, usersResult, solvedResult] = await Promise.all([
         supabase

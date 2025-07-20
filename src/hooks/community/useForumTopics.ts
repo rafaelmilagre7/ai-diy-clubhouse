@@ -11,7 +11,7 @@ export const useForumTopics = ({
   categorySlug 
 }: UseCommunityTopicsParams) => {
   const { data: topics, isLoading, error, refetch } = useQuery({
-    queryKey: ['forumTopics', activeTab, selectedFilter, searchQuery, categorySlug],
+    queryKey: ['forum-topics', activeTab, selectedFilter, searchQuery, categorySlug],
     queryFn: async () => {
       try {
         console.log('Carregando tópicos do fórum...', { 
