@@ -69,7 +69,6 @@ export interface CommunityTopic {
   last_activity_at: string;
   profiles?: UserProfile | null;
   category?: CommunityCategory | null;
-  forum_categories?: CommunityCategory | null;
 }
 
 // Alias para compatibilidade

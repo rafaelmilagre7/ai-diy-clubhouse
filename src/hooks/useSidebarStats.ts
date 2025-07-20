@@ -34,7 +34,7 @@ export const useSidebarStats = () => {
 
         // Buscar tópicos da comunidade (todos)
         const { count: communityTopicsCount } = await supabase
-          .from('forum_topics')
+          .from('community_topics')
           .select('*', { count: 'exact', head: true });
 
         // Buscar eventos do mês atual

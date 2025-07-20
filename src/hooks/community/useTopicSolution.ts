@@ -24,13 +24,13 @@ export const useTopicSolution = ({ topicId, topicAuthorId }: UseTopicSolutionPro
     try {
       // Primeiro, desmarcar qualquer solução existente no tópico
       await supabase
-        .from('forum_posts')
+        .from('community_posts')
         .update({ is_solution: false })
         .eq('topic_id', topicId);
 
       // Marcar o post específico como solução
       const { error: postError } = await supabase
-        .from('forum_posts')
+        .from('community_posts')
         .update({ is_solution: true })
         .eq('id', postId);
 
@@ -38,7 +38,7 @@ export const useTopicSolution = ({ topicId, topicAuthorId }: UseTopicSolutionPro
 
       // Marcar o tópico como resolvido
       const { error: topicError } = await supabase
-        .from('forum_topics')
+        .from('community_topics')
         .update({ is_solved: true })
         .eq('id', topicId);
 
@@ -64,7 +64,7 @@ export const useTopicSolution = ({ topicId, topicAuthorId }: UseTopicSolutionPro
     try {
       // Desmarcar post como solução
       const { error: postError } = await supabase
-        .from('forum_posts')
+        .from('community_posts')
         .update({ is_solution: false })
         .eq('id', postId);
 
@@ -72,7 +72,7 @@ export const useTopicSolution = ({ topicId, topicAuthorId }: UseTopicSolutionPro
 
       // Desmarcar tópico como resolvido
       const { error: topicError } = await supabase
-        .from('forum_topics')
+        .from('community_topics')
         .update({ is_solved: false })
         .eq('id', topicId);
 

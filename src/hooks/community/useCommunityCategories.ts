@@ -12,7 +12,7 @@ export const useCommunityCategories = () => {
         console.log('Buscando categorias da comunidade...');
         
         const { data, error } = await supabase
-          .from('forum_categories')
+          .from('community_categories')
           .select('*')
           .eq('is_active', true)
           .order('order_index', { ascending: true });

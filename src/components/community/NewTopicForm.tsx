@@ -101,7 +101,7 @@ export const NewTopicForm = ({ categoryId, categorySlug }: NewTopicFormProps) =>
       setIsSubmitting(true);
       
       const { data, error } = await supabase
-        .from("forum_topics")
+        .from("community_topics")
         .insert({
           title: title.trim(),
           content: content.trim(),

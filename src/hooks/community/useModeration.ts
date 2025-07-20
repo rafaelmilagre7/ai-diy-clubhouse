@@ -13,7 +13,7 @@ export const useModeration = () => {
   const pinTopic = useMutation({
     mutationFn: async (topicId: string) => {
       const { error } = await supabase
-        .from('forum_topics')
+        .from('community_topics')
         .update({ is_pinned: true })
         .eq('id', topicId);
       
@@ -32,7 +32,7 @@ export const useModeration = () => {
   const unpinTopic = useMutation({
     mutationFn: async (topicId: string) => {
       const { error } = await supabase
-        .from('forum_topics')
+        .from('community_topics')
         .update({ is_pinned: false })
         .eq('id', topicId);
       
@@ -51,7 +51,7 @@ export const useModeration = () => {
   const lockTopic = useMutation({
     mutationFn: async (topicId: string) => {
       const { error } = await supabase
-        .from('forum_topics')
+        .from('community_topics')
         .update({ is_locked: true })
         .eq('id', topicId);
       
@@ -70,7 +70,7 @@ export const useModeration = () => {
   const unlockTopic = useMutation({
     mutationFn: async (topicId: string) => {
       const { error } = await supabase
-        .from('forum_topics')
+        .from('community_topics')
         .update({ is_locked: false })
         .eq('id', topicId);
       

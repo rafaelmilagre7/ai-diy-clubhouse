@@ -27,7 +27,7 @@ export const usePostItem = ({ post, topicId, onSuccess }: UsePostItemProps) => {
     try {
       // Marcar post como solução
       const { error: postError } = await supabase
-        .from('forum_posts')
+        .from('community_posts')
         .update({ is_solution: true })
         .eq('id', post.id);
 
@@ -35,7 +35,7 @@ export const usePostItem = ({ post, topicId, onSuccess }: UsePostItemProps) => {
 
       // Marcar tópico como resolvido
       const { error: topicError } = await supabase
-        .from('forum_topics')
+        .from('community_topics')
         .update({ is_solved: true })
         .eq('id', topicId);
 
@@ -65,7 +65,7 @@ export const usePostItem = ({ post, topicId, onSuccess }: UsePostItemProps) => {
     try {
       // Desmarcar post como solução
       const { error: postError } = await supabase
-        .from('forum_posts')
+        .from('community_posts')
         .update({ is_solution: false })
         .eq('id', post.id);
 
@@ -73,7 +73,7 @@ export const usePostItem = ({ post, topicId, onSuccess }: UsePostItemProps) => {
 
       // Desmarcar tópico como resolvido
       const { error: topicError } = await supabase
-        .from('forum_topics')
+        .from('community_topics')
         .update({ is_solved: false })
         .eq('id', topicId);
 
@@ -102,7 +102,7 @@ export const usePostItem = ({ post, topicId, onSuccess }: UsePostItemProps) => {
     setIsSubmitting(true);
     try {
       const { error } = await supabase
-        .from('forum_posts')
+        .from('community_posts')
         .delete()
         .eq('id', post.id);
 

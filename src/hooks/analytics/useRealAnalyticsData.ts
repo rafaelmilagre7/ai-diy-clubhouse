@@ -11,7 +11,7 @@ interface RealAnalyticsData {
   userSegmentation: any[];
   engagementScores: any[];
   retentionAnalysis: any[];
-  forumEngagement: any[];
+  communityEngagement: any[];
   topContent: any[];
   weeklyActivity: any[];
 }
@@ -28,7 +28,7 @@ export const useRealAnalyticsData = (timeRange: string = '30d') => {
     userSegmentation: [],
     engagementScores: [],
     retentionAnalysis: [],
-    forumEngagement: [],
+    communityEngagement: [],
     topContent: [],
     weeklyActivity: []
   });
@@ -48,7 +48,7 @@ export const useRealAnalyticsData = (timeRange: string = '30d') => {
           userSegmentationResult,
           engagementScoresResult,
           retentionAnalysisResult,
-          forumEngagementResult,
+          communityEngagementResult,
           topContentResult,
           weeklyActivityResult
         ] = await Promise.allSettled([
@@ -59,7 +59,7 @@ export const useRealAnalyticsData = (timeRange: string = '30d') => {
           supabase.from('user_segmentation_analytics').select('*'),
           supabase.from('user_engagement_score').select('*').limit(100),
           supabase.from('retention_cohort_analysis').select('*').limit(12),
-          supabase.from('forum_engagement_metrics').select('*').order('date'),
+          supabase.from('community_engagement_metrics').select('*').order('date'),
           supabase.from('top_performing_content').select('*').limit(10),
           supabase.from('weekly_activity_patterns').select('*').order('day_of_week')
         ]);
@@ -81,7 +81,7 @@ export const useRealAnalyticsData = (timeRange: string = '30d') => {
           userSegmentation: processResult(userSegmentationResult),
           engagementScores: processResult(engagementScoresResult),
           retentionAnalysis: processResult(retentionAnalysisResult),
-          forumEngagement: processResult(forumEngagementResult),
+          communityEngagement: processResult(communityEngagementResult),
           topContent: processResult(topContentResult),
           weeklyActivity: processResult(weeklyActivityResult)
         };

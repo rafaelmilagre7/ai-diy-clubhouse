@@ -94,9 +94,9 @@ export const TopicItem = ({ topic }: TopicItemProps) => {
               <div className="flex items-center text-sm text-muted-foreground gap-4 flex-wrap">
                 <span>Por {topic.profiles?.name || 'Usuário'}</span>
                 <span>{formatDate(topic.created_at)}</span>
-                {(topic.category || topic.forum_categories) && (
+                {topic.category && (
                   <Badge variant="outline" className="text-xs">
-                    {topic.category?.name || topic.forum_categories?.name}
+                    {topic.category.name}
                   </Badge>
                 )}
               </div>

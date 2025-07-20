@@ -59,7 +59,7 @@ export const useReplyForm = ({
       
       // Inserir a resposta
       const { data, error } = await supabase
-        .from("forum_posts")
+        .from("community_posts")
         .insert({
           topic_id: topicId,
           user_id: user.id,
@@ -80,7 +80,7 @@ export const useReplyForm = ({
       
       // Atualizar também a data de última atividade
       await supabase
-        .from("forum_topics")
+        .from("community_topics")
         .update({ 
           last_activity_at: new Date().toISOString()
         })

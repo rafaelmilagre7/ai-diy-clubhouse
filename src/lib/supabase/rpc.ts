@@ -49,7 +49,7 @@ export async function incrementTopicReplies(topicId: string): Promise<void> {
  */
 export async function deleteCommunityTopic(topicId: string): Promise<{ success: boolean, error?: string }> {
   try {
-    const { data, error } = await supabase.rpc('delete_forum_topic', {
+    const { data, error } = await supabase.rpc('delete_community_topic', {
       topic_id: topicId
     });
 
@@ -77,7 +77,7 @@ export async function deleteCommunityTopic(topicId: string): Promise<{ success: 
  */
 export async function deleteCommunityPost(postId: string): Promise<{ success: boolean, error?: string }> {
   try {
-    const { data, error } = await supabase.rpc('delete_forum_post', {
+    const { data, error } = await supabase.rpc('delete_community_post', {
       post_id: postId
     });
 
@@ -100,6 +100,6 @@ export async function deleteCommunityPost(postId: string): Promise<{ success: bo
   }
 }
 
-// Manter aliases para compatibilidade com código existente
+// Manter aliases para compatibilidade com código existente  
 export const deleteForumTopic = deleteCommunityTopic;
 export const deleteForumPost = deleteCommunityPost;

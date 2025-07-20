@@ -27,7 +27,7 @@ export const TopicView = () => {
       if (!id) throw new Error('ID do tópico não fornecido');
       
       const { data, error } = await supabase
-        .from('forum_topics')
+        .from('community_topics')
         .select(`
           *,
           profiles:user_id (
@@ -58,7 +58,7 @@ export const TopicView = () => {
       if (!id) return [];
       
       const { data, error } = await supabase
-        .from('forum_posts')
+        .from('community_posts')
         .select(`
           *,
           profiles:user_id (
@@ -82,7 +82,7 @@ export const TopicView = () => {
       const incrementViews = async () => {
         try {
           await supabase
-            .from('forum_topics')
+            .from('community_topics')
             .update({ view_count: (topic.view_count || 0) + 1 })
             .eq('id', topic.id);
           
@@ -100,7 +100,7 @@ export const TopicView = () => {
   const updateTopicMutation = useMutation({
     mutationFn: async (updates: Partial<Topic>) => {
       const { error } = await supabase
-        .from('forum_topics')
+        .from('community_topics')
         .update(updates)
         .eq('id', id);
       

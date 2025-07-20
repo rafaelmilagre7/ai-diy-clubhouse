@@ -22,7 +22,7 @@ const CategoryView = () => {
     queryKey: ['community-category', slug],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('forum_categories')
+        .from('community_categories')
         .select('*')
         .eq('slug', slug)
         .single();

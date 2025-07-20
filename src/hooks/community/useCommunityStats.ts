@@ -10,23 +10,23 @@ export const useCommunityStats = () => {
       
       // Contar tópicos
       const { count: topicCount } = await supabase
-        .from('forum_topics')
+        .from('community_topics')
         .select('*', { count: 'exact', head: true });
 
       // Contar posts
       const { count: postCount } = await supabase
-        .from('forum_posts')
+        .from('community_posts')
         .select('*', { count: 'exact', head: true });
 
       // Contar usuários ativos (com pelo menos um tópico ou post)
       const { data: activeUsers } = await supabase
         .from('profiles')
         .select('id')
-        .or('id.in.(select user_id from forum_topics),id.in.(select user_id from forum_posts)');
+        .or('id.in.(select user_id from community_topics),id.in.(select user_id from community_posts)');
 
       // Contar tópicos resolvidos
       const { count: solvedCount } = await supabase
-        .from('forum_topics')
+        .from('community_topics')
         .select('*', { count: 'exact', head: true })
         .eq('is_solved', true);
 

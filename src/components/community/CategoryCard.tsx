@@ -21,7 +21,7 @@ export const CategoryCard = ({ id, name, description, slug, icon }: CategoryCard
     queryKey: ['category-stats', id],
     queryFn: async () => {
       const { count } = await supabase
-        .from('forum_topics')
+        .from('community_topics')
         .select('*', { count: 'exact', head: true })
         .eq('category_id', id);
 

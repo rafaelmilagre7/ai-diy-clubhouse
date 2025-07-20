@@ -22,7 +22,7 @@ const NewTopic = () => {
       if (!categorySlug) return null;
       
       const { data, error } = await supabase
-        .from('forum_categories')
+        .from('community_categories')
         .select('id, name, slug')
         .eq('slug', categorySlug)
         .single();

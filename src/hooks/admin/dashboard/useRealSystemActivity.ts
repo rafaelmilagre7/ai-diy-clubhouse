@@ -58,12 +58,12 @@ export const useRealSystemActivity = (timeRange: string) => {
 
         // Atividade na comunidade (novos tópicos e posts no período)
         const { count: topicsInPeriod } = await supabase
-          .from('forum_topics')
+          .from('community_topics')
           .select('*', { count: 'exact', head: true })
           .gte('created_at', startDate.toISOString());
 
         const { count: postsInPeriod } = await supabase
-          .from('forum_posts')
+          .from('community_posts')
           .select('*', { count: 'exact', head: true })
           .gte('created_at', startDate.toISOString());
 

@@ -22,7 +22,7 @@ export const useCommunityTopics = ({
         });
         
         let query = supabase
-          .from('forum_topics')
+          .from('community_topics')
           .select(`
             *,
             profiles:user_id(name, avatar_url),

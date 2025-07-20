@@ -38,12 +38,12 @@ export const useRealSystemActivity = () => {
 
         // Atividade na comunidade (novos tópicos e posts hoje)
         const { count: topicsToday } = await supabase
-          .from('forum_topics')
+          .from('community_topics')
           .select('*', { count: 'exact', head: true })
           .gte('created_at', startOfDay.toISOString());
 
         const { count: postsToday } = await supabase
-          .from('forum_posts')
+          .from('community_posts')
           .select('*', { count: 'exact', head: true })
           .gte('created_at', startOfDay.toISOString());
 
