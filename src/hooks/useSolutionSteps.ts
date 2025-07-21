@@ -27,19 +27,8 @@ export const useSolutionSteps = (solution: Solution | null) => {
       type: "basic"
     });
 
-    // Add tools step if tools are defined
-    let toolsNeeded = [];
-    try {
-      if (solution.tools_needed) {
-        toolsNeeded = typeof solution.tools_needed === 'string'
-          ? JSON.parse(solution.tools_needed)
-          : solution.tools_needed;
-      }
-    } catch (e) {
-      // Silent error handling
-    }
-
-    if (toolsNeeded.length > 0) {
+    // Add tools step - sempre mostrar se há módulos
+    if (solution) {
       generatedSteps.push({
         id: generatedSteps.length,
         title: "Ferramentas Necessárias",

@@ -3,7 +3,7 @@ import React from "react";
 import { Solution } from "@/lib/supabase";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckSquare, Info, Tool, Zap } from "lucide-react";
+import { CheckSquare, Info, Wrench, Zap } from "lucide-react";
 
 interface WizardStepContentProps {
   solution: Solution;
@@ -47,14 +47,8 @@ export const WizardStepContent: React.FC<WizardStepContentProps> = ({
   };
 
   const getToolsNeeded = () => {
-    if (!solution.tools_needed) return [];
-    try {
-      return typeof solution.tools_needed === 'string'
-        ? JSON.parse(solution.tools_needed)
-        : solution.tools_needed;
-    } catch (e) {
-      return [];
-    }
+    // Retorna array vazio - as ferramentas serão mostradas nos módulos
+    return [];
   };
 
   const implementationSteps = getImplementationSteps();
@@ -101,7 +95,7 @@ export const WizardStepContent: React.FC<WizardStepContentProps> = ({
     <div className="space-y-6">
       <div className="flex items-start space-x-4">
         <div className="p-3 bg-amber-100 rounded-lg">
-          <Tool className="h-6 w-6 text-amber-600" />
+          <Wrench className="h-6 w-6 text-amber-600" />
         </div>
         <div className="flex-1">
           <h3 className="text-lg font-semibold text-slate-800 mb-3">
@@ -134,9 +128,9 @@ export const WizardStepContent: React.FC<WizardStepContentProps> = ({
             </div>
           ) : (
             <div className="bg-slate-50 p-6 rounded-lg text-center">
-              <Tool className="h-12 w-12 text-slate-400 mx-auto mb-3" />
+              <Wrench className="h-12 w-12 text-slate-400 mx-auto mb-3" />
               <p className="text-slate-600">
-                Nenhuma ferramenta específica necessária para esta implementação.
+                As ferramentas específicas serão apresentadas durante a implementação dos módulos.
               </p>
             </div>
           )}
