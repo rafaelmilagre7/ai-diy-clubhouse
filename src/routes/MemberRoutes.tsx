@@ -12,15 +12,15 @@ import SolutionImplementation from "@/pages/member/implementation/SolutionImplem
 import Networking from "@/pages/member/Networking";
 import Profile from "@/pages/member/Profile";
 import Benefits from "@/pages/member/Benefits";
-// import Community from "@/pages/member/Community";
-// import CommunityTopic from "@/pages/member/CommunityTopic";
 
 export const MemberRoutes = () => {
+  console.log("🔧 [MEMBER-ROUTES] Componente renderizado");
+  
   return (
     <AuthProtectedRoutes>
       <Routes>
         <Route path="/" element={<MemberLayout />}>
-          <Route index element={<Dashboard />} />
+          {/* Rota específica para dashboard */}
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="solutions" element={<Solutions />} />
           <Route path="solution/:id" element={<SolutionDetails />} />
@@ -31,8 +31,6 @@ export const MemberRoutes = () => {
           <Route path="networking" element={<Networking />} />
           <Route path="profile" element={<Profile />} />
           <Route path="benefits" element={<Benefits />} />
-          {/* <Route path="community" element={<Community />} />
-          <Route path="community/topic/:id" element={<CommunityTopic />} /> */}
         </Route>
       </Routes>
     </AuthProtectedRoutes>

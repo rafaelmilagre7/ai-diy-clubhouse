@@ -16,7 +16,7 @@ const AppRoutes = () => {
   
   // Para diagnóstico - mostrar quando a rota muda
   useEffect(() => {
-    console.log("AppRoutes: Navegação para rota:", location.pathname, {
+    console.log("🔄 [APP-ROUTES] Navegação para rota:", location.pathname, {
       search: location.search,
       state: location.state
     });
@@ -39,7 +39,7 @@ const AppRoutes = () => {
       // Alertar se houver muitos eventos para a mesma rota
       Object.entries(recentPathCounts).forEach(([path, count]) => {
         if (count > 3) {
-          console.warn(`AppRoutes: Possível loop de navegação detectado para a rota ${path} (${count} eventos em 10s)`);
+          console.warn(`🚨 [APP-ROUTES] Possível loop de navegação detectado para a rota ${path} (${count} eventos em 10s)`);
         }
       });
       
@@ -61,6 +61,9 @@ const AppRoutes = () => {
       {!skipRedirects && <CommunityRedirects />}
       
       <Routes>
+        {/* Redirect root para dashboard */}
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        
         {/* Convite Routes - Alta prioridade e fora do sistema de autenticação */}
         <Route path="/convite/:token" element={<InvitePage />} />
         <Route path="/convite" element={<InvitePage />} />
@@ -75,8 +78,14 @@ const AppRoutes = () => {
           <Route key={route.path} path={route.path} element={route.element} />
         ))}
         
-        {/* Member Routes */}
-        <Route path="/*" element={<MemberRoutes />} />
+        {/* Member Routes - Rotas específicas ao invés de /* */}
+        <Route path="/dashboard" element={<MemberRoutes />} />
+        <Route path="/solutions" element={<MemberRoutes />} />
+        <Route path="/solution/:id" element={<MemberRoutes />} />
+        <Route path="/implement/:id" element={<MemberRoutes />} />
+        <Route path="/networking" element={<MemberRoutes />} />
+        <Route path="/profile" element={<MemberRoutes />} />
+        <Route path="/benefits" element={<MemberRoutes />} />
         
         {/* Admin Routes */}
         {adminRoutes.map((route) => (
