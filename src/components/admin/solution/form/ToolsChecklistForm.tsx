@@ -26,19 +26,52 @@ const ToolsChecklistForm: React.FC<ToolsChecklistFormProps> = ({
     saveTools
   } = useToolsChecklist(solutionId);
 
-  // Escutar evento de salvamento da etapa
+  // Escutar eventos de salvamento e validação
   useEffect(() => {
     const handleSaveStep = async (event: CustomEvent) => {
-      if (event.detail.step === 1) { // Step 1 = Tools
+      try {
         await handleSaveTools();
+        
+        // Disparar evento de confirmação
+        const savedEvent = new CustomEvent('tools-saved', {
+          detail: { success: true }
+        });
+        window.dispatchEvent(savedEvent);
+      } catch (error) {
+        console.error("Erro ao salvar ferramentas:", error);
+        
+        // Disparar evento de erro
+        const errorEvent = new CustomEvent('tools-saved', {
+          detail: { 
+            success: false, 
+            error: error instanceof Error ? error.message : "Erro ao salvar ferramentas"
+          }
+        });
+        window.dispatchEvent(errorEvent);
       }
     };
 
-    window.addEventListener('save-current-step', handleSaveStep as EventListener);
-    return () => {
-      window.removeEventListener('save-current-step', handleSaveStep as EventListener);
+    const handleValidateStep = () => {
+      // Validar se tem pelo menos uma ferramenta selecionada
+      const isValid = tools.length > 0;
+      
+      const validateEvent = new CustomEvent('tools-validated', {
+        detail: { 
+          valid: isValid,
+          message: isValid ? "Ferramentas válidas" : "Selecione pelo menos uma ferramenta"
+        }
+      });
+      window.dispatchEvent(validateEvent);
     };
-  }, [tools]);
+
+    window.addEventListener('save-tools-step', handleSaveStep as EventListener);
+    window.addEventListener('validate-tools-step', handleValidateStep as EventListener);
+    
+    return () => {
+      window.removeEventListener('save-tools-step', handleSaveStep as EventListener);
+      window.removeEventListener('validate-tools-step', handleValidateStep as EventListener);
+    };
+  }, [tools, saveTools]);
 
   const handleSaveTools = async () => {
     try {

@@ -34,11 +34,7 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
       await onNext();
     } catch (error) {
       console.error("Erro ao avançar para próxima etapa:", error);
-      toast({
-        title: "Erro ao avançar",
-        description: "Não foi possível avançar para a próxima etapa. Tente novamente.",
-        variant: "destructive"
-      });
+      // Erro já tratado no onNext, não duplicar toast
     }
   };
 
@@ -47,11 +43,7 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
       await onSave();
     } catch (error) {
       console.error("Erro ao salvar:", error);
-      toast({
-        title: "Erro ao salvar",
-        description: "Não foi possível salvar as alterações. Tente novamente.",
-        variant: "destructive"
-      });
+      // Erro já tratado no onSave, não duplicar toast
     }
   };
   
