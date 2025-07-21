@@ -83,7 +83,7 @@ const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
     } else if (isLearningRoute || !isFormacao || isAdmin) {
       return (
         <PageTransitionWithFallback isVisible={true}>
-          <MemberLayout>{children}</MemberLayout>
+          <MemberLayout />
         </PageTransitionWithFallback>
       );
     }
