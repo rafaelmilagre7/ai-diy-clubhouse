@@ -62,6 +62,11 @@ export const useProgressTracking = (
     setHasInteracted(interacted);
   };
   
+  // Handle module interaction callback
+  const handleModuleInteraction = () => {
+    setHasInteracted(true);
+  };
+  
   return {
     moduleIdx,
     isCompleting,
@@ -72,6 +77,7 @@ export const useProgressTracking = (
     handleConfirmImplementation,
     calculateProgress: () => calculateProgressPercentage(completedModules, modulesLength),
     setModuleInteraction,
+    handleModuleInteraction,
     requireUserConfirmation,
     setRequireUserConfirmation
   };

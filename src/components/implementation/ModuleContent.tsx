@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import { Module } from "@/lib/supabase";
 import { LandingModule } from "./LandingModule";
@@ -9,19 +10,26 @@ import { useLogging } from "@/hooks/useLogging";
 interface ModuleContentProps {
   module: Module | null;
   onComplete: () => void;
+  onInteraction?: () => void;
   onError?: (error: any) => void;
 }
 
-export const ModuleContent = ({ module, onComplete, onError }: ModuleContentProps) => {
+export const ModuleContent = ({ module, onComplete, onInteraction, onError }: ModuleContentProps) => {
   const { log, logError } = useLogging();
   
   // Mark landing and celebration modules as automatically interacted with
   useEffect(() => {
     if (module && shouldAutoComplete(module)) {
       log("Auto-completing module", { module_id: module.id, module_type: module.type });
+      
+      // Mark as interacted first, then complete
+      if (onInteraction) {
+        onInteraction();
+      }
+      
       onComplete();
     }
-  }, [module, onComplete, log]);
+  }, [module, onComplete, onInteraction, log]);
 
   if (!module) {
     log("No module provided to ModuleContent");
