@@ -6,7 +6,7 @@ import ParagraphPreview from "./ParagraphPreview";
 import ImagePreview from "./ImagePreview";
 import ListPreview from "./ListPreview";
 import VideoPreview from "./VideoPreview";
-import YoutubePreview from "./YoutubePreview";
+
 import CodePreview from "./CodePreview";
 import QuotePreview from "./QuotePreview";
 import ChecklistPreview from "./ChecklistPreview";
@@ -46,8 +46,6 @@ const BlockPreview: React.FC<BlockPreviewProps> = ({ block }) => {
       return <ListPreview data={data as { items: string[] }} />;
     case "video":
       return <VideoPreview data={data as { url: string; caption?: string }} />;
-    case "youtube":
-      return <YoutubePreview data={data as { youtubeId: string; caption?: string }} />;
     case "code":
       return <CodePreview data={data as { code: string; language: string }} />;
     case "quote":

@@ -46,10 +46,6 @@ export interface VideoBlockData {
   caption?: string;
 }
 
-export interface YoutubeBlockData {
-  youtubeId: string;
-  caption?: string;
-}
 
 export interface CodeBlockData {
   code: string;
@@ -156,11 +152,6 @@ export const createEmptyBlock = (type: string): ContentBlock => {
       return {
         ...baseBlock,
         data: { text: 'Citação...', caption: 'Autor' }
-      };
-    case 'youtube':
-      return {
-        ...baseBlock,
-        data: { youtubeId: '', caption: '' }
       };
     case 'checklist':
       return {

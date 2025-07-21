@@ -11,7 +11,7 @@ export type BlockType =
   | "list"
   | "image"
   | "video"
-  | "youtube"
+  
   | "code"
   | "checklist"
   | "steps"
@@ -119,8 +119,6 @@ export const useModuleEditor = (initialModule: Module) => {
         return { url: "", caption: "", alt: "" };
       case "video":
         return { url: "", caption: "" };
-      case "youtube":
-        return { youtubeId: "" };
       case "code":
         return { code: "", language: "javascript" };
       case "checklist":

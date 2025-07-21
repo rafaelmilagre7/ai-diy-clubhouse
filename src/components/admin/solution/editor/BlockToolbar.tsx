@@ -16,7 +16,7 @@ import {
   Plus,
   Type,
   Code,
-  Youtube,
+  
   ListChecks,
   GitBranch,
   AlertOctagon,
@@ -62,7 +62,7 @@ const BlockToolbar = ({ onAddBlock }: BlockToolbarProps) => {
   const blockTypes: { category: BlockCategory; types: BlockType[] }[] = [
     {
       category: "basic",
-      types: ["header", "paragraph", "quote", "list", "image", "video", "youtube", "code"]
+      types: ["header", "paragraph", "quote", "list", "image", "video", "code"]
     },
     {
       category: "advanced",

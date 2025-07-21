@@ -27,7 +27,7 @@ const validateLandingModule = (blocks: ContentBlock[]): ValidationResult => {
 const validateOverviewModule = (blocks: ContentBlock[]): ValidationResult => {
   // Verifica se o módulo visão geral tem pelo menos um vídeo ou imagem
   const hasMediaContent = blocks.some(block => 
-    block.type === "video" || block.type === "youtube" || block.type === "image"
+    block.type === "video" || block.type === "image"
   );
   
   if (!hasMediaContent) {

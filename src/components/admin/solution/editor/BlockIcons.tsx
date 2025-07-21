@@ -10,7 +10,6 @@ import {
   MessageSquareQuote,
   Type,
   Video,
-  Youtube,
   Award,
   BarChart3,
   Lightbulb,
@@ -27,7 +26,7 @@ export type BlockType =
   | "list"
   | "image"
   | "video"
-  | "youtube"
+  
   | "code"
   | "checklist"
   | "steps"
@@ -52,7 +51,7 @@ const blockConfigs: Record<BlockType, BlockConfig> = {
   list: { label: "Lista", icon: List, category: "basic" },
   image: { label: "Imagem", icon: Image, category: "basic" },
   video: { label: "Vídeo", icon: Video, category: "basic" },
-  youtube: { label: "YouTube", icon: Youtube, category: "basic" },
+  
   code: { label: "Código", icon: Code, category: "basic" },
   checklist: { label: "Checklist", icon: ListChecks, category: "advanced" },
   steps: { label: "Passos", icon: GitBranch, category: "advanced" },

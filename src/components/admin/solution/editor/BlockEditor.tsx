@@ -9,7 +9,7 @@ import ParagraphBlock from "./blocks/ParagraphBlock";
 import ListBlock from "./blocks/ListBlock";
 import ImageBlock from "./blocks/ImageBlock";
 import VideoBlock from "./blocks/VideoBlock";
-import YoutubeBlock from "./blocks/YoutubeBlock";
+
 import QuoteBlock from "./blocks/QuoteBlock";
 import CodeBlock from "./blocks/CodeBlock";
 import ChecklistBlock from "./blocks/ChecklistBlock";
@@ -77,13 +77,6 @@ const BlockEditor: React.FC<BlockEditorProps> = ({
         return (
           <VideoBlock
             data={data as { url: string; caption?: string }}
-            onChange={(newData) => onUpdate(index, newData)}
-          />
-        );
-      case "youtube":
-        return (
-          <YoutubeBlock
-            data={data as { youtubeId: string; caption?: string }}
             onChange={(newData) => onUpdate(index, newData)}
           />
         );
