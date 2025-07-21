@@ -30,48 +30,39 @@ export const CommunityHero = ({
 
   return (
     <div className="relative overflow-hidden">
-      {/* Bright Hero Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-50/90 via-white/60 to-purple-50/70 backdrop-blur-sm"></div>
-      
-      {/* Decorative Elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-0 left-1/4 w-32 h-32 bg-blue-200/40 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-0 right-1/4 w-40 h-40 bg-purple-200/30 rounded-full blur-3xl"></div>
-        <div className="absolute top-1/2 left-0 w-24 h-24 bg-cyan-200/50 rounded-full blur-2xl"></div>
-      </div>
+      {/* Hero Background */}
+      <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 backdrop-blur-3xl"></div>
       
       {/* Content */}
-      <div className="relative px-6 py-20 text-center">
-        {/* Title with Enhanced Gradient */}
-        <div className="mb-6">
-          <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600 bg-clip-text text-transparent mb-6 leading-tight">
+      <div className="relative px-6 py-16 text-center">
+        {/* Title with Gradient */}
+        <div className="mb-4">
+          <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent mb-4">
             Comunidade VIVER DE IA
           </h1>
-          <p className="text-xl md:text-2xl text-slate-700 max-w-3xl mx-auto leading-relaxed font-medium">
+          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
             Conecte-se, compartilhe conhecimento e construa o futuro da IA junto com nossa comunidade exclusiva
           </p>
         </div>
 
         {/* Enhanced Search Bar */}
-        <div className="max-w-3xl mx-auto mb-10">
+        <div className="max-w-2xl mx-auto mb-8">
           <div className="relative group">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-300/40 to-purple-300/40 rounded-3xl blur-lg group-hover:blur-xl transition-all duration-300"></div>
-            <div className="relative bg-white/90 backdrop-blur-xl border border-blue-200/50 rounded-3xl p-2 shadow-xl">
-              <div className="flex items-center gap-4 p-5">
-                <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl">
-                  <Search className="h-5 w-5 text-white" />
-                </div>
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-accent/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
+            <div className="relative bg-background/80 backdrop-blur-xl border border-border/50 rounded-2xl p-1">
+              <div className="flex items-center gap-3 p-4">
+                <Search className="h-5 w-5 text-muted-foreground" />
                 <Input
                   placeholder="Buscar discussões, tópicos ou membros..."
                   value={searchQuery}
                   onChange={(e) => onSearchChange(e.target.value)}
-                  className="border-0 bg-transparent text-lg placeholder:text-slate-500 focus-visible:ring-0 flex-1 font-medium"
+                  className="border-0 bg-transparent text-base placeholder:text-muted-foreground/70 focus-visible:ring-0 flex-1"
                 />
                 <Button 
                   onClick={() => setCreateTopicOpen(true)}
-                  className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-8 py-3 rounded-2xl transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl font-semibold"
+                  className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white px-6 py-2 rounded-xl transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl"
                 >
-                  <PlusCircle className="h-5 w-5 mr-2" />
+                  <PlusCircle className="h-4 w-4 mr-2" />
                   Criar Tópico
                 </Button>
               </div>
@@ -79,8 +70,8 @@ export const CommunityHero = ({
           </div>
         </div>
 
-        {/* Bright Filter Tags */}
-        <div className="flex flex-wrap justify-center gap-4">
+        {/* Quick Filter Tags */}
+        <div className="flex flex-wrap justify-center gap-3">
           {filterOptions.map((filter) => {
             const Icon = filter.icon;
             const isActive = selectedFilter === filter.key;
@@ -89,14 +80,14 @@ export const CommunityHero = ({
               <Badge
                 key={filter.key}
                 variant={isActive ? "default" : "secondary"}
-                className={`px-6 py-3 cursor-pointer transition-all duration-300 hover:scale-105 text-sm font-semibold ${
+                className={`px-4 py-2 cursor-pointer transition-all duration-300 hover:scale-105 ${
                   isActive 
-                    ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg hover:shadow-xl" 
-                    : "bg-white/80 backdrop-blur-sm text-slate-700 hover:bg-white/90 border border-slate-200/50 shadow-md"
+                    ? "bg-gradient-to-r from-primary to-accent text-white shadow-lg" 
+                    : "bg-background/60 backdrop-blur-sm hover:bg-background/80"
                 }`}
                 onClick={() => onFilterChange(filter.key)}
               >
-                <Icon className="h-4 w-4 mr-2" />
+                <Icon className="h-3 w-3 mr-2" />
                 {filter.label}
               </Badge>
             );
