@@ -1,15 +1,18 @@
 
 import { FC, memo, useMemo } from "react";
-import { ActiveSolutions } from "./ActiveSolutions";
-import { CompletedSolutions } from "./CompletedSolutions";
-import { RecommendedSolutions } from "./RecommendedSolutions";
 import { NoSolutionsPlaceholder } from "./NoSolutionsPlaceholder";
 import { Solution } from "@/lib/supabase";
 import { ModernDashboardHeader } from "./ModernDashboardHeader";
-import { KpiGrid } from "./KpiGrid";
+import { OptimizedKpiGrid } from "./OptimizedKpiGrid";
 import { useAuth } from "@/contexts/auth";
-import { SolutionsGridLoader } from "./SolutionsGridLoader";
+import { SolutionsSkeletonGrid } from "./SmoothLoadingStates";
 import { DashboardConnectionErrorState } from "./states/DashboardConnectionErrorState";
+import { 
+  LazyActiveSolutions, 
+  LazyCompletedSolutions, 
+  LazyRecommendedSolutions,
+  LazyComponentWrapper 
+} from "./LazyComponents";
 
 interface DashboardLayoutProps {
   active: Solution[];
@@ -70,47 +73,53 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
       {/* HEADER IMERSIVO */}
       <ModernDashboardHeader userName={userName} />
 
-      {/* CARDS DE PROGRESSO (KPI) */}
-      <KpiGrid 
+      {/* CARDS DE PROGRESSO (KPI) OTIMIZADOS */}
+      <OptimizedKpiGrid 
         completed={kpiTotals.completed} 
         inProgress={kpiTotals.inProgress}
         total={kpiTotals.total}
         isLoading={isLoading}
       />
 
-      {/* Mostrar loaders enquanto carrega, ou conteúdo quando pronto */}
+      {/* Loading states otimizados com transições suaves */}
       {isLoading ? (
         <div className="space-y-10">
-          <SolutionsGridLoader title="Em andamento" count={2} />
-          <SolutionsGridLoader title="Concluídas" count={2} />
-          <SolutionsGridLoader title="Recomendadas" count={3} />
+          <SolutionsSkeletonGrid title="Em andamento" count={2} />
+          <SolutionsSkeletonGrid title="Concluídas" count={2} />
+          <SolutionsSkeletonGrid title="Recomendadas" count={3} />
         </div>
       ) : hasNoSolutions ? (
         <NoSolutionsPlaceholder />
       ) : (
         <div className="space-y-10">
-          {/* Soluções Ativas */}
+          {/* Soluções Ativas com Lazy Loading */}
           {safeActive.length > 0 && (
-            <ActiveSolutions
-              solutions={safeActive}
-              onSolutionClick={onSolutionClick}
-            />
+            <LazyComponentWrapper title="Em andamento" count={safeActive.length}>
+              <LazyActiveSolutions
+                solutions={safeActive}
+                onSolutionClick={onSolutionClick}
+              />
+            </LazyComponentWrapper>
           )}
 
-          {/* Soluções Completadas */}
+          {/* Soluções Completadas com Lazy Loading */}
           {safeCompleted.length > 0 && (
-            <CompletedSolutions
-              solutions={safeCompleted}
-              onSolutionClick={onSolutionClick}
-            />
+            <LazyComponentWrapper title="Concluídas" count={safeCompleted.length}>
+              <LazyCompletedSolutions
+                solutions={safeCompleted}
+                onSolutionClick={onSolutionClick}
+              />
+            </LazyComponentWrapper>
           )}
 
-          {/* Soluções Recomendadas */}
+          {/* Soluções Recomendadas com Lazy Loading */}
           {safeRecommended.length > 0 && (
-            <RecommendedSolutions
-              solutions={safeRecommended}
-              onSolutionClick={onSolutionClick}
-            />
+            <LazyComponentWrapper title="Recomendadas" count={safeRecommended.length}>
+              <LazyRecommendedSolutions
+                solutions={safeRecommended}
+                onSolutionClick={onSolutionClick}
+              />
+            </LazyComponentWrapper>
           )}
         </div>
       )}
