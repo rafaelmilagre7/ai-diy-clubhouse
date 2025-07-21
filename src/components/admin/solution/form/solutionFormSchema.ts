@@ -10,7 +10,7 @@ export const solutionFormSchema = z.object({
   }),
   category: z.enum(["Receita", "Operacional", "Estratégia"], {
     required_error: "Por favor, selecione uma categoria.",
-  }),
+  }).optional(),
   difficulty: z.enum(["easy", "medium", "advanced"], {
     required_error: "Por favor, selecione uma dificuldade.",
   }),
@@ -21,6 +21,7 @@ export const solutionFormSchema = z.object({
   slug: z.string().min(3, {
     message: "O slug deve ter pelo menos 3 caracteres.",
   }).optional(),
+  tags: z.array(z.string()).default([]).optional(),
 });
 
 export type SolutionFormValues = z.infer<typeof solutionFormSchema>;
