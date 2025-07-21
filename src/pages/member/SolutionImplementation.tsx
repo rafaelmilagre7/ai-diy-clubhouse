@@ -1,149 +1,197 @@
-import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { useSolutionData } from "@/hooks/useSolutionData";
-import { useImplementationNavigation } from "@/hooks/implementation/useImplementationNavigation";
-import { Module } from "@/lib/supabase";
-import { ImplementationNavigation } from "@/components/implementation/ImplementationNavigation";
 
+import { useParams, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/auth";
+import { useSolutionModules } from "@/hooks/implementation/useSolutionModules";
+import { useSolutionData } from "@/hooks/useSolutionData";
+import { useProgressTracking } from "@/hooks/implementation/useProgressTracking";
+import { ModuleContent } from "@/components/implementation/ModuleContent";
+import { ImplementationNavigation } from "@/components/implementation/ImplementationNavigation";
+import { ImplementationProgress } from "@/components/implementation/ImplementationProgress";
+import LoadingScreen from "@/components/common/LoadingScreen";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import LoadingScreen from "@/components/common/LoadingScreen";
-import { PageTransition } from "@/components/transitions/PageTransition";
+import { useLogging } from "@/hooks/useLogging";
+import { useState, useEffect } from "react";
 
 const SolutionImplementation = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id, moduleIndex } = useParams<{ id: string; moduleIndex: string }>();
   const navigate = useNavigate();
-  const { solution, loading, error } = useSolutionData(id);
-  const { 
-    handleComplete, 
-    handlePrevious, 
-    handleNavigateToModule,
-    currentModuleIdx 
-  } = useImplementationNavigation();
+  const { user } = useAuth();
+  const { log, logError } = useLogging();
   
-  const [modules, setModules] = useState<Module[]>([]);
-  const [currentModule, setCurrentModule] = useState<Module | null>(null);
   const [completedModules, setCompletedModules] = useState<number[]>([]);
   
+  // Fetch solution data
+  const { solution, loading: solutionLoading, progress } = useSolutionData(id);
+  
+  // Generate dynamic modules based on solution data
+  const { modules, loading: modulesLoading, totalModules } = useSolutionModules(solution);
+  
+  // Progress tracking
+  const {
+    moduleIdx,
+    isCompleting,
+    hasInteracted,
+    showConfirmationModal,
+    setShowConfirmationModal,
+    handleMarkAsCompleted,
+    handleConfirmImplementation,
+    calculateProgress,
+    setModuleInteraction,
+    requireUserConfirmation,
+    setRequireUserConfirmation
+  } = useProgressTracking(
+    progress,
+    completedModules,
+    setCompletedModules,
+    totalModules
+  );
+
+  // Load completed modules from progress
   useEffect(() => {
-    if (solution) {
-      // Create mock modules for compatibility
-      const mockModules: Module[] = [{
-        id: 'module-1',
-        title: 'Implementação',
-        type: 'implementation',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }];
-      
-      setModules(mockModules);
-      setCurrentModule(mockModules[0]);
+    if (progress?.completed_modules) {
+      setCompletedModules(progress.completed_modules);
     }
-  }, [solution, currentModuleIdx]);
-  
-  const handleGoBack = () => {
-    navigate(`/solution/${id}`);
+  }, [progress]);
+
+  // Get current module
+  const currentModule = modules[moduleIdx];
+
+  // Loading state
+  if (solutionLoading || modulesLoading) {
+    return <LoadingScreen message="Carregando implementação..." />;
+  }
+
+  // Error state
+  if (!solution) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Solução não encontrada</h1>
+          <Button onClick={() => navigate("/solutions")}>
+            Voltar para Soluções
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!currentModule) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Módulo não encontrado</h1>
+          <Button onClick={() => navigate(`/solutions/${id}`)}>
+            Voltar para Solução
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Handle module completion
+  const handleModuleComplete = () => {
+    log("Módulo marcado como completo pelo usuário", { 
+      moduleId: currentModule.id,
+      moduleType: currentModule.type 
+    });
+    setModuleInteraction(true);
+    handleMarkAsCompleted();
   };
-  
+
+  log("Renderizando página de implementação", {
+    solutionId: solution.id,
+    moduleIndex: moduleIdx,
+    currentModule: currentModule?.type,
+    totalModules,
+    hasProgress: !!progress
+  });
+
   return (
-    <PageTransition>
-      {/* Aurora Background */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      {/* Aurora Background Effects */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-br from-viverblue/8 via-transparent to-viverblue-dark/12" />
-        <div className="absolute top-1/4 left-1/3 w-96 h-96 bg-viverblue/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-viverblue-dark/12 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}} />
+        <div className="absolute inset-0 bg-gradient-to-br from-viverblue/5 via-transparent to-viverblue-dark/8" />
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-viverblue/8 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-viverblue-dark/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}} />
       </div>
 
-      <div className="relative min-h-screen">
-        {/* Glassmorphism Container */}
-        <div className="relative bg-white/5 backdrop-blur-sm border border-white/10 mx-4 mt-4 rounded-2xl shadow-2xl overflow-hidden">
-          {/* Subtle dots pattern */}
-          <div className="absolute inset-0 opacity-5 pointer-events-none">
-            <div className="absolute inset-0" style={{
-              backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.2) 1px, transparent 0)',
-              backgroundSize: '20px 20px'
-            }} />
-          </div>
-          
-          {/* Content */}
-          <div className="relative">
-            {/* Header */}
-            <div className="p-6 border-b border-white/10">
-              <div className="flex items-center justify-between">
+      <div className="relative z-10">
+        {/* Header */}
+        <div className="border-b border-white/10 bg-white/5 backdrop-blur-sm">
+          <div className="max-w-7xl mx-auto px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
                 <Button
                   variant="ghost"
-                  onClick={handleGoBack}
-                  className="text-neutral-300 hover:text-white hover:bg-white/10 transition-colors"
+                  size="sm"
+                  onClick={() => navigate(`/solutions/${id}`)}
+                  className="text-neutral-300 hover:text-white"
                 >
                   <ArrowLeft className="h-4 w-4 mr-2" />
-                  Voltar
+                  Voltar para Solução
                 </Button>
-                
-                {solution && (
-                  <div className="text-center flex-1 mx-6">
-                    <h1 className="text-2xl font-bold bg-gradient-to-r from-white via-viverblue-light to-viverblue bg-clip-text text-transparent">
-                      {solution.title}
-                    </h1>
-                    <p className="text-sm text-neutral-400 mt-1">
-                      Módulo {currentModuleIdx + 1} de {modules.length}
-                    </p>
-                  </div>
-                )}
-                
-                <div className="w-[88px]" /> {/* Spacer for centering */}
+                <div className="h-6 w-px bg-white/20" />
+                <div>
+                  <h1 className="text-lg font-semibold text-white truncate max-w-md">
+                    {solution.title}
+                  </h1>
+                  <p className="text-sm text-neutral-400">
+                    {currentModule.title}
+                  </p>
+                </div>
               </div>
+              
+              <ImplementationProgress 
+                currentModule={moduleIdx}
+                totalModules={totalModules}
+                completedModules={completedModules}
+                progressPercentage={calculateProgress()}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            {/* Navigation Sidebar */}
+            <div className="lg:col-span-1">
+              <ImplementationNavigation
+                modules={modules.map((module, index) => ({
+                  id: module.id,
+                  title: module.title,
+                  type: module.type,
+                  completed: completedModules.includes(index),
+                  current: index === moduleIdx
+                }))}
+                solutionId={id!}
+                currentModule={moduleIdx}
+              />
             </div>
 
-            {/* Main Content */}
-            <div className="p-6">
-              {error ? (
-                <div className="text-center py-12">
-                  <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-6 max-w-md mx-auto">
-                    <h3 className="text-lg font-medium text-red-400 mb-2">Erro ao carregar</h3>
-                    <p className="text-red-300 text-sm">{error}</p>
-                  </div>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                  {/* Navigation Sidebar */}
-                  <div className="lg:col-span-1">
-                    <ImplementationNavigation
-                      modules={modules}
-                      currentModuleIndex={currentModuleIdx}
-                      completedModules={completedModules}
-                      onModuleSelect={handleNavigateToModule}
-                    />
-                  </div>
-                  
-                  {/* Module Content */}
-                  <div className="lg:col-span-3">
-                    <div className="relative bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl shadow-xl">
-                      <div className="absolute inset-0 opacity-5 pointer-events-none rounded-xl">
-                        <div className="absolute inset-0 rounded-xl" style={{
-                          backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.2) 1px, transparent 0)',
-                          backgroundSize: '15px 15px'
-                        }} />
-                      </div>
-                      
-                      <div className="relative">
-                        <div className="p-6">
-                          <h2 className="text-xl font-semibold text-white mb-4">
-                            {currentModule?.title || 'Módulo de Implementação'}
-                          </h2>
-                          <p className="text-neutral-300">
-                            Conteúdo do módulo de implementação será renderizado aqui.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
+            {/* Module Content */}
+            <div className="lg:col-span-3">
+              <div className="relative bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-8 shadow-2xl">
+                <ModuleContent
+                  module={{
+                    id: currentModule.id,
+                    type: currentModule.type,
+                    solution_id: solution.id,
+                    content: currentModule.content,
+                    order: currentModule.order
+                  }}
+                  onComplete={handleModuleComplete}
+                  onError={(error) => {
+                    logError("Erro no módulo de implementação", error);
+                  }}
+                />
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </PageTransition>
+    </div>
   );
 };
 

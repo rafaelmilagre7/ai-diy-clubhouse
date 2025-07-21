@@ -1,44 +1,40 @@
 
 import React from "react";
 import { Progress } from "@/components/ui/progress";
-import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle2 } from "lucide-react";
 
 interface ImplementationProgressProps {
-  progress: number;
-  currentStep: number;
-  totalSteps: number;
+  currentModule: number;
+  totalModules: number;
   completedModules: number[];
+  progressPercentage: number;
 }
 
-export const ImplementationProgress: React.FC<ImplementationProgressProps> = ({
-  progress,
-  currentStep,
-  totalSteps,
-  completedModules
-}) => {
+export const ImplementationProgress = ({
+  currentModule,
+  totalModules,
+  completedModules,
+  progressPercentage
+}: ImplementationProgressProps) => {
   return (
-    <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="h-5 w-5 text-green-600" />
-            <span className="font-medium text-gray-900">
-              Progresso da Implementação
-            </span>
-          </div>
-          <span className="text-sm font-medium text-gray-600">
-            {Math.round(progress)}% concluído
-          </span>
-        </div>
-        
-        <Progress value={progress} className="mb-3" />
-        
-        <div className="flex justify-between text-sm text-gray-600">
-          <span>Etapa {currentStep} de {totalSteps}</span>
-          <span>{completedModules.length} módulos completados</span>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="flex items-center space-x-4">
+      <div className="text-right">
+        <p className="text-sm font-medium text-white">
+          Módulo {currentModule + 1} de {totalModules}
+        </p>
+        <p className="text-xs text-neutral-400">
+          {completedModules.length} concluídos
+        </p>
+      </div>
+      
+      <div className="w-32">
+        <Progress 
+          value={progressPercentage} 
+          className="h-2"
+        />
+        <p className="text-xs text-neutral-400 mt-1 text-center">
+          {Math.round(progressPercentage)}%
+        </p>
+      </div>
+    </div>
   );
 };

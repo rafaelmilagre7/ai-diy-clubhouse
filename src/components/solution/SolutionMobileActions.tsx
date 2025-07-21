@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Loader2, PlayCircle } from "lucide-react";
@@ -6,7 +7,7 @@ interface SolutionMobileActionsProps {
   solutionId: string;
   progress: any;
   startImplementation: () => Promise<any>;
-  continueImplementation: () => Promise<void>;
+  continueImplementation: () => Promise<any>;
   initializing: boolean;
 }
 
@@ -31,16 +32,14 @@ export const SolutionMobileActions = ({
         <div className="relative">
           {progress ? (
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="text-center">
                 <span className="text-sm font-medium text-neutral-300">Progresso</span>
-                <span className="text-sm font-medium text-viverblue-light">{Math.round(progress.progress_percentage)}%</span>
-              </div>
-              
-              <div className="w-full bg-neutral-700 rounded-full h-2">
-                <div 
-                  className="bg-gradient-to-r from-viverblue to-viverblue-dark h-2 rounded-full transition-all duration-300" 
-                  style={{ width: `${progress.progress_percentage}%` }}
-                />
+                <div className="bg-viverblue/10 rounded-lg p-3 mt-2 mb-4">
+                  <p className="text-viverblue-light font-medium">Em andamento</p>
+                  <p className="text-xs text-neutral-400 mt-1">
+                    Módulo {(progress.current_module || 0) + 1}
+                  </p>
+                </div>
               </div>
               
               <Button
