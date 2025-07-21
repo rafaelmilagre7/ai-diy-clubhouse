@@ -1,28 +1,30 @@
 
-import { useState, useRef } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import React, { useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabase';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { useFileUpload } from '@/hooks/useFileUpload';
+import { FilePreview } from '@/components/ui/file/FilePreview';
+import { MarkdownRenderer } from './MarkdownRenderer';
 import { 
   Bold, 
   Italic, 
   Underline, 
   Link, 
+  Image, 
   List, 
   ListOrdered, 
   Quote, 
   Code, 
-  Image, 
   Eye,
-  Send
-} from "lucide-react";
-import { toast } from "sonner";
-import { supabase } from "@/lib/supabase";
-import { useQuery } from "@tanstack/react-query";
+  Upload,
+  Loader2
+} from 'lucide-react';
 
 interface RichTopicEditorProps {
   categoryId?: string;
@@ -30,106 +32,79 @@ interface RichTopicEditorProps {
   onSuccess?: () => void;
 }
 
-interface Category {
-  id: string;
-  name: string;
-  slug: string;
-}
-
 export const RichTopicEditor = ({ categoryId, categorySlug, onSuccess }: RichTopicEditorProps) => {
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [selectedCategoryId, setSelectedCategoryId] = useState(categoryId || "");
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [activeTab, setActiveTab] = useState("editor");
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [showImageUpload, setShowImageUpload] = useState(false);
+  const { toast } = useToast();
 
-  const { data: categories, isLoading: categoriesLoading } = useQuery({
-    queryKey: ['community-categories'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('community_categories')
-        .select('id, name, slug')
-        .eq('is_active', true)
-        .order('order_index');
-      
-      if (error) throw error;
-      return data as Category[];
-    }
+  const { uploading, uploadedFileUrl, handleFileUpload, setUploadedFileUrl } = useFileUpload({
+    bucketName: 'public',
+    folder: 'forum_images',
+    onUploadComplete: (url) => {
+      const imageMarkdown = `![Imagem](${url})`;
+      setContent(prev => prev + '\n\n' + imageMarkdown);
+      setShowImageUpload(false);
+      toast({
+        title: 'Imagem enviada',
+        description: 'A imagem foi adicionada ao seu tópico.',
+      });
+    },
   });
 
-  const insertAtCursor = (before: string, after: string = "") => {
-    const textarea = textareaRef.current;
+  const insertFormatting = (format: string, selection?: string) => {
+    const textarea = document.querySelector('textarea') as HTMLTextAreaElement;
     if (!textarea) return;
 
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
-    const selectedText = content.substring(start, end);
+    const selectedText = selection || content.substring(start, end);
     
-    const newText = content.substring(0, start) + before + selectedText + after + content.substring(end);
-    setContent(newText);
+    let formattedText = '';
     
-    setTimeout(() => {
-      textarea.focus();
-      textarea.setSelectionRange(start + before.length, start + before.length + selectedText.length);
-    }, 0);
-  };
-
-  const handleToolbarAction = (action: string) => {
-    switch (action) {
+    switch (format) {
       case 'bold':
-        insertAtCursor('**', '**');
+        formattedText = `**${selectedText}**`;
         break;
       case 'italic':
-        insertAtCursor('*', '*');
+        formattedText = `*${selectedText}*`;
         break;
       case 'underline':
-        insertAtCursor('<u>', '</u>');
+        formattedText = `__${selectedText}__`;
         break;
       case 'link':
-        insertAtCursor('[texto do link](', ')');
+        formattedText = `[${selectedText || 'texto do link'}](https://exemplo.com)`;
         break;
-      case 'list':
-        insertAtCursor('\n- ', '');
+      case 'ul':
+        formattedText = `\n- ${selectedText || 'item da lista'}`;
         break;
-      case 'ordered-list':
-        insertAtCursor('\n1. ', '');
+      case 'ol':
+        formattedText = `\n1. ${selectedText || 'item numerado'}`;
         break;
       case 'quote':
-        insertAtCursor('\n> ', '');
+        formattedText = `\n> ${selectedText || 'citação'}`;
         break;
       case 'code':
-        insertAtCursor('`', '`');
+        formattedText = `\`${selectedText || 'código'}\``;
         break;
-      case 'image':
-        insertAtCursor('![alt text](', ')');
-        break;
+      default:
+        return;
     }
-  };
 
-  const renderPreview = (text: string) => {
-    // Implementação básica de markdown para preview
-    return text
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      .replace(/`(.*?)`/g, '<code class="bg-gray-100 px-1 rounded">$1</code>')
-      .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-blue-600 underline">$1</a>')
-      .replace(/^> (.*$)/gm, '<blockquote class="border-l-4 border-gray-300 pl-4 italic">$1</blockquote>')
-      .replace(/^\* (.*$)/gm, '<li>$1</li>')
-      .replace(/^(\d+)\. (.*$)/gm, '<li>$1. $2</li>')
-      .replace(/\n/g, '<br>');
+    const newContent = content.substring(0, start) + formattedText + content.substring(end);
+    setContent(newContent);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!title.trim() || !content.trim()) {
-      toast.error("Por favor, preencha o título e o conteúdo");
-      return;
-    }
-
-    if (!selectedCategoryId) {
-      toast.error("Por favor, selecione uma categoria");
+      toast({
+        title: 'Erro',
+        description: 'Por favor, preencha o título e o conteúdo.',
+        variant: 'destructive',
+      });
       return;
     }
 
@@ -137,217 +112,284 @@ export const RichTopicEditor = ({ categoryId, categorySlug, onSuccess }: RichTop
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        toast.error("Você precisa estar logado para criar um tópico");
-        return;
-      }
+      if (!user) throw new Error('Usuário não autenticado');
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('community_topics')
         .insert({
           title: title.trim(),
           content: content.trim(),
-          category_id: selectedCategoryId,
-          user_id: user.id
-        })
-        .select()
-        .single();
+          user_id: user.id,
+          category_id: categoryId,
+        });
 
-      if (error) {
-        console.error('Erro ao criar tópico:', error);
-        toast.error("Erro ao criar tópico. Tente novamente.");
-        return;
-      }
+      if (error) throw error;
 
-      toast.success("Tópico criado com sucesso!");
-      
-      // Reset form
-      setTitle("");
-      setContent("");
-      if (!categoryId) {
-        setSelectedCategoryId("");
-      }
-      
-      if (onSuccess) {
-        onSuccess();
-      }
+      toast({
+        title: 'Sucesso!',
+        description: 'Seu tópico foi criado com sucesso.',
+      });
 
-    } catch (error) {
+      onSuccess?.();
+    } catch (error: any) {
       console.error('Erro ao criar tópico:', error);
-      toast.error("Erro inesperado. Tente novamente.");
+      toast({
+        title: 'Erro',
+        description: error.message || 'Erro ao criar o tópico. Tente novamente.',
+        variant: 'destructive',
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <Card className="w-full">
+    <Card className="w-full max-w-4xl mx-auto">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Send className="h-5 w-5" />
-          Criar Novo Tópico
-        </CardTitle>
+        <CardTitle className="text-2xl">Criar Novo Tópico</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="title">Título</Label>
+          <div>
+            <label htmlFor="title" className="block text-sm font-medium mb-2">
+              Título do Tópico
+            </label>
             <Input
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Digite o título do seu tópico..."
+              className="text-base"
               required
             />
           </div>
 
-          {!categoryId && (
-            <div className="space-y-2">
-              <Label htmlFor="category">Categoria</Label>
-              <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId} required>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione uma categoria" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories?.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <Label>Conteúdo</Label>
+          <div>
+            <label className="block text-sm font-medium mb-3">
+              Conteúdo
+            </label>
             
-            {/* Toolbar */}
-            <div className="flex flex-wrap gap-1 p-2 bg-gray-50 rounded-t-md border">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => handleToolbarAction('bold')}
-                title="Negrito"
-              >
-                <Bold className="h-4 w-4" />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => handleToolbarAction('italic')}
-                title="Itálico"
-              >
-                <Italic className="h-4 w-4" />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => handleToolbarAction('underline')}
-                title="Sublinhado"
-              >
-                <Underline className="h-4 w-4" />
-              </Button>
-              <div className="w-px h-6 bg-gray-300 mx-1" />
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => handleToolbarAction('link')}
-                title="Link"
-              >
-                <Link className="h-4 w-4" />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => handleToolbarAction('image')}
-                title="Imagem"
-              >
-                <Image className="h-4 w-4" />
-              </Button>
-              <div className="w-px h-6 bg-gray-300 mx-1" />
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => handleToolbarAction('list')}
-                title="Lista"
-              >
-                <List className="h-4 w-4" />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => handleToolbarAction('ordered-list')}
-                title="Lista Numerada"
-              >
-                <ListOrdered className="h-4 w-4" />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => handleToolbarAction('quote')}
-                title="Citação"
-              >
-                <Quote className="h-4 w-4" />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => handleToolbarAction('code')}
-                title="Código"
-              >
-                <Code className="h-4 w-4" />
-              </Button>
-            </div>
-
-            {/* Editor/Preview Tabs */}
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="editor">Editor</TabsTrigger>
-                <TabsTrigger value="preview" className="flex items-center gap-2">
-                  <Eye className="h-4 w-4" />
-                  Preview
+            <Tabs defaultValue="write" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-4 bg-slate-100 p-1">
+                <TabsTrigger 
+                  value="write" 
+                  className="data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm"
+                >
+                  Escrever
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="preview"
+                  className="data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm"
+                >
+                  <Eye className="h-4 w-4 mr-1" />
+                  Visualizar
                 </TabsTrigger>
               </TabsList>
-              
-              <TabsContent value="editor" className="mt-0">
+
+              <TabsContent value="write" className="space-y-4">
+                {/* Toolbar com melhor contraste */}
+                <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 shadow-sm">
+                  <div className="flex flex-wrap items-center gap-1">
+                    {/* Formatação de texto */}
+                    <div className="flex items-center gap-1">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => insertFormatting('bold')}
+                        className="h-8 w-8 p-0 hover:bg-slate-200 hover:text-slate-900"
+                        title="Negrito"
+                      >
+                        <Bold className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => insertFormatting('italic')}
+                        className="h-8 w-8 p-0 hover:bg-slate-200 hover:text-slate-900"
+                        title="Itálico"
+                      >
+                        <Italic className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => insertFormatting('underline')}
+                        className="h-8 w-8 p-0 hover:bg-slate-200 hover:text-slate-900"
+                        title="Sublinhado"
+                      >
+                        <Underline className="h-4 w-4" />
+                      </Button>
+                    </div>
+
+                    <Separator orientation="vertical" className="h-6 bg-slate-300" />
+
+                    {/* Links e mídia */}
+                    <div className="flex items-center gap-1">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => insertFormatting('link')}
+                        className="h-8 w-8 p-0 hover:bg-slate-200 hover:text-slate-900"
+                        title="Link"
+                      >
+                        <Link className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowImageUpload(!showImageUpload)}
+                        className="h-8 w-8 p-0 hover:bg-slate-200 hover:text-slate-900"
+                        title="Imagem"
+                      >
+                        <Image className="h-4 w-4" />
+                      </Button>
+                    </div>
+
+                    <Separator orientation="vertical" className="h-6 bg-slate-300" />
+
+                    {/* Listas */}
+                    <div className="flex items-center gap-1">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => insertFormatting('ul')}
+                        className="h-8 w-8 p-0 hover:bg-slate-200 hover:text-slate-900"
+                        title="Lista"
+                      >
+                        <List className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => insertFormatting('ol')}
+                        className="h-8 w-8 p-0 hover:bg-slate-200 hover:text-slate-900"
+                        title="Lista Numerada"
+                      >
+                        <ListOrdered className="h-4 w-4" />
+                      </Button>
+                    </div>
+
+                    <Separator orientation="vertical" className="h-6 bg-slate-300" />
+
+                    {/* Outros */}
+                    <div className="flex items-center gap-1">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => insertFormatting('quote')}
+                        className="h-8 w-8 p-0 hover:bg-slate-200 hover:text-slate-900"
+                        title="Citação"
+                      >
+                        <Quote className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => insertFormatting('code')}
+                        className="h-8 w-8 p-0 hover:bg-slate-200 hover:text-slate-900"
+                        title="Código"
+                      >
+                        <Code className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Upload de imagem */}
+                {showImageUpload && (
+                  <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+                    <h4 className="font-medium mb-3 text-slate-900">Enviar Imagem</h4>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleFileUpload(file);
+                        }}
+                        className="hidden"
+                        id="image-upload"
+                      />
+                      <label
+                        htmlFor="image-upload"
+                        className="cursor-pointer inline-flex items-center gap-2 px-3 py-2 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
+                      >
+                        {uploading ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Upload className="h-4 w-4" />
+                        )}
+                        {uploading ? 'Enviando...' : 'Escolher arquivo'}
+                      </label>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowImageUpload(false)}
+                        className="text-slate-600 hover:text-slate-800"
+                      >
+                        Cancelar
+                      </Button>
+                    </div>
+                    {uploadedFileUrl && <FilePreview url={uploadedFileUrl} />}
+                  </div>
+                )}
+
+                {/* Área de texto com melhor contraste */}
                 <Textarea
-                  ref={textareaRef}
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  placeholder="Digite o conteúdo do seu tópico..."
-                  className="min-h-[300px] rounded-t-none border-t-0 resize-none"
+                  placeholder="Escreva o conteúdo do seu tópico aqui... Use markdown para formatação."
+                  className="min-h-[300px] text-base border-slate-300 focus:border-viverblue focus:ring-viverblue/20"
                   required
                 />
               </TabsContent>
-              
-              <TabsContent value="preview" className="mt-0">
-                <div 
-                  className="min-h-[300px] p-3 border rounded-b-md bg-white prose max-w-none"
-                  dangerouslySetInnerHTML={{ 
-                    __html: content ? renderPreview(content) : '<p class="text-gray-400">Nada para mostrar ainda...</p>' 
-                  }}
-                />
+
+              <TabsContent value="preview">
+                <div className="min-h-[300px] border border-slate-300 rounded-lg p-4 bg-white">
+                  {content ? (
+                    <MarkdownRenderer content={content} />
+                  ) : (
+                    <p className="text-slate-500 italic">
+                      Nada para visualizar ainda. Escreva algo na aba "Escrever".
+                    </p>
+                  )}
+                </div>
               </TabsContent>
             </Tabs>
           </div>
 
           <div className="flex justify-end gap-3">
-            <Button type="button" variant="outline">
-              Salvar Rascunho
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => window.history.back()}
+              className="border-slate-300 text-slate-700 hover:bg-slate-50"
+            >
+              Cancelar
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Publicando..." : "Publicar Tópico"}
+            <Button
+              type="submit"
+              disabled={isSubmitting || !title.trim() || !content.trim()}
+              className="bg-viverblue hover:bg-viverblue-dark"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Criando...
+                </>
+              ) : (
+                'Criar Tópico'
+              )}
             </Button>
           </div>
         </form>

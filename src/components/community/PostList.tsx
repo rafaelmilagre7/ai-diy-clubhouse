@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { formatDate } from "@/utils/dateUtils";
 import { MessageSquare, ThumbsUp, User } from "lucide-react";
+import { MarkdownRenderer } from "./MarkdownRenderer";
 
 interface CommunityPost {
   id: string;
@@ -104,8 +105,8 @@ export const PostList = ({ topicId }: PostListProps) => {
                 </span>
               </div>
               
-              <div className="prose max-w-none mb-4">
-                <div className="whitespace-pre-wrap">{post.content}</div>
+              <div className="mb-4">
+                <MarkdownRenderer content={post.content} />
               </div>
               
               <div className="flex items-center gap-4">

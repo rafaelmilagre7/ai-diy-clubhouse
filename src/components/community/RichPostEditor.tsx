@@ -1,24 +1,28 @@
 
-import { useState, useRef } from "react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import React, { useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabase';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
+import { useFileUpload } from '@/hooks/useFileUpload';
+import { FilePreview } from '@/components/ui/file/FilePreview';
+import { MarkdownRenderer } from './MarkdownRenderer';
 import { 
   Bold, 
   Italic, 
   Underline, 
   Link, 
+  Image, 
   List, 
   ListOrdered, 
   Quote, 
   Code, 
-  Image, 
   Eye,
-  MessageSquare
-} from "lucide-react";
-import { toast } from "sonner";
-import { supabase } from "@/lib/supabase";
+  Upload,
+  Loader2
+} from 'lucide-react';
 
 interface RichPostEditorProps {
   topicId: string;
@@ -26,77 +30,77 @@ interface RichPostEditorProps {
 }
 
 export const RichPostEditor = ({ topicId, onSuccess }: RichPostEditorProps) => {
-  const [content, setContent] = useState("");
+  const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [activeTab, setActiveTab] = useState("editor");
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [showImageUpload, setShowImageUpload] = useState(false);
+  const { toast } = useToast();
 
-  const insertAtCursor = (before: string, after: string = "") => {
-    const textarea = textareaRef.current;
+  const { uploading, uploadedFileUrl, handleFileUpload } = useFileUpload({
+    bucketName: 'public',
+    folder: 'forum_images',
+    onUploadComplete: (url) => {
+      const imageMarkdown = `![Imagem](${url})`;
+      setContent(prev => prev + '\n\n' + imageMarkdown);
+      setShowImageUpload(false);
+      toast({
+        title: 'Imagem enviada',
+        description: 'A imagem foi adicionada à sua resposta.',
+      });
+    },
+  });
+
+  const insertFormatting = (format: string) => {
+    const textarea = document.querySelector('textarea') as HTMLTextAreaElement;
     if (!textarea) return;
 
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
     const selectedText = content.substring(start, end);
     
-    const newText = content.substring(0, start) + before + selectedText + after + content.substring(end);
-    setContent(newText);
+    let formattedText = '';
     
-    setTimeout(() => {
-      textarea.focus();
-      textarea.setSelectionRange(start + before.length, start + before.length + selectedText.length);
-    }, 0);
-  };
-
-  const handleToolbarAction = (action: string) => {
-    switch (action) {
+    switch (format) {
       case 'bold':
-        insertAtCursor('**', '**');
+        formattedText = `**${selectedText}**`;
         break;
       case 'italic':
-        insertAtCursor('*', '*');
+        formattedText = `*${selectedText}*`;
         break;
       case 'underline':
-        insertAtCursor('<u>', '</u>');
+        formattedText = `__${selectedText}__`;
         break;
       case 'link':
-        insertAtCursor('[texto do link](', ')');
+        formattedText = `[${selectedText || 'texto do link'}](https://exemplo.com)`;
         break;
-      case 'list':
-        insertAtCursor('\n- ', '');
+      case 'ul':
+        formattedText = `\n- ${selectedText || 'item da lista'}`;
         break;
-      case 'ordered-list':
-        insertAtCursor('\n1. ', '');
+      case 'ol':
+        formattedText = `\n1. ${selectedText || 'item numerado'}`;
         break;
       case 'quote':
-        insertAtCursor('\n> ', '');
+        formattedText = `\n> ${selectedText || 'citação'}`;
         break;
       case 'code':
-        insertAtCursor('`', '`');
+        formattedText = `\`${selectedText || 'código'}\``;
         break;
-      case 'image':
-        insertAtCursor('![alt text](', ')');
-        break;
+      default:
+        return;
     }
-  };
 
-  const renderPreview = (text: string) => {
-    return text
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      .replace(/`(.*?)`/g, '<code class="bg-gray-100 px-1 rounded">$1</code>')
-      .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-blue-600 underline">$1</a>')
-      .replace(/^> (.*$)/gm, '<blockquote class="border-l-4 border-gray-300 pl-4 italic">$1</blockquote>')
-      .replace(/^\* (.*$)/gm, '<li>$1</li>')
-      .replace(/^(\d+)\. (.*$)/gm, '<li>$1. $2</li>')
-      .replace(/\n/g, '<br>');
+    const newContent = content.substring(0, start) + formattedText + content.substring(end);
+    setContent(newContent);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!content.trim()) {
-      toast.error("Por favor, escreva uma resposta");
+      toast({
+        title: 'Erro',
+        description: 'Por favor, escreva sua resposta.',
+        variant: 'destructive',
+      });
       return;
     }
 
@@ -104,180 +108,189 @@ export const RichPostEditor = ({ topicId, onSuccess }: RichPostEditorProps) => {
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        toast.error("Você precisa estar logado para responder");
-        return;
-      }
+      if (!user) throw new Error('Usuário não autenticado');
 
       const { error } = await supabase
         .from('community_posts')
         .insert({
           content: content.trim(),
+          user_id: user.id,
           topic_id: topicId,
-          user_id: user.id
         });
 
-      if (error) {
-        console.error('Erro ao criar post:', error);
-        toast.error("Erro ao enviar resposta. Tente novamente.");
-        return;
-      }
+      if (error) throw error;
 
-      // Incrementar contador de respostas
-      await supabase.rpc('increment_topic_replies', { topic_id: topicId });
+      toast({
+        title: 'Sucesso!',
+        description: 'Sua resposta foi enviada.',
+      });
 
-      toast.success("Resposta enviada com sucesso!");
-      setContent("");
-      setActiveTab("editor");
-      
-      if (onSuccess) {
-        onSuccess();
-      }
-
-    } catch (error) {
-      console.error('Erro ao criar post:', error);
-      toast.error("Erro inesperado. Tente novamente.");
+      setContent('');
+      onSuccess?.();
+    } catch (error: any) {
+      console.error('Erro ao criar resposta:', error);
+      toast({
+        title: 'Erro',
+        description: error.message || 'Erro ao enviar resposta. Tente novamente.',
+        variant: 'destructive',
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <MessageSquare className="h-5 w-5" />
-          Responder
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Toolbar */}
-          <div className="flex flex-wrap gap-1 p-2 bg-gray-50 rounded-t-md border">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => handleToolbarAction('bold')}
-              title="Negrito"
-            >
-              <Bold className="h-4 w-4" />
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => handleToolbarAction('italic')}
-              title="Itálico"
-            >
-              <Italic className="h-4 w-4" />
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => handleToolbarAction('underline')}
-              title="Sublinhado"
-            >
-              <Underline className="h-4 w-4" />
-            </Button>
-            <div className="w-px h-6 bg-gray-300 mx-1" />
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => handleToolbarAction('link')}
-              title="Link"
-            >
-              <Link className="h-4 w-4" />
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => handleToolbarAction('image')}
-              title="Imagem"
-            >
-              <Image className="h-4 w-4" />
-            </Button>
-            <div className="w-px h-6 bg-gray-300 mx-1" />
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => handleToolbarAction('list')}
-              title="Lista"
-            >
-              <List className="h-4 w-4" />
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => handleToolbarAction('ordered-list')}
-              title="Lista Numerada"
-            >
-              <ListOrdered className="h-4 w-4" />
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => handleToolbarAction('quote')}
-              title="Citação"
-            >
-              <Quote className="h-4 w-4" />
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => handleToolbarAction('code')}
-              title="Código"
-            >
-              <Code className="h-4 w-4" />
-            </Button>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <Tabs defaultValue="write" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 mb-4 bg-slate-100 p-1">
+          <TabsTrigger 
+            value="write" 
+            className="data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm"
+          >
+            Escrever
+          </TabsTrigger>
+          <TabsTrigger 
+            value="preview"
+            className="data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm"
+          >
+            <Eye className="h-4 w-4 mr-1" />
+            Visualizar
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="write" className="space-y-4">
+          {/* Toolbar simplificada */}
+          <div className="bg-slate-50 border border-slate-200 rounded-lg p-2 shadow-sm">
+            <div className="flex flex-wrap items-center gap-1">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => insertFormatting('bold')}
+                className="h-8 w-8 p-0 hover:bg-slate-200 hover:text-slate-900"
+                title="Negrito"
+              >
+                <Bold className="h-4 w-4" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => insertFormatting('italic')}
+                className="h-8 w-8 p-0 hover:bg-slate-200 hover:text-slate-900"
+                title="Itálico"
+              >
+                <Italic className="h-4 w-4" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => insertFormatting('link')}
+                className="h-8 w-8 p-0 hover:bg-slate-200 hover:text-slate-900"
+                title="Link"
+              >
+                <Link className="h-4 w-4" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowImageUpload(!showImageUpload)}
+                className="h-8 w-8 p-0 hover:bg-slate-200 hover:text-slate-900"
+                title="Imagem"
+              >
+                <Image className="h-4 w-4" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => insertFormatting('code')}
+                className="h-8 w-8 p-0 hover:bg-slate-200 hover:text-slate-900"
+                title="Código"
+              >
+                <Code className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
 
-          {/* Editor/Preview Tabs */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="editor">Editor</TabsTrigger>
-              <TabsTrigger value="preview" className="flex items-center gap-2">
-                <Eye className="h-4 w-4" />
-                Preview
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="editor" className="mt-0">
-              <Textarea
-                ref={textareaRef}
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder="Escreva sua resposta..."
-                className="min-h-[200px] rounded-t-none border-t-0 resize-none"
-                required
-              />
-            </TabsContent>
-            
-            <TabsContent value="preview" className="mt-0">
-              <div 
-                className="min-h-[200px] p-3 border rounded-b-md bg-white prose max-w-none"
-                dangerouslySetInnerHTML={{ 
-                  __html: content ? renderPreview(content) : '<p class="text-gray-400">Nada para mostrar ainda...</p>' 
-                }}
-              />
-            </TabsContent>
-          </Tabs>
+          {/* Upload de imagem */}
+          {showImageUpload && (
+            <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+              <div className="flex items-center gap-3">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleFileUpload(file);
+                  }}
+                  className="hidden"
+                  id="post-image-upload"
+                />
+                <label
+                  htmlFor="post-image-upload"
+                  className="cursor-pointer inline-flex items-center gap-2 px-3 py-2 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
+                >
+                  {uploading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Upload className="h-4 w-4" />
+                  )}
+                  {uploading ? 'Enviando...' : 'Escolher arquivo'}
+                </label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowImageUpload(false)}
+                >
+                  Cancelar
+                </Button>
+              </div>
+              {uploadedFileUrl && <FilePreview url={uploadedFileUrl} />}
+            </div>
+          )}
 
-          <div className="flex justify-end">
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Enviando..." : "Enviar Resposta"}
-            </Button>
+          <Textarea
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            placeholder="Escreva sua resposta aqui... Use markdown para formatação."
+            className="min-h-[200px] text-base border-slate-300 focus:border-viverblue focus:ring-viverblue/20"
+            required
+          />
+        </TabsContent>
+
+        <TabsContent value="preview">
+          <div className="min-h-[200px] border border-slate-300 rounded-lg p-4 bg-white">
+            {content ? (
+              <MarkdownRenderer content={content} />
+            ) : (
+              <p className="text-slate-500 italic">
+                Nada para visualizar ainda. Escreva algo na aba "Escrever".
+              </p>
+            )}
           </div>
-        </form>
-      </CardContent>
-    </Card>
+        </TabsContent>
+      </Tabs>
+
+      <div className="flex justify-end">
+        <Button
+          type="submit"
+          disabled={isSubmitting || !content.trim()}
+          className="bg-viverblue hover:bg-viverblue-dark"
+        >
+          {isSubmitting ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Enviando...
+            </>
+          ) : (
+            'Responder'
+          )}
+        </Button>
+      </div>
+    </form>
   );
 };
