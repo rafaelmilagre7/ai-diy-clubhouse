@@ -13,6 +13,7 @@ interface TabBasedNavigationProps {
   currentValues: SolutionFormValues;
   onSubmit: (values: SolutionFormValues) => Promise<void>;
   saving: boolean;
+  onStepSave: (stepSaveFunction: () => Promise<void>) => void;
 }
 
 const TabBasedNavigation: React.FC<TabBasedNavigationProps> = ({
@@ -21,7 +22,8 @@ const TabBasedNavigation: React.FC<TabBasedNavigationProps> = ({
   solution,
   currentValues,
   onSubmit,
-  saving
+  saving,
+  onStepSave
 }) => {
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6">
@@ -37,6 +39,7 @@ const TabBasedNavigation: React.FC<TabBasedNavigationProps> = ({
           currentValues={currentValues}
           onSubmit={onSubmit}
           saving={saving}
+          onStepSave={onStepSave}
         />
       </TabsContent>
     </Tabs>

@@ -13,7 +13,8 @@ interface StepBasedContentProps {
   currentValues: SolutionFormValues;
   onSubmit: (values: SolutionFormValues) => Promise<void>;
   saving: boolean;
-  setActiveTab: (value: string) => void; // Adicionado o prop para passar o setter
+  setActiveTab: (value: string) => void;
+  onStepSave: (stepSaveFunction: () => Promise<void>) => void;
 }
 
 const StepBasedContent: React.FC<StepBasedContentProps> = ({
@@ -23,7 +24,8 @@ const StepBasedContent: React.FC<StepBasedContentProps> = ({
   currentValues,
   onSubmit,
   saving,
-  setActiveTab // Recebendo o setter do componente pai
+  setActiveTab,
+  onStepSave
 }) => {
   return (
     <div>
@@ -38,6 +40,7 @@ const StepBasedContent: React.FC<StepBasedContentProps> = ({
               currentValues={currentValues}
               onSubmit={onSubmit}
               saving={saving}
+              onStepSave={onStepSave}
             />
           </TabsContent>
         </Tabs>

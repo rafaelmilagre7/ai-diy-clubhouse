@@ -28,7 +28,8 @@ const SolutionEditor = () => {
     totalSteps,
     stepTitles,
     handleNextStep,
-    handleSaveCurrentStep
+    handleSaveCurrentStep,
+    handleStepSaveRegistration
   } = useSolutionEditor(id, user);
   
   if (loading) {
@@ -110,6 +111,7 @@ const SolutionEditor = () => {
             onSubmit={onSubmit}
             saving={saving}
             currentStep={currentStep}
+            onStepSave={handleStepSaveRegistration}
           />
         </CardContent>
       </Card>
