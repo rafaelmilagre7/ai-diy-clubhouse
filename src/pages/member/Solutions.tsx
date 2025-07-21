@@ -1,20 +1,14 @@
 
 import React, { useState, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useSolutionsData } from "@/hooks/useSolutionsData";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { 
   Search, 
-  Filter, 
-  Play, 
-  Clock, 
-  Target, 
-  ChevronRight,
   TrendingUp 
 } from "lucide-react";
+import { SolutionsGrid } from "@/components/dashboard/SolutionsGrid";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { PageTransition } from "@/components/transitions/PageTransition";
 
@@ -22,6 +16,7 @@ const Solutions = () => {
   const { solutions, loading, error } = useSolutionsData();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const navigate = useNavigate();
 
   // Filter and search solutions
   const filteredSolutions = useMemo(() => {
@@ -124,68 +119,10 @@ const Solutions = () => {
           </div>
 
           {/* Solutions Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredSolutions.map((solution) => (
-              <Card 
-                key={solution.id} 
-                className="bg-white/95 backdrop-blur-sm border-neutral-200 hover:shadow-lg transition-all duration-300 group"
-              >
-                <CardHeader className="pb-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <CardTitle className="text-lg font-bold text-neutral-800 group-hover:text-viverblue transition-colors">
-                        {solution.title}
-                      </CardTitle>
-                      <div className="flex flex-wrap gap-2 mt-3">
-                        <Badge variant="secondary" className="bg-viverblue/10 text-viverblue border-viverblue/20">
-                          {solution.category}
-                        </Badge>
-                        <Badge variant="outline" className="border-neutral-300">
-                          {solution.difficulty}
-                        </Badge>
-                      </div>
-                    </div>
-                  </div>
-                </CardHeader>
-                
-                <CardContent className="space-y-4">
-                  {solution.overview && (
-                    <p className="text-neutral-600 text-sm leading-relaxed line-clamp-3">
-                      {solution.overview}
-                    </p>
-                  )}
-                  
-                  {solution.estimated_time && (
-                    <div className="flex items-center gap-2 text-sm text-neutral-500">
-                      <Clock className="w-4 h-4" />
-                      Tempo estimado: {solution.estimated_time}
-                    </div>
-                  )}
-                  
-                  <div className="flex gap-2 pt-2">
-                    <Link to={`/solution/${solution.id}`} className="flex-1">
-                      <Button 
-                        variant="outline" 
-                        className="w-full text-viverblue border-viverblue hover:bg-viverblue/5"
-                      >
-                        <Target className="w-4 h-4 mr-2" />
-                        Ver Detalhes
-                      </Button>
-                    </Link>
-                    
-                    <Link to={`/implement/${solution.id}`}>
-                      <Button 
-                        className="bg-viverblue hover:bg-viverblue-dark text-white"
-                      >
-                        <Play className="w-4 h-4 mr-2" />
-                        Implementar
-                      </Button>
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <SolutionsGrid 
+            solutions={filteredSolutions}
+            onSolutionClick={(solution) => navigate(`/solution/${solution.id}`)}
+          />
 
           {/* Empty State */}
           {filteredSolutions.length === 0 && (
