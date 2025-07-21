@@ -1,8 +1,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Globe } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { ChevronLeft, ChevronRight, Globe, Loader2 } from "lucide-react";
 
 interface NavigationButtonsProps {
   currentStep: number;
@@ -13,11 +12,6 @@ interface NavigationButtonsProps {
   saving: boolean;
 }
 
-/**
- * Componente de navegação entre etapas do editor de solução
- * Provê botões para avançar/retroceder nas etapas
- * Adapta-se ao contexto da etapa atual (última etapa mostra publicação)
- */
 const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   currentStep,
   totalSteps,
@@ -27,23 +21,22 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   saving,
 }) => {
   const isLastStep = currentStep === totalSteps - 1;
-  const { toast } = useToast();
   
   const handleNext = async () => {
     try {
+      console.log("🔄 Botão Próximo clicado na etapa:", currentStep);
       await onNext();
     } catch (error) {
-      console.error("Erro ao avançar para próxima etapa:", error);
-      // Erro já tratado no onNext, não duplicar toast
+      console.error("❌ Erro no botão Próximo:", error);
     }
   };
 
   const handleSave = async () => {
     try {
+      console.log("💾 Botão Salvar clicado");
       await onSave();
     } catch (error) {
-      console.error("Erro ao salvar:", error);
-      // Erro já tratado no onSave, não duplicar toast
+      console.error("❌ Erro no botão Salvar:", error);
     }
   };
   
@@ -65,8 +58,17 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
           disabled={saving}
           className="flex items-center bg-green-600 hover:bg-green-700"
         >
-          <Globe className="w-4 h-4 mr-2" />
-          {saving ? "Publicando..." : "Publicar Solução"}
+          {saving ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Publicando...
+            </>
+          ) : (
+            <>
+              <Globe className="w-4 h-4 mr-2" />
+              Publicar Solução
+            </>
+          )}
         </Button>
       ) : (
         <Button
@@ -74,8 +76,17 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
           disabled={saving}
           className="flex items-center bg-primary hover:bg-primary/90"
         >
-          {saving ? "Salvando..." : "Próximo"}
-          <ChevronRight className="w-4 h-4 ml-2" />
+          {saving ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Salvando...
+            </>
+          ) : (
+            <>
+              Próximo
+              <ChevronRight className="w-4 h-4 ml-2" />
+            </>
+          )}
         </Button>
       )}
     </div>

@@ -1,8 +1,6 @@
 
 import React from "react";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Save, Loader2 } from "lucide-react";
 import { ToolSelector } from "@/components/admin/solution/form/ToolSelector";
 import { ToolsLoading } from "./components/ToolsLoading";
 import { useToolsChecklist } from "@/hooks/useToolsChecklist";
@@ -21,19 +19,8 @@ const ToolsChecklistForm: React.FC<ToolsChecklistFormProps> = ({
   const {
     tools,
     setTools,
-    loading,
-    savingTools,
-    saveTools
+    loading
   } = useToolsChecklist(solutionId);
-
-  const handleSaveTools = async () => {
-    try {
-      await saveTools();
-      onSave();
-    } catch (error) {
-      console.error("Erro ao salvar ferramentas:", error);
-    }
-  };
 
   if (loading) {
     return <ToolsLoading />;
@@ -57,23 +44,12 @@ const ToolsChecklistForm: React.FC<ToolsChecklistFormProps> = ({
         </CardContent>
       </Card>
       
-      <Button 
-        onClick={handleSaveTools}
-        disabled={savingTools || saving}
-        className="w-full bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
-      >
-        {savingTools ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Salvando...
-          </>
-        ) : (
-          <>
-            <Save className="mr-2 h-4 w-4" />
-            Salvar e Continuar
-          </>
-        )}
-      </Button>
+      <div className="text-sm text-muted-foreground">
+        {tools.length === 0 
+          ? "Nenhuma ferramenta selecionada" 
+          : `${tools.length} ferramenta${tools.length > 1 ? 's' : ''} selecionada${tools.length > 1 ? 's' : ''}`
+        }
+      </div>
     </div>
   );
 };
