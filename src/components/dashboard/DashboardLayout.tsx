@@ -3,7 +3,7 @@ import { FC, memo, useMemo } from "react";
 import { NoSolutionsPlaceholder } from "./NoSolutionsPlaceholder";
 import { Solution } from "@/lib/supabase";
 import { ModernDashboardHeader } from "./ModernDashboardHeader";
-import { OptimizedKpiGrid } from "./OptimizedKpiGrid";
+import { AuroraKpiGrid } from "./AuroraKpiGrid";
 import { useAuth } from "@/contexts/auth";
 import { SolutionsSkeletonGrid } from "./SmoothLoadingStates";
 import { DashboardConnectionErrorState } from "./states/DashboardConnectionErrorState";
@@ -24,7 +24,6 @@ interface DashboardLayoutProps {
   isLoading?: boolean;
 }
 
-// Otimização: Memoizar o componente completo para evitar re-renderizações desnecessárias
 export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
   active,
   completed,
@@ -73,8 +72,8 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
       {/* HEADER IMERSIVO */}
       <ModernDashboardHeader userName={userName} />
 
-      {/* CARDS DE PROGRESSO (KPI) OTIMIZADOS */}
-      <OptimizedKpiGrid 
+      {/* AURORA KPI GRID - Novo componente com design moderno */}
+      <AuroraKpiGrid 
         completed={kpiTotals.completed} 
         inProgress={kpiTotals.inProgress}
         total={kpiTotals.total}

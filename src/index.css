@@ -5,6 +5,7 @@
 @import './styles/components.css';
 @import './styles/utilities.css';
 @import './styles/notifications.css';
+@import './styles/aurora-effects.css';
 
 @tailwind base;
 @tailwind components;
@@ -55,4 +56,16 @@
   @apply bg-black/10 backdrop-blur-md border border-white/10;
 }
 
-/* --- DEMAIS customizações, plugins, ou pequenas regras que necessitem ficar aqui podem ser adicionadas abaixo --- */
+/* Aurora Style Utilities */
+.aurora-border {
+  border-image: linear-gradient(135deg, 
+    hsl(var(--aurora)), 
+    hsl(var(--viverblue)), 
+    hsl(var(--operational))
+  ) 1;
+}
+
+/* Enhanced focus states for Aurora */
+.aurora-focus {
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aurora/40 focus-visible:ring-offset-2 focus-visible:ring-offset-card;
+}

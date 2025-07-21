@@ -1,0 +1,156 @@
+
+/* ===== AURORA STYLE EFFECTS ===== */
+
+/* Gradientes Aurora customizados */
+.aurora-gradient {
+  background: linear-gradient(135deg, 
+    hsl(var(--aurora)) 0%, 
+    hsl(var(--viverblue)) 25%, 
+    hsl(var(--operational)) 50%, 
+    hsl(var(--strategy)) 75%, 
+    hsl(var(--aurora)) 100%
+  );
+}
+
+.aurora-gradient-subtle {
+  background: linear-gradient(135deg, 
+    hsl(var(--aurora) / 0.1) 0%, 
+    hsl(var(--viverblue) / 0.05) 50%, 
+    hsl(var(--operational) / 0.1) 100%
+  );
+}
+
+/* Animações Aurora específicas */
+@keyframes aurora-pulse {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes aurora-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px hsl(var(--aurora) / 0.2);
+  }
+  50% {
+    box-shadow: 0 0 40px hsl(var(--aurora) / 0.4), 0 0 60px hsl(var(--viverblue) / 0.2);
+  }
+}
+
+@keyframes aurora-float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  33% {
+    transform: translateY(-10px) rotate(1deg);
+  }
+  66% {
+    transform: translateY(5px) rotate(-1deg);
+  }
+}
+
+@keyframes aurora-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Classes utilitárias Aurora */
+.aurora-pulse {
+  animation: aurora-pulse 3s ease-in-out infinite;
+}
+
+.aurora-glow {
+  animation: aurora-glow 4s ease-in-out infinite;
+}
+
+.aurora-float {
+  animation: aurora-float 6s ease-in-out infinite;
+}
+
+.aurora-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    hsl(var(--aurora) / 0.1),
+    transparent
+  );
+  background-size: 200% 100%;
+  animation: aurora-shimmer 3s infinite;
+}
+
+/* Glassmorphism Aurora */
+.aurora-glass {
+  background: linear-gradient(135deg, 
+    hsl(var(--card) / 0.9) 0%, 
+    hsl(var(--card) / 0.6) 100%
+  );
+  backdrop-filter: blur(16px) saturate(1.2);
+  border: 1px solid hsl(var(--aurora) / 0.2);
+}
+
+.aurora-glass-hover:hover {
+  background: linear-gradient(135deg, 
+    hsl(var(--card) / 0.95) 0%, 
+    hsl(var(--card) / 0.8) 100%
+  );
+  border-color: hsl(var(--aurora) / 0.4);
+  box-shadow: 0 8px 32px hsl(var(--aurora) / 0.15);
+}
+
+/* Progress ring Aurora styles */
+.aurora-progress-ring {
+  filter: drop-shadow(0 0 4px hsl(var(--aurora) / 0.4));
+}
+
+/* Text gradients Aurora */
+.aurora-text-gradient {
+  background: linear-gradient(135deg, 
+    hsl(var(--foreground)) 0%,
+    hsl(var(--aurora)) 50%,
+    hsl(var(--viverblue)) 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Hover effects Aurora */
+.aurora-hover-scale {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.aurora-hover-scale:hover {
+  transform: scale(1.02) translateZ(0);
+  box-shadow: 
+    0 10px 40px hsl(var(--aurora) / 0.15),
+    0 4px 20px hsl(var(--viverblue) / 0.1);
+}
+
+/* Floating particles */
+.aurora-particle {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: hsl(var(--aurora));
+  border-radius: 50%;
+  opacity: 0.6;
+  animation: aurora-float 8s infinite ease-in-out;
+}
+
+.aurora-particle:nth-child(2) {
+  animation-delay: -2s;
+  background: hsl(var(--viverblue));
+}
+
+.aurora-particle:nth-child(3) {
+  animation-delay: -4s;
+  background: hsl(var(--operational));
+}
