@@ -18,7 +18,7 @@ import Benefits from "@/pages/member/Benefits";
 export const MemberRoutes = () => {
   return (
     <Routes>
-      <Route path="/" element={<MemberLayout><></></MemberLayout>}>
+      <Route path="/" element={<MemberLayout />}>
         <Route index element={<Dashboard />} />
         <Route path="solutions" element={<Solutions />} />
         <Route path="solution/:id" element={<SolutionDetails />} />

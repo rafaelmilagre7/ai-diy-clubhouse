@@ -1,133 +1,174 @@
 
-import { useParams, useLocation } from "react-router-dom";
-import LoadingScreen from "@/components/common/LoadingScreen";
+import React from "react";
+import { useParams, Link } from "react-router-dom";
 import { useSolutionData } from "@/hooks/useSolutionData";
-import { useSolutionInteractions } from "@/hooks/useSolutionInteractions";
-import { SolutionBackButton } from "@/components/solution/SolutionBackButton";
-import { SolutionHeaderSection } from "@/components/solution/SolutionHeaderSection";
-import { SolutionTabsContent } from "@/components/solution/tabs/SolutionTabsContent";
-import { SolutionSidebar } from "@/components/solution/SolutionSidebar";
-import { SolutionMobileActions } from "@/components/solution/SolutionMobileActions";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { ArrowLeft, Play, CheckCircle2, Clock, Target, Users } from "lucide-react";
+import LoadingScreen from "@/components/common/LoadingScreen";
 import { SolutionNotFound } from "@/components/solution/SolutionNotFound";
-import { useEffect, useState } from "react";
-import { useToolsData } from "@/hooks/useToolsData";
-import { useLogging } from "@/hooks/useLogging";
 import { PageTransition } from "@/components/transitions/PageTransition";
-import { FadeTransition } from "@/components/transitions/FadeTransition";
-import { SuccessCard } from "@/components/celebration/SuccessCard";
 
 const SolutionDetails = () => {
   const { id } = useParams<{ id: string }>();
-  const location = useLocation();
-  const { log, logError } = useLogging();
-  const [showStartSuccess, setShowStartSuccess] = useState(false);
-  
-  // Garantir que os dados das ferramentas estejam corretos, mas ignorar erros
-  const { isLoading: toolsDataLoading } = useToolsData();
-  
-  // Fetch solution data with the updated hook that includes progress
-  const { solution, loading, error, progress } = useSolutionData(id);
-  
-  // Solution interaction handlers
-  const { 
-    initializing, 
-    startImplementation: originalStartImplementation, 
-    continueImplementation, 
-    toggleFavorite, 
-    downloadMaterials 
-  } = useSolutionInteractions(id, progress);
+  const { solution, loading, error } = useSolutionData(id);
 
-  // Wrapped start implementation to show success animation
-  const startImplementation = async () => {
-    const result = await originalStartImplementation();
-    if (result) {
-      setShowStartSuccess(true);
-      setTimeout(() => setShowStartSuccess(false), 3000);
-    }
-    return result;
-  };
-  
-  // Log page visit
-  useEffect(() => {
-    if (solution) {
-      log("Solution details page visited", { 
-        solution_id: solution.id, 
-        solution_title: solution.title,
-        path: location.pathname
-      });
-    }
-  }, [solution, location.pathname, log]);
-  
   if (loading) {
     return <LoadingScreen message="Carregando detalhes da solução..." />;
   }
-  
-  if (!solution) {
-    logError("Solution not found", { id });
+
+  if (error || !solution) {
     return <SolutionNotFound />;
   }
-  
-  // Log para depuração
-  log("Renderizando SolutionDetails com solução", { 
-    solutionId: solution.id, 
-    solutionTitle: solution.title,
-    progress
-  });
-  
+
   return (
     <PageTransition>
-      {/* Aurora Background */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-br from-viverblue/8 via-transparent to-viverblue-dark/12" />
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-viverblue/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-viverblue-dark/12 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}} />
-      </div>
-
-      <div className="relative max-w-5xl mx-auto pb-12">
-        {showStartSuccess && (
-          <div className="fixed top-20 right-4 z-50 w-80">
-            <SuccessCard
-              title="Implementação Iniciada"
-              message="Você começou a implementação dessa solução. Boa jornada!"
-              type="step"
-              onAnimationComplete={() => setShowStartSuccess(false)}
-            />
-          </div>
-        )}
-        
-        <SolutionBackButton />
-        
-        <FadeTransition>
-          <SolutionHeaderSection solution={solution} />
-        </FadeTransition>
-        
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="md:col-span-2">
-            <FadeTransition delay={0.2}>
-              <SolutionTabsContent solution={solution} />
-            </FadeTransition>
+      <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-white to-neutral-100">
+        <div className="max-w-4xl mx-auto px-4 py-8">
+          {/* Header */}
+          <div className="mb-8">
+            <Link 
+              to="/solutions" 
+              className="inline-flex items-center gap-2 text-neutral-600 hover:text-neutral-800 transition-colors mb-4"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Voltar às Soluções
+            </Link>
             
-            <FadeTransition delay={0.3}>
-              <SolutionMobileActions 
-                solutionId={solution.id}
-                progress={progress}
-                startImplementation={startImplementation}
-                continueImplementation={continueImplementation}
-                initializing={initializing}
-              />
-            </FadeTransition>
+            <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl border border-neutral-200 p-8">
+              <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
+                <div className="flex-1">
+                  <h1 className="text-3xl font-bold text-neutral-800 mb-4">
+                    {solution.title}
+                  </h1>
+                  
+                  <div className="flex flex-wrap gap-3 mb-6">
+                    <Badge variant="secondary" className="bg-viverblue/10 text-viverblue border-viverblue/20">
+                      {solution.category}
+                    </Badge>
+                    <Badge variant="outline" className="border-neutral-300">
+                      {solution.difficulty}
+                    </Badge>
+                    {solution.estimated_time && (
+                      <div className="flex items-center gap-1 text-sm text-neutral-600">
+                        <Clock className="w-4 h-4" />
+                        {solution.estimated_time}
+                      </div>
+                    )}
+                  </div>
+                  
+                  {solution.overview && (
+                    <p className="text-neutral-600 leading-relaxed">
+                      {solution.overview}
+                    </p>
+                  )}
+                </div>
+                
+                <div className="flex flex-col gap-3">
+                  <Link to={`/implement/${solution.id}`}>
+                    <Button 
+                      size="lg" 
+                      className="w-full bg-viverblue hover:bg-viverblue-dark text-white flex items-center gap-2"
+                    >
+                      <Play className="w-5 h-5" />
+                      Implementar Solução
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
           </div>
-          
-          <div className="md:col-span-1">
-            <FadeTransition delay={0.4} direction="right">
-              <SolutionSidebar 
-                solution={solution}
-                progress={progress}
-                startImplementation={startImplementation}
-                continueImplementation={continueImplementation}
-                initializing={initializing}
-              />
-            </FadeTransition>
+
+          {/* Content Sections */}
+          <div className="grid gap-6">
+            {/* Overview Section */}
+            {solution.overview && (
+              <Card className="bg-white/95 backdrop-blur-sm border-neutral-200">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-neutral-800">
+                    <Target className="w-5 h-5 text-viverblue" />
+                    Visão Geral
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-neutral-600 leading-relaxed">
+                    {solution.overview}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Implementation Preview */}
+            {solution.implementation_steps && (
+              <Card className="bg-white/95 backdrop-blur-sm border-neutral-200">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-neutral-800">
+                    <CheckCircle2 className="w-5 h-5 text-viverblue" />
+                    Passos de Implementação
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {(typeof solution.implementation_steps === 'string' 
+                      ? JSON.parse(solution.implementation_steps) 
+                      : solution.implementation_steps
+                    ).slice(0, 3).map((step: any, index: number) => (
+                      <div key={index} className="flex items-start gap-3 p-3 bg-neutral-50 rounded-lg">
+                        <div className="w-6 h-6 bg-viverblue/20 text-viverblue rounded-full flex items-center justify-center text-sm font-medium">
+                          {index + 1}
+                        </div>
+                        <div>
+                          <h4 className="font-medium text-neutral-800">{step.title}</h4>
+                          {step.description && (
+                            <p className="text-sm text-neutral-600 mt-1">{step.description}</p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {(typeof solution.implementation_steps === 'string' 
+                      ? JSON.parse(solution.implementation_steps) 
+                      : solution.implementation_steps
+                    ).length > 3 && (
+                      <div className="text-center pt-4">
+                        <Link to={`/implement/${solution.id}`}>
+                          <Button variant="outline" className="text-viverblue border-viverblue hover:bg-viverblue/5">
+                            Ver todos os {(typeof solution.implementation_steps === 'string' 
+                              ? JSON.parse(solution.implementation_steps) 
+                              : solution.implementation_steps
+                            ).length} passos
+                          </Button>
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Action Section */}
+            <Card className="bg-gradient-to-br from-viverblue/5 to-viverblue-dark/5 border-viverblue/20">
+              <CardContent className="p-8 text-center">
+                <div className="w-16 h-16 bg-viverblue/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Play className="w-8 h-8 text-viverblue" />
+                </div>
+                <h3 className="text-xl font-bold text-neutral-800 mb-2">
+                  Pronto para começar?
+                </h3>
+                <p className="text-neutral-600 mb-6">
+                  Implemente esta solução com nosso guia interativo passo a passo
+                </p>
+                <Link to={`/implement/${solution.id}`}>
+                  <Button 
+                    size="lg" 
+                    className="bg-viverblue hover:bg-viverblue-dark text-white"
+                  >
+                    Começar Implementação
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
