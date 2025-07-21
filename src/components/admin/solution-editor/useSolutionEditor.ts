@@ -2,7 +2,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
-import { useSolution } from "@/hooks/useSolution";
+import { useSolutionData } from "@/hooks/useSolutionData";
+import { useSolutionSave } from "@/hooks/useSolutionSave";
 import { SolutionFormValues } from "@/components/admin/solution/form/solutionFormSchema";
 import { useToast } from "@/hooks/use-toast";
 import { useToolsChecklist } from "@/hooks/useToolsChecklist";
@@ -14,12 +15,37 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [saving, setSaving] = useState(false);
 
-  const {
-    solution,
-    loading,
-    onSubmit,
-    currentValues
-  } = useSolution(id, user);
+  // Hook para dados da solução
+  const { solution, loading, setSolution } = useSolutionData(id);
+  
+  // Hook para salvamento
+  const { onSubmit, saving: savingSolution } = useSolutionSave(id, setSolution);
+  
+  // Estado para valores atuais do formulário (para manter compatibilidade)
+  const [currentValues, setCurrentValues] = useState<SolutionFormValues>({
+    title: solution?.title || '',
+    description: solution?.description || '',
+    category: (solution?.category as "Receita" | "Operacional" | "Estratégia") || 'Receita',
+    difficulty: solution?.difficulty || 'easy',
+    slug: solution?.slug || '',
+    thumbnail_url: solution?.thumbnail_url || '',
+    published: solution?.published || false
+  });
+
+  // Atualizar valores quando solução carregar
+  useEffect(() => {
+    if (solution) {
+      setCurrentValues({
+        title: solution.title || '',
+        description: solution.description || '',
+        category: (solution.category as "Receita" | "Operacional" | "Estratégia") || 'Receita',
+        difficulty: solution.difficulty || 'easy',
+        slug: solution.slug || '',
+        thumbnail_url: solution.thumbnail_url || '',
+        published: solution.published || false
+      });
+    }
+  }, [solution]);
 
   // Hook para ferramentas (apenas quando há solução)
   const { saveTools } = useToolsChecklist(solution?.id || null);
