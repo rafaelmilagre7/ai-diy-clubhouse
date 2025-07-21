@@ -17,9 +17,9 @@ export interface CheckpointData {
 export const extractChecklistFromSolution = (solution: Solution): ChecklistItem[] => {
   if (!solution) return [];
   
-  // Verificar se há checklist_items na solução (campo legado)
-  if (solution.checklist_items && Array.isArray(solution.checklist_items)) {
-    return solution.checklist_items.map((item: any, index: number) => ({
+  // Verificar se há checklist na solução (campo legado)
+  if (solution.checklist && Array.isArray(solution.checklist)) {
+    return solution.checklist.map((item: any, index: number) => ({
       id: item.id || `legacy-${index}`,
       title: item.title || item.text || `Item ${index + 1}`,
       description: item.description,
