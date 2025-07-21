@@ -9,9 +9,6 @@ export const addResourceSection = (activeTab: string, currentValues: string) => 
     case 'external_links':
       newItem = ',\n  {\n    "title": "Novo Link",\n    "description": "Descrição do novo link",\n    "url": "https://example.com/novo-link"\n  }';
       break;
-    case 'faq':
-      newItem = ',\n  {\n    "question": "Nova Pergunta",\n    "answer": "Resposta para a nova pergunta"\n  }';
-      break;
     default:
       return currentValues;
   }

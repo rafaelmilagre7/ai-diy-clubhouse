@@ -27,16 +27,5 @@ export const TEMPLATES = {
     "description": "Fórum da comunidade para tirar dúvidas.",
     "url": "https://example.com/forum"
   }
-]`,
-
-  faq: `[
-  {
-    "question": "Quanto tempo leva para ver resultados?",
-    "answer": "Você deve começar a ver os primeiros resultados em cerca de 2 semanas após a implementação completa."
-  },
-  {
-    "question": "É necessário conhecimento técnico?",
-    "answer": "Não é necessário conhecimento técnico avançado, mas familiaridade básica com as ferramentas mencionadas é recomendada."
-  }
 ]`
 };

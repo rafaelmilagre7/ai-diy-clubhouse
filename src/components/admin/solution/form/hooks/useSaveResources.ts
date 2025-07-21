@@ -42,13 +42,6 @@ export function useSaveResources() {
         throw new Error('Erro ao processar links externos. Verifique o formato JSON.');
       }
       
-      try {
-        if (values.faq) {
-          resourcesData.faq = JSON.parse(values.faq);
-        }
-      } catch (parseError) {
-        throw new Error('Erro ao processar FAQ. Verifique o formato JSON.');
-      }
       
       // Check if resource already exists
       const { data: existingResource, error: queryError } = await supabase

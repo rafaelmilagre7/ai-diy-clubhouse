@@ -20,8 +20,7 @@ export function useResourcesForm(solutionId: string | null) {
     defaultValues: {
       overview: '',
       materials: TEMPLATES.materials,
-      external_links: TEMPLATES.external_links,
-      faq: TEMPLATES.faq
+      external_links: TEMPLATES.external_links
     }
   });
   
@@ -59,8 +58,7 @@ export function useResourcesForm(solutionId: string | null) {
           form.reset({
             overview: resourceData.overview || '',
             materials: resourceData.materials ? JSON.stringify(resourceData.materials, null, 2) : TEMPLATES.materials,
-            external_links: resourceData.external_links ? JSON.stringify(resourceData.external_links, null, 2) : TEMPLATES.external_links,
-            faq: resourceData.faq ? JSON.stringify(resourceData.faq, null, 2) : TEMPLATES.faq
+            external_links: resourceData.external_links ? JSON.stringify(resourceData.external_links, null, 2) : TEMPLATES.external_links
           });
         } catch (parseError) {
           console.error('Error parsing resource data:', parseError);
@@ -79,8 +77,7 @@ export function useResourcesForm(solutionId: string | null) {
     form.reset({
       overview: '',
       materials: TEMPLATES.materials,
-      external_links: TEMPLATES.external_links,
-      faq: TEMPLATES.faq
+      external_links: TEMPLATES.external_links
     });
   };
   
