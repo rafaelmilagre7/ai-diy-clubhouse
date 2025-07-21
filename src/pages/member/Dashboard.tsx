@@ -24,8 +24,27 @@ const Dashboard = () => {
     error: progressError
   } = useDashboardProgress(solutions);
 
+  // Otimização: Memoizar callbacks para evitar re-renderizações - ANTES dos early returns
+  const handleSolutionClick = useCallback((solution: Solution) => {
+    navigate(`/solution/${solution.id}`);
+  }, [navigate]);
+
+  const handleCategoryChange = useCallback((category: string) => {
+    setSelectedCategory(category);
+  }, []);
+
   const isLoading = loading || progressLoading;
   const hasError = error || progressError;
+
+  // Memoizar dados computados para performance - ANTES dos early returns
+  const memoizedData = useMemo(() => ({
+    active,
+    completed,
+    recommended,
+    category: selectedCategory,
+    isLoading,
+    hasError
+  }), [active, completed, recommended, selectedCategory, isLoading, hasError]);
 
   if (isLoading) {
     return <LoadingScreen message="Carregando dashboard..." />;
@@ -41,25 +60,6 @@ const Dashboard = () => {
       </div>
     );
   }
-
-  // Otimização: Memoizar callbacks para evitar re-renderizações
-  const handleSolutionClick = useCallback((solution: Solution) => {
-    navigate(`/solution/${solution.id}`);
-  }, [navigate]);
-
-  const handleCategoryChange = useCallback((category: string) => {
-    setSelectedCategory(category);
-  }, []);
-
-  // Memoizar dados computados para performance
-  const memoizedData = useMemo(() => ({
-    active,
-    completed,
-    recommended,
-    category: selectedCategory,
-    isLoading,
-    hasError
-  }), [active, completed, recommended, selectedCategory, isLoading, hasError]);
 
   return (
     <ErrorBoundary>
