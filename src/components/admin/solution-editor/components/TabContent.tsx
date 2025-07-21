@@ -32,14 +32,21 @@ const TabContent: React.FC<TabContentProps> = ({
 }) => {
   const isValid = solution && solution.id;
   
-  // Hook para ferramentas (apenas para etapa 1)
+  // Hook para ferramentas - usado apenas na etapa de ferramentas
   const { saveTools } = useToolsChecklist(currentStep === 1 ? solution?.id || null : null);
 
-  // Registrar função de salvamento da etapa atual
+  // Registrar função de salvamento para etapa de ferramentas (currentStep 1 = "Etapa 2 de 6")
   React.useEffect(() => {
+    console.log("🔧 TabContent: Verificando registro de função de salvamento");
+    console.log("📍 TabContent: currentStep =", currentStep);
+    console.log("🔧 TabContent: saveTools disponível =", !!saveTools);
+    console.log("📝 TabContent: onStepSave disponível =", !!onStepSave);
+    
     if (onStepSave && currentStep === 1 && saveTools) {
-      console.log("📝 TabContent: Registrando função de salvamento para etapa 1");
+      console.log("✅ TabContent: REGISTRANDO função de salvamento para etapa de ferramentas");
       onStepSave(saveTools);
+    } else {
+      console.log("⚠️ TabContent: Não registrando função - condições não atendidas");
     }
   }, [currentStep, saveTools, onStepSave]);
 
@@ -89,6 +96,8 @@ const TabContent: React.FC<TabContentProps> = ({
     // For steps > 0, show content based on step
     switch (currentStep) {
       case 1:
+        console.log("🔧 TabContent: Renderizando ToolsTab para currentStep 1");
+        console.log("🔧 TabContent: solutionId =", solution?.id);
         return <ToolsTab solutionId={solution?.id || null} onSave={() => {}} saving={saving} />;
       case 2:
         return <ResourcesTab solutionId={solution?.id || null} onSave={() => onSubmit(currentValues)} saving={saving} />;

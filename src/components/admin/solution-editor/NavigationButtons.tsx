@@ -7,10 +7,9 @@ interface NavigationButtonsProps {
   currentStep: number;
   totalSteps: number;
   onPrevious: () => void;
-  onNext: (stepSaveFunction?: () => Promise<void>) => Promise<void>;
+  onNext: () => Promise<void>;
   onSave: () => Promise<void>;
   saving: boolean;
-  stepSaveFunction?: () => Promise<void>;
 }
 
 const NavigationButtons: React.FC<NavigationButtonsProps> = ({
@@ -20,15 +19,13 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   onNext,
   onSave,
   saving,
-  stepSaveFunction,
 }) => {
   const isLastStep = currentStep === totalSteps - 1;
   
   const handleNext = async () => {
     try {
       console.log("🔄 NavigationButtons: Botão Próximo clicado na etapa:", currentStep);
-      console.log("🔍 NavigationButtons: stepSaveFunction disponível:", !!stepSaveFunction);
-      await onNext(stepSaveFunction);
+      await onNext();
     } catch (error) {
       console.error("❌ NavigationButtons: Erro no botão Próximo:", error);
     }

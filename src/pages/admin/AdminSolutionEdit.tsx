@@ -17,9 +17,6 @@ const AdminSolutionEdit = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   
-  // Estado para função de salvamento da etapa atual
-  const [currentStepSaveFunction, setCurrentStepSaveFunction] = useState<(() => Promise<void>) | undefined>();
-  
   const {
     solution,
     loading,
@@ -33,18 +30,18 @@ const AdminSolutionEdit = () => {
     totalSteps,
     stepTitles,
     handleNextStep,
-    handleSaveCurrentStep
+    handleSaveCurrentStep,
+    handleStepSaveRegistration
   } = useSolutionEditor(id, user);
   
   useEffect(() => {
     // Logging para depuração
-    console.log("Solution Editor carregado com ID:", id);
-    console.log("Dados da solução:", solution);
-    console.log("Etapa atual:", currentStep);
-    console.log("Aba ativa:", activeTab);
-    console.log("Valores atuais:", currentValues);
-    console.log("Função de salvamento da etapa:", !!currentStepSaveFunction);
-  }, [id, solution, currentStep, activeTab, currentValues, currentStepSaveFunction]);
+    console.log("🚀 AdminSolutionEdit: Solution Editor carregado com ID:", id);
+    console.log("📊 AdminSolutionEdit: Dados da solução:", solution);
+    console.log("📍 AdminSolutionEdit: Etapa atual:", currentStep);
+    console.log("🔖 AdminSolutionEdit: Aba ativa:", activeTab);
+    console.log("📋 AdminSolutionEdit: Valores atuais:", currentValues);
+  }, [id, solution, currentStep, activeTab, currentValues]);
   
   if (loading) {
     return <LoadingScreen />;
@@ -63,7 +60,7 @@ const AdminSolutionEdit = () => {
         }
       } else {
         // Nas outras etapas, salvar dados da etapa atual
-        await handleSaveCurrentStep(currentStepSaveFunction);
+        await handleSaveCurrentStep();
       }
       
       toast({
@@ -71,7 +68,7 @@ const AdminSolutionEdit = () => {
         description: "Suas alterações foram salvas com sucesso."
       });
     } catch (error) {
-      console.error("Erro ao salvar:", error);
+      console.error("❌ AdminSolutionEdit: Erro ao salvar:", error);
       toast({
         title: "Erro ao salvar",
         description: "Ocorreu um erro ao salvar suas alterações.",
@@ -88,8 +85,8 @@ const AdminSolutionEdit = () => {
   };
 
   const handleNextStepWithFunction = async () => {
-    console.log("🚀 AdminSolutionEdit: Chamando handleNextStep com função:", !!currentStepSaveFunction);
-    await handleNextStep(currentStepSaveFunction);
+    console.log("🚀 AdminSolutionEdit: Chamando handleNextStep");
+    await handleNextStep();
   };
 
   // Determina a cor do nível de dificuldade
@@ -141,7 +138,7 @@ const AdminSolutionEdit = () => {
             onSubmit={onSubmit}
             saving={saving}
             currentStep={currentStep}
-            onStepSave={setCurrentStepSaveFunction}
+            onStepSave={handleStepSaveRegistration}
           />
         </CardContent>
       </Card>
@@ -154,7 +151,6 @@ const AdminSolutionEdit = () => {
           onNext={handleNextStepWithFunction}
           onSave={handleSaveWithToast}
           saving={saving}
-          stepSaveFunction={currentStepSaveFunction}
         />
       )}
     </div>

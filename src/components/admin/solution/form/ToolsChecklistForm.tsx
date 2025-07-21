@@ -7,7 +7,7 @@ import { useToolsChecklist } from "@/hooks/useToolsChecklist";
 
 interface ToolsChecklistFormProps {
   solutionId: string | null;
-  onSave: () => Promise<void>;
+  onSave: () => void;
   saving: boolean;
 }
 
@@ -19,23 +19,13 @@ const ToolsChecklistForm: React.FC<ToolsChecklistFormProps> = ({
   const {
     tools,
     setTools,
-    loading,
-    saveTools
+    loading
   } = useToolsChecklist(solutionId);
 
-  // Função que chama saveTools e depois onSave
-  const handleSave = async () => {
-    console.log("🔧 ToolsChecklistForm: Iniciando salvamento...");
-    try {
-      await saveTools();
-      console.log("✅ ToolsChecklistForm: Ferramentas salvas com sucesso");
-      await onSave();
-      console.log("✅ ToolsChecklistForm: onSave executado com sucesso");
-    } catch (error) {
-      console.error("❌ ToolsChecklistForm: Erro no salvamento:", error);
-      throw error;
-    }
-  };
+  console.log("🔧 ToolsChecklistForm: Renderizando com:");
+  console.log("📍 solutionId =", solutionId);
+  console.log("🔧 loading =", loading);
+  console.log("🔧 tools.length =", tools.length);
 
   if (loading) {
     return <ToolsLoading />;
