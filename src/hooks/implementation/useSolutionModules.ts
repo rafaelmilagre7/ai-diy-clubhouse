@@ -90,30 +90,17 @@ export const useSolutionModules = (solution: Solution | null) => {
           });
         }
 
-        // 5. Implementation Steps (se houver)
-        if (solution.implementation_steps && solution.implementation_steps.length > 0) {
-          solution.implementation_steps.forEach((step: any, index: number) => {
-            generatedModules.push({
-              id: `step-${index}`,
-              type: 'materials',
-              title: step.title || `Etapa ${index + 1}`,
-              content: {
-                html: step.description || step.content,
-                text: step.title
-              },
-              order: generatedModules.length
-            });
-          });
-        }
+        // 5. Implementation Steps (verificar se existem passos na descrição)
+        // Como implementation_steps não existe no tipo Solution, vamos pular esta seção por enquanto
 
-        // 6. Checklist Module (se houver)
-        if (solution.checklist_items && solution.checklist_items.length > 0) {
+        // 6. Checklist Module (se houver checklist no Solution)
+        if (solution.checklist && solution.checklist.length > 0) {
           generatedModules.push({
             id: 'checklist',
             type: 'checklist',
             title: 'Lista de Verificação',
             content: { 
-              checklist: solution.checklist_items 
+              checklist: solution.checklist 
             },
             order: generatedModules.length
           });

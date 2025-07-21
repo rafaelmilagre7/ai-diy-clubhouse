@@ -179,7 +179,9 @@ const SolutionImplementation = () => {
                     type: currentModule.type,
                     solution_id: solution.id,
                     content: currentModule.content,
-                    order: currentModule.order
+                    title: currentModule.title,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
                   }}
                   onComplete={handleModuleComplete}
                   onError={(error) => {
