@@ -1,33 +1,15 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { ImageIcon, Loader2, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
-import { useAuth } from "@/contexts/auth";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { MarkdownRenderer } from "./MarkdownRenderer";
-import {
-  Bold,
-  Italic,
-  Underline,
-  Link2,
-  Image,
-  Code,
-  List,
-  ListOrdered,
-  Quote,
-  Heading1,
-  Heading2,
-  Eye,
-  Edit3,
-  Send,
-  Upload,
-  Loader2
-} from "lucide-react";
 
 interface RichTopicEditorProps {
   categoryId?: string;
@@ -36,153 +18,191 @@ interface RichTopicEditorProps {
 }
 
 export const RichTopicEditor = ({ categoryId, categorySlug, onSuccess }: RichTopicEditorProps) => {
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [activeTab, setActiveTab] = useState("editor");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const [selectedCategoryId, setSelectedCategoryId] = useState(categoryId || '');
   const [isUploading, setIsUploading] = useState(false);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { user } = useAuth();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const insertAtCursor = useCallback((text: string) => {
-    if (!textareaRef.current) return;
-    
-    const textarea = textareaRef.current;
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const newContent = content.substring(0, start) + text + content.substring(end);
-    
-    setContent(newContent);
-    
-    setTimeout(() => {
-      textarea.focus();
-      const newCursorPos = start + text.length;
-      textarea.setSelectionRange(newCursorPos, newCursorPos);
-    }, 0);
-  }, [content]);
-
-  const formatText = useCallback((prefix: string, suffix: string = "") => {
-    if (!textareaRef.current) return;
-    
-    const textarea = textareaRef.current;
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selectedText = content.substring(start, end);
-    
-    const formattedText = `${prefix}${selectedText || "texto"}${suffix}`;
-    const newContent = content.substring(0, start) + formattedText + content.substring(end);
-    
-    setContent(newContent);
-    
-    setTimeout(() => {
-      textarea.focus();
-      if (selectedText) {
-        textarea.setSelectionRange(start + prefix.length, start + prefix.length + selectedText.length);
-      } else {
-        textarea.setSelectionRange(start + prefix.length, start + prefix.length + 5);
-      }
-    }, 0);
-  }, [content]);
-
-  const handleImageUpload = useCallback(async (file: File) => {
-    if (!file.type.startsWith('image/')) {
-      toast({
-        title: "Erro",
-        description: "Por favor, selecione apenas arquivos de imagem.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsUploading(true);
-    
-    try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-      const filePath = `community/${fileName}`;
-
-      const { data, error } = await supabase.storage
-        .from('uploads')
-        .upload(filePath, file);
-
+  const { data: categories } = useQuery({
+    queryKey: ['community-categories'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('community_categories')
+        .select('*')
+        .eq('is_active', true)
+        .order('order_index');
+      
       if (error) throw error;
+      return data;
+    },
+  });
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('uploads')
-        .getPublicUrl(filePath);
+  const createTopicMutation = useMutation({
+    mutationFn: async ({ title, content, categoryId }: { title: string; content: string; categoryId: string }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuário não autenticado');
 
-      const imageMarkdown = `![Imagem](${publicUrl})`;
-      insertAtCursor(imageMarkdown);
-
-      toast({
-        title: "Sucesso",
-        description: "Imagem enviada com sucesso!"
-      });
-
-    } catch (error) {
-      console.error('Erro no upload da imagem:', error);
-      toast({
-        title: "Erro",
-        description: "Falha ao enviar a imagem. Tente novamente.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsUploading(false);
-    }
-  }, [insertAtCursor, toast]);
-
-  const handleSubmit = async () => {
-    if (!title.trim() || !content.trim()) {
-      toast({
-        title: "Erro",
-        description: "Por favor, preencha o título e o conteúdo.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!user) {
-      toast({
-        title: "Erro",
-        description: "Você precisa estar logado para criar um tópico.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
       const { data, error } = await supabase
         .from('community_topics')
         .insert({
-          title: title.trim(),
-          content: content.trim(),
+          title,
+          content,
+          category_id: categoryId,
           user_id: user.id,
-          category_id: categoryId || null
         })
         .select()
         .single();
 
       if (error) throw error;
-
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['community-topics'] });
+      queryClient.invalidateQueries({ queryKey: ['community-categories'] });
       toast({
-        title: "Sucesso",
-        description: "Tópico criado com sucesso!"
+        title: 'Tópico criado!',
+        description: 'Seu tópico foi publicado com sucesso.',
       });
-
-      setTitle("");
-      setContent("");
       onSuccess?.();
-
-    } catch (error) {
+    },
+    onError: (error) => {
       console.error('Erro ao criar tópico:', error);
       toast({
-        title: "Erro",
-        description: "Falha ao criar o tópico. Tente novamente.",
-        variant: "destructive"
+        title: 'Erro ao criar tópico',
+        description: 'Tente novamente em alguns instantes.',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const handleImageUpload = async (file: File) => {
+    // Validações de arquivo
+    const maxSize = 50 * 1024 * 1024; // 50MB
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'];
+    
+    if (file.size > maxSize) {
+      toast({
+        title: 'Arquivo muito grande',
+        description: 'O arquivo deve ter no máximo 50MB.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!allowedTypes.includes(file.type)) {
+      toast({
+        title: 'Tipo de arquivo não suportado',
+        description: 'Use apenas PNG, JPEG, GIF ou WebP.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      setIsUploading(true);
+      
+      const timestamp = new Date().getTime();
+      const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+      const fileName = `${timestamp}-${sanitizedFileName}`;
+      const filePath = `community/${fileName}`;
+
+      console.log('Fazendo upload para community-images bucket:', filePath);
+
+      const { data, error } = await supabase.storage
+        .from('community-images')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+
+      if (error) {
+        console.error('Erro no upload:', error);
+        throw error;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('community-images')
+        .getPublicUrl(filePath);
+
+      console.log('URL pública gerada:', publicUrl);
+
+      // Inserir markdown da imagem no conteúdo
+      const imageMarkdown = `![Imagem](${publicUrl})`;
+      
+      if (textareaRef.current) {
+        const textarea = textareaRef.current;
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const newContent = content.substring(0, start) + imageMarkdown + content.substring(end);
+        setContent(newContent);
+        
+        // Posicionar cursor após a imagem inserida
+        setTimeout(() => {
+          textarea.focus();
+          textarea.setSelectionRange(start + imageMarkdown.length, start + imageMarkdown.length);
+        }, 0);
+      } else {
+        setContent(prev => prev + '\n' + imageMarkdown);
+      }
+
+      toast({
+        title: 'Imagem enviada!',
+        description: 'A imagem foi adicionada ao seu tópico.',
+      });
+
+    } catch (error: any) {
+      console.error('Erro ao fazer upload da imagem:', error);
+      
+      let errorMessage = 'Erro ao enviar a imagem, tente novamente.';
+      if (error.message?.includes('not found')) {
+        errorMessage = 'Bucket de imagens não encontrado. Contate o suporte.';
+      } else if (error.message?.includes('permission')) {
+        errorMessage = 'Sem permissão para enviar imagens. Faça login novamente.';
+      }
+      
+      toast({
+        title: 'Erro no upload',
+        description: errorMessage,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      handleImageUpload(file);
+    }
+    // Limpar o input para permitir reusar o mesmo arquivo
+    event.target.value = '';
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!title.trim() || !content.trim() || !selectedCategoryId) {
+      toast({
+        title: 'Campos obrigatórios',
+        description: 'Preencha título, conteúdo e selecione uma categoria.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await createTopicMutation.mutateAsync({
+        title: title.trim(),
+        content: content.trim(),
+        categoryId: selectedCategoryId,
       });
     } finally {
       setIsSubmitting(false);
@@ -190,178 +210,134 @@ export const RichTopicEditor = ({ categoryId, categorySlug, onSuccess }: RichTop
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Edit3 className="h-5 w-5" />
-          Criar Novo Tópico
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="space-y-2">
-          <Label htmlFor="title">Título do Tópico</Label>
-          <Input
-            id="title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Digite o título do seu tópico..."
-            className="text-lg"
-            disabled={isSubmitting}
-          />
-        </div>
+    <div className="max-w-4xl mx-auto p-6 space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Criar Novo Tópico</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Título */}
+            <div className="space-y-2">
+              <label htmlFor="title" className="text-sm font-medium">
+                Título do Tópico *
+              </label>
+              <Input
+                id="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Digite o título do seu tópico..."
+                className="w-full"
+                maxLength={200}
+              />
+              <p className="text-xs text-muted-foreground">
+                {title.length}/200 caracteres
+              </p>
+            </div>
 
-        <div className="space-y-2">
-          <Label>Conteúdo</Label>
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="editor" className="flex items-center gap-2">
-                <Edit3 className="h-4 w-4" />
-                Editor
-              </TabsTrigger>
-              <TabsTrigger value="preview" className="flex items-center gap-2">
-                <Eye className="h-4 w-4" />
-                Preview
-              </TabsTrigger>
-            </TabsList>
+            {/* Categoria */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">
+                Categoria *
+              </label>
+              <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione uma categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories?.map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-            <TabsContent value="editor" className="space-y-4">
-              {/* Toolbar de Formatação */}
-              <div className="flex flex-wrap gap-1 p-3 bg-slate-800 rounded-lg border">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => formatText("**", "**")}
-                  className="text-slate-300 hover:text-white hover:bg-slate-700"
-                  disabled={isSubmitting}
-                >
-                  <Bold className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => formatText("*", "*")}
-                  className="text-slate-300 hover:text-white hover:bg-slate-700"
-                  disabled={isSubmitting}
-                >
-                  <Italic className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => formatText("__", "__")}
-                  className="text-slate-300 hover:text-white hover:bg-slate-700"
-                  disabled={isSubmitting}
-                >
-                  <Underline className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => formatText("`", "`")}
-                  className="text-slate-300 hover:text-white hover:bg-slate-700"
-                  disabled={isSubmitting}
-                >
-                  <Code className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => formatText("[texto do link](", ")")}
-                  className="text-slate-300 hover:text-white hover:bg-slate-700"
-                  disabled={isSubmitting}
-                >
-                  <Link2 className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="text-slate-300 hover:text-white hover:bg-slate-700"
-                  disabled={isSubmitting || isUploading}
-                >
-                  {isUploading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Image className="h-4 w-4" />
-                  )}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => formatText("# ", "")}
-                  className="text-slate-300 hover:text-white hover:bg-slate-700"
-                  disabled={isSubmitting}
-                >
-                  <Heading1 className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => formatText("## ", "")}
-                  className="text-slate-300 hover:text-white hover:bg-slate-700"
-                  disabled={isSubmitting}
-                >
-                  <Heading2 className="h-4 w-4" />
-                </Button>
+            {/* Editor de Conteúdo */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label htmlFor="content" className="text-sm font-medium">
+                  Conteúdo *
+                </label>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploading}
+                    className="gap-2"
+                  >
+                    {isUploading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Enviando...
+                      </>
+                    ) : (
+                      <>
+                        <ImageIcon className="h-4 w-4" />
+                        Adicionar Imagem
+                      </>
+                    )}
+                  </Button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
+                    onChange={handleFileInputChange}
+                    className="hidden"
+                  />
+                </div>
               </div>
-
               <Textarea
                 ref={textareaRef}
+                id="content"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                placeholder="Escreva o conteúdo do seu tópico aqui... Você pode usar Markdown para formatação."
-                className="min-h-[300px] resize-none font-mono text-sm"
-                disabled={isSubmitting}
+                placeholder="Escreva o conteúdo do seu tópico... Você pode usar Markdown para formatação."
+                className="min-h-[200px] resize-y"
+                maxLength={10000}
               />
+              <p className="text-xs text-muted-foreground">
+                {content.length}/10000 caracteres • Suporte a Markdown
+              </p>
+            </div>
 
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) handleImageUpload(file);
-                  e.target.value = '';
-                }}
-                className="hidden"
-              />
-            </TabsContent>
-
-            <TabsContent value="preview" className="space-y-4">
-              <Card className="min-h-[300px] p-4">
-                {content.trim() ? (
-                  <div>
-                    <h2 className="text-xl font-semibold mb-4 pb-2 border-b">
-                      {title || "Título do Tópico"}
-                    </h2>
-                    <MarkdownRenderer content={content} />
-                  </div>
-                ) : (
-                  <div className="text-center text-muted-foreground py-12">
-                    <Eye className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>O preview aparecerá aqui quando você começar a escrever</p>
-                  </div>
-                )}
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
-
-        <div className="flex justify-end gap-3">
-          <Button
-            onClick={handleSubmit}
-            disabled={isSubmitting || !title.trim() || !content.trim()}
-            className="flex items-center gap-2"
-          >
-            {isSubmitting ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Send className="h-4 w-4" />
+            {/* Preview */}
+            {content.trim() && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Preview</label>
+                <div className="border rounded-lg p-4 bg-muted/30 max-h-96 overflow-y-auto">
+                  <MarkdownRenderer content={content} />
+                </div>
+              </div>
             )}
-            {isSubmitting ? "Criando..." : "Criar Tópico"}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+
+            <Separator />
+
+            <div className="flex justify-end gap-3">
+              <Button
+                type="submit"
+                disabled={isSubmitting || isUploading || !title.trim() || !content.trim() || !selectedCategoryId}
+                className="gap-2"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Publicando...
+                  </>
+                ) : (
+                  <>
+                    <Send className="h-4 w-4" />
+                    Publicar Tópico
+                  </>
+                )}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
