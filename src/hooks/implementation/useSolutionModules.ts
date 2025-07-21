@@ -21,7 +21,7 @@ export const useSolutionModules = (solution: Solution | null): Module[] => {
         description: solution.description,
         overview: solution.overview,
         image_url: solution.image_url,
-        estimated_time: solution.estimated_time || "2-4 horas",
+        estimated_time: solution.estimated_time?.toString() || "2-4 horas",
         difficulty: solution.difficulty || "Intermediário",
         success_rate: "94%",
         learning_objectives: solution.learning_objectives || [
@@ -109,25 +109,29 @@ export const useSolutionModules = (solution: Solution | null): Module[] => {
             id: "basic-setup",
             title: "Configuração básica realizada",
             description: "Verifique se todas as configurações iniciais foram feitas corretamente.",
-            required: true
+            required: true,
+            checked: false
           },
           {
             id: "integration-test",
             title: "Teste de integração concluído",
             description: "Confirme que a solução está integrada e funcionando com seus sistemas.",
-            required: true
+            required: true,
+            checked: false
           },
           {
             id: "performance-check",
             title: "Verificação de performance",
             description: "Teste o desempenho da solução em cenários reais.",
-            required: true
+            required: true,
+            checked: false
           },
           {
             id: "documentation",
             title: "Documentação atualizada",
             description: "Documente o processo de implementação para referência futura.",
-            required: false
+            required: false,
+            checked: false
           }
         ]
       },

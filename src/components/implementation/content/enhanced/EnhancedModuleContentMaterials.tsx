@@ -24,7 +24,7 @@ export const EnhancedModuleContentMaterials = ({ module }: EnhancedModuleContent
     setDownloadingFiles(prev => new Set([...prev, material.id]));
     
     try {
-      await handleDownload(material.file_url, material.title);
+      await handleDownload(material);
       setDownloadedFiles(prev => new Set([...prev, material.id]));
     } catch (error) {
       console.error("Erro ao fazer download:", error);

@@ -68,6 +68,7 @@ export interface Solution {
   created_at: string;
   updated_at: string;
   thumbnail_url?: string;
+  image_url?: string;
   slug: string;
   tags?: string[];
   estimated_time?: number;
@@ -76,10 +77,14 @@ export interface Solution {
   author_id?: string;
   // Campos específicos do sistema legado
   overview?: string;
+  learning_objectives?: string[];
+  implementation_steps?: string[];
+  implementation_tips?: string[];
   checklist?: Array<{
     id: string;
     title: string;
     description?: string;
+    required?: boolean;
     checked?: boolean;
   }>;
   videos?: Array<{
@@ -87,6 +92,7 @@ export interface Solution {
     description?: string;
     url?: string;
     youtube_id?: string;
+    video_id?: string;
   }>;
 }
 
@@ -95,12 +101,22 @@ export interface Module {
   id: string;
   title: string;
   type: string;
+  order_index?: number;
   content?: {
+    title?: string;
+    description?: string;
+    image_url?: string;
+    estimated_time?: string;
+    difficulty?: string;
+    success_rate?: string;
+    overview?: string;
+    learning_objectives?: string[];
     blocks?: any[];
     checklist?: Array<{
       id: string;
       title: string;
       description?: string;
+      required?: boolean;
       checked?: boolean;
     }>;
     videos?: Array<{
@@ -108,7 +124,12 @@ export interface Module {
       description?: string;
       url?: string;
       youtube_id?: string;
+      video_id?: string;
     }>;
+    implementation_steps?: string[];
+    tips?: string[];
+    completion_message?: string;
+    next_steps?: string[];
   };
   solution_id?: string;
   module_order?: number;

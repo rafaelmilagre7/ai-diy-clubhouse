@@ -35,7 +35,8 @@ const SolutionImplementation = () => {
   });
 
   // Generate dynamic modules based on solution data
-  const { modules, loading: modulesLoading } = useSolutionModules(solution);
+  const modules = useSolutionModules(solution);
+  const modulesLoading = false;
   console.log("🔧 MODULES DATA:", {
     totalModules: modules.length,
     modulesLoading,
