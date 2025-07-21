@@ -1,10 +1,10 @@
-
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
@@ -14,14 +14,19 @@ import {
   Bold,
   Italic,
   Underline,
-  Link,
+  Link2,
   Image,
+  Code,
   List,
   ListOrdered,
   Quote,
-  Code,
+  Heading1,
+  Heading2,
   Eye,
-  Upload
+  Edit3,
+  Send,
+  Upload,
+  Loader2
 } from "lucide-react";
 
 interface RichTopicEditorProps {
@@ -30,114 +35,154 @@ interface RichTopicEditorProps {
   onSuccess?: () => void;
 }
 
-export const RichTopicEditor = ({ 
-  categoryId, 
-  categorySlug, 
-  onSuccess 
-}: RichTopicEditorProps) => {
+export const RichTopicEditor = ({ categoryId, categorySlug, onSuccess }: RichTopicEditorProps) => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [activeTab, setActiveTab] = useState("editor");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [activeTab, setActiveTab] = useState("write");
+  const [isUploading, setIsUploading] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const insertText = (before: string, after: string = "", placeholder: string = "") => {
+  const insertAtCursor = useCallback((text: string) => {
+    if (!textareaRef.current) return;
+    
+    const textarea = textareaRef.current;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const newContent = content.substring(0, start) + text + content.substring(end);
+    
+    setContent(newContent);
+    
+    setTimeout(() => {
+      textarea.focus();
+      const newCursorPos = start + text.length;
+      textarea.setSelectionRange(newCursorPos, newCursorPos);
+    }, 0);
+  }, [content]);
+
+  const formatText = useCallback((prefix: string, suffix: string = "") => {
     if (!textareaRef.current) return;
     
     const textarea = textareaRef.current;
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
     const selectedText = content.substring(start, end);
-    const textToInsert = selectedText || placeholder;
-    const newText = before + textToInsert + after;
     
-    const newContent = content.substring(0, start) + newText + content.substring(end);
+    const formattedText = `${prefix}${selectedText || "texto"}${suffix}`;
+    const newContent = content.substring(0, start) + formattedText + content.substring(end);
+    
     setContent(newContent);
     
     setTimeout(() => {
       textarea.focus();
-      const newCursorPos = start + before.length + textToInsert.length;
-      textarea.setSelectionRange(newCursorPos, newCursorPos);
+      if (selectedText) {
+        textarea.setSelectionRange(start + prefix.length, start + prefix.length + selectedText.length);
+      } else {
+        textarea.setSelectionRange(start + prefix.length, start + prefix.length + 5);
+      }
     }, 0);
-  };
+  }, [content]);
 
-  const handleImageUpload = async (file: File) => {
+  const handleImageUpload = useCallback(async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Erro",
+        description: "Por favor, selecione apenas arquivos de imagem.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsUploading(true);
+    
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `forum_images/${fileName}`;
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `community/${fileName}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from('public')
+      const { data, error } = await supabase.storage
+        .from('uploads')
         .upload(filePath, file);
 
-      if (uploadError) throw uploadError;
+      if (error) throw error;
 
-      const { data } = supabase.storage
-        .from('public')
+      const { data: { publicUrl } } = supabase.storage
+        .from('uploads')
         .getPublicUrl(filePath);
 
-      insertText(`![Imagem](${data.publicUrl})`);
-      
+      const imageMarkdown = `![Imagem](${publicUrl})`;
+      insertAtCursor(imageMarkdown);
+
       toast({
-        title: "Imagem enviada!",
-        description: "A imagem foi adicionada ao seu tópico.",
+        title: "Sucesso",
+        description: "Imagem enviada com sucesso!"
       });
+
     } catch (error) {
-      console.error('Erro ao fazer upload da imagem:', error);
+      console.error('Erro no upload da imagem:', error);
       toast({
-        title: "Erro no upload",
-        description: "Não foi possível enviar a imagem. Tente novamente.",
-        variant: "destructive",
+        title: "Erro",
+        description: "Falha ao enviar a imagem. Tente novamente.",
+        variant: "destructive"
       });
+    } finally {
+      setIsUploading(false);
     }
-  };
+  }, [insertAtCursor, toast]);
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      handleImageUpload(file);
+  const handleSubmit = async () => {
+    if (!title.trim() || !content.trim()) {
+      toast({
+        title: "Erro",
+        description: "Por favor, preencha o título e o conteúdo.",
+        variant: "destructive"
+      });
+      return;
     }
-  };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user || !title.trim() || !content.trim()) return;
+    if (!user) {
+      toast({
+        title: "Erro",
+        description: "Você precisa estar logado para criar um tópico.",
+        variant: "destructive"
+      });
+      return;
+    }
 
     setIsSubmitting(true);
+
     try {
       const { data, error } = await supabase
         .from('community_topics')
-        .insert([
-          {
-            title: title.trim(),
-            content: content.trim(),
-            user_id: user.id,
-            category_id: categoryId || null,
-          }
-        ])
+        .insert({
+          title: title.trim(),
+          content: content.trim(),
+          user_id: user.id,
+          category_id: categoryId || null
+        })
         .select()
         .single();
 
       if (error) throw error;
 
       toast({
-        title: "Tópico criado!",
-        description: "Seu tópico foi publicado com sucesso na comunidade.",
+        title: "Sucesso",
+        description: "Tópico criado com sucesso!"
       });
 
       setTitle("");
       setContent("");
       onSuccess?.();
+
     } catch (error) {
       console.error('Erro ao criar tópico:', error);
       toast({
-        title: "Erro ao criar tópico",
-        description: "Não foi possível publicar seu tópico. Tente novamente.",
-        variant: "destructive",
+        title: "Erro",
+        description: "Falha ao criar o tópico. Tente novamente.",
+        variant: "destructive"
       });
     } finally {
       setIsSubmitting(false);
@@ -145,214 +190,177 @@ export const RichTopicEditor = ({
   };
 
   return (
-    <Card className="bg-card border-border">
+    <Card className="w-full">
       <CardHeader>
-        <CardTitle className="text-foreground">Criar novo tópico</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <Edit3 className="h-5 w-5" />
+          Criar Novo Tópico
+        </CardTitle>
       </CardHeader>
-      
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="title" className="text-foreground font-medium">
-              Título do tópico
-            </Label>
-            <Input
-              id="title"
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Digite um título claro e descritivo..."
-              className="bg-background border-border text-foreground focus:border-primary"
-              required
-            />
-          </div>
+      <CardContent className="space-y-6">
+        <div className="space-y-2">
+          <Label htmlFor="title">Título do Tópico</Label>
+          <Input
+            id="title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Digite o título do seu tópico..."
+            className="text-lg"
+            disabled={isSubmitting}
+          />
+        </div>
 
-          <div className="space-y-3">
-            <Label htmlFor="content" className="text-foreground font-medium">
-              Conteúdo
-            </Label>
-            
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 bg-muted/50">
-                <TabsTrigger 
-                  value="write" 
-                  className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+        <div className="space-y-2">
+          <Label>Conteúdo</Label>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="editor" className="flex items-center gap-2">
+                <Edit3 className="h-4 w-4" />
+                Editor
+              </TabsTrigger>
+              <TabsTrigger value="preview" className="flex items-center gap-2">
+                <Eye className="h-4 w-4" />
+                Preview
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="editor" className="space-y-4">
+              {/* Toolbar de Formatação */}
+              <div className="flex flex-wrap gap-1 p-3 bg-slate-800 rounded-lg border">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => formatText("**", "**")}
+                  className="text-slate-300 hover:text-white hover:bg-slate-700"
+                  disabled={isSubmitting}
                 >
-                  Escrever
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="preview" 
-                  className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+                  <Bold className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => formatText("*", "*")}
+                  className="text-slate-300 hover:text-white hover:bg-slate-700"
+                  disabled={isSubmitting}
                 >
-                  <Eye className="w-4 h-4 mr-2" />
-                  Visualizar
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="write" className="space-y-3 mt-4">
-                <div className="bg-slate-800 border border-border rounded-lg p-3">
-                  <div className="flex flex-wrap gap-2 items-center">
-                    <div className="flex gap-1">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => insertText("**", "**", "texto em negrito")}
-                        className="h-8 px-2 text-slate-200 hover:bg-slate-700 hover:text-white border border-slate-600"
-                        title="Negrito"
-                      >
-                        <Bold className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => insertText("*", "*", "texto em itálico")}
-                        className="h-8 px-2 text-slate-200 hover:bg-slate-700 hover:text-white border border-slate-600"
-                        title="Itálico"
-                      >
-                        <Italic className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => insertText("__", "__", "texto sublinhado")}
-                        className="h-8 px-2 text-slate-200 hover:bg-slate-700 hover:text-white border border-slate-600"
-                        title="Sublinhado"
-                      >
-                        <Underline className="h-4 w-4" />
-                      </Button>
-                    </div>
-
-                    <div className="w-px h-6 bg-slate-600" />
-
-                    <div className="flex gap-1">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => insertText("[", "](url)", "texto do link")}
-                        className="h-8 px-2 text-slate-200 hover:bg-slate-700 hover:text-white border border-slate-600"
-                        title="Link"
-                      >
-                        <Link className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="h-8 px-2 text-slate-200 hover:bg-slate-700 hover:text-white border border-slate-600"
-                        title="Inserir imagem"
-                      >
-                        <Image className="h-4 w-4" />
-                      </Button>
-                    </div>
-
-                    <div className="w-px h-6 bg-slate-600" />
-
-                    <div className="flex gap-1">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => insertText("- ", "", "item da lista")}
-                        className="h-8 px-2 text-slate-200 hover:bg-slate-700 hover:text-white border border-slate-600"
-                        title="Lista"
-                      >
-                        <List className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => insertText("1. ", "", "item numerado")}
-                        className="h-8 px-2 text-slate-200 hover:bg-slate-700 hover:text-white border border-slate-600"
-                        title="Lista numerada"
-                      >
-                        <ListOrdered className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => insertText("> ", "", "citação")}
-                        className="h-8 px-2 text-slate-200 hover:bg-slate-700 hover:text-white border border-slate-600"
-                        title="Citação"
-                      >
-                        <Quote className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => insertText("`", "`", "código")}
-                        className="h-8 px-2 text-slate-200 hover:bg-slate-700 hover:text-white border border-slate-600"
-                        title="Código"
-                      >
-                        <Code className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-
-                <Textarea
-                  ref={textareaRef}
-                  id="content"
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  placeholder="Descreva seu tópico em detalhes... Use markdown para formatação!"
-                  className="min-h-[300px] resize-none bg-background border-border text-foreground focus:border-primary"
-                  rows={12}
-                  required
-                />
-
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileSelect}
-                  className="hidden"
-                />
-              </TabsContent>
-
-              <TabsContent value="preview" className="mt-4">
-                <div className="min-h-[300px] p-4 border border-border rounded-lg bg-background">
-                  {content ? (
-                    <MarkdownRenderer content={content} />
+                  <Italic className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => formatText("__", "__")}
+                  className="text-slate-300 hover:text-white hover:bg-slate-700"
+                  disabled={isSubmitting}
+                >
+                  <Underline className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => formatText("`", "`")}
+                  className="text-slate-300 hover:text-white hover:bg-slate-700"
+                  disabled={isSubmitting}
+                >
+                  <Code className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => formatText("[texto do link](", ")")}
+                  className="text-slate-300 hover:text-white hover:bg-slate-700"
+                  disabled={isSubmitting}
+                >
+                  <Link2 className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="text-slate-300 hover:text-white hover:bg-slate-700"
+                  disabled={isSubmitting || isUploading}
+                >
+                  {isUploading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    <p className="text-muted-foreground italic">
-                      Nada para visualizar ainda. Escreva algo na aba "Escrever" para ver a prévia aqui.
-                    </p>
+                    <Image className="h-4 w-4" />
                   )}
-                </div>
-              </TabsContent>
-            </Tabs>
-          </div>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => formatText("# ", "")}
+                  className="text-slate-300 hover:text-white hover:bg-slate-700"
+                  disabled={isSubmitting}
+                >
+                  <Heading1 className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => formatText("## ", "")}
+                  className="text-slate-300 hover:text-white hover:bg-slate-700"
+                  disabled={isSubmitting}
+                >
+                  <Heading2 className="h-4 w-4" />
+                </Button>
+              </div>
 
-          <div className="flex justify-end gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setTitle("");
-                setContent("");
-              }}
-              disabled={isSubmitting}
-              className="border-border hover:bg-muted"
-            >
-              Limpar
-            </Button>
-            <Button
-              type="submit"
-              disabled={isSubmitting || !title.trim() || !content.trim()}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground"
-            >
-              {isSubmitting ? "Publicando..." : "Publicar Tópico"}
-            </Button>
-          </div>
-        </form>
+              <Textarea
+                ref={textareaRef}
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder="Escreva o conteúdo do seu tópico aqui... Você pode usar Markdown para formatação."
+                className="min-h-[300px] resize-none font-mono text-sm"
+                disabled={isSubmitting}
+              />
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleImageUpload(file);
+                  e.target.value = '';
+                }}
+                className="hidden"
+              />
+            </TabsContent>
+
+            <TabsContent value="preview" className="space-y-4">
+              <Card className="min-h-[300px] p-4">
+                {content.trim() ? (
+                  <div>
+                    <h2 className="text-xl font-semibold mb-4 pb-2 border-b">
+                      {title || "Título do Tópico"}
+                    </h2>
+                    <MarkdownRenderer content={content} />
+                  </div>
+                ) : (
+                  <div className="text-center text-muted-foreground py-12">
+                    <Eye className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>O preview aparecerá aqui quando você começar a escrever</p>
+                  </div>
+                )}
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        <div className="flex justify-end gap-3">
+          <Button
+            onClick={handleSubmit}
+            disabled={isSubmitting || !title.trim() || !content.trim()}
+            className="flex items-center gap-2"
+          >
+            {isSubmitting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Send className="h-4 w-4" />
+            )}
+            {isSubmitting ? "Criando..." : "Criar Tópico"}
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
