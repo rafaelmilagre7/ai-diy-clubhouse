@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Save, Loader2 } from "lucide-react";
@@ -26,65 +26,12 @@ const ToolsChecklistForm: React.FC<ToolsChecklistFormProps> = ({
     saveTools
   } = useToolsChecklist(solutionId);
 
-  // Remover saveTools das dependências para evitar loop infinito
-  useEffect(() => {
-    const handleSaveStep = async (event: CustomEvent) => {
-      console.log("🎯 Evento save-tools-step recebido");
-      try {
-        await saveTools();
-        console.log("✅ Salvamento concluído, disparando evento de confirmação");
-        
-        // Disparar evento de confirmação
-        const savedEvent = new CustomEvent('tools-saved', {
-          detail: { success: true }
-        });
-        window.dispatchEvent(savedEvent);
-      } catch (error) {
-        console.error("❌ Erro ao salvar ferramentas:", error);
-        
-        // Disparar evento de erro
-        const errorEvent = new CustomEvent('tools-saved', {
-          detail: { 
-            success: false, 
-            error: error instanceof Error ? error.message : "Erro ao salvar ferramentas"
-          }
-        });
-        window.dispatchEvent(errorEvent);
-      }
-    };
-
-    const handleValidateStep = () => {
-      console.log("🔍 Validando ferramentas...");
-      // Validar se tem pelo menos uma ferramenta selecionada
-      const isValid = tools.length > 0;
-      
-      const validateEvent = new CustomEvent('tools-validated', {
-        detail: { 
-          valid: isValid,
-          message: isValid ? "Ferramentas válidas" : "Selecione pelo menos uma ferramenta"
-        }
-      });
-      window.dispatchEvent(validateEvent);
-    };
-
-    console.log("🔗 Registrando event listeners para ferramentas");
-    window.addEventListener('save-tools-step', handleSaveStep as EventListener);
-    window.addEventListener('validate-tools-step', handleValidateStep as EventListener);
-    
-    return () => {
-      console.log("🔗 Removendo event listeners para ferramentas");
-      window.removeEventListener('save-tools-step', handleSaveStep as EventListener);
-      window.removeEventListener('validate-tools-step', handleValidateStep as EventListener);
-    };
-  }, [tools, saveTools]); // Manter saveTools já que agora está memoizado
-
   const handleSaveTools = async () => {
     try {
       await saveTools();
       onSave();
     } catch (error) {
       console.error("Erro ao salvar ferramentas:", error);
-      throw error;
     }
   };
 
