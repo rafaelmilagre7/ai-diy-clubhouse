@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
-import { Solution } from "@/lib/supabase";
+import { Solution } from "@/lib/supabase/types/legacy";
 import { toast } from "sonner";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { SolutionsTable } from "@/components/admin/solutions/SolutionsTable";
@@ -23,7 +23,7 @@ const SolutionsList = () => {
     filteredSolutions,
     updateFilter,
     resetFilters
-  } = useSolutionsFilters(solutions);
+  } = useSolutionsFilters(solutions as any);
 
   // Fetch solutions from database
   useEffect(() => {
@@ -36,7 +36,7 @@ const SolutionsList = () => {
           .order("created_at", { ascending: false });
 
         if (error) throw error;
-        setSolutions(data || []);
+        setSolutions(data as Solution[] || []);
       } catch (error: any) {
         console.error("Erro ao buscar soluções:", error);
         toast.error("Erro ao carregar soluções", {
@@ -116,7 +116,7 @@ const SolutionsList = () => {
       />
 
       <SolutionsTable
-        solutions={filteredSolutions}
+        solutions={filteredSolutions as any[]}
         onEdit={(id) => navigate(`/admin/solutions/${id}/edit`)}
         onDelete={handleDeleteSolution}
         onTogglePublish={handleTogglePublish}

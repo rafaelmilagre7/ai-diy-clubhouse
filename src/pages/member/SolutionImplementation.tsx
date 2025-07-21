@@ -9,7 +9,7 @@ import { ModuleContent } from "@/components/implementation/ModuleContent";
 import { ImplementationConfirmationModal } from "@/components/implementation/ImplementationConfirmationModal";
 import { Solution, Module } from "@/lib/supabase";
 import { useSolutionData } from "@/hooks/useSolutionData";
-import { useSolutionModules } from "@/hooks/implementation/useSolutionModules";
+import { useSolutionSteps } from "@/hooks/implementation/useSolutionSteps";
 import { useProgressTracking } from "@/hooks/implementation/useProgressTracking";
 import { useImplementationNavigation } from "@/hooks/implementation/useImplementationNavigation";
 import LoadingScreen from "@/components/common/LoadingScreen";
@@ -34,8 +34,8 @@ const SolutionImplementation = () => {
     progress: progress ? "exists" : "null"
   });
 
-  // Generate dynamic modules based on solution data
-  const modules = useSolutionModules(solution);
+  // Generate dynamic steps based on solution data
+  const modules = useSolutionSteps(solution);
   const modulesLoading = false;
   console.log("🔧 MODULES DATA:", {
     totalModules: modules.length,

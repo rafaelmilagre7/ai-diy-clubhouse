@@ -1,6 +1,6 @@
 
 import { useMemo } from "react";
-import { Solution } from "@/lib/supabase";
+import { Solution } from "@/lib/supabase/types/legacy";
 
 export interface SolutionStep {
   id: string;
@@ -10,7 +10,7 @@ export interface SolutionStep {
   content: any;
 }
 
-export const useSolutionSteps = (solution: Solution | null): SolutionStep[] => {
+export const useSolutionSteps = (solution: any | null): SolutionStep[] => {
   return useMemo(() => {
     if (!solution) return [];
     
@@ -33,22 +33,40 @@ export const useSolutionSteps = (solution: Solution | null): SolutionStep[] => {
       }
     });
     
-    // 2. Implementation Steps - Usar dados reais de implementation_steps
+    // 2. Implementation Steps - Tratar tanto string[] quanto objeto[]
     if (solution.implementation_steps && Array.isArray(solution.implementation_steps)) {
       solution.implementation_steps.forEach((step: any, index: number) => {
-        steps.push({
-          id: `${solution.id}-step-${index}`,
-          title: step.title || `Etapa ${index + 1}`,
-          type: "implementation",
-          order_index: index + 1,
-          content: {
-            title: step.title,
-            description: step.description,
-            instructions: step.instructions,
-            tips: step.tips,
-            resources: step.resources
-          }
-        });
+        // Se for string, converter para objeto
+        if (typeof step === 'string') {
+          steps.push({
+            id: `${solution.id}-step-${index}`,
+            title: `Etapa ${index + 1}`,
+            type: "implementation",
+            order_index: index + 1,
+            content: {
+              title: `Etapa ${index + 1}`,
+              description: step,
+              instructions: step,
+              tips: [],
+              resources: []
+            }
+          });
+        } else {
+          // Se for objeto, usar estrutura existente
+          steps.push({
+            id: `${solution.id}-step-${index}`,
+            title: step.title || `Etapa ${index + 1}`,
+            type: "implementation",
+            order_index: index + 1,
+            content: {
+              title: step.title,
+              description: step.description,
+              instructions: step.instructions,
+              tips: step.tips,
+              resources: step.resources
+            }
+          });
+        }
       });
     }
     
