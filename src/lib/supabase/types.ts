@@ -78,7 +78,17 @@ export interface Solution {
   // Campos específicos do sistema legado
   overview?: string;
   learning_objectives?: string[];
-  implementation_steps?: string[];
+  implementation_steps?: Array<{
+    title: string;
+    description?: string;
+    instructions?: string;
+    tips?: string[];
+    resources?: Array<{
+      title: string;
+      url: string;
+      type: string;
+    }>;
+  }>;
   implementation_tips?: string[];
   checklist?: Array<{
     id: string;
@@ -87,6 +97,13 @@ export interface Solution {
     required?: boolean;
     checked?: boolean;
   }>;
+  checklist_items?: Array<{
+    id: string;
+    title: string;
+    description?: string;
+    checked?: boolean;
+  }>;
+  completion_requirements?: string[];
   videos?: Array<{
     title?: string;
     description?: string;

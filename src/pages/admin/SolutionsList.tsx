@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
-import { Solution } from "@/lib/supabase/types/legacy";
+import { Solution } from "@/lib/supabase";
 import { toast } from "sonner";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { SolutionsTable } from "@/components/admin/solutions/SolutionsTable";

@@ -1,6 +1,6 @@
 
 import { useMemo } from "react";
-import { Solution } from "@/lib/supabase/types/legacy";
+import { Solution } from "@/lib/supabase";
 
 export interface SolutionStep {
   id: string;

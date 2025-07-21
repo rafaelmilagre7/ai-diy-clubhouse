@@ -3,6 +3,6 @@
 export * from './learning';
 export * from './admin';
 export * from './members';
-export * from './legacy';
+// Legacy types removidos - usar tipos unificados
 export * from './implementation';
 export * from './database.types';

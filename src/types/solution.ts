@@ -1,3 +1,3 @@
 
-// Usar o tipo Solution de compatibilidade do sistema legado
-export type { Solution } from "@/lib/supabase/types/legacy";
+// Usar o tipo Solution unificado do sistema principal
+export type { Solution } from "@/lib/supabase";

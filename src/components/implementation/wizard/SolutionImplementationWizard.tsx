@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useSolutionData } from "@/hooks/useSolutionData";
-import type { Solution } from "@/lib/supabase/types/legacy";
+import type { Solution } from "@/lib/supabase";
 import { useSolutionSteps } from "@/hooks/implementation/useSolutionSteps";
 import { useProgressTracking } from "@/hooks/implementation/useProgressTracking";
 import { useImplementationNavigation } from "@/hooks/implementation/useImplementationNavigation";
