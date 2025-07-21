@@ -4,7 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useSolutionData } from "@/hooks/useSolutionData";
 import { useSolutionSteps } from "@/hooks/useSolutionSteps";
 import { WizardHeader } from "./WizardHeader";
-import { WizardProgress } from "./WizardProgress";
+import WizardProgress from "./WizardProgress";
 import { WizardStepContent } from "./WizardStepContent";
 import { WizardNavigation } from "./WizardNavigation";
 import LoadingScreen from "@/components/common/LoadingScreen";
