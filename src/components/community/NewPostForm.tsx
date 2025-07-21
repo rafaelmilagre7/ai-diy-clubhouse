@@ -1,5 +1,5 @@
 
-import { RichPostEditor } from "./RichPostEditor";
+import { ModernPostEditor } from "./ModernPostEditor";
 
 interface NewPostFormProps {
   topicId: string;
@@ -8,9 +8,10 @@ interface NewPostFormProps {
 
 export const NewPostForm = ({ topicId, onSuccess }: NewPostFormProps) => {
   return (
-    <RichPostEditor
+    <ModernPostEditor
       topicId={topicId}
       onSuccess={onSuccess}
+      mode="create"
     />
   );
 };

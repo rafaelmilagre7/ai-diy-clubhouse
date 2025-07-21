@@ -1,5 +1,5 @@
 
-import { RichTopicEditor } from "./RichTopicEditor";
+import { ModernTopicEditor } from "./ModernTopicEditor";
 import { useNavigate } from "react-router-dom";
 
 interface NewTopicFormProps {
@@ -20,10 +20,11 @@ export const NewTopicForm = ({ categoryId, categorySlug }: NewTopicFormProps) =>
   };
 
   return (
-    <RichTopicEditor
+    <ModernTopicEditor
       categoryId={categoryId}
       categorySlug={categorySlug}
       onSuccess={handleSuccess}
+      mode="create"
     />
   );
 };
