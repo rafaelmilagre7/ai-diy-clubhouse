@@ -1,35 +1,56 @@
 
-import { useParams, useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/auth";
-import { useSolutionModules } from "@/hooks/implementation/useSolutionModules";
-import { useSolutionData } from "@/hooks/useSolutionData";
-import { useProgressTracking } from "@/hooks/implementation/useProgressTracking";
-import { ModuleContent } from "@/components/implementation/ModuleContent";
+import { useParams } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { ImplementationHeader } from "@/components/implementation/ImplementationHeader";
 import { ImplementationNavigation } from "@/components/implementation/ImplementationNavigation";
 import { ImplementationProgress } from "@/components/implementation/ImplementationProgress";
+import { ModuleContent } from "@/components/implementation/ModuleContent";
+import { ModuleNavigation } from "@/components/implementation/ModuleNavigation";
+import { CompletionConfirmationModal } from "@/components/implementation/CompletionConfirmationModal";
+import { Solution, Module } from "@/lib/supabase";
+import { useSolutionData } from "@/hooks/useSolutionData";
+import { useSolutionModules } from "@/hooks/implementation/useSolutionModules";
+import { useProgressTracking } from "@/hooks/implementation/useProgressTracking";
+import { useImplementationNavigation } from "@/hooks/implementation/useImplementationNavigation";
 import LoadingScreen from "@/components/common/LoadingScreen";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
 import { useLogging } from "@/hooks/useLogging";
-import { useState, useEffect } from "react";
+import { PageTransition } from "@/components/transitions/PageTransition";
 
 const SolutionImplementation = () => {
-  const { id, moduleIndex } = useParams<{ id: string; moduleIndex: string }>();
-  const navigate = useNavigate();
-  const { user } = useAuth();
+  const { id, moduleIdx } = useParams<{ id: string; moduleIdx: string }>();
+  const moduleIndex = parseInt(moduleIdx || "0");
   const { log, logError } = useLogging();
   
-  const [completedModules, setCompletedModules] = useState<number[]>([]);
-  
+  console.log("🎯 SOLUTION IMPLEMENTATION CARREGADO:");
+  console.log("- Solution ID:", id);
+  console.log("- Module Index:", moduleIndex);
+  console.log("- URL Params:", { id, moduleIdx });
+
   // Fetch solution data
   const { solution, loading: solutionLoading, progress } = useSolutionData(id);
-  
+  console.log("📊 SOLUTION DATA:", { 
+    solution: solution?.title,
+    solutionLoading,
+    progress: progress ? "exists" : "null"
+  });
+
   // Generate dynamic modules based on solution data
-  const { modules, loading: modulesLoading, totalModules } = useSolutionModules(solution);
-  
-  // Progress tracking
+  const { modules, loading: modulesLoading } = useSolutionModules(solution);
+  console.log("🔧 MODULES DATA:", {
+    totalModules: modules.length,
+    modulesLoading,
+    moduleTypes: modules.map(m => m.type)
+  });
+
+  // State for tracking completed modules
+  const [completedModules, setCompletedModules] = useState<number[]>(
+    progress?.completed_modules || []
+  );
+
+  // Progress tracking functionality
   const {
-    moduleIdx,
+    moduleIdx: currentModuleIdx,
     isCompleting,
     hasInteracted,
     showConfirmationModal,
@@ -37,144 +58,149 @@ const SolutionImplementation = () => {
     handleMarkAsCompleted,
     handleConfirmImplementation,
     calculateProgress,
-    setModuleInteraction,
-    requireUserConfirmation,
-    setRequireUserConfirmation
-  } = useProgressTracking(
-    progress,
-    completedModules,
-    setCompletedModules,
-    totalModules
-  );
+    setModuleInteraction
+  } = useProgressTracking(progress, completedModules, setCompletedModules, modules.length);
 
-  // Load completed modules from progress
+  // Navigation functionality
+  const {
+    handleComplete,
+    handlePrevious,
+    handleNavigateToModule
+  } = useImplementationNavigation();
+
+  // Update completed modules when progress changes
   useEffect(() => {
     if (progress?.completed_modules) {
+      console.log("🔄 Atualizando completed modules:", progress.completed_modules);
       setCompletedModules(progress.completed_modules);
     }
   }, [progress]);
 
-  // Get current module
-  const currentModule = modules[moduleIdx];
-
   // Loading state
   if (solutionLoading || modulesLoading) {
+    console.log("⏳ Carregando dados...");
     return <LoadingScreen message="Carregando implementação..." />;
   }
 
-  // Error state
+  // Error states
   if (!solution) {
+    console.error("❌ Solução não encontrada");
+    logError("Solution not found in implementation", { id });
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Solução não encontrada</h1>
-          <Button onClick={() => navigate("/solutions")}>
-            Voltar para Soluções
-          </Button>
-        </div>
+        <Card className="p-8 text-center">
+          <h2 className="text-xl font-bold mb-4">Solução não encontrada</h2>
+          <p className="text-muted-foreground">A solução que você está tentando implementar não foi encontrada.</p>
+        </Card>
       </div>
     );
   }
 
-  if (!currentModule) {
+  if (modules.length === 0) {
+    console.error("❌ Nenhum módulo gerado");
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Módulo não encontrado</h1>
-          <Button onClick={() => navigate(`/solutions/${id}`)}>
-            Voltar para Solução
-          </Button>
-        </div>
+        <Card className="p-8 text-center">
+          <h2 className="text-xl font-bold mb-4">Erro ao carregar módulos</h2>
+          <p className="text-muted-foreground">Não foi possível carregar os módulos de implementação.</p>
+        </Card>
+      </div>
+    );
+  }
+
+  // Get current module
+  const currentModule = modules[moduleIndex] || modules[0];
+  console.log("📍 CURRENT MODULE:", {
+    index: moduleIndex,
+    module: currentModule ? {
+      id: currentModule.id,
+      type: currentModule.type,
+      title: currentModule.title
+    } : "not found"
+  });
+
+  if (!currentModule) {
+    console.error("❌ Módulo atual não encontrado");
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Card className="p-8 text-center">
+          <h2 className="text-xl font-bold mb-4">Módulo não encontrado</h2>
+          <p className="text-muted-foreground">O módulo que você está tentando acessar não existe.</p>
+        </Card>
       </div>
     );
   }
 
   // Handle module completion
   const handleModuleComplete = () => {
-    log("Módulo marcado como completo pelo usuário", { 
+    console.log("✅ Módulo completado:", currentModule.id);
+    log("Module completed", { 
+      solutionId: id,
+      moduleIndex,
       moduleId: currentModule.id,
-      moduleType: currentModule.type 
+      moduleType: currentModule.type
     });
-    setModuleInteraction(true);
+    
     handleMarkAsCompleted();
   };
 
-  log("Renderizando página de implementação", {
-    solutionId: solution.id,
-    moduleIndex: moduleIdx,
-    currentModule: currentModule?.type,
-    totalModules,
-    hasProgress: !!progress
+  // Navigation modules for sidebar
+  const navigationModules = modules.map((module, index) => ({
+    id: module.id,
+    title: module.title,
+    type: module.type,
+    completed: completedModules.includes(index),
+    current: index === moduleIndex
+  }));
+
+  // Calculate progress percentage
+  const progressPercentage = calculateProgress();
+  
+  console.log("📈 RENDER STATE:", {
+    currentModuleIndex: moduleIndex,
+    totalModules: modules.length,
+    completedModules,
+    progressPercentage,
+    hasInteracted,
+    isCompleting
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      {/* Aurora Background Effects */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-br from-viverblue/5 via-transparent to-viverblue-dark/8" />
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-viverblue/8 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-viverblue-dark/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}} />
-      </div>
-
-      <div className="relative z-10">
-        {/* Header */}
-        <div className="border-b border-white/10 bg-white/5 backdrop-blur-sm">
-          <div className="max-w-7xl mx-auto px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => navigate(`/solutions/${id}`)}
-                  className="text-neutral-300 hover:text-white"
-                >
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Voltar para Solução
-                </Button>
-                <div className="h-6 w-px bg-white/20" />
-                <div>
-                  <h1 className="text-lg font-semibold text-white truncate max-w-md">
-                    {solution.title}
-                  </h1>
-                  <p className="text-sm text-neutral-400">
-                    {currentModule.title}
-                  </p>
-                </div>
-              </div>
-              
-              <ImplementationProgress 
-                currentModule={moduleIdx}
-                totalModules={totalModules}
-                completedModules={completedModules}
-                progressPercentage={calculateProgress()}
-              />
-            </div>
-          </div>
+    <PageTransition>
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
+        {/* Aurora Background */}
+        <div className="fixed inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute inset-0 bg-gradient-to-br from-viverblue/8 via-transparent to-viverblue-dark/12" />
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-viverblue/10 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-viverblue-dark/12 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}} />
         </div>
 
-        {/* Main Content */}
-        <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="relative max-w-7xl mx-auto p-6">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            {/* Navigation Sidebar */}
-            <div className="lg:col-span-1">
+            {/* Left sidebar - Navigation */}
+            <div className="lg:col-span-1 space-y-6">
               <ImplementationNavigation
-                modules={modules.map((module, index) => ({
-                  id: module.id,
-                  title: module.title,
-                  type: module.type,
-                  completed: completedModules.includes(index),
-                  current: index === moduleIdx
-                }))}
+                modules={navigationModules}
                 solutionId={id!}
-                currentModule={moduleIdx}
+                currentModule={moduleIndex}
+              />
+              
+              <ImplementationProgress
+                currentModule={moduleIndex}
+                totalModules={modules.length}
+                completedModules={completedModules}
+                progressPercentage={progressPercentage}
               />
             </div>
 
-            {/* Module Content */}
+            {/* Main content */}
             <div className="lg:col-span-3">
-              <div className="relative bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-8 shadow-2xl">
-                <ModuleContent
-                  module={{
+              <Card className="bg-gray-800/50 backdrop-blur-sm border-gray-700">
+                <ImplementationHeader
+                  solution={solution}
+                  currentModuleIndex={moduleIndex}
+                  totalModules={modules.length}
+                  currentModule={{
                     id: currentModule.id,
                     type: currentModule.type,
                     solution_id: solution.id,
@@ -182,18 +208,53 @@ const SolutionImplementation = () => {
                     title: currentModule.title,
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString()
-                  }}
-                  onComplete={handleModuleComplete}
-                  onError={(error) => {
-                    logError("Erro no módulo de implementação", error);
-                  }}
+                  } as Module}
                 />
-              </div>
+                
+                <CardContent className="p-8">
+                  <ModuleContent
+                    module={{
+                      id: currentModule.id,
+                      type: currentModule.type,
+                      solution_id: solution.id,
+                      content: currentModule.content,
+                      title: currentModule.title,
+                      created_at: new Date().toISOString(),
+                      updated_at: new Date().toISOString()
+                    } as Module}
+                    onComplete={handleModuleComplete}
+                    onError={(error) => {
+                      console.error("❌ Erro no módulo:", error);
+                      logError("Module error", error);
+                    }}
+                  />
+                </CardContent>
+
+                <ModuleNavigation
+                  currentModule={moduleIndex}
+                  totalModules={modules.length}
+                  onNext={handleComplete}
+                  onPrevious={handlePrevious}
+                  onComplete={handleModuleComplete}
+                  isLoading={isCompleting}
+                  hasInteracted={hasInteracted}
+                  onInteraction={() => setModuleInteraction(true)}
+                />
+              </Card>
             </div>
           </div>
         </div>
+
+        {/* Completion Confirmation Modal */}
+        <CompletionConfirmationModal
+          isOpen={showConfirmationModal}
+          onClose={() => setShowConfirmationModal(false)}
+          onConfirm={handleConfirmImplementation}
+          solutionTitle={solution.title}
+          isLoading={isCompleting}
+        />
       </div>
-    </div>
+    </PageTransition>
   );
 };
 

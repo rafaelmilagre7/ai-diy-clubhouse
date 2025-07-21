@@ -19,12 +19,14 @@ export const useSolutionModules = (solution: Solution | null) => {
   useEffect(() => {
     const generateModules = async () => {
       if (!solution) {
+        console.log("🔍 MODULES: Nenhuma solução fornecida");
         setLoading(false);
         return;
       }
 
       try {
         setLoading(true);
+        console.log("🔧 GERANDO MÓDULOS para solução:", solution.id);
         const generatedModules: SolutionModule[] = [];
 
         // 1. Landing Module (sempre primeiro)
@@ -39,12 +41,20 @@ export const useSolutionModules = (solution: Solution | null) => {
           },
           order: 0
         });
+        console.log("✅ Módulo Landing adicionado");
 
         // 2. Tools Module (se houver ferramentas)
-        const { data: tools } = await supabase
+        console.log("🔍 Buscando ferramentas para solução:", solution.id);
+        const { data: tools, error: toolsError } = await supabase
           .from("solution_tools")
           .select("*")
           .eq("solution_id", solution.id);
+
+        if (toolsError) {
+          console.error("❌ Erro ao buscar ferramentas:", toolsError);
+        } else {
+          console.log("🔧 Ferramentas encontradas:", tools?.length || 0);
+        }
 
         if (tools && tools.length > 0) {
           generatedModules.push({
@@ -54,14 +64,22 @@ export const useSolutionModules = (solution: Solution | null) => {
             content: { tools },
             order: generatedModules.length
           });
+          console.log("✅ Módulo Tools adicionado com", tools.length, "ferramentas");
         }
 
         // 3. Materials Module (se houver materiais)
-        const { data: materials } = await supabase
+        console.log("🔍 Buscando materiais para solução:", solution.id);
+        const { data: materials, error: materialsError } = await supabase
           .from("solution_resources")
           .select("*")
           .eq("solution_id", solution.id)
           .in("type", ["document", "image", "other"]);
+
+        if (materialsError) {
+          console.error("❌ Erro ao buscar materiais:", materialsError);
+        } else {
+          console.log("📄 Materiais encontrados:", materials?.length || 0);
+        }
 
         if (materials && materials.length > 0) {
           generatedModules.push({
@@ -71,14 +89,22 @@ export const useSolutionModules = (solution: Solution | null) => {
             content: { materials },
             order: generatedModules.length
           });
+          console.log("✅ Módulo Materials adicionado com", materials.length, "materiais");
         }
 
         // 4. Videos Module (se houver vídeos)
-        const { data: videos } = await supabase
+        console.log("🔍 Buscando vídeos para solução:", solution.id);
+        const { data: videos, error: videosError } = await supabase
           .from("solution_resources")
           .select("*")
           .eq("solution_id", solution.id)
           .in("type", ["video", "youtube"]);
+
+        if (videosError) {
+          console.error("❌ Erro ao buscar vídeos:", videosError);
+        } else {
+          console.log("🎥 Vídeos encontrados:", videos?.length || 0);
+        }
 
         if (videos && videos.length > 0) {
           generatedModules.push({
@@ -88,12 +114,11 @@ export const useSolutionModules = (solution: Solution | null) => {
             content: { videos },
             order: generatedModules.length
           });
+          console.log("✅ Módulo Videos adicionado com", videos.length, "vídeos");
         }
 
-        // 5. Implementation Steps (verificar se existem passos na descrição)
-        // Como implementation_steps não existe no tipo Solution, vamos pular esta seção por enquanto
-
-        // 6. Checklist Module (se houver checklist no Solution)
+        // 5. Checklist Module (se houver checklist no Solution)
+        console.log("🔍 Verificando checklist na solução");
         if (solution.checklist && solution.checklist.length > 0) {
           generatedModules.push({
             id: 'checklist',
@@ -104,9 +129,10 @@ export const useSolutionModules = (solution: Solution | null) => {
             },
             order: generatedModules.length
           });
+          console.log("✅ Módulo Checklist adicionado com", solution.checklist.length, "itens");
         }
 
-        // 7. Celebration Module (sempre último)
+        // 6. Celebration Module (sempre último)
         generatedModules.push({
           id: 'celebration',
           type: 'celebration',
@@ -117,6 +143,13 @@ export const useSolutionModules = (solution: Solution | null) => {
           },
           order: generatedModules.length
         });
+        console.log("✅ Módulo Celebration adicionado");
+
+        console.log("🎯 MÓDULOS FINAIS GERADOS:", {
+          solutionId: solution.id,
+          totalModules: generatedModules.length,
+          moduleTypes: generatedModules.map(m => ({ type: m.type, title: m.title }))
+        });
 
         log("Módulos gerados para a solução", { 
           solutionId: solution.id,
@@ -126,24 +159,27 @@ export const useSolutionModules = (solution: Solution | null) => {
 
         setModules(generatedModules);
       } catch (error) {
+        console.error("❌ ERRO GERAL ao gerar módulos:", error);
         logError("Erro ao gerar módulos da solução", error);
         // Módulos mínimos em caso de erro
-        setModules([
+        const fallbackModules = [
           {
             id: 'landing',
-            type: 'landing',
+            type: 'landing' as const,
             title: 'Bem-vindo',
             content: { title: solution?.title || 'Solução' },
             order: 0
           },
           {
             id: 'celebration',
-            type: 'celebration',
+            type: 'celebration' as const,
             title: 'Finalização',
             content: { title: 'Concluído' },
             order: 1
           }
-        ]);
+        ];
+        console.log("🔄 Usando módulos de fallback:", fallbackModules);
+        setModules(fallbackModules);
       } finally {
         setLoading(false);
       }

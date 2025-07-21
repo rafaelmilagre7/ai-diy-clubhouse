@@ -21,11 +21,14 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
     
     try {
       setInitializing(true);
-      console.log("Iniciando implementação da solução:", solutionId);
+      console.log("🚀 INÍCIO DA IMPLEMENTAÇÃO:");
+      console.log("- Solution ID:", solutionId);
+      console.log("- User ID:", user.id);
+      console.log("- Progress atual:", progress);
       
       // If there's no progress record yet, create one
       if (!progress) {
-        console.log("Criando novo registro de progresso");
+        console.log("📝 Criando novo registro de progresso");
         const { data, error } = await supabase
           .from("progress")
           .insert({
@@ -40,20 +43,22 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
           .single();
         
         if (error) {
-          console.error("Erro ao criar progresso:", error);
+          console.error("❌ Erro ao criar progresso:", error);
           throw error;
         }
         
-        console.log("Progresso criado com sucesso:", data);
+        console.log("✅ Progresso criado com sucesso:", data);
       }
       
       // Navigate to the implementation page starting at module 0
+      const implementationUrl = `/implement/${solutionId}/0`;
+      console.log("🧭 Navegando para:", implementationUrl);
+      
       toast.success("Redirecionando para a implementação...");
-      console.log("Redirecionando para /implement/" + solutionId + "/0");
-      navigate(`/implement/${solutionId}/0`);
+      navigate(implementationUrl);
       return true;
     } catch (error) {
-      console.error("Erro ao iniciar implementação:", error);
+      console.error("❌ Erro ao iniciar implementação:", error);
       uiToast({
         title: "Erro ao iniciar implementação",
         description: "Ocorreu um erro ao tentar iniciar a implementação da solução.",
@@ -73,16 +78,21 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
     
     try {
       setInitializing(true);
-      console.log("Continuando implementação no módulo:", progress.current_module);
+      console.log("▶️ CONTINUANDO IMPLEMENTAÇÃO:");
+      console.log("- Solution ID:", solutionId);
+      console.log("- Progress:", progress);
+      console.log("- Current Module:", progress.current_module);
       
       // Navigate to the correct module where user left off
       const currentModule = progress.current_module || 0;
+      const implementationUrl = `/implement/${solutionId}/${currentModule}`;
+      console.log("🧭 Navegando para:", implementationUrl);
+      
       toast.success("Redirecionando para onde você parou...");
-      console.log("Redirecionando para /implement/" + solutionId + "/" + currentModule);
-      navigate(`/implement/${solutionId}/${currentModule}`);
+      navigate(implementationUrl);
       return true;
     } catch (error) {
-      console.error("Erro ao continuar implementação:", error);
+      console.error("❌ Erro ao continuar implementação:", error);
       toast.error("Erro ao continuar implementação");
       return false;
     } finally {

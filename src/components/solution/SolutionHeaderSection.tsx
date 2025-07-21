@@ -54,6 +54,7 @@ export const SolutionHeaderSection = ({ solution }: SolutionHeaderSectionProps) 
             {solution.title}
           </h1>
           
+          {/* Apenas description no header - resumo curto */}
           <p className="text-lg text-neutral-300 leading-relaxed">
             {solution.description}
           </p>

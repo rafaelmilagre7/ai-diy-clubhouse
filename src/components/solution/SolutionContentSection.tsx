@@ -7,11 +7,6 @@ interface SolutionContentSectionProps {
 }
 
 export const SolutionContentSection = ({ solution }: SolutionContentSectionProps) => {
-  // Função para renderizar o conteúdo HTML de forma segura
-  const renderContent = (content: string) => {
-    return { __html: content };
-  };
-
   return (
     <div className="relative bg-white/5 backdrop-blur-sm border border-white/10 p-6 rounded-xl shadow-2xl group hover:bg-white/8 transition-all duration-500">
       {/* Subtle dots pattern */}
@@ -30,13 +25,19 @@ export const SolutionContentSection = ({ solution }: SolutionContentSectionProps
           Sobre esta solução
         </h2>
         
+        {/* Apenas overview no content - conteúdo detalhado */}
         {solution.overview ? (
           <div 
             className="text-neutral-200 prose-headings:text-neutral-100 prose-p:text-neutral-200 prose-strong:text-neutral-100 prose-em:text-neutral-200 prose-li:text-neutral-200" 
             dangerouslySetInnerHTML={createSafeHTML(solution.overview || '')} 
           />
         ) : (
-          <p className="text-neutral-200">{solution.description}</p>
+          <div className="text-neutral-300">
+            <p className="mb-4">Esta solução ainda não possui um conteúdo detalhado.</p>
+            <p className="text-sm text-neutral-400">
+              Para começar a implementação, clique no botão "Começar Implementação" na barra lateral.
+            </p>
+          </div>
         )}
       </div>
     </div>
