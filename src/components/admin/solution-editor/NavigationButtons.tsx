@@ -8,8 +8,8 @@ interface NavigationButtonsProps {
   currentStep: number;
   totalSteps: number;
   onPrevious: () => void;
-  onNext: () => void;
-  onSave: () => void;
+  onNext: () => Promise<void>;
+  onSave: () => Promise<void>;
   saving: boolean;
 }
 
@@ -29,17 +29,30 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   const isLastStep = currentStep === totalSteps - 1;
   const { toast } = useToast();
   
-  const handleNext = () => {
-    // Primeiro salva os dados e depois avança
-    onSave();
-    // Adicionamos um pequeno delay para garantir que o salvamento ocorra antes de avançar
-    setTimeout(() => {
-      onNext();
+  const handleNext = async () => {
+    try {
+      await onNext();
+    } catch (error) {
+      console.error("Erro ao avançar para próxima etapa:", error);
       toast({
-        title: "Avançando para a próxima etapa",
-        description: "Seus dados foram salvos com sucesso."
+        title: "Erro ao avançar",
+        description: "Não foi possível avançar para a próxima etapa. Tente novamente.",
+        variant: "destructive"
       });
-    }, 500);
+    }
+  };
+
+  const handleSave = async () => {
+    try {
+      await onSave();
+    } catch (error) {
+      console.error("Erro ao salvar:", error);
+      toast({
+        title: "Erro ao salvar",
+        description: "Não foi possível salvar as alterações. Tente novamente.",
+        variant: "destructive"
+      });
+    }
   };
   
   return (
@@ -56,12 +69,12 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
       
       {isLastStep ? (
         <Button
-          onClick={onSave}
+          onClick={handleSave}
           disabled={saving}
           className="flex items-center bg-green-600 hover:bg-green-700"
         >
           <Globe className="w-4 h-4 mr-2" />
-          Publicar Solução
+          {saving ? "Publicando..." : "Publicar Solução"}
         </Button>
       ) : (
         <Button
@@ -69,7 +82,7 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
           disabled={saving}
           className="flex items-center bg-primary hover:bg-primary/90"
         >
-          Próximo
+          {saving ? "Salvando..." : "Próximo"}
           <ChevronRight className="w-4 h-4 ml-2" />
         </Button>
       )}

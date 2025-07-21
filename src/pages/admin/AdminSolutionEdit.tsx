@@ -2,7 +2,6 @@
 import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/auth';
-import { supabase, Solution } from '@/lib/supabase';
 import LoadingScreen from '@/components/common/LoadingScreen';
 import SolutionEditorHeader from '@/components/admin/solution-editor/SolutionEditorHeader';
 import SolutionEditorTabs from '@/components/admin/solution-editor/SolutionEditorTabs';
@@ -29,7 +28,9 @@ const AdminSolutionEdit = () => {
     currentStep,
     setCurrentStep,
     totalSteps,
-    stepTitles
+    stepTitles,
+    handleNextStep,
+    handleSaveCurrentStep
   } = useSolutionEditor(id, user);
   
   useEffect(() => {
@@ -45,35 +46,34 @@ const AdminSolutionEdit = () => {
     return <LoadingScreen />;
   }
   
-  // Função para mostrar toast explicitamente ao salvar
-  const handleSaveWithToast = () => {
-    // Na primeira etapa, dispara o submit do formulário
-    if (currentStep === 0) {
-      const form = document.querySelector("form");
-      if (form) form.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
-    } else {
-      // Nas outras etapas, chama a função específica de salvamento
-      onSubmit({...currentValues, published: currentStep === totalSteps - 1})
-        .then(() => {
-          toast({
-            title: "Progresso salvo",
-            description: "Suas alterações foram salvas com sucesso."
-          });
-        })
-        .catch(error => {
-          console.error("Erro ao salvar:", error);
-          toast({
-            title: "Erro ao salvar",
-            description: "Ocorreu um erro ao salvar suas alterações.",
-            variant: "destructive"
-          });
-        });
-    }
-  };
-
-  const handleNextStep = () => {
-    if (currentStep < totalSteps - 1) {
-      setCurrentStep(currentStep + 1);
+  const handleSaveWithToast = async (): Promise<void> => {
+    try {
+      // Na primeira etapa, dispara o submit do formulário
+      if (currentStep === 0) {
+        const form = document.querySelector("form");
+        if (form) {
+          const submitEvent = new Event("submit", { cancelable: true, bubbles: true });
+          form.dispatchEvent(submitEvent);
+          // Aguardar processamento do form
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+      } else {
+        // Nas outras etapas, salvar dados da etapa atual
+        await handleSaveCurrentStep();
+      }
+      
+      toast({
+        title: "Progresso salvo",
+        description: "Suas alterações foram salvas com sucesso."
+      });
+    } catch (error) {
+      console.error("Erro ao salvar:", error);
+      toast({
+        title: "Erro ao salvar",
+        description: "Ocorreu um erro ao salvar suas alterações.",
+        variant: "destructive"
+      });
+      throw error;
     }
   };
 

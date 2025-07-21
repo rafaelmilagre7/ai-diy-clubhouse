@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Save, Loader2 } from "lucide-react";
@@ -26,9 +26,28 @@ const ToolsChecklistForm: React.FC<ToolsChecklistFormProps> = ({
     saveTools
   } = useToolsChecklist(solutionId);
 
+  // Escutar evento de salvamento da etapa
+  useEffect(() => {
+    const handleSaveStep = async (event: CustomEvent) => {
+      if (event.detail.step === 1) { // Step 1 = Tools
+        await handleSaveTools();
+      }
+    };
+
+    window.addEventListener('save-current-step', handleSaveStep as EventListener);
+    return () => {
+      window.removeEventListener('save-current-step', handleSaveStep as EventListener);
+    };
+  }, [tools]);
+
   const handleSaveTools = async () => {
-    await saveTools();
-    onSave();
+    try {
+      await saveTools();
+      onSave();
+    } catch (error) {
+      console.error("Erro ao salvar ferramentas:", error);
+      throw error;
+    }
   };
 
   if (loading) {
