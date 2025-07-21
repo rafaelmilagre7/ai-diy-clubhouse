@@ -1,188 +1,209 @@
 
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useSolutionData } from "@/hooks/useSolutionData";
-import type { Solution } from "@/lib/supabase";
-import { useSolutionSteps } from "@/hooks/implementation/useSolutionSteps";
 import { useProgressTracking } from "@/hooks/implementation/useProgressTracking";
 import { useImplementationNavigation } from "@/hooks/implementation/useImplementationNavigation";
+import { WizardProgress } from "./WizardProgress";
 import { WizardHeader } from "./WizardHeader";
 import { WizardStepContent } from "./WizardStepContent";
 import { WizardNavigation } from "./WizardNavigation";
-import { WizardStepProgress } from "@/components/implementation/WizardStepProgress";
-import LoadingScreen from "@/components/common/LoadingScreen";
-import { toast } from "sonner";
+import { Card } from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
 
 const SolutionImplementationWizard = () => {
-  const { id, moduleIdx } = useParams<{ id: string; moduleIdx: string }>();
-  const navigate = useNavigate();
-  const currentStepIndex = parseInt(moduleIdx || "0");
+  const { id, moduleIndex } = useParams<{ id: string; moduleIndex: string }>();
+  const currentStep = parseInt(moduleIndex || "0");
   
-  // Solution data
   const { solution, loading: solutionLoading, progress } = useSolutionData(id);
-  const steps = useSolutionSteps(solution);
-  
-  // State management
-  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
-  
-  // Navigation
   const { handleComplete, handlePrevious, handleNavigateToModule } = useImplementationNavigation();
   
-  // Progress tracking
+  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
+  
+  // Get steps from solution data or create fallback
+  const getStepsFromSolution = () => {
+    if (!solution) return [];
+    
+    const steps = [];
+    
+    // Parse implementation_steps if available
+    let implementationSteps = [];
+    if (solution.implementation_steps) {
+      try {
+        implementationSteps = typeof solution.implementation_steps === 'string' 
+          ? JSON.parse(solution.implementation_steps)
+          : solution.implementation_steps;
+      } catch (e) {
+        console.warn("Erro ao parsear implementation_steps:", e);
+      }
+    }
+    
+    // Parse checklist_items if available
+    let checklistItems = [];
+    if (solution.checklist_items) {
+      try {
+        checklistItems = typeof solution.checklist_items === 'string'
+          ? JSON.parse(solution.checklist_items)
+          : solution.checklist_items;
+      } catch (e) {
+        console.warn("Erro ao parsear checklist_items:", e);
+      }
+    }
+    
+    // Create steps based on available data
+    if (implementationSteps.length > 0) {
+      implementationSteps.forEach((step: any, index: number) => {
+        steps.push({
+          id: index,
+          title: step.title || `Etapa ${index + 1}`,
+          description: step.description || "",
+          type: "implementation"
+        });
+      });
+    }
+    
+    if (checklistItems.length > 0) {
+      steps.push({
+        id: steps.length,
+        title: "Checklist Final",
+        description: "Verificação dos itens implementados",
+        type: "checklist"
+      });
+    }
+    
+    // Fallback if no data
+    if (steps.length === 0) {
+      return [
+        { id: 0, title: "Informações Básicas", description: "Configuração inicial", type: "basic" },
+        { id: 1, title: "Ferramentas", description: "Ferramentas necessárias", type: "tools" },
+        { id: 2, title: "Implementação", description: "Passos de implementação", type: "implementation" },
+        { id: 3, title: "Verificação", description: "Checklist final", type: "checklist" },
+        { id: 4, title: "Conclusão", description: "Finalização", type: "completion" }
+      ];
+    }
+    
+    return steps;
+  };
+  
+  const steps = getStepsFromSolution();
+  const totalSteps = steps.length;
+  
   const {
-    isCompleting,
-    hasInteracted,
+    moduleIdx,
+    handleMarkAsCompleted,
     showConfirmationModal,
     setShowConfirmationModal,
-    handleMarkAsCompleted,
     handleConfirmImplementation,
     calculateProgress,
     setModuleInteraction
-  } = useProgressTracking(progress, completedSteps, setCompletedSteps, steps.length);
+  } = useProgressTracking(progress, completedSteps, setCompletedSteps, totalSteps);
+
+  // Update completed steps based on progress
+  useEffect(() => {
+    if (progress?.completed_modules && Array.isArray(progress.completed_modules)) {
+      setCompletedSteps(progress.completed_modules);
+    }
+  }, [progress]);
+
+  // Handle step navigation
+  const handleStepClick = (stepIndex: number) => {
+    // Allow navigation to completed steps or current step
+    if (completedSteps.includes(stepIndex) || stepIndex <= currentStep) {
+      handleNavigateToModule(stepIndex);
+    }
+  };
+
+  const canGoNext = () => {
+    return currentStep < totalSteps - 1;
+  };
   
-  // Debug logs
-  useEffect(() => {
-    console.log("🎯 SOLUTION IMPLEMENTATION CARREGADO:");
-    console.log("- Solution ID:", id);
-    console.log("- Step Index:", currentStepIndex);
-    console.log("- URL Params:", { id, moduleIdx });
-  }, [id, moduleIdx, currentStepIndex]);
+  const canGoPrevious = () => {
+    return currentStep > 0;
+  };
+  
+  const isLastStep = currentStep === totalSteps - 1;
+  
+  const handleNext = () => {
+    if (canGoNext()) {
+      // Mark current step as completed
+      if (!completedSteps.includes(currentStep)) {
+        setCompletedSteps(prev => [...prev, currentStep]);
+      }
+      handleComplete();
+    } else if (isLastStep) {
+      handleConfirmImplementation();
+    }
+  };
 
-  useEffect(() => {
-    console.log("📊 SOLUTION DATA:", {
-      solution: solution?.title || "loading",
-      solutionLoading,
-      progress: progress ? "exists" : "none"
-    });
-  }, [solution, solutionLoading, progress]);
-
-  useEffect(() => {
-    console.log("🔧 STEPS DATA:", {
-      totalSteps: steps.length,
-      stepTypes: steps.map(s => s.type),
-      hasImplementationSteps: solution?.implementation_steps ? "yes" : "no"
-    });
-  }, [steps, solution]);
-
-  useEffect(() => {
-    const currentStep = steps[currentStepIndex];
-    console.log("📍 CURRENT STEP:", {
-      index: currentStepIndex,
-      step: currentStep ? {
-        id: currentStep.id,
-        type: currentStep.type,
-        title: currentStep.title
-      } : "not found"
-    });
-  }, [currentStepIndex, steps]);
-
-  useEffect(() => {
-    console.log("📈 RENDER STATE:", {
-      currentStepIndex,
-      totalSteps: steps.length,
-      completedSteps,
-      progressPercentage: calculateProgress(),
-      hasInteracted,
-      isCompleting
-    });
-  }, [currentStepIndex, steps.length, completedSteps, hasInteracted, isCompleting, calculateProgress]);
-
-  // Loading state
-  if (solutionLoading) {
-    return <LoadingScreen message="Carregando implementação da solução..." />;
-  }
-
-  // Error states
-  if (!solution) {
-    toast.error("Solução não encontrada");
-    navigate("/solutions");
-    return null;
-  }
-
-  if (steps.length === 0) {
+  if (solutionLoading || !solution) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-        <div className="text-center text-white">
-          <h2 className="text-2xl font-bold mb-4">Solução sem etapas de implementação</h2>
-          <p className="text-slate-300 mb-6">Esta solução ainda não possui etapas de implementação configuradas.</p>
-          <button 
-            onClick={() => navigate(`/solution/${id}`)}
-            className="bg-viverblue hover:bg-viverblue/90 px-6 py-2 rounded-lg text-white font-medium"
-          >
-            Voltar à Solução
-          </button>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+        <div className="flex items-center space-x-3 text-white">
+          <Loader2 className="h-8 w-8 animate-spin" />
+          <span className="text-lg">Carregando implementação...</span>
         </div>
       </div>
     );
   }
 
-  if (currentStepIndex >= steps.length) {
-    toast.error("Etapa não encontrada");
-    navigate(`/implement/${id}/0`);
-    return null;
-  }
-
-  const currentStep = steps[currentStepIndex];
-  const stepTitles = steps.map(s => s.title);
+  const currentStepData = steps[currentStep];
   const progressPercentage = calculateProgress();
-  const canGoNext = currentStepIndex < steps.length - 1 && (hasInteracted || completedSteps.includes(currentStepIndex));
-  const canGoPrevious = currentStepIndex > 0;
-  const isLastStep = currentStepIndex === steps.length - 1;
-
-  const handleNext = () => {
-    if (isLastStep) {
-      handleConfirmImplementation();
-    } else {
-      handleComplete();
-    }
-  };
-
-  const handleStepClick = (stepIndex: number) => {
-    if (stepIndex <= currentStepIndex || completedSteps.includes(stepIndex)) {
-      handleNavigateToModule(stepIndex);
-    }
-  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       {/* Header */}
       <WizardHeader
         solution={solution}
-        currentStep={currentStepIndex}
-        totalSteps={steps.length}
+        currentStep={currentStep}
+        totalSteps={totalSteps}
         progressPercentage={progressPercentage}
       />
 
-      {/* Content Area */}
-      <div className="flex-1 flex flex-col">
-        <div className="max-w-4xl mx-auto w-full px-4 py-6 flex-1">
-          {/* Progress */}
-          <WizardStepProgress
-            currentStep={currentStepIndex}
-            totalSteps={steps.length}
-            stepTitles={stepTitles}
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        {/* Progress Bar */}
+        <div className="mb-8">
+          <WizardProgress
+            currentStep={currentStep}
+            totalSteps={totalSteps}
+            stepTitles={steps.map(step => step.title)}
+            onStepClick={handleStepClick}
+            completedSteps={completedSteps}
           />
+        </div>
 
-          {/* Step Content */}
-          <div className="flex-1 mt-6">
+        {/* Main Content */}
+        <Card className="bg-white/95 backdrop-blur-sm border-0 shadow-2xl">
+          <div className="p-8">
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-slate-800 mb-2">
+                {currentStepData?.title || `Etapa ${currentStep + 1}`}
+              </h2>
+              {currentStepData?.description && (
+                <p className="text-slate-600">
+                  {currentStepData.description}
+                </p>
+              )}
+            </div>
+
             <WizardStepContent
-              step={currentStep}
-              onComplete={() => handleMarkAsCompleted()}
+              solution={solution}
+              currentStep={currentStep}
+              stepData={currentStepData}
               onInteraction={() => setModuleInteraction(true)}
             />
           </div>
-        </div>
+        </Card>
       </div>
 
       {/* Navigation */}
       <WizardNavigation
-        canGoNext={canGoNext}
-        canGoPrevious={canGoPrevious}
+        canGoNext={canGoNext()}
+        canGoPrevious={canGoPrevious()}
         isLastStep={isLastStep}
         onNext={handleNext}
         onPrevious={handlePrevious}
-        currentStep={currentStepIndex + 1}
-        totalSteps={steps.length}
+        currentStep={currentStep + 1}
+        totalSteps={totalSteps}
       />
     </div>
   );
