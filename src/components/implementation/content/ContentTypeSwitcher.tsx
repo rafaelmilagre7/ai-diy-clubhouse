@@ -2,9 +2,10 @@
 import React from "react";
 import { Module } from "@/lib/supabase";
 import { ModuleContentChecklist } from "./ModuleContentChecklist";
-import { ModuleContentMaterials } from "./ModuleContentMaterials";
-import { ModuleContentTools } from "./ModuleContentTools";
-import { ModuleContentVideos } from "./ModuleContentVideos";
+import { EnhancedModuleContentMaterials } from "./enhanced/EnhancedModuleContentMaterials";
+import { EnhancedModuleContentTools } from "./enhanced/EnhancedModuleContentTools";
+import { EnhancedModuleContentVideos } from "./enhanced/EnhancedModuleContentVideos";
+import { EnhancedModuleContentChecklist } from "./enhanced/EnhancedModuleContentChecklist";
 import { useLogging } from "@/hooks/useLogging";
 
 interface ContentTypeSwitcherProps {
@@ -26,17 +27,17 @@ export const ContentTypeSwitcher = ({ contentType, module }: ContentTypeSwitcher
     // Render specific components based on module type and content
     return (
       <div className="space-y-8">
-        {/* Render módulo-específico tools */}
-        <ModuleContentTools module={module} />
+        {/* Render enhanced tools component */}
+        <EnhancedModuleContentTools module={module} />
         
-        {/* Render module-specific materials */}
-        <ModuleContentMaterials module={module} />
+        {/* Render enhanced materials component */}
+        <EnhancedModuleContentMaterials module={module} />
         
-        {/* Render module-specific videos when needed */}
-        <ModuleContentVideos module={module} />
+        {/* Render enhanced videos component */}
+        <EnhancedModuleContentVideos module={module} />
         
-        {/* Render checklist for modules that need verification */}
-        <ModuleContentChecklist module={module} />
+        {/* Render enhanced checklist component */}
+        <EnhancedModuleContentChecklist module={module} />
       </div>
     );
   } catch (error) {
