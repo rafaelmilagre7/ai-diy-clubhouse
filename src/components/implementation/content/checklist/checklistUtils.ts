@@ -1,24 +1,27 @@
 
-import { Solution, UserChecklist } from "@/lib/supabase";
-import { toast } from "sonner";
+import { Solution } from "@/lib/supabase";
 
 export interface ChecklistItem {
   id: string;
-  title?: string;
+  title: string;
   description?: string;
   checked: boolean;
 }
 
-/**
- * Extract checklist items from a solution
- */
+export interface CheckpointData {
+  items: ChecklistItem[];
+  lastUpdated?: string;
+}
+
+// Extrair checklist de uma solução
 export const extractChecklistFromSolution = (solution: Solution): ChecklistItem[] => {
-  // Check if checklist property exists and is an array
-  if (solution.checklist && Array.isArray(solution.checklist)) {
-    // Transform items to ensure they have the required properties
-    return solution.checklist.map((item: any, index: number) => ({
-      id: item.id || `checklist-${index}`,
-      title: item.title || item.text || "Item sem título",
+  if (!solution) return [];
+  
+  // Verificar se há checklist_items na solução (campo legado)
+  if (solution.checklist_items && Array.isArray(solution.checklist_items)) {
+    return solution.checklist_items.map((item: any, index: number) => ({
+      id: item.id || `legacy-${index}`,
+      title: item.title || item.text || `Item ${index + 1}`,
       description: item.description,
       checked: false
     }));
@@ -27,43 +30,39 @@ export const extractChecklistFromSolution = (solution: Solution): ChecklistItem[
   return [];
 };
 
-/**
- * Initialize user checklist state based on solution checklist
- */
+// Inicializar checklist do usuário
 export const initializeUserChecklist = (checklist: ChecklistItem[]): Record<string, boolean> => {
-  const initialUserChecklist: Record<string, boolean> = {};
+  const userChecklist: Record<string, boolean> = {};
   checklist.forEach(item => {
-    initialUserChecklist[item.id] = false;
+    userChecklist[item.id] = false;
   });
-  return initialUserChecklist;
+  return userChecklist;
 };
 
-/**
- * Update user checklist with saved progress
- */
-export const applyUserProgress = (
-  initialChecklist: Record<string, boolean>,
-  userProgress: UserChecklist | null
-): Record<string, boolean> => {
-  if (!userProgress || !userProgress.checked_items) {
-    return initialChecklist;
+// Converter checkpoint data para checklist items
+export const convertCheckpointToChecklist = (checkpointData: CheckpointData, userChecklist: Record<string, boolean>): ChecklistItem[] => {
+  if (!checkpointData || !checkpointData.items) return [];
+  
+  return checkpointData.items.map(item => ({
+    ...item,
+    checked: userChecklist[item.id] || false
+  }));
+};
+
+// Lidar com erros de checklist
+export const handleChecklistError = (error: any, context: string) => {
+  console.error(`Erro no checklist (${context}):`, error);
+  
+  // Log específico para erros de SQL
+  if (error.code) {
+    console.error(`SQL Error Code: ${error.code}`);
+    console.error(`SQL Error Details: ${error.details}`);
+    console.error(`SQL Error Message: ${error.message}`);
   }
   
-  const updatedChecklist = { ...initialChecklist };
-  
-  Object.keys(userProgress.checked_items).forEach(itemId => {
-    if (updatedChecklist.hasOwnProperty(itemId)) {
-      updatedChecklist[itemId] = userProgress.checked_items[itemId];
-    }
-  });
-  
-  return updatedChecklist;
-};
-
-/**
- * Handle errors in checklist operations
- */
-export const handleChecklistError = (error: any, logError: (message: string, data: any) => void): void => {
-  logError("Error in checklist operation:", error);
-  toast.error("Erro ao processar checklist");
+  return {
+    hasError: true,
+    errorMessage: error.message || "Erro desconhecido no checklist",
+    errorCode: error.code
+  };
 };

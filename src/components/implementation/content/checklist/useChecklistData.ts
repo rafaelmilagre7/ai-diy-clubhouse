@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Module, Solution, supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
 import { useLogging } from "@/hooks/useLogging";
-import { ChecklistItem, extractChecklistFromSolution, initializeUserChecklist, handleChecklistError } from "./checklistUtils";
+import { ChecklistItem, CheckpointData, extractChecklistFromSolution, initializeUserChecklist, convertCheckpointToChecklist, handleChecklistError } from "./checklistUtils";
 
 export const useChecklistData = (module: Module) => {
   const [solution, setSolution] = useState<Solution | null>(null);
@@ -23,7 +23,7 @@ export const useChecklistData = (module: Module) => {
       try {
         setLoading(true);
         
-        // Fetch solution data
+        // Buscar dados da solução
         const { data, error } = await supabase
           .from("solutions")
           .select("*")
@@ -41,69 +41,88 @@ export const useChecklistData = (module: Module) => {
           return;
         }
         
-        // Ensure data is of Solution type
         const solutionData = data as Solution;
         setSolution(solutionData);
         
-        // Extract checklist items from solution
+        // Extrair checklist da solução
         const extractedChecklist = extractChecklistFromSolution(solutionData);
         
-        // If no items in solution checklist, try fetching from implementation_checkpoints
-        if (extractedChecklist.length === 0) {
+        // Se não há items na solução, buscar dos checkpoints de implementação
+        if (extractedChecklist.length === 0 && user) {
           const { data: checkpointData, error: checkpointError } = await supabase
             .from("implementation_checkpoints")
             .select("*")
             .eq("solution_id", module.solution_id)
-            .order("checkpoint_order", { ascending: true });
+            .eq("user_id", user.id)
+            .maybeSingle();
             
-          if (checkpointError) {
+          if (checkpointError && checkpointError.code !== "PGRST116") {
             logError("Error fetching checkpoints:", checkpointError);
-          } else if (checkpointData && checkpointData.length > 0) {
-            const checkpointChecklist: ChecklistItem[] = checkpointData.map((item: any) => ({
-              id: item.id,
-              title: item.description,
-              checked: false
-            }));
-            
-            setChecklist(checkpointChecklist);
-          } else {
-            log("No checklist or implementation_checkpoints found", { solutionId: solutionData.id });
-            setChecklist([]);
+          } else if (checkpointData && checkpointData.checkpoint_data) {
+            // Extrair items do campo JSONB
+            const checkpointItems = checkpointData.checkpoint_data as CheckpointData;
+            if (checkpointItems.items && checkpointItems.items.length > 0) {
+              const checklistItems = checkpointItems.items.map(item => ({
+                id: item.id,
+                title: item.title,
+                description: item.description,
+                checked: false
+              }));
+              
+              setChecklist(checklistItems);
+              
+              // Inicializar estado do usuário baseado nos completed_steps
+              const userChecklistState: Record<string, boolean> = {};
+              const completedSteps = checkpointData.completed_steps || [];
+              
+              checklistItems.forEach((item, index) => {
+                userChecklistState[item.id] = completedSteps.includes(String(index));
+              });
+              
+              setUserChecklist(userChecklistState);
+              setLoading(false);
+              return;
+            }
           }
+          
+          log("No checklist or implementation_checkpoints found", { solutionId: solutionData.id });
+          setChecklist([]);
+          setUserChecklist({});
         } else {
           setChecklist(extractedChecklist);
-        }
-        
-        let finalChecklist = checklist.length > 0 ? checklist : extractedChecklist;
-        // Initialize user checklist state
-        const initialUserChecklist = initializeUserChecklist(finalChecklist);
-        
-        // If user is logged in, fetch their specific checklist progress
-        if (user) {
-          const { data: userData, error: userError } = await supabase
-            .from("user_checklists")
-            .select("*")
-            .eq("user_id", user.id)
-            .eq("solution_id", module.solution_id)
-            .maybeSingle();
+          
+          // Inicializar checklist do usuário
+          const initialUserChecklist = initializeUserChecklist(extractedChecklist);
+          
+          // Se usuário está logado, buscar progresso específico
+          if (user) {
+            const { data: userData, error: userError } = await supabase
+              .from("user_checklists")
+              .select("*")
+              .eq("user_id", user.id)
+              .eq("solution_id", module.solution_id)
+              .maybeSingle();
               
-          if (userError) {
-            logError("Error fetching user checklist:", userError);
-          } else if (userData) {
-            // Parse the JSON data if it's a string
-            const userItems = typeof userData.checked_items === 'string' 
-              ? JSON.parse(userData.checked_items) 
-              : userData.checked_items;
-              
-            setUserChecklist(userItems as Record<string, boolean>);
+            if (userError && userError.code !== "PGRST116") {
+              logError("Error fetching user checklist:", userError);
+              setUserChecklist(initialUserChecklist);
+            } else if (userData) {
+              // Parse dos dados JSON se necessário
+              const userItems = typeof userData.checked_items === 'string' 
+                ? JSON.parse(userData.checked_items) 
+                : userData.checked_items;
+                
+              setUserChecklist(userItems as Record<string, boolean>);
+            } else {
+              setUserChecklist(initialUserChecklist);
+            }
           } else {
             setUserChecklist(initialUserChecklist);
           }
-        } else {
-          setUserChecklist(initialUserChecklist);
         }
       } catch (err) {
-        logError("Error fetching solution data:", err);
+        const errorInfo = handleChecklistError(err, "fetchData");
+        logError("Error fetching solution data:", errorInfo);
       } finally {
         setLoading(false);
       }
