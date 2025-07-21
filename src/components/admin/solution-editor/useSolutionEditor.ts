@@ -1,51 +1,35 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/auth";
-import { useSolutionData } from "@/hooks/useSolutionData";
-import { useSolutionSave } from "@/hooks/useSolutionSave";
-import { SolutionFormValues } from "@/components/admin/solution/form/solutionFormSchema";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { supabase } from "@/lib/supabase";
+import { Solution } from "@/lib/supabase";
+import { SolutionFormValues, solutionFormSchema } from "@/components/admin/solution/form/solutionFormSchema";
 import { useToast } from "@/hooks/use-toast";
 
 export const useSolutionEditor = (id: string | undefined, user: any) => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [solution, setSolution] = useState<Solution | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState("basic");
   const [currentStep, setCurrentStep] = useState(0);
-  const [saving, setSaving] = useState(false);
-  const [currentStepSaveFunction, setCurrentStepSaveFunction] = useState<(() => Promise<void>) | undefined>();
-
-  // Hook para dados da solução
-  const { solution, loading, setSolution } = useSolutionData(id);
   
-  // Hook para salvamento
-  const { onSubmit, saving: savingSolution } = useSolutionSave(id, setSolution);
-  
-  // Estado para valores atuais do formulário (para manter compatibilidade)
-  const [currentValues, setCurrentValues] = useState<SolutionFormValues>({
-    title: solution?.title || '',
-    description: solution?.description || '',
-    category: (solution?.category as "Receita" | "Operacional" | "Estratégia") || 'Receita',
-    difficulty: solution?.difficulty || 'easy',
-    slug: solution?.slug || '',
-    thumbnail_url: solution?.thumbnail_url || '',
-    published: solution?.published || false
-  });
+  // Armazenar função de salvamento da etapa atual
+  const currentStepSaveFunction = useRef<(() => Promise<void>) | null>(null);
 
-  // Atualizar valores quando solução carregar
-  useEffect(() => {
-    if (solution) {
-      setCurrentValues({
-        title: solution.title || '',
-        description: solution.description || '',
-        category: (solution.category as "Receita" | "Operacional" | "Estratégia") || 'Receita',
-        difficulty: solution.difficulty || 'easy',
-        slug: solution.slug || '',
-        thumbnail_url: solution.thumbnail_url || '',
-        published: solution.published || false
-      });
+  const form = useForm<SolutionFormValues>({
+    resolver: zodResolver(solutionFormSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      difficulty: "medium",
+      category: "",
+      tags: []
     }
-  }, [solution]);
+  });
 
   const stepTitles = [
     "Informações Básicas",
@@ -55,118 +39,161 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
     "Checklist",
     "Publicar"
   ];
-
   const totalSteps = stepTitles.length;
 
-  // Mapear activeTab baseado no currentStep
-  useEffect(() => {
-    const stepToTab = {
-      0: "basic",
-      1: "tools", 
-      2: "resources",
-      3: "video",
-      4: "checklist",
-      5: "publish"
-    };
-    setActiveTab(stepToTab[currentStep as keyof typeof stepToTab] || "basic");
+  console.log("🚀 useSolutionEditor: Hook inicializado");
+  console.log("📍 useSolutionEditor: ID =", id);
+  console.log("📍 useSolutionEditor: currentStep =", currentStep);
+  console.log("🔧 useSolutionEditor: currentStepSaveFunction disponível =", !!currentStepSaveFunction.current);
+
+  // Função para registrar a função de salvamento da etapa atual
+  const handleStepSaveRegistration = useCallback((saveFunction: () => Promise<void>) => {
+    console.log("🔧 useSolutionEditor: REGISTRANDO função de salvamento");
+    console.log("🔧 useSolutionEditor: currentStep =", currentStep);
+    console.log("🔧 useSolutionEditor: saveFunction recebida =", !!saveFunction);
+    
+    currentStepSaveFunction.current = saveFunction;
+    
+    console.log("✅ useSolutionEditor: Função registrada com sucesso");
   }, [currentStep]);
 
-  // Callback para registrar função de salvamento da etapa atual
-  const handleStepSaveRegistration = useCallback((stepSaveFunction: () => Promise<void>) => {
-    console.log("📝 useSolutionEditor: REGISTRANDO função de salvamento da etapa");
-    setCurrentStepSaveFunction(() => stepSaveFunction);
-  }, []);
-
-  // Função para salvar a etapa atual - agora usa a função registrada
-  const handleSaveCurrentStep = useCallback(async (stepSaveFunction?: () => Promise<void>) => {
-    console.log("💾 useSolutionEditor: Salvando etapa atual:", currentStep);
-    console.log("🔧 useSolutionEditor: Função passada como parâmetro:", !!stepSaveFunction);
-    console.log("🔧 useSolutionEditor: Função registrada:", !!currentStepSaveFunction);
-    
-    setSaving(true);
-    
-    try {
-      switch (currentStep) {
-        case 0:
-          // Etapa básica - usar onSubmit existente
-          console.log("💾 useSolutionEditor: Salvando informações básicas...");
-          await onSubmit(currentValues);
-          break;
-          
-        case 1:
-          // Etapa de ferramentas - usar função registrada ou passada
-          const toolsSaveFunction = stepSaveFunction || currentStepSaveFunction;
-          if (toolsSaveFunction) {
-            console.log("💾 useSolutionEditor: Salvando ferramentas com função registrada...");
-            await toolsSaveFunction();
-          } else {
-            console.log("⚠️ useSolutionEditor: Nenhuma função de salvamento disponível para ferramentas");
-            throw new Error("Função de salvamento de ferramentas não encontrada");
-          }
-          break;
-          
-        case 2:
-        case 3:
-        case 4:
-        case 5:
-          // Para outras etapas, usar a função de salvamento passada
-          if (stepSaveFunction) {
-            console.log(`💾 useSolutionEditor: Salvando etapa ${currentStep}...`);
-            await stepSaveFunction();
-          } else {
-            console.log(`⚠️ useSolutionEditor: Nenhuma função de salvamento para etapa ${currentStep}`);
-          }
-          break;
-          
-        default:
-          console.log("⚠️ useSolutionEditor: Etapa não reconhecida:", currentStep);
+  // Carregar solução existente
+  useEffect(() => {
+    const fetchSolution = async () => {
+      if (!id) {
+        setLoading(false);
+        return;
       }
-      
-      console.log("✅ useSolutionEditor: Etapa salva com sucesso");
-      
+
+      try {
+        const { data, error } = await supabase
+          .from("solutions")
+          .select("*")
+          .eq("id", id)
+          .single();
+
+        if (error) throw error;
+
+        setSolution(data);
+        if (data) {
+          form.reset({
+            title: data.title,
+            description: data.description,
+            difficulty: data.difficulty,
+            category: data.category || "",
+            tags: data.tags || []
+          });
+        }
+      } catch (error) {
+        console.error("Erro ao carregar solução:", error);
+        toast({
+          title: "Erro ao carregar solução",
+          description: "Não foi possível carregar os dados da solução.",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSolution();
+  }, [id, form, toast]);
+
+  // Função de submit principal
+  const onSubmit = async (values: SolutionFormValues) => {
+    try {
+      setSaving(true);
+      console.log("💾 useSolutionEditor: Salvando dados básicos:", values);
+
+      if (id) {
+        // Atualizar solução existente
+        const { data, error } = await supabase
+          .from("solutions")
+          .update({
+            title: values.title,
+            description: values.description,
+            difficulty: values.difficulty,
+            category: values.category,
+            tags: values.tags,
+            updated_at: new Date().toISOString()
+          })
+          .eq("id", id)
+          .select()
+          .single();
+
+        if (error) throw error;
+        setSolution(data);
+      } else {
+        // Criar nova solução
+        if (!user?.id) throw new Error("Usuário não autenticado");
+
+        const { data, error } = await supabase
+          .from("solutions")
+          .insert({
+            title: values.title,
+            description: values.description,
+            difficulty: values.difficulty,
+            category: values.category,
+            tags: values.tags,
+            created_by: user.id
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+        setSolution(data);
+        
+        // Navegar para a URL com ID após criar
+        navigate(`/admin/solutions/${data.id}`, { replace: true });
+      }
+
+      console.log("✅ useSolutionEditor: Dados básicos salvos com sucesso");
     } catch (error) {
-      console.error("❌ useSolutionEditor: Erro ao salvar etapa:", error);
+      console.error("❌ useSolutionEditor: Erro ao salvar:", error);
       throw error;
     } finally {
       setSaving(false);
     }
-  }, [currentStep, onSubmit, currentValues, currentStepSaveFunction]);
+  };
 
-  const handleNextStep = useCallback(async (stepSaveFunction?: () => Promise<void>) => {
-    console.log("▶️ useSolutionEditor: Avançando para próxima etapa...");
-    console.log("🔍 useSolutionEditor: Etapa atual:", currentStep);
-    console.log("🔧 useSolutionEditor: Função de salvamento:", !!stepSaveFunction);
-    console.log("🔧 useSolutionEditor: Função registrada:", !!currentStepSaveFunction);
+  // Salvar dados da etapa atual
+  const handleSaveCurrentStep = async () => {
+    console.log("💾 useSolutionEditor: handleSaveCurrentStep chamado");
+    console.log("📍 useSolutionEditor: currentStep =", currentStep);
+    console.log("🔧 useSolutionEditor: Função disponível =", !!currentStepSaveFunction.current);
+    
+    if (currentStepSaveFunction.current) {
+      console.log("🚀 useSolutionEditor: Executando função de salvamento da etapa");
+      await currentStepSaveFunction.current();
+      console.log("✅ useSolutionEditor: Função de salvamento executada");
+    } else {
+      console.log("⚠️ useSolutionEditor: Nenhuma função de salvamento registrada");
+    }
+  };
+
+  // Avançar para próxima etapa
+  const handleNextStep = async () => {
+    console.log("🚀 useSolutionEditor: handleNextStep chamado");
+    console.log("📍 useSolutionEditor: currentStep =", currentStep);
     
     try {
-      // Salvar etapa atual antes de avançar
-      await handleSaveCurrentStep(stepSaveFunction);
+      // Salvar dados da etapa atual antes de avançar
+      await handleSaveCurrentStep();
       
-      // Avançar para próxima etapa
       if (currentStep < totalSteps - 1) {
         const nextStep = currentStep + 1;
-        console.log(`📈 useSolutionEditor: Avançando da etapa ${currentStep} para ${nextStep}`);
+        console.log("➡️ useSolutionEditor: Avançando para etapa", nextStep);
         setCurrentStep(nextStep);
         
-        // Limpar função registrada ao mudar de etapa
-        setCurrentStepSaveFunction(undefined);
-        
-        toast({
-          title: "Progresso salvo",
-          description: `Avançando para: ${stepTitles[nextStep]}`
-        });
+        // Limpar a função de salvamento ao mudar de etapa
+        currentStepSaveFunction.current = null;
+        console.log("🔄 useSolutionEditor: Função de salvamento limpa para nova etapa");
       }
-      
     } catch (error) {
       console.error("❌ useSolutionEditor: Erro ao avançar etapa:", error);
-      toast({
-        title: "Erro ao avançar",
-        description: "Não foi possível salvar e avançar para a próxima etapa.",
-        variant: "destructive"
-      });
       throw error;
     }
-  }, [currentStep, totalSteps, handleSaveCurrentStep, toast, stepTitles, currentStepSaveFunction]);
+  };
 
   return {
     solution,
@@ -175,7 +202,7 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
     activeTab,
     setActiveTab,
     onSubmit,
-    currentValues,
+    currentValues: form.watch(),
     currentStep,
     setCurrentStep,
     totalSteps,

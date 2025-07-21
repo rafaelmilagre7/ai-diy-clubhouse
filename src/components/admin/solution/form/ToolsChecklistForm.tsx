@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { ToolSelector } from "@/components/admin/solution/form/ToolSelector";
 import { ToolsLoading } from "./components/ToolsLoading";
@@ -7,7 +7,7 @@ import { useToolsChecklist } from "@/hooks/useToolsChecklist";
 
 interface ToolsChecklistFormProps {
   solutionId: string | null;
-  onSave: () => void;
+  onSave: (saveFunction: () => Promise<void>) => void;
   saving: boolean;
 }
 
@@ -19,13 +19,28 @@ const ToolsChecklistForm: React.FC<ToolsChecklistFormProps> = ({
   const {
     tools,
     setTools,
-    loading
+    loading,
+    saveTools
   } = useToolsChecklist(solutionId);
 
   console.log("🔧 ToolsChecklistForm: Renderizando com:");
   console.log("📍 solutionId =", solutionId);
   console.log("🔧 loading =", loading);
   console.log("🔧 tools.length =", tools.length);
+
+  // Registrar a função de salvamento no componente pai
+  useEffect(() => {
+    console.log("🔧 ToolsChecklistForm: Registrando função saveTools");
+    console.log("🔧 ToolsChecklistForm: onSave disponível =", !!onSave);
+    console.log("🔧 ToolsChecklistForm: saveTools disponível =", !!saveTools);
+    
+    if (onSave && saveTools) {
+      console.log("✅ ToolsChecklistForm: REGISTRANDO saveTools");
+      onSave(saveTools);
+    } else {
+      console.log("⚠️ ToolsChecklistForm: Não foi possível registrar saveTools");
+    }
+  }, [onSave, saveTools, solutionId]);
 
   if (loading) {
     return <ToolsLoading />;

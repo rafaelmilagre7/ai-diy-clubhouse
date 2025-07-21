@@ -9,7 +9,6 @@ import ToolsTab from "../tabs/ToolsTab";
 import VideoTab from "../tabs/VideoTab";
 import ChecklistTab from "../tabs/ChecklistTab";
 import PublishTab from "../tabs/PublishTab";
-import { useToolsChecklist } from "@/hooks/useToolsChecklist";
 
 interface TabContentProps {
   activeTab: string;
@@ -31,24 +30,11 @@ const TabContent: React.FC<TabContentProps> = ({
   onStepSave
 }) => {
   const isValid = solution && solution.id;
-  
-  // Hook para ferramentas - usado apenas na etapa de ferramentas
-  const { saveTools } = useToolsChecklist(currentStep === 1 ? solution?.id || null : null);
 
-  // Registrar função de salvamento para etapa de ferramentas (currentStep 1 = "Etapa 2 de 6")
-  React.useEffect(() => {
-    console.log("🔧 TabContent: Verificando registro de função de salvamento");
-    console.log("📍 TabContent: currentStep =", currentStep);
-    console.log("🔧 TabContent: saveTools disponível =", !!saveTools);
-    console.log("📝 TabContent: onStepSave disponível =", !!onStepSave);
-    
-    if (onStepSave && currentStep === 1 && saveTools) {
-      console.log("✅ TabContent: REGISTRANDO função de salvamento para etapa de ferramentas");
-      onStepSave(saveTools);
-    } else {
-      console.log("⚠️ TabContent: Não registrando função - condições não atendidas");
-    }
-  }, [currentStep, saveTools, onStepSave]);
+  console.log("🔧 TabContent: Renderizando");
+  console.log("📍 TabContent: currentStep =", currentStep);
+  console.log("🔧 TabContent: onStepSave disponível =", !!onStepSave);
+  console.log("🔧 TabContent: solutionId =", solution?.id);
 
   // Verificar se a solução existe para exibir as abas que exigem ID
   if (!isValid && currentStep > 0) {
@@ -73,7 +59,7 @@ const TabContent: React.FC<TabContentProps> = ({
         break;
       case "tools":
         if (isValid) {
-          return <ToolsTab solutionId={solution?.id || null} onSave={() => onSubmit(currentValues)} saving={saving} />;
+          return <ToolsTab solutionId={solution?.id || null} onSave={onStepSave || (() => {})} saving={saving} />;
         }
         break;
       case "video":
@@ -97,8 +83,8 @@ const TabContent: React.FC<TabContentProps> = ({
     switch (currentStep) {
       case 1:
         console.log("🔧 TabContent: Renderizando ToolsTab para currentStep 1");
-        console.log("🔧 TabContent: solutionId =", solution?.id);
-        return <ToolsTab solutionId={solution?.id || null} onSave={() => {}} saving={saving} />;
+        console.log("🔧 TabContent: Passando onStepSave =", !!onStepSave);
+        return <ToolsTab solutionId={solution?.id || null} onSave={onStepSave || (() => {})} saving={saving} />;
       case 2:
         return <ResourcesTab solutionId={solution?.id || null} onSave={() => onSubmit(currentValues)} saving={saving} />;
       case 3:

@@ -4,7 +4,7 @@ import ToolsChecklistForm from "@/components/admin/solution/form/ToolsChecklistF
 
 interface ToolsTabProps {
   solutionId: string | null;
-  onSave: () => void;
+  onSave: (saveFunction: () => Promise<void>) => void;
   saving: boolean;
 }
 
@@ -14,6 +14,7 @@ const ToolsTab: React.FC<ToolsTabProps> = ({
   saving,
 }) => {
   console.log("🔧 ToolsTab: Renderizando com solutionId =", solutionId);
+  console.log("🔧 ToolsTab: onSave recebido =", !!onSave);
   
   return (
     <ToolsChecklistForm 
