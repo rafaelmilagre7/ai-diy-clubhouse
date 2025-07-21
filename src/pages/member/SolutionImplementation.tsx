@@ -6,8 +6,7 @@ import { ImplementationHeader } from "@/components/implementation/Implementation
 import { ImplementationNavigation } from "@/components/implementation/ImplementationNavigation";
 import { ImplementationProgress } from "@/components/implementation/ImplementationProgress";
 import { ModuleContent } from "@/components/implementation/ModuleContent";
-import { ModuleNavigation } from "@/components/implementation/ModuleNavigation";
-import { CompletionConfirmationModal } from "@/components/implementation/CompletionConfirmationModal";
+import { ImplementationConfirmationModal } from "@/components/implementation/ImplementationConfirmationModal";
 import { Solution, Module } from "@/lib/supabase";
 import { useSolutionData } from "@/hooks/useSolutionData";
 import { useSolutionModules } from "@/hooks/implementation/useSolutionModules";
@@ -230,28 +229,18 @@ const SolutionImplementation = () => {
                   />
                 </CardContent>
 
-                <ModuleNavigation
-                  currentModule={moduleIndex}
-                  totalModules={modules.length}
-                  onNext={handleComplete}
-                  onPrevious={handlePrevious}
-                  onComplete={handleModuleComplete}
-                  isLoading={isCompleting}
-                  hasInteracted={hasInteracted}
-                  onInteraction={() => setModuleInteraction(true)}
-                />
               </Card>
             </div>
           </div>
         </div>
 
         {/* Completion Confirmation Modal */}
-        <CompletionConfirmationModal
+        <ImplementationConfirmationModal
+          solution={solution}
           isOpen={showConfirmationModal}
+          isSubmitting={isCompleting}
           onClose={() => setShowConfirmationModal(false)}
           onConfirm={handleConfirmImplementation}
-          solutionTitle={solution.title}
-          isLoading={isCompleting}
         />
       </div>
     </PageTransition>
