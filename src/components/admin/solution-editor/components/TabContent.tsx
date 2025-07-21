@@ -9,6 +9,7 @@ import ToolsTab from "../tabs/ToolsTab";
 import VideoTab from "../tabs/VideoTab";
 import ChecklistTab from "../tabs/ChecklistTab";
 import PublishTab from "../tabs/PublishTab";
+import { useToolsChecklist } from "@/hooks/useToolsChecklist";
 
 interface TabContentProps {
   activeTab: string;
@@ -17,6 +18,7 @@ interface TabContentProps {
   currentValues: SolutionFormValues;
   onSubmit: (values: SolutionFormValues) => Promise<void>;
   saving: boolean;
+  onStepSave?: (stepSaveFunction: () => Promise<void>) => void;
 }
 
 const TabContent: React.FC<TabContentProps> = ({
@@ -25,9 +27,21 @@ const TabContent: React.FC<TabContentProps> = ({
   solution,
   currentValues,
   onSubmit,
-  saving
+  saving,
+  onStepSave
 }) => {
   const isValid = solution && solution.id;
+  
+  // Hook para ferramentas (apenas para etapa 1)
+  const { saveTools } = useToolsChecklist(currentStep === 1 ? solution?.id || null : null);
+
+  // Registrar função de salvamento da etapa atual
+  React.useEffect(() => {
+    if (onStepSave && currentStep === 1 && saveTools) {
+      console.log("📝 TabContent: Registrando função de salvamento para etapa 1");
+      onStepSave(saveTools);
+    }
+  }, [currentStep, saveTools, onStepSave]);
 
   // Verificar se a solução existe para exibir as abas que exigem ID
   if (!isValid && currentStep > 0) {
@@ -75,7 +89,7 @@ const TabContent: React.FC<TabContentProps> = ({
     // For steps > 0, show content based on step
     switch (currentStep) {
       case 1:
-        return <ToolsTab solutionId={solution?.id || null} onSave={() => onSubmit(currentValues)} saving={saving} />;
+        return <ToolsTab solutionId={solution?.id || null} onSave={() => {}} saving={saving} />;
       case 2:
         return <ResourcesTab solutionId={solution?.id || null} onSave={() => onSubmit(currentValues)} saving={saving} />;
       case 3:

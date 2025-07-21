@@ -6,7 +6,6 @@ import { useSolutionData } from "@/hooks/useSolutionData";
 import { useSolutionSave } from "@/hooks/useSolutionSave";
 import { SolutionFormValues } from "@/components/admin/solution/form/solutionFormSchema";
 import { useToast } from "@/hooks/use-toast";
-import { useToolsChecklist } from "@/hooks/useToolsChecklist";
 
 export const useSolutionEditor = (id: string | undefined, user: any) => {
   const navigate = useNavigate();
@@ -47,9 +46,6 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
     }
   }, [solution]);
 
-  // Hook para ferramentas (apenas quando há solução)
-  const { saveTools } = useToolsChecklist(solution?.id || null);
-
   const stepTitles = [
     "Informações Básicas",
     "Ferramentas", 
@@ -74,7 +70,8 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
     setActiveTab(stepToTab[currentStep as keyof typeof stepToTab] || "basic");
   }, [currentStep]);
 
-  const handleSaveCurrentStep = useCallback(async () => {
+  // Função para salvar a etapa atual - agora simplificada
+  const handleSaveCurrentStep = useCallback(async (stepSaveFunction?: () => Promise<void>) => {
     console.log("💾 Salvando etapa atual:", currentStep);
     setSaving(true);
     
@@ -87,31 +84,17 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
           break;
           
         case 1:
-          // Etapa de ferramentas - chamar saveTools diretamente
-          console.log("🔧 Salvando ferramentas...");
-          if (saveTools) {
-            await saveTools();
-          }
-          break;
-          
         case 2:
-          console.log("📚 Salvando materiais...");
-          // Implementar salvamento de materiais se necessário
-          break;
-          
         case 3:
-          console.log("🎥 Salvando vídeos...");
-          // Implementar salvamento de vídeos se necessário
-          break;
-          
         case 4:
-          console.log("✅ Salvando checklist...");
-          // Implementar salvamento de checklist se necessário
-          break;
-          
         case 5:
-          console.log("🚀 Publicando solução...");
-          // Implementar publicação se necessário
+          // Para outras etapas, usar a função de salvamento passada
+          if (stepSaveFunction) {
+            console.log(`💾 Salvando etapa ${currentStep}...`);
+            await stepSaveFunction();
+          } else {
+            console.log(`⚠️ Nenhuma função de salvamento para etapa ${currentStep}`);
+          }
           break;
           
         default:
@@ -126,20 +109,26 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
     } finally {
       setSaving(false);
     }
-  }, [currentStep, onSubmit, currentValues, saveTools]);
+  }, [currentStep, onSubmit, currentValues]);
 
-  const handleNextStep = useCallback(async () => {
+  const handleNextStep = useCallback(async (stepSaveFunction?: () => Promise<void>) => {
     console.log("▶️ Avançando para próxima etapa...");
+    console.log("🔍 Etapa atual:", currentStep, "Função de salvamento:", !!stepSaveFunction);
     
     try {
       // Salvar etapa atual antes de avançar
-      await handleSaveCurrentStep();
+      await handleSaveCurrentStep(stepSaveFunction);
       
       // Avançar para próxima etapa
       if (currentStep < totalSteps - 1) {
         const nextStep = currentStep + 1;
         console.log(`📈 Avançando da etapa ${currentStep} para ${nextStep}`);
         setCurrentStep(nextStep);
+        
+        toast({
+          title: "Progresso salvo",
+          description: `Avançando para: ${stepTitles[nextStep]}`
+        });
       }
       
     } catch (error) {
@@ -151,7 +140,7 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
       });
       throw error;
     }
-  }, [currentStep, totalSteps, handleSaveCurrentStep, toast]);
+  }, [currentStep, totalSteps, handleSaveCurrentStep, toast, stepTitles]);
 
   return {
     solution,

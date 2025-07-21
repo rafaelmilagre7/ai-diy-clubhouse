@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/auth';
 import LoadingScreen from '@/components/common/LoadingScreen';
@@ -16,6 +16,9 @@ const AdminSolutionEdit = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  
+  // Estado para função de salvamento da etapa atual
+  const [currentStepSaveFunction, setCurrentStepSaveFunction] = useState<(() => Promise<void>) | undefined>();
   
   const {
     solution,
@@ -40,7 +43,8 @@ const AdminSolutionEdit = () => {
     console.log("Etapa atual:", currentStep);
     console.log("Aba ativa:", activeTab);
     console.log("Valores atuais:", currentValues);
-  }, [id, solution, currentStep, activeTab, currentValues]);
+    console.log("Função de salvamento da etapa:", !!currentStepSaveFunction);
+  }, [id, solution, currentStep, activeTab, currentValues, currentStepSaveFunction]);
   
   if (loading) {
     return <LoadingScreen />;
@@ -59,7 +63,7 @@ const AdminSolutionEdit = () => {
         }
       } else {
         // Nas outras etapas, salvar dados da etapa atual
-        await handleSaveCurrentStep();
+        await handleSaveCurrentStep(currentStepSaveFunction);
       }
       
       toast({
@@ -81,6 +85,11 @@ const AdminSolutionEdit = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
     }
+  };
+
+  const handleNextStepWithFunction = async () => {
+    console.log("🚀 AdminSolutionEdit: Chamando handleNextStep com função:", !!currentStepSaveFunction);
+    await handleNextStep(currentStepSaveFunction);
   };
 
   // Determina a cor do nível de dificuldade
@@ -132,6 +141,7 @@ const AdminSolutionEdit = () => {
             onSubmit={onSubmit}
             saving={saving}
             currentStep={currentStep}
+            onStepSave={setCurrentStepSaveFunction}
           />
         </CardContent>
       </Card>
@@ -141,9 +151,10 @@ const AdminSolutionEdit = () => {
           currentStep={currentStep}
           totalSteps={totalSteps}
           onPrevious={handlePreviousStep}
-          onNext={handleNextStep}
+          onNext={handleNextStepWithFunction}
           onSave={handleSaveWithToast}
           saving={saving}
+          stepSaveFunction={currentStepSaveFunction}
         />
       )}
     </div>
