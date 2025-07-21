@@ -44,14 +44,14 @@ export const useMaterialsData = (module: Module) => {
           
           // Filter out video types - they should be in the Videos tab only
           const filteredData = (solutionData || []).filter(
-            item => item.type !== 'video' && item.type !== 'youtube'
+            item => item.type !== 'video'
           );
           
           setMaterials(filteredData);
         } else {
           // Filter out video types from module data too
           const filteredModuleData = moduleData.filter(
-            item => item.type !== 'video' && item.type !== 'youtube'
+            item => item.type !== 'video'
           );
           
           setMaterials(filteredModuleData);

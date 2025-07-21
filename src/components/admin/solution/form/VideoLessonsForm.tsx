@@ -3,9 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Save, Loader2, Film, Youtube, Plus, Trash2, Link as LinkIcon, Play } from "lucide-react";
-import { FileUpload } from "@/components/ui/file-upload";
+import { Save, Loader2, Plus, Trash2, Play } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
@@ -15,7 +13,7 @@ interface VideoLesson {
   title: string;
   description: string;
   url: string;
-  type: "youtube" | "video" | "panda";
+  type: "panda";
   solution_id: string;
   module_id?: string | null;
 }
@@ -30,10 +28,6 @@ const VideoLessonsForm: React.FC<VideoLessonsFormProps> = ({
   saving
 }) => {
   const [videoLessons, setVideoLessons] = useState<VideoLesson[]>([]);
-  const [activeTab, setActiveTab] = useState<"youtube" | "upload" | "panda">("youtube");
-  const [youtubeUrl, setYoutubeUrl] = useState("");
-  const [youtubeTitle, setYoutubeTitle] = useState("");
-  const [youtubeDescription, setYoutubeDescription] = useState("");
   const [pandaTitle, setPandaTitle] = useState("");
   const [pandaDescription, setPandaDescription] = useState("");
   const [pandaEmbedCode, setPandaEmbedCode] = useState("");
@@ -58,28 +52,21 @@ const VideoLessonsForm: React.FC<VideoLessonsFormProps> = ({
       const {
         data,
         error
-      } = await supabase.from("solution_resources").select("*").eq("solution_id", solutionId).eq("type", "video").is("module_id", null); // apenas vídeos da solução, não de módulos específicos
+      } = await supabase.from("solution_resources").select("*").eq("solution_id", solutionId).eq("type", "video").is("module_id", null); // apenas vídeos Panda da solução
 
       if (error) throw error;
       if (data) {
-        // Convert database records to VideoLesson type with proper type checking
-        const lessons = data.map(item => {
-          // Determine the correct video type
-          let videoType: "youtube" | "video" | "panda" = "video";
-          if (item.url.includes("youtube") || item.url.includes("youtu.be")) {
-            videoType = "youtube";
-          } else if (item.url.includes("pandavideo") || item.metadata?.provider === "panda") {
-            videoType = "panda";
-          }
-          return {
+        // Convert database records to VideoLesson type - only Panda videos
+        const lessons = data
+          .filter(item => item.metadata?.provider === "panda" || item.url.includes("pandavideo"))
+          .map(item => ({
             id: item.id,
             title: item.name,
             description: item.format || "",
             url: item.url,
-            type: videoType,
+            type: "panda" as const,
             solution_id: item.solution_id
-          } as VideoLesson;
-        });
+          } as VideoLesson));
         setVideoLessons(lessons);
       }
     } catch (error) {
@@ -91,124 +78,6 @@ const VideoLessonsForm: React.FC<VideoLessonsFormProps> = ({
       });
     } finally {
       setLoading(false);
-    }
-  };
-  const handleUploadComplete = async (url: string, fileName: string) => {
-    if (!solutionId) return;
-    try {
-      // Verificar se a URL é válida
-      if (!url || typeof url !== 'string') {
-        console.error("URL de vídeo inválida:", url);
-        toast({
-          title: "Erro ao adicionar vídeo",
-          description: "A URL do vídeo é inválida.",
-          variant: "destructive"
-        });
-        return;
-      }
-      const newVideo = {
-        solution_id: solutionId,
-        name: fileName || "Vídeo sem título",
-        url,
-        type: "video",
-        format: "Vídeo MP4"
-      };
-      console.log("Adicionando novo vídeo:", newVideo);
-      const {
-        data,
-        error
-      } = await supabase.from("solution_resources").insert(newVideo).select().single();
-      if (error) {
-        console.error("Erro ao adicionar vídeo na base de dados:", error);
-        throw error;
-      }
-      if (data) {
-        const videoLesson: VideoLesson = {
-          id: data.id,
-          title: data.name,
-          description: data.format || "",
-          url: data.url,
-          type: "video" as const,
-          solution_id: data.solution_id
-        };
-        setVideoLessons(prev => [...prev, videoLesson]);
-      }
-      toast({
-        title: "Vídeo adicionado",
-        description: "O vídeo foi adicionado com sucesso."
-      });
-    } catch (error: any) {
-      console.error("Erro ao adicionar vídeo:", error);
-      toast({
-        title: "Erro ao adicionar vídeo",
-        description: error.message || "Ocorreu um erro ao tentar adicionar o vídeo.",
-        variant: "destructive"
-      });
-    }
-  };
-  const handleAddYouTubeVideo = async () => {
-    if (!solutionId || !youtubeUrl.trim()) return;
-    try {
-      let videoId = "";
-
-      // Extrair o ID do vídeo do YouTube da URL
-      if (youtubeUrl.includes("youtube.com/watch")) {
-        videoId = new URL(youtubeUrl).searchParams.get("v") || "";
-      } else if (youtubeUrl.includes("youtu.be/")) {
-        videoId = youtubeUrl.split("youtu.be/")[1]?.split("?")[0] || "";
-      } else if (youtubeUrl.includes("youtube.com/embed/")) {
-        videoId = youtubeUrl.split("youtube.com/embed/")[1]?.split("?")[0] || "";
-      }
-      if (!videoId) {
-        toast({
-          title: "URL inválida",
-          description: "Por favor, insira uma URL válida do YouTube.",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      // Criar a URL de incorporação
-      const embedUrl = `https://www.youtube.com/embed/${videoId}`;
-      const newVideo = {
-        solution_id: solutionId,
-        name: youtubeTitle || `Vídeo do YouTube (${videoId})`,
-        url: embedUrl,
-        type: "video",
-        format: youtubeDescription || "Vídeo do YouTube"
-      };
-      const {
-        data,
-        error
-      } = await supabase.from("solution_resources").insert(newVideo).select().single();
-      if (error) throw error;
-      if (data) {
-        const videoLesson: VideoLesson = {
-          id: data.id,
-          title: data.name,
-          description: data.format || "",
-          url: data.url,
-          type: "youtube" as const,
-          solution_id: data.solution_id
-        };
-        setVideoLessons(prev => [...prev, videoLesson]);
-
-        // Limpar os campos
-        setYoutubeUrl("");
-        setYoutubeTitle("");
-        setYoutubeDescription("");
-      }
-      toast({
-        title: "Vídeo adicionado",
-        description: "O vídeo do YouTube foi adicionado com sucesso."
-      });
-    } catch (error: any) {
-      console.error("Erro ao adicionar vídeo do YouTube:", error);
-      toast({
-        title: "Erro ao adicionar vídeo",
-        description: error.message || "Ocorreu um erro ao tentar adicionar o vídeo do YouTube.",
-        variant: "destructive"
-      });
     }
   };
   const handleAddPandaVideo = async () => {
@@ -244,7 +113,7 @@ const VideoLessonsForm: React.FC<VideoLessonsFormProps> = ({
           title: data.name,
           description: data.format || "",
           url: data.url,
-          type: "panda" as const,
+          type: "panda",
           solution_id: data.solution_id
         };
         setVideoLessons(prev => [...prev, videoLesson]);
@@ -276,17 +145,9 @@ const VideoLessonsForm: React.FC<VideoLessonsFormProps> = ({
     setPandaVideoUrl(url);
     setPandaThumbnailUrl(thumbnailUrl);
   };
-  const handleRemoveVideo = async (id?: string, url?: string) => {
+  const handleRemoveVideo = async (id?: string) => {
     if (!id) return;
     try {
-      // Se for um vídeo carregado (não do YouTube), remover do storage
-      if (url && !url.includes("youtube") && !url.includes("youtu.be")) {
-        const filePath = url.split("/").pop();
-        if (filePath) {
-          await supabase.storage.from("solution_files").remove([`videos/${filePath}`]);
-        }
-      }
-
       // Remover o registro do banco de dados
       const {
         error
@@ -331,27 +192,6 @@ const VideoLessonsForm: React.FC<VideoLessonsFormProps> = ({
     }
   };
 
-  // Extrair ID do vídeo do YouTube para o preview
-  const getYouTubeEmbedUrl = (url: string) => {
-    if (!url) return "";
-    try {
-      let videoId = "";
-      if (url.includes("youtube.com/embed/")) {
-        return url; // Já é uma URL de incorporação
-      } else if (url.includes("youtube.com/watch")) {
-        videoId = new URL(url).searchParams.get("v") || "";
-      } else if (url.includes("youtu.be/")) {
-        videoId = url.split("youtu.be/")[1]?.split("?")[0] || "";
-      }
-      if (videoId) {
-        return `https://www.youtube.com/embed/${videoId}`;
-      }
-      return "";
-    } catch (error) {
-      console.error("Erro ao extrair ID do vídeo:", error);
-      return "";
-    }
-  };
   if (loading) {
     return <div className="flex justify-center items-center p-10">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -361,103 +201,34 @@ const VideoLessonsForm: React.FC<VideoLessonsFormProps> = ({
       <div>
         <h3 className="text-lg font-medium">Vídeo-aulas</h3>
         <p className="text-sm text-muted-foreground">
-          Adicione vídeos que mostram como implementar a solução passo a passo.
+          Adicione vídeos do Panda Video que mostram como implementar a solução passo a passo.
         </p>
       </div>
       
-      <Tabs value={activeTab} onValueChange={value => setActiveTab(value as "youtube" | "upload" | "panda")}>
-        <TabsList className="w-full grid grid-cols-3">
-          <TabsTrigger value="youtube" className="flex items-center gap-2">
-            <Youtube className="h-4 w-4" />
-            <span>YouTube</span>
-          </TabsTrigger>
-          <TabsTrigger value="upload" className="flex items-center gap-2">
-            <Film className="h-4 w-4" />
-            <span>Upload de Vídeo</span>
-          </TabsTrigger>
-          <TabsTrigger value="panda" className="flex items-center gap-2">
-            <Play className="h-4 w-4" />
-            <span>Panda Video</span>
-          </TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="youtube" className="space-y-4 mt-4">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="youtube-url">URL do Vídeo no YouTube</Label>
-                  <div className="flex gap-2">
-                    <div className="relative flex-1">
-                      <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                        <LinkIcon className="h-4 w-4 text-muted-foreground" />
-                      </div>
-                      <Input id="youtube-url" value={youtubeUrl} onChange={e => setYoutubeUrl(e.target.value)} placeholder="https://www.youtube.com/watch?v=..." className="pl-10" />
-                    </div>
-                    <Button type="button" onClick={handleAddYouTubeVideo} disabled={!youtubeUrl.trim()}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Adicionar
-                    </Button>
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="youtube-title">Título do Vídeo (opcional)</Label>
-                  <Input id="youtube-title" value={youtubeTitle} onChange={e => setYoutubeTitle(e.target.value)} placeholder="Ex: Como configurar a API OpenAI" />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="youtube-description">Descrição (opcional)</Label>
-                  <Textarea id="youtube-description" value={youtubeDescription} onChange={e => setYoutubeDescription(e.target.value)} placeholder="Breve descrição do conteúdo do vídeo..." rows={3} />
-                </div>
-                
-                {youtubeUrl && getYouTubeEmbedUrl(youtubeUrl) && <div className="mt-4 border rounded-md overflow-hidden">
-                    <p className="text-xs text-muted-foreground p-2 bg-gray-50 dark:bg-gray-800 border-b">Preview:</p>
-                    <div className="relative pb-[56.25%] h-0">
-                      <iframe src={getYouTubeEmbedUrl(youtubeUrl)} className="absolute top-0 left-0 w-full h-full" frameBorder="0" allowFullScreen />
-                    </div>
-                  </div>}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="upload" className="space-y-4 mt-4">
-          <Card>
-            <CardContent className="pt-6">
-              <FileUpload bucketName="solution_files" folder="videos" onUploadComplete={handleUploadComplete} accept=".mp4,.webm,.ogg,.mov" buttonText="Upload de Vídeo" fieldLabel="Selecione um vídeo (tamanho máximo: 200MB)" maxSize={200} // 200MB
-            />
-            </CardContent>
-          </Card>
-        </TabsContent>
+      <Card>
+        <CardContent className="pt-6">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="panda-title">Título do Vídeo (opcional)</Label>
+              <Input id="panda-title" value={pandaTitle} onChange={e => setPandaTitle(e.target.value)} placeholder="Ex: Tutorial de Implementação" />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="panda-description">Descrição (opcional)</Label>
+              <Textarea id="panda-description" value={pandaDescription} onChange={e => setPandaDescription(e.target.value)} placeholder="Breve descrição do conteúdo do vídeo..." rows={3} />
+            </div>
+            
+            <div className="space-y-2">
+              <PandaVideoEmbed value={pandaEmbedCode} onChange={handlePandaEmbedChange} label="Código de Incorporação do Panda Video" description="Cole o código iframe completo fornecido pelo Panda Video" />
+            </div>
 
-        <TabsContent value="panda" className="space-y-4 mt-4">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="panda-title">Título do Vídeo (opcional)</Label>
-                  <Input id="panda-title" value={pandaTitle} onChange={e => setPandaTitle(e.target.value)} placeholder="Ex: Tutorial de Implementação" />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="panda-description">Descrição (opcional)</Label>
-                  <Textarea id="panda-description" value={pandaDescription} onChange={e => setPandaDescription(e.target.value)} placeholder="Breve descrição do conteúdo do vídeo..." rows={3} />
-                </div>
-                
-                <div className="space-y-2">
-                  <PandaVideoEmbed value={pandaEmbedCode} onChange={handlePandaEmbedChange} label="Código de Incorporação do Panda Video" description="Cole o código iframe completo fornecido pelo Panda Video" />
-                </div>
-
-                <Button onClick={handleAddPandaVideo} disabled={!pandaVideoId || !pandaVideoUrl} className="mt-2 w-full">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Adicionar Vídeo
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+            <Button onClick={handleAddPandaVideo} disabled={!pandaVideoId || !pandaVideoUrl} className="mt-2 w-full">
+              <Plus className="h-4 w-4 mr-2" />
+              Adicionar Vídeo
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
       
       {/* Lista de vídeos */}
       {videoLessons.length > 0 && <Card>
@@ -467,16 +238,16 @@ const VideoLessonsForm: React.FC<VideoLessonsFormProps> = ({
               {videoLessons.map(video => <div key={video.id} className="border rounded-md overflow-hidden">
                   <div className="p-3 border-b flex items-center justify-between bg-gray-900">
                     <div className="flex items-center gap-2">
-                      {video.type === "youtube" ? <Youtube className="h-4 w-4 text-red-600" /> : video.type === "panda" ? <Play className="h-4 w-4 text-blue-500" /> : <Film className="h-4 w-4 text-blue-600" />}
+                      <Play className="h-4 w-4 text-blue-500" />
                       <span className="font-medium">{video.title}</span>
                     </div>
-                    <Button variant="outline" size="sm" onClick={() => handleRemoveVideo(video.id, video.url)}>
+                    <Button variant="outline" size="sm" onClick={() => handleRemoveVideo(video.id)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                   
                   <div className="relative pb-[56.25%] h-0">
-                    {video.type === "youtube" ? <iframe src={video.url} className="absolute top-0 left-0 w-full h-full" frameBorder="0" allowFullScreen /> : video.type === "panda" ? <iframe src={video.url} className="absolute top-0 left-0 w-full h-full" frameBorder="0" allowFullScreen /> : <video src={video.url} className="absolute top-0 left-0 w-full h-full" controls />}
+                    <iframe src={video.url} className="absolute top-0 left-0 w-full h-full" frameBorder="0" allowFullScreen />
                   </div>
                   
                   {video.description && <div className="p-3 text-sm">{video.description}</div>}
