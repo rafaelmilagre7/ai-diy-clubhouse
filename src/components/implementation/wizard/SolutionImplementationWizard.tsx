@@ -2,175 +2,187 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useSolutionData } from "@/hooks/useSolutionData";
-import { useSolutionModules } from "@/hooks/implementation/useSolutionModules";
+import { useSolutionSteps } from "@/hooks/implementation/useSolutionSteps";
 import { useProgressTracking } from "@/hooks/implementation/useProgressTracking";
-import { WizardProgress } from "./WizardProgress";
+import { useImplementationNavigation } from "@/hooks/implementation/useImplementationNavigation";
+import { WizardHeader } from "./WizardHeader";
 import { WizardStepContent } from "./WizardStepContent";
 import { WizardNavigation } from "./WizardNavigation";
-import { WizardHeader } from "./WizardHeader";
+import { WizardStepProgress } from "@/components/implementation/WizardStepProgress";
 import LoadingScreen from "@/components/common/LoadingScreen";
-import { Card } from "@/components/ui/card";
-import { useLogging } from "@/hooks/useLogging";
+import { toast } from "sonner";
 
 const SolutionImplementationWizard = () => {
   const { id, moduleIdx } = useParams<{ id: string; moduleIdx: string }>();
-  const moduleIndex = parseInt(moduleIdx || "0");
   const navigate = useNavigate();
-  const { log } = useLogging();
+  const currentStepIndex = parseInt(moduleIdx || "0");
   
-  const [completedModules, setCompletedModules] = useState<number[]>([]);
-  const [hasUserInteracted, setHasUserInteracted] = useState(false);
-  
-  // Fetch solution data
+  // Solution data
   const { solution, loading: solutionLoading, progress } = useSolutionData(id);
+  const steps = useSolutionSteps(solution);
   
-  // Generate modules based on solution
-  const modules = useSolutionModules(solution);
+  // State management
+  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
+  
+  // Navigation
+  const { handleComplete, handlePrevious, handleNavigateToModule } = useImplementationNavigation();
   
   // Progress tracking
   const {
+    isCompleting,
+    hasInteracted,
+    showConfirmationModal,
+    setShowConfirmationModal,
     handleMarkAsCompleted,
+    handleConfirmImplementation,
     calculateProgress,
-    setModuleInteraction,
-    moduleIdx: currentModuleIdx
-  } = useProgressTracking(
-    progress,
-    completedModules,
-    setCompletedModules,
-    modules.length
-  );
+    setModuleInteraction
+  } = useProgressTracking(progress, completedSteps, setCompletedSteps, steps.length);
   
-  // Step titles for the wizard progress
-  const stepTitles = modules.map(module => module.title);
-  
+  // Debug logs
   useEffect(() => {
-    log("Solution Implementation Wizard loaded", {
-      solutionId: id,
-      moduleIndex,
-      totalModules: modules.length,
-      completedModules: completedModules.length
+    console.log("🎯 SOLUTION IMPLEMENTATION CARREGADO:");
+    console.log("- Solution ID:", id);
+    console.log("- Step Index:", currentStepIndex);
+    console.log("- URL Params:", { id, moduleIdx });
+  }, [id, moduleIdx, currentStepIndex]);
+
+  useEffect(() => {
+    console.log("📊 SOLUTION DATA:", {
+      solution: solution?.title || "loading",
+      solutionLoading,
+      progress: progress ? "exists" : "none"
     });
-  }, [id, moduleIndex, modules.length, completedModules.length, log]);
-  
+  }, [solution, solutionLoading, progress]);
+
+  useEffect(() => {
+    console.log("🔧 STEPS DATA:", {
+      totalSteps: steps.length,
+      stepTypes: steps.map(s => s.type),
+      hasImplementationSteps: solution?.implementation_steps ? "yes" : "no"
+    });
+  }, [steps, solution]);
+
+  useEffect(() => {
+    const currentStep = steps[currentStepIndex];
+    console.log("📍 CURRENT STEP:", {
+      index: currentStepIndex,
+      step: currentStep ? {
+        id: currentStep.id,
+        type: currentStep.type,
+        title: currentStep.title
+      } : "not found"
+    });
+  }, [currentStepIndex, steps]);
+
+  useEffect(() => {
+    console.log("📈 RENDER STATE:", {
+      currentStepIndex,
+      totalSteps: steps.length,
+      completedSteps,
+      progressPercentage: calculateProgress(),
+      hasInteracted,
+      isCompleting
+    });
+  }, [currentStepIndex, steps.length, completedSteps, hasInteracted, isCompleting, calculateProgress]);
+
+  // Loading state
   if (solutionLoading) {
-    return <LoadingScreen message="Carregando implementação..." />;
+    return <LoadingScreen message="Carregando implementação da solução..." />;
   }
-  
+
+  // Error states
   if (!solution) {
+    toast.error("Solução não encontrada");
+    navigate("/solutions");
+    return null;
+  }
+
+  if (steps.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-        <Card className="p-8 text-center max-w-md">
-          <h2 className="text-2xl font-bold text-white mb-4">Solução não encontrada</h2>
-          <p className="text-neutral-400">A solução que você está procurando não existe ou foi removida.</p>
-        </Card>
+        <div className="text-center text-white">
+          <h2 className="text-2xl font-bold mb-4">Solução sem etapas de implementação</h2>
+          <p className="text-slate-300 mb-6">Esta solução ainda não possui etapas de implementação configuradas.</p>
+          <button 
+            onClick={() => navigate(`/solution/${id}`)}
+            className="bg-viverblue hover:bg-viverblue/90 px-6 py-2 rounded-lg text-white font-medium"
+          >
+            Voltar à Solução
+          </button>
+        </div>
       </div>
     );
   }
-  
-  if (modules.length === 0) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-        <Card className="p-8 text-center max-w-md">
-          <h2 className="text-2xl font-bold text-white mb-4">Módulos não disponíveis</h2>
-          <p className="text-neutral-400">Esta solução ainda não possui módulos de implementação configurados.</p>
-        </Card>
-      </div>
-    );
+
+  if (currentStepIndex >= steps.length) {
+    toast.error("Etapa não encontrada");
+    navigate(`/implement/${id}/0`);
+    return null;
   }
-  
-  const currentModule = modules[moduleIndex] || modules[0];
-  const canGoNext = hasUserInteracted || completedModules.includes(moduleIndex);
-  const canGoPrevious = moduleIndex > 0;
-  
+
+  const currentStep = steps[currentStepIndex];
+  const stepTitles = steps.map(s => s.title);
+  const progressPercentage = calculateProgress();
+  const canGoNext = currentStepIndex < steps.length - 1 && (hasInteracted || completedSteps.includes(currentStepIndex));
+  const canGoPrevious = currentStepIndex > 0;
+  const isLastStep = currentStepIndex === steps.length - 1;
+
   const handleNext = () => {
-    if (canGoNext && moduleIndex < modules.length - 1) {
-      setModuleInteraction(true);
-      handleMarkAsCompleted();
-      navigate(`/implement/${id}/${moduleIndex + 1}`);
-    }
-  };
-  
-  const handlePrevious = () => {
-    if (canGoPrevious) {
-      navigate(`/implement/${id}/${moduleIndex - 1}`);
+    if (isLastStep) {
+      handleConfirmImplementation();
     } else {
-      navigate(`/solution/${id}`);
+      handleComplete();
     }
   };
-  
+
   const handleStepClick = (stepIndex: number) => {
-    // Allow navigation to completed steps or the next step
-    if (stepIndex <= moduleIndex || completedModules.includes(stepIndex)) {
-      navigate(`/implement/${id}/${stepIndex}`);
+    if (stepIndex <= currentStepIndex || completedSteps.includes(stepIndex)) {
+      handleNavigateToModule(stepIndex);
     }
   };
-  
-  const handleModuleComplete = () => {
-    setHasUserInteracted(true);
-    setModuleInteraction(true);
-    handleMarkAsCompleted();
-    
-    // Auto-navigate to next module if not the last one
-    if (moduleIndex < modules.length - 1) {
-      setTimeout(() => {
-        handleNext();
-      }, 1000);
-    }
-  };
-  
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      {/* Background Effects */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-br from-viverblue/5 via-transparent to-viverblue-dark/8" />
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-viverblue/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-viverblue-dark/12 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}} />
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col">
+      {/* Header */}
+      <WizardHeader
+        solution={solution}
+        currentStep={currentStepIndex}
+        totalSteps={steps.length}
+        progressPercentage={progressPercentage}
+      />
+
+      {/* Content Area */}
+      <div className="flex-1 flex flex-col">
+        <div className="max-w-4xl mx-auto w-full px-4 py-6 flex-1">
+          {/* Progress */}
+          <WizardStepProgress
+            currentStep={currentStepIndex}
+            totalSteps={steps.length}
+            stepTitles={stepTitles}
+          />
+
+          {/* Step Content */}
+          <div className="flex-1 mt-6">
+            <WizardStepContent
+              step={currentStep}
+              onComplete={() => handleMarkAsCompleted()}
+              onInteraction={() => setModuleInteraction(true)}
+            />
+          </div>
+        </div>
       </div>
 
-      <div className="relative z-10 min-h-screen flex flex-col">
-        {/* Wizard Header */}
-        <WizardHeader 
-          solution={solution}
-          currentStep={moduleIndex}
-          totalSteps={modules.length}
-          progressPercentage={calculateProgress()}
-        />
-        
-        {/* Wizard Progress */}
-        <div className="px-4 py-6">
-          <div className="max-w-4xl mx-auto">
-            <WizardProgress
-              currentStep={moduleIndex}
-              totalSteps={modules.length}
-              stepTitles={stepTitles}
-              onStepClick={handleStepClick}
-              completedSteps={completedModules}
-            />
-          </div>
-        </div>
-        
-        {/* Main Content */}
-        <div className="flex-1 px-4 pb-8">
-          <div className="max-w-4xl mx-auto">
-            <WizardStepContent
-              module={currentModule}
-              onComplete={handleModuleComplete}
-              onInteraction={() => setHasUserInteracted(true)}
-            />
-          </div>
-        </div>
-        
-        {/* Navigation */}
-        <WizardNavigation
-          canGoNext={canGoNext}
-          canGoPrevious={canGoPrevious}
-          isLastStep={moduleIndex === modules.length - 1}
-          onNext={handleNext}
-          onPrevious={handlePrevious}
-          currentStep={moduleIndex + 1}
-          totalSteps={modules.length}
-        />
-      </div>
+      {/* Navigation */}
+      <WizardNavigation
+        canGoNext={canGoNext}
+        canGoPrevious={canGoPrevious}
+        isLastStep={isLastStep}
+        onNext={handleNext}
+        onPrevious={handlePrevious}
+        currentStep={currentStepIndex + 1}
+        totalSteps={steps.length}
+      />
     </div>
   );
 };

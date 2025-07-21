@@ -9,40 +9,40 @@ export const useImplementationNavigation = () => {
   }>();
   
   // Normaliza os parâmetros, suportando tanto /implement/:id/:moduleIdx quanto /implementation/:id/:moduleIdx
-  const moduleIdxParam = moduleIndex || moduleIdx || "0";
-  const moduleIdxNumber = parseInt(moduleIdxParam);
+  const stepIdxParam = moduleIndex || moduleIdx || "0";
+  const stepIdxNumber = parseInt(stepIdxParam);
   const navigate = useNavigate();
   
-  // Usa consistentemente o padrão /implement/:id/:moduleIdx para navegação
+  // Usa consistentemente o padrão /implement/:id/:stepIdx para navegação
   const basePath = "/implement";
   
-  // Navigate to next module
+  // Navigate to next step
   const handleComplete = () => {
-    console.log(`Navegando para o próximo módulo: ${moduleIdxNumber + 1}`);
-    navigate(`${basePath}/${id}/${moduleIdxNumber + 1}`);
+    console.log(`Navegando para a próxima etapa: ${stepIdxNumber + 1}`);
+    navigate(`${basePath}/${id}/${stepIdxNumber + 1}`);
   };
   
-  // Navigate to previous module
+  // Navigate to previous step
   const handlePrevious = () => {
-    if (moduleIdxNumber > 0) {
-      console.log(`Navegando para o módulo anterior: ${moduleIdxNumber - 1}`);
-      navigate(`${basePath}/${id}/${moduleIdxNumber - 1}`);
+    if (stepIdxNumber > 0) {
+      console.log(`Navegando para a etapa anterior: ${stepIdxNumber - 1}`);
+      navigate(`${basePath}/${id}/${stepIdxNumber - 1}`);
     } else {
       console.log(`Voltando para a página de solução: ${id}`);
       navigate(`/solution/${id}`);
     }
   };
   
-  // Navigate to specific module
-  const handleNavigateToModule = (moduleIdx: number) => {
-    console.log(`Navegando para o módulo específico: ${moduleIdx}`);
-    navigate(`${basePath}/${id}/${moduleIdx}`);
+  // Navigate to specific step
+  const handleNavigateToModule = (stepIdx: number) => {
+    console.log(`Navegando para a etapa específica: ${stepIdx}`);
+    navigate(`${basePath}/${id}/${stepIdx}`);
   };
   
   return {
     handleComplete,
     handlePrevious,
     handleNavigateToModule,
-    currentModuleIdx: moduleIdxNumber
+    currentModuleIdx: stepIdxNumber
   };
 };

@@ -17,9 +17,6 @@ export const WizardStepProgress = ({
 }: WizardStepProgressProps) => {
   // Array de etapas
   const steps = Array.from({ length: totalSteps }, (_, i) => i);
-  
-  // Filtramos o primeiro passo (Landing) na visualização móvel
-  const visibleStepsOnMobile = steps.filter(step => step > 0);
 
   return (
     <TooltipProvider>
@@ -41,12 +38,10 @@ export const WizardStepProgress = ({
                           : "bg-neutral-100 border-neutral-200 text-neutral-400"
                     )}
                   >
-                    {index === 0 ? (
-                      <span className="opacity-0">1</span> // Espaço reservado invisível
-                    ) : index < currentStep ? (
+                    {index < currentStep ? (
                       <CheckIcon className="w-3.5 h-3.5" />
                     ) : (
-                      <span>{index}</span>
+                      <span>{index + 1}</span>
                     )}
                   </div>
                 </TooltipTrigger>
@@ -70,34 +65,34 @@ export const WizardStepProgress = ({
           ))}
         </div>
         
-        {/* Versão mobile - mostra apenas os passos principais, sem o primeiro */}
+        {/* Versão mobile - mostra todos os passos de forma compacta */}
         <div className="flex md:hidden items-center justify-between">
-          {visibleStepsOnMobile.map((step, index) => (
+          {steps.map((step, index) => (
             <React.Fragment key={step}>
               {/* Círculo do passo em versão compacta */}
               <div
                 className={cn(
                   "relative flex items-center justify-center w-6 h-6 rounded-full border transition-all duration-300 text-xs",
-                  step < currentStep 
+                  index < currentStep 
                     ? "bg-green-500 border-green-400 text-white"
-                    : step === currentStep 
+                    : index === currentStep 
                       ? "bg-[#0ABAB5] border-[#0ABAB5] text-white ring-1 ring-[#0ABAB5]/20 scale-105"
                       : "bg-neutral-100 border-neutral-200 text-neutral-400"
                 )}
               >
-                {step < currentStep ? (
+                {index < currentStep ? (
                   <CheckIcon className="w-3 h-3" />
                 ) : (
-                  <span>{step}</span>
+                  <span>{index + 1}</span>
                 )}
               </div>
               
               {/* Linha conectora para mobile */}
-              {index < visibleStepsOnMobile.length - 1 && (
+              {index < steps.length - 1 && (
                 <div
                   className={cn(
                     "flex-1 h-0.5 mx-0.5 transition-colors duration-300 rounded-full",
-                    step < currentStep ? "bg-green-400" : "bg-neutral-200"
+                    index < currentStep ? "bg-green-400" : "bg-neutral-200"
                   )}
                 />
               )}
