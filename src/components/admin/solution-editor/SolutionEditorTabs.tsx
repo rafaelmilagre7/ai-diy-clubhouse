@@ -14,7 +14,6 @@ interface SolutionEditorTabsProps {
   onSubmit: (values: SolutionFormValues) => Promise<void>;
   saving: boolean;
   currentStep: number;
-  registerSaveFunction?: (step: number, saveFunction: () => Promise<void>) => void;
 }
 
 const SolutionEditorTabs: React.FC<SolutionEditorTabsProps> = ({
@@ -24,8 +23,7 @@ const SolutionEditorTabs: React.FC<SolutionEditorTabsProps> = ({
   currentValues,
   onSubmit,
   saving,
-  currentStep,
-  registerSaveFunction
+  currentStep
 }) => {
   const stepTitles = [
     "Informações Básicas",
@@ -64,7 +62,6 @@ const SolutionEditorTabs: React.FC<SolutionEditorTabsProps> = ({
           currentValues={currentValues}
           onSubmit={onSubmit}
           saving={saving}
-          registerSaveFunction={registerSaveFunction}
         />
       </div>
     );
@@ -90,7 +87,6 @@ const SolutionEditorTabs: React.FC<SolutionEditorTabsProps> = ({
           currentValues={currentValues}
           onSubmit={onSubmit}
           saving={saving}
-          registerSaveFunction={registerSaveFunction}
         />
       </div>
     </Tabs>

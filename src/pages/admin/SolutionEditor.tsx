@@ -28,8 +28,7 @@ const SolutionEditor = () => {
     totalSteps,
     stepTitles,
     handleNextStep,
-    handleSaveCurrentStep,
-    registerSaveFunction
+    handleSaveCurrentStep
   } = useSolutionEditor(id, user);
   
   if (loading) {
@@ -38,7 +37,20 @@ const SolutionEditor = () => {
   
   const handleSaveWithToast = async (): Promise<void> => {
     try {
-      await handleSaveCurrentStep();
+      // Na primeira etapa, dispara o submit do formulário
+      if (currentStep === 0) {
+        const form = document.querySelector("form");
+        if (form) {
+          const submitEvent = new Event("submit", { cancelable: true, bubbles: true });
+          form.dispatchEvent(submitEvent);
+          // Aguardar processamento do form
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+      } else {
+        // Nas outras etapas, salvar dados da etapa atual
+        await handleSaveCurrentStep();
+      }
+      
       toast({
         title: "Progresso salvo",
         description: "Suas alterações foram salvas com sucesso."
@@ -98,7 +110,6 @@ const SolutionEditor = () => {
             onSubmit={onSubmit}
             saving={saving}
             currentStep={currentStep}
-            registerSaveFunction={registerSaveFunction}
           />
         </CardContent>
       </Card>
