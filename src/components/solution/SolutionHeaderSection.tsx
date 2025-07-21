@@ -1,7 +1,8 @@
 
 import { Solution } from "@/lib/supabase";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Target, Zap } from "lucide-react";
+import { Clock, Target } from "lucide-react";
+import { DifficultyBadge } from "@/components/dashboard/DifficultyBadge";
 
 interface SolutionHeaderSectionProps {
   solution: Solution;
@@ -32,13 +33,9 @@ export const SolutionHeaderSection = ({ solution }: SolutionHeaderSectionProps) 
               <Target className="h-3 w-3 mr-1" />
               {solution.category}
             </Badge>
-            <Badge 
-              variant="outline" 
-              className="text-neutral-300 border-neutral-600 hover:border-viverblue/30 hover:text-viverblue-light transition-colors"
-            >
-              <Zap className="h-3 w-3 mr-1" />
-              {solution.difficulty}
-            </Badge>
+            
+            <DifficultyBadge difficulty={solution.difficulty} />
+            
             {solution.estimated_time && (
               <Badge 
                 variant="outline" 

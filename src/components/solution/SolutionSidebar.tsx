@@ -2,7 +2,8 @@
 import React from "react";
 import { Solution } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
-import { Loader2, PlayCircle, ArrowRight } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ArrowRight, Loader2, PlayCircle, Clock, Users, TrendingUp } from "lucide-react";
 
 interface SolutionSidebarProps {
   solution: Solution;
@@ -21,8 +22,8 @@ export const SolutionSidebar = ({
 }: SolutionSidebarProps) => {
   return (
     <div className="space-y-6">
-      {/* Glassmorphism Progress Card */}
-      <div className="relative bg-white/5 backdrop-blur-sm border border-white/10 p-6 rounded-xl shadow-2xl">
+      {/* Card de Implementação */}
+      <div className="relative bg-white/5 backdrop-blur-sm border border-white/10 p-6 rounded-xl shadow-2xl group hover:bg-white/8 transition-all duration-500">
         {/* Subtle dots pattern */}
         <div className="absolute inset-0 opacity-5 pointer-events-none rounded-xl">
           <div className="absolute inset-0 rounded-xl" style={{
@@ -31,21 +32,21 @@ export const SolutionSidebar = ({
           }} />
         </div>
         
+        {/* Glow effect */}
+        <div className="absolute -inset-0.5 bg-gradient-to-r from-viverblue/15 to-viverblue-dark/15 rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-1000"></div>
+        
         <div className="relative">
           <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-white to-viverblue-light bg-clip-text text-transparent">
-            Progresso da Implementação
+            Implementação
           </h3>
           
           {progress ? (
             <div className="space-y-4">
-              <div className="text-center">
-                <p className="text-sm text-neutral-400 mb-2">Progresso atual</p>
-                <div className="bg-viverblue/10 rounded-lg p-3 mb-4">
-                  <p className="text-viverblue-light font-medium">Em andamento</p>
-                  <p className="text-xs text-neutral-400 mt-1">
-                    Módulo {(progress.current_module || 0) + 1}
-                  </p>
-                </div>
+              <div className="bg-viverblue/10 rounded-lg p-3 mb-4">
+                <p className="text-viverblue-light font-medium">Em andamento</p>
+                <p className="text-xs text-neutral-400 mt-1">
+                  Módulo {(progress.current_module || 0) + 1}
+                </p>
               </div>
               
               <Button
@@ -67,10 +68,13 @@ export const SolutionSidebar = ({
               </Button>
             </div>
           ) : (
-            <div className="text-center py-4">
-              <p className="text-neutral-300 mb-4">
-                Pronto para começar a implementação?
-              </p>
+            <div className="space-y-4">
+              <div className="text-center py-4">
+                <p className="text-neutral-300 text-sm mb-2">
+                  Pronto para começar sua implementação?
+                </p>
+              </div>
+              
               <Button
                 onClick={startImplementation}
                 disabled={initializing}
@@ -93,8 +97,9 @@ export const SolutionSidebar = ({
         </div>
       </div>
 
-      {/* Glassmorphism Quick Actions Card */}
+      {/* Card de Detalhes da Solução */}
       <div className="relative bg-white/5 backdrop-blur-sm border border-white/10 p-6 rounded-xl shadow-2xl">
+        {/* Subtle dots pattern */}
         <div className="absolute inset-0 opacity-5 pointer-events-none rounded-xl">
           <div className="absolute inset-0 rounded-xl" style={{
             backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.2) 1px, transparent 0)',
@@ -104,47 +109,42 @@ export const SolutionSidebar = ({
         
         <div className="relative">
           <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-white to-viverblue-light bg-clip-text text-transparent">
-            Ações Rápidas
+            Detalhes
           </h3>
-          <div className="space-y-3">
-            <button className="w-full p-3 bg-viverblue/10 hover:bg-viverblue/15 rounded-lg border border-viverblue/20 text-viverblue-light transition-colors">
-              Adicionar aos Favoritos
-            </button>
-            <button className="w-full p-3 bg-viverblue/10 hover:bg-viverblue/15 rounded-lg border border-viverblue/20 text-viverblue-light transition-colors">
-              Baixar Materiais
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Glassmorphism Solution Details Card */}
-      <div className="relative bg-white/5 backdrop-blur-sm border border-white/10 p-6 rounded-xl shadow-2xl">
-        <div className="absolute inset-0 opacity-5 pointer-events-none rounded-xl">
-          <div className="absolute inset-0 rounded-xl" style={{
-            backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.2) 1px, transparent 0)',
-            backgroundSize: '15px 15px'
-          }} />
-        </div>
-        
-        <div className="relative">
-          <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-white to-viverblue-light bg-clip-text text-transparent">
-            Detalhes da Solução
-          </h3>
-          <div className="space-y-3 text-sm">
-            <div className="flex justify-between">
-              <span className="text-neutral-400">Categoria:</span>
-              <span className="text-viverblue-light">{solution.category}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-neutral-400">Dificuldade:</span>
-              <span className="text-viverblue-light capitalize">{solution.difficulty}</span>
-            </div>
+          
+          <div className="space-y-4">
             {solution.estimated_time && (
-              <div className="flex justify-between">
-                <span className="text-neutral-400">Tempo estimado:</span>
-                <span className="text-viverblue-light">{solution.estimated_time} min</span>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-neutral-400 flex items-center">
+                  <Clock className="h-4 w-4 mr-2" />
+                  Tempo estimado
+                </span>
+                <Badge variant="outline" className="bg-viverblue/10 text-viverblue-light border-viverblue/20">
+                  {solution.estimated_time} min
+                </Badge>
               </div>
             )}
+            
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-neutral-400 flex items-center">
+                <TrendingUp className="h-4 w-4 mr-2" />
+                Nível
+              </span>
+              <Badge variant="outline" className="bg-neutral-800/60 text-neutral-300 border-neutral-600">
+                {solution.difficulty === 'easy' ? 'Iniciante' : 
+                 solution.difficulty === 'medium' ? 'Intermediário' : 'Avançado'}
+              </Badge>
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-neutral-400 flex items-center">
+                <Users className="h-4 w-4 mr-2" />
+                Categoria
+              </span>
+              <Badge variant="outline" className="bg-viverblue/10 text-viverblue-light border-viverblue/20">
+                {solution.category}
+              </Badge>
+            </div>
           </div>
         </div>
       </div>
