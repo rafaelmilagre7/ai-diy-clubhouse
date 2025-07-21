@@ -27,20 +27,18 @@ const ToolsChecklistForm: React.FC<ToolsChecklistFormProps> = ({
   console.log("📍 solutionId =", solutionId);
   console.log("🔧 loading =", loading);
   console.log("🔧 tools.length =", tools.length);
+  console.log("🔧 onSave disponível =", !!onSave);
+  console.log("🔧 saveTools disponível =", !!saveTools);
 
-  // Registrar a função de salvamento no componente pai
+  // Registrar a função de salvamento imediatamente quando disponível
   useEffect(() => {
-    console.log("🔧 ToolsChecklistForm: Registrando função saveTools");
-    console.log("🔧 ToolsChecklistForm: onSave disponível =", !!onSave);
-    console.log("🔧 ToolsChecklistForm: saveTools disponível =", !!saveTools);
-    
     if (onSave && saveTools) {
-      console.log("✅ ToolsChecklistForm: REGISTRANDO saveTools");
+      console.log("✅ ToolsChecklistForm: Registrando saveTools na função onSave");
       onSave(saveTools);
     } else {
-      console.log("⚠️ ToolsChecklistForm: Não foi possível registrar saveTools");
+      console.log("⚠️ ToolsChecklistForm: Não foi possível registrar - onSave:", !!onSave, "saveTools:", !!saveTools);
     }
-  }, [onSave, saveTools, solutionId]);
+  }, [onSave, saveTools]);
 
   if (loading) {
     return <ToolsLoading />;

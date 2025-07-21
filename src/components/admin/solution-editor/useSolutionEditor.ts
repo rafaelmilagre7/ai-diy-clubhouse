@@ -13,6 +13,9 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
   const [activeTab, setActiveTab] = useState("basic");
   const [currentStep, setCurrentStep] = useState(0);
   
+  // Sistema de callbacks por etapa
+  const [stepSaveFunctions, setStepSaveFunctions] = useState<Record<number, () => Promise<void>>>({});
+  
   // Valores padrão corrigidos
   const [currentValues, setCurrentValues] = useState<SolutionFormValues>({
     title: "",
@@ -25,17 +28,6 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
     tags: [], // Campo tags adicionado
   });
 
-  // Função para registrar callbacks de salvamento por etapa
-  const [stepSaveFunctions, setStepSaveFunctions] = useState<Record<number, () => Promise<void>>>({});
-
-  const handleStepSaveRegistration = useCallback((stepSaveFunction: () => Promise<void>) => {
-    console.log("🔄 useSolutionEditor: Registrando função de salvamento para etapa:", currentStep);
-    setStepSaveFunctions(prev => ({
-      ...prev,
-      [currentStep]: stepSaveFunction
-    }));
-  }, [currentStep]);
-
   const stepTitles = [
     "Informações Básicas",
     "Ferramentas",
@@ -46,6 +38,21 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
   ];
 
   const totalSteps = stepTitles.length;
+
+  // Função para registrar callbacks de salvamento por etapa
+  const handleStepSaveRegistration = useCallback((stepSaveFunction: () => Promise<void>) => {
+    console.log("🔄 useSolutionEditor: Registrando função de salvamento para etapa:", currentStep);
+    console.log("🔄 useSolutionEditor: Função recebida:", !!stepSaveFunction);
+    
+    setStepSaveFunctions(prev => {
+      const updated = {
+        ...prev,
+        [currentStep]: stepSaveFunction
+      };
+      console.log("✅ useSolutionEditor: Função registrada para etapa", currentStep);
+      return updated;
+    });
+  }, [currentStep]);
 
   useEffect(() => {
     if (id && id !== "new") {
@@ -147,26 +154,44 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
 
   const handleSaveCurrentStep = async () => {
     console.log("💾 useSolutionEditor: Salvando etapa atual:", currentStep);
+    console.log("💾 useSolutionEditor: Funções disponíveis:", Object.keys(stepSaveFunctions));
+    
     const stepSaveFunction = stepSaveFunctions[currentStep];
     
     if (stepSaveFunction) {
-      console.log("✅ useSolutionEditor: Executando função de salvamento da etapa");
-      await stepSaveFunction();
+      console.log("✅ useSolutionEditor: Executando função de salvamento da etapa", currentStep);
+      try {
+        await stepSaveFunction();
+        console.log("✅ useSolutionEditor: Salvamento da etapa", currentStep, "concluído");
+      } catch (error) {
+        console.error("❌ useSolutionEditor: Erro no salvamento da etapa", currentStep, ":", error);
+        throw error;
+      }
     } else {
       console.log("⚠️ useSolutionEditor: Nenhuma função de salvamento registrada para etapa", currentStep);
+      // Para etapa 0, usar onSubmit se não há função específica
+      if (currentStep === 0) {
+        console.log("💾 useSolutionEditor: Usando onSubmit para etapa 0");
+        await onSubmit(currentValues);
+      }
     }
   };
 
   const handleNextStep = async () => {
     try {
       console.log("🚀 useSolutionEditor: handleNextStep chamado na etapa:", currentStep);
+      console.log("🚀 useSolutionEditor: Total de etapas:", totalSteps);
       
       // Salvar dados da etapa atual antes de avançar
       await handleSaveCurrentStep();
       
       if (currentStep < totalSteps - 1) {
         console.log("➡️ useSolutionEditor: Avançando para próxima etapa");
-        setCurrentStep(currentStep + 1);
+        const nextStep = currentStep + 1;
+        setCurrentStep(nextStep);
+        console.log("✅ useSolutionEditor: Etapa atual agora é:", nextStep);
+      } else {
+        console.log("🏁 useSolutionEditor: Última etapa alcançada");
       }
     } catch (error) {
       console.error("❌ useSolutionEditor: Erro no handleNextStep:", error);

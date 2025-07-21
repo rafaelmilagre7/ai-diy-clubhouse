@@ -17,7 +17,7 @@ interface TabContentProps {
   currentValues: SolutionFormValues;
   onSubmit: (values: SolutionFormValues) => Promise<void>;
   saving: boolean;
-  onStepSave?: (stepSaveFunction: () => Promise<void>) => void;
+  onStepSave: (stepSaveFunction: () => Promise<void>) => void;
 }
 
 const TabContent: React.FC<TabContentProps> = ({
@@ -59,7 +59,8 @@ const TabContent: React.FC<TabContentProps> = ({
         break;
       case "tools":
         if (isValid) {
-          return <ToolsTab solutionId={solution?.id || null} onSave={onStepSave || (() => {})} saving={saving} />;
+          console.log("🔧 TabContent: Renderizando ToolsTab (activeTab mode)");
+          return <ToolsTab solutionId={solution?.id || null} onSave={onStepSave} saving={saving} />;
         }
         break;
       case "video":
@@ -84,7 +85,7 @@ const TabContent: React.FC<TabContentProps> = ({
       case 1:
         console.log("🔧 TabContent: Renderizando ToolsTab para currentStep 1");
         console.log("🔧 TabContent: Passando onStepSave =", !!onStepSave);
-        return <ToolsTab solutionId={solution?.id || null} onSave={onStepSave || (() => {})} saving={saving} />;
+        return <ToolsTab solutionId={solution?.id || null} onSave={onStepSave} saving={saving} />;
       case 2:
         return <ResourcesTab solutionId={solution?.id || null} onSave={() => onSubmit(currentValues)} saving={saving} />;
       case 3:

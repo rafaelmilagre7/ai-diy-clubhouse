@@ -14,7 +14,7 @@ interface SolutionEditorTabsProps {
   onSubmit: (values: SolutionFormValues) => Promise<void>;
   saving: boolean;
   currentStep: number;
-  onStepSave?: (stepSaveFunction: () => Promise<void>) => void;
+  onStepSave: (stepSaveFunction: () => Promise<void>) => void;
 }
 
 const SolutionEditorTabs: React.FC<SolutionEditorTabsProps> = ({
@@ -27,6 +27,9 @@ const SolutionEditorTabs: React.FC<SolutionEditorTabsProps> = ({
   currentStep,
   onStepSave
 }) => {
+  console.log("🔧 SolutionEditorTabs: Renderizando com currentStep =", currentStep);
+  console.log("🔧 SolutionEditorTabs: onStepSave disponível =", !!onStepSave);
+
   const stepTitles = [
     "Informações Básicas",
     "Ferramentas",
