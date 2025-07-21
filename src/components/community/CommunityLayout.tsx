@@ -15,19 +15,8 @@ export const CommunityLayout = ({
   showStats = false 
 }: CommunityLayoutProps) => {
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-6">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">
-            {title}
-          </h1>
-          <p className="text-muted-foreground">
-            {description}
-          </p>
-        </div>
-
-        {/* Content */}
+    <div className="min-h-screen">
+      <div className="container mx-auto px-4 py-6 max-w-7xl">
         {children}
       </div>
     </div>
