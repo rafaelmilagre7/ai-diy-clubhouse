@@ -14,12 +14,14 @@ interface BasicInfoFormProps {
   defaultValues: SolutionFormValues;
   onSubmit: (values: SolutionFormValues) => Promise<void>;
   saving: boolean;
+  onValuesChange?: (values: SolutionFormValues) => void;
 }
 
 const BasicInfoForm = ({
   defaultValues,
   onSubmit,
   saving,
+  onValuesChange,
 }: BasicInfoFormProps) => {
   const form = useForm<SolutionFormValues>({
     resolver: zodResolver(solutionFormSchema),
@@ -29,7 +31,29 @@ const BasicInfoForm = ({
   const title = form.watch("title");
   const difficulty = form.watch("difficulty");
   
-  console.log("🔧 BasicInfoForm: Renderizando com valores:", { title, difficulty });
+  console.log("🔧 BasicInfoForm: Renderizando com valores:", { 
+    defaultValues, 
+    formValues: form.getValues(),
+    title, 
+    difficulty 
+  });
+
+  // Atualizar formulário quando defaultValues mudarem
+  useEffect(() => {
+    console.log("🔄 BasicInfoForm: Resetando formulário com novos defaultValues:", defaultValues);
+    form.reset(defaultValues);
+  }, [defaultValues, form]);
+
+  // Notificar mudanças nos valores do formulário
+  useEffect(() => {
+    const subscription = form.watch((values) => {
+      if (onValuesChange) {
+        onValuesChange(values as SolutionFormValues);
+      }
+    });
+    
+    return () => subscription.unsubscribe();
+  }, [form, onValuesChange]);
   
   // Auto-gerar slug quando o título mudar
   useEffect(() => {

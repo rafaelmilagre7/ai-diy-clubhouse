@@ -18,6 +18,7 @@ interface TabContentProps {
   onSubmit: (values: SolutionFormValues) => Promise<void>;
   saving: boolean;
   onStepSave: (stepSaveFunction: () => Promise<void>) => void;
+  onValuesChange?: (values: SolutionFormValues) => void;
 }
 
 const TabContent: React.FC<TabContentProps> = ({
@@ -27,7 +28,8 @@ const TabContent: React.FC<TabContentProps> = ({
   currentValues,
   onSubmit,
   saving,
-  onStepSave
+  onStepSave,
+  onValuesChange
 }) => {
   const isValid = solution && solution.id;
 
@@ -35,6 +37,7 @@ const TabContent: React.FC<TabContentProps> = ({
   console.log("📍 TabContent: currentStep =", currentStep);
   console.log("🔧 TabContent: onStepSave disponível =", !!onStepSave);
   console.log("🔧 TabContent: solutionId =", solution?.id);
+  console.log("📋 TabContent: currentValues =", currentValues);
 
   // Verificar se a solução existe para exibir as abas que exigem ID
   if (!isValid && currentStep > 0) {
@@ -51,7 +54,15 @@ const TabContent: React.FC<TabContentProps> = ({
     // In step 0, show content based on active tab
     switch (activeTab) {
       case "basic":
-        return <BasicInfoTab currentValues={currentValues} onSubmit={onSubmit} saving={saving} onStepSave={onStepSave} />;
+        return (
+          <BasicInfoTab 
+            currentValues={currentValues} 
+            onSubmit={onSubmit} 
+            saving={saving} 
+            onStepSave={onStepSave}
+            onValuesChange={onValuesChange}
+          />
+        );
       case "resources":
         if (isValid) {
           return <ResourcesTab solutionId={solution?.id || null} onSave={() => onSubmit(currentValues)} saving={saving} />;
@@ -99,7 +110,15 @@ const TabContent: React.FC<TabContentProps> = ({
 
   // Default for step 0 if no valid tab is selected
   if (currentStep === 0) {
-    return <BasicInfoTab currentValues={currentValues} onSubmit={onSubmit} saving={saving} onStepSave={onStepSave} />;
+    return (
+      <BasicInfoTab 
+        currentValues={currentValues} 
+        onSubmit={onSubmit} 
+        saving={saving} 
+        onStepSave={onStepSave}
+        onValuesChange={onValuesChange}
+      />
+    );
   }
 
   // Default alert for unrecognized steps

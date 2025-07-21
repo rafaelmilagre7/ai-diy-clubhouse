@@ -25,6 +25,7 @@ const AdminSolutionEdit = () => {
     setActiveTab,
     onSubmit,
     currentValues,
+    setCurrentValues,
     currentStep,
     setCurrentStep,
     totalSteps,
@@ -139,6 +140,7 @@ const AdminSolutionEdit = () => {
             saving={saving}
             currentStep={currentStep}
             onStepSave={handleStepSaveRegistration}
+            onValuesChange={setCurrentValues}
           />
         </CardContent>
       </Card>

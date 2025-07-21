@@ -15,6 +15,7 @@ interface SolutionEditorTabsProps {
   saving: boolean;
   currentStep: number;
   onStepSave: (stepSaveFunction: () => Promise<void>) => void;
+  onValuesChange?: (values: SolutionFormValues) => void;
 }
 
 const SolutionEditorTabs: React.FC<SolutionEditorTabsProps> = ({
@@ -25,10 +26,12 @@ const SolutionEditorTabs: React.FC<SolutionEditorTabsProps> = ({
   onSubmit,
   saving,
   currentStep,
-  onStepSave
+  onStepSave,
+  onValuesChange
 }) => {
   console.log("🔧 SolutionEditorTabs: Renderizando com currentStep =", currentStep);
   console.log("🔧 SolutionEditorTabs: onStepSave disponível =", !!onStepSave);
+  console.log("🔧 SolutionEditorTabs: currentValues =", currentValues);
 
   const stepTitles = [
     "Informações Básicas",
@@ -68,6 +71,7 @@ const SolutionEditorTabs: React.FC<SolutionEditorTabsProps> = ({
           onSubmit={onSubmit}
           saving={saving}
           onStepSave={onStepSave}
+          onValuesChange={onValuesChange}
         />
       </div>
     );
@@ -94,6 +98,7 @@ const SolutionEditorTabs: React.FC<SolutionEditorTabsProps> = ({
           onSubmit={onSubmit}
           saving={saving}
           onStepSave={onStepSave}
+          onValuesChange={onValuesChange}
         />
       </div>
     </Tabs>

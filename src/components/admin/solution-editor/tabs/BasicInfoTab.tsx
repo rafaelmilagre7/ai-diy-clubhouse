@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import BasicInfoForm from "@/components/admin/solution/BasicInfoForm";
 import { SolutionFormValues } from "@/components/admin/solution/form/solutionFormSchema";
 
@@ -8,6 +8,7 @@ interface BasicInfoTabProps {
   onSubmit: (values: SolutionFormValues) => Promise<void>;
   saving: boolean;
   onStepSave?: (stepSaveFunction: () => Promise<void>) => void;
+  onValuesChange?: (values: SolutionFormValues) => void;
 }
 
 const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
@@ -15,20 +16,36 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
   onSubmit,
   saving,
   onStepSave,
+  onValuesChange,
 }) => {
-  console.log("🔧 BasicInfoTab: Renderizando com onStepSave =", !!onStepSave);
+  const formRef = useRef<HTMLFormElement>(null);
+  
+  console.log("🔧 BasicInfoTab: Renderizando com:", {
+    currentValues,
+    onStepSave: !!onStepSave,
+    onValuesChange: !!onValuesChange
+  });
 
   // Função para salvar os dados da primeira etapa
   const handleSave = async () => {
     console.log("💾 BasicInfoTab: Executando handleSave");
-    // Disparar o submit do formulário
-    const form = document.querySelector("form");
-    if (form) {
+    
+    // Tentar submeter o formulário programaticamente
+    if (formRef.current) {
+      const form = formRef.current;
       const submitEvent = new Event("submit", { cancelable: true, bubbles: true });
       form.dispatchEvent(submitEvent);
-      // Aguardar processamento do form
-      await new Promise(resolve => setTimeout(resolve, 500));
+    } else {
+      // Fallback: buscar formulário no DOM
+      const form = document.querySelector("form");
+      if (form) {
+        const submitEvent = new Event("submit", { cancelable: true, bubbles: true });
+        form.dispatchEvent(submitEvent);
+      }
     }
+    
+    // Aguardar processamento do form
+    await new Promise(resolve => setTimeout(resolve, 500));
   };
 
   // Registrar a função de salvamento
@@ -40,11 +57,14 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
   }, [onStepSave]);
 
   return (
-    <BasicInfoForm 
-      defaultValues={currentValues} 
-      onSubmit={onSubmit} 
-      saving={saving} 
-    />
+    <div ref={formRef}>
+      <BasicInfoForm 
+        defaultValues={currentValues} 
+        onSubmit={onSubmit} 
+        saving={saving}
+        onValuesChange={onValuesChange}
+      />
+    </div>
   );
 };
 
