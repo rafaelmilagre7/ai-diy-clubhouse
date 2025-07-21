@@ -7,37 +7,29 @@ interface SolutionStep {
   title: string;
   description: string;
   type: string;
+  hasContent: boolean;
 }
 
 export const useSolutionSteps = (solution: Solution | null) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [activeTab, setActiveTab] = useState("basic");
 
-  // Generate steps based on solution data
+  // Generate steps based on real solution data
   const steps = useMemo((): SolutionStep[] => {
     if (!solution) return [];
 
     const generatedSteps: SolutionStep[] = [];
 
-    // Always start with basic info
+    // Step 1: Always start with overview
     generatedSteps.push({
       id: 0,
-      title: "Informações Básicas",
-      description: "Visão geral da solução",
-      type: "basic"
+      title: "Visão Geral",
+      description: "Entenda a solução antes de começar",
+      type: "overview",
+      hasContent: true
     });
 
-    // Add tools step - sempre mostrar se há módulos
-    if (solution) {
-      generatedSteps.push({
-        id: generatedSteps.length,
-        title: "Ferramentas Necessárias",
-        description: "Prepare as ferramentas para implementação", 
-        type: "tools"
-      });
-    }
-
-    // Add implementation steps
+    // Step 2: Check if we have implementation steps
     let implementationSteps = [];
     try {
       if (solution.implementation_steps) {
@@ -46,29 +38,32 @@ export const useSolutionSteps = (solution: Solution | null) => {
           : solution.implementation_steps;
       }
     } catch (e) {
-      // Silent error handling
+      implementationSteps = [];
     }
 
-    if (implementationSteps.length > 0) {
+    // Add implementation steps if they exist
+    if (implementationSteps && implementationSteps.length > 0) {
       implementationSteps.forEach((step: any, index: number) => {
         generatedSteps.push({
           id: generatedSteps.length,
-          title: step.title || `Implementação ${index + 1}`,
-          description: step.description || "Passo de implementação",
-          type: "implementation"
+          title: step.title || `Passo ${index + 1}`,
+          description: step.description || "Siga as instruções para implementar",
+          type: "implementation",
+          hasContent: true
         });
       });
     } else {
-      // Add generic implementation step if no specific steps
+      // Add a generic implementation step if no specific steps exist
       generatedSteps.push({
         id: generatedSteps.length,
         title: "Implementação",
-        description: "Implementar a solução",
-        type: "implementation"
+        description: "Implemente a solução seguindo as orientações",
+        type: "implementation",
+        hasContent: !!solution.overview
       });
     }
 
-    // Add checklist step if checklist items exist
+    // Step 3: Check if we have checklist items
     let checklistItems = [];
     try {
       if (solution.checklist_items) {
@@ -77,24 +72,27 @@ export const useSolutionSteps = (solution: Solution | null) => {
           : solution.checklist_items;
       }
     } catch (e) {
-      // Silent error handling
+      checklistItems = [];
     }
 
-    if (checklistItems.length > 0) {
+    // Add checklist step only if items exist
+    if (checklistItems && checklistItems.length > 0) {
       generatedSteps.push({
         id: generatedSteps.length,
-        title: "Checklist de Verificação",
-        description: "Verifique os itens implementados",
-        type: "checklist"
+        title: "Verificação",
+        description: "Confirme se tudo foi implementado corretamente",
+        type: "checklist",
+        hasContent: true
       });
     }
 
-    // Always end with completion
+    // Step 4: Always end with completion
     generatedSteps.push({
       id: generatedSteps.length,
-      title: "Finalização",
-      description: "Concluir implementação",
-      type: "completion"
+      title: "Conclusão",
+      description: "Finalize sua implementação",
+      type: "completion",
+      hasContent: true
     });
 
     return generatedSteps;
@@ -102,11 +100,12 @@ export const useSolutionSteps = (solution: Solution | null) => {
 
   const totalSteps = steps.length;
   const stepTitles = steps.map(step => step.title);
+  const currentStepData = steps[currentStep];
 
   // Helper function to get default tab for step
   const getDefaultTabForStep = (step: number): string => {
     const stepData = steps[step];
-    return stepData?.type || "basic";
+    return stepData?.type || "overview";
   };
 
   // Update step and tab together
@@ -124,7 +123,8 @@ export const useSolutionSteps = (solution: Solution | null) => {
     setActiveTab,
     totalSteps,
     stepTitles,
-    steps
+    steps,
+    currentStepData
   };
 };
 
