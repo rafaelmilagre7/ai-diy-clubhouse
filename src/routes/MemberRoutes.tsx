@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import MemberLayout from "@/components/layout/MemberLayout";
 // import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
@@ -19,7 +19,8 @@ export const MemberRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={<MemberLayout />}>
-        <Route index element={<Dashboard />} />
+        <Route index element={<Navigate to="/dashboard" replace />} />
+        <Route path="dashboard" element={<Dashboard />} />
         <Route path="solutions" element={<Solutions />} />
         <Route path="solution/:id" element={<SolutionDetails />} />
         
