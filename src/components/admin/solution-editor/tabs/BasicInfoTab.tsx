@@ -18,7 +18,7 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
   onStepSave,
   onValuesChange,
 }) => {
-  const formRef = useRef<HTMLFormElement>(null);
+  const formRef = useRef<HTMLDivElement>(null);
   
   console.log("🔧 BasicInfoTab: Renderizando com:", {
     currentValues,
