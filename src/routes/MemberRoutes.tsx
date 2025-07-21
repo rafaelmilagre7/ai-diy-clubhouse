@@ -1,8 +1,8 @@
 
 import React from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import MemberLayout from "@/components/layout/MemberLayout";
-// import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import AuthProtectedRoutes from "@/components/auth/AuthProtectedRoutes";
 
 // Pages
 import Dashboard from "@/pages/member/Dashboard";
@@ -17,22 +17,24 @@ import Benefits from "@/pages/member/Benefits";
 
 export const MemberRoutes = () => {
   return (
-    <Routes>
-      <Route path="/" element={<MemberLayout />}>
-        <Route index element={<Navigate to="/dashboard" replace />} />
-        <Route path="dashboard" element={<Dashboard />} />
-        <Route path="solutions" element={<Solutions />} />
-        <Route path="solution/:id" element={<SolutionDetails />} />
-        
-        {/* Unified implementation route */}
-        <Route path="implement/:id" element={<SolutionImplementation />} />
-        
-        <Route path="networking" element={<Networking />} />
-        <Route path="profile" element={<Profile />} />
-        <Route path="benefits" element={<Benefits />} />
-        {/* <Route path="community" element={<Community />} />
-        <Route path="community/topic/:id" element={<CommunityTopic />} /> */}
-      </Route>
-    </Routes>
+    <AuthProtectedRoutes>
+      <Routes>
+        <Route path="/" element={<MemberLayout />}>
+          <Route index element={<Dashboard />} />
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="solutions" element={<Solutions />} />
+          <Route path="solution/:id" element={<SolutionDetails />} />
+          
+          {/* Unified implementation route */}
+          <Route path="implement/:id" element={<SolutionImplementation />} />
+          
+          <Route path="networking" element={<Networking />} />
+          <Route path="profile" element={<Profile />} />
+          <Route path="benefits" element={<Benefits />} />
+          {/* <Route path="community" element={<Community />} />
+          <Route path="community/topic/:id" element={<CommunityTopic />} /> */}
+        </Route>
+      </Routes>
+    </AuthProtectedRoutes>
   );
 };
