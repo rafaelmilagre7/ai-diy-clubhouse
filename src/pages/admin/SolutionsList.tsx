@@ -23,7 +23,7 @@ const SolutionsList = () => {
     filteredSolutions,
     updateFilter,
     resetFilters
-  } = useSolutionsFilters(solutions as any);
+  } = useSolutionsFilters(solutions);
 
   // Fetch solutions from database
   useEffect(() => {
@@ -36,7 +36,7 @@ const SolutionsList = () => {
           .order("created_at", { ascending: false });
 
         if (error) throw error;
-        setSolutions(data as Solution[] || []);
+        setSolutions(data || []);
       } catch (error: any) {
         console.error("Erro ao buscar soluções:", error);
         toast.error("Erro ao carregar soluções", {
@@ -116,7 +116,7 @@ const SolutionsList = () => {
       />
 
       <SolutionsTable
-        solutions={filteredSolutions as any[]}
+        solutions={filteredSolutions}
         onEdit={(id) => navigate(`/admin/solutions/${id}/edit`)}
         onDelete={handleDeleteSolution}
         onTogglePublish={handleTogglePublish}

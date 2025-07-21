@@ -6,12 +6,8 @@ import { useLogging } from "@/hooks/useLogging";
 export interface Material {
   id: string;
   name: string;
-  title?: string;
-  description?: string;
   url: string;
   type: string;
-  file_type?: string;
-  file_size?: number;
   format: string | null;
   solution_id: string;
   module_id: string | null;

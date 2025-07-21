@@ -20,43 +20,32 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
     return solutions.map(s => s.id).sort().join(',');
   }, [solutions]);
   
-  // Função de busca otimizada e defensiva
+  // Função de busca otimizada
   const fetchProgress = useCallback(async () => {
     if (!user?.id) {
-      console.log('🔍 Usuário não autenticado para buscar progresso');
-      return [];
+      throw new Error("Usuário não autenticado");
     }
     
     // Verificar cache local primeiro
     const cacheKey = `progress_${user.id}`;
     const cached = progressCache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-      console.log('📦 Usando progresso do cache');
       return cached.data;
     }
     
     try {
-      console.log('🔄 Buscando progresso do usuário no banco...');
-      
-      // Query otimizada com timeout
-      const { data, error } = await Promise.race([
-        supabase
-          .from("progress")
-          .select("solution_id, is_completed, completed_at, last_activity, created_at")
-          .eq("user_id", user.id),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Timeout')), 8000)
-        )
-      ]) as any;
+      // Query otimizada com batch
+      const { data, error } = await supabase
+        .from("progress")
+        .select("solution_id, is_completed, completed_at, last_activity, created_at")
+        .eq("user_id", user.id);
         
       if (error) {
-        console.error("❌ Erro na query de progresso:", error);
-        // Retornar array vazio em vez de lançar erro
-        return [];
+        console.error("useDashboardProgress: Erro na query:", error);
+        throw error;
       }
       
-      const result = Array.isArray(data) ? data : [];
-      console.log(`✅ Progresso carregado: ${result.length} registros`);
+      const result = data || [];
       
       // Atualizar cache local
       progressCache.set(cacheKey, {
@@ -66,13 +55,12 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
       
       return result;
     } catch (error) {
-      console.error("❌ Erro na execução da busca de progresso:", error);
-      // Retornar array vazio em vez de lançar erro
-      return [];
+      console.error("useDashboardProgress: Erro na execução:", error);
+      throw error;
     }
   }, [user?.id]);
   
-  // Query React Query otimizada com fallback
+  // Query React Query otimizada
   const { 
     data: progressData,
     isLoading,
@@ -86,24 +74,14 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false,
-    retry: (failureCount, error) => {
-      console.log(`🔄 Tentativa ${failureCount} de buscar progresso falhou:`, error);
-      return failureCount < 2; // Máximo 2 tentativas
-    },
+    retry: 1,
     retryDelay: 2000
   });
 
-  // Processamento otimizado com memoização e tratamento defensivo
+  // Processamento otimizado com memoização
   const processedData = useMemo(() => {
-    console.log('🔄 Processando dados de progresso...', {
-      solutionsCount: solutions?.length || 0,
-      progressCount: progressData?.length || 0,
-      solutionsHash
-    });
-    
-    // Validação de entrada mais defensiva
-    if (!Array.isArray(solutions) || solutions.length === 0) {
-      console.log('⚠️ Nenhuma solução disponível');
+    // Validação de entrada
+    if (!solutions || !Array.isArray(solutions) || solutions.length === 0) {
       return { 
         active: [], 
         completed: [], 
@@ -112,12 +90,11 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
       };
     }
 
-    if (!Array.isArray(progressData)) {
-      console.log('📝 Nenhum progresso encontrado, todas as soluções são recomendadas');
+    if (!progressData || !Array.isArray(progressData)) {
       return { 
         active: [], 
         completed: [], 
-        recommended: solutions.filter(s => s && s.id), // Filtrar soluções válidas
+        recommended: solutions,
         isEmpty: false
       };
     }
@@ -126,23 +103,15 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
       // Criar mapa de progresso para lookup O(1)
       const progressMap = new Map();
       progressData.forEach(progress => {
-        if (progress && progress.solution_id) {
-          progressMap.set(progress.solution_id, progress);
-        }
+        progressMap.set(progress.solution_id, progress);
       });
 
-      // Categorização otimizada com validação
+      // Categorização otimizada
       const active: Solution[] = [];
       const completed: Solution[] = [];
       const recommended: Solution[] = [];
 
       solutions.forEach(solution => {
-        // Validar se a solução tem dados mínimos necessários
-        if (!solution || !solution.id) {
-          console.warn('⚠️ Solução inválida encontrada:', solution);
-          return;
-        }
-        
         const progress = progressMap.get(solution.id);
         
         if (!progress) {
@@ -154,12 +123,6 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
         }
       });
 
-      console.log('✅ Progresso processado com sucesso:', {
-        active: active.length,
-        completed: completed.length,
-        recommended: recommended.length
-      });
-
       return {
         active,
         completed,
@@ -167,16 +130,15 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
         isEmpty: false
       };
     } catch (err) {
-      console.error("❌ Erro no processamento de progresso:", err);
-      // Fallback defensivo
+      console.error("useDashboardProgress: Erro no processamento:", err);
       return { 
         active: [], 
         completed: [], 
-        recommended: Array.isArray(solutions) ? solutions.filter(s => s && s.id) : [],
+        recommended: solutions,
         isEmpty: false
       };
     }
-  }, [solutions, progressData, solutionsHash]);
+  }, [solutions, progressData]);
 
   return {
     active: processedData.active,

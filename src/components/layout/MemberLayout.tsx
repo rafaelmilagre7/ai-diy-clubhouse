@@ -1,6 +1,5 @@
 
 import React, { memo, useMemo, useCallback } from "react";
-import { Outlet } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import BaseLayout from "./BaseLayout";
 import { MemberSidebar } from "./member/MemberSidebar";
@@ -8,7 +7,11 @@ import { MemberContent } from "./member/MemberContent";
 import { useSidebarControl } from "@/hooks/useSidebarControl";
 import { toast } from "sonner";
 
-const MemberLayout = memo(() => {
+interface MemberLayoutProps {
+  children: React.ReactNode;
+}
+
+const MemberLayout = memo<MemberLayoutProps>(({ children }) => {
   const { profile, signOut } = useAuth();
   const { sidebarOpen, setSidebarOpen, toggleSidebar, isMobile } = useSidebarControl();
 
@@ -17,6 +20,7 @@ const MemberLayout = memo(() => {
     console.log('[MemberLayout] Renderizando com:', {
       profile: !!profile,
       profileName: profile?.name,
+      hasChildren: !!children,
       sidebarOpen,
       isMobile
     });
@@ -77,7 +81,7 @@ const MemberLayout = memo(() => {
           sidebarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
         >
-          <Outlet />
+          {children}
         </BaseLayout>
       </>
     );

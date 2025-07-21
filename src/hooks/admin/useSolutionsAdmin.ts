@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
-import { Solution } from '@/lib/supabase';
+import { Solution } from '@/lib/supabase/types/legacy';
 
 export const useSolutionsAdmin = () => {
   const { toast } = useToast();

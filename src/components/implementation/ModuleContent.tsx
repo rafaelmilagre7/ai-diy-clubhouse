@@ -1,10 +1,7 @@
-
 import React, { useEffect } from "react";
 import { Module } from "@/lib/supabase";
 import { LandingModule } from "./LandingModule";
 import { CelebrationModule } from "./CelebrationModule";
-import { CompletionModule } from "./CompletionModule";
-import { SolutionCoverModule } from "./SolutionCoverModule";
 import { DefaultModule } from "./DefaultModule";
 import { shouldAutoComplete } from "./content/ContentManager";
 import { useLogging } from "@/hooks/useLogging";
@@ -34,17 +31,15 @@ export const ModuleContent = ({ module, onComplete, onError }: ModuleContentProp
   try {
     // Renderiza o conteúdo apropriado com base no tipo do módulo
     log("Rendering module content", { module_type: module.type });
-    
+    // Microanimação suave na troca de módulo (fade-in)
     return (
       <div className="animate-fade-in">
         {(() => {
           switch (module.type) {
             case "landing":
-            case "cover":
-              return <SolutionCoverModule module={module} onComplete={onComplete} />;
+              return <LandingModule module={module} onComplete={onComplete} />;
             case "celebration":
-            case "completion":
-              return <CompletionModule module={module} onComplete={onComplete} />;
+              return <CelebrationModule module={module} onComplete={onComplete} />;
             default:
               return <DefaultModule module={module} onComplete={onComplete} />;
           }

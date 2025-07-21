@@ -1,146 +1,197 @@
 
-import React, { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
-import { useSolutionsData } from "@/hooks/useSolutionsData";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { 
-  Search, 
-  TrendingUp 
-} from "lucide-react";
-import { SolutionsGrid } from "@/components/dashboard/SolutionsGrid";
-import LoadingScreen from "@/components/common/LoadingScreen";
-import { PageTransition } from "@/components/transitions/PageTransition";
+import React, { useState } from 'react';
+import { useSolutionsData } from '@/hooks/useSolutionsData';
+import { SolutionCard } from '@/components/solution/SolutionCard';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Search, Filter, ShieldAlert } from 'lucide-react';
+import LoadingScreen from '@/components/common/LoadingScreen';
+import { Solution } from '@/lib/supabase';
+import { useToolsData } from '@/hooks/useToolsData';
+import { useLogging } from '@/contexts/logging';
+import { useDocumentTitle } from '@/hooks/use-document-title';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 
 const Solutions = () => {
-  const { solutions, loading, error } = useSolutionsData();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const navigate = useNavigate();
+  // Definir título da página
+  useDocumentTitle('Soluções | VIVER DE IA Club');
+  
+  // Logger para depuração
+  const { log } = useLogging();
+  
+  // Garantir que as ferramentas estejam corretamente configuradas, mas ignorar erros
+  const { isLoading: toolsDataLoading } = useToolsData();
+  
+  const { 
+    filteredSolutions, 
+    loading, 
+    searchQuery, 
+    setSearchQuery,
+    activeCategory,
+    setActiveCategory,
+    canViewSolutions
+  } = useSolutionsData();
 
-  // Filter and search solutions
-  const filteredSolutions = useMemo(() => {
-    if (!solutions) return [];
-    
-    return solutions.filter(solution => {
-      const matchesSearch = solution.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           solution.overview?.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory = selectedCategory === "all" || solution.category === selectedCategory;
-      
-      return matchesSearch && matchesCategory;
-    });
-  }, [solutions, searchTerm, selectedCategory]);
+  // Log data for debugging
+  log("Solutions page loaded", { 
+    solutionsCount: filteredSolutions?.length || 0, 
+    activeCategory,
+    isLoading: loading || toolsDataLoading,
+    canViewSolutions
+  });
 
-  // Get unique categories
-  const categories = useMemo(() => {
-    if (!solutions) return [];
-    return [...new Set(solutions.map(s => s.category))].filter(Boolean);
-  }, [solutions]);
+  // Atualizado para usar nomes de categorias em português
+  const categories = [
+    { id: 'all', name: 'Todas' },
+    { id: 'Receita', name: 'Receita' },
+    { id: 'Operacional', name: 'Operacional' },
+    { id: 'Estratégia', name: 'Estratégia' }
+  ];
 
-  if (loading) {
-    return <LoadingScreen message="Carregando soluções..." />;
-  }
-
-  if (error) {
+  // Se o usuário não tem permissão para ver soluções, mostrar mensagem
+  if (!canViewSolutions) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-neutral-800 mb-2">Erro ao carregar soluções</h2>
-          <p className="text-neutral-600">Tente novamente mais tarde.</p>
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-white">Soluções</h1>
+            <p className="text-neutral-300 mt-1">
+              Explore as soluções disponíveis e comece a implementá-las em seu negócio
+            </p>
+          </div>
         </div>
+
+        <Alert variant="destructive" className="my-8">
+          <ShieldAlert className="h-5 w-5" />
+          <AlertTitle className="text-white">Acesso restrito</AlertTitle>
+          <AlertDescription className="text-neutral-200">
+            <p className="mb-4">Você não tem permissão para acessar as soluções. Entre em contato com o administrador para solicitar acesso.</p>
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/dashboard">Voltar para o Dashboard</Link>
+            </Button>
+          </AlertDescription>
+        </Alert>
       </div>
     );
   }
 
+  // Se estiver carregando as soluções, mostrar tela de carregamento
+  // Mas não bloquear se apenas as ferramentas estiverem carregando
+  if (loading) {
+    return <LoadingScreen message="Carregando soluções..." />;
+  }
+
   return (
-    <PageTransition>
-      <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-white to-neutral-100">
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          {/* Header */}
-          <div className="mb-8">
-            <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl border border-neutral-200 p-8">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-                <div>
-                  <h1 className="text-3xl font-bold text-neutral-800 mb-2">
-                    Soluções de IA
-                  </h1>
-                  <p className="text-neutral-600">
-                    Descubra e implemente soluções práticas de inteligência artificial
-                  </p>
-                </div>
-                
-                <div className="flex items-center gap-3 text-sm text-neutral-600">
-                  <TrendingUp className="w-5 h-5 text-viverblue" />
-                  <span>{solutions?.length || 0} soluções disponíveis</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Filters */}
-          <div className="mb-8">
-            <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-lg border border-neutral-200 p-6">
-              <div className="flex flex-col md:flex-row gap-4">
-                <div className="flex-1">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400" />
-                    <Input
-                      placeholder="Buscar soluções..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                </div>
-                
-                <div className="flex gap-2">
-                  <Button
-                    variant={selectedCategory === "all" ? "default" : "outline"}
-                    onClick={() => setSelectedCategory("all")}
-                    size="sm"
-                    className={selectedCategory === "all" ? "bg-viverblue hover:bg-viverblue-dark" : ""}
-                  >
-                    Todas
-                  </Button>
-                   {categories.map((category) => (
-                    <Button
-                      key={category as string}
-                      variant={selectedCategory === category ? "default" : "outline"}
-                      onClick={() => setSelectedCategory(category as string)}
-                      size="sm"
-                      className={selectedCategory === category ? "bg-viverblue hover:bg-viverblue-dark" : ""}
-                    >
-                      {category as string}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Solutions Grid */}
-          <SolutionsGrid 
-            solutions={filteredSolutions}
-            onSolutionClick={(solution) => navigate(`/solution/${solution.id}`)}
-          />
-
-          {/* Empty State */}
-          {filteredSolutions.length === 0 && (
-            <div className="text-center py-12">
-              <div className="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Search className="w-8 h-8 text-neutral-400" />
-              </div>
-              <h3 className="text-lg font-medium text-neutral-800 mb-2">
-                Nenhuma solução encontrada
-              </h3>
-              <p className="text-neutral-600">
-                Tente ajustar os filtros ou termos de busca
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-background/95">
+      <div className="container mx-auto py-8 space-y-8">
+        {/* Header com VIA Aurora Style */}
+        <div className="relative overflow-hidden rounded-2xl bg-card/95 backdrop-blur-xl border border-border/30 p-8 shadow-2xl shadow-primary/5">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent"></div>
+          <div className="absolute inset-0 bg-dot-pattern opacity-5"></div>
+          <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+            <div className="space-y-3">
+              <h1 className="text-4xl font-heading font-bold bg-gradient-to-r from-primary via-primary/90 to-primary/70 bg-clip-text text-transparent">
+                Soluções
+              </h1>
+              <p className="text-lg text-muted-foreground/80 max-w-2xl">
+                Explore as soluções disponíveis e comece a implementá-las em seu negócio
               </p>
             </div>
-          )}
+
+            {/* Search com VIA Aurora glow */}
+            <div className="relative group">
+              <div className="absolute -inset-1 bg-gradient-to-r from-primary/30 via-primary/20 to-primary/30 rounded-2xl blur-lg opacity-60 group-hover:opacity-100 group-focus-within:opacity-100 transition duration-300"></div>
+              <div className="relative bg-card/90 backdrop-blur-sm border border-border/40 rounded-xl p-1 shadow-lg">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground/70" />
+                  <Input
+                    type="search"
+                    placeholder="Buscar soluções..."
+                    className="w-80 pl-10 bg-background/50 border-border/30 focus:border-primary/50 focus:bg-background/70 transition-all duration-300"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+
+        {/* Filtros com VIA Aurora Style */}
+        <Tabs defaultValue={activeCategory} onValueChange={setActiveCategory} className="w-full">
+          <div className="relative group">
+            {/* Aurora glow effect */}
+            <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 via-primary/30 to-primary/20 rounded-3xl blur-xl opacity-50 group-hover:opacity-80 transition-opacity duration-500"></div>
+            
+            {/* Container das tabs com glassmorphism avançado */}
+            <div className="relative bg-card/80 backdrop-blur-xl border border-border/30 rounded-2xl p-2 shadow-2xl shadow-primary/10">
+              <TabsList className="bg-transparent p-0 h-auto w-full grid grid-cols-4 gap-2">
+                {categories.map((category) => (
+                  <TabsTrigger 
+                    key={category.id}
+                    value={category.id}
+                    className="relative px-6 py-4 text-sm font-medium transition-all duration-300 rounded-xl group
+                             data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/90 
+                             data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg data-[state=active]:shadow-primary/30
+                             data-[state=active]:scale-105 data-[state=active]:border-0
+                             hover:bg-muted/50 hover:scale-102 hover:text-foreground hover:shadow-md
+                             text-muted-foreground border border-transparent"
+                  >
+                    <span className="relative z-10">{category.name}</span>
+                    {/* Active state glow */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-primary/10 opacity-0 data-[state=active]:opacity-100 rounded-xl transition-opacity duration-300"></div>
+                    {/* Hover shimmer effect */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 rounded-xl transition-opacity duration-300"></div>
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </div>
+          </div>
+
+          {/* Conteúdo com animações VIA Aurora */}
+          {categories.map((category) => (
+            <TabsContent key={category.id} value={category.id} className="mt-8">
+              {filteredSolutions?.length === 0 ? (
+                <div className="relative overflow-hidden rounded-2xl bg-card/60 backdrop-blur-sm border border-border/40 p-12 shadow-xl">
+                  <div className="absolute inset-0 bg-dot-pattern opacity-5"></div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5"></div>
+                  <div className="relative flex flex-col items-center text-center space-y-6">
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-primary/30 rounded-full blur-2xl animate-pulse"></div>
+                      <div className="relative p-4 bg-card/80 backdrop-blur-sm rounded-2xl border border-border/40">
+                        <Filter className="h-12 w-12 text-primary" />
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <h3 className="text-2xl font-heading font-semibold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                        Nenhuma solução encontrada
+                      </h3>
+                      <p className="text-muted-foreground/80 max-w-md">
+                        Não encontramos soluções com esse filtro. Tente selecionar outra categoria ou ajuste sua busca.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 animate-fade-in">
+                  {filteredSolutions?.map((solution: Solution, index) => (
+                    <div 
+                      key={solution.id} 
+                      className="animate-scale-in"
+                      style={{ animationDelay: `${index * 0.1}s` }}
+                    >
+                      <SolutionCard solution={solution} />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+          ))}
+        </Tabs>
       </div>
-    </PageTransition>
+    </div>
   );
 };
 

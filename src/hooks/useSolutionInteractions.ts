@@ -71,8 +71,8 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
   };
   
   const continueImplementation = async () => {
-    if (!user || !solutionId) {
-      toast.error("Você precisa estar logado para continuar a implementação");
+    if (!solutionId || !progress) {
+      toast.error("Não foi possível continuar a implementação");
       return false;
     }
     
@@ -80,14 +80,11 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
       setInitializing(true);
       console.log("▶️ CONTINUANDO IMPLEMENTAÇÃO:");
       console.log("- Solution ID:", solutionId);
-      console.log("- User ID:", user.id);
       console.log("- Progress:", progress);
-      
-      // Get current module from progress or default to 0
-      const currentModule = progress?.current_module || 0;
-      console.log("- Current Module:", currentModule);
+      console.log("- Current Module:", progress.current_module);
       
       // Navigate to the correct module where user left off
+      const currentModule = progress.current_module || 0;
       const implementationUrl = `/implement/${solutionId}/${currentModule}`;
       console.log("🧭 Navegando para:", implementationUrl);
       
@@ -96,11 +93,7 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
       return true;
     } catch (error) {
       console.error("❌ Erro ao continuar implementação:", error);
-      uiToast({
-        title: "Erro ao continuar implementação",
-        description: "Ocorreu um erro ao tentar continuar a implementação da solução.",
-        variant: "destructive",
-      });
+      toast.error("Erro ao continuar implementação");
       return false;
     } finally {
       setInitializing(false);

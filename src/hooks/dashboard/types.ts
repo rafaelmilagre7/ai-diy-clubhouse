@@ -1,6 +1,6 @@
 
 // Importar o tipo Solution corretamente do sistema principal
-import type { Solution } from "@/lib/supabase";
+import type { Solution } from "@/lib/supabase/types/legacy";
 
 // Interface para progresso do usuário
 export interface UserProgress {

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Solution } from '@/lib/supabase';
+import { Solution } from '@/lib/supabase/types/legacy';
 import { SolutionDifficultyBadge } from './SolutionDifficultyBadge';
 import { TableActions } from './TableActions';
 import { PublishStatus } from './PublishStatus';

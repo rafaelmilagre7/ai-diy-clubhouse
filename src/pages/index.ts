@@ -14,7 +14,7 @@ export { default as SolutionsList } from './admin/SolutionsList';
 export { default as Dashboard } from './member/Dashboard';
 export { default as ProfileSettings } from './member/Profile';
 export { default as SolutionDetails } from './member/SolutionDetails';
-export { default as SolutionImplementation } from './member/implementation/SolutionImplementation';
+export { default as SolutionImplementation } from './member/SolutionImplementation';
 export { default as ImplementationConfirmation } from './member/ImplementationConfirmation';
 export { default as ImplementationCompleted } from './member/ImplementationCompleted';
 export { default as Achievements } from './member/Achievements';
