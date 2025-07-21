@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
@@ -74,11 +74,13 @@ export const useToolsChecklist = (solutionId: string | null) => {
     }
   };
 
-  const saveTools = async () => {
+  // Memoizar saveTools para evitar dependências circulares
+  const saveTools = useCallback(async () => {
     if (!solutionId) return;
     
     try {
       setSavingTools(true);
+      console.log("🔧 Iniciando salvamento de ferramentas...");
       
       await supabase
         .from("solution_tools")
@@ -100,22 +102,24 @@ export const useToolsChecklist = (solutionId: string | null) => {
         if (insertError) throw insertError;
       }
       
+      console.log("✅ Ferramentas salvas com sucesso");
       toast({
         title: "Ferramentas salvas",
         description: "As ferramentas foram salvas com sucesso.",
       });
       
     } catch (error: any) {
-      console.error("Erro ao salvar ferramentas:", error);
+      console.error("❌ Erro ao salvar ferramentas:", error);
       toast({
         title: "Erro ao salvar ferramentas",
         description: error.message || "Ocorreu um erro ao tentar salvar as ferramentas.",
         variant: "destructive",
       });
+      throw error; // Re-throw para que o componente pai possa tratar
     } finally {
       setSavingTools(false);
     }
-  };
+  }, [solutionId, tools, toast]);
 
   return {
     tools,
