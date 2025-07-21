@@ -29,14 +29,14 @@ export function useResourceUpload(
         version: "1.0"
       };
       
-      // Convert metadata to a string for storage
+      // Metadata as JSONB object for storage
       const newResource = {
         solution_id: solutionId,
         name: fileName,
         url: url,
         type: fileType,
         format: format,
-        metadata: JSON.stringify(metadata),
+        metadata: metadata,
         size: fileSize
       };
       
