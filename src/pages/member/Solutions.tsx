@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { useSolutions } from "@/hooks/useSolutions";
+import { useSolutionsData } from "@/hooks/useSolutionsData";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,7 +19,7 @@ import LoadingScreen from "@/components/common/LoadingScreen";
 import { PageTransition } from "@/components/transitions/PageTransition";
 
 const Solutions = () => {
-  const { solutions, loading, error } = useSolutions();
+  const { solutions, loading, error } = useSolutionsData();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
@@ -107,15 +107,15 @@ const Solutions = () => {
                   >
                     Todas
                   </Button>
-                  {categories.map(category => (
+                   {categories.map((category) => (
                     <Button
-                      key={category}
+                      key={category as string}
                       variant={selectedCategory === category ? "default" : "outline"}
-                      onClick={() => setSelectedCategory(category)}
+                      onClick={() => setSelectedCategory(category as string)}
                       size="sm"
                       className={selectedCategory === category ? "bg-viverblue hover:bg-viverblue-dark" : ""}
                     >
-                      {category}
+                      {category as string}
                     </Button>
                   ))}
                 </div>
