@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Save, Loader2 } from "lucide-react";
@@ -11,12 +11,14 @@ interface ToolsChecklistFormProps {
   solutionId: string | null;
   onSave: () => void;
   saving: boolean;
+  onRegisterSaveFunction?: (saveFunction: () => Promise<void>) => void;
 }
 
 const ToolsChecklistForm: React.FC<ToolsChecklistFormProps> = ({
   solutionId,
   onSave,
-  saving
+  saving,
+  onRegisterSaveFunction
 }) => {
   const {
     tools,
@@ -26,54 +28,7 @@ const ToolsChecklistForm: React.FC<ToolsChecklistFormProps> = ({
     saveTools
   } = useToolsChecklist(solutionId);
 
-  // Escutar eventos de salvamento e validação
-  useEffect(() => {
-    const handleSaveStep = async (event: CustomEvent) => {
-      try {
-        await handleSaveTools();
-        
-        // Disparar evento de confirmação
-        const savedEvent = new CustomEvent('tools-saved', {
-          detail: { success: true }
-        });
-        window.dispatchEvent(savedEvent);
-      } catch (error) {
-        console.error("Erro ao salvar ferramentas:", error);
-        
-        // Disparar evento de erro
-        const errorEvent = new CustomEvent('tools-saved', {
-          detail: { 
-            success: false, 
-            error: error instanceof Error ? error.message : "Erro ao salvar ferramentas"
-          }
-        });
-        window.dispatchEvent(errorEvent);
-      }
-    };
-
-    const handleValidateStep = () => {
-      // Validar se tem pelo menos uma ferramenta selecionada
-      const isValid = tools.length > 0;
-      
-      const validateEvent = new CustomEvent('tools-validated', {
-        detail: { 
-          valid: isValid,
-          message: isValid ? "Ferramentas válidas" : "Selecione pelo menos uma ferramenta"
-        }
-      });
-      window.dispatchEvent(validateEvent);
-    };
-
-    window.addEventListener('save-tools-step', handleSaveStep as EventListener);
-    window.addEventListener('validate-tools-step', handleValidateStep as EventListener);
-    
-    return () => {
-      window.removeEventListener('save-tools-step', handleSaveStep as EventListener);
-      window.removeEventListener('validate-tools-step', handleValidateStep as EventListener);
-    };
-  }, [tools, saveTools]);
-
-  const handleSaveTools = async () => {
+  const handleSaveTools = useCallback(async () => {
     try {
       await saveTools();
       onSave();
@@ -81,7 +36,14 @@ const ToolsChecklistForm: React.FC<ToolsChecklistFormProps> = ({
       console.error("Erro ao salvar ferramentas:", error);
       throw error;
     }
-  };
+  }, [saveTools, onSave]);
+
+  // Registrar função de salvamento no hook principal
+  useEffect(() => {
+    if (onRegisterSaveFunction) {
+      onRegisterSaveFunction(handleSaveTools);
+    }
+  }, [handleSaveTools, onRegisterSaveFunction]);
 
   if (loading) {
     return <ToolsLoading />;

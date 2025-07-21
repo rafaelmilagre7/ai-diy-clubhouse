@@ -17,6 +17,7 @@ interface TabContentProps {
   currentValues: SolutionFormValues;
   onSubmit: (values: SolutionFormValues) => Promise<void>;
   saving: boolean;
+  registerSaveFunction?: (step: number, saveFunction: () => Promise<void>) => void;
 }
 
 const TabContent: React.FC<TabContentProps> = ({
@@ -25,7 +26,8 @@ const TabContent: React.FC<TabContentProps> = ({
   solution,
   currentValues,
   onSubmit,
-  saving
+  saving,
+  registerSaveFunction
 }) => {
   const isValid = solution && solution.id;
 
@@ -52,7 +54,12 @@ const TabContent: React.FC<TabContentProps> = ({
         break;
       case "tools":
         if (isValid) {
-          return <ToolsTab solutionId={solution?.id || null} onSave={() => onSubmit(currentValues)} saving={saving} />;
+          return <ToolsTab 
+            solutionId={solution?.id || null} 
+            onSave={() => onSubmit(currentValues)} 
+            saving={saving}
+            onRegisterSaveFunction={registerSaveFunction ? (fn) => registerSaveFunction(1, fn) : undefined}
+          />;
         }
         break;
       case "video":
@@ -75,15 +82,37 @@ const TabContent: React.FC<TabContentProps> = ({
     // For steps > 0, show content based on step
     switch (currentStep) {
       case 1:
-        return <ToolsTab solutionId={solution?.id || null} onSave={() => onSubmit(currentValues)} saving={saving} />;
+        return <ToolsTab 
+          solutionId={solution?.id || null} 
+          onSave={() => onSubmit(currentValues)} 
+          saving={saving}
+          onRegisterSaveFunction={registerSaveFunction ? (fn) => registerSaveFunction(1, fn) : undefined}
+        />;
       case 2:
-        return <ResourcesTab solutionId={solution?.id || null} onSave={() => onSubmit(currentValues)} saving={saving} />;
+        return <ResourcesTab 
+          solutionId={solution?.id || null} 
+          onSave={() => onSubmit(currentValues)} 
+          saving={saving}
+        />;
       case 3:
-        return <VideoTab solutionId={solution?.id || null} onSave={() => onSubmit(currentValues)} saving={saving} />;
+        return <VideoTab 
+          solutionId={solution?.id || null} 
+          onSave={() => onSubmit(currentValues)} 
+          saving={saving}
+        />;
       case 4:
-        return <ChecklistTab solutionId={solution?.id || null} onSave={() => onSubmit(currentValues)} saving={saving} />;
+        return <ChecklistTab 
+          solutionId={solution?.id || null} 
+          onSave={() => onSubmit(currentValues)} 
+          saving={saving}
+        />;
       case 5:
-        return <PublishTab solutionId={solution?.id || null} solution={solution} onSave={onSubmit} saving={saving} />;
+        return <PublishTab 
+          solutionId={solution?.id || null} 
+          solution={solution} 
+          onSave={onSubmit} 
+          saving={saving}
+        />;
     }
   }
 

@@ -1,188 +1,211 @@
 
-import { useState } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/auth";
+import { supabase, Solution } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
 import { SolutionFormValues } from "@/components/admin/solution/form/solutionFormSchema";
 import { useSolutionData } from "@/hooks/useSolutionData";
-import { useSolutionSave } from "@/hooks/useSolutionSave";
-import { useSolutionSteps } from "@/hooks/useSolutionSteps";
-import { useToast } from "@/hooks/use-toast";
 
 export const useSolutionEditor = (id: string | undefined, user: any) => {
+  const navigate = useNavigate();
   const { toast } = useToast();
   
-  // Get solution data
   const { solution, setSolution, loading } = useSolutionData(id);
-  
-  // Get step navigation
-  const { currentStep, setCurrentStep, activeTab, setActiveTab, totalSteps, stepTitles } = useSolutionSteps(0);
-  
-  // Get save functionality
-  const { saving, onSubmit } = useSolutionSave(id, setSolution);
-  
-  // Estado para salvamento de etapas específicas
-  const [stepSaving, setStepSaving] = useState(false);
-  
-  // Prepare the default and current form values
-  const defaultValues: SolutionFormValues = {
+  const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState("basic");
+  const [currentStep, setCurrentStep] = useState(0);
+  const [currentValues, setCurrentValues] = useState<SolutionFormValues>({
     title: "",
     description: "",
-    category: "Receita" as const,
-    difficulty: "medium" as const,
-    thumbnail_url: "",
-    published: false,
-    slug: "",
-  };
-  
-  const currentValues: SolutionFormValues = solution
-    ? {
-        title: solution.title,
-        description: solution.description,
-        category: solution.category as "Receita" | "Operacional" | "Estratégia",
-        difficulty: solution.difficulty as "easy" | "medium" | "advanced",
-        thumbnail_url: solution.thumbnail_url || "",
-        published: solution.published,
-        slug: solution.slug,
-      }
-    : defaultValues;
+    difficulty: "easy",
+    category_id: "",
+    status: "draft"
+  });
 
-  // Validate step completion before advancing
-  const validateStepCompletion = async (step: number): Promise<boolean> => {
-    switch (step) {
-      case 0: // Basic info - sempre válido se chegou até aqui
-        return true;
-      
-      case 1: // Tools - verificar se tem pelo menos uma ferramenta
-        try {
-          if (!solution?.id) return false;
-          
-          // Verificar se existem ferramentas selecionadas
-          const toolsEvent = new CustomEvent('validate-tools-step');
-          window.dispatchEvent(toolsEvent);
-          
-          // Por enquanto, permitir prosseguir (a validação real será implementada no componente)
-          return true;
-        } catch (error) {
-          console.error("Erro ao validar ferramentas:", error);
-          return false;
-        }
-      
-      case 2: // Resources - permitir prosseguir mesmo sem recursos
-        return true;
-      
-      case 3: // Videos - permitir prosseguir mesmo sem vídeos
-        return true;
-      
-      case 4: // Checklist - permitir prosseguir mesmo sem checklist
-        return true;
-      
-      default:
-        return true;
+  // Refs para funções de salvamento de cada etapa
+  const saveToolsRef = useRef<(() => Promise<void>) | null>(null);
+  const saveResourcesRef = useRef<(() => Promise<void>) | null>(null);
+  const saveVideoRef = useRef<(() => Promise<void>) | null>(null);
+  const saveChecklistRef = useRef<(() => Promise<void>) | null>(null);
+
+  const stepTitles = [
+    "Informações Básicas",
+    "Ferramentas", 
+    "Materiais",
+    "Vídeos",
+    "Checklist",
+    "Publicar"
+  ];
+  const totalSteps = stepTitles.length;
+
+  // Carregar dados da solução ao montar
+  useEffect(() => {
+    if (solution) {
+      setCurrentValues({
+        title: solution.title || "",
+        description: solution.description || "",
+        difficulty: solution.difficulty || "easy",
+        category_id: solution.category_id || "",
+        status: solution.status || "draft"
+      });
     }
-  };
+  }, [solution]);
 
-  // Save current step and advance
-  const handleNextStep = async (): Promise<void> => {
+  // Registrar funções de salvamento
+  const registerSaveFunction = useCallback((step: number, saveFunction: () => Promise<void>) => {
+    switch (step) {
+      case 1:
+        saveToolsRef.current = saveFunction;
+        break;
+      case 2:
+        saveResourcesRef.current = saveFunction;
+        break;
+      case 3:
+        saveVideoRef.current = saveFunction;
+        break;
+      case 4:
+        saveChecklistRef.current = saveFunction;
+        break;
+    }
+  }, []);
+
+  const onSubmit = useCallback(async (values: SolutionFormValues): Promise<void> => {
     try {
-      setStepSaving(true);
+      setSaving(true);
       
-      // Primeiro, salvar os dados atuais
-      await handleSaveCurrentStep();
-      
-      // Validar se a etapa atual está completa
-      const isValid = await validateStepCompletion(currentStep);
-      if (!isValid) {
-        throw new Error("Complete os campos obrigatórios desta etapa antes de continuar");
+      let solutionData;
+      if (id && solution) {
+        // Atualizar solução existente
+        const { data, error } = await supabase
+          .from("solutions")
+          .update({
+            title: values.title,
+            description: values.description,
+            difficulty: values.difficulty,
+            category_id: values.category_id || null,
+            status: values.status,
+            updated_at: new Date().toISOString()
+          })
+          .eq("id", id)
+          .select()
+          .single();
+          
+        if (error) throw error;
+        solutionData = data;
+      } else {
+        // Criar nova solução
+        const { data, error } = await supabase
+          .from("solutions")
+          .insert({
+            title: values.title,
+            description: values.description,
+            difficulty: values.difficulty,
+            category_id: values.category_id || null,
+            status: values.status,
+            user_id: user?.id
+          })
+          .select()
+          .single();
+          
+        if (error) throw error;
+        solutionData = data;
+        
+        // Redirecionar para edição da nova solução
+        navigate(`/admin/solutions/${solutionData.id}`);
       }
       
-      // Avançar para próxima etapa
-      if (currentStep < totalSteps - 1) {
-        setCurrentStep(currentStep + 1);
-        toast({
-          title: "Etapa salva com sucesso",
-          description: "Avançando para a próxima etapa."
-        });
-      }
-    } catch (error) {
-      console.error("Erro ao avançar etapa:", error);
+      setSolution(solutionData as Solution);
+      setCurrentValues(values);
+      
+    } catch (error: any) {
+      console.error("Erro ao salvar solução:", error);
       toast({
-        title: "Erro ao avançar",
-        description: error instanceof Error ? error.message : "Não foi possível avançar para a próxima etapa.",
+        title: "Erro ao salvar",
+        description: error.message || "Ocorreu um erro ao salvar a solução.",
         variant: "destructive"
       });
       throw error;
     } finally {
-      setStepSaving(false);
+      setSaving(false);
+    }
+  }, [id, solution, user, setSolution, navigate, toast]);
+
+  const handleSaveCurrentStep = useCallback(async (): Promise<void> => {
+    if (currentStep === 0) {
+      // Etapa básica - usar onSubmit
+      const form = document.querySelector("form");
+      if (form) {
+        const submitEvent = new Event("submit", { cancelable: true, bubbles: true });
+        form.dispatchEvent(submitEvent);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+      return;
+    }
+
+    // Outras etapas - usar funções registradas
+    const saveFunction = getSaveFunctionForStep(currentStep);
+    if (saveFunction) {
+      await saveFunction();
+    } else {
+      throw new Error(`Função de salvamento não encontrada para etapa ${currentStep}`);
+    }
+  }, [currentStep]);
+
+  const getSaveFunctionForStep = (step: number) => {
+    switch (step) {
+      case 1: return saveToolsRef.current;
+      case 2: return saveResourcesRef.current; 
+      case 3: return saveVideoRef.current;
+      case 4: return saveChecklistRef.current;
+      default: return null;
     }
   };
 
-  // Save current step data using direct function calls instead of events
-  const handleSaveCurrentStep = async (): Promise<void> => {
+  const handleNextStep = useCallback(async (): Promise<void> => {
     try {
-      // Para a primeira etapa, usar onSubmit padrão
-      if (currentStep === 0) {
-        await onSubmit(currentValues);
-        return;
-      }
-
-      // Para outras etapas, chamar função de salvamento específica
-      if (currentStep === 1) {
-        // Tools step - disparar salvamento das ferramentas
-        const saveToolsPromise = new Promise<void>((resolve, reject) => {
-          const handleToolsSaved = (event: CustomEvent) => {
-            window.removeEventListener('tools-saved', handleToolsSaved as EventListener);
-            if (event.detail.success) {
-              resolve();
-            } else {
-              reject(new Error(event.detail.error || "Erro ao salvar ferramentas"));
-            }
-          };
-          
-          window.addEventListener('tools-saved', handleToolsSaved as EventListener);
-          
-          // Disparar evento para salvar ferramentas
-          const saveEvent = new CustomEvent('save-tools-step');
-          window.dispatchEvent(saveEvent);
-          
-          // Timeout de segurança
-          setTimeout(() => {
-            window.removeEventListener('tools-saved', handleToolsSaved as EventListener);
-            reject(new Error("Timeout ao salvar ferramentas"));
-          }, 10000);
-        });
-        
-        await saveToolsPromise;
+      setSaving(true);
+      
+      // Salvar etapa atual antes de avançar
+      await handleSaveCurrentStep();
+      
+      // Avançar para próxima etapa
+      if (currentStep < totalSteps - 1) {
+        setCurrentStep(prev => prev + 1);
       }
       
-      // Para outras etapas, implementar salvamento específico conforme necessário
+      toast({
+        title: "Progresso salvo",
+        description: "Etapa salva com sucesso!"
+      });
       
-    } catch (error) {
-      console.error("Erro ao salvar etapa atual:", error);
+    } catch (error: any) {
+      console.error("Erro ao avançar etapa:", error);
+      toast({
+        title: "Erro ao salvar",
+        description: error.message || "Ocorreu um erro ao salvar a etapa atual.",
+        variant: "destructive"
+      });
       throw error;
+    } finally {
+      setSaving(false);
     }
-  };
-
-  // Create a submit handler that uses our onSubmit function
-  const handleSubmit = async (values: SolutionFormValues): Promise<void> => {
-    try {
-      await onSubmit(values);
-    } catch (error) {
-      console.error("Erro ao submeter formulário:", error);
-      throw error;
-    }
-  };
+  }, [currentStep, totalSteps, handleSaveCurrentStep, toast]);
 
   return {
     solution,
     loading,
-    saving: saving || stepSaving,
+    saving,
     activeTab,
     setActiveTab,
-    onSubmit: handleSubmit,
+    onSubmit,
     currentValues,
     currentStep,
     setCurrentStep,
     totalSteps,
     stepTitles,
     handleNextStep,
-    handleSaveCurrentStep
+    handleSaveCurrentStep,
+    registerSaveFunction
   };
 };
