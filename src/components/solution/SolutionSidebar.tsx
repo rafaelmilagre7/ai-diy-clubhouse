@@ -1,7 +1,8 @@
+
 import React from "react";
 import { Solution } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
-import { Loader2, PlayCircle } from "lucide-react";
+import { Loader2, PlayCircle, ArrowRight } from "lucide-react";
 
 interface SolutionSidebarProps {
   solution: Solution;
@@ -18,6 +19,9 @@ export const SolutionSidebar = ({
   continueImplementation, 
   initializing 
 }: SolutionSidebarProps) => {
+  const hasProgress = progress && !progress.is_completed;
+  const isCompleted = progress?.is_completed;
+  
   return (
     <div className="space-y-6">
       {/* Glassmorphism Progress Card */}
@@ -35,14 +39,50 @@ export const SolutionSidebar = ({
             Progresso da Implementação
           </h3>
           
-          {progress ? (
-            <div className="space-y-3">
+          {isCompleted ? (
+            <div className="text-center py-4">
+              <div className="bg-green-500/10 rounded-lg p-4 mb-4">
+                <p className="text-green-400 font-medium">✅ Implementação Concluída!</p>
+                <p className="text-sm text-green-300 mt-1">
+                  Parabéns por completar esta solução
+                </p>
+              </div>
+              <Button
+                onClick={() => continueImplementation()}
+                className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white border-0 shadow-lg hover:shadow-green-600/20 transition-all duration-300"
+              >
+                <ArrowRight className="h-4 w-4 mr-2" />
+                Ver Implementação
+              </Button>
+            </div>
+          ) : hasProgress ? (
+            <div className="space-y-4">
               <div className="text-center">
                 <p className="text-sm text-neutral-400 mb-2">Progresso atual</p>
-                <div className="bg-viverblue/10 rounded-lg p-3">
+                <div className="bg-viverblue/10 rounded-lg p-3 mb-4">
                   <p className="text-viverblue-light font-medium">Em andamento</p>
+                  <p className="text-xs text-viverblue-light/70 mt-1">
+                    Módulo {(progress.current_module || 0) + 1}
+                  </p>
                 </div>
               </div>
+              <Button
+                onClick={() => continueImplementation()}
+                disabled={initializing}
+                className="w-full bg-gradient-to-r from-viverblue to-viverblue-dark hover:from-viverblue-light hover:to-viverblue text-white border-0 shadow-lg hover:shadow-viverblue/20 transition-all duration-300"
+              >
+                {initializing ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Carregando...
+                  </>
+                ) : (
+                  <>
+                    <ArrowRight className="h-4 w-4 mr-2" />
+                    Continuar Implementação
+                  </>
+                )}
+              </Button>
             </div>
           ) : (
             <div className="text-center py-4">

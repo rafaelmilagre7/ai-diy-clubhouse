@@ -16,7 +16,7 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
   const startImplementation = async () => {
     if (!user || !solutionId) {
       toast.error("Você precisa estar logado para implementar esta solução");
-      return false; // Retorna false em caso de erro
+      return false;
     }
     
     try {
@@ -33,7 +33,7 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
             solution_id: solutionId,
             current_module: 0,
             is_completed: false,
-            completed_modules: [], // Initialize as empty array
+            completed_modules: [],
             last_activity: new Date().toISOString(),
           })
           .select()
@@ -45,15 +45,13 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
         }
         
         console.log("Progresso criado com sucesso:", data);
-      } else {
-        console.log("Usando progresso existente:", progress);
       }
       
       // Navigate directly to the implementation page
       toast.success("Redirecionando para a implementação...");
       console.log("Redirecionando para /implement/" + solutionId + "/0");
       navigate(`/implement/${solutionId}/0`);
-      return true; // Retorna true quando a implementação é iniciada com sucesso
+      return true;
     } catch (error) {
       console.error("Erro ao iniciar implementação:", error);
       uiToast({
@@ -61,35 +59,52 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
         description: "Ocorreu um erro ao tentar iniciar a implementação da solução.",
         variant: "destructive",
       });
-      return false; // Retorna false em caso de erro
+      return false;
     } finally {
       setInitializing(false);
     }
   };
   
-  const continueImplementation = () => {
-    if (!solutionId || !progress) {
-      toast.error("Não foi possível continuar a implementação");
-      return false; // Retorna false em caso de erro
+  const continueImplementation = async () => {
+    if (!user || !solutionId) {
+      toast.error("Você precisa estar logado para continuar a implementação");
+      return;
     }
     
-    // Navigate directly to the implementation page
-    console.log("Continuando implementação no módulo:", progress.current_module);
-    toast.success("Redirecionando para onde você parou...");
-    console.log("Redirecionando para /implement/" + solutionId + "/" + (progress.current_module || 0));
-    navigate(`/implement/${solutionId}/${progress.current_module || 0}`);
-    return true; // Retorna true quando a continuação é bem-sucedida
+    try {
+      setInitializing(true);
+      
+      // If no progress exists, treat as start implementation
+      if (!progress) {
+        await startImplementation();
+        return;
+      }
+      
+      // Navigate to current module or start from beginning
+      const currentModule = progress.current_module || 0;
+      console.log("Continuando implementação no módulo:", currentModule);
+      toast.success("Redirecionando para onde você parou...");
+      navigate(`/implement/${solutionId}/${currentModule}`);
+      
+    } catch (error) {
+      console.error("Erro ao continuar implementação:", error);
+      uiToast({
+        title: "Erro ao continuar implementação",
+        description: "Ocorreu um erro ao tentar continuar a implementação.",
+        variant: "destructive",
+      });
+    } finally {
+      setInitializing(false);
+    }
   };
   
   const toggleFavorite = () => {
     toast.success("Solução adicionada aos favoritos!");
-    // Implementação futura para favoritar soluções
     return true;
   };
   
   const downloadMaterials = () => {
     toast.success("Baixando materiais de apoio...");
-    // Implementação futura para download de materiais
     return true;
   };
   
