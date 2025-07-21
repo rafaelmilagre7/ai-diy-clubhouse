@@ -31,7 +31,7 @@ import MemberCertificates from '@/pages/member/learning/MemberCertificates';
 
 // Member Community pages - CORRIGIDA IMPORTAÇÃO
 import CommunityHome from '@/pages/CommunityHome'; // Nova página unificada
-import { TopicView } from '@/pages/member/community/TopicView';
+import TopicView from '@/pages/member/community/TopicView';
 import CategoryView from '@/pages/member/community/CategoryView';
 import NewTopic from '@/pages/member/community/NewTopic';
 import CategoryListPage from '@/pages/member/community/CategoryListPage';
