@@ -179,7 +179,7 @@ const WizardTabContent: React.FC<WizardTabContentProps> = ({
           </h2>
           {solution.implementation_steps ? (
             <div className="space-y-6">
-              {JSON.parse(solution.implementation_steps).map((step: any, index: number) => (
+              {(typeof solution.implementation_steps === 'string' ? JSON.parse(solution.implementation_steps) : solution.implementation_steps).map((step: any, index: number) => (
                 <motion.div
                   key={index}
                   initial={{ opacity: 0, x: -20 }}
@@ -215,7 +215,7 @@ const WizardTabContent: React.FC<WizardTabContentProps> = ({
           </h2>
           {solution.checklist_items ? (
             <div className="space-y-4">
-              {JSON.parse(solution.checklist_items).map((item: any, index: number) => (
+              {(typeof solution.checklist_items === 'string' ? JSON.parse(solution.checklist_items) : solution.checklist_items).map((item: any, index: number) => (
                 <motion.div
                   key={index}
                   initial={{ opacity: 0, scale: 0.95 }}

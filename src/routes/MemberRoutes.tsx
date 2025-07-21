@@ -1,8 +1,8 @@
 
 import React from "react";
 import { Routes, Route } from "react-router-dom";
-import { MemberLayout } from "@/components/layout/MemberLayout";
-import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import MemberLayout from "@/components/layout/MemberLayout";
+// import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 // Pages
 import Dashboard from "@/pages/member/Dashboard";
@@ -12,17 +12,13 @@ import SolutionImplementation from "@/pages/member/implementation/SolutionImplem
 import Networking from "@/pages/member/Networking";
 import Profile from "@/pages/member/Profile";
 import Benefits from "@/pages/member/Benefits";
-import Community from "@/pages/member/Community";
-import CommunityTopic from "@/pages/member/CommunityTopic";
+// import Community from "@/pages/member/Community";
+// import CommunityTopic from "@/pages/member/CommunityTopic";
 
 export const MemberRoutes = () => {
   return (
     <Routes>
-      <Route path="/" element={
-        <ProtectedRoute>
-          <MemberLayout />
-        </ProtectedRoute>
-      }>
+      <Route path="/" element={<MemberLayout><></></MemberLayout>}>
         <Route index element={<Dashboard />} />
         <Route path="solutions" element={<Solutions />} />
         <Route path="solution/:id" element={<SolutionDetails />} />
@@ -33,8 +29,8 @@ export const MemberRoutes = () => {
         <Route path="networking" element={<Networking />} />
         <Route path="profile" element={<Profile />} />
         <Route path="benefits" element={<Benefits />} />
-        <Route path="community" element={<Community />} />
-        <Route path="community/topic/:id" element={<CommunityTopic />} />
+        {/* <Route path="community" element={<Community />} />
+        <Route path="community/topic/:id" element={<CommunityTopic />} /> */}
       </Route>
     </Routes>
   );

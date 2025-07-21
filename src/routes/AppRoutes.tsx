@@ -3,7 +3,7 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { authRoutes } from './AuthRoutes';
 import { adminRoutes } from './AdminRoutes';
-import { memberRoutes } from './MemberRoutes';
+import { MemberRoutes } from './MemberRoutes';
 import { formacaoRoutes } from './FormacaoRoutes';
 import { certificateRoutes } from './CertificateRoutes';
 import { CommunityRedirects } from '@/components/routing/CommunityRedirects';
@@ -75,10 +75,8 @@ const AppRoutes = () => {
           <Route key={route.path} path={route.path} element={route.element} />
         ))}
         
-        {/* Member Routes - Agora incluindo a rota raiz com RootRedirect */}
-        {memberRoutes.map((route) => (
-          <Route key={route.path} path={route.path} element={route.element} />
-        ))}
+        {/* Member Routes */}
+        <Route path="/*" element={<MemberRoutes />} />
         
         {/* Admin Routes */}
         {adminRoutes.map((route) => (
