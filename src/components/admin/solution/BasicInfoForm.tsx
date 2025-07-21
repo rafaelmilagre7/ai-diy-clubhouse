@@ -29,6 +29,8 @@ const BasicInfoForm = ({
   const title = form.watch("title");
   const difficulty = form.watch("difficulty");
   
+  console.log("🔧 BasicInfoForm: Renderizando com valores:", { title, difficulty });
+  
   // Auto-gerar slug quando o título mudar
   useEffect(() => {
     if (title) {
@@ -43,15 +45,30 @@ const BasicInfoForm = ({
     }
   }, [title, form]);
 
+  const handleFormSubmit = async (values: SolutionFormValues) => {
+    console.log("📝 BasicInfoForm: Submetendo formulário com valores:", values);
+    try {
+      await onSubmit(values);
+      console.log("✅ BasicInfoForm: Formulário submetido com sucesso");
+    } catch (error) {
+      console.error("❌ BasicInfoForm: Erro ao submeter formulário:", error);
+      throw error;
+    }
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <BasicInfoLeftColumn form={form} />
           <BasicInfoRightColumn form={form} difficulty={difficulty} />
         </div>
 
-        <Button type="submit" disabled={saving} className="bg-primary hover:bg-primary/90">
+        <Button 
+          type="submit" 
+          disabled={saving} 
+          className="w-full bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
+        >
           {saving ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />

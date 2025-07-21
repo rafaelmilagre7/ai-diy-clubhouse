@@ -51,7 +51,7 @@ const TabContent: React.FC<TabContentProps> = ({
     // In step 0, show content based on active tab
     switch (activeTab) {
       case "basic":
-        return <BasicInfoTab currentValues={currentValues} onSubmit={onSubmit} saving={saving} />;
+        return <BasicInfoTab currentValues={currentValues} onSubmit={onSubmit} saving={saving} onStepSave={onStepSave} />;
       case "resources":
         if (isValid) {
           return <ResourcesTab solutionId={solution?.id || null} onSave={() => onSubmit(currentValues)} saving={saving} />;
@@ -99,7 +99,7 @@ const TabContent: React.FC<TabContentProps> = ({
 
   // Default for step 0 if no valid tab is selected
   if (currentStep === 0) {
-    return <BasicInfoTab currentValues={currentValues} onSubmit={onSubmit} saving={saving} />;
+    return <BasicInfoTab currentValues={currentValues} onSubmit={onSubmit} saving={saving} onStepSave={onStepSave} />;
   }
 
   // Default alert for unrecognized steps
