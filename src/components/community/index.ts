@@ -1,4 +1,3 @@
-
 // Exportações centralizadas dos componentes de comunidade
 export { PostItem } from './PostItem';
 export { TopicItem } from './TopicItem';
@@ -23,3 +22,6 @@ export { CommunityBreadcrumbs } from './CommunityBreadcrumbs';
 export { CommunityHeader } from './CommunityHeader';
 export { CommunitySearch } from './CommunitySearch';
 export { CommunityStatistics } from './CommunityStatistics';
+export { InlineImagePreview } from './InlineImagePreview';
+export { DragDropImageZone } from './DragDropImageZone';
+export { ImageEditDialog } from './ImageEditDialog';
