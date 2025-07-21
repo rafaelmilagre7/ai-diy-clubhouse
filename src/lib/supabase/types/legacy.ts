@@ -21,6 +21,27 @@ export interface Solution {
   related_solutions?: string[];
   author_id?: string;
   overview?: string;
+  image_url?: string;
+  learning_objectives?: string[];
+  // Novos campos para implementação
+  implementation_steps?: Array<{
+    title: string;
+    description?: string;
+    instructions?: string;
+    tips?: string[];
+    resources?: Array<{
+      title: string;
+      url: string;
+      type: string;
+    }>;
+  }>;
+  checklist_items?: Array<{
+    id: string;
+    title: string;
+    description?: string;
+    checked?: boolean;
+  }>;
+  completion_requirements?: string[];
   checklist?: Array<{
     id: string;
     title: string;

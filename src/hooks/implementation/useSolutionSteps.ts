@@ -53,7 +53,8 @@ export const useSolutionSteps = (solution: Solution | null): SolutionStep[] => {
     }
     
     // 3. Checklist Step - Usar dados reais de checklist_items
-    if (solution.checklist_items && Array.isArray(solution.checklist_items) && solution.checklist_items.length > 0) {
+    const checklistItems = solution.checklist_items || solution.checklist || [];
+    if (checklistItems && Array.isArray(checklistItems) && checklistItems.length > 0) {
       steps.push({
         id: `${solution.id}-checklist`,
         title: "Verificação Final",
@@ -61,7 +62,7 @@ export const useSolutionSteps = (solution: Solution | null): SolutionStep[] => {
         order_index: steps.length,
         content: {
           description: "Verifique se todos os itens foram implementados corretamente.",
-          checklist: solution.checklist_items
+          checklist: checklistItems
         }
       });
     }
