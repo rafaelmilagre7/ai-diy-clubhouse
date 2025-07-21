@@ -112,7 +112,7 @@ const SolutionDetails = () => {
                 solutionId={solution.id}
                 progress={progress}
                 startImplementation={startImplementation}
-                continueImplementation={() => Promise.resolve()}
+                continueImplementation={continueImplementation}
                 initializing={initializing}
               />
             </FadeTransition>
@@ -124,7 +124,7 @@ const SolutionDetails = () => {
                 solution={solution}
                 progress={progress}
                 startImplementation={startImplementation}
-                continueImplementation={() => Promise.resolve()}
+                continueImplementation={continueImplementation}
                 initializing={initializing}
               />
             </FadeTransition>
