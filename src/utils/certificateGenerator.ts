@@ -1,5 +1,6 @@
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import viverDeIaLogo from '@/assets/viver-de-ia-logo.png';
 
 export interface CertificateData {
   userName: string;
@@ -59,9 +60,7 @@ export const generateCertificatePDF = async (certificateData: CertificateData): 
               align-items: center; 
               justify-content: center;
             ">
-              <svg style="width: 48px; height: 48px; color: #8A5CF6;" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2L15.09 8.26L22 9L17 14L18.18 21L12 17.77L5.82 21L7 14L2 9L8.91 8.26L12 2Z"/>
-              </svg>
+              <img src="${viverDeIaLogo}" alt="VIVER DE IA Logo" style="width: 64px; height: 64px; object-fit: contain;" />
             </div>
           </div>
           
@@ -77,10 +76,9 @@ export const generateCertificatePDF = async (certificateData: CertificateData): 
           
           <div style="display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 8px;">
             <div style="width: 32px; height: 2px; background: linear-gradient(90deg, #8A5CF6, #3B82F6); border-radius: 2px;"></div>
-            <p style="font-size: 24px; color: #E5E7EB; font-weight: 600; margin: 0;">VIA</p>
+            <p style="font-size: 24px; color: #E5E7EB; font-weight: 600; margin: 0;">VIVER DE IA</p>
             <div style="width: 32px; height: 2px; background: linear-gradient(90deg, #3B82F6, #10B981); border-radius: 2px;"></div>
           </div>
-          <p style="font-size: 18px; color: #9CA3AF; margin: 0;">Viverde Inteligência Artificial</p>
         </div>
         
         <div style="margin: 40px 0;">
@@ -132,6 +130,16 @@ export const generateCertificatePDF = async (certificateData: CertificateData): 
         </div>
         
         <div style="text-align: center;">
+          <div style="margin-bottom: 16px;">
+            <p style="
+              font-size: 24px; 
+              color: #3B82F6; 
+              margin: 0 0 8px 0; 
+              font-family: 'Dancing Script', cursive; 
+              font-weight: 600;
+            ">Rafael G Milagre</p>
+            <div style="width: 128px; height: 2px; background: #9CA3AF; margin: 0 auto;"></div>
+          </div>
           <div style="
             width: 160px; 
             height: 80px; 
@@ -141,7 +149,7 @@ export const generateCertificatePDF = async (certificateData: CertificateData): 
             flex-direction: column;
             align-items: center; 
             justify-content: center; 
-            margin-bottom: 12px;
+            margin: 0 auto 12px;
             border: 1px solid rgba(138, 92, 246, 0.2);
           ">
             <div style="
@@ -165,7 +173,7 @@ export const generateCertificatePDF = async (certificateData: CertificateData): 
         
         <div style="text-align: right;">
           <p style="font-size: 14px; color: #9CA3AF; margin: 0 0 4px 0;">Emitido por</p>
-          <p style="font-weight: 600; color: #E5E7EB; margin: 0; font-size: 18px;">VIA - Viverde IA</p>
+          <p style="font-weight: 600; color: #E5E7EB; margin: 0; font-size: 18px;">VIVER DE IA</p>
         </div>
       </div>
     </div>

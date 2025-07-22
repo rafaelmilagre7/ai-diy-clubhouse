@@ -421,6 +421,47 @@ export type Database = {
           },
         ]
       }
+      certificate_files: {
+        Row: {
+          certificate_id: string
+          created_at: string | null
+          file_path: string
+          file_size: number | null
+          file_url: string | null
+          id: string
+          mime_type: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          certificate_id: string
+          created_at?: string | null
+          file_path: string
+          file_size?: number | null
+          file_url?: string | null
+          id?: string
+          mime_type?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          certificate_id?: string
+          created_at?: string | null
+          file_path?: string
+          file_size?: number | null
+          file_url?: string | null
+          id?: string
+          mime_type?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "certificate_files_certificate_id_fkey"
+            columns: ["certificate_id"]
+            isOneToOne: false
+            referencedRelation: "solution_certificates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       communication_deliveries: {
         Row: {
           clicked_at: string | null
@@ -3705,6 +3746,8 @@ export type Database = {
       solution_certificates: {
         Row: {
           certificate_filename: string | null
+          certificate_pdf_path: string | null
+          certificate_pdf_url: string | null
           certificate_url: string | null
           created_at: string
           id: string
@@ -3718,6 +3761,8 @@ export type Database = {
         }
         Insert: {
           certificate_filename?: string | null
+          certificate_pdf_path?: string | null
+          certificate_pdf_url?: string | null
           certificate_url?: string | null
           created_at?: string
           id?: string
@@ -3731,6 +3776,8 @@ export type Database = {
         }
         Update: {
           certificate_filename?: string | null
+          certificate_pdf_path?: string | null
+          certificate_pdf_url?: string | null
           certificate_url?: string | null
           created_at?: string
           id?: string

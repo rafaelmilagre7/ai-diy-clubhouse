@@ -1,6 +1,7 @@
 import React from 'react';
 import { Download, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import viverDeIaLogo from '@/assets/viver-de-ia-logo.png';
 
 interface CertificateViewerProps {
   userName: string;
@@ -39,19 +40,20 @@ export const CertificateViewer: React.FC<CertificateViewerProps> = ({
       <div className="relative text-center mb-8">
         <div className="inline-flex items-center justify-center w-24 h-24 aurora-gradient rounded-full mb-6 aurora-glow p-1">
           <div className="w-full h-full bg-card rounded-full flex items-center justify-center">
-            <svg className="w-12 h-12 text-aurora" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2L15.09 8.26L22 9L17 14L18.18 21L12 17.77L5.82 21L7 14L2 9L8.91 8.26L12 2Z"/>
-            </svg>
+            <img 
+              src={viverDeIaLogo} 
+              alt="VIVER DE IA Logo" 
+              className="w-16 h-16 object-contain"
+            />
           </div>
         </div>
         
         <h1 className="text-5xl font-bold aurora-text-gradient mb-3">Certificado de Conclusão</h1>
         <div className="flex items-center justify-center gap-2 mb-2">
           <div className="w-8 h-0.5 aurora-gradient rounded-full"></div>
-          <p className="text-xl text-muted-foreground font-medium">VIA</p>
+          <p className="text-xl text-muted-foreground font-medium">VIVER DE IA</p>
           <div className="w-8 h-0.5 aurora-gradient rounded-full"></div>
         </div>
-        <p className="text-lg text-muted-foreground">Viverde Inteligência Artificial</p>
       </div>
       
       {/* Content */}
@@ -92,6 +94,12 @@ export const CertificateViewer: React.FC<CertificateViewerProps> = ({
         </div>
         
         <div className="text-center">
+          <div className="mb-4">
+            <p className="text-xl font-signature text-viverblue mb-2" style={{ fontFamily: 'Dancing Script, cursive' }}>
+              Rafael G Milagre
+            </p>
+            <div className="w-32 h-0.5 bg-muted mx-auto"></div>
+          </div>
           <div className="w-40 h-20 aurora-glass rounded-xl flex flex-col items-center justify-center mb-3 aurora-pulse">
             <div className="w-8 h-8 aurora-gradient rounded-full mb-2 flex items-center justify-center">
               <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -105,7 +113,7 @@ export const CertificateViewer: React.FC<CertificateViewerProps> = ({
         
         <div className="text-right">
           <p className="text-sm text-muted-foreground/70 mb-1">Emitido por</p>
-          <p className="font-semibold text-foreground text-lg">VIA - Viverde IA</p>
+          <p className="font-semibold text-foreground text-lg">VIVER DE IA</p>
         </div>
       </div>
       
