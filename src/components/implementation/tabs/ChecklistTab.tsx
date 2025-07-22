@@ -122,13 +122,17 @@ const ChecklistTab: React.FC<ChecklistTabProps> = ({ solutionId, onComplete }) =
 
       console.log('ChecklistTab: Atualizando progresso:', { itemId, isCompleted, itemNotes });
 
-      // Buscar dados atuais
-      const { data: currentData } = await supabase
+      // Buscar dados atuais do usuário
+      const { data: currentData, error: fetchError } = await supabase
         .from('implementation_checkpoints')
         .select('*')
         .eq('user_id', user.id)
         .eq('solution_id', solutionId)
-        .single();
+        .maybeSingle();
+
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        throw fetchError;
+      }
 
       let checkpointData;
       let completedSteps: string[] = [];
@@ -154,14 +158,37 @@ const ChecklistTab: React.FC<ChecklistTabProps> = ({ solutionId, onComplete }) =
           .map((item: any, index: number) => item.completed ? String(index) : null)
           .filter(Boolean);
 
+        const progressPercentage = checkpointData.items.length > 0 
+          ? Math.round((completedSteps.length / checkpointData.items.length) * 100)
+          : 0;
+
+        // Fazer UPDATE
+        const { data, error } = await supabase
+          .from('implementation_checkpoints')
+          .update({
+            checkpoint_data: checkpointData,
+            completed_steps: completedSteps,
+            total_steps: checkpointData.items.length,
+            progress_percentage: progressPercentage,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', currentData.id)
+          .select()
+          .single();
+
+        if (error) throw error;
+        return data;
+
       } else {
-        // Criar novos dados baseados no template do admin
-        const { data: adminData } = await supabase
+        // Buscar template do admin para criar novo registro
+        const { data: adminData, error: adminError } = await supabase
           .from('implementation_checkpoints')
           .select('checkpoint_data')
           .eq('solution_id', solutionId)
           .limit(1)
           .single();
+
+        if (adminError) throw adminError;
 
         if (adminData?.checkpoint_data?.items) {
           checkpointData = {
@@ -178,34 +205,34 @@ const ChecklistTab: React.FC<ChecklistTabProps> = ({ solutionId, onComplete }) =
             .map((item: any, index: number) => item.completed ? String(index) : null)
             .filter(Boolean);
         }
+
+        const progressPercentage = checkpointData?.items?.length > 0 
+          ? Math.round((completedSteps.length / checkpointData.items.length) * 100)
+          : 0;
+
+        // Fazer INSERT
+        const { data, error } = await supabase
+          .from('implementation_checkpoints')
+          .insert({
+            user_id: user.id,
+            solution_id: solutionId,
+            checkpoint_data: checkpointData,
+            completed_steps: completedSteps,
+            total_steps: checkpointData?.items?.length || 0,
+            progress_percentage: progressPercentage
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+        return data;
       }
-
-      const progressPercentage = checkpointData?.items?.length > 0 
-        ? Math.round((completedSteps.length / checkpointData.items.length) * 100)
-        : 0;
-
-      // Upsert no banco
-      const { data, error } = await supabase
-        .from('implementation_checkpoints')
-        .upsert({
-          user_id: user.id,
-          solution_id: solutionId,
-          checkpoint_data: checkpointData,
-          completed_steps: completedSteps,
-          total_steps: checkpointData?.items?.length || 0,
-          progress_percentage: progressPercentage,
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'user_id,solution_id'
-        });
-
-      if (error) throw error;
-      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ 
         queryKey: ['user-checklist-progress', solutionId, user?.id] 
       });
+      toast.success('Progresso salvo com sucesso!');
     },
     onError: (error) => {
       toast.error('Erro ao salvar progresso');
