@@ -55,7 +55,9 @@ const ImplementationTabsContainer: React.FC = () => {
     }
   };
 
-  const progress = (completedTabs.length / IMPLEMENTATION_TABS.length) * 100;
+  const progress = completedTabs.includes('completion') 
+    ? 100 
+    : (completedTabs.length / (IMPLEMENTATION_TABS.length - 1)) * 100;
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -92,11 +94,12 @@ const ImplementationTabsContainer: React.FC = () => {
       />
 
       {/* Tab Content */}
-      <Card className="min-h-[600px] bg-gradient-to-br from-background/80 to-background/60 backdrop-blur-sm border-primary/10">
-        <div className="p-6">
+      <div className="relative bg-gradient-to-br from-card/40 via-card/20 to-transparent backdrop-blur-md rounded-3xl border-0 shadow-lg min-h-[600px]">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/2 to-transparent rounded-3xl"></div>
+        <div className="relative p-6">
           {renderTabContent()}
         </div>
-      </Card>
+      </div>
     </div>
   );
 };

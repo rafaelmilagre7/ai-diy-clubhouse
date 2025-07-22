@@ -3,11 +3,9 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/auth";
 import { useNavigate } from "react-router-dom";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Trophy, Award, CheckCircle, Star } from "lucide-react";
+import { CheckCircle, Sparkles, ArrowRight, Download, Gift } from "lucide-react";
 import confetti from "canvas-confetti";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -28,8 +26,6 @@ const CompletionTab: React.FC<CompletionTabProps> = ({
   const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [feedback, setFeedback] = useState("");
-  const [rating, setRating] = useState(0);
 
   const completeSolutionMutation = useMutation({
     mutationFn: async () => {
@@ -61,21 +57,6 @@ const CompletionTab: React.FC<CompletionTabProps> = ({
         });
 
       if (certificateError) throw certificateError;
-
-      // Save feedback if provided
-      if (feedback.trim() || rating > 0) {
-        const { error: feedbackError } = await supabase
-          .from('solution_feedback')
-          .insert({
-            user_id: user.id,
-            solution_id: solutionId,
-            rating: rating,
-            feedback: feedback.trim(),
-            created_at: new Date().toISOString()
-          });
-
-        if (feedbackError) console.error('Error saving feedback:', feedbackError);
-      }
 
       return { progressData, certificateData };
     },
@@ -116,63 +97,86 @@ const CompletionTab: React.FC<CompletionTabProps> = ({
   };
 
   return (
-    <div className="space-y-6">
-      <div className="text-center">
-        <div className="flex justify-center mb-4">
-          <div className="relative">
-            <Trophy className="w-16 h-16 text-yellow-500" />
-            {canComplete && (
-              <div className="absolute -top-2 -right-2">
-                <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center animate-pulse">
-                  <CheckCircle className="w-4 h-4 text-primary-foreground" />
-                </div>
+    <div className="space-y-8 animate-fade-in">
+      {/* Header Hero Section */}
+      <div className="relative text-center">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/10 rounded-3xl blur-xl"></div>
+        <div className="relative p-8 bg-gradient-to-br from-card/60 via-card/40 to-transparent backdrop-blur-md rounded-3xl border-0">
+          <div className="mb-6">
+            <div className="relative inline-flex items-center justify-center w-20 h-20 mx-auto mb-4">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary to-secondary rounded-2xl animate-pulse"></div>
+              <div className="relative flex items-center justify-center w-full h-full bg-gradient-to-br from-primary/90 to-secondary/90 rounded-2xl">
+                <Sparkles className="w-10 h-10 text-white" />
               </div>
-            )}
+            </div>
           </div>
+          
+          <h1 className="text-3xl font-bold mb-3 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+            {canComplete ? "Implementação Concluída!" : "Quase Lá!"}
+          </h1>
+          
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            {canComplete 
+              ? "Parabéns! Você completou todas as etapas necessárias. Agora é só finalizar e receber seu certificado."
+              : "Complete mais algumas etapas para finalizar sua implementação e receber seu certificado."
+            }
+          </p>
         </div>
-        <h2 className="text-2xl font-bold mb-2">Conclusão da Implementação</h2>
-        <p className="text-muted-foreground">
-          {canComplete 
-            ? "Parabéns! Você está pronto para concluir esta solução."
-            : "Complete mais etapas antes de finalizar a implementação."
-          }
-        </p>
       </div>
 
-      {/* Progress Summary */}
-      <Card className="p-6">
-        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <Award className="w-5 h-5 text-primary" />
-          Resumo do Progresso
-        </h3>
-        
-        <div className="space-y-3">
-          <div className="flex justify-between items-center">
-            <span>Progresso geral</span>
-            <Badge variant={progress >= 80 ? "default" : "secondary"}>
+      {/* Progress Overview */}
+      <div className="relative bg-gradient-to-br from-card/40 via-card/20 to-transparent backdrop-blur-md rounded-2xl p-6 border-0">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/3 to-transparent rounded-2xl"></div>
+        <div className="relative">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold">Seu Progresso</h2>
+            <Badge 
+              variant={progress >= 80 ? "default" : "secondary"}
+              className={cn(
+                "text-lg px-4 py-2",
+                progress >= 80 && "bg-gradient-to-r from-primary to-secondary"
+              )}
+            >
               {Math.round(progress)}%
             </Badge>
           </div>
           
-          <div className="w-full bg-muted rounded-full h-3">
+          <div className="relative w-full h-4 bg-gradient-to-r from-muted/50 to-muted/30 rounded-full overflow-hidden mb-6">
             <div 
-              className="bg-gradient-to-r from-primary to-primary-glow h-3 rounded-full transition-all duration-500"
+              className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary via-primary to-secondary rounded-full transition-all duration-1000 ease-out"
               style={{ width: `${progress}%` }}
-            />
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"></div>
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 mt-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {Object.entries(tabNames).map(([tabId, tabName]) => {
               const isCompleted = completedTabs.includes(tabId);
               return (
-                <div key={tabId} className="flex items-center gap-2">
-                  {isCompleted ? (
-                    <CheckCircle className="w-4 h-4 text-primary" />
-                  ) : (
-                    <div className="w-4 h-4 rounded-full border-2 border-muted-foreground" />
+                <div 
+                  key={tabId} 
+                  className={cn(
+                    "flex items-center gap-3 p-3 rounded-xl transition-all duration-200",
+                    isCompleted 
+                      ? "bg-gradient-to-r from-primary/10 to-secondary/10 border border-primary/20" 
+                      : "bg-muted/30"
                   )}
+                >
+                  <div className={cn(
+                    "flex items-center justify-center w-8 h-8 rounded-lg",
+                    isCompleted 
+                      ? "bg-gradient-to-br from-primary to-secondary" 
+                      : "bg-muted border-2 border-muted-foreground/30"
+                  )}>
+                    {isCompleted ? (
+                      <CheckCircle className="w-5 h-5 text-white" />
+                    ) : (
+                      <div className="w-2 h-2 rounded-full bg-muted-foreground/50" />
+                    )}
+                  </div>
                   <span className={cn(
-                    "text-sm",
+                    "font-medium",
                     isCompleted ? "text-foreground" : "text-muted-foreground"
                   )}>
                     {tabName}
@@ -182,75 +186,82 @@ const CompletionTab: React.FC<CompletionTabProps> = ({
             })}
           </div>
         </div>
-      </Card>
+      </div>
 
-      {/* Feedback Section */}
+      {/* Benefits Section */}
       {canComplete && (
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Avalie sua experiência (opcional)</h3>
-          
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Avaliação da solução
-              </label>
-              <div className="flex gap-1">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <button
-                    key={star}
-                    onClick={() => setRating(star)}
-                    className="p-1 hover:scale-110 transition-transform"
-                  >
-                    <Star 
-                      className={cn(
-                        "w-6 h-6",
-                        star <= rating ? "text-yellow-400 fill-current" : "text-gray-300"
-                      )}
-                    />
-                  </button>
-                ))}
+        <div className="relative bg-gradient-to-br from-secondary/10 via-secondary/5 to-transparent backdrop-blur-sm rounded-2xl p-6 border-0">
+          <div className="absolute inset-0 bg-gradient-to-br from-secondary/5 to-transparent rounded-2xl"></div>
+          <div className="relative">
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <Gift className="w-5 h-5 text-secondary" />
+              O que você vai receber
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex items-start gap-3 p-4 bg-gradient-to-br from-card/50 to-transparent rounded-xl">
+                <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-lg">
+                  <CheckCircle className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <h4 className="font-medium mb-1">Certificado de Conclusão</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Certificado digital válido comprovando sua implementação
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-3 p-4 bg-gradient-to-br from-card/50 to-transparent rounded-xl">
+                <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-lg">
+                  <Download className="w-6 h-6 text-secondary" />
+                </div>
+                <div>
+                  <h4 className="font-medium mb-1">Recursos Completos</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Acesso permanente a todos os materiais e atualizações
+                  </p>
+                </div>
               </div>
             </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Comentários sobre a implementação
-              </label>
-              <Textarea
-                placeholder="Compartilhe sua experiência, dificuldades encontradas ou sugestões..."
-                value={feedback}
-                onChange={(e) => setFeedback(e.target.value)}
-                className="min-h-[100px]"
-              />
-            </div>
           </div>
-        </Card>
+        </div>
       )}
 
-      {/* Completion Button */}
+      {/* Completion Action */}
       <div className="text-center">
         <Button
           size="lg"
           onClick={() => completeSolutionMutation.mutate()}
           disabled={!canComplete || completeSolutionMutation.isPending}
-          className="px-8 py-3 text-lg"
+          className={cn(
+            "px-8 py-4 text-lg font-semibold rounded-2xl transition-all duration-300",
+            canComplete 
+              ? "bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 shadow-lg hover:shadow-xl transform hover:scale-105" 
+              : "opacity-50 cursor-not-allowed"
+          )}
         >
           {completeSolutionMutation.isPending ? (
-            <div className="flex items-center gap-2">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground" />
-              Finalizando...
+            <div className="flex items-center gap-3">
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
+              Finalizando implementação...
+            </div>
+          ) : canComplete ? (
+            <div className="flex items-center gap-3">
+              <Sparkles className="w-5 h-5" />
+              Finalizar e Receber Certificado
+              <ArrowRight className="w-5 h-5" />
             </div>
           ) : (
-            <div className="flex items-center gap-2">
-              <Trophy className="w-5 h-5" />
-              Concluir Implementação
+            <div className="flex items-center gap-3">
+              <CheckCircle className="w-5 h-5" />
+              Complete mais etapas
             </div>
           )}
         </Button>
         
         {!canComplete && (
-          <p className="text-sm text-muted-foreground mt-2">
-            Complete pelo menos 80% das etapas para finalizar
+          <p className="text-sm text-muted-foreground mt-3">
+            Complete pelo menos {Math.ceil((5 * 0.8) - completedTabs.length)} etapa(s) adicionais para finalizar
           </p>
         )}
       </div>
