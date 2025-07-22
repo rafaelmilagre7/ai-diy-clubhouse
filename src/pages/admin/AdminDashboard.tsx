@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRealAdminDashboardData } from "@/hooks/useRealAdminDashboardData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -9,14 +9,7 @@ import { DashboardHeader } from "@/components/admin/dashboard/DashboardHeader";
 const AdminDashboard = () => {
   const [timeRange, setTimeRange] = useState('30d');
   const [lastRefresh, setLastRefresh] = useState(new Date());
-  const [forceRefresh, setForceRefresh] = useState(0);
-
-  // Handler para mudança de período que força atualização
-  const handleTimeRangeChange = (newTimeRange: string) => {
-    console.log(`🔄 [DASHBOARD] Mudando período de ${timeRange} para ${newTimeRange}`);
-    setTimeRange(newTimeRange);
-    setForceRefresh(prev => prev + 1); // Força re-render
-  };
+  
   const {
     statsData,
     activityData,
@@ -29,38 +22,6 @@ const AdminDashboard = () => {
     await refetch();
     setLastRefresh(new Date());
   };
-
-  // Debug dos dados recebidos com timeRange atual
-  useEffect(() => {
-    if (!loading && statsData && activityData) {
-      console.log('📊 [DASHBOARD] Dados atualizados para período:', {
-        timeRange,
-        statsData: {
-          totalUsers: statsData.totalUsers,
-          totalSolutions: statsData.totalSolutions,
-          totalLearningLessons: statsData.totalLearningLessons,
-          completedImplementations: statsData.completedImplementations,
-          newUsersInPeriod: statsData.newUsersInPeriod,
-          activeUsersInPeriod: statsData.activeUsersInPeriod,
-          timeRange: statsData.timeRange,
-          periodGrowthRate: statsData.periodGrowthRate,
-          periodEngagementRate: statsData.periodEngagementRate
-        },
-        activityData: {
-          recentActivities: activityData.recentActivities?.length || 0,
-          timeRange: activityData.timeRange
-        }
-      });
-    }
-  }, [loading, statsData, activityData, timeRange, forceRefresh]);
-
-  // Forçar atualização quando período muda
-  useEffect(() => {
-    if (timeRange) {
-      console.log(`🔄 [DASHBOARD] Período alterado para: ${timeRange}`);
-      refetch();
-    }
-  }, [timeRange, refetch]);
 
   // Loading state
   if (loading) {
@@ -102,7 +63,7 @@ const AdminDashboard = () => {
         <div className="space-y-6">
           <DashboardHeader 
             timeRange={timeRange}
-            setTimeRange={handleTimeRangeChange}
+            setTimeRange={setTimeRange}
           />
           
           <Card className="aurora-glass border-red-500/20">
@@ -171,7 +132,7 @@ const AdminDashboard = () => {
           <div className="mt-6">
             <DashboardHeader 
               timeRange={timeRange}
-              setTimeRange={handleTimeRangeChange}
+              setTimeRange={setTimeRange}
             />
           </div>
         </div>
@@ -414,7 +375,7 @@ const AdminDashboard = () => {
                       <div className="w-3 h-3 rounded-full bg-gradient-to-r from-primary to-secondary aurora-glow"></div>
                       <span className="font-semibold text-foreground">{role.role}</span>
                     </div>
-                    <span className="aurora-text-gradient font-bold">
+                    <span className="text-white font-bold drop-shadow-lg">
                       {role.count} usuário{role.count !== 1 ? 's' : ''}
                     </span>
                   </div>
