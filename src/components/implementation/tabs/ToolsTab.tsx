@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,22 +19,28 @@ interface SolutionTool {
   tool_name: string;
   tool_url?: string;
   is_required: boolean;
-  order_index: number;
 }
 
 const ToolsTab: React.FC<ToolsTabProps> = ({ solutionId, onComplete }) => {
   const [viewedTools, setViewedTools] = useState<string[]>([]);
 
-  const { data: tools, isLoading } = useQuery({
+  const { data: tools, isLoading, error } = useQuery({
     queryKey: ['solution-tools', solutionId],
     queryFn: async () => {
+      console.log('Buscando ferramentas para solution_id:', solutionId);
+      
       const { data, error } = await supabase
         .from('solution_tools')
         .select('*')
         .eq('solution_id', solutionId)
-        .order('order_index');
+        .order('created_at');
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao buscar ferramentas:', error);
+        throw error;
+      }
+      
+      console.log('Ferramentas encontradas:', data);
       return data as SolutionTool[];
     }
   });
@@ -54,6 +61,22 @@ const ToolsTab: React.FC<ToolsTabProps> = ({ solutionId, onComplete }) => {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    console.error('Erro na query:', error);
+    return (
+      <div className="text-center py-12">
+        <Wrench className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+        <h3 className="text-lg font-semibold mb-2">Erro ao carregar ferramentas</h3>
+        <p className="text-muted-foreground mb-4">
+          Ocorreu um erro ao buscar as ferramentas. Tente novamente.
+        </p>
+        <Button onClick={() => window.location.reload()} variant="outline">
+          Tentar novamente
+        </Button>
       </div>
     );
   }
