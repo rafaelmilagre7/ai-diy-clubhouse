@@ -273,7 +273,7 @@ const ChecklistTab: React.FC<ChecklistTabProps> = ({ solutionId, onComplete }) =
         onComplete();
       }
     }
-  }, [checklistItems, userProgress, onComplete]);
+  }, [checklistItems, userProgress]);
 
   // Initialize notes from existing progress
   useEffect(() => {
