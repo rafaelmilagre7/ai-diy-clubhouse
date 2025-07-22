@@ -13,7 +13,7 @@ interface SystemActivity {
     count: number;
     period: string;
   }>;
-  communityActivity: number;
+  forumActivity: number;
   timeRange: string;
   lastUpdated: string;
 }
@@ -104,7 +104,7 @@ export const useRealSystemActivity = (timeRange: string) => {
           completedSolutions: 0, // Pode ser implementado futuramente
           systemHealth: 'healthy' as const,
           recentActivities,
-          communityActivity: (topicsInPeriod || 0) + (postsInPeriod || 0),
+          forumActivity: (topicsInPeriod || 0) + (postsInPeriod || 0),
           timeRange,
           lastUpdated: new Date().toISOString()
         };
@@ -120,7 +120,7 @@ export const useRealSystemActivity = (timeRange: string) => {
           completedSolutions: 0,
           systemHealth: 'warning' as const,
           recentActivities: [],
-          communityActivity: 0,
+          forumActivity: 0,
           timeRange,
           lastUpdated: new Date().toISOString()
         };

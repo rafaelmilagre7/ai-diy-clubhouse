@@ -26,6 +26,11 @@ interface StatsData {
   // Identificador do período para forçar re-render
   timeRange: string;
   lastUpdated: string;
+  
+  // Campos de compatibilidade
+  lastMonthGrowth: number;
+  activeUsersLast7Days: number;
+  contentEngagementRate: number;
 }
 
 export const useRealAdminStats = (timeRange: string) => {
@@ -46,7 +51,10 @@ export const useRealAdminStats = (timeRange: string) => {
     periodEngagementRate: 0,
     periodCompletionRate: 0,
     timeRange: timeRange,
-    lastUpdated: new Date().toISOString()
+    lastUpdated: new Date().toISOString(),
+    lastMonthGrowth: 0,
+    activeUsersLast7Days: 0,
+    contentEngagementRate: 0
   });
 
   const refetch = async () => {
@@ -94,11 +102,28 @@ export const useRealAdminStats = (timeRange: string) => {
         .select('*', { count: 'exact', head: true })
         .eq('is_completed', true);
 
-      // Segmentação de usuários por role
-      const { data: userSegmentation } = await supabase
-        .from('user_segmentation_analytics')
-        .select('*')
-        .order('user_count', { ascending: false });
+      // Segmentação de usuários por role - corrigir consulta
+      const { data: userRoles } = await supabase
+        .from('profiles')
+        .select(`
+          role_id,
+          user_roles (
+            name
+          )
+        `)
+        .not('role_id', 'is', null);
+
+      // Processar contagem por roles
+      const roleCount: { [key: string]: number } = {};
+      userRoles?.forEach(user => {
+        const roleName = (user.user_roles as any)?.name || 'Outros';
+        roleCount[roleName] = (roleCount[roleName] || 0) + 1;
+      });
+
+      const userSegmentation = Object.entries(roleCount).map(([name, count]) => ({
+        role_name: name,
+        user_count: count
+      }));
 
       // === DADOS ESPECÍFICOS DO PERÍODO ===
 
@@ -152,17 +177,18 @@ export const useRealAdminStats = (timeRange: string) => {
       const periodCompletionRate = totalImplementationsInPeriod > 0 ? 
         ((completedInPeriod || 0) / totalImplementationsInPeriod) * 100 : 0;
 
-      // Processar roles
+      // Processar roles corrigido
       const usersByRole = (userSegmentation || []).map(item => ({
         role: item.role_name === 'member' ? 'Membros Club' : 
               item.role_name === 'admin' ? 'Administradores' :
               item.role_name === 'formacao' ? 'Formação' : 
+              item.role_name === 'membro_club' ? 'Membros Club' :
               item.role_name || 'Outros',
         count: item.user_count || 0
       }));
 
       const finalStats: StatsData = {
-        // Dados cumulativos
+        // Dados cumulativos corretos
         totalUsers: totalUsers || 0,
         totalSolutions: totalSolutions || 0,
         totalLearningLessons: totalLearningLessons || 0,
@@ -183,7 +209,12 @@ export const useRealAdminStats = (timeRange: string) => {
         
         // Identificadores para forçar re-render
         timeRange,
-        lastUpdated: new Date().toISOString()
+        lastUpdated: new Date().toISOString(),
+        
+        // Campos de compatibilidade
+        lastMonthGrowth: periodGrowthRate,
+        activeUsersLast7Days: activeUsersInPeriod,
+        contentEngagementRate: periodEngagementRate
       };
 
       setStatsData(finalStats);
@@ -191,13 +222,17 @@ export const useRealAdminStats = (timeRange: string) => {
       console.log('✅ [STATS] Estatísticas carregadas:', {
         periodo: `${daysBack} dias`,
         totalUsers: finalStats.totalUsers,
+        totalSolutions: finalStats.totalSolutions,
+        totalLearningLessons: finalStats.totalLearningLessons,
+        completedImplementations: finalStats.completedImplementations,
         newUsersInPeriod: finalStats.newUsersInPeriod,
         activeUsersInPeriod: finalStats.activeUsersInPeriod,
         implementationsInPeriod: finalStats.implementationsInPeriod,
         completedInPeriod: finalStats.completedInPeriod,
         periodGrowthRate: finalStats.periodGrowthRate,
         periodEngagementRate: finalStats.periodEngagementRate,
-        timeRange: finalStats.timeRange
+        timeRange: finalStats.timeRange,
+        usersByRole: finalStats.usersByRole
       });
 
     } catch (error: any) {
