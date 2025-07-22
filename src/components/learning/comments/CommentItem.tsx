@@ -86,37 +86,37 @@ export const CommentItem: React.FC<CommentItemProps> = ({
   const avatarUrl = profileData.avatar_url || "";
   
   return (
-    <Card className={`p-4 ${isReply ? 'border-l-4 border-l-primary/20' : ''}`}>
+    <div className={`backdrop-blur-sm bg-white/5 border-0 rounded-xl p-4 shadow-lg transition-all duration-300 hover:bg-white/10 ${isReply ? 'border-l-4 border-l-primary/30 ml-4' : ''}`}>
       <div className="flex gap-3">
-        <Avatar className="h-8 w-8">
+        <Avatar className="h-8 w-8 ring-2 ring-white/20">
           <AvatarImage src={avatarUrl} alt={profileName} />
-          <AvatarFallback className="bg-primary/10 text-primary">
+          <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary font-semibold">
             {getInitials(profileName)}
           </AvatarFallback>
         </Avatar>
         
         <div className="flex-1 space-y-2">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="font-medium">{profileName}</span>
-            <span className="text-xs text-muted-foreground">{formatDate(comment.created_at)}</span>
+            <span className="font-medium text-foreground">{profileName}</span>
+            <span className="text-xs text-muted-foreground/80">{formatDate(comment.created_at)}</span>
             {profileRole === 'admin' && (
-              <span className="text-xs px-1.5 py-0.5 bg-primary/10 text-primary rounded">Admin</span>
+              <span className="text-xs px-2 py-1 bg-gradient-to-r from-primary/20 to-primary/10 text-primary rounded-full border border-primary/20">Admin</span>
             )}
             {profileRole === 'formacao' && (
-              <span className="text-xs px-1.5 py-0.5 bg-amber-500/10 text-amber-600 rounded">Instrutor</span>
+              <span className="text-xs px-2 py-1 bg-gradient-to-r from-amber-500/20 to-amber-400/10 text-amber-600 rounded-full border border-amber-500/20">Instrutor</span>
             )}
           </div>
           
-          <div className="text-sm">
+          <div className="text-sm text-foreground/90 leading-relaxed">
             {comment.content}
           </div>
           
-          <div className="flex gap-2 pt-1">
+          <div className="flex gap-2 pt-2">
             {!isReply && (
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="h-7 px-2 text-xs"
+                className="h-8 px-3 text-xs bg-white/5 border-0 hover:bg-white/10 transition-all duration-200"
                 onClick={handleReplyClick}
               >
                 <MessageSquare className="h-3.5 w-3.5 mr-1" />
@@ -127,10 +127,14 @@ export const CommentItem: React.FC<CommentItemProps> = ({
             <Button 
               variant={comment.user_has_liked ? "secondary" : "ghost"}
               size="sm" 
-              className="h-7 px-2 text-xs"
+              className={`h-8 px-3 text-xs border-0 transition-all duration-200 ${
+                comment.user_has_liked 
+                  ? 'bg-gradient-to-r from-primary/20 to-primary/10 text-primary hover:from-primary/30 hover:to-primary/20' 
+                  : 'bg-white/5 hover:bg-white/10'
+              }`}
               onClick={() => onLike(comment.id)}
             >
-              <ThumbsUp className="h-3.5 w-3.5 mr-1" />
+              <ThumbsUp className={`h-3.5 w-3.5 mr-1 ${comment.user_has_liked ? 'fill-current' : ''}`} />
               {comment.likes_count || 0}
             </Button>
             
@@ -138,7 +142,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="h-7 px-2 text-xs text-destructive"
+                className="h-8 px-3 text-xs text-destructive bg-white/5 border-0 hover:bg-destructive/10 transition-all duration-200"
                 onClick={() => onDelete(comment.id)}
               >
                 <Trash2 className="h-3.5 w-3.5 mr-1" />
@@ -148,7 +152,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
           </div>
           
           {isReplying && (
-            <div className="mt-3 pl-2">
+            <div className="mt-4 pl-2 border-l-2 border-primary/20">
               <CommentForm
                 lessonId={lessonId}
                 parentId={comment.id}
@@ -162,7 +166,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
           )}
         </div>
       </div>
-    </Card>
+    </div>
   );
 };
 

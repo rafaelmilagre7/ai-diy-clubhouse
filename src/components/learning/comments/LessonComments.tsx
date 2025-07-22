@@ -40,18 +40,25 @@ export const LessonComments: React.FC<LessonCommentsProps> = ({ lessonId }) => {
 
   return (
     <div className="space-y-6">
-      <CardHeader className="px-0 pt-0">
-        <CardTitle className="flex items-center gap-2">
-          <MessageCircle className="h-5 w-5" />
+      <div className="px-0 pt-0">
+        <h3 className="flex items-center gap-3 text-xl font-semibold text-foreground mb-2">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/20">
+            <MessageCircle className="h-5 w-5 text-primary" />
+          </div>
           <span>Comentários</span>
-        </CardTitle>
-      </CardHeader>
+        </h3>
+        <p className="text-muted-foreground/80 text-sm">
+          Compartilhe suas dúvidas e experiências sobre esta aula
+        </p>
+      </div>
       
-      <CommentForm
-        lessonId={lessonId}
-        onSubmit={handleSubmitComment}
-        isSubmitting={isSubmitting}
-      />
+      <div className="backdrop-blur-sm bg-white/5 rounded-xl border border-white/10 p-4 shadow-lg">
+        <CommentForm
+          lessonId={lessonId}
+          onSubmit={handleSubmitComment}
+          isSubmitting={isSubmitting}
+        />
+      </div>
       
       <CommentList
         comments={comments}

@@ -118,42 +118,47 @@ const LessonView = () => {
   }
 
   return (
-    <div className="container py-6">
-      <Button
-        variant="ghost"
-        className="mb-4"
-        onClick={navigateToCourse}
-      >
-        <ArrowLeft className="h-4 w-4 mr-2" />
-        Voltar para o curso
-      </Button>
-      
-      {/* Conteúdo principal da aula */}
-      <div>
-        <LessonHeader 
-          title={lesson?.title || ""} 
-          moduleTitle={moduleData?.module?.title || ""}
-          courseTitle={courseInfo?.title}
-          courseId={courseId}
-          progress={isCompleted ? 100 : 0}
-        />
-        
-        <div className="mt-8">
-          <LessonContent 
-            lesson={lesson} 
-            videos={safeVideos}
-            resources={safeResources}
-            isCompleted={isCompleted}
-            onProgressUpdate={handleProgressUpdate} 
-            onComplete={completeLesson}
-            prevLesson={prevLesson}
-            nextLesson={nextLesson}
-            courseId={courseId}
-            allLessons={safeAllCourseLessons}
-            onNextLesson={navigateToNext}
-            onPreviousLesson={navigateToPrevious}
-            isUpdating={isUpdating}
-          />
+    <div className="min-h-screen bg-gradient-to-br from-background via-background/80 to-primary/5">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(120,119,198,0.3),transparent_50%)]" />
+      <div className="relative">
+        <div className="container py-6">
+          <Button
+            variant="ghost"
+            className="mb-6 bg-white/10 border-0 backdrop-blur-sm hover:bg-white/20 transition-all duration-300"
+            onClick={navigateToCourse}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Voltar para o curso
+          </Button>
+          
+          {/* Conteúdo principal da aula */}
+          <div className="space-y-6">
+            <LessonHeader 
+              title={lesson?.title || ""} 
+              moduleTitle={moduleData?.module?.title || ""}
+              courseTitle={courseInfo?.title}
+              courseId={courseId}
+              progress={isCompleted ? 100 : 0}
+            />
+            
+            <div className="backdrop-blur-sm bg-white/5 rounded-2xl border border-white/10 p-6 shadow-2xl">
+              <LessonContent 
+                lesson={lesson} 
+                videos={safeVideos}
+                resources={safeResources}
+                isCompleted={isCompleted}
+                onProgressUpdate={handleProgressUpdate} 
+                onComplete={completeLesson}
+                prevLesson={prevLesson}
+                nextLesson={nextLesson}
+                courseId={courseId}
+                allLessons={safeAllCourseLessons}
+                onNextLesson={navigateToNext}
+                onPreviousLesson={navigateToPrevious}
+                isUpdating={isUpdating}
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>

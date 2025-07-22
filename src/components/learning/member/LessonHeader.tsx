@@ -22,55 +22,59 @@ export const LessonHeader = ({
   const isCompleted = progress >= 100;
   
   return (
-    <div>
+    <div className="space-y-4">
       {/* Breadcrumb para navegação */}
       {courseTitle && courseId && (
-        <Breadcrumb className="mb-4">
-          <BreadcrumbList>
+        <Breadcrumb className="mb-6">
+          <BreadcrumbList className="text-sm">
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link to="/learning">Cursos</Link>
+                <Link to="/learning" className="text-muted-foreground/80 hover:text-primary transition-colors">Cursos</Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
-            <BreadcrumbSeparator />
+            <BreadcrumbSeparator className="text-muted-foreground/50" />
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link to={`/learning/course/${courseId}`}>{courseTitle}</Link>
+                <Link to={`/learning/course/${courseId}`} className="text-muted-foreground/80 hover:text-primary transition-colors">{courseTitle}</Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
-            <BreadcrumbSeparator />
+            <BreadcrumbSeparator className="text-muted-foreground/50" />
             <BreadcrumbItem>
-              <BreadcrumbLink>{moduleTitle}</BreadcrumbLink>
+              <BreadcrumbLink className="text-foreground">{moduleTitle}</BreadcrumbLink>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
       )}
 
-      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-        <BookOpen className="h-4 w-4" />
+      <div className="flex items-center gap-3 text-sm text-muted-foreground/80 mb-2">
+        <div className="p-1.5 rounded-lg bg-primary/10 border border-primary/20">
+          <BookOpen className="h-4 w-4 text-primary" />
+        </div>
         <span>Módulo: {moduleTitle}</span>
       </div>
       
-      <div className="flex items-center gap-2">
-        <h1 className="text-2xl font-bold">{title}</h1>
+      <div className="flex items-center gap-3 flex-wrap">
+        <h1 className="text-3xl font-bold text-foreground leading-tight">{title}</h1>
         {isCompleted && (
-          <div className="flex items-center gap-1 bg-green-100 text-green-600 dark:bg-green-950/30 dark:text-green-400 px-2 py-1 rounded-full text-xs font-medium">
-            <CheckCircle className="h-3 w-3" />
+          <div className="flex items-center gap-2 bg-gradient-to-r from-green-500/20 to-emerald-500/10 text-green-600 dark:text-emerald-400 px-3 py-1.5 rounded-full text-sm font-medium border border-green-500/20 backdrop-blur-sm">
+            <CheckCircle className="h-4 w-4" />
             <span>Concluído</span>
           </div>
         )}
       </div>
       
-      <div className="mt-4">
-        <div className="flex justify-between text-sm mb-1">
-          <span>Progresso da aula</span>
-          <span>{progress}%</span>
+      <div className="mt-6 space-y-3">
+        <div className="flex justify-between text-sm font-medium">
+          <span className="text-foreground">Progresso da aula</span>
+          <span className="text-primary">{progress}%</span>
         </div>
-        <Progress 
-          value={progress} 
-          className="h-2"
-          color={isCompleted ? "bg-green-500" : undefined}
-        />
+        <div className="relative">
+          <Progress 
+            value={progress} 
+            className="h-3 bg-white/10 border border-white/20 rounded-full overflow-hidden"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-transparent to-primary/20 rounded-full pointer-events-none" />
+        </div>
       </div>
     </div>
   );
