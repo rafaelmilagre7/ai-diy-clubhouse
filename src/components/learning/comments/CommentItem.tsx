@@ -164,6 +164,23 @@ export const CommentItem: React.FC<CommentItemProps> = ({
               />
             </div>
           )}
+          
+          {/* Renderizar respostas se existirem */}
+          {comment.replies && comment.replies.length > 0 && (
+            <div className="mt-4 space-y-3">
+              {comment.replies.map((reply) => (
+                <CommentItem
+                  key={reply.id}
+                  comment={reply}
+                  lessonId={lessonId}
+                  onReply={onReply}
+                  onDelete={onDelete}
+                  onLike={onLike}
+                  isReply={true}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -246,36 +246,26 @@ export const useLessonComments = (lessonId: string) => {
       if (existingLike) {
         log('Removendo curtida existente', { likeId: existingLike.id });
         
-        // Remover curtida
-        await supabase
+        // Remover curtida (trigger atualizará contador automaticamente)
+        const { error } = await supabase
           .from('learning_comment_likes')
           .delete()
           .eq('comment_id', commentId)
           .eq('user_id', user.id);
           
-        // Decrementar contador de curtidas
-        await supabase.rpc('decrement', {
-          row_id: commentId,
-          table_name: 'learning_comments',
-          column_name: 'likes_count'
-        });
+        if (error) throw error;
       } else {
         log('Adicionando nova curtida');
         
-        // Adicionar curtida
-        await supabase
+        // Adicionar curtida (trigger atualizará contador automaticamente)
+        const { error } = await supabase
           .from('learning_comment_likes')
           .insert({
             comment_id: commentId,
             user_id: user.id
           });
           
-        // Incrementar contador de curtidas
-        await supabase.rpc('increment', {
-          row_id: commentId,
-          table_name: 'learning_comments',
-          column_name: 'likes_count'
-        });
+        if (error) throw error;
       }
       
       queryClient.invalidateQueries({ queryKey: ['learning-comments', lessonId] });
