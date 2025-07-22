@@ -77,7 +77,7 @@ export const AuroraKpiGrid = memo(({
   const kpiItems = useMemo(() => [
     {
       id: 'completed',
-      title: 'Soluções Concluídas',
+      title: 'Concluídas',
       value: completed,
       percentage: stats.completionRate,
       icon: Trophy,
@@ -85,11 +85,11 @@ export const AuroraKpiGrid = memo(({
       iconColor: 'text-emerald-600',
       accentColor: 'border-emerald-500/30',
       glowColor: 'group-hover:shadow-emerald-500/20',
-      description: 'Implementações finalizadas'
+      description: 'Soluções implementadas com sucesso'
     },
     {
       id: 'progress',
-      title: 'Em Andamento',
+      title: 'Em Progresso',
       value: inProgress,
       percentage: stats.progressRate,
       icon: Target,
@@ -97,11 +97,11 @@ export const AuroraKpiGrid = memo(({
       iconColor: 'text-blue-600',
       accentColor: 'border-blue-500/30',
       glowColor: 'group-hover:shadow-blue-500/20',
-      description: 'Soluções em implementação'
+      description: 'Implementações em andamento'
     },
     {
       id: 'total',
-      title: 'Total Disponível',
+      title: 'Disponíveis',
       value: total,
       percentage: 100,
       icon: TrendingUp,
@@ -109,7 +109,7 @@ export const AuroraKpiGrid = memo(({
       iconColor: 'text-purple-600',
       accentColor: 'border-purple-500/30',
       glowColor: 'group-hover:shadow-purple-500/20',
-      description: 'Soluções na plataforma'
+      description: 'Total de soluções na plataforma'
     }
   ], [completed, inProgress, total, stats]);
 

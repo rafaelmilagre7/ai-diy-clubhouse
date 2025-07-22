@@ -14,16 +14,28 @@ export const SidebarLogo = ({ sidebarOpen, setSidebarOpen }: SidebarLogoProps) =
 
   return (
     <div className="flex h-16 shrink-0 items-center justify-between px-4 py-3">
-      <img
-        src="/lovable-uploads/fe3733f5-092e-4a4e-bdd7-650b71aaa801.png"
-        alt="VIVER DE IA Club"
-        className={cn(
-          "transition-all duration-300 object-contain",
-          sidebarOpen 
-            ? "h-12 w-auto max-w-[200px]" // Logo maior quando aberto
-            : "h-10 w-10 object-cover" // Logo compacto quando fechado
-        )}
-      />
+      <div 
+        className="cursor-pointer transition-transform hover:scale-105"
+        onClick={() => window.location.href = '/dashboard'}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            window.location.href = '/dashboard';
+          }
+        }}
+      >
+        <img
+          src="/lovable-uploads/fe3733f5-092e-4a4e-bdd7-650b71aaa801.png"
+          alt="VIVER DE IA Club"
+          className={cn(
+            "transition-all duration-300 object-contain",
+            sidebarOpen 
+              ? "h-12 w-auto max-w-[200px]" // Logo maior quando aberto
+              : "h-10 w-10 object-cover" // Logo compacto quando fechado
+          )}
+        />
+      </div>
       
       <Button
         variant="ghost"

@@ -26,7 +26,12 @@ export const ModernDashboardHeader: FC<ModernDashboardHeaderProps> = memo(({ use
         <div className="flex items-start justify-between">
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <Sparkles className="h-6 w-6 text-primary" />
+              <div className="relative">
+                <div className="w-6 h-6 bg-gradient-to-br from-primary/20 to-primary/10 rounded-lg flex items-center justify-center backdrop-blur-sm border border-primary/20">
+                  <div className="w-3 h-3 bg-primary/60 rounded-sm shadow-lg"></div>
+                </div>
+                <div className="absolute -top-1 -right-1 w-2 h-2 bg-primary/40 rounded-full blur-sm"></div>
+              </div>
               <span className="text-sm font-medium text-primary uppercase tracking-wider">
                 Bem-vindo de volta
               </span>
@@ -50,17 +55,6 @@ export const ModernDashboardHeader: FC<ModernDashboardHeaderProps> = memo(({ use
             </Button>
           </div>
 
-          {/* Stats Cards */}
-          <div className="hidden lg:flex gap-4">
-            <div className="bg-card/50 backdrop-blur-sm border border-border rounded-xl p-4 text-center min-w-[100px]">
-              <div className="text-2xl font-bold text-foreground">12</div>
-              <div className="text-sm text-muted-foreground">Soluções</div>
-            </div>
-            <div className="bg-card/50 backdrop-blur-sm border border-border rounded-xl p-4 text-center min-w-[100px]">
-              <div className="text-2xl font-bold text-foreground">85%</div>
-              <div className="text-sm text-muted-foreground">Progresso</div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
