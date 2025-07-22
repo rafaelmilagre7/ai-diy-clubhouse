@@ -1,11 +1,12 @@
 
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import { useParams } from "react-router-dom";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, ArrowLeft } from "lucide-react";
 import { LessonContent } from "@/components/learning/member/LessonContent";
 import { LessonHeader } from "@/components/learning/member/LessonHeader";
+import { LessonLoadingSkeleton } from "@/components/learning/LessonLoadingSkeleton";
 import { useLessonData } from "@/hooks/learning/useLessonData";
 import { useLessonNavigation } from "@/hooks/learning/useLessonNavigation";
 import { useLessonProgress } from "@/hooks/learning/useLessonProgress";
@@ -90,7 +91,7 @@ const LessonView = () => {
   };
 
   if (isLoading) {
-    return <div className="container py-8">Carregando conteúdo da aula...</div>;
+    return <LessonLoadingSkeleton />;
   }
   
   // Se não tiver a lição, mostrar erro

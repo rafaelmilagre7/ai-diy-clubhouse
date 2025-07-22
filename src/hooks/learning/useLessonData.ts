@@ -20,7 +20,7 @@ export interface LessonModule {
 }
 
 export function useLessonData({ lessonId, courseId }: UseLessonDataProps) {
-  // Buscar detalhes da lição
+  // Buscar detalhes da lição - OTIMIZADO para carregamento mais rápido
   const { 
     data: lesson, 
     isLoading: isLoadingLesson,
@@ -32,14 +32,24 @@ export function useLessonData({ lessonId, courseId }: UseLessonDataProps) {
       
       const { data, error } = await supabase
         .from("learning_lessons")
-        .select("*")
+        .select(`
+          *,
+          module:learning_modules(
+            id,
+            title,
+            course_id,
+            course:learning_courses(id, title, description)
+          )
+        `)
         .eq("id", lessonId)
         .maybeSingle();
         
       if (error) throw error;
       return data;
     },
-    enabled: !!lessonId
+    enabled: !!lessonId,
+    staleTime: 5 * 60 * 1000, // Cache por 5 minutos
+    gcTime: 10 * 60 * 1000, // Manter no cache por 10 minutos
   });
   
   // Buscar recursos da lição
