@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useSolutionData } from "@/hooks/useSolutionData";
 import { useTabProgress } from "@/hooks/implementation/useTabProgress";
@@ -49,27 +49,20 @@ const ImplementationTabsContainer: React.FC = () => {
     );
   }
 
-  const handleTabComplete = useCallback(async (tabId: string, progressData?: any) => {
-    console.log('🎯 Marcando aba como completa:', tabId);
-    console.log('📊 Abas já completadas:', completedTabs);
-    
+  const handleTabComplete = async (tabId: string, progressData?: any) => {
     // Marcar aba como completa no banco de dados
     await markTabComplete(tabId, progressData);
-    
-    console.log('✅ Aba marcada como completa:', tabId);
     
     // Navegar automaticamente para a próxima guia se não for a conclusão
     if (tabId !== 'completion') {
       const currentIndex = IMPLEMENTATION_TABS.findIndex(tab => tab.id === tabId);
       const nextTab = IMPLEMENTATION_TABS[currentIndex + 1];
       
-      console.log('🔄 Navegando para próxima aba:', nextTab?.id);
-      
       if (nextTab) {
         setActiveTab(nextTab.id);
       }
     }
-  }, [markTabComplete, completedTabs]);
+  };
 
   // Calcular progresso baseado nas abas completadas
   const progress = isTabCompleted('completion') 

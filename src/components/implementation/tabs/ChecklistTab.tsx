@@ -273,7 +273,7 @@ const ChecklistTab: React.FC<ChecklistTabProps> = ({ solutionId, onComplete }) =
         onComplete();
       }
     }
-  }, [checklistItems, userProgress]); // Remover onComplete das dependências
+  }, [checklistItems, userProgress, onComplete]);
 
   // Initialize notes from existing progress
   useEffect(() => {
