@@ -17,6 +17,26 @@ const AdminDashboard = () => {
     refetch
   } = useRealAdminDashboardData(timeRange);
 
+  // Handler que força atualização quando timeRange muda
+  const handleTimeRangeChange = (newTimeRange: string) => {
+    console.log(`🔄 [DASHBOARD] Alterando período de ${timeRange} para ${newTimeRange}`);
+    setTimeRange(newTimeRange);
+    setLastRefresh(new Date()); // Força re-render
+  };
+
+  // Debug detalhado dos dados recebidos
+  console.log('📊 [DASHBOARD] Estado atual:', {
+    timeRange,
+    statsData: statsData ? {
+      newUsersInPeriod: statsData.newUsersInPeriod,
+      activeUsersInPeriod: statsData.activeUsersInPeriod,
+      periodGrowthRate: statsData.periodGrowthRate,
+      timeRange: statsData.timeRange
+    } : null,
+    loading,
+    lastRefresh: lastRefresh.toISOString()
+  });
+
   const handleRefresh = async () => {
     console.log('🔄 Atualizando dashboard manualmente...');
     await refetch();
@@ -63,7 +83,7 @@ const AdminDashboard = () => {
         <div className="space-y-6">
           <DashboardHeader 
             timeRange={timeRange}
-            setTimeRange={setTimeRange}
+            setTimeRange={handleTimeRangeChange}
           />
           
           <Card className="aurora-glass border-red-500/20">
@@ -132,7 +152,7 @@ const AdminDashboard = () => {
           <div className="mt-6">
             <DashboardHeader 
               timeRange={timeRange}
-              setTimeRange={setTimeRange}
+              setTimeRange={handleTimeRangeChange}
             />
           </div>
         </div>
@@ -162,7 +182,7 @@ const AdminDashboard = () => {
             <h3 className="text-xl font-bold aurora-text-gradient">Dados Totais da Plataforma</h3>
           </div>
           
-          <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-4" key={`stats-grid-${timeRange}-${lastRefresh.getTime()}`}>
             <div className="aurora-glass rounded-xl p-6 aurora-hover-scale">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
@@ -238,7 +258,7 @@ const AdminDashboard = () => {
             </h3>
           </div>
           
-          <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-4" key={`period-stats-${timeRange}-${lastRefresh.getTime()}`}>
             <div className="aurora-glass rounded-xl p-6 aurora-hover-scale">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
