@@ -59,14 +59,15 @@ export const CommentItem = ({
         : "bg-[#151823] border border-white/10 hover:border-white/20 transition-colors"
     )}>
       <div className="flex gap-3">
-        <Avatar className="h-10 w-10">
-          {comment.profiles?.avatar_url ? (
-            <AvatarImage src={comment.profiles.avatar_url} alt={comment.profiles?.name || 'Usuário'} />
-          ) : (
-            <AvatarFallback className="bg-viverblue/10 text-viverblue">
-              {getInitials(comment.profiles?.name || 'Usuário')}
-            </AvatarFallback>
-          )}
+        <Avatar className="h-10 w-10 border border-white/10">
+          <AvatarImage 
+            src={comment.profiles?.avatar_url || ''} 
+            alt={comment.profiles?.name || 'Usuário'}
+            className="object-cover"
+          />
+          <AvatarFallback className="bg-viverblue/10 text-viverblue font-medium">
+            {getInitials(comment.profiles?.name || 'Usuário')}
+          </AvatarFallback>
         </Avatar>
         
         <div className="flex-1">
