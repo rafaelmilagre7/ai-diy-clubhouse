@@ -1,7 +1,7 @@
 import React from 'react';
 import { Download, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import viverDeIaClubLogo from '@/assets/viver-de-ia-club-logo.png';
+import viverDeIaLogo from '@/assets/viver-de-ia-logo.png';
 
 interface CertificateViewerProps {
   userName: string;
@@ -41,8 +41,8 @@ export const CertificateViewer: React.FC<CertificateViewerProps> = ({
         <div className="inline-flex items-center justify-center w-24 h-24 aurora-gradient rounded-full mb-6 aurora-glow p-1">
           <div className="w-full h-full bg-card rounded-full flex items-center justify-center">
             <img 
-              src={viverDeIaClubLogo} 
-              alt="VIVER DE IA Club Logo" 
+              src={viverDeIaLogo} 
+              alt="VIVER DE IA Logo" 
               className="w-16 h-16 object-contain"
             />
           </div>

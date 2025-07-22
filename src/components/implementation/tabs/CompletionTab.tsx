@@ -224,31 +224,47 @@ const CompletionTab: React.FC<CompletionTabProps> = ({
               certificateId={certificateData.certificateId}
               onDownload={async () => {
                 try {
-                  if (storedCertificate) {
+                  if (storedCertificate?.pdfUrl) {
+                    // Download do storage
                     await downloadCertificateFromStorage(
                       storedCertificate.pdfUrl, 
                       `certificado-${certificateData.solutionTitle.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`
                     );
                   } else {
+                    // Gerar e baixar localmente
                     await downloadCertificate(certificateData);
                   }
                   toast.success('🏆 Certificado baixado com sucesso!');
                 } catch (error) {
                   console.error('Erro ao baixar certificado:', error);
-                  toast.error('Erro ao baixar certificado');
+                  // Tentar fallback local
+                  try {
+                    await downloadCertificate(certificateData);
+                    toast.success('🏆 Certificado baixado com sucesso!');
+                  } catch (fallbackError) {
+                    toast.error('Erro ao baixar certificado');
+                  }
                 }
               }}
               onOpenInNewTab={async () => {
                 try {
-                  if (storedCertificate) {
+                  if (storedCertificate?.pdfUrl) {
+                    // Abrir do storage
                     openCertificateFromStorage(storedCertificate.pdfUrl);
                   } else {
+                    // Gerar e abrir localmente
                     await openCertificateInNewTab(certificateData);
                   }
                   toast.success('🏆 Certificado aberto em nova guia!');
                 } catch (error) {
                   console.error('Erro ao abrir certificado:', error);
-                  toast.error('Erro ao abrir certificado');
+                  // Tentar fallback local
+                  try {
+                    await openCertificateInNewTab(certificateData);
+                    toast.success('🏆 Certificado aberto em nova guia!');
+                  } catch (fallbackError) {
+                    toast.error('Erro ao abrir certificado');
+                  }
                 }
               }}
             />
