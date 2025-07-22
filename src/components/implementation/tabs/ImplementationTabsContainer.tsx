@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { useSolutionData } from "@/hooks/useSolutionData";
 import { useTabProgress } from "@/hooks/implementation/useTabProgress";
@@ -49,7 +49,7 @@ const ImplementationTabsContainer: React.FC = () => {
     );
   }
 
-  const handleTabComplete = async (tabId: string, progressData?: any) => {
+  const handleTabComplete = useCallback(async (tabId: string, progressData?: any) => {
     console.log('🎯 Marcando aba como completa:', tabId);
     console.log('📊 Abas já completadas:', completedTabs);
     
@@ -69,7 +69,15 @@ const ImplementationTabsContainer: React.FC = () => {
         setActiveTab(nextTab.id);
       }
     }
-  };
+  }, [markTabComplete, completedTabs]);
+
+  // Crear callbacks memorized para cada aba
+  const handleToolsComplete = useCallback(() => handleTabComplete('tools'), [handleTabComplete]);
+  const handleResourcesComplete = useCallback(() => handleTabComplete('resources'), [handleTabComplete]);
+  const handleVideoComplete = useCallback(() => handleTabComplete('video'), [handleTabComplete]);
+  const handleChecklistComplete = useCallback(() => handleTabComplete('checklist'), [handleTabComplete]);
+  const handleCommentsComplete = useCallback(() => handleTabComplete('comments'), [handleTabComplete]);
+  const handleCompletionComplete = useCallback(() => handleTabComplete('completion'), [handleTabComplete]);
 
   // Calcular progresso baseado nas abas completadas
   const progress = isTabCompleted('completion') 
@@ -79,24 +87,24 @@ const ImplementationTabsContainer: React.FC = () => {
   const renderTabContent = () => {
     switch (activeTab) {
       case 'tools':
-        return <ToolsTab solutionId={id!} onComplete={() => handleTabComplete('tools')} />;
+        return <ToolsTab solutionId={id!} onComplete={handleToolsComplete} />;
       case 'resources':
-        return <ResourcesTab solutionId={id!} onComplete={() => handleTabComplete('resources')} />;
+        return <ResourcesTab solutionId={id!} onComplete={handleResourcesComplete} />;
       case 'video':
-        return <VideoTab solutionId={id!} onComplete={() => handleTabComplete('video')} />;
+        return <VideoTab solutionId={id!} onComplete={handleVideoComplete} />;
       case 'checklist':
-        return <ChecklistTab solutionId={id!} onComplete={() => handleTabComplete('checklist')} />;
+        return <ChecklistTab solutionId={id!} onComplete={handleChecklistComplete} />;
       case 'comments':
-        return <CommentsTab solutionId={id!} onComplete={() => handleTabComplete('comments')} />;
+        return <CommentsTab solutionId={id!} onComplete={handleCommentsComplete} />;
       case 'completion':
         return <CompletionTab 
           solutionId={id!} 
           progress={progress} 
           completedTabs={completedTabs}
-          onComplete={() => handleTabComplete('completion')} 
+          onComplete={handleCompletionComplete} 
         />;
       default:
-        return <ToolsTab solutionId={id!} onComplete={() => handleTabComplete('tools')} />;
+        return <ToolsTab solutionId={id!} onComplete={handleToolsComplete} />;
     }
   };
 
