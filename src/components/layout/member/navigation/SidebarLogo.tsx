@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Menu, X } from "lucide-react";
 import { useIsMobile } from "@/hooks/useResponsive";
+import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 interface SidebarLogoProps {
@@ -11,17 +12,18 @@ interface SidebarLogoProps {
 
 export const SidebarLogo = ({ sidebarOpen, setSidebarOpen }: SidebarLogoProps) => {
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
 
   return (
     <div className="flex h-16 shrink-0 items-center justify-between px-4 py-3">
       <div 
         className="cursor-pointer transition-transform hover:scale-105"
-        onClick={() => window.location.href = '/dashboard'}
+        onClick={() => navigate('/dashboard')}
         role="button"
         tabIndex={0}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
-            window.location.href = '/dashboard';
+            navigate('/dashboard');
           }
         }}
       >
