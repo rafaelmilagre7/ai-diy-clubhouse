@@ -97,18 +97,27 @@ export const RealSystemActivity = ({ activityData, loading }: RealSystemActivity
                      periodDays === 365 ? '1 ano' : `${periodDays} dias`;
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>Atividade dos Últimos {periodLabel}</CardTitle>
-            <CardDescription>
+    <div className="aurora-glass rounded-xl aurora-hover-scale">
+      <div className="p-6 border-b border-border/50">
+        <div className="flex items-center justify-between mb-4">
+          <div className="space-y-2">
+            <div className="flex items-center gap-3">
+              <div className="w-1 h-6 bg-gradient-to-b from-primary to-secondary rounded-full"></div>
+              <h3 className="text-xl font-bold aurora-text-gradient">
+                Atividade dos Últimos {periodLabel}
+              </h3>
+            </div>
+            <p className="text-muted-foreground">
               Principais métricas de atividade para o período selecionado
-            </CardDescription>
+            </p>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Status:</span>
-            <span className={`font-medium ${getHealthColor(activityData.systemHealth)}`}>
+          <div className="flex items-center gap-3 aurora-glass px-4 py-2 rounded-lg">
+            <div className={`w-2 h-2 rounded-full aurora-glow ${
+              activityData.systemHealth === 'healthy' ? 'bg-emerald-500' :
+              activityData.systemHealth === 'warning' ? 'bg-amber-500' : 'bg-red-500'
+            }`}></div>
+            <span className="text-sm font-medium">Status:</span>
+            <span className={`font-bold ${getHealthColor(activityData.systemHealth)}`}>
               {getHealthLabel(activityData.systemHealth)}
             </span>
           </div>
@@ -116,33 +125,47 @@ export const RealSystemActivity = ({ activityData, loading }: RealSystemActivity
         <div className="text-xs text-muted-foreground">
           Última atualização: {new Date(activityData.lastUpdated).toLocaleString('pt-BR')}
         </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
+      </div>
+      
+      <div className="p-6 space-y-4">
         {activityData.recentActivities.length > 0 ? (
           activityData.recentActivities.map((activity, index) => (
-            <div key={`${activity.type}-${activityData.timeRange}-${index}`} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
-              <div className="flex items-center gap-3">
-                {getActivityIcon(activity.type)}
-                <div>
-                  <p className="font-medium">{activity.type}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {activity.period}
+            <div 
+              key={`${activity.type}-${activityData.timeRange}-${index}`} 
+              className="aurora-glass rounded-lg p-4 aurora-hover-scale transition-all duration-300 hover:shadow-lg"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="p-2 rounded-lg bg-gradient-to-br from-primary/20 to-secondary/20">
+                    {getActivityIcon(activity.type)}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-foreground">{activity.type}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {activity.period}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-3xl font-bold aurora-text-gradient">
+                    {activity.count.toLocaleString()}
                   </p>
                 </div>
-              </div>
-              <div className="text-right">
-                <p className="text-2xl font-bold">{activity.count.toLocaleString()}</p>
               </div>
             </div>
           ))
         ) : (
-          <div className="text-center py-8 text-muted-foreground">
-            <Activity className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Nenhuma atividade encontrada para este período</p>
-            <p className="text-sm mt-2">Tente selecionar um período maior ou aguarde mais atividade dos usuários</p>
+          <div className="text-center py-12">
+            <div className="aurora-glass rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
+              <Activity className="h-10 w-10 text-muted-foreground/50" />
+            </div>
+            <h4 className="text-lg font-semibold mb-2">Nenhuma atividade encontrada</h4>
+            <p className="text-muted-foreground text-sm">
+              Tente selecionar um período maior ou aguarde mais atividade dos usuários
+            </p>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };

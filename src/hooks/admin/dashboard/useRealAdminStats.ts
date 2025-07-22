@@ -214,6 +214,8 @@ export const useRealAdminStats = (timeRange: string) => {
 
   useEffect(() => {
     console.log(`🔄 [STATS] TimeRange mudou para: ${timeRange}`);
+    // Forçar atualização dos dados quando o período mudar
+    setStatsData(prev => ({ ...prev, timeRange, lastUpdated: new Date().toISOString() }));
     refetch();
   }, [timeRange]);
 

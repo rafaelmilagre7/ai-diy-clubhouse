@@ -10,10 +10,9 @@ export const useRealAdminDashboardData = (timeRange: string) => {
     console.log(`🔄 Atualizando dashboard administrativo para período: ${timeRange}...`);
     
     try {
-      await Promise.all([
-        refetchStats?.(),
-        refetchActivity?.()
-      ]);
+      // Forçar atualização sequencial para garantir sincronização
+      await refetchStats?.();
+      await refetchActivity?.();
       
       console.log('✅ Dashboard atualizado com sucesso');
     } catch (error) {
