@@ -1,4 +1,15 @@
 
+/**
+ * 🔒 MÓDULO APROVADO - Página de Detalhes da Solução
+ * Status: Produção Estável ✅
+ * Função: Interface principal para visualização e interação com soluções
+ * 
+ * ⚠️ MUDANÇAS NESTE ARQUIVO PODEM AFETAR:
+ * - Experiência completa do usuário com soluções
+ * - Sistema de progresso e implementação
+ * - Navegação e loading states
+ */
+
 import { useParams, useLocation } from "react-router-dom";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { useSolutionData } from "@/hooks/useSolutionData";

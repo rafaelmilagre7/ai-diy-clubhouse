@@ -1,4 +1,15 @@
 
+/**
+ * 🔒 MÓDULO APROVADO - Hook de Dados de Soluções
+ * Status: Produção Estável ✅
+ * Função: Gerencia carregamento e estado de soluções individuais
+ * 
+ * ⚠️ MUDANÇAS NESTE ARQUIVO PODEM AFETAR:
+ * - Carregamento de soluções para usuários
+ * - Verificação de permissões admin vs member
+ * - Sistema de progresso do usuário
+ */
+
 import { useState, useEffect, useMemo, useRef } from "react";
 import { supabase, Solution } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
