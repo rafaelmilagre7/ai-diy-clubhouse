@@ -1,146 +1,71 @@
 
+/* Modularização dos estilos em arquivos separados para facilitar manutenção */
+
+@import './styles/base.css';
+@import './styles/components.css';
+@import './styles/utilities.css';
+@import './styles/notifications.css';
+@import './styles/aurora-effects.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* VIA Aurora Style Design System */
-@layer base {
-  :root {
-    --background: 222 84% 5%;
-    --foreground: 210 40% 98%;
-    --card: 222 84% 8%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222 84% 8%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217 92% 60%;
-    --primary-foreground: 222 84% 5%;
-    --secondary: 217 32% 17%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 215 32% 12%;
-    --muted-foreground: 217 24% 65%;
-    --accent: 215 32% 17%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217 32% 17%;
-    --input: 217 32% 17%;
-    --ring: 217 92% 60%;
-    --radius: 0.5rem;
-
-    /* VIA Colors - Aurora Blue Palette */
-    --viverblue: 217 92% 60%;
-    --viverblue-light: 217 92% 70%;
-    --viverblue-lighter: 217 92% 80%;
-    --viverblue-dark: 217 92% 50%;
-    --viverblue-darker: 217 92% 40%;
-    
-    /* Aurora alias */
-    --aurora: var(--viverblue);
-    
-    /* Track Colors */
-    --revenue: 154 68% 50%;
-    --revenue-light: 154 68% 60%;
-    --revenue-lighter: 154 68% 70%;
-    --revenue-dark: 154 68% 40%;
-    --revenue-darker: 154 68% 30%;
-    
-    --operational: 280 74% 65%;
-    --operational-light: 280 74% 75%;
-    --operational-lighter: 280 74% 85%;
-    --operational-dark: 280 74% 55%;
-    --operational-darker: 280 74% 45%;
-    
-    --strategy: 39 94% 68%;
-    --strategy-light: 39 94% 78%;
-    --strategy-lighter: 39 94% 88%;
-    --strategy-dark: 39 94% 58%;
-    --strategy-darker: 39 94% 48%;
-  }
-
-  .light {
-    --background: 0 0% 100%;
-    --foreground: 222 84% 5%;
-    --card: 0 0% 100%;
-    --card-foreground: 222 84% 5%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 84% 5%;
-    --primary: 217 92% 60%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222 84% 5%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
-    --accent: 210 40% 96%;
-    --accent-foreground: 222 84% 5%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 217 92% 60%;
-  }
-}
-
 /* Aurora Background Animations */
 @keyframes blob {
-  0% { transform: translate(0px, 0px) scale(1); }
-  33% { transform: translate(30px, -50px) scale(1.1); }
-  66% { transform: translate(-20px, 20px) scale(0.9); }
-  100% { transform: translate(0px, 0px) scale(1); }
-}
-
-@keyframes aurora {
-  0%, 100% { opacity: 0.5; transform: rotate(0deg); }
-  50% { opacity: 0.8; transform: rotate(180deg); }
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
 }
 
 .animate-blob {
   animation: blob 7s infinite;
 }
 
-.animate-aurora {
-  animation: aurora 8s ease-in-out infinite;
+.animation-delay-2000 {
+  animation-delay: 2s;
 }
 
-.animation-delay-2000 { animation-delay: 2s; }
-.animation-delay-4000 { animation-delay: 4s; }
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
 
-/* Aurora Style Components */
-@layer components {
-  /* Aurora Cards - No harsh borders */
-  .aurora-card {
-    @apply bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-md;
-    @apply shadow-lg shadow-primary/5;
-    @apply ring-1 ring-white/10;
-    @apply rounded-lg;
-  }
+/* Line clamp utility */
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
 
-  /* Aurora Glass Effect */
-  .aurora-glass {
-    @apply bg-white/5 backdrop-blur-xl;
-    @apply border border-white/10;
-    @apply shadow-2xl shadow-primary/10;
-  }
+/* Glassmorphism effects */
+.glass {
+  @apply bg-white/10 backdrop-blur-md border border-white/20;
+}
 
-  /* Aurora Buttons */
-  .aurora-button {
-    @apply bg-gradient-to-r from-primary to-primary/80;
-    @apply hover:from-primary/90 hover:to-primary/70;
-    @apply shadow-lg shadow-primary/20;
-    @apply border-0;
-    @apply transition-all duration-300;
-  }
+.glass-dark {
+  @apply bg-black/10 backdrop-blur-md border border-white/10;
+}
 
-  /* Aurora Inputs */
-  .aurora-input {
-    @apply bg-muted/50 backdrop-blur-sm;
-    @apply border border-white/10;
-    @apply focus:border-primary/50 focus:ring-2 focus:ring-primary/20;
-    @apply transition-all duration-200;
-  }
+/* Aurora Style Utilities */
+.aurora-border {
+  border-image: linear-gradient(135deg, 
+    hsl(var(--aurora)), 
+    hsl(var(--viverblue)), 
+    hsl(var(--operational))
+  ) 1;
+}
 
-  /* Aurora Separators */
-  .aurora-separator {
-    @apply bg-gradient-to-r from-transparent via-white/20 to-transparent;
-    @apply border-0;
-  }
+/* Enhanced focus states for Aurora */
+.aurora-focus {
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aurora/40 focus-visible:ring-offset-2 focus-visible:ring-offset-card;
 }
