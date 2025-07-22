@@ -8,13 +8,13 @@ const SuggestionHeader = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="mb-6">
+    <div className="space-y-4">
       <Button
         variant="ghost"
-        className="flex items-center gap-2 mb-2"
+        className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
         onClick={() => navigate('/suggestions')}
       >
-        <ChevronLeft size={16} />
+        <ChevronLeft className="w-4 h-4" />
         Voltar para sugestões
       </Button>
     </div>

@@ -13,13 +13,22 @@ export const SuggestionsEmptyState: React.FC<SuggestionsEmptyStateProps> = ({ se
   
   if (searchQuery) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-        <SearchX className="h-16 w-16 text-gray-400 mb-4" />
-        <h3 className="text-lg font-medium">Nenhuma sugestão encontrada</h3>
-        <p className="text-muted-foreground mt-2 mb-6 max-w-md">
-          Não encontramos nenhuma sugestão para "{searchQuery}". Tente usar termos diferentes ou crie uma nova sugestão.
+      <div className="flex flex-col items-center justify-center py-16 px-4 text-center animate-fade-in">
+        <div className="bg-muted/30 rounded-full p-6 mb-6">
+          <SearchX className="w-12 h-12 text-muted-foreground" />
+        </div>
+        <h3 className="text-xl font-semibold text-foreground mb-3">
+          Nenhuma sugestão encontrada
+        </h3>
+        <p className="text-muted-foreground mb-8 max-w-md leading-relaxed">
+          Não encontramos nenhuma sugestão para <span className="font-medium">"{searchQuery}"</span>. 
+          Tente usar termos diferentes ou crie uma nova sugestão.
         </p>
-        <Button onClick={() => navigate('/suggestions/new')}>
+        <Button 
+          onClick={() => navigate('/suggestions/new')}
+          className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium px-6 h-11 rounded-lg"
+        >
+          <MessageSquarePlus className="w-4 h-4 mr-2" />
           Criar Nova Sugestão
         </Button>
       </div>
@@ -27,13 +36,21 @@ export const SuggestionsEmptyState: React.FC<SuggestionsEmptyStateProps> = ({ se
   }
 
   return (
-    <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-      <MessageSquarePlus className="h-16 w-16 text-gray-400 mb-4" />
-      <h3 className="text-lg font-medium">Ainda não há sugestões</h3>
-      <p className="text-muted-foreground mt-2 mb-6 max-w-md">
+    <div className="flex flex-col items-center justify-center py-16 px-4 text-center animate-fade-in">
+      <div className="bg-muted/30 rounded-full p-6 mb-6">
+        <MessageSquarePlus className="w-12 h-12 text-muted-foreground" />
+      </div>
+      <h3 className="text-xl font-semibold text-foreground mb-3">
+        Ainda não há sugestões
+      </h3>
+      <p className="text-muted-foreground mb-8 max-w-md leading-relaxed">
         Seja o primeiro a compartilhar uma ideia ou sugestão para melhorarmos o VIVER DE IA Club.
       </p>
-      <Button onClick={() => navigate('/suggestions/new')}>
+      <Button 
+        onClick={() => navigate('/suggestions/new')}
+        className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium px-6 h-11 rounded-lg"
+      >
+        <MessageSquarePlus className="w-4 h-4 mr-2" />
         Criar Primeira Sugestão
       </Button>
     </div>

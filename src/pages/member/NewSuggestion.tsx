@@ -80,91 +80,119 @@ const NewSuggestionPage = () => {
   }
 
   return (
-    <div className="container py-6 space-y-6">
-      <Button 
-        variant="ghost" 
-        className="flex items-center gap-2 mb-4" 
-        onClick={() => navigate('/suggestions')}
-      >
-        <ArrowLeft size={16} />
-        Voltar para sugestões
-      </Button>
-
-      <Card className="max-w-2xl mx-auto">
-        <CardHeader>
-          <CardTitle>Nova Sugestão</CardTitle>
-          <CardDescription>
-            Compartilhe sua ideia para melhorar nossa plataforma
-          </CardDescription>
-        </CardHeader>
-        
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="title">Título da sugestão</Label>
-              <Input
-                id="title"
-                placeholder="Ex: Adicionar dashboard personalizado"
-                {...register('title', { required: 'O título é obrigatório' })}
-              />
-              {errors.title && (
-                <p className="text-sm text-red-500">{errors.title.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="category">Categoria</Label>
-              <Select 
-                onValueChange={(value) => setValue('category_id', value)}
-                value={selectedCategory}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione uma categoria" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categoriesList.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.category_id && (
-                <p className="text-sm text-red-500">{errors.category_id.message}</p>
-              )}
-              {!selectedCategory && (
-                <p className="text-sm text-amber-500">Selecione uma categoria para sua sugestão</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="description">Descrição</Label>
-              <Textarea
-                id="description"
-                placeholder="Descreva sua sugestão em detalhes..."
-                className="min-h-[150px]"
-                {...register('description', { required: 'A descrição é obrigatória' })}
-              />
-              {errors.description && (
-                <p className="text-sm text-red-500">{errors.description.message}</p>
-              )}
-            </div>
-          </CardContent>
-
-          <CardFooter className="flex justify-end space-x-2">
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-2xl mx-auto space-y-8">
+          {/* Header com navegação */}
+          <div className="space-y-4">
             <Button 
-              type="button" 
-              variant="outline" 
+              variant="ghost" 
+              className="flex items-center gap-2 text-muted-foreground hover:text-foreground" 
               onClick={() => navigate('/suggestions')}
             >
-              Cancelar
+              <ArrowLeft className="w-4 h-4" />
+              Voltar para sugestões
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Enviando...' : 'Enviar sugestão'}
-            </Button>
-          </CardFooter>
-        </form>
-      </Card>
+            
+            <div className="space-y-2">
+              <h1 className="text-3xl font-semibold text-foreground">Nova Sugestão</h1>
+              <p className="text-base text-muted-foreground">
+                Compartilhe sua ideia para melhorar nossa plataforma
+              </p>
+            </div>
+          </div>
+
+          {/* Formulário */}
+          <Card className="bg-card/50 backdrop-blur-sm border-border shadow-lg">
+            <form onSubmit={handleSubmit(onSubmit)}>
+              <CardContent className="p-8 space-y-6">
+                <div className="space-y-3">
+                  <Label htmlFor="title" className="text-sm font-medium text-foreground">
+                    Título da sugestão
+                  </Label>
+                  <Input
+                    id="title"
+                    placeholder="Ex: Adicionar dashboard personalizado"
+                    className="h-11 bg-background border-border focus:border-primary transition-colors"
+                    {...register('title', { required: 'O título é obrigatório' })}
+                  />
+                  {errors.title && (
+                    <p className="text-sm text-destructive flex items-center gap-1">
+                      {errors.title.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-3">
+                  <Label htmlFor="category" className="text-sm font-medium text-foreground">
+                    Categoria
+                  </Label>
+                  <Select 
+                    onValueChange={(value) => setValue('category_id', value)}
+                    value={selectedCategory}
+                  >
+                    <SelectTrigger className="h-11 bg-background border-border focus:border-primary">
+                      <SelectValue placeholder="Selecione uma categoria" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover border-border">
+                      {categoriesList.map((category) => (
+                        <SelectItem 
+                          key={category.id} 
+                          value={category.id}
+                          className="hover:bg-accent focus:bg-accent"
+                        >
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {errors.category_id && (
+                    <p className="text-sm text-destructive">{errors.category_id.message}</p>
+                  )}
+                  {!selectedCategory && (
+                    <p className="text-sm text-amber-600 dark:text-amber-400">
+                      Selecione uma categoria para sua sugestão
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-3">
+                  <Label htmlFor="description" className="text-sm font-medium text-foreground">
+                    Descrição
+                  </Label>
+                  <Textarea
+                    id="description"
+                    placeholder="Descreva sua sugestão em detalhes..."
+                    className="min-h-[150px] bg-background border-border focus:border-primary transition-colors resize-none"
+                    {...register('description', { required: 'A descrição é obrigatória' })}
+                  />
+                  {errors.description && (
+                    <p className="text-sm text-destructive">{errors.description.message}</p>
+                  )}
+                </div>
+              </CardContent>
+
+              <CardFooter className="flex justify-end gap-3 p-8 pt-0">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => navigate('/suggestions')}
+                  className="px-6 h-11"
+                >
+                  Cancelar
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={isSubmitting}
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium px-6 h-11"
+                >
+                  {isSubmitting ? 'Enviando...' : 'Enviar sugestão'}
+                </Button>
+              </CardFooter>
+            </form>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 };

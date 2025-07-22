@@ -19,14 +19,19 @@ export const SuggestionsContent: React.FC<SuggestionsContentProps> = ({
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-      {suggestions.map((suggestion) => (
-        <SuggestionCard
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 animate-fade-in">
+      {suggestions.map((suggestion, index) => (
+        <div
           key={suggestion.id}
-          suggestion={suggestion}
-          getStatusLabel={getStatusLabel}
-          getStatusColor={getStatusColor}
-        />
+          className="animate-fade-in"
+          style={{ animationDelay: `${index * 100}ms` }}
+        >
+          <SuggestionCard
+            suggestion={suggestion}
+            getStatusLabel={getStatusLabel}
+            getStatusColor={getStatusColor}
+          />
+        </div>
       ))}
     </div>
   );

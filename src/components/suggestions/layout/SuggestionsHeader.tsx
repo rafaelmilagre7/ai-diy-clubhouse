@@ -23,77 +23,96 @@ export const SuggestionsHeader: React.FC<SuggestionsHeaderProps> = ({
   const navigate = useNavigate();
 
   return (
-    <div className="flex flex-col space-y-6">
-      {/* Header com título e ação principal */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Sugestões</h1>
-          <p className="text-muted-foreground mt-1">
+    <div className="space-y-8">
+      {/* Header moderno VIA Aurora Style */}
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-semibold text-foreground">Sugestões</h1>
+          <p className="text-base text-muted-foreground">
             Compartilhe suas ideias e vote nas propostas da comunidade
           </p>
         </div>
         <Button 
           onClick={() => navigate('/suggestions/new')}
-          className="gap-2"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium px-6 h-11 rounded-lg"
+          size="lg"
         >
-          <Plus size={16} />
+          <Plus className="w-4 h-4 mr-2" />
           Nova Sugestão
         </Button>
       </div>
       
-      {/* Barra de busca */}
-      <div className="relative w-full max-w-md">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-        <Input
-          placeholder="Buscar sugestões..."
-          value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
-          className="pl-10"
-        />
-      </div>
-      
-      {/* Filtros organizados */}
-      <div className="flex flex-wrap gap-3">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-muted-foreground">Ordenar:</span>
-          <ToggleGroup 
-            type="single" 
-            value={filter}
-            onValueChange={(value) => value && onFilterChange(value as SuggestionFilter)}
-            className="h-9"
-          >
-            <ToggleGroupItem value="popular" className="gap-2 px-3">
-              <TrendingUp className="h-4 w-4" />
-              <span>Populares</span>
-            </ToggleGroupItem>
-            <ToggleGroupItem value="recent" className="gap-2 px-3">
-              <Clock className="h-4 w-4" />
-              <span>Recentes</span>
-            </ToggleGroupItem>
-          </ToggleGroup>
+      {/* Container de busca e filtros */}
+      <div className="flex flex-col lg:flex-row gap-6 lg:items-center lg:justify-between">
+        {/* Barra de busca */}
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+          <Input
+            placeholder="Buscar sugestões..."
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="pl-10 h-11 bg-background border-border focus:border-primary transition-colors"
+          />
         </div>
-        
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-muted-foreground">Status:</span>
-          <ToggleGroup 
-            type="single" 
-            value={filter}
-            onValueChange={(value) => value && onFilterChange(value as SuggestionFilter)}
-            className="h-9"
-          >
-            <ToggleGroupItem value="new" className="gap-2 px-3">
-              <Lightbulb className="h-4 w-4" />
-              <span>Novas</span>
-            </ToggleGroupItem>
-            <ToggleGroupItem value="in_development" className="gap-2 px-3">
-              <Wrench className="h-4 w-4" />
-              <span>Em Desenvolvimento</span>
-            </ToggleGroupItem>
-            <ToggleGroupItem value="implemented" className="gap-2 px-3">
-              <CheckCircle className="h-4 w-4" />
-              <span>Implementadas</span>
-            </ToggleGroupItem>
-          </ToggleGroup>
+
+        {/* Filtros organizados */}
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-medium text-foreground">Ordenar:</span>
+            <ToggleGroup 
+              type="single" 
+              value={filter}
+              onValueChange={(value) => value && onFilterChange(value as SuggestionFilter)}
+              className="bg-muted/50 p-1 rounded-lg"
+            >
+              <ToggleGroupItem 
+                value="popular" 
+                className="data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-sm h-9 px-3 rounded-md"
+              >
+                <TrendingUp className="w-4 h-4 mr-2" />
+                Populares
+              </ToggleGroupItem>
+              <ToggleGroupItem 
+                value="recent" 
+                className="data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-sm h-9 px-3 rounded-md"
+              >
+                <Clock className="w-4 h-4 mr-2" />
+                Recentes
+              </ToggleGroupItem>
+            </ToggleGroup>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-medium text-foreground">Status:</span>
+            <ToggleGroup 
+              type="single" 
+              value={filter}
+              onValueChange={(value) => value && onFilterChange(value as SuggestionFilter)}
+              className="bg-muted/50 p-1 rounded-lg"
+            >
+              <ToggleGroupItem 
+                value="new" 
+                className="data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-sm h-9 px-3 rounded-md"
+              >
+                <Lightbulb className="w-4 h-4 mr-2" />
+                Novas
+              </ToggleGroupItem>
+              <ToggleGroupItem 
+                value="in_development" 
+                className="data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-sm h-9 px-3 rounded-md"
+              >
+                <Wrench className="w-4 h-4 mr-2" />
+                Desenvolvimento
+              </ToggleGroupItem>
+              <ToggleGroupItem 
+                value="implemented" 
+                className="data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-sm h-9 px-3 rounded-md"
+              >
+                <CheckCircle className="w-4 h-4 mr-2" />
+                Implementadas
+              </ToggleGroupItem>
+            </ToggleGroup>
+          </div>
         </div>
       </div>
     </div>

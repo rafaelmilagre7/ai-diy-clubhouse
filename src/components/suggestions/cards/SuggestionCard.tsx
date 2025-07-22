@@ -29,24 +29,32 @@ export const SuggestionCard: React.FC<SuggestionCardProps> = ({
   
   return (
     <Card 
-      className="h-full cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-[1.02] border-border/50"
+      className="group h-full cursor-pointer transition-all duration-300 hover:shadow-md hover:-translate-y-1 border-border bg-card/50 backdrop-blur-sm"
       onClick={handleCardClick}
     >
-      <CardHeader className="pb-3">
-        <div className="flex justify-between items-start gap-3">
-          <div className="space-y-2 flex-1 min-w-0">
-            <h3 className="font-semibold text-lg leading-tight line-clamp-2">{suggestion.title}</h3>
+      <CardHeader className="pb-4">
+        <div className="flex justify-between items-start gap-4">
+          <div className="space-y-3 flex-1 min-w-0">
+            <h3 className="font-semibold text-lg text-foreground leading-tight line-clamp-2 group-hover:text-primary transition-colors">
+              {suggestion.title}
+            </h3>
             <Badge 
               variant="secondary" 
-              className={`${getStatusColor(suggestion.status)} text-xs font-medium w-fit`}
+              className={`${getStatusColor(suggestion.status)} text-xs font-medium px-3 py-1 rounded-full w-fit`}
             >
               {getStatusLabel(suggestion.status)}
             </Badge>
           </div>
           
-          {/* Score de votos mais prominente */}
-          <div className="flex flex-col items-center bg-muted/50 rounded-xl p-3 min-w-[70px] border">
-            <div className={`text-xl font-bold ${netVotes > 0 ? 'text-green-600' : netVotes < 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
+          {/* Score de votos moderno */}
+          <div className="flex flex-col items-center bg-muted/30 rounded-xl p-3 min-w-[72px] border border-border/50">
+            <div className={`text-xl font-semibold ${
+              netVotes > 0 
+                ? 'text-emerald-600 dark:text-emerald-400' 
+                : netVotes < 0 
+                ? 'text-rose-500 dark:text-rose-400' 
+                : 'text-muted-foreground'
+            }`}>
               {netVotes > 0 ? `+${netVotes}` : netVotes}
             </div>
             <div className="text-xs text-muted-foreground font-medium">votos</div>
@@ -55,28 +63,30 @@ export const SuggestionCard: React.FC<SuggestionCardProps> = ({
       </CardHeader>
       
       <CardContent className="pb-4">
-        <p className="text-muted-foreground line-clamp-3 leading-relaxed">{suggestion.description}</p>
+        <p className="text-muted-foreground line-clamp-3 leading-relaxed text-sm">
+          {suggestion.description}
+        </p>
       </CardContent>
       
-      <CardFooter className="pt-3 border-t border-border/50">
-        <div className="flex items-center justify-between w-full text-sm">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1.5 text-green-600">
-              <ThumbsUp className="h-4 w-4" />
-              <span className="font-medium">{suggestion.upvotes || 0}</span>
+      <CardFooter className="pt-4 border-t border-border/30">
+        <div className="flex items-center justify-between w-full">
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+              <ThumbsUp className="w-4 h-4" />
+              <span className="font-medium text-sm">{suggestion.upvotes || 0}</span>
             </div>
             
-            <div className="flex items-center gap-1.5 text-red-500">
-              <ThumbsDown className="h-4 w-4" />
-              <span className="font-medium">{suggestion.downvotes || 0}</span>
+            <div className="flex items-center gap-1.5 text-rose-500 dark:text-rose-400">
+              <ThumbsDown className="w-4 h-4" />
+              <span className="font-medium text-sm">{suggestion.downvotes || 0}</span>
             </div>
           </div>
           
-          {/* Mostrar contador de comentários apenas para admins */}
+          {/* Mostrar contador de comentários para admins */}
           {isAdmin && (
             <div className="flex items-center gap-1.5 text-muted-foreground">
-              <MessageSquare className="h-4 w-4" />
-              <span className="font-medium">{suggestion.comment_count || 0}</span>
+              <MessageSquare className="w-4 h-4" />
+              <span className="font-medium text-sm">{suggestion.comment_count || 0}</span>
             </div>
           )}
         </div>

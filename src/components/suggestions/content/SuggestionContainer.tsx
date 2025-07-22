@@ -38,30 +38,34 @@ const SuggestionContainer = ({
   const categoryName = suggestion.category?.name || '';
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-          <SuggestionTitle
-            title={suggestion.title}
-            category={{ name: categoryName }}
-            createdAt={suggestion.created_at}
-            isOwner={isOwner}
-          />
-        </div>
-      </CardHeader>
-      
-      <CardContent className="space-y-6">
-        <SuggestionDescription description={suggestion.description} />
+    <div className="max-w-4xl mx-auto">
+      <Card className="bg-card/50 backdrop-blur-sm border-border shadow-lg">
+        <CardHeader className="pb-6">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            <SuggestionTitle
+              title={suggestion.title}
+              category={{ name: categoryName }}
+              createdAt={suggestion.created_at}
+              isOwner={isOwner}
+            />
+          </div>
+        </CardHeader>
+        
+        <CardContent className="space-y-8 pb-8">
+          <SuggestionDescription description={suggestion.description} />
 
-        <SuggestionVoting
-          suggestion={suggestion}
-          userVote={userVote}
-          voteLoading={voteLoading}
-          onVote={onVote}
-          voteBalance={voteBalance}
-        />
-      </CardContent>
-    </Card>
+          <div className="pt-6 border-t border-border/30">
+            <SuggestionVoting
+              suggestion={suggestion}
+              userVote={userVote}
+              voteLoading={voteLoading}
+              onVote={onVote}
+              voteBalance={voteBalance}
+            />
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

@@ -77,31 +77,33 @@ const SuggestionDetailsPage = () => {
   const isOwner = user && user.id === suggestion.user_id;
 
   return (
-    <div className="container py-6 space-y-6">
-      <SuggestionDetailsHeader
-        isAdmin={isAdmin}
-        adminActionLoading={adminActionLoading}
-        suggestionStatus={suggestion.status}
-        onUpdateStatus={handleUpdateStatus}
-        onOpenDeleteDialog={() => setDeleteDialogOpen(true)}
-      />
-
-      <SuggestionContent
-        suggestion={suggestion}
-        onVote={handleVote}
-        isOwner={isOwner}
-        userVote={userVote as UserVote | null}
-        voteLoading={voteLoading}
-      />
-
-      {/* Dialog de exclusão apenas para admins */}
-      {isAdmin && (
-        <DeleteSuggestionDialog
-          isOpen={deleteDialogOpen}
-          onOpenChange={setDeleteDialogOpen}
-          onConfirmDelete={handleRemoveSuggestion}
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-8 space-y-8">
+        <SuggestionDetailsHeader
+          isAdmin={isAdmin}
+          adminActionLoading={adminActionLoading}
+          suggestionStatus={suggestion.status}
+          onUpdateStatus={handleUpdateStatus}
+          onOpenDeleteDialog={() => setDeleteDialogOpen(true)}
         />
-      )}
+
+        <SuggestionContent
+          suggestion={suggestion}
+          onVote={handleVote}
+          isOwner={isOwner}
+          userVote={userVote as UserVote | null}
+          voteLoading={voteLoading}
+        />
+
+        {/* Dialog de exclusão apenas para admins */}
+        {isAdmin && (
+          <DeleteSuggestionDialog
+            isOpen={deleteDialogOpen}
+            onOpenChange={setDeleteDialogOpen}
+            onConfirmDelete={handleRemoveSuggestion}
+          />
+        )}
+      </div>
     </div>
   );
 };
