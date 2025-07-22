@@ -17,7 +17,7 @@ export const useCommentActions = (onSuccess: () => void) => {
       const alreadyLiked = comment.user_has_liked;
       
       if (alreadyLiked) {
-        // Remover curtida
+        // Remover curtida - o trigger automaticamente atualizará o contador
         const { error } = await supabase
           .from('tool_comment_likes')
           .delete()
@@ -25,17 +25,8 @@ export const useCommentActions = (onSuccess: () => void) => {
           .eq('user_id', user.id);
           
         if (error) throw error;
-        
-        // Decrementar contador
-        await supabase
-          .rpc('decrement', { 
-            row_id: comment.id, 
-            table_name: 'tool_comments', 
-            column_name: 'likes_count'
-          });
-          
       } else {
-        // Adicionar curtida
+        // Adicionar curtida - o trigger automaticamente atualizará o contador
         const { error } = await supabase
           .from('tool_comment_likes')
           .insert({
@@ -44,14 +35,6 @@ export const useCommentActions = (onSuccess: () => void) => {
           });
           
         if (error) throw error;
-        
-        // Incrementar contador
-        await supabase
-          .rpc('increment', { 
-            row_id: comment.id, 
-            table_name: 'tool_comments', 
-            column_name: 'likes_count'
-          });
       }
       
       onSuccess();

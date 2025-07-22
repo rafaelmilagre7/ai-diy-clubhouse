@@ -60,8 +60,13 @@ export const CommentItem = ({ comment, onReply, onLike, onDelete }: CommentItemP
       <div className="p-4 space-y-4">
         <div className="flex gap-4">
           <Avatar className="h-10 w-10 ring-2 ring-viverblue/10">
-            <AvatarImage src={profileAvatarUrl} alt={profileName} />
-            <AvatarFallback className="bg-viverblue/5 text-viverblue">
+            <AvatarImage 
+              src={profileAvatarUrl} 
+              alt={profileName}
+              className="object-cover"
+              onError={() => console.log('Erro ao carregar avatar:', profileAvatarUrl)}
+            />
+            <AvatarFallback className="bg-viverblue/10 text-viverblue font-medium border border-viverblue/20">
               {getInitials(profileName)}
             </AvatarFallback>
           </Avatar>
