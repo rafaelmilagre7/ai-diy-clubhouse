@@ -5,14 +5,11 @@ import { useAuth } from "@/contexts/auth";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Sparkles, ArrowRight, Download, Gift } from "lucide-react";
+import { CheckCircle, Trophy, ArrowRight, Download, Gift, Star, Award } from "lucide-react";
 import confetti from "canvas-confetti";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { downloadCertificate, openCertificateInNewTab, CertificateData } from "@/utils/certificateGenerator";
-import { saveCertificateToStorage, downloadCertificateFromStorage, openCertificateFromStorage, StoredCertificate } from "@/utils/certificateStorage";
 import { useSolutionData } from "@/hooks/useSolutionData";
-import { CertificateViewer } from "@/components/certificates/CertificateViewer";
 
 interface CompletionTabProps {
   solutionId: string;
@@ -32,9 +29,7 @@ const CompletionTab: React.FC<CompletionTabProps> = ({
   const queryClient = useQueryClient();
   const { solution } = useSolutionData(solutionId);
   const [showCelebration, setShowCelebration] = useState(false);
-  const [showCertificate, setShowCertificate] = useState(false);
-  const [certificateData, setCertificateData] = useState<CertificateData | null>(null);
-  const [storedCertificate, setStoredCertificate] = useState<StoredCertificate | null>(null);
+  const [showSummary, setShowSummary] = useState(false);
 
   const completeSolutionMutation = useMutation({
     mutationFn: async () => {
@@ -102,40 +97,10 @@ const CompletionTab: React.FC<CompletionTabProps> = ({
       toast.success('🎉 Parabéns! Solução concluída com sucesso!');
       onComplete();
       
-      // Generate certificate data
-      if (user && solution && data.certificateRecord) {
-        const newCertificateData: CertificateData = {
-          userName: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuário',
-          solutionTitle: solution.title || 'Solução VIA',
-          completedDate: new Date().toLocaleDateString('pt-BR'),
-          certificateId: data.certificateRecord.validation_code
-        };
-        
-        setCertificateData(newCertificateData);
-        
-        // Salvar certificado no storage
-        try {
-          const stored = await saveCertificateToStorage(newCertificateData, user.id);
-          setStoredCertificate(stored);
-          
-          // Atualizar registro no banco com URLs do PDF
-          await supabase
-            .from('solution_certificates')
-            .update({
-              certificate_pdf_url: stored.pdfUrl,
-              certificate_pdf_path: stored.filePath
-            })
-            .eq('id', data.certificateRecord.id);
-        } catch (storageError) {
-          console.error('Erro ao salvar no storage:', storageError);
-          // Continuar mesmo se o storage falhar
-        }
-        
-        // Show certificate after celebration
-        setTimeout(() => {
-          setShowCertificate(true);
-        }, 2000);
-      }
+      // Show summary after celebration
+      setTimeout(() => {
+        setShowSummary(true);
+      }, 2000);
       
       // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: ['user-progress'] });
@@ -143,7 +108,7 @@ const CompletionTab: React.FC<CompletionTabProps> = ({
     },
     onError: (error) => {
       console.error('Error completing solution:', error);
-      // Simular sucesso para demonstração do certificado
+      // Simular sucesso para demonstração
       setShowCelebration(true);
       
       // Efeito de confete
@@ -170,21 +135,9 @@ const CompletionTab: React.FC<CompletionTabProps> = ({
         });
       }, 250);
 
-      // Generate certificate data for demo
-      if (user && solution) {
-        const newCertificateData: CertificateData = {
-          userName: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuário',
-          solutionTitle: solution.title || 'Solução VIA',
-          completedDate: new Date().toLocaleDateString('pt-BR'),
-          certificateId: `VIA-${Date.now()}`
-        };
-        
-        setCertificateData(newCertificateData);
-        
-        setTimeout(() => {
-          setShowCertificate(true);
-        }, 2000);
-      }
+      setTimeout(() => {
+        setShowSummary(true);
+      }, 2000);
       
       onComplete();
     }
@@ -203,71 +156,76 @@ const CompletionTab: React.FC<CompletionTabProps> = ({
   return (
     <div className="space-y-8 animate-fade-in relative">
       {/* Celebration overlay */}
-      {showCelebration && !showCertificate && (
+      {showCelebration && !showSummary && (
         <div className="fixed inset-0 z-50 flex items-center justify-center aurora-glass">
           <div className="text-center p-8 aurora-glass-hover rounded-3xl text-foreground animate-scale-in aurora-glow">
-            <Sparkles className="w-16 h-16 mx-auto mb-4 animate-spin aurora-text-gradient" />
+            <Trophy className="w-16 h-16 mx-auto mb-4 animate-pulse aurora-text-gradient" />
             <h2 className="text-3xl font-bold mb-2 aurora-text-gradient">🎉 Parabéns!</h2>
-            <p className="text-lg text-muted-foreground">Gerando seu certificado...</p>
+            <p className="text-lg text-muted-foreground">Processando sua conclusão...</p>
           </div>
         </div>
       )}
 
-      {/* Certificate Modal */}
-      {showCertificate && certificateData && (
+      {/* Summary Modal */}
+      {showSummary && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 aurora-glass">
-          <div className="w-full max-w-5xl animate-scale-in">
-            <CertificateViewer
-              userName={certificateData.userName}
-              solutionTitle={certificateData.solutionTitle}
-              completedDate={certificateData.completedDate}
-              certificateId={certificateData.certificateId}
-              onDownload={async () => {
-                try {
-                  if (storedCertificate?.pdfUrl) {
-                    // Download do storage
-                    await downloadCertificateFromStorage(
-                      storedCertificate.pdfUrl, 
-                      `certificado-${certificateData.solutionTitle.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`
-                    );
-                  } else {
-                    // Gerar e baixar localmente
-                    await downloadCertificate(certificateData);
-                  }
-                  toast.success('🏆 Certificado baixado com sucesso!');
-                } catch (error) {
-                  console.error('Erro ao baixar certificado:', error);
-                  // Tentar fallback local
-                  try {
-                    await downloadCertificate(certificateData);
-                    toast.success('🏆 Certificado baixado com sucesso!');
-                  } catch (fallbackError) {
-                    toast.error('Erro ao baixar certificado');
-                  }
-                }
-              }}
-              onOpenInNewTab={async () => {
-                try {
-                  if (storedCertificate?.pdfUrl) {
-                    // Abrir do storage
-                    openCertificateFromStorage(storedCertificate.pdfUrl);
-                  } else {
-                    // Gerar e abrir localmente
-                    await openCertificateInNewTab(certificateData);
-                  }
-                  toast.success('🏆 Certificado aberto em nova guia!');
-                } catch (error) {
-                  console.error('Erro ao abrir certificado:', error);
-                  // Tentar fallback local
-                  try {
-                    await openCertificateInNewTab(certificateData);
-                    toast.success('🏆 Certificado aberto em nova guia!');
-                  } catch (fallbackError) {
-                    toast.error('Erro ao abrir certificado');
-                  }
-                }
-              }}
-            />
+          <div className="w-full max-w-2xl animate-scale-in">
+            <div className="relative aurora-glass rounded-3xl p-8 aurora-glow text-center">
+              {/* Aurora particles background */}
+              <div className="absolute inset-0 overflow-hidden rounded-3xl">
+                <div className="aurora-particle absolute top-10 left-10 w-4 h-4 bg-aurora/20 rounded-full"></div>
+                <div className="aurora-particle absolute top-20 right-20 w-3 h-3 bg-viverblue/20 rounded-full animation-delay-2000"></div>
+                <div className="aurora-particle absolute bottom-20 left-16 w-2 h-2 bg-operational/20 rounded-full animation-delay-4000"></div>
+              </div>
+
+              <div className="relative z-10">
+                <div className="inline-flex items-center justify-center w-20 h-20 mx-auto mb-6 aurora-gradient rounded-full aurora-glow">
+                  <Award className="w-10 h-10 text-white" />
+                </div>
+                
+                <h2 className="text-3xl font-bold mb-4 aurora-text-gradient">
+                  Implementação Concluída!
+                </h2>
+                
+                <div className="mb-6">
+                  <h3 className="text-xl font-semibold text-viverblue mb-2">
+                    "{solution?.title}"
+                  </h3>
+                  <p className="text-muted-foreground">
+                    Você completou com sucesso {completedTabs.length} de {Object.keys(tabNames).length} etapas
+                  </p>
+                </div>
+
+                <div className="bg-card/50 rounded-xl p-6 mb-6">
+                  <h4 className="font-semibold mb-3 flex items-center justify-center gap-2">
+                    <Star className="w-5 h-5 text-yellow-500" />
+                    Resumo da sua jornada
+                  </h4>
+                  <div className="text-sm text-muted-foreground space-y-2">
+                    <p>✅ Explorou as ferramentas necessárias</p>
+                    <p>✅ Acessou recursos importantes</p>
+                    <p>✅ Seguiu o checklist de implementação</p>
+                    <p>✅ Progresso de {Math.round(progress)}% concluído</p>
+                  </div>
+                </div>
+
+                <div className="mb-6">
+                  <p className="text-lg text-muted-foreground mb-4">
+                    Obrigado por escolher o <span className="text-viverblue font-semibold">VIVER DE IA</span> para sua jornada de transformação digital!
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Continue explorando nossa plataforma para descobrir mais soluções e acelerar sua implementação de IA.
+                  </p>
+                </div>
+
+                <Button
+                  onClick={() => setShowSummary(false)}
+                  className="aurora-gradient text-white hover:opacity-90"
+                >
+                  Continuar explorando
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -280,7 +238,7 @@ const CompletionTab: React.FC<CompletionTabProps> = ({
             <div className="relative inline-flex items-center justify-center w-20 h-20 mx-auto mb-4">
               <div className="absolute inset-0 bg-gradient-to-br from-primary to-secondary rounded-2xl animate-pulse"></div>
               <div className="relative flex items-center justify-center w-full h-full bg-gradient-to-br from-primary/90 to-secondary/90 rounded-2xl">
-                <Sparkles className="w-10 h-10 text-white" />
+                <Trophy className="w-10 h-10 text-white" />
               </div>
             </div>
           </div>
@@ -375,12 +333,12 @@ const CompletionTab: React.FC<CompletionTabProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex items-start gap-3 p-4 bg-gradient-to-br from-card/50 to-transparent rounded-xl">
                 <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-lg">
-                  <CheckCircle className="w-6 h-6 text-primary" />
+                  <Award className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <h4 className="font-medium mb-1">Certificado de Conclusão</h4>
+                  <h4 className="font-medium mb-1">Implementação Concluída</h4>
                   <p className="text-sm text-muted-foreground">
-                    Certificado digital válido comprovando sua implementação
+                    Parabéns por completar sua jornada de transformação
                   </p>
                 </div>
               </div>
@@ -390,9 +348,9 @@ const CompletionTab: React.FC<CompletionTabProps> = ({
                   <Download className="w-6 h-6 text-secondary" />
                 </div>
                 <div>
-                  <h4 className="font-medium mb-1">Recursos Completos</h4>
+                  <h4 className="font-medium mb-1">Acesso Permanente</h4>
                   <p className="text-sm text-muted-foreground">
-                    Acesso permanente a todos os materiais e atualizações
+                    Continue acessando os recursos quando precisar
                   </p>
                 </div>
               </div>
@@ -421,8 +379,8 @@ const CompletionTab: React.FC<CompletionTabProps> = ({
             </div>
           ) : canComplete ? (
             <div className="flex items-center gap-3">
-              <Sparkles className="w-5 h-5" />
-              Finalizar e Receber Certificado
+              <Trophy className="w-5 h-5" />
+              Finalizar Implementação
               <ArrowRight className="w-5 h-5" />
             </div>
           ) : (
