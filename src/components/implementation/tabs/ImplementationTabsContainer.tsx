@@ -34,10 +34,10 @@ const ImplementationTabsContainer: React.FC = () => {
     getProgressPercentage
   } = useTabProgress(id || '');
 
-  // Função simples para marcar aba como completa
-  const handleTabComplete = async (tabId: string, progressData?: any) => {
+  // Função estável para marcar aba como completa
+  const handleTabComplete = React.useCallback(async (tabId: string, progressData?: any) => {
     await markTabComplete(tabId, progressData);
-  };
+  }, [markTabComplete]);
 
   const progress = React.useMemo(() => {
     const isCompleted = completedTabs.includes('completion');

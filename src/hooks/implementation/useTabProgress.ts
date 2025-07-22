@@ -101,9 +101,9 @@ export const useTabProgress = (solutionId: string) => {
     },
   });
 
-  const markTabComplete = (tabId: string, progressData?: any) => {
+  const markTabComplete = React.useCallback((tabId: string, progressData?: any) => {
     markTabCompleteMutation.mutate({ tabId, progressData });
-  };
+  }, [markTabCompleteMutation.mutate]);
 
   const resetTabProgress = (tabId: string) => {
     resetTabProgressMutation.mutate(tabId);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -29,6 +29,7 @@ const CommentsTab: React.FC<CommentsTabProps> = ({ solutionId, onComplete }) => 
   const queryClient = useQueryClient();
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
   const [ratingFeedback, setRatingFeedback] = useState("");
+  const completedRef = useRef(false);
 
   // Fetch ratings
   const { data: ratings, isLoading: ratingsLoading } = useQuery({
@@ -115,8 +116,9 @@ const CommentsTab: React.FC<CommentsTabProps> = ({ solutionId, onComplete }) => 
 
   // Marcar como completo quando o usuário interage significativamente
   useEffect(() => {
-    // Se o usuário avaliou, marcar como completo
-    if (userRating) {
+    // Se o usuário avaliou e ainda não foi marcado como completo
+    if (userRating && !completedRef.current) {
+      completedRef.current = true;
       onComplete();
     }
   }, [userRating, onComplete]);

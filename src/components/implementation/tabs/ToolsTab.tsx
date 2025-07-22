@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,7 @@ interface ToolWithDetails {
 const ToolsTab: React.FC<ToolsTabProps> = ({ solutionId, onComplete }) => {
   const [viewedTools, setViewedTools] = useState<string[]>([]);
   const [isAware, setIsAware] = useState(false);
+  const completedRef = useRef(false);
 
   const { data: tools, isLoading, error } = useQuery({
     queryKey: ['solution-tools', solutionId],
@@ -83,13 +84,17 @@ const ToolsTab: React.FC<ToolsTabProps> = ({ solutionId, onComplete }) => {
   };
 
   const handleMarkAsAware = () => {
-    setIsAware(true);
-    toast.success("Ótimo! Você está ciente das ferramentas necessárias.");
-    onComplete();
+    if (!completedRef.current) {
+      completedRef.current = true;
+      setIsAware(true);
+      toast.success("Ótimo! Você está ciente das ferramentas necessárias.");
+      onComplete();
+    }
   };
 
   useEffect(() => {
-    if (tools && viewedTools.length === tools.length && tools.length > 0) {
+    if (tools && viewedTools.length === tools.length && tools.length > 0 && !completedRef.current) {
+      completedRef.current = true;
       onComplete();
     }
   }, [viewedTools, tools, onComplete]);
