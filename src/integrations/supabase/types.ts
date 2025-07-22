@@ -5176,6 +5176,14 @@ export type Database = {
               p_email: string
               p_role_id: string
               p_phone?: string
+              p_expires_in?: string
+              p_notes?: string
+              p_channel_preference?: string
+            }
+          | {
+              p_email: string
+              p_role_id: string
+              p_phone?: string
               p_expires_in?: unknown
               p_notes?: string
               p_channel_preference?: string
