@@ -52,6 +52,14 @@ const ImplementationTabsContainer: React.FC = () => {
   const handleTabComplete = (tabId: string) => {
     if (!completedTabs.includes(tabId)) {
       setCompletedTabs(prev => [...prev, tabId]);
+      
+      // Navegar automaticamente para a próxima guia
+      const currentIndex = IMPLEMENTATION_TABS.findIndex(tab => tab.id === tabId);
+      const nextTab = IMPLEMENTATION_TABS[currentIndex + 1];
+      
+      if (nextTab) {
+        setActiveTab(nextTab.id);
+      }
     }
   };
 
