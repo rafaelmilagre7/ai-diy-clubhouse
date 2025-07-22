@@ -101,14 +101,12 @@ export const ToolItem = ({
       {toolId ? (
         <div className="mt-auto pt-3">
           <Button 
-            asChild
             variant="outline"
             className="w-full bg-transparent border-viverblue/20 text-viverblue hover:bg-viverblue/10 hover:text-viverblue"
+            onClick={() => window.open(`https://app.viverdeia.ai/tools/${toolId}`, '_blank')}
           >
-            <Link to={`/tools/${toolId}`} target="_blank" rel="noopener noreferrer">
-              <ArrowRight className="mr-2 h-4 w-4" />
-              Ver ferramenta
-            </Link>
+            <ArrowRight className="mr-2 h-4 w-4" />
+            Ver ferramenta
           </Button>
         </div>
       ) : toolUrl && (
