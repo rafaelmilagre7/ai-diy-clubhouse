@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/auth";
@@ -30,6 +30,7 @@ const CompletionTab: React.FC<CompletionTabProps> = ({
   const { solution } = useSolutionData(solutionId);
   const [showCelebration, setShowCelebration] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
+  const completionProcessedRef = useRef(false);
 
   const completeSolutionMutation = useMutation({
     mutationFn: async () => {
@@ -68,6 +69,9 @@ const CompletionTab: React.FC<CompletionTabProps> = ({
       return { progressData, certificateRecord };
     },
     onSuccess: async (data) => {
+      if (completionProcessedRef.current) return;
+      completionProcessedRef.current = true;
+      
       setShowCelebration(true);
       
       // Enhanced confetti celebration
@@ -108,6 +112,9 @@ const CompletionTab: React.FC<CompletionTabProps> = ({
       queryClient.invalidateQueries({ queryKey: ['user-certificates'] });
     },
     onError: (error) => {
+      if (completionProcessedRef.current) return;
+      completionProcessedRef.current = true;
+      
       console.error('Error completing solution:', error);
       // Simular sucesso para demonstração
       setShowCelebration(true);
@@ -371,8 +378,12 @@ const CompletionTab: React.FC<CompletionTabProps> = ({
       <div className="text-center">
         <Button
           size="lg"
-          onClick={() => completeSolutionMutation.mutate()}
-          disabled={!canComplete || completeSolutionMutation.isPending}
+          onClick={() => {
+            if (!completionProcessedRef.current) {
+              completeSolutionMutation.mutate();
+            }
+          }}
+          disabled={!canComplete || completeSolutionMutation.isPending || completionProcessedRef.current}
           className={cn(
             "px-8 py-4 text-lg font-semibold rounded-2xl transition-all duration-300",
             canComplete 
