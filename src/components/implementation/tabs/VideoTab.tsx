@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Video } from "lucide-react";
+import { Video, CheckCircle } from "lucide-react";
 import { PandaVideoPlayer } from "@/components/formacao/comum/PandaVideoPlayer";
+import { toast } from "sonner";
 
 interface VideoTabProps {
   solutionId: string;
@@ -21,6 +22,7 @@ interface VideoLesson {
 }
 
 const VideoTab: React.FC<VideoTabProps> = ({ solutionId, onComplete }) => {
+  const [isWatched, setIsWatched] = useState(false);
 
   const { data: videoLessons, isLoading } = useQuery({
     queryKey: ['solution-video-resources', solutionId],
@@ -60,6 +62,12 @@ const VideoTab: React.FC<VideoTabProps> = ({ solutionId, onComplete }) => {
     if (progress >= 95) {
       onComplete();
     }
+  };
+
+  const handleMarkAsWatched = () => {
+    setIsWatched(true);
+    toast.success("Ótimo! Você assistiu aos vídeos da solução.");
+    onComplete();
   };
 
   if (isLoading) {
@@ -129,6 +137,33 @@ const VideoTab: React.FC<VideoTabProps> = ({ solutionId, onComplete }) => {
           </div>
         </div>
       )}
+
+      {/* Botão para marcar como assistido */}
+      <div className="text-center mt-8 p-6 bg-gradient-to-br from-primary/5 via-secondary/5 to-transparent backdrop-blur-sm rounded-2xl border-0">
+        <div className="max-w-md mx-auto space-y-4">
+          <div className="flex items-center justify-center gap-2 mb-3">
+            <CheckCircle className="w-5 h-5 text-primary" />
+            <h3 className="text-lg font-semibold">Terminou de assistir?</h3>
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">
+            Após assistir aos vídeos acima, confirme que você compreendeu o conteúdo apresentado sobre a implementação da solução.
+          </p>
+          <Button 
+            onClick={handleMarkAsWatched}
+            disabled={isWatched}
+            className="bg-primary/90 hover:bg-primary px-8"
+          >
+            {isWatched ? (
+              <>
+                <CheckCircle className="w-4 h-4 mr-2" />
+                Concluído
+              </>
+            ) : (
+              "Já assisti aos vídeos"
+            )}
+          </Button>
+        </div>
+      </div>
     </div>
   );
 };
