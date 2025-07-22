@@ -4919,6 +4919,10 @@ export type Database = {
         Args: { user_id_param: string }
         Returns: Json
       }
+      check_comment_rate_limit: {
+        Args: { p_user_id: string }
+        Returns: boolean
+      }
       check_function_security_status: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -4927,6 +4931,10 @@ export type Database = {
           security_type: string
           recommendation: string
         }[]
+      }
+      check_nps_rate_limit: {
+        Args: { p_user_id: string; p_lesson_id: string }
+        Returns: boolean
       }
       check_onboarding_integrity: {
         Args: { p_user_id: string }
@@ -5760,6 +5768,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      is_admin_secure: {
+        Args: { target_user_id?: string }
+        Returns: boolean
+      }
       is_admin_user: {
         Args: Record<PropertyKey, never>
         Returns: boolean
@@ -5825,6 +5837,15 @@ export type Database = {
       }
       log_invite_validation_attempt: {
         Args: { p_token: string; p_success: boolean; p_details: string }
+        Returns: undefined
+      }
+      log_learning_action: {
+        Args: {
+          p_action: string
+          p_resource_type: string
+          p_resource_id: string
+          p_details?: Json
+        }
         Returns: undefined
       }
       log_onboarding_event: {

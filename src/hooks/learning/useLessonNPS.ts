@@ -50,6 +50,20 @@ export const useLessonNPS = ({ lessonId }: LessonNPSOptions) => {
       setIsSubmitting(true);
       
       try {
+        // Verificar rate limiting para novas avaliações
+        if (!existingNPS) {
+          const { data: canRate } = await supabase.rpc('check_nps_rate_limit', {
+            p_user_id: user.id,
+            p_lesson_id: lessonId
+          });
+
+          if (!canRate) {
+            throw new Error('Você já avaliou esta aula hoje. Tente novamente amanhã.');
+          }
+        }
+
+        let result;
+        
         // Se já existe uma avaliação, atualiza
         if (existingNPS) {
           const { data, error } = await supabase
@@ -64,7 +78,19 @@ export const useLessonNPS = ({ lessonId }: LessonNPSOptions) => {
             .single();
             
           if (error) throw error;
-          return data;
+          result = data;
+
+          // Log da atualização
+          await supabase.rpc('log_learning_action', {
+            p_action: 'nps_updated',
+            p_resource_type: 'lesson',
+            p_resource_id: lessonId,
+            p_details: {
+              score,
+              feedback_length: feedback?.length || 0,
+              previous_score: existingNPS.score
+            }
+          });
         } 
         // Caso contrário, cria nova
         else {
@@ -80,8 +106,22 @@ export const useLessonNPS = ({ lessonId }: LessonNPSOptions) => {
             .single();
             
           if (error) throw error;
-          return data;
+          result = data;
+
+          // Log da nova avaliação
+          await supabase.rpc('log_learning_action', {
+            p_action: 'nps_created',
+            p_resource_type: 'lesson',
+            p_resource_id: lessonId,
+            p_details: {
+              score,
+              feedback_length: feedback?.length || 0,
+              nps_id: data.id
+            }
+          });
         }
+
+        return result;
       } finally {
         setIsSubmitting(false);
       }
@@ -92,7 +132,7 @@ export const useLessonNPS = ({ lessonId }: LessonNPSOptions) => {
     },
     onError: (error) => {
       console.error('Erro ao enviar avaliação:', error);
-      toast.error('Não foi possível enviar sua avaliação. Tente novamente.');
+      toast.error(`Erro: ${error.message}`);
     }
   });
 

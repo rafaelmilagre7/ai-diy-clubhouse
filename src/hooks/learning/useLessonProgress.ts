@@ -91,10 +91,35 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
             .eq("lesson_id", lessonId);
             
           if (updateError) throw updateError;
+
+          // Log da atualização de progresso
+          await supabase.rpc('log_learning_action', {
+            p_action: completed ? 'lesson_completed' : 'lesson_progress_updated',
+            p_resource_type: 'lesson',
+            p_resource_id: lessonId,
+            p_details: {
+              progress_percentage: progressPercentage,
+              completed: completed,
+              method: 'update'
+            }
+          });
+
           return { progress_percentage: progressPercentage, completed: completed };
         }
         throw error;
       }
+
+      // Log da criação/atualização de progresso
+      await supabase.rpc('log_learning_action', {
+        p_action: completed ? 'lesson_completed' : 'lesson_progress_updated',
+        p_resource_type: 'lesson',
+        p_resource_id: lessonId,
+        p_details: {
+          progress_percentage: progressPercentage,
+          completed: completed,
+          method: 'upsert'
+        }
+      });
       
       return { ...data, completed: completed };
     },

@@ -164,6 +164,17 @@ export const useLessonComments = (lessonId: string) => {
       setIsSubmitting(true);
       log('Adicionando comentário à aula', { lessonId, hasParentId: !!parentId });
       
+      // Verificar rate limiting
+      const { data: canComment } = await supabase.rpc('check_comment_rate_limit', {
+        p_user_id: user.id
+      });
+
+      if (!canComment) {
+        toast.error('Você atingiu o limite de comentários por hora. Tente novamente mais tarde.');
+        setIsSubmitting(false);
+        return;
+      }
+      
       const { data, error } = await supabase
         .from('learning_comments')
         .insert({
@@ -180,6 +191,18 @@ export const useLessonComments = (lessonId: string) => {
         logError('Erro ao adicionar comentário à aula', error);
         throw error;
       }
+
+      // Log da ação para auditoria
+      await supabase.rpc('log_learning_action', {
+        p_action: 'comment_added',
+        p_resource_type: 'lesson',
+        p_resource_id: lessonId,
+        p_details: {
+          content_length: content.length,
+          has_parent: !!parentId,
+          comment_id: data?.[0]?.id
+        }
+      });
       
       toast.success(parentId ? "Resposta adicionada!" : "Comentário adicionado!");
       log('Comentário adicionado com sucesso', { commentId: data?.[0]?.id });
