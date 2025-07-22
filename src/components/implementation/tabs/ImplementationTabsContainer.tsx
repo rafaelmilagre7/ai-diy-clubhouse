@@ -34,18 +34,18 @@ const ImplementationTabsContainer: React.FC = () => {
     getProgressPercentage
   } = useTabProgress(id || '');
 
-  // Memoizar funções e valores para evitar re-renders desnecessários
-  const handleTabComplete = React.useCallback(async (tabId: string, progressData?: any) => {
+  // Função simples para marcar aba como completa
+  const handleTabComplete = async (tabId: string, progressData?: any) => {
     await markTabComplete(tabId, progressData);
-  }, [markTabComplete]);
+  };
 
   const progress = React.useMemo(() => {
-    return isTabCompleted('completion') 
-      ? 100 
-      : getProgressPercentage(IMPLEMENTATION_TABS.length - 1);
-  }, [completedTabs, isTabCompleted, getProgressPercentage]);
+    const isCompleted = completedTabs.includes('completion');
+    const percentage = completedTabs.length / (IMPLEMENTATION_TABS.length - 1) * 100;
+    return isCompleted ? 100 : percentage;
+  }, [completedTabs]);
 
-  const renderTabContent = React.useCallback(() => {
+  const renderTabContent = () => {
     switch (activeTab) {
       case 'tools':
         return <ToolsTab solutionId={id!} onComplete={() => handleTabComplete('tools')} />;
@@ -68,7 +68,7 @@ const ImplementationTabsContainer: React.FC = () => {
       default:
         return <ToolsTab solutionId={id!} onComplete={() => handleTabComplete('tools')} />;
     }
-  }, [activeTab, id, handleTabComplete, progress, completedTabs, solution?.title]);
+  };
 
   // CONDICIONAIS APENAS APÓS TODOS OS HOOKS
   if (isLoading || isLoadingProgress) {

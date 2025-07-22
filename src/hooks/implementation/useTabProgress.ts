@@ -70,7 +70,7 @@ export const useTabProgress = (solutionId: string) => {
         return prev;
       });
       
-      // Invalidar cache para recarregar dados
+      // Invalidar cache para recarregar dados (sem dependências circulares)
       queryClient.invalidateQueries({ queryKey: ['tab-progress', user?.id, solutionId] });
     },
     onError: (error) => {
@@ -101,22 +101,21 @@ export const useTabProgress = (solutionId: string) => {
     },
   });
 
-  // Funções memoizadas para evitar re-renders
-  const markTabComplete = React.useCallback((tabId: string, progressData?: any) => {
+  const markTabComplete = (tabId: string, progressData?: any) => {
     markTabCompleteMutation.mutate({ tabId, progressData });
-  }, [markTabCompleteMutation]);
+  };
 
-  const resetTabProgress = React.useCallback((tabId: string) => {
+  const resetTabProgress = (tabId: string) => {
     resetTabProgressMutation.mutate(tabId);
-  }, [resetTabProgressMutation]);
+  };
 
-  const isTabCompleted = React.useCallback((tabId: string) => {
+  const isTabCompleted = (tabId: string) => {
     return completedTabs.includes(tabId);
-  }, [completedTabs]);
+  };
 
-  const getProgressPercentage = React.useCallback((totalTabs: number) => {
+  const getProgressPercentage = (totalTabs: number) => {
     return totalTabs > 0 ? (completedTabs.length / totalTabs) * 100 : 0;
-  }, [completedTabs]);
+  };
 
   return {
     completedTabs,

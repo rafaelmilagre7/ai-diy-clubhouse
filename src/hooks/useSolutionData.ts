@@ -98,7 +98,7 @@ export const useSolutionData = (id: string | undefined) => {
     };
 
     fetchSolution();
-  }, [id, isAdmin, authLoading, user, toast, navigate]);
+  }, [id, isAdmin, authLoading, user?.id]); // Removidas dependências problemáticas
 
   return {
     solution,
