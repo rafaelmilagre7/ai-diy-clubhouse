@@ -52,17 +52,24 @@ export const ModuleLessons = ({
   }
   
   return (
-    <div>
-      {/* Banner estilo Netflix - Carrossel de miniaturas destacado */}
-      <div className="p-6 bg-[#1A1E2E] border-b border-white/10">
-        <h3 className="text-lg font-semibold mb-4 text-neutral-100">
-          Aulas do Módulo ({lessons.length})
+    <div className="space-y-6">
+      {/* Header Section */}
+      <div className="px-6 py-4">
+        <h3 className="text-2xl font-bold text-foreground mb-2">
+          Aulas do Módulo
         </h3>
-        
+        <p className="text-muted-foreground">
+          {lessons.length} {lessons.length === 1 ? 'aula disponível' : 'aulas disponíveis'}
+        </p>
+      </div>
+      
+      {/* Netflix-style Carousel */}
+      <div className="px-6">
         <Carousel
           opts={{
             align: "start",
-            loop: lessons.length > 3,
+            loop: false,
+            skipSnaps: false,
           }}
           className="w-full"
         >
@@ -75,7 +82,7 @@ export const ModuleLessons = ({
               return (
                 <CarouselItem 
                   key={lesson.id} 
-                  className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4"
+                  className="pl-4 basis-[280px] sm:basis-[320px] md:basis-[280px] lg:basis-[300px]"
                 >
                   <LessonThumbnail
                     lesson={lesson}
@@ -89,35 +96,42 @@ export const ModuleLessons = ({
             })}
           </CarouselContent>
           
-          <CarouselPrevious className="left-2 bg-viverblue/90 text-white border-2 border-white/20 hover:bg-viverblue hover:border-white/40 hover:scale-110 transition-all duration-300 shadow-lg backdrop-blur-sm" />
-          <CarouselNext className="right-2 bg-viverblue/90 text-white border-2 border-white/20 hover:bg-viverblue hover:border-white/40 hover:scale-110 transition-all duration-300 shadow-lg backdrop-blur-sm" />
+          {lessons.length > 3 && (
+            <>
+              <CarouselPrevious className="left-2 bg-background/90 text-foreground border-border/50 hover:bg-background hover:scale-110 transition-all duration-300 shadow-xl backdrop-blur-sm" />
+              <CarouselNext className="right-2 bg-background/90 text-foreground border-border/50 hover:bg-background hover:scale-110 transition-all duration-300 shadow-xl backdrop-blur-sm" />
+            </>
+          )}
         </Carousel>
       </div>
       
-      {/* Lista detalhada de aulas (formato tradicional) */}
-      <div className="divide-y divide-white/10 bg-[#151823]">
-        <div className="px-6 py-3 bg-[#1A1E2E] border-b border-white/10">
-          <h4 className="text-sm font-medium text-neutral-300">
-            Lista Detalhada das Aulas
-          </h4>
-        </div>
-        
-        {lessons.map(lesson => {
-          const completed = isLessonCompleted(lesson.id);
-          const inProgress = isLessonInProgress(lesson.id);
-          const progress = getLessonProgress(lesson.id);
+      {/* Optional: List View Toggle */}
+      <div className="px-6">
+        <details className="group">
+          <summary className="flex items-center justify-between cursor-pointer p-4 bg-muted/50 rounded-lg hover:bg-muted/70 transition-colors">
+            <span className="font-medium text-foreground">Ver lista detalhada</span>
+            <span className="text-muted-foreground group-open:rotate-180 transition-transform">▼</span>
+          </summary>
           
-          return (
-            <LessonListItem
-              key={lesson.id}
-              lesson={lesson}
-              courseId={courseId}
-              isCompleted={completed}
-              inProgress={inProgress}
-              progress={progress}
-            />
-          );
-        })}
+          <div className="mt-4 space-y-2">
+            {lessons.map(lesson => {
+              const completed = isLessonCompleted(lesson.id);
+              const inProgress = isLessonInProgress(lesson.id);
+              const progress = getLessonProgress(lesson.id);
+              
+              return (
+                <LessonListItem
+                  key={lesson.id}
+                  lesson={lesson}
+                  courseId={courseId}
+                  isCompleted={completed}
+                  inProgress={inProgress}
+                  progress={progress}
+                />
+              );
+            })}
+          </div>
+        </details>
       </div>
     </div>
   );

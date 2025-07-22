@@ -64,47 +64,54 @@ export const CourseModules: React.FC<CourseModulesProps> = ({
     modules.map(m => ({ id: m.id, title: m.title })));
   
   return (
-    <Card className="border rounded-lg overflow-hidden">
-      <div className="p-6">
-        <h2 className="text-xl font-semibold mb-6">Conteúdo do curso</h2>
-        
-        <Accordion
-          type="multiple" 
-          value={openModules}
-          onValueChange={(newOpenModules) => {
-            console.log("Módulos abertos alterados:", newOpenModules);
-            setOpenModules(newOpenModules);
-          }}
-          className="space-y-6"
-        >
-          {modules.map((module, index) => (
-            <AccordionItem
-              key={module.id}
-              value={module.id}
-              className="border rounded-lg overflow-hidden"
-            >
-              <div className="border-b">
-                <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-accent/50">
-                  <div className="flex justify-between w-full items-center text-left">
-                    <span className="font-semibold">{module.title}</span>
-                    <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
-                  </div>
-                </AccordionTrigger>
+    <div className="space-y-6">
+      <Accordion
+        type="multiple" 
+        value={openModules}
+        onValueChange={(newOpenModules) => {
+          console.log("Módulos abertos alterados:", newOpenModules);
+          setOpenModules(newOpenModules);
+        }}
+        className="space-y-4"
+      >
+        {modules.map((module, index) => (
+          <AccordionItem
+            key={module.id}
+            value={module.id}
+            className="border-0 bg-card/50 backdrop-blur-sm rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300"
+          >
+            <AccordionTrigger className="px-6 py-6 text-left hover:no-underline group bg-gradient-to-r from-transparent via-primary/5 to-transparent hover:from-primary/10 hover:via-primary/5 hover:to-primary/10 transition-all duration-300">
+              <div className="flex items-center justify-between w-full">
+                <div className="space-y-2">
+                  <h3 className="text-xl font-semibold text-foreground group-hover:text-primary transition-colors">
+                    {module.title}
+                  </h3>
+                  {module.description && (
+                    <p className="text-muted-foreground text-sm max-w-2xl">
+                      {module.description}
+                    </p>
+                  )}
+                </div>
+                
+                <div className="flex items-center gap-4">
+                  <ChevronDown className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-all duration-200 group-data-[state=open]:rotate-180" />
+                </div>
               </div>
-              <AccordionContent className="p-0">
-                <ModuleLessons 
-                  moduleId={module.id} 
-                  courseId={courseId}
-                  userProgress={userProgress}
-                  isLessonCompleted={(lessonId) => isLessonCompleted(lessonId, userProgress)}
-                  isLessonInProgress={(lessonId) => isLessonInProgress(lessonId, userProgress)}
-                  getLessonProgress={(lessonId) => getLessonProgress(lessonId, userProgress)}
-                />
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
-      </div>
-    </Card>
+            </AccordionTrigger>
+            
+            <AccordionContent className="px-0 pb-0">
+              <ModuleLessons 
+                moduleId={module.id} 
+                courseId={courseId}
+                userProgress={userProgress}
+                isLessonCompleted={(lessonId) => isLessonCompleted(lessonId, userProgress)}
+                isLessonInProgress={(lessonId) => isLessonInProgress(lessonId, userProgress)}
+                getLessonProgress={(lessonId) => getLessonProgress(lessonId, userProgress)}
+              />
+            </AccordionContent>
+          </AccordionItem>
+        ))}
+      </Accordion>
+    </div>
   );
 };

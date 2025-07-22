@@ -75,38 +75,59 @@ const CourseDetails = () => {
   const expandedModules = modules && modules.length > 0 ? [modules[0].id] : [];
 
   return (
-    <div className="container pt-6 pb-12">
-      <Button
-        variant="ghost"
-        className="mb-4"
-        onClick={() => navigate("/learning")}
-      >
-        <ArrowLeft className="h-4 w-4 mr-2" />
-        Voltar para Cursos
-      </Button>
-      
-      <CourseHeader 
-        title={course.title} 
-        description={course.description} 
-        coverImage={course.cover_image_url}
-        stats={courseStats}
-        firstLessonId={firstLessonId}
-        courseId={id}
-      />
-      
-      <div className="mt-6">
-        <CourseProgress 
-          percentage={courseProgress} 
-          className="mb-6"
-        />
+    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-background/90">
+      {/* Aurora Background Effects */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute inset-0 bg-gradient-to-br from-viverblue/8 via-transparent to-aurora/12" />
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-aurora/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-viverblue/12 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}} />
+      </div>
+
+      <div className="relative z-10">
+        {/* Header Navigation */}
+        <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-xl border-b border-border/50">
+          <div className="container py-4">
+            <Button
+              variant="ghost"
+              className="hover:bg-primary/10 hover:text-primary transition-all duration-200"
+              onClick={() => navigate("/learning")}
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Voltar para Cursos
+            </Button>
+          </div>
+        </div>
         
-        <CourseModules 
-          modules={modules} 
-          courseId={id} 
-          userProgress={userProgress}
-          course={course}
-          expandedModules={expandedModules}
-        />
+        {/* Hero Section - Estilo Netflix */}
+        <div className="relative">
+          <CourseHeader 
+            title={course.title} 
+            description={course.description} 
+            coverImage={course.cover_image_url}
+            stats={courseStats}
+            firstLessonId={firstLessonId}
+            courseId={id}
+          />
+        </div>
+        
+        {/* Progress Section */}
+        <div className="container py-6">
+          <CourseProgress 
+            percentage={courseProgress} 
+            className="mb-8"
+          />
+        </div>
+        
+        {/* Modules Section */}
+        <div className="container pb-12">
+          <CourseModules 
+            modules={modules} 
+            courseId={id} 
+            userProgress={userProgress}
+            course={course}
+            expandedModules={expandedModules}
+          />
+        </div>
       </div>
     </div>
   );
