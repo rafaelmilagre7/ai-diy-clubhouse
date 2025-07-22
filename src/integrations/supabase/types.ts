@@ -5180,14 +5180,6 @@ export type Database = {
               p_notes?: string
               p_channel_preference?: string
             }
-          | {
-              p_email: string
-              p_role_id: string
-              p_phone?: string
-              p_expires_in?: unknown
-              p_notes?: string
-              p_channel_preference?: string
-            }
         Returns: Json
       }
       create_learning_certificate_if_eligible: {
