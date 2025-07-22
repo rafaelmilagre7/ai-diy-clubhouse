@@ -188,13 +188,13 @@ const AdminDashboard = () => {
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   <p className="text-sm font-medium text-muted-foreground">Total de Usuários</p>
-                  <h3 className="text-3xl font-bold aurora-text-gradient mt-2">
-                    {statsData.totalUsers?.toLocaleString() || '0'}
+                  <h3 className="text-3xl font-bold text-white drop-shadow-lg mt-2">
+                    {(statsData?.totalUsers || 0).toLocaleString('pt-BR')}
                   </h3>
-                  {statsData.periodGrowthRate > 0 && (
+                  {(statsData?.periodGrowthRate || 0) > 0 && (
                     <div className="flex items-center mt-3">
-                      <TrendingUp className="h-4 w-4 text-emerald-500 mr-1" />
-                      <span className="text-sm font-medium text-emerald-500">
+                      <TrendingUp className="h-4 w-4 text-emerald-400 mr-1" />
+                      <span className="text-sm font-medium text-emerald-400">
                         +{statsData.periodGrowthRate}% no período
                       </span>
                     </div>
@@ -210,8 +210,8 @@ const AdminDashboard = () => {
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   <p className="text-sm font-medium text-muted-foreground">Soluções Publicadas</p>
-                  <h3 className="text-3xl font-bold aurora-text-gradient mt-2">
-                    {statsData.totalSolutions?.toLocaleString() || '0'}
+                  <h3 className="text-3xl font-bold text-white drop-shadow-lg mt-2">
+                    {(statsData?.totalSolutions || 0).toLocaleString('pt-BR')}
                   </h3>
                 </div>
                 <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 aurora-glow">
@@ -224,8 +224,8 @@ const AdminDashboard = () => {
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   <p className="text-sm font-medium text-muted-foreground">Aulas Publicadas</p>
-                  <h3 className="text-3xl font-bold aurora-text-gradient mt-2">
-                    {statsData.totalLearningLessons?.toLocaleString() || '0'}
+                  <h3 className="text-3xl font-bold text-white drop-shadow-lg mt-2">
+                    {(statsData?.totalLearningLessons || 0).toLocaleString('pt-BR')}
                   </h3>
                 </div>
                 <div className="p-3 rounded-xl bg-gradient-to-br from-indigo-500/20 to-blue-500/20 aurora-glow">
@@ -238,8 +238,8 @@ const AdminDashboard = () => {
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   <p className="text-sm font-medium text-muted-foreground">Implementações Completas</p>
-                  <h3 className="text-3xl font-bold aurora-text-gradient mt-2">
-                    {statsData.completedImplementations?.toLocaleString() || '0'}
+                  <h3 className="text-3xl font-bold text-white drop-shadow-lg mt-2">
+                    {(statsData?.completedImplementations || 0).toLocaleString('pt-BR')}
                   </h3>
                 </div>
                 <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-500/20 to-green-500/20 aurora-glow">
@@ -265,8 +265,8 @@ const AdminDashboard = () => {
                 <div className="flex-1">
                   <p className="text-sm font-medium text-muted-foreground">Novos Usuários</p>
                   <p className="text-xs text-muted-foreground/70">({periodLabel})</p>
-                  <h3 className="text-3xl font-bold aurora-text-gradient mt-2">
-                    {statsData.newUsersInPeriod?.toLocaleString() || '0'}
+                  <h3 className="text-3xl font-bold text-white drop-shadow-lg mt-2">
+                    {(statsData?.newUsersInPeriod || 0).toLocaleString('pt-BR')}
                   </h3>
                 </div>
                 <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 aurora-glow">
@@ -280,12 +280,12 @@ const AdminDashboard = () => {
                 <div className="flex-1">
                   <p className="text-sm font-medium text-muted-foreground">Usuários Ativos</p>
                   <p className="text-xs text-muted-foreground/70">({periodLabel})</p>
-                  <h3 className="text-3xl font-bold aurora-text-gradient mt-2">
-                    {statsData.activeUsersInPeriod?.toLocaleString() || '0'}
+                  <h3 className="text-3xl font-bold text-white drop-shadow-lg mt-2">
+                    {(statsData?.activeUsersInPeriod || 0).toLocaleString('pt-BR')}
                   </h3>
-                  {statsData.periodEngagementRate > 0 && (
+                  {(statsData?.periodEngagementRate || 0) > 0 && (
                     <div className="flex items-center mt-2">
-                      <span className="text-sm text-blue-500">
+                      <span className="text-sm text-blue-400">
                         {statsData.periodEngagementRate}% engajamento
                       </span>
                     </div>
@@ -302,8 +302,8 @@ const AdminDashboard = () => {
                 <div className="flex-1">
                   <p className="text-sm font-medium text-muted-foreground">Implementações</p>
                   <p className="text-xs text-muted-foreground/70">({periodLabel})</p>
-                  <h3 className="text-3xl font-bold aurora-text-gradient mt-2">
-                    {statsData.implementationsInPeriod?.toLocaleString() || '0'}
+                  <h3 className="text-3xl font-bold text-white drop-shadow-lg mt-2">
+                    {(statsData?.implementationsInPeriod || 0).toLocaleString('pt-BR')}
                   </h3>
                 </div>
                 <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500/20 to-yellow-500/20 aurora-glow">
@@ -317,8 +317,8 @@ const AdminDashboard = () => {
                 <div className="flex-1">
                   <p className="text-sm font-medium text-muted-foreground">Taxa de Conclusão</p>
                   <p className="text-xs text-muted-foreground/70">(do período)</p>
-                  <h3 className="text-3xl font-bold aurora-text-gradient mt-2">
-                    {statsData.periodCompletionRate?.toFixed(1) || '0'}%
+                  <h3 className="text-3xl font-bold text-white drop-shadow-lg mt-2">
+                    {(statsData?.periodCompletionRate || 0).toFixed(1)}%
                   </h3>
                 </div>
                 <div className="p-3 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-500/20 aurora-glow">
@@ -355,8 +355,8 @@ const AdminDashboard = () => {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-2xl font-bold aurora-text-gradient">
-                          {activity.count?.toLocaleString() || '0'}
+                        <p className="text-2xl font-bold text-white drop-shadow-lg">
+                          {(activity?.count || 0).toLocaleString('pt-BR')}
                         </p>
                       </div>
                     </div>
