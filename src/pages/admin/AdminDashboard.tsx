@@ -186,15 +186,15 @@ const AdminDashboard = () => {
             <div className="aurora-glass rounded-xl p-6 aurora-hover-scale">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-muted-foreground">Total de Usuários</p>
+                  <p className="text-sm font-medium text-muted-foreground">Novos Usuários ({periodLabel})</p>
                   <h3 className="text-3xl font-bold text-white drop-shadow-lg mt-2">
-                    {(statsData?.totalUsers || 0).toLocaleString('pt-BR')}
+                    {(statsData?.newUsersInPeriod || 0).toLocaleString('pt-BR')}
                   </h3>
                   {(statsData?.periodGrowthRate || 0) > 0 && (
                     <div className="flex items-center mt-3">
                       <TrendingUp className="h-4 w-4 text-emerald-400 mr-1" />
                       <span className="text-sm font-medium text-emerald-400">
-                        +{statsData.periodGrowthRate}% no período
+                        +{statsData.periodGrowthRate}% crescimento
                       </span>
                     </div>
                   )}
@@ -208,9 +208,9 @@ const AdminDashboard = () => {
             <div className="aurora-glass rounded-xl p-6 aurora-hover-scale">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-muted-foreground">Soluções Publicadas</p>
+                  <p className="text-sm font-medium text-muted-foreground">Usuários Ativos ({periodLabel})</p>
                   <h3 className="text-3xl font-bold text-white drop-shadow-lg mt-2">
-                    {(statsData?.totalSolutions || 0).toLocaleString('pt-BR')}
+                    {(statsData?.activeUsersInPeriod || 0).toLocaleString('pt-BR')}
                   </h3>
                 </div>
                 <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 aurora-glow">
@@ -222,9 +222,9 @@ const AdminDashboard = () => {
             <div className="aurora-glass rounded-xl p-6 aurora-hover-scale">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-muted-foreground">Aulas Publicadas</p>
+                  <p className="text-sm font-medium text-muted-foreground">Implementações ({periodLabel})</p>
                   <h3 className="text-3xl font-bold text-white drop-shadow-lg mt-2">
-                    {(statsData?.totalLearningLessons || 0).toLocaleString('pt-BR')}
+                    {(statsData?.implementationsInPeriod || 0).toLocaleString('pt-BR')}
                   </h3>
                 </div>
                 <div className="p-3 rounded-xl bg-gradient-to-br from-indigo-500/20 to-blue-500/20 aurora-glow">
@@ -236,9 +236,9 @@ const AdminDashboard = () => {
             <div className="aurora-glass rounded-xl p-6 aurora-hover-scale">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-muted-foreground">Implementações Completas</p>
+                  <p className="text-sm font-medium text-muted-foreground">Implementações Completas ({periodLabel})</p>
                   <h3 className="text-3xl font-bold text-white drop-shadow-lg mt-2">
-                    {(statsData?.completedImplementations || 0).toLocaleString('pt-BR')}
+                    {(statsData?.completedInPeriod || 0).toLocaleString('pt-BR')}
                   </h3>
                 </div>
                 <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-500/20 to-green-500/20 aurora-glow">
