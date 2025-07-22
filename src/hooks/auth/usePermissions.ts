@@ -70,7 +70,7 @@ export const usePermissions = () => {
 
     try {
       const { data, error } = await supabase.rpc('get_user_permissions', {
-        user_id: user.id
+        p_user_id: user.id
       });
 
       if (error) throw error;
