@@ -48,20 +48,37 @@ const CommentsTab: React.FC<CommentsTabProps> = ({ solutionId, onComplete }) => 
   const { data: comments, isLoading: commentsLoading } = useQuery({
     queryKey: ['solution-comments', solutionId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First get comments
+      const { data: commentsData, error: commentsError } = await supabase
         .from('solution_comments')
-        .select(`
-          *,
-          profiles(name, email)
-        `)
+        .select('*')
         .eq('solution_id', solutionId)
         .order('created_at', { ascending: true });
 
-      if (error) throw error;
+      if (commentsError) throw commentsError;
+      
+      if (!commentsData || commentsData.length === 0) return [];
+
+      // Get unique user IDs
+      const userIds = [...new Set(commentsData.map(comment => comment.user_id))];
+      
+      // Fetch profiles for these users
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, name, email')
+        .in('id', userIds);
+
+      if (profilesError) throw profilesError;
+      
+      // Map profiles to comments
+      const commentsWithProfiles = commentsData.map(comment => ({
+        ...comment,
+        profiles: profilesData?.find(profile => profile.id === comment.user_id) || null
+      }));
       
       // Organizar comentários em threads
-      const mainComments = data?.filter(comment => !comment.parent_id) || [];
-      const replies = data?.filter(comment => comment.parent_id) || [];
+      const mainComments = commentsWithProfiles.filter(comment => !comment.parent_id);
+      const replies = commentsWithProfiles.filter(comment => comment.parent_id);
       
       return mainComments.map(comment => ({
         ...comment,
@@ -117,10 +134,7 @@ const CommentsTab: React.FC<CommentsTabProps> = ({ solutionId, onComplete }) => 
           content: content.trim(),
           parent_id: parentId || null
         })
-        .select(`
-          *,
-          profiles(name, email)
-        `)
+        .select('*')
         .single();
 
       if (error) throw error;
