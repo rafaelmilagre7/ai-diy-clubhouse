@@ -17,9 +17,9 @@ export const useFetchModuleComments = (solutionId: string, moduleId: string) => 
         
         // Buscar comentários principais de forma direta (sem join automático)
         const { data: parentComments, error: parentError } = await supabase
-          .from('tool_comments')
+          .from('solution_comments')
           .select('*')
-          .eq('tool_id', solutionId)
+          .eq('solution_id', solutionId)
           .is('parent_id', null)
           .order('created_at', { ascending: false });
 
@@ -47,9 +47,9 @@ export const useFetchModuleComments = (solutionId: string, moduleId: string) => 
 
         // Buscar respostas (replies)
         const { data: replies, error: repliesError } = await supabase
-          .from('tool_comments')
+          .from('solution_comments')
           .select('*')
-          .eq('tool_id', solutionId)
+          .eq('solution_id', solutionId)
           .not('parent_id', 'is', null)
           .order('created_at', { ascending: true });
 
@@ -82,7 +82,7 @@ export const useFetchModuleComments = (solutionId: string, moduleId: string) => 
         
         if (user) {
           const { data: userLikes } = await supabase
-            .from('tool_comment_likes')
+            .from('solution_comment_likes')
             .select('comment_id')
             .eq('user_id', user.id);
 

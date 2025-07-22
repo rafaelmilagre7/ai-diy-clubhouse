@@ -28,7 +28,7 @@ export const useLikeModuleComment = (solutionId: string, moduleId: string) => {
       if (comment.user_has_liked) {
         // Remover curtida
         const { error: deleteError } = await supabase
-          .from('tool_comment_likes')
+          .from('solution_comment_likes')
           .delete()
           .match({ 
             user_id: user.id,
@@ -38,18 +38,17 @@ export const useLikeModuleComment = (solutionId: string, moduleId: string) => {
         if (deleteError) throw deleteError;
         
         // Decrementar contador
-        const { error: decrementError } = await supabase.rpc('decrement', {
-          row_id: comment.id,
-          table_name: 'tool_comments',
-          column_name: 'likes_count'
-        });
+        const { error: decrementError } = await supabase
+          .from('solution_comments')
+          .update({ likes_count: Math.max(0, (comment.likes_count || 1) - 1) })
+          .eq('id', comment.id);
         
         if (decrementError) throw decrementError;
         
       } else {
         // Adicionar curtida
         const { error: insertError } = await supabase
-          .from('tool_comment_likes')
+          .from('solution_comment_likes')
           .insert({
             user_id: user.id,
             comment_id: comment.id
@@ -58,11 +57,10 @@ export const useLikeModuleComment = (solutionId: string, moduleId: string) => {
         if (insertError) throw insertError;
         
         // Incrementar contador
-        const { error: incrementError } = await supabase.rpc('increment', {
-          row_id: comment.id,
-          table_name: 'tool_comments',
-          column_name: 'likes_count'
-        });
+        const { error: incrementError } = await supabase
+          .from('solution_comments')
+          .update({ likes_count: (comment.likes_count || 0) + 1 })
+          .eq('id', comment.id);
         
         if (incrementError) throw incrementError;
       }

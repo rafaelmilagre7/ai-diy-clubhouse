@@ -28,14 +28,14 @@ export const useAddModuleComment = (solutionId: string, moduleId: string) => {
       log('Adicionando comentário', { solutionId, moduleId, parentId });
       
       const commentData = {
-        tool_id: solutionId,
+        solution_id: solutionId,
         user_id: user.id,
         content: content.trim(),
         parent_id: parentId
       };
       
       const { error, data } = await supabase
-        .from('tool_comments')
+        .from('solution_comments')
         .insert(commentData)
         .select();
         

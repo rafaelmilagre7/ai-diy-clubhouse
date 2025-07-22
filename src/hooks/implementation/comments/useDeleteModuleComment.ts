@@ -34,7 +34,7 @@ export const useDeleteModuleComment = (solutionId: string, moduleId: string) => 
       log('Excluindo comentário', { commentId: comment.id });
       
       const { error } = await supabase
-        .from('tool_comments')
+        .from('solution_comments')
         .delete()
         .eq('id', comment.id);
         
