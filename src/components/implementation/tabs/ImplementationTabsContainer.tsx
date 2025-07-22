@@ -24,6 +24,7 @@ const ImplementationTabsContainer: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [activeTab, setActiveTab] = useState('tools');
   
+  // TODOS OS HOOKS DEVEM ESTAR AQUI NO TOPO - ANTES DE QUALQUER CONDICIONAL
   const { solution, loading: isLoading, error } = useSolutionData(id);
   const {
     completedTabs,
@@ -33,43 +34,11 @@ const ImplementationTabsContainer: React.FC = () => {
     getProgressPercentage
   } = useTabProgress(id || '');
 
-  if (isLoading || isLoadingProgress) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
-  if (error || !solution) {
-    return (
-      <Card className="p-6 text-center">
-        <p className="text-muted-foreground">Erro ao carregar a solução.</p>
-      </Card>
-    );
-  }
-
+  // Memoizar funções e valores para evitar re-renders desnecessários
   const handleTabComplete = React.useCallback(async (tabId: string, progressData?: any) => {
-    // Marcar aba como completa no banco de dados
     await markTabComplete(tabId, progressData);
   }, [markTabComplete]);
 
-  const handleTabCompleteAndNavigate = async (tabId: string, progressData?: any) => {
-    // Marcar aba como completa no banco de dados
-    await markTabComplete(tabId, progressData);
-    
-    // Navegar automaticamente para a próxima guia se não for a conclusão
-    if (tabId !== 'completion') {
-      const currentIndex = IMPLEMENTATION_TABS.findIndex(tab => tab.id === tabId);
-      const nextTab = IMPLEMENTATION_TABS[currentIndex + 1];
-      
-      if (nextTab) {
-        setActiveTab(nextTab.id);
-      }
-    }
-  };
-
-  // Calcular progresso baseado nas abas completadas (memoizado para evitar re-cálculos)
   const progress = React.useMemo(() => {
     return isTabCompleted('completion') 
       ? 100 
@@ -100,6 +69,23 @@ const ImplementationTabsContainer: React.FC = () => {
         return <ToolsTab solutionId={id!} onComplete={() => handleTabComplete('tools')} />;
     }
   }, [activeTab, id, handleTabComplete, progress, completedTabs, solution?.title]);
+
+  // CONDICIONAIS APENAS APÓS TODOS OS HOOKS
+  if (isLoading || isLoadingProgress) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (error || !solution) {
+    return (
+      <Card className="p-6 text-center">
+        <p className="text-muted-foreground">Erro ao carregar a solução.</p>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">

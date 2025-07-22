@@ -14,7 +14,7 @@ export const useTabProgress = (solutionId: string) => {
   const queryClient = useQueryClient();
   const [completedTabs, setCompletedTabs] = useState<string[]>([]);
 
-  // Buscar progresso das abas
+  // Buscar progresso das abas - SEMPRE executar o useQuery
   const { data: tabProgressData, isLoading } = useQuery({
     queryKey: ['tab-progress', user?.id, solutionId],
     queryFn: async () => {
@@ -101,13 +101,14 @@ export const useTabProgress = (solutionId: string) => {
     },
   });
 
-  const markTabComplete = (tabId: string, progressData?: any) => {
+  // Funções memoizadas para evitar re-renders
+  const markTabComplete = React.useCallback((tabId: string, progressData?: any) => {
     markTabCompleteMutation.mutate({ tabId, progressData });
-  };
+  }, [markTabCompleteMutation]);
 
-  const resetTabProgress = (tabId: string) => {
+  const resetTabProgress = React.useCallback((tabId: string) => {
     resetTabProgressMutation.mutate(tabId);
-  };
+  }, [resetTabProgressMutation]);
 
   const isTabCompleted = React.useCallback((tabId: string) => {
     return completedTabs.includes(tabId);
