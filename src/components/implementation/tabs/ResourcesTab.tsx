@@ -1,180 +1,244 @@
+
 import React, { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useParams } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Download, FileText, File, Image, Video } from "lucide-react";
-import { cn } from "@/lib/utils";
-
-interface ResourcesTabProps {
-  solutionId: string;
-  onComplete: () => void;
-}
+import { Download, FileText, FileImage, FileVideo, File as FileIcon, FileArchive } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
 
 interface Resource {
   id: string;
-  file_name: string;
-  file_path: string;
-  file_type: string;
-  description?: string;
-  created_at: string;
+  name: string;
+  url: string;
+  type: string;
+  format: string | null;
+  solution_id: string;
+  module_id: string | null;
+}
+
+interface ResourcesTabProps {
+  solutionId: string;
+  onComplete?: () => void;
 }
 
 const ResourcesTab: React.FC<ResourcesTabProps> = ({ solutionId, onComplete }) => {
-  const [downloadedFiles, setDownloadedFiles] = useState<string[]>([]);
+  const [resources, setResources] = useState<Resource[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
-  const { data: resources, isLoading } = useQuery({
-    queryKey: ['solution-resources', solutionId],
-    queryFn: async () => {
+  useEffect(() => {
+    fetchResources();
+  }, [solutionId]);
+
+  const fetchResources = async () => {
+    try {
+      setLoading(true);
+      
       const { data, error } = await supabase
-        .from('solution_resources')
-        .select('*')
-        .eq('solution_id', solutionId)
-        .order('created_at', { ascending: true });
-
-      if (error) throw error;
-      return data as Resource[];
+        .from("solution_resources")
+        .select("*")
+        .eq("solution_id", solutionId)
+        .neq("type", "video"); // Excluir vídeos que vão na aba específica
+      
+      if (error) {
+        console.error("Erro ao buscar recursos:", error);
+        toast({
+          title: "Erro ao carregar recursos",
+          description: "Não foi possível carregar os recursos da solução.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      setResources(data || []);
+    } catch (error) {
+      console.error("Erro ao buscar recursos:", error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro inesperado ao carregar os recursos.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
-  });
+  };
+
+  const getFileIcon = (resource: Resource) => {
+    const fileType = resource.type?.toLowerCase() || '';
+    const fileName = resource.name?.toLowerCase() || '';
+    const format = resource.format?.toLowerCase() || '';
+    
+    // Verificar por tipo primeiro
+    if (fileType.includes('image') || format.includes('image')) {
+      return <FileImage className="h-6 w-6 text-purple-500" />;
+    }
+    
+    if (fileType.includes('video') || format.includes('video')) {
+      return <FileVideo className="h-6 w-6 text-orange-500" />;
+    }
+    
+    if (fileType.includes('pdf') || format.includes('pdf') || fileName.includes('.pdf')) {
+      return <FileText className="h-6 w-6 text-red-500" />;
+    }
+    
+    if (fileType.includes('document') || format.includes('doc') || fileName.includes('.doc')) {
+      return <FileText className="h-6 w-6 text-blue-500" />;
+    }
+    
+    if (fileType.includes('spreadsheet') || format.includes('xls') || fileName.includes('.xls')) {
+      return <FileArchive className="h-6 w-6 text-green-500" />;
+    }
+    
+    // Verificar extensões do nome do arquivo
+    if (fileName.includes('.jpg') || fileName.includes('.png') || fileName.includes('.gif') || fileName.includes('.webp')) {
+      return <FileImage className="h-6 w-6 text-purple-500" />;
+    }
+    
+    if (fileName.includes('.mp4') || fileName.includes('.webm') || fileName.includes('.mov')) {
+      return <FileVideo className="h-6 w-6 text-orange-500" />;
+    }
+    
+    // Ícone padrão
+    return <FileIcon className="h-6 w-6 text-gray-500" />;
+  };
+
+  const getFileFormatName = (resource: Resource): string => {
+    const format = resource.format?.toLowerCase() || '';
+    const fileName = resource.name?.toLowerCase() || '';
+    
+    if (format.includes('pdf') || fileName.includes('.pdf')) return "PDF";
+    if (format.includes('doc') || fileName.includes('.doc')) return "Word";
+    if (format.includes('xls') || fileName.includes('.xls')) return "Excel";
+    if (format.includes('ppt') || fileName.includes('.ppt')) return "PowerPoint";
+    if (format.includes('image') || fileName.match(/\.(jpg|jpeg|png|gif|webp)$/)) return "Imagem";
+    if (format.includes('video') || fileName.match(/\.(mp4|webm|mov)$/)) return "Vídeo";
+    
+    return resource.format || "Arquivo";
+  };
 
   const handleDownload = async (resource: Resource) => {
     try {
-      const { data, error } = await supabase.storage
-        .from('solution_files')
-        .download(resource.file_path);
-
-      if (error) throw error;
-
-      // Create download link
-      const url = URL.createObjectURL(data);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = resource.file_name;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
-      // Mark as downloaded
-      if (!downloadedFiles.includes(resource.id)) {
-        setDownloadedFiles(prev => [...prev, resource.id]);
+      if (!resource.url) {
+        toast({
+          title: "Erro",
+          description: "URL do arquivo não disponível.",
+          variant: "destructive",
+        });
+        return;
       }
+
+      // Para URLs do YouTube, abrir em nova aba
+      if (resource.url.includes('youtube.com') || resource.url.includes('youtu.be')) {
+        window.open(resource.url, '_blank');
+        return;
+      }
+
+      // Para outros arquivos, tentar fazer download
+      const response = await fetch(resource.url);
+      if (!response.ok) throw new Error('Erro ao baixar arquivo');
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = resource.name || 'arquivo';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Download iniciado",
+        description: `O arquivo "${resource.name}" está sendo baixado.`,
+      });
     } catch (error) {
-      console.error('Error downloading file:', error);
+      console.error("Erro ao baixar arquivo:", error);
+      toast({
+        title: "Erro no download",
+        description: "Não foi possível baixar o arquivo. Tente novamente.",
+        variant: "destructive",
+      });
     }
   };
 
-  useEffect(() => {
-    if (resources && downloadedFiles.length === resources.length && resources.length > 0) {
-      onComplete();
-    }
-  }, [downloadedFiles, resources, onComplete]);
-
-  const getFileIcon = (fileType: string) => {
-    if (fileType.includes('pdf')) return <FileText className="w-6 h-6 text-red-500" />;
-    if (fileType.includes('image')) return <Image className="w-6 h-6 text-blue-500" />;
-    if (fileType.includes('video')) return <Video className="w-6 h-6 text-purple-500" />;
-    return <File className="w-6 h-6 text-gray-500" />;
-  };
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-
-  if (isLoading) {
+  if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex items-center justify-center min-h-[400px]">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
-  if (!resources || resources.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <FileText className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-        <h3 className="text-lg font-semibold mb-2">Nenhum arquivo encontrado</h3>
-        <p className="text-muted-foreground mb-4">
-          Esta solução não possui materiais para download.
-        </p>
-        <Button onClick={onComplete} variant="outline">
-          Continuar para próxima etapa
-        </Button>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="text-center">
-        <h2 className="text-2xl font-bold mb-2">Materiais para Download</h2>
+      <div className="space-y-4">
+        <h2 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+          Materiais e Recursos
+        </h2>
         <p className="text-muted-foreground">
-          Baixe os arquivos necessários para implementar esta solução
+          Baixe os materiais necessários para implementar esta solução. Estes recursos foram especialmente selecionados para te ajudar no processo.
         </p>
       </div>
 
-      <div className="grid gap-4">
-        {resources.map((resource) => {
-          const isDownloaded = downloadedFiles.includes(resource.id);
-          
-          return (
-            <Card key={resource.id} className={cn(
-              "p-4 transition-all duration-300 hover:shadow-md border-2",
-              isDownloaded ? "border-primary/40 bg-primary/5" : "border-border hover:border-primary/20"
-            )}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  {getFileIcon(resource.file_type)}
-                  <div>
-                    <h3 className="font-medium">{resource.file_name}</h3>
-                    {resource.description && (
-                      <p className="text-sm text-muted-foreground">
-                        {resource.description}
-                      </p>
+      {resources.length === 0 ? (
+        <Card className="p-8 text-center">
+          <FileIcon className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+          <h3 className="text-lg font-semibold mb-2">Nenhum recurso disponível</h3>
+          <p className="text-muted-foreground">
+            Esta solução ainda não possui materiais de apoio disponíveis.
+          </p>
+        </Card>
+      ) : (
+        <div className="grid gap-4">
+          {resources.map((resource) => (
+            <Card key={resource.id} className="p-6 hover:shadow-lg transition-shadow">
+              <div className="flex items-start space-x-4">
+                <div className="flex-shrink-0 bg-primary/10 p-3 rounded-lg">
+                  {getFileIcon(resource)}
+                </div>
+                
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-lg font-semibold mb-2 text-foreground">
+                    {resource.name}
+                  </h4>
+                  
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium">
+                      {getFileFormatName(resource)}
+                    </span>
+                    {resource.type && (
+                      <span className="px-3 py-1 bg-secondary text-secondary-foreground rounded-full text-sm capitalize">
+                        {resource.type}
+                      </span>
                     )}
-                    <div className="flex items-center gap-2 mt-1">
-                      <Badge variant="secondary" className="text-xs">
-                        {resource.file_type}
-                      </Badge>
-                      {isDownloaded && (
-                        <Badge className="bg-primary/20 text-primary text-xs">
-                          Baixado
-                        </Badge>
-                      )}
-                    </div>
                   </div>
                 </div>
-
-                <Button
-                  onClick={() => handleDownload(resource)}
-                  variant={isDownloaded ? "outline" : "default"}
-                  size="sm"
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  {isDownloaded ? "Baixar novamente" : "Baixar"}
-                </Button>
+                
+                <div className="flex-shrink-0">
+                  <Button
+                    onClick={() => handleDownload(resource)}
+                    className="bg-primary hover:bg-primary/90"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Baixar
+                  </Button>
+                </div>
               </div>
             </Card>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
 
-      {resources.length > 0 && (
-        <div className="text-center">
-          <p className="text-sm text-muted-foreground mb-4">
-            Progresso: {downloadedFiles.length} de {resources.length} arquivos baixados
-          </p>
-          <div className="w-full bg-muted rounded-full h-2 mb-4">
-            <div 
-              className="bg-gradient-to-r from-primary to-primary-glow h-2 rounded-full transition-all duration-500"
-              style={{ width: `${(downloadedFiles.length / resources.length) * 100}%` }}
-            />
-          </div>
+      {resources.length > 0 && onComplete && (
+        <div className="flex justify-center pt-6">
+          <Button 
+            onClick={onComplete}
+            variant="outline"
+            className="px-8"
+          >
+            Marcar como visualizado
+          </Button>
         </div>
       )}
     </div>
