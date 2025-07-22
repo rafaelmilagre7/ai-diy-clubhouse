@@ -237,217 +237,232 @@ const CommentsTab: React.FC<CommentsTabProps> = ({ solutionId, onComplete }) => 
       </div>
 
       {/* Rating Section */}
-      <Card className="p-6">
-        <div className="flex items-center gap-3 mb-6">
-          <Star className="w-6 h-6 text-primary" />
-          <h3 className="text-lg font-semibold">Avalie esta solução</h3>
-        </div>
+      <div className="relative bg-gradient-to-br from-card/40 via-card/20 to-transparent backdrop-blur-md rounded-2xl p-6 border-0 shadow-lg">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent rounded-2xl"></div>
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 rounded-xl bg-primary/10">
+              <Star className="w-6 h-6 text-primary" />
+            </div>
+            <h3 className="text-lg font-semibold">Avalie esta solução</h3>
+          </div>
 
-        {/* Current stats */}
-        {ratings && ratings.length > 0 && (
-          <div className="mb-6 p-4 bg-muted/50 rounded-lg">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-              <div>
-                <div className="text-2xl font-bold text-primary">{averageRating}</div>
-                <div className="text-sm text-muted-foreground">Nota Média</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-primary">{ratings.length}</div>
-                <div className="text-sm text-muted-foreground">Avaliações</div>
-              </div>
-              <div>
-                <div className={cn(
-                  "text-2xl font-bold",
-                  npsScore >= 50 ? "text-green-600" : npsScore >= 0 ? "text-yellow-600" : "text-red-600"
-                )}>
-                  {npsScore > 0 ? '+' : ''}{npsScore}
+          {/* Current stats */}
+          {ratings && ratings.length > 0 && (
+            <div className="mb-6 p-4 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-xl backdrop-blur-sm">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                <div>
+                  <div className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">{averageRating}</div>
+                  <div className="text-sm text-muted-foreground">Nota Média</div>
                 </div>
-                <div className="text-sm text-muted-foreground">NPS Score</div>
+                <div>
+                  <div className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">{ratings.length}</div>
+                  <div className="text-sm text-muted-foreground">Avaliações</div>
+                </div>
+                <div>
+                  <div className={cn(
+                    "text-2xl font-bold",
+                    npsScore >= 50 ? "text-green-400" : npsScore >= 0 ? "text-yellow-400" : "text-red-400"
+                  )}>
+                    {npsScore > 0 ? '+' : ''}{npsScore}
+                  </div>
+                  <div className="text-sm text-muted-foreground">NPS Score</div>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* User rating form */}
-        {!userRating ? (
-          <div className="space-y-4">
-            <div>
-              <p className="text-sm font-medium mb-3">De 0 a 10, o quanto você recomendaria esta solução?</p>
-              <div className="flex gap-2 flex-wrap">
-                {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((score) => (
-                  <Button
-                    key={score}
-                    variant={selectedRating === score ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setSelectedRating(score)}
-                    className="w-10 h-10"
-                  >
-                    {score}
-                  </Button>
-                ))}
+          {/* User rating form */}
+          {!userRating ? (
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm font-medium mb-3">De 0 a 10, o quanto você recomendaria esta solução?</p>
+                <div className="flex gap-2 flex-wrap">
+                  {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((score) => (
+                    <Button
+                      key={score}
+                      variant={selectedRating === score ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setSelectedRating(score)}
+                      className="w-10 h-10"
+                    >
+                      {score}
+                    </Button>
+                  ))}
+                </div>
               </div>
+              
+              <Textarea
+                placeholder="Conte-nos mais sobre sua experiência (opcional)..."
+                value={ratingFeedback}
+                onChange={(e) => setRatingFeedback(e.target.value)}
+                className="min-h-[80px] bg-card/50 backdrop-blur-sm border-0"
+              />
+              
+              <Button
+                onClick={handleSubmitRating}
+                disabled={selectedRating === null || addRatingMutation.isPending}
+                className="w-full bg-primary/90 hover:bg-primary"
+              >
+                <Star className="w-4 h-4 mr-2" />
+                {addRatingMutation.isPending ? 'Enviando...' : 'Enviar Avaliação'}
+              </Button>
             </div>
-            
-            <Textarea
-              placeholder="Conte-nos mais sobre sua experiência (opcional)..."
-              value={ratingFeedback}
-              onChange={(e) => setRatingFeedback(e.target.value)}
-              className="min-h-[80px]"
-            />
-            
-            <Button
-              onClick={handleSubmitRating}
-              disabled={selectedRating === null || addRatingMutation.isPending}
-              className="w-full"
-            >
-              <Star className="w-4 h-4 mr-2" />
-              {addRatingMutation.isPending ? 'Enviando...' : 'Enviar Avaliação'}
-            </Button>
-          </div>
-        ) : (
-          <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-            <div className="flex items-center gap-2 mb-2">
-              <Star className="w-5 h-5 text-green-600" />
-              <span className="font-medium text-green-800">
-                Você avaliou esta solução com nota {userRating.rating}
-              </span>
+          ) : (
+            <div className="p-4 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-xl backdrop-blur-sm">
+              <div className="flex items-center gap-2 mb-2">
+                <Star className="w-5 h-5 text-green-400" />
+                <span className="font-medium text-green-300">
+                  Você avaliou esta solução com nota {userRating.rating}
+                </span>
+              </div>
+              {userRating.feedback && (
+                <p className="text-sm text-green-400/80 mt-2">"{userRating.feedback}"</p>
+              )}
             </div>
-            {userRating.feedback && (
-              <p className="text-sm text-green-700 mt-2">"{userRating.feedback}"</p>
-            )}
-          </div>
-        )}
-      </Card>
+          )}
+        </div>
+      </div>
 
       <Separator />
 
       {/* Comments Section */}
-      <Card className="p-6">
-        <div className="flex items-center gap-3 mb-6">
-          <MessageSquare className="w-6 h-6 text-primary" />
-          <h3 className="text-lg font-semibold">Discussão da Comunidade</h3>
-        </div>
+      <div className="relative bg-gradient-to-br from-card/40 via-card/20 to-transparent backdrop-blur-md rounded-2xl p-6 border-0 shadow-lg">
+        <div className="absolute inset-0 bg-gradient-to-br from-secondary/5 to-transparent rounded-2xl"></div>
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 rounded-xl bg-secondary/10">
+              <MessageSquare className="w-6 h-6 text-secondary" />
+            </div>
+            <h3 className="text-lg font-semibold">Discussão da Comunidade</h3>
+          </div>
 
-        {/* Comment Form */}
-        <div className="space-y-4 mb-6">
-          <Textarea
-            placeholder="Compartilhe sua experiência, dúvidas ou dicas sobre esta solução..."
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            className="min-h-[100px]"
-          />
-          <div className="flex justify-end">
-            <Button
-              onClick={handleSubmitComment}
-              disabled={!newComment.trim() || addCommentMutation.isPending}
-            >
-              <Send className="w-4 h-4 mr-2" />
-              {addCommentMutation.isPending ? 'Enviando...' : 'Comentar'}
-            </Button>
+          {/* Comment Form */}
+          <div className="space-y-4 mb-6">
+            <Textarea
+              placeholder="Compartilhe sua experiência, dúvidas ou dicas sobre esta solução..."
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              className="min-h-[100px] bg-card/50 backdrop-blur-sm border-0"
+            />
+            <div className="flex justify-end">
+              <Button
+                onClick={handleSubmitComment}
+                disabled={!newComment.trim() || addCommentMutation.isPending}
+                className="bg-secondary/90 hover:bg-secondary"
+              >
+                <Send className="w-4 h-4 mr-2" />
+                {addCommentMutation.isPending ? 'Enviando...' : 'Comentar'}
+              </Button>
+            </div>
+          </div>
+
+          {/* Comments List */}
+          <div className="space-y-6">
+            {commentsLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+              </div>
+            ) : comments && comments.length > 0 ? (
+              comments.map((comment) => (
+                <div key={comment.id} className="space-y-4">
+                  {/* Main Comment */}
+                  <div className="relative bg-gradient-to-br from-card/60 via-card/30 to-transparent backdrop-blur-sm rounded-xl p-4 border-0">
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/3 to-transparent rounded-xl"></div>
+                    <div className="relative z-10 space-y-3">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h4 className="font-medium">{comment.profiles?.name || 'Usuário'}</h4>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(comment.created_at).toLocaleDateString('pt-BR', {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
+                          className="hover:bg-primary/10"
+                        >
+                          <Reply className="w-4 h-4 mr-1" />
+                          Responder
+                        </Button>
+                      </div>
+                      <p className="text-sm">{comment.content}</p>
+                      
+                      {/* Reply Form */}
+                      {replyingTo === comment.id && (
+                        <div className="space-y-2 pt-3 border-t border-border/30">
+                          <Textarea
+                            placeholder="Escreva sua resposta..."
+                            value={replyContent}
+                            onChange={(e) => setReplyContent(e.target.value)}
+                            className="min-h-[80px] bg-card/50 backdrop-blur-sm border-0"
+                          />
+                          <div className="flex gap-2 justify-end">
+                            <Button variant="outline" size="sm" onClick={() => setReplyingTo(null)} className="border-border/30 hover:bg-card/50">
+                              Cancelar
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={() => handleSubmitReply(comment.id)}
+                              disabled={!replyContent.trim() || addCommentMutation.isPending}
+                              className="bg-primary/90 hover:bg-primary"
+                            >
+                              <Send className="w-3 h-3 mr-1" />
+                              Responder
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Replies */}
+                  {comment.replies && comment.replies.length > 0 && (
+                    <div className="ml-8 space-y-3">
+                      {comment.replies.map((reply) => (
+                        <div key={reply.id} className="relative bg-gradient-to-br from-secondary/10 via-secondary/5 to-transparent backdrop-blur-sm rounded-lg p-3 border-0">
+                          <div className="absolute inset-0 bg-gradient-to-br from-secondary/5 to-transparent rounded-lg"></div>
+                          <div className="relative z-10 space-y-2">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <h5 className="text-sm font-medium">{reply.profiles?.name || 'Usuário'}</h5>
+                                <p className="text-xs text-muted-foreground">
+                                  {new Date(reply.created_at).toLocaleDateString('pt-BR', {
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </p>
+                              </div>
+                            </div>
+                            <p className="text-sm">{reply.content}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8">
+                <MessageSquare className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">
+                  Seja o primeiro a comentar sobre esta solução!
+                </p>
+              </div>
+            )}
           </div>
         </div>
-
-        {/* Comments List */}
-        <div className="space-y-6">
-          {commentsLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-            </div>
-          ) : comments && comments.length > 0 ? (
-            comments.map((comment) => (
-              <div key={comment.id} className="space-y-4">
-                {/* Main Comment */}
-                <Card className="p-4">
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h4 className="font-medium">{comment.profiles?.name || 'Usuário'}</h4>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(comment.created_at).toLocaleDateString('pt-BR', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </p>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
-                      >
-                        <Reply className="w-4 h-4 mr-1" />
-                        Responder
-                      </Button>
-                    </div>
-                    <p className="text-sm">{comment.content}</p>
-                    
-                    {/* Reply Form */}
-                    {replyingTo === comment.id && (
-                      <div className="space-y-2 pt-3 border-t">
-                        <Textarea
-                          placeholder="Escreva sua resposta..."
-                          value={replyContent}
-                          onChange={(e) => setReplyContent(e.target.value)}
-                          className="min-h-[80px]"
-                        />
-                        <div className="flex gap-2 justify-end">
-                          <Button variant="outline" size="sm" onClick={() => setReplyingTo(null)}>
-                            Cancelar
-                          </Button>
-                          <Button
-                            size="sm"
-                            onClick={() => handleSubmitReply(comment.id)}
-                            disabled={!replyContent.trim() || addCommentMutation.isPending}
-                          >
-                            <Send className="w-3 h-3 mr-1" />
-                            Responder
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </Card>
-
-                {/* Replies */}
-                {comment.replies && comment.replies.length > 0 && (
-                  <div className="ml-8 space-y-3">
-                    {comment.replies.map((reply) => (
-                      <Card key={reply.id} className="p-3 bg-muted/30">
-                        <div className="space-y-2">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h5 className="text-sm font-medium">{reply.profiles?.name || 'Usuário'}</h5>
-                              <p className="text-xs text-muted-foreground">
-                                {new Date(reply.created_at).toLocaleDateString('pt-BR', {
-                                  day: '2-digit',
-                                  month: '2-digit',
-                                  year: 'numeric',
-                                  hour: '2-digit',
-                                  minute: '2-digit'
-                                })}
-                              </p>
-                            </div>
-                          </div>
-                          <p className="text-sm">{reply.content}</p>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))
-          ) : (
-            <div className="text-center py-8">
-              <MessageSquare className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">
-                Seja o primeiro a comentar sobre esta solução!
-              </p>
-            </div>
-          )}
-        </div>
-      </Card>
+      </div>
 
       <div className="text-center">
         <Button onClick={onComplete} variant="outline">
