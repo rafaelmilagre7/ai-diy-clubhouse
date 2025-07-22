@@ -71,14 +71,6 @@ const ImplementationTabsContainer: React.FC = () => {
     }
   }, [markTabComplete, completedTabs]);
 
-  // Crear callbacks memorized para cada aba
-  const handleToolsComplete = useCallback(() => handleTabComplete('tools'), [handleTabComplete]);
-  const handleResourcesComplete = useCallback(() => handleTabComplete('resources'), [handleTabComplete]);
-  const handleVideoComplete = useCallback(() => handleTabComplete('video'), [handleTabComplete]);
-  const handleChecklistComplete = useCallback(() => handleTabComplete('checklist'), [handleTabComplete]);
-  const handleCommentsComplete = useCallback(() => handleTabComplete('comments'), [handleTabComplete]);
-  const handleCompletionComplete = useCallback(() => handleTabComplete('completion'), [handleTabComplete]);
-
   // Calcular progresso baseado nas abas completadas
   const progress = isTabCompleted('completion') 
     ? 100 
@@ -87,24 +79,24 @@ const ImplementationTabsContainer: React.FC = () => {
   const renderTabContent = () => {
     switch (activeTab) {
       case 'tools':
-        return <ToolsTab solutionId={id!} onComplete={handleToolsComplete} />;
+        return <ToolsTab solutionId={id!} onComplete={() => handleTabComplete('tools')} />;
       case 'resources':
-        return <ResourcesTab solutionId={id!} onComplete={handleResourcesComplete} />;
+        return <ResourcesTab solutionId={id!} onComplete={() => handleTabComplete('resources')} />;
       case 'video':
-        return <VideoTab solutionId={id!} onComplete={handleVideoComplete} />;
+        return <VideoTab solutionId={id!} onComplete={() => handleTabComplete('video')} />;
       case 'checklist':
-        return <ChecklistTab solutionId={id!} onComplete={handleChecklistComplete} />;
+        return <ChecklistTab solutionId={id!} onComplete={() => handleTabComplete('checklist')} />;
       case 'comments':
-        return <CommentsTab solutionId={id!} onComplete={handleCommentsComplete} />;
+        return <CommentsTab solutionId={id!} onComplete={() => handleTabComplete('comments')} />;
       case 'completion':
         return <CompletionTab 
           solutionId={id!} 
           progress={progress} 
           completedTabs={completedTabs}
-          onComplete={handleCompletionComplete} 
+          onComplete={() => handleTabComplete('completion')} 
         />;
       default:
-        return <ToolsTab solutionId={id!} onComplete={handleToolsComplete} />;
+        return <ToolsTab solutionId={id!} onComplete={() => handleTabComplete('tools')} />;
     }
   };
 
