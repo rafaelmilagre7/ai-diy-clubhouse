@@ -117,87 +117,92 @@ export const LessonResources = ({ resources = [] }: { resources: LessonResourceP
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <BookOpen className="h-5 w-5" />
-          Material complementar
-        </CardTitle>
-        <CardDescription>
+    <div className="backdrop-blur-sm bg-white/5 rounded-xl border border-white/10 shadow-lg">
+      <div className="p-6 border-b border-white/10">
+        <h3 className="flex items-center gap-3 text-xl font-semibold text-foreground mb-2">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/20">
+            <BookOpen className="h-5 w-5 text-primary" />
+          </div>
+          <span>Material complementar</span>
+        </h3>
+        <p className="text-muted-foreground/80 text-sm">
           {resources.length > 0 
             ? "Recursos adicionais para aprofundar seus conhecimentos"
             : "Esta aula não possui materiais complementares disponíveis para download"
           }
-        </CardDescription>
+        </p>
         
         {resourceTypes.length > 2 && (
-          <Tabs 
-            value={activeType} 
-            onValueChange={setActiveType}
-            className="mt-2"
-          >
-            <TabsList className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+          <div className="mt-4">
+            <div className="flex flex-wrap gap-2">
               {resourceTypes.map(type => (
-                <TabsTrigger 
-                  key={type} 
-                  value={type}
-                  className="capitalize"
+                <button
+                  key={type}
+                  onClick={() => setActiveType(type)}
+                  className={`px-3 py-1.5 text-sm rounded-full transition-all duration-200 capitalize ${
+                    activeType === type
+                      ? 'bg-gradient-to-r from-primary/20 to-primary/10 text-primary border border-primary/20'
+                      : 'bg-white/5 text-muted-foreground hover:bg-white/10 border border-white/10'
+                  }`}
                 >
                   {type === "all" ? "Todos" : type}
-                </TabsTrigger>
+                </button>
               ))}
-            </TabsList>
-          </Tabs>
+            </div>
+          </div>
         )}
-      </CardHeader>
+      </div>
       
-      <CardContent>
+      <div className="p-6">
         {resources.length === 0 ? (
           <div className="py-8 text-center">
-            <div className="bg-muted/50 rounded-lg p-6">
-              <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="font-medium text-muted-foreground mb-2">
+            <div className="backdrop-blur-sm bg-white/5 border border-white/10 rounded-xl p-8">
+              <BookOpen className="h-12 w-12 text-primary/60 mx-auto mb-4" />
+              <h3 className="font-medium text-foreground mb-2">
                 Nenhum material adicional
               </h3>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-muted-foreground/80">
                 Esta aula não possui materiais complementares disponíveis para download. 
                 O conteúdo principal da aula já contém todas as informações necessárias.
               </p>
             </div>
           </div>
         ) : (
-          <div className="space-y-2 divide-y">
+          <div className="space-y-4">
             {filteredResources.length === 0 ? (
-              <p className="py-8 text-center text-muted-foreground">
+              <p className="py-8 text-center text-muted-foreground/80">
                 Nenhum recurso deste tipo disponível.
               </p>
             ) : (
               filteredResources.map((resource, index) => (
-                <div key={resource.id} className={`pt-3 ${index > 0 ? 'pt-3' : ''}`}>
+                <div key={resource.id} className="backdrop-blur-sm bg-white/5 border border-white/10 rounded-lg p-4 hover:bg-white/10 transition-all duration-200">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-start gap-3">
-                      {getResourceIcon(resource)}
-                      <div>
-                        {/* Usar title ou name, com fallback para garantir que sempre exiba algo */}
-                        <h4 className="font-medium">{resource.title || resource.name || "Material sem título"}</h4>
+                    <div className="flex items-start gap-3 flex-1">
+                      <div className="p-2 rounded-lg bg-white/10 border border-white/20">
+                        {getResourceIcon(resource)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-foreground truncate">
+                          {resource.title || resource.name || "Material sem título"}
+                        </h4>
                         {resource.description && (
-                          <p className="text-sm text-muted-foreground mt-0.5">
+                          <p className="text-sm text-muted-foreground/80 mt-1 line-clamp-2">
                             {resource.description}
                           </p>
                         )}
-                        <div className="flex items-center gap-2 mt-1">
+                        <div className="flex items-center gap-2 mt-2 flex-wrap">
                           {resource.file_size_bytes && (
-                            <span className="text-xs text-muted-foreground">
+                            <span className="text-xs bg-white/10 text-muted-foreground/80 px-2 py-1 rounded-full border border-white/20">
                               {formatFileSize(resource.file_size_bytes)}
                             </span>
                           )}
                           {resource.resource_type && (
-                            <span className="text-xs bg-muted px-2 py-0.5 rounded-full">
+                            <span className="text-xs bg-primary/20 text-primary px-2 py-1 rounded-full border border-primary/20">
                               {resource.resource_type}
                             </span>
                           )}
                           {resource.external_url && (
-                            <span className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full">
+                            <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded-full border border-blue-500/20">
                               Link externo
                             </span>
                           )}
@@ -206,11 +211,11 @@ export const LessonResources = ({ resources = [] }: { resources: LessonResourceP
                     </div>
                     
                     <Button 
-                      variant="outline" 
+                      variant="ghost"
                       size="sm"
                       onClick={() => handleResourceClick(resource)}
                       disabled={downloading === resource.id}
-                      className="ml-2 flex-shrink-0"
+                      className="ml-4 flex-shrink-0 bg-white/10 border-0 hover:bg-white/20 transition-all duration-200"
                     >
                       {downloading === resource.id ? (
                         <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
@@ -222,13 +227,12 @@ export const LessonResources = ({ resources = [] }: { resources: LessonResourceP
                       {resource.external_url ? "Abrir" : "Baixar"}
                     </Button>
                   </div>
-                  {index < filteredResources.length - 1 && <Separator className="mt-3" />}
                 </div>
               ))
             )}
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
