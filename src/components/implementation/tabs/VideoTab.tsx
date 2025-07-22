@@ -65,6 +65,7 @@ const VideoTab: React.FC<VideoTabProps> = ({ solutionId, onComplete }) => {
   };
 
   const handleMarkAsWatched = () => {
+    console.log('VideoTab: Marcando vídeo como assistido');
     setIsWatched(true);
     toast.success("Ótimo! Você assistiu aos vídeos da solução.");
     onComplete();
