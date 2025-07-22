@@ -3827,6 +3827,36 @@ export type Database = {
         }
         Relationships: []
       }
+      solution_ratings: {
+        Row: {
+          created_at: string | null
+          feedback: string | null
+          id: string
+          rating: number
+          solution_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          feedback?: string | null
+          id?: string
+          rating: number
+          solution_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          feedback?: string | null
+          id?: string
+          rating?: number
+          solution_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       solution_resources: {
         Row: {
           created_at: string | null
