@@ -42,14 +42,36 @@ const ChecklistTab: React.FC<ChecklistTabProps> = ({ solutionId, onComplete }) =
   const { data: checklistItems, isLoading } = useQuery({
     queryKey: ['solution-checklist', solutionId],
     queryFn: async () => {
+      console.log('ChecklistTab: Buscando checklist para solução:', solutionId);
+      
+      // Buscar o checklist criado pelo admin na tabela implementation_checkpoints
       const { data, error } = await supabase
-        .from('solution_checklist_items')
-        .select('*')
+        .from('implementation_checkpoints')
+        .select('checkpoint_data')
         .eq('solution_id', solutionId)
-        .order('order_index', { ascending: true });
+        .limit(1)
+        .single();
 
-      if (error) throw error;
-      return data as ChecklistItem[];
+      if (error) {
+        console.log('ChecklistTab: Nenhum checklist encontrado:', error);
+        return [];
+      }
+      
+      console.log('ChecklistTab: Dados encontrados:', data);
+      
+      // Extrair os items do checkpoint_data
+      const items = data?.checkpoint_data?.items || [];
+      
+      console.log('ChecklistTab: Items do checklist:', items);
+      
+      // Transformar para o formato esperado
+      return items.map((item: any, index: number) => ({
+        id: item.id || `item-${index}`,
+        title: item.title,
+        description: item.description,
+        order_index: index,
+        is_required: true // Todos os items do admin são obrigatórios por padrão
+      }));
     }
   });
 
@@ -58,14 +80,34 @@ const ChecklistTab: React.FC<ChecklistTabProps> = ({ solutionId, onComplete }) =
     queryFn: async () => {
       if (!user?.id) return [];
       
+      console.log('ChecklistTab: Buscando progresso do usuário:', user.id, solutionId);
+      
+      // Buscar o progresso do usuário para esta solução
       const { data, error } = await supabase
-        .from('user_checklist_progress')
+        .from('implementation_checkpoints')
         .select('*')
         .eq('user_id', user.id)
-        .eq('solution_id', solutionId);
+        .eq('solution_id', solutionId)
+        .single();
 
-      if (error) throw error;
-      return data as UserChecklistProgress[];
+      if (error) {
+        console.log('ChecklistTab: Nenhum progresso encontrado:', error);
+        return [];
+      }
+      
+      console.log('ChecklistTab: Progresso encontrado:', data);
+      
+      // Extrair progresso dos items
+      const items = data?.checkpoint_data?.items || [];
+      return items.map((item: any) => ({
+        id: item.id,
+        user_id: user.id,
+        solution_id: solutionId,
+        checklist_item_id: item.id,
+        is_completed: item.completed || false,
+        notes: item.notes || '',
+        completed_at: item.completed ? new Date().toISOString() : null
+      }));
     },
     enabled: !!user?.id
   });
@@ -78,17 +120,83 @@ const ChecklistTab: React.FC<ChecklistTabProps> = ({ solutionId, onComplete }) =
     }) => {
       if (!user?.id) throw new Error('User not authenticated');
 
+      console.log('ChecklistTab: Atualizando progresso:', { itemId, isCompleted, itemNotes });
+
+      // Buscar dados atuais
+      const { data: currentData } = await supabase
+        .from('implementation_checkpoints')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('solution_id', solutionId)
+        .single();
+
+      let checkpointData;
+      let completedSteps: string[] = [];
+
+      if (currentData) {
+        // Atualizar dados existentes
+        checkpointData = { ...currentData.checkpoint_data };
+        if (!checkpointData.items) checkpointData.items = [];
+        
+        // Atualizar o item específico
+        const itemIndex = checkpointData.items.findIndex((item: any) => item.id === itemId);
+        if (itemIndex >= 0) {
+          checkpointData.items[itemIndex] = {
+            ...checkpointData.items[itemIndex],
+            completed: isCompleted,
+            notes: itemNotes || '',
+            completedAt: isCompleted ? new Date().toISOString() : null
+          };
+        }
+
+        // Calcular steps completados
+        completedSteps = checkpointData.items
+          .map((item: any, index: number) => item.completed ? String(index) : null)
+          .filter(Boolean);
+
+      } else {
+        // Criar novos dados baseados no template do admin
+        const { data: adminData } = await supabase
+          .from('implementation_checkpoints')
+          .select('checkpoint_data')
+          .eq('solution_id', solutionId)
+          .limit(1)
+          .single();
+
+        if (adminData?.checkpoint_data?.items) {
+          checkpointData = {
+            items: adminData.checkpoint_data.items.map((item: any) => ({
+              ...item,
+              completed: item.id === itemId ? isCompleted : false,
+              notes: item.id === itemId ? (itemNotes || '') : '',
+              completedAt: item.id === itemId && isCompleted ? new Date().toISOString() : null
+            })),
+            lastUpdated: new Date().toISOString()
+          };
+
+          completedSteps = checkpointData.items
+            .map((item: any, index: number) => item.completed ? String(index) : null)
+            .filter(Boolean);
+        }
+      }
+
+      const progressPercentage = checkpointData?.items?.length > 0 
+        ? Math.round((completedSteps.length / checkpointData.items.length) * 100)
+        : 0;
+
+      // Upsert no banco
       const { data, error } = await supabase
-        .from('user_checklist_progress')
+        .from('implementation_checkpoints')
         .upsert({
           user_id: user.id,
           solution_id: solutionId,
-          checklist_item_id: itemId,
-          is_completed: isCompleted,
-          notes: itemNotes,
-          completed_at: isCompleted ? new Date().toISOString() : null
+          checkpoint_data: checkpointData,
+          completed_steps: completedSteps,
+          total_steps: checkpointData?.items?.length || 0,
+          progress_percentage: progressPercentage,
+          updated_at: new Date().toISOString()
         }, {
-          onConflict: 'user_id,solution_id,checklist_item_id'
+          onConflict: 'user_id,solution_id'
         });
 
       if (error) throw error;
