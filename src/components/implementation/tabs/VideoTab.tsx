@@ -23,16 +23,27 @@ interface VideoLesson {
 const VideoTab: React.FC<VideoTabProps> = ({ solutionId, onComplete }) => {
 
   const { data: videoLessons, isLoading } = useQuery({
-    queryKey: ['solution-video-lessons', solutionId],
+    queryKey: ['solution-video-resources', solutionId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('solution_video_lessons')
+        .from('solution_resources')
         .select('*')
         .eq('solution_id', solutionId)
+        .eq('type', 'video')
+        .is('module_id', null)
         .order('order_index', { ascending: true });
 
       if (error) throw error;
-      return data as VideoLesson[];
+      
+      // Transformar os dados para o formato esperado
+      return data?.map(resource => ({
+        id: resource.id,
+        title: resource.name,
+        description: resource.description,
+        video_url: resource.external_url,
+        video_id: resource.file_path,
+        order_index: resource.order_index
+      })) || [];
     }
   });
 
