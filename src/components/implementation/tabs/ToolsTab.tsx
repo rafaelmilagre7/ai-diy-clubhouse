@@ -13,13 +13,12 @@ interface ToolsTabProps {
   onComplete: () => void;
 }
 
-interface Tool {
+interface SolutionTool {
   id: string;
-  name: string;
-  description: string;
-  category: string;
-  website_url: string;
-  thumbnail_url?: string;
+  tool_name: string;
+  tool_url?: string;
+  is_required: boolean;
+  order_index: number;
 }
 
 const ToolsTab: React.FC<ToolsTabProps> = ({ solutionId, onComplete }) => {
@@ -30,20 +29,12 @@ const ToolsTab: React.FC<ToolsTabProps> = ({ solutionId, onComplete }) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('solution_tools')
-        .select(`
-          tools (
-            id,
-            name,
-            description,
-            category,
-            website_url,
-            thumbnail_url
-          )
-        `)
-        .eq('solution_id', solutionId);
+        .select('*')
+        .eq('solution_id', solutionId)
+        .order('order_index');
 
       if (error) throw error;
-      return data?.map(item => item.tools).filter(Boolean).flat() as Tool[];
+      return data as SolutionTool[];
     }
   });
 
@@ -103,8 +94,10 @@ const ToolsTab: React.FC<ToolsTabProps> = ({ solutionId, onComplete }) => {
               <div className="space-y-4">
                 <div className="flex items-start justify-between">
                   <div className="space-y-2">
-                    <h3 className="font-semibold text-lg">{tool.name}</h3>
-                    <Badge variant="secondary">{tool.category}</Badge>
+                    <h3 className="font-semibold text-lg">{tool.tool_name}</h3>
+                    {tool.is_required && (
+                      <Badge variant="destructive">Obrigatório</Badge>
+                    )}
                   </div>
                   {isViewed && (
                     <Badge className="bg-primary/20 text-primary">
@@ -113,35 +106,26 @@ const ToolsTab: React.FC<ToolsTabProps> = ({ solutionId, onComplete }) => {
                   )}
                 </div>
 
-                <p className="text-muted-foreground text-sm line-clamp-3">
-                  {tool.description}
+                <p className="text-muted-foreground text-sm">
+                  Ferramenta necessária para implementar esta solução
                 </p>
 
                 <div className="flex gap-2">
-                  <Button
-                    asChild
-                    variant="outline"
-                    size="sm"
-                    className="flex-1"
-                    onClick={() => handleToolView(tool.id)}
-                  >
-                    <Link to={`/tools/${tool.id}`}>
-                      Ver Ferramenta
-                    </Link>
-                  </Button>
-                  
-                  {tool.website_url && (
+                  {tool.tool_url && (
                     <Button
                       asChild
-                      variant="ghost"
+                      variant="outline"
                       size="sm"
+                      className="flex-1"
+                      onClick={() => handleToolView(tool.id)}
                     >
                       <a 
-                        href={tool.website_url} 
+                        href={tool.tool_url} 
                         target="_blank" 
                         rel="noopener noreferrer"
                       >
-                        <ExternalLink className="w-4 h-4" />
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        Acessar Ferramenta
                       </a>
                     </Button>
                   )}
