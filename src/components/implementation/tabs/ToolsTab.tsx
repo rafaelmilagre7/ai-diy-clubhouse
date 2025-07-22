@@ -3,9 +3,10 @@ import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Wrench } from "lucide-react";
+import { Wrench, CheckCircle } from "lucide-react";
 import { ToolItem } from "@/components/implementation/content/tools/ToolItem";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface ToolsTabProps {
   solutionId: string;
@@ -25,6 +26,7 @@ interface ToolWithDetails {
 
 const ToolsTab: React.FC<ToolsTabProps> = ({ solutionId, onComplete }) => {
   const [viewedTools, setViewedTools] = useState<string[]>([]);
+  const [isAware, setIsAware] = useState(false);
 
   const { data: tools, isLoading, error } = useQuery({
     queryKey: ['solution-tools', solutionId],
@@ -78,6 +80,12 @@ const ToolsTab: React.FC<ToolsTabProps> = ({ solutionId, onComplete }) => {
     if (!viewedTools.includes(toolId)) {
       setViewedTools(prev => [...prev, toolId]);
     }
+  };
+
+  const handleMarkAsAware = () => {
+    setIsAware(true);
+    toast.success("Ótimo! Você está ciente das ferramentas necessárias.");
+    onComplete();
   };
 
   useEffect(() => {
@@ -163,6 +171,33 @@ const ToolsTab: React.FC<ToolsTabProps> = ({ solutionId, onComplete }) => {
             </div>
           );
         })}
+      </div>
+
+      {/* Botão para marcar como ciente das ferramentas */}
+      <div className="text-center mt-8 p-6 bg-gradient-to-br from-primary/5 via-secondary/5 to-transparent backdrop-blur-sm rounded-2xl border-0">
+        <div className="max-w-md mx-auto space-y-4">
+          <div className="flex items-center justify-center gap-2 mb-3">
+            <CheckCircle className="w-5 h-5 text-primary" />
+            <h3 className="text-lg font-semibold">Pronto para continuar?</h3>
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">
+            Após revisar as ferramentas acima, confirme que você está ciente dos recursos necessários para implementar esta solução.
+          </p>
+          <Button 
+            onClick={handleMarkAsAware}
+            disabled={isAware}
+            className="bg-primary/90 hover:bg-primary px-8"
+          >
+            {isAware ? (
+              <>
+                <CheckCircle className="w-4 h-4 mr-2" />
+                Concluído
+              </>
+            ) : (
+              "Estou ciente das ferramentas"
+            )}
+          </Button>
+        </div>
       </div>
 
     </div>
