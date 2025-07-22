@@ -3042,6 +3042,7 @@ export type Database = {
           completed_at: string | null
           completed_modules: number[] | null
           completion_data: Json | null
+          completion_percentage: number | null
           created_at: string | null
           current_module: number | null
           id: string
@@ -3055,6 +3056,7 @@ export type Database = {
           completed_at?: string | null
           completed_modules?: number[] | null
           completion_data?: Json | null
+          completion_percentage?: number | null
           created_at?: string | null
           current_module?: number | null
           id?: string
@@ -3068,6 +3070,7 @@ export type Database = {
           completed_at?: string | null
           completed_modules?: number[] | null
           completion_data?: Json | null
+          completion_percentage?: number | null
           created_at?: string | null
           current_module?: number | null
           id?: string
