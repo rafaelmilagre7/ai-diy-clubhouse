@@ -24,13 +24,14 @@ export const CommentItem = ({ comment, onReply, onLike, onDelete }: CommentItemP
   
   // Log para diagnóstico
   React.useEffect(() => {
-    log('Renderizando item de comentário:', { 
+    console.log('🔍 [CommentItem] Renderizando comentário:', { 
       commentId: comment.id, 
       hasProfile: !!comment.profiles,
-      profileData: comment.profiles || 'Perfil não disponível',
+      profileData: comment.profiles,
       userId: comment.user_id,
       currentUser: user?.id,
-      isAuthor
+      isAuthor,
+      avatarUrl: comment.profiles?.avatar_url
     });
   }, [comment, user?.id, isAuthor, log]);
   
@@ -124,6 +125,18 @@ export const CommentItem = ({ comment, onReply, onLike, onDelete }: CommentItemP
                 <MessageSquare className="h-3.5 w-3.5 mr-1" />
                 Responder
               </Button>
+              
+              {isAuthor && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => onDelete(comment)}
+                  className="text-xs text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                >
+                  <Trash className="h-3.5 w-3.5 mr-1" />
+                  Excluir
+                </Button>
+              )}
             </div>
             
             {comment.replies && comment.replies.length > 0 && (
