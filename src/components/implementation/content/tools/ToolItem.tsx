@@ -105,7 +105,7 @@ export const ToolItem = ({
             variant="outline"
             className="w-full bg-transparent border-viverblue/20 text-viverblue hover:bg-viverblue/10 hover:text-viverblue"
           >
-            <Link to={`/tools/${toolId}`}>
+            <Link to={`/tools/${toolId}`} target="_blank" rel="noopener noreferrer">
               <ArrowRight className="mr-2 h-4 w-4" />
               Ver ferramenta
             </Link>

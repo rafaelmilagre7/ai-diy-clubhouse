@@ -83,22 +83,6 @@ const ImplementationTabsContainer: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Progress Bar */}
-      <Card className="p-4 bg-gradient-to-r from-background/50 to-background/30 backdrop-blur-sm border-primary/20">
-        <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <h3 className="font-semibold text-foreground">Progresso da Implementação</h3>
-            <span className="text-sm text-muted-foreground">{Math.round(progress)}%</span>
-          </div>
-          <div className="w-full bg-muted rounded-full h-2">
-            <div 
-              className="bg-gradient-to-r from-primary to-primary-glow h-2 rounded-full transition-all duration-500 ease-out"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-        </div>
-      </Card>
-
       {/* Tabs Navigation */}
       <TabsNavigation 
         tabs={IMPLEMENTATION_TABS}

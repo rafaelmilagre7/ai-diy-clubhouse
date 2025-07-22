@@ -29,7 +29,7 @@ const TabsNavigation: React.FC<TabsNavigationProps> = ({
         {tabs.map((tab, index) => {
           const isActive = activeTab === tab.id;
           const isCompleted = completedTabs.includes(tab.id);
-          const isAccessible = index === 0 || completedTabs.includes(tabs[index - 1].id);
+          const isAccessible = true; // Permitir navegação livre entre guias
           
           return (
             <Button

@@ -165,19 +165,6 @@ const ToolsTab: React.FC<ToolsTabProps> = ({ solutionId, onComplete }) => {
         })}
       </div>
 
-      {tools.length > 0 && (
-        <div className="text-center">
-          <p className="text-sm text-muted-foreground mb-4">
-            Progresso: {viewedTools.length} de {tools.length} ferramentas visualizadas
-          </p>
-          <div className="w-full bg-muted rounded-full h-2 mb-4">
-            <div 
-              className="bg-gradient-to-r from-primary to-primary-glow h-2 rounded-full transition-all duration-500"
-              style={{ width: `${(viewedTools.length / tools.length) * 100}%` }}
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 };
