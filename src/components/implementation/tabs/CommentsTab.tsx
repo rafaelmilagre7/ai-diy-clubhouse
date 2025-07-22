@@ -228,37 +228,45 @@ const CommentsTab: React.FC<CommentsTabProps> = ({ solutionId, onComplete }) => 
   }, [onComplete]);
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-8 animate-fade-in">
       <div className="text-center">
-        <h2 className="text-2xl font-bold mb-2">Avalie e Discuta</h2>
-        <p className="text-muted-foreground">
+        <h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-primary to-operational bg-clip-text text-transparent">
+          Avalie e Discuta
+        </h2>
+        <p className="text-muted-foreground text-lg">
           Compartilhe sua experiência e interaja com outros usuários
         </p>
       </div>
 
       {/* Rating Section */}
-      <Card className="p-6">
-        <div className="flex items-center gap-3 mb-6">
-          <Star className="w-6 h-6 text-primary" />
-          <h3 className="text-lg font-semibold">Avalie esta solução</h3>
+      <div className="aurora-card p-8">
+        <div className="flex items-center gap-3 mb-8">
+          <div className="p-2 rounded-lg bg-gradient-to-br from-primary/20 to-operational/20">
+            <Star className="w-6 h-6 text-primary" />
+          </div>
+          <h3 className="text-xl font-semibold">Avalie esta solução</h3>
         </div>
 
         {/* Current stats */}
         {ratings && ratings.length > 0 && (
-          <div className="mb-6 p-4 bg-muted/50 rounded-lg">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-              <div>
-                <div className="text-2xl font-bold text-primary">{averageRating}</div>
+          <div className="mb-8 p-6 aurora-glass rounded-xl">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+              <div className="space-y-2">
+                <div className="text-3xl font-bold bg-gradient-to-r from-primary to-aurora bg-clip-text text-transparent">
+                  {averageRating}
+                </div>
                 <div className="text-sm text-muted-foreground">Nota Média</div>
               </div>
-              <div>
-                <div className="text-2xl font-bold text-primary">{ratings.length}</div>
+              <div className="space-y-2">
+                <div className="text-3xl font-bold bg-gradient-to-r from-revenue to-revenue-light bg-clip-text text-transparent">
+                  {ratings.length}
+                </div>
                 <div className="text-sm text-muted-foreground">Avaliações</div>
               </div>
-              <div>
+              <div className="space-y-2">
                 <div className={cn(
-                  "text-2xl font-bold",
-                  npsScore >= 50 ? "text-green-600" : npsScore >= 0 ? "text-yellow-600" : "text-red-600"
+                  "text-3xl font-bold",
+                  npsScore >= 50 ? "text-revenue" : npsScore >= 0 ? "text-strategy" : "text-destructive"
                 )}>
                   {npsScore > 0 ? '+' : ''}{npsScore}
                 </div>
@@ -270,9 +278,9 @@ const CommentsTab: React.FC<CommentsTabProps> = ({ solutionId, onComplete }) => 
 
         {/* User rating form */}
         {!userRating ? (
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div>
-              <p className="text-sm font-medium mb-3">De 0 a 10, o quanto você recomendaria esta solução?</p>
+              <p className="text-sm font-medium mb-4">De 0 a 10, o quanto você recomendaria esta solução?</p>
               <div className="flex gap-2 flex-wrap">
                 {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((score) => (
                   <Button
@@ -280,7 +288,12 @@ const CommentsTab: React.FC<CommentsTabProps> = ({ solutionId, onComplete }) => 
                     variant={selectedRating === score ? "default" : "outline"}
                     size="sm"
                     onClick={() => setSelectedRating(score)}
-                    className="w-10 h-10"
+                    className={cn(
+                      "w-12 h-12 rounded-lg transition-all duration-200",
+                      selectedRating === score 
+                        ? "aurora-button text-white shadow-lg shadow-primary/30" 
+                        : "aurora-glass hover:bg-primary/10"
+                    )}
                   >
                     {score}
                   </Button>
@@ -292,56 +305,61 @@ const CommentsTab: React.FC<CommentsTabProps> = ({ solutionId, onComplete }) => 
               placeholder="Conte-nos mais sobre sua experiência (opcional)..."
               value={ratingFeedback}
               onChange={(e) => setRatingFeedback(e.target.value)}
-              className="min-h-[80px]"
+              className="min-h-[100px] aurora-input resize-none"
             />
             
             <Button
               onClick={handleSubmitRating}
               disabled={selectedRating === null || addRatingMutation.isPending}
-              className="w-full"
+              className="w-full aurora-button h-12 text-white font-medium"
             >
-              <Star className="w-4 h-4 mr-2" />
+              <Star className="w-5 h-5 mr-2" />
               {addRatingMutation.isPending ? 'Enviando...' : 'Enviar Avaliação'}
             </Button>
           </div>
         ) : (
-          <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-            <div className="flex items-center gap-2 mb-2">
-              <Star className="w-5 h-5 text-green-600" />
-              <span className="font-medium text-green-800">
+          <div className="p-6 bg-gradient-to-r from-revenue/10 to-revenue/5 rounded-xl ring-1 ring-revenue/20">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="p-2 rounded-lg bg-revenue/20">
+                <Star className="w-5 h-5 text-revenue" />
+              </div>
+              <span className="font-medium text-revenue">
                 Você avaliou esta solução com nota {userRating.rating}
               </span>
             </div>
             {userRating.feedback && (
-              <p className="text-sm text-green-700 mt-2">"{userRating.feedback}"</p>
+              <p className="text-sm text-muted-foreground mt-3 italic">"{userRating.feedback}"</p>
             )}
           </div>
         )}
-      </Card>
+      </div>
 
-      <Separator />
+      <div className="aurora-separator h-px my-8" />
 
       {/* Comments Section */}
-      <Card className="p-6">
-        <div className="flex items-center gap-3 mb-6">
-          <MessageSquare className="w-6 h-6 text-primary" />
-          <h3 className="text-lg font-semibold">Discussão da Comunidade</h3>
+      <div className="aurora-card p-8">
+        <div className="flex items-center gap-3 mb-8">
+          <div className="p-2 rounded-lg bg-gradient-to-br from-operational/20 to-primary/20">
+            <MessageSquare className="w-6 h-6 text-operational" />
+          </div>
+          <h3 className="text-xl font-semibold">Discussão da Comunidade</h3>
         </div>
 
         {/* Comment Form */}
-        <div className="space-y-4 mb-6">
+        <div className="space-y-6 mb-8">
           <Textarea
             placeholder="Compartilhe sua experiência, dúvidas ou dicas sobre esta solução..."
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
-            className="min-h-[100px]"
+            className="min-h-[120px] aurora-input resize-none text-base"
           />
           <div className="flex justify-end">
             <Button
               onClick={handleSubmitComment}
               disabled={!newComment.trim() || addCommentMutation.isPending}
+              className="aurora-button px-8 h-12 text-white font-medium"
             >
-              <Send className="w-4 h-4 mr-2" />
+              <Send className="w-5 h-5 mr-2" />
               {addCommentMutation.isPending ? 'Enviando...' : 'Comentar'}
             </Button>
           </div>
@@ -350,56 +368,70 @@ const CommentsTab: React.FC<CommentsTabProps> = ({ solutionId, onComplete }) => 
         {/* Comments List */}
         <div className="space-y-6">
           {commentsLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+            <div className="flex items-center justify-center py-12">
+              <div className="relative">
+                <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+              </div>
             </div>
           ) : comments && comments.length > 0 ? (
             comments.map((comment) => (
               <div key={comment.id} className="space-y-4">
                 {/* Main Comment */}
-                <Card className="p-4">
-                  <div className="space-y-3">
+                <div className="aurora-glass p-6 rounded-xl">
+                  <div className="space-y-4">
                     <div className="flex justify-between items-start">
-                      <div>
-                        <h4 className="font-medium">{comment.profiles?.name || 'Usuário'}</h4>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(comment.created_at).toLocaleDateString('pt-BR', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </p>
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-operational flex items-center justify-center text-white font-medium">
+                          {(comment.profiles?.name || 'U')[0].toUpperCase()}
+                        </div>
+                        <div>
+                          <h4 className="font-medium text-foreground">{comment.profiles?.name || 'Usuário'}</h4>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(comment.created_at).toLocaleDateString('pt-BR', {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
+                        </div>
                       </div>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
+                        className="text-muted-foreground hover:text-primary transition-colors"
                       >
                         <Reply className="w-4 h-4 mr-1" />
                         Responder
                       </Button>
                     </div>
-                    <p className="text-sm">{comment.content}</p>
+                    <p className="text-foreground leading-relaxed">{comment.content}</p>
                     
                     {/* Reply Form */}
                     {replyingTo === comment.id && (
-                      <div className="space-y-2 pt-3 border-t">
+                      <div className="space-y-3 pt-4 border-t border-white/10">
                         <Textarea
                           placeholder="Escreva sua resposta..."
                           value={replyContent}
                           onChange={(e) => setReplyContent(e.target.value)}
-                          className="min-h-[80px]"
+                          className="min-h-[100px] aurora-input resize-none"
                         />
-                        <div className="flex gap-2 justify-end">
-                          <Button variant="outline" size="sm" onClick={() => setReplyingTo(null)}>
+                        <div className="flex gap-3 justify-end">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => setReplyingTo(null)}
+                            className="text-muted-foreground hover:text-foreground"
+                          >
                             Cancelar
                           </Button>
                           <Button
                             size="sm"
                             onClick={() => handleSubmitReply(comment.id)}
                             disabled={!replyContent.trim() || addCommentMutation.isPending}
+                            className="aurora-button text-white px-6"
                           >
                             <Send className="w-3 h-3 mr-1" />
                             Responder
@@ -408,17 +440,20 @@ const CommentsTab: React.FC<CommentsTabProps> = ({ solutionId, onComplete }) => 
                       </div>
                     )}
                   </div>
-                </Card>
+                </div>
 
                 {/* Replies */}
                 {comment.replies && comment.replies.length > 0 && (
-                  <div className="ml-8 space-y-3">
+                  <div className="ml-8 space-y-4">
                     {comment.replies.map((reply) => (
-                      <Card key={reply.id} className="p-3 bg-muted/30">
-                        <div className="space-y-2">
-                          <div className="flex justify-between items-start">
+                      <div key={reply.id} className="aurora-glass p-4 rounded-lg">
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-operational to-strategy flex items-center justify-center text-white text-sm font-medium">
+                              {(reply.profiles?.name || 'U')[0].toUpperCase()}
+                            </div>
                             <div>
-                              <h5 className="text-sm font-medium">{reply.profiles?.name || 'Usuário'}</h5>
+                              <h5 className="text-sm font-medium text-foreground">{reply.profiles?.name || 'Usuário'}</h5>
                               <p className="text-xs text-muted-foreground">
                                 {new Date(reply.created_at).toLocaleDateString('pt-BR', {
                                   day: '2-digit',
@@ -430,27 +465,33 @@ const CommentsTab: React.FC<CommentsTabProps> = ({ solutionId, onComplete }) => 
                               </p>
                             </div>
                           </div>
-                          <p className="text-sm">{reply.content}</p>
+                          <p className="text-sm text-foreground leading-relaxed">{reply.content}</p>
                         </div>
-                      </Card>
+                      </div>
                     ))}
                   </div>
                 )}
               </div>
             ))
           ) : (
-            <div className="text-center py-8">
-              <MessageSquare className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">
+            <div className="text-center py-12">
+              <div className="p-4 rounded-full bg-gradient-to-br from-primary/10 to-operational/10 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                <MessageSquare className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <p className="text-muted-foreground text-lg">
                 Seja o primeiro a comentar sobre esta solução!
               </p>
             </div>
           )}
         </div>
-      </Card>
+      </div>
 
-      <div className="text-center">
-        <Button onClick={onComplete} variant="outline">
+      <div className="text-center pt-6">
+        <Button 
+          onClick={onComplete} 
+          variant="outline"
+          className="aurora-glass px-8 h-12 hover:bg-primary/10 transition-all duration-200"
+        >
           Continuar para próxima etapa
         </Button>
       </div>
