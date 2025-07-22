@@ -86,7 +86,7 @@ const VideoTab: React.FC<VideoTabProps> = ({ solutionId, onComplete }) => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <div className="text-center">
         <h2 className="text-2xl font-bold mb-2">Vídeos da Solução</h2>
         <p className="text-muted-foreground">
@@ -94,21 +94,16 @@ const VideoTab: React.FC<VideoTabProps> = ({ solutionId, onComplete }) => {
         </p>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-6">
         {videoLessons.map((video, index) => (
-          <Card key={video.id} className="overflow-hidden">
-            <div className="p-4">
-              <h3 className="text-lg font-semibold mb-2">{video.title}</h3>
-              {video.description && (
-                <p className="text-muted-foreground mb-4">{video.description}</p>
-              )}
-            </div>
-            
-            <div className="aspect-video">
+          <div key={video.id} className="w-full">
+            {/* Video Player Only */}
+            <div className="aspect-video rounded-lg overflow-hidden shadow-lg border bg-black/5">
               <PandaVideoPlayer
                 videoId={video.video_id || video.video_url}
                 url={video.video_url}
                 title={video.title}
+                className="w-full h-full"
                 onProgress={handleVideoProgress}
                 onEnded={() => {
                   if (index === videoLessons.length - 1) {
@@ -117,9 +112,23 @@ const VideoTab: React.FC<VideoTabProps> = ({ solutionId, onComplete }) => {
                 }}
               />
             </div>
-          </Card>
+          </div>
         ))}
       </div>
+      
+      {/* Progress Indicator for Multiple Videos */}
+      {videoLessons.length > 1 && (
+        <div className="flex justify-center mt-6">
+          <div className="flex gap-2">
+            {videoLessons.map((_, index) => (
+              <div
+                key={index}
+                className="w-2 h-2 rounded-full bg-muted transition-colors"
+              />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
