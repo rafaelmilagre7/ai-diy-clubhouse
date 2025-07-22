@@ -10,6 +10,7 @@ import confetti from "canvas-confetti";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { downloadCertificate, openCertificateInNewTab, CertificateData } from "@/utils/certificateGenerator";
+import { saveCertificateToStorage, downloadCertificateFromStorage, openCertificateFromStorage, StoredCertificate } from "@/utils/certificateStorage";
 import { useSolutionData } from "@/hooks/useSolutionData";
 import { CertificateViewer } from "@/components/certificates/CertificateViewer";
 
@@ -33,6 +34,7 @@ const CompletionTab: React.FC<CompletionTabProps> = ({
   const [showCelebration, setShowCelebration] = useState(false);
   const [showCertificate, setShowCertificate] = useState(false);
   const [certificateData, setCertificateData] = useState<CertificateData | null>(null);
+  const [storedCertificate, setStoredCertificate] = useState<StoredCertificate | null>(null);
 
   const completeSolutionMutation = useMutation({
     mutationFn: async () => {
@@ -55,17 +57,20 @@ const CompletionTab: React.FC<CompletionTabProps> = ({
       if (progressError) throw progressError;
 
       // Create certificate
-      const { data: certificateData, error: certificateError } = await supabase
+      const { data: certificateRecord, error: certificateError } = await supabase
         .from('solution_certificates')
         .insert({
           user_id: user.id,
           solution_id: solutionId,
-          issued_at: new Date().toISOString()
-        });
+          validation_code: `VIA-${Date.now()}`,
+          implementation_data: {}
+        })
+        .select()
+        .single();
 
       if (certificateError) throw certificateError;
 
-      return { progressData, certificateData };
+      return { progressData, certificateRecord };
     },
     onSuccess: async (data) => {
       setShowCelebration(true);
@@ -98,15 +103,33 @@ const CompletionTab: React.FC<CompletionTabProps> = ({
       onComplete();
       
       // Generate certificate data
-      if (user && solution) {
+      if (user && solution && data.certificateRecord) {
         const newCertificateData: CertificateData = {
           userName: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuário',
           solutionTitle: solution.title || 'Solução VIA',
           completedDate: new Date().toLocaleDateString('pt-BR'),
-          certificateId: `VIA-${Date.now()}`
+          certificateId: data.certificateRecord.validation_code
         };
         
         setCertificateData(newCertificateData);
+        
+        // Salvar certificado no storage
+        try {
+          const stored = await saveCertificateToStorage(newCertificateData, user.id);
+          setStoredCertificate(stored);
+          
+          // Atualizar registro no banco com URLs do PDF
+          await supabase
+            .from('solution_certificates')
+            .update({
+              certificate_pdf_url: stored.pdfUrl,
+              certificate_pdf_path: stored.filePath
+            })
+            .eq('id', data.certificateRecord.id);
+        } catch (storageError) {
+          console.error('Erro ao salvar no storage:', storageError);
+          // Continuar mesmo se o storage falhar
+        }
         
         // Show certificate after celebration
         setTimeout(() => {
@@ -201,7 +224,14 @@ const CompletionTab: React.FC<CompletionTabProps> = ({
               certificateId={certificateData.certificateId}
               onDownload={async () => {
                 try {
-                  await downloadCertificate(certificateData);
+                  if (storedCertificate) {
+                    await downloadCertificateFromStorage(
+                      storedCertificate.pdfUrl, 
+                      `certificado-${certificateData.solutionTitle.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`
+                    );
+                  } else {
+                    await downloadCertificate(certificateData);
+                  }
                   toast.success('🏆 Certificado baixado com sucesso!');
                 } catch (error) {
                   console.error('Erro ao baixar certificado:', error);
@@ -210,7 +240,11 @@ const CompletionTab: React.FC<CompletionTabProps> = ({
               }}
               onOpenInNewTab={async () => {
                 try {
-                  await openCertificateInNewTab(certificateData);
+                  if (storedCertificate) {
+                    openCertificateFromStorage(storedCertificate.pdfUrl);
+                  } else {
+                    await openCertificateInNewTab(certificateData);
+                  }
                   toast.success('🏆 Certificado aberto em nova guia!');
                 } catch (error) {
                   console.error('Erro ao abrir certificado:', error);
