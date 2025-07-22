@@ -11,6 +11,7 @@ export const useRealAdminDashboardData = (timeRange: string) => {
     
     try {
       // Forçar atualização sequencial para garantir sincronização
+      console.log('📊 [DASHBOARD] Iniciando refetch dos dados...');
       await refetchStats?.();
       await refetchActivity?.();
       
@@ -32,7 +33,11 @@ export const useRealAdminDashboardData = (timeRange: string) => {
       timeRange,
       lastUpdate: new Date().toISOString(),
       statsTimeRange: statsData?.timeRange,
-      activityTimeRange: activityData?.timeRange
+      activityTimeRange: activityData?.timeRange,
+      statsLoading,
+      activityLoading,
+      statsDataKeys: statsData ? Object.keys(statsData) : [],
+      activityDataKeys: activityData ? Object.keys(activityData) : []
     }
   };
 };

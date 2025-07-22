@@ -126,7 +126,8 @@ export const useRealSystemActivity = (timeRange: string) => {
         };
       }
     },
-    staleTime: 2 * 60 * 1000, // 2 minutos
-    refetchInterval: 5 * 60 * 1000, // Atualizar a cada 5 minutos
+    staleTime: 0, // Dados sempre frescos
+    refetchInterval: false, // Não atualizar automaticamente
+    refetchOnWindowFocus: false, // Não refetch no foco
   });
 };

@@ -250,8 +250,17 @@ export const useRealAdminStats = (timeRange: string) => {
   useEffect(() => {
     console.log(`🔄 [STATS] TimeRange mudou para: ${timeRange}`);
     // Forçar atualização dos dados quando o período mudar
-    setStatsData(prev => ({ ...prev, timeRange, lastUpdated: new Date().toISOString() }));
-    refetch();
+    setStatsData(prev => ({ 
+      ...prev, 
+      timeRange, 
+      lastUpdated: new Date().toISOString() 
+    }));
+    // Chamar refetch com um pequeno delay para garantir que seja executado
+    const timeoutId = setTimeout(() => {
+      refetch();
+    }, 100);
+    
+    return () => clearTimeout(timeoutId);
   }, [timeRange]);
 
   return { statsData, loading, refetch };
