@@ -5,8 +5,8 @@ import { useSolutionData } from "@/hooks/useSolutionData";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { PageTransition } from "@/components/transitions/PageTransition";
 import ImplementationTabsContainer from "@/components/implementation/tabs/ImplementationTabsContainer";
-import SolutionBackButton from "@/components/solution/SolutionBackButton";
-import SolutionHeaderSection from "@/components/solution/SolutionHeaderSection";
+import { SolutionBackButton } from "@/components/solution/SolutionBackButton";
+import { SolutionHeaderSection } from "@/components/solution/SolutionHeaderSection";
 
 const SolutionImplementation = () => {
   const { id } = useParams<{ id: string }>();
