@@ -52,6 +52,11 @@ const ImplementationTabsContainer: React.FC = () => {
   const handleTabComplete = async (tabId: string, progressData?: any) => {
     // Marcar aba como completa no banco de dados
     await markTabComplete(tabId, progressData);
+  };
+
+  const handleTabCompleteAndNavigate = async (tabId: string, progressData?: any) => {
+    // Marcar aba como completa no banco de dados
+    await markTabComplete(tabId, progressData);
     
     // Navegar automaticamente para a próxima guia se não for a conclusão
     if (tabId !== 'completion') {
