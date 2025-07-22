@@ -99,8 +99,9 @@ const CompletionTab: React.FC<CompletionTabProps> = ({
       
       // Show summary after celebration
       setTimeout(() => {
+        setShowCelebration(false);
         setShowSummary(true);
-      }, 2000);
+      }, 3000);
       
       // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: ['user-progress'] });
@@ -136,8 +137,9 @@ const CompletionTab: React.FC<CompletionTabProps> = ({
       }, 250);
 
       setTimeout(() => {
+        setShowCelebration(false);
         setShowSummary(true);
-      }, 2000);
+      }, 3000);
       
       onComplete();
     }
@@ -156,12 +158,15 @@ const CompletionTab: React.FC<CompletionTabProps> = ({
   return (
     <div className="space-y-8 animate-fade-in relative">
       {/* Celebration overlay */}
-      {showCelebration && !showSummary && (
+      {showCelebration && (
         <div className="fixed inset-0 z-50 flex items-center justify-center aurora-glass">
           <div className="text-center p-8 aurora-glass-hover rounded-3xl text-foreground animate-scale-in aurora-glow">
             <Trophy className="w-16 h-16 mx-auto mb-4 animate-pulse aurora-text-gradient" />
             <h2 className="text-3xl font-bold mb-2 aurora-text-gradient">🎉 Parabéns!</h2>
             <p className="text-lg text-muted-foreground">Processando sua conclusão...</p>
+            <div className="mt-4">
+              <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
+            </div>
           </div>
         </div>
       )}
@@ -219,7 +224,10 @@ const CompletionTab: React.FC<CompletionTabProps> = ({
                 </div>
 
                 <Button
-                  onClick={() => setShowSummary(false)}
+                  onClick={() => {
+                    setShowSummary(false);
+                    setShowCelebration(false);
+                  }}
                   className="aurora-gradient text-white hover:opacity-90"
                 >
                   Continuar explorando
