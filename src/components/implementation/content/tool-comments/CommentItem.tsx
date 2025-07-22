@@ -31,9 +31,10 @@ export const CommentItem = ({ comment, onReply, onLike, onDelete }: CommentItemP
       userId: comment.user_id,
       currentUser: user?.id,
       isAuthor,
-      avatarUrl: comment.profiles?.avatar_url
+      avatarUrl: comment.profiles?.avatar_url,
+      fullComment: comment
     });
-  }, [comment, user?.id, isAuthor, log]);
+  }, [comment, user?.id, isAuthor]);
   
   const formatDate = (dateString: string) => {
     try {

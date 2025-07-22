@@ -15,10 +15,18 @@ export const useFetchModuleComments = (solutionId: string, moduleId: string) => 
       try {
         log('Buscando comentários da solução', { solutionId, moduleId });
         
-        // Buscar comentários principais de forma direta (sem join automático)
+        // Buscar comentários principais com dados dos perfis em uma única consulta
         const { data: parentComments, error: parentError } = await supabase
           .from('solution_comments')
-          .select('*')
+          .select(`
+            *,
+            profiles:user_id (
+              id,
+              name,
+              avatar_url,
+              role
+            )
+          `)
           .eq('solution_id', solutionId)
           .is('parent_id', null)
           .order('created_at', { ascending: false });
@@ -28,27 +36,18 @@ export const useFetchModuleComments = (solutionId: string, moduleId: string) => 
           throw parentError;
         }
 
-        // Buscar perfis dos usuários que fizeram os comentários
-        const userIds = [...new Set(parentComments.map((c: any) => c.user_id))];
-        const { data: userProfiles, error: profilesError } = await supabase
-          .from('profiles')
-          .select('id, name, avatar_url, role')
-          .in('id', userIds);
-          
-        if (profilesError) {
-          logError('Erro ao buscar perfis dos usuários', profilesError);
-        }
-        
-        // Mapear perfis por ID para fácil acesso
-        const profilesMap = (userProfiles || []).reduce((acc: Record<string, any>, profile: any) => {
-          acc[profile.id] = profile;
-          return acc;
-        }, {});
-
-        // Buscar respostas (replies)
+        // Buscar respostas (replies) com perfis
         const { data: replies, error: repliesError } = await supabase
           .from('solution_comments')
-          .select('*')
+          .select(`
+            *,
+            profiles:user_id (
+              id,
+              name,
+              avatar_url,
+              role
+            )
+          `)
           .eq('solution_id', solutionId)
           .not('parent_id', 'is', null)
           .order('created_at', { ascending: true });
@@ -57,51 +56,38 @@ export const useFetchModuleComments = (solutionId: string, moduleId: string) => 
           logError('Erro ao buscar respostas', repliesError);
           throw repliesError;
         }
-        
-        // Adicionar IDs de usuários de respostas ao conjunto de IDs
-        const replyUserIds = [...new Set(replies.map((r: any) => r.user_id))];
-        
-        // Buscar perfis adicionais se necessário
-        if (replyUserIds.some(id => !profilesMap[id])) {
-          const missingIds = replyUserIds.filter(id => !profilesMap[id]);
-          
-          const { data: additionalProfiles } = await supabase
-            .from('profiles')
-            .select('id, name, avatar_url, role')
-            .in('id', missingIds);
-            
-          if (additionalProfiles) {
-            additionalProfiles.forEach((profile: any) => {
-              profilesMap[profile.id] = profile;
-            });
-          }
-        }
 
         // Verificar curtidas do usuário atual
         let likesMap: Record<string, boolean> = {};
         
         if (user) {
-          const { data: userLikes } = await supabase
-            .from('solution_comment_likes')
-            .select('comment_id')
-            .eq('user_id', user.id);
+          const allCommentIds = [
+            ...parentComments.map((c: any) => c.id),
+            ...replies.map((r: any) => r.id)
+          ];
 
-          likesMap = (userLikes || []).reduce((acc: Record<string, boolean>, like) => {
-            acc[like.comment_id] = true;
-            return acc;
-          }, {});
+          if (allCommentIds.length > 0) {
+            const { data: userLikes } = await supabase
+              .from('solution_comment_likes')
+              .select('comment_id')
+              .eq('user_id', user.id)
+              .in('comment_id', allCommentIds);
+
+            likesMap = (userLikes || []).reduce((acc: Record<string, boolean>, like) => {
+              acc[like.comment_id] = true;
+              return acc;
+            }, {});
+          }
         }
 
-        // Organizar comentários com respostas e perfis
+        // Organizar comentários com respostas (os perfis já vêm incluídos)
         const organizedComments = parentComments.map((comment: any) => ({
           ...comment,
-          profiles: profilesMap[comment.user_id] || null,
           user_has_liked: !!likesMap[comment.id],
           replies: (replies || [])
             .filter((reply: any) => reply.parent_id === comment.id)
             .map((reply: any) => ({
               ...reply,
-              profiles: profilesMap[reply.user_id] || null,
               user_has_liked: !!likesMap[reply.id]
             }))
         }));
