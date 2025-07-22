@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { supabase, Solution } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth";
@@ -13,106 +13,92 @@ export const useSolutionData = (id: string | undefined) => {
   const [progress, setProgress] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [fetchedIds, setFetchedIds] = useState<Set<string>>(new Set());
+  const fetchedRef = useRef<string | null>(null);
   
   const isAdmin = useMemo(() => profile?.user_roles?.name === 'admin', [profile?.user_roles?.name]);
 
-  const fetchSolution = useCallback(async () => {
-    if (!id || authLoading) {
+  useEffect(() => {
+    if (!id || authLoading || fetchedRef.current === id) {
       if (!id) setLoading(false);
       return;
     }
-    
-    // Verificar se já foi buscado usando uma referência local
-    setFetchedIds(prev => {
-      if (prev.has(id)) {
-        return prev; // Não refazer a busca
-      }
-      
-      // Se não foi buscado ainda, marcar como buscado e continuar
-      const newSet = new Set([...prev, id]);
-      
-      // Executar a busca de forma assíncrona para evitar loop
-      setTimeout(async () => {
-        try {
-          setLoading(true);
+
+    const fetchSolution = async () => {
+      try {
+        setLoading(true);
+        fetchedRef.current = id;
+        
+        let query = supabase
+          .from("solutions")
+          .select("*")
+          .eq("id", id);
           
-          let query = supabase
-            .from("solutions")
-            .select("*")
-            .eq("id", id);
-            
-          // Se não for um admin, só mostra soluções publicadas
-          if (!isAdmin) {
-            query = query.eq("published", true);
-          }
+        // Se não for um admin, só mostra soluções publicadas
+        if (!isAdmin) {
+          query = query.eq("published", true);
+        }
+        
+        const { data, error: fetchError } = await query.maybeSingle();
+        
+        if (fetchError) {
+          console.error("Erro ao buscar solução:", fetchError);
           
-          const { data, error: fetchError } = await query.maybeSingle();
-          
-          if (fetchError) {
-            console.error("Erro ao buscar solução:", fetchError);
-            
-            if (fetchError.code === "PGRST116" && !isAdmin) {
-              toast({
-                title: "Solução não disponível",
-                description: "Esta solução não está disponível no momento.",
-                variant: "destructive"
-              });
-              navigate("/solutions");
-              return;
-            }
-            
-            throw fetchError;
-          }
-          
-          if (data) {
-            setSolution(data as Solution);
-            
-            // Fetch progress if user is authenticated
-            if (user) {
-              try {
-                const { data: progressData, error: progressError } = await supabase
-                  .from("progress")
-                  .select("*")
-                  .eq("solution_id", id)
-                  .eq("user_id", user.id)
-                  .maybeSingle();
-                  
-                if (!progressError && progressData) {
-                  setProgress(progressData);
-                }
-              } catch (progressFetchError) {
-                console.error("Erro ao buscar progresso:", progressFetchError);
-              }
-            }
-          } else {
-            setError("Solução não encontrada");
+          if (fetchError.code === "PGRST116" && !isAdmin) {
             toast({
-              title: "Solução não encontrada",
-              description: "Não foi possível encontrar a solução solicitada.",
+              title: "Solução não disponível",
+              description: "Esta solução não está disponível no momento.",
               variant: "destructive"
             });
+            navigate("/solutions");
+            return;
           }
-        } catch (error: any) {
-          console.error("Erro em useSolutionData:", error);
-          setError(error.message || "Erro ao buscar a solução");
+          
+          throw fetchError;
+        }
+        
+        if (data) {
+          setSolution(data as Solution);
+          
+          // Fetch progress if user is authenticated
+          if (user) {
+            try {
+              const { data: progressData, error: progressError } = await supabase
+                .from("progress")
+                .select("*")
+                .eq("solution_id", id)
+                .eq("user_id", user.id)
+                .maybeSingle();
+                
+              if (!progressError && progressData) {
+                setProgress(progressData);
+              }
+            } catch (progressFetchError) {
+              console.error("Erro ao buscar progresso:", progressFetchError);
+            }
+          }
+        } else {
+          setError("Solução não encontrada");
           toast({
-            title: "Erro ao carregar solução",
-            description: error.message || "Não foi possível carregar os dados da solução.",
+            title: "Solução não encontrada",
+            description: "Não foi possível encontrar a solução solicitada.",
             variant: "destructive"
           });
-        } finally {
-          setLoading(false);
         }
-      }, 0);
-      
-      return newSet;
-    });
-  }, [id, toast, user, navigate, isAdmin, authLoading]);
+      } catch (error: any) {
+        console.error("Erro em useSolutionData:", error);
+        setError(error.message || "Erro ao buscar a solução");
+        toast({
+          title: "Erro ao carregar solução",
+          description: error.message || "Não foi possível carregar os dados da solução.",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  useEffect(() => {
     fetchSolution();
-  }, [fetchSolution]);
+  }, [id, isAdmin, authLoading, user, toast, navigate]);
 
   return {
     solution,
