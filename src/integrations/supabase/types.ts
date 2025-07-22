@@ -1146,6 +1146,36 @@ export type Database = {
         }
         Relationships: []
       }
+      implementation_tab_progress: {
+        Row: {
+          completed_at: string | null
+          id: string
+          progress_data: Json | null
+          solution_id: string
+          tab_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          id?: string
+          progress_data?: Json | null
+          solution_id: string
+          tab_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          id?: string
+          progress_data?: Json | null
+          solution_id?: string
+          tab_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       implementation_trails: {
         Row: {
           created_at: string | null

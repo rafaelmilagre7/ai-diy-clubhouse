@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useSolutionData } from "@/hooks/useSolutionData";
-import { useProgressTracking } from "@/hooks/implementation/useProgressTracking";
+import { useTabProgress } from "@/hooks/implementation/useTabProgress";
 import TabsNavigation from "./TabsNavigation";
 import ToolsTab from "./ToolsTab";
 import ResourcesTab from "./ResourcesTab";
@@ -23,17 +23,17 @@ const IMPLEMENTATION_TABS = [
 const ImplementationTabsContainer: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [activeTab, setActiveTab] = useState('tools');
-  const [completedTabs, setCompletedTabs] = useState<string[]>([]);
   
   const { solution, loading: isLoading, error } = useSolutionData(id);
   const {
-    moduleIdx,
-    isCompleting,
-    handleMarkAsCompleted,
-    calculateProgress
-  } = useProgressTracking(null, completedTabs.map((_, index) => index), () => {}, 6);
+    completedTabs,
+    isLoading: isLoadingProgress,
+    markTabComplete,
+    isTabCompleted,
+    getProgressPercentage
+  } = useTabProgress(id || '');
 
-  if (isLoading) {
+  if (isLoading || isLoadingProgress) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -49,11 +49,12 @@ const ImplementationTabsContainer: React.FC = () => {
     );
   }
 
-  const handleTabComplete = (tabId: string) => {
-    if (!completedTabs.includes(tabId)) {
-      setCompletedTabs(prev => [...prev, tabId]);
-      
-      // Navegar automaticamente para a próxima guia
+  const handleTabComplete = async (tabId: string, progressData?: any) => {
+    // Marcar aba como completa no banco de dados
+    await markTabComplete(tabId, progressData);
+    
+    // Navegar automaticamente para a próxima guia se não for a conclusão
+    if (tabId !== 'completion') {
       const currentIndex = IMPLEMENTATION_TABS.findIndex(tab => tab.id === tabId);
       const nextTab = IMPLEMENTATION_TABS[currentIndex + 1];
       
@@ -63,9 +64,10 @@ const ImplementationTabsContainer: React.FC = () => {
     }
   };
 
-  const progress = completedTabs.includes('completion') 
+  // Calcular progresso baseado nas abas completadas
+  const progress = isTabCompleted('completion') 
     ? 100 
-    : (completedTabs.length / (IMPLEMENTATION_TABS.length - 1)) * 100;
+    : getProgressPercentage(IMPLEMENTATION_TABS.length - 1); // Excluir aba de conclusão do cálculo
 
   const renderTabContent = () => {
     switch (activeTab) {

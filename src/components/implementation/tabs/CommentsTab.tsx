@@ -218,14 +218,13 @@ const CommentsTab: React.FC<CommentsTabProps> = ({ solutionId, onComplete }) => 
     ? Math.round(((ratings.filter(r => r.rating >= 9).length - ratings.filter(r => r.rating <= 6).length) / ratings.length) * 100)
     : 0;
 
-  // Auto-complete this tab after viewing for a few seconds
+  // Marcar como completo quando o usuário interage significativamente
   useEffect(() => {
-    const timer = setTimeout(() => {
+    // Se o usuário avaliou ou comentou, marcar como completo
+    if (userRating || (comments && comments.length > 0 && comments.some(c => c.user_id === user?.id))) {
       onComplete();
-    }, 10000);
-
-    return () => clearTimeout(timer);
-  }, [onComplete]);
+    }
+  }, [userRating, comments, user?.id, onComplete]);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -465,9 +464,17 @@ const CommentsTab: React.FC<CommentsTabProps> = ({ solutionId, onComplete }) => 
       </div>
 
       <div className="text-center">
-        <Button onClick={onComplete} variant="outline">
-          Continuar para próxima etapa
+        <Button 
+          onClick={onComplete}
+          size="lg"
+          className="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg"
+        >
+          Continuar para Próxima Etapa
+          <div className="ml-2 text-white">→</div>
         </Button>
+        <p className="text-sm text-muted-foreground mt-2">
+          Avalie ou comente para prosseguir automaticamente
+        </p>
       </div>
     </div>
   );
