@@ -9,6 +9,8 @@ import { CheckCircle, Sparkles, ArrowRight, Download, Gift } from "lucide-react"
 import confetti from "canvas-confetti";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { downloadCertificate, openCertificateInNewTab, CertificateData } from "@/utils/certificateGenerator";
+import { useSolutionData } from "@/hooks/useSolutionData";
 
 interface CompletionTabProps {
   solutionId: string;
@@ -26,6 +28,8 @@ const CompletionTab: React.FC<CompletionTabProps> = ({
   const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { solution } = useSolutionData(solutionId);
+  const [showCelebration, setShowCelebration] = useState(false);
 
   const completeSolutionMutation = useMutation({
     mutationFn: async () => {
@@ -60,25 +64,57 @@ const CompletionTab: React.FC<CompletionTabProps> = ({
 
       return { progressData, certificateData };
     },
-    onSuccess: () => {
-      // Trigger confetti animation
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 }
-      });
+    onSuccess: async (data) => {
+      setShowCelebration(true);
+      
+      // Enhanced confetti celebration
+      const celebration = () => {
+        confetti({
+          particleCount: 150,
+          spread: 80,
+          origin: { y: 0.6 },
+          colors: ['#3B82F6', '#8B5CF6', '#10B981', '#F59E0B']
+        });
+      };
+      
+      // Multiple confetti bursts
+      celebration();
+      setTimeout(celebration, 200);
+      setTimeout(celebration, 400);
 
-      toast.success('Parabéns! Solução concluída com sucesso!');
+      toast.success('🎉 Parabéns! Solução concluída com sucesso!');
       onComplete();
+      
+      // Generate certificate data
+      if (user && solution) {
+        const certificateData: CertificateData = {
+          userName: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuário',
+          solutionTitle: solution.title || 'Solução VIA',
+          completedDate: new Date().toLocaleDateString('pt-BR'),
+          certificateId: new Date().getTime().toString()
+        };
+        
+        // Show certificate options after celebration
+        setTimeout(async () => {
+          try {
+            await openCertificateInNewTab(certificateData);
+            await downloadCertificate(certificateData);
+            toast.success('🏆 Certificado gerado e baixado!');
+          } catch (error) {
+            console.error('Erro ao gerar certificado:', error);
+            toast.error('Erro ao gerar certificado');
+          }
+        }, 1500);
+      }
       
       // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: ['user-progress'] });
       queryClient.invalidateQueries({ queryKey: ['user-certificates'] });
       
-      // Navigate to completion page after a delay
+      // Navigate to completion page after celebration
       setTimeout(() => {
         navigate(`/implementation/completed/${solutionId}`);
-      }, 2000);
+      }, 3000);
     },
     onError: (error) => {
       toast.error('Erro ao concluir solução');
@@ -97,7 +133,18 @@ const CompletionTab: React.FC<CompletionTabProps> = ({
   };
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-8 animate-fade-in relative">
+      {/* Celebration overlay */}
+      {showCelebration && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
+          <div className="text-center p-8 bg-gradient-to-br from-primary/90 to-secondary/90 rounded-3xl text-white animate-scale-in">
+            <Sparkles className="w-16 h-16 mx-auto mb-4 animate-spin" />
+            <h2 className="text-3xl font-bold mb-2">🎉 Parabéns!</h2>
+            <p className="text-lg">Gerando seu certificado...</p>
+          </div>
+        </div>
+      )}
+      
       {/* Header Hero Section */}
       <div className="relative text-center">
         <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/10 rounded-3xl blur-xl"></div>

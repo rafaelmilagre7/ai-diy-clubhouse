@@ -69,3 +69,19 @@
 .aurora-focus {
   @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aurora/40 focus-visible:ring-offset-2 focus-visible:ring-offset-card;
 }
+
+/* Scale animation for celebration overlay */
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scale-in {
+  animation: scale-in 0.5s ease-out forwards;
+}
