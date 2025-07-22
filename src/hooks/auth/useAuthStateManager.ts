@@ -84,7 +84,7 @@ export const useAuthStateManager = ({
       setIsLoading(false);
       console.log('🏁 [AUTH-STATE] Setup concluído');
     }
-  }, [setSession, setUser, setProfile, setIsLoading]);
+  }, []); // Removido todas as dependências para quebrar o ciclo
 
   return {
     setupAuthSession,

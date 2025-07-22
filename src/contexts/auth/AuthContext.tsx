@@ -51,7 +51,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.error('❌ [AUTH] Erro na inicialização:', error);
       setAuthInitialized(false);
     }
-  }, [authInitialized, setupAuthSession]);
+  }, [authInitialized]); // Removido setupAuthSession da dependência
 
   useEffect(() => {
     initializeAuth();
