@@ -18,83 +18,97 @@ export const useSolutionData = (id: string | undefined) => {
   const isAdmin = useMemo(() => profile?.user_roles?.name === 'admin', [profile?.user_roles?.name]);
 
   const fetchSolution = useCallback(async () => {
-    if (!id || authLoading || fetchedIds.has(id)) {
+    if (!id || authLoading) {
       if (!id) setLoading(false);
       return;
     }
     
-    try {
-      setLoading(true);
-      setFetchedIds(prev => new Set([...prev, id]));
-      
-      let query = supabase
-        .from("solutions")
-        .select("*")
-        .eq("id", id);
-        
-      // Se não for um admin, só mostra soluções publicadas
-      if (!isAdmin) {
-        query = query.eq("published", true);
+    // Verificar se já foi buscado usando uma referência local
+    setFetchedIds(prev => {
+      if (prev.has(id)) {
+        return prev; // Não refazer a busca
       }
       
-      const { data, error: fetchError } = await query.maybeSingle();
+      // Se não foi buscado ainda, marcar como buscado e continuar
+      const newSet = new Set([...prev, id]);
       
-      if (fetchError) {
-        console.error("Erro ao buscar solução:", fetchError);
-        
-        if (fetchError.code === "PGRST116" && !isAdmin) {
+      // Executar a busca de forma assíncrona para evitar loop
+      setTimeout(async () => {
+        try {
+          setLoading(true);
+          
+          let query = supabase
+            .from("solutions")
+            .select("*")
+            .eq("id", id);
+            
+          // Se não for um admin, só mostra soluções publicadas
+          if (!isAdmin) {
+            query = query.eq("published", true);
+          }
+          
+          const { data, error: fetchError } = await query.maybeSingle();
+          
+          if (fetchError) {
+            console.error("Erro ao buscar solução:", fetchError);
+            
+            if (fetchError.code === "PGRST116" && !isAdmin) {
+              toast({
+                title: "Solução não disponível",
+                description: "Esta solução não está disponível no momento.",
+                variant: "destructive"
+              });
+              navigate("/solutions");
+              return;
+            }
+            
+            throw fetchError;
+          }
+          
+          if (data) {
+            setSolution(data as Solution);
+            
+            // Fetch progress if user is authenticated
+            if (user) {
+              try {
+                const { data: progressData, error: progressError } = await supabase
+                  .from("progress")
+                  .select("*")
+                  .eq("solution_id", id)
+                  .eq("user_id", user.id)
+                  .maybeSingle();
+                  
+                if (!progressError && progressData) {
+                  setProgress(progressData);
+                }
+              } catch (progressFetchError) {
+                console.error("Erro ao buscar progresso:", progressFetchError);
+              }
+            }
+          } else {
+            setError("Solução não encontrada");
+            toast({
+              title: "Solução não encontrada",
+              description: "Não foi possível encontrar a solução solicitada.",
+              variant: "destructive"
+            });
+          }
+        } catch (error: any) {
+          console.error("Erro em useSolutionData:", error);
+          setError(error.message || "Erro ao buscar a solução");
           toast({
-            title: "Solução não disponível",
-            description: "Esta solução não está disponível no momento.",
+            title: "Erro ao carregar solução",
+            description: error.message || "Não foi possível carregar os dados da solução.",
             variant: "destructive"
           });
-          navigate("/solutions");
-          return;
+        } finally {
+          setLoading(false);
         }
-        
-        throw fetchError;
-      }
+      }, 0);
       
-      if (data) {
-        setSolution(data as Solution);
-        
-        // Fetch progress if user is authenticated
-        if (user) {
-          try {
-            const { data: progressData, error: progressError } = await supabase
-              .from("progress")
-              .select("*")
-              .eq("solution_id", id)
-              .eq("user_id", user.id)
-              .maybeSingle();
-              
-            if (!progressError && progressData) {
-              setProgress(progressData);
-            }
-          } catch (progressFetchError) {
-            console.error("Erro ao buscar progresso:", progressFetchError);
-          }
-        }
-      } else {
-        setError("Solução não encontrada");
-        toast({
-          title: "Solução não encontrada",
-          description: "Não foi possível encontrar a solução solicitada.",
-          variant: "destructive"
-        });
-      }
-    } catch (error: any) {
-      console.error("Erro em useSolutionData:", error);
-      setError(error.message || "Erro ao buscar a solução");
-      toast({
-        title: "Erro ao carregar solução",
-        description: error.message || "Não foi possível carregar os dados da solução.",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [id, toast, user, navigate, isAdmin, authLoading, fetchedIds]);
+      return newSet;
+    });
+  }, [id, toast, user, navigate, isAdmin, authLoading]);
 
   useEffect(() => {
     fetchSolution();
