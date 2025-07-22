@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -109,13 +109,13 @@ export const useTabProgress = (solutionId: string) => {
     resetTabProgressMutation.mutate(tabId);
   };
 
-  const isTabCompleted = (tabId: string) => {
+  const isTabCompleted = React.useCallback((tabId: string) => {
     return completedTabs.includes(tabId);
-  };
+  }, [completedTabs]);
 
-  const getProgressPercentage = (totalTabs: number) => {
+  const getProgressPercentage = React.useCallback((totalTabs: number) => {
     return totalTabs > 0 ? (completedTabs.length / totalTabs) * 100 : 0;
-  };
+  }, [completedTabs]);
 
   return {
     completedTabs,

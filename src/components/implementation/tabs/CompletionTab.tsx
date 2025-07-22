@@ -9,25 +9,25 @@ import { CheckCircle, Trophy, ArrowRight, Download, Gift, Star, Award } from "lu
 import confetti from "canvas-confetti";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { useSolutionData } from "@/hooks/useSolutionData";
 
 interface CompletionTabProps {
   solutionId: string;
   progress: number;
   completedTabs: string[];
   onComplete: () => void;
+  solutionTitle?: string;
 }
 
 const CompletionTab: React.FC<CompletionTabProps> = ({ 
   solutionId, 
   progress, 
   completedTabs,
-  onComplete 
+  onComplete,
+  solutionTitle = "Solução de IA"
 }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { solution } = useSolutionData(solutionId);
   const [showCelebration, setShowCelebration] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const completionProcessedRef = useRef(false);
@@ -201,7 +201,7 @@ const CompletionTab: React.FC<CompletionTabProps> = ({
                 
                 <div className="mb-6">
                   <h3 className="text-xl font-semibold text-viverblue mb-2">
-                    "{solution?.title}"
+                    "{solutionTitle}"
                   </h3>
                   <p className="text-muted-foreground">
                     Você completou com sucesso {completedTabs.length} de {Object.keys(tabNames).length} etapas

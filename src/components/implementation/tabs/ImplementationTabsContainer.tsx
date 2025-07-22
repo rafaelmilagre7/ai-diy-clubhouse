@@ -49,10 +49,10 @@ const ImplementationTabsContainer: React.FC = () => {
     );
   }
 
-  const handleTabComplete = async (tabId: string, progressData?: any) => {
+  const handleTabComplete = React.useCallback(async (tabId: string, progressData?: any) => {
     // Marcar aba como completa no banco de dados
     await markTabComplete(tabId, progressData);
-  };
+  }, [markTabComplete]);
 
   const handleTabCompleteAndNavigate = async (tabId: string, progressData?: any) => {
     // Marcar aba como completa no banco de dados
@@ -69,12 +69,14 @@ const ImplementationTabsContainer: React.FC = () => {
     }
   };
 
-  // Calcular progresso baseado nas abas completadas
-  const progress = isTabCompleted('completion') 
-    ? 100 
-    : getProgressPercentage(IMPLEMENTATION_TABS.length - 1); // Excluir aba de conclusão do cálculo
+  // Calcular progresso baseado nas abas completadas (memoizado para evitar re-cálculos)
+  const progress = React.useMemo(() => {
+    return isTabCompleted('completion') 
+      ? 100 
+      : getProgressPercentage(IMPLEMENTATION_TABS.length - 1);
+  }, [completedTabs, isTabCompleted, getProgressPercentage]);
 
-  const renderTabContent = () => {
+  const renderTabContent = React.useCallback(() => {
     switch (activeTab) {
       case 'tools':
         return <ToolsTab solutionId={id!} onComplete={() => handleTabComplete('tools')} />;
@@ -91,12 +93,13 @@ const ImplementationTabsContainer: React.FC = () => {
           solutionId={id!} 
           progress={progress} 
           completedTabs={completedTabs}
+          solutionTitle={solution?.title}
           onComplete={() => handleTabComplete('completion')} 
         />;
       default:
         return <ToolsTab solutionId={id!} onComplete={() => handleTabComplete('tools')} />;
     }
-  };
+  }, [activeTab, id, handleTabComplete, progress, completedTabs, solution?.title]);
 
   return (
     <div className="space-y-6">
