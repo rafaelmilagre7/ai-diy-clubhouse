@@ -1,3 +1,4 @@
+// FormacaoAulas - Sistema de gerenciamento de aulas (v2.0 - Sem IA Classification)
 
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
@@ -28,7 +29,6 @@ const FormacaoAulas = () => {
   const [aulas, setAulas] = useState<LearningLesson[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingAulas, setLoadingAulas] = useState(true);
-  
 
   // Detectar se estamos na rota geral ou específica
   const isGeneralView = !id;
