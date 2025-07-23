@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DashboardHeader } from "@/components/admin/dashboard/DashboardHeader";
+import { OnboardingStatusCard } from "@/components/admin/OnboardingStatusCard";
 import { RefreshCw, Users, Activity, CheckCircle, TrendingUp, BarChart3 } from "lucide-react";
 
 const AdminDashboard = () => {
@@ -216,7 +217,10 @@ const AdminDashboard = () => {
         </div>
 
         {/* Estatísticas Detalhadas */}
-        <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
+        <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
+          
+          {/* Card de Status do Onboarding */}
+          <OnboardingStatusCard />
           
           {/* Card de Dados Gerais */}
           <Card>

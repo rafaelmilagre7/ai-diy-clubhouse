@@ -5,6 +5,7 @@ import { useDashboardProgress } from '@/hooks/dashboard/useDashboardProgress';
 import LoadingScreen from '@/components/common/LoadingScreen';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
+import { OnboardingBanner } from '@/components/common/OnboardingBanner';
 import { useNavigate } from 'react-router-dom';
 import { Solution } from '@/lib/supabase';
 import { useState, useCallback, useMemo } from 'react';
@@ -63,15 +64,18 @@ const Dashboard = () => {
 
   return (
     <ErrorBoundary>
-      <DashboardLayout
-        active={memoizedData.active}
-        completed={memoizedData.completed}
-        recommended={memoizedData.recommended}
-        category={memoizedData.category}
-        onCategoryChange={handleCategoryChange}
-        onSolutionClick={handleSolutionClick}
-        isLoading={memoizedData.isLoading}
-      />
+      <div className="space-y-0">
+        <OnboardingBanner />
+        <DashboardLayout
+          active={memoizedData.active}
+          completed={memoizedData.completed}
+          recommended={memoizedData.recommended}
+          category={memoizedData.category}
+          onCategoryChange={handleCategoryChange}
+          onSolutionClick={handleSolutionClick}
+          isLoading={memoizedData.isLoading}
+        />
+      </div>
     </ErrorBoundary>
   );
 };
