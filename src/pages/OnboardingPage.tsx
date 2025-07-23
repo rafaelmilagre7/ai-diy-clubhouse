@@ -89,6 +89,62 @@ const OnboardingPage: React.FC = () => {
   const currentStepConfig = stepConfig[current_step as keyof typeof stepConfig];
   const StepComponent = currentStepConfig.component;
 
+  // Memoizar todas as funções onDataChange ANTES das condicionais
+  const handleStep1DataChange = useCallback((personalData: any) => {
+    console.log('[STEP1] Dados alterados:', personalData);
+    setState(prev => ({
+      ...prev,
+      data: {
+        ...prev.data,
+        personal_info: personalData
+      }
+    }));
+  }, [setState]);
+
+  const handleStep2DataChange = useCallback((businessData: any) => {
+    console.log('Step2 Data Change:', businessData);
+    setState(prev => ({
+      ...prev,
+      data: {
+        ...prev.data,
+        professional_info: businessData
+      }
+    }));
+  }, [setState]);
+
+  const handleStep3DataChange = useCallback((aiData: any) => {
+    console.log('Step3 Data Change:', aiData);
+    setState(prev => ({
+      ...prev,
+      data: {
+        ...prev.data,
+        ai_experience: aiData
+      }
+    }));
+  }, [setState]);
+
+  const handleStep4DataChange = useCallback((goalsData: any) => {
+    console.log('Step4 Data Change:', goalsData);
+    setState(prev => ({
+      ...prev,
+      data: {
+        ...prev.data,
+        goals_info: goalsData
+      }
+    }));
+  }, [setState]);
+
+  const handleStep5DataChange = useCallback((personalizationData: any) => {
+    console.log('Step5 Data Change:', personalizationData);
+    setState(prev => ({
+      ...prev,
+      data: {
+        ...prev.data,
+        personalization: personalizationData
+      }
+    }));
+  }, [setState]);
+
   const handleNext = async () => {
     console.log('[ONBOARDING_PAGE] HandleNext chamado, step atual:', current_step);
     
@@ -191,52 +247,23 @@ const OnboardingPage: React.FC = () => {
       {current_step === 1 && (
         <Step1PersonalInfo
           initialData={data.personal_info}
-          onDataChange={(personalData) => {
-            console.log('[STEP1] Dados alterados:', personalData);
-            // Atualizar estado local sem mutação direta
-            setState(prev => ({
-              ...prev,
-              data: {
-                ...prev.data,
-                personal_info: personalData
-              }
-            }));
-          }}
-          onNext={() => {}} // Não usado - controlado pelo OnboardingLayout
+          onDataChange={handleStep1DataChange}
+          onNext={() => {}}
         />
       )}
 
       {current_step === 2 && (
         <Step2BusinessInfo
           initialData={data.professional_info}
-          onDataChange={(businessData) => {
-            console.log('Step2 Data Change:', businessData);
-            // Atualizar estado local sem mutação direta
-            setState(prev => ({
-              ...prev,
-              data: {
-                ...prev.data,
-                professional_info: businessData as any
-              }
-            }));
-          }}
-          onNext={() => {}} // Não usado - controlado pelo OnboardingLayout
+          onDataChange={handleStep2DataChange}
+          onNext={() => {}}
         />
       )}
 
       {current_step === 3 && (
         <Step3AIExperience
           initialData={data.ai_experience}
-          onDataChange={useCallback((aiData: any) => {
-            console.log('Step3 Data Change:', aiData);
-            setState(prev => ({
-              ...prev,
-              data: {
-                ...prev.data,
-                ai_experience: aiData
-              }
-            }));
-          }, [setState])}
+          onDataChange={handleStep3DataChange}
           onNext={() => {}}
         />
       )}
@@ -244,36 +271,16 @@ const OnboardingPage: React.FC = () => {
       {current_step === 4 && (
         <Step4Goals
           initialData={data.goals_info}
-          onDataChange={(goalsData) => {
-            console.log('Step4 Data Change:', goalsData);
-            // Atualizar estado local sem mutação direta (com cast temporário)
-            setState(prev => ({
-              ...prev,
-              data: {
-                ...prev.data,
-                goals_info: goalsData as any
-              }
-            }));
-          }}
-          onNext={() => {}} // Não usado - controlado pelo OnboardingLayout
+          onDataChange={handleStep4DataChange}
+          onNext={() => {}}
         />
       )}
 
       {current_step === 5 && (
         <Step5Personalization
           initialData={data.personalization}
-          onDataChange={(personalizationData) => {
-            console.log('Step5 Data Change:', personalizationData);
-            // Atualizar estado local sem mutação direta (com cast temporário)
-            setState(prev => ({
-              ...prev,
-              data: {
-                ...prev.data,
-                personalization: personalizationData as any
-              }
-            }));
-          }}
-          onNext={() => {}} // Não usado - controlado pelo OnboardingLayout
+          onDataChange={handleStep5DataChange}
+          onNext={() => {}}
         />
       )}
 
