@@ -53,12 +53,42 @@ Deno.serve(async (req) => {
 
     // Personalizar baseado na experiência com IA
     if (experience.experience_level) {
-      if (experience.experience_level === 'Iniciante') {
-        message += '🌱 Como você está começando sua jornada com IA, preparei um caminho gradual e prático para você.\n\n';
-      } else if (experience.experience_level === 'Intermediário') {
-        message += '🚀 Com sua experiência intermediária, podemos acelerar e focar em implementações mais sofisticadas.\n\n';
-      } else if (experience.experience_level === 'Avançado') {
+      if (experience.experience_level === 'beginner') {
+        message += '🌟 Que emocionante começar essa jornada na IA! Vou te guiar passo a passo com muito carinho.\n\n';
+      } else if (experience.experience_level === 'basic') {
+        message += '👍 Vejo que você já tem um contato inicial com IA! Vamos expandir esse conhecimento juntos.\n\n';
+      } else if (experience.experience_level === 'intermediate') {
+        message += '🚀 Com sua experiência intermediária, podemos acelerar para soluções mais robustas!\n\n';
+      } else if (experience.experience_level === 'advanced') {
         message += '⭐ Sua experiência avançada nos permite explorar cases complexos e estratégias inovadoras.\n\n';
+      }
+    }
+
+    // Personalizar baseado no status de implementação
+    if (experience.implementation_status) {
+      const statusMessages = {
+        'not_started': 'Perfeito momento para começar! Vou te mostrar os primeiros passos.',
+        'exploring': 'Já está explorando as possibilidades - vamos estruturar essa exploração!',
+        'testing': 'Que bom que já está testando! Vou te ajudar a maximizar esses testes.',
+        'implementing': 'Implementando soluções - vamos acelerar e otimizar esse processo!',
+        'advanced': 'Com IA já integrada, vamos para o próximo nível de inovação!'
+      };
+      
+      if (statusMessages[experience.implementation_status]) {
+        message += statusMessages[experience.implementation_status] + '\n\n';
+      }
+    }
+
+    // Personalizar baseado na abordagem de implementação
+    if (experience.implementation_approach) {
+      const approachMessages = {
+        'myself': 'Admiro sua autonomia! Vou te dar todas as ferramentas para implementar com sucesso.',
+        'team': 'Trabalho em equipe é fundamental! Vou preparar recursos para você e seu time.',
+        'hire': 'Pensando em contratar especialistas? Vou te ajudar a saber exatamente o que procurar.'
+      };
+      
+      if (approachMessages[experience.implementation_approach]) {
+        message += approachMessages[experience.implementation_approach] + '\n\n';
       }
     }
 

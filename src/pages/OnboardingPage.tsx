@@ -160,7 +160,9 @@ const OnboardingPage: React.FC = () => {
       case 2:
         return !!(data.professional_info?.company_name && data.professional_info?.company_sector);
       case 3:
-        return !!(data.ai_experience?.experience_level);
+        return !!(data.ai_experience?.experience_level && 
+                  data.ai_experience?.implementation_status && 
+                  data.ai_experience?.implementation_approach);
       case 4:
         return !!(data.goals_info?.primary_goal);
       case 5:
