@@ -5585,6 +5585,10 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: Json
       }
+      get_onboarding_stats_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       get_profile_safe: {
         Args: { target_user_id?: string }
         Returns: {
