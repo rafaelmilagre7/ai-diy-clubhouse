@@ -215,6 +215,8 @@ export interface UserProfile {
   role_id: string | null; // Campo principal para roles
   role?: UserRole; // Campo legado - deprecado, mas mantido para compatibilidade
   user_roles?: UserRoleData | null; // Dados da role via join
+  onboarding_completed?: boolean | null; // Status do onboarding
+  onboarding_completed_at?: string | null; // Data de conclusão
   created_at: string;
 }
 

@@ -32,6 +32,12 @@ const RootRedirect = () => {
     return <LoadingScreen message="Carregando seu perfil..." />;
   }
 
+  // CRÍTICO: Verificar se usuário precisa fazer onboarding
+  if (user && profile && profile.onboarding_completed === false) {
+    console.log("📝 [ROOT-REDIRECT] Usuário precisa fazer onboarding - redirecionando");
+    return <Navigate to="/onboarding" replace />;
+  }
+
   // Usuário logado tentando acessar login
   if (location.pathname === '/login' && user && profile) {
     const targetRoute = getUserRoleName(profile) === 'formacao' 
