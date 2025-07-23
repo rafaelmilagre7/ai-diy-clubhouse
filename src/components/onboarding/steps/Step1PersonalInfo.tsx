@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BRAZILIAN_STATES, getCitiesByState } from '@/utils/brazilianCities';
+import { DateSelector } from '@/components/ui/date-selector';
+import { InternationalPhoneInput } from '@/components/ui/international-phone-input';
 
 interface PersonalInfoData {
   name: string;
@@ -75,8 +77,12 @@ export const Step1PersonalInfo: React.FC<Step1PersonalInfoProps> = ({
 
     if (!formData.phone.trim()) {
       newErrors.phone = 'Telefone é obrigatório';
-    } else if (!/^\(?[1-9]{2}\)?\s?9?\d{4}-?\d{4}$/.test(formData.phone.replace(/\D/g, ''))) {
-      newErrors.phone = 'Telefone inválido';
+    } else {
+      // Validação básica para telefone internacional (deve ter pelo menos dialCode|number)
+      const parts = formData.phone.split('|');
+      if (parts.length !== 2 || !parts[0].startsWith('+') || parts[1].length < 8) {
+        newErrors.phone = 'Telefone inválido';
+      }
     }
 
     if (!formData.state.trim()) {
@@ -98,13 +104,6 @@ export const Step1PersonalInfo: React.FC<Step1PersonalInfoProps> = ({
     }
   };
 
-  const formatPhone = (value: string) => {
-    const numbers = value.replace(/\D/g, '');
-    if (numbers.length <= 11) {
-      return numbers.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
-    }
-    return value;
-  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -148,22 +147,15 @@ export const Step1PersonalInfo: React.FC<Step1PersonalInfoProps> = ({
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <Label htmlFor="phone" className="text-sm font-medium text-foreground mb-2 block">
+          <Label className="text-sm font-medium text-foreground mb-2 block">
             Qual seu telefone para contato? *
           </Label>
-          <div className="relative">
-            <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              id="phone"
-              type="tel"
-              placeholder="(11) 99999-9999"
-              value={formData.phone}
-              onChange={(e) => handleChange('phone', formatPhone(e.target.value))}
-              className={`pl-10 h-12 bg-background/50 border-border/50 focus:border-primary transition-all duration-300 ${
-                errors.phone ? 'border-destructive focus:border-destructive' : ''
-              }`}
-            />
-          </div>
+          <InternationalPhoneInput
+            value={formData.phone}
+            onChange={(phone) => handleChange('phone', phone)}
+            error={errors.phone}
+            placeholder="Número de telefone"
+          />
           {errors.phone && (
             <motion.p
               initial={{ opacity: 0, y: -10 }}
@@ -257,21 +249,16 @@ export const Step1PersonalInfo: React.FC<Step1PersonalInfoProps> = ({
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.4 }}
+          transition={{ delay: 0.5 }}
         >
-          <Label htmlFor="birth_date" className="text-sm font-medium text-foreground mb-2 block">
+          <Label className="text-sm font-medium text-foreground mb-2 block">
             Data de nascimento (opcional)
           </Label>
-          <div className="relative">
-            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              id="birth_date"
-              type="date"
-              value={formData.birth_date}
-              onChange={(e) => handleChange('birth_date', e.target.value)}
-              className="pl-10 h-12 bg-background/50 border-border/50 focus:border-primary transition-all duration-300"
-            />
-          </div>
+          <DateSelector
+            value={formData.birth_date}
+            onChange={(date) => handleChange('birth_date', date)}
+            placeholder="Selecione sua data de nascimento"
+          />
           <p className="text-xs text-muted-foreground mt-1">
             Isso nos ajuda a personalizar melhor sua experiência
           </p>
