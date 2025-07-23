@@ -286,19 +286,24 @@ export const Step1PersonalInfo: React.FC<Step1PersonalInfoProps> = ({
           </p>
         </motion.div>
 
-        {/* Upload de Foto de Perfil (Opcional) */}
+        {/* Upload de Foto de Perfil (OBRIGATÓRIO) */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.6 }}
         >
           <Label className="text-sm font-medium text-foreground mb-4 block text-center">
-            Faça upload de uma foto de perfil (opcional)
+            Faça upload de uma foto de perfil *
           </Label>
           <ProfilePictureUpload
             value={formData.profile_picture}
             onChange={(url) => handleChange('profile_picture', url)}
           />
+          {!formData.profile_picture && (
+            <p className="text-xs text-orange-600 mt-2 text-center">
+              Uma foto de perfil é obrigatória para continuar
+            </p>
+          )}
         </motion.div>
 
         {/* LinkedIn (Opcional) */}

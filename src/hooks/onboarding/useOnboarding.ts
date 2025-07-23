@@ -11,6 +11,7 @@ export interface OnboardingData {
     state: string;
     city: string;
     birth_date?: string;
+    profile_picture?: string;
   };
   
   // Step 2: Contexto de Negócio
@@ -69,6 +70,65 @@ export const useOnboarding = () => {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('Carregando...');
+
+  // Backup localStorage para recuperação
+  const saveToLocalStorage = useCallback((stepData: any, step: number) => {
+    if (!user?.id) return;
+    
+    try {
+      const stepMapping = {
+        1: 'personal_info',
+        2: 'business_info', 
+        3: 'ai_experience',
+        4: 'goals_info',
+        5: 'personalization',
+      };
+      
+      const fieldName = stepMapping[step as keyof typeof stepMapping];
+      const backup = {
+        ...state.data,
+        [fieldName]: stepData,
+        lastSaved: new Date().toISOString(),
+        currentStep: step
+      };
+      
+      localStorage.setItem(`onboarding_backup_${user.id}`, JSON.stringify(backup));
+      console.log('[BACKUP] Dados salvos no localStorage para step:', step);
+    } catch (error) {
+      console.warn('[BACKUP] Erro ao salvar no localStorage:', error);
+    }
+  }, [user?.id, state.data]);
+
+  // Recuperar dados do localStorage
+  const recoverFromLocalStorage = useCallback(() => {
+    if (!user?.id) return null;
+    
+    try {
+      const backup = localStorage.getItem(`onboarding_backup_${user.id}`);
+      if (backup) {
+        const parsedBackup = JSON.parse(backup);
+        console.log('[BACKUP] Recuperando dados do localStorage:', parsedBackup);
+        return parsedBackup;
+      }
+    } catch (error) {
+      console.warn('[BACKUP] Erro ao recuperar localStorage:', error);
+    }
+    
+    return null;
+  }, [user?.id]);
+
+  // Limpar backup após finalização com sucesso
+  const clearLocalStorageBackup = useCallback(() => {
+    if (!user?.id) return;
+    
+    try {
+      localStorage.removeItem(`onboarding_backup_${user.id}`);
+      console.log('[BACKUP] Backup removido do localStorage');
+    } catch (error) {
+      console.warn('[BACKUP] Erro ao limpar localStorage:', error);
+    }
+  }, [user?.id]);
 
   // Carregar dados existentes do onboarding
   const loadOnboardingData = useCallback(async () => {
@@ -111,22 +171,44 @@ export const useOnboarding = () => {
           },
         });
       } else {
-        console.log('[ONBOARDING] Nenhum dado encontrado - primeiro acesso');
-        setState({
-          id: null,
-          current_step: 1,
-          completed_steps: [],
-          is_completed: false,
-          nina_message: null,
-          data: {},
-        });
+        console.log('[ONBOARDING] Nenhum dado encontrado - verificando backup localStorage');
+        
+        // Tentar recuperar dados do localStorage
+        const backup = recoverFromLocalStorage();
+        if (backup) {
+          console.log('[ONBOARDING] Recuperando dados do backup localStorage');
+          setState({
+            id: null,
+            current_step: backup.currentStep || 1,
+            completed_steps: [],
+            is_completed: false,
+            nina_message: null,
+            data: backup,
+          });
+          
+          toast({
+            title: 'Dados recuperados',
+            description: 'Seus dados foram recuperados de onde você parou.',
+            variant: 'default'
+          });
+        } else {
+          console.log('[ONBOARDING] Primeiro acesso - sem backup');
+          setState({
+            id: null,
+            current_step: 1,
+            completed_steps: [],
+            is_completed: false,
+            nina_message: null,
+            data: {},
+          });
+        }
       }
     } catch (error) {
       console.error('[ONBOARDING] Erro crítico ao carregar:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [user?.id]);
+  }, [user?.id, recoverFromLocalStorage]);
 
   // Salvar dados do step atual
   const saveStepData = useCallback(async (step: number, stepData: any) => {
@@ -141,7 +223,24 @@ export const useOnboarding = () => {
     
     try {
       setIsSaving(true);
-      const toastId = toast({ title: 'Salvando dados...', description: 'Por favor aguarde...' }).id;
+      
+      // Mensagens dinâmicas baseadas no step
+      const stepMessages = {
+        1: 'Salvando suas informações pessoais...',
+        2: 'Salvando dados da sua empresa...',
+        3: 'Salvando sua experiência com IA...',
+        4: 'Salvando seus objetivos...',
+        5: 'Salvando preferências de aprendizado...'
+      };
+      
+      setLoadingMessage(stepMessages[step as keyof typeof stepMessages] || 'Salvando dados...');
+      const toastId = toast({ 
+        title: stepMessages[step as keyof typeof stepMessages], 
+        description: 'Por favor aguarde...' 
+      }).id;
+      
+      // Salvar backup no localStorage antes de tentar salvar no servidor
+      saveToLocalStorage(stepData, step);
       
       const stepMapping = {
         1: 'personal_info',
@@ -226,7 +325,7 @@ export const useOnboarding = () => {
     } finally {
       setIsSaving(false);
     }
-  }, [user?.id, state.id, state.completed_steps]);
+  }, [user?.id, state.id, state.completed_steps, saveToLocalStorage]);
 
   // Navegar para próximo step
   const goToNextStep = useCallback(async (currentStepData?: any) => {
@@ -256,12 +355,15 @@ export const useOnboarding = () => {
     
     try {
       setIsSaving(true);
+      setLoadingMessage('Finalizando sua configuração...');
       
       // Salvar dados do step 5 primeiro
       const success = await saveStepData(5, finalStepData);
       if (!success) {
         throw new Error('Falha ao salvar dados do step 5');
       }
+      
+      setLoadingMessage('Gerando sua experiência personalizada...');
       
       // Tentar gerar mensagem da NINA (com fallback)
       let ninaMessage = 'Bem-vindo(a) ao Viver de IA! Sua jornada personalizada está pronta para começar. Explore nossa plataforma e descubra como a IA pode transformar seu negócio!';
@@ -289,6 +391,8 @@ export const useOnboarding = () => {
         console.warn('[ONBOARDING] Edge Function não disponível, usando mensagem padrão:', ninaError);
       }
 
+      setLoadingMessage('Aplicando configurações finais...');
+      
       // Finalizar onboarding
       console.log('[ONBOARDING] Finalizando onboarding via complete_onboarding_flow...');
       const { error } = await supabase.rpc('complete_onboarding_flow', {
@@ -309,7 +413,12 @@ export const useOnboarding = () => {
         nina_message: ninaMessage,
       }));
 
+      // Limpar backup após sucesso
+      clearLocalStorageBackup();
+
       console.log('[ONBOARDING] Onboarding concluído com sucesso!');
+      setLoadingMessage('Redirecionando para o dashboard...');
+      
       toast({ 
         title: 'Onboarding concluído!', 
         description: 'Bem-vindo à nossa plataforma! Redirecionando para o dashboard...',
@@ -334,7 +443,7 @@ export const useOnboarding = () => {
     } finally {
       setIsSaving(false);
     }
-  }, [user?.id, state.data, saveStepData]);
+  }, [user?.id, state.data, saveStepData, clearLocalStorageBackup]);
 
   // Carregar dados na inicialização
   useEffect(() => {
@@ -346,6 +455,7 @@ export const useOnboarding = () => {
     ...state,
     isLoading,
     isSaving,
+    loadingMessage,
     
     // Ações
     saveStepData,

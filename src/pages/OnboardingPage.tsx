@@ -20,6 +20,7 @@ const OnboardingPage: React.FC = () => {
     data,
     isLoading,
     isSaving,
+    loadingMessage,
     saveStepData,
     goToNextStep,
     goToPrevStep,
@@ -142,14 +143,20 @@ const OnboardingPage: React.FC = () => {
           data.personal_info.phone.startsWith('+') &&
           data.personal_info.phone.split('|')[1] && // Ter número após o |
           data.personal_info.phone.split('|')[1].trim().length > 0; // Número não vazio
+        
         const hasRequiredFields = data.personal_info?.name && 
           data.personal_info?.state && 
           data.personal_info?.city;
         
+        // Adicionar validação da foto de perfil
+        const hasProfilePicture = data.personal_info?.profile_picture && 
+          data.personal_info.profile_picture.trim().length > 0;
+        
         console.log('[VALIDATION] Phone:', data.personal_info?.phone, 'Valid:', phoneValid);
         console.log('[VALIDATION] Required fields:', hasRequiredFields);
+        console.log('[VALIDATION] Profile picture:', data.personal_info?.profile_picture, 'Valid:', hasProfilePicture);
         
-        return !!(hasRequiredFields && phoneValid);
+        return !!(hasRequiredFields && phoneValid && hasProfilePicture);
       case 2:
         return !!(data.business_info?.company_name && data.business_info?.company_sector);
       case 3:
@@ -175,6 +182,7 @@ const OnboardingPage: React.FC = () => {
       onNext={current_step < 6 ? handleNext : undefined}
       nextLabel={current_step === 5 ? 'Finalizar' : current_step === 6 ? 'Ir para Dashboard' : 'Continuar'}
       isLoading={isSaving}
+      loadingMessage={loadingMessage}
       canProceed={canProceed()}
       completedSteps={completed_steps}
     >

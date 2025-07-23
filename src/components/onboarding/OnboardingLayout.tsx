@@ -14,6 +14,7 @@ interface OnboardingLayoutProps {
   onNext?: () => void;
   nextLabel?: string;
   isLoading?: boolean;
+  loadingMessage?: string;
   canProceed?: boolean;
   completedSteps: number[];
 }
@@ -28,6 +29,7 @@ export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
   onNext,
   nextLabel = 'Continuar',
   isLoading = false,
+  loadingMessage = 'Carregando...',
   canProceed = true,
   completedSteps,
 }) => {
@@ -167,11 +169,16 @@ export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
               className="group bg-gradient-to-r from-primary to-accent hover:shadow-lg hover:shadow-primary/25 transition-all duration-300"
             >
               {isLoading ? (
-                <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin mr-2" />
+                <>
+                  <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin mr-2" />
+                  {loadingMessage}
+                </>
               ) : (
-                <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                <>
+                  {nextLabel}
+                  <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                </>
               )}
-              {isLoading ? 'Salvando...' : nextLabel}
             </Button>
           </motion.div>
         </motion.div>
