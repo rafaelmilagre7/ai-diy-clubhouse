@@ -54,20 +54,24 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
     onDataChangeRef.current = onDataChange;
   }, [onDataChange]);
 
-  // Função memoizada para notificar mudanças com debounce
+  // Função para notificar mudanças SEM useEffect automático
   const notifyChange = useCallback((newData: Partial<AIExperienceFormData>) => {
     const dataString = JSON.stringify(newData);
     if (lastDataRef.current !== dataString) {
       lastDataRef.current = dataString;
-      onDataChangeRef.current(newData);
+      // Usar setTimeout para quebrar qualquer cadeia síncrona
+      setTimeout(() => {
+        onDataChangeRef.current(newData);
+      }, 0);
     }
-  }, []); // SEM DEPENDÊNCIAS para evitar loops
+  }, []);
 
   const handleSelectChange = useCallback((field: keyof AIExperienceFormData, value: string) => {
     form.setValue(field, value);
+    // Notificar mudança imediatamente quando campos do form mudam
     const formData = form.getValues();
     notifyChange({ ...formData, current_tools: selectedTools });
-  }, [form, selectedTools]); // REMOVIDO notifyChange das dependências
+  }, [form, selectedTools, notifyChange]);
 
   const handleToolClick = useCallback((toolName: string) => {
     setSelectedTools(prevSelectedTools => {
@@ -87,16 +91,17 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
         }
       }
       
+      // Notificar mudança APÓS atualizar o estado
+      setTimeout(() => {
+        const formData = form.getValues();
+        notifyChange({ ...formData, current_tools: newSelectedTools });
+      }, 0);
+      
       return newSelectedTools;
     });
-  }, []);
-  
-  // Separar useEffect para evitar loops
-  useEffect(() => {
-    const formData = form.getValues();
-    const dataToSend = { ...formData, current_tools: selectedTools };
-    notifyChange(dataToSend);
-  }, [selectedTools]); // REMOVIDO notifyChange das dependências
+  }, [form, notifyChange]);
+
+  // REMOVIDO: useEffect que causava loops
 
   const handleSubmit = (data: AIExperienceFormData) => {
     console.log('[Step3] Enviando dados:', data);
