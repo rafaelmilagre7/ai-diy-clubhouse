@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/auth';
 import { useOnboarding } from '@/hooks/onboarding/useOnboarding';
@@ -227,18 +227,17 @@ const OnboardingPage: React.FC = () => {
       {current_step === 3 && (
         <Step3AIExperience
           initialData={data.ai_experience}
-          onDataChange={(aiData) => {
+          onDataChange={useCallback((aiData: any) => {
             console.log('Step3 Data Change:', aiData);
-            // Atualizar estado local sem mutação direta (com cast temporário)
             setState(prev => ({
               ...prev,
               data: {
                 ...prev.data,
-                ai_experience: aiData as any
+                ai_experience: aiData
               }
             }));
-          }}
-          onNext={() => {}} // Não usado - controlado pelo OnboardingLayout
+          }, [setState])}
+          onNext={() => {}}
         />
       )}
 
