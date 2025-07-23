@@ -53,7 +53,7 @@ export const PersonalizationInsights = ({ trail }: PersonalizationInsightsProps)
 
       {/* Métricas de Personalização */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="text-center card-onboarding">
+        <Card className="text-center">
           <CardContent className="pt-6">
             <div className="flex flex-col items-center space-y-2">
               <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
@@ -70,7 +70,7 @@ export const PersonalizationInsights = ({ trail }: PersonalizationInsightsProps)
           </CardContent>
         </Card>
 
-        <Card className="text-center card-onboarding">
+        <Card className="text-center">
           <CardContent className="pt-6">
             <div className="flex flex-col items-center space-y-2">
               <div className="w-12 h-12 bg-green-500/10 rounded-full flex items-center justify-center">
@@ -87,7 +87,7 @@ export const PersonalizationInsights = ({ trail }: PersonalizationInsightsProps)
           </CardContent>
         </Card>
 
-        <Card className="text-center card-onboarding">
+        <Card className="text-center">
           <CardContent className="pt-6">
             <div className="flex flex-col items-center space-y-2">
               <div className="w-12 h-12 bg-purple-500/10 rounded-full flex items-center justify-center">
@@ -106,7 +106,7 @@ export const PersonalizationInsights = ({ trail }: PersonalizationInsightsProps)
       </div>
 
       {/* Distribuição por prioridade */}
-      <Card className="card-onboarding">
+      <Card>
         <CardHeader>
           <CardTitle className="text-foreground flex items-center gap-2">
             <Target className="h-5 w-5 text-primary" />
@@ -143,7 +143,7 @@ export const PersonalizationInsights = ({ trail }: PersonalizationInsightsProps)
       </Card>
 
       {/* Dicas de Implementação */}
-      <Card className="card-onboarding">
+      <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Clock className="h-5 w-5 text-primary" />

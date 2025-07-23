@@ -5119,14 +5119,8 @@ export type Database = {
           | { p_user_id: string; p_invite_token: string }
         Returns: Json
       }
-      complete_onboarding: {
-        Args: { p_user_id: string }
-        Returns: Json
-      }
       complete_onboarding_and_unlock_features: {
-        Args:
-          | { p_user_id: string }
-          | { p_user_id: string; p_onboarding_data: Json }
+        Args: { p_user_id: string }
         Returns: Json
       }
       complete_onboarding_secure: {
@@ -5566,10 +5560,6 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
-      get_onboarding_next_step: {
-        Args: { p_user_id: string }
-        Returns: Json
-      }
       get_onboarding_progress: {
         Args: { p_user_id: string }
         Returns: Json
@@ -5777,9 +5767,7 @@ export type Database = {
         Returns: Json
       }
       initialize_onboarding_for_user: {
-        Args:
-          | { p_user_id: string; p_invite_data?: Json }
-          | { p_user_id: string; p_invite_token?: string }
+        Args: { p_user_id: string; p_invite_token?: string }
         Returns: Json
       }
       invalidate_profile_cache: {
