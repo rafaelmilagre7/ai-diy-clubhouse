@@ -153,35 +153,55 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
       implementation_approach: initialData?.implementation_approach || '',
       current_tools: initialData?.current_tools || [],
     },
-    mode: 'onBlur', // MUDANÇA: não trigger em toda mudança, só ao sair do campo
+    mode: 'onSubmit', // CRÍTICO: Não reagir a mudanças, só no submit
   });
 
-  // SIMPLIFICAÇÃO: onDataChange estável - não fica mudando
-  const stableOnDataChange = useRef(onDataChange);
-  stableOnDataChange.current = onDataChange;
+  // SOLUÇÃO RADICAL: Bloquear notificações durante o primeiro render
+  const isInitializing = useRef(true);
+  const notificationBlocked = useRef(false);
+  
+  useEffect(() => {
+    // Permitir notificações após o primeiro render
+    const timer = setTimeout(() => {
+      isInitializing.current = false;
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
 
-  // SIMPLIFICAÇÃO: Uma única função para notificar mudanças
+  // SIMPLIFICAÇÃO EXTREMA: função de notificação com bloqueios
   const notifyChange = (newData: Partial<AIExperienceFormData>) => {
+    // Bloquear se ainda está inicializando
+    if (isInitializing.current || notificationBlocked.current) {
+      console.log('[STEP3] Notificação bloqueada - inicializando');
+      return;
+    }
+
     const dataString = JSON.stringify(newData);
     if (lastDataRef.current !== dataString) {
       lastDataRef.current = dataString;
-      // Usar setTimeout para garantir que não há conflitos
-      setTimeout(() => {
-        stableOnDataChange.current(newData);
-      }, 10);
+      console.log('[STEP3] Notificando mudança:', newData);
+      onDataChange(newData); // DIRETO, sem setTimeout
     }
   };
 
   const handleSelectChange = (field: keyof AIExperienceFormData, value: string) => {
-    form.setValue(field, value);
-    // ESPERAR um pouquinho antes de notificar para evitar conflitos
+    // Bloquear notificações temporariamente
+    notificationBlocked.current = true;
+    
+    form.setValue(field, value, { shouldValidate: false, shouldDirty: false });
+    
+    // Desbloquear e notificar após um tempo
     setTimeout(() => {
+      notificationBlocked.current = false;
       const formData = form.getValues();
       notifyChange({ ...formData, current_tools: selectedTools });
-    }, 50);
+    }, 100);
   };
 
   const handleToolClick = (toolName: string) => {
+    // Bloquear notificações temporariamente
+    notificationBlocked.current = true;
+    
     let newSelectedTools: string[];
     
     if (toolName === 'Nenhuma ainda') {
@@ -198,14 +218,15 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
       }
     }
     
-    // PRIMEIRO: Atualizar o estado das ferramentas
+    // Atualizar estado SEM notificar ainda
     setSelectedTools(newSelectedTools);
     
-    // SEGUNDO: Esperar e notificar com os dados completos
+    // Desbloquear e notificar após um tempo seguro
     setTimeout(() => {
+      notificationBlocked.current = false;
       const formData = form.getValues();
       notifyChange({ ...formData, current_tools: newSelectedTools });
-    }, 50);
+    }, 100);
   };
 
   const handleImageError = useCallback((toolId: string) => {
