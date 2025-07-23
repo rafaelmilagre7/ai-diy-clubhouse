@@ -36,6 +36,7 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
     checkAccessRestrictions: false // Não verificar restrições de acesso
   });
   const lastDataRef = useRef<string>('');
+  const onDataChangeRef = useRef(onDataChange);
 
   const form = useForm<AIExperienceFormData>({
     resolver: zodResolver(aiExperienceSchema),
@@ -48,20 +49,25 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
     mode: 'onChange',
   });
 
+  // Atualizar ref sempre que onDataChange mudar
+  useEffect(() => {
+    onDataChangeRef.current = onDataChange;
+  }, [onDataChange]);
+
   // Função memoizada para notificar mudanças com debounce
   const notifyChange = useCallback((newData: Partial<AIExperienceFormData>) => {
     const dataString = JSON.stringify(newData);
     if (lastDataRef.current !== dataString) {
       lastDataRef.current = dataString;
-      onDataChange(newData);
+      onDataChangeRef.current(newData);
     }
-  }, [onDataChange]);
+  }, []); // SEM DEPENDÊNCIAS para evitar loops
 
   const handleSelectChange = useCallback((field: keyof AIExperienceFormData, value: string) => {
     form.setValue(field, value);
     const formData = form.getValues();
     notifyChange({ ...formData, current_tools: selectedTools });
-  }, [form, selectedTools, notifyChange]);
+  }, [form, selectedTools]); // REMOVIDO notifyChange das dependências
 
   const handleToolClick = useCallback((toolName: string) => {
     setSelectedTools(prevSelectedTools => {
@@ -90,7 +96,7 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
     const formData = form.getValues();
     const dataToSend = { ...formData, current_tools: selectedTools };
     notifyChange(dataToSend);
-  }, [selectedTools, notifyChange]);
+  }, [selectedTools]); // REMOVIDO notifyChange das dependências
 
   const handleSubmit = (data: AIExperienceFormData) => {
     console.log('[Step3] Enviando dados:', data);
