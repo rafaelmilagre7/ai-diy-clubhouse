@@ -44,33 +44,20 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
     mode: 'onChange',
   });
 
-  // Função simples para notificar mudanças dos selects apenas
-  const notifySelectChange = (field: keyof AIExperienceFormData, value: string) => {
+  // APENAS notificar mudanças nos selects - sem chamar durante cliques
+  const handleSelectChange = (field: keyof AIExperienceFormData, value: string) => {
+    form.setValue(field, value);
+    // Notificar apenas após mudança de select, não durante cliques
     const newData = {
       experience_level: field === 'experience_level' ? value : form.getValues('experience_level'),
       implementation_status: field === 'implementation_status' ? value : form.getValues('implementation_status'),
       implementation_approach: field === 'implementation_approach' ? value : form.getValues('implementation_approach'),
-      current_tools: selectedTools // Sempre usar o estado local
+      current_tools: selectedTools
     };
     onDataChange(newData);
   };
 
-  // Função simples para notificar mudanças das ferramentas apenas
-  const notifyToolsChange = (newTools: string[]) => {
-    const newData = {
-      experience_level: form.getValues('experience_level'),
-      implementation_status: form.getValues('implementation_status'),
-      implementation_approach: form.getValues('implementation_approach'),
-      current_tools: newTools
-    };
-    onDataChange(newData);
-  };
-
-  const handleSelectChange = (field: keyof AIExperienceFormData, value: string) => {
-    form.setValue(field, value);
-    notifySelectChange(field, value);
-  };
-
+  // APENAS atualizar estado local - SEM notificar durante clique
   const handleToolClick = (toolName: string) => {
     let newSelectedTools: string[];
     
@@ -88,8 +75,9 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
       }
     }
     
+    // APENAS atualizar estado - SEM chamar onDataChange
     setSelectedTools(newSelectedTools);
-    notifyToolsChange(newSelectedTools); // Função separada sem form.getValues()
+    // Notificação será feita apenas no submit
   };
 
   const handleSubmit = (data: AIExperienceFormData) => {
@@ -99,6 +87,15 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
       console.error('[Step3] Campos obrigatórios não preenchidos');
       return;
     }
+    
+    // Notificar dados finais apenas no submit
+    const finalData = {
+      experience_level: data.experience_level,
+      implementation_status: data.implementation_status,
+      implementation_approach: data.implementation_approach,
+      current_tools: selectedTools
+    };
+    onDataChange(finalData);
     
     onNext();
   };
