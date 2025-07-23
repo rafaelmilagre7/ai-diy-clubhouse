@@ -2699,6 +2699,7 @@ export type Database = {
           location_info: Json
           main_goal: string | null
           message_generated: boolean | null
+          nina_message: string | null
           personal_info: Json
           personalization: Json
           professional_info: Json | null
@@ -2730,6 +2731,7 @@ export type Database = {
           location_info?: Json
           main_goal?: string | null
           message_generated?: boolean | null
+          nina_message?: string | null
           personal_info?: Json
           personalization?: Json
           professional_info?: Json | null
@@ -2761,6 +2763,7 @@ export type Database = {
           location_info?: Json
           main_goal?: string | null
           message_generated?: boolean | null
+          nina_message?: string | null
           personal_info?: Json
           personalization?: Json
           professional_info?: Json | null
