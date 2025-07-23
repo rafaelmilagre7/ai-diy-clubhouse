@@ -65,16 +65,45 @@ export const OnboardingBanner: React.FC = () => {
     }
   };
 
-  const handleStartOnboarding = () => {
+  const handleStartOnboarding = async () => {
     console.log('🎯 [BANNER] Botão clicado - iniciando onboarding');
     
-    toast({
-      title: "Redirecionando para o onboarding...",
-      description: "Vamos personalizar sua experiência!",
-    });
-    
-    console.log('🎯 [BANNER] Navegando para /onboarding');
-    navigate('/onboarding');
+    // Buscar current_step atual do usuário para redirecionar corretamente
+    try {
+      const { data: onboardingData, error } = await supabase
+        .from('onboarding_final')
+        .select('current_step, completed_steps')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error) {
+        console.error('Erro ao buscar current_step:', error);
+        // Fallback para o início se houver erro
+        navigate('/onboarding');
+        return;
+      }
+
+      // Calcular step correto baseado nos completed_steps
+      const targetStep = onboardingData.completed_steps && onboardingData.completed_steps.length > 0 
+        ? Math.max(...onboardingData.completed_steps) + 1 
+        : 1;
+      
+      // Garantir que não ultrapasse o limite
+      const finalStep = Math.min(targetStep, 6);
+      
+      console.log('🎯 [BANNER] Redirecionando para step:', finalStep);
+      
+      toast({
+        title: "Continuando de onde parou...",
+        description: `Redirecionando para a etapa ${finalStep}`,
+      });
+      
+      // Redirecionar para o step correto com parâmetro de query
+      navigate(`/onboarding?step=${finalStep}`);
+    } catch (error) {
+      console.error('Erro ao determinar step:', error);
+      navigate('/onboarding');
+    }
   };
 
   const handleDismiss = () => {

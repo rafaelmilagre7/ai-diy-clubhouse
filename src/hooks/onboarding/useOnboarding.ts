@@ -445,9 +445,20 @@ export const useOnboarding = () => {
     }
   }, [user?.id, state.data, saveStepData, clearLocalStorageBackup]);
 
-  // Carregar dados na inicialização
+  // Carregar dados na inicialização e verificar query params
   useEffect(() => {
     loadOnboardingData();
+    
+    // Verificar se há parâmetro step na URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const stepParam = urlParams.get('step');
+    if (stepParam) {
+      const targetStep = parseInt(stepParam);
+      if (targetStep >= 1 && targetStep <= 6) {
+        console.log('[ONBOARDING] Definindo step via URL param:', targetStep);
+        setState(prev => ({ ...prev, current_step: targetStep }));
+      }
+    }
   }, [loadOnboardingData]);
 
   return {
