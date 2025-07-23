@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface DateSelectorProps {
@@ -14,11 +14,22 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
   placeholder = "Selecione a data",
   error
 }) => {
-  // Parse do valor atual
-  const currentDate = value ? new Date(value) : null;
-  const currentDay = currentDate ? currentDate.getDate().toString().padStart(2, '0') : '';
-  const currentMonth = currentDate ? (currentDate.getMonth() + 1).toString().padStart(2, '0') : '';
-  const currentYear = currentDate ? currentDate.getFullYear().toString() : '';
+  // Estados locais para cada campo
+  const [selectedDay, setSelectedDay] = useState<string>('');
+  const [selectedMonth, setSelectedMonth] = useState<string>('');
+  const [selectedYear, setSelectedYear] = useState<string>('');
+
+  // Parse do valor inicial quando o componente é montado
+  useEffect(() => {
+    if (value && value.includes('-') && value.length === 10) {
+      const currentDate = new Date(value);
+      if (!isNaN(currentDate.getTime())) {
+        setSelectedDay(currentDate.getDate().toString().padStart(2, '0'));
+        setSelectedMonth((currentDate.getMonth() + 1).toString().padStart(2, '0'));
+        setSelectedYear(currentDate.getFullYear().toString());
+      }
+    }
+  }, [value]);
 
   // Gerar opções
   const days = Array.from({ length: 31 }, (_, i) => (i + 1).toString().padStart(2, '0'));
@@ -40,11 +51,8 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
   const currentYearNum = new Date().getFullYear();
   const years = Array.from({ length: 100 }, (_, i) => (currentYearNum - i).toString());
 
-  const handleDateChange = (newDay?: string, newMonth?: string, newYear?: string) => {
-    const day = newDay || currentDay;
-    const month = newMonth || currentMonth;
-    const year = newYear || currentYear;
-
+  // Função para atualizar uma data completa quando todos os campos estão preenchidos
+  const updateCompleteDate = (day: string, month: string, year: string) => {
     if (day && month && year) {
       // Validar se a data é válida
       const dateObj = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
@@ -52,22 +60,41 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
           dateObj.getMonth() === parseInt(month) - 1 && 
           dateObj.getFullYear() === parseInt(year)) {
         onChange(`${year}-${month}-${day}`);
+        console.log('Data completa selecionada:', `${year}-${month}-${day}`);
       }
     }
   };
 
+  const handleDayChange = (day: string) => {
+    console.log('Dia selecionado:', day);
+    setSelectedDay(day);
+    updateCompleteDate(day, selectedMonth, selectedYear);
+  };
+
+  const handleMonthChange = (month: string) => {
+    console.log('Mês selecionado:', month);
+    setSelectedMonth(month);
+    updateCompleteDate(selectedDay, month, selectedYear);
+  };
+
+  const handleYearChange = (year: string) => {
+    console.log('Ano selecionado:', year);
+    setSelectedYear(year);
+    updateCompleteDate(selectedDay, selectedMonth, year);
+  };
+
   return (
     <div className="space-y-2">
-      {currentDay && currentMonth && currentYear && (
+      {selectedDay && selectedMonth && selectedYear && (
         <p className="text-sm text-muted-foreground">
-          Data selecionada: {currentDay}/{currentMonth}/{currentYear}
+          Data selecionada: {selectedDay}/{selectedMonth}/{selectedYear}
         </p>
       )}
       <div className="grid grid-cols-3 gap-2">
         {/* Dia */}
         <div>
           <label className="text-xs text-muted-foreground mb-1 block">Dia</label>
-          <Select value={currentDay} onValueChange={(day) => handleDateChange(day, undefined, undefined)}>
+          <Select value={selectedDay} onValueChange={handleDayChange}>
             <SelectTrigger className={`h-12 ${error ? 'border-destructive' : ''}`}>
               <SelectValue placeholder="Dia" />
             </SelectTrigger>
@@ -84,7 +111,7 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
         {/* Mês */}
         <div>
           <label className="text-xs text-muted-foreground mb-1 block">Mês</label>
-          <Select value={currentMonth} onValueChange={(month) => handleDateChange(undefined, month, undefined)}>
+          <Select value={selectedMonth} onValueChange={handleMonthChange}>
             <SelectTrigger className={`h-12 ${error ? 'border-destructive' : ''}`}>
               <SelectValue placeholder="Mês" />
             </SelectTrigger>
@@ -101,7 +128,7 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
         {/* Ano */}
         <div>
           <label className="text-xs text-muted-foreground mb-1 block">Ano</label>
-          <Select value={currentYear} onValueChange={(year) => handleDateChange(undefined, undefined, year)}>
+          <Select value={selectedYear} onValueChange={handleYearChange}>
             <SelectTrigger className={`h-12 ${error ? 'border-destructive' : ''}`}>
               <SelectValue placeholder="Ano" />
             </SelectTrigger>
