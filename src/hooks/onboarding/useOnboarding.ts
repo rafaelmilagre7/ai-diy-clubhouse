@@ -258,53 +258,76 @@ export const useOnboarding = () => {
       setIsSaving(true);
       
       // Salvar dados do step 5 primeiro
-      await saveStepData(5, finalStepData);
+      const success = await saveStepData(5, finalStepData);
+      if (!success) {
+        throw new Error('Falha ao salvar dados do step 5');
+      }
       
-      // Chamar Edge Function para gerar mensagem da NINA
-      const { data: ninaData, error: ninaError } = await supabase.functions
-        .invoke('generate-nina-message', {
-          body: {
-            user_id: user.id,
-            onboarding_data: {
-              ...state.data,
-              personalization: finalStepData,
+      // Tentar gerar mensagem da NINA (com fallback)
+      let ninaMessage = 'Bem-vindo(a) ao Viver de IA! Sua jornada personalizada está pronta para começar. Explore nossa plataforma e descubra como a IA pode transformar seu negócio!';
+      
+      try {
+        console.log('[ONBOARDING] Tentando gerar mensagem da NINA...');
+        const { data: ninaData, error: ninaError } = await supabase.functions
+          .invoke('generate-nina-message', {
+            body: {
+              user_id: user.id,
+              onboarding_data: {
+                ...state.data,
+                personalization: finalStepData,
+              },
             },
-          },
-        });
+          });
 
-      if (ninaError) {
-        console.error('Erro ao gerar mensagem da NINA:', ninaError);
-        // Continuar mesmo sem a mensagem da NINA
+        if (ninaError) {
+          console.warn('[ONBOARDING] Erro ao gerar mensagem da NINA, usando mensagem padrão:', ninaError);
+        } else if (ninaData?.message) {
+          ninaMessage = ninaData.message;
+          console.log('[ONBOARDING] Mensagem da NINA gerada com sucesso');
+        }
+      } catch (ninaError) {
+        console.warn('[ONBOARDING] Edge Function não disponível, usando mensagem padrão:', ninaError);
       }
 
       // Finalizar onboarding
+      console.log('[ONBOARDING] Finalizando onboarding via complete_onboarding_flow...');
       const { error } = await supabase.rpc('complete_onboarding_flow', {
         p_user_id: user.id,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('[ONBOARDING] Erro na função complete_onboarding_flow:', error);
+        throw error;
+      }
 
-      // Atualizar estado
+      // Atualizar estado local
       setState(prev => ({
         ...prev,
         current_step: 6,
         is_completed: true,
         completed_steps: [1, 2, 3, 4, 5, 6],
-        nina_message: ninaData?.message || 'Bem-vindo(a) à nossa plataforma!',
+        nina_message: ninaMessage,
       }));
 
+      console.log('[ONBOARDING] Onboarding concluído com sucesso!');
       toast({ 
         title: 'Onboarding concluído!', 
-        description: 'Bem-vindo à nossa plataforma!',
+        description: 'Bem-vindo à nossa plataforma! Redirecionando para o dashboard...',
         variant: 'default'
       });
+      
+      // Redirecionar após um breve delay
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 2000);
+      
       return true;
 
     } catch (error) {
-      console.error('Erro ao finalizar onboarding:', error);
+      console.error('[ONBOARDING] Erro ao finalizar onboarding:', error);
       toast({ 
         title: 'Erro ao finalizar', 
-        description: 'Erro ao finalizar onboarding',
+        description: 'Erro ao finalizar onboarding: ' + (error?.message || 'Erro desconhecido'),
         variant: 'destructive'
       });
       return false;

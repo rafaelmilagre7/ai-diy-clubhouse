@@ -110,11 +110,24 @@ const OnboardingPage: React.FC = () => {
         console.error('[ONBOARDING_PAGE] Falha ao salvar step', current_step);
         return;
       }
+      
+      // Se é o step 5, finalizar onboarding antes de ir para step 6
+      if (current_step === 5) {
+        console.log('[ONBOARDING_PAGE] Step 5 → Step 6: finalizando onboarding...');
+        const onboardingCompleted = await completeOnboarding(stepData);
+        if (!onboardingCompleted) {
+          console.error('[ONBOARDING_PAGE] Falha ao finalizar onboarding');
+          return;
+        }
+      }
     }
     
     if (current_step === 6) {
-      // Finalizar onboarding no step 6
-      await completeOnboarding(data.personalization || {});
+      console.log('[ONBOARDING_PAGE] Step 6 - redirecionamento direto ao dashboard');
+      // No step 6, apenas redirecionar
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 500);
     } else {
       await goToNextStep();
     }
@@ -258,7 +271,12 @@ const OnboardingPage: React.FC = () => {
       {current_step === 6 && (
         <Step6Welcome
           ninaMessage={nina_message}
-          onFinish={() => completeOnboarding(data.personalization || {})}
+          onFinish={() => {
+            console.log('[ONBOARDING_PAGE] Step6Welcome onFinish chamado - redirecionando');
+            setTimeout(() => {
+              window.location.href = '/dashboard';
+            }, 500);
+          }}
         />
       )}
     </OnboardingLayout>
