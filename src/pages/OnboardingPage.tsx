@@ -9,7 +9,6 @@ import { Step3AIExperience } from '@/components/onboarding/steps/Step3AIExperien
 import { Step4Goals } from '@/components/onboarding/steps/Step4Goals';
 import { Step5Personalization } from '@/components/onboarding/steps/Step5Personalization';
 import { Step6Welcome } from '@/components/onboarding/steps/Step6Welcome';
-import { OnboardingDataViewer } from '@/components/debug/OnboardingDataViewer';
 import { Loader2 } from 'lucide-react';
 
 const OnboardingPage: React.FC = () => {
@@ -144,11 +143,10 @@ const OnboardingPage: React.FC = () => {
         <Step1PersonalInfo
           initialData={data.personal_info}
           onDataChange={(personalData) => {
-            console.log('[STEP1] Dados alterados:', personalData);
-            // Salvar automaticamente os dados quando mudarem
-            saveStepData(1, personalData);
+            // Só atualizar estado local, não salvar automaticamente
+            data.personal_info = personalData;
           }}
-          onNext={() => handleNext()}
+          onNext={() => handleStepSubmit(data.personal_info)}
         />
       )}
 
@@ -294,9 +292,6 @@ const OnboardingPage: React.FC = () => {
           onFinish={() => completeOnboarding(data.personalization || {})}
         />
       )}
-      
-      {/* Debug component - temporário */}
-      <OnboardingDataViewer />
     </OnboardingLayout>
   );
 };
