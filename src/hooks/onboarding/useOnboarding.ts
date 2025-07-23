@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/auth';
-import { toast } from 'sonner';
+import { toast } from '@/hooks/use-toast';
 
 export interface OnboardingData {
   // Step 1: Informações Pessoais
@@ -141,7 +141,7 @@ export const useOnboarding = () => {
     
     try {
       setIsSaving(true);
-      toast.loading('Salvando dados...', { id: 'onboarding-save' });
+      const toastId = toast({ title: 'Salvando dados...', description: 'Por favor aguarde...' }).id;
       
       const stepMapping = {
         1: 'personal_info',
@@ -209,11 +209,19 @@ export const useOnboarding = () => {
       }));
 
       console.log('[ONBOARDING] Step', step, 'salvo com sucesso!');
-      toast.success('Dados salvos com sucesso!', { id: 'onboarding-save' });
+      toast({ 
+        title: 'Dados salvos!', 
+        description: 'Seus dados foram salvos com sucesso.',
+        variant: 'default'
+      });
       return true;
     } catch (error) {
       console.error('Erro ao salvar step:', error);
-      toast.error('Erro ao salvar dados: ' + (error?.message || 'Erro desconhecido'), { id: 'onboarding-save' });
+      toast({ 
+        title: 'Erro ao salvar', 
+        description: 'Erro ao salvar dados: ' + (error?.message || 'Erro desconhecido'),
+        variant: 'destructive'
+      });
       return false;
     } finally {
       setIsSaving(false);
@@ -285,12 +293,20 @@ export const useOnboarding = () => {
         nina_message: ninaData?.message || 'Bem-vindo(a) à nossa plataforma!',
       }));
 
-      toast.success('Onboarding concluído com sucesso!');
+      toast({ 
+        title: 'Onboarding concluído!', 
+        description: 'Bem-vindo à nossa plataforma!',
+        variant: 'default'
+      });
       return true;
 
     } catch (error) {
       console.error('Erro ao finalizar onboarding:', error);
-      toast.error('Erro ao finalizar onboarding');
+      toast({ 
+        title: 'Erro ao finalizar', 
+        description: 'Erro ao finalizar onboarding',
+        variant: 'destructive'
+      });
       return false;
     } finally {
       setIsSaving(false);
@@ -313,6 +329,7 @@ export const useOnboarding = () => {
     goToNextStep,
     goToPrevStep,
     completeOnboarding,
+    setState, // Expor setState para permitir atualizações locais
     
     // Helpers
     isStepCompleted: (step: number) => state.completed_steps.includes(step),

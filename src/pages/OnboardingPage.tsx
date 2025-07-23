@@ -25,6 +25,8 @@ const OnboardingPage: React.FC = () => {
     goToPrevStep,
     completeOnboarding,
     nina_message,
+    // Adicionar setState do hook para poder atualizar dados localmente
+    setState,
   } = useOnboarding();
 
   // Redirect se usuário não está logado
@@ -87,6 +89,29 @@ const OnboardingPage: React.FC = () => {
   const StepComponent = currentStepConfig.component;
 
   const handleNext = async () => {
+    console.log('[ONBOARDING_PAGE] HandleNext chamado, step atual:', current_step);
+    
+    // Salvar dados do step atual antes de prosseguir
+    let stepData = null;
+    let stepMapping = {
+      1: data.personal_info,
+      2: data.business_info,
+      3: data.ai_experience,
+      4: data.goals_info,
+      5: data.personalization,
+    };
+    
+    if (current_step <= 5) {
+      stepData = stepMapping[current_step as keyof typeof stepMapping];
+      console.log('[ONBOARDING_PAGE] Salvando dados do step:', current_step, stepData);
+      
+      const success = await saveStepData(current_step, stepData);
+      if (!success) {
+        console.error('[ONBOARDING_PAGE] Falha ao salvar step', current_step);
+        return;
+      }
+    }
+    
     if (current_step === 6) {
       // Finalizar onboarding no step 6
       await completeOnboarding(data.personalization || {});
@@ -95,29 +120,23 @@ const OnboardingPage: React.FC = () => {
     }
   };
 
-  const handleStepSubmit = async (stepData: any) => {
-    console.log('[ONBOARDING_PAGE] Submetendo step:', current_step);
-    console.log('[ONBOARDING_PAGE] Dados do step:', stepData);
-    
-    // Simplificar: passar dados brutos e deixar o hook processar
-    const success = await saveStepData(current_step, stepData);
-    console.log('[ONBOARDING_PAGE] Resultado do salvamento:', success);
-    
-    if (success) {
-      await handleNext();
-    } else {
-      console.error('[ONBOARDING_PAGE] Falha ao salvar step');
-    }
-  };
-
   const canProceed = () => {
     switch (current_step) {
       case 1:
-        // Validar telefone internacional (formato: +dialCode|number)
+        // Validar telefone internacional completo (formato: +dialCode|number) 
         const phoneValid = data.personal_info?.phone && 
           data.personal_info.phone.includes('|') && 
-          data.personal_info.phone.startsWith('+');
-        return !!(data.personal_info?.name && phoneValid && data.personal_info?.state && data.personal_info?.city);
+          data.personal_info.phone.startsWith('+') &&
+          data.personal_info.phone.split('|')[1] && // Ter número após o |
+          data.personal_info.phone.split('|')[1].trim().length > 0; // Número não vazio
+        const hasRequiredFields = data.personal_info?.name && 
+          data.personal_info?.state && 
+          data.personal_info?.city;
+        
+        console.log('[VALIDATION] Phone:', data.personal_info?.phone, 'Valid:', phoneValid);
+        console.log('[VALIDATION] Required fields:', hasRequiredFields);
+        
+        return !!(hasRequiredFields && phoneValid);
       case 2:
         return !!(data.business_info?.company_name && data.business_info?.company_sector);
       case 3:
@@ -150,10 +169,17 @@ const OnboardingPage: React.FC = () => {
         <Step1PersonalInfo
           initialData={data.personal_info}
           onDataChange={(personalData) => {
-            // Só atualizar estado local, não salvar automaticamente
-            data.personal_info = personalData;
+            console.log('[STEP1] Dados alterados:', personalData);
+            // Atualizar estado local sem mutação direta
+            setState(prev => ({
+              ...prev,
+              data: {
+                ...prev.data,
+                personal_info: personalData
+              }
+            }));
           }}
-          onNext={() => handleStepSubmit(data.personal_info)}
+          onNext={() => {}} // Não usado - controlado pelo OnboardingLayout
         />
       )}
 
@@ -162,34 +188,16 @@ const OnboardingPage: React.FC = () => {
           initialData={data.business_info}
           onDataChange={(businessData) => {
             console.log('Step2 Data Change:', businessData);
-            // Criar novo objeto com estrutura correta
-            const formattedData = {
-              company_name: businessData.company_name || '',
-              company_sector: businessData.company_sector || '',
-              company_size: businessData.company_size || '',
-              annual_revenue: businessData.annual_revenue || '',
-              current_position: businessData.current_position || '',
-              years_experience: '1-3', // Adicionar campo faltante
-            };
-            
-            // Atualizar dados no formato correto
-            if (data.business_info) {
-              Object.assign(data.business_info, formattedData);
-            } else {
-              data.business_info = formattedData;
-            }
+            // Atualizar estado local sem mutação direta (com cast temporário)
+            setState(prev => ({
+              ...prev,
+              data: {
+                ...prev.data,
+                business_info: businessData as any
+              }
+            }));
           }}
-          onNext={() => {
-            console.log('Step2 Submit:', data.business_info);
-            handleStepSubmit(data.business_info || {
-              company_name: '',
-              company_sector: '',
-              company_size: '',
-              annual_revenue: '',
-              current_position: '',
-              years_experience: '1-3',
-            });
-          }}
+          onNext={() => {}} // Não usado - controlado pelo OnboardingLayout
         />
       )}
 
@@ -198,30 +206,16 @@ const OnboardingPage: React.FC = () => {
           initialData={data.ai_experience}
           onDataChange={(aiData) => {
             console.log('Step3 Data Change:', aiData);
-            // Criar novo objeto com estrutura correta
-            const formattedData = {
-              experience_level: aiData.experience_level || '',
-              tools_used: aiData.current_tools || [], // Mapear current_tools -> tools_used
-              satisfaction_level: 'satisfied',
-              biggest_challenge: aiData.biggest_challenge || '',
-            };
-            
-            // Atualizar dados no formato correto
-            if (data.ai_experience) {
-              Object.assign(data.ai_experience, formattedData);
-            } else {
-              data.ai_experience = formattedData;
-            }
+            // Atualizar estado local sem mutação direta (com cast temporário)
+            setState(prev => ({
+              ...prev,
+              data: {
+                ...prev.data,
+                ai_experience: aiData as any
+              }
+            }));
           }}
-          onNext={() => {
-            console.log('Step3 Submit:', data.ai_experience);
-            handleStepSubmit(data.ai_experience || {
-              experience_level: '',
-              tools_used: [],
-              satisfaction_level: 'satisfied',
-              biggest_challenge: '',
-            });
-          }}
+          onNext={() => {}} // Não usado - controlado pelo OnboardingLayout
         />
       )}
 
@@ -230,32 +224,16 @@ const OnboardingPage: React.FC = () => {
           initialData={data.goals_info}
           onDataChange={(goalsData) => {
             console.log('Step4 Data Change:', goalsData);
-            // Criar novo objeto com estrutura correta
-            const formattedData = {
-              primary_goal: goalsData.primary_goal || '',
-              specific_challenge: goalsData.specific_objectives || '', // Mapear specific_objectives -> specific_challenge
-              key_metrics: goalsData.success_metrics?.join(', ') || '', // Mapear success_metrics -> key_metrics
-              timeline: goalsData.timeline || '',
-              success_definition: 'Implementar IA com sucesso',
-            };
-            
-            // Atualizar dados no formato correto
-            if (data.goals_info) {
-              Object.assign(data.goals_info, formattedData);
-            } else {
-              data.goals_info = formattedData;
-            }
+            // Atualizar estado local sem mutação direta (com cast temporário)
+            setState(prev => ({
+              ...prev,
+              data: {
+                ...prev.data,
+                goals_info: goalsData as any
+              }
+            }));
           }}
-          onNext={() => {
-            console.log('Step4 Submit:', data.goals_info);
-            handleStepSubmit(data.goals_info || {
-              primary_goal: '',
-              specific_challenge: '',
-              key_metrics: '',
-              timeline: '',
-              success_definition: 'Implementar IA com sucesso',
-            });
-          }}
+          onNext={() => {}} // Não usado - controlado pelo OnboardingLayout
         />
       )}
 
@@ -264,32 +242,16 @@ const OnboardingPage: React.FC = () => {
           initialData={data.personalization}
           onDataChange={(personalizationData) => {
             console.log('Step5 Data Change:', personalizationData);
-            // Criar novo objeto com estrutura correta
-            const formattedData = {
-              study_hours: '2-4',
-              preferred_content: personalizationData.preferred_content || [],
-              learning_style: personalizationData.learning_style || '',
-              support_level: personalizationData.support_level || '',
-              schedule_preference: personalizationData.availability || '', // Mapear availability -> schedule_preference
-            };
-            
-            // Atualizar dados no formato correto
-            if (data.personalization) {
-              Object.assign(data.personalization, formattedData);
-            } else {
-              data.personalization = formattedData;
-            }
+            // Atualizar estado local sem mutação direta (com cast temporário)
+            setState(prev => ({
+              ...prev,
+              data: {
+                ...prev.data,
+                personalization: personalizationData as any
+              }
+            }));
           }}
-          onNext={() => {
-            console.log('Step5 Submit:', data.personalization);
-            handleStepSubmit(data.personalization || {
-              study_hours: '2-4',
-              preferred_content: [],
-              learning_style: '',
-              support_level: '',
-              schedule_preference: '',
-            });
-          }}
+          onNext={() => {}} // Não usado - controlado pelo OnboardingLayout
         />
       )}
 
