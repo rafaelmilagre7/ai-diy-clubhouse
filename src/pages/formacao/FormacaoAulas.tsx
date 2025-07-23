@@ -19,7 +19,7 @@ import { ClassificacaoAulasModal } from "@/components/formacao/aulas/Classificac
 const FormacaoAulas = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { profile } = useAuth();
+  const { profile, isAdmin } = useAuth();
   
   // Para visualização geral de todas as aulas (sem ID de módulo)
   const { lessons: allLessons, loading: loadingAllLessons, refetch: refetchAllLessons } = useAllLessons();
@@ -183,8 +183,6 @@ const FormacaoAulas = () => {
       </div>
     );
   }
-
-  const isAdmin = profile?.role === 'admin';
 
   // Renderizar visualização geral de todas as aulas
   if (isGeneralView) {
