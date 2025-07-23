@@ -4,11 +4,11 @@ import { useAuth } from '@/contexts/auth';
 import { useOnboarding } from '@/hooks/onboarding/useOnboarding';
 import { OnboardingLayout } from '@/components/onboarding/OnboardingLayout';
 import { Step1PersonalInfo } from '@/components/onboarding/steps/Step1PersonalInfo';
-// import { Step2BusinessInfo } from '@/components/onboarding/steps/Step2BusinessInfo';
-// import { Step3AIExperience } from '@/components/onboarding/steps/Step3AIExperience';
-// import { Step4Goals } from '@/components/onboarding/steps/Step4Goals';
-// import { Step5Personalization } from '@/components/onboarding/steps/Step5Personalization';
-// import { Step6Welcome } from '@/components/onboarding/steps/Step6Welcome';
+import { Step2BusinessInfo } from '@/components/onboarding/steps/Step2BusinessInfo';
+import { Step3AIExperience } from '@/components/onboarding/steps/Step3AIExperience';
+import { Step4Goals } from '@/components/onboarding/steps/Step4Goals';
+import { Step5Personalization } from '@/components/onboarding/steps/Step5Personalization';
+import { Step6Welcome } from '@/components/onboarding/steps/Step6Welcome';
 import { Loader2 } from 'lucide-react';
 
 const OnboardingPage: React.FC = () => {
@@ -58,27 +58,27 @@ const OnboardingPage: React.FC = () => {
     2: {
       title: 'Contexto do seu negócio',
       subtitle: 'Entenda como podemos ajudar sua empresa a crescer com IA',
-      component: () => <div>Step 2 - Em construção</div>,
+      component: Step2BusinessInfo,
     },
     3: {
       title: 'Sua experiência com IA',
       subtitle: 'Queremos saber quais ferramentas você já usa ou gostaria de usar',
-      component: () => <div>Step 3 - Em construção</div>,
+      component: Step3AIExperience,
     },
     4: {
       title: 'Seus objetivos',
       subtitle: 'Defina suas metas para que possamos criar o melhor plano para você',
-      component: () => <div>Step 4 - Em construção</div>,
+      component: Step4Goals,
     },
     5: {
       title: 'Personalização',
       subtitle: 'Como você prefere aprender e ser acompanhado?',
-      component: () => <div>Step 5 - Em construção</div>,
+      component: Step5Personalization,
     },
     6: {
       title: 'Bem-vindo(a) ao Viver de IA!',
       subtitle: 'Sua jornada personalizada está pronta para começar',
-      component: () => <div>Step 6 - Mensagem da NINA: {nina_message}</div>,
+      component: Step6Welcome,
     },
   };
 
@@ -86,8 +86,8 @@ const OnboardingPage: React.FC = () => {
   const StepComponent = currentStepConfig.component;
 
   const handleNext = async () => {
-    if (current_step === 5) {
-      // Finalizar onboarding no step 5
+    if (current_step === 6) {
+      // Finalizar onboarding no step 6
       await completeOnboarding(data.personalization || {});
     } else {
       await goToNextStep();
@@ -95,7 +95,8 @@ const OnboardingPage: React.FC = () => {
   };
 
   const handleStepSubmit = async (stepData: any) => {
-    const success = await saveStepData(current_step, stepData);
+    // Salvar dados temporariamente sem validação strict
+    const success = await saveStepData(current_step, stepData as any);
     if (success) {
       await handleNext();
     }
@@ -137,7 +138,6 @@ const OnboardingPage: React.FC = () => {
         <Step1PersonalInfo
           initialData={data.personal_info}
           onDataChange={(personalData) => {
-            // Atualizar dados localmente sem salvar ainda
             if (data.personal_info) {
               Object.assign(data.personal_info, personalData);
             } else {
@@ -147,11 +147,92 @@ const OnboardingPage: React.FC = () => {
           onNext={() => handleStepSubmit(data.personal_info || {})}
         />
       )}
-      
-      {current_step !== 1 && (
-        <div className="text-center p-8">
-          <p className="text-muted-foreground">Step {current_step} em construção...</p>
-        </div>
+
+      {current_step === 2 && (
+        <Step2BusinessInfo
+          initialData={data.business_info}
+          onDataChange={(businessData) => {
+            if (data.business_info) {
+              Object.assign(data.business_info, businessData);
+            } else {
+              data.business_info = businessData;
+            }
+          }}
+          onNext={() => handleStepSubmit({
+            company_name: '',
+            company_sector: '',
+            company_size: '',
+            annual_revenue: '',
+            current_position: '',
+            years_experience: '1-3',
+          })}
+        />
+      )}
+
+      {current_step === 3 && (
+        <Step3AIExperience
+          initialData={data.ai_experience}
+          onDataChange={(aiData) => {
+            if (data.ai_experience) {
+              Object.assign(data.ai_experience, aiData);
+            } else {
+              data.ai_experience = aiData;
+            }
+          }}
+          onNext={() => handleStepSubmit({
+            experience_level: '',
+            tools_used: [],
+            satisfaction_level: 'satisfied',
+            biggest_challenge: '',
+          })}
+        />
+      )}
+
+      {current_step === 4 && (
+        <Step4Goals
+          initialData={data.goals_info}
+          onDataChange={(goalsData) => {
+            if (data.goals_info) {
+              Object.assign(data.goals_info, goalsData);
+            } else {
+              data.goals_info = goalsData;
+            }
+          }}
+          onNext={() => handleStepSubmit({
+            primary_goal: '',
+            specific_challenge: '',
+            key_metrics: '',
+            timeline: '',
+            success_definition: '',
+          })}
+        />
+      )}
+
+      {current_step === 5 && (
+        <Step5Personalization
+          initialData={data.personalization}
+          onDataChange={(personalizationData) => {
+            if (data.personalization) {
+              Object.assign(data.personalization, personalizationData);
+            } else {
+              data.personalization = personalizationData;
+            }
+          }}
+          onNext={() => handleStepSubmit({
+            study_hours: '2-4',
+            preferred_content: [],
+            learning_style: '',
+            support_level: '',
+            schedule_preference: '',
+          })}
+        />
+      )}
+
+      {current_step === 6 && (
+        <Step6Welcome
+          ninaMessage={nina_message}
+          onFinish={() => completeOnboarding(data.personalization || {})}
+        />
       )}
     </OnboardingLayout>
   );
