@@ -222,6 +222,16 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
             <CheckSquare className="w-4 h-4" />
             Quais ferramentas de IA você já usa? (selecione todas que se aplicam)
           </Label>
+          
+          {/* Debug Info */}
+          <div className="p-2 bg-muted rounded text-xs">
+            <strong>Debug:</strong> {selectedTools.length} ferramentas selecionadas: {selectedTools.join(', ') || 'Nenhuma'}
+            <br />
+            <strong>Total ferramentas:</strong> {tools.length} | <strong>Loading:</strong> {isLoading ? 'Sim' : 'Não'}
+            <br />
+            <strong>Categorias disponíveis:</strong> {Object.keys(organizedTools).length}
+          </div>
+          
           {isLoading ? (
             <div className="text-center py-8">
               <p className="text-muted-foreground">Carregando ferramentas...</p>
