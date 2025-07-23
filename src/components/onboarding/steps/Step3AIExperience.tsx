@@ -51,7 +51,7 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
     const newData = { ...currentData, ...watchedFields };
     setCurrentData(newData);
     onDataChange(newData);
-  }, [watchedFields, onDataChange]);
+  }, [watchedFields]); // Removido onDataChange das dependências para evitar loop
 
   const handleSubmit = (data: AIExperienceFormData) => {
     console.log('[Step3] Enviando dados:', data);
