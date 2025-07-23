@@ -7,7 +7,6 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Bot, Zap, CheckSquare } from 'lucide-react';
-import { useOnboardingTools } from '@/hooks/useOnboardingTools';
 import { Card, CardContent } from '@/components/ui/card';
 
 const aiExperienceSchema = z.object({
@@ -31,7 +30,22 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
   onNext,
 }) => {
   const [selectedTools, setSelectedTools] = useState<string[]>(initialData?.current_tools || []);
-  const { tools, isLoading } = useOnboardingTools();
+  
+  // Lista estática de ferramentas para o onboarding - sem depender do banco
+  const staticTools = [
+    { id: '1', name: 'ChatGPT', category: 'Modelos de IA e Interfaces' },
+    { id: '2', name: 'Claude', category: 'Modelos de IA e Interfaces' },
+    { id: '3', name: 'Gemini', category: 'Modelos de IA e Interfaces' },
+    { id: '4', name: 'Canva', category: 'Geração de Conteúdo Visual' },
+    { id: '5', name: 'Midjourney', category: 'Geração de Conteúdo Visual' },
+    { id: '6', name: 'DALL-E', category: 'Geração de Conteúdo Visual' },
+    { id: '7', name: 'Make (Integromat)', category: 'Automação e Integrações' },
+    { id: '8', name: 'Zapier', category: 'Automação e Integrações' },
+    { id: '9', name: 'Notion AI', category: 'Produtividade e Organização' },
+    { id: '10', name: 'Grammarly', category: 'Gestão de Documentos e Conteúdo' }
+  ];
+  
+  const isLoading = false;
   const lastDataRef = useRef<string>('');
   const onDataChangeRef = useRef(onDataChange);
 
@@ -98,8 +112,6 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
     });
   }, [form, notifyChange]);
 
-  // REMOVIDO: useEffect que causava loops
-
   const handleSubmit = (data: AIExperienceFormData) => {
     console.log('[Step3] Enviando dados:', data);
     
@@ -116,22 +128,14 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
     const categories = [
       'Modelos de IA e Interfaces',
       'Geração de Conteúdo Visual', 
-      'Geração e Processamento de Áudio',
       'Automação e Integrações',
-      'Comunicação e Atendimento',
-      'Captura e Análise de Dados',
-      'Pesquisa e Síntese de Informações',
-      'Gestão de Documentos e Conteúdo',
-      'Marketing e CRM',
       'Produtividade e Organização',
-      'Desenvolvimento e Código',
-      'Plataformas de Mídia',
-      'Outros'
+      'Gestão de Documentos e Conteúdo'
     ];
 
     return categories.reduce((acc, category) => {
-      const toolsInCategory = tools
-        .filter(tool => tool.status && tool.category === category)
+      const toolsInCategory = staticTools
+        .filter(tool => tool.category === category)
         .sort((a, b) => a.name.localeCompare(b.name));
       
       if (toolsInCategory.length > 0) {
@@ -139,8 +143,8 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
       }
       
       return acc;
-    }, {} as Record<string, typeof tools>);
-  }, [tools]);
+    }, {} as Record<string, typeof staticTools>);
+  }, [staticTools]);
 
   return (
     <div className="space-y-8 max-w-2xl mx-auto">
@@ -225,15 +229,6 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
             Quais ferramentas de IA você já usa? (selecione todas que se aplicam)
           </Label>
           
-          {/* Debug Info */}
-          <div className="p-2 bg-muted rounded text-xs">
-            <strong>Debug:</strong> {selectedTools.length} ferramentas selecionadas: {selectedTools.join(', ') || 'Nenhuma'}
-            <br />
-            <strong>Total ferramentas:</strong> {tools.length} | <strong>Loading:</strong> {isLoading ? 'Sim' : 'Não'}
-            <br />
-            <strong>Categorias disponíveis:</strong> {Object.keys(organizedTools).length}
-          </div>
-          
           {isLoading ? (
             <div className="text-center py-8">
               <p className="text-muted-foreground">Carregando ferramentas...</p>
@@ -254,28 +249,15 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
                         }`}
                         onClick={() => handleToolClick(tool.name)}
                       >
-                        <CardContent className="p-3 flex flex-col items-center space-y-2">
-                          <div className="h-8 w-8 rounded-md bg-primary/10 flex items-center justify-center overflow-hidden flex-shrink-0">
-                            {tool.logo_url ? (
-                              <img 
-                                src={tool.logo_url} 
-                                alt={tool.name} 
-                                className="h-full w-full object-contain" 
-                                onError={(e) => {
-                                  e.currentTarget.style.display = 'none';
-                                  const parent = e.currentTarget.parentElement;
-                                  if (parent) {
-                                    parent.innerHTML = `<div class="text-xs font-bold text-primary">${tool.name.substring(0, 2).toUpperCase()}</div>`;
-                                  }
-                                }}
-                              />
-                            ) : (
-                              <div className="text-xs font-bold text-primary">
-                                {tool.name.substring(0, 2).toUpperCase()}
+                        <CardContent className="p-3 flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 bg-gradient-to-br from-primary/20 to-primary/5 rounded-lg flex items-center justify-center">
+                              <div className="text-xs font-medium text-primary">
+                                {tool.name.charAt(0)}
                               </div>
-                            )}
+                            </div>
                           </div>
-                          <span className="text-xs font-medium text-center line-clamp-2">
+                          <span className="text-sm font-medium flex-1 text-left ml-2">
                             {tool.name}
                           </span>
                           <Checkbox
@@ -301,11 +283,13 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
                     }`}
                     onClick={() => handleToolClick('Nenhuma ainda')}
                   >
-                    <CardContent className="p-3 flex flex-col items-center space-y-2">
-                      <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center">
-                        <span className="text-xs">❌</span>
+                    <CardContent className="p-3 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 bg-gradient-to-br from-muted to-muted/50 rounded-lg flex items-center justify-center">
+                          <span className="text-xs">❌</span>
+                        </div>
                       </div>
-                      <span className="text-xs font-medium text-center">
+                      <span className="text-sm font-medium flex-1 text-left ml-2">
                         Nenhuma ainda
                       </span>
                       <Checkbox
