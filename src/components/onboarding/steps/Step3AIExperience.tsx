@@ -39,20 +39,36 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
       experience_level: initialData?.experience_level || '',
       implementation_status: initialData?.implementation_status || '',
       implementation_approach: initialData?.implementation_approach || '',
-      current_tools: initialData?.current_tools || [],
+      current_tools: [], // Não usar no form, apenas estado local
     },
     mode: 'onChange',
   });
 
-  // Função simples para notificar mudanças - SEM memoização
-  const notifyChange = (newData: Partial<AIExperienceFormData>) => {
+  // Função simples para notificar mudanças dos selects apenas
+  const notifySelectChange = (field: keyof AIExperienceFormData, value: string) => {
+    const newData = {
+      experience_level: field === 'experience_level' ? value : form.getValues('experience_level'),
+      implementation_status: field === 'implementation_status' ? value : form.getValues('implementation_status'),
+      implementation_approach: field === 'implementation_approach' ? value : form.getValues('implementation_approach'),
+      current_tools: selectedTools // Sempre usar o estado local
+    };
+    onDataChange(newData);
+  };
+
+  // Função simples para notificar mudanças das ferramentas apenas
+  const notifyToolsChange = (newTools: string[]) => {
+    const newData = {
+      experience_level: form.getValues('experience_level'),
+      implementation_status: form.getValues('implementation_status'),
+      implementation_approach: form.getValues('implementation_approach'),
+      current_tools: newTools
+    };
     onDataChange(newData);
   };
 
   const handleSelectChange = (field: keyof AIExperienceFormData, value: string) => {
     form.setValue(field, value);
-    const formData = form.getValues();
-    notifyChange({ ...formData, current_tools: selectedTools });
+    notifySelectChange(field, value);
   };
 
   const handleToolClick = (toolName: string) => {
@@ -73,8 +89,7 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
     }
     
     setSelectedTools(newSelectedTools);
-    const formData = form.getValues();
-    notifyChange({ ...formData, current_tools: newSelectedTools });
+    notifyToolsChange(newSelectedTools); // Função separada sem form.getValues()
   };
 
   const handleSubmit = (data: AIExperienceFormData) => {
