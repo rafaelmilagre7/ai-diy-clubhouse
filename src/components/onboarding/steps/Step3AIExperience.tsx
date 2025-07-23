@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -32,6 +32,7 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
 }) => {
   const [selectedTools, setSelectedTools] = useState<string[]>(initialData?.current_tools || []);
   const { tools, isLoading } = useTools();
+  const lastDataRef = useRef<string>('');
 
   const form = useForm<AIExperienceFormData>({
     resolver: zodResolver(aiExperienceSchema),
@@ -44,38 +45,48 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
     mode: 'onChange',
   });
 
-  // Função simples para notificar mudanças - SEM memoização
-  const notifyChange = (newData: Partial<AIExperienceFormData>) => {
-    onDataChange(newData);
-  };
+  // Função memoizada para notificar mudanças com debounce
+  const notifyChange = useCallback((newData: Partial<AIExperienceFormData>) => {
+    const dataString = JSON.stringify(newData);
+    if (lastDataRef.current !== dataString) {
+      lastDataRef.current = dataString;
+      onDataChange(newData);
+    }
+  }, [onDataChange]);
 
-  const handleSelectChange = (field: keyof AIExperienceFormData, value: string) => {
+  const handleSelectChange = useCallback((field: keyof AIExperienceFormData, value: string) => {
     form.setValue(field, value);
     const formData = form.getValues();
     notifyChange({ ...formData, current_tools: selectedTools });
-  };
+  }, [form, selectedTools, notifyChange]);
 
-  const handleToolClick = (toolName: string) => {
-    let newSelectedTools: string[];
-    
-    if (toolName === 'Nenhuma ainda') {
-      newSelectedTools = selectedTools.includes('Nenhuma ainda') 
-        ? selectedTools.filter(t => t !== 'Nenhuma ainda')
-        : ['Nenhuma ainda'];
-    } else {
-      if (selectedTools.includes('Nenhuma ainda')) {
-        newSelectedTools = [toolName];
-      } else if (selectedTools.includes(toolName)) {
-        newSelectedTools = selectedTools.filter(t => t !== toolName);
+  const handleToolClick = useCallback((toolName: string) => {
+    setSelectedTools(prevSelectedTools => {
+      let newSelectedTools: string[];
+      
+      if (toolName === 'Nenhuma ainda') {
+        newSelectedTools = prevSelectedTools.includes('Nenhuma ainda') 
+          ? prevSelectedTools.filter(t => t !== 'Nenhuma ainda')
+          : ['Nenhuma ainda'];
       } else {
-        newSelectedTools = [...selectedTools, toolName];
+        if (prevSelectedTools.includes('Nenhuma ainda')) {
+          newSelectedTools = [toolName];
+        } else if (prevSelectedTools.includes(toolName)) {
+          newSelectedTools = prevSelectedTools.filter(t => t !== toolName);
+        } else {
+          newSelectedTools = [...prevSelectedTools, toolName];
+        }
       }
-    }
-    
-    setSelectedTools(newSelectedTools);
-    const formData = form.getValues();
-    notifyChange({ ...formData, current_tools: newSelectedTools });
-  };
+      
+      // Usar setTimeout para evitar chamadas síncronas que causam loop
+      setTimeout(() => {
+        const formData = form.getValues();
+        notifyChange({ ...formData, current_tools: newSelectedTools });
+      }, 0);
+      
+      return newSelectedTools;
+    });
+  }, [form, notifyChange]);
 
   const handleSubmit = (data: AIExperienceFormData) => {
     console.log('[Step3] Enviando dados:', data);
@@ -88,8 +99,8 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
     onNext();
   };
 
-  // Organizar ferramentas por categoria
-  const organizeToolsByCategory = () => {
+  // Organizar ferramentas por categoria - memoizado para evitar recálculos
+  const organizedTools = useMemo(() => {
     const categories = [
       'Modelos de IA e Interfaces',
       'Geração de Conteúdo Visual', 
@@ -106,7 +117,7 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
       'Outros'
     ];
 
-    const organizedTools = categories.reduce((acc, category) => {
+    return categories.reduce((acc, category) => {
       const toolsInCategory = tools
         .filter(tool => tool.status && tool.category === category)
         .sort((a, b) => a.name.localeCompare(b.name));
@@ -117,11 +128,7 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
       
       return acc;
     }, {} as Record<string, typeof tools>);
-
-    return organizedTools;
-  };
-
-  const organizedTools = organizeToolsByCategory();
+  }, [tools]);
 
   return (
     <div className="space-y-8 max-w-2xl mx-auto">
