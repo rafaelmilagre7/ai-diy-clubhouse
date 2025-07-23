@@ -190,42 +190,47 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
     // A notificação acontece automaticamente via useEffect
   };
 
-  const handleToolClick = (toolName: string) => {
-    console.log('[STEP3] 🖱️ Click na ferramenta:', toolName, '| Estado atual:', selectedTools);
+  const handleToolClick = useCallback((toolName: string) => {
+    console.log('[STEP3] 🖱️ CLICK REGISTRADO na ferramenta:', toolName, '| Estado atual:', selectedTools);
     
     let newSelectedTools: string[];
     
     if (toolName === 'Nenhuma ainda') {
       // Se clicar em "Nenhuma ainda", limpar todas e só deixar essa
       newSelectedTools = ['Nenhuma ainda'];
+      console.log('[STEP3] ✅ Selecionando APENAS Nenhuma ainda');
     } else {
       // Se tem "Nenhuma ainda" selecionada, remover ela e adicionar a nova ferramenta
       if (selectedTools.includes('Nenhuma ainda')) {
         newSelectedTools = [toolName];
+        console.log('[STEP3] ✅ Removendo Nenhuma ainda e adicionando:', toolName);
       } else {
         // Lógica normal de toggle
         if (selectedTools.includes(toolName)) {
           // Remover ferramenta
           newSelectedTools = selectedTools.filter(tool => tool !== toolName);
+          console.log('[STEP3] ✅ Removendo ferramenta:', toolName);
           // Se ficou vazio, adicionar "Nenhuma ainda"
           if (newSelectedTools.length === 0) {
             newSelectedTools = ['Nenhuma ainda'];
+            console.log('[STEP3] ✅ Lista vazia, adicionando Nenhuma ainda');
           }
         } else {
           // Adicionar ferramenta
           newSelectedTools = [...selectedTools, toolName];
+          console.log('[STEP3] ✅ Adicionando ferramenta:', toolName);
         }
       }
     }
     
-    console.log('[STEP3] ✅ Atualizando selectedTools:', selectedTools, '→', newSelectedTools);
+    console.log('[STEP3] 🔄 MUDANÇA DE ESTADO:', selectedTools, '→', newSelectedTools);
     setSelectedTools(newSelectedTools);
     
     // Força uma re-render para garantir que a UI atualize
     setTimeout(() => {
-      console.log('[STEP3] 🔄 Estado após update:', newSelectedTools);
+      console.log('[STEP3] ✅ Estado confirmado após update:', newSelectedTools);
     }, 100);
-  };
+  }, [selectedTools]);
 
   const handleImageError = useCallback((toolId: string) => {
     setFailedImages(prev => new Set([...prev, toolId]));
@@ -374,7 +379,12 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
                             ? 'border-2 border-primary bg-primary/10 shadow-lg' 
                             : 'border border-border hover:bg-accent/50'
                         }`}
-                        onClick={() => handleToolClick(tool.name)}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          console.log('[STEP3] 🎯 Card clicado - ferramenta:', tool.name);
+                          handleToolClick(tool.name);
+                        }}
                       >
                         <CardContent className="p-3 flex items-center justify-between">
                           <div className="flex items-center gap-2">
@@ -398,6 +408,7 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
                           </span>
                           <Checkbox
                             checked={selectedTools.includes(tool.name)}
+                            onChange={() => {}} // Checkbox apenas visual
                             className="pointer-events-none"
                           />
                         </CardContent>
@@ -417,7 +428,12 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
                         ? 'border-2 border-primary bg-primary/10 shadow-lg' 
                         : 'border border-border hover:bg-accent/50'
                     }`}
-                    onClick={() => handleToolClick('Nenhuma ainda')}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      console.log('[STEP3] 🎯 Card clicado - Nenhuma ainda');
+                      handleToolClick('Nenhuma ainda');
+                    }}
                   >
                     <CardContent className="p-3 flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -430,6 +446,7 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
                       </span>
                       <Checkbox
                         checked={selectedTools.includes('Nenhuma ainda')}
+                        onChange={() => {}} // Checkbox apenas visual
                         className="pointer-events-none"
                       />
                     </CardContent>
