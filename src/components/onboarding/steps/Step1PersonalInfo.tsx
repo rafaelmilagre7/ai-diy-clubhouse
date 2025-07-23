@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { User, Phone, MapPin, Calendar } from 'lucide-react';
+import { User, Phone, MapPin, Calendar, Instagram, Linkedin, Camera, Sparkles } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { BRAZILIAN_STATES, getCitiesByState } from '@/utils/brazilianCities';
 import { DateSelector } from '@/components/ui/date-selector';
 import { InternationalPhoneInput } from '@/components/ui/international-phone-input';
-import { validateInternationalPhone } from '@/utils/validationUtils';
+import { validateInternationalPhone, validateLinkedInUrl, validateInstagramUrl, formatSocialUrl } from '@/utils/validationUtils';
 
 interface PersonalInfoData {
   name: string;
@@ -17,6 +17,10 @@ interface PersonalInfoData {
   state: string;
   city: string;
   birth_date?: string;
+  instagram_url?: string;
+  linkedin_url?: string;
+  profile_picture?: string;
+  fun_fact?: string;
 }
 
 interface Step1PersonalInfoProps {
@@ -36,6 +40,10 @@ export const Step1PersonalInfo: React.FC<Step1PersonalInfoProps> = ({
     state: initialData?.state || '',
     city: initialData?.city || '',
     birth_date: initialData?.birth_date || '',
+    instagram_url: initialData?.instagram_url || '',
+    linkedin_url: initialData?.linkedin_url || '',
+    profile_picture: initialData?.profile_picture || '',
+    fun_fact: initialData?.fun_fact || '',
   });
 
   const [availableCities, setAvailableCities] = useState<string[]>([]);
@@ -88,6 +96,23 @@ export const Step1PersonalInfo: React.FC<Step1PersonalInfoProps> = ({
 
     if (!formData.city.trim()) {
       newErrors.city = 'Cidade é obrigatória';
+    }
+
+    // Validações opcionais - só validar se preenchidos
+    if (formData.linkedin_url && formData.linkedin_url.trim()) {
+      if (!validateLinkedInUrl(formData.linkedin_url)) {
+        newErrors.linkedin_url = 'URL do LinkedIn inválida';
+      }
+    }
+
+    if (formData.instagram_url && formData.instagram_url.trim()) {
+      if (!validateInstagramUrl(formData.instagram_url)) {
+        newErrors.instagram_url = 'URL do Instagram inválida';
+      }
+    }
+
+    if (formData.fun_fact && formData.fun_fact.length > 200) {
+      newErrors.fun_fact = 'Máximo 200 caracteres';
     }
 
     setErrors(newErrors);
@@ -257,6 +282,126 @@ export const Step1PersonalInfo: React.FC<Step1PersonalInfoProps> = ({
           />
           <p className="text-xs text-muted-foreground mt-1">
             Isso nos ajuda a personalizar melhor sua experiência
+          </p>
+        </motion.div>
+
+        {/* LinkedIn (Opcional) */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.6 }}
+        >
+          <Label htmlFor="linkedin_url" className="text-sm font-medium text-foreground mb-2 block">
+            Qual seu LinkedIn? (opcional)
+          </Label>
+          <div className="relative">
+            <Linkedin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              id="linkedin_url"
+              type="text"
+              placeholder="linkedin.com/in/seu-perfil ou seu-usuario"
+              value={formData.linkedin_url}
+              onChange={(e) => {
+                const formatted = formatSocialUrl(e.target.value, 'linkedin');
+                handleChange('linkedin_url', formatted);
+              }}
+              className={`pl-10 h-12 bg-background/50 border-border/50 focus:border-primary transition-all duration-300 ${
+                errors.linkedin_url ? 'border-destructive focus:border-destructive' : ''
+              }`}
+            />
+          </div>
+          {errors.linkedin_url && (
+            <motion.p
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-destructive text-xs mt-1"
+            >
+              {errors.linkedin_url}
+            </motion.p>
+          )}
+          <p className="text-xs text-muted-foreground mt-1">
+            Isso nos ajuda a conhecer melhor seu perfil profissional
+          </p>
+        </motion.div>
+
+        {/* Instagram (Opcional) */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.7 }}
+        >
+          <Label htmlFor="instagram_url" className="text-sm font-medium text-foreground mb-2 block">
+            Qual seu Instagram? (opcional)
+          </Label>
+          <div className="relative">
+            <Instagram className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              id="instagram_url"
+              type="text"
+              placeholder="@seu-usuario ou instagram.com/seu-perfil"
+              value={formData.instagram_url}
+              onChange={(e) => {
+                const formatted = formatSocialUrl(e.target.value, 'instagram');
+                handleChange('instagram_url', formatted);
+              }}
+              className={`pl-10 h-12 bg-background/50 border-border/50 focus:border-primary transition-all duration-300 ${
+                errors.instagram_url ? 'border-destructive focus:border-destructive' : ''
+              }`}
+            />
+          </div>
+          {errors.instagram_url && (
+            <motion.p
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-destructive text-xs mt-1"
+            >
+              {errors.instagram_url}
+            </motion.p>
+          )}
+          <p className="text-xs text-muted-foreground mt-1">
+            Opcional, mas nos ajuda a conhecer mais sobre você
+          </p>
+        </motion.div>
+
+        {/* Curiosidade (Opcional) */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.8 }}
+        >
+          <Label htmlFor="fun_fact" className="text-sm font-medium text-foreground mb-2 block">
+            Conte uma curiosidade sobre você (opcional)
+          </Label>
+          <div className="relative">
+            <Sparkles className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+            <textarea
+              id="fun_fact"
+              placeholder="Ex: Já visitei 15 países, amo culinária japonesa, pratico yoga há 5 anos..."
+              value={formData.fun_fact}
+              onChange={(e) => handleChange('fun_fact', e.target.value)}
+              rows={3}
+              maxLength={200}
+              className={`pl-10 pt-3 pb-3 resize-none bg-background/50 border-border/50 focus:border-primary transition-all duration-300 w-full rounded-md border ${
+                errors.fun_fact ? 'border-destructive focus:border-destructive' : ''
+              }`}
+            />
+          </div>
+          {formData.fun_fact && (
+            <p className="text-xs text-muted-foreground mt-1">
+              {formData.fun_fact.length}/200 caracteres
+            </p>
+          )}
+          {errors.fun_fact && (
+            <motion.p
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-destructive text-xs mt-1"
+            >
+              {errors.fun_fact}
+            </motion.p>
+          )}
+          <p className="text-xs text-muted-foreground mt-1">
+            Isso torna a experiência mais pessoal e divertida!
           </p>
         </motion.div>
       </div>
