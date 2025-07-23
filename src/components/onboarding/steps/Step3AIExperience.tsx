@@ -161,62 +161,45 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
     onDataChangeRef.current = onDataChange;
   }, [onDataChange]);
 
-  // Função para notificar mudanças SEM useEffect automático
-  const notifyChange = useCallback((newData: Partial<AIExperienceFormData>) => {
+  // Função simples sem useCallback para evitar loops
+  const notifyChange = (newData: Partial<AIExperienceFormData>) => {
     const dataString = JSON.stringify(newData);
     if (lastDataRef.current !== dataString) {
       lastDataRef.current = dataString;
-      // Usar setTimeout para quebrar qualquer cadeia síncrona
-      setTimeout(() => {
-        onDataChangeRef.current(newData);
-      }, 0);
+      onDataChangeRef.current(newData);
     }
-  }, []); // REMOVIDO dependências que causavam loop
+  };
 
-  const handleSelectChange = useCallback((field: keyof AIExperienceFormData, value: string) => {
+  const handleSelectChange = (field: keyof AIExperienceFormData, value: string) => {
     form.setValue(field, value);
-    // Usar callback para acessar selectedTools atual sem dependência
-    setTimeout(() => {
-      const formData = form.getValues();
-      setSelectedTools(currentTools => {
-        notifyChange({ ...formData, current_tools: currentTools });
-        return currentTools; // Não modifica o estado, só acessa
-      });
-    }, 0);
-  }, [form]); // REMOVIDO selectedTools e notifyChange das dependências
+    // Notificar imediatamente com dados atuais
+    const formData = form.getValues();
+    notifyChange({ ...formData, current_tools: selectedTools });
+  };
 
-  const handleToolClick = useCallback((toolName: string) => {
-    setSelectedTools(prevSelectedTools => {
-      let newSelectedTools: string[];
-      
-      if (toolName === 'Nenhuma ainda') {
-        newSelectedTools = prevSelectedTools.includes('Nenhuma ainda') 
-          ? prevSelectedTools.filter(t => t !== 'Nenhuma ainda')
-          : ['Nenhuma ainda'];
+  const handleToolClick = (toolName: string) => {
+    let newSelectedTools: string[];
+    
+    if (toolName === 'Nenhuma ainda') {
+      newSelectedTools = selectedTools.includes('Nenhuma ainda') 
+        ? selectedTools.filter(t => t !== 'Nenhuma ainda')
+        : ['Nenhuma ainda'];
+    } else {
+      if (selectedTools.includes('Nenhuma ainda')) {
+        newSelectedTools = [toolName];
+      } else if (selectedTools.includes(toolName)) {
+        newSelectedTools = selectedTools.filter(t => t !== toolName);
       } else {
-        if (prevSelectedTools.includes('Nenhuma ainda')) {
-          newSelectedTools = [toolName];
-        } else if (prevSelectedTools.includes(toolName)) {
-          newSelectedTools = prevSelectedTools.filter(t => t !== toolName);
-        } else {
-          newSelectedTools = [...prevSelectedTools, toolName];
-        }
+        newSelectedTools = [...selectedTools, toolName];
       }
-      
-      // Notificar mudança usando dados atuais sem depender de referências externas
-      setTimeout(() => {
-        const formData = form.getValues();
-        const dataToNotify = { ...formData, current_tools: newSelectedTools };
-        const dataString = JSON.stringify(dataToNotify);
-        if (lastDataRef.current !== dataString) {
-          lastDataRef.current = dataString;
-          onDataChangeRef.current(dataToNotify);
-        }
-      }, 0);
-      
-      return newSelectedTools;
-    });
-  }, [form]); // REMOVIDO todas as dependências problemáticas
+    }
+    
+    setSelectedTools(newSelectedTools);
+    
+    // Notificar mudança após update do state
+    const formData = form.getValues();
+    notifyChange({ ...formData, current_tools: newSelectedTools });
+  };
 
   const handleImageError = useCallback((toolId: string) => {
     setFailedImages(prev => new Set([...prev, toolId]));
