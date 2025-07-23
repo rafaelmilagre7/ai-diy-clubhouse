@@ -29,11 +29,12 @@ const OnboardingPage: React.FC = () => {
 
   // Redirect se usuário não está logado
   if (!user) {
-    return <Navigate to="/auth" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   // Redirect se onboarding já foi completado
-  if (is_completed) {
+  if (user && profile && profile.onboarding_completed === true) {
+    console.log("✅ [ONBOARDING] Onboarding já completado - redirecionando para dashboard");
     return <Navigate to="/dashboard" replace />;
   }
 
