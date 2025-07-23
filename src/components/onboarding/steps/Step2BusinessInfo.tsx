@@ -52,15 +52,10 @@ export const Step2BusinessInfo: React.FC<Step2BusinessInfoProps> = ({
   }, [onDataChange]);
 
   useEffect(() => {
-    // Usar setTimeout para quebrar a cadeia síncrona de chamadas
-    const timeoutId = setTimeout(() => {
-      const newData = { ...currentData, ...watchedFields };
-      setCurrentData(newData);
-      notifyChange(newData);
-    }, 0);
-
-    return () => clearTimeout(timeoutId);
-  }, [watchedFields, currentData, notifyChange]);
+    const newData = { ...currentData, ...watchedFields };
+    setCurrentData(newData);
+    notifyChange(newData);
+  }, [watchedFields, notifyChange]);
 
   const handleSubmit = useCallback((data: BusinessInfoFormData) => {
     onNext();
