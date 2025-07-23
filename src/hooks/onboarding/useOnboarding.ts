@@ -8,6 +8,7 @@ export interface OnboardingData {
   personal_info: {
     name: string;
     phone: string;
+    state: string;
     city: string;
     birth_date?: string;
   };

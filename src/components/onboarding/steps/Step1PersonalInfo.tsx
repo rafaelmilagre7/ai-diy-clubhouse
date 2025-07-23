@@ -5,10 +5,74 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+// Estados brasileiros
+const BRAZILIAN_STATES = [
+  { code: 'AC', name: 'Acre' },
+  { code: 'AL', name: 'Alagoas' },
+  { code: 'AP', name: 'Amapá' },
+  { code: 'AM', name: 'Amazonas' },
+  { code: 'BA', name: 'Bahia' },
+  { code: 'CE', name: 'Ceará' },
+  { code: 'DF', name: 'Distrito Federal' },
+  { code: 'ES', name: 'Espírito Santo' },
+  { code: 'GO', name: 'Goiás' },
+  { code: 'MA', name: 'Maranhão' },
+  { code: 'MT', name: 'Mato Grosso' },
+  { code: 'MS', name: 'Mato Grosso do Sul' },
+  { code: 'MG', name: 'Minas Gerais' },
+  { code: 'PA', name: 'Pará' },
+  { code: 'PB', name: 'Paraíba' },
+  { code: 'PR', name: 'Paraná' },
+  { code: 'PE', name: 'Pernambuco' },
+  { code: 'PI', name: 'Piauí' },
+  { code: 'RJ', name: 'Rio de Janeiro' },
+  { code: 'RN', name: 'Rio Grande do Norte' },
+  { code: 'RS', name: 'Rio Grande do Sul' },
+  { code: 'RO', name: 'Rondônia' },
+  { code: 'RR', name: 'Roraima' },
+  { code: 'SC', name: 'Santa Catarina' },
+  { code: 'SP', name: 'São Paulo' },
+  { code: 'SE', name: 'Sergipe' },
+  { code: 'TO', name: 'Tocantins' }
+];
+
+// Principais cidades por estado (uma amostra)
+const CITIES_BY_STATE: Record<string, string[]> = {
+  'SP': ['São Paulo', 'Campinas', 'Santos', 'Ribeirão Preto', 'São José dos Campos', 'Sorocaba', 'São Bernardo do Campo', 'Santo André', 'Osasco', 'Guarulhos'],
+  'RJ': ['Rio de Janeiro', 'Niterói', 'Duque de Caxias', 'Nova Iguaçu', 'Belford Roxo', 'Campos dos Goytacazes', 'Petrópolis', 'Volta Redonda'],
+  'MG': ['Belo Horizonte', 'Uberlândia', 'Contagem', 'Juiz de Fora', 'Betim', 'Montes Claros', 'Ribeirão das Neves', 'Uberaba'],
+  'PR': ['Curitiba', 'Londrina', 'Maringá', 'Ponta Grossa', 'Cascavel', 'São José dos Pinhais', 'Foz do Iguaçu', 'Colombo'],
+  'RS': ['Porto Alegre', 'Caxias do Sul', 'Pelotas', 'Canoas', 'Santa Maria', 'Gravataí', 'Viamão', 'Novo Hamburgo'],
+  'BA': ['Salvador', 'Feira de Santana', 'Vitória da Conquista', 'Camaçari', 'Juazeiro', 'Ilhéus', 'Itabuna', 'Lauro de Freitas'],
+  'SC': ['Florianópolis', 'Joinville', 'Blumenau', 'São José', 'Criciúma', 'Chapecó', 'Itajaí', 'Lages'],
+  'GO': ['Goiânia', 'Aparecida de Goiânia', 'Anápolis', 'Rio Verde', 'Luziânia', 'Águas Lindas de Goiás', 'Valparaíso de Goiás'],
+  'PE': ['Recife', 'Jaboatão dos Guararapes', 'Olinda', 'Caruaru', 'Petrolina', 'Paulista', 'Cabo de Santo Agostinho'],
+  'CE': ['Fortaleza', 'Caucaia', 'Juazeiro do Norte', 'Maracanaú', 'Sobral', 'Crato', 'Itapipoca'],
+  'PA': ['Belém', 'Ananindeua', 'Santarém', 'Marabá', 'Parauapebas', 'Castanhal', 'Abaetetuba'],
+  'DF': ['Brasília', 'Taguatinga', 'Ceilândia', 'Samambaia', 'Planaltina', 'Águas Claras'],
+  'MA': ['São Luís', 'Imperatriz', 'São José de Ribamar', 'Timon', 'Caxias', 'Codó', 'Paço do Lumiar'],
+  'PB': ['João Pessoa', 'Campina Grande', 'Santa Rita', 'Patos', 'Bayeux', 'Sousa', 'Cajazeiras'],
+  'ES': ['Vitória', 'Guarapari', 'Linhares', 'São Mateus', 'Colatina', 'Cariacica', 'Cachoeiro de Itapemirim'],
+  'PI': ['Teresina', 'Parnaíba', 'Picos', 'Piripiri', 'Floriano', 'Campo Maior', 'Barras'],
+  'AL': ['Maceió', 'Arapiraca', 'Palmeira dos Índios', 'Rio Largo', 'Penedo', 'União dos Palmares'],
+  'MT': ['Cuiabá', 'Várzea Grande', 'Rondonópolis', 'Sinop', 'Tangará da Serra', 'Cáceres', 'Barra do Garças'],
+  'MS': ['Campo Grande', 'Dourados', 'Três Lagoas', 'Corumbá', 'Ponta Porã', 'Aquidauana'],
+  'SE': ['Aracaju', 'Nossa Senhora do Socorro', 'Lagarto', 'Itabaiana', 'Estância'],
+  'RO': ['Porto Velho', 'Ji-Paraná', 'Ariquemes', 'Vilhena', 'Cacoal', 'Rolim de Moura'],
+  'AC': ['Rio Branco', 'Cruzeiro do Sul', 'Sena Madureira', 'Tarauacá', 'Feijó'],
+  'AM': ['Manaus', 'Parintins', 'Itacoatiara', 'Manacapuru', 'Coari', 'Tefé'],
+  'RR': ['Boa Vista', 'Rorainópolis', 'Caracaraí', 'Alto Alegre', 'Mucajaí'],
+  'AP': ['Macapá', 'Santana', 'Laranjal do Jari', 'Oiapoque', 'Mazagão'],
+  'TO': ['Palmas', 'Araguaína', 'Gurupi', 'Porto Nacional', 'Paraíso do Tocantins'],
+  'RN': ['Natal', 'Mossoró', 'Parnamirim', 'São Gonçalo do Amarante', 'Macaíba', 'Ceará-Mirim']
+};
 
 interface PersonalInfoData {
   name: string;
   phone: string;
+  state: string;
   city: string;
   birth_date?: string;
 }
@@ -27,11 +91,27 @@ export const Step1PersonalInfo: React.FC<Step1PersonalInfoProps> = ({
   const [formData, setFormData] = useState<PersonalInfoData>({
     name: initialData?.name || '',
     phone: initialData?.phone || '',
+    state: initialData?.state || '',
     city: initialData?.city || '',
     birth_date: initialData?.birth_date || '',
   });
 
+  const [availableCities, setAvailableCities] = useState<string[]>([]);
+
   const [errors, setErrors] = useState<Partial<PersonalInfoData>>({});
+
+  // Carregar cidades quando estado mudar
+  useEffect(() => {
+    if (formData.state && CITIES_BY_STATE[formData.state]) {
+      setAvailableCities(CITIES_BY_STATE[formData.state]);
+      // Limpar cidade se não estiver na lista do novo estado
+      if (formData.city && !CITIES_BY_STATE[formData.state].includes(formData.city)) {
+        setFormData(prev => ({ ...prev, city: '' }));
+      }
+    } else {
+      setAvailableCities([]);
+    }
+  }, [formData.state, formData.city]);
 
   useEffect(() => {
     onDataChange(formData);
@@ -57,6 +137,10 @@ export const Step1PersonalInfo: React.FC<Step1PersonalInfoProps> = ({
       newErrors.phone = 'Telefone é obrigatório';
     } else if (!/^\(?[1-9]{2}\)?\s?9?\d{4}-?\d{4}$/.test(formData.phone.replace(/\D/g, ''))) {
       newErrors.phone = 'Telefone inválido';
+    }
+
+    if (!formData.state.trim()) {
+      newErrors.state = 'Estado é obrigatório';
     }
 
     if (!formData.city.trim()) {
@@ -151,28 +235,73 @@ export const Step1PersonalInfo: React.FC<Step1PersonalInfoProps> = ({
           )}
         </motion.div>
 
-        {/* Cidade */}
+        {/* Estado */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <Label htmlFor="city" className="text-sm font-medium text-foreground mb-2 block">
+          <Label className="text-sm font-medium text-foreground mb-2 block">
+            Em qual estado você está localizado(a)? *
+          </Label>
+          <Select value={formData.state} onValueChange={(value) => handleChange('state', value)}>
+            <SelectTrigger className={`h-12 bg-background/50 border-border/50 focus:border-primary transition-all duration-300 ${
+              errors.state ? 'border-destructive focus:border-destructive' : ''
+            }`}>
+              <SelectValue placeholder="Selecione seu estado" />
+            </SelectTrigger>
+            <SelectContent className="pointer-events-auto">
+              {BRAZILIAN_STATES.map((state) => (
+                <SelectItem key={state.code} value={state.code}>
+                  {state.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {errors.state && (
+            <motion.p
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-destructive text-xs mt-1"
+            >
+              {errors.state}
+            </motion.p>
+          )}
+        </motion.div>
+
+        {/* Cidade */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <Label className="text-sm font-medium text-foreground mb-2 block">
             Em qual cidade você está localizado(a)? *
           </Label>
-          <div className="relative">
-            <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              id="city"
-              type="text"
-              placeholder="São Paulo, SP"
-              value={formData.city}
-              onChange={(e) => handleChange('city', e.target.value)}
-              className={`pl-10 h-12 bg-background/50 border-border/50 focus:border-primary transition-all duration-300 ${
-                errors.city ? 'border-destructive focus:border-destructive' : ''
-              }`}
-            />
-          </div>
+          <Select 
+            value={formData.city} 
+            onValueChange={(value) => handleChange('city', value)}
+            disabled={!formData.state || availableCities.length === 0}
+          >
+            <SelectTrigger className={`h-12 bg-background/50 border-border/50 focus:border-primary transition-all duration-300 ${
+              errors.city ? 'border-destructive focus:border-destructive' : ''
+            } ${!formData.state ? 'opacity-50 cursor-not-allowed' : ''}`}>
+              <SelectValue placeholder={
+                !formData.state 
+                  ? "Primeiro selecione um estado" 
+                  : availableCities.length === 0 
+                    ? "Nenhuma cidade disponível" 
+                    : "Selecione sua cidade"
+              } />
+            </SelectTrigger>
+            <SelectContent className="pointer-events-auto">
+              {availableCities.map((city) => (
+                <SelectItem key={city} value={city}>
+                  {city}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           {errors.city && (
             <motion.p
               initial={{ opacity: 0, y: -10 }}
