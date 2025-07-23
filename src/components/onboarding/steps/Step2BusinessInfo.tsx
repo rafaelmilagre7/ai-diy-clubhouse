@@ -85,7 +85,10 @@ export const Step2BusinessInfo: React.FC<Step2BusinessInfoProps> = ({
               <Target className="w-4 h-4" />
               Cargo Atual
             </Label>
-            <Select onValueChange={(value) => form.setValue('current_position', value)} defaultValue={form.getValues('current_position')}>
+            <Select onValueChange={(value) => {
+              form.setValue('current_position', value);
+              form.trigger('current_position');
+            }} defaultValue={form.getValues('current_position')}>
               <SelectTrigger className="h-12">
                 <SelectValue placeholder="Selecione seu cargo" />
               </SelectTrigger>
@@ -124,7 +127,10 @@ export const Step2BusinessInfo: React.FC<Step2BusinessInfoProps> = ({
               <Users className="w-4 h-4" />
               Tamanho da Empresa
             </Label>
-            <Select onValueChange={(value) => form.setValue('company_size', value)} defaultValue={form.getValues('company_size')}>
+            <Select onValueChange={(value) => {
+              form.setValue('company_size', value);
+              form.trigger('company_size');
+            }} defaultValue={form.getValues('company_size')}>
               <SelectTrigger className="h-12">
                 <SelectValue placeholder="Selecione o tamanho" />
               </SelectTrigger>
@@ -154,7 +160,10 @@ export const Step2BusinessInfo: React.FC<Step2BusinessInfoProps> = ({
               <TrendingUp className="w-4 h-4" />
               Faturamento Anual
             </Label>
-            <Select onValueChange={(value) => form.setValue('annual_revenue', value)} defaultValue={form.getValues('annual_revenue')}>
+            <Select onValueChange={(value) => {
+              form.setValue('annual_revenue', value);
+              form.trigger('annual_revenue');
+            }} defaultValue={form.getValues('annual_revenue')}>
               <SelectTrigger className="h-12">
                 <SelectValue placeholder="Selecione o faturamento" />
               </SelectTrigger>
@@ -186,7 +195,10 @@ export const Step2BusinessInfo: React.FC<Step2BusinessInfoProps> = ({
             <Building2 className="w-4 h-4" />
             Setor da Empresa
           </Label>
-          <Select onValueChange={(value) => form.setValue('company_sector', value)} defaultValue={form.getValues('company_sector')}>
+          <Select onValueChange={(value) => {
+            form.setValue('company_sector', value);
+            form.trigger('company_sector');
+          }} defaultValue={form.getValues('company_sector')}>
             <SelectTrigger className="h-12">
               <SelectValue placeholder="Selecione o setor" />
             </SelectTrigger>
@@ -231,7 +243,10 @@ export const Step2BusinessInfo: React.FC<Step2BusinessInfoProps> = ({
             <Target className="w-4 h-4" />
             Principal Desafio da Empresa (opcional)
           </Label>
-          <Select onValueChange={(value) => form.setValue('main_challenge', value)} defaultValue={form.getValues('main_challenge')}>
+          <Select onValueChange={(value) => {
+            form.setValue('main_challenge', value);
+            form.trigger('main_challenge');
+          }} defaultValue={form.getValues('main_challenge')}>
             <SelectTrigger className="h-12">
               <SelectValue placeholder="Selecione o principal desafio" />
             </SelectTrigger>
