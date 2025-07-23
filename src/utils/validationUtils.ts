@@ -1,6 +1,27 @@
 
 /**
- * Valida um número de telefone brasileiro
+ * Validates an international phone number in the format "+dialCode|phoneNumber"
+ */
+export const validateInternationalPhone = (phone: string): boolean => {
+  if (!phone || typeof phone !== 'string') return false;
+  
+  const parts = phone.split('|');
+  if (parts.length !== 2) return false;
+  
+  const [dialCode, number] = parts;
+  
+  // Validate dial code format
+  if (!dialCode.startsWith('+') || dialCode.length < 2 || dialCode.length > 5) {
+    return false;
+  }
+  
+  // Validate phone number (at least 8 digits, max 15)
+  const cleanNumber = number.replace(/\D/g, '');
+  return cleanNumber.length >= 8 && cleanNumber.length <= 15;
+};
+
+/**
+ * Validates a Brazilian phone number (legacy support)
  * Formato: (XX) XXXXX-XXXX ou (XX) XXXX-XXXX
  */
 export const validateBrazilianPhone = (phone: string): boolean => {

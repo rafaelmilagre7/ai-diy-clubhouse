@@ -58,6 +58,11 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
 
   return (
     <div className="space-y-2">
+      {currentDay && currentMonth && currentYear && (
+        <p className="text-sm text-muted-foreground">
+          Data selecionada: {currentDay}/{currentMonth}/{currentYear}
+        </p>
+      )}
       <div className="grid grid-cols-3 gap-2">
         {/* Dia */}
         <div>

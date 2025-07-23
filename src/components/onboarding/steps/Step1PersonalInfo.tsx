@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { BRAZILIAN_STATES, getCitiesByState } from '@/utils/brazilianCities';
 import { DateSelector } from '@/components/ui/date-selector';
 import { InternationalPhoneInput } from '@/components/ui/international-phone-input';
+import { validateInternationalPhone } from '@/utils/validationUtils';
 
 interface PersonalInfoData {
   name: string;
@@ -77,12 +78,8 @@ export const Step1PersonalInfo: React.FC<Step1PersonalInfoProps> = ({
 
     if (!formData.phone.trim()) {
       newErrors.phone = 'Telefone é obrigatório';
-    } else {
-      // Validação básica para telefone internacional (deve ter pelo menos dialCode|number)
-      const parts = formData.phone.split('|');
-      if (parts.length !== 2 || !parts[0].startsWith('+') || parts[1].length < 8) {
-        newErrors.phone = 'Telefone inválido';
-      }
+    } else if (!validateInternationalPhone(formData.phone)) {
+      newErrors.phone = 'Telefone inválido. Verifique o formato.';
     }
 
     if (!formData.state.trim()) {
