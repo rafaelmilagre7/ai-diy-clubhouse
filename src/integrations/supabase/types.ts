@@ -2973,6 +2973,8 @@ export type Database = {
           last_active: string | null
           linkedin_url: string | null
           name: string | null
+          onboarding_completed: boolean | null
+          onboarding_completed_at: string | null
           professional_bio: string | null
           referrals_count: number
           role: string
@@ -2995,6 +2997,8 @@ export type Database = {
           last_active?: string | null
           linkedin_url?: string | null
           name?: string | null
+          onboarding_completed?: boolean | null
+          onboarding_completed_at?: string | null
           professional_bio?: string | null
           referrals_count?: number
           role?: string
@@ -3017,6 +3021,8 @@ export type Database = {
           last_active?: string | null
           linkedin_url?: string | null
           name?: string | null
+          onboarding_completed?: boolean | null
+          onboarding_completed_at?: string | null
           professional_bio?: string | null
           referrals_count?: number
           role?: string
@@ -5134,6 +5140,10 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: Json
       }
+      complete_onboarding_flow: {
+        Args: { p_user_id: string }
+        Returns: Json
+      }
       complete_onboarding_secure: {
         Args:
           | { p_user_id: string }
@@ -5589,6 +5599,8 @@ export type Database = {
           last_active: string | null
           linkedin_url: string | null
           name: string | null
+          onboarding_completed: boolean | null
+          onboarding_completed_at: string | null
           professional_bio: string | null
           referrals_count: number
           role: string
