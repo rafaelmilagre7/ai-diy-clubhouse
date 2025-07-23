@@ -191,7 +191,8 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
   };
 
   const handleToolClick = useCallback((toolName: string) => {
-    console.log('[STEP3] 🖱️ CLICK REGISTRADO na ferramenta:', toolName, '| Estado atual:', selectedTools);
+    console.log('[STEP3] 🖱️ CLICK REGISTRADO na ferramenta:', toolName);
+    console.log('[STEP3] 📊 Estado atual selectedTools:', selectedTools);
     
     let newSelectedTools: string[];
     
@@ -229,7 +230,7 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
     // Força uma re-render para garantir que a UI atualize
     setTimeout(() => {
       console.log('[STEP3] ✅ Estado confirmado após update:', newSelectedTools);
-    }, 100);
+    }, 50);
   }, [selectedTools]);
 
   const handleImageError = useCallback((toolId: string) => {
@@ -379,10 +380,8 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
                             ? 'border-2 border-primary bg-primary/10 shadow-lg' 
                             : 'border border-border hover:bg-accent/50'
                         }`}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          console.log('[STEP3] 🎯 Card clicado - ferramenta:', tool.name);
+                        onClick={() => {
+                          console.log('[STEP3] 🎯 Card onClick DISPARADO - ferramenta:', tool.name);
                           handleToolClick(tool.name);
                         }}
                       >
@@ -428,10 +427,8 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
                         ? 'border-2 border-primary bg-primary/10 shadow-lg' 
                         : 'border border-border hover:bg-accent/50'
                     }`}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      console.log('[STEP3] 🎯 Card clicado - Nenhuma ainda');
+                    onClick={() => {
+                      console.log('[STEP3] 🎯 Card onClick DISPARADO - Nenhuma ainda');
                       handleToolClick('Nenhuma ainda');
                     }}
                   >
