@@ -31,7 +31,10 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
   onNext,
 }) => {
   const [selectedTools, setSelectedTools] = useState<string[]>(initialData?.current_tools || []);
-  const { tools, isLoading } = useTools();
+  const { tools, isLoading } = useTools({ 
+    onboardingMode: true, // Usar modo onboarding
+    checkAccessRestrictions: false // Não verificar restrições de acesso
+  });
   const lastDataRef = useRef<string>('');
 
   const form = useForm<AIExperienceFormData>({

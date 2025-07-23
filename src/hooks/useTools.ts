@@ -8,15 +8,17 @@ export const useTools = (options?: {
   checkAccessRestrictions?: boolean;
   categoryFilter?: string;
   benefitsOnly?: boolean;
+  onboardingMode?: boolean; // Nova opção para modo onboarding
 }) => {
   const { user } = useAuth();
   const opts = {
     checkAccessRestrictions: true,
+    onboardingMode: false,
     ...options
   };
 
   const query = useQuery<Tool[], Error>({
-    queryKey: ['tools', user?.id, opts.categoryFilter, opts.benefitsOnly],
+    queryKey: ['tools', user?.id, opts.categoryFilter, opts.benefitsOnly, opts.onboardingMode],
     queryFn: async () => {
       console.log('Buscando ferramentas...');
       
@@ -44,7 +46,8 @@ export const useTools = (options?: {
       }
 
       // Verificar restrições de acesso para benefícios, se autenticado e solicitado
-      if (user && opts.checkAccessRestrictions) {
+      // Para modo onboarding, pular verificações de acesso para performance
+      if (user && opts.checkAccessRestrictions && !opts.onboardingMode) {
         // Verificar quais ferramentas têm restrições de acesso
         const { data: restrictedToolsData } = await supabase
           .from('benefit_access_control')
@@ -88,6 +91,14 @@ export const useTools = (options?: {
             has_access: true
           }));
         }
+      } else {
+        // Para modo onboarding ou quando não há verificação de acesso, 
+        // assumir que todos têm acesso
+        filteredData = filteredData.map(tool => ({
+          ...tool,
+          is_access_restricted: false,
+          has_access: true
+        }));
       }
 
       const toolsWithLogosInfo = filteredData.map(tool => ({
