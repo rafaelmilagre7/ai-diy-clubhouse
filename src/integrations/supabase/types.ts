@@ -4822,6 +4822,17 @@ export type Database = {
         }
         Relationships: []
       }
+      invite_dashboard_stats: {
+        Row: {
+          active_invites: number | null
+          conversion_rate: number | null
+          expired_invites: number | null
+          recent_invites: number | null
+          total_invites: number | null
+          used_invites: number | null
+        }
+        Relationships: []
+      }
       nps_analytics_view: {
         Row: {
           course_id: string | null
@@ -6020,6 +6031,10 @@ export type Database = {
         Args: { p_token: string; p_name: string; p_password: string }
         Returns: Json
       }
+      resend_invite_manual: {
+        Args: { p_invite_id: string }
+        Returns: Json
+      }
       reset_all_onboarding_data: {
         Args: Record<PropertyKey, never>
         Returns: Json
@@ -6223,15 +6238,7 @@ export type Database = {
       }
       validate_invite_token_enhanced: {
         Args: { p_token: string }
-        Returns: {
-          id: string
-          email: string
-          role_id: string
-          token: string
-          expires_at: string
-          used_at: string
-          created_at: string
-        }[]
+        Returns: Json
       }
       validate_invite_token_safe: {
         Args: { p_token: string }
