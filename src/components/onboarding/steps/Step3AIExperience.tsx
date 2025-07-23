@@ -116,7 +116,7 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
             <Zap className="w-4 h-4" />
             Qual é seu nível de experiência com IA?
           </Label>
-          <Select onValueChange={(value) => form.setValue('experience_level', value)} value={form.getValues('experience_level') || ''}>
+          <Select onValueChange={(value) => form.setValue('experience_level', value)} defaultValue={form.getValues('experience_level') || ''}>
             <SelectTrigger className="h-12">
               <SelectValue placeholder="Selecione seu nível" />
             </SelectTrigger>
@@ -138,7 +138,7 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
           <Label>
             Qual é o status da implementação de IA na sua empresa?
           </Label>
-          <Select onValueChange={(value) => form.setValue('implementation_status', value)} value={form.getValues('implementation_status') || ''}>
+          <Select onValueChange={(value) => form.setValue('implementation_status', value)} defaultValue={form.getValues('implementation_status') || ''}>
             <SelectTrigger className="h-12">
               <SelectValue placeholder="Selecione o status atual" />
             </SelectTrigger>
@@ -161,7 +161,7 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
           <Label>
             Como pretende implementar IA na sua empresa?
           </Label>
-          <Select onValueChange={(value) => form.setValue('implementation_approach', value)} value={form.getValues('implementation_approach') || ''}>
+          <Select onValueChange={(value) => form.setValue('implementation_approach', value)} defaultValue={form.getValues('implementation_approach') || ''}>
             <SelectTrigger className="h-12">
               <SelectValue placeholder="Selecione sua abordagem" />
             </SelectTrigger>
