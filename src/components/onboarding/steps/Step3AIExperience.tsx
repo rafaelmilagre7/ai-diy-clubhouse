@@ -31,8 +31,9 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
 }) => {
   const [selectedTools, setSelectedTools] = useState<string[]>(() => {
     const tools = initialData?.current_tools || [];
-    console.log('[STEP3] Inicializando selectedTools com:', tools);
-    return tools;
+    console.log('[STEP3] 🚀 Inicializando selectedTools com:', tools);
+    // Se não tem ferramentas iniciais, começar com "Nenhuma ainda"
+    return tools.length > 0 ? tools : ['Nenhuma ainda'];
   });
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
   const staticTools = [
@@ -169,10 +170,17 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
   // Sincronizar selectedTools com form e notificar mudanças
   useEffect(() => {
     const formData = form.getValues();
-    const completeData = { ...formData, current_tools: selectedTools };
+    // Remove "Nenhuma ainda" das ferramentas finais se houver outras selecionadas
+    const finalTools = selectedTools.includes('Nenhuma ainda') && selectedTools.length > 1 
+      ? selectedTools.filter(tool => tool !== 'Nenhuma ainda')
+      : selectedTools;
     
-    // Só notifica se tem dados completos
-    if (formData.experience_level || formData.implementation_status || selectedTools.length > 0) {
+    const completeData = { ...formData, current_tools: finalTools };
+    
+    console.log('[STEP3] 🔄 Sincronizando - selectedTools:', selectedTools, '| finalTools:', finalTools);
+    
+    // Só notifica se tem dados válidos
+    if (formData.experience_level || formData.implementation_status || finalTools.length > 0) {
       notifyDataChange(completeData);
     }
   }, [selectedTools, form.watch(), notifyDataChange]);
@@ -183,28 +191,40 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
   };
 
   const handleToolClick = (toolName: string) => {
+    console.log('[STEP3] 🖱️ Click na ferramenta:', toolName, '| Estado atual:', selectedTools);
+    
     let newSelectedTools: string[];
     
     if (toolName === 'Nenhuma ainda') {
+      // Se clicar em "Nenhuma ainda", limpar todas e só deixar essa
       newSelectedTools = ['Nenhuma ainda'];
     } else {
+      // Se tem "Nenhuma ainda" selecionada, remover ela e adicionar a nova ferramenta
       if (selectedTools.includes('Nenhuma ainda')) {
         newSelectedTools = [toolName];
       } else {
+        // Lógica normal de toggle
         if (selectedTools.includes(toolName)) {
+          // Remover ferramenta
           newSelectedTools = selectedTools.filter(tool => tool !== toolName);
+          // Se ficou vazio, adicionar "Nenhuma ainda"
           if (newSelectedTools.length === 0) {
             newSelectedTools = ['Nenhuma ainda'];
           }
         } else {
+          // Adicionar ferramenta
           newSelectedTools = [...selectedTools, toolName];
         }
       }
     }
     
-    console.log('[STEP3] Atualizando selectedTools de:', selectedTools, 'para:', newSelectedTools);
+    console.log('[STEP3] ✅ Atualizando selectedTools:', selectedTools, '→', newSelectedTools);
     setSelectedTools(newSelectedTools);
-    // A notificação acontece automaticamente via useEffect
+    
+    // Força uma re-render para garantir que a UI atualize
+    setTimeout(() => {
+      console.log('[STEP3] 🔄 Estado após update:', newSelectedTools);
+    }, 100);
   };
 
   const handleImageError = useCallback((toolId: string) => {
@@ -349,10 +369,10 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
                     {categoryTools.map((tool) => (
                       <Card 
                         key={tool.id} 
-                        className={`cursor-pointer transition-all duration-200 hover:border-primary/50 ${
+                        className={`cursor-pointer transition-all duration-200 hover:border-primary/50 hover:shadow-md ${
                           selectedTools.includes(tool.name) 
-                            ? 'border-primary bg-primary/5' 
-                            : 'border-border hover:bg-accent/50'
+                            ? 'border-2 border-primary bg-primary/10 shadow-lg' 
+                            : 'border border-border hover:bg-accent/50'
                         }`}
                         onClick={() => handleToolClick(tool.name)}
                       >
@@ -392,10 +412,10 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
                 <h4 className="text-sm font-semibold text-muted-foreground">Opções especiais</h4>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                   <Card 
-                    className={`cursor-pointer transition-all duration-200 hover:border-primary/50 ${
+                    className={`cursor-pointer transition-all duration-200 hover:border-primary/50 hover:shadow-md ${
                       selectedTools.includes('Nenhuma ainda') 
-                        ? 'border-primary bg-primary/5' 
-                        : 'border-border hover:bg-accent/50'
+                        ? 'border-2 border-primary bg-primary/10 shadow-lg' 
+                        : 'border border-border hover:bg-accent/50'
                     }`}
                     onClick={() => handleToolClick('Nenhuma ainda')}
                   >
