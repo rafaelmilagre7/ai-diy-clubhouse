@@ -29,44 +29,23 @@ export const VideosList: React.FC<VideosListProps> = ({
     );
   }
 
+  // Temporariamente desabilitar DragDropContext para prevenir loops
   return (
-    <DragDropContext onDragEnd={onDragEnd}>
-      <Droppable droppableId="videos">
-        {(provided) => (
-          <div 
-            {...provided.droppableProps} 
-            ref={provided.innerRef} 
-            className="space-y-4"
-          >
-            {videos.map((video: VideoFormValues, index) => (
-              <Draggable 
-                key={`video-${index}`} 
-                draggableId={`video-${index}`} 
-                index={index}
-              >
-                {(provided) => (
-                  <div
-                    ref={provided.innerRef}
-                    {...provided.draggableProps}
-                  >
-                    <VideoItem
-                      video={video}
-                      index={index}
-                      onRemove={() => onRemoveVideo(index)}
-                      onChange={(field, value) => onVideoChange(index, field, value)}
-                      onEmbedChange={(embedCode, videoId, url, thumbnailUrl) => 
-                        onEmbedChange(index, embedCode, videoId, url, thumbnailUrl)
-                      }
-                      dragHandleProps={provided.dragHandleProps}
-                    />
-                  </div>
-                )}
-              </Draggable>
-            ))}
-            {provided.placeholder}
-          </div>
-        )}
-      </Droppable>
-    </DragDropContext>
+    <div className="space-y-4">
+      {videos.map((video: VideoFormValues, index) => (
+        <div key={`video-${index}`}>
+          <VideoItem
+            video={video}
+            index={index}
+            onRemove={() => onRemoveVideo(index)}
+            onChange={(field, value) => onVideoChange(index, field, value)}
+            onEmbedChange={(embedCode, videoId, url, thumbnailUrl) => 
+              onEmbedChange(index, embedCode, videoId, url, thumbnailUrl)
+            }
+            dragHandleProps={undefined}
+          />
+        </div>
+      ))}
+    </div>
   );
 };

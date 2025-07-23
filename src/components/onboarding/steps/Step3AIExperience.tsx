@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -81,15 +81,16 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
         }
       }
       
-      // Usar setTimeout para evitar chamadas síncronas que causam loop
-      setTimeout(() => {
-        const formData = form.getValues();
-        notifyChange({ ...formData, current_tools: newSelectedTools });
-      }, 0);
-      
       return newSelectedTools;
     });
-  }, [form, notifyChange]);
+  }, []);
+  
+  // Separar useEffect para evitar loops
+  useEffect(() => {
+    const formData = form.getValues();
+    const dataToSend = { ...formData, current_tools: selectedTools };
+    notifyChange(dataToSend);
+  }, [selectedTools, notifyChange]);
 
   const handleSubmit = (data: AIExperienceFormData) => {
     console.log('[Step3] Enviando dados:', data);
