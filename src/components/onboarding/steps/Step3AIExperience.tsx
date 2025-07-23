@@ -167,7 +167,7 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
     onDataChange(newData);
   }, [onDataChange]);
 
-  // Sincronizar selectedTools com form e notificar mudanças
+  // Notificar mudanças apenas quando selectedTools mudar (sem form.watch)
   useEffect(() => {
     const formData = form.getValues();
     // Remove "Nenhuma ainda" das ferramentas finais se houver outras selecionadas
@@ -177,13 +177,26 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
     
     const completeData = { ...formData, current_tools: finalTools };
     
-    console.log('[STEP3] 🔄 Sincronizando - selectedTools:', selectedTools, '| finalTools:', finalTools);
+    console.log('[STEP3] 🔄 Notificando mudança - selectedTools:', selectedTools, '| finalTools:', finalTools);
     
-    // Só notifica se tem dados válidos
-    if (formData.experience_level || formData.implementation_status || finalTools.length > 0) {
+    // Sempre notifica para manter o estado atualizado
+    notifyDataChange(completeData);
+  }, [selectedTools, notifyDataChange]);
+
+  // Notificar mudanças nos campos do form separadamente
+  useEffect(() => {
+    const subscription = form.watch((data) => {
+      const finalTools = selectedTools.includes('Nenhuma ainda') && selectedTools.length > 1 
+        ? selectedTools.filter(tool => tool !== 'Nenhuma ainda')
+        : selectedTools;
+      
+      const completeData = { ...data, current_tools: finalTools };
+      console.log('[STEP3] 📝 Mudança no form detectada:', completeData);
       notifyDataChange(completeData);
-    }
-  }, [selectedTools, form.watch(), notifyDataChange]);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [form, selectedTools, notifyDataChange]);
 
   const handleSelectChange = (field: keyof AIExperienceFormData, value: string) => {
     form.setValue(field, value);
