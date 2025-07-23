@@ -21,7 +21,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   bucketName,
   folder = '', // Definir um valor padrão para folder
   onUploadComplete,
-  accept = '*',
+  accept = '*/*', // Aceitar todos os tipos de arquivo
   maxSize = 300, // Padrão aumentado para 300MB
   buttonText = 'Upload do Arquivo',
   fieldLabel = 'Selecione um arquivo',
