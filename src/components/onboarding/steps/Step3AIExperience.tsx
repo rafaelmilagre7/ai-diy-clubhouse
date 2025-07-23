@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -32,7 +32,6 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
 }) => {
   const [selectedTools, setSelectedTools] = useState<string[]>(initialData?.current_tools || []);
   const { tools, isLoading } = useTools();
-  const lastDataRef = useRef<string>('');
 
   const form = useForm<AIExperienceFormData>({
     resolver: zodResolver(aiExperienceSchema),
@@ -45,22 +44,18 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
     mode: 'onChange',
   });
 
-  // Função segura para notificar mudanças - evita loops
-  const safeNotifyChange = useCallback((data: Partial<AIExperienceFormData>) => {
-    const dataString = JSON.stringify(data);
-    if (dataString !== lastDataRef.current) {
-      lastDataRef.current = dataString;
-      onDataChange(data);
-    }
-  }, [onDataChange]);
+  // Função simples para notificar mudanças - SEM memoização
+  const notifyChange = (newData: Partial<AIExperienceFormData>) => {
+    onDataChange(newData);
+  };
 
-  const handleSelectChange = useCallback((field: keyof AIExperienceFormData, value: string) => {
+  const handleSelectChange = (field: keyof AIExperienceFormData, value: string) => {
     form.setValue(field, value);
     const formData = form.getValues();
-    safeNotifyChange({ ...formData, current_tools: selectedTools });
-  }, [form, selectedTools, safeNotifyChange]);
+    notifyChange({ ...formData, current_tools: selectedTools });
+  };
 
-  const handleToolSelection = useCallback((toolName: string) => {
+  const handleToolClick = (toolName: string) => {
     let newSelectedTools: string[];
     
     if (toolName === 'Nenhuma ainda') {
@@ -68,7 +63,6 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
         ? selectedTools.filter(t => t !== 'Nenhuma ainda')
         : ['Nenhuma ainda'];
     } else {
-      // Se "Nenhuma ainda" estiver selecionado, desmarcar
       if (selectedTools.includes('Nenhuma ainda')) {
         newSelectedTools = [toolName];
       } else if (selectedTools.includes(toolName)) {
@@ -80,13 +74,12 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
     
     setSelectedTools(newSelectedTools);
     const formData = form.getValues();
-    safeNotifyChange({ ...formData, current_tools: newSelectedTools });
-  }, [selectedTools, form, safeNotifyChange]);
+    notifyChange({ ...formData, current_tools: newSelectedTools });
+  };
 
   const handleSubmit = (data: AIExperienceFormData) => {
     console.log('[Step3] Enviando dados:', data);
     
-    // Validar campos obrigatórios
     if (!data.experience_level || !data.implementation_status || !data.implementation_approach) {
       console.error('[Step3] Campos obrigatórios não preenchidos');
       return;
@@ -230,7 +223,7 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
                             ? 'border-primary bg-primary/5' 
                             : 'border-border hover:bg-accent/50'
                         }`}
-                        onClick={() => handleToolSelection(tool.name)}
+                        onClick={() => handleToolClick(tool.name)}
                       >
                         <CardContent className="p-3 flex flex-col items-center space-y-2">
                           <div className="h-8 w-8 rounded-md bg-primary/10 flex items-center justify-center overflow-hidden flex-shrink-0">
@@ -277,7 +270,7 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
                         ? 'border-primary bg-primary/5' 
                         : 'border-border hover:bg-accent/50'
                     }`}
-                    onClick={() => handleToolSelection('Nenhuma ainda')}
+                    onClick={() => handleToolClick('Nenhuma ainda')}
                   >
                     <CardContent className="p-3 flex flex-col items-center space-y-2">
                       <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center">
