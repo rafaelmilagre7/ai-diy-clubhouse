@@ -607,79 +607,56 @@ const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, modul
                 Os vídeos adicionados aqui determinarão automaticamente o tempo total da aula
               </FormDescription>
               
-              <DragDropContext onDragEnd={onDragEnd}>
-                <Droppable droppableId="videos">
-                  {(provided) => (
-                    <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-4">
-                      {form.getValues().videos?.map((video, index) => (
-                        <Draggable key={index} draggableId={`video-${index}`} index={index}>
-                          {(provided) => (
-                            <div
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              className="border rounded-md p-4"
-                            >
-                              <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center">
-                                  <div {...provided.dragHandleProps} className="cursor-grab mr-2">
-                                    <GripVertical className="h-4 w-4 text-gray-500" />
-                                  </div>
-                                  <span className="font-medium">Vídeo {index + 1}</span>
-                                </div>
-                                <Button 
-                                  type="button" 
-                                  variant="ghost" 
-                                  size="sm" 
-                                  onClick={() => handleRemoveVideo(index)}
-                                >
-                                  Remover
-                                </Button>
-                              </div>
-
-                              <div className="space-y-3">
-                                <Input
-                                  placeholder="Título do vídeo"
-                                  value={video.title || ''}
-                                  onChange={(e) => handleVideoChange(index, "title", e.target.value)}
-                                  className="mb-2"
-                                />
-                                
-                                <Textarea
-                                  placeholder="Descrição do vídeo"
-                                  value={video.description || ''}
-                                  onChange={(e) => handleVideoChange(index, "description", e.target.value)}
-                                  className="mb-2 resize-none h-20"
-                                />
-                                
-                                <VideoUpload
-                                  value={video.url || ""}
-                                  videoType={video.type || "youtube"}
-                                  onChange={(url, type, fileName, filePath, fileSize, duration_seconds, thumbnail_url) => {
-                                    handleVideoChange(index, "url", url);
-                                    handleVideoChange(index, "type", type);
-                                    handleVideoChange(index, "fileName", fileName);
-                                    handleVideoChange(index, "filePath", filePath);
-                                    handleVideoChange(index, "fileSize", fileSize);
-                                    handleVideoChange(index, "duration_seconds", duration_seconds);
-                                    handleVideoChange(index, "thumbnail_url", thumbnail_url);
-                                    
-                                    // Se for um vídeo do YouTube, tentar extrair duração (implementação futura)
-                                    // Por enquanto, adicionamos um valor padrão para teste de 300 segundos (5 min)
-                                    // if (type === 'youtube') {
-                                    //   handleVideoChange(index, "duration_seconds", 300);
-                                    // }
-                                  }}
-                                />
-                              </div>
-                            </div>
-                          )}
-                        </Draggable>
-                      ))}
-                      {provided.placeholder}
+              {/* Temporariamente desabilitar DragDropContext para prevenir loops */}
+              <div className="space-y-4">
+                {form.getValues().videos?.map((video, index) => (
+                  <div key={index} className="border rounded-md p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center">
+                        <span className="font-medium">Vídeo {index + 1}</span>
+                      </div>
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => handleRemoveVideo(index)}
+                      >
+                        Remover
+                      </Button>
                     </div>
-                  )}
-                </Droppable>
-              </DragDropContext>
+
+                    <div className="space-y-3">
+                      <Input
+                        placeholder="Título do vídeo"
+                        value={video.title || ''}
+                        onChange={(e) => handleVideoChange(index, "title", e.target.value)}
+                        className="mb-2"
+                      />
+                      
+                      <Textarea
+                        placeholder="Descrição do vídeo"
+                        value={video.description || ''}
+                        onChange={(e) => handleVideoChange(index, "description", e.target.value)}
+                        className="mb-2 resize-none h-20"
+                      />
+                      
+                      <VideoUpload
+                        value={video.url || ""}
+                        videoType={video.type || "youtube"}
+                        onChange={(url, type, fileName, filePath, fileSize, duration_seconds, thumbnail_url) => {
+                          handleVideoChange(index, "url", url);
+                          handleVideoChange(index, "type", type);
+                          handleVideoChange(index, "fileName", fileName);
+                          handleVideoChange(index, "filePath", filePath);
+                          handleVideoChange(index, "fileSize", fileSize);
+                          handleVideoChange(index, "duration_seconds", duration_seconds);
+                          handleVideoChange(index, "thumbnail_url", thumbnail_url);
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
 
               <Button type="button" variant="outline" className="mt-4 w-full" onClick={handleAddVideo}>
                 <Plus className="w-4 h-4 mr-2" />
