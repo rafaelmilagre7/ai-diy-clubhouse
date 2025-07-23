@@ -66,10 +66,14 @@ export const OnboardingBanner: React.FC = () => {
   };
 
   const handleStartOnboarding = () => {
+    console.log('🎯 [BANNER] Botão clicado - iniciando onboarding');
+    
     toast({
       title: "Redirecionando para o onboarding...",
       description: "Vamos personalizar sua experiência!",
     });
+    
+    console.log('🎯 [BANNER] Navegando para /onboarding');
     navigate('/onboarding');
   };
 
