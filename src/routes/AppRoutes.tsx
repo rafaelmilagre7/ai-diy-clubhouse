@@ -9,6 +9,7 @@ import { certificateRoutes } from './CertificateRoutes';
 import { CommunityRedirects } from '@/components/routing/CommunityRedirects';
 import NotFound from '@/pages/NotFound';
 import InvitePage from '@/pages/InvitePage';
+import OnboardingPage from '@/pages/OnboardingPage';
 
 const AppRoutes = () => {
   const location = useLocation();
@@ -61,6 +62,9 @@ const AppRoutes = () => {
       {!skipRedirects && <CommunityRedirects />}
       
       <Routes>
+        {/* Onboarding Route - Para novos usuários */}
+        <Route path="/onboarding" element={<OnboardingPage />} />
+        
         {/* Convite Routes - Alta prioridade e fora do sistema de autenticação */}
         <Route path="/convite/:token" element={<InvitePage />} />
         <Route path="/convite" element={<InvitePage />} />
