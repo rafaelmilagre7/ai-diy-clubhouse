@@ -96,9 +96,8 @@ export const Step1PersonalInfo: React.FC<Step1PersonalInfoProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateForm()) {
-      onNext();
-    }
+    // Validação é feita pelo OnboardingLayout via canProceed
+    // Não precisa fazer nada aqui, o onNext do layout cuida do resto
   };
 
 
@@ -278,20 +277,7 @@ export const Step1PersonalInfo: React.FC<Step1PersonalInfoProps> = ({
         </Card>
       </motion.div>
 
-      {/* Submit Button */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.6 }}
-        className="pt-4"
-      >
-        <Button
-          type="submit"
-          className="w-full h-12 bg-gradient-to-r from-primary to-accent hover:shadow-lg hover:shadow-primary/25 transition-all duration-300 text-primary-foreground font-medium"
-        >
-          Continuar para próxima etapa
-        </Button>
-      </motion.div>
+      {/* Removido: botão submit duplicado - o OnboardingLayout já tem o botão de navegação */}
     </form>
   );
 };

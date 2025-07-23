@@ -106,7 +106,11 @@ const OnboardingPage: React.FC = () => {
   const canProceed = () => {
     switch (current_step) {
       case 1:
-        return !!(data.personal_info?.name && data.personal_info?.phone && data.personal_info?.state && data.personal_info?.city);
+        // Validar telefone internacional (formato: +dialCode|number)
+        const phoneValid = data.personal_info?.phone && 
+          data.personal_info.phone.includes('|') && 
+          data.personal_info.phone.startsWith('+');
+        return !!(data.personal_info?.name && phoneValid && data.personal_info?.state && data.personal_info?.city);
       case 2:
         return !!(data.business_info?.company_name && data.business_info?.company_sector);
       case 3:
