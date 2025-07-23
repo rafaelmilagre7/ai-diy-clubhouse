@@ -96,10 +96,17 @@ const OnboardingPage: React.FC = () => {
   };
 
   const handleStepSubmit = async (stepData: any) => {
+    console.log('[ONBOARDING_PAGE] Submetendo step:', current_step);
+    console.log('[ONBOARDING_PAGE] Dados do step:', stepData);
+    
     // Simplificar: passar dados brutos e deixar o hook processar
     const success = await saveStepData(current_step, stepData);
+    console.log('[ONBOARDING_PAGE] Resultado do salvamento:', success);
+    
     if (success) {
       await handleNext();
+    } else {
+      console.error('[ONBOARDING_PAGE] Falha ao salvar step');
     }
   };
 

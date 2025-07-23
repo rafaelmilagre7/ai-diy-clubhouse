@@ -130,10 +130,18 @@ export const useOnboarding = () => {
 
   // Salvar dados do step atual
   const saveStepData = useCallback(async (step: number, stepData: any) => {
-    if (!user?.id) return false;
+    if (!user?.id) {
+      console.error('[ONBOARDING] Usuário não autenticado, não é possível salvar');
+      return false;
+    }
+    
+    console.log('[ONBOARDING] Iniciando salvamento do step:', step);
+    console.log('[ONBOARDING] Dados a salvar:', stepData);
+    console.log('[ONBOARDING] ID do usuário:', user.id);
     
     try {
       setIsSaving(true);
+      toast.loading('Salvando dados...', { id: 'onboarding-save' });
       
       const stepMapping = {
         1: 'personal_info',
@@ -156,24 +164,36 @@ export const useOnboarding = () => {
         [fieldName]: stepData,
       };
 
+      console.log('[ONBOARDING] Dados preparados para salvamento:', updateData);
+      
       if (state.id) {
         // Atualizar registro existente
+        console.log('[ONBOARDING] Atualizando registro existente com ID:', state.id);
         const { error } = await supabase
           .from('onboarding_final')
           .update(updateData)
           .eq('id', state.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error('[ONBOARDING] Erro ao atualizar:', error);
+          throw error;
+        }
+        console.log('[ONBOARDING] Registro atualizado com sucesso');
       } else {
         // Criar novo registro
+        console.log('[ONBOARDING] Criando novo registro');
         const { data: newRecord, error } = await supabase
           .from('onboarding_final')
           .insert(updateData)
           .select()
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error('[ONBOARDING] Erro ao criar registro:', error);
+          throw error;
+        }
         
+        console.log('[ONBOARDING] Novo registro criado:', newRecord);
         setState(prev => ({ ...prev, id: newRecord.id }));
       }
 
@@ -188,10 +208,12 @@ export const useOnboarding = () => {
         },
       }));
 
+      console.log('[ONBOARDING] Step', step, 'salvo com sucesso!');
+      toast.success('Dados salvos com sucesso!', { id: 'onboarding-save' });
       return true;
     } catch (error) {
       console.error('Erro ao salvar step:', error);
-      toast.error('Erro ao salvar dados');
+      toast.error('Erro ao salvar dados: ' + (error?.message || 'Erro desconhecido'), { id: 'onboarding-save' });
       return false;
     } finally {
       setIsSaving(false);
