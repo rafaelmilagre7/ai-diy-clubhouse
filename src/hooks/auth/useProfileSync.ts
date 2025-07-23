@@ -87,9 +87,36 @@ export const useProfileSync = () => {
     }
   }, [user?.id]);
 
+  // Função para debugar dados do onboarding
+  const getOnboardingData = useCallback(async () => {
+    if (!user?.id) return null;
+    
+    try {
+      const { data, error } = await supabase
+        .from('onboarding_final')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      if (error) {
+        logger.error('[ONBOARDING-DEBUG] Erro ao buscar dados:', error);
+        return null;
+      }
+      
+      logger.info('[ONBOARDING-DEBUG] Dados encontrados:', data);
+      console.log('📊 Dados do seu Step 1:', data?.personal_info || 'Nenhum dado encontrado');
+      
+      return data;
+    } catch (error) {
+      logger.error('[ONBOARDING-DEBUG] Erro crítico:', error);
+      return null;
+    }
+  }, [user?.id]);
+
   return {
     syncProfile,
     markProfileStale,
-    canSync: !!user?.id
+    canSync: !!user?.id,
+    getOnboardingData
   };
 };
