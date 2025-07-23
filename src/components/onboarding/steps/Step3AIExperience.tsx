@@ -156,77 +156,58 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
     mode: 'onSubmit', // CRÍTICO: Não reagir a mudanças, só no submit
   });
 
-  // SOLUÇÃO RADICAL: Bloquear notificações durante o primeiro render
-  const isInitializing = useRef(true);
-  const notificationBlocked = useRef(false);
+  // SOLUÇÃO DEFINITIVA: Não notificar em tempo real, só quando sair do componente
+  const finalDataRef = useRef<Partial<AIExperienceFormData>>({});
   
-  useEffect(() => {
-    // Permitir notificações após o primeiro render
-    const timer = setTimeout(() => {
-      isInitializing.current = false;
-    }, 100);
-    return () => clearTimeout(timer);
-  }, []);
-
-  // SIMPLIFICAÇÃO EXTREMA: função de notificação com bloqueios
-  const notifyChange = (newData: Partial<AIExperienceFormData>) => {
-    // Bloquear se ainda está inicializando
-    if (isInitializing.current || notificationBlocked.current) {
-      console.log('[STEP3] Notificação bloqueada - inicializando');
-      return;
-    }
-
-    const dataString = JSON.stringify(newData);
-    if (lastDataRef.current !== dataString) {
-      lastDataRef.current = dataString;
-      console.log('[STEP3] Notificando mudança:', newData);
-      onDataChange(newData); // DIRETO, sem setTimeout
-    }
+  // Atualizar dados internos sem notificar
+  const updateInternalData = (newData: Partial<AIExperienceFormData>) => {
+    finalDataRef.current = newData;
   };
+  
+  // Notificar apenas ao desmontar o componente ou quando explicitamente solicitado
+  useEffect(() => {
+    return () => {
+      // Só notifica quando o componente está sendo desmontado
+      if (Object.keys(finalDataRef.current).length > 0) {
+        onDataChange(finalDataRef.current);
+      }
+    };
+  }, [onDataChange]);
 
   const handleSelectChange = (field: keyof AIExperienceFormData, value: string) => {
-    // Bloquear notificações temporariamente
-    notificationBlocked.current = true;
-    
     form.setValue(field, value, { shouldValidate: false, shouldDirty: false });
     
-    // Desbloquear e notificar após um tempo
-    setTimeout(() => {
-      notificationBlocked.current = false;
-      const formData = form.getValues();
-      notifyChange({ ...formData, current_tools: selectedTools });
-    }, 100);
+    // Atualizar dados internos sem notificar ainda
+    const formData = form.getValues();
+    updateInternalData({ ...formData, current_tools: selectedTools });
   };
 
   const handleToolClick = (toolName: string) => {
-    // Bloquear notificações temporariamente
-    notificationBlocked.current = true;
-    
     let newSelectedTools: string[];
     
     if (toolName === 'Nenhuma ainda') {
-      newSelectedTools = selectedTools.includes('Nenhuma ainda') 
-        ? selectedTools.filter(t => t !== 'Nenhuma ainda')
-        : ['Nenhuma ainda'];
+      newSelectedTools = ['Nenhuma ainda'];
     } else {
       if (selectedTools.includes('Nenhuma ainda')) {
         newSelectedTools = [toolName];
-      } else if (selectedTools.includes(toolName)) {
-        newSelectedTools = selectedTools.filter(t => t !== toolName);
       } else {
-        newSelectedTools = [...selectedTools, toolName];
+        if (selectedTools.includes(toolName)) {
+          newSelectedTools = selectedTools.filter(tool => tool !== toolName);
+          if (newSelectedTools.length === 0) {
+            newSelectedTools = ['Nenhuma ainda'];
+          }
+        } else {
+          newSelectedTools = [...selectedTools, toolName];
+        }
       }
     }
     
-    // Atualizar estado SEM notificar ainda
+    // Atualizar estado local
     setSelectedTools(newSelectedTools);
     
-    // Desbloquear e notificar após um tempo seguro
-    setTimeout(() => {
-      notificationBlocked.current = false;
-      const formData = form.getValues();
-      notifyChange({ ...formData, current_tools: newSelectedTools });
-    }, 100);
+    // Atualizar dados internos sem notificar ainda
+    const formData = form.getValues();
+    updateInternalData({ ...formData, current_tools: newSelectedTools });
   };
 
   const handleImageError = useCallback((toolId: string) => {

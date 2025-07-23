@@ -53,15 +53,18 @@ const OnboardingPage: React.FC = () => {
   }, []); // REMOVIDO setState da dependência
 
   const handleStep3DataChange = useCallback((aiData: any) => {
-    console.log('Step3 Data Change:', aiData);
-    setState(prev => ({
-      ...prev,
-      data: {
-        ...prev.data,
-        ai_experience: aiData
-      }
-    }));
-  }, []); // REMOVIDO setState da dependência para quebrar o loop circular
+    console.log('Step3 Data Change (só ao sair):', aiData);
+    // Só atualiza o estado quando receber dados válidos
+    if (aiData && Object.keys(aiData).length > 0) {
+      setState(prev => ({
+        ...prev,
+        data: {
+          ...prev.data,
+          ai_experience: aiData
+        }
+      }));
+    }
+  }, [setState]); // Volta a usar setState na dependência pois agora não há loop
 
   const handleStep4DataChange = useCallback((goalsData: any) => {
     console.log('Step4 Data Change:', goalsData);
