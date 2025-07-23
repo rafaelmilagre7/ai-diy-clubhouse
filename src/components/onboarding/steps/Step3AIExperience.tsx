@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Bot, Zap, CheckSquare } from 'lucide-react';
-import { useTools } from '@/hooks/useTools';
+import { useOnboardingTools } from '@/hooks/useOnboardingTools';
 import { Card, CardContent } from '@/components/ui/card';
 
 const aiExperienceSchema = z.object({
@@ -31,10 +31,7 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
   onNext,
 }) => {
   const [selectedTools, setSelectedTools] = useState<string[]>(initialData?.current_tools || []);
-  const { tools, isLoading } = useTools({ 
-    onboardingMode: true, // Usar modo onboarding
-    checkAccessRestrictions: false // Não verificar restrições de acesso
-  });
+  const { tools, isLoading } = useOnboardingTools();
   const lastDataRef = useRef<string>('');
   const onDataChangeRef = useRef(onDataChange);
 
