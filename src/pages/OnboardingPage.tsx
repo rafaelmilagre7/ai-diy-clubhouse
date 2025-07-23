@@ -144,7 +144,7 @@ const OnboardingPage: React.FC = () => {
               data.personal_info = personalData;
             }
           }}
-          onNext={() => handleStepSubmit(data.personal_info as any)}
+          onNext={() => handleStepSubmit(data.personal_info)}
         />
       )}
 
@@ -152,13 +152,35 @@ const OnboardingPage: React.FC = () => {
         <Step2BusinessInfo
           initialData={data.business_info}
           onDataChange={(businessData) => {
+            console.log('Step2 Data Change:', businessData);
+            // Criar novo objeto com estrutura correta
+            const formattedData = {
+              company_name: businessData.company_name || '',
+              company_sector: businessData.company_sector || '',
+              company_size: businessData.company_size || '',
+              annual_revenue: businessData.annual_revenue || '',
+              current_position: businessData.current_position || '',
+              years_experience: '1-3', // Adicionar campo faltante
+            };
+            
+            // Atualizar dados no formato correto
             if (data.business_info) {
-              Object.assign(data.business_info, businessData);
+              Object.assign(data.business_info, formattedData);
             } else {
-              data.business_info = businessData;
+              data.business_info = formattedData;
             }
           }}
-          onNext={() => handleStepSubmit(data.business_info as any)}
+          onNext={() => {
+            console.log('Step2 Submit:', data.business_info);
+            handleStepSubmit(data.business_info || {
+              company_name: '',
+              company_sector: '',
+              company_size: '',
+              annual_revenue: '',
+              current_position: '',
+              years_experience: '1-3',
+            });
+          }}
         />
       )}
 
@@ -166,13 +188,31 @@ const OnboardingPage: React.FC = () => {
         <Step3AIExperience
           initialData={data.ai_experience}
           onDataChange={(aiData) => {
+            console.log('Step3 Data Change:', aiData);
+            // Criar novo objeto com estrutura correta
+            const formattedData = {
+              experience_level: aiData.experience_level || '',
+              tools_used: aiData.current_tools || [], // Mapear current_tools -> tools_used
+              satisfaction_level: 'satisfied',
+              biggest_challenge: aiData.biggest_challenge || '',
+            };
+            
+            // Atualizar dados no formato correto
             if (data.ai_experience) {
-              Object.assign(data.ai_experience, aiData);
+              Object.assign(data.ai_experience, formattedData);
             } else {
-              data.ai_experience = aiData;
+              data.ai_experience = formattedData;
             }
           }}
-          onNext={() => handleStepSubmit(data.ai_experience as any)}
+          onNext={() => {
+            console.log('Step3 Submit:', data.ai_experience);
+            handleStepSubmit(data.ai_experience || {
+              experience_level: '',
+              tools_used: [],
+              satisfaction_level: 'satisfied',
+              biggest_challenge: '',
+            });
+          }}
         />
       )}
 
@@ -180,13 +220,33 @@ const OnboardingPage: React.FC = () => {
         <Step4Goals
           initialData={data.goals_info}
           onDataChange={(goalsData) => {
+            console.log('Step4 Data Change:', goalsData);
+            // Criar novo objeto com estrutura correta
+            const formattedData = {
+              primary_goal: goalsData.primary_goal || '',
+              specific_challenge: goalsData.specific_objectives || '', // Mapear specific_objectives -> specific_challenge
+              key_metrics: goalsData.success_metrics?.join(', ') || '', // Mapear success_metrics -> key_metrics
+              timeline: goalsData.timeline || '',
+              success_definition: 'Implementar IA com sucesso',
+            };
+            
+            // Atualizar dados no formato correto
             if (data.goals_info) {
-              Object.assign(data.goals_info, goalsData);
+              Object.assign(data.goals_info, formattedData);
             } else {
-              data.goals_info = goalsData;
+              data.goals_info = formattedData;
             }
           }}
-          onNext={() => handleStepSubmit(data.goals_info as any)}
+          onNext={() => {
+            console.log('Step4 Submit:', data.goals_info);
+            handleStepSubmit(data.goals_info || {
+              primary_goal: '',
+              specific_challenge: '',
+              key_metrics: '',
+              timeline: '',
+              success_definition: 'Implementar IA com sucesso',
+            });
+          }}
         />
       )}
 
@@ -194,13 +254,33 @@ const OnboardingPage: React.FC = () => {
         <Step5Personalization
           initialData={data.personalization}
           onDataChange={(personalizationData) => {
+            console.log('Step5 Data Change:', personalizationData);
+            // Criar novo objeto com estrutura correta
+            const formattedData = {
+              study_hours: '2-4',
+              preferred_content: personalizationData.preferred_content || [],
+              learning_style: personalizationData.learning_style || '',
+              support_level: personalizationData.support_level || '',
+              schedule_preference: personalizationData.availability || '', // Mapear availability -> schedule_preference
+            };
+            
+            // Atualizar dados no formato correto
             if (data.personalization) {
-              Object.assign(data.personalization, personalizationData);
+              Object.assign(data.personalization, formattedData);
             } else {
-              data.personalization = personalizationData;
+              data.personalization = formattedData;
             }
           }}
-          onNext={() => handleStepSubmit(data.personalization as any)}
+          onNext={() => {
+            console.log('Step5 Submit:', data.personalization);
+            handleStepSubmit(data.personalization || {
+              study_hours: '2-4',
+              preferred_content: [],
+              learning_style: '',
+              support_level: '',
+              schedule_preference: '',
+            });
+          }}
         />
       )}
 
