@@ -31,6 +31,7 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
   onNext,
 }) => {
   const [currentData, setCurrentData] = useState<Partial<AIExperienceFormData>>(initialData || {});
+  const [selectedTools, setSelectedTools] = useState<string[]>(initialData?.current_tools || []);
   const { tools, isLoading } = useTools();
 
   const form = useForm<AIExperienceFormData>({
@@ -48,10 +49,10 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
 
   useEffect(() => {
     console.log('[Step3] Campos observados mudaram:', watchedFields);
-    const newData = { ...currentData, ...watchedFields };
+    const newData = { ...currentData, ...watchedFields, current_tools: selectedTools };
     setCurrentData(newData);
     onDataChange(newData);
-  }, [watchedFields]); // Removido onDataChange das dependências para evitar loop
+  }, [watchedFields, selectedTools]); // Incluir selectedTools como dependência
 
   const handleSubmit = (data: AIExperienceFormData) => {
     console.log('[Step3] Enviando dados:', data);
@@ -194,25 +195,24 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
                   <h4 className="text-sm font-semibold text-muted-foreground">{category}</h4>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                     {categoryTools.map((tool) => (
-                      <Card 
-                        key={tool.id} 
-                        className={`cursor-pointer transition-all duration-200 hover:border-primary/50 ${
-                          form.getValues('current_tools')?.includes(tool.name) 
-                            ? 'border-primary bg-primary/5' 
-                            : 'border-border hover:bg-accent/50'
-                        }`}
-                        onClick={() => {
-                          const currentTools = form.getValues('current_tools') || [];
-                          // Se "Nenhuma ainda" estiver selecionado, desmarcar
-                          if (currentTools.includes('Nenhuma ainda')) {
-                            form.setValue('current_tools', [tool.name]);
-                          } else if (currentTools.includes(tool.name)) {
-                            form.setValue('current_tools', currentTools.filter(t => t !== tool.name));
-                          } else {
-                            form.setValue('current_tools', [...currentTools, tool.name]);
-                          }
-                        }}
-                      >
+                       <Card 
+                         key={tool.id} 
+                         className={`cursor-pointer transition-all duration-200 hover:border-primary/50 ${
+                           selectedTools.includes(tool.name) 
+                             ? 'border-primary bg-primary/5' 
+                             : 'border-border hover:bg-accent/50'
+                         }`}
+                         onClick={() => {
+                           // Se "Nenhuma ainda" estiver selecionado, desmarcar
+                           if (selectedTools.includes('Nenhuma ainda')) {
+                             setSelectedTools([tool.name]);
+                           } else if (selectedTools.includes(tool.name)) {
+                             setSelectedTools(selectedTools.filter(t => t !== tool.name));
+                           } else {
+                             setSelectedTools([...selectedTools, tool.name]);
+                           }
+                         }}
+                       >
                         <CardContent className="p-3 flex flex-col items-center space-y-2">
                           <div className="h-8 w-8 rounded-md bg-primary/10 flex items-center justify-center overflow-hidden flex-shrink-0">
                             {tool.logo_url ? (
@@ -238,7 +238,7 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
                             {tool.name}
                           </span>
                           <Checkbox
-                            checked={form.getValues('current_tools')?.includes(tool.name) || false}
+                            checked={selectedTools.includes(tool.name)}
                             className="pointer-events-none"
                           />
                         </CardContent>
@@ -254,16 +254,15 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                   <Card 
                     className={`cursor-pointer transition-all duration-200 hover:border-primary/50 ${
-                      form.getValues('current_tools')?.includes('Nenhuma ainda') 
+                      selectedTools.includes('Nenhuma ainda') 
                         ? 'border-primary bg-primary/5' 
                         : 'border-border hover:bg-accent/50'
                     }`}
                     onClick={() => {
-                      const currentTools = form.getValues('current_tools') || [];
-                      if (currentTools.includes('Nenhuma ainda')) {
-                        form.setValue('current_tools', currentTools.filter(t => t !== 'Nenhuma ainda'));
+                      if (selectedTools.includes('Nenhuma ainda')) {
+                        setSelectedTools(selectedTools.filter(t => t !== 'Nenhuma ainda'));
                       } else {
-                        form.setValue('current_tools', ['Nenhuma ainda']); // Substituir todas as outras
+                        setSelectedTools(['Nenhuma ainda']); // Substituir todas as outras
                       }
                     }}
                   >
@@ -275,7 +274,7 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
                         Nenhuma ainda
                       </span>
                       <Checkbox
-                        checked={form.getValues('current_tools')?.includes('Nenhuma ainda') || false}
+                        checked={selectedTools.includes('Nenhuma ainda')}
                         className="pointer-events-none"
                       />
                     </CardContent>
