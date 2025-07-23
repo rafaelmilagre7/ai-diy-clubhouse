@@ -26,8 +26,8 @@ export const BUCKET_CONFIGS = {
     description: 'Capas de cursos e lições'
   },
   [STORAGE_BUCKETS.SOLUTION_FILES]: {
-    maxSize: MAX_UPLOAD_SIZES.DOCUMENT,
-    allowedTypes: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain', 'application/zip'],
+    maxSize: 300, // 300MB
+    allowedTypes: ['*'], // Aceitar todos os tipos de arquivo
     description: 'Arquivos de soluções'
   },
   
