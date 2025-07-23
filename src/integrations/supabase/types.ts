@@ -6128,6 +6128,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      test_reset_onboarding: {
+        Args: { target_email: string }
+        Returns: Json
+      }
       toggle_topic_solved: {
         Args: { p_topic_id: string; p_user_id?: string }
         Returns: Json
