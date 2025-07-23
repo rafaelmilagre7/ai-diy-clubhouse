@@ -153,28 +153,32 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
       implementation_approach: initialData?.implementation_approach || '',
       current_tools: initialData?.current_tools || [],
     },
-    mode: 'onChange',
+    mode: 'onBlur', // MUDANÇA: não trigger em toda mudança, só ao sair do campo
   });
 
-  // Atualizar ref sempre que onDataChange mudar
-  useEffect(() => {
-    onDataChangeRef.current = onDataChange;
-  }, [onDataChange]);
+  // SIMPLIFICAÇÃO: onDataChange estável - não fica mudando
+  const stableOnDataChange = useRef(onDataChange);
+  stableOnDataChange.current = onDataChange;
 
-  // Função simples sem useCallback para evitar loops
+  // SIMPLIFICAÇÃO: Uma única função para notificar mudanças
   const notifyChange = (newData: Partial<AIExperienceFormData>) => {
     const dataString = JSON.stringify(newData);
     if (lastDataRef.current !== dataString) {
       lastDataRef.current = dataString;
-      onDataChangeRef.current(newData);
+      // Usar setTimeout para garantir que não há conflitos
+      setTimeout(() => {
+        stableOnDataChange.current(newData);
+      }, 10);
     }
   };
 
   const handleSelectChange = (field: keyof AIExperienceFormData, value: string) => {
     form.setValue(field, value);
-    // Notificar imediatamente com dados atuais
-    const formData = form.getValues();
-    notifyChange({ ...formData, current_tools: selectedTools });
+    // ESPERAR um pouquinho antes de notificar para evitar conflitos
+    setTimeout(() => {
+      const formData = form.getValues();
+      notifyChange({ ...formData, current_tools: selectedTools });
+    }, 50);
   };
 
   const handleToolClick = (toolName: string) => {
@@ -194,11 +198,14 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
       }
     }
     
+    // PRIMEIRO: Atualizar o estado das ferramentas
     setSelectedTools(newSelectedTools);
     
-    // Notificar mudança após update do state
-    const formData = form.getValues();
-    notifyChange({ ...formData, current_tools: newSelectedTools });
+    // SEGUNDO: Esperar e notificar com os dados completos
+    setTimeout(() => {
+      const formData = form.getValues();
+      notifyChange({ ...formData, current_tools: newSelectedTools });
+    }, 50);
   };
 
   const handleImageError = useCallback((toolId: string) => {
