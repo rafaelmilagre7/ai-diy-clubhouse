@@ -91,16 +91,6 @@ const navigationItems = [
     icon: Shield,
   },
   {
-    title: "Preview Onboarding",
-    href: "/admin/onboarding-preview",
-    icon: TestTube,
-  },
-  {
-    title: "Componentes Onboarding",
-    href: "/admin/onboarding-components",
-    icon: FileText,
-  },
-  {
     title: "WhatsApp Debug",
     href: "/admin/whatsapp-debug",
     icon: MessageSquare,

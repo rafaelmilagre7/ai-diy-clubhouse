@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/auth';
 import { useInviteValidation } from '@/hooks/admin/invites/useInviteValidation';
-import { useOnboardingRedirect } from '@/hooks/useOnboardingRedirect';
+
 import InviteLoadingState from '@/components/invite/InviteLoadingState';
 import InviteErrorState from '@/components/invite/InviteErrorState';
 import InviteSuccessState from '@/components/invite/InviteSuccessState';
@@ -15,7 +15,7 @@ const InvitePage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { validationState, validateToken } = useInviteValidation();
-  const { redirectToNextStep } = useOnboardingRedirect();
+  
   
   const [validationResult, setValidationResult] = useState<any>(null);
   const [showRegisterForm, setShowRegisterForm] = useState(false);
@@ -80,21 +80,7 @@ const InvitePage = () => {
 
   if (user && user.email === validationResult.invite?.email) {
     // Usuário já está logado com o email correto do convite
-    // Redirecionar direto para onboarding se não completou
-    const isOnboardingCompleted = true; // Onboarding removido
-    
-    if (!isOnboardingCompleted) {
-      console.log('🎯 [INVITE] Usuário logado, redirecionando para onboarding');
-      setTimeout(() => {
-        redirectToNextStep();
-      }, 1000);
-      
-      return (
-        <InviteLoadingState message="Redirecionando para seu onboarding personalizado..." />
-      );
-    }
-    
-    // Se já completou onboarding, mostrar sucesso
+    // Redirecionar para dashboard
     return (
       <InviteSuccessState 
         userName={user.user_metadata?.name || user.email?.split('@')[0]}
@@ -123,7 +109,6 @@ const InvitePage = () => {
                     prefilledName={validationResult.invite.profile_data?.name}
                     onSuccess={() => {
                       console.log('🎯 [INVITE] Registro concluído via InvitePage');
-                      // O redirecionamento agora é feito pelo ModernRegisterForm usando useOnboardingRedirect
                     }}
                   />
                 </div>

@@ -8,7 +8,7 @@ import { toast } from "@/hooks/use-toast";
 import { RateLimitGuard } from '@/components/security/RateLimitGuard';
 import { useRateLimit } from '@/hooks/security/useRateLimit';
 import { useSecurityMetrics } from '@/hooks/security/useSecurityMetrics';
-import { useOnboardingRedirect } from '@/hooks/useOnboardingRedirect';
+
 // Removido hook de telemetria para simplificação
 
 interface ModernRegisterFormProps {
@@ -35,7 +35,7 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
   const [step, setStep] = useState<'form' | 'success'>('form');
   const { checkRateLimit } = useRateLimit();
   const { logSecurityViolation } = useSecurityMetrics();
-  const { redirectToNextStep } = useOnboardingRedirect();
+  
   // Removido hook de telemetria para simplificação
 
   const validatePassword = (password: string) => {
@@ -205,17 +205,12 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
         console.log('✅ [REGISTER] Usuário criado - trigger handle_new_user automaticamente criou perfil');
         
         toast({
-          title: "Conta criada com sucesso!",
-          description: "Preparando seu onboarding personalizado...",
+          title: "Conta criada com sucesso! 🎉",
+          description: "Bem-vindo à plataforma!",
         });
         
-        // 🎯 REDIRECIONAMENTO DIRETO
+        // Sucesso - chamar callback
         onSuccess?.();
-        const redirectUrl = inviteToken 
-          ? `/onboarding/step/1?token=${encodeURIComponent(inviteToken.trim())}`
-          : '/onboarding/step/1';
-        console.log('🔗 [REGISTER] Redirecionando para:', redirectUrl);
-        redirectToNextStep();
       }
       
     } catch (error: any) {
@@ -263,7 +258,7 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
             </li>
             <li className="flex items-center gap-2">
               <CheckCircle className="h-4 w-4 text-green-600" />
-              Complete seu onboarding personalizado
+              Complete seu cadastro
             </li>
             <li className="flex items-center gap-2">
               <CheckCircle className="h-4 w-4 text-green-600" />

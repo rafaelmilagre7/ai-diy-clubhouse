@@ -83,12 +83,12 @@ const RegisterForm = ({ inviteToken, prefilledEmail }: RegisterFormProps = {}) =
           } else if (inviteResult?.status === 'success') {
             toast({
               title: "Convite aplicado!",
-              description: "Seu convite foi aplicado com sucesso. Redirecionando para o onboarding...",
+              description: "Seu convite foi aplicado com sucesso. Redirecionando para o dashboard...",
             });
             
-            // Redirecionar para onboarding após sucesso
+            // Redirecionar para dashboard após sucesso
             setTimeout(() => {
-              navigate('/onboarding', { replace: true });
+              navigate('/', { replace: true });
             }, 2000);
           }
         } catch (inviteError) {
