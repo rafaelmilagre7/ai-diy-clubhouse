@@ -118,8 +118,9 @@ export const professionalInfoSchema = z.object({
 
 export const aiExperienceSchema = z.object({
   experience_level: z.enum(['beginner', 'basic', 'intermediate', 'advanced']),
+  implementation_status: z.enum(['not_started', 'exploring', 'testing', 'implementing', 'advanced']),
+  implementation_approach: z.enum(['myself', 'team', 'hire']),
   current_tools: z.array(z.string()).optional(),
-  implementation_status: z.enum(['not_started', 'exploring', 'testing', 'implementing', 'advanced']).optional()
 });
 
 // Função para validar arquivos de upload
