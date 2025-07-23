@@ -159,12 +159,12 @@ const OnboardingPage: React.FC = () => {
             }
           }}
           onNext={() => handleStepSubmit({
-            company_name: '',
-            company_sector: '',
-            company_size: '',
-            annual_revenue: '',
-            current_position: '',
-            years_experience: '1-3',
+            company_name: data.business_info?.company_name || '',
+            company_sector: data.business_info?.company_sector || '',
+            company_size: data.business_info?.company_size || '',
+            annual_revenue: data.business_info?.annual_revenue || '',
+            current_position: data.business_info?.current_position || '',
+            years_experience: '1-3', // valor padrão baseado no cargo
           })}
         />
       )}
@@ -180,10 +180,10 @@ const OnboardingPage: React.FC = () => {
             }
           }}
           onNext={() => handleStepSubmit({
-            experience_level: '',
-            tools_used: [],
-            satisfaction_level: 'satisfied',
-            biggest_challenge: '',
+            experience_level: data.ai_experience?.experience_level || '',
+            tools_used: data.ai_experience?.current_tools || [],
+            satisfaction_level: 'satisfied', // valor padrão
+            biggest_challenge: data.ai_experience?.biggest_challenge || '',
           })}
         />
       )}
@@ -199,11 +199,11 @@ const OnboardingPage: React.FC = () => {
             }
           }}
           onNext={() => handleStepSubmit({
-            primary_goal: '',
-            specific_challenge: '',
-            key_metrics: '',
-            timeline: '',
-            success_definition: '',
+            primary_goal: data.goals_info?.primary_goal || '',
+            specific_challenge: data.goals_info?.specific_objectives || 'Implementar IA efetivamente',
+            key_metrics: data.goals_info?.success_metrics?.join(', ') || 'ROI positivo',
+            timeline: data.goals_info?.timeline || '',
+            success_definition: 'Implementação bem-sucedida com resultados mensuráveis',
           })}
         />
       )}
@@ -219,11 +219,11 @@ const OnboardingPage: React.FC = () => {
             }
           }}
           onNext={() => handleStepSubmit({
-            study_hours: '2-4',
-            preferred_content: [],
-            learning_style: '',
-            support_level: '',
-            schedule_preference: '',
+            study_hours: '2-4', // valor padrão
+            preferred_content: data.personalization?.preferred_content || [],
+            learning_style: data.personalization?.learning_style || '',
+            support_level: data.personalization?.support_level || '',
+            schedule_preference: data.personalization?.availability || '',
           })}
         />
       )}
