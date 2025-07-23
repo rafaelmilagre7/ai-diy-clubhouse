@@ -39,7 +39,7 @@ const OnboardingPage: React.FC = () => {
         personal_info: personalData
       }
     }));
-  }, [setState]);
+  }, []); // REMOVIDO setState da dependência
 
   const handleStep2DataChange = useCallback((businessData: any) => {
     console.log('Step2 Data Change:', businessData);
@@ -50,7 +50,7 @@ const OnboardingPage: React.FC = () => {
         professional_info: businessData
       }
     }));
-  }, [setState]);
+  }, []); // REMOVIDO setState da dependência
 
   const handleStep3DataChange = useCallback((aiData: any) => {
     console.log('Step3 Data Change:', aiData);
@@ -61,7 +61,7 @@ const OnboardingPage: React.FC = () => {
         ai_experience: aiData
       }
     }));
-  }, [setState]);
+  }, []); // REMOVIDO setState da dependência para quebrar o loop circular
 
   const handleStep4DataChange = useCallback((goalsData: any) => {
     console.log('Step4 Data Change:', goalsData);
@@ -72,7 +72,7 @@ const OnboardingPage: React.FC = () => {
         goals_info: goalsData
       }
     }));
-  }, [setState]);
+  }, []); // REMOVIDO setState da dependência
 
   const handleStep5DataChange = useCallback((personalizationData: any) => {
     console.log('Step5 Data Change:', personalizationData);
@@ -83,7 +83,7 @@ const OnboardingPage: React.FC = () => {
         personalization: personalizationData
       }
     }));
-  }, [setState]);
+  }, []); // REMOVIDO setState da dependência
 
   const handleNext = useCallback(async () => {
     console.log('[ONBOARDING_PAGE] HandleNext chamado, step atual:', current_step);
