@@ -157,33 +157,29 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
       implementation_approach: initialData?.implementation_approach || '',
       current_tools: initialData?.current_tools || [],
     },
-    mode: 'onSubmit', // CRÍTICO: Não reagir a mudanças, só no submit
+    mode: 'onChange', // VOLTA para onChange para funcionar em tempo real
   });
 
-  // SOLUÇÃO DEFINITIVA: Não notificar em tempo real, só quando sair do componente
-  const finalDataRef = useRef<Partial<AIExperienceFormData>>({});
-  
-  // Atualizar dados internos sem notificar
-  const updateInternalData = (newData: Partial<AIExperienceFormData>) => {
-    finalDataRef.current = newData;
-  };
-  
-  // Notificar apenas ao desmontar o componente ou quando explicitamente solicitado
-  useEffect(() => {
-    return () => {
-      // Só notifica quando o componente está sendo desmontado
-      if (Object.keys(finalDataRef.current).length > 0) {
-        onDataChange(finalDataRef.current);
-      }
-    };
+  // SOLUÇÃO SIMPLES: Notificar mudanças quando necessário
+  const notifyDataChange = useCallback((newData: Partial<AIExperienceFormData>) => {
+    console.log('[STEP3] Notificando mudança:', newData);
+    onDataChange(newData);
   }, [onDataChange]);
 
-  const handleSelectChange = (field: keyof AIExperienceFormData, value: string) => {
-    form.setValue(field, value, { shouldValidate: false, shouldDirty: false });
-    
-    // Atualizar dados internos sem notificar ainda
+  // Sincronizar selectedTools com form e notificar mudanças
+  useEffect(() => {
     const formData = form.getValues();
-    updateInternalData({ ...formData, current_tools: selectedTools });
+    const completeData = { ...formData, current_tools: selectedTools };
+    
+    // Só notifica se tem dados completos
+    if (formData.experience_level || formData.implementation_status || selectedTools.length > 0) {
+      notifyDataChange(completeData);
+    }
+  }, [selectedTools, form.watch(), notifyDataChange]);
+
+  const handleSelectChange = (field: keyof AIExperienceFormData, value: string) => {
+    form.setValue(field, value);
+    // A notificação acontece automaticamente via useEffect
   };
 
   const handleToolClick = (toolName: string) => {
@@ -206,13 +202,9 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
       }
     }
     
-    // Atualizar estado local
     console.log('[STEP3] Atualizando selectedTools de:', selectedTools, 'para:', newSelectedTools);
     setSelectedTools(newSelectedTools);
-    
-    // Atualizar dados internos sem notificar ainda
-    const formData = form.getValues();
-    updateInternalData({ ...formData, current_tools: newSelectedTools });
+    // A notificação acontece automaticamente via useEffect
   };
 
   const handleImageError = useCallback((toolId: string) => {
