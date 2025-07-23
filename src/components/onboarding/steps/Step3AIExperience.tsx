@@ -1,7 +1,4 @@
 import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -10,18 +7,16 @@ import { Bot, Zap, CheckSquare } from 'lucide-react';
 import { useTools } from '@/hooks/useTools';
 import { Card, CardContent } from '@/components/ui/card';
 
-const aiExperienceSchema = z.object({
-  experience_level: z.string().min(1, 'Selecione seu nível de experiência'),
-  implementation_status: z.string().min(1, 'Selecione o status da implementação'),
-  implementation_approach: z.string().min(1, 'Selecione como pretende implementar'),
-  current_tools: z.array(z.string()).optional(),
-});
-
-type AIExperienceFormData = z.infer<typeof aiExperienceSchema>;
+interface AIExperienceData {
+  experience_level: string;
+  implementation_status: string;
+  implementation_approach: string;
+  current_tools: string[];
+}
 
 interface Step3AIExperienceProps {
-  initialData?: Partial<AIExperienceFormData>;
-  onDataChange: (data: Partial<AIExperienceFormData>) => void;
+  initialData?: Partial<AIExperienceData>;
+  onDataChange: (data: Partial<AIExperienceData>) => void;
   onNext: () => void;
 }
 
@@ -30,34 +25,49 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
   onDataChange,
   onNext,
 }) => {
+  // Estados simples - sem React Hook Form
+  const [experienceLevel, setExperienceLevel] = useState(initialData?.experience_level || '');
+  const [implementationStatus, setImplementationStatus] = useState(initialData?.implementation_status || '');
+  const [implementationApproach, setImplementationApproach] = useState(initialData?.implementation_approach || '');
   const [selectedTools, setSelectedTools] = useState<string[]>(initialData?.current_tools || []);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
   const { tools, isLoading } = useTools();
 
-  const form = useForm<AIExperienceFormData>({
-    resolver: zodResolver(aiExperienceSchema),
-    defaultValues: {
-      experience_level: initialData?.experience_level || '',
-      implementation_status: initialData?.implementation_status || '',
-      implementation_approach: initialData?.implementation_approach || '',
-      current_tools: [], // Não usar no form, apenas estado local
-    },
-    mode: 'onChange',
-  });
+  // Validação simples
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+    
+    if (!experienceLevel) newErrors.experience_level = 'Selecione seu nível de experiência';
+    if (!implementationStatus) newErrors.implementation_status = 'Selecione o status da implementação';
+    if (!implementationApproach) newErrors.implementation_approach = 'Selecione como pretende implementar';
 
-  // APENAS notificar mudanças nos selects - sem chamar durante cliques
-  const handleSelectChange = (field: keyof AIExperienceFormData, value: string) => {
-    form.setValue(field, value);
-    // Notificar apenas após mudança de select, não durante cliques
-    const newData = {
-      experience_level: field === 'experience_level' ? value : form.getValues('experience_level'),
-      implementation_status: field === 'implementation_status' ? value : form.getValues('implementation_status'),
-      implementation_approach: field === 'implementation_approach' ? value : form.getValues('implementation_approach'),
-      current_tools: selectedTools
-    };
-    onDataChange(newData);
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
-  // APENAS atualizar estado local - SEM notificar durante clique
+  // Handlers simples sem notificações em tempo real
+  const handleExperienceLevelChange = (value: string) => {
+    setExperienceLevel(value);
+    if (errors.experience_level) {
+      setErrors(prev => ({ ...prev, experience_level: '' }));
+    }
+  };
+
+  const handleImplementationStatusChange = (value: string) => {
+    setImplementationStatus(value);
+    if (errors.implementation_status) {
+      setErrors(prev => ({ ...prev, implementation_status: '' }));
+    }
+  };
+
+  const handleImplementationApproachChange = (value: string) => {
+    setImplementationApproach(value);
+    if (errors.implementation_approach) {
+      setErrors(prev => ({ ...prev, implementation_approach: '' }));
+    }
+  };
+
   const handleToolClick = (toolName: string) => {
     let newSelectedTools: string[];
     
@@ -75,28 +85,26 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
       }
     }
     
-    // APENAS atualizar estado - SEM chamar onDataChange
     setSelectedTools(newSelectedTools);
-    // Notificação será feita apenas no submit
   };
 
-  const handleSubmit = (data: AIExperienceFormData) => {
-    console.log('[Step3] Enviando dados:', data);
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     
-    if (!data.experience_level || !data.implementation_status || !data.implementation_approach) {
-      console.error('[Step3] Campos obrigatórios não preenchidos');
+    if (!validateForm()) {
       return;
     }
-    
-    // Notificar dados finais apenas no submit
-    const finalData = {
-      experience_level: data.experience_level,
-      implementation_status: data.implementation_status,
-      implementation_approach: data.implementation_approach,
+
+    // Apenas aqui notificamos os dados finais
+    const finalData: AIExperienceData = {
+      experience_level: experienceLevel,
+      implementation_status: implementationStatus,
+      implementation_approach: implementationApproach,
       current_tools: selectedTools
     };
+
+    console.log('[Step3] Enviando dados:', finalData);
     onDataChange(finalData);
-    
     onNext();
   };
 
@@ -134,6 +142,7 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
   };
 
   const organizedTools = organizeToolsByCategory();
+  const isFormValid = experienceLevel && implementationStatus && implementationApproach;
 
   return (
     <div className="space-y-8 max-w-2xl mx-auto">
@@ -144,13 +153,13 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
         </p>
       </div>
 
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-2">
           <Label className="flex items-center gap-2">
             <Zap className="w-4 h-4" />
             Qual é seu nível de experiência com IA?
           </Label>
-          <Select onValueChange={(value) => handleSelectChange('experience_level', value)} defaultValue={form.getValues('experience_level') || ''}>
+          <Select onValueChange={handleExperienceLevelChange} value={experienceLevel}>
             <SelectTrigger className="h-12">
               <SelectValue placeholder="Selecione seu nível" />
             </SelectTrigger>
@@ -161,10 +170,8 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
               <SelectItem value="advanced">Avançado - Implemento soluções de IA na empresa</SelectItem>
             </SelectContent>
           </Select>
-          {form.formState.errors.experience_level && (
-            <p className="text-sm text-destructive">
-              {form.formState.errors.experience_level.message}
-            </p>
+          {errors.experience_level && (
+            <p className="text-sm text-destructive">{errors.experience_level}</p>
           )}
         </div>
 
@@ -172,7 +179,7 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
           <Label>
             Qual é o status da implementação de IA na sua empresa?
           </Label>
-          <Select onValueChange={(value) => handleSelectChange('implementation_status', value)} defaultValue={form.getValues('implementation_status') || ''}>
+          <Select onValueChange={handleImplementationStatusChange} value={implementationStatus}>
             <SelectTrigger className="h-12">
               <SelectValue placeholder="Selecione o status atual" />
             </SelectTrigger>
@@ -184,10 +191,8 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
               <SelectItem value="advanced">Já temos IA integrada aos processos</SelectItem>
             </SelectContent>
           </Select>
-          {form.formState.errors.implementation_status && (
-            <p className="text-sm text-destructive">
-              {form.formState.errors.implementation_status.message}
-            </p>
+          {errors.implementation_status && (
+            <p className="text-sm text-destructive">{errors.implementation_status}</p>
           )}
         </div>
 
@@ -195,7 +200,7 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
           <Label>
             Como pretende implementar IA na sua empresa?
           </Label>
-          <Select onValueChange={(value) => handleSelectChange('implementation_approach', value)} defaultValue={form.getValues('implementation_approach') || ''}>
+          <Select onValueChange={handleImplementationApproachChange} value={implementationApproach}>
             <SelectTrigger className="h-12">
               <SelectValue placeholder="Selecione sua abordagem" />
             </SelectTrigger>
@@ -205,10 +210,8 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
               <SelectItem value="hire">Quero contratar</SelectItem>
             </SelectContent>
           </Select>
-          {form.formState.errors.implementation_approach && (
-            <p className="text-sm text-destructive">
-              {form.formState.errors.implementation_approach.message}
-            </p>
+          {errors.implementation_approach && (
+            <p className="text-sm text-destructive">{errors.implementation_approach}</p>
           )}
         </div>
 
@@ -307,7 +310,7 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
           <Button 
             type="submit" 
             className="w-full h-12 bg-primary hover:bg-primary/90"
-            disabled={!form.formState.isValid || !form.getValues('experience_level') || !form.getValues('implementation_status') || !form.getValues('implementation_approach')}
+            disabled={!isFormValid}
           >
             Continuar
           </Button>
