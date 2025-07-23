@@ -152,7 +152,7 @@ export function useImplementationTrail() {
             estimatedTime: '1-2 dias'
           }
         ],
-        ai_message: 'Trilha básica criada. Complete seu onboarding para uma experiência mais personalizada.',
+        ai_message: 'Trilha básica criada. Complete seu perfil para uma experiência mais personalizada.',
         generated_at: new Date().toISOString()
       };
 

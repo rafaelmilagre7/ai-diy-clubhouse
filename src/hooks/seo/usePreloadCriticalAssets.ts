@@ -27,10 +27,7 @@ export const usePreloadCriticalAssets = () => {
       document.head.appendChild(link);
     };
 
-    // Desabilitar preload nas páginas de onboarding para reduzir erros de console
-    if (location.pathname.includes('/onboarding/')) {
-      return;
-    }
+    // Route-specific preloading otimizado
 
     // Route-specific preloading - apenas para dashboard e home
     switch (location.pathname) {
