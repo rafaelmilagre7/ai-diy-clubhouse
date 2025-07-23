@@ -55,11 +55,40 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
     onNext();
   };
 
-  // Filtrar ferramentas ativas e ordenar por popularidade
-  const availableTools = tools
-    .filter(tool => tool.status) // Apenas ferramentas ativas
-    .sort((a, b) => a.name.localeCompare(b.name))
-    .slice(0, 12); // Limitar a 12 ferramentas mais populares
+  // Organizar ferramentas por categoria conforme CategoryGrid
+  const organizeToolsByCategory = () => {
+    const categories = [
+      'Modelos de IA e Interfaces',
+      'Geração de Conteúdo Visual', 
+      'Geração e Processamento de Áudio',
+      'Automação e Integrações',
+      'Comunicação e Atendimento',
+      'Captura e Análise de Dados',
+      'Pesquisa e Síntese de Informações',
+      'Gestão de Documentos e Conteúdo',
+      'Marketing e CRM',
+      'Produtividade e Organização',
+      'Desenvolvimento e Código',
+      'Plataformas de Mídia',
+      'Outros'
+    ];
+
+    const organizedTools = categories.reduce((acc, category) => {
+      const toolsInCategory = tools
+        .filter(tool => tool.status && tool.category === category)
+        .sort((a, b) => a.name.localeCompare(b.name));
+      
+      if (toolsInCategory.length > 0) {
+        acc[category] = toolsInCategory;
+      }
+      
+      return acc;
+    }, {} as Record<string, typeof tools>);
+
+    return organizedTools;
+  };
+
+  const organizedTools = organizeToolsByCategory();
 
 
   return (
@@ -149,84 +178,100 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
               <p className="text-muted-foreground">Carregando ferramentas...</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-              {availableTools.map((tool) => (
-                <Card 
-                  key={tool.id} 
-                  className={`cursor-pointer transition-all duration-200 hover:border-primary/50 ${
-                    form.getValues('current_tools')?.includes(tool.name) 
-                      ? 'border-primary bg-primary/5' 
-                      : 'border-border hover:bg-accent/50'
-                  }`}
-                  onClick={() => {
-                    const currentTools = form.getValues('current_tools') || [];
-                    if (currentTools.includes(tool.name)) {
-                      form.setValue('current_tools', currentTools.filter(t => t !== tool.name));
-                    } else {
-                      form.setValue('current_tools', [...currentTools, tool.name]);
-                    }
-                  }}
-                >
-                  <CardContent className="p-3 flex flex-col items-center space-y-2">
-                    <div className="h-8 w-8 rounded-md bg-primary/10 flex items-center justify-center overflow-hidden flex-shrink-0">
-                      {tool.logo_url ? (
-                        <img 
-                          src={tool.logo_url} 
-                          alt={tool.name} 
-                          className="h-full w-full object-contain" 
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                            const parent = e.currentTarget.parentElement;
-                            if (parent) {
-                              parent.innerHTML = `<div class="text-xs font-bold text-primary">${tool.name.substring(0, 2).toUpperCase()}</div>`;
-                            }
-                          }}
-                        />
-                      ) : (
-                        <div className="text-xs font-bold text-primary">
-                          {tool.name.substring(0, 2).toUpperCase()}
-                        </div>
-                      )}
-                    </div>
-                    <span className="text-xs font-medium text-center line-clamp-2">
-                      {tool.name}
-                    </span>
-                    <Checkbox
-                      checked={form.getValues('current_tools')?.includes(tool.name) || false}
-                      className="pointer-events-none"
-                    />
-                  </CardContent>
-                </Card>
-              ))}
-              {/* Opção "Nenhuma ainda" */}
-              <Card 
-                className={`cursor-pointer transition-all duration-200 hover:border-primary/50 ${
-                  form.getValues('current_tools')?.includes('Nenhuma ainda') 
-                    ? 'border-primary bg-primary/5' 
-                    : 'border-border hover:bg-accent/50'
-                }`}
-                onClick={() => {
-                  const currentTools = form.getValues('current_tools') || [];
-                  if (currentTools.includes('Nenhuma ainda')) {
-                    form.setValue('current_tools', currentTools.filter(t => t !== 'Nenhuma ainda'));
-                  } else {
-                    form.setValue('current_tools', ['Nenhuma ainda']); // Substituir todas as outras
-                  }
-                }}
-              >
-                <CardContent className="p-3 flex flex-col items-center space-y-2">
-                  <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center">
-                    <span className="text-xs">❌</span>
+            <div className="space-y-6">
+              {Object.entries(organizedTools).map(([category, categoryTools]) => (
+                <div key={category} className="space-y-3">
+                  <h4 className="text-sm font-semibold text-muted-foreground">{category}</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                    {categoryTools.map((tool) => (
+                      <Card 
+                        key={tool.id} 
+                        className={`cursor-pointer transition-all duration-200 hover:border-primary/50 ${
+                          form.getValues('current_tools')?.includes(tool.name) 
+                            ? 'border-primary bg-primary/5' 
+                            : 'border-border hover:bg-accent/50'
+                        }`}
+                        onClick={() => {
+                          const currentTools = form.getValues('current_tools') || [];
+                          // Se "Nenhuma ainda" estiver selecionado, desmarcar
+                          if (currentTools.includes('Nenhuma ainda')) {
+                            form.setValue('current_tools', [tool.name]);
+                          } else if (currentTools.includes(tool.name)) {
+                            form.setValue('current_tools', currentTools.filter(t => t !== tool.name));
+                          } else {
+                            form.setValue('current_tools', [...currentTools, tool.name]);
+                          }
+                        }}
+                      >
+                        <CardContent className="p-3 flex flex-col items-center space-y-2">
+                          <div className="h-8 w-8 rounded-md bg-primary/10 flex items-center justify-center overflow-hidden flex-shrink-0">
+                            {tool.logo_url ? (
+                              <img 
+                                src={tool.logo_url} 
+                                alt={tool.name} 
+                                className="h-full w-full object-contain" 
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                  const parent = e.currentTarget.parentElement;
+                                  if (parent) {
+                                    parent.innerHTML = `<div class="text-xs font-bold text-primary">${tool.name.substring(0, 2).toUpperCase()}</div>`;
+                                  }
+                                }}
+                              />
+                            ) : (
+                              <div className="text-xs font-bold text-primary">
+                                {tool.name.substring(0, 2).toUpperCase()}
+                              </div>
+                            )}
+                          </div>
+                          <span className="text-xs font-medium text-center line-clamp-2">
+                            {tool.name}
+                          </span>
+                          <Checkbox
+                            checked={form.getValues('current_tools')?.includes(tool.name) || false}
+                            className="pointer-events-none"
+                          />
+                        </CardContent>
+                      </Card>
+                    ))}
                   </div>
-                  <span className="text-xs font-medium text-center">
-                    Nenhuma ainda
-                  </span>
-                  <Checkbox
-                    checked={form.getValues('current_tools')?.includes('Nenhuma ainda') || false}
-                    className="pointer-events-none"
-                  />
-                </CardContent>
-              </Card>
+                </div>
+              ))}
+              
+              {/* Opção "Nenhuma ainda" no final */}
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold text-muted-foreground">Opções especiais</h4>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                  <Card 
+                    className={`cursor-pointer transition-all duration-200 hover:border-primary/50 ${
+                      form.getValues('current_tools')?.includes('Nenhuma ainda') 
+                        ? 'border-primary bg-primary/5' 
+                        : 'border-border hover:bg-accent/50'
+                    }`}
+                    onClick={() => {
+                      const currentTools = form.getValues('current_tools') || [];
+                      if (currentTools.includes('Nenhuma ainda')) {
+                        form.setValue('current_tools', currentTools.filter(t => t !== 'Nenhuma ainda'));
+                      } else {
+                        form.setValue('current_tools', ['Nenhuma ainda']); // Substituir todas as outras
+                      }
+                    }}
+                  >
+                    <CardContent className="p-3 flex flex-col items-center space-y-2">
+                      <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center">
+                        <span className="text-xs">❌</span>
+                      </div>
+                      <span className="text-xs font-medium text-center">
+                        Nenhuma ainda
+                      </span>
+                      <Checkbox
+                        checked={form.getValues('current_tools')?.includes('Nenhuma ainda') || false}
+                        className="pointer-events-none"
+                      />
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
             </div>
           )}
         </div>
