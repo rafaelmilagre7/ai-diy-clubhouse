@@ -6,16 +6,15 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Textarea } from '@/components/ui/textarea';
-import { Bot, Zap, Target, CheckSquare } from 'lucide-react';
+import { Bot, Zap, CheckSquare } from 'lucide-react';
+import { useTools } from '@/hooks/useTools';
+import { Card, CardContent } from '@/components/ui/card';
 
 const aiExperienceSchema = z.object({
   experience_level: z.string().min(1, 'Selecione seu nível de experiência'),
   current_tools: z.array(z.string()).optional(),
   main_interest: z.string().optional(),
   implementation_status: z.string().optional(),
-  desired_areas: z.array(z.string()).optional(),
-  biggest_challenge: z.string().optional(),
 });
 
 type AIExperienceFormData = z.infer<typeof aiExperienceSchema>;
@@ -32,12 +31,12 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
   onNext,
 }) => {
   const [currentData, setCurrentData] = useState<Partial<AIExperienceFormData>>(initialData || {});
+  const { tools, isLoading } = useTools();
 
   const form = useForm<AIExperienceFormData>({
     resolver: zodResolver(aiExperienceSchema),
     defaultValues: {
       current_tools: [],
-      desired_areas: [],
       ...initialData,
     },
     mode: 'onChange',
@@ -55,33 +54,12 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
     onNext();
   };
 
-  const aiTools = [
-    'ChatGPT',
-    'Claude',
-    'Gemini',
-    'Midjourney',
-    'Stable Diffusion',
-    'GitHub Copilot',
-    'Notion AI',
-    'Jasper',
-    'Copy.ai',
-    'Zapier',
-    'Make (Integromat)',
-    'Nenhuma ainda'
-  ];
+  // Filtrar ferramentas ativas e ordenar por popularidade
+  const availableTools = tools
+    .filter(tool => tool.status) // Apenas ferramentas ativas
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .slice(0, 12); // Limitar a 12 ferramentas mais populares
 
-  const aiAreas = [
-    'Atendimento ao Cliente',
-    'Marketing Digital',
-    'Vendas',
-    'Criação de Conteúdo',
-    'Automação de Processos',
-    'Análise de Dados',
-    'Design e Criação',
-    'Desenvolvimento',
-    'Recursos Humanos',
-    'Financeiro'
-  ];
 
   return (
     <div className="space-y-8 max-w-2xl mx-auto">
@@ -119,54 +97,93 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
         <div className="space-y-4">
           <Label className="flex items-center gap-2">
             <CheckSquare className="w-4 h-4" />
-            Quais ferramentas de IA você já usa? (marque todas que se aplicam)
+            Quais ferramentas de IA você já usa? (selecione todas que se aplicam)
           </Label>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {aiTools.map((tool) => (
-              <div key={tool} className="flex items-center space-x-2">
-                <Checkbox
-                  id={tool}
-                  onCheckedChange={(checked) => {
+          {isLoading ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">Carregando ferramentas...</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              {availableTools.map((tool) => (
+                <Card 
+                  key={tool.id} 
+                  className={`cursor-pointer transition-all duration-200 hover:border-primary/50 ${
+                    form.getValues('current_tools')?.includes(tool.name) 
+                      ? 'border-primary bg-primary/5' 
+                      : 'border-border hover:bg-accent/50'
+                  }`}
+                  onClick={() => {
                     const currentTools = form.getValues('current_tools') || [];
-                    if (checked) {
-                      form.setValue('current_tools', [...currentTools, tool]);
+                    if (currentTools.includes(tool.name)) {
+                      form.setValue('current_tools', currentTools.filter(t => t !== tool.name));
                     } else {
-                      form.setValue('current_tools', currentTools.filter(t => t !== tool));
+                      form.setValue('current_tools', [...currentTools, tool.name]);
                     }
                   }}
-                />
-                <Label htmlFor={tool} className="text-sm font-normal cursor-pointer">
-                  {tool}
-                </Label>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label>
-            Em que áreas você gostaria de implementar IA na sua empresa?
-          </Label>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {aiAreas.map((area) => (
-              <div key={area} className="flex items-center space-x-2">
-                <Checkbox
-                  id={area}
-                  onCheckedChange={(checked) => {
-                    const currentAreas = form.getValues('desired_areas') || [];
-                    if (checked) {
-                      form.setValue('desired_areas', [...currentAreas, area]);
-                    } else {
-                      form.setValue('desired_areas', currentAreas.filter(a => a !== area));
-                    }
-                  }}
-                />
-                <Label htmlFor={area} className="text-sm font-normal cursor-pointer">
-                  {area}
-                </Label>
-              </div>
-            ))}
-          </div>
+                >
+                  <CardContent className="p-3 flex flex-col items-center space-y-2">
+                    <div className="h-8 w-8 rounded-md bg-primary/10 flex items-center justify-center overflow-hidden flex-shrink-0">
+                      {tool.logo_url ? (
+                        <img 
+                          src={tool.logo_url} 
+                          alt={tool.name} 
+                          className="h-full w-full object-contain" 
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            const parent = e.currentTarget.parentElement;
+                            if (parent) {
+                              parent.innerHTML = `<div class="text-xs font-bold text-primary">${tool.name.substring(0, 2).toUpperCase()}</div>`;
+                            }
+                          }}
+                        />
+                      ) : (
+                        <div className="text-xs font-bold text-primary">
+                          {tool.name.substring(0, 2).toUpperCase()}
+                        </div>
+                      )}
+                    </div>
+                    <span className="text-xs font-medium text-center line-clamp-2">
+                      {tool.name}
+                    </span>
+                    <Checkbox
+                      checked={form.getValues('current_tools')?.includes(tool.name) || false}
+                      className="pointer-events-none"
+                    />
+                  </CardContent>
+                </Card>
+              ))}
+              {/* Opção "Nenhuma ainda" */}
+              <Card 
+                className={`cursor-pointer transition-all duration-200 hover:border-primary/50 ${
+                  form.getValues('current_tools')?.includes('Nenhuma ainda') 
+                    ? 'border-primary bg-primary/5' 
+                    : 'border-border hover:bg-accent/50'
+                }`}
+                onClick={() => {
+                  const currentTools = form.getValues('current_tools') || [];
+                  if (currentTools.includes('Nenhuma ainda')) {
+                    form.setValue('current_tools', currentTools.filter(t => t !== 'Nenhuma ainda'));
+                  } else {
+                    form.setValue('current_tools', ['Nenhuma ainda']); // Substituir todas as outras
+                  }
+                }}
+              >
+                <CardContent className="p-3 flex flex-col items-center space-y-2">
+                  <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center">
+                    <span className="text-xs">❌</span>
+                  </div>
+                  <span className="text-xs font-medium text-center">
+                    Nenhuma ainda
+                  </span>
+                  <Checkbox
+                    checked={form.getValues('current_tools')?.includes('Nenhuma ainda') || false}
+                    className="pointer-events-none"
+                  />
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -185,18 +202,6 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
               <SelectItem value="advanced">Já temos IA integrada aos processos</SelectItem>
             </SelectContent>
           </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="biggest_challenge">
-            Qual é seu maior desafio com IA atualmente? (opcional)
-          </Label>
-          <Textarea
-            id="biggest_challenge"
-            placeholder="Ex: Não sei por onde começar, falta de conhecimento técnico, resistência da equipe..."
-            {...form.register('biggest_challenge')}
-            className="min-h-[100px]"
-          />
         </div>
       </form>
     </div>

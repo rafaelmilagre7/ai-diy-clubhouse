@@ -27,9 +27,8 @@ export interface OnboardingData {
   // Step 3: Experiência com IA
   ai_experience: {
     experience_level: string;
-    tools_used: string[];
-    satisfaction_level: string;
-    biggest_challenge: string;
+    current_tools?: string[];
+    implementation_status?: string;
   };
   
   // Step 4: Objetivos
