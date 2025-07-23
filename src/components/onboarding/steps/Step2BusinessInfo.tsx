@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -32,6 +32,7 @@ export const Step2BusinessInfo: React.FC<Step2BusinessInfoProps> = ({
   onNext,
 }) => {
   const [currentData, setCurrentData] = useState<Partial<BusinessInfoFormData>>(initialData || {});
+  const lastDataRef = useRef<string>('');
 
   const form = useForm<BusinessInfoFormData>({
     resolver: zodResolver(businessInfoSchema),
@@ -41,17 +42,29 @@ export const Step2BusinessInfo: React.FC<Step2BusinessInfoProps> = ({
 
   const watchedFields = form.watch();
 
-  useEffect(() => {
-    const newData = { ...currentData, ...watchedFields };
-    console.log('[STEP2] Dados alterados:', newData);
-    console.log('[STEP2] WatchedFields:', watchedFields);
-    setCurrentData(newData);
-    onDataChange(newData);
-  }, [watchedFields, onDataChange]);
+  // Função memoizada para notificar mudanças com debounce
+  const notifyChange = useCallback((newData: Partial<BusinessInfoFormData>) => {
+    const dataString = JSON.stringify(newData);
+    if (lastDataRef.current !== dataString) {
+      lastDataRef.current = dataString;
+      onDataChange(newData);
+    }
+  }, [onDataChange]);
 
-  const handleSubmit = (data: BusinessInfoFormData) => {
+  useEffect(() => {
+    // Usar setTimeout para quebrar a cadeia síncrona de chamadas
+    const timeoutId = setTimeout(() => {
+      const newData = { ...currentData, ...watchedFields };
+      setCurrentData(newData);
+      notifyChange(newData);
+    }, 0);
+
+    return () => clearTimeout(timeoutId);
+  }, [watchedFields, currentData, notifyChange]);
+
+  const handleSubmit = useCallback((data: BusinessInfoFormData) => {
     onNext();
-  };
+  }, [onNext]);
 
   return (
     <div className="space-y-8 max-w-2xl mx-auto">
