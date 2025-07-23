@@ -41,10 +41,11 @@ export const Step1PersonalInfo: React.FC<Step1PersonalInfoProps> = ({
 
   // Carregar cidades quando estado mudar
   useEffect(() => {
-    if (formData.state && CITIES_BY_STATE[formData.state]) {
-      setAvailableCities(CITIES_BY_STATE[formData.state]);
+    if (formData.state) {
+      const cities = getCitiesByState(formData.state);
+      setAvailableCities(cities);
       // Limpar cidade se não estiver na lista do novo estado
-      if (formData.city && !CITIES_BY_STATE[formData.state].includes(formData.city)) {
+      if (formData.city && !cities.includes(formData.city)) {
         setFormData(prev => ({ ...prev, city: '' }));
       }
     } else {
