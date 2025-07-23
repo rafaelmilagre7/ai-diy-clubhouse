@@ -29,7 +29,11 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
   onDataChange,
   onNext,
 }) => {
-  const [selectedTools, setSelectedTools] = useState<string[]>(initialData?.current_tools || []);
+  const [selectedTools, setSelectedTools] = useState<string[]>(() => {
+    const tools = initialData?.current_tools || [];
+    console.log('[STEP3] Inicializando selectedTools com:', tools);
+    return tools;
+  });
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
   const staticTools = [
     // Automação e Integrações
@@ -203,6 +207,7 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
     }
     
     // Atualizar estado local
+    console.log('[STEP3] Atualizando selectedTools de:', selectedTools, 'para:', newSelectedTools);
     setSelectedTools(newSelectedTools);
     
     // Atualizar dados internos sem notificar ainda
