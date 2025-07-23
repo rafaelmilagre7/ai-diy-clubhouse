@@ -30,8 +30,7 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
   onNext,
 }) => {
   const [selectedTools, setSelectedTools] = useState<string[]>(initialData?.current_tools || []);
-  
-  // Lista completa de ferramentas replicada do banco de dados
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
   const staticTools = [
     // Automação e Integrações
     { id: '1', name: '0codekit', category: 'Automação e Integrações', logo_url: 'https://i.ibb.co/rRDMwKQj/0codekit-logo.jpg' },
@@ -209,6 +208,10 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
     });
   }, [form, notifyChange]);
 
+  const handleImageError = useCallback((toolId: string) => {
+    setFailedImages(prev => new Set([...prev, toolId]));
+  }, []);
+
   const handleSubmit = (data: AIExperienceFormData) => {
     console.log('[Step3] Enviando dados:', data);
     
@@ -357,22 +360,18 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
                         <CardContent className="p-3 flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <div className="w-8 h-8 bg-gradient-to-br from-primary/20 to-primary/5 rounded-lg flex items-center justify-center overflow-hidden">
-                              <img 
-                                src={tool.logo_url} 
-                                alt={`${tool.name} logo`}
-                                className="w-6 h-6 object-contain"
-                                onError={(e) => {
-                                  const target = e.currentTarget as HTMLImageElement;
-                                  target.style.display = 'none';
-                                  const parent = target.parentElement;
-                                  if (parent && !parent.querySelector('.fallback-icon')) {
-                                    const fallback = document.createElement('div');
-                                    fallback.className = 'fallback-icon text-xs font-medium text-primary flex items-center justify-center w-full h-full';
-                                    fallback.textContent = tool.name.charAt(0);
-                                    parent.appendChild(fallback);
-                                  }
-                                }}
-                              />
+                              {failedImages.has(tool.id) ? (
+                                <div className="text-xs font-medium text-primary flex items-center justify-center w-full h-full">
+                                  {tool.name.charAt(0)}
+                                </div>
+                              ) : (
+                                <img 
+                                  src={tool.logo_url} 
+                                  alt={`${tool.name} logo`}
+                                  className="w-6 h-6 object-contain"
+                                  onError={() => handleImageError(tool.id)}
+                                />
+                              )}
                             </div>
                           </div>
                           <span className="text-sm font-medium flex-1 text-left ml-2">
