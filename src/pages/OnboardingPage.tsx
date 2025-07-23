@@ -26,9 +26,140 @@ const OnboardingPage: React.FC = () => {
     goToPrevStep,
     completeOnboarding,
     nina_message,
-    // Adicionar setState do hook para poder atualizar dados localmente
     setState,
   } = useOnboarding();
+
+  // Memoizar todas as funções onDataChange ANTES das condicionais
+  const handleStep1DataChange = useCallback((personalData: any) => {
+    console.log('[STEP1] Dados alterados:', personalData);
+    setState(prev => ({
+      ...prev,
+      data: {
+        ...prev.data,
+        personal_info: personalData
+      }
+    }));
+  }, [setState]);
+
+  const handleStep2DataChange = useCallback((businessData: any) => {
+    console.log('Step2 Data Change:', businessData);
+    setState(prev => ({
+      ...prev,
+      data: {
+        ...prev.data,
+        professional_info: businessData
+      }
+    }));
+  }, [setState]);
+
+  const handleStep3DataChange = useCallback((aiData: any) => {
+    console.log('Step3 Data Change:', aiData);
+    setState(prev => ({
+      ...prev,
+      data: {
+        ...prev.data,
+        ai_experience: aiData
+      }
+    }));
+  }, [setState]);
+
+  const handleStep4DataChange = useCallback((goalsData: any) => {
+    console.log('Step4 Data Change:', goalsData);
+    setState(prev => ({
+      ...prev,
+      data: {
+        ...prev.data,
+        goals_info: goalsData
+      }
+    }));
+  }, [setState]);
+
+  const handleStep5DataChange = useCallback((personalizationData: any) => {
+    console.log('Step5 Data Change:', personalizationData);
+    setState(prev => ({
+      ...prev,
+      data: {
+        ...prev.data,
+        personalization: personalizationData
+      }
+    }));
+  }, [setState]);
+
+  const handleNext = useCallback(async () => {
+    console.log('[ONBOARDING_PAGE] HandleNext chamado, step atual:', current_step);
+    
+    let stepData = null;
+    let stepMapping = {
+      1: data.personal_info,
+      2: data.professional_info,
+      3: data.ai_experience,
+      4: data.goals_info,
+      5: data.personalization,
+    };
+    
+    if (current_step <= 5) {
+      stepData = stepMapping[current_step as keyof typeof stepMapping];
+      console.log('[ONBOARDING_PAGE] Salvando dados do step:', current_step, stepData);
+      
+      const success = await saveStepData(current_step, stepData);
+      if (!success) {
+        console.error('[ONBOARDING_PAGE] Falha ao salvar step', current_step);
+        return;
+      }
+      
+      if (current_step === 5) {
+        console.log('[ONBOARDING_PAGE] Step 5 → Step 6: finalizando onboarding...');
+        const onboardingCompleted = await completeOnboarding(stepData);
+        if (!onboardingCompleted) {
+          console.error('[ONBOARDING_PAGE] Falha ao finalizar onboarding');
+          return;
+        }
+      }
+    }
+    
+    if (current_step === 6) {
+      console.log('[ONBOARDING_PAGE] Step 6 - redirecionamento direto ao dashboard');
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 500);
+    } else {
+      await goToNextStep();
+    }
+  }, [current_step, data, saveStepData, completeOnboarding, goToNextStep]);
+
+  const canProceed = useCallback(() => {
+    switch (current_step) {
+      case 1:
+        const phoneValid = data.personal_info?.phone && 
+          data.personal_info.phone.includes('|') && 
+          data.personal_info.phone.startsWith('+') &&
+          data.personal_info.phone.split('|')[1] && 
+          data.personal_info.phone.split('|')[1].trim().length > 0;
+        
+        const hasRequiredFields = data.personal_info?.name && 
+          data.personal_info?.state && 
+          data.personal_info?.city;
+        
+        const hasProfilePicture = data.personal_info?.profile_picture && 
+          data.personal_info.profile_picture.trim().length > 0;
+        
+        return !!(hasRequiredFields && phoneValid && hasProfilePicture);
+      case 2:
+        return !!(data.professional_info?.company_name && data.professional_info?.company_sector);
+      case 3:
+        return !!(data.ai_experience?.experience_level && 
+                  data.ai_experience?.implementation_status && 
+                  data.ai_experience?.implementation_approach);
+      case 4:
+        return !!(data.goals_info?.primary_goal);
+      case 5:
+        return !!(data.personalization?.learning_style);
+      case 6:
+        return true;
+      default:
+        return false;
+    }
+  }, [current_step, data]);
 
   // Redirect se usuário não está logado
   if (!user) {
@@ -87,146 +218,64 @@ const OnboardingPage: React.FC = () => {
   };
 
   const currentStepConfig = stepConfig[current_step as keyof typeof stepConfig];
-  const StepComponent = currentStepConfig.component;
 
-  // Memoizar todas as funções onDataChange ANTES das condicionais
-  const handleStep1DataChange = useCallback((personalData: any) => {
-    console.log('[STEP1] Dados alterados:', personalData);
-    setState(prev => ({
-      ...prev,
-      data: {
-        ...prev.data,
-        personal_info: personalData
-      }
-    }));
-  }, [setState]);
-
-  const handleStep2DataChange = useCallback((businessData: any) => {
-    console.log('Step2 Data Change:', businessData);
-    setState(prev => ({
-      ...prev,
-      data: {
-        ...prev.data,
-        professional_info: businessData
-      }
-    }));
-  }, [setState]);
-
-  const handleStep3DataChange = useCallback((aiData: any) => {
-    console.log('Step3 Data Change:', aiData);
-    setState(prev => ({
-      ...prev,
-      data: {
-        ...prev.data,
-        ai_experience: aiData
-      }
-    }));
-  }, [setState]);
-
-  const handleStep4DataChange = useCallback((goalsData: any) => {
-    console.log('Step4 Data Change:', goalsData);
-    setState(prev => ({
-      ...prev,
-      data: {
-        ...prev.data,
-        goals_info: goalsData
-      }
-    }));
-  }, [setState]);
-
-  const handleStep5DataChange = useCallback((personalizationData: any) => {
-    console.log('Step5 Data Change:', personalizationData);
-    setState(prev => ({
-      ...prev,
-      data: {
-        ...prev.data,
-        personalization: personalizationData
-      }
-    }));
-  }, [setState]);
-
-  const handleNext = async () => {
-    console.log('[ONBOARDING_PAGE] HandleNext chamado, step atual:', current_step);
-    
-    // Salvar dados do step atual antes de prosseguir
-    let stepData = null;
-    let stepMapping = {
-      1: data.personal_info,
-      2: data.professional_info,
-      3: data.ai_experience,
-      4: data.goals_info,
-      5: data.personalization,
-    };
-    
-    if (current_step <= 5) {
-      stepData = stepMapping[current_step as keyof typeof stepMapping];
-      console.log('[ONBOARDING_PAGE] Salvando dados do step:', current_step, stepData);
-      
-      const success = await saveStepData(current_step, stepData);
-      if (!success) {
-        console.error('[ONBOARDING_PAGE] Falha ao salvar step', current_step);
-        return;
-      }
-      
-      // Se é o step 5, finalizar onboarding antes de ir para step 6
-      if (current_step === 5) {
-        console.log('[ONBOARDING_PAGE] Step 5 → Step 6: finalizando onboarding...');
-        const onboardingCompleted = await completeOnboarding(stepData);
-        if (!onboardingCompleted) {
-          console.error('[ONBOARDING_PAGE] Falha ao finalizar onboarding');
-          return;
-        }
-      }
-    }
-    
-    if (current_step === 6) {
-      console.log('[ONBOARDING_PAGE] Step 6 - redirecionamento direto ao dashboard');
-      // No step 6, apenas redirecionar
-      setTimeout(() => {
-        window.location.href = '/dashboard';
-      }, 500);
-    } else {
-      await goToNextStep();
-    }
-  };
-
-  const canProceed = () => {
+  // Função para renderizar o componente do step atual
+  const renderCurrentStep = () => {
     switch (current_step) {
       case 1:
-        // Validar telefone internacional completo (formato: +dialCode|number) 
-        const phoneValid = data.personal_info?.phone && 
-          data.personal_info.phone.includes('|') && 
-          data.personal_info.phone.startsWith('+') &&
-          data.personal_info.phone.split('|')[1] && // Ter número após o |
-          data.personal_info.phone.split('|')[1].trim().length > 0; // Número não vazio
-        
-        const hasRequiredFields = data.personal_info?.name && 
-          data.personal_info?.state && 
-          data.personal_info?.city;
-        
-        // Adicionar validação da foto de perfil
-        const hasProfilePicture = data.personal_info?.profile_picture && 
-          data.personal_info.profile_picture.trim().length > 0;
-        
-        console.log('[VALIDATION] Phone:', data.personal_info?.phone, 'Valid:', phoneValid);
-        console.log('[VALIDATION] Required fields:', hasRequiredFields);
-        console.log('[VALIDATION] Profile picture:', data.personal_info?.profile_picture, 'Valid:', hasProfilePicture);
-        
-        return !!(hasRequiredFields && phoneValid && hasProfilePicture);
+        return (
+          <Step1PersonalInfo
+            initialData={data.personal_info}
+            onDataChange={handleStep1DataChange}
+            onNext={() => {}}
+          />
+        );
       case 2:
-        return !!(data.professional_info?.company_name && data.professional_info?.company_sector);
+        return (
+          <Step2BusinessInfo
+            initialData={data.professional_info}
+            onDataChange={handleStep2DataChange}
+            onNext={() => {}}
+          />
+        );
       case 3:
-        return !!(data.ai_experience?.experience_level && 
-                  data.ai_experience?.implementation_status && 
-                  data.ai_experience?.implementation_approach);
+        return (
+          <Step3AIExperience
+            initialData={data.ai_experience}
+            onDataChange={handleStep3DataChange}
+            onNext={() => {}}
+          />
+        );
       case 4:
-        return !!(data.goals_info?.primary_goal);
+        return (
+          <Step4Goals
+            initialData={data.goals_info}
+            onDataChange={handleStep4DataChange}
+            onNext={() => {}}
+          />
+        );
       case 5:
-        return !!(data.personalization?.learning_style);
+        return (
+          <Step5Personalization
+            initialData={data.personalization}
+            onDataChange={handleStep5DataChange}
+            onNext={() => {}}
+          />
+        );
       case 6:
-        return true;
+        return (
+          <Step6Welcome
+            ninaMessage={nina_message}
+            onFinish={() => {
+              console.log('[ONBOARDING_PAGE] Step6Welcome onFinish chamado - redirecionando');
+              setTimeout(() => {
+                window.location.href = '/dashboard';
+              }, 500);
+            }}
+          />
+        );
       default:
-        return false;
+        return null;
     }
   };
 
@@ -244,57 +293,7 @@ const OnboardingPage: React.FC = () => {
       canProceed={canProceed()}
       completedSteps={completed_steps}
     >
-      {current_step === 1 && (
-        <Step1PersonalInfo
-          initialData={data.personal_info}
-          onDataChange={handleStep1DataChange}
-          onNext={() => {}}
-        />
-      )}
-
-      {current_step === 2 && (
-        <Step2BusinessInfo
-          initialData={data.professional_info}
-          onDataChange={handleStep2DataChange}
-          onNext={() => {}}
-        />
-      )}
-
-      {current_step === 3 && (
-        <Step3AIExperience
-          initialData={data.ai_experience}
-          onDataChange={handleStep3DataChange}
-          onNext={() => {}}
-        />
-      )}
-
-      {current_step === 4 && (
-        <Step4Goals
-          initialData={data.goals_info}
-          onDataChange={handleStep4DataChange}
-          onNext={() => {}}
-        />
-      )}
-
-      {current_step === 5 && (
-        <Step5Personalization
-          initialData={data.personalization}
-          onDataChange={handleStep5DataChange}
-          onNext={() => {}}
-        />
-      )}
-
-      {current_step === 6 && (
-        <Step6Welcome
-          ninaMessage={nina_message}
-          onFinish={() => {
-            console.log('[ONBOARDING_PAGE] Step6Welcome onFinish chamado - redirecionando');
-            setTimeout(() => {
-              window.location.href = '/dashboard';
-            }, 500);
-          }}
-        />
-      )}
+      {renderCurrentStep()}
     </OnboardingLayout>
   );
 };
