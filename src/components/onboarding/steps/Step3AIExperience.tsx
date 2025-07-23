@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -32,6 +32,7 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
 }) => {
   const [selectedTools, setSelectedTools] = useState<string[]>(initialData?.current_tools || []);
   const { tools, isLoading } = useTools();
+  const lastDataRef = useRef<string>('');
 
   const form = useForm<AIExperienceFormData>({
     resolver: zodResolver(aiExperienceSchema),
@@ -43,6 +44,44 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
     },
     mode: 'onChange',
   });
+
+  // Função segura para notificar mudanças - evita loops
+  const safeNotifyChange = useCallback((data: Partial<AIExperienceFormData>) => {
+    const dataString = JSON.stringify(data);
+    if (dataString !== lastDataRef.current) {
+      lastDataRef.current = dataString;
+      onDataChange(data);
+    }
+  }, [onDataChange]);
+
+  const handleSelectChange = useCallback((field: keyof AIExperienceFormData, value: string) => {
+    form.setValue(field, value);
+    const formData = form.getValues();
+    safeNotifyChange({ ...formData, current_tools: selectedTools });
+  }, [form, selectedTools, safeNotifyChange]);
+
+  const handleToolSelection = useCallback((toolName: string) => {
+    let newSelectedTools: string[];
+    
+    if (toolName === 'Nenhuma ainda') {
+      newSelectedTools = selectedTools.includes('Nenhuma ainda') 
+        ? selectedTools.filter(t => t !== 'Nenhuma ainda')
+        : ['Nenhuma ainda'];
+    } else {
+      // Se "Nenhuma ainda" estiver selecionado, desmarcar
+      if (selectedTools.includes('Nenhuma ainda')) {
+        newSelectedTools = [toolName];
+      } else if (selectedTools.includes(toolName)) {
+        newSelectedTools = selectedTools.filter(t => t !== toolName);
+      } else {
+        newSelectedTools = [...selectedTools, toolName];
+      }
+    }
+    
+    setSelectedTools(newSelectedTools);
+    const formData = form.getValues();
+    safeNotifyChange({ ...formData, current_tools: newSelectedTools });
+  }, [selectedTools, form, safeNotifyChange]);
 
   const handleSubmit = (data: AIExperienceFormData) => {
     console.log('[Step3] Enviando dados:', data);
@@ -56,7 +95,7 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
     onNext();
   };
 
-  // Organizar ferramentas por categoria conforme CategoryGrid
+  // Organizar ferramentas por categoria
   const organizeToolsByCategory = () => {
     const categories = [
       'Modelos de IA e Interfaces',
@@ -91,7 +130,6 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
 
   const organizedTools = organizeToolsByCategory();
 
-
   return (
     <div className="space-y-8 max-w-2xl mx-auto">
       <div className="text-center space-y-2">
@@ -107,10 +145,7 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
             <Zap className="w-4 h-4" />
             Qual é seu nível de experiência com IA?
           </Label>
-          <Select onValueChange={(value) => { 
-            form.setValue('experience_level', value); 
-            onDataChange({ ...form.getValues(), experience_level: value, current_tools: selectedTools }); 
-          }} defaultValue={form.getValues('experience_level') || ''}>
+          <Select onValueChange={(value) => handleSelectChange('experience_level', value)} defaultValue={form.getValues('experience_level') || ''}>
             <SelectTrigger className="h-12">
               <SelectValue placeholder="Selecione seu nível" />
             </SelectTrigger>
@@ -132,10 +167,7 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
           <Label>
             Qual é o status da implementação de IA na sua empresa?
           </Label>
-          <Select onValueChange={(value) => { 
-            form.setValue('implementation_status', value); 
-            onDataChange({ ...form.getValues(), implementation_status: value, current_tools: selectedTools }); 
-          }} defaultValue={form.getValues('implementation_status') || ''}>
+          <Select onValueChange={(value) => handleSelectChange('implementation_status', value)} defaultValue={form.getValues('implementation_status') || ''}>
             <SelectTrigger className="h-12">
               <SelectValue placeholder="Selecione o status atual" />
             </SelectTrigger>
@@ -158,10 +190,7 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
           <Label>
             Como pretende implementar IA na sua empresa?
           </Label>
-          <Select onValueChange={(value) => { 
-            form.setValue('implementation_approach', value); 
-            onDataChange({ ...form.getValues(), implementation_approach: value, current_tools: selectedTools }); 
-          }} defaultValue={form.getValues('implementation_approach') || ''}>
+          <Select onValueChange={(value) => handleSelectChange('implementation_approach', value)} defaultValue={form.getValues('implementation_approach') || ''}>
             <SelectTrigger className="h-12">
               <SelectValue placeholder="Selecione sua abordagem" />
             </SelectTrigger>
@@ -194,27 +223,15 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
                   <h4 className="text-sm font-semibold text-muted-foreground">{category}</h4>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                     {categoryTools.map((tool) => (
-                       <Card 
-                         key={tool.id} 
-                         className={`cursor-pointer transition-all duration-200 hover:border-primary/50 ${
-                           selectedTools.includes(tool.name) 
-                             ? 'border-primary bg-primary/5' 
-                             : 'border-border hover:bg-accent/50'
-                         }`}
-                          onClick={() => {
-                            let newSelectedTools: string[];
-                            // Se "Nenhuma ainda" estiver selecionado, desmarcar
-                            if (selectedTools.includes('Nenhuma ainda')) {
-                              newSelectedTools = [tool.name];
-                            } else if (selectedTools.includes(tool.name)) {
-                              newSelectedTools = selectedTools.filter(t => t !== tool.name);
-                            } else {
-                              newSelectedTools = [...selectedTools, tool.name];
-                            }
-                            setSelectedTools(newSelectedTools);
-                            onDataChange({ ...form.getValues(), current_tools: newSelectedTools });
-                          }}
-                       >
+                      <Card 
+                        key={tool.id} 
+                        className={`cursor-pointer transition-all duration-200 hover:border-primary/50 ${
+                          selectedTools.includes(tool.name) 
+                            ? 'border-primary bg-primary/5' 
+                            : 'border-border hover:bg-accent/50'
+                        }`}
+                        onClick={() => handleToolSelection(tool.name)}
+                      >
                         <CardContent className="p-3 flex flex-col items-center space-y-2">
                           <div className="h-8 w-8 rounded-md bg-primary/10 flex items-center justify-center overflow-hidden flex-shrink-0">
                             {tool.logo_url ? (
@@ -260,16 +277,7 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
                         ? 'border-primary bg-primary/5' 
                         : 'border-border hover:bg-accent/50'
                     }`}
-                    onClick={() => {
-                      let newSelectedTools: string[];
-                      if (selectedTools.includes('Nenhuma ainda')) {
-                        newSelectedTools = selectedTools.filter(t => t !== 'Nenhuma ainda');
-                      } else {
-                        newSelectedTools = ['Nenhuma ainda']; // Substituir todas as outras
-                      }
-                      setSelectedTools(newSelectedTools);
-                      onDataChange({ ...form.getValues(), current_tools: newSelectedTools });
-                    }}
+                    onClick={() => handleToolSelection('Nenhuma ainda')}
                   >
                     <CardContent className="p-3 flex flex-col items-center space-y-2">
                       <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center">
@@ -299,7 +307,6 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
             Continuar
           </Button>
         </div>
-
       </form>
     </div>
   );
