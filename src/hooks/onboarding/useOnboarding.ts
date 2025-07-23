@@ -72,23 +72,30 @@ export const useOnboarding = () => {
 
   // Carregar dados existentes do onboarding
   const loadOnboardingData = useCallback(async () => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      console.log('[ONBOARDING] Usuário não encontrado');
+      return;
+    }
     
     try {
       setIsLoading(true);
+      console.log('[ONBOARDING] Carregando dados para usuário:', user.id);
       
       const { data, error } = await supabase
         .from('onboarding_final')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle(); // Mudança aqui: usar maybeSingle() em vez de single()
 
-      if (error && error.code !== 'PGRST116') {
-        console.error('Erro ao carregar onboarding:', error);
+      if (error) {
+        console.error('[ONBOARDING] Erro ao carregar:', error);
         return;
       }
+      
+      console.log('[ONBOARDING] Dados encontrados:', data);
 
       if (data) {
+        console.log('[ONBOARDING] Setando estado com dados carregados');
         setState({
           id: data.id,
           current_step: data.current_step,
@@ -103,9 +110,19 @@ export const useOnboarding = () => {
             personalization: data.personalization || {},
           },
         });
+      } else {
+        console.log('[ONBOARDING] Nenhum dado encontrado - primeiro acesso');
+        setState({
+          id: null,
+          current_step: 1,
+          completed_steps: [],
+          is_completed: false,
+          nina_message: null,
+          data: {},
+        });
       }
     } catch (error) {
-      console.error('Erro ao carregar onboarding:', error);
+      console.error('[ONBOARDING] Erro crítico ao carregar:', error);
     } finally {
       setIsLoading(false);
     }
