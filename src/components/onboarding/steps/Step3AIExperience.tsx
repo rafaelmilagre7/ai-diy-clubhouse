@@ -171,14 +171,19 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
         onDataChangeRef.current(newData);
       }, 0);
     }
-  }, []);
+  }, []); // REMOVIDO dependências que causavam loop
 
   const handleSelectChange = useCallback((field: keyof AIExperienceFormData, value: string) => {
     form.setValue(field, value);
-    // Notificar mudança imediatamente quando campos do form mudam
-    const formData = form.getValues();
-    notifyChange({ ...formData, current_tools: selectedTools });
-  }, [form, selectedTools, notifyChange]);
+    // Usar callback para acessar selectedTools atual sem dependência
+    setTimeout(() => {
+      const formData = form.getValues();
+      setSelectedTools(currentTools => {
+        notifyChange({ ...formData, current_tools: currentTools });
+        return currentTools; // Não modifica o estado, só acessa
+      });
+    }, 0);
+  }, [form]); // REMOVIDO selectedTools e notifyChange das dependências
 
   const handleToolClick = useCallback((toolName: string) => {
     setSelectedTools(prevSelectedTools => {
@@ -198,15 +203,20 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
         }
       }
       
-      // Notificar mudança APÓS atualizar o estado
+      // Notificar mudança usando dados atuais sem depender de referências externas
       setTimeout(() => {
         const formData = form.getValues();
-        notifyChange({ ...formData, current_tools: newSelectedTools });
+        const dataToNotify = { ...formData, current_tools: newSelectedTools };
+        const dataString = JSON.stringify(dataToNotify);
+        if (lastDataRef.current !== dataString) {
+          lastDataRef.current = dataString;
+          onDataChangeRef.current(dataToNotify);
+        }
       }, 0);
       
       return newSelectedTools;
     });
-  }, [form, notifyChange]);
+  }, [form]); // REMOVIDO todas as dependências problemáticas
 
   const handleImageError = useCallback((toolId: string) => {
     setFailedImages(prev => new Set([...prev, toolId]));
