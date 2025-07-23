@@ -10,6 +10,7 @@ import { BRAZILIAN_STATES, getCitiesByState } from '@/utils/brazilianCities';
 import { DateSelector } from '@/components/ui/date-selector';
 import { InternationalPhoneInput } from '@/components/ui/international-phone-input';
 import { validateInternationalPhone, validateLinkedInUrl, validateInstagramUrl, formatSocialUrl } from '@/utils/validationUtils';
+import { ProfilePictureUpload } from '@/components/ui/profile-picture-upload';
 
 interface PersonalInfoData {
   name: string;
@@ -285,11 +286,26 @@ export const Step1PersonalInfo: React.FC<Step1PersonalInfoProps> = ({
           </p>
         </motion.div>
 
-        {/* LinkedIn (Opcional) */}
+        {/* Upload de Foto de Perfil (Opcional) */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.6 }}
+        >
+          <Label className="text-sm font-medium text-foreground mb-4 block text-center">
+            Faça upload de uma foto de perfil (opcional)
+          </Label>
+          <ProfilePictureUpload
+            value={formData.profile_picture}
+            onChange={(url) => handleChange('profile_picture', url)}
+          />
+        </motion.div>
+
+        {/* LinkedIn (Opcional) */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.7 }}
         >
           <Label htmlFor="linkedin_url" className="text-sm font-medium text-foreground mb-2 block">
             Qual seu LinkedIn? (opcional)
@@ -328,7 +344,7 @@ export const Step1PersonalInfo: React.FC<Step1PersonalInfoProps> = ({
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.7 }}
+          transition={{ delay: 0.8 }}
         >
           <Label htmlFor="instagram_url" className="text-sm font-medium text-foreground mb-2 block">
             Qual seu Instagram? (opcional)
@@ -367,7 +383,7 @@ export const Step1PersonalInfo: React.FC<Step1PersonalInfoProps> = ({
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.8 }}
+          transition={{ delay: 0.9 }}
         >
           <Label htmlFor="fun_fact" className="text-sm font-medium text-foreground mb-2 block">
             Conte uma curiosidade sobre você (opcional)
