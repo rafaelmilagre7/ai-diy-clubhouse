@@ -144,13 +144,11 @@ const OnboardingPage: React.FC = () => {
         <Step1PersonalInfo
           initialData={data.personal_info}
           onDataChange={(personalData) => {
-            if (data.personal_info) {
-              Object.assign(data.personal_info, personalData);
-            } else {
-              data.personal_info = personalData;
-            }
+            console.log('[STEP1] Dados alterados:', personalData);
+            // Salvar automaticamente os dados quando mudarem
+            saveStepData(1, personalData);
           }}
-          onNext={() => handleStepSubmit(data.personal_info)}
+          onNext={() => handleNext()}
         />
       )}
 

@@ -36,14 +36,12 @@ export const OnboardingDataViewer = () => {
             </pre>
           </div>
           
-          {data.business_info && (
-            <div>
-              <h4 className="font-medium text-sm mb-2">Dados Empresariais (Step 2):</h4>
-              <pre className="bg-muted p-3 rounded text-xs overflow-auto">
-                {JSON.stringify(data.business_info, null, 2)}
-              </pre>
-            </div>
-          )}
+          <div>
+            <h4 className="font-medium text-sm mb-2">Dados Completos:</h4>
+            <pre className="bg-muted p-3 rounded text-xs overflow-auto max-h-40">
+              {JSON.stringify(data, null, 2)}
+            </pre>
+          </div>
         </div>
       )}
     </Card>
