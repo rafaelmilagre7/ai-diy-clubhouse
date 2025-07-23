@@ -67,8 +67,8 @@ const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
                   </div>
                 ) : (
                   <FileUpload
-                    bucketName="solution_files"
-                    folder="thumbnails"
+                    bucketName="course_images"
+                    folder="solution-covers"
                     onUploadComplete={(url) => {
                       // Atualizar o campo do formulário com a URL da imagem
                       field.onChange(url);
@@ -78,7 +78,7 @@ const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
                     accept="image/*"
                     buttonText="Upload de Imagem"
                     fieldLabel=""
-                    maxSize={5} // 5MB
+                    maxSize={10} // 10MB para imagens de capa
                   />
                 )}
               </div>
