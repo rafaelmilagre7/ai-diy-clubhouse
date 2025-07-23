@@ -6,68 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
-// Estados brasileiros
-const BRAZILIAN_STATES = [
-  { code: 'AC', name: 'Acre' },
-  { code: 'AL', name: 'Alagoas' },
-  { code: 'AP', name: 'Amapá' },
-  { code: 'AM', name: 'Amazonas' },
-  { code: 'BA', name: 'Bahia' },
-  { code: 'CE', name: 'Ceará' },
-  { code: 'DF', name: 'Distrito Federal' },
-  { code: 'ES', name: 'Espírito Santo' },
-  { code: 'GO', name: 'Goiás' },
-  { code: 'MA', name: 'Maranhão' },
-  { code: 'MT', name: 'Mato Grosso' },
-  { code: 'MS', name: 'Mato Grosso do Sul' },
-  { code: 'MG', name: 'Minas Gerais' },
-  { code: 'PA', name: 'Pará' },
-  { code: 'PB', name: 'Paraíba' },
-  { code: 'PR', name: 'Paraná' },
-  { code: 'PE', name: 'Pernambuco' },
-  { code: 'PI', name: 'Piauí' },
-  { code: 'RJ', name: 'Rio de Janeiro' },
-  { code: 'RN', name: 'Rio Grande do Norte' },
-  { code: 'RS', name: 'Rio Grande do Sul' },
-  { code: 'RO', name: 'Rondônia' },
-  { code: 'RR', name: 'Roraima' },
-  { code: 'SC', name: 'Santa Catarina' },
-  { code: 'SP', name: 'São Paulo' },
-  { code: 'SE', name: 'Sergipe' },
-  { code: 'TO', name: 'Tocantins' }
-];
-
-// Principais cidades por estado (uma amostra)
-const CITIES_BY_STATE: Record<string, string[]> = {
-  'SP': ['São Paulo', 'Campinas', 'Santos', 'Ribeirão Preto', 'São José dos Campos', 'Sorocaba', 'São Bernardo do Campo', 'Santo André', 'Osasco', 'Guarulhos'],
-  'RJ': ['Rio de Janeiro', 'Niterói', 'Duque de Caxias', 'Nova Iguaçu', 'Belford Roxo', 'Campos dos Goytacazes', 'Petrópolis', 'Volta Redonda'],
-  'MG': ['Belo Horizonte', 'Uberlândia', 'Contagem', 'Juiz de Fora', 'Betim', 'Montes Claros', 'Ribeirão das Neves', 'Uberaba'],
-  'PR': ['Curitiba', 'Londrina', 'Maringá', 'Ponta Grossa', 'Cascavel', 'São José dos Pinhais', 'Foz do Iguaçu', 'Colombo'],
-  'RS': ['Porto Alegre', 'Caxias do Sul', 'Pelotas', 'Canoas', 'Santa Maria', 'Gravataí', 'Viamão', 'Novo Hamburgo'],
-  'BA': ['Salvador', 'Feira de Santana', 'Vitória da Conquista', 'Camaçari', 'Juazeiro', 'Ilhéus', 'Itabuna', 'Lauro de Freitas'],
-  'SC': ['Florianópolis', 'Joinville', 'Blumenau', 'São José', 'Criciúma', 'Chapecó', 'Itajaí', 'Lages'],
-  'GO': ['Goiânia', 'Aparecida de Goiânia', 'Anápolis', 'Rio Verde', 'Luziânia', 'Águas Lindas de Goiás', 'Valparaíso de Goiás'],
-  'PE': ['Recife', 'Jaboatão dos Guararapes', 'Olinda', 'Caruaru', 'Petrolina', 'Paulista', 'Cabo de Santo Agostinho'],
-  'CE': ['Fortaleza', 'Caucaia', 'Juazeiro do Norte', 'Maracanaú', 'Sobral', 'Crato', 'Itapipoca'],
-  'PA': ['Belém', 'Ananindeua', 'Santarém', 'Marabá', 'Parauapebas', 'Castanhal', 'Abaetetuba'],
-  'DF': ['Brasília', 'Taguatinga', 'Ceilândia', 'Samambaia', 'Planaltina', 'Águas Claras'],
-  'MA': ['São Luís', 'Imperatriz', 'São José de Ribamar', 'Timon', 'Caxias', 'Codó', 'Paço do Lumiar'],
-  'PB': ['João Pessoa', 'Campina Grande', 'Santa Rita', 'Patos', 'Bayeux', 'Sousa', 'Cajazeiras'],
-  'ES': ['Vitória', 'Guarapari', 'Linhares', 'São Mateus', 'Colatina', 'Cariacica', 'Cachoeiro de Itapemirim'],
-  'PI': ['Teresina', 'Parnaíba', 'Picos', 'Piripiri', 'Floriano', 'Campo Maior', 'Barras'],
-  'AL': ['Maceió', 'Arapiraca', 'Palmeira dos Índios', 'Rio Largo', 'Penedo', 'União dos Palmares'],
-  'MT': ['Cuiabá', 'Várzea Grande', 'Rondonópolis', 'Sinop', 'Tangará da Serra', 'Cáceres', 'Barra do Garças'],
-  'MS': ['Campo Grande', 'Dourados', 'Três Lagoas', 'Corumbá', 'Ponta Porã', 'Aquidauana'],
-  'SE': ['Aracaju', 'Nossa Senhora do Socorro', 'Lagarto', 'Itabaiana', 'Estância'],
-  'RO': ['Porto Velho', 'Ji-Paraná', 'Ariquemes', 'Vilhena', 'Cacoal', 'Rolim de Moura'],
-  'AC': ['Rio Branco', 'Cruzeiro do Sul', 'Sena Madureira', 'Tarauacá', 'Feijó'],
-  'AM': ['Manaus', 'Parintins', 'Itacoatiara', 'Manacapuru', 'Coari', 'Tefé'],
-  'RR': ['Boa Vista', 'Rorainópolis', 'Caracaraí', 'Alto Alegre', 'Mucajaí'],
-  'AP': ['Macapá', 'Santana', 'Laranjal do Jari', 'Oiapoque', 'Mazagão'],
-  'TO': ['Palmas', 'Araguaína', 'Gurupi', 'Porto Nacional', 'Paraíso do Tocantins'],
-  'RN': ['Natal', 'Mossoró', 'Parnamirim', 'São Gonçalo do Amarante', 'Macaíba', 'Ceará-Mirim']
-};
+import { BRAZILIAN_STATES, getCitiesByState } from '@/utils/brazilianCities';
 
 interface PersonalInfoData {
   name: string;
