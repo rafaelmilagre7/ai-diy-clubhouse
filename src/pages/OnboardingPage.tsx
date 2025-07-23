@@ -96,7 +96,7 @@ const OnboardingPage: React.FC = () => {
     let stepData = null;
     let stepMapping = {
       1: data.personal_info,
-      2: data.business_info,
+      2: data.professional_info,
       3: data.ai_experience,
       4: data.goals_info,
       5: data.personalization,
@@ -158,7 +158,7 @@ const OnboardingPage: React.FC = () => {
         
         return !!(hasRequiredFields && phoneValid && hasProfilePicture);
       case 2:
-        return !!(data.business_info?.company_name && data.business_info?.company_sector);
+        return !!(data.professional_info?.company_name && data.professional_info?.company_sector);
       case 3:
         return !!(data.ai_experience?.experience_level);
       case 4:
@@ -206,15 +206,15 @@ const OnboardingPage: React.FC = () => {
 
       {current_step === 2 && (
         <Step2BusinessInfo
-          initialData={data.business_info}
+          initialData={data.professional_info}
           onDataChange={(businessData) => {
             console.log('Step2 Data Change:', businessData);
-            // Atualizar estado local sem mutação direta (com cast temporário)
+            // Atualizar estado local sem mutação direta
             setState(prev => ({
               ...prev,
               data: {
                 ...prev.data,
-                business_info: businessData as any
+                professional_info: businessData as any
               }
             }));
           }}

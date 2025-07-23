@@ -14,14 +14,14 @@ export interface OnboardingData {
     profile_picture?: string;
   };
   
-  // Step 2: Contexto de Negócio
-  business_info: {
+  // Step 2: Informações Profissionais
+  professional_info: {
     company_name: string;
     company_sector: string;
     company_size: string;
     annual_revenue: string;
     current_position: string;
-    years_experience: string;
+    main_challenge?: string;
   };
   
   // Step 3: Experiência com IA
@@ -79,7 +79,7 @@ export const useOnboarding = () => {
     try {
       const stepMapping = {
         1: 'personal_info',
-        2: 'business_info', 
+        2: 'professional_info', 
         3: 'ai_experience',
         4: 'goals_info',
         5: 'personalization',
@@ -164,7 +164,7 @@ export const useOnboarding = () => {
           nina_message: data.nina_message,
           data: {
             personal_info: data.personal_info || {},
-            business_info: data.business_info || {},
+            professional_info: data.professional_info || {},
             ai_experience: data.ai_experience || {},
             goals_info: data.goals_info || {},
             personalization: data.personalization || {},
@@ -244,7 +244,7 @@ export const useOnboarding = () => {
       
       const stepMapping = {
         1: 'personal_info',
-        2: 'business_info', 
+        2: 'professional_info', 
         3: 'ai_experience',
         4: 'goals_info',
         5: 'personalization',
