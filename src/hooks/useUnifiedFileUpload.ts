@@ -1,8 +1,20 @@
 
+/**
+ * HOOK UNIFICADO DE UPLOAD - VERSÃO OTIMIZADA
+ * 
+ * Hook mantido para compatibilidade total.
+ * Agora usa o sistema unificado internamente.
+ * 
+ * ⚠️ PARA NOVOS PROJETOS: Use useSuperFileUpload
+ */
+
 import { useState, useCallback, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { uploadFileUnified, validateFileForBucket } from '@/lib/supabase/storage-unified';
-import { STORAGE_BUCKETS } from '@/lib/supabase/config';
+import { 
+  legacyUpload, 
+  mapLegacyBucketToContext,
+  UPLOAD_CONTEXTS 
+} from '@/lib/uploads/unified-upload-system';
 
 interface UseUnifiedFileUploadProps {
   bucketName: string;
@@ -32,32 +44,8 @@ export const useUnifiedFileUpload = ({
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const uploadFile = useCallback(async (file: File) => {
-    console.log(`[UNIFIED_UPLOAD] Iniciando upload para bucket: ${bucketName}`);
+    console.log(`[UNIFIED_UPLOAD] Upload via hook unificado para bucket: ${bucketName}`);
     
-    // Validar se bucket é válido
-    const validBucket = Object.values(STORAGE_BUCKETS).includes(bucketName) 
-      ? bucketName 
-      : STORAGE_BUCKETS.FALLBACK;
-    
-    if (validBucket !== bucketName) {
-      console.warn(`[UNIFIED_UPLOAD] Bucket ${bucketName} não configurado, usando ${validBucket}`);
-    }
-    
-    // Validação inicial
-    const validation = validateFileForBucket(file, validBucket);
-    if (!validation.valid) {
-      const errorMsg = validation.error || 'Arquivo inválido';
-      console.error(`[UNIFIED_UPLOAD] Validação falhou: ${errorMsg}`);
-      setError(errorMsg);
-      onUploadError?.(errorMsg);
-      toast({
-        title: 'Erro na validação',
-        description: errorMsg,
-        variant: 'destructive',
-      });
-      return;
-    }
-
     setError(null);
     setIsUploading(true);
     setProgress(0);
@@ -66,9 +54,9 @@ export const useUnifiedFileUpload = ({
     try {
       abortControllerRef.current = new AbortController();
 
-      const result = await uploadFileUnified(
+      const result = await legacyUpload(
         file,
-        validBucket,
+        bucketName,
         folder,
         (progress) => {
           console.log(`[UNIFIED_UPLOAD] Progresso: ${progress}%`);
@@ -76,19 +64,23 @@ export const useUnifiedFileUpload = ({
         }
       );
 
+      if (!result.success) {
+        throw new Error((result as any).error);
+      }
+
       const uploadedFileData = {
         url: result.publicUrl,
-        name: file.name,
-        size: file.size,
+        name: result.fileName,
+        size: result.fileSize,
       };
 
       console.log(`[UNIFIED_UPLOAD] Upload concluído: ${result.publicUrl}`);
       setUploadedFile(uploadedFileData);
-      onUploadComplete?.(result.publicUrl, file.name, file.size);
+      onUploadComplete?.(result.publicUrl, result.fileName, result.fileSize);
 
       toast({
         title: 'Upload concluído',
-        description: `Arquivo "${file.name}" enviado com sucesso.`,
+        description: `Arquivo "${result.fileName}" enviado com sucesso.`,
       });
 
     } catch (error: any) {

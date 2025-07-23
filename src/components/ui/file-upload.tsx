@@ -1,10 +1,18 @@
+/**
+ * FILE UPLOAD COMPONENT - VERSÃO OTIMIZADA
+ * 
+ * Componente mantido para compatibilidade total.
+ * Agora usa o sistema unificado internamente.
+ * 
+ * ⚠️ PARA NOVOS PROJETOS: Use SuperFileUpload
+ */
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Loader2, Upload, AlertCircle, X, Info, Check } from 'lucide-react';
-import { uploadFileToStorage } from '@/components/ui/file/uploadUtils';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { STORAGE_BUCKETS } from '@/lib/supabase/config';
+import { legacyUpload } from '@/lib/uploads/unified-upload-system';
 
 interface FileUploadProps {
   bucketName: string;
@@ -19,10 +27,10 @@ interface FileUploadProps {
 
 export const FileUpload: React.FC<FileUploadProps> = ({
   bucketName,
-  folder = '', // Definir um valor padrão para folder
+  folder = '',
   onUploadComplete,
-  accept = '*/*', // Aceitar todos os tipos de arquivo
-  maxSize = 300, // Padrão aumentado para 300MB
+  accept = '*/*',
+  maxSize = 300,
   buttonText = 'Upload do Arquivo',
   fieldLabel = 'Selecione um arquivo',
   initialFileUrl,
@@ -31,13 +39,11 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
   const [fileName, setFileName] = useState<string | null>(null);
-  const [bucketStatus, setBucketStatus] = useState<"ready" | "checking">("ready");
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   
   const handleButtonClick = () => {
-    // Acionar o clique no input de arquivo
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
@@ -60,7 +66,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     
     if (!file) return;
     
-    // Validações
+    // Validação de tamanho (mantida para compatibilidade)
     const fileSizeMB = file.size / (1024 * 1024);
     if (fileSizeMB > maxSize) {
       setErrorMessage(`O arquivo é muito grande. O tamanho máximo é ${maxSize}MB.`);
@@ -80,29 +86,29 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     try {
       abortControllerRef.current = new AbortController();
       
-      const uploadBucket = bucketName;
-      const actualFolder = folder.trim();
-      
-      console.log(`Iniciando upload para bucket: ${uploadBucket}, pasta: ${actualFolder}`);
+      console.log(`[LEGACY_UPLOAD] Redirecionando para sistema unificado`);
       toast({
         title: 'Iniciando upload',
         description: "Enviando arquivo...",
       });
       
-      // Corrigido: Passar o AbortSignal em vez do AbortController completo
-      const result = await uploadFileToStorage(
+      // Usar o novo sistema unificado
+      const result = await legacyUpload(
         file,
-        uploadBucket,
-        actualFolder,
+        bucketName,
+        folder,
         (progress) => {
           setProgress(progress);
-        },
-        abortControllerRef.current.signal // Corrigido: Agora passamos o AbortSignal
+        }
       );
       
-      console.log('Upload bem-sucedido:', result);
+      if (!result.success) {
+        throw new Error((result as any).error);
+      }
       
-      onUploadComplete(result.publicUrl, file.name, file.size);
+      console.log('[LEGACY_UPLOAD] Upload bem-sucedido:', result);
+      
+      onUploadComplete(result.publicUrl, result.fileName, result.fileSize);
       
       toast({
         title: 'Upload realizado com sucesso',
@@ -110,52 +116,9 @@ export const FileUpload: React.FC<FileUploadProps> = ({
         variant: 'default',
       });
     } catch (error: any) {
-      console.error('Erro ao fazer upload:', error);
+      console.error('[LEGACY_UPLOAD] Erro:', error);
       
       let displayMessage = error.message || 'Erro ao fazer upload do arquivo.';
-      
-      // Mensagens de erro específicas para problemas comuns
-      if (error.message?.includes('bucket') && error.message?.includes('not found')) {
-        displayMessage = 'Não foi possível encontrar o local de armazenamento. Tentando usar armazenamento alternativo...';
-        // Não exibimos o erro para o usuário, tentamos novamente com bucket alternativo
-        try {
-          abortControllerRef.current = new AbortController();
-          const fallbackBucket = STORAGE_BUCKETS.FALLBACK;
-          const fallbackFolder = `${bucketName}/${folder}`.trim();
-          
-          console.log(`Tentando upload com fallback para bucket: ${fallbackBucket}, pasta: ${fallbackFolder}`);
-          
-          const result = await uploadFileToStorage(
-            file,
-            fallbackBucket,
-            fallbackFolder,
-            (progress) => {
-              setProgress(progress);
-            },
-            abortControllerRef.current.signal
-          );
-          
-          console.log('Upload com fallback bem-sucedido:', result);
-          
-          onUploadComplete(result.publicUrl, file.name, file.size);
-          
-          toast({
-            title: 'Upload realizado com sucesso',
-            description: 'O arquivo foi enviado com sucesso usando armazenamento alternativo.',
-            variant: 'default',
-          });
-          
-          setErrorMessage(null);
-          setIsUploading(false);
-          e.target.value = '';
-          return;
-        } catch (fallbackError: any) {
-          console.error('Erro no upload com fallback:', fallbackError);
-          displayMessage = 'Não foi possível fazer o upload mesmo com armazenamento alternativo. Por favor, tente novamente mais tarde.';
-        }
-      } else if (error.message?.includes('timeout') || error.message?.includes('network')) {
-        displayMessage = 'Tempo limite excedido ou problema de conexão. Tente novamente com um arquivo menor ou verifique sua conexão.';
-      }
       
       setErrorMessage(displayMessage);
       
@@ -167,7 +130,6 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     } finally {
       setIsUploading(false);
       abortControllerRef.current = null;
-      // Limpar o input
       e.target.value = '';
     }
   };
