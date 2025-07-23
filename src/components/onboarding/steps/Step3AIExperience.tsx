@@ -47,12 +47,26 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
 
   const watchedFields = form.watch();
 
-  useEffect(() => {
-    console.log('[Step3] Campos observados mudaram:', watchedFields);
-    const newData = { ...currentData, ...watchedFields, current_tools: selectedTools };
+  // Função para notificar mudanças sem causar loops
+  const notifyDataChange = (formData: any, tools: string[]) => {
+    const newData = { ...formData, current_tools: tools };
     setCurrentData(newData);
     onDataChange(newData);
-  }, [watchedFields, selectedTools]); // Incluir selectedTools como dependência
+  };
+
+  // useEffect para selectedTools
+  useEffect(() => {
+    const formValues = form.getValues();
+    notifyDataChange(formValues, selectedTools);
+  }, [selectedTools]);
+
+  // useEffect para mudanças nos campos do formulário
+  useEffect(() => {
+    const subscription = form.watch((formData) => {
+      notifyDataChange(formData, selectedTools);
+    });
+    return () => subscription.unsubscribe();
+  }, [selectedTools]);
 
   const handleSubmit = (data: AIExperienceFormData) => {
     console.log('[Step3] Enviando dados:', data);
