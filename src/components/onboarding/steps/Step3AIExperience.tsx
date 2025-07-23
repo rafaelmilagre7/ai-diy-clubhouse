@@ -12,9 +12,10 @@ import { Card, CardContent } from '@/components/ui/card';
 
 const aiExperienceSchema = z.object({
   experience_level: z.string().min(1, 'Selecione seu nível de experiência'),
+  implementation_status: z.string().min(1, 'Selecione o status da implementação'),
+  implementation_approach: z.string().min(1, 'Selecione como pretende implementar'),
   current_tools: z.array(z.string()).optional(),
   main_interest: z.string().optional(),
-  implementation_status: z.string().optional(),
 });
 
 type AIExperienceFormData = z.infer<typeof aiExperienceSchema>;
@@ -90,6 +91,50 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
           {form.formState.errors.experience_level && (
             <p className="text-sm text-destructive">
               {form.formState.errors.experience_level.message}
+            </p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label>
+            Qual é o status da implementação de IA na sua empresa?
+          </Label>
+          <Select onValueChange={(value) => form.setValue('implementation_status', value)}>
+            <SelectTrigger className="h-12">
+              <SelectValue placeholder="Selecione o status atual" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="not_started">Ainda não começamos</SelectItem>
+              <SelectItem value="exploring">Estamos explorando possibilidades</SelectItem>
+              <SelectItem value="testing">Testando algumas ferramentas</SelectItem>
+              <SelectItem value="implementing">Implementando soluções</SelectItem>
+              <SelectItem value="advanced">Já temos IA integrada aos processos</SelectItem>
+            </SelectContent>
+          </Select>
+          {form.formState.errors.implementation_status && (
+            <p className="text-sm text-destructive">
+              {form.formState.errors.implementation_status.message}
+            </p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label>
+            Como pretende implementar IA na sua empresa?
+          </Label>
+          <Select onValueChange={(value) => form.setValue('implementation_approach', value)}>
+            <SelectTrigger className="h-12">
+              <SelectValue placeholder="Selecione sua abordagem" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="myself">Eu mesmo vou fazer</SelectItem>
+              <SelectItem value="team">Meu time</SelectItem>
+              <SelectItem value="hire">Quero contratar</SelectItem>
+            </SelectContent>
+          </Select>
+          {form.formState.errors.implementation_approach && (
+            <p className="text-sm text-destructive">
+              {form.formState.errors.implementation_approach.message}
             </p>
           )}
         </div>
@@ -186,23 +231,6 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
           )}
         </div>
 
-        <div className="space-y-2">
-          <Label>
-            Qual é o status da implementação de IA na sua empresa?
-          </Label>
-          <Select onValueChange={(value) => form.setValue('implementation_status', value)}>
-            <SelectTrigger className="h-12">
-              <SelectValue placeholder="Selecione o status atual" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="not_started">Ainda não começamos</SelectItem>
-              <SelectItem value="exploring">Estamos explorando possibilidades</SelectItem>
-              <SelectItem value="testing">Testando algumas ferramentas</SelectItem>
-              <SelectItem value="implementing">Implementando soluções</SelectItem>
-              <SelectItem value="advanced">Já temos IA integrada aos processos</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
       </form>
     </div>
   );
