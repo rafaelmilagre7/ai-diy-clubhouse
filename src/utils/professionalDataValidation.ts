@@ -52,7 +52,6 @@ export const validateAnnualRevenue = (value: string): string | undefined => {
 
 export const validateCurrentPosition = (value: string): string | undefined => {
   if (!value) return "Cargo atual é obrigatório";
-  if (value.length < 2) return "Cargo deve ter pelo menos 2 caracteres";
   return undefined;
 };
 

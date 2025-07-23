@@ -87,17 +87,33 @@ export const personalInfoSchema = z.object({
 
 export const professionalInfoSchema = z.object({
   company_name: companyNameSchema,
-  role: z.string().min(2, 'Cargo muito curto').max(100, 'Cargo muito longo'),
+  current_position: z.enum([
+    'CEO', 'CTO', 'CFO', 'CMO', 'COO', 'Diretor', 'Gerente', 
+    'Coordenador', 'Analista Senior', 'Analista Pleno', 'Analista Junior', 
+    'Assistente', 'Consultor', 'Especialista', 'Supervisor', 
+    'Empreendedor', 'Freelancer', 'Outro'
+  ]),
   company_size: z.enum([
-    '1-10', '11-50', '51-200', '201-500', 
-    '501-1000', '1001-5000', '5000+'
+    'Solo', '2-5', '6-10', '11-25', '26-50', '51-100', 
+    '101-250', '251-500', '501-1000', '1001-5000', '5000+'
   ]),
-  company_segment: z.string().min(2, 'Segmento muito curto').max(100, 'Segmento muito longo'),
-  annual_revenue_range: z.enum([
-    'ate-100k', '100k-500k', '500k-1m', '1m-5m', 
-    '5m-10m', '10m-50m', '50m+'
+  company_sector: z.enum([
+    'Tecnologia', 'E-commerce', 'Varejo', 'Saúde', 'Educação', 'Financeiro',
+    'Seguros', 'Consultoria', 'Marketing', 'Advocacia', 'Contabilidade',
+    'Imobiliário', 'Construção', 'Indústria', 'Logística', 'Alimentação',
+    'Turismo', 'Beleza', 'Fitness', 'Agricultura', 'ONG', 'Governo',
+    'Energia', 'Telecomunicações', 'Mídia', 'Outro'
   ]),
-  main_challenge: z.string().min(10, 'Descreva melhor o desafio').max(500, 'Descrição muito longa')
+  annual_revenue: z.enum([
+    '0-50k', '50k-100k', '100k-250k', '250k-500k', '500k-1m', '1m-2m',
+    '2m-5m', '5m-10m', '10m-50m', '50m-100m', '100m+', 'nao-divulgar'
+  ]),
+  main_challenge: z.enum([
+    'Aumentar vendas', 'Reduzir custos', 'Melhorar eficiência', 'Automatizar processos',
+    'Atrair clientes', 'Reter clientes', 'Melhorar atendimento', 'Contratar talentos',
+    'Capacitar equipe', 'Transformação digital', 'Presença online', 'Gestão financeira',
+    'Expandir negócio', 'Inovação', 'Competitividade', 'Compliance', 'Sustentabilidade', 'Outro'
+  ]).optional()
 });
 
 export const aiExperienceSchema = z.object({
