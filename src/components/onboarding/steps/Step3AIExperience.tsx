@@ -1,11 +1,6 @@
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Bot, Zap, CheckSquare } from 'lucide-react';
 import { useTools } from '@/hooks/useTools';
-import { Card, CardContent } from '@/components/ui/card';
 
 interface AIExperienceData {
   experience_level: string;
@@ -25,77 +20,23 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
   onDataChange,
   onNext,
 }) => {
-  // Estados simples - sem React Hook Form
+  // Estados básicos
   const [experienceLevel, setExperienceLevel] = useState(initialData?.experience_level || '');
   const [implementationStatus, setImplementationStatus] = useState(initialData?.implementation_status || '');
   const [implementationApproach, setImplementationApproach] = useState(initialData?.implementation_approach || '');
   const [selectedTools, setSelectedTools] = useState<string[]>(initialData?.current_tools || []);
-  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const { tools, isLoading } = useTools();
-
-  // Validação simples
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-    
-    if (!experienceLevel) newErrors.experience_level = 'Selecione seu nível de experiência';
-    if (!implementationStatus) newErrors.implementation_status = 'Selecione o status da implementação';
-    if (!implementationApproach) newErrors.implementation_approach = 'Selecione como pretende implementar';
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  // Handlers simples sem notificações em tempo real
-  const handleExperienceLevelChange = (value: string) => {
-    setExperienceLevel(value);
-    if (errors.experience_level) {
-      setErrors(prev => ({ ...prev, experience_level: '' }));
-    }
-  };
-
-  const handleImplementationStatusChange = (value: string) => {
-    setImplementationStatus(value);
-    if (errors.implementation_status) {
-      setErrors(prev => ({ ...prev, implementation_status: '' }));
-    }
-  };
-
-  const handleImplementationApproachChange = (value: string) => {
-    setImplementationApproach(value);
-    if (errors.implementation_approach) {
-      setErrors(prev => ({ ...prev, implementation_approach: '' }));
-    }
-  };
-
-  const handleToolClick = (toolName: string) => {
-    let newSelectedTools: string[];
-    
-    if (toolName === 'Nenhuma ainda') {
-      newSelectedTools = selectedTools.includes('Nenhuma ainda') 
-        ? selectedTools.filter(t => t !== 'Nenhuma ainda')
-        : ['Nenhuma ainda'];
-    } else {
-      if (selectedTools.includes('Nenhuma ainda')) {
-        newSelectedTools = [toolName];
-      } else if (selectedTools.includes(toolName)) {
-        newSelectedTools = selectedTools.filter(t => t !== toolName);
-      } else {
-        newSelectedTools = [...selectedTools, toolName];
-      }
-    }
-    
-    setSelectedTools(newSelectedTools);
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) {
+    if (!experienceLevel || !implementationStatus || !implementationApproach) {
+      alert('Por favor, preencha todos os campos obrigatórios');
       return;
     }
 
-    // Apenas aqui notificamos os dados finais
+    // Notificar dados finais
     const finalData: AIExperienceData = {
       experience_level: experienceLevel,
       implementation_status: implementationStatus,
@@ -108,213 +49,156 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
     onNext();
   };
 
-  // Organizar ferramentas por categoria
-  const organizeToolsByCategory = () => {
-    const categories = [
-      'Modelos de IA e Interfaces',
-      'Geração de Conteúdo Visual', 
-      'Geração e Processamento de Áudio',
-      'Automação e Integrações',
-      'Comunicação e Atendimento',
-      'Captura e Análise de Dados',
-      'Pesquisa e Síntese de Informações',
-      'Gestão de Documentos e Conteúdo',
-      'Marketing e CRM',
-      'Produtividade e Organização',
-      'Desenvolvimento e Código',
-      'Plataformas de Mídia',
-      'Outros'
-    ];
-
-    const organizedTools = categories.reduce((acc, category) => {
-      const toolsInCategory = tools
-        .filter(tool => tool.status && tool.category === category)
-        .sort((a, b) => a.name.localeCompare(b.name));
-      
-      if (toolsInCategory.length > 0) {
-        acc[category] = toolsInCategory;
-      }
-      
-      return acc;
-    }, {} as Record<string, typeof tools>);
-
-    return organizedTools;
+  const handleToolToggle = (toolName: string) => {
+    if (selectedTools.includes(toolName)) {
+      setSelectedTools(selectedTools.filter(t => t !== toolName));
+    } else {
+      setSelectedTools([...selectedTools, toolName]);
+    }
   };
 
-  const organizedTools = organizeToolsByCategory();
-  const isFormValid = experienceLevel && implementationStatus && implementationApproach;
+  // Simplificar ferramentas - apenas as primeiras 10 para teste
+  const simpleTools = tools.slice(0, 10);
 
   return (
-    <div className="space-y-8 max-w-2xl mx-auto">
-      <div className="text-center space-y-2">
-        <Bot className="w-16 h-16 mx-auto text-primary" />
-        <p className="text-muted-foreground text-lg">
+    <div style={{ maxWidth: '600px', margin: '0 auto', padding: '20px' }}>
+      <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+        <Bot size={64} style={{ margin: '0 auto 16px', color: '#0066cc' }} />
+        <p style={{ color: '#666', fontSize: '18px' }}>
           Vamos entender sua experiência atual com IA para criar o melhor plano de aprendizado
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="space-y-2">
-          <Label className="flex items-center gap-2">
-            <Zap className="w-4 h-4" />
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        {/* Nível de experiência */}
+        <div>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', fontWeight: '500' }}>
+            <Zap size={16} />
             Qual é seu nível de experiência com IA?
-          </Label>
-          <Select onValueChange={handleExperienceLevelChange} value={experienceLevel}>
-            <SelectTrigger className="h-12">
-              <SelectValue placeholder="Selecione seu nível" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="beginner">Iniciante - Nunca usei ferramentas de IA</SelectItem>
-              <SelectItem value="basic">Básico - Uso algumas ferramentas ocasionalmente</SelectItem>
-              <SelectItem value="intermediate">Intermediário - Uso IA regularmente no trabalho</SelectItem>
-              <SelectItem value="advanced">Avançado - Implemento soluções de IA na empresa</SelectItem>
-            </SelectContent>
-          </Select>
-          {errors.experience_level && (
-            <p className="text-sm text-destructive">{errors.experience_level}</p>
-          )}
+          </label>
+          <select 
+            value={experienceLevel} 
+            onChange={(e) => setExperienceLevel(e.target.value)}
+            style={{ width: '100%', padding: '12px', borderRadius: '6px', border: '1px solid #ccc' }}
+          >
+            <option value="">Selecione seu nível</option>
+            <option value="beginner">Iniciante - Nunca usei ferramentas de IA</option>
+            <option value="basic">Básico - Uso algumas ferramentas ocasionalmente</option>
+            <option value="intermediate">Intermediário - Uso IA regularmente no trabalho</option>
+            <option value="advanced">Avançado - Implemento soluções de IA na empresa</option>
+          </select>
         </div>
 
-        <div className="space-y-2">
-          <Label>
+        {/* Status de implementação */}
+        <div>
+          <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
             Qual é o status da implementação de IA na sua empresa?
-          </Label>
-          <Select onValueChange={handleImplementationStatusChange} value={implementationStatus}>
-            <SelectTrigger className="h-12">
-              <SelectValue placeholder="Selecione o status atual" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="not_started">Ainda não começamos</SelectItem>
-              <SelectItem value="exploring">Estamos explorando possibilidades</SelectItem>
-              <SelectItem value="testing">Testando algumas ferramentas</SelectItem>
-              <SelectItem value="implementing">Implementando soluções</SelectItem>
-              <SelectItem value="advanced">Já temos IA integrada aos processos</SelectItem>
-            </SelectContent>
-          </Select>
-          {errors.implementation_status && (
-            <p className="text-sm text-destructive">{errors.implementation_status}</p>
-          )}
+          </label>
+          <select 
+            value={implementationStatus} 
+            onChange={(e) => setImplementationStatus(e.target.value)}
+            style={{ width: '100%', padding: '12px', borderRadius: '6px', border: '1px solid #ccc' }}
+          >
+            <option value="">Selecione o status atual</option>
+            <option value="not_started">Ainda não começamos</option>
+            <option value="exploring">Estamos explorando possibilidades</option>
+            <option value="testing">Testando algumas ferramentas</option>
+            <option value="implementing">Implementando soluções</option>
+            <option value="advanced">Já temos IA integrada aos processos</option>
+          </select>
         </div>
 
-        <div className="space-y-2">
-          <Label>
+        {/* Abordagem de implementação */}
+        <div>
+          <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
             Como pretende implementar IA na sua empresa?
-          </Label>
-          <Select onValueChange={handleImplementationApproachChange} value={implementationApproach}>
-            <SelectTrigger className="h-12">
-              <SelectValue placeholder="Selecione sua abordagem" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="myself">Eu mesmo vou fazer</SelectItem>
-              <SelectItem value="team">Meu time</SelectItem>
-              <SelectItem value="hire">Quero contratar</SelectItem>
-            </SelectContent>
-          </Select>
-          {errors.implementation_approach && (
-            <p className="text-sm text-destructive">{errors.implementation_approach}</p>
-          )}
+          </label>
+          <select 
+            value={implementationApproach} 
+            onChange={(e) => setImplementationApproach(e.target.value)}
+            style={{ width: '100%', padding: '12px', borderRadius: '6px', border: '1px solid #ccc' }}
+          >
+            <option value="">Selecione sua abordagem</option>
+            <option value="myself">Eu mesmo vou fazer</option>
+            <option value="team">Meu time</option>
+            <option value="hire">Quero contratar</option>
+          </select>
         </div>
 
-        <div className="space-y-4">
-          <Label className="flex items-center gap-2">
-            <CheckSquare className="w-4 h-4" />
+        {/* Ferramentas */}
+        <div>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', fontWeight: '500' }}>
+            <CheckSquare size={16} />
             Quais ferramentas de IA você já usa? (selecione todas que se aplicam)
-          </Label>
+          </label>
+          
           {isLoading ? (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">Carregando ferramentas...</p>
-            </div>
+            <p>Carregando ferramentas...</p>
           ) : (
-            <div className="space-y-6">
-              {Object.entries(organizedTools).map(([category, categoryTools]) => (
-                <div key={category} className="space-y-3">
-                  <h4 className="text-sm font-semibold text-muted-foreground">{category}</h4>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                    {categoryTools.map((tool) => (
-                      <Card 
-                        key={tool.id} 
-                        className={`cursor-pointer transition-all duration-200 hover:border-primary/50 ${
-                          selectedTools.includes(tool.name) 
-                            ? 'border-primary bg-primary/5' 
-                            : 'border-border hover:bg-accent/50'
-                        }`}
-                        onClick={() => handleToolClick(tool.name)}
-                      >
-                        <CardContent className="p-3 flex flex-col items-center space-y-2">
-                          <div className="h-8 w-8 rounded-md bg-primary/10 flex items-center justify-center overflow-hidden flex-shrink-0">
-                            {tool.logo_url ? (
-                              <img 
-                                src={tool.logo_url} 
-                                alt={tool.name} 
-                                className="h-full w-full object-contain" 
-                                onError={(e) => {
-                                  e.currentTarget.style.display = 'none';
-                                  const parent = e.currentTarget.parentElement;
-                                  if (parent) {
-                                    parent.innerHTML = `<div class="text-xs font-bold text-primary">${tool.name.substring(0, 2).toUpperCase()}</div>`;
-                                  }
-                                }}
-                              />
-                            ) : (
-                              <div className="text-xs font-bold text-primary">
-                                {tool.name.substring(0, 2).toUpperCase()}
-                              </div>
-                            )}
-                          </div>
-                          <span className="text-xs font-medium text-center line-clamp-2">
-                            {tool.name}
-                          </span>
-                          <Checkbox
-                            checked={selectedTools.includes(tool.name)}
-                            className="pointer-events-none"
-                          />
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+              {simpleTools.map((tool) => (
+                <label 
+                  key={tool.id} 
+                  style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '8px', 
+                    padding: '12px',
+                    border: '1px solid #ccc',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    backgroundColor: selectedTools.includes(tool.name) ? '#f0f8ff' : '#fff'
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedTools.includes(tool.name)}
+                    onChange={() => handleToolToggle(tool.name)}
+                  />
+                  <span style={{ fontSize: '14px' }}>{tool.name}</span>
+                </label>
               ))}
               
-              {/* Opção "Nenhuma ainda" no final */}
-              <div className="space-y-3">
-                <h4 className="text-sm font-semibold text-muted-foreground">Opções especiais</h4>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                  <Card 
-                    className={`cursor-pointer transition-all duration-200 hover:border-primary/50 ${
-                      selectedTools.includes('Nenhuma ainda') 
-                        ? 'border-primary bg-primary/5' 
-                        : 'border-border hover:bg-accent/50'
-                    }`}
-                    onClick={() => handleToolClick('Nenhuma ainda')}
-                  >
-                    <CardContent className="p-3 flex flex-col items-center space-y-2">
-                      <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center">
-                        <span className="text-xs">❌</span>
-                      </div>
-                      <span className="text-xs font-medium text-center">
-                        Nenhuma ainda
-                      </span>
-                      <Checkbox
-                        checked={selectedTools.includes('Nenhuma ainda')}
-                        className="pointer-events-none"
-                      />
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
+              {/* Opção "Nenhuma ainda" */}
+              <label 
+                style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '8px', 
+                  padding: '12px',
+                  border: '1px solid #ccc',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  backgroundColor: selectedTools.includes('Nenhuma ainda') ? '#f0f8ff' : '#fff'
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedTools.includes('Nenhuma ainda')}
+                  onChange={() => handleToolToggle('Nenhuma ainda')}
+                />
+                <span style={{ fontSize: '14px' }}>Nenhuma ainda</span>
+              </label>
             </div>
           )}
         </div>
 
-        <div className="flex justify-center pt-6">
-          <Button 
-            type="submit" 
-            className="w-full h-12 bg-primary hover:bg-primary/90"
-            disabled={!isFormValid}
-          >
-            Continuar
-          </Button>
-        </div>
+        <button 
+          type="submit" 
+          disabled={!experienceLevel || !implementationStatus || !implementationApproach}
+          style={{ 
+            width: '100%', 
+            padding: '12px 24px', 
+            backgroundColor: experienceLevel && implementationStatus && implementationApproach ? '#0066cc' : '#ccc',
+            color: 'white',
+            border: 'none',
+            borderRadius: '6px',
+            fontSize: '16px',
+            cursor: experienceLevel && implementationStatus && implementationApproach ? 'pointer' : 'not-allowed'
+          }}
+        >
+          Continuar
+        </button>
       </form>
     </div>
   );
