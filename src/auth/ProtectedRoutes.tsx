@@ -13,12 +13,7 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
   const { user, profile, isLoading } = useAuth();
   const [showTimeout, setShowTimeout] = useState(false);
 
-  console.log("[PROTECTED] Estado:", {
-    hasUser: !!user,
-    hasProfile: !!profile,
-    isLoading,
-    currentPath: location.pathname
-  });
+  // Log removido para evitar loops de renderização
 
   // Timeout de segurança para evitar loading infinito
   useEffect(() => {

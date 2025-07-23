@@ -27,17 +27,8 @@ interface MemberSidebarNavItemsProps {
 export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ sidebarOpen }) => {
   const { user, profile, isAdmin } = useAuth();
   const { data: stats, isLoading } = useSidebarStats();
-  
-  console.log('🔍 [SIDEBAR-NAV] Componente renderizado');
-  
+
   try {
-    console.log('✅ [SIDEBAR-NAV] Contexto obtido com sucesso:', {
-      hasUser: !!user,
-      hasProfile: !!profile,
-      isAdmin,
-      userEmail: user?.email,
-      stats
-    });
 
     return (
       <div className="flex-1 space-y-4 px-2 py-4">

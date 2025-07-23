@@ -15,16 +15,7 @@ const MemberLayout = memo<MemberLayoutProps>(({ children }) => {
   const { profile, signOut } = useAuth();
   const { sidebarOpen, setSidebarOpen, toggleSidebar, isMobile } = useSidebarControl();
 
-  // Log apenas em desenvolvimento
-  if (process.env.NODE_ENV === 'development') {
-    console.log('[MemberLayout] Renderizando com:', {
-      profile: !!profile,
-      profileName: profile?.name,
-      hasChildren: !!children,
-      sidebarOpen,
-      isMobile
-    });
-  }
+  // Removido log para evitar loops de renderização
 
   // Memoizar função para obter iniciais
   const getInitials = useCallback((name: string | null) => {
