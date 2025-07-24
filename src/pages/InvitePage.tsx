@@ -83,7 +83,7 @@ const InvitePage = () => {
     // Redirecionar para dashboard
     return (
       <InviteSuccessState 
-        userName={user.user_metadata?.name || user.email?.split('@')[0]}
+        userName={validationResult.invite?.email?.split('@')[0] || user.user_metadata?.name || user.email?.split('@')[0]}
         userEmail={user.email}
       />
     );

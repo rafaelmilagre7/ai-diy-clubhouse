@@ -71,7 +71,7 @@ export const useInviteCreate = () => {
         inviteUrl,
         roleName: roleData?.name || 'membro',
         expiresAt: data.expires_at,
-        senderName: user.user_metadata?.name || user.email,
+        senderName: email.split('@')[0].replace(/[._-]/g, ' ').trim(),
         notes,
         inviteId: data.invite_id,
         channelPreference
