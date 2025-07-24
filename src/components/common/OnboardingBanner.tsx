@@ -28,82 +28,19 @@ export const OnboardingBanner: React.FC = () => {
       return;
     }
 
-    // Verificar se usuário completou onboarding
-    if (profile.onboarding_completed) {
+    // Se usuário não completou onboarding, mostrar banner sempre
+    if (!profile.onboarding_completed) {
+      setShowBanner(true);
+      console.log('🎯 [BANNER] Usuário sem onboarding concluído - mostrando banner');
       return;
     }
 
-    // Verificar se é usuário legacy (criado antes da correção + tem dados de onboarding)
-    try {
-      const { data: onboardingData, error } = await supabase
-        .from('onboarding_final')
-        .select('user_id, created_at, current_step, completed_steps, is_completed')
-        .eq('user_id', user.id)
-        .single();
-
-      if (error) {
-        console.log('Usuário não tem onboarding - não é legacy');
-        return;
-      }
-
-      // Usuário é legacy se:
-      // 1. Tem registro de onboarding
-      // 2. Não completou ainda (is_completed = false)
-      // 3. Tem alguns passos feitos (completed_steps não vazio) OU foi criado antes de hoje
-      const isLegacy = !onboardingData.is_completed && (
-        (onboardingData.completed_steps && onboardingData.completed_steps.length > 0) ||
-        new Date(onboardingData.created_at) < new Date('2025-07-23')
-      );
-
-      if (isLegacy) {
-        setIsLegacyUser(true);
-        setShowBanner(true);
-        console.log('🎯 [BANNER] Usuário legacy detectado - mostrando banner de onboarding');
-      }
-    } catch (error) {
-      console.error('Erro ao verificar status legacy:', error);
-    }
+    // REMOVIDO: Lógica legacy desnecessária - banner deve aparecer para TODOS os usuários sem onboarding concluído
   };
 
   const handleStartOnboarding = async () => {
     console.log('🎯 [BANNER] Botão clicado - iniciando onboarding');
-    
-    // Buscar current_step atual do usuário para redirecionar corretamente
-    try {
-      const { data: onboardingData, error } = await supabase
-        .from('onboarding_final')
-        .select('current_step, completed_steps')
-        .eq('user_id', user.id)
-        .single();
-
-      if (error) {
-        console.error('Erro ao buscar current_step:', error);
-        // Fallback para o início se houver erro
-        navigate('/onboarding');
-        return;
-      }
-
-      // Calcular step correto baseado nos completed_steps
-      const targetStep = onboardingData.completed_steps && onboardingData.completed_steps.length > 0 
-        ? Math.max(...onboardingData.completed_steps) + 1 
-        : 1;
-      
-      // Garantir que não ultrapasse o limite
-      const finalStep = Math.min(targetStep, 6);
-      
-      console.log('🎯 [BANNER] Redirecionando para step:', finalStep);
-      
-      toast({
-        title: "Continuando de onde parou...",
-        description: `Redirecionando para a etapa ${finalStep}`,
-      });
-      
-      // Redirecionar para o step correto com parâmetro de query
-      navigate(`/onboarding?step=${finalStep}`);
-    } catch (error) {
-      console.error('Erro ao determinar step:', error);
-      navigate('/onboarding');
-    }
+    navigate('/onboarding');
   };
 
   const handleDismiss = () => {
@@ -117,7 +54,7 @@ export const OnboardingBanner: React.FC = () => {
     });
   };
 
-  if (!showBanner || isDismissed || !isLegacyUser) {
+  if (!showBanner || isDismissed) {
     return null;
   }
 

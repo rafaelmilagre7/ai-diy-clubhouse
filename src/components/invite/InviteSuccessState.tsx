@@ -78,10 +78,10 @@ const InviteSuccessState: React.FC<InviteSuccessStateProps> = ({
 
             {/* Action Button */}
             <Button 
-              onClick={() => navigate('/dashboard')} 
+              onClick={() => navigate('/')} 
               className="w-full h-12 font-medium transition-all duration-200 group"
             >
-              Acessar Dashboard
+              Começar
               <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Button>
 
