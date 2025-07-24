@@ -5456,22 +5456,7 @@ export type Database = {
       }
       get_admin_analytics_overview: {
         Args: Record<PropertyKey, never>
-        Returns: {
-          total_users: number
-          total_solutions: number
-          active_implementations: number
-          completed_implementations: number
-          overall_completion_rate: number
-          avg_implementation_time_days: number
-          total_benefit_clicks: number
-          forum_topics: number
-          total_courses: number
-          completed_lessons: number
-          active_learners_7d: number
-          active_users_7d: number
-          new_implementations_30d: number
-          new_users_30d: number
-        }[]
+        Returns: Json
       }
       get_admin_stats: {
         Args: Record<PropertyKey, never>
@@ -5529,6 +5514,10 @@ export type Database = {
       get_current_user_role_safe: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_invite_dashboard_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
       }
       get_learning_courses_with_stats: {
         Args: Record<PropertyKey, never>
@@ -5633,6 +5622,10 @@ export type Database = {
         }[]
       }
       get_progress_analytics: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      get_security_configuration_reminders: {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
