@@ -63,8 +63,8 @@ serve(async (req) => {
 
     console.log('📱 [WHATSAPP] Telefone formatado:', formattedPhone)
 
-    // Extrair nome do email ou usar um padrão
-    const userName = senderName || (email ? email.split('@')[0].replace(/[._-]/g, ' ').trim() : 'Novo Membro')
+    // Extrair nome do email da pessoa CONVIDADA (não do sender)
+    const userName = email ? email.split('@')[0].replace(/[._-]/g, ' ').trim() : 'Novo Membro'
     
     console.log('📱 [WHATSAPP] Nome do usuário para template:', userName)
 
