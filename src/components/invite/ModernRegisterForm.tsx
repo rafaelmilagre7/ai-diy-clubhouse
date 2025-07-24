@@ -181,6 +181,40 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
       if (error) {
         console.error('❌ [REGISTER] Erro no signUp:', error);
         
+        // Verificar se é erro de rate limit de email
+        if (error.message?.includes("email rate limit exceeded")) {
+          // Usar a nova função do backend para lidar com rate limit
+          try {
+            const { data: rateLimitInfo } = await supabase.rpc('handle_supabase_email_rate_limit_error', {
+              error_message: error.message
+            });
+            
+            if (rateLimitInfo) {
+              setError(rateLimitInfo.user_message);
+              toast({
+                title: "Limite de email atingido",
+                description: rateLimitInfo.user_message,
+                variant: "destructive",
+              });
+              
+              // Log da tentativa para monitoramento
+              await supabase.rpc('log_registration_attempt', {
+                p_email: email,
+                p_success: false,
+                p_error_details: {
+                  error_type: 'email_rate_limit',
+                  error_message: error.message,
+                  timestamp: new Date().toISOString()
+                }
+              });
+              
+              return;
+            }
+          } catch (rateLimitError) {
+            console.error('Erro ao processar rate limit:', rateLimitError);
+          }
+        }
+        
         let userMessage = "Não foi possível criar sua conta. ";
         if (error.message?.includes("User already registered")) {
           userMessage = "Este email já possui uma conta. Tente fazer login ou usar 'Esqueci minha senha'.";
@@ -188,6 +222,8 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
           userMessage = "O cadastro está temporariamente desabilitado. Entre em contato com o suporte.";
         } else if (error.message?.includes("refresh_token")) {
           userMessage = "Problema com a sessão detectado. Recarregue a página e tente novamente.";
+        } else if (error.message?.includes("rate limit")) {
+          userMessage = "Muitas tentativas de cadastro. Aguarde alguns minutos e tente novamente.";
         } else {
           userMessage += `Erro: ${error.message}`;
         }
@@ -198,6 +234,21 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
           description: userMessage,
           variant: "destructive",
         });
+        
+        // Log da tentativa para monitoramento
+        try {
+          await supabase.rpc('log_registration_attempt', {
+            p_email: email,
+            p_success: false,
+            p_error_details: {
+              error_message: error.message,
+              timestamp: new Date().toISOString()
+            }
+          });
+        } catch (logError) {
+          console.error('Erro ao registrar tentativa:', logError);
+        }
+        
         return;
       }
       

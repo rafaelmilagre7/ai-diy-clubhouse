@@ -5765,6 +5765,10 @@ export type Database = {
           parent_event_id: string
         }[]
       }
+      handle_supabase_email_rate_limit_error: {
+        Args: { error_message: string }
+        Returns: Json
+      }
       has_role: {
         Args: { role_name: string }
         Returns: boolean
@@ -5924,6 +5928,10 @@ export type Database = {
           ip_address?: string
         }
         Returns: string
+      }
+      log_registration_attempt: {
+        Args: { p_email: string; p_success: boolean; p_error_details?: Json }
+        Returns: undefined
       }
       log_rls_violation_attempt: {
         Args: { p_table_name: string; p_operation: string; p_user_id?: string }
