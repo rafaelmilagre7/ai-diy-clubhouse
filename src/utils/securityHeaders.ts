@@ -12,18 +12,20 @@ export class SecurityHeaders {
     return SecurityHeaders.instance;
   }
   
-  // Headers de segurança padrão para todas as requisições
+  // Headers de segurança aprimorados para todas as requisições
   getSecurityHeaders(): Record<string, string> {
     return {
       'X-Content-Type-Options': 'nosniff',
       'X-Frame-Options': 'DENY',
       'X-XSS-Protection': '1; mode=block',
       'Referrer-Policy': 'strict-origin-when-cross-origin',
-      'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
-      'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+      'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=(), usb=()',
+      'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
       'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
       'Pragma': 'no-cache',
-      'Expires': '0'
+      'Expires': '0',
+      'X-Powered-By': '', // Remove server fingerprinting
+      'Server': '' // Remove server fingerprinting
     };
   }
   
@@ -55,21 +57,26 @@ export class SecurityHeaders {
            (process.env.NODE_ENV === 'development' && origin.includes('localhost'));
   }
   
-  // Configurar CSP (Content Security Policy)
+  // CSP (Content Security Policy) aprimorado
   getCSPDirectives(): string {
     const directives = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com",
+      "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com 'nonce-'",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-      "font-src 'self' https://fonts.gstatic.com",
-      "img-src 'self' data: https: blob:",
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
-      "media-src 'self' blob:",
+      "font-src 'self' https://fonts.gstatic.com data:",
+      "img-src 'self' data: https: blob: https://*.supabase.co",
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.openai.com",
+      "media-src 'self' blob: https://*.supabase.co",
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self'",
       "frame-ancestors 'none'",
-      "upgrade-insecure-requests"
+      "frame-src 'none'",
+      "child-src 'none'",
+      "worker-src 'self'",
+      "manifest-src 'self'",
+      "upgrade-insecure-requests",
+      "block-all-mixed-content"
     ];
     
     return directives.join('; ');

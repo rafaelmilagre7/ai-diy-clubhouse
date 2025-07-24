@@ -152,25 +152,33 @@ class RateLimiter {
   }
 }
 
-// Rate limiters pré-configurados para diferentes cenários
+// Rate limiters aprimorados para segurança
 export const loginRateLimiter = new RateLimiter({
-  maxAttempts: 5,
+  maxAttempts: 3, // Reduzido para maior segurança
   windowMs: 15 * 60 * 1000, // 15 minutos
-  blockDurationMs: 30 * 60 * 1000, // 30 minutos
+  blockDurationMs: 60 * 60 * 1000, // 1 hora (aumentado)
   progressiveDelay: true
 });
 
 export const apiRateLimiter = new RateLimiter({
-  maxAttempts: 50,
+  maxAttempts: 30, // Reduzido para prevenir spam
   windowMs: 60 * 1000, // 1 minuto
-  blockDurationMs: 60 * 1000, // 1 minuto
+  blockDurationMs: 5 * 60 * 1000, // 5 minutos (aumentado)
   progressiveDelay: false
 });
 
 export const passwordResetRateLimiter = new RateLimiter({
-  maxAttempts: 3,
+  maxAttempts: 2, // Reduzido para maior segurança
   windowMs: 60 * 60 * 1000, // 1 hora
-  blockDurationMs: 2 * 60 * 60 * 1000, // 2 horas
+  blockDurationMs: 4 * 60 * 60 * 1000, // 4 horas (aumentado)
+  progressiveDelay: true
+});
+
+// Novo rate limiter para operações críticas
+export const criticalOperationsRateLimiter = new RateLimiter({
+  maxAttempts: 1,
+  windowMs: 5 * 60 * 1000, // 5 minutos
+  blockDurationMs: 30 * 60 * 1000, // 30 minutos
   progressiveDelay: true
 });
 
