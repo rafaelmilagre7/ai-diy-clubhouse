@@ -5134,6 +5134,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: number
       }
+      cleanup_stale_sessions: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       cleanup_user_auth_state: {
         Args: { target_user_id?: string }
         Returns: boolean
