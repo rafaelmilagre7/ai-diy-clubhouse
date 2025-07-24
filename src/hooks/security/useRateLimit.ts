@@ -23,9 +23,11 @@ export const useRateLimit = () => {
     } = config;
 
     try {
-      const { data: allowed, error } = await supabase.rpc('check_rate_limit', {
-        p_identifier: identifier,
+      // CORREÇÃO: Usar função mais permissiva para convites
+      const functionName = actionType.includes('invite') ? 'check_invite_rate_limit' : 'check_rate_limit';
+      const { data: allowed, error } = await supabase.rpc(functionName, {
         p_action_type: actionType,
+        p_identifier: identifier,
         p_max_attempts: maxAttempts,
         p_window_minutes: windowMinutes
       });

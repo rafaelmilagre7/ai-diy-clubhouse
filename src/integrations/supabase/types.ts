@@ -4978,6 +4978,15 @@ export type Database = {
           recommendation: string
         }[]
       }
+      check_invite_rate_limit: {
+        Args: {
+          p_action_type: string
+          p_identifier?: string
+          p_max_attempts?: number
+          p_window_minutes?: number
+        }
+        Returns: boolean
+      }
       check_nps_rate_limit: {
         Args: { p_user_id: string; p_lesson_id: string }
         Returns: boolean
