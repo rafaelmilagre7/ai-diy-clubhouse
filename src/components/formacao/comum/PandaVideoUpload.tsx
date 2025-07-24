@@ -150,6 +150,15 @@ export const PandaVideoUpload = ({
         });
       }, 1000);
 
+      // Cleanup garantido em caso de desmonte do componente
+      const cleanup = () => {
+        clearTimeout(timeoutId);
+        clearInterval(progressInterval);
+      };
+
+      // Adicionar ao cleanup da função
+      window.addEventListener('beforeunload', cleanup);
+
       // Verificar resposta HTTP (status code)
       if (!response.ok) {
         clearInterval(progressInterval);
