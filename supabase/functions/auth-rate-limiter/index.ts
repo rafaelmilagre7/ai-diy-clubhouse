@@ -2,11 +2,11 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4'
 import { corsHeaders } from '../_shared/cors.ts'
 
-// Configuração do rate limiting
+// Configuração do rate limiting - AJUSTADO para permitir convites
 const RATE_LIMIT_CONFIG = {
-  MAX_ATTEMPTS: 5,
-  WINDOW_MINUTES: 10,
-  PROGRESSIVE_BLOCKS: [60000, 300000, 900000], // 1min, 5min, 15min em ms
+  MAX_ATTEMPTS: 10, // Aumentado de 5 para 10
+  WINDOW_MINUTES: 15, // Aumentado de 10 para 15 minutos
+  PROGRESSIVE_BLOCKS: [30000, 120000, 600000], // Reduzido: 30s, 2min, 10min
   JITTER_MAX: 500, // máximo 500ms de jitter
   CLEANUP_INTERVAL: 86400000 // 24h em ms
 }
@@ -58,14 +58,14 @@ function addJitter(): number {
 }
 
 // Função para verificar e aplicar rate limiting usando tabela persistente
-async function checkRateLimit(supabase: any, identifier: string): Promise<{
+async function checkRateLimit(supabase: any, identifier: string, config = RATE_LIMIT_CONFIG): Promise<{
   allowed: boolean;
   reason?: string;
   waitTime?: number;
   remaining?: number;
 }> {
   const now = Date.now()
-  const windowStart = now - (RATE_LIMIT_CONFIG.WINDOW_MINUTES * 60 * 1000)
+  const windowStart = now - (config.WINDOW_MINUTES * 60 * 1000)
   
   try {
     // Buscar entrada existente
@@ -78,7 +78,7 @@ async function checkRateLimit(supabase: any, identifier: string): Promise<{
     if (selectError && selectError.code !== 'PGRST116') { // PGRST116 = not found
       console.error('Error checking rate limit:', selectError)
       // Em caso de erro, permitir (fail-open para não bloquear usuários legítimos)
-      return { allowed: true, remaining: RATE_LIMIT_CONFIG.MAX_ATTEMPTS }
+      return { allowed: true, remaining: config.MAX_ATTEMPTS }
     }
     
     let entry = existingEntry
@@ -99,7 +99,7 @@ async function checkRateLimit(supabase: any, identifier: string): Promise<{
       
       if (insertError) {
         console.error('Error creating rate limit entry:', insertError)
-        return { allowed: true, remaining: RATE_LIMIT_CONFIG.MAX_ATTEMPTS }
+        return { allowed: true, remaining: config.MAX_ATTEMPTS }
       }
       
       entry = newEntry
@@ -132,14 +132,14 @@ async function checkRateLimit(supabase: any, identifier: string): Promise<{
         console.error('Error resetting rate limit:', resetError)
       }
       
-      return { allowed: true, remaining: RATE_LIMIT_CONFIG.MAX_ATTEMPTS }
+      return { allowed: true, remaining: config.MAX_ATTEMPTS }
     }
     
     // Verificar se excedeu o limite
-    if (entry.attempts >= RATE_LIMIT_CONFIG.MAX_ATTEMPTS) {
+    if (entry.attempts >= config.MAX_ATTEMPTS) {
       // Aplicar bloqueio progressivo
-      const blockDuration = RATE_LIMIT_CONFIG.PROGRESSIVE_BLOCKS[
-        Math.min(entry.block_level || 0, RATE_LIMIT_CONFIG.PROGRESSIVE_BLOCKS.length - 1)
+      const blockDuration = config.PROGRESSIVE_BLOCKS[
+        Math.min(entry.block_level || 0, config.PROGRESSIVE_BLOCKS.length - 1)
       ]
       
       const blockUntil = new Date(now + blockDuration + addJitter()).toISOString()
@@ -167,12 +167,12 @@ async function checkRateLimit(supabase: any, identifier: string): Promise<{
     
     return {
       allowed: true,
-      remaining: RATE_LIMIT_CONFIG.MAX_ATTEMPTS - entry.attempts
+      remaining: config.MAX_ATTEMPTS - entry.attempts
     }
   } catch (error) {
     console.error('Unexpected error in rate limiting:', error)
     // Em caso de erro inesperado, permitir (fail-open)
-    return { allowed: true, remaining: RATE_LIMIT_CONFIG.MAX_ATTEMPTS }
+    return { allowed: true, remaining: config.MAX_ATTEMPTS }
   }
 }
 
@@ -273,6 +273,12 @@ Deno.serve(async (req) => {
       )
     }
     
+    // CORREÇÃO: Permitir bypass para operações via convite
+    const isInviteOperation = requestData.invite_token || requestData.options?.data?.invite_token
+    if (isInviteOperation) {
+      console.log('🎯 [RATE-LIMITER] Operação via convite detectada - aplicando limites relaxados')
+    }
+    
     // CORREÇÃO DE SEGURANÇA: Validar entrada
     const validation = validateAuthInput(requestData)
     if (!validation.isValid) {
@@ -299,8 +305,16 @@ Deno.serve(async (req) => {
     // Criar identificador seguro
     const identifier = createSecureIdentifier(clientIP, email)
     
+    // CORREÇÃO: Aplicar limites relaxados para convites
+    const relaxedConfig = isInviteOperation ? {
+      ...RATE_LIMIT_CONFIG,
+      MAX_ATTEMPTS: 20, // 4x mais tentativas para convites
+      WINDOW_MINUTES: 60, // Janela de 1 hora para convites
+      PROGRESSIVE_BLOCKS: [15000, 60000, 300000] // Bloqueios mais curtos: 15s, 1min, 5min
+    } : RATE_LIMIT_CONFIG
+    
     // Verificar rate limiting usando tabela persistente
-    const rateLimitCheck = await checkRateLimit(serviceSupabase, identifier)
+    const rateLimitCheck = await checkRateLimit(serviceSupabase, identifier, relaxedConfig)
     
     if (!rateLimitCheck.allowed) {
       // Log da tentativa bloqueada
