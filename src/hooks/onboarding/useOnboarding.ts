@@ -34,19 +34,21 @@ export interface OnboardingData {
   // Step 4: Objetivos
   goals_info: {
     primary_goal: string;
-    specific_challenge: string;
-    key_metrics: string;
-    timeline: string;
-    success_definition: string;
+    timeline?: string;
+    success_metrics?: string[];
+    investment_capacity?: string;
+    specific_objectives?: string;
+    priority_areas?: string[];
   };
   
   // Step 5: Personalização
   personalization: {
-    study_hours: string;
-    preferred_content: string[];
     learning_style: string;
-    support_level: string;
-    schedule_preference: string;
+    communication_frequency?: string;
+    preferred_content?: string[];
+    support_level?: string;
+    availability?: string;
+    special_needs?: string;
   };
 }
 

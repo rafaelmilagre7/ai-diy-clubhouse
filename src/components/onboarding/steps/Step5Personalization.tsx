@@ -79,10 +79,13 @@ export const Step5Personalization: React.FC<Step5PersonalizationProps> = ({
             <Brain className="w-4 h-4" />
             Como você prefere aprender?
           </Label>
-          <Select onValueChange={(value) => form.setValue('learning_style', value)}>
-            <SelectTrigger className="h-12">
-              <SelectValue placeholder="Selecione seu estilo de aprendizado" />
-            </SelectTrigger>
+           <Select 
+             value={form.getValues('learning_style')}
+             onValueChange={(value) => form.setValue('learning_style', value)}
+           >
+             <SelectTrigger className="h-12">
+               <SelectValue placeholder="Selecione seu estilo de aprendizado" />
+             </SelectTrigger>
             <SelectContent>
               <SelectItem value="visual">Visual - Prefiro vídeos e imagens</SelectItem>
               <SelectItem value="hands_on">Prático - Aprendo fazendo</SelectItem>
@@ -103,10 +106,13 @@ export const Step5Personalization: React.FC<Step5PersonalizationProps> = ({
             <MessageCircle className="w-4 h-4" />
             Com que frequência gostaria de receber dicas e conteúdos?
           </Label>
-          <Select onValueChange={(value) => form.setValue('communication_frequency', value)}>
-            <SelectTrigger className="h-12">
-              <SelectValue placeholder="Selecione a frequência" />
-            </SelectTrigger>
+           <Select 
+             value={form.getValues('communication_frequency')}
+             onValueChange={(value) => form.setValue('communication_frequency', value)}
+           >
+             <SelectTrigger className="h-12">
+               <SelectValue placeholder="Selecione a frequência" />
+             </SelectTrigger>
             <SelectContent>
               <SelectItem value="daily">Diariamente</SelectItem>
               <SelectItem value="weekly">Semanalmente</SelectItem>
@@ -124,17 +130,18 @@ export const Step5Personalization: React.FC<Step5PersonalizationProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {contentTypes.map((content) => (
               <div key={content} className="flex items-center space-x-2">
-                <Checkbox
-                  id={content}
-                  onCheckedChange={(checked) => {
-                    const currentContent = form.getValues('preferred_content') || [];
-                    if (checked) {
-                      form.setValue('preferred_content', [...currentContent, content]);
-                    } else {
-                      form.setValue('preferred_content', currentContent.filter(c => c !== content));
-                    }
-                  }}
-                />
+                 <Checkbox
+                   id={content}
+                   checked={(form.getValues('preferred_content') || []).includes(content)}
+                   onCheckedChange={(checked) => {
+                     const currentContent = form.getValues('preferred_content') || [];
+                     if (checked) {
+                       form.setValue('preferred_content', [...currentContent, content]);
+                     } else {
+                       form.setValue('preferred_content', currentContent.filter(c => c !== content));
+                     }
+                   }}
+                 />
                 <Label htmlFor={content} className="text-sm font-normal cursor-pointer">
                   {content}
                 </Label>
@@ -147,10 +154,13 @@ export const Step5Personalization: React.FC<Step5PersonalizationProps> = ({
           <Label>
             Qual nível de suporte você gostaria de receber?
           </Label>
-          <Select onValueChange={(value) => form.setValue('support_level', value)}>
-            <SelectTrigger className="h-12">
-              <SelectValue placeholder="Selecione o nível de suporte" />
-            </SelectTrigger>
+           <Select 
+             value={form.getValues('support_level')}
+             onValueChange={(value) => form.setValue('support_level', value)}
+           >
+             <SelectTrigger className="h-12">
+               <SelectValue placeholder="Selecione o nível de suporte" />
+             </SelectTrigger>
             <SelectContent>
               <SelectItem value="autonomous">Autônomo - Prefiro explorar sozinho</SelectItem>
               <SelectItem value="guided">Guiado - Gosto de direcionamento claro</SelectItem>
@@ -165,10 +175,13 @@ export const Step5Personalization: React.FC<Step5PersonalizationProps> = ({
             <Calendar className="w-4 h-4" />
             Quando você tem mais tempo para se dedicar ao aprendizado?
           </Label>
-          <Select onValueChange={(value) => form.setValue('availability', value)}>
-            <SelectTrigger className="h-12">
-              <SelectValue placeholder="Selecione sua disponibilidade" />
-            </SelectTrigger>
+           <Select 
+             value={form.getValues('availability')}
+             onValueChange={(value) => form.setValue('availability', value)}
+           >
+             <SelectTrigger className="h-12">
+               <SelectValue placeholder="Selecione sua disponibilidade" />
+             </SelectTrigger>
             <SelectContent>
               <SelectItem value="morning">Manhã (6h às 12h)</SelectItem>
               <SelectItem value="afternoon">Tarde (12h às 18h)</SelectItem>

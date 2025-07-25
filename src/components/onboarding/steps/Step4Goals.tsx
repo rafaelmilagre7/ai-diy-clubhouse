@@ -92,10 +92,13 @@ export const Step4Goals: React.FC<Step4GoalsProps> = ({
             <Star className="w-4 h-4" />
             Qual é seu principal objetivo com IA?
           </Label>
-          <Select onValueChange={(value) => form.setValue('primary_goal', value)}>
-            <SelectTrigger className="h-12">
-              <SelectValue placeholder="Selecione seu objetivo principal" />
-            </SelectTrigger>
+           <Select 
+             value={form.getValues('primary_goal')}
+             onValueChange={(value) => form.setValue('primary_goal', value)}
+           >
+             <SelectTrigger className="h-12">
+               <SelectValue placeholder="Selecione seu objetivo principal" />
+             </SelectTrigger>
             <SelectContent>
               <SelectItem value="productivity">Aumentar produtividade da equipe</SelectItem>
               <SelectItem value="cost_reduction">Reduzir custos operacionais</SelectItem>
@@ -119,10 +122,13 @@ export const Step4Goals: React.FC<Step4GoalsProps> = ({
             <Clock className="w-4 h-4" />
             Em quanto tempo espera ver resultados?
           </Label>
-          <Select onValueChange={(value) => form.setValue('timeline', value)}>
-            <SelectTrigger className="h-12">
-              <SelectValue placeholder="Selecione o prazo esperado" />
-            </SelectTrigger>
+           <Select 
+             value={form.getValues('timeline')}
+             onValueChange={(value) => form.setValue('timeline', value)}
+           >
+             <SelectTrigger className="h-12">
+               <SelectValue placeholder="Selecione o prazo esperado" />
+             </SelectTrigger>
             <SelectContent>
               <SelectItem value="1_month">1 mês</SelectItem>
               <SelectItem value="3_months">3 meses</SelectItem>
@@ -141,17 +147,18 @@ export const Step4Goals: React.FC<Step4GoalsProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {successMetrics.map((metric) => (
               <div key={metric} className="flex items-center space-x-2">
-                <Checkbox
-                  id={metric}
-                  onCheckedChange={(checked) => {
-                    const currentMetrics = form.getValues('success_metrics') || [];
-                    if (checked) {
-                      form.setValue('success_metrics', [...currentMetrics, metric]);
-                    } else {
-                      form.setValue('success_metrics', currentMetrics.filter(m => m !== metric));
-                    }
-                  }}
-                />
+                 <Checkbox
+                   id={metric}
+                   checked={(form.getValues('success_metrics') || []).includes(metric)}
+                   onCheckedChange={(checked) => {
+                     const currentMetrics = form.getValues('success_metrics') || [];
+                     if (checked) {
+                       form.setValue('success_metrics', [...currentMetrics, metric]);
+                     } else {
+                       form.setValue('success_metrics', currentMetrics.filter(m => m !== metric));
+                     }
+                   }}
+                 />
                 <Label htmlFor={metric} className="text-sm font-normal cursor-pointer">
                   {metric}
                 </Label>
@@ -167,17 +174,18 @@ export const Step4Goals: React.FC<Step4GoalsProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {priorityAreas.map((area) => (
               <div key={area} className="flex items-center space-x-2">
-                <Checkbox
-                  id={area}
-                  onCheckedChange={(checked) => {
-                    const currentAreas = form.getValues('priority_areas') || [];
-                    if (checked) {
-                      form.setValue('priority_areas', [...currentAreas, area]);
-                    } else {
-                      form.setValue('priority_areas', currentAreas.filter(a => a !== area));
-                    }
-                  }}
-                />
+                 <Checkbox
+                   id={area}
+                   checked={(form.getValues('priority_areas') || []).includes(area)}
+                   onCheckedChange={(checked) => {
+                     const currentAreas = form.getValues('priority_areas') || [];
+                     if (checked) {
+                       form.setValue('priority_areas', [...currentAreas, area]);
+                     } else {
+                       form.setValue('priority_areas', currentAreas.filter(a => a !== area));
+                     }
+                   }}
+                 />
                 <Label htmlFor={area} className="text-sm font-normal cursor-pointer">
                   {area}
                 </Label>
@@ -190,10 +198,13 @@ export const Step4Goals: React.FC<Step4GoalsProps> = ({
           <Label>
             Qual é sua capacidade de investimento em IA?
           </Label>
-          <Select onValueChange={(value) => form.setValue('investment_capacity', value)}>
-            <SelectTrigger className="h-12">
-              <SelectValue placeholder="Selecione sua capacidade de investimento" />
-            </SelectTrigger>
+           <Select 
+             value={form.getValues('investment_capacity')}
+             onValueChange={(value) => form.setValue('investment_capacity', value)}
+           >
+             <SelectTrigger className="h-12">
+               <SelectValue placeholder="Selecione sua capacidade de investimento" />
+             </SelectTrigger>
             <SelectContent>
               <SelectItem value="minimal">Mínimo - Foco em ferramentas gratuitas</SelectItem>
               <SelectItem value="low">Baixo - Até R$ 500/mês</SelectItem>
