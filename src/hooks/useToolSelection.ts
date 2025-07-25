@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback } from 'react';
 
 export interface UseToolSelectionProps {
   initialTools?: string[];
@@ -9,36 +9,35 @@ export const useToolSelection = ({
   initialTools = [], 
   onSelectionChange 
 }: UseToolSelectionProps = {}) => {
-  // Inicializar estado apenas com initialTools
-  const initialState = useMemo(() => {
+  // Estado simples sem dependências circulares
+  const [selectedTools, setSelectedTools] = useState<string[]>(() => {
     console.log('[TOOL_SELECTION] 🚀 Inicializando com:', initialTools);
-    return initialTools?.length > 0 ? initialTools : [];
-  }, []);
-
-  const [selectedTools, setSelectedTools] = useState<string[]>(initialState);
+    return initialTools || [];
+  });
 
   const toggleTool = useCallback((toolName: string) => {
     console.log('[TOOL_SELECTION] 🖱️ Toggle para:', toolName);
     
     setSelectedTools(prevSelected => {
+      const isSelected = prevSelected.includes(toolName);
       let newSelection: string[];
       
-      if (prevSelected.includes(toolName)) {
-        // Remover ferramenta existente
+      if (isSelected) {
         newSelection = prevSelected.filter(tool => tool !== toolName);
         console.log('[TOOL_SELECTION] ➖ Removendo:', toolName);
       } else {
-        // Adicionar nova ferramenta
         newSelection = [...prevSelected, toolName];
         console.log('[TOOL_SELECTION] ➕ Adicionando:', toolName);
       }
       
       console.log('[TOOL_SELECTION] 🔄 Mudança:', prevSelected, '→', newSelection);
       
-      // Notificar mudança
-      if (onSelectionChange) {
-        onSelectionChange(newSelection);
-      }
+      // Notificar mudança de forma assíncrona para evitar loops
+      setTimeout(() => {
+        if (onSelectionChange) {
+          onSelectionChange(newSelection);
+        }
+      }, 0);
       
       return newSelection;
     });

@@ -24,7 +24,9 @@ export const ToolCard: React.FC<ToolCardProps> = ({ tool, isSelected, onToggle }
           ? 'border-2 border-primary bg-primary/10 shadow-lg' 
           : 'border border-border hover:bg-accent/50'
       }`}
-      onClick={() => {
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
         console.log('[TOOL_CARD] 🎯 Clique em:', tool.name);
         onToggle(tool.name);
       }}
