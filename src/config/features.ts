@@ -17,10 +17,10 @@ export interface FeatureConfig {
  */
 export const APP_FEATURES: Record<string, FeatureConfig> = {
   implementation_trail: {
-    enabled: false, // DESATIVADO na Fase 2
+    enabled: true, // ✅ REATIVADO - Trilha de Implementação Personalizada com IA
     adminOnly: false,
-    description: "Trilha de Implementação Personalizada - DESATIVADA (Fase 2)",
-    lastModified: "2024-06-07T10:00:00Z"
+    description: "Trilha de Implementação Personalizada com IA - Recomendações baseadas no onboarding completo",
+    lastModified: "2025-01-24T10:00:00Z"
   }
 };
 

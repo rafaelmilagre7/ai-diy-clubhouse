@@ -1,92 +1,87 @@
-
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Brain, Sparkles, Target, Lightbulb, GraduationCap } from 'lucide-react';
-import { Progress } from '@/components/ui/progress';
+import React from 'react';
+import { Bot, Sparkles, Brain, Target } from 'lucide-react';
 
 interface TrailGenerationLoaderProps {
   message?: string;
 }
 
-export const TrailGenerationLoader = ({ message = "Gerando sua trilha personalizada" }: TrailGenerationLoaderProps) => {
-  const [progress, setProgress] = useState(0);
-  const [currentStep, setCurrentStep] = useState(0);
-
-  const steps = [
-    { icon: Brain, text: "Analisando seu perfil", color: "text-viverblue" },
-    { icon: Target, text: "Identificando objetivos", color: "text-green-400" },
-    { icon: Lightbulb, text: "Selecionando soluções", color: "text-yellow-400" },
-    { icon: GraduationCap, text: "Recomendando aulas", color: "text-purple-400" },
-    { icon: Sparkles, text: "Finalizando trilha", color: "text-viverblue" }
-  ];
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        const newProgress = prev + Math.random() * 20;
-        if (newProgress >= 100) {
-          return 100;
-        }
-        return newProgress;
-      });
-    }, 800);
-
-    const stepInterval = setInterval(() => {
-      setCurrentStep((prev) => (prev + 1) % steps.length);
-    }, 1500);
-
-    return () => {
-      clearInterval(interval);
-      clearInterval(stepInterval);
-    };
-  }, []);
-
+export const TrailGenerationLoader: React.FC<TrailGenerationLoaderProps> = ({ 
+  message = "Criando sua trilha personalizada com IA..." 
+}) => {
   return (
-    <div className="min-h-screen flex items-center justify-center p-6">
-      <Card className="glass-dark border-viverblue/20 max-w-md w-full">
-        <CardContent className="p-8 text-center">
-          <div className="mb-6">
-            <div className="relative mx-auto w-20 h-20 mb-4">
-              <div className="absolute inset-0 bg-viverblue/20 rounded-full animate-ping"></div>
-              <div className="relative w-20 h-20 bg-viverblue/10 rounded-full flex items-center justify-center">
-                <Brain className="h-10 w-10 text-viverblue animate-pulse" />
-              </div>
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
+      {/* Background Aurora Effect */}
+      <div className="absolute inset-0 w-full h-full">
+        <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-viverblue/20 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-operational/20 rounded-full blur-3xl animate-pulse animation-delay-2000" />
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-revenue/10 rounded-full blur-3xl animate-pulse animation-delay-4000" />
+      </div>
+
+      {/* Main Content */}
+      <div className="relative z-10 text-center max-w-md mx-auto px-6">
+        {/* Icon Container with Animation */}
+        <div className="relative mb-8">
+          <div className="w-24 h-24 mx-auto bg-gradient-to-br from-viverblue/20 to-operational/20 rounded-3xl flex items-center justify-center aurora-glass backdrop-blur-md border border-viverblue/30">
+            <Bot className="w-12 h-12 text-viverblue animate-pulse" />
+          </div>
+          
+          {/* Floating Icons */}
+          <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-operational to-revenue rounded-xl flex items-center justify-center aurora-float">
+            <Sparkles className="w-4 h-4 text-white" />
+          </div>
+          <div className="absolute -bottom-2 -left-2 w-8 h-8 bg-gradient-to-br from-revenue to-viverblue rounded-xl flex items-center justify-center aurora-float animation-delay-2000">
+            <Brain className="w-4 h-4 text-white" />
+          </div>
+          <div className="absolute top-1/2 -right-4 w-6 h-6 bg-gradient-to-br from-viverblue to-operational rounded-lg flex items-center justify-center aurora-float animation-delay-4000">
+            <Target className="w-3 h-3 text-white" />
+          </div>
+        </div>
+
+        {/* Title */}
+        <h2 className="text-2xl font-bold text-foreground mb-3 aurora-text-gradient">
+          IA Analisando seu Perfil
+        </h2>
+        
+        {/* Message */}
+        <p className="text-muted-foreground mb-8 leading-relaxed">
+          {message}
+        </p>
+
+        {/* Progress Animation */}
+        <div className="space-y-4">
+          {/* Progress Steps */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-3 text-sm">
+              <div className="w-2 h-2 bg-viverblue rounded-full animate-pulse" />
+              <span className="text-muted-foreground">Analisando dados do onboarding</span>
             </div>
-            <h2 className="text-xl font-semibold text-high-contrast mb-2">
-              {message}
-            </h2>
-            <p className="text-medium-contrast text-sm">
-              Nossa IA está criando o melhor caminho para seus objetivos
-            </p>
+            <div className="flex items-center gap-3 text-sm animation-delay-1000">
+              <div className="w-2 h-2 bg-operational rounded-full animate-pulse animation-delay-1000" />
+              <span className="text-muted-foreground">Identificando objetivos prioritários</span>
+            </div>
+            <div className="flex items-center gap-3 text-sm animation-delay-2000">
+              <div className="w-2 h-2 bg-revenue rounded-full animate-pulse animation-delay-2000" />
+              <span className="text-muted-foreground">Personalizando recomendações</span>
+            </div>
+            <div className="flex items-center gap-3 text-sm animation-delay-3000">
+              <div className="w-2 h-2 bg-strategy rounded-full animate-pulse animation-delay-3000" />
+              <span className="text-muted-foreground">Criando trilha inteligente</span>
+            </div>
           </div>
 
-          <div className="space-y-4">
-            <Progress value={progress} className="h-2" />
-            
-            <div className="flex items-center justify-center gap-3 min-h-[24px]">
-              {steps.map((step, index) => {
-                const StepIcon = step.icon;
-                return (
-                  <div
-                    key={index}
-                    className={`transition-all duration-300 ${
-                      index === currentStep 
-                        ? `${step.color} scale-110` 
-                        : 'text-medium-contrast/50 scale-90'
-                    }`}
-                  >
-                    <StepIcon className="h-5 w-5" />
-                  </div>
-                );
-              })}
-            </div>
-            
-            <p className="text-sm text-medium-contrast animate-fade-in">
-              {steps[currentStep]?.text}
-            </p>
+          {/* Progress Bar */}
+          <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-viverblue via-operational to-revenue rounded-full animate-pulse aurora-shimmer" />
           </div>
-        </CardContent>
-      </Card>
+        </div>
+
+        {/* Additional Info */}
+        <div className="mt-8 p-4 aurora-glass rounded-2xl border border-viverblue/20">
+          <p className="text-xs text-muted-foreground">
+            ✨ Usando IA para criar uma trilha 100% personalizada baseada no seu perfil e objetivos
+          </p>
+        </div>
+      </div>
     </div>
   );
 };

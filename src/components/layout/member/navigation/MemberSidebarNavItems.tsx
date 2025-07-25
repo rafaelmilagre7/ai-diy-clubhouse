@@ -15,7 +15,8 @@ import {
   Wrench,
   Lightbulb,
   Calendar,
-  Trophy
+  Trophy,
+  Bot
 } from 'lucide-react';
 import { SidebarNavigationGroup } from './SidebarNavigationGroup';
 import { TooltipNavItem } from './TooltipNavItem';
@@ -49,6 +50,13 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
 
         {/* Grupo: Aprendizado */}
         <SidebarNavigationGroup title="Aprendizado" sidebarOpen={sidebarOpen}>
+          <TooltipNavItem
+            to="/trilha-implementacao"
+            label="Trilha com IA"
+            icon={Bot}
+            sidebarOpen={sidebarOpen}
+            isNew={true}
+          />
           <TooltipNavItem
             to="/solutions"
             label="Soluções"
