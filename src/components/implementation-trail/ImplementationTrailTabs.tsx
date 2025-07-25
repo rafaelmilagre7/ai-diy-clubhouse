@@ -2,10 +2,9 @@
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { OverviewTab } from './tabs/OverviewTab';
+import { SolutionsTab } from './tabs/SolutionsTab';
+import { LessonsTab } from './tabs/LessonsTab';
 import { Eye, Target, GraduationCap, Sparkles } from 'lucide-react';
-
-// Import SolutionsTab dinamicamente para evitar conflitos
-const SolutionsTab = React.lazy(() => import('./tabs/SolutionsTab').then(m => ({ default: m.SolutionsTab })));
 
 interface ImplementationTrail {
   priority1: Array<{
@@ -51,7 +50,7 @@ export const ImplementationTrailTabs = ({ trail }: ImplementationTrailTabsProps)
   return (
     <div className="space-y-6 animate-fade-in">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 aurora-glass border-viverblue/20">
+        <TabsList className="grid w-full grid-cols-3 aurora-glass border-viverblue/20">
           <TabsTrigger 
             value="overview" 
             className="flex items-center gap-2 data-[state=active]:bg-viverblue data-[state=active]:text-white"
@@ -73,6 +72,19 @@ export const ImplementationTrailTabs = ({ trail }: ImplementationTrailTabsProps)
               </span>
             )}
           </TabsTrigger>
+          <TabsTrigger 
+            value="lessons" 
+            className="flex items-center gap-2 data-[state=active]:bg-viverblue data-[state=active]:text-white"
+          >
+            <GraduationCap className="h-4 w-4" />
+            <span className="hidden sm:inline">Aulas</span>
+            <span className="sm:hidden">Aulas</span>
+            {totalLessons > 0 && (
+              <span className="bg-operational text-white text-xs px-2 py-0.5 rounded-full ml-1">
+                {totalLessons}
+              </span>
+            )}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="mt-6 animate-fade-in">
@@ -80,12 +92,11 @@ export const ImplementationTrailTabs = ({ trail }: ImplementationTrailTabsProps)
         </TabsContent>
 
         <TabsContent value="solutions" className="mt-6 animate-fade-in">
-          <React.Suspense fallback={<div className="animate-pulse space-y-4">
-            <div className="h-6 bg-muted rounded w-1/4"></div>
-            <div className="h-32 bg-muted rounded"></div>
-          </div>}>
-            <SolutionsTab trail={trail} />
-          </React.Suspense>
+          <SolutionsTab trail={trail} />
+        </TabsContent>
+
+        <TabsContent value="lessons" className="mt-6 animate-fade-in">
+          <LessonsTab lessons={trail.recommended_lessons || []} />
         </TabsContent>
       </Tabs>
     </div>

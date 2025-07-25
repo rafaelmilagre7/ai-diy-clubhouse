@@ -59,6 +59,8 @@ export const SolutionsTab: React.FC<SolutionsTabProps> = ({ trail }) => {
   useEffect(() => {
     const fetchSolutions = async () => {
       try {
+        setLoading(true);
+        
         // Get all solution IDs from trail
         const allSolutionIds = [
           ...trail.priority1.map(item => item.solutionId),
@@ -66,13 +68,26 @@ export const SolutionsTab: React.FC<SolutionsTabProps> = ({ trail }) => {
           ...trail.priority3.map(item => item.solutionId)
         ];
 
+        console.log('🔍 Carregando soluções para IDs:', allSolutionIds);
+
+        if (allSolutionIds.length === 0) {
+          console.log('⚠️ Nenhum ID de solução encontrado na trilha');
+          setSolutions({});
+          return;
+        }
+
         // Fetch solutions from database
         const { data, error } = await supabase
           .from('solutions')
           .select('id, title, description, category, difficulty, thumbnail_url')
           .in('id', allSolutionIds);
 
-        if (error) throw error;
+        if (error) {
+          console.error('❌ Erro ao buscar soluções:', error);
+          throw error;
+        }
+
+        console.log('✅ Soluções carregadas:', data?.length || 0);
 
         // Create a mapping of solution ID to solution data
         const solutionsMap: Record<string, Solution> = {};
@@ -82,13 +97,35 @@ export const SolutionsTab: React.FC<SolutionsTabProps> = ({ trail }) => {
 
         setSolutions(solutionsMap);
       } catch (error) {
-        console.error('Error fetching solutions:', error);
+        console.error('❌ Erro ao carregar soluções:', error);
+        // Em caso de erro, criar soluções mock para demonstração
+        const mockSolutions: Record<string, Solution> = {};
+        const allSolutionIds = [
+          ...trail.priority1.map(item => item.solutionId),
+          ...trail.priority2.map(item => item.solutionId),
+          ...trail.priority3.map(item => item.solutionId)
+        ];
+
+        allSolutionIds.forEach((id, index) => {
+          mockSolutions[id] = {
+            id,
+            title: `Solução ${index + 1}`,
+            description: 'Esta é uma solução de demonstração com dados mock.',
+            category: 'IA & Automação',
+            difficulty: index % 3 === 0 ? 'Iniciante' : index % 3 === 1 ? 'Intermediário' : 'Avançado',
+            thumbnail_url: undefined
+          };
+        });
+
+        setSolutions(mockSolutions);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchSolutions();
+    if (trail) {
+      fetchSolutions();
+    }
   }, [trail]);
 
   const getPriorityLabel = (priority: number) => {

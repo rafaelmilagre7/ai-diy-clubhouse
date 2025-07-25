@@ -1,12 +1,16 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { AspectRatio } from '@/components/ui/aspect-ratio';
-import { GraduationCap, Clock, Zap, ArrowRight, Star } from 'lucide-react';
-import { useLessonImages } from '../contexts/LessonImagesContext';
-import { APP_CONFIG } from '@/config/app';
+import { Button } from '@/components/ui/button';
+import { 
+  Play, 
+  Clock, 
+  Star, 
+  TrendingUp,
+  ExternalLink,
+  GraduationCap
+} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface RecommendedLesson {
   lessonId: string;
@@ -23,164 +27,131 @@ interface EnhancedLessonCardProps {
 }
 
 export const EnhancedLessonCard = ({ lesson, index }: EnhancedLessonCardProps) => {
-  const { getLessonImage, getLessonMetadata } = useLessonImages();
-  
-  const imageUrl = getLessonImage(lesson.lessonId);
-  const metadata = getLessonMetadata(lesson.lessonId);
-  
-  console.log(`[EnhancedLessonCard] Renderizando aula ${lesson.lessonId}:`, {
-    title: lesson.title,
-    hasImage: !!imageUrl,
-    imageUrl: imageUrl?.substring(0, 50) + '...',
-    hasMetadata: !!metadata
-  });
-  
-  const getPriorityColor = (priority: number) => {
+  const navigate = useNavigate();
+
+  const getPriorityConfig = (priority: number) => {
     switch (priority) {
-      case 1: return 'bg-green-500';
-      case 2: return 'bg-yellow-500';
-      case 3: return 'bg-blue-500';
-      default: return 'bg-gray-500';
+      case 1:
+        return {
+          label: 'Alta Prioridade',
+          color: 'bg-viverblue text-white',
+          borderColor: 'border-viverblue/50',
+          bgGradient: 'from-viverblue/10 to-viverblue/5'
+        };
+      case 2:
+        return {
+          label: 'Média Prioridade',
+          color: 'bg-operational text-white',
+          borderColor: 'border-operational/50',
+          bgGradient: 'from-operational/10 to-operational/5'
+        };
+      case 3:
+        return {
+          label: 'Baixa Prioridade',
+          color: 'bg-revenue text-white',
+          borderColor: 'border-revenue/50',
+          bgGradient: 'from-revenue/10 to-revenue/5'
+        };
+      default:
+        return {
+          label: 'Prioridade',
+          color: 'bg-muted text-muted-foreground',
+          borderColor: 'border-muted/50',
+          bgGradient: 'from-muted/10 to-muted/5'
+        };
     }
   };
 
-  const getPriorityLabel = (priority: number) => {
-    switch (priority) {
-      case 1: return 'Alta Prioridade';
-      case 2: return 'Prioridade Média';
-      case 3: return 'Complementar';
-      default: return 'Recomendada';
-    }
-  };
-
-  const getDifficultyColor = (difficulty?: string) => {
-    switch (difficulty?.toLowerCase()) {
-      case 'beginner': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-      case 'intermediate': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
-      case 'advanced': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
-      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200';
-    }
-  };
-
-  const getDifficultyLabel = (difficulty?: string) => {
-    switch (difficulty?.toLowerCase()) {
-      case 'beginner': return 'Iniciante';
-      case 'intermediate': return 'Intermediário';
-      case 'advanced': return 'Avançado';
-      default: return 'Não definido';
-    }
-  };
+  const priorityConfig = getPriorityConfig(lesson.priority);
 
   const handleLessonClick = () => {
-    const lessonUrl = APP_CONFIG.getAppUrl(`/learning/course/${lesson.courseId}/lesson/${lesson.lessonId}`);
-    console.log(`[EnhancedLessonCard] Abrindo aula: ${lessonUrl}`);
-    window.open(lessonUrl, '_blank');
-  };
-
-  const handleButtonClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Evita duplo clique quando o botão é clicado
-    handleLessonClick();
+    // Navegar para a aula específica
+    navigate(`/lesson/${lesson.lessonId}`);
   };
 
   return (
-    <Card 
-      className="glass-dark border border-neutral-700/50 hover:border-viverblue/50 transition-all duration-300 group overflow-hidden h-full flex flex-col cursor-pointer hover:scale-[1.02] hover:shadow-lg" 
-      onClick={handleLessonClick}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          handleLessonClick();
-        }
-      }}
-      aria-label={`Acessar aula: ${lesson.title}`}
-    >
-      <div className="relative">
-        {/* Ranking badge */}
-        <div className="absolute top-3 left-3 z-10">
-          <div className="flex items-center gap-1 bg-viverblue text-white text-xs px-2 py-1 rounded-full font-bold">
-            <Star className="h-3 w-3 fill-current" />
-            #{index + 1}
-          </div>
+    <Card className={`aurora-glass ${priorityConfig.borderColor} aurora-hover-scale group cursor-pointer h-full bg-gradient-to-br ${priorityConfig.bgGradient} overflow-hidden`}>
+      {/* Thumbnail/Preview Area */}
+      <div className="relative aspect-video bg-gradient-to-br from-muted/50 to-muted/20 flex items-center justify-center">
+        <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent" />
+        <div className="relative z-10 flex items-center gap-2">
+          <GraduationCap className="h-8 w-8 text-viverblue" />
+          <Play className="h-6 w-6 text-foreground/80 group-hover:text-viverblue transition-colors" />
         </div>
-
-        {/* Priority badge */}
-        <div className="absolute top-3 right-3 z-10">
-          <Badge className={`${getPriorityColor(lesson.priority)} text-white text-xs`}>
-            {getPriorityLabel(lesson.priority)}
+        
+        {/* Priority Badge */}
+        <div className="absolute top-3 left-3">
+          <Badge className={`${priorityConfig.color} text-xs font-medium`}>
+            {priorityConfig.label}
           </Badge>
         </div>
 
-        {/* Cover image with 9:16 aspect ratio */}
-        <AspectRatio ratio={9/16} className="bg-gradient-to-br from-neutral-800 to-neutral-900 relative overflow-hidden">
-          {imageUrl ? (
-            <img 
-              src={imageUrl} 
-              alt={lesson.title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              onLoad={() => console.log(`[EnhancedLessonCard] Imagem carregada: ${lesson.title}`)}
-              onError={(e) => {
-                console.error(`[EnhancedLessonCard] Erro ao carregar imagem: ${lesson.title}`, imageUrl);
-                const target = e.target as HTMLImageElement;
-                target.style.display = 'none';
-              }}
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <GraduationCap className="h-16 w-16 text-neutral-600" />
-            </div>
-          )}
-          
-          {/* Gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-        </AspectRatio>
+        {/* Rank indicator */}
+        <div className="absolute top-3 right-3">
+          <div className="bg-background/90 backdrop-blur-sm rounded-full w-8 h-8 flex items-center justify-center">
+            <span className="text-sm font-bold text-viverblue">#{index + 1}</span>
+          </div>
+        </div>
       </div>
 
-      <CardHeader className="pb-3 flex-1">
-        <CardTitle className="text-high-contrast text-lg leading-tight line-clamp-2">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg line-clamp-2 group-hover:text-viverblue transition-colors">
           {lesson.title}
         </CardTitle>
         
-        {/* Metadata badges */}
-        <div className="flex items-center gap-2 flex-wrap mt-2">
-          {metadata?.estimated_time_minutes && (
-            <Badge variant="outline" className="text-xs border-neutral-600">
-              <Clock className="h-3 w-3 mr-1" />
-              {metadata.estimated_time_minutes} min
-            </Badge>
-          )}
-          
-          {metadata?.difficulty_level && (
-            <Badge className={`text-xs ${getDifficultyColor(metadata.difficulty_level)}`}>
-              <Zap className="h-3 w-3 mr-1" />
-              {getDifficultyLabel(metadata.difficulty_level)}
-            </Badge>
-          )}
+        {/* Course/Module info */}
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="flex items-center gap-1">
+            <Clock className="w-3 h-3" />
+            <span>Módulo ID: {lesson.moduleId.slice(0, 8)}...</span>
+          </div>
         </div>
       </CardHeader>
 
-      <CardContent className="pt-0 flex flex-col flex-1">
-        {/* Justification */}
-        <p className="text-medium-contrast text-sm leading-relaxed mb-4 line-clamp-3 flex-1">
-          {lesson.justification}
-        </p>
+      <CardContent className="pt-0 space-y-4">
+        {/* AI Justification */}
+        <div className="bg-muted/30 rounded-lg p-3">
+          <div className="flex items-start gap-2">
+            <Star className="w-4 h-4 text-viverblue mt-0.5 flex-shrink-0" />
+            <p className="text-sm text-foreground line-clamp-3">{lesson.justification}</p>
+          </div>
+        </div>
 
-        {/* Description preview if available */}
-        {metadata?.description && (
-          <p className="text-low-contrast text-xs leading-relaxed mb-4 line-clamp-2">
-            {metadata.description}
-          </p>
-        )}
+        {/* Priority Score Visual */}
+        <div className="space-y-2">
+          <div className="flex justify-between text-xs">
+            <span className="text-muted-foreground">Relevância</span>
+            <span className="text-foreground font-medium">
+              {lesson.priority === 1 ? '95%' : lesson.priority === 2 ? '80%' : '65%'}
+            </span>
+          </div>
+          <div className="h-2 bg-muted/30 rounded-full overflow-hidden">
+            <div 
+              className={`h-full rounded-full transition-all duration-1000 ${
+                lesson.priority === 1 ? 'bg-viverblue' : 
+                lesson.priority === 2 ? 'bg-operational' : 'bg-revenue'
+              }`}
+              style={{ 
+                width: lesson.priority === 1 ? '95%' : lesson.priority === 2 ? '80%' : '65%',
+                animationDelay: `${index * 200}ms`
+              }}
+            />
+          </div>
+        </div>
 
-        {/* Action button */}
+        {/* Action Button */}
         <Button 
-          className="w-full bg-viverblue hover:bg-viverblue-dark text-white group/btn mt-auto"
-          onClick={handleButtonClick}
+          variant="outline" 
+          size="sm" 
+          className="w-full group-hover:bg-viverblue group-hover:text-white group-hover:border-viverblue transition-all"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleLessonClick();
+          }}
         >
-          <GraduationCap className="mr-2 h-4 w-4" />
-          Começar Aula
-          <ArrowRight className="ml-2 h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />
+          <Play className="w-4 h-4 mr-2" />
+          Assistir Aula
+          <ExternalLink className="w-4 h-4 ml-2" />
         </Button>
       </CardContent>
     </Card>

@@ -152,6 +152,32 @@ export function useImplementationTrail() {
             estimatedTime: '1-2 dias'
           }
         ],
+        recommended_lessons: [
+          {
+            lessonId: 'lesson-1',
+            moduleId: 'module-1',
+            courseId: 'course-1',
+            title: 'Introdução à IA para Negócios',
+            justification: 'Fundamentos essenciais para começar com IA',
+            priority: 1
+          },
+          {
+            lessonId: 'lesson-2',
+            moduleId: 'module-2',
+            courseId: 'course-1',
+            title: 'Ferramentas de IA para Produtividade',
+            justification: 'Aprenda as principais ferramentas disponíveis',
+            priority: 2
+          },
+          {
+            lessonId: 'lesson-3',
+            moduleId: 'module-3',
+            courseId: 'course-2',
+            title: 'IA Aplicada ao Marketing Digital',
+            justification: 'Como usar IA para melhorar suas campanhas',
+            priority: 3
+          }
+        ],
         ai_message: 'Trilha básica criada. Complete seu perfil para uma experiência mais personalizada.',
         generated_at: new Date().toISOString()
       };

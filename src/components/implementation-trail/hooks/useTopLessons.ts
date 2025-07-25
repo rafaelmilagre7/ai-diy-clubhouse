@@ -1,5 +1,4 @@
-
-import { useMemo, useState } from 'react';
+import { useState, useMemo } from 'react';
 
 interface RecommendedLesson {
   lessonId: string;
@@ -10,38 +9,36 @@ interface RecommendedLesson {
   priority: number;
 }
 
-export const useTopLessons = (lessons: RecommendedLesson[], initialMaxCount: number = 5) => {
+export const useTopLessons = (lessons: RecommendedLesson[], topCount: number = 5) => {
   const [showAll, setShowAll] = useState(false);
-  const maxCount = showAll ? lessons?.length || 0 : initialMaxCount;
+
+  // Ordenar aulas por prioridade (1 = alta, 2 = média, 3 = baixa)
+  const sortedLessons = useMemo(() => {
+    return [...lessons].sort((a, b) => a.priority - b.priority);
+  }, [lessons]);
 
   const topLessons = useMemo(() => {
-    if (!lessons || lessons.length === 0) return [];
+    if (showAll) {
+      return sortedLessons;
+    }
+    return sortedLessons.slice(0, topCount);
+  }, [sortedLessons, showAll, topCount]);
 
-    // Algoritmo de ranking baseado em prioridade e outros fatores
-    const sortedLessons = [...lessons].sort((a, b) => {
-      // Prioridade mais alta primeiro (1 é melhor que 3)
-      if (a.priority !== b.priority) {
-        return a.priority - b.priority;
-      }
-      
-      // Em caso de empate, ordenar por título alfabeticamente
-      return a.title.localeCompare(b.title);
-    });
+  const hasMoreLessons = sortedLessons.length > topCount;
+  const remainingCount = Math.max(0, sortedLessons.length - topCount);
+  const totalLessons = sortedLessons.length;
 
-    return sortedLessons.slice(0, maxCount);
-  }, [lessons, maxCount]);
-
-  const hasMoreLessons = lessons && lessons.length > initialMaxCount;
-  const remainingCount = lessons ? Math.max(0, lessons.length - initialMaxCount) : 0;
-
-  const toggleShowAll = () => setShowAll(!showAll);
+  const toggleShowAll = () => {
+    setShowAll(!showAll);
+  };
 
   return {
     topLessons,
     hasMoreLessons,
     remainingCount,
-    totalLessons: lessons?.length || 0,
+    totalLessons,
     showAll,
-    toggleShowAll
+    toggleShowAll,
+    sortedLessons,
   };
 };
