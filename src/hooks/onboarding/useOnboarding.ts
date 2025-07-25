@@ -160,20 +160,32 @@ export const useOnboarding = () => {
         // Determinar o próximo step baseado nos dados existentes
         let nextStep = 1;
         
+        // Função para verificar se um objeto tem dados válidos
+        const hasValidData = (obj: any) => {
+          if (!obj || typeof obj !== 'object') return false;
+          const keys = Object.keys(obj);
+          return keys.length > 0 && keys.some(key => obj[key] && obj[key] !== '');
+        };
+        
         // Verificar qual é o próximo step incompleto
-        if (data.personal_info && Object.keys(data.personal_info).length > 0) {
+        if (hasValidData(data.personal_info)) {
+          console.log('[ONBOARDING] Personal info válido, indo para step 2');
           nextStep = 2;
         }
-        if (data.professional_info && Object.keys(data.professional_info).length > 0) {
+        if (hasValidData(data.professional_info)) {
+          console.log('[ONBOARDING] Professional info válido, indo para step 3');
           nextStep = 3;
         }
-        if (data.ai_experience && Object.keys(data.ai_experience).length > 0) {
+        if (hasValidData(data.ai_experience)) {
+          console.log('[ONBOARDING] AI experience válido, indo para step 4');
           nextStep = 4;
         }
-        if (data.goals_info && Object.keys(data.goals_info).length > 0) {
+        if (hasValidData(data.goals_info)) {
+          console.log('[ONBOARDING] Goals info válido, indo para step 5');
           nextStep = 5;
         }
-        if (data.personalization && Object.keys(data.personalization).length > 0) {
+        if (hasValidData(data.personalization)) {
+          console.log('[ONBOARDING] Personalization válido, indo para step 6');
           nextStep = 6;
         }
         
