@@ -158,23 +158,33 @@ export const useOnboarding = () => {
         console.log('[ONBOARDING] Setando estado com dados carregados');
         
         // Determinar o próximo step baseado nos dados existentes
-        let nextStep = data.current_step;
+        let nextStep = 1;
         
-        // Se current_step está atrasado, calcular o próximo step baseado nos dados
+        // Verificar qual é o próximo step incompleto
         if (data.personal_info && Object.keys(data.personal_info).length > 0) {
-          nextStep = Math.max(nextStep, 2);
+          nextStep = 2;
         }
         if (data.professional_info && Object.keys(data.professional_info).length > 0) {
-          nextStep = Math.max(nextStep, 3);
+          nextStep = 3;
         }
         if (data.ai_experience && Object.keys(data.ai_experience).length > 0) {
-          nextStep = Math.max(nextStep, 4);
+          nextStep = 4;
         }
         if (data.goals_info && Object.keys(data.goals_info).length > 0) {
-          nextStep = Math.max(nextStep, 5);
+          nextStep = 5;
+        }
+        if (data.personalization && Object.keys(data.personalization).length > 0) {
+          nextStep = 6;
         }
         
-        console.log('[ONBOARDING] Step calculado:', nextStep);
+        console.log('[ONBOARDING] Step calculado baseado nos dados:', nextStep);
+        console.log('[ONBOARDING] Dados disponíveis:', {
+          personal_info: Object.keys(data.personal_info || {}).length,
+          professional_info: Object.keys(data.professional_info || {}).length,
+          ai_experience: Object.keys(data.ai_experience || {}).length,
+          goals_info: Object.keys(data.goals_info || {}).length,
+          personalization: Object.keys(data.personalization || {}).length
+        });
         
         setState({
           id: data.id,
