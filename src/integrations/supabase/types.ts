@@ -4815,32 +4815,7 @@ export type Database = {
       }
     }
     Views: {
-      nps_analytics_view: {
-        Row: {
-          course_id: string | null
-          course_title: string | null
-          created_at: string | null
-          feedback: string | null
-          id: string | null
-          lesson_id: string | null
-          lesson_title: string | null
-          module_title: string | null
-          score: number | null
-          updated_at: string | null
-          user_email: string | null
-          user_id: string | null
-          user_name: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "learning_lesson_nps_lesson_id_fkey"
-            columns: ["lesson_id"]
-            isOneToOne: false
-            referencedRelation: "learning_lessons"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
+      [_ in never]: never
     }
     Functions: {
       accept_invite: {
@@ -5559,19 +5534,13 @@ export type Database = {
       get_nps_analytics: {
         Args: Record<PropertyKey, never>
         Returns: {
-          id: string
-          lesson_id: string
-          user_id: string
-          score: number
-          feedback: string
-          created_at: string
-          updated_at: string
-          user_name: string
-          user_email: string
-          lesson_title: string
-          module_title: string
-          course_title: string
-          course_id: string
+          total_responses: number
+          average_score: number
+          nps_score: number
+          promoters_count: number
+          passives_count: number
+          detractors_count: number
+          response_rate: number
         }[]
       }
       get_onboarding_analytics: {
