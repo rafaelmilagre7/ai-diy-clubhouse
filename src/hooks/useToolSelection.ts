@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 
 export interface UseToolSelectionProps {
   initialTools?: string[];
@@ -9,25 +9,13 @@ export const useToolSelection = ({
   initialTools = [], 
   onSelectionChange 
 }: UseToolSelectionProps = {}) => {
-  // Estado simples sem refs complexos
-  const [selectedTools, setSelectedTools] = useState<string[]>(() => {
+  // Inicializar estado apenas com initialTools
+  const initialState = useMemo(() => {
     console.log('[TOOL_SELECTION] 🚀 Inicializando com:', initialTools);
-    if (initialTools && initialTools.length > 0) {
-      return initialTools;
-    }
-    return [];
-  });
+    return initialTools?.length > 0 ? initialTools : [];
+  }, []);
 
-  // Sincronizar com initialTools quando mudar
-  useEffect(() => {
-    if (initialTools && initialTools.length > 0) {
-      console.log('[TOOL_SELECTION] 🔄 Sincronizando com initialTools:', initialTools);
-      setSelectedTools(initialTools);
-    } else if (initialTools && initialTools.length === 0) {
-      console.log('[TOOL_SELECTION] 🔄 Limpando seleção (array vazio)');
-      setSelectedTools([]);
-    }
-  }, [initialTools]);
+  const [selectedTools, setSelectedTools] = useState<string[]>(initialState);
 
   const toggleTool = useCallback((toolName: string) => {
     console.log('[TOOL_SELECTION] 🖱️ Toggle para:', toolName);
