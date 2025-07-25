@@ -64,7 +64,7 @@ const OnboardingPage: React.FC = () => {
         }
       }));
     }
-  }, [setState]); // Volta a usar setState na dependência pois agora não há loop
+  }, []); // REMOVIDO setState da dependência para evitar loop
 
   const handleStep4DataChange = useCallback((goalsData: any) => {
     console.log('Step4 Data Change:', goalsData);
