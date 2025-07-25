@@ -21,7 +21,7 @@ interface SendInviteEmailRequest {
 }
 
 const handler = async (req: Request): Promise<Response> => {
-  console.log('🚀 [SEND-INVITE-EMAIL] Iniciando processamento...');
+  console.log('🚀 [SEND-INVITE-EMAIL] Processamento iniciado - v2.0');
 
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -59,17 +59,22 @@ const handler = async (req: Request): Promise<Response> => {
     
     console.log('🔗 [SEND-INVITE-EMAIL] URL do convite:', inviteUrl);
 
+    // Verificar dados do template antes de renderizar
+    const templateData = {
+      inviteUrl,
+      invitedByName: body.senderName,
+      recipientEmail: body.email,
+      roleName: body.roleName,
+      companyName: 'Viver de IA',
+      expiresAt: body.expiresAt,
+      notes: body.notes,
+    };
+    
+    console.log('📋 [SEND-INVITE-EMAIL] Dados do template:', templateData);
+
     // Renderizar template do email
     const emailHtml = await renderAsync(
-      React.createElement(InviteEmail, {
-        inviteUrl,
-        invitedByName: body.senderName, // Corrigido: usar senderName ao invés de invitedByName
-        recipientEmail: body.email,
-        roleName: body.roleName,
-        companyName: 'Viver de IA',
-        expiresAt: body.expiresAt,
-        notes: body.notes,
-      })
+      React.createElement(InviteEmail, templateData)
     );
 
     console.log('📝 [SEND-INVITE-EMAIL] Template renderizado com sucesso');
