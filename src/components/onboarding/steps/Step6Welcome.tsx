@@ -98,8 +98,17 @@ export const Step6Welcome: React.FC<Step6WelcomeProps> = ({
 
       <div className="space-y-4">
         <p className="text-muted-foreground">
-          Sua experiência personalizada já está configurada. Vamos começar sua transformação digital!
+          Sua experiência personalizada já está configurada. Clique em "Concluir" para finalizar e ir para o dashboard!
         </p>
+        
+        <Button 
+          onClick={onFinish}
+          size="lg" 
+          className="w-full md:w-auto px-8 py-3 text-lg font-semibold group bg-gradient-to-r from-primary to-accent hover:shadow-lg hover:shadow-primary/25"
+        >
+          ✨ Concluir Onboarding
+          <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+        </Button>
       </div>
 
       <div className="pt-6 border-t border-border/50">

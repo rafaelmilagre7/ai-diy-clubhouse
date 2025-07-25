@@ -450,9 +450,8 @@ export const useOnboarding = () => {
       // Atualizar estado local
       setState(prev => ({
         ...prev,
-        current_step: 6,
         is_completed: true,
-        completed_steps: [1, 2, 3, 4, 5, 6],
+        completed_steps: [1, 2, 3, 4, 5], // NÃO incluir step 6 aqui para evitar "step 7 de 6"
         nina_message: ninaMessage,
       }));
 
@@ -460,7 +459,6 @@ export const useOnboarding = () => {
       clearLocalStorageBackup();
 
       console.log('[ONBOARDING] Onboarding concluído com sucesso!');
-      setLoadingMessage('Redirecionando para o dashboard...');
       
       toast({ 
         title: 'Onboarding concluído!', 
@@ -471,7 +469,7 @@ export const useOnboarding = () => {
       // Redirecionar após um breve delay
       setTimeout(() => {
         window.location.href = '/dashboard';
-      }, 2000);
+      }, 1500);
       
       return true;
 

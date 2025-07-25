@@ -111,21 +111,12 @@ const OnboardingPage: React.FC = () => {
       }
       
       if (current_step === 5) {
-        console.log('[ONBOARDING_PAGE] Step 5 → Step 6: finalizando onboarding...');
-        const onboardingCompleted = await completeOnboarding(stepData);
-        if (!onboardingCompleted) {
-          console.error('[ONBOARDING_PAGE] Falha ao finalizar onboarding');
-          return;
-        }
+        console.log('[ONBOARDING_PAGE] Step 5 → Step 6: ir para tela de boas-vindas...');
+        // Não finalizar ainda, apenas ir para step 6
       }
     }
     
-    if (current_step === 6) {
-      console.log('[ONBOARDING_PAGE] Step 6 - redirecionamento direto ao dashboard');
-      setTimeout(() => {
-        window.location.href = '/dashboard';
-      }, 500);
-    } else {
+    if (current_step < 6) {
       await goToNextStep();
     }
   }, [current_step, data, saveStepData, completeOnboarding, goToNextStep]);
@@ -269,11 +260,12 @@ const OnboardingPage: React.FC = () => {
         return (
           <Step6Welcome
             ninaMessage={nina_message}
-            onFinish={() => {
-              console.log('[ONBOARDING_PAGE] Step6Welcome onFinish chamado - redirecionando');
-              setTimeout(() => {
-                window.location.href = '/dashboard';
-              }, 500);
+            onFinish={async () => {
+              console.log('[ONBOARDING_PAGE] Step6Welcome onFinish chamado - finalizando onboarding');
+              const success = await completeOnboarding(data.personalization);
+              if (success) {
+                console.log('[ONBOARDING_PAGE] Onboarding finalizado com sucesso - redirecionando');
+              }
             }}
           />
         );
@@ -290,7 +282,7 @@ const OnboardingPage: React.FC = () => {
       subtitle={currentStepConfig.subtitle}
       onPrevious={current_step > 1 ? goToPrevStep : undefined}
       onNext={current_step < 6 ? handleNext : undefined}
-      nextLabel={current_step === 5 ? 'Finalizar' : current_step === 6 ? 'Ir para Dashboard' : 'Continuar'}
+      nextLabel={current_step === 5 ? 'Ir para boas-vindas' : 'Continuar'}
       isLoading={isSaving}
       loadingMessage={loadingMessage}
       canProceed={canProceed()}
