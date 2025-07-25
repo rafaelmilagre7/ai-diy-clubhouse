@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/auth';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { getUserRoleName } from '@/lib/supabase/types';
+import { Loader2, Mail, Lock } from 'lucide-react';
 
 const AuthLayout = () => {
   const { signIn, user, profile, isLoading } = useAuth();
@@ -75,70 +76,93 @@ const AuthLayout = () => {
   // Não mostrar formulário se usuário já está logado
   if (user && profile) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black flex items-center justify-center p-4">
-        <div className="text-center text-white">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#0ABAB5] mx-auto mb-4"></div>
-          <p>Redirecionando...</p>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+        <div className="flex flex-col items-center space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin text-white" />
+          <p className="text-white/80">Redirecionando...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">VIVER DE IA</h1>
-          <p className="text-gray-400">Acesse sua conta</p>
-        </div>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 px-4 relative overflow-hidden">
+      {/* Elementos de fundo animados */}
+      <div className="absolute inset-0 w-full h-full">
+        <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-viverblue/20 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse animation-delay-2000" />
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-pink-500/10 rounded-full blur-3xl animate-pulse animation-delay-4000" />
+      </div>
 
+      <div className="relative z-10 w-full max-w-md space-y-8">
         <Tabs defaultValue="login" className="w-full">
-          <TabsList className="grid w-full grid-cols-1 bg-gray-800 border-gray-700">
-            <TabsTrigger value="login" className="text-white">Entrar</TabsTrigger>
-          </TabsList>
-          
           <TabsContent value="login">
-            <Card className="bg-gray-800 border-gray-700">
-              <CardHeader>
-                <CardTitle className="text-white">Bem-vindo de volta</CardTitle>
-                <CardDescription className="text-gray-400">
-                  Entre com suas credenciais para acessar o club
+            <Card className="backdrop-blur-lg bg-black/30 border border-white/10 shadow-2xl animate-fade-in">
+              <CardHeader className="space-y-1 text-center pb-8">
+                <div className="flex justify-center mb-8">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-viverblue/20 rounded-full blur-xl animate-pulse" />
+                    <img
+                      src="/lovable-uploads/fe3733f5-092e-4a4e-bdd7-650b71aaa801.png"
+                      alt="VIVER DE IA Club"
+                      className="relative h-20 w-auto object-contain hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
+                </div>
+                <CardTitle className="text-3xl font-bold text-white mb-2">
+                  Bem-vindo de volta
+                </CardTitle>
+                <CardDescription className="text-gray-300 text-base">
+                  Acesse sua conta do VIVER DE IA Club
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <form onSubmit={handleSignIn} className="space-y-4">
+              <CardContent className="space-y-6">
+                <form onSubmit={handleSignIn} className="space-y-6">
                   <div className="space-y-2">
-                    <Label htmlFor="email" className="text-white">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="seu@email.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
-                      disabled={isSigningIn}
-                      required
-                    />
+                    <Label htmlFor="email" className="text-white/90 font-medium">Email</Label>
+                    <div className="relative group">
+                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-viverblue transition-colors" />
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="Digite seu email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="pl-10 h-12 bg-white/5 border-white/20 text-white placeholder:text-gray-400 focus:bg-white/10 focus:border-viverblue/50 transition-all duration-200 rounded-lg"
+                        disabled={isSigningIn}
+                        required
+                      />
+                    </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="password" className="text-white">Senha</Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      placeholder="Sua senha"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
-                      disabled={isSigningIn}
-                      required
-                    />
+                    <Label htmlFor="password" className="text-white/90 font-medium">Senha</Label>
+                    <div className="relative group">
+                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-viverblue transition-colors" />
+                      <Input
+                        id="password"
+                        type="password"
+                        placeholder="Digite sua senha"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="pl-10 h-12 bg-white/5 border-white/20 text-white placeholder:text-gray-400 focus:bg-white/10 focus:border-viverblue/50 transition-all duration-200 rounded-lg"
+                        disabled={isSigningIn}
+                        required
+                      />
+                    </div>
                   </div>
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-[#0ABAB5] hover:bg-[#0ABAB5]/90 text-white"
+                  <Button
+                    type="submit"
+                    className="w-full h-12 bg-gradient-to-r from-viverblue to-purple-600 hover:from-viverblue-dark hover:to-purple-700 text-white font-semibold text-base rounded-lg shadow-lg hover:shadow-viverblue/25 transition-all duration-300 hover:scale-[1.02]"
                     disabled={isSigningIn || isLoading}
                   >
-                    {isSigningIn ? 'Entrando...' : 'Entrar'}
+                    {isSigningIn ? (
+                      <>
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        Entrando...
+                      </>
+                    ) : (
+                      'Entrar na plataforma'
+                    )}
                   </Button>
                 </form>
               </CardContent>
