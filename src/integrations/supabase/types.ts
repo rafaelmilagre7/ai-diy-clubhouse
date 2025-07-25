@@ -6139,7 +6139,7 @@ export type Database = {
         Returns: Json
       }
       toggle_topic_solved: {
-        Args: { p_topic_id: string; p_user_id?: string }
+        Args: { p_topic_id: string; p_user_id?: string } | { topic_id: string }
         Returns: Json
       }
       track_onboarding_step: {
