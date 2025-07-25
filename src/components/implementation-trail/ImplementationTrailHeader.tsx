@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Brain, Sparkles, TrendingUp, Target, Star } from 'lucide-react';
+import { Brain, TrendingUp, Target, Star, Award, Zap } from 'lucide-react';
 import { useAuth } from '@/contexts/auth';
 
 interface ImplementationTrailHeaderProps {
@@ -50,12 +50,12 @@ export const ImplementationTrailHeader = ({
                 <div className="absolute inset-0 rounded-2xl border border-viverblue/40 scale-110 animate-ping opacity-20" />
               </div>
               
-              {/* Floating sparkles with different timings */}
+              {/* Floating elements with professional icons */}
               <div className="absolute -top-2 -right-2">
-                <Sparkles className="h-6 w-6 text-yellow-400 animate-pulse group-hover:rotate-180 transition-transform duration-700" />
+                <Award className="h-6 w-6 text-yellow-500 animate-pulse group-hover:rotate-180 transition-transform duration-700" />
               </div>
               <div className="absolute -bottom-1 -left-1">
-                <Sparkles className="h-4 w-4 text-operational animate-pulse animation-delay-1000 opacity-60" />
+                <Zap className="h-4 w-4 text-operational animate-pulse animation-delay-1000 opacity-60" />
               </div>
               
               {/* User avatar integration */}
@@ -86,8 +86,8 @@ export const ImplementationTrailHeader = ({
               
               {/* Enhanced trust indicators */}
               <div className="flex items-center gap-4 flex-wrap">
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-yellow-400/10 rounded-full border border-yellow-400/20">
-                  <Star className="h-4 w-4 text-yellow-400 fill-current animate-pulse" />
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-yellow-500/10 rounded-full border border-yellow-500/20">
+                  <Star className="h-4 w-4 text-yellow-500 fill-current animate-pulse" />
                   <span className="text-sm font-medium text-muted-foreground">
                     Análise Avançada de IA
                   </span>
@@ -150,7 +150,7 @@ export const ImplementationTrailHeader = ({
               
               <div className="flex items-center gap-4 relative z-10">
                 <div className="p-3 bg-revenue/20 rounded-xl group-hover:scale-125 group-hover:rotate-12 transition-all duration-500 shadow-lg shadow-revenue/20">
-                  <Sparkles className="h-6 w-6 text-revenue group-hover:animate-spin" />
+                  <TrendingUp className="h-6 w-6 text-revenue group-hover:rotate-12 transition-transform duration-300" />
                 </div>
                 <div>
                   <div className="text-3xl font-bold text-foreground group-hover:text-revenue transition-colors duration-300">94%</div>
@@ -199,7 +199,7 @@ export const ImplementationTrailHeader = ({
                   >
                     {isRegenerating ? (
                       <span className="flex items-center gap-2">
-                        <Sparkles className="h-4 w-4 animate-spin" />
+                        <TrendingUp className="h-4 w-4 animate-spin" />
                         Regenerando...
                       </span>
                     ) : (

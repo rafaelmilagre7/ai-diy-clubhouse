@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Lightbulb, ArrowRight, Clock, Target, Sparkles, Zap, Star } from 'lucide-react';
+import { Lightbulb, ArrowRight, Clock, Target, Zap, Star, Award, TrendingUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useSolutionDataContext } from './contexts/SolutionDataContext';
 import { useImageURL } from '@/hooks/useImageURL';
@@ -173,7 +173,7 @@ export const SolutionRecommendationCard = ({
                     <span className="text-sm text-viverblue font-semibold relative z-10">
                       {recommendation.aiScore}%
                     </span>
-                    <Sparkles className="h-3 w-3 text-viverblue animate-pulse relative z-10 group-hover:scale-125 transition-transform duration-300" />
+                    <Award className="h-3 w-3 text-viverblue relative z-10 group-hover:scale-125 transition-transform duration-300" />
                   </div>
                 )}
               </div>
