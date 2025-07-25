@@ -30,19 +30,16 @@ export const ToolGrid: React.FC<ToolGridProps> = ({ selectedTools, onToolToggle 
         </div>
       ))}
       
-      {/* Opções Especiais */}
+      {/* Opção "Nenhuma ainda" */}
       <div className="space-y-3">
         <h4 className="text-sm font-semibold text-muted-foreground">Opções especiais</h4>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-          {SPECIAL_OPTIONS.map((option) => (
-            <SpecialOptionCard
-              key={option.id}
-              name={option.name}
-              icon={option.icon}
-              isSelected={selectedTools.includes(option.name)}
-              onToggle={onToolToggle}
-            />
-          ))}
+          <SpecialOptionCard
+            name="Nenhuma ainda"
+            icon="❌"
+            isSelected={selectedTools.length === 0}
+            onToggle={() => onToolToggle('Nenhuma ainda')}
+          />
         </div>
       </div>
     </div>

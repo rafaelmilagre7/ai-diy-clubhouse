@@ -29,6 +29,7 @@ export interface OnboardingData {
     experience_level: string;
     implementation_status: string;
     implementation_approach: string;
+    current_tools?: string[];
   };
   
   // Step 4: Objetivos

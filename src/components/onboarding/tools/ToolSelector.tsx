@@ -26,7 +26,7 @@ export const ToolSelector: React.FC<ToolSelectorProps> = ({
       <div className="flex items-center justify-between">
         <Label className="flex items-center gap-2">
           <CheckSquare className="w-4 h-4" />
-          Quais ferramentas de IA você já usa? (selecione todas que se aplicam)
+          Quais ferramentas de IA você já usa? (opcional)
         </Label>
         {selectionCount > 0 && (
           <span className="text-xs text-muted-foreground bg-primary/10 px-2 py-1 rounded-full">
