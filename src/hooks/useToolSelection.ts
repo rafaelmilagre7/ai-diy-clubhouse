@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
 export interface UseToolSelectionProps {
   initialTools?: string[];
@@ -12,8 +12,28 @@ export const useToolSelection = ({
   // Inicializar com ferramentas existentes ou "Nenhuma ainda" como padrão
   const [selectedTools, setSelectedTools] = useState<string[]>(() => {
     console.log('[TOOL_SELECTION] 🚀 Inicializando com:', initialTools);
-    return initialTools.length > 0 ? initialTools : ['Nenhuma ainda'];
+    // Se initialTools tem valores e não contém apenas "Nenhuma ainda", use-os
+    if (initialTools.length > 0 && !(initialTools.length === 1 && initialTools[0] === 'Nenhuma ainda')) {
+      return initialTools;
+    }
+    return ['Nenhuma ainda'];
   });
+
+  // Sincronizar com initialTools quando mudarem (evitando loops desnecessários)
+  useEffect(() => {
+    const currentToolsStr = JSON.stringify([...selectedTools].sort());
+    const initialToolsStr = JSON.stringify([...initialTools].sort());
+    
+    // Só sincroniza se realmente mudou e não é apenas um re-render
+    if (initialToolsStr !== currentToolsStr && initialTools.length > 0) {
+      console.log('[TOOL_SELECTION] 🔄 Sincronizando com initialTools:', initialTools);
+      
+      // Se initialTools tem valores válidos e diferentes do estado atual
+      if (!(initialTools.length === 1 && initialTools[0] === 'Nenhuma ainda' && selectedTools.includes('Nenhuma ainda'))) {
+        setSelectedTools(initialTools.length > 0 ? initialTools : ['Nenhuma ainda']);
+      }
+    }
+  }, [initialTools]); // Removido selectedTools da dependência para evitar loops
 
   const toggleTool = useCallback((toolName: string) => {
     console.log('[TOOL_SELECTION] 🖱️ Toggle para:', toolName);
