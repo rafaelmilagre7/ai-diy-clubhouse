@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 
 export interface UseToolSelectionProps {
   initialTools?: string[];
@@ -9,17 +9,29 @@ export const useToolSelection = ({
   initialTools = [], 
   onSelectionChange 
 }: UseToolSelectionProps = {}) => {
-  // Inicializar apenas uma vez com as ferramentas fornecidas
+  // Usar ref para evitar re-inicializações desnecessárias
+  const initializedRef = useRef(false);
+  const lastNotifiedRef = useRef<string>('');
+  
+  // Inicializar apenas uma vez
   const [selectedTools, setSelectedTools] = useState<string[]>(() => {
     console.log('[TOOL_SELECTION] 🚀 Inicializando com:', initialTools);
     if (initialTools && initialTools.length > 0) {
-      // Se tem ferramentas válidas (não apenas "Nenhuma ainda"), use-as
-      if (!(initialTools.length === 1 && initialTools[0] === 'Nenhuma ainda')) {
-        return initialTools;
-      }
+      return initialTools;
     }
     return ['Nenhuma ainda'];
   });
+
+  // Sincronizar apenas quando initialTools muda significativamente
+  useEffect(() => {
+    if (initializedRef.current) return; // Já foi inicializado
+    
+    if (initialTools && initialTools.length > 0) {
+      console.log('[TOOL_SELECTION] 🔄 Sincronizando com initialTools:', initialTools);
+      setSelectedTools(initialTools);
+      initializedRef.current = true;
+    }
+  }, [initialTools]);
 
   const toggleTool = useCallback((toolName: string) => {
     console.log('[TOOL_SELECTION] 🖱️ Toggle para:', toolName);
@@ -54,8 +66,10 @@ export const useToolSelection = ({
       
       console.log('[TOOL_SELECTION] 🔄 Mudança:', prevSelected, '→', newSelection);
       
-      // Notificar mudança
-      if (onSelectionChange) {
+      // Evitar notificações duplicadas
+      const newSelectionStr = JSON.stringify(newSelection.sort());
+      if (onSelectionChange && lastNotifiedRef.current !== newSelectionStr) {
+        lastNotifiedRef.current = newSelectionStr;
         onSelectionChange(newSelection);
       }
       

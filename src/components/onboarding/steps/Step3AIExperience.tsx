@@ -80,9 +80,12 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
     console.log('[STEP3] 🛠️ Ferramentas alteradas:', tools);
     // Evitar loop - só chama setValue se realmente mudou
     const currentTools = form.getValues('current_tools') || [];
-    const toolsChanged = JSON.stringify(currentTools.sort()) !== JSON.stringify(tools.sort());
-    if (toolsChanged) {
-      form.setValue('current_tools', tools);
+    const toolsStr1 = JSON.stringify(currentTools.sort());
+    const toolsStr2 = JSON.stringify(tools.sort());
+    
+    if (toolsStr1 !== toolsStr2) {
+      console.log('[STEP3] 🔄 Atualizando ferramentas no form');
+      form.setValue('current_tools', tools, { shouldValidate: true });
     }
   }, [form]);
 
