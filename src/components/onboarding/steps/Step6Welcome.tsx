@@ -100,15 +100,6 @@ export const Step6Welcome: React.FC<Step6WelcomeProps> = ({
         <p className="text-muted-foreground">
           Sua experiência personalizada já está configurada. Vamos começar sua transformação digital!
         </p>
-        
-        <Button 
-          onClick={onFinish}
-          size="lg" 
-          className="w-full md:w-auto px-8 py-3 text-lg font-semibold group"
-        >
-          Ir para o Dashboard
-          <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-        </Button>
       </div>
 
       <div className="pt-6 border-t border-border/50">
