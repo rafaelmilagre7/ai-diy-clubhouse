@@ -2,8 +2,10 @@
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { OverviewTab } from './tabs/OverviewTab';
-import { SolutionsTab } from './tabs/SolutionsTab';
 import { Eye, Target, GraduationCap, Sparkles } from 'lucide-react';
+
+// Import SolutionsTab dinamicamente para evitar conflitos
+const SolutionsTab = React.lazy(() => import('./tabs/SolutionsTab').then(m => ({ default: m.SolutionsTab })));
 
 interface ImplementationTrail {
   priority1: Array<{
@@ -78,7 +80,12 @@ export const ImplementationTrailTabs = ({ trail }: ImplementationTrailTabsProps)
         </TabsContent>
 
         <TabsContent value="solutions" className="mt-6 animate-fade-in">
-          <SolutionsTab trail={trail} />
+          <React.Suspense fallback={<div className="animate-pulse space-y-4">
+            <div className="h-6 bg-muted rounded w-1/4"></div>
+            <div className="h-32 bg-muted rounded"></div>
+          </div>}>
+            <SolutionsTab trail={trail} />
+          </React.Suspense>
         </TabsContent>
       </Tabs>
     </div>
