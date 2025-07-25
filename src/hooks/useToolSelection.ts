@@ -32,12 +32,10 @@ export const useToolSelection = ({
       
       console.log('[TOOL_SELECTION] 🔄 Mudança:', prevSelected, '→', newSelection);
       
-      // Notificar mudança de forma assíncrona para evitar loops
-      setTimeout(() => {
-        if (onSelectionChange) {
-          onSelectionChange(newSelection);
-        }
-      }, 0);
+      // Notificar mudança de forma síncrona
+      if (onSelectionChange) {
+        onSelectionChange(newSelection);
+      }
       
       return newSelection;
     });

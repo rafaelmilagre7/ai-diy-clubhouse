@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AITool } from '@/data/aiTools';
@@ -16,6 +16,11 @@ export const ToolCard: React.FC<ToolCardProps> = ({ tool, isSelected, onToggle }
     console.log('[TOOL_CARD] ❌ Erro ao carregar imagem:', tool.name);
     setImageError(true);
   };
+
+  // Função estável para evitar re-renders
+  const handleCheckboxChange = useCallback(() => {
+    // Função vazia mas estável
+  }, []);
 
   return (
     <Card 
@@ -53,7 +58,7 @@ export const ToolCard: React.FC<ToolCardProps> = ({ tool, isSelected, onToggle }
         </span>
         <Checkbox
           checked={isSelected}
-          onChange={() => {}} // Apenas visual
+          onCheckedChange={handleCheckboxChange}
           className="pointer-events-none"
         />
       </CardContent>
