@@ -19,23 +19,33 @@ export const OnboardingBanner: React.FC = () => {
   }, [user, profile]);
 
   const checkIfShouldShowBanner = async () => {
-    if (!user || !profile) return;
+    if (!user || !profile) {
+      console.log('🎯 [BANNER] Sem user ou profile:', { hasUser: !!user, hasProfile: !!profile });
+      return;
+    }
+
+    console.log('🎯 [BANNER] Verificando se deve mostrar banner:', {
+      userId: user.id.substring(0, 8) + '***',
+      onboardingCompleted: profile.onboarding_completed,
+      profileData: profile
+    });
 
     // Verificar se banner foi dismissado
     const dismissed = localStorage.getItem(`onboarding-banner-dismissed-${user.id}`);
     if (dismissed) {
+      console.log('🎯 [BANNER] Banner foi dismissado anteriormente');
       setIsDismissed(true);
       return;
     }
 
     // Se usuário não completou onboarding, mostrar banner sempre
     if (!profile.onboarding_completed) {
-      setShowBanner(true);
       console.log('🎯 [BANNER] Usuário sem onboarding concluído - mostrando banner');
+      setShowBanner(true);
       return;
     }
 
-    // REMOVIDO: Lógica legacy desnecessária - banner deve aparecer para TODOS os usuários sem onboarding concluído
+    console.log('🎯 [BANNER] Usuário já completou onboarding - não mostrando banner');
   };
 
   const handleStartOnboarding = async () => {
