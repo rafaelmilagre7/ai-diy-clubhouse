@@ -12,7 +12,7 @@ export const useToolSelection = ({
   // Estado simples sem refs complexos
   const [selectedTools, setSelectedTools] = useState<string[]>(() => {
     console.log('[TOOL_SELECTION] 🚀 Inicializando com:', initialTools);
-    if (initialTools && initialTools.length > 0 && !initialTools.includes('Nenhuma ainda')) {
+    if (initialTools && initialTools.length > 0) {
       return initialTools;
     }
     return [];
@@ -20,7 +20,7 @@ export const useToolSelection = ({
 
   // Sincronizar com initialTools apenas uma vez
   useEffect(() => {
-    if (initialTools && initialTools.length > 0 && !initialTools.includes('Nenhuma ainda')) {
+    if (initialTools && initialTools.length > 0) {
       console.log('[TOOL_SELECTION] 🔄 Sincronizando com initialTools:', initialTools);
       setSelectedTools(initialTools);
     }
@@ -32,20 +32,14 @@ export const useToolSelection = ({
     setSelectedTools(prevSelected => {
       let newSelection: string[];
       
-      if (toolName === 'Nenhuma ainda') {
-        // Se clicou em "Nenhuma ainda", limpar tudo
-        newSelection = [];
-        console.log('[TOOL_SELECTION] ✅ Limpando seleção');
+      if (prevSelected.includes(toolName)) {
+        // Remover ferramenta existente
+        newSelection = prevSelected.filter(tool => tool !== toolName);
+        console.log('[TOOL_SELECTION] ➖ Removendo:', toolName);
       } else {
-        if (prevSelected.includes(toolName)) {
-          // Remover ferramenta existente
-          newSelection = prevSelected.filter(tool => tool !== toolName);
-          console.log('[TOOL_SELECTION] ➖ Removendo:', toolName);
-        } else {
-          // Adicionar nova ferramenta
-          newSelection = [...prevSelected, toolName];
-          console.log('[TOOL_SELECTION] ➕ Adicionando:', toolName);
-        }
+        // Adicionar nova ferramenta
+        newSelection = [...prevSelected, toolName];
+        console.log('[TOOL_SELECTION] ➕ Adicionando:', toolName);
       }
       
       console.log('[TOOL_SELECTION] 🔄 Mudança:', prevSelected, '→', newSelection);
