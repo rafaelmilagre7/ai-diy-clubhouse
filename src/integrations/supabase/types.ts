@@ -5663,6 +5663,10 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: Json
       }
+      get_user_profile_optimized_secure: {
+        Args: { target_user_id: string }
+        Returns: Json
+      }
       get_user_profile_safe: {
         Args: { target_user_id: string }
         Returns: {
@@ -5779,11 +5783,19 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      initialize_onboarding_for_all_users_secure: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       initialize_onboarding_for_user: {
         Args: { p_user_id: string; p_invite_token?: string }
         Returns: Json
       }
       invalidate_profile_cache: {
+        Args: { user_id?: string }
+        Returns: undefined
+      }
+      invalidate_profile_cache_secure: {
         Args: { user_id?: string }
         Returns: undefined
       }
