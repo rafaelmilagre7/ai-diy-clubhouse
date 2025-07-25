@@ -4909,11 +4909,19 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      check_admin_access_secure: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       check_and_fix_onboarding_data: {
         Args: { user_id_param: string }
         Returns: Json
       }
       check_comment_rate_limit: {
+        Args: { p_user_id: string }
+        Returns: boolean
+      }
+      check_comment_rate_limit_secure: {
         Args: { p_user_id: string }
         Returns: boolean
       }
@@ -4936,6 +4944,10 @@ export type Database = {
         Returns: boolean
       }
       check_nps_rate_limit: {
+        Args: { p_user_id: string; p_lesson_id: string }
+        Returns: boolean
+      }
+      check_nps_rate_limit_secure: {
         Args: { p_user_id: string; p_lesson_id: string }
         Returns: boolean
       }
