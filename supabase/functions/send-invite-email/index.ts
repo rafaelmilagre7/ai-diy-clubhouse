@@ -13,9 +13,9 @@ const corsHeaders = {
 interface SendInviteEmailRequest {
   inviteId: string;
   email: string;
-  token: string;
+  inviteUrl: string;
   roleName: string;
-  invitedByName: string;
+  senderName: string;
   expiresAt: string;
   notes?: string;
 }
@@ -50,12 +50,12 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('📧 [SEND-INVITE-EMAIL] Dados recebidos:', {
       email: body.email,
       roleName: body.roleName,
-      invitedBy: body.invitedByName
+      invitedBy: body.senderName,
+      inviteUrl: body.inviteUrl
     });
 
-    // Construir URL do convite
-    const baseUrl = supabaseUrl.replace('.supabase.co', '.lovableproject.com');
-    const inviteUrl = `${baseUrl}/invite/${body.token}`;
+    // Usar a URL do convite fornecida
+    const inviteUrl = body.inviteUrl;
     
     console.log('🔗 [SEND-INVITE-EMAIL] URL do convite:', inviteUrl);
 
@@ -63,7 +63,7 @@ const handler = async (req: Request): Promise<Response> => {
     const emailHtml = await renderAsync(
       React.createElement(InviteEmail, {
         inviteUrl,
-        invitedByName: body.invitedByName,
+        invitedByName: body.senderName, // Corrigido: usar senderName ao invés de invitedByName
         recipientEmail: body.email,
         roleName: body.roleName,
         companyName: 'Viver de IA',
