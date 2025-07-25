@@ -4815,33 +4815,6 @@ export type Database = {
       }
     }
     Views: {
-      admin_analytics_overview: {
-        Row: {
-          active_learners: number | null
-          active_users_7d: number | null
-          completed_implementations: number | null
-          completed_onboarding: number | null
-          completion_rate: number | null
-          growth_rate: number | null
-          new_solutions_30d: number | null
-          new_users_30d: number | null
-          total_lessons: number | null
-          total_solutions: number | null
-          total_users: number | null
-        }
-        Relationships: []
-      }
-      invite_dashboard_stats: {
-        Row: {
-          active_invites: number | null
-          conversion_rate: number | null
-          expired_invites: number | null
-          recent_invites: number | null
-          total_invites: number | null
-          used_invites: number | null
-        }
-        Relationships: []
-      }
       nps_analytics_view: {
         Row: {
           course_id: string | null
@@ -5456,7 +5429,19 @@ export type Database = {
       }
       get_admin_analytics_overview: {
         Args: Record<PropertyKey, never>
-        Returns: Json
+        Returns: {
+          total_users: number
+          new_users_30d: number
+          active_users_7d: number
+          completed_onboarding: number
+          total_solutions: number
+          new_solutions_30d: number
+          growth_rate: number
+          completed_implementations: number
+          total_lessons: number
+          active_learners: number
+          completion_rate: number
+        }[]
       }
       get_admin_stats: {
         Args: Record<PropertyKey, never>
@@ -5517,7 +5502,14 @@ export type Database = {
       }
       get_invite_dashboard_stats: {
         Args: Record<PropertyKey, never>
-        Returns: Json
+        Returns: {
+          total_invites: number
+          active_invites: number
+          used_invites: number
+          expired_invites: number
+          recent_invites: number
+          conversion_rate: number
+        }[]
       }
       get_learning_courses_with_stats: {
         Args: Record<PropertyKey, never>
