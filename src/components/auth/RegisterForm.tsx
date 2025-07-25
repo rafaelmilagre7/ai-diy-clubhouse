@@ -65,10 +65,10 @@ const RegisterForm = ({ inviteToken, prefilledEmail }: RegisterFormProps = {}) =
       
       if (error) throw error;
       
-      // Se há um token de convite, aplicar usando a função do Supabase
+      // Se há um token de convite, aplicar usando a função correta com onboarding
       if (inviteToken && data.user) {
         try {
-          const { data: inviteResult, error: inviteError } = await supabase.rpc('use_invite', {
+          const { data: inviteResult, error: inviteError } = await supabase.rpc('use_invite_with_onboarding', {
             invite_token: inviteToken,
             user_id: data.user.id
           });

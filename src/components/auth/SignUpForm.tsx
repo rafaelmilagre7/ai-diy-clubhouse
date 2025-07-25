@@ -144,7 +144,7 @@ const SignUpForm = ({ onBackToLogin }: SignUpFormProps) => {
         // Se tem token de convite, aplicar agora
         if (inviteToken) {
           try {
-            const { data: inviteResult, error: inviteError } = await supabase.rpc('use_invite_enhanced', {
+            const { data: inviteResult, error: inviteError } = await supabase.rpc('use_invite_with_onboarding', {
               invite_token: inviteToken,
               user_id: data.user.id
             });
