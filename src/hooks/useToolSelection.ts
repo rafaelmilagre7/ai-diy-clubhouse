@@ -9,12 +9,14 @@ export const useToolSelection = ({
   initialTools = [], 
   onSelectionChange 
 }: UseToolSelectionProps = {}) => {
-  // Inicializar com ferramentas existentes ou "Nenhuma ainda" como padrão
+  // Inicializar apenas uma vez com as ferramentas fornecidas
   const [selectedTools, setSelectedTools] = useState<string[]>(() => {
     console.log('[TOOL_SELECTION] 🚀 Inicializando com:', initialTools);
-    // Se initialTools tem valores e não contém apenas "Nenhuma ainda", use-os
-    if (initialTools.length > 0 && !(initialTools.length === 1 && initialTools[0] === 'Nenhuma ainda')) {
-      return initialTools;
+    if (initialTools && initialTools.length > 0) {
+      // Se tem ferramentas válidas (não apenas "Nenhuma ainda"), use-as
+      if (!(initialTools.length === 1 && initialTools[0] === 'Nenhuma ainda')) {
+        return initialTools;
+      }
     }
     return ['Nenhuma ainda'];
   });

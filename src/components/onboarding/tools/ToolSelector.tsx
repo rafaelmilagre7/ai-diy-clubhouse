@@ -19,6 +19,7 @@ export const ToolSelector: React.FC<ToolSelectorProps> = ({
   });
 
   console.log('[TOOL_SELECTOR] 🔄 Renderizando com:', selectedTools, 'Count:', selectionCount);
+  console.log('[TOOL_SELECTOR] 📥 initialTools recebido:', initialTools);
 
   return (
     <div className="space-y-4">

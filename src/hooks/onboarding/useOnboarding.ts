@@ -156,9 +156,29 @@ export const useOnboarding = () => {
 
       if (data) {
         console.log('[ONBOARDING] Setando estado com dados carregados');
+        
+        // Determinar o próximo step baseado nos dados existentes
+        let nextStep = data.current_step;
+        
+        // Se current_step está atrasado, calcular o próximo step baseado nos dados
+        if (data.personal_info && Object.keys(data.personal_info).length > 0) {
+          nextStep = Math.max(nextStep, 2);
+        }
+        if (data.professional_info && Object.keys(data.professional_info).length > 0) {
+          nextStep = Math.max(nextStep, 3);
+        }
+        if (data.ai_experience && Object.keys(data.ai_experience).length > 0) {
+          nextStep = Math.max(nextStep, 4);
+        }
+        if (data.goals_info && Object.keys(data.goals_info).length > 0) {
+          nextStep = Math.max(nextStep, 5);
+        }
+        
+        console.log('[ONBOARDING] Step calculado:', nextStep);
+        
         setState({
           id: data.id,
-          current_step: data.current_step,
+          current_step: nextStep,
           completed_steps: data.completed_steps || [],
           is_completed: data.is_completed,
           nina_message: data.nina_message,
