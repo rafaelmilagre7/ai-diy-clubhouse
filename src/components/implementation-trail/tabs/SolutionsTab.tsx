@@ -86,7 +86,42 @@ export const SolutionsTab: React.FC<SolutionsTabProps> = ({ trail }) => {
           throw error;
         }
 
-        console.log('✅ Soluções carregadas:', data?.length || 0);
+        console.log('✅ Soluções encontradas:', data?.length || 0, 'de', allSolutionIds.length, 'solicitadas');
+
+        // Se não encontramos nenhuma solução com os IDs da trilha, buscar soluções atuais do banco
+        if (!data || data.length === 0) {
+          console.log('⚠️ Nenhuma solução encontrada com os IDs da trilha. Buscando soluções atuais...');
+          
+          const { data: currentSolutions, error: currentError } = await supabase
+            .from('solutions')
+            .select('id, title, description, category, difficulty, thumbnail_url')
+            .eq('published', true)
+            .order('created_at', { ascending: false })
+            .limit(5);
+
+          if (currentError) {
+            console.error('❌ Erro ao buscar soluções atuais:', currentError);
+            throw currentError;
+          }
+
+          console.log('✅ Usando soluções atuais:', currentSolutions?.length || 0);
+          
+          // Mapear as soluções atuais para os slots da trilha
+          const solutionsMap: Record<string, Solution> = {};
+          
+          if (currentSolutions && currentSolutions.length > 0) {
+            // Mapear soluções atuais para os IDs da trilha
+            allSolutionIds.forEach((originalId, index) => {
+              if (currentSolutions[index]) {
+                solutionsMap[originalId] = currentSolutions[index];
+              }
+            });
+          }
+          
+          setSolutions(solutionsMap);
+          setLoading(false);
+          return;
+        }
 
         // Create a mapping of solution ID to solution data
         const solutionsMap: Record<string, Solution> = {};
