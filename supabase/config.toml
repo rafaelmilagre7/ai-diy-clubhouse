@@ -52,6 +52,12 @@ verify_jwt = true
 [functions.enhance-trail-with-ai]
 verify_jwt = true
 
+[functions.generate-smart-trail]
+verify_jwt = true
+
+[functions.generate-implementation-trail]
+verify_jwt = true
+
 [functions.list-panda-videos]
 verify_jwt = true
 

@@ -99,9 +99,12 @@ export function useImplementationTrail() {
       console.log('🚀 Gerando trilha inteligente para usuário:', user.id);
 
       // Chamar a edge function de geração inteligente
+      console.log('🚀 Chamando generate-smart-trail para usuário:', user.id);
       const { data, error } = await supabase.functions.invoke('generate-smart-trail', {
         body: { userId: user.id }
       });
+
+      console.log('📋 Resposta da edge function:', { data, error });
 
       if (error) {
         throw new Error(error.message || 'Erro ao gerar trilha');
