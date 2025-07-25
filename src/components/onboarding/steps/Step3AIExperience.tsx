@@ -6,13 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Bot, Zap } from 'lucide-react';
-import { ToolSelector } from '@/components/onboarding/tools/ToolSelector';
 
 const aiExperienceSchema = z.object({
   experience_level: z.string().min(1, 'Selecione seu nível de experiência'),
   implementation_status: z.string().min(1, 'Selecione o status da implementação'),
   implementation_approach: z.string().min(1, 'Selecione como pretende implementar'),
-  current_tools: z.array(z.string()).optional(),
 });
 
 type AIExperienceFormData = z.infer<typeof aiExperienceSchema>;
@@ -36,7 +34,6 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
       experience_level: initialData?.experience_level || '',
       implementation_status: initialData?.implementation_status || '',
       implementation_approach: initialData?.implementation_approach || '',
-      current_tools: initialData?.current_tools || [],
     },
     mode: 'onChange',
   });
@@ -61,7 +58,6 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
         experience_level: data.experience_level || '',
         implementation_status: data.implementation_status || '',
         implementation_approach: data.implementation_approach || '',
-        current_tools: data.current_tools || []
       };
       
       console.log('[STEP3] 📝 Mudança no form detectada:', completeData);
@@ -74,11 +70,6 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
   const handleSelectChange = useCallback((field: keyof AIExperienceFormData, value: string) => {
     console.log('[STEP3] 🔄 Campo alterado:', field, '=', value);
     form.setValue(field, value);
-  }, [form]);
-
-  const handleToolSelectionChange = useCallback((tools: string[]) => {
-    console.log('[STEP3] 🛠️ Ferramentas alteradas:', tools);
-    form.setValue('current_tools', tools, { shouldValidate: true });
   }, [form]);
 
   const handleSubmit = useCallback((data: AIExperienceFormData) => {
@@ -185,12 +176,6 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
             </p>
           )}
         </div>
-
-        {/* Seletor de Ferramentas */}
-        <ToolSelector
-          initialTools={initialData?.current_tools}
-          onSelectionChange={handleToolSelectionChange}
-        />
 
         {/* Botão de Continuar */}
         <div className="flex justify-center pt-6">
