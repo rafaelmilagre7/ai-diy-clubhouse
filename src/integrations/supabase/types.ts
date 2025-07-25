@@ -5952,7 +5952,7 @@ export type Database = {
               p_ip_address?: unknown
               p_user_agent?: string
             }
-        Returns: string
+        Returns: undefined
       }
       log_security_violation: {
         Args:
