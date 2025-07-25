@@ -18,13 +18,16 @@ export const useToolSelection = ({
     return [];
   });
 
-  // Sincronizar com initialTools apenas uma vez
+  // Sincronizar com initialTools quando mudar
   useEffect(() => {
     if (initialTools && initialTools.length > 0) {
       console.log('[TOOL_SELECTION] 🔄 Sincronizando com initialTools:', initialTools);
       setSelectedTools(initialTools);
+    } else if (initialTools && initialTools.length === 0) {
+      console.log('[TOOL_SELECTION] 🔄 Limpando seleção (array vazio)');
+      setSelectedTools([]);
     }
-  }, []);
+  }, [initialTools]);
 
   const toggleTool = useCallback((toolName: string) => {
     console.log('[TOOL_SELECTION] 🖱️ Toggle para:', toolName);
