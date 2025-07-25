@@ -76,7 +76,7 @@ const AuthLayout = () => {
   // Não mostrar formulário se usuário já está logado
   if (user && profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
         <div className="flex flex-col items-center space-y-4">
           <Loader2 className="h-8 w-8 animate-spin text-white" />
           <p className="text-white/80">Redirecionando...</p>
@@ -86,12 +86,12 @@ const AuthLayout = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 px-4 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 px-4 relative overflow-hidden">
       {/* Elementos de fundo animados */}
       <div className="absolute inset-0 w-full h-full">
         <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-viverblue/20 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse animation-delay-2000" />
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-pink-500/10 rounded-full blur-3xl animate-pulse animation-delay-4000" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl animate-pulse animation-delay-2000" />
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl animate-pulse animation-delay-4000" />
       </div>
 
       <div className="relative z-10 w-full max-w-md space-y-8">
@@ -152,7 +152,7 @@ const AuthLayout = () => {
                   </div>
                   <Button
                     type="submit"
-                    className="w-full h-12 bg-gradient-to-r from-viverblue to-purple-600 hover:from-viverblue-dark hover:to-purple-700 text-white font-semibold text-base rounded-lg shadow-lg hover:shadow-viverblue/25 transition-all duration-300 hover:scale-[1.02]"
+                    className="w-full h-12 bg-gradient-to-r from-viverblue to-blue-600 hover:from-viverblue-dark hover:to-blue-700 text-white font-semibold text-base rounded-lg shadow-lg hover:shadow-viverblue/25 transition-all duration-300 hover:scale-[1.02]"
                     disabled={isSigningIn || isLoading}
                   >
                     {isSigningIn ? (
