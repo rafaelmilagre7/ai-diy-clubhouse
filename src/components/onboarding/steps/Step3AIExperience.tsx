@@ -78,7 +78,12 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
 
   const handleToolSelectionChange = useCallback((tools: string[]) => {
     console.log('[STEP3] 🛠️ Ferramentas alteradas:', tools);
-    form.setValue('current_tools', tools);
+    // Evitar loop - só chama setValue se realmente mudou
+    const currentTools = form.getValues('current_tools') || [];
+    const toolsChanged = JSON.stringify(currentTools.sort()) !== JSON.stringify(tools.sort());
+    if (toolsChanged) {
+      form.setValue('current_tools', tools);
+    }
   }, [form]);
 
   const handleSubmit = useCallback((data: AIExperienceFormData) => {
