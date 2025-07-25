@@ -59,20 +59,19 @@ export const SolutionsTab: React.FC<SolutionsTabProps> = ({ trail }) => {
   useEffect(() => {
     const fetchSolutions = async () => {
       try {
-        setLoading(true);
-        
         // Get all solution IDs from trail
         const allSolutionIds = [
-          ...trail.priority1.map(item => item.solutionId),
-          ...trail.priority2.map(item => item.solutionId),
-          ...trail.priority3.map(item => item.solutionId)
-        ];
+          ...(trail.priority1 || []).map(item => item.solutionId),
+          ...(trail.priority2 || []).map(item => item.solutionId),
+          ...(trail.priority3 || []).map(item => item.solutionId)
+        ].filter(Boolean);
 
         console.log('🔍 Carregando soluções para IDs:', allSolutionIds);
 
         if (allSolutionIds.length === 0) {
           console.log('⚠️ Nenhum ID de solução encontrado na trilha');
           setSolutions({});
+          setLoading(false);
           return;
         }
 
@@ -101,10 +100,10 @@ export const SolutionsTab: React.FC<SolutionsTabProps> = ({ trail }) => {
         // Em caso de erro, criar soluções mock para demonstração
         const mockSolutions: Record<string, Solution> = {};
         const allSolutionIds = [
-          ...trail.priority1.map(item => item.solutionId),
-          ...trail.priority2.map(item => item.solutionId),
-          ...trail.priority3.map(item => item.solutionId)
-        ];
+          ...(trail.priority1 || []).map(item => item.solutionId),
+          ...(trail.priority2 || []).map(item => item.solutionId),
+          ...(trail.priority3 || []).map(item => item.solutionId)
+        ].filter(Boolean);
 
         allSolutionIds.forEach((id, index) => {
           mockSolutions[id] = {
@@ -112,7 +111,7 @@ export const SolutionsTab: React.FC<SolutionsTabProps> = ({ trail }) => {
             title: `Solução ${index + 1}`,
             description: 'Esta é uma solução de demonstração com dados mock.',
             category: 'IA & Automação',
-            difficulty: index % 3 === 0 ? 'Iniciante' : index % 3 === 1 ? 'Intermediário' : 'Avançado',
+            difficulty: index % 3 === 0 ? 'easy' : index % 3 === 1 ? 'medium' : 'advanced',
             thumbnail_url: undefined
           };
         });
@@ -123,8 +122,11 @@ export const SolutionsTab: React.FC<SolutionsTabProps> = ({ trail }) => {
       }
     };
 
-    if (trail) {
+    if (trail && trail.priority1) {
+      setLoading(true);
       fetchSolutions();
+    } else {
+      setLoading(false);
     }
   }, [trail]);
 
