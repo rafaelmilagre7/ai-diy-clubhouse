@@ -220,7 +220,7 @@ const OnboardingPage: React.FC = () => {
     },
   };
 
-  const currentStepConfig = stepConfig[current_step as keyof typeof stepConfig];
+  const currentStepConfig = stepConfig[current_step as keyof typeof stepConfig] || stepConfig[1];
 
   // Função para renderizar o componente do step atual
   const renderCurrentStep = () => {

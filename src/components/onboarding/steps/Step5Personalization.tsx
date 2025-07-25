@@ -47,7 +47,7 @@ export const Step5Personalization: React.FC<Step5PersonalizationProps> = ({
     const newData = { ...currentData, ...watchedFields };
     setCurrentData(newData);
     onDataChange(newData);
-  }, [watchedFields, onDataChange]);
+  }, [watchedFields]); // Removido onDataChange para evitar loop infinito
 
   const handleSubmit = (data: PersonalizationFormData) => {
     onNext();
