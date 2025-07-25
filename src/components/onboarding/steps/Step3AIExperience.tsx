@@ -177,16 +177,6 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
           )}
         </div>
 
-        {/* Botão de Continuar */}
-        <div className="flex justify-center pt-6">
-          <Button 
-            type="submit" 
-            className="w-full h-12 bg-primary hover:bg-primary/90"
-            disabled={!isFormValid}
-          >
-            Continuar
-          </Button>
-        </div>
       </form>
     </div>
   );
