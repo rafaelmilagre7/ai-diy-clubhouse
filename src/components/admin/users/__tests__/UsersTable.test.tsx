@@ -28,11 +28,14 @@ describe('UsersTable', () => {
     canEditRoles: true,
     canDeleteUsers: true,
     canResetPasswords: true,
+    canResetUsers: true,
+    canToggleStatus: true,
     onEditRole: jest.fn(),
     onDeleteUser: jest.fn(),
     onResetPassword: jest.fn(),
     onResetUser: jest.fn(),
     onRefresh: jest.fn(),
+    onToggleStatus: jest.fn(),
   };
 
   it('renders correctly with users', () => {
