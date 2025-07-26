@@ -16,15 +16,24 @@ export const PersonalizedMessage = ({ message }: PersonalizedMessageProps) => {
             <Brain className="h-6 w-6 text-viverblue" />
           </div>
           <div className="flex-1">
-            <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center gap-2 mb-4">
               <Sparkles className="h-5 w-5 text-viverblue" />
               <h3 className="text-high-contrast font-semibold text-lg">
-                Mensagem Personalizada da IA
+                Mensagem da IA
               </h3>
             </div>
-            <p className="text-high-contrast leading-relaxed">
-              {message}
-            </p>
+            <div className="text-high-contrast leading-relaxed space-y-3">
+              {message.split('. ').map((sentence, index, array) => {
+                if (index === array.length - 1 && sentence.trim() === '') return null;
+                const cleanSentence = sentence.trim();
+                if (!cleanSentence) return null;
+                return (
+                  <p key={index} className="text-sm">
+                    {cleanSentence}{index < array.length - 1 && !cleanSentence.endsWith('.') ? '.' : ''}
+                  </p>
+                );
+              })}
+            </div>
           </div>
         </div>
       </CardContent>
