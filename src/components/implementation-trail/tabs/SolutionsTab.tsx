@@ -190,11 +190,12 @@ export const SolutionsTab: React.FC<SolutionsTabProps> = ({ trail }) => {
     if (!solution) {
       return (
         <Card className="group relative overflow-hidden border border-border/50 bg-gradient-to-br from-card to-muted/30 backdrop-blur-sm animate-pulse">
-          <div className="flex h-[280px]">
-            <div className="w-[200px] bg-muted/50"></div>
-            <div className="flex-1 p-6 space-y-4">
+          <div className="flex h-[240px]">
+            <div className="w-[180px] bg-muted/50 rounded-l-xl"></div>
+            <div className="flex-1 p-4 space-y-3">
               <div className="h-4 bg-muted rounded w-3/4"></div>
               <div className="h-3 bg-muted rounded w-1/2"></div>
+              <div className="h-3 bg-muted rounded w-2/3"></div>
             </div>
           </div>
         </Card>
@@ -202,44 +203,57 @@ export const SolutionsTab: React.FC<SolutionsTabProps> = ({ trail }) => {
     }
 
     return (
-      <Card className="group relative overflow-hidden border border-border/50 hover:border-viverblue/50 bg-gradient-to-br from-card/95 to-muted/30 backdrop-blur-sm transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-viverblue/10">
+      <Card className="group relative overflow-hidden border border-border/50 hover:border-viverblue/50 bg-gradient-to-br from-card/95 to-muted/30 backdrop-blur-sm transition-all duration-500 hover:scale-[1.01] hover:shadow-xl hover:shadow-viverblue/5 cursor-pointer">
         {/* Animated glow effect */}
         <div className="absolute inset-0 bg-gradient-to-r from-viverblue/5 via-transparent to-operational/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
         
         {/* Shimmer effect */}
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-out" />
         
-        <div className="flex h-[280px] relative z-10" onClick={() => navigate(`/solution/${solution.id}`)}>
-          {/* Solution Cover Image */}
-          <div className="w-[200px] relative overflow-hidden bg-gradient-to-br from-muted to-muted/50">
+        <div className="flex h-[240px] relative z-10" onClick={() => navigate(`/solution/${solution.id}`)}>
+          {/* Solution Cover Image - Ajustado */}
+          <div className="w-[180px] relative overflow-hidden bg-gradient-to-br from-muted to-muted/50 rounded-l-xl">
             {solution.thumbnail_url ? (
               <>
                 <img 
                   src={solution.thumbnail_url} 
                   alt={solution.title}
-                  className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
+                  className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
                   loading="lazy"
+                  onError={(e) => {
+                    // Fallback para caso a imagem não carregue
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                  }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent to-background/60" />
+                <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent to-background/40" />
+                
+                {/* Fallback hidden por padrão */}
+                <div className="hidden absolute inset-0 flex items-center justify-center bg-gradient-to-br from-viverblue/20 to-operational/20">
+                  <div className="text-center">
+                    <Target className="h-8 w-8 mx-auto mb-2 text-viverblue" />
+                    <p className="text-xs text-muted-foreground font-medium">Solução IA</p>
+                  </div>
+                </div>
               </>
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-viverblue/20 to-operational/20 relative">
                 {/* Animated background orbs */}
                 <div className="absolute inset-0 overflow-hidden">
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 bg-viverblue/20 rounded-full blur-xl animate-pulse" />
-                  <div className="absolute top-1/3 left-1/3 w-16 h-16 bg-operational/15 rounded-full blur-lg animate-pulse animation-delay-1000" />
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-viverblue/20 rounded-full blur-xl animate-pulse" />
+                  <div className="absolute top-1/3 left-1/3 w-12 h-12 bg-operational/15 rounded-full blur-lg animate-pulse animation-delay-1000" />
                 </div>
                 
                 <div className="text-center relative z-10">
-                  <Target className="h-12 w-12 mx-auto mb-2 text-viverblue group-hover:scale-125 group-hover:rotate-12 transition-all duration-500" />
+                  <Target className="h-8 w-8 mx-auto mb-2 text-viverblue group-hover:scale-110 group-hover:rotate-6 transition-all duration-500" />
                   <p className="text-xs text-muted-foreground font-medium">Solução IA</p>
                 </div>
               </div>
             )}
             
             {/* Priority badge overlay */}
-            <div className="absolute top-4 left-4">
+            <div className="absolute top-3 left-3">
               <Badge className={`${priorityInfo.color} ${priorityInfo.textColor} text-xs shadow-lg backdrop-blur-md group-hover:scale-105 transition-transform duration-300`}>
                 {priorityInfo.label}
               </Badge>
@@ -247,34 +261,34 @@ export const SolutionsTab: React.FC<SolutionsTabProps> = ({ trail }) => {
             
             {/* AI Score badge */}
             {item.aiScore && (
-              <div className="absolute bottom-4 left-4">
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-viverblue/10 backdrop-blur-md rounded-full border border-viverblue/20 group-hover:bg-viverblue/20 transition-colors duration-300">
-                  <Brain className="h-3 w-3 text-viverblue" />
-                  <span className="text-xs text-viverblue font-semibold">{item.aiScore}%</span>
+              <div className="absolute bottom-3 left-3 right-3">
+                <div className="flex items-center gap-2 px-2 py-1 bg-viverblue/90 backdrop-blur-md rounded-lg border border-viverblue/20 group-hover:bg-viverblue transition-colors duration-300">
+                  <Brain className="h-3 w-3 text-white" />
+                  <span className="text-xs text-white font-semibold">{item.aiScore}%</span>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Solution Content */}
-          <div className="flex-1 p-6 flex flex-col justify-between">
+          {/* Solution Content - Ajustado */}
+          <div className="flex-1 p-4 flex flex-col justify-between">
             {/* Header */}
-            <div className="space-y-3">
+            <div className="space-y-2">
               <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-foreground group-hover:text-viverblue transition-colors duration-300 line-clamp-2 mb-2">
+                <div className="flex-1 pr-2">
+                  <h3 className="text-base font-bold text-foreground group-hover:text-viverblue transition-colors duration-300 line-clamp-2 mb-2 leading-snug">
                     {solution.title}
                   </h3>
                   
                   {/* Meta info */}
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-2 mb-2 text-xs">
+                    <div className="flex items-center gap-1">
                       <Target className="w-3 h-3 text-muted-foreground" />
-                      <span className="text-xs text-muted-foreground">{solution.category}</span>
+                      <span className="text-muted-foreground truncate">{solution.category}</span>
                     </div>
                     
                     {solution.difficulty && (
-                      <Badge variant="outline" className={`text-xs ${getDifficultyColor(solution.difficulty)}`}>
+                      <Badge variant="outline" className={`text-xs px-1.5 py-0.5 ${getDifficultyColor(solution.difficulty)}`}>
                         {solution.difficulty}
                       </Badge>
                     )}
@@ -282,46 +296,46 @@ export const SolutionsTab: React.FC<SolutionsTabProps> = ({ trail }) => {
                     {item.estimatedTime && (
                       <div className="flex items-center gap-1">
                         <Clock className="w-3 h-3 text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground">{item.estimatedTime}</span>
+                        <span className="text-muted-foreground">{item.estimatedTime}</span>
                       </div>
                     )}
                   </div>
                 </div>
                 
-                <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-viverblue group-hover:scale-110 transition-all duration-300 flex-shrink-0 ml-2" />
+                <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-viverblue group-hover:scale-110 transition-all duration-300 flex-shrink-0" />
               </div>
               
               {/* Description */}
-              <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+              <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
                 {solution.description}
               </p>
             </div>
 
-            {/* AI Justification with Aurora styling */}
-            <div className="space-y-4">
-              <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-viverblue/5 to-operational/5 border border-viverblue/10 p-4">
+            {/* AI Justification with Aurora styling - Compacto */}
+            <div className="space-y-3">
+              <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-viverblue/5 to-operational/5 border border-viverblue/10 p-3">
                 {/* Background pattern */}
                 <div className="absolute inset-0 bg-gradient-to-r from-viverblue/5 to-transparent opacity-50" />
                 
-                <div className="flex items-start gap-3 relative z-10">
-                  <div className="p-2 bg-viverblue/10 rounded-lg">
-                    <Star className="w-4 h-4 text-viverblue" />
+                <div className="flex items-start gap-2 relative z-10">
+                  <div className="p-1.5 bg-viverblue/10 rounded-md flex-shrink-0">
+                    <Star className="w-3 h-3 text-viverblue" />
                   </div>
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <h4 className="text-xs font-semibold text-viverblue mb-1">Análise IA</h4>
-                    <p className="text-sm text-foreground leading-relaxed">{item.justification}</p>
+                    <p className="text-xs text-foreground leading-relaxed line-clamp-2">{item.justification}</p>
                   </div>
                 </div>
               </div>
 
-              {/* Compatibility progress */}
+              {/* Compatibility progress - Compacto */}
               {item.aiScore && (
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <div className="flex justify-between items-center">
                     <span className="text-xs text-muted-foreground">Compatibilidade</span>
                     <span className="text-xs text-viverblue font-semibold">{item.aiScore}%</span>
                   </div>
-                  <div className="relative h-2 bg-muted/30 rounded-full overflow-hidden">
+                  <div className="relative h-1.5 bg-muted/30 rounded-full overflow-hidden">
                     <div 
                       className="absolute left-0 top-0 h-full bg-gradient-to-r from-viverblue to-operational rounded-full transition-all duration-1000 group-hover:from-viverblue group-hover:to-viverblue"
                       style={{width: `${item.aiScore}%`}}
@@ -330,9 +344,10 @@ export const SolutionsTab: React.FC<SolutionsTabProps> = ({ trail }) => {
                 </div>
               )}
 
-              {/* Action button */}
+              {/* Action button - Compacto */}
               <Button 
-                className="w-full bg-viverblue/10 hover:bg-viverblue text-viverblue hover:text-white border border-viverblue/20 hover:border-viverblue transition-all duration-300 group-hover:scale-105 group-hover:shadow-lg relative overflow-hidden"
+                size="sm"
+                className="w-full bg-viverblue/10 hover:bg-viverblue text-viverblue hover:text-white border border-viverblue/20 hover:border-viverblue transition-all duration-300 group-hover:scale-105 relative overflow-hidden text-xs py-2"
                 onClick={(e) => {
                   e.stopPropagation();
                   navigate(`/solution/${solution.id}`);
@@ -340,9 +355,9 @@ export const SolutionsTab: React.FC<SolutionsTabProps> = ({ trail }) => {
               >
                 {/* Button shine effect */}
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-                <span className="relative z-10 flex items-center gap-2">
+                <span className="relative z-10 flex items-center gap-1.5">
                   Implementar Agora
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
+                  <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform duration-300" />
                 </span>
               </Button>
             </div>
