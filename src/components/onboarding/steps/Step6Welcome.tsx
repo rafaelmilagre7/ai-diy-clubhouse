@@ -4,54 +4,43 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Sparkles, Rocket, Users, BookOpen, Calendar, CheckCircle } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { motion } from 'framer-motion';
-
 interface Step6WelcomeProps {
   ninaMessage?: string;
   onFinish: () => void;
 }
-
 export const Step6Welcome: React.FC<Step6WelcomeProps> = ({
   ninaMessage,
-  onFinish,
+  onFinish
 }) => {
   const [isCompleting, setIsCompleting] = useState(false);
-  
   const handleFinish = async () => {
     setIsCompleting(true);
-    
+
     // Lançar confete
     confetti({
       particleCount: 200,
       spread: 70,
-      origin: { y: 0.6 }
+      origin: {
+        y: 0.6
+      }
     });
-    
+
     // Aguardar um pouco para mostrar o confete
     setTimeout(() => {
       onFinish();
     }, 1000);
   };
-
-  return (
-    <div className="space-y-8 max-w-3xl mx-auto text-center">
+  return <div className="space-y-8 max-w-3xl mx-auto text-center">
       <div className="space-y-4">
-        <div className="relative">
-          <Sparkles className="w-20 h-20 mx-auto text-primary animate-pulse" />
-          <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-primary to-primary/60 rounded-full animate-bounce" />
-        </div>
+        
         
         <div className="space-y-2">
-          <h2 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-            Bem-vindo(a) ao Viver de IA!
-          </h2>
-          <p className="text-xl text-muted-foreground">
-            Sua jornada personalizada está pronta para começar
-          </p>
+          
+          
         </div>
       </div>
 
-      {ninaMessage && (
-        <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+      {ninaMessage && <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
           <CardContent className="p-6">
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
@@ -63,8 +52,7 @@ export const Step6Welcome: React.FC<Step6WelcomeProps> = ({
               </div>
             </div>
           </CardContent>
-        </Card>
-      )}
+        </Card>}
 
       <div className="grid md:grid-cols-2 gap-6">
         <Card className="p-6 hover:shadow-lg transition-shadow">
@@ -121,26 +109,18 @@ export const Step6Welcome: React.FC<Step6WelcomeProps> = ({
           Sua experiência personalizada já está configurada. Clique em "Concluir" para finalizar e ir para o dashboard!
         </p>
         
-        <motion.div
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-        >
-          <Button 
-            onClick={handleFinish}
-            disabled={isCompleting}
-            size="lg" 
-            className="w-full md:w-auto px-8 py-3 text-lg font-semibold group bg-gradient-to-r from-primary to-accent hover:shadow-lg hover:shadow-primary/25 disabled:opacity-50"
-          >
-            {isCompleting ? (
-              <>
+        <motion.div whileHover={{
+        scale: 1.02
+      }} whileTap={{
+        scale: 0.98
+      }}>
+          <Button onClick={handleFinish} disabled={isCompleting} size="lg" className="w-full md:w-auto px-8 py-3 text-lg font-semibold group bg-gradient-to-r from-primary to-accent hover:shadow-lg hover:shadow-primary/25 disabled:opacity-50">
+            {isCompleting ? <>
                 <CheckCircle className="w-5 h-5 mr-2 animate-spin" />
                 Finalizando...
-              </>
-            ) : (
-              <>
+              </> : <>
                 ✨ Concluir Onboarding
-              </>
-            )}
+              </>}
           </Button>
         </motion.div>
       </div>
@@ -150,6 +130,5 @@ export const Step6Welcome: React.FC<Step6WelcomeProps> = ({
           Você pode sempre ajustar suas preferências nas configurações da sua conta
         </p>
       </div>
-    </div>
-  );
+    </div>;
 };
