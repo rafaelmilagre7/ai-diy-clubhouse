@@ -68,12 +68,12 @@ export const AdminFilters = ({
 
       case 'select':
         return (
-          <Select value={value || ''} onValueChange={(val) => onChange(filter.key, val)}>
+          <Select value={value || 'all'} onValueChange={(val) => onChange(filter.key, val === 'all' ? '' : val)}>
             <SelectTrigger className="w-full">
               <SelectValue placeholder={filter.placeholder || `Selecionar ${filter.label.toLowerCase()}`} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todos</SelectItem>
+              <SelectItem value="all">Todos</SelectItem>
               {filter.options?.map((option) => (
                 <SelectItem key={option.value} value={option.value}>
                   {option.label}
