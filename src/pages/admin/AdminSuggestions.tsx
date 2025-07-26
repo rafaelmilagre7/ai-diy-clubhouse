@@ -38,8 +38,15 @@ const AdminSuggestions = () => {
     queryKey: ['admin-suggestions', searchTerm, statusFilter],
     queryFn: async () => {
       let query = supabase
-        .from('suggestions_with_profiles')
-        .select('*')
+        .from('suggestions')
+        .select(`
+          *,
+          profiles:user_id (
+            id,
+            name,
+            email
+          )
+        `)
         .order('created_at', { ascending: false });
 
       if (searchTerm) {
@@ -51,8 +58,20 @@ const AdminSuggestions = () => {
       }
 
       const { data, error } = await query;
-      if (error) throw error;
-      return data || [];
+      if (error) {
+        console.error('Erro ao buscar sugestões:', error);
+        throw error;
+      }
+      
+      // Mapear dados para o formato esperado pela interface
+      const mappedData = (data || []).map(suggestion => ({
+        ...suggestion,
+        user_name: suggestion.profiles?.name || 'Usuário Anônimo',
+        user_email: suggestion.profiles?.email || null
+      }));
+      
+      console.log('Sugestões carregadas:', mappedData.length);
+      return mappedData;
     }
   });
 
