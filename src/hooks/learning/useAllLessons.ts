@@ -19,7 +19,7 @@ export const useAllLessons = (): UseAllLessonsResult => {
       setLoading(true);
       setError(null);
 
-      // Query direta para admin - busca todas as aulas com informações de módulo e curso
+      // Query com ordenação hierárquica: curso > módulo > order_index > título
       const { data, error: queryError } = await supabase
         .from('learning_lessons')
         .select(`
@@ -30,15 +30,41 @@ export const useAllLessons = (): UseAllLessonsResult => {
           ),
           videos:learning_lesson_videos(*),
           resources:learning_resources(*)
-        `)
-        .order('created_at', { ascending: false });
+        `);
 
       if (queryError) {
         throw queryError;
       }
 
-      console.log('useAllLessons: Aulas carregadas:', data?.length || 0);
-      setLessons(data || []);
+      // Ordenação hierárquica manual das aulas
+      const sortedData = (data || []).sort((a, b) => {
+        // 1. Primeiro ordenar por curso
+        const courseA = (a.module as any)?.course?.title || '';
+        const courseB = (b.module as any)?.course?.title || '';
+        if (courseA !== courseB) {
+          return courseA.localeCompare(courseB, 'pt-BR');
+        }
+
+        // 2. Depois por módulo
+        const moduleA = (a.module as any)?.title || '';
+        const moduleB = (b.module as any)?.title || '';
+        if (moduleA !== moduleB) {
+          return moduleA.localeCompare(moduleB, 'pt-BR');
+        }
+
+        // 3. Depois por order_index (se existir)
+        const orderA = a.order_index || 999;
+        const orderB = b.order_index || 999;
+        if (orderA !== orderB) {
+          return orderA - orderB;
+        }
+
+        // 4. Por último, por título da aula
+        return (a.title || '').localeCompare(b.title || '', 'pt-BR');
+      });
+
+      console.log('useAllLessons: Aulas carregadas e ordenadas:', sortedData?.length || 0);
+      setLessons(sortedData);
     } catch (err) {
       console.error('useAllLessons: Erro ao buscar aulas:', err);
       setError(err instanceof Error ? err.message : 'Erro desconhecido');

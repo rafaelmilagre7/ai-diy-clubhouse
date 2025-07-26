@@ -74,7 +74,8 @@ const FormacaoAulas = () => {
         .from('learning_lessons')
         .select('*')
         .eq('module_id', id)
-        .order('order_index');
+        .order('order_index', { ascending: true })
+        .order('title', { ascending: true });
       
       console.log("FormacaoAulas: Resposta do Supabase:", { data, error });
       

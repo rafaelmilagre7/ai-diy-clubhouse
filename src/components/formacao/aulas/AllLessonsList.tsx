@@ -74,7 +74,7 @@ export const AllLessonsList = ({
       return matchesSearch && matchesCourse && matchesStatus;
     });
 
-    // Agrupar por curso e módulo
+    // Agrupar por curso e módulo com ordenação
     const grouped: GroupedLessons = {};
     const coursesSet = new Set<string>();
 
@@ -93,6 +93,23 @@ export const AllLessonsList = ({
         grouped[courseTitle][moduleTitle] = [];
       }
       grouped[courseTitle][moduleTitle].push(lesson);
+    });
+
+    // Ordenar as aulas dentro de cada módulo por order_index e título
+    Object.keys(grouped).forEach(courseTitle => {
+      Object.keys(grouped[courseTitle]).forEach(moduleTitle => {
+        grouped[courseTitle][moduleTitle].sort((a, b) => {
+          // 1. Primeiro por order_index (se existir)
+          const orderA = a.order_index || 999;
+          const orderB = b.order_index || 999;
+          if (orderA !== orderB) {
+            return orderA - orderB;
+          }
+
+          // 2. Depois por título da aula
+          return (a.title || '').localeCompare(b.title || '', 'pt-BR');
+        });
+      });
     });
 
     return {
