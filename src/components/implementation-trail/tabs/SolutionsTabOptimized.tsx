@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,14 @@ interface SolutionsTabOptimizedProps {
 
 export const SolutionsTabOptimized: React.FC<SolutionsTabOptimizedProps> = ({ trail }) => {
   const navigate = useNavigate();
+
+  // Debug: vamos ver o que tem na trilha
+  useEffect(() => {
+    console.log('🔍 [SOLUTIONS-TAB] Dados da trilha recebidos:', trail);
+    console.log('🔍 [SOLUTIONS-TAB] Priority 1:', trail?.priority1);
+    console.log('🔍 [SOLUTIONS-TAB] Priority 2:', trail?.priority2);
+    console.log('🔍 [SOLUTIONS-TAB] Priority 3:', trail?.priority3);
+  }, [trail]);
 
   const getPriorityLabel = (priority: number) => {
     switch (priority) {
@@ -79,7 +87,7 @@ export const SolutionsTabOptimized: React.FC<SolutionsTabOptimizedProps> = ({ tr
               <div className="flex items-start justify-between">
                 <div className="flex-1 pr-2">
                   <h3 className="text-base font-bold text-foreground group-hover:text-viverblue transition-colors duration-300 line-clamp-2 mb-2 leading-snug">
-                    Solução Personalizada #{priority === 1 ? 'Priority' : priority === 2 ? 'Medium' : 'Low'}
+                    Solução ID: {item.solutionId}
                   </h3>
                   
                   {/* Meta info */}
