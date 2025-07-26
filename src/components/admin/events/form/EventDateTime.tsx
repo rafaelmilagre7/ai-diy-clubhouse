@@ -66,15 +66,16 @@ export const EventDateTime = ({ form }: EventDateTimeProps) => {
       ) : (
         // Campos para evento recorrente (apenas hora)
         <div>
-          <Alert variant="info" className="mb-4 bg-blue-50 text-blue-800 border-blue-200">
-            <AlertDescription className="flex items-center gap-2 text-xs">
-              <Info size={14} />
-              <span>
-                Para eventos recorrentes, informe apenas o horário de início e término que será repetido em cada ocorrência.
-                Os horários estão no fuso horário de Brasília.
-              </span>
-            </AlertDescription>
-          </Alert>
+          <div className="p-4 surface-overlay rounded-lg border border-viverblue/20 bg-viverblue/5 mb-4">
+            <div className="flex items-center gap-2 text-viverblue mb-2">
+              <Info size={16} />
+              <span className="text-body-small font-medium">Configuração de Horário Recorrente</span>
+            </div>
+            <p className="text-body-small text-text-secondary">
+              Para eventos recorrentes, informe apenas o horário de início e término que será repetido em cada ocorrência.
+              Os horários estão no fuso horário de Brasília.
+            </p>
+          </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <FormField
