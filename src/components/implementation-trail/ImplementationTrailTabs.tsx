@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { OverviewTab } from './tabs/OverviewTab';
 import { SolutionsTab } from './tabs/SolutionsTab';
@@ -13,6 +13,17 @@ interface ImplementationTrailTabsProps {
 
 export const ImplementationTrailTabs = ({ trail }: ImplementationTrailTabsProps) => {
   const [activeTab, setActiveTab] = useState('overview');
+  
+  // Preload dados das abas para transições mais rápidas
+  const allSolutionIds = useMemo(() => [
+    ...trail.priority1.map(p => p.solutionId),
+    ...trail.priority2.map(p => p.solutionId),
+    ...trail.priority3.map(p => p.solutionId)
+  ], [trail]);
+  
+  const allLessonIds = useMemo(() => 
+    trail.recommended_lessons?.map(l => l.lessonId) || []
+  , [trail.recommended_lessons]);
 
   const totalSolutions = trail.priority1.length + trail.priority2.length + trail.priority3.length;
   const totalLessons = trail.recommended_lessons?.length || 0;

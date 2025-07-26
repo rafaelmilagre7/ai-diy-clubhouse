@@ -84,22 +84,15 @@ export function useImplementationTrail() {
         throw new Error(data.error || 'Erro desconhecido ao gerar trilha');
       }
 
-      console.log('✅ Trilha inteligente gerada:', {
-        personalização: data.personalization_insights,
-        categorias: data.trail.priority1.length + data.trail.priority2.length + data.trail.priority3.length
-      });
-
       setTrail(data.trail);
       toast({
         title: 'Trilha inteligente gerada!',
         description: `Personalização: ${Math.round(data.personalization_insights.avg_score)}% de compatibilidade`,
       });
     } catch (err: any) {
-      console.error('❌ Erro ao gerar trilha:', err);
-      setError(err.message || 'Erro ao gerar trilha');
+      setError('Não foi possível gerar sua trilha personalizada. Gerando trilha padrão...');
       
       // Fallback para trilha básica em caso de erro
-      console.log('📝 Gerando trilha básica como fallback...');
       const fallbackTrail: ImplementationTrailData = {
         priority1: [
           {

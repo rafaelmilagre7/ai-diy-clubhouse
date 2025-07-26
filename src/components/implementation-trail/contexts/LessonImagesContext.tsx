@@ -28,15 +28,20 @@ export const LessonImagesProvider = ({ children }: LessonImagesProviderProps) =>
     setLoading(true);
     
     try {
-      // Simular preload de imagens das aulas
-      console.log('[LessonImages] Precarregando imagens para:', lessonIds);
+      // Preload real das imagens das aulas
+      const imagePromises = lessonIds.map(async (lessonId) => {
+        const imageUrl = `/api/lessons/${lessonId}/cover`;
+        return new Promise((resolve) => {
+          const img = new Image();
+          img.onload = resolve;
+          img.onerror = resolve;
+          img.src = imageUrl;
+        });
+      });
       
-      // Simular delay de carregamento
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      console.log('[LessonImages] Imagens precarregadas com sucesso');
+      await Promise.all(imagePromises);
     } catch (error) {
-      console.error('[LessonImages] Erro ao precarregar imagens:', error);
+      // Falha silenciosa no preload
     } finally {
       setLoading(false);
     }

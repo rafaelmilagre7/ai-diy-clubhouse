@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { ImplementationTrailTabs } from './ImplementationTrailTabs';
-import { SolutionDataProvider } from './contexts/SolutionDataContext';
+import { OptimizedTrailProvider } from './OptimizedTrailProvider';
 import { ImplementationTrailData } from '@/types/implementationTrail';
 
 interface ImplementationTrailContentProps {
@@ -10,10 +10,10 @@ interface ImplementationTrailContentProps {
 
 export const ImplementationTrailContent = ({ trail }: ImplementationTrailContentProps) => {
   return (
-    <SolutionDataProvider>
+    <OptimizedTrailProvider>
       <div className="space-y-6 pb-8">
         <ImplementationTrailTabs trail={trail} />
       </div>
-    </SolutionDataProvider>
+    </OptimizedTrailProvider>
   );
 };

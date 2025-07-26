@@ -5,6 +5,7 @@ import { useImplementationTrail } from '@/hooks/useImplementationTrail';
 import { TrailGenerationLoader } from '@/components/implementation-trail/TrailGenerationLoader';
 import { ImplementationTrailHeader } from '@/components/implementation-trail/ImplementationTrailHeader';
 import { ImplementationTrailContent } from '@/components/implementation-trail/ImplementationTrailContent';
+import { TrailErrorBoundary } from '@/components/implementation-trail/ErrorBoundary';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 
@@ -76,11 +77,13 @@ const ImplementationTrail = () => {
       
       {/* Content */}
       <div className="relative z-10 space-y-8 animate-fade-in container mx-auto px-4 py-8">
-        <ImplementationTrailHeader 
-          onRegenerate={regenerateTrail}
-          isRegenerating={isRegenerating}
-        />
-        <ImplementationTrailContent trail={trail} />
+        <TrailErrorBoundary>
+          <ImplementationTrailHeader 
+            onRegenerate={regenerateTrail}
+            isRegenerating={isRegenerating}
+          />
+          <ImplementationTrailContent trail={trail} />
+        </TrailErrorBoundary>
       </div>
     </div>
   );
