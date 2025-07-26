@@ -154,107 +154,105 @@ const LessonsTabContent = ({ lessons }: LessonsTabProps) => {
           </p>
         </div>
 
-        {/* Lista de Aulas */}
-        <div className="grid gap-6">
+        {/* Grid de aulas IA com capas verticais */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8">
           {aiLessons.map((lesson, index) => (
-            <Card key={lesson.id} className="aurora-glass aurora-hover-scale group">
-              <CardHeader className="pb-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <Badge variant="outline" className="text-xs font-medium bg-viverblue/10 border-viverblue/30">
-                        #{index + 1} Recomendada
-                      </Badge>
-                      <div className="flex items-center gap-1">
-                        <Star className="h-4 w-4 text-amber-400 fill-current" />
-                        <span className="text-sm font-medium text-amber-400">
-                          {lesson.ai_score}% compatível
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <CardTitle className="text-xl text-foreground group-hover:text-viverblue transition-colors">
-                      {lesson.title}
-                    </CardTitle>
+            <Card 
+              key={lesson.id} 
+              className="aurora-glass aurora-hover-scale group cursor-pointer overflow-hidden bg-gradient-to-br from-card/95 to-muted/30 border border-viverblue/20 hover:border-viverblue/40 hover:shadow-2xl hover:shadow-viverblue/10 transition-all duration-500"
+            >
+              {/* Capa vertical da aula */}
+              <div className="relative aspect-[2/3] overflow-hidden">
+                <img 
+                  src={`https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=400&h=600&fit=crop&crop=center&auto=format`}
+                  alt={`Capa da aula ${lesson.title}`}
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7?q=80&w=400&h=600&fit=crop&crop=center';
+                  }}
+                />
+                
+                {/* Gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
+                
+                {/* Badges flutuantes */}
+                <div className="absolute top-4 left-4">
+                  <Badge className="bg-gradient-to-r from-viverblue to-viverblue-light text-white text-xs font-semibold backdrop-blur-sm border-0 px-3 py-1 shadow-lg">
+                    #{index + 1} Recomendada
+                  </Badge>
+                </div>
+                
+                <div className="absolute top-4 right-4">
+                  <div className="flex items-center gap-1 bg-amber-500/90 backdrop-blur-sm rounded-full px-2 py-1">
+                    <Star className="h-3 w-3 text-white fill-current" />
+                    <span className="text-xs font-medium text-white">
+                      {lesson.ai_score}%
+                    </span>
                   </div>
-                  
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="ml-4 opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <Play className="h-5 w-5" />
-                  </Button>
                 </div>
 
-                {/* Tags e Metadados */}
-                <div className="flex flex-wrap items-center gap-2 mt-3">
-                  <Badge variant="outline" className={getCategoryColor(lesson.category)}>
+                {/* Play button overlay */}
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+                  <div className="p-4 bg-viverblue/90 backdrop-blur-sm rounded-full border-2 border-white/20 shadow-2xl">
+                    <Play className="h-8 w-8 text-white fill-current" />
+                  </div>
+                </div>
+              </div>
+
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg font-bold line-clamp-2 group-hover:text-viverblue transition-colors duration-300">
+                  {lesson.title}
+                </CardTitle>
+                
+                {/* Tags compactas */}
+                <div className="flex flex-wrap items-center gap-2 mt-2">
+                  <Badge variant="outline" className={`text-xs ${getCategoryColor(lesson.category)}`}>
                     {lesson.category === 'strategy' ? 'Estratégia' : 
                      lesson.category === 'operational' ? 'Operacional' : 
                      lesson.category === 'revenue' ? 'Revenue' : lesson.category}
                   </Badge>
                   
-                  <Badge variant="outline" className={getDifficultyColor(lesson.difficulty)}>
+                  <Badge variant="outline" className={`text-xs ${getDifficultyColor(lesson.difficulty)}`}>
                     {getDifficultyLabel(lesson.difficulty)}
                   </Badge>
                   
                   <div className="flex items-center gap-1 text-muted-foreground">
-                    <Clock className="h-3.5 w-3.5" />
-                    <span className="text-sm">{lesson.duration}</span>
+                    <Clock className="h-3 w-3" />
+                    <span className="text-xs">{lesson.duration}</span>
                   </div>
                 </div>
               </CardHeader>
 
-              <CardContent className="space-y-4">
-                {/* Descrição */}
-                <p className="text-muted-foreground leading-relaxed">
+              <CardContent className="pt-0 space-y-4">
+                {/* Descrição compacta */}
+                <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
                   {lesson.description}
                 </p>
 
-                {/* Por que é recomendada */}
-                <div className="bg-viverblue/5 border border-viverblue/20 rounded-lg p-4">
-                  <div className="flex items-start gap-3">
-                    <Target className="h-5 w-5 text-viverblue mt-0.5 flex-shrink-0" />
+                {/* Justificativa IA */}
+                <div className="bg-gradient-to-r from-viverblue/10 via-viverblue/5 to-viverblue/10 border border-viverblue/20 rounded-lg p-3">
+                  <div className="flex items-start gap-2">
+                    <Target className="h-4 w-4 text-viverblue mt-0.5 flex-shrink-0" />
                     <div>
-                      <h4 className="font-medium text-foreground mb-1">
-                        Por que é perfeita para você
+                      <h4 className="font-medium text-foreground text-sm mb-1">
+                        Perfeita para você
                       </h4>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-xs text-muted-foreground line-clamp-2">
                         {lesson.reasoning}
                       </p>
                     </div>
                   </div>
                 </div>
 
-                {/* Tópicos */}
-                <div>
-                  <h4 className="text-sm font-medium text-foreground mb-2">
-                    Você vai aprender:
-                  </h4>
-                  <div className="flex flex-wrap gap-1">
-                    {lesson.topics.map((topic, idx) => (
-                      <Badge 
-                        key={idx} 
-                        variant="secondary" 
-                        className="text-xs bg-card border border-border"
-                      >
-                        {topic}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Ações */}
-                <div className="flex gap-3 pt-2">
-                  <Button className="flex-1" size="sm">
-                    <Play className="h-4 w-4 mr-2" />
-                    Começar Aula
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    Ver Detalhes
-                  </Button>
-                </div>
+                {/* Botão de ação */}
+                <Button 
+                  className="w-full group-hover:bg-viverblue group-hover:text-white transition-all duration-300" 
+                  size="sm"
+                  variant="outline"
+                >
+                  <Play className="h-4 w-4 mr-2" />
+                  Começar Aula
+                </Button>
               </CardContent>
             </Card>
           ))}
@@ -368,20 +366,20 @@ const LessonsTabContent = ({ lessons }: LessonsTabProps) => {
         </div>
       )}
 
-      {/* Grid de aulas - formato 9:16 */}
-      {!loading && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {topLessons.map((lesson, index) => (
-            <div
-              key={`${lesson.lessonId}-${index}`}
-              className="animate-fade-in"
-              style={{ animationDelay: `${index * 150}ms` }}
-            >
-              <EnhancedLessonCard lesson={lesson} index={index} />
-            </div>
-          ))}
-        </div>
-      )}
+        {/* Grid de aulas - formato vertical otimizado */}
+        {!loading && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8">
+            {topLessons.map((lesson, index) => (
+              <div
+                key={`${lesson.lessonId}-${index}`}
+                className="animate-fade-in hover:z-10 relative"
+                style={{ animationDelay: `${index * 150}ms` }}
+              >
+                <EnhancedLessonCard lesson={lesson} index={index} />
+              </div>
+            ))}
+          </div>
+        )}
 
       {/* Botão para mostrar/ocultar mais aulas */}
       {hasMoreLessons && !loading && (
