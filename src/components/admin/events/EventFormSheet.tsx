@@ -3,7 +3,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { EventForm } from "./EventForm";
 import type { Event } from "@/types/events";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { X } from "lucide-react";
+import { X, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface EventFormSheetProps {
@@ -16,20 +16,30 @@ export const EventFormSheet = ({ event, onClose }: EventFormSheetProps) => {
   
   return (
     <Sheet open onOpenChange={onClose}>
-      <SheetContent className="w-full sm:max-w-[540px] overflow-y-auto flex flex-col h-full p-0">
-        <div className="flex justify-between items-center p-6 border-b sticky top-0 bg-background z-10">
+      <SheetContent className="w-full sm:max-w-[600px] overflow-y-auto flex flex-col h-full p-0 surface-modal border-l border-border/50">
+        <div className="flex justify-between items-center p-6 border-b border-border/50 sticky top-0 bg-surface-modal/95 backdrop-blur-sm z-10">
           <SheetHeader className="mb-0">
-            <SheetTitle className="text-xl">
-              {isEditing ? "Editar Evento" : "Novo Evento"}
-            </SheetTitle>
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-viverblue/10 border border-viverblue/20">
+                <Edit className="w-5 h-5 text-viverblue" />
+              </div>
+              <SheetTitle className="text-heading-2">
+                {isEditing ? "Editar Evento" : "Novo Evento"}
+              </SheetTitle>
+            </div>
           </SheetHeader>
-          <Button variant="ghost" size="icon" onClick={onClose}>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={onClose}
+            className="hover:bg-surface-elevated"
+          >
             <X className="h-4 w-4" />
           </Button>
         </div>
 
-        <ScrollArea className="flex-1 h-[calc(100vh-80px)]">
-          <div className="px-6 py-4">
+        <ScrollArea className="flex-1 h-[calc(100vh-120px)]">
+          <div className="px-6 py-6">
             <EventForm 
               event={event}
               onSuccess={onClose}

@@ -15,18 +15,32 @@ export const AdminEventsHeader = ({}: AdminEventsHeaderProps) => {
   };
 
   return (
-    <div className="flex items-center justify-between mb-6">
-      <div>
-        <h1 className="text-2xl font-bold">Gerenciar Eventos</h1>
-        <p className="text-muted-foreground">
-          Adicione e gerencie eventos da comunidade
-        </p>
-      </div>
-      <div className="flex gap-2">
-        <Button onClick={() => setShowCreateDialog(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Novo Evento
-        </Button>
+    <div className="px-6 py-8">
+      <div className="flex items-center justify-between">
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-viverblue/10 border border-viverblue/20">
+              <Plus className="w-5 h-5 text-viverblue" />
+            </div>
+            <div>
+              <h1 className="text-heading-1">Gerenciar Eventos</h1>
+              <p className="text-body-small text-text-muted">
+                Adicione e gerencie eventos da comunidade
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="flex gap-3">
+          <Button 
+            onClick={() => setShowCreateDialog(true)}
+            className="bg-viverblue hover:bg-viverblue/90 text-white shadow-aurora"
+            size="lg"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Novo Evento
+          </Button>
+        </div>
       </div>
 
       {showCreateDialog && (

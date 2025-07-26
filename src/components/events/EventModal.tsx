@@ -29,80 +29,121 @@ export const EventModal = ({ event, onClose }: EventModalProps) => {
 
   return (
     <Dialog open onOpenChange={() => onClose()}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle className="text-xl">{event.title}</DialogTitle>
-        </DialogHeader>
-
+      <DialogContent className="max-w-2xl surface-modal border-border/50 shadow-aurora-strong p-0 overflow-hidden">
         {event.cover_image_url && (
-          <div className="relative">
+          <div className="relative h-48 w-full">
             <img
               src={event.cover_image_url}
               alt={event.title}
-              className="w-full h-48 object-cover rounded-md"
+              className="w-full h-full object-cover"
             />
-            <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/60 to-transparent rounded-b-md"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+            <div className="absolute bottom-4 left-6 right-6">
+              <h1 className="text-heading-1 text-white font-bold">{event.title}</h1>
+            </div>
           </div>
         )}
 
-        <div className="space-y-4">
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center gap-2 text-sm">
-              <CalendarIcon className="h-4 w-4 text-viverblue" />
-              <span className="capitalize">{formattedDate}</span>
-            </div>
-            
-            <div className="flex items-center gap-2 text-sm">
-              <Clock className="h-4 w-4 text-viverblue" />
-              <span>
-                {startTime} - {endTime}
-              </span>
+        <div className="p-6">
+          {!event.cover_image_url && (
+            <DialogHeader className="pb-4 border-b border-border/50">
+              <DialogTitle className="text-heading-2 text-text-primary">{event.title}</DialogTitle>
+            </DialogHeader>
+          )}
+
+          <div className="space-y-6 mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex items-center gap-3 p-3 surface-elevated rounded-lg">
+                <div className="p-2 rounded-lg bg-viverblue/10 border border-viverblue/20">
+                  <CalendarIcon className="h-4 w-4 text-viverblue" />
+                </div>
+                <div>
+                  <div className="text-caption text-text-muted">Data</div>
+                  <div className="text-body font-medium capitalize">{formattedDate}</div>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3 p-3 surface-elevated rounded-lg">
+                <div className="p-2 rounded-lg bg-operational/10 border border-operational/20">
+                  <Clock className="h-4 w-4 text-operational" />
+                </div>
+                <div>
+                  <div className="text-caption text-text-muted">Horário</div>
+                  <div className="text-body font-medium">{startTime} - {endTime}</div>
+                </div>
+              </div>
             </div>
             
             {(event.location_link || event.physical_location) && (
-              <div className="flex items-start gap-2 text-sm">
-                <MapPin className="h-4 w-4 text-viverblue mt-0.5" />
-                <div className="flex flex-col">
-                  {event.physical_location && (
-                    <span className="text-gray-700">{event.physical_location}</span>
-                  )}
-                  {event.location_link && (
-                    <a
-                      href={event.location_link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-viverblue hover:underline flex items-center gap-1"
-                    >
-                      Link da reunião <ExternalLink className="h-3 w-3" />
-                    </a>
-                  )}
+              <div className="space-y-3">
+                {event.physical_location && (
+                  <div className="flex items-start gap-3 p-3 surface-elevated rounded-lg">
+                    <div className="p-2 rounded-lg bg-strategy/10 border border-strategy/20">
+                      <MapPin className="h-4 w-4 text-strategy" />
+                    </div>
+                    <div>
+                      <div className="text-caption text-text-muted">Local Presencial</div>
+                      <div className="text-body">{event.physical_location}</div>
+                    </div>
+                  </div>
+                )}
+                
+                {event.location_link && (
+                  <div className="flex items-start gap-3 p-3 surface-elevated rounded-lg">
+                    <div className="p-2 rounded-lg bg-revenue/10 border border-revenue/20">
+                      <ExternalLink className="h-4 w-4 text-revenue" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-caption text-text-muted">Reunião Online</div>
+                      <a
+                        href={event.location_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-body text-viverblue hover:text-viverblue/80 hover:underline flex items-center gap-1 transition-colors"
+                      >
+                        Acessar reunião
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {event.description && (
+              <div className="space-y-3">
+                <h3 className="text-label">Descrição do Evento</h3>
+                <div className="p-4 surface-elevated rounded-lg">
+                  <p className="text-body text-text-secondary whitespace-pre-line leading-relaxed">
+                    {event.description}
+                  </p>
                 </div>
               </div>
             )}
-          </div>
 
-          {event.description && (
-            <div className="pt-2">
-              <h3 className="text-sm font-medium text-gray-700 mb-1">Descrição</h3>
-              <p className="text-sm text-white whitespace-pre-line">{event.description}</p>
-            </div>
-          )}
-
-          <div className="flex justify-end gap-2 pt-2">
-            <Button 
-              asChild 
-              className="bg-viverblue hover:bg-viverblue/90"
-            >
-              <a
-                href={generateGoogleCalendarLink()}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5"
+            <div className="flex justify-end gap-3 pt-4 border-t border-border/50">
+              <Button 
+                variant="outline"
+                onClick={onClose}
+                className="border-border/50"
               >
-                <CalendarIcon className="h-4 w-4" />
-                Adicionar ao Google Calendar
-              </a>
-            </Button>
+                Fechar
+              </Button>
+              <Button 
+                asChild 
+                className="bg-viverblue hover:bg-viverblue/90 text-white shadow-aurora"
+              >
+                <a
+                  href={generateGoogleCalendarLink()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2"
+                >
+                  <CalendarIcon className="h-4 w-4" />
+                  Adicionar ao Calendário
+                </a>
+              </Button>
+            </div>
           </div>
         </div>
       </DialogContent>

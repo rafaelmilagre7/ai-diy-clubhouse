@@ -51,33 +51,45 @@ export const EventCoverImage = ({ form }: EventCoverImageProps) => {
   };
 
   return (
-    <FormField
-      control={form.control}
-      name="cover_image_url"
-      render={({ field }) => (
-        <FormItem>
-          <div className="space-y-2">
-            <h3 className="font-medium text-sm">Imagem de Capa</h3>
-            <FormLabel>Imagem de Capa</FormLabel>
+    <div className="space-y-6 p-6 surface-elevated rounded-xl border border-border/50">
+      <div className="flex items-center gap-2">
+        <div className="w-2 h-6 bg-revenue rounded-full" />
+        <h3 className="text-heading-3">Imagem de Capa</h3>
+      </div>
+
+      <FormField
+        control={form.control}
+        name="cover_image_url"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel className="text-label">Imagem do Evento</FormLabel>
             <FormControl>
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {field.value && (
-                  <div className="mt-2">
+                  <div className="relative group">
                     <img 
                       src={field.value} 
-                      alt="Prévia" 
-                      className="w-full max-h-44 object-cover rounded-lg border"
+                      alt="Prévia da imagem do evento" 
+                      className="w-full max-h-48 object-cover rounded-xl border border-border/50 shadow-md"
                     />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center">
+                      <span className="text-white text-sm font-medium">Clique para alterar</span>
+                    </div>
                   </div>
                 )}
+                
                 <div className="flex items-center justify-start">
                   <Button
                     type="button"
                     variant="outline"
-                    className={isUploading ? "opacity-70" : ""}
+                    className={`transition-all duration-200 ${
+                      isUploading 
+                        ? "opacity-70 cursor-not-allowed" 
+                        : "hover:bg-viverblue/10 hover:border-viverblue/30 hover:text-viverblue"
+                    }`}
                     disabled={isUploading}
                     onClick={() => fileInputRef.current?.click()}
-                    size="sm"
+                    size="default"
                   >
                     {isUploading ? (
                       <>
@@ -87,7 +99,7 @@ export const EventCoverImage = ({ form }: EventCoverImageProps) => {
                     ) : (
                       <>
                         <Upload className="mr-2 h-4 w-4" />
-                        {field.value ? "Trocar Imagem" : "Upload da Imagem"}
+                        {field.value ? "Trocar Imagem" : "Adicionar Imagem"}
                       </>
                     )}
                   </Button>
@@ -100,12 +112,16 @@ export const EventCoverImage = ({ form }: EventCoverImageProps) => {
                     disabled={isUploading}
                   />
                 </div>
+                
+                <p className="text-caption">
+                  Recomendado: 1200x630px, máximo 2MB
+                </p>
               </div>
             </FormControl>
             <FormMessage />
-          </div>
-        </FormItem>
-      )}
-    />
+          </FormItem>
+        )}
+      />
+    </div>
   );
 };

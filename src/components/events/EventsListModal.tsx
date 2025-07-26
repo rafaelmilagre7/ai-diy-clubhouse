@@ -23,11 +23,13 @@ export const EventsListModal = ({ date, events, onSelectEvent, onClose }: Events
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <CalendarIcon className="h-5 w-5 text-viverblue" />
-            <span className="capitalize">{formattedDate}</span>
+      <DialogContent className="max-w-lg surface-modal border-border/50 shadow-aurora-strong">
+        <DialogHeader className="pb-4 border-b border-border/50">
+          <DialogTitle className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-viverblue/10 border border-viverblue/20">
+              <CalendarIcon className="h-5 w-5 text-viverblue" />
+            </div>
+            <span className="capitalize text-heading-3">{formattedDate}</span>
           </DialogTitle>
         </DialogHeader>
 
@@ -35,30 +37,32 @@ export const EventsListModal = ({ date, events, onSelectEvent, onClose }: Events
           {events.map((event) => (
             <div 
               key={event.id} 
-              className="p-4 border rounded-md hover:border-viverblue transition-colors cursor-pointer"
+              className="p-4 surface-elevated rounded-xl border border-border/50 hover:border-viverblue/50 hover:shadow-aurora transition-all duration-200 cursor-pointer group"
               onClick={() => onSelectEvent(event)}
             >
-              <h3 className="font-medium text-lg">{event.title}</h3>
+              <h3 className="text-body-large font-semibold text-text-primary group-hover:text-viverblue transition-colors">
+                {event.title}
+              </h3>
               
               {event.cover_image_url && (
-                <div className="mt-2">
+                <div className="mt-3">
                   <img
                     src={event.cover_image_url}
                     alt={event.title}
-                    className="w-full h-32 object-cover rounded-md"
+                    className="w-full h-32 object-cover rounded-lg border border-border/50"
                   />
                 </div>
               )}
               
-              <div className="mt-2 flex items-center gap-1.5 text-sm text-gray-600">
+              <div className="mt-3 flex items-center gap-2 text-text-secondary">
                 <Clock className="h-4 w-4" />
-                <span>
+                <span className="text-body-small font-medium">
                   {format(new Date(event.start_time), "HH:mm", { locale: ptBR })}
                 </span>
               </div>
               
               {event.description && (
-                <p className="text-sm text-gray-600 mt-2 line-clamp-2">
+                <p className="text-body-small text-text-muted mt-2 line-clamp-2">
                   {event.description}
                 </p>
               )}
@@ -66,9 +70,9 @@ export const EventsListModal = ({ date, events, onSelectEvent, onClose }: Events
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="mt-2 text-viverblue hover:text-viverblue/80 hover:bg-viverblue/10 px-0"
+                className="mt-3 text-viverblue hover:text-viverblue/80 hover:bg-viverblue/10 px-0 transition-colors"
               >
-                Ver detalhes
+                Ver detalhes →
               </Button>
             </div>
           ))}

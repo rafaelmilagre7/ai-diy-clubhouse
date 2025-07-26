@@ -16,9 +16,10 @@ export const EventDateTime = ({ form }: EventDateTimeProps) => {
   const isRecurring = form.watch("is_recurring");
   
   return (
-    <div className="space-y-4">
-      <div className="flex flex-row items-center justify-between">
-        <h3 className="font-medium text-sm">Data e Horário</h3>
+    <div className="space-y-6 p-6 surface-elevated rounded-xl border border-border/50">
+      <div className="flex items-center gap-2">
+        <div className="w-2 h-6 bg-operational rounded-full" />
+        <h3 className="text-heading-3">Data e Horário</h3>
       </div>
 
       <RecurrenceToggle form={form} />
