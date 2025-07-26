@@ -3,7 +3,28 @@ import { useState, useEffect } from 'react';
 import { useTools } from '@/hooks/useTools';
 import { Badge } from '@/components/ui/badge';
 import { ToolCategory } from '@/types/toolTypes';
-import * as Icons from 'lucide-react';
+import { 
+  Palette, 
+  MessageSquare, 
+  Code, 
+  TrendingUp, 
+  Shield, 
+  FileText, 
+  Globe, 
+  Music, 
+  Video, 
+  Image, 
+  Database,
+  Layers,
+  Headphones,
+  Settings,
+  Search,
+  Book,
+  Calendar,
+  Monitor,
+  LayoutGrid,
+  type LucideIcon 
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 
@@ -88,31 +109,31 @@ export const CategoryGrid = ({ selectedCategory, onCategoryChange }: CategoryGri
     
     switch(category) {
       case 'Modelos de IA e Interfaces':
-        return <Icons.Layers size={iconSize} color={iconColor} />;
+        return <Layers size={iconSize} color={iconColor} />;
       case 'Geração de Conteúdo Visual':
-        return <Icons.Image size={iconSize} color={iconColor} />;
+        return <Image size={iconSize} color={iconColor} />;
       case 'Geração e Processamento de Áudio':
-        return <Icons.Headphones size={iconSize} color={iconColor} />;
+        return <Headphones size={iconSize} color={iconColor} />;
       case 'Automação e Integrações':
-        return <Icons.Settings size={iconSize} color={iconColor} />;
+        return <Settings size={iconSize} color={iconColor} />;
       case 'Comunicação e Atendimento':
-        return <Icons.MessageSquare size={iconSize} color={iconColor} />;
+        return <MessageSquare size={iconSize} color={iconColor} />;
       case 'Captura e Análise de Dados':
-        return <Icons.Database size={iconSize} color={iconColor} />;
+        return <Database size={iconSize} color={iconColor} />;
       case 'Pesquisa e Síntese de Informações':
-        return <Icons.Search size={iconSize} color={iconColor} />;
+        return <Search size={iconSize} color={iconColor} />;
       case 'Gestão de Documentos e Conteúdo':
-        return <Icons.Book size={iconSize} color={iconColor} />;
+        return <Book size={iconSize} color={iconColor} />;
       case 'Marketing e CRM':
-        return <Icons.TrendingUp size={iconSize} color={iconColor} />;
+        return <TrendingUp size={iconSize} color={iconColor} />;
       case 'Produtividade e Organização':
-        return <Icons.Calendar size={iconSize} color={iconColor} />;
+        return <Calendar size={iconSize} color={iconColor} />;
       case 'Desenvolvimento e Código':
-        return <Icons.Code size={iconSize} color={iconColor} />;
+        return <Code size={iconSize} color={iconColor} />;
       case 'Plataformas de Mídia':
-        return <Icons.Monitor size={iconSize} color={iconColor} />;
+        return <Monitor size={iconSize} color={iconColor} />;
       default: // 'Todas'
-        return <Icons.LayoutGrid size={iconSize} color={iconColor} />;
+        return <LayoutGrid size={iconSize} color={iconColor} />;
     }
   };
 
