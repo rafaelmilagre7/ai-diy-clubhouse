@@ -9,7 +9,8 @@ import {
   Star, 
   Target, 
   Brain,
-  ExternalLink
+  ExternalLink,
+  Loader2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ImplementationTrailData, SolutionItem } from '@/types/implementationTrail';
@@ -33,10 +34,16 @@ export const SolutionsTabOptimized: React.FC<SolutionsTabOptimizedProps> = ({ tr
       ];
       
       if (allSolutionIds.length > 0) {
+        console.log('🔍 [SOLUTIONS-TAB] Carregando soluções para nova trilha:', {
+          trailGenerated: trail.generated_at,
+          solutionIds: allSolutionIds
+        });
+        
+        // Forçar reload sempre que uma nova trilha for gerada
         loadSolutions(allSolutionIds);
       }
     }
-  }, [trail, loadSolutions]);
+  }, [trail?.generated_at, loadSolutions]); // Usar generated_at como key principal
 
   const getPriorityLabel = (priority: number) => {
     switch (priority) {
@@ -51,26 +58,48 @@ export const SolutionsTabOptimized: React.FC<SolutionsTabOptimizedProps> = ({ tr
     const priorityInfo = getPriorityLabel(priority);
     const solutionData = getSolution(item.solutionId);
 
+    // Loading state enquanto dados não chegaram
+    if (!solutionData) {
+      return (
+        <Card className="group relative overflow-hidden border border-border/50 bg-gradient-to-br from-card/95 to-muted/30 backdrop-blur-sm">
+          <div className="flex h-[200px] relative z-10 items-center justify-center">
+            <div className="text-center">
+              <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">Carregando solução...</p>
+            </div>
+          </div>
+        </Card>
+      );
+    }
+
     return (
       <Card className="group relative overflow-hidden border border-border/50 hover:border-viverblue/50 bg-gradient-to-br from-card/95 to-muted/30 backdrop-blur-sm transition-all duration-500 hover:scale-[1.01] hover:shadow-xl hover:shadow-viverblue/5 cursor-pointer">
         {/* Animated glow effect */}
         <div className="absolute inset-0 bg-gradient-to-r from-viverblue/5 via-transparent to-operational/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
         
         <div className="flex h-[200px] relative z-10" onClick={() => navigate(`/solution/${item.solutionId}`)}>
-          {/* Solution Cover - Placeholder */}
+          {/* Solution Cover */}
           <div className="w-[280px] relative overflow-hidden bg-gradient-to-br from-viverblue/20 to-operational/20 rounded-l-xl">
-            <div className="w-full h-full flex items-center justify-center relative">
-              {/* Background orbs */}
-              <div className="absolute inset-0 overflow-hidden rounded-l-xl">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 bg-viverblue/20 rounded-full blur-xl animate-pulse" />
-                <div className="absolute top-1/3 left-1/3 w-12 h-12 bg-operational/15 rounded-full blur-lg animate-pulse animation-delay-1000" />
+            {solutionData.thumbnail_url ? (
+              <img 
+                src={solutionData.thumbnail_url} 
+                alt={solutionData.title}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center relative">
+                {/* Background orbs */}
+                <div className="absolute inset-0 overflow-hidden rounded-l-xl">
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 bg-viverblue/20 rounded-full blur-xl animate-pulse" />
+                  <div className="absolute top-1/3 left-1/3 w-12 h-12 bg-operational/15 rounded-full blur-lg animate-pulse animation-delay-1000" />
+                </div>
+                
+                <div className="text-center relative z-10">
+                  <Target className="h-12 w-12 mx-auto mb-2 text-viverblue group-hover:scale-110 group-hover:rotate-6 transition-all duration-500" />
+                  <p className="text-sm text-muted-foreground font-medium">Solução IA</p>
+                </div>
               </div>
-              
-              <div className="text-center relative z-10">
-                <Target className="h-12 w-12 mx-auto mb-2 text-viverblue group-hover:scale-110 group-hover:rotate-6 transition-all duration-500" />
-                <p className="text-sm text-muted-foreground font-medium">Solução IA</p>
-              </div>
-            </div>
+            )}
             
             {/* Priority badge */}
             <div className="absolute top-3 left-3">
@@ -97,14 +126,14 @@ export const SolutionsTabOptimized: React.FC<SolutionsTabOptimizedProps> = ({ tr
               <div className="flex items-start justify-between">
                 <div className="flex-1 pr-2">
                   <h3 className="text-base font-bold text-foreground group-hover:text-viverblue transition-colors duration-300 line-clamp-2 mb-2 leading-snug">
-                    {solutionData?.title || 'Carregando solução...'}
+                    {solutionData.title}
                   </h3>
-                   
+                  
                   {/* Meta info */}
                   <div className="flex items-center gap-2 mb-2 text-xs">
                     <div className="flex items-center gap-1">
                       <Target className="w-3 h-3 text-muted-foreground" />
-                      <span className="text-muted-foreground">{solutionData?.category || 'IA & Automação'}</span>
+                      <span className="text-muted-foreground">{solutionData.category}</span>
                     </div>
                     
                     {item.estimatedTime && (
@@ -121,7 +150,7 @@ export const SolutionsTabOptimized: React.FC<SolutionsTabOptimizedProps> = ({ tr
               
               {/* Description */}
               <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-                {solutionData?.description || 'Solução recomendada pela IA baseada no seu perfil e objetivos empresariais.'}
+                {solutionData.description}
               </p>
             </div>
 
@@ -195,7 +224,7 @@ export const SolutionsTabOptimized: React.FC<SolutionsTabOptimizedProps> = ({ tr
         
         <div className="grid gap-4">
           {items.map((item, index) => (
-            <SolutionCard key={`${priority}-${index}`} item={item} priority={priority} />
+            <SolutionCard key={`${item.solutionId}-${index}`} item={item} priority={priority} />
           ))}
         </div>
       </div>
@@ -230,6 +259,14 @@ export const SolutionsTabOptimized: React.FC<SolutionsTabOptimizedProps> = ({ tr
           </CardContent>
         </Card>
       </div>
+
+      {/* Loading state global */}
+      {loading && (
+        <div className="text-center py-8">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-viverblue" />
+          <p className="text-muted-foreground">Carregando dados das soluções...</p>
+        </div>
+      )}
 
       {/* Solutions by Priority */}
       {renderPrioritySection(trail.priority1 || [], 1, 'Alta Prioridade')}

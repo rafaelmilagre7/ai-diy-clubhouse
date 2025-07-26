@@ -79,6 +79,14 @@ export function useImplementationTrail() {
       }
 
       setTrail(data.trail);
+      
+      // Limpar cache de soluções para forçar reload dos dados reais
+      try {
+        sessionStorage.removeItem('trail_solutions_cache');
+      } catch (error) {
+        console.warn('Erro ao limpar cache de soluções:', error);
+      }
+      
       toast({
         title: 'Trilha inteligente gerada!',
         description: `Personalização: ${Math.round(data.personalization_insights.avg_score)}% de compatibilidade`,

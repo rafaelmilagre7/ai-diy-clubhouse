@@ -17,6 +17,7 @@ interface SolutionDataContextType {
   loading: boolean;
   getSolution: (solutionId: string) => SolutionData | null;
   loadSolutions: (solutionIds: string[]) => Promise<void>;
+  clearCache: () => void;
 }
 
 const SolutionDataContext = createContext<SolutionDataContextType | undefined>(undefined);
@@ -104,12 +105,23 @@ export const SolutionDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
     return solutions[solutionId] || null;
   }, [solutions]);
 
+  const clearCache = useCallback(() => {
+    setSolutions({});
+    setRequestInProgress(new Set());
+    try {
+      sessionStorage.removeItem('trail_solutions_cache');
+    } catch (error) {
+      console.warn('Erro ao limpar cache de soluções:', error);
+    }
+  }, []);
+
   const value = useMemo(() => ({
     solutions,
     loading,
     getSolution,
     loadSolutions,
-  }), [solutions, loading, getSolution, loadSolutions]);
+    clearCache,
+  }), [solutions, loading, getSolution, loadSolutions, clearCache]);
 
   return (
     <SolutionDataContext.Provider value={value}>
