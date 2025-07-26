@@ -24,33 +24,33 @@ export const KpiGrid: FC<KpiGridProps> = memo(({
       title: "Soluções Completadas",
       value: completed,
       icon: CheckCircle,
-      color: "text-emerald-600",
-      bgColor: "bg-emerald-50 dark:bg-emerald-900/20",
-      borderColor: "border-emerald-200 dark:border-emerald-800"
+      color: "text-primary",
+      bgColor: "bg-primary/10",
+      borderColor: "border-primary/20"
     },
     {
       title: "Em Andamento",
       value: inProgress,
       icon: Clock,
-      color: "text-cyan-600",
-      bgColor: "bg-cyan-50 dark:bg-cyan-900/20",
-      borderColor: "border-cyan-200 dark:border-cyan-800"
+      color: "text-viverblue",
+      bgColor: "bg-viverblue/10",
+      borderColor: "border-viverblue/20"
     },
     {
       title: "Taxa de Conclusão",
       value: `${completionRate}%`,
       icon: Target,
-      color: "text-teal-600",
-      bgColor: "bg-teal-50 dark:bg-teal-900/20",
-      borderColor: "border-teal-200 dark:border-teal-800"
+      color: "text-viverorange",
+      bgColor: "bg-viverorange/10",
+      borderColor: "border-viverorange/20"
     },
     {
       title: "Total Disponível",
       value: total,
       icon: TrendingUp,
-      color: "text-blue-600",
-      bgColor: "bg-blue-50 dark:bg-blue-900/20",
-      borderColor: "border-blue-200 dark:border-blue-800"
+      color: "text-secondary",
+      bgColor: "bg-secondary/10",
+      borderColor: "border-secondary/20"
     }
   ];
 
