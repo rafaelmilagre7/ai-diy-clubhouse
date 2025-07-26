@@ -5,8 +5,8 @@ import { UseFormReturn } from "react-hook-form";
 import type { EventFormData } from "./EventFormSchema";
 import { RecurrenceToggle } from "./recurrence/RecurrenceToggle";
 import { Info } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { extractLocalTime } from "@/utils/timezoneUtils";
+import { TimezoneInfo } from "../TimezoneInfo";
 
 interface EventDateTimeProps {
   form: UseFormReturn<EventFormData>;
@@ -21,8 +21,11 @@ export const EventDateTime = ({ form }: EventDateTimeProps) => {
         <div className="w-2 h-6 bg-operational rounded-full" />
         <h3 className="text-heading-3">Data e Horário</h3>
       </div>
-
-      <RecurrenceToggle form={form} />
+      
+      <div className="space-y-6">
+        <TimezoneInfo />
+        
+        <RecurrenceToggle form={form} />
 
       {!isRecurring ? (
         // Campos para evento único (data e hora)
@@ -136,6 +139,7 @@ export const EventDateTime = ({ form }: EventDateTimeProps) => {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };

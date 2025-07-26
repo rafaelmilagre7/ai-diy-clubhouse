@@ -3,6 +3,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { formatBrazilianDateTime } from "@/utils/timezoneUtils";
 import { Edit, Trash2, Repeat } from "lucide-react";
 import { useState } from "react";
 import { useEvents } from "@/hooks/useEvents";
@@ -127,12 +128,12 @@ export const EventsTable = () => {
                 </TableCell>
                 <TableCell className="text-text-secondary py-4">
                   <div className="font-mono text-sm">
-                    {format(new Date(event.start_time), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                    {formatBrazilianDateTime(event.start_time)}
                   </div>
                 </TableCell>
                 <TableCell className="text-text-secondary py-4">
                   <div className="font-mono text-sm">
-                    {format(new Date(event.end_time), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                    {formatBrazilianDateTime(event.end_time)}
                   </div>
                 </TableCell>
                 <TableCell className="py-4">
