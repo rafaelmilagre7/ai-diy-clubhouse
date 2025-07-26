@@ -4,6 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import { supabase, Solution, Progress } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
+import { devLog, devWarn } from "@/hooks/useOptimizedLogging";
 
 interface SolutionModule {
   id: string;
@@ -48,10 +49,10 @@ export const useImplementationData = () => {
           query = query.eq("published", true);
         }
         
-        const { data: solutionData, error: solutionError } = await query.single();
+        const { data: solutionData, error: solutionError } = await query.maybeSingle();
         
-        if (solutionError) {
-          if (solutionError.code === "PGRST116" && !isAdmin) {
+        if (solutionError || !solutionData) {
+          if (!isAdmin) {
             toast({
               title: "Solução não disponível",
               description: "Esta solução não está disponível para implementação.",
@@ -60,7 +61,7 @@ export const useImplementationData = () => {
             navigate("/solutions");
             return;
           }
-          throw solutionError;
+          throw solutionError || new Error("Solução não encontrada");
         }
         
         setSolution(solutionData as Solution);
@@ -173,7 +174,7 @@ export const useImplementationData = () => {
             .select("*")
             .eq("user_id", user.id)
             .eq("solution_id", id)
-            .single();
+            .maybeSingle();
           
           if (!progressError && progressData) {
             setProgress(progressData as Progress);
@@ -196,7 +197,7 @@ export const useImplementationData = () => {
                 last_activity: new Date().toISOString(),
               })
               .select()
-              .single();
+              .maybeSingle();
             
             if (!createError && newProgress) {
               setProgress(newProgress as Progress);
@@ -205,7 +206,7 @@ export const useImplementationData = () => {
           }
         }
       } catch (error) {
-        console.error("Error fetching data:", error);
+        devWarn("Error fetching data:", error);
         toast({
           title: "Erro ao carregar dados",
           description: "Ocorreu um erro ao tentar carregar os dados da implementação.",

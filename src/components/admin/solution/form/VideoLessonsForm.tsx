@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import PandaVideoEmbed from "@/components/formacao/comum/PandaVideoEmbed";
+import { devLog, devWarn } from "@/hooks/useOptimizedLogging";
 interface VideoLesson {
   id?: string;
   title: string;
@@ -70,7 +71,7 @@ const VideoLessonsForm: React.FC<VideoLessonsFormProps> = ({
         setVideoLessons(lessons);
       }
     } catch (error) {
-      console.error("Erro ao carregar vídeo-aulas:", error);
+      devWarn("Erro ao carregar vídeo-aulas:", error);
       toast({
         title: "Erro ao carregar vídeo-aulas",
         description: "Não foi possível carregar a lista de vídeo-aulas.",

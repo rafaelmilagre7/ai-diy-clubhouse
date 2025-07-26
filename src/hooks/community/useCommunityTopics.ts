@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { CommunityFilterType, UseCommunityTopicsParams } from "@/types/communityTypes";
+import { devLog, devWarn } from "@/hooks/useOptimizedLogging";
 
 export const useCommunityTopics = ({ 
   activeTab, 
@@ -14,7 +15,7 @@ export const useCommunityTopics = ({
     queryKey: ['community-topics', activeTab, selectedFilter, searchQuery, categorySlug],
     queryFn: async () => {
       try {
-        console.log('Carregando tópicos da comunidade...', { 
+        devLog('Carregando tópicos da comunidade...', { 
           activeTab, 
           selectedFilter, 
           searchQuery, 
@@ -36,10 +37,10 @@ export const useCommunityTopics = ({
             .from('community_categories')
             .select('id')
             .eq('slug', categorySlug)
-            .single();
+            .maybeSingle();
           
           if (categoryError) {
-            console.error("Erro ao buscar categoria:", categoryError.message);
+            devWarn("Erro ao buscar categoria:", categoryError.message);
             throw new Error(`Categoria '${categorySlug}' não encontrada`);
           }
           
@@ -91,19 +92,19 @@ export const useCommunityTopics = ({
         const { data, error } = await query;
         
         if (error) {
-          console.error("Erro ao buscar tópicos:", error.message);
+          devWarn("Erro ao buscar tópicos:", error.message);
           throw error;
         }
         
-        console.log('Tópicos carregados:', data?.length || 0);
+        devLog('Tópicos carregados:', data?.length || 0);
         return data || [];
       } catch (error: any) {
-        console.error("Erro ao buscar tópicos:", error.message);
+        devWarn("Erro ao buscar tópicos:", error.message);
         toast.error("Não foi possível carregar os tópicos. Por favor, tente novamente.");
         return [];
       }
     },
-    staleTime: 1000 * 60 * 3, // 3 minutos de cache
+    staleTime: 10 * 60 * 1000, // 10 minutos (aumentado)
     retry: 2,
     refetchOnWindowFocus: false
   });

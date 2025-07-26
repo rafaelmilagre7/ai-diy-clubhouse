@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { LearningLesson, LearningModule } from "@/lib/supabase/types";
 import { LearningCourseWithStats } from "@/lib/supabase/types/extended";
 import { useAuth } from "@/contexts/auth";
+import { devLog, devWarn } from "@/hooks/useOptimizedLogging";
 
 export const useLearningCourses = () => {
   const { user, profile } = useAuth();
@@ -15,7 +16,7 @@ export const useLearningCourses = () => {
   } = useQuery({
     queryKey: ["learning-courses", user?.id, profile?.role],
     queryFn: async () => {
-      console.log('[COURSES] Iniciando busca de cursos...', {
+      devLog('[COURSES] Iniciando busca de cursos...', {
         userId: user?.id,
         userEmail: user?.email,
         profileRole: profile?.role,
@@ -24,14 +25,14 @@ export const useLearningCourses = () => {
 
       try {
         // Estratégia 1: Tentar usar a função SQL get_courses_with_stats
-        console.log('[COURSES] Tentativa 1: Usando função SQL');
+        devLog('[COURSES] Tentativa 1: Usando função SQL');
         const { data: sqlData, error: sqlError } = await supabase.rpc('get_courses_with_stats');
 
         if (sqlError) {
-          console.warn('[COURSES] Função SQL falhou:', sqlError.message);
+          devWarn('[COURSES] Função SQL falhou:', sqlError.message);
           
           // Estratégia 2: Buscar diretamente das tabelas
-          console.log('[COURSES] Tentativa 2: Busca direta das tabelas');
+          devLog('[COURSES] Tentativa 2: Busca direta das tabelas');
           const { data: directData, error: directError } = await supabase
             .from("learning_courses")
             .select(`
@@ -42,7 +43,7 @@ export const useLearningCourses = () => {
             .order("order_index", { ascending: true });
 
           if (directError) {
-            console.error('[COURSES] Busca direta também falhou:', directError.message);
+            devWarn('[COURSES] Busca direta também falhou:', directError.message);
             throw directError;
           }
 
@@ -54,7 +55,7 @@ export const useLearningCourses = () => {
             is_restricted: false // Assumir que não é restrito se não conseguimos verificar
           })) || [];
 
-          console.log('[COURSES] Busca direta bem-sucedida:', {
+          devLog('[COURSES] Busca direta bem-sucedida:', {
             coursesFound: processedCourses.length,
             courses: processedCourses.map(c => ({ id: c.id, title: c.title }))
           });
@@ -62,14 +63,14 @@ export const useLearningCourses = () => {
           return processedCourses;
         }
 
-        console.log('[COURSES] Função SQL bem-sucedida:', {
+        devLog('[COURSES] Função SQL bem-sucedida:', {
           coursesFound: sqlData?.length || 0,
           courses: sqlData?.map(c => ({ id: c.id, title: c.title, is_restricted: c.is_restricted }))
         });
 
         // Processar dados da função SQL
         if (!sqlData || sqlData.length === 0) {
-          console.warn('[COURSES] Nenhum curso retornado pela função SQL');
+          devWarn('[COURSES] Nenhum curso retornado pela função SQL');
           return [];
         }
 
@@ -82,7 +83,7 @@ export const useLearningCourses = () => {
           return acc;
         }, []);
 
-        console.log('[COURSES] Cursos únicos encontrados:', uniqueCourses.length);
+        devLog('[COURSES] Cursos únicos encontrados:', uniqueCourses.length);
 
         // Buscar módulos e aulas para cada curso
         const coursesWithModules = await Promise.all(
@@ -110,7 +111,7 @@ export const useLearningCourses = () => {
                 .order("order_index", { ascending: true });
 
               if (modulesError) {
-                console.warn(`[COURSES] Erro ao buscar módulos para curso ${course.title}:`, modulesError.message);
+                devWarn(`[COURSES] Erro ao buscar módulos para curso ${course.title}:`, modulesError.message);
                 return course;
               }
 
@@ -143,7 +144,7 @@ export const useLearningCourses = () => {
                 all_lessons: allLessons
               };
             } catch (moduleError) {
-              console.warn(`[COURSES] Erro ao processar módulos para curso ${course.title}:`, moduleError);
+              devWarn(`[COURSES] Erro ao processar módulos para curso ${course.title}:`, moduleError);
               return course;
             }
           })
@@ -159,20 +160,20 @@ export const useLearningCourses = () => {
           const restrictedCount = finalCourses.filter(course => course.is_restricted).length;
           finalCourses = finalCourses.filter(course => !course.is_restricted);
           
-          console.log('[COURSES] Usuário não autenticado - filtrando cursos restritos:', {
+          devLog('[COURSES] Usuário não autenticado - filtrando cursos restritos:', {
             totalCourses: coursesWithModules.length,
             restrictedFiltered: restrictedCount,
             remainingCourses: finalCourses.length
           });
         } else {
-          console.log('[COURSES] Admin ou usuário autenticado - mostrando todos os cursos:', {
+          devLog('[COURSES] Admin ou usuário autenticado - mostrando todos os cursos:', {
             isAdmin,
             userEmail: user?.email,
             totalCourses: finalCourses.length
           });
         }
 
-        console.log('[COURSES] Cursos finais a serem retornados:', {
+        devLog('[COURSES] Cursos finais a serem retornados:', {
           count: finalCourses.length,
           courses: finalCourses.map(c => ({ 
             id: c.id, 
@@ -185,11 +186,11 @@ export const useLearningCourses = () => {
         return finalCourses;
 
       } catch (error) {
-        console.error('[COURSES] Erro geral na busca de cursos:', error);
+        devWarn('[COURSES] Erro geral na busca de cursos:', error);
         
         // Estratégia 3: Busca mínima de emergência
         try {
-          console.log('[COURSES] Tentativa de emergência: busca mínima');
+          devLog('[COURSES] Tentativa de emergência: busca mínima');
           const { data: emergencyData, error: emergencyError } = await supabase
             .from("learning_courses")
             .select("*")
@@ -197,11 +198,11 @@ export const useLearningCourses = () => {
             .order("order_index", { ascending: true });
 
           if (emergencyError) {
-            console.error('[COURSES] Busca de emergência falhou:', emergencyError.message);
+            devWarn('[COURSES] Busca de emergência falhou:', emergencyError.message);
             throw emergencyError;
           }
 
-          console.log('[COURSES] Busca de emergência bem-sucedida:', {
+          devLog('[COURSES] Busca de emergência bem-sucedida:', {
             coursesFound: emergencyData?.length || 0
           });
 
@@ -215,7 +216,7 @@ export const useLearningCourses = () => {
           })) || [];
 
         } catch (emergencyError) {
-          console.error('[COURSES] Todas as estratégias falharam:', emergencyError);
+          devWarn('[COURSES] Todas as estratégias falharam:', emergencyError);
           throw emergencyError;
         }
       }
@@ -223,10 +224,12 @@ export const useLearningCourses = () => {
     enabled: true,
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    staleTime: 10 * 60 * 1000, // 10 minutos (aumentado)
+    refetchOnWindowFocus: false
   });
 
   // Log do resultado final
-  console.log('[COURSES] Hook resultado final:', {
+  devLog('[COURSES] Hook resultado final:', {
     isLoading,
     error: error?.message,
     coursesCount: courses?.length || 0,
