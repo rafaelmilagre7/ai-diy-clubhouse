@@ -23,17 +23,17 @@ export const ToolsHeader = ({
     <div className="space-y-6">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-textPrimary">Ferramentas</h1>
-          <p className="text-textSecondary mt-1">
+          <h1 className="text-2xl font-bold text-foreground">Ferramentas</h1>
+          <p className="text-muted-foreground mt-1">
             Explore todas as ferramentas recomendadas pelo VIVER DE IA Club
           </p>
         </div>
         <div className="relative lg:w-72">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-textMuted" />
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
             placeholder="Buscar ferramenta..."
-            className="w-full pl-8 bg-backgroundLight border-white/10 text-textPrimary"
+            className="w-full pl-8"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
           />
@@ -52,16 +52,16 @@ export const ToolsHeader = ({
           transition={{ duration: 0.2 }}
           className="flex items-center"
         >
-          <span className="text-sm mr-2 text-textSecondary">Filtro ativo:</span>
+          <span className="text-sm mr-2 text-muted-foreground">Filtro ativo:</span>
           <Badge 
             variant="outline" 
-            className="bg-viverblue/10 text-viverblue border-viverblue/30 flex items-center gap-1"
+            className="flex items-center gap-1"
           >
             {selectedCategory}
             <Button
               variant="ghost"
               size="icon"
-              className="h-4 w-4 p-0 hover:bg-transparent text-viverblue"
+              className="h-4 w-4 p-0 hover:bg-transparent"
               onClick={() => onCategoryChange(null)}
             >
               ×
