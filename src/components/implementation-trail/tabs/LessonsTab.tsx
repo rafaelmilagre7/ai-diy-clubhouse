@@ -118,31 +118,46 @@ const LessonsTabContent = ({ lessons }: LessonsTabProps) => {
     if (aiLoading) {
       return (
         <div className="space-y-6">
-          <div className="text-center py-8">
-            <Brain className="h-12 w-12 text-viverblue mx-auto mb-4 animate-pulse" />
-            <h3 className="text-lg font-semibold text-foreground mb-2">
-              IA analisando seu perfil...
+          <div className="text-center py-12">
+            <div className="relative">
+              <Brain className="h-16 w-16 text-viverblue mx-auto mb-6 animate-pulse" />
+              <div className="absolute inset-0 bg-viverblue/20 rounded-full animate-ping opacity-20"></div>
+            </div>
+            <h3 className="text-xl font-semibold text-foreground mb-3">
+              🧠 IA analisando seu perfil personalizado...
             </h3>
-            <p className="text-muted-foreground">
-              Selecionando as melhores aulas para você
+            <p className="text-muted-foreground max-w-md mx-auto">
+              Nossa inteligência artificial está estudando seu histórico de aprendizado, 
+              progresso e perfil profissional para recomendar as aulas mais relevantes para você.
             </p>
+            <div className="mt-6 flex justify-center gap-2">
+              <div className="w-2 h-2 bg-viverblue rounded-full animate-bounce"></div>
+              <div className="w-2 h-2 bg-operational rounded-full animate-bounce animation-delay-200"></div>
+              <div className="w-2 h-2 bg-revenue rounded-full animate-bounce animation-delay-400"></div>
+            </div>
           </div>
         </div>
       );
     }
 
     return (
-      <div className="space-y-6">
-        {/* Header */}
+      <div className="space-y-8">
+        {/* Header da análise IA */}
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <BookOpen className="h-6 w-6 text-viverblue" />
-            <h2 className="text-2xl font-bold text-foreground">
-              Aulas Recomendadas para Você
+          <div className="flex items-center justify-center gap-3 mb-6">
+            <div className="p-3 bg-gradient-to-br from-viverblue/20 to-viverblue/10 rounded-2xl border border-viverblue/30">
+              <BookOpen className="h-8 w-8 text-viverblue" />
+            </div>
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-viverblue via-operational to-revenue bg-clip-text text-transparent">
+              Aulas Personalizadas com IA
             </h2>
+            <div className="p-3 bg-gradient-to-br from-operational/20 to-operational/10 rounded-2xl border border-operational/30">
+              <Brain className="h-8 w-8 text-operational" />
+            </div>
           </div>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            Nossa IA analisou seu perfil e selecionou as aulas mais relevantes para seus objetivos e nível de experiência.
+          <p className="text-muted-foreground max-w-3xl mx-auto text-lg">
+            Nossa IA analisou seu perfil completo, progresso de aprendizado e contexto profissional 
+            para selecionar as aulas mais relevantes para seus objetivos específicos.
           </p>
         </div>
 
