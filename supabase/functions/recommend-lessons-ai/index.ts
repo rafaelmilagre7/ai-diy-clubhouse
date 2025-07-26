@@ -309,13 +309,24 @@ RESPONDA APENAS EM JSON:
     console.log('✅ [TRAIL-AI] Resposta da IA recebida');
 
     const aiContent = aiResult.choices[0].message.content;
-    let personalizedTrail;
+    console.log('Conteúdo recebido:', aiContent);
     
+    // Limpar o conteúdo para extrair JSON válido
+    let cleanContent = aiContent.trim();
+    
+    // Remover blocos de código markdown se presentes
+    if (cleanContent.startsWith('```json')) {
+      cleanContent = cleanContent.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+    } else if (cleanContent.startsWith('```')) {
+      cleanContent = cleanContent.replace(/^```\s*/, '').replace(/\s*```$/, '');
+    }
+    
+    let personalizedTrail;
     try {
-      personalizedTrail = JSON.parse(aiContent);
+      personalizedTrail = JSON.parse(cleanContent);
     } catch (parseError) {
       console.error('❌ [TRAIL-AI] Erro ao fazer parse do JSON:', parseError);
-      console.log('Conteúdo recebido:', aiContent);
+      console.error('❌ [TRAIL-AI] Conteúdo limpo que falhou:', cleanContent);
       throw new Error('Resposta da IA inválida');
     }
 
