@@ -20,6 +20,8 @@ export interface LessonModule {
 }
 
 export function useLessonData({ lessonId, courseId }: UseLessonDataProps) {
+  console.log("🔍 useLessonData iniciado:", { lessonId, courseId });
+  
   // Buscar detalhes da lição - OTIMIZADO para carregamento mais rápido
   const { 
     data: lesson, 
