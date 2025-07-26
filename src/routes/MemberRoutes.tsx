@@ -13,6 +13,7 @@ import EditProfile from '@/pages/member/EditProfile';
 import SolutionDetails from '@/pages/member/SolutionDetails';
 import SolutionImplementation from '@/pages/member/SolutionImplementation';
 import ImplementationCompleted from '@/pages/member/ImplementationCompleted';
+import ImplementationConfirmation from '@/pages/member/ImplementationConfirmation';
 import ImplementationTrail from '@/pages/member/ImplementationTrail';
 import Benefits from '@/pages/member/Benefits';
 import Suggestions from '@/pages/member/Suggestions';
@@ -67,6 +68,7 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/profile/edit", EditProfile),
   createProtectedRoute("/profile/notifications", NotificationSettingsPage),
   createProtectedRoute("/solution/:id", SolutionDetails),
+  createProtectedRoute("/solution/:id/confirmation", ImplementationConfirmation),
   createProtectedRoute("/solution/:id/certificate", SolutionCertificate),
   createProtectedRoute("/implement/:id/:moduleIdx", SolutionImplementation),
   createProtectedRoute("/implementation/:id", SolutionImplementation),

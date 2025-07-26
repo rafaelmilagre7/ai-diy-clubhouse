@@ -42,7 +42,7 @@ const CompletionTab: React.FC<CompletionTabProps> = ({
         .upsert({
           user_id: user.id,
           solution_id: solutionId,
-          status: 'completed',
+          is_completed: true,
           completion_percentage: 100,
           completed_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
