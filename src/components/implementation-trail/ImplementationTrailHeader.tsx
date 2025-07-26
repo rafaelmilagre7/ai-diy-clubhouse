@@ -125,45 +125,6 @@ export const ImplementationTrailHeader = ({
             </div>
           </div>
 
-          {/* Call to Action Aprimorado */}
-          <div className="mt-8 relative group">
-            <div className="p-6 bg-gradient-to-r from-viverblue/10 via-operational/5 to-revenue/10 rounded-xl border border-viverblue/30 group-hover:border-viverblue/50 transition-all duration-500 relative overflow-hidden">
-              {/* Animated background pattern */}
-              <div className="absolute inset-0 bg-gradient-to-r from-viverblue/5 to-operational/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              
-              <div className="relative z-10 text-center">
-                <div className="flex items-center justify-center gap-3 mb-3">
-                  <div className="flex gap-1">
-                    <div className="w-2 h-2 bg-viverblue rounded-full animate-pulse" />
-                    <div className="w-2 h-2 bg-operational rounded-full animate-pulse animation-delay-1000" />
-                    <div className="w-2 h-2 bg-revenue rounded-full animate-pulse animation-delay-2000" />
-                  </div>
-                  <span className="text-lg font-semibold text-foreground">🎯 Trilha Inteligente Ativa</span>
-                  <div className="flex gap-1">
-                    <div className="w-2 h-2 bg-revenue rounded-full animate-pulse animation-delay-2000" />
-                    <div className="w-2 h-2 bg-operational rounded-full animate-pulse animation-delay-1000" />
-                    <div className="w-2 h-2 bg-viverblue rounded-full animate-pulse" />
-                  </div>
-                </div>
-                <p className="text-sm text-muted-foreground group-hover:text-foreground transition-colors duration-300">
-                  Esta trilha foi gerada com <span className="font-semibold text-viverblue">IA avançada</span> considerando seu perfil, experiência e objetivos específicos.
-                  <br />
-                  <span className="text-xs opacity-75">Última atualização: Agora • Próxima análise: Quando necessário</span>
-                </p>
-                
-                {/* Regeneration button if provided */}
-                {onRegenerate && <button onClick={onRegenerate} disabled={isRegenerating} className="mt-4 px-4 py-2 bg-viverblue/20 hover:bg-viverblue/30 border border-viverblue/40 rounded-lg text-sm text-viverblue hover:text-white transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105">
-                    {isRegenerating ? <span className="flex items-center gap-2">
-                        <TrendingUp className="h-4 w-4 animate-spin" />
-                        Regenerando...
-                      </span> : <span className="flex items-center gap-2">
-                        <Brain className="h-4 w-4" />
-                        Nova Análise IA
-                      </span>}
-                  </button>}
-              </div>
-            </div>
-          </div>
         </CardContent>
       </Card>
     </div>;
