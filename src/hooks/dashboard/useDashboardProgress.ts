@@ -26,14 +26,25 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
       throw new Error("Usuário não autenticado");
     }
     
-    // Verificar cache local primeiro
+    // Verificar cache local primeiro - MAS não usar durante debug
     const cacheKey = `progress_${user.id}`;
     const cached = progressCache.get(cacheKey);
-    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-      return cached.data;
-    }
+    
+    console.log("🔧 [DASHBOARD DEBUG] Cache status:", {
+      hasCached: !!cached,
+      cacheAge: cached ? Date.now() - cached.timestamp : 0,
+      cacheTTL: CACHE_TTL,
+      shouldUseCache: cached && Date.now() - cached.timestamp < CACHE_TTL
+    });
+    
+    // DESATIVAR CACHE TEMPORARIAMENTE PARA DEBUG
+    // if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    //   return cached.data;
+    // }
     
     try {
+      console.log("🔧 [DASHBOARD DEBUG] Fazendo query fresh para buscar progresso...");
+      
       // Query otimizada com batch
       const { data, error } = await supabase
         .from("progress")
@@ -46,6 +57,8 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
       }
       
       const result = data || [];
+      
+      console.log("🔧 [DASHBOARD DEBUG] Dados recebidos do Supabase:", result);
       
       // Atualizar cache local
       progressCache.set(cacheKey, {
@@ -114,13 +127,29 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
       solutions.forEach(solution => {
         const progress = progressMap.get(solution.id);
         
+        console.log(`🔧 [DASHBOARD DEBUG] Solução: ${solution.title}`, {
+          solutionId: solution.id,
+          hasProgress: !!progress,
+          isCompleted: progress?.is_completed,
+          progressData: progress
+        });
+        
         if (!progress) {
           recommended.push(solution);
         } else if (progress.is_completed) {
           completed.push(solution);
+          console.log(`✅ [DASHBOARD DEBUG] Adicionando à lista de concluídas: ${solution.title}`);
         } else {
           active.push(solution);
         }
+      });
+
+      console.log(`🔧 [DASHBOARD DEBUG] Resultado final:`, {
+        totalSolutions: solutions.length,
+        completedCount: completed.length,
+        activeCount: active.length,
+        recommendedCount: recommended.length,
+        completedSolutions: completed.map(s => s.title)
       });
 
       return {
