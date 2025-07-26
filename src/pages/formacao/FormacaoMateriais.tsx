@@ -1,46 +1,47 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
-import { LearningResource } from "@/lib/supabase";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, FileText, Download, ExternalLink, Loader2, Filter, BookOpen } from "lucide-react";
+import { Plus, FileText, Download, ExternalLink, BookOpen, Clock, Heart } from "lucide-react";
 import { RecursoFormDialog } from "@/components/formacao/materiais/RecursoFormDialog";
 import { RecursoDeleteDialog } from "@/components/formacao/materiais/RecursoDeleteDialog";
 import { RecursosList } from "@/components/formacao/materiais/RecursosList";
-
-interface RecursoWithDetails extends LearningResource {
-  lesson?: {
-    id: string;
-    title: string;
-    module?: {
-      id: string;
-      title: string;
-      course?: {
-        id: string;
-        title: string;
-      };
-    };
-  };
-}
+import { MaterialGridView } from "@/components/formacao/materiais/MaterialGridView";
+import { MaterialHierarchyView } from "@/components/formacao/materiais/MaterialHierarchyView";
+import { AdvancedFilters } from "@/components/formacao/materiais/AdvancedFilters";
+import { ViewModeToggle } from "@/components/formacao/materiais/ViewModeToggle";
+import { useMaterialFavorites } from "@/hooks/formacao/useMaterialFavorites";
+import { RecursoWithDetails, MaterialFilters, ViewMode, MaterialStats } from "@/components/formacao/materiais/types";
 
 const FormacaoMateriais = () => {
   const { profile } = useAuth();
+  const { favorites, toggleFavorite } = useMaterialFavorites();
+  
+  // Estados principais
   const [recursos, setRecursos] = useState<RecursoWithDetails[]>([]);
   const [cursos, setCursos] = useState<{id: string, title: string}[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCourse, setSelectedCourse] = useState<string>('todos');
-  const [activeTab, setActiveTab] = useState('todos');
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  
+  // Estados dos diálogos
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
   const [editingRecurso, setEditingRecurso] = useState<RecursoWithDetails | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [recursoToDelete, setRecursoToDelete] = useState<RecursoWithDetails | null>(null);
+  
+  // Estados dos filtros
+  const [filters, setFilters] = useState<MaterialFilters>({
+    search: '',
+    course: 'todos',
+    type: 'todos',
+    dateRange: 'todos',
+    sizeRange: 'todos',
+    showFavorites: false
+  });
 
   // Buscar recursos com dados completos
   const fetchRecursos = async () => {
@@ -94,30 +95,142 @@ const FormacaoMateriais = () => {
     fetchCursos();
   }, []);
 
-  // Filtrar recursos baseado no file_type e curso
-  const filteredRecursos = recursos.filter(recurso => {
-    const matchesSearch = !searchQuery || 
-      recurso.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      recurso.description?.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesTab = activeTab === 'todos' || 
-      (activeTab === 'arquivos' && (recurso.file_type?.includes('pdf') || recurso.file_type?.includes('doc') || recurso.file_type?.includes('zip'))) ||
-      (activeTab === 'links' && recurso.file_url?.startsWith('http')) ||
-      (activeTab === 'videos' && (recurso.file_type?.includes('video') || recurso.file_url?.includes('youtube')));
-    
-    const matchesCourse = selectedCourse === 'todos' || 
-      recurso.lesson?.module?.course?.id === selectedCourse;
-    
-    return matchesSearch && matchesTab && matchesCourse;
-  });
+  // Filtrar recursos baseado nos filtros ativos
+  const filteredRecursos = useMemo(() => {
+    return recursos.filter(recurso => {
+      // Filtro de busca
+      if (filters.search) {
+        const searchLower = filters.search.toLowerCase();
+        const matchesName = recurso.name.toLowerCase().includes(searchLower);
+        const matchesDescription = recurso.description?.toLowerCase().includes(searchLower);
+        const matchesLesson = recurso.lesson?.title.toLowerCase().includes(searchLower);
+        const matchesCourse = recurso.lesson?.module?.course?.title.toLowerCase().includes(searchLower);
+        
+        if (!matchesName && !matchesDescription && !matchesLesson && !matchesCourse) {
+          return false;
+        }
+      }
+
+      // Filtro por curso
+      if (filters.course !== 'todos') {
+        if (recurso.lesson?.module?.course?.id !== filters.course) {
+          return false;
+        }
+      }
+
+      // Filtro por tipo
+      if (filters.type !== 'todos') {
+        const fileType = recurso.file_type?.toLowerCase() || '';
+        switch (filters.type) {
+          case 'pdf':
+            if (!fileType.includes('pdf')) return false;
+            break;
+          case 'doc':
+            if (!fileType.includes('doc') && !fileType.includes('word')) return false;
+            break;
+          case 'zip':
+            if (!fileType.includes('zip') && !fileType.includes('rar')) return false;
+            break;
+          case 'image':
+            if (!fileType.includes('image')) return false;
+            break;
+          case 'video':
+            if (!fileType.includes('video') && !recurso.file_url?.includes('youtube')) return false;
+            break;
+          case 'link':
+            if (!recurso.file_url?.startsWith('http')) return false;
+            break;
+        }
+      }
+
+      // Filtro por data
+      if (filters.dateRange !== 'todos') {
+        const createdAt = new Date(recurso.created_at);
+        const now = new Date();
+        const diffTime = now.getTime() - createdAt.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        switch (filters.dateRange) {
+          case 'hoje':
+            if (diffDays > 1) return false;
+            break;
+          case 'semana':
+            if (diffDays > 7) return false;
+            break;
+          case 'mes':
+            if (diffDays > 30) return false;
+            break;
+          case 'trimestre':
+            if (diffDays > 90) return false;
+            break;
+          case 'ano':
+            if (diffDays > 365) return false;
+            break;
+        }
+      }
+
+      // Filtro por tamanho
+      if (filters.sizeRange !== 'todos' && recurso.file_size_bytes) {
+        const sizeInMB = recurso.file_size_bytes / (1024 * 1024);
+        switch (filters.sizeRange) {
+          case 'pequeno':
+            if (sizeInMB >= 1) return false;
+            break;
+          case 'medio':
+            if (sizeInMB < 1 || sizeInMB >= 10) return false;
+            break;
+          case 'grande':
+            if (sizeInMB < 10 || sizeInMB >= 100) return false;
+            break;
+          case 'muito-grande':
+            if (sizeInMB < 100) return false;
+            break;
+        }
+      }
+
+      // Filtro de favoritos
+      if (filters.showFavorites) {
+        if (!favorites.includes(recurso.id)) return false;
+      }
+
+      return true;
+    });
+  }, [recursos, filters, favorites]);
 
   // Estatísticas baseadas nos recursos filtrados
-  const stats = {
-    total: filteredRecursos.length,
-    arquivos: filteredRecursos.filter(r => r.file_type?.includes('pdf') || r.file_type?.includes('doc') || r.file_type?.includes('zip')).length,
-    links: filteredRecursos.filter(r => r.file_url?.startsWith('http')).length,
-    videos: filteredRecursos.filter(r => r.file_type?.includes('video') || r.file_url?.includes('youtube')).length
-  };
+  const stats: MaterialStats = useMemo(() => {
+    return {
+      total: filteredRecursos.length,
+      arquivos: filteredRecursos.filter(r => 
+        r.file_type?.includes('pdf') || 
+        r.file_type?.includes('doc') || 
+        r.file_type?.includes('zip')
+      ).length,
+      links: filteredRecursos.filter(r => r.file_url?.startsWith('http')).length,
+      videos: filteredRecursos.filter(r => 
+        r.file_type?.includes('video') || 
+        r.file_url?.includes('youtube')
+      ).length,
+      favoritos: favorites.length,
+      recentes: recursos.filter(r => {
+        const diffTime = new Date().getTime() - new Date(r.created_at).getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays <= 7;
+      }).length
+    };
+  }, [filteredRecursos, favorites, recursos]);
+
+  // Contar filtros ativos
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (filters.search) count++;
+    if (filters.course !== 'todos') count++;
+    if (filters.type !== 'todos') count++;
+    if (filters.dateRange !== 'todos') count++;
+    if (filters.sizeRange !== 'todos') count++;
+    if (filters.showFavorites) count++;
+    return count;
+  }, [filters]);
 
   // Handlers
   const handleNovoRecurso = () => {
@@ -164,7 +277,37 @@ const FormacaoMateriais = () => {
     fetchRecursos();
   };
 
+  const handleBulkDownload = () => {
+    toast.info("Funcionalidade de download em lote será implementada em breve!");
+  };
+
   const isAdmin = profile?.role === 'admin';
+
+  // Renderizar conteúdo baseado no modo de visualização
+  const renderContent = () => {
+    const sharedProps = {
+      recursos: filteredRecursos,
+      loading,
+      onEdit: handleEditarRecurso,
+      onDelete: handleExcluirRecurso,
+      isAdmin
+    };
+
+    switch (viewMode) {
+      case 'grid':
+        return (
+          <MaterialGridView 
+            {...sharedProps}
+            onToggleFavorite={toggleFavorite}
+            favorites={favorites}
+          />
+        );
+      case 'hierarchy':
+        return <MaterialHierarchyView {...sharedProps} />;
+      default:
+        return <RecursosList {...sharedProps} />;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
@@ -183,7 +326,7 @@ const FormacaoMateriais = () => {
               Central de Materiais
             </h1>
             <p className="text-muted-foreground text-lg mt-2">
-              Gerencie recursos, arquivos e materiais de apoio da plataforma
+              Hub central de recursos, arquivos e materiais educacionais
             </p>
           </div>
           
@@ -198,11 +341,11 @@ const FormacaoMateriais = () => {
           )}
         </div>
 
-        {/* Estatísticas */}
-        <div className="grid gap-6 md:grid-cols-4">
+        {/* Estatísticas Expandidas */}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-6">
           <Card className="bg-gradient-to-br from-card to-card/50 border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total de Materiais</CardTitle>
+              <CardTitle className="text-sm font-medium">Total</CardTitle>
               <FileText className="h-5 w-5 text-primary" />
             </CardHeader>
             <CardContent>
@@ -210,7 +353,7 @@ const FormacaoMateriais = () => {
                 {stats.total}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                {recursos.length} no total
+                de {recursos.length} materiais
               </p>
             </CardContent>
           </Card>
@@ -232,7 +375,7 @@ const FormacaoMateriais = () => {
           
           <Card className="bg-gradient-to-br from-card to-card/50 border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Links Externos</CardTitle>
+              <CardTitle className="text-sm font-medium">Links</CardTitle>
               <ExternalLink className="h-5 w-5 text-blue-500" />
             </CardHeader>
             <CardContent>
@@ -240,7 +383,7 @@ const FormacaoMateriais = () => {
                 {stats.links}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                URLs e recursos web
+                Recursos externos
               </p>
             </CardContent>
           </Card>
@@ -259,71 +402,63 @@ const FormacaoMateriais = () => {
               </p>
             </CardContent>
           </Card>
+
+          <Card className="bg-gradient-to-br from-card to-card/50 border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Favoritos</CardTitle>
+              <Heart className="h-5 w-5 text-red-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-red-600">
+                {stats.favoritos}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Seus preferidos
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-card to-card/50 border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Recentes</CardTitle>
+              <Clock className="h-5 w-5 text-orange-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-orange-600">
+                {stats.recentes}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Última semana
+              </p>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Filtros */}
-        <Card className="bg-gradient-to-r from-card/50 to-card/30 border-0 shadow-lg">
-          <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  placeholder="Buscar materiais por nome ou descrição..." 
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 h-12 bg-background/50 border-0 shadow-sm focus:ring-2 focus:ring-primary/20"
-                />
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4 text-muted-foreground" />
-                <Select value={selectedCourse} onValueChange={setSelectedCourse}>
-                  <SelectTrigger className="w-48 h-12 bg-background/50 border-0 shadow-sm">
-                    <SelectValue placeholder="Filtrar por curso" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todos">Todos os cursos</SelectItem>
-                    {cursos.map((curso) => (
-                      <SelectItem key={curso.id} value={curso.id}>
-                        {curso.title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Filtros Avançados */}
+        <AdvancedFilters
+          filters={filters}
+          onFiltersChange={setFilters}
+          cursos={cursos}
+          activeFilterCount={activeFilterCount}
+        />
 
-        {/* Tabs e Lista */}
+        {/* Toggle de Visualização */}
+        <ViewModeToggle
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+          onBulkDownload={handleBulkDownload}
+        />
+
+        {/* Conteúdo Principal */}
         <Card className="bg-gradient-to-r from-card/80 to-card/60 border-0 shadow-xl">
           <CardContent className="p-6">
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-4 bg-muted/20">
-                <TabsTrigger value="todos" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                  Todos ({stats.total})
-                </TabsTrigger>
-                <TabsTrigger value="arquivos" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                  Arquivos ({stats.arquivos})
-                </TabsTrigger>
-                <TabsTrigger value="links" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                  Links ({stats.links})
-                </TabsTrigger>
-                <TabsTrigger value="videos" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                  Vídeos ({stats.videos})
-                </TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value={activeTab} className="mt-6">
-                <RecursosList 
-                  recursos={filteredRecursos}
-                  loading={loading}
-                  onEdit={handleEditarRecurso}
-                  onDelete={handleExcluirRecurso}
-                  isAdmin={isAdmin}
-                />
-              </TabsContent>
-            </Tabs>
+            {loading ? (
+              <div className="flex justify-center items-center py-16">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+              </div>
+            ) : (
+              renderContent()
+            )}
           </CardContent>
         </Card>
 
