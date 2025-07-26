@@ -75,10 +75,13 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
   };
 
   return (
-    <div className={`w-full aspect-video ${className || ''}`}>
+    <div className={`relative w-full aspect-video ${className || ''}`}>
       {loading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-slate-100 rounded-md">
-          <div className="animate-pulse">Carregando vídeo...</div>
+        <div className="absolute inset-0 flex items-center justify-center bg-slate-900/90 rounded-md z-10">
+          <div className="flex flex-col items-center space-y-3">
+            <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent"></div>
+            <div className="text-white text-sm">Carregando vídeo...</div>
+          </div>
         </div>
       )}
       <iframe
@@ -87,13 +90,18 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
         title={title}
         width={width}
         height={height}
-        loading="lazy"
+        loading="eager"
         className="w-full h-full rounded-md"
         frameBorder="0"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowFullScreen
         onLoad={handleLoad}
         onError={handleError}
+        style={{ 
+          backgroundColor: '#0f172a',
+          opacity: loading ? 0 : 1,
+          transition: 'opacity 0.3s ease-in-out'
+        }}
       />
     </div>
   );

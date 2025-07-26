@@ -131,7 +131,7 @@ const LessonView = () => {
             Voltar para o curso
           </Button>
           
-          {/* Conteúdo principal da aula */}
+          {/* Conteúdo principal da aula com Suspense */}
           <div className="space-y-6">
             <LessonHeader 
               title={lesson?.title || ""} 
@@ -141,22 +141,28 @@ const LessonView = () => {
               progress={isCompleted ? 100 : 0}
             />
             
-            <div className="backdrop-blur-sm bg-white/5 rounded-2xl border border-white/10 p-6 shadow-2xl">
-              <LessonContent 
-                lesson={lesson} 
-                videos={safeVideos}
-                resources={safeResources}
-                isCompleted={isCompleted}
-                onProgressUpdate={handleProgressUpdate} 
-                onComplete={completeLesson}
-                prevLesson={prevLesson}
-                nextLesson={nextLesson}
-                courseId={courseId}
-                allLessons={safeAllCourseLessons}
-                onNextLesson={navigateToNext}
-                onPreviousLesson={navigateToPrevious}
-                isUpdating={isUpdating}
-              />
+            <div className="backdrop-blur-sm bg-white/5 rounded-2xl border border-white/10 p-6 shadow-2xl min-h-[400px]">
+              <Suspense fallback={
+                <div className="w-full h-96 flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                </div>
+              }>
+                <LessonContent 
+                  lesson={lesson} 
+                  videos={safeVideos}
+                  resources={safeResources}
+                  isCompleted={isCompleted}
+                  onProgressUpdate={handleProgressUpdate} 
+                  onComplete={completeLesson}
+                  prevLesson={prevLesson}
+                  nextLesson={nextLesson}
+                  courseId={courseId}
+                  allLessons={safeAllCourseLessons}
+                  onNextLesson={navigateToNext}
+                  onPreviousLesson={navigateToPrevious}
+                  isUpdating={isUpdating}
+                />
+              </Suspense>
             </div>
           </div>
         </div>
