@@ -22,39 +22,60 @@ interface SolutionDataContextType {
 const SolutionDataContext = createContext<SolutionDataContextType | undefined>(undefined);
 
 export const SolutionDataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [solutions, setSolutions] = useState<Record<string, SolutionData>>({});
+  // Cache persistente entre sessões - 30 minutos
+  const [solutions, setSolutions] = useState<Record<string, SolutionData>>(() => {
+    try {
+      const stored = sessionStorage.getItem('trail_solutions_cache');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Date.now() - parsed.timestamp < 1800000) { // 30 minutos
+          return parsed.data;
+        }
+      }
+    } catch (error) {
+      console.warn('Erro ao carregar cache de soluções:', error);
+    }
+    return {};
+  });
+  
   const [loading, setLoading] = useState(false);
-  const [loadedIds, setLoadedIds] = useState<Set<string>>(new Set());
-  const [cache, setCache] = useState<Map<string, { data: SolutionData[], timestamp: number }>>(new Map());
-  const { log, logError } = useLogging();
+  const [requestInProgress, setRequestInProgress] = useState<Set<string>>(new Set());
+  const { logError } = useLogging();
+
+  // Salvar no sessionStorage sempre que solutions mudar
+  useEffect(() => {
+    if (Object.keys(solutions).length > 0) {
+      try {
+        sessionStorage.setItem('trail_solutions_cache', JSON.stringify({
+          data: solutions,
+          timestamp: Date.now()
+        }));
+      } catch (error) {
+        console.warn('Erro ao salvar cache de soluções:', error);
+      }
+    }
+  }, [solutions]);
 
   const loadSolutions = useCallback(async (solutionIds: string[]): Promise<void> => {
     if (!solutionIds.length) return;
     
-    // Cache inteligente - 5 minutos
-    const cacheKey = solutionIds.sort().join(',');
-    const cached = cache.get(cacheKey);
-    const now = Date.now();
-    
-    if (cached && (now - cached.timestamp) < 300000) {
-      const solutionsMap: Record<string, SolutionData> = {};
-      cached.data.forEach(solution => {
-        solutionsMap[solution.id] = solution;
-      });
-      setSolutions(prev => ({ ...prev, ...solutionsMap }));
-      return;
-    }
+    // Verificar quais soluções já temos
+    const missingIds = solutionIds.filter(id => !solutions[id]);
+    if (missingIds.length === 0) return;
 
-    const newIds = solutionIds.filter(id => !loadedIds.has(id));
-    if (newIds.length === 0) return;
+    // Evitar requisições duplicadas
+    const newMissingIds = missingIds.filter(id => !requestInProgress.has(id));
+    if (newMissingIds.length === 0) return;
 
+    // Marcar como em progresso
+    setRequestInProgress(prev => new Set([...prev, ...newMissingIds]));
     setLoading(true);
     
     try {
       const { data, error } = await supabase
         .from('solutions')
         .select('id, title, description, category, difficulty, thumbnail_url, tags')
-        .in('id', newIds);
+        .in('id', newMissingIds);
 
       if (error) throw error;
 
@@ -65,17 +86,19 @@ export const SolutionDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
         });
         
         setSolutions(prev => ({ ...prev, ...solutionsMap }));
-        setLoadedIds(prev => new Set([...prev, ...newIds]));
-        
-        // Atualizar cache
-        setCache(prev => new Map(prev.set(cacheKey, { data, timestamp: now })));
       }
     } catch (error) {
       logError('Erro ao carregar soluções:', error);
     } finally {
       setLoading(false);
+      // Remover das requisições em progresso
+      setRequestInProgress(prev => {
+        const newSet = new Set(prev);
+        newMissingIds.forEach(id => newSet.delete(id));
+        return newSet;
+      });
     }
-  }, [loadedIds, cache, logError]);
+  }, [solutions, requestInProgress, logError]);
 
   const getSolution = useCallback((solutionId: string): SolutionData | null => {
     return solutions[solutionId] || null;
