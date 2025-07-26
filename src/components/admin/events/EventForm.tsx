@@ -15,6 +15,7 @@ import { EventRecurrence } from "./form/EventRecurrence";
 import { eventSchema, type EventFormData } from "./form/EventFormSchema";
 import { type Event } from "@/types/events";
 import { formatDateTimeLocal, convertLocalToUTC } from "@/utils/timezoneUtils";
+import { RecurrenceEditDialog } from "./RecurrenceEditDialog";
 
 interface EventFormProps {
   event?: Event;
@@ -23,6 +24,8 @@ interface EventFormProps {
 
 export const EventForm = ({ event, onSuccess }: EventFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showRecurrenceDialog, setShowRecurrenceDialog] = useState(false);
+  const [pendingFormData, setPendingFormData] = useState<EventFormData | null>(null);
   const queryClient = useQueryClient();
 
   const form = useForm<EventFormData>({
@@ -45,6 +48,17 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
   });
 
   const onSubmit = async (data: EventFormData) => {
+    // Se for edição de evento recorrente, mostrar dialog de escolha
+    if (event && event.is_recurring && (event.parent_event_id || event.recurrence_pattern)) {
+      setPendingFormData(data);
+      setShowRecurrenceDialog(true);
+      return;
+    }
+
+    await handleSubmit(data, 'this');
+  };
+
+  const handleSubmit = async (data: EventFormData, recurrenceChoice: 'this' | 'future' | 'all') => {
     try {
       setIsSubmitting(true);
 
@@ -72,13 +86,18 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
 
       let result;
       if (event) {
-        // Atualizar evento existente
-        result = await supabase
-          .from("events")
-          .update(eventData)
-          .eq("id", event.id)
-          .select()
-          .single();
+        // Lógica para eventos recorrentes
+        if (event.is_recurring && recurrenceChoice !== 'this') {
+          result = await handleRecurrentEventUpdate(eventData, recurrenceChoice);
+        } else {
+          // Atualizar evento individual
+          result = await supabase
+            .from("events")
+            .update(eventData)
+            .eq("id", event.id)
+            .select()
+            .single();
+        }
       } else {
         // Criar novo evento
         const { data: userData } = await supabase.auth.getUser();
@@ -120,25 +139,74 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
     }
   };
 
-  return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <EventBasicInfo form={form} />
-        <EventDateTime form={form} />
-        <EventLocation form={form} />
-        <EventCoverImage form={form} />
-        <EventRecurrence form={form} />
+  const handleRecurrentEventUpdate = async (eventData: any, choice: 'future' | 'all') => {
+    if (!event) return null;
 
-        <div className="flex justify-end gap-3 pt-6 border-t">
-          <Button
-            type="submit"
-            disabled={isSubmitting}
-            className="min-w-[100px]"
-          >
-            {isSubmitting ? "Salvando..." : event ? "Atualizar" : "Criar"}
-          </Button>
-        </div>
-      </form>
-    </Form>
+    try {
+      if (choice === 'all') {
+        // Atualizar todos os eventos da série (mesmo parent_event_id ou é o pai)
+        const parentId = event.parent_event_id || event.id;
+        
+        return await supabase
+          .from("events")
+          .update(eventData)
+          .or(`id.eq.${parentId},parent_event_id.eq.${parentId}`)
+          .select();
+      } else if (choice === 'future') {
+        // Atualizar este evento e todos os futuros da série
+        const parentId = event.parent_event_id || event.id;
+        
+        return await supabase
+          .from("events")
+          .update(eventData)
+          .or(`id.eq.${parentId},parent_event_id.eq.${parentId}`)
+          .gte('start_time', event.start_time)
+          .select();
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar eventos recorrentes:', error);
+      throw error;
+    }
+  };
+
+  const handleRecurrenceChoice = async (choice: 'this' | 'future' | 'all') => {
+    if (!pendingFormData) return;
+    
+    setShowRecurrenceDialog(false);
+    await handleSubmit(pendingFormData, choice);
+    setPendingFormData(null);
+  };
+
+  return (
+    <>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <EventBasicInfo form={form} />
+          <EventDateTime form={form} />
+          <EventLocation form={form} />
+          <EventCoverImage form={form} />
+          <EventRecurrence form={form} />
+
+          <div className="flex justify-end gap-3 pt-6 border-t border-border/50">
+            <Button 
+              type="submit" 
+              disabled={isSubmitting}
+              className="bg-viverblue hover:bg-viverblue/90 text-white shadow-aurora min-w-[120px]"
+            >
+              {isSubmitting ? "Salvando..." : (event ? "Salvar Alterações" : "Criar Evento")}
+            </Button>
+          </div>
+        </form>
+      </Form>
+
+      <RecurrenceEditDialog
+        isOpen={showRecurrenceDialog}
+        onClose={() => {
+          setShowRecurrenceDialog(false);
+          setPendingFormData(null);
+        }}
+        onChoice={handleRecurrenceChoice}
+      />
+    </>
   );
 };
