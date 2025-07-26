@@ -65,8 +65,8 @@ serve(async (req) => {
       .select('*')
       .eq('user_id', user.id);
 
-    // Buscar aulas disponíveis
-    const { data: availableLessons } = await supabaseClient
+    // Buscar aulas disponíveis - CONSULTA CORRIGIDA
+    const { data: availableLessons, error: lessonsError } = await supabaseClient
       .from('learning_lessons')
       .select(`
         id,
@@ -74,11 +74,17 @@ serve(async (req) => {
         description,
         cover_image_url,
         difficulty_level,
-        estimated_time_minutes
+        estimated_time_minutes,
+        module_id,
+        order_index
       `)
       .eq('published', true)
       .order('order_index')
       .limit(15);
+
+    if (lessonsError) {
+      console.error('❌ [TRAIL-AI] Erro ao buscar aulas:', lessonsError);
+    }
 
     // Buscar soluções disponíveis
     const { data: availableSolutions } = await supabaseClient
@@ -279,7 +285,7 @@ RESPONDA APENAS EM JSON:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4.1-2025-04-14',
         messages: [
           {
             role: 'system',
