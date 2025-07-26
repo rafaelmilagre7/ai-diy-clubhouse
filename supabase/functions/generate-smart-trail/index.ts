@@ -65,6 +65,10 @@ const SCORING_MATRIX = {
   
   // Pontuação por experiência em IA
   aiExperience: {
+    'basic': { difficulty: 'easy', bonus: 20 },
+    'intermediate': { difficulty: 'medium', bonus: 10 },
+    'advanced': { difficulty: 'advanced', bonus: 0 },
+    // Manter compatibilidade com valores antigos
     'iniciante': { difficulty: 'easy', bonus: 20 },
     'intermediario': { difficulty: 'medium', bonus: 10 },
     'avancado': { difficulty: 'advanced', bonus: 0 },
@@ -95,7 +99,7 @@ function calculateSolutionScore(solution: Solution, profile: UserProfile): numbe
   }
   
   // Bonus por experiência em IA
-  const aiLevel = profile.ai_knowledge_level || 'iniciante';
+  const aiLevel = profile.ai_knowledge_level || 'basic';
   const aiPrefs = SCORING_MATRIX.aiExperience[aiLevel];
   if (aiPrefs && solution.difficulty === aiPrefs.difficulty) {
     score += aiPrefs.bonus;
@@ -134,10 +138,12 @@ function generatePersonalizedJustification(solution: Solution, profile: UserProf
   }
   
   // Razão baseada na experiência
-  const aiLevel = profile.ai_knowledge_level || 'iniciante';
-  if (aiLevel === 'iniciante' && solution.difficulty === 'easy') {
+  const aiLevel = profile.ai_knowledge_level || 'basic';
+  if ((aiLevel === 'basic' || aiLevel === 'iniciante') && solution.difficulty === 'easy') {
     reasons.push('Perfeito para quem está começando com IA');
-  } else if (aiLevel === 'avancado' && solution.difficulty === 'advanced') {
+  } else if ((aiLevel === 'intermediate' || aiLevel === 'intermediario') && solution.difficulty === 'medium') {
+    reasons.push('Adequado para seu nível intermediário em IA');
+  } else if ((aiLevel === 'advanced' || aiLevel === 'avancado') && solution.difficulty === 'advanced') {
     reasons.push('Desafio adequado para seu nível avançado');
   }
   
@@ -155,7 +161,7 @@ function generatePersonalizedJustification(solution: Solution, profile: UserProf
 }
 
 function estimateImplementationTime(solution: Solution, profile: UserProfile): string {
-  const aiLevel = profile.ai_knowledge_level || 'iniciante';
+  const aiLevel = profile.ai_knowledge_level || 'basic';
   const companySize = profile.company_size || 'solo';
   
   let baseHours = 2;
@@ -165,8 +171,8 @@ function estimateImplementationTime(solution: Solution, profile: UserProfile): s
   if (solution.difficulty === 'advanced') baseHours = 8;
   
   // Ajustar por experiência
-  if (aiLevel === 'iniciante') baseHours *= 1.5;
-  if (aiLevel === 'avancado') baseHours *= 0.7;
+  if (aiLevel === 'basic' || aiLevel === 'iniciante') baseHours *= 1.5;
+  if (aiLevel === 'advanced' || aiLevel === 'avancado') baseHours *= 0.7;
   
   // Ajustar por tamanho da empresa
   if (companySize === '51-200' || companySize === '200+') baseHours *= 1.3;
@@ -282,7 +288,7 @@ serve(async (req) => {
       industry: profile?.industry || onboardingData?.business_info?.company_sector,
       company_size: onboardingData?.business_info?.company_size || onboardingData?.company_size,
       annual_revenue: onboardingData?.business_info?.annual_revenue || onboardingData?.annual_revenue,
-      ai_knowledge_level: onboardingData?.ai_experience?.knowledge_level || onboardingData?.ai_knowledge_level,
+      ai_knowledge_level: onboardingData?.ai_experience?.experience_level || onboardingData?.ai_knowledge_level,
       main_goal: onboardingData?.business_goals?.primary_goal || onboardingData?.main_goal,
       business_info: onboardingData?.business_info,
       ai_experience: onboardingData?.ai_experience,
