@@ -11,6 +11,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Importar visual-hierarchy após as diretivas @tailwind */
+@import './styles/visual-hierarchy.css';
+
 /* Aurora Background Animations */
 @keyframes blob {
   0% {
