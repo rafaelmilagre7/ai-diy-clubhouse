@@ -24,31 +24,10 @@ interface Solution {
   thumbnail_url?: string;
 }
 
-interface SolutionItem {
-  solutionId: string;
-  justification: string;
-  aiScore?: number;
-  estimatedTime?: string;
-}
-
-interface ImplementationTrail {
-  priority1: SolutionItem[];
-  priority2: SolutionItem[];
-  priority3: SolutionItem[];
-  recommended_lessons?: Array<{
-    lessonId: string;
-    moduleId: string;
-    courseId: string;
-    title: string;
-    justification: string;
-    priority: number;
-  }>;
-  ai_message?: string;
-  generated_at: string;
-}
+import { ImplementationTrailData, SolutionItem } from '@/types/implementationTrail';
 
 interface SolutionsTabProps {
-  trail: ImplementationTrail;
+  trail: ImplementationTrailData;
 }
 
 export const SolutionsTab: React.FC<SolutionsTabProps> = ({ trail }) => {

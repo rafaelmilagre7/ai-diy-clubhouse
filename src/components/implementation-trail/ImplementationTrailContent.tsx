@@ -2,40 +2,10 @@
 import React from 'react';
 import { ImplementationTrailTabs } from './ImplementationTrailTabs';
 import { SolutionDataProvider } from './contexts/SolutionDataContext';
-
-interface ImplementationTrail {
-  priority1: Array<{
-    solutionId: string;
-    justification: string;
-    aiScore?: number;
-    estimatedTime?: string;
-  }>;
-  priority2: Array<{
-    solutionId: string;
-    justification: string;
-    aiScore?: number;
-    estimatedTime?: string;
-  }>;
-  priority3: Array<{
-    solutionId: string;
-    justification: string;
-    aiScore?: number;
-    estimatedTime?: string;
-  }>;
-  recommended_lessons?: Array<{
-    lessonId: string;
-    moduleId: string;
-    courseId: string;
-    title: string;
-    justification: string;
-    priority: number;
-  }>;
-  ai_message?: string;
-  generated_at: string;
-}
+import { ImplementationTrailData } from '@/types/implementationTrail';
 
 interface ImplementationTrailContentProps {
-  trail: ImplementationTrail;
+  trail: ImplementationTrailData;
 }
 
 export const ImplementationTrailContent = ({ trail }: ImplementationTrailContentProps) => {

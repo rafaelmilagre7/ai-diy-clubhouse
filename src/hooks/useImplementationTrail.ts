@@ -3,43 +3,13 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
-
-interface ImplementationTrail {
-  priority1: Array<{
-    solutionId: string;
-    justification: string;
-    aiScore: number;
-    estimatedTime: string;
-  }>;
-  priority2: Array<{
-    solutionId: string;
-    justification: string;
-    aiScore: number;
-    estimatedTime: string;
-  }>;
-  priority3: Array<{
-    solutionId: string;
-    justification: string;
-    aiScore: number;
-    estimatedTime: string;
-  }>;
-  recommended_lessons?: Array<{
-    lessonId: string;
-    moduleId: string;
-    courseId: string;
-    title: string;
-    justification: string;
-    priority: number;
-  }>;
-  ai_message?: string;
-  generated_at: string;
-}
+import { ImplementationTrailData } from '@/types/implementationTrail';
 
 export function useImplementationTrail() {
   const { user } = useAuth();
   const { toast } = useToast();
   
-  const [trail, setTrail] = useState<ImplementationTrail | null>(null);
+  const [trail, setTrail] = useState<ImplementationTrailData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isRegenerating, setIsRegenerating] = useState(false);
@@ -71,7 +41,7 @@ export function useImplementationTrail() {
 
       if (existingTrail && existingTrail.trail_data) {
         console.log('✅ Trilha existente encontrada');
-        setTrail(existingTrail.trail_data as ImplementationTrail);
+        setTrail(existingTrail.trail_data as ImplementationTrailData);
         setIsFirstTimeGeneration(false);
       } else {
         console.log('📝 Nenhuma trilha encontrada, gerando nova');
@@ -130,7 +100,7 @@ export function useImplementationTrail() {
       
       // Fallback para trilha básica em caso de erro
       console.log('📝 Gerando trilha básica como fallback...');
-      const fallbackTrail: ImplementationTrail = {
+      const fallbackTrail: ImplementationTrailData = {
         priority1: [
           {
             solutionId: '9d867a8b-815b-42cb-b8f9-28190a60aaee',

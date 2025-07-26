@@ -17,6 +17,7 @@ import {
 import { supabase } from '@/lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { useLessonTagsForLesson } from '@/hooks/useLessonTags';
+import { ImplementationTrailData, RecommendedLesson } from '@/types/implementationTrail';
 
 interface Lesson {
   id: string;
@@ -28,41 +29,10 @@ interface Lesson {
   module_id: string;
 }
 
-interface LessonItem {
-  lessonId: string;
-  moduleId: string;
-  courseId: string;
-  title: string;
-  justification: string;
-  priority: number;
-}
 
-interface ImplementationTrail {
-  priority1: Array<{
-    solutionId: string;
-    justification: string;
-    aiScore?: number;
-    estimatedTime?: string;
-  }>;
-  priority2: Array<{
-    solutionId: string;
-    justification: string;
-    aiScore?: number;
-    estimatedTime?: string;
-  }>;
-  priority3: Array<{
-    solutionId: string;
-    justification: string;
-    aiScore?: number;
-    estimatedTime?: string;
-  }>;
-  recommended_lessons?: LessonItem[];
-  ai_message?: string;
-  generated_at: string;
-}
 
 interface LessonsTabProps {
-  trail: ImplementationTrail;
+  trail: ImplementationTrailData;
 }
 
 export const LessonsTab = ({ trail }: LessonsTabProps) => {
@@ -192,7 +162,7 @@ export const LessonsTab = ({ trail }: LessonsTabProps) => {
     }
   };
 
-  const LessonCard: React.FC<{ item: LessonItem }> = ({ item }) => {
+  const LessonCard: React.FC<{ item: RecommendedLesson }> = ({ item }) => {
     const lesson = lessons[item.lessonId];
     const priorityInfo = getPriorityLabel(item.priority);
 
@@ -366,7 +336,7 @@ export const LessonsTab = ({ trail }: LessonsTabProps) => {
     }
     acc[lesson.priority].push(lesson);
     return acc;
-  }, {} as Record<number, LessonItem[]>);
+  }, {} as Record<number, RecommendedLesson[]>);
 
   return (
     <div className="space-y-8">
@@ -390,7 +360,7 @@ export const LessonsTab = ({ trail }: LessonsTabProps) => {
         .sort(([a], [b]) => Number(a) - Number(b))
         .map(([priority, priorityLessons]) => {
           const priorityInfo = getPriorityLabel(Number(priority));
-          const priorityCount = priorityLessons.length;
+          const priorityCount = priorityLessons?.length || 0;
           
           return (
             <section key={priority} className="space-y-4">
@@ -418,7 +388,7 @@ export const LessonsTab = ({ trail }: LessonsTabProps) => {
 
               {/* Lessons List */}
               <div className="space-y-3">
-                {priorityLessons.map((item, index) => (
+                {(priorityLessons || []).map((item, index) => (
                   <div
                     key={`${item.lessonId}-${index}`}
                     className="animate-fade-in"
