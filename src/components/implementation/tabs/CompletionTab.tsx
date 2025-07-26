@@ -34,7 +34,19 @@ const CompletionTab: React.FC<CompletionTabProps> = ({
 
   const completeSolutionMutation = useMutation({
     mutationFn: async () => {
-      if (!user?.id) throw new Error('User not authenticated');
+      console.log("🔧 [DEBUG] Iniciando finalização da implementação...");
+      
+      if (!user?.id) {
+        console.error("🔧 [DEBUG] Usuário não autenticado!");
+        throw new Error('User not authenticated');
+      }
+
+      console.log("🔧 [DEBUG] Dados da requisição:", {
+        user_id: user.id,
+        solution_id: solutionId,
+        is_completed: true,
+        completion_percentage: 100
+      });
 
       // Mark solution as completed
       const { data: progressData, error: progressError } = await supabase
@@ -44,13 +56,17 @@ const CompletionTab: React.FC<CompletionTabProps> = ({
           solution_id: solutionId,
           is_completed: true,
           completion_percentage: 100,
-          completed_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          completed_at: new Date().toISOString()
         }, {
           onConflict: 'user_id,solution_id'
         });
 
-      if (progressError) throw progressError;
+      if (progressError) {
+        console.error("🔧 [DEBUG] Erro ao atualizar progresso:", progressError);
+        throw progressError;
+      }
+      
+      console.log("🔧 [DEBUG] Progresso atualizado com sucesso:", progressData);
 
       // Create certificate
       const { data: certificateRecord, error: certificateError } = await supabase
@@ -64,7 +80,12 @@ const CompletionTab: React.FC<CompletionTabProps> = ({
         .select()
         .single();
 
-      if (certificateError) throw certificateError;
+      if (certificateError) {
+        console.error("🔧 [DEBUG] Erro ao criar certificado:", certificateError);
+        throw certificateError;
+      }
+      
+      console.log("🔧 [DEBUG] Certificado criado com sucesso:", certificateRecord);
 
       return { progressData, certificateRecord };
     },
