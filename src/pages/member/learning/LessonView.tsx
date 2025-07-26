@@ -91,7 +91,6 @@ const LessonView = () => {
   };
 
   if (isLoading) {
-    console.log("🔍 LessonView: Carregando aula...", { lessonId, courseId });
     return <LessonLoadingSkeleton />;
   }
   

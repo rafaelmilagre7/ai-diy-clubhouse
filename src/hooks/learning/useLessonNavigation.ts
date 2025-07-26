@@ -27,14 +27,6 @@ export function useLessonNavigation({
     }
     
     // As aulas já vêm ordenadas do hook useLessonData
-    console.log("Aulas para navegação:", 
-      lessons.map(l => ({
-        id: l.id, 
-        title: l.title, 
-        moduleTitle: l.module?.title,
-        isCurrent: l.id === currentLessonId
-      }))
-    );
     
     const currentIndex = lessons.findIndex(lesson => lesson.id === currentLessonId);
     
@@ -46,16 +38,6 @@ export function useLessonNavigation({
     const prevLesson = currentIndex > 0 ? lessons[currentIndex - 1] : null;
     const nextLesson = currentIndex < lessons.length - 1 ? lessons[currentIndex + 1] : null;
     
-    console.log("Navegação do curso calculada:", {
-      currentIndex,
-      totalLessons: lessons.length,
-      hasPrev: !!prevLesson,
-      hasNext: !!nextLesson,
-      prevTitle: prevLesson?.title,
-      nextTitle: nextLesson?.title,
-      prevModule: prevLesson?.module?.title,
-      nextModule: nextLesson?.module?.title
-    });
     
     return {
       prev: prevLesson,
