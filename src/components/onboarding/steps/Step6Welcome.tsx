@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Sparkles, Rocket, Users, BookOpen, Calendar, ArrowRight } from 'lucide-react';
+import { Sparkles, Rocket, Users, BookOpen, Calendar, CheckCircle } from 'lucide-react';
+import confetti from 'canvas-confetti';
+import { motion } from 'framer-motion';
 
 interface Step6WelcomeProps {
   ninaMessage?: string;
@@ -12,6 +14,24 @@ export const Step6Welcome: React.FC<Step6WelcomeProps> = ({
   ninaMessage,
   onFinish,
 }) => {
+  const [isCompleting, setIsCompleting] = useState(false);
+  
+  const handleFinish = async () => {
+    setIsCompleting(true);
+    
+    // Lançar confete
+    confetti({
+      particleCount: 200,
+      spread: 70,
+      origin: { y: 0.6 }
+    });
+    
+    // Aguardar um pouco para mostrar o confete
+    setTimeout(() => {
+      onFinish();
+    }, 1000);
+  };
+
   return (
     <div className="space-y-8 max-w-3xl mx-auto text-center">
       <div className="space-y-4">
@@ -101,14 +121,28 @@ export const Step6Welcome: React.FC<Step6WelcomeProps> = ({
           Sua experiência personalizada já está configurada. Clique em "Concluir" para finalizar e ir para o dashboard!
         </p>
         
-        <Button 
-          onClick={onFinish}
-          size="lg" 
-          className="w-full md:w-auto px-8 py-3 text-lg font-semibold group bg-gradient-to-r from-primary to-accent hover:shadow-lg hover:shadow-primary/25"
+        <motion.div
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
         >
-          ✨ Concluir Onboarding
-          <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-        </Button>
+          <Button 
+            onClick={handleFinish}
+            disabled={isCompleting}
+            size="lg" 
+            className="w-full md:w-auto px-8 py-3 text-lg font-semibold group bg-gradient-to-r from-primary to-accent hover:shadow-lg hover:shadow-primary/25 disabled:opacity-50"
+          >
+            {isCompleting ? (
+              <>
+                <CheckCircle className="w-5 h-5 mr-2 animate-spin" />
+                Finalizando...
+              </>
+            ) : (
+              <>
+                ✨ Concluir Onboarding
+              </>
+            )}
+          </Button>
+        </motion.div>
       </div>
 
       <div className="pt-6 border-t border-border/50">
