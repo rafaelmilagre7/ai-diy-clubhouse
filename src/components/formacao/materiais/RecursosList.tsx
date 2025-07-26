@@ -23,10 +23,25 @@ import {
 } from "lucide-react";
 import { RecursoDeleteDialog } from "./RecursoDeleteDialog";
 
+interface RecursoWithDetails extends LearningResource {
+  lesson?: {
+    id: string;
+    title: string;
+    module?: {
+      id: string;
+      title: string;
+      course?: {
+        id: string;
+        title: string;
+      };
+    };
+  };
+}
+
 interface RecursosListProps {
-  recursos: LearningResource[];
+  recursos: RecursoWithDetails[];
   loading: boolean;
-  onEdit: (recurso: LearningResource) => void;
+  onEdit: (recurso: RecursoWithDetails) => void;
   onDelete: (id: string) => void;
   isAdmin: boolean;
 }
@@ -38,10 +53,10 @@ export const RecursosList = ({
   onDelete, 
   isAdmin 
 }: RecursosListProps) => {
-  const [recursoParaExcluir, setRecursoParaExcluir] = useState<LearningResource | null>(null);
+  const [recursoParaExcluir, setRecursoParaExcluir] = useState<RecursoWithDetails | null>(null);
 
   // Abrir diálogo de confirmação para excluir
-  const handleOpenDelete = (recurso: LearningResource) => {
+  const handleOpenDelete = (recurso: RecursoWithDetails) => {
     setRecursoParaExcluir(recurso);
   };
 
@@ -76,6 +91,27 @@ export const RecursosList = ({
     return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
   };
 
+  // Função para gerar hierarquia do recurso
+  const getResourceHierarchy = (recurso: RecursoWithDetails) => {
+    const lesson = recurso.lesson;
+    if (!lesson) return <span className="text-sm text-muted-foreground">Sem aula associada</span>;
+    
+    const module = lesson.module;
+    const course = module?.course;
+    
+    return (
+      <div className="text-sm">
+        {course?.title && (
+          <div className="font-medium text-foreground">{course.title}</div>
+        )}
+        {module?.title && (
+          <div className="text-muted-foreground">{module.title}</div>
+        )}
+        <div className="text-xs text-muted-foreground">{lesson.title}</div>
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center py-12">
@@ -104,7 +140,7 @@ export const RecursosList = ({
             <TableRow>
               <TableHead className="w-12"></TableHead>
               <TableHead>Nome</TableHead>
-              <TableHead>Descrição</TableHead>
+              <TableHead>Curso/Módulo/Aula</TableHead>
               <TableHead>Tamanho</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
@@ -114,7 +150,7 @@ export const RecursosList = ({
               <TableRow key={recurso.id}>
                 <TableCell>{getFileIcon(recurso.file_type)}</TableCell>
                 <TableCell className="font-medium">{recurso.name}</TableCell>
-                <TableCell>{recurso.description || "—"}</TableCell>
+                <TableCell>{getResourceHierarchy(recurso)}</TableCell>
                 <TableCell>{formatFileSize(recurso.file_size_bytes)}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
