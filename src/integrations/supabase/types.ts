@@ -5319,6 +5319,15 @@ export type Database = {
           suggested_action: string
         }[]
       }
+      enhanced_rate_limit_check: {
+        Args: {
+          p_identifier: string
+          p_action_type: string
+          p_max_attempts?: number
+          p_window_minutes?: number
+        }
+        Returns: boolean
+      }
       ensure_audit_log: {
         Args: {
           p_event_type: string
@@ -6094,6 +6103,10 @@ export type Database = {
       }
       secure_assign_role: {
         Args: { target_user_id: string; new_role_id: string }
+        Returns: Json
+      }
+      secure_credential_validation: {
+        Args: { p_validation_code: string }
         Returns: Json
       }
       security_health_check: {
