@@ -16,85 +16,59 @@ export const ImplementationTrailHeader = ({
   const { profile } = useAuth();
 
   return (
-    <div className="relative overflow-hidden mb-8 group">
-      {/* Animated Background Layers */}
-      <div className="absolute inset-0 bg-gradient-to-br from-viverblue/20 via-operational/15 to-revenue/15 rounded-2xl blur-xl opacity-60 animate-pulse" />
-      <div className="absolute inset-0 bg-gradient-to-r from-viverblue/5 via-transparent to-operational/5 rounded-2xl blur-2xl animate-blob" />
-      <div className="absolute inset-0 bg-gradient-to-l from-revenue/5 via-transparent to-viverblue/5 rounded-2xl blur-2xl animate-blob animation-delay-2000" />
-      
-      {/* Floating particles */}
-      <div className="absolute inset-0 overflow-hidden rounded-2xl">
-        <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-viverblue rounded-full animate-pulse opacity-30" />
-        <div className="absolute top-3/4 right-1/3 w-1 h-1 bg-operational rounded-full animate-pulse animation-delay-1000 opacity-40" />
-        <div className="absolute bottom-1/3 left-2/3 w-1.5 h-1.5 bg-revenue rounded-full animate-pulse animation-delay-2000 opacity-35" />
-        <div className="absolute top-1/2 right-1/4 w-1 h-1 bg-viverblue rounded-full animate-pulse animation-delay-4000 opacity-30" />
-      </div>
-      
-      <Card className="relative border border-viverblue/30 bg-gradient-to-br from-card/95 to-muted/95 backdrop-blur-xl overflow-hidden shadow-2xl shadow-viverblue/10">
-        {/* Animated grid pattern */}
-        <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:20px_20px] animate-pulse" />
-        
-        {/* Shine effect */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-viverblue/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1500 ease-out" />
-        
-        <CardContent className="relative p-8 z-10">
-          {/* Header Principal com avatar e efeitos */}
+    <div className="relative overflow-hidden mb-8">
+      <Card className="relative border bg-card">
+        <CardContent className="relative p-8">
+          {/* Header Principal com avatar */}
           <div className="flex items-start gap-6 mb-8">
-            <div className="relative group">
-              {/* Main AI icon container */}
-              <div className="p-4 bg-gradient-to-br from-viverblue/20 to-viverblue/10 rounded-2xl border border-viverblue/30 group-hover:scale-110 transition-all duration-500 shadow-lg shadow-viverblue/20">
-                <Brain className="h-10 w-10 text-viverblue group-hover:rotate-12 transition-transform duration-500" />
-                
-                {/* Pulsing glow ring */}
-                <div className="absolute inset-0 rounded-2xl border-2 border-viverblue/20 animate-pulse" />
-                <div className="absolute inset-0 rounded-2xl border border-viverblue/40 scale-110 animate-ping opacity-20" />
-              </div>
-              
-              {/* Floating elements with professional icons */}
-              <div className="absolute -top-2 -right-2">
-                <Award className="h-6 w-6 text-yellow-500 animate-pulse group-hover:rotate-180 transition-transform duration-700" />
-              </div>
-              <div className="absolute -bottom-1 -left-1">
-                <Zap className="h-4 w-4 text-operational animate-pulse animation-delay-1000 opacity-60" />
-              </div>
-              
-              {/* User avatar integration */}
-              {profile?.avatar_url && (
-                <div className="absolute -bottom-2 -right-2">
+            <div className="relative">
+              {/* User avatar */}
+              {profile?.avatar_url ? (
+                <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-primary/20 shadow-lg">
                   <img 
                     src={profile.avatar_url} 
                     alt={profile.name || 'User'} 
-                    className="w-8 h-8 rounded-full border-2 border-card shadow-lg"
+                    className="w-full h-full object-cover"
                   />
                 </div>
+              ) : (
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 border-2 border-primary/20 flex items-center justify-center">
+                  <span className="text-2xl font-bold text-primary">
+                    {profile?.name?.charAt(0) || 'U'}
+                  </span>
+                </div>
               )}
+              
+              {/* Status indicator */}
+              <div className="absolute -bottom-1 -right-1">
+                <div className="w-5 h-5 bg-green-500 rounded-full border-2 border-card flex items-center justify-center">
+                  <Star className="h-3 w-3 text-white" />
+                </div>
+              </div>
             </div>
             
             <div className="flex-1">
-              {/* Animated title with typewriter effect inspiration */}
-              <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-viverblue via-operational to-revenue bg-clip-text text-transparent hover:scale-105 transition-transform duration-300 cursor-default">
+              <h1 className="text-3xl font-bold mb-2 text-foreground">
                 Trilha IA Personalizada
-                <span className="inline-block w-1 h-8 bg-viverblue ml-2 animate-pulse" />
               </h1>
               
-              {/* Enhanced greeting with animation */}
-              <p className="text-xl text-muted-foreground mb-4 group-hover:text-foreground transition-colors duration-300">
-                Olá <span className="font-semibold text-viverblue hover:text-operational transition-colors duration-300">{profile?.name || 'Membro'}</span>! 
+              <p className="text-lg text-muted-foreground mb-4">
+                Olá <span className="font-semibold text-primary">{profile?.name || 'Membro'}</span>! 
                 <br />
-                <span className="text-lg">Sua jornada inteligente criada especialmente para você.</span>
+                <span className="text-base">Sua jornada inteligente criada especialmente para você.</span>
               </p>
               
-              {/* Enhanced trust indicators */}
+              {/* Trust indicators */}
               <div className="flex items-center gap-4 flex-wrap">
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-yellow-500/10 rounded-full border border-yellow-500/20">
-                  <Star className="h-4 w-4 text-yellow-500 fill-current animate-pulse" />
-                  <span className="text-sm font-medium text-muted-foreground">
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-full border border-primary/20">
+                  <Star className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium text-foreground">
                     Análise Avançada de IA
                   </span>
                 </div>
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-viverblue/10 rounded-full border border-viverblue/20">
-                  <Target className="h-4 w-4 text-viverblue" />
-                  <span className="text-sm font-medium text-muted-foreground">
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-secondary/10 rounded-full border border-secondary/20">
+                  <Target className="h-4 w-4 text-secondary" />
+                  <span className="text-sm font-medium text-foreground">
                     100% Personalizada
                   </span>
                 </div>
