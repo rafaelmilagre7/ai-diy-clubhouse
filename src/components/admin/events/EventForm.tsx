@@ -14,7 +14,7 @@ import { EventCoverImage } from "./form/EventCoverImage";
 import { EventRecurrence } from "./form/EventRecurrence";
 import { eventSchema, type EventFormData } from "./form/EventFormSchema";
 import { type Event } from "@/types/events";
-import { formatDateTimeLocal } from "@/utils/timezoneUtils";
+import { formatDateTimeLocal, convertLocalToUTC } from "@/utils/timezoneUtils";
 
 interface EventFormProps {
   event?: Event;
@@ -48,11 +48,15 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
     try {
       setIsSubmitting(true);
 
+      // Converter horários locais para UTC antes de salvar (apenas se não estiver vazio)
+      const startTimeUTC = data.start_time ? convertLocalToUTC(data.start_time) : '';
+      const endTimeUTC = data.end_time ? convertLocalToUTC(data.end_time) : '';
+
       const eventData = {
         title: data.title,
         description: data.description || null,
-        start_time: data.start_time,
-        end_time: data.end_time,
+        start_time: startTimeUTC,
+        end_time: endTimeUTC,
         location_link: data.location_link || null,
         physical_location: data.physical_location || null,
         cover_image_url: data.cover_image_url || null,
@@ -63,6 +67,8 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
         recurrence_count: data.recurrence_count || null,
         recurrence_end_date: data.recurrence_end_date || null,
       };
+
+      console.log('Dados do evento sendo salvos:', eventData);
 
       let result;
       if (event) {
@@ -91,8 +97,11 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
       }
 
       if (result.error) {
+        console.error("Erro do Supabase:", result.error);
         throw result.error;
       }
+
+      console.log('Evento salvo com sucesso:', result.data);
 
       toast.success(event ? "Evento atualizado com sucesso!" : "Evento criado com sucesso!");
       

@@ -22,7 +22,7 @@ export const TimezoneInfo = () => {
     <div className="p-4 surface-elevated rounded-lg border border-border/50">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Clock className="h-4 w-4 text-viverblue" />
+        <Clock className="h-4 w-4 text-viverblue" />
           <span className="text-label">Horário da Plataforma</span>
           <Badge variant={isInBrazil ? "default" : "outline"} className="bg-viverblue/10 text-viverblue border-viverblue/30">
             {isInBrazil ? "Brasília" : "Convertido"}
@@ -34,12 +34,12 @@ export const TimezoneInfo = () => {
           onClick={() => setIsExpanded(!isExpanded)}
           className="text-text-muted hover:text-viverblue"
         >
-          <Info className="h-4 w-4" />
+          <Info className="h-4 w-4 text-viverblue" />
         </Button>
       </div>
 
       <div className="mt-2 flex items-center gap-2 text-body-small">
-        <MapPin className="h-3 w-3 text-text-muted" />
+        <MapPin className="h-3 w-3 text-viverblue" />
         <span className="text-text-secondary font-mono">
           {timezoneInfo.brazilTimeFormatted} (UTC{timezoneInfo.offset})
         </span>

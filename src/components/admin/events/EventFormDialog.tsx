@@ -1,5 +1,5 @@
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { EventForm } from "./EventForm";
 import { EventFormSheet } from "./EventFormSheet";
 import type { Event } from "@/types/events";
@@ -40,6 +40,9 @@ export const EventFormDialog = ({ event, onClose }: EventFormDialogProps) => {
             <DialogTitle className="text-heading-2">
               {event ? "Editar Evento" : "Novo Evento"}
             </DialogTitle>
+            <DialogDescription className="text-body-small text-text-muted">
+              {event ? "Modifique as informações do evento selecionado." : "Preencha os dados para criar um novo evento."}
+            </DialogDescription>
           </div>
         </DialogHeader>
         <div className="max-h-[calc(80vh-140px)] overflow-y-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
