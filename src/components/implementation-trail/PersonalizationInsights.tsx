@@ -10,7 +10,9 @@ import {
   Award, 
   Lightbulb,
   Building2,
-  User
+  User,
+  Zap,
+  BookOpen
 } from 'lucide-react';
 import { PersonalizedMessage } from './PersonalizedMessage';
 
@@ -24,14 +26,32 @@ interface PersonalizationInsightsProps {
 export const PersonalizationInsights: React.FC<PersonalizationInsightsProps> = ({ trail }) => {
   // Calculate stats from trail
   const totalSolutions = trail.priority1.length + trail.priority2.length + trail.priority3.length;
-  const averageScore = Math.round(
-    [...trail.priority1, ...trail.priority2, ...trail.priority3]
-      .reduce((acc, item) => acc + (item.aiScore || 0), 0) / totalSolutions
-  );
+  
+  // Calculate complexity level based on solution types and estimated times
+  const getComplexityLevel = () => {
+    const allItems = [...trail.priority1, ...trail.priority2, ...trail.priority3];
+    let complexityScore = 0;
+    
+    allItems.forEach(item => {
+      // Base complexity on time estimation
+      if (item.estimatedTime) {
+        if (item.estimatedTime.includes('4-8') || item.estimatedTime.includes('8')) {
+          complexityScore += 3; // Advanced
+        } else if (item.estimatedTime.includes('2-4')) {
+          complexityScore += 2; // Intermediate
+        } else {
+          complexityScore += 1; // Basic
+        }
+      }
+    });
+    
+    const avgComplexity = complexityScore / totalSolutions;
+    if (avgComplexity >= 2.5) return { level: 'Avançado', icon: Brain };
+    if (avgComplexity >= 1.5) return { level: 'Intermediário', icon: Zap };
+    return { level: 'Iniciante', icon: BookOpen };
+  };
 
-  const highPriority = trail.priority1.length;
-  const mediumPriority = trail.priority2.length;
-  const lowPriority = trail.priority3.length;
+  const complexity = getComplexityLevel();
 
   // Estimated total time calculation
   const getTotalEstimatedHours = () => {
@@ -74,15 +94,15 @@ export const PersonalizationInsights: React.FC<PersonalizationInsightsProps> = (
           </CardContent>
         </Card>
 
-        {/* Average Compatibility */}
+        {/* Complexity Level */}
         <Card className="aurora-glass border-revenue/30 aurora-hover-scale">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Compatibilidade Média</p>
-                <p className="text-2xl font-bold text-foreground">{averageScore}%</p>
+                <p className="text-sm text-muted-foreground">Nível de Complexidade</p>
+                <p className="text-2xl font-bold text-foreground">{complexity.level}</p>
               </div>
-              <TrendingUp className="w-8 h-8 text-revenue" />
+              <complexity.icon className="w-8 h-8 text-revenue" />
             </div>
           </CardContent>
         </Card>
@@ -113,52 +133,6 @@ export const PersonalizationInsights: React.FC<PersonalizationInsightsProps> = (
           </CardContent>
         </Card>
       </div>
-
-      {/* Priority Distribution */}
-      <Card className="aurora-glass border-viverblue/20">
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <Lightbulb className="w-5 h-5 text-viverblue" />
-            <CardTitle>Distribuição por Prioridade</CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-3">
-            {/* High Priority */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Badge variant="default" className="bg-viverblue text-white">
-                  Alta Prioridade
-                </Badge>
-                <span className="text-sm text-muted-foreground">{highPriority} soluções</span>
-              </div>
-              <Progress value={(highPriority / totalSolutions) * 100} className="w-24" />
-            </div>
-
-            {/* Medium Priority */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Badge variant="secondary" className="bg-operational text-white">
-                  Média Prioridade
-                </Badge>
-                <span className="text-sm text-muted-foreground">{mediumPriority} soluções</span>
-              </div>
-              <Progress value={(mediumPriority / totalSolutions) * 100} className="w-24" />
-            </div>
-
-            {/* Low Priority */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Badge variant="outline" className="border-revenue text-revenue">
-                  Baixa Prioridade
-                </Badge>
-                <span className="text-sm text-muted-foreground">{lowPriority} soluções</span>
-              </div>
-              <Progress value={(lowPriority / totalSolutions) * 100} className="w-24" />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Generation Info */}
       <Card className="aurora-glass border-muted/20">
