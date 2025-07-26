@@ -86,7 +86,7 @@
   animation: scale-in 0.5s ease-out forwards;
 }
 
-/* Shimmer Animation for Loading States */
+/* Shimmer Animation para Loading States Aprimorado */
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
@@ -94,15 +94,17 @@
 
 .animate-shimmer {
   animation: shimmer 2s ease-in-out infinite;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  background: linear-gradient(90deg, transparent, hsl(var(--muted) / 0.4), transparent);
   background-size: 200% 100%;
 }
 
-/* Enhanced Loading States */
+/* Enhanced Loading States com Aurora */
 .loading-skeleton {
   background: linear-gradient(90deg, 
     hsl(var(--muted)) 0%, 
-    hsl(var(--muted)/0.8) 50%, 
+    hsl(var(--primary) / 0.1) 25%,
+    hsl(var(--muted) / 0.8) 50%, 
+    hsl(var(--primary) / 0.1) 75%,
     hsl(var(--muted)) 100%
   );
   background-size: 200% 100%;

@@ -1,27 +1,61 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
 
 :root {
-  /* --- Design System Colors (HSL) - Dark Theme como padrão --- */
+  /* --- Design System Colors (HSL) - Dark Theme Aprimorado --- */
   --background: 216 28% 7%;
   --foreground: 0 0% 98%;
-  --card: 217 32% 9%;
+  
+  /* Sistema de Elevação Progressiva */
+  --surface-base: 216 28% 7%;
+  --surface-elevated: 217 32% 10%;
+  --surface-overlay: 217 32% 13%;
+  --surface-modal: 217 32% 16%;
+  
+  /* Cards com melhor contraste */
+  --card: 217 32% 10%;
   --card-foreground: 0 0% 98%;
-  --popover: 217 32% 9%;
+  --popover: 217 32% 13%;
   --popover-foreground: 0 0% 98%;
+  
+  /* Cores primárias mantidas */
   --primary: 173 100% 46%;
   --primary-foreground: 240 10% 3.9%;
-  --secondary: 217 32% 12%;
+  
+  /* Secundárias com melhor contraste */
+  --secondary: 217 32% 13%;
   --secondary-foreground: 0 0% 98%;
-  --muted: 217 32% 12%;
-  --muted-foreground: 240 4% 70%;
-  --accent: 217 32% 12%;
+  
+  /* Muted com contraste otimizado */
+  --muted: 217 32% 13%;
+  --muted-foreground: 0 0% 75%;
+  
+  /* Accent melhorado */
+  --accent: 217 32% 15%;
   --accent-foreground: 0 0% 98%;
+  
+  /* Cores de estado */
   --destructive: 0 62.8% 30.6%;
   --destructive-foreground: 0 0% 98%;
-  --border: 217 32% 15%;
-  --input: 217 32% 12%;
+  
+  /* Bordas e inputs com melhor visibilidade */
+  --border: 217 32% 18%;
+  --input: 217 32% 13%;
   --ring: 173 100% 46%;
   --radius: 0.5rem;
+
+  /* --- Hierarquia de Texto Aprimorada --- */
+  --text-primary: 0 0% 98%;
+  --text-secondary: 0 0% 85%;
+  --text-muted: 0 0% 70%;
+  --text-disabled: 0 0% 50%;
+
+  /* --- Sistema de Sombras Aurora --- */
+  --shadow-sm: 0 2px 4px hsl(216 28% 4% / 0.1);
+  --shadow-md: 0 4px 12px hsl(216 28% 4% / 0.15);
+  --shadow-lg: 0 8px 24px hsl(216 28% 4% / 0.2);
+  --shadow-xl: 0 12px 32px hsl(216 28% 4% / 0.25);
+  --shadow-aurora: 0 0 20px hsl(var(--primary) / 0.1);
+  --shadow-aurora-strong: 0 0 30px hsl(var(--primary) / 0.2);
 
   /* --- Custom Design Tokens --- */
   --viverblue: 173 100% 46%;
@@ -51,39 +85,61 @@
 
   /* --- Onboarding Specific --- */
   --onboarding-bg: 216 28% 7%;
-  --onboarding-card: 217 32% 9%;
-  --onboarding-card-hover: 217 32% 12%;
+  --onboarding-card: 217 32% 10%;
+  --onboarding-card-hover: 217 32% 13%;
   --onboarding-text: 0 0% 98%;
-  --onboarding-text-muted: 240 4% 70%;
-  --onboarding-border: 217 32% 15%;
+  --onboarding-text-muted: 0 0% 75%;
+  --onboarding-border: 217 32% 18%;
   --onboarding-accent: 173 100% 46%;
 
-  /* --- Animations --- */
+  /* --- Transições e Animações Aprimoradas --- */
   --transition-base: all 0.2s ease-out;
   --transition-slow: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-bounce: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .light {
   --background: 0 0% 100%;
   --foreground: 240 10% 3.9%;
-  --card: 0 0% 100%;
+  
+  /* Sistema de Elevação para Light Mode */
+  --surface-base: 0 0% 100%;
+  --surface-elevated: 0 0% 98%;
+  --surface-overlay: 0 0% 96%;
+  --surface-modal: 0 0% 94%;
+  
+  --card: 0 0% 98%;
   --card-foreground: 240 10% 3.9%;
-  --popover: 0 0% 100%;
+  --popover: 0 0% 96%;
   --popover-foreground: 240 10% 3.9%;
   --primary: 173 100% 46%;
   --primary-foreground: 0 0% 98%;
   --secondary: 240 4.8% 95.9%;
   --secondary-foreground: 240 5.9% 10%;
   --muted: 240 4.8% 95.9%;
-  --muted-foreground: 240 3.8% 46.1%;
-  --accent: 240 4.8% 95.9%;
+  --muted-foreground: 240 3.8% 50%;
+  --accent: 240 4.8% 93%;
   --accent-foreground: 240 5.9% 10%;
   --destructive: 0 84.2% 60.2%;
   --destructive-foreground: 0 0% 98%;
-  --border: 240 5.9% 90%;
-  --input: 240 5.9% 90%;
+  --border: 240 5.9% 88%;
+  --input: 240 5.9% 95%;
   --ring: 173 100% 46%;
+
+  /* Hierarquia de Texto para Light Mode */
+  --text-primary: 240 10% 3.9%;
+  --text-secondary: 240 5.9% 20%;
+  --text-muted: 240 3.8% 50%;
+  --text-disabled: 240 3.8% 70%;
+
+  /* Sombras para Light Mode */
+  --shadow-sm: 0 2px 4px hsl(0 0% 0% / 0.05);
+  --shadow-md: 0 4px 12px hsl(0 0% 0% / 0.1);
+  --shadow-lg: 0 8px 24px hsl(0 0% 0% / 0.15);
+  --shadow-xl: 0 12px 32px hsl(0 0% 0% / 0.2);
+  --shadow-aurora: 0 0 20px hsl(var(--primary) / 0.15);
+  --shadow-aurora-strong: 0 0 30px hsl(var(--primary) / 0.25);
 }
 
 * {
@@ -102,4 +158,183 @@ h1, h2, h3, h4, h5, h6 {
   font-family: 'Outfit', system-ui, sans-serif;
   font-weight: 600;
   line-height: 1.2;
+  letter-spacing: -0.025em;
+}
+
+/* Utilitários de Hierarquia Visual */
+@layer utilities {
+  /* Typography Scale */
+  .text-display {
+    @apply text-4xl font-bold tracking-tight;
+    color: hsl(var(--text-primary));
+    line-height: 1.1;
+  }
+
+  .text-heading-1 {
+    @apply text-3xl font-semibold tracking-tight;
+    color: hsl(var(--text-primary));
+    line-height: 1.15;
+  }
+
+  .text-heading-2 {
+    @apply text-2xl font-semibold tracking-tight;
+    color: hsl(var(--text-primary));
+    line-height: 1.2;
+  }
+
+  .text-heading-3 {
+    @apply text-xl font-medium;
+    color: hsl(var(--text-primary));
+    line-height: 1.25;
+  }
+
+  .text-body-large {
+    @apply text-lg font-normal;
+    color: hsl(var(--text-primary));
+    line-height: 1.5;
+  }
+
+  .text-body {
+    @apply text-base font-normal;
+    color: hsl(var(--text-primary));
+    line-height: 1.6;
+  }
+
+  .text-body-small {
+    @apply text-sm font-normal;
+    color: hsl(var(--text-secondary));
+    line-height: 1.5;
+  }
+
+  .text-caption {
+    @apply text-xs font-medium;
+    color: hsl(var(--text-muted));
+    line-height: 1.4;
+  }
+
+  .text-label {
+    @apply text-sm font-medium;
+    color: hsl(var(--text-primary));
+    line-height: 1.4;
+  }
+
+  /* Surfaces com Elevação */
+  .surface-base {
+    background-color: hsl(var(--surface-base));
+    border-color: hsl(var(--border));
+  }
+
+  .surface-elevated {
+    background-color: hsl(var(--surface-elevated));
+    border-color: hsl(var(--border));
+    box-shadow: var(--shadow-sm);
+  }
+
+  .surface-overlay {
+    background-color: hsl(var(--surface-overlay));
+    border-color: hsl(var(--border));
+    box-shadow: var(--shadow-md);
+    backdrop-filter: blur(8px);
+  }
+
+  .surface-modal {
+    background-color: hsl(var(--surface-modal));
+    border-color: hsl(var(--border));
+    box-shadow: var(--shadow-xl);
+    backdrop-filter: blur(12px);
+  }
+
+  /* Estados Interativos */
+  .interactive-hover {
+    @apply transition-all duration-200;
+    transform-origin: center;
+  }
+
+  .interactive-hover:hover {
+    @apply shadow-md;
+    transform: translateY(-1px) scale(1.02);
+    background-color: hsl(var(--accent));
+    color: hsl(var(--accent-foreground));
+  }
+
+  .interactive-press {
+    @apply transition-transform duration-100;
+  }
+
+  .interactive-press:active {
+    transform: scale(0.98);
+  }
+
+  .interactive-focus {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aurora focus-visible:ring-offset-2;
+  }
+
+  /* Aurora Focus Ring */
+  .aurora-focus {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aurora/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  }
+
+  /* Sombras Aurora */
+  .shadow-aurora {
+    box-shadow: var(--shadow-aurora);
+  }
+
+  .shadow-aurora-strong {
+    box-shadow: var(--shadow-aurora-strong);
+  }
+
+  /* Loading States Aprimorados */
+  .skeleton {
+    @apply bg-muted animate-pulse rounded;
+    background: linear-gradient(90deg, 
+      hsl(var(--muted)) 0%, 
+      hsl(var(--muted) / 0.8) 50%, 
+      hsl(var(--muted)) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+  }
+
+  .skeleton-text {
+    @apply skeleton h-4 w-3/4;
+  }
+
+  .skeleton-heading {
+    @apply skeleton h-6 w-1/2;
+  }
+
+  /* Content Sections */
+  .content-section {
+    @apply space-y-6 p-6 rounded-lg surface-elevated;
+  }
+
+  .content-section-header {
+    @apply pb-4;
+    border-bottom: 1px solid hsl(var(--border) / 0.5);
+  }
+
+  /* Status Indicators */
+  .status-success {
+    background-color: hsl(142 76% 36% / 0.1);
+    color: hsl(142 76% 36%);
+    border-color: hsl(142 76% 36% / 0.2);
+  }
+
+  .status-warning {
+    background-color: hsl(43 96% 56% / 0.1);
+    color: hsl(43 96% 56%);
+    border-color: hsl(43 96% 56% / 0.2);
+  }
+
+  .status-error {
+    background-color: hsl(0 84% 60% / 0.1);
+    color: hsl(0 84% 60%);
+    border-color: hsl(0 84% 60% / 0.2);
+  }
+
+  .status-info {
+    background-color: hsl(221 83% 53% / 0.1);
+    color: hsl(221 83% 53%);
+    border-color: hsl(221 83% 53% / 0.2);
+  }
 }
