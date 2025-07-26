@@ -24,9 +24,9 @@ export const KpiGrid: FC<KpiGridProps> = memo(({
       title: "Soluções Completadas",
       value: completed,
       icon: CheckCircle,
-      color: "text-primary",
-      bgColor: "bg-primary/10",
-      borderColor: "border-primary/20"
+      color: "text-strategy",
+      bgColor: "bg-strategy/10",
+      borderColor: "border-strategy/20"
     },
     {
       title: "Em Andamento",
@@ -40,17 +40,17 @@ export const KpiGrid: FC<KpiGridProps> = memo(({
       title: "Taxa de Conclusão",
       value: `${completionRate}%`,
       icon: Target,
-      color: "text-viverorange",
-      bgColor: "bg-viverorange/10",
-      borderColor: "border-viverorange/20"
+      color: "text-aurora-light",
+      bgColor: "bg-aurora-light/10",
+      borderColor: "border-aurora-light/20"
     },
     {
       title: "Total Disponível",
       value: total,
       icon: TrendingUp,
-      color: "text-secondary",
-      bgColor: "bg-secondary/10",
-      borderColor: "border-secondary/20"
+      color: "text-primary",
+      bgColor: "bg-primary/10",
+      borderColor: "border-primary/20"
     }
   ];
 
