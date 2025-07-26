@@ -199,9 +199,10 @@ export const LessonsTab = ({ trail }: LessonsTabProps) => {
     if (!lesson) {
       return (
         <Card className="group relative overflow-hidden border border-border/50 bg-gradient-to-br from-card to-muted/30 backdrop-blur-sm animate-pulse">
-          <div className="flex h-[200px]">
-            <div className="w-[160px] bg-muted/50 rounded-l-xl"></div>
-            <div className="flex-1 p-4 space-y-3">
+          <div className="p-6 space-y-4">
+            {/* Cover placeholder - 9:16 format */}
+            <div className="w-full aspect-[9/16] bg-muted/50 rounded-xl"></div>
+            <div className="space-y-3">
               <div className="h-4 bg-muted rounded w-3/4"></div>
               <div className="h-3 bg-muted rounded w-1/2"></div>
               <div className="h-3 bg-muted rounded w-2/3"></div>
@@ -212,16 +213,16 @@ export const LessonsTab = ({ trail }: LessonsTabProps) => {
     }
 
     return (
-      <Card className="group relative overflow-hidden border border-border/50 hover:border-operational/50 bg-gradient-to-br from-card/95 to-muted/30 backdrop-blur-sm transition-all duration-500 hover:scale-[1.01] hover:shadow-xl hover:shadow-operational/5 cursor-pointer">
+      <Card className="group relative overflow-hidden border border-border/50 hover:border-operational/50 bg-gradient-to-br from-card/95 to-muted/30 backdrop-blur-sm transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-operational/10 cursor-pointer">
         {/* Animated glow effect */}
-        <div className="absolute inset-0 bg-gradient-to-r from-operational/5 via-transparent to-viverblue/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+        <div className="absolute inset-0 bg-gradient-to-br from-operational/5 via-transparent to-viverblue/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
         
         {/* Shimmer effect */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-out" />
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/8 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-out" />
         
-        <div className="flex h-[200px] relative z-10" onClick={() => navigate(`/learning/lesson/${lesson.id}`)}>
-          {/* Lesson Cover Image - Formato Vertical Otimizado */}
-          <div className="w-[160px] relative overflow-hidden bg-gradient-to-br from-muted to-muted/50 rounded-l-xl">
+        <div className="relative z-10 p-6 space-y-5" onClick={() => navigate(`/learning/lesson/${lesson.id}`)}>
+          {/* Lesson Cover Image - Formato 9:16 */}
+          <div className="relative w-full aspect-[9/16] overflow-hidden rounded-xl bg-gradient-to-br from-muted to-muted/50">
             {lesson.cover_image_url ? (
               <div className="relative w-full h-full">
                 <img 
@@ -229,7 +230,6 @@ export const LessonsTab = ({ trail }: LessonsTabProps) => {
                   alt={lesson.title}
                   className="w-full h-full object-cover object-center transition-all duration-700 group-hover:scale-105"
                   loading="lazy"
-                  style={{ aspectRatio: '4/5' }}
                   onError={(e) => {
                     const target = e.currentTarget;
                     target.style.display = 'none';
@@ -241,125 +241,123 @@ export const LessonsTab = ({ trail }: LessonsTabProps) => {
                 />
                 
                 {/* Overlay gradients for better readability */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-black/20" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20" />
                 
                 {/* Fallback content (hidden by default) */}
                 <div className="fallback-content absolute inset-0 hidden items-center justify-center bg-gradient-to-br from-operational/20 to-viverblue/20">
                   <div className="text-center">
-                    <GraduationCap className="h-10 w-10 mx-auto mb-2 text-operational" />
-                    <p className="text-xs text-muted-foreground font-medium">Aula IA</p>
+                    <GraduationCap className="h-20 w-20 mx-auto mb-4 text-operational" />
+                    <p className="text-lg text-muted-foreground font-medium">Aula IA</p>
+                    <p className="text-sm text-muted-foreground/70 mt-2">Conteúdo Personalizado</p>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-operational/20 to-viverblue/20 relative rounded-l-xl">
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-operational/20 to-viverblue/20 relative rounded-xl">
                 {/* Animated background orbs */}
-                <div className="absolute inset-0 overflow-hidden rounded-l-xl">
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 bg-operational/20 rounded-full blur-xl animate-pulse" />
-                  <div className="absolute top-1/3 left-1/3 w-12 h-12 bg-viverblue/15 rounded-full blur-lg animate-pulse animation-delay-1000" />
+                <div className="absolute inset-0 overflow-hidden rounded-xl">
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 bg-operational/20 rounded-full blur-3xl animate-pulse" />
+                  <div className="absolute top-1/4 left-1/4 w-24 h-24 bg-viverblue/15 rounded-full blur-2xl animate-pulse animation-delay-1000" />
+                  <div className="absolute bottom-1/4 right-1/4 w-20 h-20 bg-revenue/15 rounded-full blur-xl animate-pulse animation-delay-2000" />
                 </div>
                 
                 <div className="text-center relative z-10">
-                  <GraduationCap className="h-12 w-12 mx-auto mb-2 text-operational group-hover:scale-110 group-hover:rotate-6 transition-all duration-500" />
-                  <p className="text-sm text-muted-foreground font-medium">Aula IA</p>
+                  <GraduationCap className="h-24 w-24 mx-auto mb-6 text-operational group-hover:scale-110 group-hover:rotate-6 transition-all duration-500" />
+                  <p className="text-xl text-muted-foreground font-semibold">Aula IA</p>
+                  <p className="text-sm text-muted-foreground/70 mt-2">Conteúdo Personalizado</p>
                 </div>
               </div>
             )}
             
             {/* Priority badge overlay */}
-            <div className="absolute top-3 left-3">
-              <Badge className={`${priorityInfo.color} ${priorityInfo.textColor} text-xs shadow-lg backdrop-blur-md group-hover:scale-105 transition-transform duration-300 border border-white/20`}>
+            <div className="absolute top-4 left-4">
+              <Badge className={`${priorityInfo.color} ${priorityInfo.textColor} text-sm shadow-lg backdrop-blur-md group-hover:scale-105 transition-transform duration-300 border border-white/30 font-semibold px-4 py-2`}>
                 {priorityInfo.label}
               </Badge>
             </div>
             
             {/* Duration badge */}
             {lesson.estimated_time_minutes && (
-              <div className="absolute bottom-3 right-3">
-                <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-black/70 backdrop-blur-md rounded-lg border border-white/20 group-hover:bg-operational/90 transition-colors duration-300">
-                  <Clock className="h-3 w-3 text-white" />
-                  <span className="text-xs text-white font-semibold">{lesson.estimated_time_minutes}min</span>
+              <div className="absolute bottom-4 right-4">
+                <div className="flex items-center gap-2 px-4 py-2 bg-black/80 backdrop-blur-md rounded-lg border border-white/20 group-hover:bg-operational/90 transition-colors duration-300">
+                  <Clock className="h-4 w-4 text-white" />
+                  <span className="text-white text-sm font-medium">
+                    {lesson.estimated_time_minutes} min
+                  </span>
                 </div>
               </div>
             )}
+            
+            {/* Difficulty indicator */}
+            <div className="absolute top-4 right-4">
+              <div className={`px-3 py-2 rounded-full text-sm font-medium backdrop-blur-md border ${getDifficultyColor(lesson.difficulty_level)}`}>
+                {lesson.difficulty_level || 'beginner'}
+              </div>
+            </div>
+
+            {/* Play button overlay */}
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <div className="bg-white/95 backdrop-blur-md rounded-full p-6 shadow-2xl border border-white/20 group-hover:scale-110 transition-transform duration-300">
+                <Play className="h-10 w-10 text-operational fill-operational" />
+              </div>
+            </div>
           </div>
 
           {/* Lesson Content */}
-          <div className="flex-1 p-4 flex flex-col justify-between">
-            {/* Header */}
-            <div className="space-y-2">
-              <div className="flex items-start justify-between">
-                <div className="flex-1 pr-2">
-                  <h3 className="text-base font-bold text-foreground group-hover:text-operational transition-colors duration-300 line-clamp-2 mb-2 leading-snug">
-                    {lesson.title}
-                  </h3>
-                  
-                  {/* Meta info */}
-                  <div className="flex items-center gap-2 mb-2 text-xs flex-wrap">
-                    <div className="flex items-center gap-1">
-                      <BookOpen className="w-3 h-3 text-muted-foreground" />
-                      <span className="text-muted-foreground truncate">Módulo: {lesson.module_id.slice(0, 8)}...</span>
-                    </div>
-                    
-                    {lesson.difficulty_level && (
-                      <Badge variant="outline" className={`text-xs px-1.5 py-0.5 ${getDifficultyColor(lesson.difficulty_level)}`}>
-                        {lesson.difficulty_level}
-                      </Badge>
-                    )}
-                    
-                    {lesson.estimated_time_minutes && (
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-3 h-3 text-muted-foreground" />
-                        <span className="text-muted-foreground">{lesson.estimated_time_minutes} min</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                
-                <Play className="w-4 h-4 text-muted-foreground group-hover:text-operational group-hover:scale-110 transition-all duration-300 flex-shrink-0" />
-              </div>
-              
-              {/* Description */}
-              <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-                {lesson.description}
-              </p>
-            </div>
-
-            {/* AI Justification with Aurora styling */}
+          <div className="space-y-4">
+            {/* Title and Description */}
             <div className="space-y-3">
-              <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-operational/5 to-viverblue/5 border border-operational/10 p-3">
-                {/* Background pattern */}
-                <div className="absolute inset-0 bg-gradient-to-r from-operational/5 to-transparent opacity-50" />
-                
-                <div className="flex items-start gap-2 relative z-10">
-                  <div className="p-1.5 bg-operational/10 rounded-md flex-shrink-0">
-                    <Star className="w-3 h-3 text-operational" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-xs font-semibold text-operational mb-1">Por que estudar?</h4>
-                    <p className="text-xs text-foreground leading-relaxed line-clamp-2">{item.justification}</p>
-                  </div>
+              <h3 className="font-bold text-xl leading-tight text-foreground group-hover:text-operational transition-colors duration-300 line-clamp-2">
+                {lesson.title}
+              </h3>
+              
+              {lesson.description && (
+                <p className="text-base text-muted-foreground leading-relaxed line-clamp-3 group-hover:text-muted-foreground/90 transition-colors duration-300">
+                  {lesson.description}
+                </p>
+              )}
+
+              {/* Meta info */}
+              <div className="flex items-center gap-3 text-sm flex-wrap">
+                <div className="flex items-center gap-2">
+                  <BookOpen className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">Módulo: {lesson.module_id.slice(0, 8)}...</span>
                 </div>
               </div>
-
-              {/* Action button */}
-              <Button 
-                size="sm"
-                className="w-full bg-operational/10 hover:bg-operational text-operational hover:text-white border border-operational/20 hover:border-operational transition-all duration-300 group-hover:scale-105 relative overflow-hidden text-xs py-2"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigate(`/learning/lesson/${lesson.id}`);
-                }}
-              >
-                {/* Button shine effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-                <span className="relative z-10 flex items-center gap-1.5">
-                  Começar Aula
-                  <Play className="w-3 h-3 group-hover:translate-x-1 transition-transform duration-300" />
-                </span>
-              </Button>
             </div>
+
+            {/* Justification */}
+            <div className="p-5 rounded-xl bg-gradient-to-r from-operational/10 to-viverblue/10 border border-operational/20 group-hover:border-operational/30 transition-colors duration-300">
+              <div className="flex items-start gap-4">
+                <div className="w-8 h-8 bg-operational/20 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                  <Target className="h-4 w-4 text-operational" />
+                </div>
+                <div>
+                  <h4 className="text-base font-semibold text-foreground mb-2">Por que esta aula?</h4>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {item.justification}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Button */}
+            <Button 
+              variant="outline" 
+              size="lg"
+              className="w-full group-hover:bg-operational group-hover:text-white group-hover:border-operational transition-all duration-300 font-semibold py-4 text-base relative overflow-hidden"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/learning/lesson/${lesson.id}`);
+              }}
+            >
+              {/* Button shine effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+              <span className="relative z-10 flex items-center gap-3">
+                <Play className="w-5 h-5" />
+                Começar Aula
+              </span>
+            </Button>
           </div>
         </div>
       </Card>
@@ -472,19 +470,19 @@ export const LessonsTab = ({ trail }: LessonsTabProps) => {
                   {priorityLessons.length} aulas
                 </Badge>
               </div>
-              <div className="grid gap-6">
-                {priorityLessons
-                  .sort((a, b) => a.priority - b.priority)
-                  .map((item, index) => (
-                    <div
-                      key={`p${priority}-${index}`}
-                      className="animate-fade-in"
-                      style={{ animationDelay: `${index * 150}ms` }}
-                    >
-                      <LessonCard item={item} />
-                    </div>
-                  ))}
-              </div>
+               <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                 {priorityLessons
+                   .sort((a, b) => a.priority - b.priority)
+                   .map((item, index) => (
+                     <div
+                       key={`p${priority}-${index}`}
+                       className="animate-fade-in"
+                       style={{ animationDelay: `${index * 150}ms` }}
+                     >
+                       <LessonCard item={item} />
+                     </div>
+                   ))}
+               </div>
             </section>
           );
         })}
