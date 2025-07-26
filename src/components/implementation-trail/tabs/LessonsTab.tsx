@@ -549,20 +549,6 @@ export const LessonsTab = ({ trail }: LessonsTabProps) => {
         </CardContent>
       </Card>
 
-      {/* AI Message if available */}
-      {trail.ai_message && (
-        <Card className="aurora-glass border-primary/20 bg-gradient-to-r from-primary/5 to-operational/5">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-primary">
-              <Target className="w-5 h-5" />
-              Mensagem da IA
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm leading-relaxed">{trail.ai_message}</p>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 };

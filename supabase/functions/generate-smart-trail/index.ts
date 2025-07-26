@@ -20,12 +20,15 @@ interface UserProfile {
   current_position?: string;
   industry?: string;
   
-  // Dados do onboarding
+  // Dados do onboarding completos
   business_info?: any;
   ai_experience?: any;
   business_goals?: any;
   personal_info?: any;
   professional_info?: any;
+  personalization?: any;
+  
+  // Campos derivados para compatibilidade
   company_size?: string;
   annual_revenue?: string;
   ai_knowledge_level?: string;
@@ -41,46 +44,78 @@ interface Solution {
   tags: string[];
 }
 
-// Matriz de pontuação baseada em perfil
+// Matriz de pontuação baseada em perfil completo
 const SCORING_MATRIX = {
   // Pontuação por setor/indústria
   industry: {
-    'tecnologia': { category: 'Automação', bonus: 20 },
-    'vendas': { category: 'Receita', bonus: 25 },
-    'marketing': { category: 'Marketing', bonus: 25 },
-    'educacao': { category: 'Operacional', bonus: 15 },
-    'consultoria': { category: 'Automação', bonus: 20 },
-    'saude': { category: 'Operacional', bonus: 15 },
-    'financeiro': { category: 'Automação', bonus: 20 },
+    'tecnologia': { category: 'Automação', bonus: 25 },
+    'vendas': { category: 'Receita', bonus: 30 },
+    'marketing': { category: 'Marketing', bonus: 30 },
+    'educacao': { category: 'Operacional', bonus: 20 },
+    'consultoria': { category: 'Automação', bonus: 25 },
+    'saude': { category: 'Operacional', bonus: 20 },
+    'financeiro': { category: 'Automação', bonus: 25 },
   },
   
   // Pontuação por tamanho da empresa
   companySize: {
     'solo': { difficulty: 'easy', bonus: 15 },
     '2-10': { difficulty: 'easy', bonus: 10 },
-    '11-50': { difficulty: 'medium', bonus: 5 },
-    '51-200': { difficulty: 'medium', bonus: 0 },
-    '200+': { difficulty: 'advanced', bonus: -5 },
+    '11-25': { difficulty: 'medium', bonus: 5 },
+    '26-50': { difficulty: 'medium', bonus: 0 },
+    '51-100': { difficulty: 'advanced', bonus: -5 },
+    '101+': { difficulty: 'advanced', bonus: -10 },
   },
   
   // Pontuação por experiência em IA
   aiExperience: {
-    'basic': { difficulty: 'easy', bonus: 20 },
-    'intermediate': { difficulty: 'medium', bonus: 10 },
-    'advanced': { difficulty: 'advanced', bonus: 0 },
+    'basic': { difficulty: 'easy', bonus: 25 },
+    'intermediate': { difficulty: 'medium', bonus: 15 },
+    'advanced': { difficulty: 'advanced', bonus: 5 },
     // Manter compatibilidade com valores antigos
-    'iniciante': { difficulty: 'easy', bonus: 20 },
-    'intermediario': { difficulty: 'medium', bonus: 10 },
-    'avancado': { difficulty: 'advanced', bonus: 0 },
+    'iniciante': { difficulty: 'easy', bonus: 25 },
+    'intermediario': { difficulty: 'medium', bonus: 15 },
+    'avancado': { difficulty: 'advanced', bonus: 5 },
   },
   
   // Pontuação por objetivo principal
   mainGoal: {
-    'aumentar_vendas': { category: 'Receita', bonus: 30 },
-    'automatizar_processos': { category: 'Automação', bonus: 30 },
-    'melhorar_marketing': { category: 'Marketing', bonus: 30 },
-    'otimizar_operacoes': { category: 'Operacional', bonus: 30 },
-  }
+    'sales_growth': { category: 'Receita', bonus: 35 },
+    'productivity': { category: 'Automação', bonus: 35 },
+    'cost_reduction': { category: 'Operacional', bonus: 35 },
+    'customer_satisfaction': { category: 'Atendimento', bonus: 30 },
+    // Compatibilidade
+    'aumentar_vendas': { category: 'Receita', bonus: 35 },
+    'automatizar_processos': { category: 'Automação', bonus: 35 },
+    'melhorar_marketing': { category: 'Marketing', bonus: 35 },
+    'otimizar_operacoes': { category: 'Operacional', bonus: 35 },
+  },
+
+  // Pontuação por áreas prioritárias
+  priorityAreas: {
+    'Marketing e vendas': { category: 'Receita', bonus: 20 },
+    'Automação de tarefas repetitivas': { category: 'Automação', bonus: 20 },
+    'Análise de dados': { category: 'Estratégia', bonus: 20 },
+    'Atendimento ao cliente': { category: 'Atendimento', bonus: 20 },
+    'Criação de conteúdo': { category: 'Marketing', bonus: 15 },
+    'Gestão de equipes': { category: 'Operacional', bonus: 15 },
+  },
+
+  // Pontuação por capacidade de investimento
+  investmentCapacity: {
+    'low': { difficulty: 'easy', bonus: 10 },
+    'medium': { difficulty: 'medium', bonus: 5 },
+    'high': { difficulty: 'advanced', bonus: 0 },
+    'enterprise': { difficulty: 'advanced', bonus: -5 },
+  },
+
+  // Pontuação por estilo de aprendizado
+  learningStyle: {
+    'hands_on': { tags: ['pratico', 'implementacao'], bonus: 15 },
+    'visual': { tags: ['video', 'infografico'], bonus: 10 },
+    'reading': { tags: ['documentacao', 'tutorial'], bonus: 10 },
+    'mixed': { tags: ['pratico', 'video'], bonus: 12 },
+  },
 };
 
 function calculateSolutionScore(solution: Solution, profile: UserProfile): number {
@@ -110,13 +145,51 @@ function calculateSolutionScore(solution: Solution, profile: UserProfile): numbe
   if (goalPrefs && solution.category === goalPrefs.category) {
     score += goalPrefs.bonus;
   }
+
+  // NOVO: Bonus por áreas prioritárias do onboarding
+  const priorityAreas = profile.business_goals?.priority_areas || [];
+  priorityAreas.forEach((area: string) => {
+    const areaPrefs = SCORING_MATRIX.priorityAreas[area];
+    if (areaPrefs && solution.category === areaPrefs.category) {
+      score += areaPrefs.bonus;
+    }
+  });
+
+  // NOVO: Bonus por capacidade de investimento
+  const investmentCapacity = profile.business_goals?.investment_capacity || 'medium';
+  const investmentPrefs = SCORING_MATRIX.investmentCapacity[investmentCapacity];
+  if (investmentPrefs && solution.difficulty === investmentPrefs.difficulty) {
+    score += investmentPrefs.bonus;
+  }
+
+  // NOVO: Bonus por estilo de aprendizado
+  const learningStyle = profile.personalization?.learning_style || 'mixed';
+  const stylePrefs = SCORING_MATRIX.learningStyle[learningStyle];
+  if (stylePrefs) {
+    const matchingStyleTags = solution.tags?.filter(tag => 
+      stylePrefs.tags.some(styleTag => tag.toLowerCase().includes(styleTag))
+    ).length || 0;
+    score += matchingStyleTags * stylePrefs.bonus;
+  }
   
-  // Bonus por tags relevantes
-  const relevantTags = ['automacao', 'vendas', 'marketing', 'whatsapp', 'linkedin'];
+  // Bonus por tags relevantes (melhorado)
+  const relevantTags = ['automacao', 'vendas', 'marketing', 'whatsapp', 'linkedin', 'chatbot', 'crm'];
   const matchingTags = solution.tags?.filter(tag => 
     relevantTags.includes(tag.toLowerCase())
   ).length || 0;
-  score += matchingTags * 5;
+  score += matchingTags * 8;
+  
+  // NOVO: Bonus por alinhamento com desafios principais
+  const mainChallenge = profile.professional_info?.main_challenge || '';
+  if (mainChallenge.toLowerCase().includes('vendas') && solution.category === 'Receita') {
+    score += 15;
+  }
+  if (mainChallenge.toLowerCase().includes('automação') && solution.category === 'Automação') {
+    score += 15;
+  }
+  if (mainChallenge.toLowerCase().includes('marketing') && solution.category === 'Marketing') {
+    score += 15;
+  }
   
   // Garantir que o score está entre 0 e 100
   return Math.max(0, Math.min(100, score));
@@ -131,10 +204,29 @@ function generatePersonalizedJustification(solution: Solution, profile: UserProf
     reasons.push(`Ideal para empresas do setor ${profile.industry}`);
   }
   
-  // Razão baseada no objetivo
+  // Razão baseada no objetivo principal
   const goalPrefs = SCORING_MATRIX.mainGoal[profile.main_goal || ''];
   if (goalPrefs && solution.category === goalPrefs.category) {
     reasons.push(`Alinhado com seu objetivo de ${profile.main_goal?.replace('_', ' ')}`);
+  }
+
+  // NOVO: Razão baseada nas áreas prioritárias
+  const priorityAreas = profile.business_goals?.priority_areas || [];
+  const matchingAreas = priorityAreas.filter((area: string) => {
+    const areaPrefs = SCORING_MATRIX.priorityAreas[area];
+    return areaPrefs && solution.category === areaPrefs.category;
+  });
+  if (matchingAreas.length > 0) {
+    reasons.push(`Foca em ${matchingAreas[0]}, uma de suas áreas prioritárias`);
+  }
+
+  // NOVO: Razão baseada no desafio principal
+  const mainChallenge = profile.professional_info?.main_challenge || '';
+  if (mainChallenge.toLowerCase().includes('vendas') && solution.category === 'Receita') {
+    reasons.push('Ajuda diretamente com seu desafio de aumentar vendas');
+  }
+  if (mainChallenge.toLowerCase().includes('automação') && solution.category === 'Automação') {
+    reasons.push('Resolve seu desafio de automação de processos');
   }
   
   // Razão baseada na experiência
@@ -146,18 +238,32 @@ function generatePersonalizedJustification(solution: Solution, profile: UserProf
   } else if ((aiLevel === 'advanced' || aiLevel === 'avancado') && solution.difficulty === 'advanced') {
     reasons.push('Desafio adequado para seu nível avançado');
   }
+
+  // NOVO: Razão baseada no estilo de aprendizado
+  const learningStyle = profile.personalization?.learning_style;
+  if (learningStyle === 'hands_on' && solution.difficulty === 'medium') {
+    reasons.push('Solução prática que você pode implementar na mão');
+  }
   
   // Razão baseada no tamanho da empresa
-  if (profile.company_size === 'solo' && solution.difficulty === 'easy') {
-    reasons.push('Solução prática para implementação individual');
+  if ((profile.company_size === 'solo' || profile.company_size === '2-10') && solution.difficulty === 'easy') {
+    reasons.push('Solução prática para empresas menores');
+  } else if (profile.company_size === '26-50' && solution.difficulty === 'medium') {
+    reasons.push('Adequada para o porte da sua empresa');
   }
   
-  // Fallback genérico
+  // Fallback genérico mais inteligente
   if (reasons.length === 0) {
-    reasons.push(`Solução recomendada com ${score}% de compatibilidade`);
+    if (score >= 80) {
+      reasons.push(`Excelente compatibilidade (${score}%) com seu perfil`);
+    } else if (score >= 60) {
+      reasons.push(`Boa compatibilidade (${score}%) com seus objetivos`);
+    } else {
+      reasons.push(`Recomendada com ${score}% de compatibilidade`);
+    }
   }
   
-  return reasons.join('. ') + '.';
+  return reasons.slice(0, 2).join('. ') + '.';
 }
 
 function estimateImplementationTime(solution: Solution, profile: UserProfile): string {
@@ -280,21 +386,22 @@ serve(async (req) => {
       throw new Error('Nenhuma solução encontrada');
     }
 
-    // 4. Consolidar perfil do usuário
+    // 4. Consolidar perfil do usuário com TODOS os dados do onboarding
     const userProfile: UserProfile = {
       name: profile?.name || onboardingData?.personal_info?.name,
-      company_name: profile?.company_name || onboardingData?.business_info?.company_name,
+      company_name: profile?.company_name || onboardingData?.professional_info?.company_name,
       current_position: profile?.current_position || onboardingData?.professional_info?.current_position,
-      industry: profile?.industry || onboardingData?.business_info?.company_sector,
-      company_size: onboardingData?.business_info?.company_size || onboardingData?.company_size,
-      annual_revenue: onboardingData?.business_info?.annual_revenue || onboardingData?.annual_revenue,
+      industry: profile?.industry || onboardingData?.professional_info?.company_sector,
+      company_size: onboardingData?.professional_info?.company_size || onboardingData?.company_size,
+      annual_revenue: onboardingData?.professional_info?.annual_revenue || onboardingData?.annual_revenue,
       ai_knowledge_level: onboardingData?.ai_experience?.experience_level || onboardingData?.ai_knowledge_level,
-      main_goal: onboardingData?.business_goals?.primary_goal || onboardingData?.main_goal,
+      main_goal: onboardingData?.goals_info?.primary_goal || onboardingData?.main_goal,
       business_info: onboardingData?.business_info,
       ai_experience: onboardingData?.ai_experience,
-      business_goals: onboardingData?.business_goals,
+      business_goals: onboardingData?.goals_info,
       personal_info: onboardingData?.personal_info,
       professional_info: onboardingData?.professional_info,
+      personalization: onboardingData?.personalization,
     };
 
     console.log('👤 Perfil consolidado:', {
