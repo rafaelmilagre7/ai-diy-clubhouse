@@ -13,7 +13,7 @@ import { RoleSyncPanel } from '@/components/admin/roles/RoleSyncPanel';
 import { useRoles, Role } from '@/hooks/admin/useRoles';
 
 const AdminRoles: React.FC = () => {
-  const { roles, loading, deleteRole, isDeleting } = useRoles();
+  const { roles, isLoading, deleteRole, isDeleting } = useRoles();
   const [formOpen, setFormOpen] = useState(false);
   const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
   const [selectedRole, setSelectedRole] = useState<Role | undefined>();
@@ -85,7 +85,7 @@ const AdminRoles: React.FC = () => {
             <CardContent>
               <RolesList
                 roles={roles}
-                isLoading={loading}
+                isLoading={isLoading}
                 onEditRole={handleEditRole}
                 onDeleteRole={handleDeleteRole}
                 onManagePermissions={handleManagePermissions}

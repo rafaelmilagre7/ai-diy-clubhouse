@@ -67,8 +67,7 @@ export const useLessonsByModule = (moduleId: string) => {
       }
     },
     enabled: !!moduleId,
-    // Forçar refetch para garantir dados atualizados
-    staleTime: 0,
-    refetchOnWindowFocus: true
+    staleTime: 5 * 60 * 1000, // 5 minutos
+    refetchOnWindowFocus: false
   });
 };

@@ -87,13 +87,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                   )
                 `)
                 .eq('id', session.user.id)
-                .single();
+                .maybeSingle();
 
               if (!error && profileData) {
-                console.log('👤 [AUTH] Perfil carregado:', profileData.name);
                 setProfile(profileData);
               } else {
-                console.warn('⚠️ [AUTH] Erro ao buscar perfil:', error);
+                console.warn('⚠️ [AUTH] Erro ao buscar perfil:', error?.message);
               }
             } catch (error) {
               console.error('❌ [AUTH] Erro ao buscar perfil:', error);

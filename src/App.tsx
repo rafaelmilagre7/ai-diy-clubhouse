@@ -12,8 +12,10 @@ import { PerformanceDashboard } from "@/components/dev/PerformanceDashboard";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutos
-      gcTime: 10 * 60 * 1000, // 10 minutos
+      staleTime: 10 * 60 * 1000, // 10 minutos (aumentado)
+      gcTime: 30 * 60 * 1000, // 30 minutos (aumentado)
+      refetchOnWindowFocus: false, // Desabilitar refetch no foco
+      retry: 1, // Reduzir tentativas
     },
   },
 });

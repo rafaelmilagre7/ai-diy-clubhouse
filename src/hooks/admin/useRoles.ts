@@ -25,7 +25,6 @@ export interface UpdateRoleData {
 
 export const useRoles = () => {
   const [roles, setRoles] = useState<Role[]>([]);
-  const [loading, setLoading] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -40,7 +39,6 @@ export const useRoles = () => {
 
   const fetchRoles = async () => {
     try {
-      setLoading(true);
       setIsLoading(true);
       setError(null);
       const { data, error } = await supabase
@@ -55,7 +53,6 @@ export const useRoles = () => {
       setError(error as Error);
       toast.error('Erro ao carregar papéis');
     } finally {
-      setLoading(false);
       setIsLoading(false);
     }
   };
@@ -134,7 +131,6 @@ export const useRoles = () => {
 
   return {
     roles,
-    loading,
     isLoading,
     isCreating,
     isUpdating,
