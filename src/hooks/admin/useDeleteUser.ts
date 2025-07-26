@@ -22,13 +22,19 @@ export const useDeleteUser = () => {
   const [error, setError] = useState<Error | null>(null);
   const [deleteResult, setDeleteResult] = useState<DeleteResult | null>(null);
 
-  const deleteUser = async (userId: string, userEmail: string, softDelete: boolean = false) => {
+  const deleteUser = async (userId: string, userEmail: string, softDelete: boolean = false, isCompleteDelete: boolean = true) => {
     try {
       setIsDeleting(true);
       setError(null);
       setDeleteResult(null);
 
-      console.log("🗑️ Iniciando exclusão do usuário:", { userId, userEmail, softDelete });
+      console.log("🔥 Iniciando exclusão COMPLETA do usuário:", { 
+        userId, 
+        userEmail, 
+        softDelete, 
+        isCompleteDelete,
+        timestamp: new Date().toISOString()
+      });
 
       // Buscar token de autenticação para a requisição segura
       const { data: { session } } = await supabase.auth.getSession();
@@ -42,8 +48,11 @@ export const useDeleteUser = () => {
         },
         body: { 
           userId,
-          forceDelete: true, // Sempre forçar delete para contornar erros menores
-          softDelete
+          userEmail,
+          forceDelete: true, // Sempre forçar delete 
+          softDelete,
+          isCompleteDelete, // Nova opção para exclusão completa
+          deleteFromAuth: isCompleteDelete // Deletar também do sistema de auth
         }
       });
 
@@ -61,17 +70,25 @@ export const useDeleteUser = () => {
       setDeleteResult(data as DeleteResult);
 
       // Toast detalhado baseado no resultado
-      if (softDelete) {
+      if (isCompleteDelete && !softDelete) {
+        const authStatus = data.details.authUserDeleted ? "✅ Removido do Auth" : "⚠️ Auth mantido";
+        const profileStatus = data.details.profileDeleted ? "✅ Perfil excluído" : "⚠️ Perfil mantido";
+        
+        toast.success('🔥 USUÁRIO EXCLUÍDO COMPLETAMENTE DA PLATAFORMA!', {
+          description: `${userEmail} foi REMOVIDO TOTALMENTE. ${authStatus}, ${profileStatus}. ${data.details.tablesAffected.length} tabelas limpas. Email liberado para reutilização!`,
+          duration: 10000
+        });
+      } else if (softDelete) {
         toast.success('🧹 Dados do usuário limpos (soft delete)', {
-          description: `${userEmail} foi resetado. ${data.details.tablesAffected.length} tabelas limpas. Agora é possível reenviar convites.`,
+          description: `${userEmail} foi resetado. ${data.details.tablesAffected.length} tabelas limpas. Email ainda ocupado no sistema.`,
           duration: 6000
         });
       } else {
         const authStatus = data.details.authUserDeleted ? "✅ Auth removido" : "⚠️ Auth mantido";
         const profileStatus = data.details.profileDeleted ? "✅ Perfil removido" : "⚠️ Perfil mantido";
         
-        toast.success('💥 Usuário excluído completamente', {
-          description: `${userEmail} foi removido. ${authStatus}, ${profileStatus}. ${data.details.tablesAffected.length} tabelas limpas.`,
+        toast.success('💥 Usuário processado', {
+          description: `${userEmail} foi processado. ${authStatus}, ${profileStatus}. ${data.details.tablesAffected.length} tabelas limpas.`,
           duration: 8000
         });
       }

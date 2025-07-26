@@ -33,16 +33,27 @@ export const DeleteUserDialog: React.FC<DeleteUserDialogProps> = ({
 }) => {
   const { deleteUser, isDeleting, deleteResult } = useDeleteUser();
   const [softDelete, setSoftDelete] = useState(false); // Hard delete por padrão
+  const [isCompleteDelete, setIsCompleteDelete] = useState(true); // Exclusão completa por padrão
 
   const handleDeleteUser = async () => {
     if (!user) return;
     
-    const success = await deleteUser(user.id, user.email, softDelete);
+    console.log('🔥 Iniciando exclusão com configurações:', {
+      userId: user.id,
+      email: user.email,
+      softDelete,
+      isCompleteDelete
+    });
+    
+    const success = await deleteUser(user.id, user.email, softDelete, isCompleteDelete);
     
     if (success) {
       onOpenChange(false);
       if (onSuccess) {
-        onSuccess();
+        // Aguardar um pouco para garantir que a exclusão foi processada
+        setTimeout(() => {
+          onSuccess();
+        }, 1000);
       }
     }
   };
@@ -52,69 +63,95 @@ export const DeleteUserDialog: React.FC<DeleteUserDialogProps> = ({
       <AlertDialogContent className="max-w-2xl">
         <AlertDialogHeader>
           <AlertDialogTitle>
-            {softDelete ? '🧹 Limpar dados do usuário' : '💥 Excluir usuário completamente'}
+            🔥 EXCLUSÃO COMPLETA DO USUÁRIO DA PLATAFORMA
           </AlertDialogTitle>
           <AlertDialogDescription className="space-y-4">
-            <p>
-              Tem certeza que deseja {softDelete ? 'limpar os dados' : 'excluir permanentemente'} do usuário <strong>{user?.name || user?.email}</strong>?
-            </p>
+            <div className="bg-red-50 dark:bg-red-950/20 p-4 rounded-md border border-red-200 dark:border-red-800">
+              <p className="text-red-800 dark:text-red-200 font-medium mb-2">
+                ⚠️ ATENÇÃO: Esta ação irá excluir COMPLETAMENTE o usuário da plataforma!
+              </p>
+              <p className="text-sm text-red-700 dark:text-red-300">
+                Usuário: <strong>{user?.name || user?.email}</strong>
+              </p>
+            </div>
             
-            <div className="flex items-center space-x-2 p-4 bg-blue-50 dark:bg-blue-950/20 rounded-md border">
-              <Switch
-                id="soft-delete"
-                checked={softDelete}
-                onCheckedChange={setSoftDelete}
-              />
-              <Label htmlFor="soft-delete" className="text-sm font-medium">
-                Usar soft delete (apenas para testes)
-              </Label>
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2 p-3 bg-red-100 dark:bg-red-950/30 rounded-md border">
+                <Switch
+                  id="complete-delete"
+                  checked={isCompleteDelete}
+                  onCheckedChange={setIsCompleteDelete}
+                />
+                <Label htmlFor="complete-delete" className="text-sm font-medium text-red-800 dark:text-red-200">
+                  Exclusão completa e irreversível (RECOMENDADO)
+                </Label>
+              </div>
+              
+              <div className="flex items-center space-x-2 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-md border">
+                <Switch
+                  id="soft-delete"
+                  checked={softDelete}
+                  onCheckedChange={setSoftDelete}
+                />
+                <Label htmlFor="soft-delete" className="text-sm font-medium">
+                  Usar soft delete (apenas para desenvolvimento)
+                </Label>
+              </div>
             </div>
 
-            {softDelete ? (
-              <div className="bg-green-50 dark:bg-green-950/20 p-4 rounded-md border border-green-200 dark:border-green-800">
-                <div className="flex items-center gap-2 mb-2">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                  <p className="text-sm text-green-800 dark:text-green-200 font-medium">
-                    ✨ Soft Delete - Ideal para Testes
-                  </p>
-                </div>
-                <ul className="text-xs text-green-700 dark:text-green-300 space-y-1">
-                  <li>• 🧹 Limpa todos os dados pessoais e de progresso</li>
-                  <li>• 👤 Mantém o usuário no sistema de autenticação</li>
-                  <li>• 📧 Permite reenvio de convites imediatamente</li>
-                  <li>• ⚡ Mais rápido e seguro para desenvolvimento</li>
-                  <li>• 🔄 Perfeito para resolver "emails esgotados"</li>
-                </ul>
-              </div>
-            ) : (
+            {isCompleteDelete && (
               <div className="bg-red-50 dark:bg-red-950/20 p-4 rounded-md border border-red-200 dark:border-red-800">
                 <div className="flex items-center gap-2 mb-2">
                   <AlertTriangle className="h-4 w-4 text-red-600" />
                   <p className="text-sm text-red-800 dark:text-red-200 font-medium">
-                    💥 Exclusão Completa (Hard Delete) - RECOMENDADO
+                    🔥 EXCLUSÃO COMPLETA E IRREVERSÍVEL
                   </p>
                 </div>
                 <ul className="text-xs text-red-700 dark:text-red-300 space-y-1">
-                  <li>• 💥 Remove completamente do sistema de autenticação</li>
-                  <li>• 🗑️ Limpa todos os dados associados</li>
-                  <li>• 📧 Permite reutilizar o email para novos convites</li>
-                  <li>• ⚡ Ação irreversível</li>
-                  <li>• ✅ Solução definitiva para reutilizar emails</li>
+                  <li>• 💥 Remove completamente do sistema de autenticação Supabase</li>
+                  <li>• 🗑️ Exclui TODOS os dados relacionados ao usuário</li>
+                  <li>• 📧 Libera o email para reutilização imediata</li>
+                  <li>• 🔥 Remove de TODAS as tabelas da plataforma</li>
+                  <li>• ⚡ Ação 100% irreversível</li>
+                  <li>• ✅ Solução definitiva para limpeza total</li>
+                </ul>
+              </div>
+            )}
+
+            {softDelete && (
+              <div className="bg-blue-50 dark:bg-blue-950/20 p-4 rounded-md border border-blue-200 dark:border-blue-800">
+                <div className="flex items-center gap-2 mb-2">
+                  <Info className="h-4 w-4 text-blue-600" />
+                  <p className="text-sm text-blue-800 dark:text-blue-200 font-medium">
+                    🧹 Soft Delete - Apenas Desenvolvimento
+                  </p>
+                </div>
+                <ul className="text-xs text-blue-700 dark:text-blue-300 space-y-1">
+                  <li>• 🧹 Limpa dados pessoais e de progresso</li>
+                  <li>• 👤 Mantém o usuário no sistema de autenticação</li>
+                  <li>• 📧 Permite reenvio de convites</li>
+                  <li>• ⚡ Mais seguro para testes</li>
                 </ul>
               </div>
             )}
             
-            <div className="bg-blue-50 dark:bg-blue-950/20 p-4 rounded-md border border-blue-200 dark:border-blue-800">
+            <div className="bg-orange-50 dark:bg-orange-950/20 p-4 rounded-md border border-orange-200 dark:border-orange-800">
               <div className="flex items-center gap-2 mb-2">
-                <Info className="h-4 w-4 text-blue-600" />
-                <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                    💡 Recomendação
+                <AlertTriangle className="h-4 w-4 text-orange-600" />
+                <p className="text-sm font-medium text-orange-800 dark:text-orange-200">
+                    ⚠️ O QUE SERÁ REMOVIDO:
                 </p>
               </div>
-              <p className="text-xs text-blue-700 dark:text-blue-300">
-                <strong>Use hard delete</strong> se você quer poder convidar este email novamente. 
-                É a única forma de liberar completamente o email para reutilização.
-              </p>
+              <ul className="text-xs text-orange-700 dark:text-orange-300 space-y-1">
+                <li>• Perfil do usuário</li>
+                <li>• Dados de onboarding</li>
+                <li>• Progresso de implementação</li>
+                <li>• Mensagens e conversas</li>
+                <li>• Posts no fórum</li>
+                <li>• Certificados</li>
+                <li>• Preferências de comunicação</li>
+                <li>• {isCompleteDelete ? "✅ Conta de autenticação (email liberado)" : "❌ Conta de autenticação (email ainda ocupado)"}</li>
+              </ul>
             </div>
 
             {/* Mostrar resultado da última exclusão se houver */}
@@ -164,15 +201,15 @@ export const DeleteUserDialog: React.FC<DeleteUserDialogProps> = ({
               handleDeleteUser();
             }}
             disabled={isDeleting}
-            className={softDelete ? "bg-blue-600 hover:bg-blue-700" : "bg-destructive text-destructive-foreground hover:bg-destructive/90"}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
             {isDeleting ? (
               <>
                 <LoadingSpinner className="mr-2 h-4 w-4" />
-                <span>Processando...</span>
+                <span>Excluindo da plataforma...</span>
               </>
             ) : (
-              softDelete ? "🧹 Limpar dados" : "💥 Excluir completamente"
+              isCompleteDelete ? "🔥 EXCLUIR COMPLETAMENTE DA PLATAFORMA" : "🧹 Limpar dados do usuário"
             )}
           </AlertDialogAction>
         </AlertDialogFooter>
