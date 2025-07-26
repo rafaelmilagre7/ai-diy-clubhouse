@@ -247,8 +247,8 @@ export const SolutionsTab: React.FC<SolutionsTabProps> = ({ trail }) => {
     if (!solution) {
       return (
         <Card className="group relative overflow-hidden border border-border/50 bg-gradient-to-br from-card to-muted/30 backdrop-blur-sm animate-pulse">
-          <div className="flex h-[240px]">
-            <div className="w-[180px] bg-muted/50 rounded-l-xl"></div>
+          <div className="flex h-[200px]">
+            <div className="w-[280px] bg-muted/50 rounded-l-xl"></div>
             <div className="flex-1 p-4 space-y-3">
               <div className="h-4 bg-muted rounded w-3/4"></div>
               <div className="h-3 bg-muted rounded w-1/2"></div>
@@ -267,9 +267,9 @@ export const SolutionsTab: React.FC<SolutionsTabProps> = ({ trail }) => {
         {/* Shimmer effect */}
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-out" />
         
-        <div className="flex h-[240px] relative z-10" onClick={() => navigate(`/solution/${solution.id}`)}>
-          {/* Solution Cover Image - Design Corrigido */}
-          <div className="w-[200px] relative overflow-hidden bg-gradient-to-br from-muted to-muted/50">
+        <div className="flex h-[200px] relative z-10" onClick={() => navigate(`/solution/${solution.id}`)}>
+          {/* Solution Cover Image - Formato Horizontal Otimizado */}
+          <div className="w-[280px] relative overflow-hidden bg-gradient-to-br from-muted to-muted/50 rounded-l-xl">
             {solution.thumbnail_url ? (
               <div className="relative w-full h-full">
                 <img 
@@ -277,6 +277,7 @@ export const SolutionsTab: React.FC<SolutionsTabProps> = ({ trail }) => {
                   alt={solution.title}
                   className="w-full h-full object-cover object-center transition-all duration-700 group-hover:scale-105"
                   loading="lazy"
+                  style={{ aspectRatio: '16/9' }}
                   onError={(e) => {
                     const target = e.currentTarget;
                     target.style.display = 'none';
@@ -300,16 +301,16 @@ export const SolutionsTab: React.FC<SolutionsTabProps> = ({ trail }) => {
                 </div>
               </div>
             ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-viverblue/20 to-operational/20 relative">
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-viverblue/20 to-operational/20 relative rounded-l-xl">
                 {/* Animated background orbs */}
-                <div className="absolute inset-0 overflow-hidden">
+                <div className="absolute inset-0 overflow-hidden rounded-l-xl">
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 bg-viverblue/20 rounded-full blur-xl animate-pulse" />
                   <div className="absolute top-1/3 left-1/3 w-12 h-12 bg-operational/15 rounded-full blur-lg animate-pulse animation-delay-1000" />
                 </div>
                 
                 <div className="text-center relative z-10">
-                  <Target className="h-10 w-10 mx-auto mb-2 text-viverblue group-hover:scale-110 group-hover:rotate-6 transition-all duration-500" />
-                  <p className="text-xs text-muted-foreground font-medium">Solução IA</p>
+                  <Target className="h-12 w-12 mx-auto mb-2 text-viverblue group-hover:scale-110 group-hover:rotate-6 transition-all duration-500" />
+                  <p className="text-sm text-muted-foreground font-medium">Solução IA</p>
                 </div>
               </div>
             )}
@@ -494,15 +495,21 @@ export const SolutionsTab: React.FC<SolutionsTabProps> = ({ trail }) => {
             </Badge>
           </div>
           <div className="grid gap-6">
-            {trail.priority1.map((item, index) => (
-              <div
-                key={`p1-${index}`}
-                className="animate-fade-in"
-                style={{ animationDelay: `${index * 150}ms` }}
-              >
-                <SolutionCard item={item} priority={1} />
-              </div>
-            ))}
+            {[...trail.priority1]
+              .sort((a, b) => {
+                const scoreA = aiCompatibility[a.solutionId] || a.aiScore || 0;
+                const scoreB = aiCompatibility[b.solutionId] || b.aiScore || 0;
+                return scoreB - scoreA; // Ordem decrescente
+              })
+              .map((item, index) => (
+                <div
+                  key={`p1-${index}`}
+                  className="animate-fade-in"
+                  style={{ animationDelay: `${index * 150}ms` }}
+                >
+                  <SolutionCard item={item} priority={1} />
+                </div>
+              ))}
           </div>
         </section>
       )}
@@ -526,15 +533,21 @@ export const SolutionsTab: React.FC<SolutionsTabProps> = ({ trail }) => {
             </Badge>
           </div>
           <div className="grid gap-6">
-            {trail.priority2.map((item, index) => (
-              <div
-                key={`p2-${index}`}
-                className="animate-fade-in"
-                style={{ animationDelay: `${index * 150}ms` }}
-              >
-                <SolutionCard item={item} priority={2} />
-              </div>
-            ))}
+            {[...trail.priority2]
+              .sort((a, b) => {
+                const scoreA = aiCompatibility[a.solutionId] || a.aiScore || 0;
+                const scoreB = aiCompatibility[b.solutionId] || b.aiScore || 0;
+                return scoreB - scoreA; // Ordem decrescente
+              })
+              .map((item, index) => (
+                <div
+                  key={`p2-${index}`}
+                  className="animate-fade-in"
+                  style={{ animationDelay: `${index * 150}ms` }}
+                >
+                  <SolutionCard item={item} priority={2} />
+                </div>
+              ))}
           </div>
         </section>
       )}
@@ -558,15 +571,21 @@ export const SolutionsTab: React.FC<SolutionsTabProps> = ({ trail }) => {
             </Badge>
           </div>
           <div className="grid gap-6">
-            {trail.priority3.map((item, index) => (
-              <div
-                key={`p3-${index}`}
-                className="animate-fade-in"
-                style={{ animationDelay: `${index * 150}ms` }}
-              >
-                <SolutionCard item={item} priority={3} />
-              </div>
-            ))}
+            {[...trail.priority3]
+              .sort((a, b) => {
+                const scoreA = aiCompatibility[a.solutionId] || a.aiScore || 0;
+                const scoreB = aiCompatibility[b.solutionId] || b.aiScore || 0;
+                return scoreB - scoreA; // Ordem decrescente
+              })
+              .map((item, index) => (
+                <div
+                  key={`p3-${index}`}
+                  className="animate-fade-in"
+                  style={{ animationDelay: `${index * 150}ms` }}
+                >
+                  <SolutionCard item={item} priority={3} />
+                </div>
+              ))}
           </div>
         </section>
       )}
