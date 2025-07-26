@@ -1,175 +1,218 @@
 /* Visual Hierarchy Utilities */
+@layer utilities {
+  /* Typography Scale Improvements */
+  .text-display {
+    @apply text-4xl font-bold tracking-tight text-foreground;
+  }
 
-/* Typography Scale Improvements */
-.text-display {
-  @apply text-4xl font-bold tracking-tight text-foreground;
-}
+  .text-heading-1 {
+    @apply text-3xl font-semibold tracking-tight text-foreground;
+  }
 
-.text-heading-1 {
-  @apply text-3xl font-semibold tracking-tight text-foreground;
-}
+  .text-heading-2 {
+    @apply text-2xl font-semibold tracking-tight text-foreground;
+  }
 
-.text-heading-2 {
-  @apply text-2xl font-semibold tracking-tight text-foreground;
-}
+  .text-heading-3 {
+    @apply text-xl font-medium tracking-tight text-foreground;
+  }
 
-.text-heading-3 {
-  @apply text-xl font-medium tracking-tight text-foreground;
-}
+  .text-body-large {
+    @apply text-lg font-normal text-foreground;
+  }
 
-.text-body-large {
-  @apply text-lg font-normal text-foreground;
-}
+  .text-body {
+    @apply text-base font-normal text-foreground;
+  }
 
-.text-body {
-  @apply text-base font-normal text-foreground;
-}
+  .text-body-small {
+    @apply text-sm font-normal;
+    color: hsl(var(--foreground) / 0.8);
+  }
 
-.text-body-small {
-  @apply text-sm font-normal text-foreground/80;
-}
+  .text-caption {
+    @apply text-xs font-medium;
+    color: hsl(var(--foreground) / 0.7);
+  }
 
-.text-caption {
-  @apply text-xs font-medium text-foreground/70;
-}
+  .text-label {
+    @apply text-sm font-medium text-foreground;
+  }
 
-.text-label {
-  @apply text-sm font-medium text-foreground;
-}
+  /* Surface Elevation Classes */
+  .surface-base {
+    @apply bg-background border-border;
+  }
 
-/* Surface Elevation Classes */
-.surface-base {
-  @apply bg-background border-border;
-}
+  .surface-elevated {
+    background-color: hsl(var(--surface-elevated));
+    border-color: hsl(var(--elevated));
+    @apply shadow-sm;
+  }
 
-.surface-elevated {
-  @apply bg-surface-elevated border-elevated shadow-sm;
-}
+  .surface-overlay {
+    background-color: hsl(var(--surface-overlay));
+    border-color: hsl(var(--elevated));
+    @apply shadow-md backdrop-blur-sm;
+  }
 
-.surface-overlay {
-  @apply bg-surface-overlay border-elevated shadow-md backdrop-blur-sm;
-}
+  .surface-modal {
+    background-color: hsl(var(--surface-modal));
+    border-color: hsl(var(--elevated));
+    @apply shadow-xl backdrop-blur-md;
+  }
 
-.surface-modal {
-  @apply bg-surface-modal border-elevated shadow-xl backdrop-blur-md;
-}
+  /* Interactive States */
+  .interactive-hover {
+    @apply transition-all duration-200 hover:bg-accent hover:text-accent-foreground hover:shadow-md;
+    transform: hover:scale(1.02);
+  }
 
-/* Interactive States */
-.interactive-hover {
-  @apply transition-all duration-200 hover:bg-accent hover:text-accent-foreground hover:shadow-md hover:scale-[1.02];
-}
+  .interactive-press {
+    @apply active:shadow-sm transition-transform duration-100;
+    transform: active:scale(0.98);
+  }
 
-.interactive-press {
-  @apply active:scale-[0.98] active:shadow-sm transition-transform duration-100;
-}
+  .interactive-focus {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+  }
 
-.interactive-focus {
-  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
-}
+  /* Status Indicators with Better Contrast */
+  .status-success {
+    background-color: hsl(142 76% 36% / 0.1);
+    color: hsl(142 76% 36%);
+    border-color: hsl(142 76% 36% / 0.2);
+  }
 
-/* Status Indicators with Better Contrast */
-.status-success {
-  @apply bg-emerald-500/10 text-emerald-600 border-emerald-500/20;
-}
+  .status-warning {
+    background-color: hsl(43 96% 56% / 0.1);
+    color: hsl(43 96% 56%);
+    border-color: hsl(43 96% 56% / 0.2);
+  }
 
-.status-warning {
-  @apply bg-amber-500/10 text-amber-600 border-amber-500/20;
-}
+  .status-error {
+    background-color: hsl(0 84% 60% / 0.1);
+    color: hsl(0 84% 60%);
+    border-color: hsl(0 84% 60% / 0.2);
+  }
 
-.status-error {
-  @apply bg-red-500/10 text-red-600 border-red-500/20;
-}
+  .status-info {
+    background-color: hsl(221 83% 53% / 0.1);
+    color: hsl(221 83% 53%);
+    border-color: hsl(221 83% 53% / 0.2);
+  }
 
-.status-info {
-  @apply bg-blue-500/10 text-blue-600 border-blue-500/20;
-}
+  /* Content Sections with Clear Hierarchy */
+  .content-section {
+    @apply space-y-6 p-6 rounded-lg;
+    background-color: hsl(var(--surface-elevated));
+  }
 
-/* Content Sections with Clear Hierarchy */
-.content-section {
-  @apply space-y-6 p-6 surface-elevated rounded-lg;
-}
+  .content-section-header {
+    @apply pb-4 border-b;
+    border-color: hsl(var(--border) / 0.5);
+  }
 
-.content-section-header {
-  @apply pb-4 border-b border-border/50;
-}
+  .content-section-title {
+    @apply text-xl font-medium tracking-tight text-foreground mb-2;
+  }
 
-.content-section-title {
-  @apply text-heading-3 mb-2;
-}
+  .content-section-description {
+    @apply text-sm;
+    color: hsl(var(--foreground) / 0.8);
+  }
 
-.content-section-description {
-  @apply text-body-small;
-}
+  /* Form Improvements */
+  .form-field {
+    @apply space-y-2;
+  }
 
-/* Form Improvements */
-.form-field {
-  @apply space-y-2;
-}
+  .form-label {
+    @apply text-sm font-medium text-foreground block;
+  }
 
-.form-label {
-  @apply text-label block;
-}
+  .form-input {
+    @apply w-full px-3 py-2 rounded-md text-foreground border border-input transition-colors;
+    background-color: hsl(var(--surface-elevated));
+  }
 
-.form-input {
-  @apply w-full px-3 py-2 surface-elevated border border-input rounded-md text-foreground placeholder:text-foreground/50 focus:border-ring focus:ring-1 focus:ring-ring transition-colors;
-}
+  .form-input::placeholder {
+    color: hsl(var(--foreground) / 0.5);
+  }
 
-.form-error {
-  @apply text-red-600 text-xs font-medium;
-}
+  .form-input:focus {
+    @apply border-ring ring-1 ring-ring;
+  }
 
-.form-help {
-  @apply text-foreground/70 text-xs;
-}
+  .form-error {
+    @apply text-red-600 text-xs font-medium;
+  }
 
-/* Navigation Improvements */
-.nav-item {
-  @apply px-3 py-2 rounded-md text-foreground/80 hover:text-foreground hover:bg-accent transition-colors interactive-focus;
-}
+  .form-help {
+    @apply text-xs;
+    color: hsl(var(--foreground) / 0.7);
+  }
 
-.nav-item-active {
-  @apply bg-primary/10 text-primary border-primary/20;
-}
+  /* Navigation Improvements */
+  .nav-item {
+    @apply px-3 py-2 rounded-md transition-colors;
+    color: hsl(var(--foreground) / 0.8);
+  }
 
-/* Loading States */
-.skeleton {
-  @apply bg-muted animate-pulse rounded;
-}
+  .nav-item:hover {
+    @apply text-foreground bg-accent;
+  }
 
-.skeleton-text {
-  @apply skeleton h-4 w-3/4;
-}
+  .nav-item:focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2;
+  }
 
-.skeleton-heading {
-  @apply skeleton h-6 w-1/2;
-}
+  .nav-item-active {
+    background-color: hsl(var(--primary) / 0.1);
+    color: hsl(var(--primary));
+    border-color: hsl(var(--primary) / 0.2);
+  }
 
-.skeleton-avatar {
-  @apply skeleton h-10 w-10 rounded-full;
-}
+  /* Loading States */
+  .skeleton {
+    @apply bg-muted animate-pulse rounded;
+  }
 
-/* Spacing Utilities */
-.space-section {
-  @apply space-y-8;
-}
+  .skeleton-text {
+    @apply skeleton h-4 w-3/4;
+  }
 
-.space-component {
-  @apply space-y-4;
-}
+  .skeleton-heading {
+    @apply skeleton h-6 w-1/2;
+  }
 
-.space-tight {
-  @apply space-y-2;
-}
+  .skeleton-avatar {
+    @apply skeleton h-10 w-10 rounded-full;
+  }
 
-/* Container Utilities */
-.container-content {
-  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
-}
+  /* Spacing Utilities */
+  .space-section {
+    @apply space-y-8;
+  }
 
-.container-narrow {
-  @apply max-w-4xl mx-auto px-4 sm:px-6 lg:px-8;
-}
+  .space-component {
+    @apply space-y-4;
+  }
 
-.container-text {
-  @apply max-w-2xl mx-auto px-4 sm:px-6 lg:px-8;
+  .space-tight {
+    @apply space-y-2;
+  }
+
+  /* Container Utilities */
+  .container-content {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .container-narrow {
+    @apply max-w-4xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .container-text {
+    @apply max-w-2xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
 }
