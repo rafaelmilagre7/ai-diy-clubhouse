@@ -6,19 +6,19 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-viverblue focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        default: "bg-viverblue text-white hover:bg-viverblue-dark focus-visible:bg-viverblue-dark active:bg-viverblue-darker",
+        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-md hover:shadow-lg",
         destructive:
-          "bg-red-600 text-white hover:bg-red-700 active:bg-red-800",
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-md",
         outline:
-          "border border-neutral-600 bg-[#1A1E2E] hover:bg-[#252842] hover:border-neutral-500 text-white",
+          "border border-input bg-surface-elevated hover:bg-accent hover:text-accent-foreground shadow-sm hover:shadow-md",
         secondary:
-          "bg-[#1E2033] text-white hover:bg-[#252842] hover:text-white",
-        ghost: "text-white hover:bg-[#181A2A] hover:text-white",
-        link: "text-viverblue underline-offset-4 hover:underline text-white",
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-sm",
+        ghost: "hover:bg-accent hover:text-accent-foreground",
+        link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
         default: "h-10 px-4 py-2",
