@@ -5328,6 +5328,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      enhanced_security_audit: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       ensure_audit_log: {
         Args: {
           p_event_type: string

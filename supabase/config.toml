@@ -37,14 +37,29 @@ port = 54325
 smtp_port = 54326
 pop3_port = 54327
 
+# EDGE FUNCTIONS SECURITY CONFIGURATION
+# ✅ PÚBLICAS - Não exigem JWT (apenas para webhooks/sistemas externos)
 [functions.setup-storage-buckets]
 verify_jwt = false
 
-[functions.send-communication-email]
+[functions.auth-rate-limiter]
 verify_jwt = false
 
-[functions.send-whatsapp-invite]
+[functions.send-invite-email]
 verify_jwt = false
+
+[functions.send-invite-whatsapp] 
+verify_jwt = false
+
+[functions.process-invite]
+verify_jwt = false
+
+# 🔒 PRIVADAS - Exigem JWT (funções de usuário autenticado)
+[functions.send-communication-email]
+verify_jwt = true
+
+[functions.send-whatsapp-invite]
+verify_jwt = true
 
 [functions.get-assistant-messages]
 verify_jwt = true
@@ -64,9 +79,6 @@ verify_jwt = true
 [functions.generate-onboarding-message]
 verify_jwt = true
 
-[functions.auth-rate-limiter]
-verify_jwt = false
-
 [functions.admin-delete-user]
 verify_jwt = true
 
@@ -82,11 +94,22 @@ verify_jwt = true
 [functions.classify-lessons-simple]
 verify_jwt = true
 
+[functions.validate-credentials]
+verify_jwt = true
+
+# 🧪 TESTE/DEBUG - Apenas para desenvolvimento (remover em produção)
 [functions.classify-lessons-test]
 verify_jwt = false
 
-[functions.validate-credentials]
+[functions.calculate-ai-compatibility]
 verify_jwt = true
+
+[functions.recommend-lessons-ai]
+verify_jwt = true
+
+# 🛡️ VALIDAÇÃO SEGURA - Não exige JWT mas tem auditoria completa
+[functions.validate-coupon]
+verify_jwt = false
 
 [auth]
 enabled = true
@@ -112,21 +135,6 @@ template = "Your code is {{ .Code }}"
 enabled = true
 client_id = "env(GOOGLE_CLIENT_ID)"
 secret = "env(GOOGLE_CLIENT_SECRET)"
-
-[functions.send-invite-email]
-verify_jwt = false
-
-[functions.send-invite-whatsapp] 
-verify_jwt = false
-
-[functions.process-invite]
-verify_jwt = false
-
-[functions.calculate-ai-compatibility]
-verify_jwt = true
-
-[functions.recommend-lessons-ai]
-verify_jwt = true
 
 [edge_runtime]
 policy = "per_worker"
