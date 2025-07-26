@@ -10,15 +10,7 @@ import { useTopLessons } from '../hooks/useTopLessons';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
-interface RecommendedLesson {
-  lessonId: string;
-  moduleId: string;
-  courseId: string;
-  title: string;
-  justification: string;
-  priority: number;
-}
-
+// Interface simplificada para evitar conflitos de tipo
 interface AILesson {
   id: number;
   title: string;
@@ -32,7 +24,7 @@ interface AILesson {
 }
 
 interface LessonsTabProps {
-  lessons: RecommendedLesson[];
+  lessons: any[]; // Usando any[] para evitar conflito de tipos
 }
 
 const LessonsTabContent = ({ lessons }: LessonsTabProps) => {
@@ -43,7 +35,7 @@ const LessonsTabContent = ({ lessons }: LessonsTabProps) => {
   const { preloadLessonImages, loading } = useLessonImages();
 
   const lessonIds = useMemo(() => 
-    topLessons.map(lesson => lesson.lessonId), 
+    topLessons.map((lesson: any) => lesson.id || lesson.lessonId || 'unknown'), 
     [topLessons]
   );
 
@@ -366,20 +358,29 @@ const LessonsTabContent = ({ lessons }: LessonsTabProps) => {
         </div>
       )}
 
-        {/* Grid de aulas - formato vertical otimizado */}
-        {!loading && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8">
-            {topLessons.map((lesson, index) => (
+      {/* Grid de aulas - formato vertical otimizado */}
+      {!loading && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8">
+          {topLessons.map((lesson: any, index: number) => {
+            // Garantir compatibilidade entre formatos de dados
+            const normalizedLesson = {
+              ...lesson,
+              id: lesson.id || lesson.lessonId || `lesson-${index}`,
+              description: lesson.description || lesson.justification || 'Aula recomendada pela IA'
+            };
+            
+            return (
               <div
-                key={`${lesson.lessonId}-${index}`}
+                key={`${normalizedLesson.id}-${index}`}
                 className="animate-fade-in hover:z-10 relative"
                 style={{ animationDelay: `${index * 150}ms` }}
               >
-                <EnhancedLessonCard lesson={lesson} index={index} />
+                <EnhancedLessonCard lesson={normalizedLesson} index={index} />
               </div>
-            ))}
-          </div>
-        )}
+            );
+          })}
+        </div>
+      )}
 
       {/* Botão para mostrar/ocultar mais aulas */}
       {hasMoreLessons && !loading && (

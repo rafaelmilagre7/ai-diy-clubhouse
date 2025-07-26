@@ -16,12 +16,23 @@ import {
 import { useNavigate } from 'react-router-dom';
 
 interface RecommendedLesson {
-  lessonId: string;
-  moduleId: string;
-  courseId: string;
+  id: string; // Agora é UUID real da aula
+  lessonId?: string; // Para compatibilidade com dados antigos
+  moduleId?: string;
+  courseId?: string;
   title: string;
-  justification: string;
-  priority: number;
+  description: string;
+  justification?: string;
+  reasoning?: string;
+  priority?: number;
+  ai_score?: number;
+  category?: string;
+  difficulty?: string;
+  duration?: string;
+  course_title?: string;
+  module_title?: string;
+  cover_image_url?: string;
+  topics?: string[];
 }
 
 interface EnhancedLessonCardProps {
@@ -34,8 +45,16 @@ export const EnhancedLessonCard = ({ lesson, index }: EnhancedLessonCardProps) =
   const [isHovered, setIsHovered] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
 
-  const getPriorityConfig = (priority: number) => {
-    switch (priority) {
+  const getPriorityConfig = (priority: number = 1) => {
+    // Se temos ai_score, usar isso para determinar prioridade
+    const score = lesson.ai_score || 70;
+    let calculatedPriority = priority;
+    
+    if (score >= 85) calculatedPriority = 1;
+    else if (score >= 70) calculatedPriority = 2;
+    else calculatedPriority = 3;
+
+    switch (calculatedPriority) {
       case 1:
         return {
           label: 'Alta Prioridade',
@@ -77,11 +96,15 @@ export const EnhancedLessonCard = ({ lesson, index }: EnhancedLessonCardProps) =
 
   const priorityConfig = getPriorityConfig(lesson.priority);
 
-  // Usar uma imagem placeholder específica para aulas em formato vertical
-  const lessonCoverUrl = `https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=400&h=600&fit=crop&crop=center`;
+  // Usar a capa real da aula ou fallback
+  const lessonCoverUrl = lesson.cover_image_url || `https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=400&h=600&fit=crop&crop=center`;
 
   const handleLessonClick = () => {
-    navigate(`/lesson/${lesson.lessonId}`);
+    // Usar o ID da aula real
+    const lessonId = lesson.id || lesson.lessonId;
+    if (lessonId) {
+      navigate(`/lesson/${lessonId}`);
+    }
   };
 
   return (
@@ -165,12 +188,14 @@ export const EnhancedLessonCard = ({ lesson, index }: EnhancedLessonCardProps) =
         <div className="flex items-center gap-3 text-sm text-muted-foreground mt-2">
           <div className="flex items-center gap-1">
             <Clock className="w-3.5 h-3.5" />
-            <span>15-20 min</span>
+            <span>{lesson.duration || '45-60 min'}</span>
           </div>
-          <div className="flex items-center gap-1">
-            <Target className="w-3.5 h-3.5" />
-            <span>Módulo {lesson.moduleId.slice(-2)}</span>
-          </div>
+          {lesson.course_title && (
+            <div className="flex items-center gap-1">
+              <Target className="w-3.5 h-3.5" />
+              <span className="truncate max-w-[120px]">{lesson.course_title}</span>
+            </div>
+          )}
         </div>
       </CardHeader>
 
@@ -183,7 +208,9 @@ export const EnhancedLessonCard = ({ lesson, index }: EnhancedLessonCardProps) =
             </div>
             <div className="flex-1">
               <h4 className="font-medium text-foreground text-sm mb-1">Por que é recomendada</h4>
-              <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">{lesson.justification}</p>
+              <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">
+                {lesson.reasoning || lesson.justification || lesson.description}
+              </p>
             </div>
           </div>
         </div>
@@ -194,16 +221,18 @@ export const EnhancedLessonCard = ({ lesson, index }: EnhancedLessonCardProps) =
             <span className="text-sm font-medium text-muted-foreground">Compatibilidade IA</span>
             <div className="flex items-center gap-2">
               <Zap className="w-4 h-4 text-viverblue" />
-              <span className="text-sm font-bold text-foreground">
-                {lesson.priority === 1 ? '95%' : lesson.priority === 2 ? '80%' : '65%'}
-              </span>
+            <span className="text-sm font-bold text-foreground">
+              {lesson.ai_score ? `${lesson.ai_score}%` : 
+               lesson.priority === 1 ? '95%' : lesson.priority === 2 ? '80%' : '65%'}
+            </span>
             </div>
           </div>
           <div className="h-3 bg-muted/30 rounded-full overflow-hidden backdrop-blur-sm">
             <div 
               className={`h-full rounded-full transition-all duration-1000 ease-out ${priorityConfig.progressColor}`}
               style={{ 
-                width: lesson.priority === 1 ? '95%' : lesson.priority === 2 ? '80%' : '65%',
+                width: lesson.ai_score ? `${lesson.ai_score}%` :
+                       lesson.priority === 1 ? '95%' : lesson.priority === 2 ? '80%' : '65%',
                 animationDelay: `${index * 200}ms`
               }}
             />

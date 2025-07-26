@@ -40,105 +40,125 @@ serve(async (req) => {
 
     // Buscar perfil do usuário
     const { data: userProfile } = await supabaseClient
-      .from('user_profiles')
+      .from('profiles')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('id', user.id)
       .single();
 
     console.log('📊 [LESSON-AI] Perfil do usuário carregado');
 
-    // Buscar todas as aulas disponíveis (simulado por enquanto)
-    const mockLessons = [
-      {
-        id: 1,
-        title: "Fundamentos de Liderança Digital",
-        description: "Aprenda os princípios básicos da liderança em ambientes digitais",
-        category: "strategy",
-        difficulty: "easy",
-        duration: "45 min",
-        topics: ["liderança", "transformação digital", "gestão de equipes"]
-      },
-      {
-        id: 2,
-        title: "Gestão de Processos com Automação",
-        description: "Como automatizar processos empresariais para aumentar eficiência",
-        category: "operational",
-        difficulty: "medium",
-        duration: "60 min",
-        topics: ["automação", "processos", "eficiência operacional"]
-      },
-      {
-        id: 3,
-        title: "Análise de ROI em Projetos Digitais",
-        description: "Métodos para calcular e justificar retorno sobre investimento",
-        category: "revenue",
-        difficulty: "advanced",
-        duration: "90 min",
-        topics: ["ROI", "análise financeira", "projetos digitais"]
-      },
-      {
-        id: 4,
-        title: "Customer Experience Digital",
-        description: "Estratégias para melhorar a experiência do cliente online",
-        category: "strategy",
-        difficulty: "medium",
-        duration: "75 min",
-        topics: ["experiência do cliente", "digital", "satisfação"]
-      },
-      {
-        id: 5,
-        title: "Data Analytics para Negócios",
-        description: "Como usar dados para tomar decisões empresariais estratégicas",
-        category: "operational",
-        difficulty: "advanced",
-        duration: "120 min",
-        topics: ["dados", "analytics", "tomada de decisão"]
-      },
-      {
-        id: 6,
-        title: "Metodologias Ágeis na Prática",
-        description: "Implementação de Scrum e Kanban em equipes corporativas",
-        category: "operational",
-        difficulty: "medium",
-        duration: "90 min",
-        topics: ["agile", "scrum", "kanban", "gestão de projetos"]
-      }
-    ];
+    // Buscar todas as aulas reais disponíveis do banco de dados
+    const { data: realLessons, error: lessonsError } = await supabaseClient
+      .from('learning_lessons')
+      .select(`
+        id,
+        title,
+        description,
+        estimated_time_minutes,
+        difficulty_level,
+        cover_image_url,
+        learning_modules!inner (
+          id,
+          title,
+          learning_courses!inner (
+            id,
+            title,
+            description
+          )
+        )
+      `)
+      .eq('published', true)
+      .eq('learning_modules.published', true)
+      .eq('learning_modules.learning_courses.published', true)
+      .order('learning_modules.learning_courses.order_index', { ascending: true })
+      .order('learning_modules.order_index', { ascending: true })
+      .order('order_index', { ascending: true });
 
-    console.log(`🛠️ [LESSON-AI] Aulas disponíveis: ${mockLessons.length}`);
+    if (lessonsError) {
+      console.error('❌ [LESSON-AI] Erro ao buscar aulas:', lessonsError);
+      throw new Error('Erro ao buscar aulas do banco de dados');
+    }
+
+    // Transformar as aulas para o formato esperado
+    const formattedLessons = (realLessons || []).map((lesson: any) => {
+      const module = lesson.learning_modules;
+      const course = module?.learning_courses;
+      
+      // Determinar categoria baseada no curso/módulo
+      let category = 'operational';
+      if (course?.title?.toLowerCase().includes('formação')) {
+        category = 'strategy';
+      } else if (course?.title?.toLowerCase().includes('club')) {
+        category = 'operational';
+      }
+
+      // Determinar duração estimada
+      const duration = lesson.estimated_time_minutes 
+        ? `${lesson.estimated_time_minutes} min`
+        : '45-60 min';
+
+      // Mapear dificuldade
+      const difficultyMap: { [key: string]: string } = {
+        'beginner': 'easy',
+        'intermediate': 'medium',
+        'advanced': 'advanced'
+      };
+
+      const difficulty = difficultyMap[lesson.difficulty_level] || 'medium';
+
+      return {
+        id: lesson.id,
+        title: lesson.title,
+        description: lesson.description || `Aula do curso ${course?.title} - ${module?.title}`,
+        category,
+        difficulty,
+        duration,
+        course_title: course?.title,
+        module_title: module?.title,
+        cover_image_url: lesson.cover_image_url,
+        topics: [
+          course?.title?.toLowerCase().includes('formação') ? 'formação em IA' : 'prática de IA',
+          'inteligência artificial',
+          module?.title?.toLowerCase() || 'desenvolvimento'
+        ]
+      };
+    });
+
+    console.log(`🛠️ [LESSON-AI] Aulas disponíveis: ${formattedLessons.length}`);
 
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openAIApiKey) {
       console.log('⚠️ [LESSON-AI] Chave OpenAI não encontrada, usando análise básica');
       
       // Fallback básico se não houver OpenAI
-      const recommendedLessons = mockLessons.map(lesson => ({
+      const recommendedLessons = formattedLessons.map(lesson => ({
         ...lesson,
         ai_score: Math.floor(Math.random() * 40) + 60, // 60-100%
         reasoning: "Análise básica baseada no perfil"
       })).sort((a, b) => b.ai_score - a.ai_score);
 
-      return new Response(JSON.stringify({ lessons: recommendedLessons }), {
+      return new Response(JSON.stringify({ lessons: recommendedLessons.slice(0, 6) }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
     console.log('🤖 [LESSON-AI] Iniciando análise com IA real');
 
-    // Prompt para a IA analisar as aulas
+    // Prompt para a IA analisar as aulas reais
     const aiPrompt = `
-Você é um especialista em educação corporativa e desenvolvimento profissional. Analise as aulas disponíveis e recomende as melhores para este usuário específico.
+Você é um especialista em educação corporativa e IA. Analise as aulas de IA disponíveis e recomende as melhores para este usuário específico.
 
 PERFIL DO USUÁRIO:
-- Setor: ${userProfile?.business_sector || 'Não informado'}
-- Experiência: ${userProfile?.experience_level || 'Não informado'}
-- Cargo: ${userProfile?.job_title || 'Não informado'}
-- Objetivos: ${userProfile?.business_goals || 'Não informado'}
-- Desafios: ${userProfile?.main_challenges || 'Não informado'}
+- Nome: ${userProfile?.name || 'Não informado'}
+- Empresa: ${userProfile?.company_name || 'Não informado'}
+- Cargo: ${userProfile?.current_position || 'Não informado'}
+- Setor: ${userProfile?.industry || 'Não informado'}
 
 AULAS DISPONÍVEIS:
-${mockLessons.map(lesson => `
+${formattedLessons.map(lesson => `
 - ${lesson.title}
+  Curso: ${lesson.course_title}
+  Módulo: ${lesson.module_title}
   Categoria: ${lesson.category}
   Dificuldade: ${lesson.difficulty}
   Duração: ${lesson.duration}
@@ -148,23 +168,22 @@ ${mockLessons.map(lesson => `
 
 Para cada aula, forneça:
 1. Uma pontuação de 0-100 indicando quão relevante ela é para este usuário específico
-2. Uma justificativa de 1-2 frases explicando por que é relevante
+2. Uma justificativa de 1-2 frases explicando por que é relevante para o contexto de IA
 
 Considere:
-- Nível de experiência do usuário
-- Setor de atuação
-- Objetivos profissionais
-- Desafios enfrentados
-- Sequência lógica de aprendizado
-- Aplicabilidade prática no contexto do usuário
+- Nível de complexidade apropriado para o usuário
+- Relevância para aplicação prática de IA no trabalho
+- Sequência lógica de aprendizado (fundamentos antes de avançado)
+- Aplicabilidade no setor/cargo do usuário
+- Potencial de transformação digital
 
 Responda APENAS em formato JSON:
 {
   "recommendations": [
     {
-      "lesson_id": 1,
+      "lesson_id": "uuid_da_aula",
       "score": 85,
-      "reasoning": "Muito relevante para desenvolver habilidades de liderança específicas do seu setor"
+      "reasoning": "Muito relevante para desenvolver habilidades de IA aplicadas ao seu contexto profissional"
     }
   ]
 }`;
@@ -176,7 +195,7 @@ Responda APENAS em formato JSON:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
@@ -202,15 +221,15 @@ Responda APENAS em formato JSON:
     const aiContent = aiResult.choices[0].message.content;
     const aiRecommendations = JSON.parse(aiContent).recommendations;
 
-    // Combinar recomendações da IA com dados das aulas
-    const recommendedLessons = mockLessons.map(lesson => {
+    // Combinar recomendações da IA com dados das aulas reais
+    const recommendedLessons = formattedLessons.map(lesson => {
       const aiRec = aiRecommendations.find((rec: any) => rec.lesson_id === lesson.id);
       return {
         ...lesson,
         ai_score: aiRec?.score || 50,
-        reasoning: aiRec?.reasoning || "Recomendação básica"
+        reasoning: aiRec?.reasoning || "Análise baseada no conteúdo da aula de IA"
       };
-    }).sort((a, b) => b.ai_score - a.ai_score);
+    }).sort((a, b) => b.ai_score - a.ai_score).slice(0, 6); // Limitar a 6 aulas
 
     console.log('🎯 [LESSON-AI] Análise concluída com sucesso');
 
