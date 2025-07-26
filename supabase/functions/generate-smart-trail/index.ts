@@ -338,22 +338,113 @@ serve(async (req) => {
     // 7. Gerar mensagem de IA personalizada
     const aiMessage = await generateAIInsights(userProfile, priority1);
 
-    // 8. Gerar aulas recomendadas usando a função recommend-lessons-ai
+    // 8. Gerar aulas recomendadas usando IA
     let recommendedLessons = [];
     try {
-      console.log('🎓 Gerando aulas recomendadas...');
-      const lessonsResponse = await supabase.functions.invoke('recommend-lessons-ai', {
-        body: { userId }
-      });
+      console.log('🎓 Gerando aulas recomendadas com IA...');
       
-      if (lessonsResponse.data && lessonsResponse.data.success) {
-        recommendedLessons = lessonsResponse.data.recommendations || [];
-        console.log('✅ Aulas recomendadas geradas:', recommendedLessons.length);
-      } else {
-        console.log('⚠️ Erro ao gerar aulas recomendadas:', lessonsResponse.error);
+      // Buscar aulas disponíveis
+      const { data: availableLessons } = await supabase
+        .from('learning_lessons')
+        .select('id, title, description, difficulty_level, estimated_time_minutes, module_id')
+        .eq('published', true)
+        .order('order_index')
+        .limit(15);
+
+      if (availableLessons && availableLessons.length > 0) {
+        // Criar prompt para recomendar aulas baseado no perfil e soluções
+        const lessonsPrompt = `
+        Com base no perfil do usuário e nas soluções prioritárias selecionadas, recomende 5-6 aulas que criem uma jornada de aprendizado coerente.
+
+        PERFIL DO USUÁRIO:
+        - Nome: ${userProfile.name || 'N/A'}
+        - Setor: ${userProfile.industry || 'N/A'}
+        - Nível IA: ${userProfile.ai_knowledge_level || 'iniciante'}
+        - Objetivo: ${userProfile.main_goal || 'N/A'}
+
+        SOLUÇÕES PRIORITÁRIAS SELECIONADAS:
+        ${priority1.map(s => `- ${s.solutionId}`).join('\n')}
+
+        AULAS DISPONÍVEIS:
+        ${availableLessons.map(lesson => `
+        ID: ${lesson.id}
+        Título: ${lesson.title}
+        Descrição: ${lesson.description}
+        Dificuldade: ${lesson.difficulty_level}
+        Duração: ${lesson.estimated_time_minutes} min
+        `).join('\n')}
+
+        Retorne APENAS um JSON no formato:
+        {
+          "recommendations": [
+            {
+              "lessonId": "uuid",
+              "moduleId": "module-id",
+              "courseId": "course-id",
+              "title": "título da aula",
+              "justification": "justificativa personalizada",
+              "priority": 1
+            }
+          ]
+        }
+        `;
+
+        const lessonsResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${openAIApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'gpt-4.1-2025-04-14',
+            messages: [
+              { role: 'system', content: 'Você é um especialista em educação corporativa que cria trilhas de aprendizado personalizadas. Sempre responda em JSON válido.' },
+              { role: 'user', content: lessonsPrompt }
+            ],
+            max_tokens: 1500,
+            temperature: 0.3,
+          }),
+        });
+
+        if (lessonsResponse.ok) {
+          const lessonsData = await lessonsResponse.json();
+          let lessonsContent = lessonsData.choices[0].message.content.trim();
+          
+          // Limpar markdown se presente
+          if (lessonsContent.startsWith('```json')) {
+            lessonsContent = lessonsContent.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+          } else if (lessonsContent.startsWith('```')) {
+            lessonsContent = lessonsContent.replace(/^```\s*/, '').replace(/\s*```$/, '');
+          }
+          
+          const parsedLessons = JSON.parse(lessonsContent);
+          recommendedLessons = parsedLessons.recommendations || [];
+          console.log('✅ Aulas recomendadas geradas:', recommendedLessons.length);
+        } else {
+          console.log('⚠️ Erro na resposta da IA para aulas');
+        }
       }
     } catch (error) {
-      console.log('⚠️ Erro na chamada de recommend-lessons-ai:', error);
+      console.log('⚠️ Erro ao gerar aulas recomendadas:', error);
+      // Fallback: selecionar aulas básicas
+      recommendedLessons = [
+        {
+          lessonId: 'fallback-1',
+          moduleId: 'module-basic',
+          courseId: 'course-ai-basics',
+          title: 'Introdução à Inteligência Artificial',
+          justification: 'Fundamentos essenciais para começar sua jornada em IA',
+          priority: 1
+        },
+        {
+          lessonId: 'fallback-2', 
+          moduleId: 'module-tools',
+          courseId: 'course-ai-tools',
+          title: 'Ferramentas de IA para Negócios',
+          justification: 'Conheça as principais ferramentas disponíveis no mercado',
+          priority: 2
+        }
+      ];
     }
 
     // 9. Criar trilha personalizada
