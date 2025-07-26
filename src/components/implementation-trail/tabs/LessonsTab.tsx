@@ -199,13 +199,11 @@ export const LessonsTab = ({ trail }: LessonsTabProps) => {
     if (!lesson) {
       return (
         <Card className="group relative overflow-hidden border border-border/50 bg-gradient-to-br from-card to-muted/30 backdrop-blur-sm animate-pulse">
-          <div className="p-6 space-y-4">
-            {/* Cover placeholder - 9:16 format */}
-            <div className="w-full aspect-[9/16] bg-muted/50 rounded-xl"></div>
-            <div className="space-y-3">
+          <div className="p-4 space-y-3">
+            <div className="w-full h-32 bg-muted/50 rounded-lg"></div>
+            <div className="space-y-2">
               <div className="h-4 bg-muted rounded w-3/4"></div>
               <div className="h-3 bg-muted rounded w-1/2"></div>
-              <div className="h-3 bg-muted rounded w-2/3"></div>
             </div>
           </div>
         </Card>
@@ -213,22 +211,19 @@ export const LessonsTab = ({ trail }: LessonsTabProps) => {
     }
 
     return (
-      <Card className="group relative overflow-hidden border border-border/50 hover:border-operational/50 bg-gradient-to-br from-card/95 to-muted/30 backdrop-blur-sm transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-operational/10 cursor-pointer">
-        {/* Animated glow effect */}
-        <div className="absolute inset-0 bg-gradient-to-br from-operational/5 via-transparent to-viverblue/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+      <Card className="group relative overflow-hidden border border-border/50 hover:border-operational/50 bg-gradient-to-br from-card/95 to-muted/30 backdrop-blur-sm transition-all duration-300 hover:scale-[1.01] hover:shadow-lg hover:shadow-operational/5 cursor-pointer">
+        {/* Subtle hover effects */}
+        <div className="absolute inset-0 bg-gradient-to-br from-operational/5 via-transparent to-viverblue/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
         
-        {/* Shimmer effect */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/8 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-out" />
-        
-        <div className="relative z-10 p-6 space-y-5" onClick={() => navigate(`/learning/lesson/${lesson.id}`)}>
-          {/* Lesson Cover Image - Formato 9:16 */}
-          <div className="relative w-full aspect-[9/16] overflow-hidden rounded-xl bg-gradient-to-br from-muted to-muted/50">
+        <div className="relative z-10 p-4 space-y-4" onClick={() => navigate(`/learning/lesson/${lesson.id}`)}>
+          {/* Lesson Cover - Proporção mais balanceada (4:3) */}
+          <div className="relative w-full aspect-[4/3] overflow-hidden rounded-lg bg-gradient-to-br from-muted to-muted/50">
             {lesson.cover_image_url ? (
               <div className="relative w-full h-full">
                 <img 
                   src={lesson.cover_image_url} 
                   alt={lesson.title}
-                  className="w-full h-full object-cover object-center transition-all duration-700 group-hover:scale-105"
+                  className="w-full h-full object-cover object-center transition-all duration-500 group-hover:scale-105"
                   loading="lazy"
                   onError={(e) => {
                     const target = e.currentTarget;
@@ -240,123 +235,109 @@ export const LessonsTab = ({ trail }: LessonsTabProps) => {
                   }}
                 />
                 
-                {/* Overlay gradients for better readability */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20" />
+                {/* Subtle overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
                 
-                {/* Fallback content (hidden by default) */}
+                {/* Fallback content */}
                 <div className="fallback-content absolute inset-0 hidden items-center justify-center bg-gradient-to-br from-operational/20 to-viverblue/20">
                   <div className="text-center">
-                    <GraduationCap className="h-20 w-20 mx-auto mb-4 text-operational" />
-                    <p className="text-lg text-muted-foreground font-medium">Aula IA</p>
-                    <p className="text-sm text-muted-foreground/70 mt-2">Conteúdo Personalizado</p>
+                    <GraduationCap className="h-8 w-8 mx-auto mb-2 text-operational" />
+                    <p className="text-sm text-muted-foreground font-medium">Aula IA</p>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-operational/20 to-viverblue/20 relative rounded-xl">
-                {/* Animated background orbs */}
-                <div className="absolute inset-0 overflow-hidden rounded-xl">
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 bg-operational/20 rounded-full blur-3xl animate-pulse" />
-                  <div className="absolute top-1/4 left-1/4 w-24 h-24 bg-viverblue/15 rounded-full blur-2xl animate-pulse animation-delay-1000" />
-                  <div className="absolute bottom-1/4 right-1/4 w-20 h-20 bg-revenue/15 rounded-full blur-xl animate-pulse animation-delay-2000" />
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-operational/20 to-viverblue/20 relative rounded-lg">
+                {/* Background pattern */}
+                <div className="absolute inset-0 overflow-hidden rounded-lg">
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-operational/20 rounded-full blur-xl animate-pulse" />
+                  <div className="absolute top-1/4 right-1/4 w-10 h-10 bg-viverblue/15 rounded-full blur-lg animate-pulse animation-delay-1000" />
                 </div>
                 
                 <div className="text-center relative z-10">
-                  <GraduationCap className="h-24 w-24 mx-auto mb-6 text-operational group-hover:scale-110 group-hover:rotate-6 transition-all duration-500" />
-                  <p className="text-xl text-muted-foreground font-semibold">Aula IA</p>
-                  <p className="text-sm text-muted-foreground/70 mt-2">Conteúdo Personalizado</p>
+                  <GraduationCap className="h-8 w-8 mx-auto mb-2 text-operational group-hover:scale-110 transition-all duration-300" />
+                  <p className="text-sm text-muted-foreground font-medium">Aula IA</p>
                 </div>
               </div>
             )}
             
-            {/* Priority badge overlay */}
-            <div className="absolute top-4 left-4">
-              <Badge className={`${priorityInfo.color} ${priorityInfo.textColor} text-sm shadow-lg backdrop-blur-md group-hover:scale-105 transition-transform duration-300 border border-white/30 font-semibold px-4 py-2`}>
+            {/* Priority badge */}
+            <div className="absolute top-2 left-2">
+              <Badge className={`${priorityInfo.color} ${priorityInfo.textColor} text-xs shadow-md backdrop-blur-sm group-hover:scale-105 transition-transform duration-200 border border-white/20 px-2 py-1`}>
                 {priorityInfo.label}
               </Badge>
             </div>
             
             {/* Duration badge */}
             {lesson.estimated_time_minutes && (
-              <div className="absolute bottom-4 right-4">
-                <div className="flex items-center gap-2 px-4 py-2 bg-black/80 backdrop-blur-md rounded-lg border border-white/20 group-hover:bg-operational/90 transition-colors duration-300">
-                  <Clock className="h-4 w-4 text-white" />
-                  <span className="text-white text-sm font-medium">
-                    {lesson.estimated_time_minutes} min
-                  </span>
+              <div className="absolute bottom-2 right-2">
+                <div className="flex items-center gap-1 px-2 py-1 bg-black/70 backdrop-blur-sm rounded text-xs text-white">
+                  <Clock className="h-3 w-3" />
+                  <span>{lesson.estimated_time_minutes}min</span>
                 </div>
               </div>
             )}
             
-            {/* Difficulty indicator */}
-            <div className="absolute top-4 right-4">
-              <div className={`px-3 py-2 rounded-full text-sm font-medium backdrop-blur-md border ${getDifficultyColor(lesson.difficulty_level)}`}>
+            {/* Difficulty */}
+            <div className="absolute top-2 right-2">
+              <div className={`px-2 py-1 rounded text-xs font-medium backdrop-blur-sm ${getDifficultyColor(lesson.difficulty_level)}`}>
                 {lesson.difficulty_level || 'beginner'}
               </div>
             </div>
 
-            {/* Play button overlay */}
+            {/* Play overlay on hover */}
             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <div className="bg-white/95 backdrop-blur-md rounded-full p-6 shadow-2xl border border-white/20 group-hover:scale-110 transition-transform duration-300">
-                <Play className="h-10 w-10 text-operational fill-operational" />
+              <div className="bg-white/90 backdrop-blur-sm rounded-full p-3 shadow-lg">
+                <Play className="h-5 w-5 text-operational fill-operational" />
               </div>
             </div>
           </div>
 
-          {/* Lesson Content */}
-          <div className="space-y-4">
-            {/* Title and Description */}
-            <div className="space-y-3">
-              <h3 className="font-bold text-xl leading-tight text-foreground group-hover:text-operational transition-colors duration-300 line-clamp-2">
-                {lesson.title}
-              </h3>
-              
-              {lesson.description && (
-                <p className="text-base text-muted-foreground leading-relaxed line-clamp-3 group-hover:text-muted-foreground/90 transition-colors duration-300">
-                  {lesson.description}
-                </p>
-              )}
+          {/* Content */}
+          <div className="space-y-3">
+            {/* Title */}
+            <h3 className="font-semibold text-base leading-snug text-foreground group-hover:text-operational transition-colors duration-200 line-clamp-2">
+              {lesson.title}
+            </h3>
+            
+            {/* Description */}
+            {lesson.description && (
+              <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">
+                {lesson.description}
+              </p>
+            )}
 
-              {/* Meta info */}
-              <div className="flex items-center gap-3 text-sm flex-wrap">
-                <div className="flex items-center gap-2">
-                  <BookOpen className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">Módulo: {lesson.module_id.slice(0, 8)}...</span>
-                </div>
-              </div>
+            {/* Meta info */}
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <BookOpen className="h-3 w-3" />
+              <span>Módulo: {lesson.module_id.slice(0, 8)}...</span>
             </div>
 
             {/* Justification */}
-            <div className="p-5 rounded-xl bg-gradient-to-r from-operational/10 to-viverblue/10 border border-operational/20 group-hover:border-operational/30 transition-colors duration-300">
-              <div className="flex items-start gap-4">
-                <div className="w-8 h-8 bg-operational/20 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                  <Target className="h-4 w-4 text-operational" />
-                </div>
+            <div className="p-3 rounded-lg bg-gradient-to-r from-operational/5 to-viverblue/5 border border-operational/10">
+              <div className="flex items-start gap-2">
+                <Target className="h-4 w-4 text-operational flex-shrink-0 mt-0.5" />
                 <div>
-                  <h4 className="text-base font-semibold text-foreground mb-2">Por que esta aula?</h4>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
+                  <h4 className="text-xs font-medium text-operational mb-1">Por que esta aula?</h4>
+                  <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
                     {item.justification}
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Action Button */}
+            {/* Action button */}
             <Button 
               variant="outline" 
-              size="lg"
-              className="w-full group-hover:bg-operational group-hover:text-white group-hover:border-operational transition-all duration-300 font-semibold py-4 text-base relative overflow-hidden"
+              size="sm"
+              className="w-full group-hover:bg-operational group-hover:text-white group-hover:border-operational transition-all duration-200 text-sm"
               onClick={(e) => {
                 e.stopPropagation();
                 navigate(`/learning/lesson/${lesson.id}`);
               }}
             >
-              {/* Button shine effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-              <span className="relative z-10 flex items-center gap-3">
-                <Play className="w-5 h-5" />
-                Começar Aula
-              </span>
+              <Play className="w-4 h-4 mr-2" />
+              Começar Aula
             </Button>
           </div>
         </div>
