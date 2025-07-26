@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Brain, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 
 interface PersonalizedMessageProps {
   message: string;
@@ -12,14 +12,18 @@ export const PersonalizedMessage = ({ message }: PersonalizedMessageProps) => {
     <Card className="glass-dark border-2 bg-viverblue/5 border-viverblue/20">
       <CardContent className="p-6">
         <div className="flex items-start gap-4">
-          <div className="p-3 bg-viverblue/20 rounded-full">
-            <Brain className="h-6 w-6 text-viverblue" />
+          <div className="relative">
+            <img 
+              src="/lovable-uploads/693dabd3-1072-42e6-b4d1-385f35dc5d5a.png" 
+              alt="Nina" 
+              className="w-16 h-16 rounded-full object-cover border-2 border-viverblue/30"
+            />
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-4">
               <Sparkles className="h-5 w-5 text-viverblue" />
               <h3 className="text-high-contrast font-semibold text-lg">
-                Mensagem da IA
+                Mensagem da Nina
               </h3>
             </div>
             <div className="text-high-contrast leading-relaxed space-y-3">
