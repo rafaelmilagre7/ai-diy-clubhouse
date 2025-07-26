@@ -1,11 +1,14 @@
 
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { GraduationCap, ArrowRight, Sparkles, TrendingUp, Eye, AlertCircle, ChevronUp } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { GraduationCap, ArrowRight, Sparkles, TrendingUp, Eye, AlertCircle, ChevronUp, Brain, Clock, Play, Star, BookOpen, Target } from 'lucide-react';
 import { EnhancedLessonCard } from '../cards/EnhancedLessonCard';
 import { LessonImagesProvider, useLessonImages } from '../contexts/LessonImagesContext';
 import { useTopLessons } from '../hooks/useTopLessons';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface RecommendedLesson {
   lessonId: string;
@@ -16,11 +19,26 @@ interface RecommendedLesson {
   priority: number;
 }
 
+interface AILesson {
+  id: number;
+  title: string;
+  description: string;
+  category: string;
+  difficulty: string;
+  duration: string;
+  topics: string[];
+  ai_score: number;
+  reasoning: string;
+}
+
 interface LessonsTabProps {
   lessons: RecommendedLesson[];
 }
 
 const LessonsTabContent = ({ lessons }: LessonsTabProps) => {
+  const [aiLessons, setAiLessons] = useState<AILesson[]>([]);
+  const [aiLoading, setAiLoading] = useState(false);
+  const { toast } = useToast();
   const { topLessons, hasMoreLessons, remainingCount, totalLessons, showAll, toggleShowAll } = useTopLessons(lessons, 5);
   const { preloadLessonImages, loading } = useLessonImages();
 
@@ -36,6 +54,228 @@ const LessonsTabContent = ({ lessons }: LessonsTabProps) => {
     }
   }, [lessonIds, preloadLessonImages]);
 
+  useEffect(() => {
+    fetchAIRecommendedLessons();
+  }, []);
+
+  const fetchAIRecommendedLessons = async () => {
+    try {
+      setAiLoading(true);
+      
+      const { data, error } = await supabase.functions.invoke('recommend-lessons-ai');
+      
+      if (error) {
+        console.error('Erro ao buscar recomendações de aulas:', error);
+        toast({
+          title: "Erro ao carregar recomendações",
+          description: "Não foi possível carregar as aulas recomendadas pela IA.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setAiLessons(data.lessons || []);
+    } catch (error) {
+      console.error('Erro:', error);
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const getCategoryColor = (category: string) => {
+    switch (category) {
+      case 'strategy':
+        return 'bg-strategy/20 text-strategy border-strategy/30';
+      case 'operational':
+        return 'bg-operational/20 text-operational border-operational/30';
+      case 'revenue':
+        return 'bg-revenue/20 text-revenue border-revenue/30';
+      default:
+        return 'bg-viverblue/20 text-viverblue border-viverblue/30';
+    }
+  };
+
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case 'easy':
+        return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
+      case 'medium':
+        return 'bg-amber-500/20 text-amber-400 border-amber-500/30';
+      case 'advanced':
+        return 'bg-rose-500/20 text-rose-400 border-rose-500/30';
+      default:
+        return 'bg-neutral-500/20 text-neutral-400 border-neutral-500/30';
+    }
+  };
+
+  const getDifficultyLabel = (difficulty: string) => {
+    switch (difficulty) {
+      case 'easy':
+        return 'Iniciante';
+      case 'medium':
+        return 'Intermediário';
+      case 'advanced':
+        return 'Avançado';
+      default:
+        return difficulty;
+    }
+  };
+
+  // Se temos aulas da IA, mostrar interface da IA
+  if (aiLessons.length > 0 || aiLoading) {
+    if (aiLoading) {
+      return (
+        <div className="space-y-6">
+          <div className="text-center py-8">
+            <Brain className="h-12 w-12 text-viverblue mx-auto mb-4 animate-pulse" />
+            <h3 className="text-lg font-semibold text-foreground mb-2">
+              IA analisando seu perfil...
+            </h3>
+            <p className="text-muted-foreground">
+              Selecionando as melhores aulas para você
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <BookOpen className="h-6 w-6 text-viverblue" />
+            <h2 className="text-2xl font-bold text-foreground">
+              Aulas Recomendadas para Você
+            </h2>
+          </div>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            Nossa IA analisou seu perfil e selecionou as aulas mais relevantes para seus objetivos e nível de experiência.
+          </p>
+        </div>
+
+        {/* Lista de Aulas */}
+        <div className="grid gap-6">
+          {aiLessons.map((lesson, index) => (
+            <Card key={lesson.id} className="aurora-glass aurora-hover-scale group">
+              <CardHeader className="pb-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <Badge variant="outline" className="text-xs font-medium bg-viverblue/10 border-viverblue/30">
+                        #{index + 1} Recomendada
+                      </Badge>
+                      <div className="flex items-center gap-1">
+                        <Star className="h-4 w-4 text-amber-400 fill-current" />
+                        <span className="text-sm font-medium text-amber-400">
+                          {lesson.ai_score}% compatível
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <CardTitle className="text-xl text-foreground group-hover:text-viverblue transition-colors">
+                      {lesson.title}
+                    </CardTitle>
+                  </div>
+                  
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="ml-4 opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <Play className="h-5 w-5" />
+                  </Button>
+                </div>
+
+                {/* Tags e Metadados */}
+                <div className="flex flex-wrap items-center gap-2 mt-3">
+                  <Badge variant="outline" className={getCategoryColor(lesson.category)}>
+                    {lesson.category === 'strategy' ? 'Estratégia' : 
+                     lesson.category === 'operational' ? 'Operacional' : 
+                     lesson.category === 'revenue' ? 'Revenue' : lesson.category}
+                  </Badge>
+                  
+                  <Badge variant="outline" className={getDifficultyColor(lesson.difficulty)}>
+                    {getDifficultyLabel(lesson.difficulty)}
+                  </Badge>
+                  
+                  <div className="flex items-center gap-1 text-muted-foreground">
+                    <Clock className="h-3.5 w-3.5" />
+                    <span className="text-sm">{lesson.duration}</span>
+                  </div>
+                </div>
+              </CardHeader>
+
+              <CardContent className="space-y-4">
+                {/* Descrição */}
+                <p className="text-muted-foreground leading-relaxed">
+                  {lesson.description}
+                </p>
+
+                {/* Por que é recomendada */}
+                <div className="bg-viverblue/5 border border-viverblue/20 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <Target className="h-5 w-5 text-viverblue mt-0.5 flex-shrink-0" />
+                    <div>
+                      <h4 className="font-medium text-foreground mb-1">
+                        Por que é perfeita para você
+                      </h4>
+                      <p className="text-sm text-muted-foreground">
+                        {lesson.reasoning}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Tópicos */}
+                <div>
+                  <h4 className="text-sm font-medium text-foreground mb-2">
+                    Você vai aprender:
+                  </h4>
+                  <div className="flex flex-wrap gap-1">
+                    {lesson.topics.map((topic, idx) => (
+                      <Badge 
+                        key={idx} 
+                        variant="secondary" 
+                        className="text-xs bg-card border border-border"
+                      >
+                        {topic}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Ações */}
+                <div className="flex gap-3 pt-2">
+                  <Button className="flex-1" size="sm">
+                    <Play className="h-4 w-4 mr-2" />
+                    Começar Aula
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    Ver Detalhes
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {aiLessons.length === 0 && !aiLoading && (
+          <div className="text-center py-12">
+            <BookOpen className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-foreground mb-2">
+              Nenhuma aula encontrada
+            </h3>
+            <p className="text-muted-foreground">
+              Complete seu perfil para receber recomendações personalizadas.
+            </p>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Fallback para aulas antigas se não houver aulas da IA
   if (!lessons || lessons.length === 0) {
     return (
       <div className="text-center py-16">
