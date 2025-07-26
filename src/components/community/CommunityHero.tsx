@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Sparkles, Users, MessageSquare, PlusCircle } from "lucide-react";
+import { Search, MessageSquare, Users, PlusCircle } from "lucide-react";
 import { CreateTopicDialog } from "./CreateTopicDialog";
 import { useState } from "react";
 import { CommunityFilterType } from "@/types/communityTypes";
@@ -25,7 +25,7 @@ export const CommunityHero = ({
   const filterOptions = [
     { key: "recentes" as CommunityFilterType, label: "Recentes", icon: MessageSquare },
     { key: "populares" as CommunityFilterType, label: "Populares", icon: Users },
-    { key: "sem-respostas" as CommunityFilterType, label: "Sem Respostas", icon: Sparkles },
+    { key: "sem-respostas" as CommunityFilterType, label: "Sem Respostas", icon: MessageSquare },
   ];
 
   return (

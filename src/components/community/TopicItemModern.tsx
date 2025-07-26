@@ -1,7 +1,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Pin, Lock, CheckCircle, MessageCircle, Eye, Clock, Sparkles } from "lucide-react";
+import { Pin, Lock, CheckCircle, MessageCircle, Eye, Clock, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import { CommunityTopic } from "@/types/communityTypes";
 import { ModerationActions } from "./ModerationActions";
@@ -159,7 +159,7 @@ export const TopicItemModern = ({ topic, isPinned = false }: TopicItemModernProp
                 
                 {topic.last_activity_at && (
                   <div className="flex items-center gap-1.5 text-xs ml-auto">
-                    <Sparkles className="h-3 w-3" />
+                    <Clock className="h-3 w-3" />
                     <span>Última atividade: {formatDate(topic.last_activity_at)}</span>
                   </div>
                 )}

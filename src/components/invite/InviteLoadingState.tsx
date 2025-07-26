@@ -1,5 +1,5 @@
 import React from 'react';
-import { Loader2, Sparkles } from 'lucide-react';
+import { Loader2, CheckCircle } from 'lucide-react';
 
 interface InviteLoadingStateProps {
   message?: string;
@@ -16,7 +16,7 @@ const InviteLoadingState: React.FC<InviteLoadingStateProps> = ({
             {/* Logo/Icon */}
             <div className="relative">
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto animate-pulse">
-                <Sparkles className="h-8 w-8 text-primary" />
+                <CheckCircle className="h-8 w-8 text-primary" />
               </div>
               <div className="absolute inset-0 w-16 h-16 border-2 border-primary/20 rounded-full mx-auto animate-spin" 
                    style={{ animationDuration: '3s' }}>

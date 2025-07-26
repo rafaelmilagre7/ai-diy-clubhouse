@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Lock, Sparkles, ArrowRight, Eye, AlertTriangle, Clock, Star } from 'lucide-react';
+import { Lock, Shield, ArrowRight, Eye, AlertTriangle, Clock, Star } from 'lucide-react';
 import { APP_FEATURES } from '@/config/features';
 
 interface SmartFeatureBlockProps {
@@ -20,7 +20,7 @@ const FEATURE_CONFIG = {
   learning: {
     title: 'Área de Aprendizado',
     description: 'Cursos e aulas personalizadas para seu nível e objetivos',
-    icon: Sparkles,
+    icon: Star,
     color: 'bg-purple-500',
     preview: 'Acesse cursos curados e aulas direcionadas ao seu setor e nível de conhecimento em IA.',
     benefits: [
@@ -123,7 +123,7 @@ export const SmartFeatureBlock: React.FC<SmartFeatureBlockProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-left">
                 {config.benefits.map((benefit, index) => (
                   <div key={index} className="flex items-start gap-2">
-                    <Sparkles className="h-4 w-4 text-viverblue mt-0.5 flex-shrink-0" />
+                    <Star className="h-4 w-4 text-viverblue mt-0.5 flex-shrink-0" />
                     <span className="text-sm text-gray-600 dark:text-gray-300">{benefit}</span>
                   </div>
                 ))}

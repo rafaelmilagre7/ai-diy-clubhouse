@@ -2,7 +2,7 @@
 import React from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Sparkles, Users, Search } from "lucide-react";
+import { MessageSquare, PlusCircle, Users, Search } from "lucide-react";
 import { CreateTopicDialog } from "./CreateTopicDialog";
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -62,7 +62,7 @@ export const EmptyTopicsStateModern = ({ searchQuery }: EmptyTopicsStateModernPr
                   onClick={() => setCreateTopicOpen(true)}
                   className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white"
                 >
-                  <Sparkles className="h-4 w-4 mr-2" />
+                  <PlusCircle className="h-4 w-4 mr-2" />
                   Criar Discussão
                 </Button>
               </div>
@@ -80,7 +80,7 @@ export const EmptyTopicsStateModern = ({ searchQuery }: EmptyTopicsStateModernPr
                   <MessageSquare className="h-20 w-20 text-primary mx-auto mb-4" />
                   <div className="flex justify-center gap-2">
                     <Users className="h-6 w-6 text-accent animate-pulse" />
-                    <Sparkles className="h-6 w-6 text-primary animate-pulse animation-delay-1000" />
+                    <MessageSquare className="h-6 w-6 text-primary animate-pulse animation-delay-1000" />
                   </div>
                 </div>
               </motion.div>
@@ -99,7 +99,7 @@ export const EmptyTopicsStateModern = ({ searchQuery }: EmptyTopicsStateModernPr
                   size="lg"
                   className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
                 >
-                  <Sparkles className="h-5 w-5 mr-2" />
+                  <PlusCircle className="h-5 w-5 mr-2" />
                   Iniciar Primeira Discussão
                 </Button>
                 
@@ -132,7 +132,7 @@ export const EmptyTopicsStateModern = ({ searchQuery }: EmptyTopicsStateModernPr
                 </div>
                 <div className="text-center">
                   <div className="p-3 bg-purple-500/10 rounded-xl mb-2 mx-auto w-fit">
-                    <Sparkles className="h-5 w-5 text-purple-500" />
+                    <MessageSquare className="h-5 w-5 text-purple-500" />
                   </div>
                   <p className="text-2xl font-bold text-purple-500">24h</p>
                   <p className="text-xs text-muted-foreground">Resposta Média</p>

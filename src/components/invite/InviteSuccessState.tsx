@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, ArrowRight, Sparkles } from 'lucide-react';
+import { CheckCircle, ArrowRight, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface InviteSuccessStateProps {
@@ -26,7 +26,7 @@ const InviteSuccessState: React.FC<InviteSuccessStateProps> = ({
               </div>
               <div className="absolute -top-1 -right-1">
                 <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center animate-bounce">
-                  <Sparkles className="h-3 w-3 text-primary-foreground" />
+                  <Star className="h-3 w-3 text-primary-foreground" />
                 </div>
               </div>
             </div>

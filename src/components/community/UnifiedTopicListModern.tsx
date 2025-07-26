@@ -5,7 +5,7 @@ import { TopicListError } from "./TopicListError";
 import { EmptyTopicsStateModern } from "./EmptyTopicsStateModern";
 import { CommunityTopic } from "@/types/communityTypes";
 import { Separator } from "@/components/ui/separator";
-import { Pin, Sparkles } from "lucide-react";
+import { Pin, Star } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface UnifiedTopicListModernProps {
@@ -83,7 +83,7 @@ export const UnifiedTopicListModern = ({
           {pinnedTopics.length > 0 && (
             <div className="flex items-center gap-3 mb-6 p-4 bg-gradient-to-r from-primary/10 to-accent/10 backdrop-blur-sm rounded-2xl border border-primary/20">
               <div className="p-2 bg-gradient-to-br from-primary/20 to-accent/20 rounded-lg">
-                <Sparkles className="h-4 w-4 text-primary" />
+                <Star className="h-4 w-4 text-primary" />
               </div>
               <div>
                 <h3 className="font-semibold text-primary">Todas as Discussões</h3>

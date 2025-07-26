@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, Sparkles, ArrowRight } from 'lucide-react';
+import { X, CheckCircle, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/integrations/supabase/client';
@@ -87,7 +87,7 @@ export const OnboardingBanner: React.FC = () => {
         {/* Icon */}
         <div className="flex-shrink-0">
           <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-            <Sparkles className="w-6 h-6 text-primary" />
+            <CheckCircle className="w-6 h-6 text-primary" />
           </div>
         </div>
 
@@ -110,7 +110,7 @@ export const OnboardingBanner: React.FC = () => {
               className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm relative z-20 cursor-pointer"
               size="sm"
             >
-              <Sparkles className="w-4 h-4 mr-2" />
+              <CheckCircle className="w-4 h-4 mr-2" />
               Personalizar agora
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>

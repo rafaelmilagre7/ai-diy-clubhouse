@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { OverviewTab } from './tabs/OverviewTab';
 import { SolutionsTab } from './tabs/SolutionsTab';
 import { LessonsTab } from './tabs/LessonsTab';
-import { Eye, Target, GraduationCap, Sparkles } from 'lucide-react';
+import { Eye, Target, GraduationCap, BarChart3 } from 'lucide-react';
 import { ImplementationTrailData } from '@/types/implementationTrail';
 
 interface ImplementationTrailTabsProps {

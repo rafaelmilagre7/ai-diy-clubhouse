@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bot, Sparkles, Brain, Target } from 'lucide-react';
+import { Bot, Brain, Target } from 'lucide-react';
 
 interface TrailGenerationLoaderProps {
   message?: string;
@@ -27,7 +27,7 @@ export const TrailGenerationLoader: React.FC<TrailGenerationLoaderProps> = ({
           
           {/* Floating Icons */}
           <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-operational to-revenue rounded-xl flex items-center justify-center aurora-float">
-            <Sparkles className="w-4 h-4 text-white" />
+            <Brain className="w-4 h-4 text-white" />
           </div>
           <div className="absolute -bottom-2 -left-2 w-8 h-8 bg-gradient-to-br from-revenue to-viverblue rounded-xl flex items-center justify-center aurora-float animation-delay-2000">
             <Brain className="w-4 h-4 text-white" />

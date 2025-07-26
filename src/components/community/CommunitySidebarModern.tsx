@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Users, MessageSquare, TrendingUp, Sparkles, Award, Calendar, Zap } from "lucide-react";
+import { PlusCircle, Users, MessageSquare, TrendingUp, Star, Award, Calendar, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useCommunityStats } from "@/hooks/community/useCommunityStats";
 import { CreateTopicDialog } from "./CreateTopicDialog";
@@ -59,7 +59,7 @@ export const CommunitySidebarModern = () => {
           <CardContent className="p-6">
             <div className="text-center space-y-4">
               <div className="p-4 bg-gradient-to-br from-primary/20 to-accent/20 rounded-2xl mx-auto w-fit">
-                <Sparkles className="h-8 w-8 text-primary" />
+                <Star className="h-8 w-8 text-primary" />
               </div>
               
               <div>

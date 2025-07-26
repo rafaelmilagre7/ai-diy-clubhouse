@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { SolutionRecommendationCard } from './SolutionRecommendationCard';
-import { Sparkles } from 'lucide-react';
+import { Target } from 'lucide-react';
 
 interface Recommendation {
   solutionId: string;
@@ -50,7 +50,7 @@ export const PrioritySection = ({
           <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-transparent" />
           <CardHeader className="relative z-10">
             <div className="flex items-center gap-3">
-              <Sparkles className={`h-6 w-6 ${iconColor} animate-pulse`} />
+              <Target className={`h-6 w-6 ${iconColor}`} />
               <div>
                 <CardTitle className="text-high-contrast text-2xl font-bold">
                   {title}

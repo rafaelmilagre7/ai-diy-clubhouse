@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Sparkles, Users, AlertCircle, RefreshCw } from 'lucide-react';
+import { CheckCircle, Users, AlertCircle, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -77,7 +77,7 @@ export const OnboardingStatusCard: React.FC = () => {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Status do Onboarding</CardTitle>
-          <Sparkles className="h-4 w-4 text-muted-foreground" />
+          <CheckCircle className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="animate-pulse space-y-3">
@@ -123,7 +123,7 @@ export const OnboardingStatusCard: React.FC = () => {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">Status do Onboarding</CardTitle>
-        <Sparkles className="h-4 w-4 text-muted-foreground" />
+        <CheckCircle className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
         <div className="space-y-4">

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Sparkles } from 'lucide-react';
+import { MessageCircle } from 'lucide-react';
 
 interface PersonalizedMessageProps {
   message: string;
@@ -21,7 +21,7 @@ export const PersonalizedMessage = ({ message }: PersonalizedMessageProps) => {
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-4">
-              <Sparkles className="h-5 w-5 text-viverblue" />
+              <MessageCircle className="h-5 w-5 text-viverblue" />
               <h3 className="text-high-contrast font-semibold text-lg">
                 Mensagem da Nina
               </h3>

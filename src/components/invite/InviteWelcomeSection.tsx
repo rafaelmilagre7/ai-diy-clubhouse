@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, Users, Zap, Target } from 'lucide-react';
+import { Star, Users, Zap, Target } from 'lucide-react';
 
 interface InviteWelcomeSectionProps {
   inviteData: {
@@ -13,7 +13,7 @@ interface InviteWelcomeSectionProps {
 const InviteWelcomeSection: React.FC<InviteWelcomeSectionProps> = ({ inviteData }) => {
   const features = [
     {
-      icon: Sparkles,
+      icon: Star,
       title: "IA Revolucionária",
       description: "Automatize processos e aumente sua receita em até 300% com IA personalizada para seu negócio"
     },
@@ -48,7 +48,7 @@ const InviteWelcomeSection: React.FC<InviteWelcomeSectionProps> = ({ inviteData 
       {/* Header Section */}
       <div className="text-center space-y-6">
         <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary/20 to-primary/10 border border-primary/30 rounded-full text-sm font-semibold text-primary mb-6 animate-pulse">
-          <Sparkles className="h-4 w-4" />
+          <Star className="h-4 w-4" />
           Convite Exclusivo
         </div>
         

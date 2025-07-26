@@ -1,7 +1,7 @@
 
 import { useCommunityStats } from "@/hooks/community/useCommunityStats";
 import { Card, CardContent } from "@/components/ui/card";
-import { MessageSquare, Users, TrendingUp, CheckCircle2, Sparkles, Zap } from "lucide-react";
+import { MessageSquare, Users, TrendingUp, CheckCircle2, Star, Zap } from "lucide-react";
 import { motion } from "framer-motion";
 
 export const CommunityStatsModern = () => {
@@ -35,7 +35,7 @@ export const CommunityStatsModern = () => {
     {
       title: "Insights Compartilhados",
       value: Math.floor(Math.random() * 150) + 50,
-      icon: Sparkles,
+      icon: Star,
       gradient: "from-orange-500/20 to-red-500/20",
       iconColor: "text-orange-500",
       bgGlow: "bg-orange-500/10"
