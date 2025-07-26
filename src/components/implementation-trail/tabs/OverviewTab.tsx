@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { PersonalizationInsights } from '../PersonalizationInsights';
+import { SolutionsTabOptimized } from './SolutionsTabOptimized';
 import { ImplementationTrailData } from '@/types/implementationTrail';
 
 interface OverviewTabProps {

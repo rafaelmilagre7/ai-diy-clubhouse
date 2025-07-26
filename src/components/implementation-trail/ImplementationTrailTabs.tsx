@@ -2,7 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { OverviewTab } from './tabs/OverviewTab';
-import { SolutionsTab } from './tabs/SolutionsTab';
+import { SolutionsTabOptimized } from './tabs/SolutionsTabOptimized';
 import { LessonsTab } from './tabs/LessonsTab';
 import { Eye, Target, GraduationCap, BarChart3 } from 'lucide-react';
 import { ImplementationTrailData } from '@/types/implementationTrail';
@@ -73,7 +73,7 @@ export const ImplementationTrailTabs = ({ trail }: ImplementationTrailTabsProps)
         </TabsContent>
 
         <TabsContent value="solutions" className="mt-6 animate-fade-in">
-          <SolutionsTab trail={trail} />
+          <SolutionsTabOptimized trail={trail} />
         </TabsContent>
 
         <TabsContent value="lessons" className="mt-6 animate-fade-in">
