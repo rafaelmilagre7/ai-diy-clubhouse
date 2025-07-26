@@ -81,10 +81,10 @@ export const AuroraKpiGrid = memo(({
       value: completed,
       percentage: stats.completionRate,
       icon: Trophy,
-      gradient: 'from-emerald-500/10 via-green-500/5 to-teal-500/10',
-      iconColor: 'text-emerald-600',
-      accentColor: 'border-emerald-500/30',
-      glowColor: 'group-hover:shadow-emerald-500/20',
+      gradient: 'from-strategy/10 via-strategy-light/5 to-strategy-lighter/10',
+      iconColor: 'text-strategy',
+      accentColor: 'border-strategy/30',
+      glowColor: 'group-hover:shadow-strategy/20',
       description: 'Soluções implementadas com sucesso'
     },
     {
@@ -93,10 +93,10 @@ export const AuroraKpiGrid = memo(({
       value: inProgress,
       percentage: stats.progressRate,
       icon: Target,
-      gradient: 'from-blue-500/10 via-viverblue/5 to-cyan-500/10',
-      iconColor: 'text-blue-600',
-      accentColor: 'border-blue-500/30',
-      glowColor: 'group-hover:shadow-blue-500/20',
+      gradient: 'from-operational/10 via-operational-light/5 to-operational-lighter/10',
+      iconColor: 'text-operational',
+      accentColor: 'border-operational/30',
+      glowColor: 'group-hover:shadow-operational/20',
       description: 'Implementações em andamento'
     },
     {
@@ -105,10 +105,10 @@ export const AuroraKpiGrid = memo(({
       value: total,
       percentage: 100,
       icon: TrendingUp,
-      gradient: 'from-purple-500/10 via-aurora/5 to-indigo-500/10',
-      iconColor: 'text-purple-600',
-      accentColor: 'border-purple-500/30',
-      glowColor: 'group-hover:shadow-purple-500/20',
+      gradient: 'from-strategy-light/10 via-strategy/5 to-operational/10',
+      iconColor: 'text-strategy-light',
+      accentColor: 'border-strategy-light/30',
+      glowColor: 'group-hover:shadow-strategy-light/20',
       description: 'Total de soluções na plataforma'
     }
   ], [completed, inProgress, total, stats]);
@@ -180,8 +180,8 @@ export const AuroraKpiGrid = memo(({
                 
                 {/* Ícone especial para total */}
                 {item.id === 'total' && (
-                  <div className="flex-shrink-0 p-2 rounded-full bg-gradient-to-r from-aurora/20 to-purple-500/20 backdrop-blur-sm">
-                    <TrendingUp className="h-6 w-6 text-purple-600" />
+                  <div className="flex-shrink-0 p-2 rounded-full bg-gradient-to-r from-strategy/20 to-operational/20 backdrop-blur-sm">
+                    <TrendingUp className="h-6 w-6 text-strategy-light" />
                   </div>
                 )}
               </div>
@@ -191,11 +191,11 @@ export const AuroraKpiGrid = memo(({
                 
                 {/* Barra de progresso visual para todos os itens */}
                 <div className="w-full h-1.5 bg-muted/30 rounded-full overflow-hidden">
-                  <div 
+                   <div 
                     className={`h-full bg-gradient-to-r ${
-                      item.id === 'completed' ? 'from-emerald-500 to-green-500' :
-                      item.id === 'progress' ? 'from-blue-500 to-viverblue' :
-                      'from-purple-500 to-aurora'
+                      item.id === 'completed' ? 'from-strategy to-strategy-light' :
+                      item.id === 'progress' ? 'from-operational to-operational-light' :
+                      'from-strategy-light to-operational'
                     } rounded-full transition-all duration-1000 ease-out aurora-shimmer`}
                     style={{ width: `${item.id === 'total' ? 100 : item.percentage}%` }}
                   />
