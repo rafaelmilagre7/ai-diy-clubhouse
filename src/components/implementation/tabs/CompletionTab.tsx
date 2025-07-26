@@ -75,7 +75,8 @@ const CompletionTab: React.FC<CompletionTabProps> = ({
           user_id: user.id,
           solution_id: solutionId,
           validation_code: `VIA-${Date.now()}`,
-          implementation_data: {}
+          implementation_date: new Date().toISOString(),
+          issued_at: new Date().toISOString()
         })
         .select()
         .single();
@@ -131,6 +132,10 @@ const CompletionTab: React.FC<CompletionTabProps> = ({
       // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: ['user-progress'] });
       queryClient.invalidateQueries({ queryKey: ['user-certificates'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-progress'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-data'] });
+      
+      console.log("🔧 [DEBUG] Cache invalidado para forçar atualização do dashboard");
     },
     onError: (error) => {
       if (completionProcessedRef.current) return;
