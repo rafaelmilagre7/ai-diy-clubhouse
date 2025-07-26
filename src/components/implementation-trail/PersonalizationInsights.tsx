@@ -12,6 +12,7 @@ import {
   Building2,
   User
 } from 'lucide-react';
+import { PersonalizedMessage } from './PersonalizedMessage';
 
 import { ImplementationTrailData } from '@/types/implementationTrail';
 
@@ -53,24 +54,9 @@ export const PersonalizationInsights: React.FC<PersonalizationInsightsProps> = (
 
   return (
     <div className="space-y-6">
-      {/* AI Message Card */}
+      {/* Nina's Personalized Message */}
       {trail.ai_message && (
-        <Card className="aurora-glass border-viverblue/30 aurora-glow">
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-viverblue to-operational rounded-xl flex items-center justify-center">
-                <Brain className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <CardTitle className="text-lg">Análise Personalizada</CardTitle>
-                <CardDescription>Insights baseados no seu perfil</CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-foreground leading-relaxed">{trail.ai_message}</p>
-          </CardContent>
-        </Card>
+        <PersonalizedMessage message={trail.ai_message} />
       )}
 
       {/* Stats Grid */}
