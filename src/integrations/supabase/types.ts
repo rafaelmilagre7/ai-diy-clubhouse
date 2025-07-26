@@ -901,6 +901,51 @@ export type Database = {
           },
         ]
       }
+      coupons: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          discount_type: string
+          discount_value: number
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          updated_at: string
+          usage_limit: number | null
+          used_count: number
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          discount_type: string
+          discount_value: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+          usage_limit?: number | null
+          used_count?: number
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          discount_type?: string
+          discount_value?: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+          usage_limit?: number | null
+          used_count?: number
+        }
+        Relationships: []
+      }
       course_access_control: {
         Row: {
           course_id: string | null
@@ -5768,6 +5813,10 @@ export type Database = {
         Args: { input_data: string }
         Returns: string
       }
+      hash_sensitive_data_secure: {
+        Args: { input_text: string }
+        Returns: string
+      }
       increment: {
         Args: { row_id: string; table_name: string; column_name: string }
         Returns: undefined
@@ -6304,6 +6353,10 @@ export type Database = {
       validate_password_strength: {
         Args: { password: string }
         Returns: boolean
+      }
+      validate_password_strength_enhanced: {
+        Args: { password: string }
+        Returns: Json
       }
       validate_password_strength_server: {
         Args: { password: string }
