@@ -96,7 +96,7 @@ export const ImplementationTrailTabs = ({ trail }: ImplementationTrailTabsProps)
         </TabsContent>
 
         <TabsContent value="lessons" className="mt-6 animate-fade-in">
-          <LessonsTab />
+          <LessonsTab trail={trail} />
         </TabsContent>
       </Tabs>
     </div>
