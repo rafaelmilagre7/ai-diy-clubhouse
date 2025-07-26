@@ -32,25 +32,25 @@ export const KpiGrid: FC<KpiGridProps> = memo(({
       title: "Em Andamento",
       value: inProgress,
       icon: Clock,
-      color: "text-viverblue",
-      bgColor: "bg-viverblue/10",
-      borderColor: "border-viverblue/20"
+      color: "text-operational",
+      bgColor: "bg-operational/10",
+      borderColor: "border-operational/20"
     },
     {
       title: "Taxa de Conclusão",
       value: `${completionRate}%`,
       icon: Target,
-      color: "text-aurora-light",
-      bgColor: "bg-aurora-light/10",
-      borderColor: "border-aurora-light/20"
+      color: "text-strategy-light",
+      bgColor: "bg-strategy-light/10",
+      borderColor: "border-strategy-light/20"
     },
     {
       title: "Total Disponível",
       value: total,
       icon: TrendingUp,
-      color: "text-primary",
-      bgColor: "bg-primary/10",
-      borderColor: "border-primary/20"
+      color: "text-operational-light",
+      bgColor: "bg-operational-light/10",
+      borderColor: "border-operational-light/20"
     }
   ];
 
