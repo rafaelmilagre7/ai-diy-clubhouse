@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ImplementationTrailData, SolutionItem } from '@/types/implementationTrail';
+import { useSolutionDataContext } from '@/components/implementation-trail/contexts/SolutionDataContext';
 
 interface SolutionsTabOptimizedProps {
   trail: ImplementationTrailData;
@@ -20,14 +21,22 @@ interface SolutionsTabOptimizedProps {
 
 export const SolutionsTabOptimized: React.FC<SolutionsTabOptimizedProps> = ({ trail }) => {
   const navigate = useNavigate();
+  const { getSolution, loadSolutions, loading } = useSolutionDataContext();
 
-  // Debug: vamos ver o que tem na trilha
+  // Carregar dados das soluções quando a trilha mudar
   useEffect(() => {
-    console.log('🔍 [SOLUTIONS-TAB] Dados da trilha recebidos:', trail);
-    console.log('🔍 [SOLUTIONS-TAB] Priority 1:', trail?.priority1);
-    console.log('🔍 [SOLUTIONS-TAB] Priority 2:', trail?.priority2);
-    console.log('🔍 [SOLUTIONS-TAB] Priority 3:', trail?.priority3);
-  }, [trail]);
+    if (trail) {
+      const allSolutionIds = [
+        ...(trail.priority1?.map(item => item.solutionId) || []),
+        ...(trail.priority2?.map(item => item.solutionId) || []),
+        ...(trail.priority3?.map(item => item.solutionId) || [])
+      ];
+      
+      if (allSolutionIds.length > 0) {
+        loadSolutions(allSolutionIds);
+      }
+    }
+  }, [trail, loadSolutions]);
 
   const getPriorityLabel = (priority: number) => {
     switch (priority) {
@@ -40,6 +49,7 @@ export const SolutionsTabOptimized: React.FC<SolutionsTabOptimizedProps> = ({ tr
 
   const SolutionCard: React.FC<{ item: SolutionItem; priority: number }> = ({ item, priority }) => {
     const priorityInfo = getPriorityLabel(priority);
+    const solutionData = getSolution(item.solutionId);
 
     return (
       <Card className="group relative overflow-hidden border border-border/50 hover:border-viverblue/50 bg-gradient-to-br from-card/95 to-muted/30 backdrop-blur-sm transition-all duration-500 hover:scale-[1.01] hover:shadow-xl hover:shadow-viverblue/5 cursor-pointer">
@@ -87,14 +97,14 @@ export const SolutionsTabOptimized: React.FC<SolutionsTabOptimizedProps> = ({ tr
               <div className="flex items-start justify-between">
                 <div className="flex-1 pr-2">
                   <h3 className="text-base font-bold text-foreground group-hover:text-viverblue transition-colors duration-300 line-clamp-2 mb-2 leading-snug">
-                    Solução ID: {item.solutionId}
+                    {solutionData?.title || 'Carregando solução...'}
                   </h3>
-                  
+                   
                   {/* Meta info */}
                   <div className="flex items-center gap-2 mb-2 text-xs">
                     <div className="flex items-center gap-1">
                       <Target className="w-3 h-3 text-muted-foreground" />
-                      <span className="text-muted-foreground">IA & Automação</span>
+                      <span className="text-muted-foreground">{solutionData?.category || 'IA & Automação'}</span>
                     </div>
                     
                     {item.estimatedTime && (
@@ -111,7 +121,7 @@ export const SolutionsTabOptimized: React.FC<SolutionsTabOptimizedProps> = ({ tr
               
               {/* Description */}
               <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-                Solução recomendada pela IA baseada no seu perfil e objetivos empresariais.
+                {solutionData?.description || 'Solução recomendada pela IA baseada no seu perfil e objetivos empresariais.'}
               </p>
             </div>
 
