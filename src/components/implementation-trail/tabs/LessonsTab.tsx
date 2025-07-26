@@ -1,449 +1,370 @@
-
-import React, { useEffect, useMemo, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { GraduationCap, ArrowRight, Sparkles, TrendingUp, Eye, AlertCircle, ChevronUp, Brain, Clock, Play, Star, BookOpen, Target } from 'lucide-react';
-import { EnhancedLessonCard } from '../cards/EnhancedLessonCard';
-import { LessonImagesProvider, useLessonImages } from '../contexts/LessonImagesContext';
-import { useTopLessons } from '../hooks/useTopLessons';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { Loader2, BookOpen, Target, TrendingUp, Clock, Star, ChevronRight, Brain, CheckCircle } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
 
-// Interface simplificada para evitar conflitos de tipo
-interface AILesson {
-  id: number;
-  title: string;
-  description: string;
-  category: string;
-  difficulty: string;
-  duration: string;
-  topics: string[];
-  ai_score: number;
-  reasoning: string;
+interface PersonalizedTrail {
+  overview: {
+    analysis: string;
+    opportunities: string;
+    strategic_goals: string;
+    implementation_phases: string[];
+  };
+  solutions_guide: {
+    quick_wins: Array<{
+      solution_id: string;
+      priority_score: number;
+      category: string;
+      reasoning: string;
+      expected_impact: string;
+      implementation_timeframe: string;
+      solution_data?: any;
+    }>;
+    growth_solutions: Array<{
+      solution_id: string;
+      priority_score: number;
+      category: string;
+      reasoning: string;
+      expected_impact: string;
+      implementation_timeframe: string;
+      solution_data?: any;
+    }>;
+    optimization_solutions: Array<{
+      solution_id: string;
+      priority_score: number;
+      category: string;
+      reasoning: string;
+      expected_impact: string;
+      implementation_timeframe: string;
+      solution_data?: any;
+    }>;
+  };
+  lessons_guide: {
+    learning_path: Array<{
+      lesson_id: string;
+      sequence: number;
+      category: string;
+      reasoning: string;
+      connects_to_solutions: string[];
+      estimated_completion: string;
+      lesson_data?: any;
+    }>;
+    total_learning_time: string;
+    learning_objectives: string[];
+  };
+  personalized_message: string;
+  user_profile?: any;
+  generation_timestamp?: string;
+  analysis_type?: string;
 }
 
-interface LessonsTabProps {
-  lessons: any[]; // Usando any[] para evitar conflito de tipos
-}
-
-const LessonsTabContent = ({ lessons }: LessonsTabProps) => {
-  const [aiLessons, setAiLessons] = useState<AILesson[]>([]);
-  const [aiLoading, setAiLoading] = useState(false);
-  const { toast } = useToast();
-  const { topLessons, hasMoreLessons, remainingCount, totalLessons, showAll, toggleShowAll } = useTopLessons(lessons, 5);
-  const { preloadLessonImages, loading } = useLessonImages();
-
-  const lessonIds = useMemo(() => 
-    topLessons.map((lesson: any) => lesson.id || lesson.lessonId || 'unknown'), 
-    [topLessons]
-  );
+export const LessonsTab = () => {
+  const [personalizedTrail, setPersonalizedTrail] = useState<PersonalizedTrail | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (lessonIds.length > 0) {
-      console.log('[LessonsTab] Precarregando imagens para aulas:', lessonIds);
-      preloadLessonImages(lessonIds);
-    }
-  }, [lessonIds, preloadLessonImages]);
-
-  useEffect(() => {
-    fetchAIRecommendedLessons();
+    fetchPersonalizedTrail();
   }, []);
 
-  const fetchAIRecommendedLessons = async () => {
+  const fetchPersonalizedTrail = async () => {
     try {
-      setAiLoading(true);
-      
+      setIsLoading(true);
+      setError(null);
+
       const { data, error } = await supabase.functions.invoke('recommend-lessons-ai');
-      
+
       if (error) {
-        console.error('Erro ao buscar recomendações de aulas:', error);
-        toast({
-          title: "Erro ao carregar recomendações",
-          description: "Não foi possível carregar as aulas recomendadas pela IA.",
-          variant: "destructive",
-        });
-        return;
+        console.error('Erro ao buscar trilha personalizada:', error);
+        throw error;
       }
 
-      setAiLessons(data.lessons || []);
-    } catch (error) {
-      console.error('Erro:', error);
+      console.log('✅ Trilha personalizada recebida:', data);
+      setPersonalizedTrail(data);
+
+    } catch (err: any) {
+      console.error('Erro ao buscar trilha personalizada:', err);
+      setError(err.message || 'Erro ao carregar trilha personalizada');
     } finally {
-      setAiLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case 'strategy':
-        return 'bg-strategy/20 text-strategy border-strategy/30';
-      case 'operational':
-        return 'bg-operational/20 text-operational border-operational/30';
-      case 'revenue':
-        return 'bg-revenue/20 text-revenue border-revenue/30';
-      default:
-        return 'bg-viverblue/20 text-viverblue border-viverblue/30';
-    }
-  };
-
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'easy':
-        return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
-      case 'medium':
-        return 'bg-amber-500/20 text-amber-400 border-amber-500/30';
-      case 'advanced':
-        return 'bg-rose-500/20 text-rose-400 border-rose-500/30';
-      default:
-        return 'bg-neutral-500/20 text-neutral-400 border-neutral-500/30';
-    }
-  };
-
-  const getDifficultyLabel = (difficulty: string) => {
-    switch (difficulty) {
-      case 'easy':
-        return 'Iniciante';
-      case 'medium':
-        return 'Intermediário';
-      case 'advanced':
-        return 'Avançado';
-      default:
-        return difficulty;
-    }
-  };
-
-  // Se temos aulas da IA, mostrar interface da IA
-  if (aiLessons.length > 0 || aiLoading) {
-    if (aiLoading) {
-      return (
-        <div className="space-y-6">
-          <div className="text-center py-12">
-            <div className="relative">
-              <Brain className="h-16 w-16 text-viverblue mx-auto mb-6 animate-pulse" />
-              <div className="absolute inset-0 bg-viverblue/20 rounded-full animate-ping opacity-20"></div>
-            </div>
-            <h3 className="text-xl font-semibold text-foreground mb-3">
-              🧠 IA analisando seu perfil personalizado...
-            </h3>
-            <p className="text-muted-foreground max-w-md mx-auto">
-              Nossa inteligência artificial está estudando seu histórico de aprendizado, 
-              progresso e perfil profissional para recomendar as aulas mais relevantes para você.
-            </p>
-            <div className="mt-6 flex justify-center gap-2">
-              <div className="w-2 h-2 bg-viverblue rounded-full animate-bounce"></div>
-              <div className="w-2 h-2 bg-operational rounded-full animate-bounce animation-delay-200"></div>
-              <div className="w-2 h-2 bg-revenue rounded-full animate-bounce animation-delay-400"></div>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
+  if (isLoading) {
     return (
-      <div className="space-y-8">
-        {/* Header da análise IA */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-6">
-            <div className="p-3 bg-gradient-to-br from-viverblue/20 to-viverblue/10 rounded-2xl border border-viverblue/30">
-              <BookOpen className="h-8 w-8 text-viverblue" />
-            </div>
-            <h2 className="text-3xl font-bold bg-gradient-to-r from-viverblue via-operational to-revenue bg-clip-text text-transparent">
-              Aulas Personalizadas com IA
-            </h2>
-            <div className="p-3 bg-gradient-to-br from-operational/20 to-operational/10 rounded-2xl border border-operational/30">
-              <Brain className="h-8 w-8 text-operational" />
-            </div>
+      <div className="flex items-center justify-center min-h-96">
+        <div className="text-center space-y-6">
+          <div className="relative">
+            <Brain className="w-16 h-16 mx-auto text-primary animate-pulse" />
+            <div className="absolute inset-0 bg-primary/20 rounded-full animate-ping opacity-20"></div>
           </div>
-          <p className="text-muted-foreground max-w-3xl mx-auto text-lg">
-            Nossa IA analisou seu perfil completo, progresso de aprendizado e contexto profissional 
-            para selecionar as aulas mais relevantes para seus objetivos específicos.
-          </p>
-        </div>
-
-        {/* Grid de aulas IA com capas verticais */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8">
-          {aiLessons.map((lesson, index) => (
-            <Card 
-              key={lesson.id} 
-              className="aurora-glass aurora-hover-scale group cursor-pointer overflow-hidden bg-gradient-to-br from-card/95 to-muted/30 border border-viverblue/20 hover:border-viverblue/40 hover:shadow-2xl hover:shadow-viverblue/10 transition-all duration-500"
-            >
-              {/* Capa vertical da aula */}
-              <div className="relative aspect-[2/3] overflow-hidden">
-                <img 
-                  src={`https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=400&h=600&fit=crop&crop=center&auto=format`}
-                  alt={`Capa da aula ${lesson.title}`}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7?q=80&w=400&h=600&fit=crop&crop=center';
-                  }}
-                />
-                
-                {/* Gradient overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
-                
-                {/* Badges flutuantes */}
-                <div className="absolute top-4 left-4">
-                  <Badge className="bg-gradient-to-r from-viverblue to-viverblue-light text-white text-xs font-semibold backdrop-blur-sm border-0 px-3 py-1 shadow-lg">
-                    #{index + 1} Recomendada
-                  </Badge>
-                </div>
-                
-                <div className="absolute top-4 right-4">
-                  <div className="flex items-center gap-1 bg-amber-500/90 backdrop-blur-sm rounded-full px-2 py-1">
-                    <Star className="h-3 w-3 text-white fill-current" />
-                    <span className="text-xs font-medium text-white">
-                      {lesson.ai_score}%
-                    </span>
-                  </div>
-                </div>
-
-                {/* Play button overlay */}
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
-                  <div className="p-4 bg-viverblue/90 backdrop-blur-sm rounded-full border-2 border-white/20 shadow-2xl">
-                    <Play className="h-8 w-8 text-white fill-current" />
-                  </div>
-                </div>
-              </div>
-
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg font-bold line-clamp-2 group-hover:text-viverblue transition-colors duration-300">
-                  {lesson.title}
-                </CardTitle>
-                
-                {/* Tags compactas */}
-                <div className="flex flex-wrap items-center gap-2 mt-2">
-                  <Badge variant="outline" className={`text-xs ${getCategoryColor(lesson.category)}`}>
-                    {lesson.category === 'strategy' ? 'Estratégia' : 
-                     lesson.category === 'operational' ? 'Operacional' : 
-                     lesson.category === 'revenue' ? 'Revenue' : lesson.category}
-                  </Badge>
-                  
-                  <Badge variant="outline" className={`text-xs ${getDifficultyColor(lesson.difficulty)}`}>
-                    {getDifficultyLabel(lesson.difficulty)}
-                  </Badge>
-                  
-                  <div className="flex items-center gap-1 text-muted-foreground">
-                    <Clock className="h-3 w-3" />
-                    <span className="text-xs">{lesson.duration}</span>
-                  </div>
-                </div>
-              </CardHeader>
-
-              <CardContent className="pt-0 space-y-4">
-                {/* Descrição compacta */}
-                <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
-                  {lesson.description}
-                </p>
-
-                {/* Justificativa IA */}
-                <div className="bg-gradient-to-r from-viverblue/10 via-viverblue/5 to-viverblue/10 border border-viverblue/20 rounded-lg p-3">
-                  <div className="flex items-start gap-2">
-                    <Target className="h-4 w-4 text-viverblue mt-0.5 flex-shrink-0" />
-                    <div>
-                      <h4 className="font-medium text-foreground text-sm mb-1">
-                        Perfeita para você
-                      </h4>
-                      <p className="text-xs text-muted-foreground line-clamp-2">
-                        {lesson.reasoning}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Botão de ação */}
-                <Button 
-                  className="w-full group-hover:bg-viverblue group-hover:text-white transition-all duration-300" 
-                  size="sm"
-                  variant="outline"
-                >
-                  <Play className="h-4 w-4 mr-2" />
-                  Começar Aula
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {aiLessons.length === 0 && !aiLoading && (
-          <div className="text-center py-12">
-            <BookOpen className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-foreground mb-2">
-              Nenhuma aula encontrada
+          <div className="space-y-3">
+            <h3 className="text-2xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+              🧠 IA criando sua trilha personalizada...
             </h3>
-            <p className="text-muted-foreground">
-              Complete seu perfil para receber recomendações personalizadas.
+            <p className="text-muted-foreground max-w-md mx-auto leading-relaxed">
+              Nossa inteligência artificial está analisando seu perfil, progresso e objetivos
+              para criar um guia completo de implementação de IA personalizado.
             </p>
           </div>
-        )}
+        </div>
       </div>
     );
   }
 
-  // Fallback para aulas antigas se não houver aulas da IA
-  if (!lessons || lessons.length === 0) {
+  if (error) {
     return (
-      <div className="text-center py-16">
-        <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/10 via-orange-500/5 to-transparent rounded-2xl blur-xl opacity-50" />
-          <Card className="glass-dark border border-neutral-700/50 relative backdrop-blur-sm max-w-md mx-auto">
-            <CardContent className="p-8 text-center">
-              <AlertCircle className="h-16 w-16 mx-auto text-yellow-500 mb-4" />
-              <h3 className="text-lg font-semibold text-high-contrast mb-2">
-                Nenhuma aula recomendada ainda
-              </h3>
-              <p className="text-medium-contrast mb-4">
-                As aulas personalizadas estão sendo processadas. Tente regenerar sua trilha ou aguarde alguns instantes.
-              </p>
-              <Button 
-                variant="outline" 
-                className="border-yellow-500/50 text-yellow-500 hover:bg-yellow-500/10"
-                onClick={() => window.location.reload()}
-              >
-                <ArrowRight className="mr-2 h-4 w-4" />
-                Atualizar Página
+      <div className="flex items-center justify-center min-h-96">
+        <Card className="w-full max-w-md border-destructive/20">
+          <CardContent className="pt-6">
+            <div className="text-center space-y-4">
+              <div className="w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center mx-auto">
+                <Target className="w-6 h-6 text-destructive" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="font-semibold">Erro ao carregar trilha</h3>
+                <p className="text-sm text-muted-foreground">{error}</p>
+              </div>
+              <Button onClick={fetchPersonalizedTrail} variant="outline" size="sm">
+                Tentar novamente
               </Button>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!personalizedTrail) {
+    return (
+      <div className="text-center py-12">
+        <BookOpen className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+        <p className="text-muted-foreground">Nenhuma trilha personalizada encontrada</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-8">
-      {/* Header da seção - melhorado */}
-      <div className="relative">
-        <div className="absolute inset-0 bg-gradient-to-r from-viverblue/20 via-green-500/10 to-transparent rounded-2xl blur-xl opacity-50" />
-        <Card className="glass-dark border-2 border-viverblue/40 bg-viverblue/5 relative overflow-hidden backdrop-blur-sm">
-          <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-transparent" />
-          <CardHeader className="relative z-10">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-viverblue/20 rounded-xl">
-                  <GraduationCap className="h-8 w-8 text-viverblue animate-pulse" />
-                </div>
-                <div>
-                  <CardTitle className="text-high-contrast text-3xl font-bold flex items-center gap-2">
-                    🎓 {showAll ? 'Todas as Aulas' : 'Top 5 Aulas'} Recomendadas
-                    <Sparkles className="h-6 w-6 text-viverblue animate-pulse" />
-                  </CardTitle>
-                  <p className="text-medium-contrast text-lg mt-2">
-                    {showAll ? 
-                      `Todas as ${topLessons.length} aulas recomendadas para você` :
-                      `As ${topLessons.length} aulas mais relevantes selecionadas especialmente para você`
-                    }
-                  </p>
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="text-3xl font-bold text-viverblue">{topLessons.length}</div>
-                <div className="text-sm text-medium-contrast">
-                  {showAll ? 'Total' : 'Top'} Aulas
-                </div>
-                {hasMoreLessons && !showAll && (
-                  <div className="text-xs text-green-400 mt-1">
-                    +{remainingCount} disponíveis
-                  </div>
-                )}
-              </div>
-            </div>
-          </CardHeader>
-        </Card>
-      </div>
-
-      {/* Loading state */}
-      {loading && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {Array.from({ length: Math.min(showAll ? totalLessons : 5, topLessons.length) }, (_, i) => (
-            <Card key={i} className="glass-dark border border-neutral-700/50 animate-pulse h-full">
-              <CardContent className="p-0">
-                <div className="aspect-[9/16] bg-neutral-800 rounded-t-xl"></div>
-                <div className="p-6 space-y-4">
-                  <div className="h-6 bg-neutral-700 rounded w-3/4"></div>
-                  <div className="h-4 bg-neutral-700 rounded w-1/2"></div>
-                  <div className="space-y-2">
-                    <div className="h-3 bg-neutral-700 rounded"></div>
-                    <div className="h-3 bg-neutral-700 rounded w-4/5"></div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+      {/* Header principal com mensagem personalizada */}
+      <div className="text-center space-y-6">
+        <div className="flex items-center justify-center gap-4">
+          <div className="p-4 bg-gradient-to-br from-primary/20 to-primary/10 rounded-2xl border border-primary/30">
+            <Brain className="h-10 w-10 text-primary" />
+          </div>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+            Sua Trilha de Implementação IA
+          </h1>
+          <div className="p-4 bg-gradient-to-br from-secondary/20 to-secondary/10 rounded-2xl border border-secondary/30">
+            <Target className="h-10 w-10 text-secondary" />
+          </div>
         </div>
-      )}
 
-      {/* Grid de aulas - formato vertical otimizado */}
-      {!loading && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8">
-          {topLessons.map((lesson: any, index: number) => {
-            // Garantir compatibilidade entre formatos de dados
-            const normalizedLesson = {
-              ...lesson,
-              id: lesson.id || lesson.lessonId || `lesson-${index}`,
-              description: lesson.description || lesson.justification || 'Aula recomendada pela IA'
-            };
-            
-            return (
-              <div
-                key={`${normalizedLesson.id}-${index}`}
-                className="animate-fade-in hover:z-10 relative"
-                style={{ animationDelay: `${index * 150}ms` }}
-              >
-                <EnhancedLessonCard lesson={normalizedLesson} index={index} />
+        {personalizedTrail.personalized_message && (
+          <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-purple-500/5 max-w-4xl mx-auto">
+            <CardContent className="pt-6">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Star className="w-6 h-6 text-primary" />
+                </div>
+                <div className="text-center flex-1">
+                  <h3 className="font-semibold mb-2">Mensagem Personalizada</h3>
+                  <p className="text-sm leading-relaxed">{personalizedTrail.personalized_message}</p>
+                </div>
               </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Botão para mostrar/ocultar mais aulas */}
-      {hasMoreLessons && !loading && (
-        <div className="animate-fade-in" style={{ animationDelay: '750ms' }}>
-          <Card className="glass-dark border border-viverblue/30 bg-viverblue/5 hover:border-viverblue/50 transition-all duration-300">
-            <CardContent className="p-6 text-center">
-              <div className="flex items-center justify-center gap-3 mb-4">
-                <TrendingUp className="h-6 w-6 text-viverblue" />
-                <h3 className="text-xl font-semibold text-high-contrast">
-                  {showAll ? 'Mostrar Apenas Top 5' : 'Mais Aulas Disponíveis'}
-                </h3>
-              </div>
-              <p className="text-medium-contrast mb-4">
-                {showAll ? 
-                  'Voltar para a visualização das 5 aulas mais importantes' :
-                  `Existem mais ${remainingCount} aulas recomendadas além das top 5 mostradas acima.`
-                }
-              </p>
-              <Button 
-                variant="outline" 
-                className="border-viverblue/50 text-viverblue hover:bg-viverblue/10"
-                onClick={toggleShowAll}
-              >
-                {showAll ? (
-                  <>
-                    <ChevronUp className="mr-2 h-4 w-4" />
-                    Mostrar Apenas Top 5
-                  </>
-                ) : (
-                  <>
-                    <Eye className="mr-2 h-4 w-4" />
-                    Ver Todas as {totalLessons} Aulas
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </>
-                )}
-              </Button>
             </CardContent>
           </Card>
-        </div>
-      )}
-    </div>
-  );
-};
+        )}
+      </div>
 
-export const LessonsTab = ({ lessons }: LessonsTabProps) => {
-  return (
-    <LessonImagesProvider>
-      <LessonsTabContent lessons={lessons} />
-    </LessonImagesProvider>
+      <Tabs defaultValue="overview" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-3 max-w-md mx-auto">
+          <TabsTrigger value="overview" className="flex items-center gap-2">
+            <Target className="w-4 h-4" />
+            Visão Geral
+          </TabsTrigger>
+          <TabsTrigger value="solutions" className="flex items-center gap-2">
+            <TrendingUp className="w-4 h-4" />
+            Soluções
+          </TabsTrigger>
+          <TabsTrigger value="lessons" className="flex items-center gap-2">
+            <BookOpen className="w-4 h-4" />
+            Aulas
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Visão Geral */}
+        <TabsContent value="overview" className="space-y-6">
+          <div className="grid gap-6">
+            {personalizedTrail.overview?.analysis && (
+              <Card className="border-blue-200 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-950/20">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
+                    <Target className="w-5 h-5" />
+                    Análise do Seu Perfil
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm leading-relaxed">{personalizedTrail.overview.analysis}</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {personalizedTrail.overview?.opportunities && (
+              <Card className="border-green-200 bg-green-50/50 dark:border-green-800 dark:bg-green-950/20">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-green-700 dark:text-green-300">
+                    <TrendingUp className="w-5 h-5" />
+                    Oportunidades Identificadas
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm leading-relaxed">{personalizedTrail.overview.opportunities}</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {personalizedTrail.overview?.strategic_goals && (
+              <Card className="border-purple-200 bg-purple-50/50 dark:border-purple-800 dark:bg-purple-950/20">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-purple-700 dark:text-purple-300">
+                    <Star className="w-5 h-5" />
+                    Objetivos Estratégicos
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm leading-relaxed">{personalizedTrail.overview.strategic_goals}</p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </TabsContent>
+
+        {/* Guia de Soluções */}
+        <TabsContent value="solutions" className="space-y-8">
+          {personalizedTrail.solutions_guide?.quick_wins?.length > 0 && (
+            <div className="space-y-4">
+              <h3 className="text-xl font-bold flex items-center gap-2 text-green-600 dark:text-green-400">
+                <CheckCircle className="w-6 h-6" />
+                🏆 Primeiras Vitórias
+              </h3>
+              <div className="grid gap-4">
+                {personalizedTrail.solutions_guide.quick_wins.map((solution, index) => (
+                  <Card key={index} className="border-green-200 bg-green-50/50 dark:border-green-800 dark:bg-green-950/20 hover:shadow-lg transition-all duration-300">
+                    <CardContent className="pt-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-3">
+                            <Badge className="bg-green-500 text-white">#{index + 1}</Badge>
+                            <h4 className="font-semibold text-green-800 dark:text-green-200">
+                              {solution.solution_data?.title || 'Solução não encontrada'}
+                            </h4>
+                          </div>
+                          <p className="text-sm text-muted-foreground mb-4 leading-relaxed">{solution.reasoning}</p>
+                          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                            <span className="flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              {solution.implementation_timeframe}
+                            </span>
+                            <Badge variant="secondary" className="text-xs">
+                              Score: {solution.priority_score}%
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                      <Separator className="my-3" />
+                      <div className="bg-green-100 dark:bg-green-900/30 rounded-lg p-3">
+                        <p className="text-sm text-green-800 dark:text-green-200 font-medium">
+                          💡 {solution.expected_impact}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+        </TabsContent>
+
+        {/* Guia de Aulas */}
+        <TabsContent value="lessons" className="space-y-6">
+          {personalizedTrail.lessons_guide?.learning_path?.length > 0 && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-2xl font-bold flex items-center gap-2">
+                  <BookOpen className="w-6 h-6 text-primary" />
+                  📚 Sua Jornada de Aprendizado
+                </h3>
+                <Badge variant="outline" className="text-sm px-3 py-1">
+                  {personalizedTrail.lessons_guide.total_learning_time || '8-12 semanas'}
+                </Badge>
+              </div>
+
+              <div className="space-y-6">
+                {personalizedTrail.lessons_guide.learning_path
+                  .sort((a, b) => a.sequence - b.sequence)
+                  .map((lesson, index) => (
+                    <div key={lesson.lesson_id} className="relative">
+                      {index < personalizedTrail.lessons_guide.learning_path.length - 1 && (
+                        <div className="absolute left-8 top-20 w-0.5 h-16 bg-gradient-to-b from-primary to-primary/30" />
+                      )}
+                      
+                      <div className="flex gap-6">
+                        <div className="w-16 h-16 bg-gradient-to-br from-primary to-primary/70 rounded-full flex items-center justify-center flex-shrink-0 border-4 border-background shadow-lg">
+                          <span className="text-xl font-bold text-white">{lesson.sequence}</span>
+                        </div>
+                        
+                        <div className="flex-1">
+                          <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-primary">
+                            <CardContent className="pt-6">
+                              <div className="space-y-4">
+                                <div className="flex items-start justify-between">
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <Badge className="bg-primary text-white text-xs">
+                                        {lesson.category}
+                                      </Badge>
+                                      <Badge variant="outline" className="text-xs">
+                                        {lesson.estimated_completion}
+                                      </Badge>
+                                    </div>
+                                    <h4 className="text-lg font-semibold mb-2">
+                                      {lesson.lesson_data?.title || 'Aula não encontrada'}
+                                    </h4>
+                                    <p className="text-sm text-muted-foreground leading-relaxed">
+                                      {lesson.reasoning}
+                                    </p>
+                                  </div>
+                                  
+                                  {lesson.lesson_data?.cover_image_url && (
+                                    <div className="w-16 h-24 ml-4 rounded-lg overflow-hidden border">
+                                      <img 
+                                        src={lesson.lesson_data.cover_image_url}
+                                        alt={lesson.lesson_data.title}
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                          (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=400&h=600&fit=crop&crop=center&auto=format';
+                                        }}
+                                      />
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 };

@@ -13,7 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    console.log('🚀 [LESSON-AI] Iniciando recomendação de aulas');
+    console.log('🚀 [TRAIL-AI] Iniciando geração de trilha personalizada com IA');
     
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -36,10 +36,10 @@ serve(async (req) => {
       });
     }
 
-    console.log(`👤 [LESSON-AI] Usuário autenticado: ${user.id}`);
+    console.log(`👤 [TRAIL-AI] Usuário autenticado: ${user.id}`);
 
-    // Buscar perfil completo do usuário com dados para análise
-    const { data: userProfile, error: profileError } = await supabaseClient
+    // Buscar perfil completo do usuário
+    const { data: userProfile } = await supabaseClient
       .from('profiles')
       .select(`
         *,
@@ -53,87 +53,63 @@ serve(async (req) => {
       .eq('id', user.id)
       .single();
 
-    if (profileError) {
-      console.error('❌ [LESSON-AI] Erro ao buscar perfil:', profileError);
-    }
-
-    // Buscar progresso de aprendizado do usuário (simplificado)
+    // Buscar progresso de aprendizado
     const { data: userProgress } = await supabaseClient
       .from('learning_progress')
-      .select(`
-        lesson_id,
-        progress_percentage,
-        completed_at
-      `)
+      .select('*')
       .eq('user_id', user.id);
 
-    // Buscar certificados obtidos (simplificado)
+    // Buscar certificados
     const { data: userCertificates } = await supabaseClient
       .from('learning_certificates')
-      .select(`
-        course_id,
-        issued_at
-      `)
+      .select('*')
       .eq('user_id', user.id);
 
-    console.log('📊 [LESSON-AI] Perfil e progresso do usuário carregados');
-
-    // Buscar todas as aulas reais disponíveis (simplificado para evitar erros)
-    const { data: realLessons, error: lessonsError } = await supabaseClient
+    // Buscar aulas disponíveis
+    const { data: availableLessons } = await supabaseClient
       .from('learning_lessons')
       .select(`
         id,
         title,
         description,
-        estimated_time_minutes,
-        difficulty_level,
         cover_image_url,
-        order_index,
-        module_id,
-        published
+        difficulty_level,
+        estimated_time_minutes
       `)
       .eq('published', true)
-      .order('order_index', { ascending: true })
+      .order('order_index')
+      .limit(15);
+
+    // Buscar soluções disponíveis
+    const { data: availableSolutions } = await supabaseClient
+      .from('solutions')
+      .select(`
+        id,
+        title,
+        description,
+        category,
+        difficulty,
+        thumbnail_url
+      `)
+      .eq('published', true)
+      .order('created_at', { ascending: false })
       .limit(20);
 
-    if (lessonsError) {
-      console.error('❌ [LESSON-AI] Erro ao buscar aulas:', lessonsError);
-      throw new Error('Erro ao buscar aulas do banco de dados');
+    console.log(`📊 [TRAIL-AI] Dados coletados - Aulas: ${availableLessons?.length}, Soluções: ${availableSolutions?.length}`);
+
+    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+    if (!openAIApiKey) {
+      console.log('⚠️ [TRAIL-AI] Chave OpenAI não encontrada');
+      return new Response(JSON.stringify({ 
+        error: 'OpenAI API key não configurada',
+        fallback: true
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
-    // Transformar as aulas para o formato esperado (simplificado)
-    const formattedLessons = (realLessons || []).map((lesson: any) => {
-      // Determinar duração estimada
-      const duration = lesson.estimated_time_minutes 
-        ? `${lesson.estimated_time_minutes} min`
-        : '45-60 min';
-
-      // Mapear dificuldade
-      const difficultyMap: { [key: string]: string } = {
-        'beginner': 'easy',
-        'intermediate': 'medium',
-        'advanced': 'advanced'
-      };
-
-      const difficulty = difficultyMap[lesson.difficulty_level] || 'medium';
-
-      return {
-        id: lesson.id,
-        title: lesson.title,
-        description: lesson.description || 'Aula de Inteligência Artificial',
-        category: 'operational', // Categoria padrão
-        difficulty,
-        duration,
-        course_title: 'Viver de IA',
-        module_title: 'Módulo de IA',
-        cover_image_url: lesson.cover_image_url,
-        tags: ['inteligência artificial', 'desenvolvimento', 'prática de IA']
-      };
-    });
-
-    console.log(`🛠️ [LESSON-AI] Aulas disponíveis: ${formattedLessons.length}`);
-
-    // Criar contexto detalhado do usuário para análise
+    // Criar contexto do usuário para análise personalizada
     const userContext = {
       profile: {
         name: userProfile?.name || 'Usuário',
@@ -142,99 +118,158 @@ serve(async (req) => {
         position: userProfile?.current_position,
         industry: userProfile?.industry,
         role: userProfile?.user_roles?.name,
-        created_at: userProfile?.created_at
+        created_at: userProfile?.created_at,
+        skills: userProfile?.skills || []
       },
-      learning_progress: {
+      progress: {
         completed_lessons: userProgress?.filter(p => p.completed_at)?.length || 0,
         in_progress_lessons: userProgress?.filter(p => !p.completed_at && p.progress_percentage > 0)?.length || 0,
         certificates_earned: userCertificates?.length || 0,
-        average_progress: userProgress?.length > 0 
-          ? Math.round(userProgress.reduce((acc, p) => acc + (p.progress_percentage || 0), 0) / userProgress.length)
-          : 0
+        total_progress: userProgress?.length || 0
       },
-      completed_courses: [], // Simplificado para evitar erros
-      current_lessons: [] // Simplificado para evitar erros
+      available_resources: {
+        lessons: availableLessons?.map(lesson => ({
+          id: lesson.id,
+          title: lesson.title,
+          description: lesson.description,
+          difficulty: lesson.difficulty_level,
+          duration: lesson.estimated_time_minutes
+        })) || [],
+        solutions: availableSolutions?.map(solution => ({
+          id: solution.id,
+          title: solution.title,
+          description: solution.description,
+          category: solution.category,
+          difficulty: solution.difficulty
+        })) || []
+      }
     };
 
-    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openAIApiKey) {
-      console.log('⚠️ [LESSON-AI] Chave OpenAI não encontrada, usando análise básica');
-      
-      // Fallback básico se não houver OpenAI
-      const recommendedLessons = formattedLessons.map(lesson => ({
-        ...lesson,
-        ai_score: Math.floor(Math.random() * 40) + 60, // 60-100%
-        reasoning: "Recomendação baseada na estrutura do curso - configure OpenAI para análise personalizada"
-      })).sort((a, b) => b.ai_score - a.ai_score);
+    console.log('🤖 [TRAIL-AI] Iniciando análise personalizada com IA');
 
-      return new Response(JSON.stringify({ 
-        lessons: recommendedLessons.slice(0, 6),
-        analysis_type: 'basic',
-        message: 'Configure OPENAI_API_KEY para análise personalizada com IA'
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    console.log('🤖 [LESSON-AI] Iniciando análise personalizada com IA real');
-
-    // Prompt avançado para análise personalizada com IA
+    // Prompt avançado para criar trilha de implementação personalizada
     const aiPrompt = `
-Você é um especialista em educação corporativa e inteligência artificial com 10 anos de experiência. Sua missão é analisar o perfil do usuário e recomendar as melhores aulas de IA para maximizar seu aprendizado e aplicação prática.
+Você é um especialista em implementação de IA corporativa com 15 anos de experiência em transformação digital. Sua missão é criar uma trilha de implementação personalizada e estratégica para este usuário específico.
 
 PERFIL DETALHADO DO USUÁRIO:
-📊 Informações Pessoais:
+👤 Dados Pessoais:
 - Nome: ${userContext.profile.name}
-- Cargo/Posição: ${userContext.profile.position || 'Não informado'}
+- Email: ${userContext.profile.email}
 - Empresa: ${userContext.profile.company || 'Não informado'}
+- Cargo: ${userContext.profile.position || 'Não informado'}
 - Setor: ${userContext.profile.industry || 'Não informado'}
 - Papel no sistema: ${userContext.profile.role || 'member'}
-- Membro desde: ${userContext.profile.created_at ? new Date(userContext.profile.created_at).toLocaleDateString('pt-BR') : 'Não informado'}
+- Membro desde: ${userContext.profile.created_at ? new Date(userContext.profile.created_at).toLocaleDateString('pt-BR') : 'Data não informada'}
+- Habilidades: ${userContext.profile.skills.length > 0 ? userContext.profile.skills.join(', ') : 'Não informadas'}
 
-📈 Progresso de Aprendizado:
-- Aulas concluídas: ${userContext.learning_progress.completed_lessons}
-- Aulas em andamento: ${userContext.learning_progress.in_progress_lessons}
-- Certificados obtidos: ${userContext.learning_progress.certificates_earned}
-- Progresso médio: ${userContext.learning_progress.average_progress}%
+📈 Progresso Atual:
+- Aulas concluídas: ${userContext.progress.completed_lessons}
+- Aulas em andamento: ${userContext.progress.in_progress_lessons}
+- Certificados obtidos: ${userContext.progress.certificates_earned}
+- Total de atividades: ${userContext.progress.total_progress}
 
-✅ Cursos já concluídos: ${userContext.completed_courses.length > 0 ? userContext.completed_courses.join(', ') : 'Nenhum'}
-⏳ Aulas em andamento: ${userContext.current_lessons.length > 0 ? userContext.current_lessons.join(', ') : 'Nenhuma'}
+🎯 RECURSOS DISPONÍVEIS:
 
-AULAS DISPONÍVEIS PARA ANÁLISE:
-${formattedLessons.map((lesson, index) => `
+📚 AULAS DISPONÍVEIS (${userContext.available_resources.lessons.length} aulas):
+${userContext.available_resources.lessons.map((lesson, index) => `
 ${index + 1}. "${lesson.title}"
    - ID: ${lesson.id}
-   - Curso: ${lesson.course_title}
-   - Módulo: ${lesson.module_title}
    - Dificuldade: ${lesson.difficulty}
-   - Duração: ${lesson.duration}
-   - Categoria: ${lesson.category}
-   - Tags: ${lesson.tags.join(', ')}
+   - Duração: ${lesson.duration ? `${lesson.duration} min` : 'Não especificada'}
    - Descrição: ${lesson.description}
 `).join('\n')}
 
-INSTRUÇÕES PARA ANÁLISE:
-1. Analise profundamente o perfil do usuário (experiência, cargo, progresso)
-2. Considere o que já foi concluído para evitar redundância
-3. Identifique lacunas de conhecimento e próximos passos lógicos
-4. Priorize aulas que agregam valor prático ao contexto profissional
-5. Balance entre desafio apropriado e aplicabilidade imediata
-6. Considere a sequência pedagógica (fundamentos antes de avançado)
+🛠️ SOLUÇÕES DISPONÍVEIS (${userContext.available_resources.solutions.length} soluções):
+${userContext.available_resources.solutions.map((solution, index) => `
+${index + 1}. "${solution.title}"
+   - ID: ${solution.id}
+   - Categoria: ${solution.category}
+   - Dificuldade: ${solution.difficulty}
+   - Descrição: ${solution.description}
+`).join('\n')}
 
-Para cada aula, forneça:
-- Score de 0-100 (quão relevante é para ESTE usuário específico)
-- Justificativa personalizada de 2-3 frases explicando POR QUE esta aula é importante para este usuário específico
+🎯 MISSÃO: Criar uma trilha de implementação de IA personalizada com:
+
+1. **VISÃO GERAL PERSONALIZADA**: 
+   - Análise do perfil e contexto do usuário
+   - Identificação de oportunidades específicas de IA para seu contexto
+   - Definição de objetivos estratégicos baseados no perfil
+   - Roadmap de implementação em fases
+
+2. **GUIA DE SOLUÇÕES PRIORITÁRIAS**:
+   - Selecionar 6-8 soluções mais relevantes para este usuário específico
+   - Ordenar por prioridade estratégica (não apenas por score)
+   - Justificar cada recomendação baseada no perfil
+   - Agrupar em categorias estratégicas (Primeiras Vitórias, Crescimento, Otimização)
+
+3. **GUIA DE AULAS RECOMENDADAS**:
+   - Selecionar 6-8 aulas que criem uma jornada de aprendizado lógica
+   - Ordenar pedagogicamente (fundamentos antes de avançado)
+   - Conectar com as soluções recomendadas
+   - Incluir cronograma sugerido
+
+INSTRUÇÕES CRÍTICAS:
+- Sea MUITO específico para este usuário (use nome, empresa, cargo)
+- Base tudo no perfil real fornecido
+- Crie conexões lógicas entre perfil → objetivos → soluções → aulas
+- Seja estratégico, não apenas técnico
+- Foque no ROI e aplicabilidade prática
 
 RESPONDA APENAS EM JSON:
 {
-  "analysis_summary": "Resumo em 2-3 frases sobre o perfil do usuário e estratégia de recomendação",
-  "recommendations": [
-    {
-      "lesson_id": "uuid_da_aula",
-      "score": 85,
-      "reasoning": "Justificativa personalizada específica para este usuário"
-    }
-  ]
+  "overview": {
+    "analysis": "Análise detalhada do perfil e contexto do usuário",
+    "opportunities": "Oportunidades específicas de IA identificadas",
+    "strategic_goals": "3-4 objetivos estratégicos personalizados",
+    "implementation_phases": ["Fase 1: Fundação", "Fase 2: Expansão", "Fase 3: Otimização"]
+  },
+  "solutions_guide": {
+    "quick_wins": [
+      {
+        "solution_id": "uuid",
+        "priority_score": 95,
+        "category": "Primeiras Vitórias",
+        "reasoning": "Por que é prioritário para ESTE usuário específico",
+        "expected_impact": "Impacto esperado no contexto dele",
+        "implementation_timeframe": "1-2 semanas"
+      }
+    ],
+    "growth_solutions": [
+      {
+        "solution_id": "uuid",
+        "priority_score": 88,
+        "category": "Crescimento",
+        "reasoning": "Justificativa personalizada",
+        "expected_impact": "Impacto esperado",
+        "implementation_timeframe": "3-4 semanas"
+      }
+    ],
+    "optimization_solutions": [
+      {
+        "solution_id": "uuid",
+        "priority_score": 82,
+        "category": "Otimização",
+        "reasoning": "Justificativa personalizada",
+        "expected_impact": "Impacto esperado",
+        "implementation_timeframe": "4-6 semanas"
+      }
+    ]
+  },
+  "lessons_guide": {
+    "learning_path": [
+      {
+        "lesson_id": "uuid",
+        "sequence": 1,
+        "category": "Fundamentos",
+        "reasoning": "Por que começar com esta aula",
+        "connects_to_solutions": ["solution_id1", "solution_id2"],
+        "estimated_completion": "Semana 1"
+      }
+    ],
+    "total_learning_time": "8-12 semanas",
+    "learning_objectives": ["Objetivo 1", "Objetivo 2", "Objetivo 3"]
+  },
+  "personalized_message": "Mensagem motivacional personalizada de 2-3 frases usando o nome e contexto do usuário"
 }`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -248,24 +283,21 @@ RESPONDA APENAS EM JSON:
         messages: [
           {
             role: 'system',
-            content: `Você é um especialista em educação corporativa e IA com PhD em Ciência da Computação. 
+            content: `Você é um especialista em implementação de IA corporativa com PhD em Engenharia de Software e 15 anos de experiência consultando Fortune 500. 
             
-            Analise perfis de usuários e recomende aulas de IA de forma personalizada e estratégica. 
-            Sempre responda em JSON válido e seja específico nas justificativas.
+            Você cria trilhas de implementação personalizadas que geram resultados reais e mensuráveis. 
             
-            Foque em:
-            - Relevância prática para o contexto profissional
-            - Progressão lógica de aprendizado
-            - Aplicabilidade imediata no trabalho
-            - ROI educacional maximizado`
+            Seja EXTREMAMENTE específico e personalizado - use o nome, empresa e contexto real do usuário.
+            
+            Sempre responda em JSON válido e estruturado.`
           },
           {
             role: 'user',
             content: aiPrompt
           }
         ],
-        temperature: 0.3,
-        max_tokens: 2000
+        temperature: 0.2,
+        max_tokens: 3000
       }),
     });
 
@@ -274,47 +306,44 @@ RESPONDA APENAS EM JSON:
     }
 
     const aiResult = await response.json();
-    console.log('✅ [LESSON-AI] Resposta da IA recebida');
+    console.log('✅ [TRAIL-AI] Resposta da IA recebida');
 
     const aiContent = aiResult.choices[0].message.content;
-    let aiData;
+    let personalizedTrail;
     
     try {
-      aiData = JSON.parse(aiContent);
+      personalizedTrail = JSON.parse(aiContent);
     } catch (parseError) {
-      console.error('❌ [LESSON-AI] Erro ao fazer parse do JSON:', parseError);
+      console.error('❌ [TRAIL-AI] Erro ao fazer parse do JSON:', parseError);
       console.log('Conteúdo recebido:', aiContent);
       throw new Error('Resposta da IA inválida');
     }
 
-    const aiRecommendations = aiData.recommendations || [];
-    const analysisSummary = aiData.analysis_summary || 'Análise personalizada concluída';
-
-    // Combinar recomendações da IA com dados das aulas reais
-    const recommendedLessons = formattedLessons.map(lesson => {
-      const aiRec = aiRecommendations.find((rec: any) => rec.lesson_id === lesson.id);
-      return {
-        ...lesson,
-        ai_score: aiRec?.score || 50,
-        reasoning: aiRec?.reasoning || "Aula relevante para desenvolvimento em IA"
-      };
-    }).sort((a, b) => b.ai_score - a.ai_score).slice(0, 6); // Top 6 aulas
-
-    console.log('🎯 [LESSON-AI] Análise personalizada concluída com sucesso');
-
-    return new Response(JSON.stringify({ 
-      lessons: recommendedLessons,
+    // Enriquecer com dados reais das soluções e aulas
+    const enrichedTrail = {
+      ...personalizedTrail,
+      solutions_guide: {
+        quick_wins: await enrichSolutions(personalizedTrail.solutions_guide?.quick_wins || [], availableSolutions),
+        growth_solutions: await enrichSolutions(personalizedTrail.solutions_guide?.growth_solutions || [], availableSolutions),
+        optimization_solutions: await enrichSolutions(personalizedTrail.solutions_guide?.optimization_solutions || [], availableSolutions)
+      },
+      lessons_guide: {
+        ...personalizedTrail.lessons_guide,
+        learning_path: await enrichLessons(personalizedTrail.lessons_guide?.learning_path || [], availableLessons)
+      },
       user_profile: userProfile,
-      analysis_summary: analysisSummary,
-      analysis_type: 'ai_powered',
-      user_context: userContext,
-      total_lessons_analyzed: formattedLessons.length
-    }), {
+      generation_timestamp: new Date().toISOString(),
+      analysis_type: 'ai_powered_personalized'
+    };
+
+    console.log('🎯 [TRAIL-AI] Trilha personalizada gerada com sucesso');
+
+    return new Response(JSON.stringify(enrichedTrail), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
-    console.error('❌ [LESSON-AI] Erro:', error);
+    console.error('❌ [TRAIL-AI] Erro:', error);
     return new Response(JSON.stringify({ 
       error: 'Erro interno do servidor',
       details: error.message 
@@ -324,3 +353,25 @@ RESPONDA APENAS EM JSON:
     });
   }
 });
+
+// Função auxiliar para enriquecer soluções com dados reais
+async function enrichSolutions(aiSolutions: any[], availableSolutions: any[]) {
+  return aiSolutions.map(aiSol => {
+    const realSolution = availableSolutions.find(sol => sol.id === aiSol.solution_id);
+    return {
+      ...aiSol,
+      solution_data: realSolution || null
+    };
+  }).filter(sol => sol.solution_data); // Remove soluções não encontradas
+}
+
+// Função auxiliar para enriquecer aulas com dados reais
+async function enrichLessons(aiLessons: any[], availableLessons: any[]) {
+  return aiLessons.map(aiLesson => {
+    const realLesson = availableLessons.find(lesson => lesson.id === aiLesson.lesson_id);
+    return {
+      ...aiLesson,
+      lesson_data: realLesson || null
+    };
+  }).filter(lesson => lesson.lesson_data); // Remove aulas não encontradas
+}
