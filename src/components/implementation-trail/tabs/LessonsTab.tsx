@@ -1,22 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { 
   ArrowRight, 
   Clock, 
   Star, 
   GraduationCap,
   Brain,
-  ExternalLink,
-  CheckCircle2,
   BookOpen,
   Target,
   Play
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useNavigate } from 'react-router-dom';
+import { useLessonTagsForLesson } from '@/hooks/useLessonTags';
 
 interface Lesson {
   id: string;
@@ -176,19 +176,19 @@ export const LessonsTab = ({ trail }: LessonsTabProps) => {
 
   const getPriorityLabel = (priority: number) => {
     switch (priority) {
-      case 1: return { label: 'Fundamentos', color: 'bg-operational', textColor: 'text-white' };
-      case 2: return { label: 'Intermediário', color: 'bg-viverblue', textColor: 'text-white' };
-      case 3: return { label: 'Avançado', color: 'bg-revenue', textColor: 'text-white' };
+      case 1: return { label: 'Fundamentos', color: 'bg-green-500', textColor: 'text-white' };
+      case 2: return { label: 'Intermediário', color: 'bg-blue-500', textColor: 'text-white' };
+      case 3: return { label: 'Avançado', color: 'bg-purple-500', textColor: 'text-white' };
       default: return { label: 'Recomendada', color: 'bg-muted', textColor: 'text-muted-foreground' };
     }
   };
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty?.toLowerCase()) {
-      case 'iniciante': return 'bg-green-500/10 text-green-500 border-green-500/20';
-      case 'intermediário': return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
-      case 'avançado': return 'bg-red-500/10 text-red-500 border-red-500/20';
-      default: return 'bg-muted/50 text-muted-foreground border-muted/20';
+      case 'iniciante': return 'bg-green-100 text-green-700 border-green-200';
+      case 'intermediário': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+      case 'avançado': return 'bg-red-100 text-red-700 border-red-200';
+      default: return 'bg-gray-100 text-gray-700 border-gray-200';
     }
   };
 
@@ -243,8 +243,8 @@ export const LessonsTab = ({ trail }: LessonsTabProps) => {
             {/* Priority indicator */}
             <div className="absolute top-1 right-1">
               <div className={`w-1.5 h-1.5 rounded-full ${
-                item.priority === 1 ? 'bg-red-500' :
-                item.priority === 2 ? 'bg-yellow-500' : 'bg-green-500'
+                item.priority === 1 ? 'bg-green-500' :
+                item.priority === 2 ? 'bg-blue-500' : 'bg-purple-500'
               }`}></div>
             </div>
             
@@ -324,8 +324,8 @@ export const LessonsTab = ({ trail }: LessonsTabProps) => {
   if (recommendedLessons.length === 0) {
     return (
       <div className="text-center py-12 space-y-4">
-        <div className="w-16 h-16 bg-gradient-to-br from-operational/20 to-operational/10 rounded-full flex items-center justify-center mx-auto">
-          <BookOpen className="w-8 h-8 text-operational" />
+        <div className="w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/10 rounded-full flex items-center justify-center mx-auto">
+          <BookOpen className="w-8 h-8 text-primary" />
         </div>
         <div className="space-y-2">
           <h3 className="text-lg font-semibold">Aulas em preparação</h3>
@@ -345,7 +345,7 @@ export const LessonsTab = ({ trail }: LessonsTabProps) => {
             <div className="h-6 bg-muted rounded w-1/4 animate-pulse"></div>
             <div className="grid gap-4">
               {[1, 2].map((item) => (
-                <Card key={item} className="aurora-glass border-muted/30 animate-pulse">
+                <Card key={item} className="border-muted/30 animate-pulse">
                   <CardContent className="p-6">
                     <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
                     <div className="h-3 bg-muted rounded w-1/2"></div>
@@ -370,138 +370,104 @@ export const LessonsTab = ({ trail }: LessonsTabProps) => {
 
   return (
     <div className="space-y-8">
-      {/* Aurora Hero Header */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-operational/10 via-viverblue/5 to-revenue/10 border border-operational/20 p-8">
-        {/* Animated background */}
-        <div className="absolute inset-0 bg-gradient-to-r from-operational/5 via-transparent to-viverblue/5 opacity-50" />
-        <div className="absolute top-0 right-0 w-64 h-64 bg-operational/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-viverblue/10 rounded-full blur-2xl animate-pulse animation-delay-2000" />
-        
-        <div className="relative z-10 text-center">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="p-3 bg-operational/20 rounded-xl">
-              <GraduationCap className="h-8 w-8 text-operational" />
-            </div>
-            <h2 className="text-3xl font-bold bg-gradient-to-r from-operational via-viverblue to-revenue bg-clip-text text-transparent">
-              Aulas Recomendadas por IA
-            </h2>
+      {/* Header */}
+      <div className="text-center space-y-4">
+        <div className="flex items-center justify-center gap-3">
+          <div className="p-2 bg-primary/10 rounded-lg">
+            <GraduationCap className="h-6 w-6 text-primary" />
           </div>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Jornada de aprendizado personalizada para acelerar sua implementação de IA
-          </p>
+          <h2 className="text-2xl font-bold text-foreground">
+            Aulas Recomendadas por IA
+          </h2>
         </div>
+        <p className="text-muted-foreground max-w-2xl mx-auto">
+          Jornada de aprendizado personalizada para acelerar sua implementação de IA
+        </p>
       </div>
 
-      {/* Render lessons grouped by priority */}
+      {/* Lessons by Priority */}
       {Object.entries(groupedLessons)
         .sort(([a], [b]) => Number(a) - Number(b))
         .map(([priority, priorityLessons]) => {
           const priorityInfo = getPriorityLabel(Number(priority));
-          const priorityColors = {
-            1: { border: 'border-operational/20', bg: 'bg-operational', shadow: 'shadow-operational/25' },
-            2: { border: 'border-viverblue/20', bg: 'bg-viverblue', shadow: 'shadow-viverblue/25' },
-            3: { border: 'border-revenue/20', bg: 'bg-revenue', shadow: 'shadow-revenue/25' }
-          };
-          const colors = priorityColors[Number(priority) as keyof typeof priorityColors] || priorityColors[1];
+          const priorityCount = priorityLessons.length;
           
           return (
-            <section key={priority} className="space-y-6">
-              <div className={`flex items-center gap-4 pb-4 border-b ${colors.border}`}>
-                <div className="relative">
-                  <div className={`w-8 h-8 bg-gradient-to-br ${colors.bg} to-${colors.bg}/70 rounded-full flex items-center justify-center shadow-lg ${colors.shadow}`}>
-                    <span className="text-white font-bold text-sm">{priority}</span>
+            <section key={priority} className="space-y-4">
+              {/* Priority Header */}
+              <div className="flex items-center justify-between p-4 bg-card border rounded-lg shadow-sm">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-sm">
+                    {priority}
                   </div>
-                  <div className={`absolute inset-0 ${colors.bg} rounded-full animate-ping opacity-20`} />
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground">
+                      {priorityInfo.label}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      {priority === '1' && 'Base essencial para sua jornada'}
+                      {priority === '2' && 'Expandir conhecimento e habilidades'}
+                      {priority === '3' && 'Conceitos avançados e especializados'}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-2xl font-bold text-foreground">{priorityInfo.label}</h3>
-                  <p className="text-muted-foreground">
-                    {priority === '1' ? 'Base essencial para sua jornada' : 
-                     priority === '2' ? 'Expandir conhecimento e habilidades' : 
-                     'Expertise avançada em IA'}
-                  </p>
-                </div>
-                <Badge className={`${priorityInfo.color} text-white px-4 py-2 text-sm`}>
-                  {priorityLessons.length} aulas
+                <Badge variant="secondary" className="bg-primary/10 text-primary">
+                  {priorityCount} {priorityCount === 1 ? 'aula' : 'aulas'}
                 </Badge>
               </div>
-               <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                 {priorityLessons
-                   .sort((a, b) => a.priority - b.priority)
-                   .map((item, index) => (
-                     <div
-                       key={`p${priority}-${index}`}
-                       className="animate-fade-in"
-                       style={{ animationDelay: `${index * 150}ms` }}
-                     >
-                       <LessonCard item={item} />
-                     </div>
-                   ))}
-               </div>
+
+              {/* Lessons List */}
+              <div className="space-y-3">
+                {priorityLessons.map((item, index) => (
+                  <div
+                    key={`${item.lessonId}-${index}`}
+                    className="animate-fade-in"
+                    style={{ animationDelay: `${index * 100}ms` }}
+                  >
+                    <LessonCard item={item} />
+                  </div>
+                ))}
+              </div>
             </section>
           );
         })}
 
-      {/* Aurora Learning Guide */}
-      <Card className="relative overflow-hidden border border-operational/30 bg-gradient-to-br from-operational/5 via-viverblue/5 to-revenue/5 backdrop-blur-sm">
-        {/* Animated background patterns */}
-        <div className="absolute inset-0 bg-gradient-to-r from-operational/10 via-transparent to-viverblue/10 opacity-30" />
-        <div className="absolute top-0 right-0 w-32 h-32 bg-operational/20 rounded-full blur-2xl animate-pulse" />
-        <div className="absolute bottom-0 left-0 w-24 h-24 bg-viverblue/20 rounded-full blur-xl animate-pulse animation-delay-2000" />
-        
-        <CardHeader className="relative z-10">
+      {/* Summary Card */}
+      <div className="bg-gradient-to-r from-primary/5 to-secondary/5 border border-primary/20 rounded-lg p-6">
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <h3 className="text-lg font-semibold text-foreground">
+              Sua Trilha de Aprendizado
+            </h3>
+            <p className="text-muted-foreground">
+              {recommendedLessons.length} aulas selecionadas especialmente para você
+            </p>
+          </div>
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-operational/20 rounded-xl">
-              <CheckCircle2 className="w-6 h-6 text-operational" />
+            <div className="text-right">
+              <div className="text-2xl font-bold text-primary">
+                {recommendedLessons.reduce((total, lesson) => {
+                  const lessonData = lessons[lesson.lessonId];
+                  return total + (lessonData?.estimated_time_minutes || 30);
+                }, 0)}min
+              </div>
+              <div className="text-sm text-muted-foreground">tempo estimado</div>
             </div>
-            <div>
-              <CardTitle className="text-xl text-foreground">Guia de Aprendizado Inteligente</CardTitle>
-              <p className="text-muted-foreground mt-1">Estratégia de estudos recomendada pela IA</p>
+            <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+              <Target className="h-6 w-6 text-primary" />
             </div>
           </div>
-        </CardHeader>
+        </div>
         
-        <CardContent className="relative z-10 space-y-4">
-          <div className="grid gap-4">
-            <div className="flex items-start gap-4 p-4 rounded-xl bg-gradient-to-r from-operational/5 to-transparent border border-operational/10">
-              <div className="w-8 h-8 bg-operational/20 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-operational font-bold text-sm">1</span>
-              </div>
-              <div>
-                <h4 className="font-semibold text-foreground mb-1">Sequência Progressiva</h4>
-                <p className="text-sm text-muted-foreground">
-                  Siga a ordem recomendada das aulas para construir conhecimento sólido e evitar lacunas de aprendizado.
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex items-start gap-4 p-4 rounded-xl bg-gradient-to-r from-viverblue/5 to-transparent border border-viverblue/10">
-              <div className="w-8 h-8 bg-viverblue/20 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-viverblue font-bold text-sm">2</span>
-              </div>
-              <div>
-                <h4 className="font-semibold text-foreground mb-1">Prática Imediata</h4>
-                <p className="text-sm text-muted-foreground">
-                  Aplique os conceitos aprendidos imediatamente nas soluções recomendadas para fixar o conhecimento.
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex items-start gap-4 p-4 rounded-xl bg-gradient-to-r from-revenue/5 to-transparent border border-revenue/10">
-              <div className="w-8 h-8 bg-revenue/20 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-revenue font-bold text-sm">3</span>
-              </div>
-              <div>
-                <h4 className="font-semibold text-foreground mb-1">Conexão Estratégica</h4>
-                <p className="text-sm text-muted-foreground">
-                  Cada aula foi selecionada para complementar suas soluções prioritárias e acelerar a implementação.
-                </p>
-              </div>
-            </div>
+        {/* Progress Bar */}
+        <div className="mt-4">
+          <div className="flex items-center justify-between text-sm text-muted-foreground mb-2">
+            <span>Progresso da trilha</span>
+            <span>0 de {recommendedLessons.length} aulas concluídas</span>
           </div>
-        </CardContent>
-      </Card>
-
+          <Progress value={0} className="h-2" />
+        </div>
+      </div>
     </div>
   );
 };
