@@ -26,8 +26,8 @@ import Networking from '@/pages/member/Networking';
 import LearningPage from '@/pages/member/learning/LearningPage';
 import CourseDetails from '@/pages/member/learning/CourseDetails';
 import LessonView from '@/pages/member/learning/LessonView';
+import LessonRedirect from '@/pages/member/learning/LessonRedirect';
 import CertificatesPage from '@/pages/member/learning/CertificatesPage';
-import MemberCertificates from '@/pages/member/learning/MemberCertificates';
 
 // Member Community pages - CORRIGIDA IMPORTAÇÃO
 import CommunityHome from '@/pages/CommunityHome'; // Nova página unificada
@@ -78,6 +78,7 @@ export const memberRoutes: RouteObject[] = [
   // Learning/LMS Routes
   createProtectedRoute("/learning", LearningPage),
   createProtectedRoute("/learning/course/:id", CourseDetails),
+  createProtectedRoute("/learning/lesson/:lessonId", LessonRedirect),
   createProtectedRoute("/learning/course/:courseId/lesson/:lessonId", LessonView),
   createProtectedRoute("/learning/certificates", CertificatesPage),
   
