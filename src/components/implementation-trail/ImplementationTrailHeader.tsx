@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Brain, TrendingUp, Target, Star, Award, Zap } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Brain, TrendingUp, Target, Star, Award, Zap, Sparkles } from 'lucide-react';
 import { useAuth } from '@/contexts/auth';
 interface ImplementationTrailHeaderProps {
   onRegenerate?: () => void;
@@ -59,6 +60,16 @@ export const ImplementationTrailHeader = ({
                     100% Personalizada
                   </span>
                 </div>
+                <Button 
+                  onClick={onRegenerate}
+                  disabled={isRegenerating}
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 border-primary/20 text-primary hover:bg-primary/10"
+                >
+                  <Sparkles className={`h-4 w-4 ${isRegenerating ? 'animate-spin' : ''}`} />
+                  {isRegenerating ? 'Gerando...' : 'Gerar uma nova trilha com IA'}
+                </Button>
               </div>
             </div>
           </div>
