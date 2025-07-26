@@ -338,12 +338,30 @@ serve(async (req) => {
     // 7. Gerar mensagem de IA personalizada
     const aiMessage = await generateAIInsights(userProfile, priority1);
 
-    // 8. Criar trilha personalizada
+    // 8. Gerar aulas recomendadas usando a função recommend-lessons-ai
+    let recommendedLessons = [];
+    try {
+      console.log('🎓 Gerando aulas recomendadas...');
+      const lessonsResponse = await supabase.functions.invoke('recommend-lessons-ai', {
+        body: { userId }
+      });
+      
+      if (lessonsResponse.data && lessonsResponse.data.success) {
+        recommendedLessons = lessonsResponse.data.recommendations || [];
+        console.log('✅ Aulas recomendadas geradas:', recommendedLessons.length);
+      } else {
+        console.log('⚠️ Erro ao gerar aulas recomendadas:', lessonsResponse.error);
+      }
+    } catch (error) {
+      console.log('⚠️ Erro na chamada de recommend-lessons-ai:', error);
+    }
+
+    // 9. Criar trilha personalizada
     const trail = {
       priority1,
       priority2,
       priority3,
-      recommended_lessons: [], // TODO: Implementar recomendação de aulas
+      recommended_lessons: recommendedLessons,
       ai_message: aiMessage,
       generated_at: new Date().toISOString(),
       personalization_score: Math.round(sortedSolutions.slice(0, 3).reduce((acc, s) => acc + s.aiScore, 0) / 3)
