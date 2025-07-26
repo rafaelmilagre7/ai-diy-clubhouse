@@ -265,6 +265,7 @@ const OnboardingPage: React.FC = () => {
               const success = await completeOnboarding(data.personalization);
               if (success) {
                 console.log('[ONBOARDING_PAGE] Onboarding finalizado com sucesso - redirecionando');
+                window.location.href = '/dashboard';
               }
             }}
           />
