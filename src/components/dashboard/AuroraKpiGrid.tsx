@@ -93,10 +93,10 @@ export const AuroraKpiGrid = memo(({
       value: inProgress,
       percentage: stats.progressRate,
       icon: Target,
-      gradient: 'from-operational/10 via-operational-light/5 to-operational-lighter/10',
-      iconColor: 'text-operational',
-      accentColor: 'border-operational/30',
-      glowColor: 'group-hover:shadow-operational/20',
+      gradient: 'from-strategy-light/10 via-strategy/5 to-strategy-lighter/10',
+      iconColor: 'text-strategy-light',
+      accentColor: 'border-strategy-light/30',
+      glowColor: 'group-hover:shadow-strategy-light/20',
       description: 'Implementações em andamento'
     },
     {
@@ -105,7 +105,7 @@ export const AuroraKpiGrid = memo(({
       value: total,
       percentage: 100,
       icon: TrendingUp,
-      gradient: 'from-strategy-light/10 via-strategy/5 to-operational/10',
+      gradient: 'from-strategy-light/10 via-strategy/5 to-strategy-lighter/10',
       iconColor: 'text-strategy-light',
       accentColor: 'border-strategy-light/30',
       glowColor: 'group-hover:shadow-strategy-light/20',
@@ -180,7 +180,7 @@ export const AuroraKpiGrid = memo(({
                 
                 {/* Ícone especial para total */}
                 {item.id === 'total' && (
-                  <div className="flex-shrink-0 p-2 rounded-full bg-gradient-to-r from-strategy/20 to-operational/20 backdrop-blur-sm">
+                  <div className="flex-shrink-0 p-2 rounded-full bg-gradient-to-r from-strategy/20 to-strategy-light/20 backdrop-blur-sm">
                     <TrendingUp className="h-6 w-6 text-strategy-light" />
                   </div>
                 )}
@@ -194,8 +194,8 @@ export const AuroraKpiGrid = memo(({
                    <div 
                     className={`h-full bg-gradient-to-r ${
                       item.id === 'completed' ? 'from-strategy to-strategy-light' :
-                      item.id === 'progress' ? 'from-operational to-operational-light' :
-                      'from-strategy-light to-operational'
+                      item.id === 'progress' ? 'from-strategy-light to-strategy-lighter' :
+                      'from-strategy-light to-strategy'
                     } rounded-full transition-all duration-1000 ease-out aurora-shimmer`}
                     style={{ width: `${item.id === 'total' ? 100 : item.percentage}%` }}
                   />
