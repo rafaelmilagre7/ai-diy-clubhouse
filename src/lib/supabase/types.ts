@@ -217,6 +217,7 @@ export interface UserProfile {
   user_roles?: UserRoleData | null; // Dados da role via join
   onboarding_completed?: boolean | null; // Status do onboarding
   onboarding_completed_at?: string | null; // Data de conclusão
+  status?: string | null; // Status do usuário: 'active' | 'inactive'
   created_at: string;
 }
 

@@ -1,58 +1,79 @@
-
 import React, { useState } from "react";
-import { UserProfile, getUserRoleName } from "@/lib/supabase";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MoreHorizontal, Edit, Trash2, Key, RotateCcw } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
   DropdownMenuTrigger,
+  DropdownMenuSeparator 
 } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { 
+  MoreHorizontal, 
+  UserCog, 
+  Key, 
+  RotateCcw, 
+  Trash2, 
+  UserX,
+  UserCheck 
+} from "lucide-react";
+import { UserProfile, getUserRoleName } from "@/lib/supabase";
+import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { UserResetDialog } from "./UserResetDialog";
+import { ToggleUserStatusDialog } from "./ToggleUserStatusDialog";
 
 interface UsersTableProps {
   users: UserProfile[];
   loading: boolean;
-  canEditRoles: boolean;
-  canDeleteUsers: boolean;
-  canResetPasswords: boolean;
   onEditRole: (user: UserProfile) => void;
   onDeleteUser: (user: UserProfile) => void;
   onResetPassword: (user: UserProfile) => void;
   onResetUser: (user: UserProfile) => void;
+  onToggleStatus: (user: UserProfile) => void;
   onRefresh: () => void;
+  canEditRoles: boolean;
+  canDeleteUsers: boolean;
+  canResetPasswords: boolean;
+  canResetUsers: boolean;
+  canToggleStatus: boolean;
 }
 
 export const UsersTable: React.FC<UsersTableProps> = ({
   users,
   loading,
-  canEditRoles,
-  canDeleteUsers,
-  canResetPasswords,
   onEditRole,
   onDeleteUser,
   onResetPassword,
   onResetUser,
+  onToggleStatus,
   onRefresh,
+  canEditRoles,
+  canDeleteUsers,
+  canResetPasswords,
+  canResetUsers,
+  canToggleStatus
 }) => {
-  const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [toggleStatusDialogOpen, setToggleStatusDialogOpen] = useState(false);
 
   const handleResetUser = (user: UserProfile) => {
     setSelectedUser(user);
     setResetDialogOpen(true);
+  };
+
+  const handleToggleStatus = (user: UserProfile) => {
+    setSelectedUser(user);
+    setToggleStatusDialogOpen(true);
   };
 
   const handleResetSuccess = () => {
@@ -62,7 +83,7 @@ export const UsersTable: React.FC<UsersTableProps> = ({
   if (loading) {
     return (
       <div className="text-center py-8">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-viverblue"></div>
+        <LoadingSpinner className="h-8 w-8 mx-auto" />
         <p className="mt-2 text-muted-foreground">Carregando usuários...</p>
       </div>
     );
@@ -85,6 +106,7 @@ export const UsersTable: React.FC<UsersTableProps> = ({
           <TableBody>
             {users.map((user) => {
               const roleName = getUserRoleName(user);
+              const isActive = (user.status || 'active') === 'active';
               
               return (
                 <TableRow key={user.id}>
@@ -106,7 +128,9 @@ export const UsersTable: React.FC<UsersTableProps> = ({
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline">Ativo</Badge>
+                    <Badge variant={isActive ? 'default' : 'destructive'}>
+                      {isActive ? 'Ativo' : 'Inativo'}
+                    </Badge>
                   </TableCell>
                   <TableCell>
                     {new Date(user.created_at).toLocaleDateString('pt-BR')}
@@ -122,7 +146,7 @@ export const UsersTable: React.FC<UsersTableProps> = ({
                       <DropdownMenuContent align="end">
                         {canEditRoles && (
                           <DropdownMenuItem onClick={() => onEditRole(user)}>
-                            <Edit className="mr-2 h-4 w-4" />
+                            <UserCog className="mr-2 h-4 w-4" />
                             Editar papel
                           </DropdownMenuItem>
                         )}
@@ -132,10 +156,27 @@ export const UsersTable: React.FC<UsersTableProps> = ({
                             Redefinir senha
                           </DropdownMenuItem>
                         )}
-                        <DropdownMenuItem onClick={() => handleResetUser(user)}>
-                          <RotateCcw className="mr-2 h-4 w-4" />
-                          Resetar usuário
-                        </DropdownMenuItem>
+                        {canResetUsers && (
+                          <DropdownMenuItem onClick={() => handleResetUser(user)}>
+                            <RotateCcw className="mr-2 h-4 w-4" />
+                            Resetar usuário
+                          </DropdownMenuItem>
+                        )}
+                        {canToggleStatus && (
+                          <DropdownMenuItem onClick={() => handleToggleStatus(user)}>
+                            {isActive ? (
+                              <>
+                                <UserX className="mr-2 h-4 w-4" />
+                                Desativar usuário
+                              </>
+                            ) : (
+                              <>
+                                <UserCheck className="mr-2 h-4 w-4" />
+                                Reativar usuário
+                              </>
+                            )}
+                          </DropdownMenuItem>
+                        )}
                         {canDeleteUsers && (
                           <>
                             <DropdownMenuSeparator />
@@ -161,6 +202,13 @@ export const UsersTable: React.FC<UsersTableProps> = ({
       <UserResetDialog 
         open={resetDialogOpen}
         onOpenChange={setResetDialogOpen}
+        user={selectedUser}
+        onSuccess={handleResetSuccess}
+      />
+
+      <ToggleUserStatusDialog 
+        open={toggleStatusDialogOpen}
+        onOpenChange={setToggleStatusDialogOpen}
         user={selectedUser}
         onSuccess={handleResetSuccess}
       />

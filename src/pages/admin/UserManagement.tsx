@@ -8,6 +8,7 @@ import { UserProfile } from "@/lib/supabase";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, RefreshCw } from "lucide-react";
 import { DeleteUserDialog } from "@/components/admin/users/DeleteUserDialog";
+import { ToggleUserStatusDialog } from "@/components/admin/users/ToggleUserStatusDialog";
 import { ResetPasswordDialog } from "@/components/admin/users/ResetPasswordDialog";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/auth";
@@ -39,6 +40,7 @@ const UserManagement = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
   const [resetUserDialogOpen, setResetUserDialogOpen] = useState(false);
+  const [toggleStatusDialogOpen, setToggleStatusDialogOpen] = useState(false);
 
   const handleEditRole = (user: UserProfile) => {
     setSelectedUser(user);
@@ -58,6 +60,11 @@ const UserManagement = () => {
   const handleResetUser = (user: UserProfile) => {
     setSelectedUser(user);
     setResetUserDialogOpen(true);
+  };
+
+  const handleToggleStatus = (user: UserProfile) => {
+    setSelectedUser(user);
+    setToggleStatusDialogOpen(true);
   };
 
   const handleRefresh = () => {
@@ -152,9 +159,12 @@ const UserManagement = () => {
           onEditRole={handleEditRole}
           onDeleteUser={handleDeleteUser}
           onResetPassword={handleResetPassword}
-          onResetUser={handleResetUser}
-          onRefresh={handleRefresh}
-        />
+           onResetUser={handleResetUser}
+           onToggleStatus={handleToggleStatus}
+           onRefresh={handleRefresh}
+           canResetUsers={canManageUsers}
+           canToggleStatus={canManageUsers}
+         />
       </div>
       
       {users.length > 0 && !isRefreshing && (
@@ -190,6 +200,15 @@ const UserManagement = () => {
           open={resetPasswordDialogOpen}
           onOpenChange={setResetPasswordDialogOpen}
           user={selectedUser}
+        />
+      )}
+      
+      {canManageUsers && (
+        <ToggleUserStatusDialog 
+          open={toggleStatusDialogOpen}
+          onOpenChange={setToggleStatusDialogOpen}
+          user={selectedUser}
+          onSuccess={fetchUsers}
         />
       )}
 
