@@ -24,7 +24,17 @@ export const useMaterialsState = (solutionId: string | null) => {
       if (error) throw error;
       
       if (data) {
-        const processedMaterials = data.map(item => parseResourceMetadata(item));
+        // Filter out video types and Panda Video content - they belong in the Videos tab
+        const filteredData = data.filter(
+          item => item.type !== 'video' && 
+                  !item.url?.includes('pandavideo') && 
+                  !(item.metadata?.provider === 'panda')
+        );
+        
+        console.log("DEBUG Admin Materials - Raw data:", data);
+        console.log("DEBUG Admin Materials - Filtered data:", filteredData);
+        
+        const processedMaterials = filteredData.map(item => parseResourceMetadata(item));
         setMaterials(processedMaterials);
       }
     } catch (error) {
