@@ -28,6 +28,10 @@ interface DiscordWebhookData {
       value: string;
       inline?: boolean;
     }>;
+    footer?: {
+      text: string;
+      icon_url?: string;
+    };
     timestamp: string;
   }>;
 }
@@ -148,29 +152,82 @@ serve(async (req) => {
     // 2. Criar deal no Pipedrive
     let pipedriveData: PipedriveResponse | null = null;
     const pipedriveToken = Deno.env.get('PIPEDRIVE_API_TOKEN');
+    const pipedriveCompanyDomain = Deno.env.get('PIPEDRIVE_COMPANY_DOMAIN');
     
-    if (pipedriveToken) {
+    if (pipedriveToken && pipedriveCompanyDomain) {
       try {
-        const pipedriveResponse = await fetch('https://api.pipedrive.com/v1/deals', {
+        // Buscar o pipeline "Inside Sales" e stage "Qualificado"
+        const pipelinesResponse = await fetch(`https://${pipedriveCompanyDomain}.pipedrive.com/api/v1/pipelines?api_token=${pipedriveToken}`);
+        const pipelinesData = await pipelinesResponse.json();
+        
+        let pipelineId = null;
+        let stageId = null;
+        
+        if (pipelinesData.success && pipelinesData.data) {
+          // Encontrar pipeline "Inside Sales"
+          const insideSalesPipeline = pipelinesData.data.find((p: any) => 
+            p.name.toLowerCase().includes('inside sales') || 
+            p.name.toLowerCase().includes('inside_sales')
+          );
+          
+          if (insideSalesPipeline) {
+            pipelineId = insideSalesPipeline.id;
+            
+            // Buscar stages do pipeline
+            const stagesResponse = await fetch(`https://${pipedriveCompanyDomain}.pipedrive.com/api/v1/stages?pipeline_id=${pipelineId}&api_token=${pipedriveToken}`);
+            const stagesData = await stagesResponse.json();
+            
+            if (stagesData.success && stagesData.data) {
+              // Encontrar stage "Qualificado"
+              const qualificadoStage = stagesData.data.find((s: any) => 
+                s.name.toLowerCase().includes('qualificado')
+              );
+              
+              if (qualificadoStage) {
+                stageId = qualificadoStage.id;
+              }
+            }
+          }
+        }
+        
+        console.log('Pipedrive IDs encontrados:', { pipelineId, stageId });
+        
+        const pipedriveResponse = await fetch(`https://${pipedriveCompanyDomain}.pipedrive.com/api/v1/deals?api_token=${pipedriveToken}`, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${pipedriveToken}`
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            title: `Implementação: ${requestData.solutionTitle} - ${requestData.userName}`,
-            value: 0, // Valor inicial
+            title: `Projeto | Plataforma do Club | ${requestData.userName}`,
+            value: 0,
             currency: 'BRL',
             status: 'open',
-            visible_to: '3', // Visível para todos
-            notes: `Solicitação de implementação da solução "${requestData.solutionTitle}" (${requestData.solutionCategory}).\n\nContato: ${requestData.userEmail}${requestData.userPhone ? `\nTelefone: ${requestData.userPhone}` : ''}\n\nID da solicitação: ${implementationRequest.id}`,
-            person_id: null, // Será criado separadamente se necessário
-            org_id: null,
-            custom_fields: {
-              solution_category: requestData.solutionCategory,
-              request_id: implementationRequest.id,
-              user_email: requestData.userEmail
-            }
+            visible_to: '3',
+            pipeline_id: pipelineId,
+            stage_id: stageId,
+            notes: `🚀 SOLICITAÇÃO DE IMPLEMENTAÇÃO - PLATAFORMA DO CLUB
+
+📋 DETALHES DO PROJETO:
+• Solução: ${requestData.solutionTitle}
+• Categoria: ${requestData.solutionCategory}
+• Status: Nova solicitação
+
+👤 INFORMAÇÕES DO CLIENTE:
+• Nome: ${requestData.userName}
+• Email: ${requestData.userEmail}${requestData.userPhone ? `
+• Telefone: ${requestData.userPhone}` : ''}
+
+🔗 REFERÊNCIAS:
+• ID da Solicitação: ${implementationRequest.id}
+• Origem: Plataforma do Club
+• Data da Solicitação: ${new Date().toLocaleString('pt-BR')}
+
+⚡ PRÓXIMOS PASSOS:
+1. Entrar em contato com o cliente
+2. Agendar reunião de descoberta
+3. Elaborar proposta personalizada`,
+            person_id: null,
+            org_id: null
           })
         });
 
@@ -207,41 +264,30 @@ serve(async (req) => {
       try {
         const discordData: DiscordWebhookData = {
           embeds: [{
-            title: "🚀 Nova Solicitação de Implementação",
-            description: `Solicitação para implementar a solução **${requestData.solutionTitle}**`,
-            color: 0x0ABAB5, // Cor viverblue
+            title: "🎯 NOVA SOLICITAÇÃO - PLATAFORMA DO CLUB",
+            description: `**${requestData.userName}** solicitou implementação da solução **${requestData.solutionTitle}**`,
+            color: 0x10B981, // Verde vibrante
             fields: [
               {
-                name: "👤 Cliente",
-                value: requestData.userName,
+                name: "👤 CLIENTE",
+                value: `**${requestData.userName}**\n📧 ${requestData.userEmail}${requestData.userPhone ? `\n📱 ${requestData.userPhone}` : ''}`,
                 inline: true
               },
               {
-                name: "📧 Email",
-                value: requestData.userEmail,
+                name: "🚀 PROJETO",
+                value: `**${requestData.solutionTitle}**\n📂 ${requestData.solutionCategory}`,
                 inline: true
               },
               {
-                name: "📱 Telefone",
-                value: requestData.userPhone || "Não informado",
-                inline: true
-              },
-              {
-                name: "🎯 Solução",
-                value: requestData.solutionTitle,
-                inline: true
-              },
-              {
-                name: "📂 Categoria",
-                value: requestData.solutionCategory,
-                inline: true
-              },
-              {
-                name: "🆔 ID da Solicitação",
-                value: implementationRequest.id,
-                inline: true
+                name: "⚡ STATUS",
+                value: `🆔 \`${implementationRequest.id}\`\n⏰ ${new Date().toLocaleString('pt-BR')}\n📍 Pipeline: Inside Sales → Qualificado`,
+                inline: false
               }
             ],
+            footer: {
+              text: "Plataforma do Club - Sistema de Implementação",
+              icon_url: "https://viverdeia.ai/favicon.ico"
+            },
             timestamp: new Date().toISOString()
           }]
         };
