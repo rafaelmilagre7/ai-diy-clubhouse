@@ -20,9 +20,63 @@ interface ValidationResult {
   timestamp: string;
 }
 
-const validateCredentials = (): ValidationResult => {
+const validateCredentials = async (): Promise<ValidationResult> => {
   const credentials: CredentialCheck[] = [];
   const recommendations: string[] = [];
+
+  // Pipedrive API Token
+  const pipedriveToken = Deno.env.get('PIPEDRIVE_API_TOKEN');
+  let pipedriveStatus: 'ok' | 'missing' | 'invalid' = 'missing';
+  let pipedriveMessage = '❌ Token não configurado';
+  
+  if (pipedriveToken) {
+    try {
+      const response = await fetch('https://api.pipedrive.com/v1/users/me', {
+        headers: { 'Authorization': `Bearer ${pipedriveToken}` }
+      });
+      if (response.ok) {
+        pipedriveStatus = 'ok';
+        pipedriveMessage = '✅ Token funcionando corretamente';
+      } else {
+        pipedriveStatus = 'invalid';
+        pipedriveMessage = '❌ Token inválido ou sem permissões';
+      }
+    } catch (error) {
+      pipedriveStatus = 'invalid';
+      pipedriveMessage = '❌ Erro ao verificar token';
+    }
+  }
+  
+  credentials.push({
+    name: 'PIPEDRIVE_API_TOKEN',
+    configured: !!pipedriveToken,
+    length: pipedriveToken?.length,
+    status: pipedriveStatus,
+    message: pipedriveMessage
+  });
+
+  // Discord Webhook
+  const discordWebhook = Deno.env.get('DISCORD_WEBHOOK_URL');
+  let discordStatus: 'ok' | 'missing' | 'invalid' = 'missing';
+  let discordMessage = '❌ Webhook URL não configurado';
+  
+  if (discordWebhook) {
+    if (discordWebhook.includes('discord.com/api/webhooks/')) {
+      discordStatus = 'ok';
+      discordMessage = '✅ Webhook URL configurado corretamente';
+    } else {
+      discordStatus = 'invalid';
+      discordMessage = '❌ URL não parece ser um webhook Discord válido';
+    }
+  }
+  
+  credentials.push({
+    name: 'DISCORD_WEBHOOK_URL',
+    configured: !!discordWebhook,
+    length: discordWebhook?.length,
+    status: discordStatus,
+    message: discordMessage
+  });
 
   // WhatsApp Business
   const whatsappToken = Deno.env.get('WHATSAPP_BUSINESS_TOKEN');
@@ -133,7 +187,7 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     console.log('🔍 Validando credenciais dos Edge Function Secrets...');
     
-    const result = validateCredentials();
+    const result = await validateCredentials();
     
     console.log('📊 Resultado da validação:', {
       status: result.overall_status,

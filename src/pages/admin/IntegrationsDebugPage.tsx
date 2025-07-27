@@ -127,13 +127,28 @@ const IntegrationsDebugPage = () => {
 
   const checkSecretsStatus = async () => {
     try {
-      // Chamar edge function que verifica secrets
-      const { data } = await supabase.functions.invoke('debug-pipedrive-mapping');
+      setIsLoading(true);
       
-      if (data?.success) {
+      // Chamar edge function que verifica secrets
+      const { data, error } = await supabase.functions.invoke('validate-credentials');
+      
+      if (error) {
+        console.error('Erro ao verificar secrets:', error);
         setSecretsStatus({
-          pipedrive: !!data.account_info,
-          discord: true // Se chegou até aqui, pelo menos o Pipedrive está OK
+          pipedrive: false,
+          discord: false
+        });
+        return;
+      }
+
+      // Verificar se temos dados válidos da validação
+      if (data?.credentials) {
+        const pipedriveCredential = data.credentials.find((c: any) => c.name === 'PIPEDRIVE_API_TOKEN');
+        const discordCredential = data.credentials.find((c: any) => c.name === 'DISCORD_WEBHOOK_URL');
+        
+        setSecretsStatus({
+          pipedrive: pipedriveCredential?.status === 'ok',
+          discord: discordCredential?.status === 'ok'
         });
       } else {
         setSecretsStatus({
@@ -142,10 +157,13 @@ const IntegrationsDebugPage = () => {
         });
       }
     } catch (error) {
+      console.error('Erro na verificação:', error);
       setSecretsStatus({
         pipedrive: false,
         discord: false
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
