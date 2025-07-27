@@ -168,6 +168,7 @@ export const SolutionSidebar = ({
         onClose={() => setShowContractModal(false)}
         solutionTitle={solution.title}
         solutionCategory={solution.category}
+        solutionId={solution.id}
       />
     </div>
   );

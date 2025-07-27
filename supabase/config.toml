@@ -97,6 +97,9 @@ verify_jwt = true
 [functions.validate-credentials]
 verify_jwt = true
 
+[functions.process-implementation-request]
+verify_jwt = true
+
 # 🧪 TESTE/DEBUG - Apenas para desenvolvimento (remover em produção)
 [functions.classify-lessons-test]
 verify_jwt = false

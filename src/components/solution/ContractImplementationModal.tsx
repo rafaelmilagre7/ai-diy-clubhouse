@@ -5,21 +5,26 @@ import { Input } from "@/components/ui/input";
 import { UserCheck, Mail, Phone, Briefcase, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/auth";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ContractImplementationModalProps {
   isOpen: boolean;
   onClose: () => void;
   solutionTitle: string;
   solutionCategory: string;
+  solutionId?: string;
 }
 
 export const ContractImplementationModal = ({ 
   isOpen, 
   onClose, 
   solutionTitle, 
-  solutionCategory 
+  solutionCategory,
+  solutionId 
 }: ContractImplementationModalProps) => {
   const { profile } = useAuth();
+  const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [userEmail, setUserEmail] = useState(profile?.email || "");
   const [userPhone, setUserPhone] = useState((profile as any)?.whatsapp_number || "");
@@ -28,23 +33,80 @@ export const ContractImplementationModal = ({
     setIsSubmitting(true);
     
     try {
-      // Aqui iremos implementar a integração com Pipedrive e Discord
-      console.log("Solicitação de contratação enviada:", {
-        userName: profile?.name,
-        userEmail,
-        userPhone,
+      // Validação básica
+      if (!userEmail || !profile?.name) {
+        toast({
+          title: "Erro",
+          description: "Nome e email são obrigatórios",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!solutionId) {
+        toast({
+          title: "Erro", 
+          description: "ID da solução não encontrado",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Preparar dados para envio
+      const requestData = {
+        solutionId,
         solutionTitle,
-        solutionCategory
+        solutionCategory,
+        userName: profile.name,
+        userEmail,
+        userPhone: userPhone || ""
+      };
+
+      console.log("Enviando solicitação:", requestData);
+
+      // Chamar edge function
+      const { data, error } = await supabase.functions.invoke('process-implementation-request', {
+        body: requestData
       });
+
+      if (error) {
+        console.error("Edge function error:", error);
+        toast({
+          title: "Erro ao processar solicitação",
+          description: error.message || "Tente novamente em alguns minutos",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (data?.success) {
+        toast({
+          title: "Solicitação enviada com sucesso! 🎉",
+          description: data.message || "Nossa equipe entrará em contato em breve",
+        });
+        
+        console.log("Solicitação processada:", {
+          requestId: data.requestId,
+          pipedrive: data.pipedrive,
+          discord: data.discord
+        });
+        
+        onClose();
+      } else {
+        toast({
+          title: "Erro",
+          description: data?.error || "Erro inesperado ao processar solicitação",
+          variant: "destructive",
+        });
+      }
       
-      // TODO: Implementar chamada para edge function
-      
-      // Simular delay por enquanto
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      onClose();
     } catch (error) {
       console.error("Erro ao enviar solicitação:", error);
+      toast({
+        title: "Erro de conexão",
+        description: "Verifique sua conexão e tente novamente",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }
