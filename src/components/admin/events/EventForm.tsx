@@ -143,25 +143,131 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
     if (!event) return null;
 
     try {
+      const { start_time, end_time, ...otherData } = eventData;
+      
       if (choice === 'all') {
         // Atualizar todos os eventos da série (mesmo parent_event_id ou é o pai)
         const parentId = event.parent_event_id || event.id;
         
-        return await supabase
-          .from("events")
-          .update(eventData)
-          .or(`id.eq.${parentId},parent_event_id.eq.${parentId}`)
-          .select();
+        // Se alterou horário, aplicar diferença de tempo mantendo as datas
+        if (start_time && end_time) {
+          const originalStart = new Date(event.start_time);
+          const newStart = new Date(start_time);
+          const originalEnd = new Date(event.end_time);
+          const newEnd = new Date(end_time);
+          
+          // Calcular diferença apenas de horário (não data)
+          const timeDiff = (newStart.getHours() * 60 + newStart.getMinutes()) - 
+                          (originalStart.getHours() * 60 + originalStart.getMinutes());
+          const endTimeDiff = (newEnd.getHours() * 60 + newEnd.getMinutes()) - 
+                            (originalEnd.getHours() * 60 + originalEnd.getMinutes());
+          
+          // Buscar todos os eventos da série
+          const { data: allEvents } = await supabase
+            .from("events")
+            .select('id, start_time, end_time')
+            .or(`id.eq.${parentId},parent_event_id.eq.${parentId}`);
+          
+          if (allEvents) {
+            for (const evt of allEvents) {
+              const eventStart = new Date(evt.start_time);
+              const eventEnd = new Date(evt.end_time);
+              
+              // Manter a data original, alterar apenas o horário
+              eventStart.setHours(
+                Math.floor((eventStart.getHours() * 60 + eventStart.getMinutes() + timeDiff) / 60),
+                (eventStart.getHours() * 60 + eventStart.getMinutes() + timeDiff) % 60,
+                newStart.getSeconds(),
+                newStart.getMilliseconds()
+              );
+              
+              eventEnd.setHours(
+                Math.floor((eventEnd.getHours() * 60 + eventEnd.getMinutes() + endTimeDiff) / 60),
+                (eventEnd.getHours() * 60 + eventEnd.getMinutes() + endTimeDiff) % 60,
+                newEnd.getSeconds(),
+                newEnd.getMilliseconds()
+              );
+              
+              await supabase
+                .from("events")
+                .update({
+                  ...otherData,
+                  start_time: eventStart.toISOString(),
+                  end_time: eventEnd.toISOString()
+                })
+                .eq('id', evt.id);
+            }
+            
+            return { data: allEvents };
+          }
+        } else {
+          // Se não alterou horário, só atualizar outros campos
+          return await supabase
+            .from("events")
+            .update(otherData)
+            .or(`id.eq.${parentId},parent_event_id.eq.${parentId}`)
+            .select();
+        }
       } else if (choice === 'future') {
         // Atualizar este evento e todos os futuros da série
         const parentId = event.parent_event_id || event.id;
         
-        return await supabase
-          .from("events")
-          .update(eventData)
-          .or(`id.eq.${parentId},parent_event_id.eq.${parentId}`)
-          .gte('start_time', event.start_time)
-          .select();
+        if (start_time && end_time) {
+          const originalStart = new Date(event.start_time);
+          const newStart = new Date(start_time);
+          const originalEnd = new Date(event.end_time);
+          const newEnd = new Date(end_time);
+          
+          const timeDiff = (newStart.getHours() * 60 + newStart.getMinutes()) - 
+                          (originalStart.getHours() * 60 + originalStart.getMinutes());
+          const endTimeDiff = (newEnd.getHours() * 60 + newEnd.getMinutes()) - 
+                            (originalEnd.getHours() * 60 + originalEnd.getMinutes());
+          
+          const { data: futureEvents } = await supabase
+            .from("events")
+            .select('id, start_time, end_time')
+            .or(`id.eq.${parentId},parent_event_id.eq.${parentId}`)
+            .gte('start_time', event.start_time);
+          
+          if (futureEvents) {
+            for (const evt of futureEvents) {
+              const eventStart = new Date(evt.start_time);
+              const eventEnd = new Date(evt.end_time);
+              
+              eventStart.setHours(
+                Math.floor((eventStart.getHours() * 60 + eventStart.getMinutes() + timeDiff) / 60),
+                (eventStart.getHours() * 60 + eventStart.getMinutes() + timeDiff) % 60,
+                newStart.getSeconds(),
+                newStart.getMilliseconds()
+              );
+              
+              eventEnd.setHours(
+                Math.floor((eventEnd.getHours() * 60 + eventEnd.getMinutes() + endTimeDiff) / 60),
+                (eventEnd.getHours() * 60 + eventEnd.getMinutes() + endTimeDiff) % 60,
+                newEnd.getSeconds(),
+                newEnd.getMilliseconds()
+              );
+              
+              await supabase
+                .from("events")
+                .update({
+                  ...otherData,
+                  start_time: eventStart.toISOString(),
+                  end_time: eventEnd.toISOString()
+                })
+                .eq('id', evt.id);
+            }
+            
+            return { data: futureEvents };
+          }
+        } else {
+          return await supabase
+            .from("events")
+            .update(otherData)
+            .or(`id.eq.${parentId},parent_event_id.eq.${parentId}`)
+            .gte('start_time', event.start_time)
+            .select();
+        }
       }
     } catch (error) {
       console.error('Erro ao atualizar eventos recorrentes:', error);
