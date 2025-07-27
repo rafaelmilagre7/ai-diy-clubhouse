@@ -31,7 +31,7 @@ export default function AdminAnalytics() {
               </div>
               <div>
                 <h1 className="text-display text-foreground bg-gradient-to-r from-operational to-strategy bg-clip-text text-transparent">
-                  Analytics VIA Aurora
+                  Analytics
                 </h1>
                 <p className="text-body-large text-muted-foreground">
                   Dados completos e em tempo real da plataforma

@@ -84,7 +84,7 @@ const AdminDashboard = () => {
                 <BarChart3 className="h-8 w-8 text-viverblue" />
               </div>
               <div>
-                <h1 className="text-display text-foreground">Dashboard VIA Aurora</h1>
+                <h1 className="text-display text-foreground">Dashboard Admin</h1>
                 <p className="text-body-large text-muted-foreground">Erro ao carregar dados</p>
               </div>
             </div>

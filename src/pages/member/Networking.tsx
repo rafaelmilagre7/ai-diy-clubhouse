@@ -27,7 +27,7 @@ const Networking = () => {
           </div>
         </div>
         
-        {/* Conteúdo com VIA Aurora Style */}
+        {/* Conteúdo */}
         <div className="relative overflow-hidden rounded-2xl bg-card/80 backdrop-blur-sm border border-border/50 min-h-[500px]">
           <div className="absolute inset-0 bg-dot-pattern opacity-5"></div>
           <div className="relative p-6">

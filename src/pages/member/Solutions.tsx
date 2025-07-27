@@ -86,7 +86,7 @@ const Solutions = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-background/95">
       <div className="container mx-auto py-8 space-y-8">
-        {/* Header com VIA Aurora Style */}
+        {/* Header */}
         <div className="relative overflow-hidden rounded-2xl bg-card/95 backdrop-blur-xl border border-border/30 p-8 shadow-2xl shadow-primary/5">
           <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent"></div>
           <div className="absolute inset-0 bg-dot-pattern opacity-5"></div>
@@ -100,7 +100,7 @@ const Solutions = () => {
               </p>
             </div>
 
-            {/* Search com VIA Aurora glow */}
+            {/* Search */}
             <div className="relative group">
               <div className="absolute -inset-1 bg-gradient-to-r from-primary/30 via-primary/20 to-primary/30 rounded-2xl blur-lg opacity-60 group-hover:opacity-100 group-focus-within:opacity-100 transition duration-300"></div>
               <div className="relative bg-card/90 backdrop-blur-sm border border-border/40 rounded-xl p-1 shadow-lg">
@@ -119,7 +119,7 @@ const Solutions = () => {
           </div>
         </div>
 
-        {/* Filtros com VIA Aurora Style */}
+        {/* Filtros */}
         <Tabs defaultValue={activeCategory} onValueChange={setActiveCategory} className="w-full">
           <div className="relative group">
             {/* Aurora glow effect */}
@@ -150,7 +150,7 @@ const Solutions = () => {
             </div>
           </div>
 
-          {/* Conteúdo com animações VIA Aurora */}
+          {/* Conteúdo */}
           {categories.map((category) => (
             <TabsContent key={category.id} value={category.id} className="mt-8">
               {filteredSolutions?.length === 0 ? (

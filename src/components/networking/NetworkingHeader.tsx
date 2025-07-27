@@ -48,7 +48,7 @@ export const NetworkingHeader = ({
         </div>
       </div>
 
-      {/* Tabs com VIA Aurora Style */}
+      {/* Tabs */}
       <div className="relative group">
         <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 rounded-2xl blur-lg opacity-75 group-hover:opacity-100 transition-opacity duration-500"></div>
         

@@ -33,7 +33,7 @@ export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
 }) => {
   const progressPercentage = completedSteps.length / totalSteps * 100;
   return <div className="min-h-screen bg-gradient-to-br from-background via-background/50 to-primary/5 relative overflow-hidden">
-      {/* Background Effects - VIA Aurora Style */}
+      {/* Background Effects */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-20 right-20 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse" />
         <div className="absolute bottom-20 left-20 w-80 h-80 bg-accent/10 rounded-full blur-3xl animate-pulse delay-1000" />

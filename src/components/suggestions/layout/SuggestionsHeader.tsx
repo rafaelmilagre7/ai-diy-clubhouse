@@ -24,7 +24,7 @@ export const SuggestionsHeader: React.FC<SuggestionsHeaderProps> = ({
 
   return (
     <div className="space-y-8">
-      {/* Header moderno VIA Aurora Style */}
+      {/* Header moderno */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
         <div className="space-y-2">
           <h1 className="text-3xl font-semibold text-foreground">Sugestões</h1>

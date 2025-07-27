@@ -115,7 +115,7 @@ const AdminUsers = () => {
               <Users className="h-8 w-8 text-viverblue" />
             </div>
             <div>
-              <h1 className="text-display text-foreground">Usuários VIA Aurora</h1>
+              <h1 className="text-display text-foreground">Usuários</h1>
               <p className="text-body-large text-muted-foreground">Gerencie usuários e permissões do sistema</p>
             </div>
           </div>
@@ -211,7 +211,7 @@ const AdminUsers = () => {
               </div>
               <div>
                 <h1 className="text-display text-foreground bg-gradient-to-r from-viverblue to-operational bg-clip-text text-transparent">
-                  Usuários VIA Aurora
+                  Usuários
                 </h1>
                 <p className="text-body-large text-muted-foreground">
                   Gerencie {totalUsers} usuários e suas permissões no sistema
