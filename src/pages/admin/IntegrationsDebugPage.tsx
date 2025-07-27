@@ -115,15 +115,32 @@ const IntegrationsDebugPage = () => {
     }
   };
 
-  // Verificar status dos secrets
-  const checkSecretsStatus = () => {
-    return {
-      pipedrive: !!process.env.PIPEDRIVE_API_TOKEN,
-      discord: !!process.env.DISCORD_WEBHOOK_URL
-    };
-  };
+  // Verificar status dos secrets - será feito via edge function
+  const [secretsStatus, setSecretsStatus] = useState<any>(null);
 
-  const secretsStatus = checkSecretsStatus();
+  const checkSecretsStatus = async () => {
+    try {
+      // Chamar edge function que verifica secrets
+      const { data } = await supabase.functions.invoke('debug-pipedrive-mapping');
+      
+      if (data?.success) {
+        setSecretsStatus({
+          pipedrive: !!data.account_info,
+          discord: true // Se chegou até aqui, pelo menos o Pipedrive está OK
+        });
+      } else {
+        setSecretsStatus({
+          pipedrive: false,
+          discord: false
+        });
+      }
+    } catch (error) {
+      setSecretsStatus({
+        pipedrive: false,
+        discord: false
+      });
+    }
+  };
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -158,34 +175,56 @@ const IntegrationsDebugPage = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Status dos Secrets */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <Database className="h-5 w-5" />
-                    <span>PIPEDRIVE_API_TOKEN</span>
-                  </div>
-                  {secretsStatus.pipedrive ? (
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                  ) : (
-                    <XCircle className="h-5 w-5 text-red-500" />
-                  )}
-                </div>
+              {/* Botão para verificar secrets */}
+              <Button 
+                onClick={checkSecretsStatus} 
+                disabled={isLoading}
+                variant="outline"
+                className="w-full"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Verificando...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Verificar Status dos Secrets
+                  </>
+                )}
+              </Button>
 
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <MessageSquare className="h-5 w-5" />
-                    <span>DISCORD_WEBHOOK_URL</span>
+              {/* Status dos Secrets - só mostrar após verificação */}
+              {secretsStatus && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <Database className="h-5 w-5" />
+                      <span>PIPEDRIVE_API_TOKEN</span>
+                    </div>
+                    {secretsStatus.pipedrive ? (
+                      <CheckCircle className="h-5 w-5 text-green-500" />
+                    ) : (
+                      <XCircle className="h-5 w-5 text-red-500" />
+                    )}
                   </div>
-                  {secretsStatus.discord ? (
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                  ) : (
-                    <XCircle className="h-5 w-5 text-red-500" />
-                  )}
-                </div>
-              </div>
 
-              {(!secretsStatus.pipedrive || !secretsStatus.discord) && (
+                  <div className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <MessageSquare className="h-5 w-5" />
+                      <span>DISCORD_WEBHOOK_URL</span>
+                    </div>
+                    {secretsStatus.discord ? (
+                      <CheckCircle className="h-5 w-5 text-green-500" />
+                    ) : (
+                      <XCircle className="h-5 w-5 text-red-500" />
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {secretsStatus && (!secretsStatus.pipedrive || !secretsStatus.discord) && (
                 <Alert>
                   <AlertTriangle className="h-4 w-4" />
                   <AlertDescription>
