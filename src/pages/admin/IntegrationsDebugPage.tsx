@@ -346,9 +346,9 @@ const IntegrationsDebugPage = () => {
                   {pipedriveMapping.recommended_config && (
                     <div className="border rounded-lg p-4 bg-blue-50">
                       <h4 className="font-semibold mb-2">Configuração Recomendada</h4>
-                      <pre className="text-sm bg-white p-2 rounded border overflow-x-auto">
+                       <pre className="text-sm text-green-400 bg-gray-900 p-3 rounded border border-gray-700 overflow-x-auto">
 {JSON.stringify(pipedriveMapping.recommended_config, null, 2)}
-                      </pre>
+                       </pre>
                     </div>
                   )}
                 </div>
