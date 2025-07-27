@@ -210,47 +210,30 @@ serve(async (req) => {
         
         console.log('Pipedrive IDs encontrados:', { pipelineId, stageId });
         
+        const dealPayload = {
+          title: `Projeto | Plataforma do Club | ${requestData.userName}`,
+          value: 0,
+          currency: 'BRL',
+          status: 'open',
+          visible_to: '3',
+          pipeline_id: pipelineId,
+          stage_id: stageId,
+          person_id: null,
+          org_id: null
+        };
+
+        console.log('Deal payload being sent:', JSON.stringify(dealPayload, null, 2));
+
         const pipedriveResponse = await fetch(`https://${pipedriveCompanyDomain}.pipedrive.com/api/v1/deals?api_token=${pipedriveToken}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({
-            title: `Projeto | Plataforma do Club | ${requestData.userName}`,
-            value: 0,
-            currency: 'BRL',
-            status: 'open',
-            visible_to: '3',
-            pipeline_id: pipelineId,
-            stage_id: stageId,
-            notes: `🚀 SOLICITAÇÃO DE IMPLEMENTAÇÃO - PLATAFORMA DO CLUB
-
-📋 DETALHES DO PROJETO:
-• Solução: ${requestData.solutionTitle}
-• Categoria: ${requestData.solutionCategory}
-• Status: Nova solicitação
-
-👤 INFORMAÇÕES DO CLIENTE:
-• Nome: ${requestData.userName}
-• Email: ${requestData.userEmail}${requestData.userPhone ? `
-• Telefone: ${requestData.userPhone}` : ''}
-
-🔗 REFERÊNCIAS:
-• ID da Solicitação: ${implementationRequest.id}
-• Origem: Plataforma do Club
-• Data da Solicitação: ${new Date().toLocaleString('pt-BR')}
-
-⚡ PRÓXIMOS PASSOS:
-1. Entrar em contato com o cliente
-2. Agendar reunião de descoberta
-3. Elaborar proposta personalizada`,
-            person_id: null,
-            org_id: null
-          })
+          body: JSON.stringify(dealPayload)
         });
 
         pipedriveData = await pipedriveResponse.json();
-        console.log('Pipedrive response:', pipedriveData);
+        console.log('Pipedrive response:', JSON.stringify(pipedriveData, null, 2));
 
         if (pipedriveData?.success && pipedriveData.data) {
           // Atualizar registro com ID do Pipedrive
