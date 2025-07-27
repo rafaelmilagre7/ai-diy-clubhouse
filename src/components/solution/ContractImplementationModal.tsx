@@ -22,7 +22,7 @@ export const ContractImplementationModal = ({
   const { profile } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [userEmail, setUserEmail] = useState(profile?.email || "");
-  const [userPhone, setUserPhone] = useState("");
+  const [userPhone, setUserPhone] = useState((profile as any)?.whatsapp_number || "");
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
@@ -50,10 +50,11 @@ export const ContractImplementationModal = ({
     }
   };
 
-  // Sincronizar email quando profile mudar
+  // Sincronizar dados quando profile mudar
   useEffect(() => {
     setUserEmail(profile?.email || "");
-  }, [profile?.email]);
+    setUserPhone((profile as any)?.whatsapp_number || "");
+  }, [profile?.email, profile]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -64,9 +65,9 @@ export const ContractImplementationModal = ({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <div className="space-y-3 py-2">
           {/* Dados do usuário */}
-          <div className="space-y-4">
+          <div className="space-y-2">
             <h3 className="text-sm font-medium text-neutral-300">Seus dados:</h3>
             
             <div className="space-y-3">
@@ -109,14 +110,14 @@ export const ContractImplementationModal = ({
           </div>
 
           {/* Solução interessada */}
-          <div className="space-y-3">
+          <div className="space-y-2">
             <h3 className="text-sm font-medium text-neutral-300">Solução de interesse:</h3>
             
             <div className="flex items-start gap-3 p-3 bg-viverblue/10 rounded-lg border border-viverblue/20">
               <Briefcase className="h-4 w-4 text-viverblue-light mt-0.5" />
               <div className="flex-1">
                 <p className="font-medium text-white">{solutionTitle}</p>
-                <div className="flex items-center gap-2 mt-2">
+                <div className="flex items-center gap-2 mt-1">
                   <Badge variant="outline" className="text-xs bg-viverblue/20 text-viverblue-light border-viverblue/30">
                     {solutionCategory}
                   </Badge>
@@ -126,7 +127,7 @@ export const ContractImplementationModal = ({
           </div>
 
           {/* Informação sobre o processo */}
-          <div className="bg-neutral-800/30 rounded-lg p-4 border border-neutral-700">
+          <div className="bg-neutral-800/30 rounded-lg p-3 border border-neutral-700">
             <p className="text-sm text-neutral-300">
               Ao confirmar, nossa equipe entrará em contato em até 24 horas para entender suas necessidades 
               e apresentar uma proposta personalizada de implementação.
