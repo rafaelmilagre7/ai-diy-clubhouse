@@ -58,7 +58,7 @@ export const ContractImplementationModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-y-auto bg-background/95 backdrop-blur-sm border border-white/10">
+      <DialogContent className="sm:max-w-lg bg-background/95 backdrop-blur-sm border border-white/10">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold bg-gradient-to-r from-white to-viverblue-light bg-clip-text text-transparent">
             Contratar Implementação
@@ -126,13 +126,6 @@ export const ContractImplementationModal = ({
             </div>
           </div>
 
-          {/* Informação sobre o processo */}
-          <div className="bg-neutral-800/30 rounded-lg p-3 border border-neutral-700">
-            <p className="text-sm text-neutral-300">
-              Ao confirmar, nossa equipe entrará em contato em até 24 horas para entender suas necessidades 
-              e apresentar uma proposta personalizada de implementação.
-            </p>
-          </div>
 
           {/* Botões de ação */}
           <div className="flex gap-3 pt-2">
