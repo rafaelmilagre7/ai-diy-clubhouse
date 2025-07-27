@@ -22,6 +22,7 @@ import WhatsAppDebug from '@/pages/admin/WhatsAppDebug';
 import AdminCommunications from '@/pages/admin/AdminCommunications';
 import SupabaseDiagnostics from '@/pages/admin/SupabaseDiagnostics';
 import AdminSecurity from '@/pages/admin/AdminSecurity';
+import IntegrationsDebugPage from '@/pages/admin/IntegrationsDebugPage';
 
 import NPSAnalytics from '@/pages/admin/NPSAnalytics';
 import CertificateTemplates from '@/pages/admin/CertificateTemplates';
@@ -57,6 +58,7 @@ export const adminRoutes: RouteObject[] = [
   createAdminRoute("/admin/communications", AdminCommunications),
   createAdminRoute("/admin/security", AdminSecurity),
   createAdminRoute("/admin/whatsapp-debug", WhatsAppDebug),
+  createAdminRoute("/admin/integrations-debug", IntegrationsDebugPage),
   createAdminRoute("/admin/diagnostics", SupabaseDiagnostics),
   
   createAdminRoute("/admin/nps", NPSAnalytics),

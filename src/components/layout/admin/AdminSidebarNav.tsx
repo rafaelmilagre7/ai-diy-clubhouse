@@ -14,7 +14,9 @@ import {
   GraduationCap,
   Shield,
   TestTube,
-  Star
+  Star,
+  Settings2,
+  Zap
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -94,6 +96,11 @@ const navigationItems = [
     title: "WhatsApp Debug",
     href: "/admin/whatsapp-debug",
     icon: MessageSquare,
+  },
+  {
+    title: "Pipedrive + Discord",
+    href: "/admin/integrations-debug",
+    icon: Zap,
   },
   {
     title: "Diagnósticos",
