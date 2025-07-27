@@ -8,34 +8,88 @@ import { Edit, Trash2, Repeat } from "lucide-react";
 import { useState } from "react";
 import { useEvents } from "@/hooks/useEvents";
 import { EventFormDialog } from "./EventFormDialog";
+import { RecurrenceDeleteDialog } from "./RecurrenceDeleteDialog";
 import { supabase } from "@/lib/supabase";
 import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 import type { Event } from "@/types/events";
 import { Badge } from "@/components/ui/badge";
 
 export const EventsTable = () => {
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [deletingEvent, setDeletingEvent] = useState<Event | null>(null);
+  const [showRecurrenceDeleteDialog, setShowRecurrenceDeleteDialog] = useState(false);
   const { data: events = [], isLoading, error } = useEvents();
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
-  const handleDelete = async (id: string) => {
-    const confirmed = window.confirm("Tem certeza que deseja excluir este evento?");
-    if (!confirmed) return;
+  const handleDeleteClick = (event: Event) => {
+    if (event.is_recurring || event.parent_event_id) {
+      setDeletingEvent(event);
+      setShowRecurrenceDeleteDialog(true);
+    } else {
+      const confirmed = window.confirm("Tem certeza que deseja excluir este evento?");
+      if (confirmed) {
+        handleDeleteConfirmed(event.id, 'this');
+      }
+    }
+  };
 
+  const handleRecurrenceDeleteChoice = (choice: 'this' | 'future' | 'all') => {
+    if (deletingEvent) {
+      handleDeleteConfirmed(deletingEvent.id, choice);
+    }
+    setShowRecurrenceDeleteDialog(false);
+    setDeletingEvent(null);
+  };
+
+  const handleDeleteConfirmed = async (eventId: string, choice: 'this' | 'future' | 'all') => {
     try {
-      const { error } = await supabase
-        .from("events")
-        .delete()
-        .eq("id", id);
+      const event = events.find(e => e.id === eventId);
+      if (!event) return;
 
-      if (error) throw error;
+      if (choice === 'this') {
+        // Excluir apenas este evento
+        const { error } = await supabase
+          .from("events")
+          .delete()
+          .eq("id", eventId);
+        
+        if (error) throw error;
+        toast({ title: "Evento excluído com sucesso!" });
+        
+      } else if (choice === 'future') {
+        // Excluir este evento e futuros
+        const parentId = event.parent_event_id || event.id;
+        
+        const { error } = await supabase
+          .from("events")
+          .delete()
+          .or(`id.eq.${eventId},and(parent_event_id.eq.${parentId},start_time.gte.${event.start_time})`);
+        
+        if (error) throw error;
+        toast({ title: "Eventos futuros excluídos com sucesso!" });
+        
+      } else if (choice === 'all') {
+        // Excluir toda a série
+        const parentId = event.parent_event_id || event.id;
+        
+        const { error } = await supabase
+          .from("events")
+          .delete()
+          .or(`id.eq.${parentId},parent_event_id.eq.${parentId}`);
+        
+        if (error) throw error;
+        toast({ title: "Série de eventos excluída com sucesso!" });
+      }
 
       queryClient.invalidateQueries({ queryKey: ["events"] });
-      toast.success("Evento excluído com sucesso!");
     } catch (error) {
       console.error("Erro ao excluir evento:", error);
-      toast.error("Erro ao excluir evento");
+      toast({ 
+        title: "Erro ao excluir evento",
+        variant: "destructive"
+      });
     }
   };
 
@@ -162,7 +216,7 @@ export const EventsTable = () => {
                     <Button
                       variant="outline"
                       size="icon"
-                      onClick={() => handleDelete(event.id)}
+                      onClick={() => handleDeleteClick(event)}
                       title="Excluir evento"
                       className="hover:bg-destructive/10 hover:border-destructive/30 hover:text-destructive transition-colors"
                     >
@@ -180,6 +234,18 @@ export const EventsTable = () => {
         <EventFormDialog
           event={editingEvent}
           onClose={() => setEditingEvent(null)}
+        />
+      )}
+
+      {showRecurrenceDeleteDialog && deletingEvent && (
+        <RecurrenceDeleteDialog
+          isOpen={showRecurrenceDeleteDialog}
+          onClose={() => {
+            setShowRecurrenceDeleteDialog(false);
+            setDeletingEvent(null);
+          }}
+          onChoice={handleRecurrenceDeleteChoice}
+          eventTitle={deletingEvent.title}
         />
       )}
     </>
