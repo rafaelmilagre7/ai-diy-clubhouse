@@ -4925,7 +4925,33 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      nps_analytics_view: {
+        Row: {
+          course_title: string | null
+          created_at: string | null
+          feedback: string | null
+          id: string | null
+          lesson_description: string | null
+          lesson_id: string | null
+          lesson_title: string | null
+          module_title: string | null
+          nps_category: string | null
+          score: number | null
+          updated_at: string | null
+          user_email: string | null
+          user_id: string | null
+          user_name: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "learning_lesson_nps_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "learning_lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       accept_invite: {
