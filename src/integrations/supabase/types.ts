@@ -1232,6 +1232,71 @@ export type Database = {
         }
         Relationships: []
       }
+      implementation_requests: {
+        Row: {
+          created_at: string
+          discord_message_id: string | null
+          id: string
+          metadata: Json | null
+          notes: string | null
+          pipedrive_deal_id: string | null
+          processed_at: string | null
+          solution_category: string
+          solution_id: string
+          solution_title: string
+          status: string
+          updated_at: string
+          user_email: string
+          user_id: string
+          user_name: string
+          user_phone: string | null
+        }
+        Insert: {
+          created_at?: string
+          discord_message_id?: string | null
+          id?: string
+          metadata?: Json | null
+          notes?: string | null
+          pipedrive_deal_id?: string | null
+          processed_at?: string | null
+          solution_category: string
+          solution_id: string
+          solution_title: string
+          status?: string
+          updated_at?: string
+          user_email: string
+          user_id: string
+          user_name: string
+          user_phone?: string | null
+        }
+        Update: {
+          created_at?: string
+          discord_message_id?: string | null
+          id?: string
+          metadata?: Json | null
+          notes?: string | null
+          pipedrive_deal_id?: string | null
+          processed_at?: string | null
+          solution_category?: string
+          solution_id?: string
+          solution_title?: string
+          status?: string
+          updated_at?: string
+          user_email?: string
+          user_id?: string
+          user_name?: string
+          user_phone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "implementation_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       implementation_tab_progress: {
         Row: {
           completed_at: string | null
