@@ -13,6 +13,7 @@ serve(async (req) => {
 
   try {
     const pipedriveToken = Deno.env.get('PIPEDRIVE_API_TOKEN');
+    const pipedriveCompanyDomain = Deno.env.get('PIPEDRIVE_COMPANY_DOMAIN');
     
     console.log('🔍 Iniciando diagnóstico completo do Pipedrive...');
     
@@ -32,10 +33,40 @@ serve(async (req) => {
     }
 
     console.log('✅ Token encontrado, testando autenticação...');
+    
+    // Função helper para fazer requisições com fallback de formato
+    const makePipedriveRequest = async (endpoint: string) => {
+      let response;
+      
+      // Tentar primeiro com domínio da empresa (se disponível)
+      if (pipedriveCompanyDomain) {
+        const urlWithDomain = `https://${pipedriveCompanyDomain}.pipedrive.com/api/v1/${endpoint}?api_token=${pipedriveToken}`;
+        console.log(`🏢 Tentando com domínio: ${urlWithDomain}`);
+        response = await fetch(urlWithDomain);
+        
+        if (response.ok) {
+          console.log('✅ Sucesso com formato de domínio da empresa');
+          return response;
+        } else {
+          console.log(`❌ Falhou com domínio da empresa: ${response.status}`);
+        }
+      }
+      
+      // Fallback para formato moderno
+      const urlModern = `https://api.pipedrive.com/v1/${endpoint}?api_token=${pipedriveToken}`;
+      console.log(`🌐 Tentando com formato moderno: ${urlModern}`);
+      response = await fetch(urlModern);
+      
+      if (!response.ok) {
+        console.log(`❌ Falhou com formato moderno: ${response.status}`);
+      }
+      
+      return response;
+    };
 
     // 1. Primeiro, testar autenticação
-    // Pipedrive usa o token como parâmetro na URL, não como Bearer token
-    const authTestResponse = await fetch(`https://api.pipedrive.com/v1/users/me?api_token=${pipedriveToken}`);
+    console.log('🔐 Testando autenticação...');
+    const authTestResponse = await makePipedriveRequest('users/me');
     
     console.log('🔐 Status da autenticação:', authTestResponse.status);
     
@@ -63,7 +94,7 @@ serve(async (req) => {
 
     // 2. Buscar todos os pipelines
     console.log('📊 Buscando pipelines...');
-    const pipelinesResponse = await fetch(`https://api.pipedrive.com/v1/pipelines?api_token=${pipedriveToken}`);
+    const pipelinesResponse = await makePipedriveRequest('pipelines');
     
     if (!pipelinesResponse.ok) {
       const errorText = await pipelinesResponse.text();
@@ -95,7 +126,7 @@ serve(async (req) => {
       for (const pipeline of pipelinesData.data) {
         console.log(`🔍 Analisando pipeline: ${pipeline.name} (ID: ${pipeline.id})`);
         
-        const stagesResponse = await fetch(`https://api.pipedrive.com/v1/stages?pipeline_id=${pipeline.id}&api_token=${pipedriveToken}`);
+        const stagesResponse = await makePipedriveRequest(`stages?pipeline_id=${pipeline.id}`);
         
         if (stagesResponse.ok) {
           const stagesData = await stagesResponse.json();
@@ -135,7 +166,7 @@ serve(async (req) => {
 
     // 4. Buscar campos personalizados de deals
     console.log('🏷️ Buscando campos de deals...');
-    const dealFieldsResponse = await fetch(`https://api.pipedrive.com/v1/dealFields?api_token=${pipedriveToken}`);
+    const dealFieldsResponse = await makePipedriveRequest('dealFields');
     
     let dealFields = [];
     if (dealFieldsResponse.ok) {
@@ -148,7 +179,7 @@ serve(async (req) => {
 
     // 5. Buscar campos de pessoas
     console.log('👤 Buscando campos de pessoas...');
-    const personFieldsResponse = await fetch(`https://api.pipedrive.com/v1/personFields?api_token=${pipedriveToken}`);
+    const personFieldsResponse = await makePipedriveRequest('personFields');
     
     let personFields = [];
     if (personFieldsResponse.ok) {
@@ -161,7 +192,7 @@ serve(async (req) => {
 
     // 6. Buscar usuários
     console.log('👥 Buscando usuários...');
-    const usersResponse = await fetch(`https://api.pipedrive.com/v1/users?api_token=${pipedriveToken}`);
+    const usersResponse = await makePipedriveRequest('users');
     
     let users = [];
     if (usersResponse.ok) {
@@ -174,7 +205,7 @@ serve(async (req) => {
 
     // 7. Buscar tipos de atividades
     console.log('📅 Buscando tipos de atividades...');
-    const activityTypesResponse = await fetch(`https://api.pipedrive.com/v1/activityTypes?api_token=${pipedriveToken}`);
+    const activityTypesResponse = await makePipedriveRequest('activityTypes');
     
     let activityTypes = [];
     if (activityTypesResponse.ok) {
@@ -185,7 +216,7 @@ serve(async (req) => {
 
     // 8. Buscar organizações (amostra)
     console.log('🏢 Buscando organizações (amostra)...');
-    const organizationsResponse = await fetch(`https://api.pipedrive.com/v1/organizations?limit=10&api_token=${pipedriveToken}`);
+    const organizationsResponse = await makePipedriveRequest('organizations?limit=10');
     
     let organizationsSample = [];
     if (organizationsResponse.ok) {
@@ -196,7 +227,7 @@ serve(async (req) => {
 
     // 9. Buscar produtos (se existirem)
     console.log('🛍️ Buscando produtos (amostra)...');
-    const productsResponse = await fetch(`https://api.pipedrive.com/v1/products?limit=10&api_token=${pipedriveToken}`);
+    const productsResponse = await makePipedriveRequest('products?limit=10');
     
     let productsSample = [];
     if (productsResponse.ok) {
