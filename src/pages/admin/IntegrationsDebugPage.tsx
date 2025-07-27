@@ -336,9 +336,69 @@ export const IntegrationsDebugPage = () => {
                   Envie uma mensagem de teste para o Discord
                 </p>
                 <Button 
-                  onClick={() => {
-                    // TODO: Implementar teste de Discord
-                    console.log('Teste Discord');
+                  onClick={async () => {
+                    try {
+                      setIsLoading(true);
+                      
+                      // Criar uma mensagem de teste para o Discord
+                      const testMessage = {
+                        content: "🔧 **Teste de Integração - Viver de IA**",
+                        embeds: [{
+                          title: "✅ Teste de Webhook Discord",
+                          description: "Esta é uma mensagem de teste da integração com Discord.",
+                          color: 3447003, // Azul
+                          fields: [
+                            {
+                              name: "📊 Status",
+                              value: "Integração funcionando corretamente",
+                              inline: true
+                            },
+                            {
+                              name: "⏰ Data/Hora",
+                              value: new Date().toLocaleString('pt-BR'),
+                              inline: true
+                            }
+                          ],
+                          footer: {
+                            text: "Viver de IA - Debug System"
+                          }
+                        }]
+                      };
+
+                      // Buscar a URL do webhook do Supabase Edge Functions
+                      const webhookUrl = 'DISCORD_WEBHOOK_URL'; // Será substituído pela edge function
+                      
+                      // Enviar via Edge Function que tem acesso aos secrets
+                      const { data, error } = await supabase.functions.invoke('test-discord-webhook', {
+                        body: { message: testMessage }
+                      });
+                      
+                      if (error) {
+                        throw error;
+                      }
+                      
+                      if (data?.success) {
+                        toast.success('Mensagem enviada para o Discord com sucesso!');
+                        setTestResult({ 
+                          discord: true, 
+                          message: 'Webhook Discord funcionando corretamente',
+                          timestamp: new Date().toISOString()
+                        });
+                      } else {
+                        throw new Error(data?.error || 'Erro desconhecido');
+                      }
+                      
+                    } catch (error: any) {
+                      console.error('Erro no teste Discord:', error);
+                      toast.error(`Erro no teste Discord: ${error.message}`);
+                      setTestResult({ 
+                        discord: false, 
+                        error: error.message,
+                        timestamp: new Date().toISOString()
+                      });
+                    } finally {
+                      setIsLoading(false);
+                    }
                   }}
                   disabled={isLoading || !secretsStatus?.discord}
                   className="w-full"
@@ -347,6 +407,15 @@ export const IntegrationsDebugPage = () => {
                   <Send className="h-4 w-4 mr-2" />
                   Enviar Mensagem de Teste
                 </Button>
+
+                {testResult && testResult.discord !== undefined && (
+                  <div className="mt-4 p-4 bg-muted rounded-lg">
+                    <h4 className="font-semibold mb-2">Resultado do Teste Discord:</h4>
+                    <pre className="text-xs bg-background p-3 rounded border overflow-auto max-h-48">
+                      {JSON.stringify(testResult, null, 2)}
+                    </pre>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
