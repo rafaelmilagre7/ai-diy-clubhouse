@@ -18,6 +18,12 @@ import { supabase } from '@/lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { useLessonTagsForLesson } from '@/hooks/useLessonTags';
 import { ImplementationTrailData, RecommendedLesson } from '@/types/implementationTrail';
+import { PersonalizationInsights } from '@/components/personalized-learning/PersonalizationInsights';
+import { RecommendationExplanation } from '@/components/personalized-learning/RecommendationExplanation';
+import { PersonalizedLessonsGrid } from '@/components/personalized-learning/PersonalizedLessonsGrid';
+import { OnboardingToAIAdapter, PersonalizedContext } from '@/adapters/OnboardingToAIAdapter';
+import { LessonPersonalizationEngine } from '@/utils/LessonPersonalizationEngine';
+import { useRecommendationTracking } from '@/hooks/useRecommendationTracking';
 
 interface Lesson {
   id: string;

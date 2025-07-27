@@ -53,6 +53,22 @@ serve(async (req) => {
       .eq('id', user.id)
       .single();
 
+    // Buscar dados completos de onboarding para personalização
+    console.log('📋 [TRAIL-AI] Buscando dados de onboarding para personalização...');
+    const { data: onboardingData, error: onboardingError } = await supabaseClient
+      .from('onboarding_final')
+      .select('*')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (onboardingError) {
+      console.error('⚠️ [TRAIL-AI] Erro ao buscar onboarding:', onboardingError);
+    } else if (onboardingData) {
+      console.log('✅ [TRAIL-AI] Dados de onboarding encontrados para personalização');
+    } else {
+      console.log('📝 [TRAIL-AI] Onboarding não encontrado, usando dados do perfil básico');
+    }
+
     // Buscar progresso de aprendizado
     const { data: userProgress } = await supabaseClient
       .from('learning_progress')
@@ -115,7 +131,62 @@ serve(async (req) => {
       });
     }
 
-    // Criar contexto do usuário para análise personalizada
+    // Criar contexto personalizado baseado no onboarding
+    let personalizedContext = null;
+    
+    if (onboardingData) {
+      try {
+        // Usar adapter para converter dados de onboarding
+        personalizedContext = {
+          personalProfile: {
+            name: onboardingData.personal_info?.name || userProfile?.name || 'Usuário',
+            location: formatLocation(onboardingData.personal_info),
+            experienceLevel: onboardingData.ai_experience?.experience_level || 'Iniciante'
+          },
+          businessContext: {
+            company: onboardingData.business_info?.company_name || onboardingData.professional_info?.company_name || userProfile?.company_name || 'Empresa não informada',
+            sector: onboardingData.business_info?.company_sector || onboardingData.professional_info?.company_sector || 'Setor não informado',
+            size: onboardingData.business_info?.company_size || onboardingData.professional_info?.company_size || 'Tamanho não informado',
+            revenue: onboardingData.business_info?.annual_revenue || onboardingData.professional_info?.annual_revenue || 'Não informado',
+            position: onboardingData.business_info?.current_position || onboardingData.professional_info?.current_position || userProfile?.current_position || 'Cargo não informado',
+            mainChallenge: onboardingData.business_info?.main_challenge || onboardingData.professional_info?.main_challenge
+          },
+          aiReadiness: {
+            currentStatus: onboardingData.ai_experience?.implementation_status || 'Não implementado',
+            approach: onboardingData.ai_experience?.implementation_approach || 'Gradual',
+            experienceLevel: onboardingData.ai_experience?.experience_level || 'Iniciante'
+          },
+          objectives: {
+            primaryGoal: onboardingData.goals_info?.primary_goal || onboardingData.business_context?.primary_goal || 'Aumentar eficiência',
+            timeline: onboardingData.goals_info?.timeline || onboardingData.business_context?.timeline,
+            successMetrics: onboardingData.goals_info?.success_metrics || onboardingData.business_context?.success_metrics || [],
+            investment: onboardingData.goals_info?.investment_capacity || onboardingData.business_context?.investment_capacity,
+            priorityAreas: onboardingData.goals_info?.priority_areas || onboardingData.business_context?.priority_areas || [],
+            specificObjectives: onboardingData.goals_info?.specific_objectives || onboardingData.business_context?.specific_objectives
+          },
+          learningPreferences: {
+            style: onboardingData.personalization?.learning_style || 'Visual e prático',
+            contentPreference: onboardingData.personalization?.preferred_content || [],
+            supportLevel: onboardingData.personalization?.support_level,
+            availability: onboardingData.personalization?.availability,
+            frequency: onboardingData.personalization?.communication_frequency
+          }
+        };
+        
+        console.log('🎯 [TRAIL-AI] Contexto personalizado criado:', {
+          name: personalizedContext.personalProfile.name,
+          sector: personalizedContext.businessContext.sector,
+          experience: personalizedContext.aiReadiness.experienceLevel,
+          goal: personalizedContext.objectives.primaryGoal
+        });
+        
+      } catch (error) {
+        console.error('❌ [TRAIL-AI] Erro ao processar dados de onboarding:', error);
+        personalizedContext = null;
+      }
+    }
+
+    // Contexto básico de fallback
     const userContext = {
       profile: {
         name: userProfile?.name || 'Usuário',
@@ -148,78 +219,132 @@ serve(async (req) => {
           category: solution.category,
           difficulty: solution.difficulty
         })) || []
-      }
+      },
+      personalized: personalizedContext
     };
 
     console.log('🤖 [TRAIL-AI] Iniciando análise personalizada com IA');
 
-    // Prompt avançado para criar trilha de implementação personalizada
-    const aiPrompt = `
-Você é um especialista em implementação de IA corporativa com 15 anos de experiência em transformação digital. Sua missão é criar uma trilha de implementação personalizada e estratégica para este usuário específico.
+    // Prompt avançado personalizado baseado no onboarding
+    let aiPrompt = '';
+    
+    if (personalizedContext) {
+      // Prompt personalizado com dados de onboarding
+      aiPrompt = `
+Você é um especialista em implementação de IA corporativa com 15 anos de experiência em transformação digital. Sua missão é criar uma trilha de implementação ALTAMENTE PERSONALIZADA para este usuário específico baseada em dados detalhados de onboarding.
 
-PERFIL DETALHADO DO USUÁRIO:
-👤 Dados Pessoais:
-- Nome: ${userContext.profile.name}
-- Email: ${userContext.profile.email}
-- Empresa: ${userContext.profile.company || 'Não informado'}
-- Cargo: ${userContext.profile.position || 'Não informado'}
-- Setor: ${userContext.profile.industry || 'Não informado'}
-- Papel no sistema: ${userContext.profile.role || 'member'}
-- Membro desde: ${userContext.profile.created_at ? new Date(userContext.profile.created_at).toLocaleDateString('pt-BR') : 'Data não informada'}
-- Habilidades: ${userContext.profile.skills.length > 0 ? userContext.profile.skills.join(', ') : 'Não informadas'}
+🎯 PERFIL PERSONALIZADO COMPLETO:
 
-📈 Progresso Atual:
+👤 DADOS PESSOAIS:
+- Nome: ${personalizedContext.personalProfile.name}
+- Localização: ${personalizedContext.personalProfile.location}
+- Nível de experiência em IA: ${personalizedContext.personalProfile.experienceLevel}
+
+🏢 CONTEXTO EMPRESARIAL DETALHADO:
+- Empresa: ${personalizedContext.businessContext.company}
+- Setor: ${personalizedContext.businessContext.sector}
+- Tamanho da empresa: ${personalizedContext.businessContext.size}
+- Receita anual: ${personalizedContext.businessContext.revenue}
+- Cargo/Posição: ${personalizedContext.businessContext.position}
+- Desafio principal: ${personalizedContext.businessContext.mainChallenge || 'Não especificado'}
+
+🤖 MATURIDADE E PRONTIDÃO PARA IA:
+- Status atual de implementação: ${personalizedContext.aiReadiness.currentStatus}
+- Abordagem preferida: ${personalizedContext.aiReadiness.approach}
+- Nível de experiência: ${personalizedContext.aiReadiness.experienceLevel}
+
+🎯 OBJETIVOS ESPECÍFICOS E ESTRATÉGICOS:
+- Meta principal: ${personalizedContext.objectives.primaryGoal}
+- Timeline desejado: ${personalizedContext.objectives.timeline || 'Não especificado'}
+- Métricas de sucesso: ${personalizedContext.objectives.successMetrics?.join(', ') || 'Não especificadas'}
+- Capacidade de investimento: ${personalizedContext.objectives.investment || 'Não especificada'}
+- Áreas prioritárias: ${personalizedContext.objectives.priorityAreas?.join(', ') || 'Não especificadas'}
+- Objetivos específicos: ${personalizedContext.objectives.specificObjectives || 'Não especificados'}
+
+📚 PREFERÊNCIAS DE APRENDIZADO:
+- Estilo de aprendizado: ${personalizedContext.learningPreferences.style}
+- Tipo de conteúdo preferido: ${personalizedContext.learningPreferences.contentPreference?.join(', ') || 'Não especificado'}
+- Nível de suporte desejado: ${personalizedContext.learningPreferences.supportLevel || 'Não especificado'}
+- Disponibilidade de tempo: ${personalizedContext.learningPreferences.availability || 'Não especificada'}
+- Frequência de comunicação: ${personalizedContext.learningPreferences.frequency || 'Não especificada'}
+
+📈 PROGRESSO ATUAL NO SISTEMA:
 - Aulas concluídas: ${userContext.progress.completed_lessons}
 - Aulas em andamento: ${userContext.progress.in_progress_lessons}
 - Certificados obtidos: ${userContext.progress.certificates_earned}
 - Total de atividades: ${userContext.progress.total_progress}
 
-🎯 RECURSOS DISPONÍVEIS:
-
-📚 AULAS DISPONÍVEIS (${userContext.available_resources.lessons.length} aulas):
+📚 AULAS DISPONÍVEIS PARA RECOMENDAÇÃO (${userContext.available_resources.lessons.length} aulas):
 ${userContext.available_resources.lessons.map((lesson, index) => `
 ${index + 1}. "${lesson.title}"
    - ID: ${lesson.id}
-   - Dificuldade: ${lesson.difficulty}
+   - Dificuldade: ${lesson.difficulty || 'Não especificada'}
    - Duração: ${lesson.duration ? `${lesson.duration} min` : 'Não especificada'}
-   - Descrição: ${lesson.description}
+   - Descrição: ${lesson.description || 'Sem descrição'}
 `).join('\n')}
 
 🛠️ SOLUÇÕES DISPONÍVEIS (${userContext.available_resources.solutions.length} soluções):
 ${userContext.available_resources.solutions.map((solution, index) => `
 ${index + 1}. "${solution.title}"
    - ID: ${solution.id}
-   - Categoria: ${solution.category}
-   - Dificuldade: ${solution.difficulty}
-   - Descrição: ${solution.description}
-`).join('\n')}
+   - Categoria: ${solution.category || 'Não especificada'}
+   - Dificuldade: ${solution.difficulty || 'Não especificada'}
+   - Descrição: ${solution.description || 'Sem descrição'}
+`).join('\n')}`;
+    } else {
+      // Prompt básico de fallback
+      aiPrompt = `
+Você é um especialista em implementação de IA corporativa. Crie uma trilha personalizada baseada nos dados básicos disponíveis.
 
-🎯 MISSÃO: Criar uma trilha de implementação de IA personalizada com:
+PERFIL BÁSICO DO USUÁRIO:
+👤 Dados Pessoais:
+- Nome: ${userContext.profile.name}
+- Email: ${userContext.profile.email || 'Não informado'}
+- Empresa: ${userContext.profile.company || 'Não informado'}
+- Cargo: ${userContext.profile.position || 'Não informado'}
+- Setor: ${userContext.profile.industry || 'Não informado'}
 
-1. **VISÃO GERAL PERSONALIZADA**: 
-   - Análise do perfil e contexto do usuário
-   - Identificação de oportunidades específicas de IA para seu contexto
-   - Definição de objetivos estratégicos baseados no perfil
-   - Roadmap de implementação em fases
+📈 Progresso Atual:
+- Aulas concluídas: ${userContext.progress.completed_lessons}
+- Aulas em andamento: ${userContext.progress.in_progress_lessons}
+- Certificados obtidos: ${userContext.progress.certificates_earned}
 
-2. **GUIA DE SOLUÇÕES PRIORITÁRIAS**:
-   - Selecionar 6-8 soluções mais relevantes para este usuário específico
-   - Ordenar por prioridade estratégica (não apenas por score)
-   - Justificar cada recomendação baseada no perfil
-   - Agrupar em categorias estratégicas (Primeiras Vitórias, Crescimento, Otimização)
+📚 AULAS DISPONÍVEIS (${userContext.available_resources.lessons.length} aulas):
+${userContext.available_resources.lessons.map((lesson, index) => `
+${index + 1}. "${lesson.title}" (ID: ${lesson.id})
+   - Dificuldade: ${lesson.difficulty || 'Não especificada'}
+   - Duração: ${lesson.duration ? `${lesson.duration} min` : 'Não especificada'}
+`).join('\n')}`;
+    }
 
-3. **GUIA DE AULAS RECOMENDADAS**:
-   - Selecionar 6-8 aulas que criem uma jornada de aprendizado lógica
-   - Ordenar pedagogicamente (fundamentos antes de avançado)
-   - Conectar com as soluções recomendadas
-   - Incluir cronograma sugerido
+🎯 MISSÃO CRÍTICA: Criar uma trilha de implementação ALTAMENTE PERSONALIZADA com:
+
+1. **ANÁLISE CONTEXTUAL PROFUNDA**: 
+   - Analise ESPECIFICAMENTE o perfil detalhado fornecido
+   - Identifique oportunidades de IA únicas para este setor, cargo e contexto empresarial
+   - Considere o nível de experiência atual e objetivos declarados
+   - Leve em conta preferências de aprendizado e disponibilidade
+
+2. **RECOMENDAÇÕES DE AULAS ESTRATÉGICAS**:
+   - Selecione 6-8 aulas que sejam ALTAMENTE relevantes para este perfil específico
+   - Priorize baseado em: experiência atual + setor + objetivos + preferências
+   - Crie uma progressão lógica: fundamentos → aplicação → especialização
+   - Conecte cada aula aos objetivos e desafios específicos do usuário
+   - Considere a disponibilidade e estilo de aprendizado declarados
+
+3. **JUSTIFICATIVAS PERSONALIZADAS**:
+   - Para cada aula, explique POR QUE é relevante para ESTE usuário específico
+   - Use o nome, empresa, cargo e contexto real
+   - Conecte com os objetivos e desafios mencionados
+   - Seja específico sobre como cada aula ajuda no contexto empresarial deles
 
 INSTRUÇÕES CRÍTICAS:
-- Sea MUITO específico para este usuário (use nome, empresa, cargo)
-- Base tudo no perfil real fornecido
-- Crie conexões lógicas entre perfil → objetivos → soluções → aulas
-- Seja estratégico, não apenas técnico
-- Foque no ROI e aplicabilidade prática
+- Use SEMPRE o nome real: ${personalizedContext ? personalizedContext.personalProfile.name : userContext.profile.name}
+- Mencione o setor específico: ${personalizedContext ? personalizedContext.businessContext.sector : (userContext.profile.industry || 'tecnologia')}
+- Considere o nível de experiência: ${personalizedContext ? personalizedContext.aiReadiness.experienceLevel : 'iniciante'}
+- Foque no objetivo principal: ${personalizedContext ? personalizedContext.objectives.primaryGoal : 'aumentar eficiência'}
+- Seja EXTREMAMENTE específico e personalizado - não use respostas genéricas
+- Crie conexões lógicas: perfil real → objetivos reais → aulas específicas → resultados esperados
 
 RESPONDA APENAS EM JSON:
 {
@@ -285,25 +410,31 @@ RESPONDA APENAS EM JSON:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
+        model: 'gpt-4o',
         messages: [
           {
             role: 'system',
-            content: `Você é um especialista em implementação de IA corporativa com PhD em Engenharia de Software e 15 anos de experiência consultando Fortune 500. 
-            
-            Você cria trilhas de implementação personalizadas que geram resultados reais e mensuráveis. 
-            
-            Seja EXTREMAMENTE específico e personalizado - use o nome, empresa e contexto real do usuário.
-            
-            Sempre responda em JSON válido e estruturado.`
+            content: `Você é um consultor sênior especializado em implementação de IA corporativa com PhD em Engenharia de Software e 15 anos de experiência consultando Fortune 500. 
+
+            Sua especialidade é criar trilhas de aprendizado ALTAMENTE PERSONALIZADAS que geram resultados reais e mensuráveis para cada perfil específico.
+
+            REGRAS CRÍTICAS:
+            1. Seja EXTREMAMENTE específico - use nome real, empresa real, setor real, cargo real
+            2. Base TODAS as recomendações no perfil detalhado fornecido
+            3. Conecte cada aula aos objetivos e desafios específicos declarados
+            4. Considere nível de experiência, disponibilidade e preferências de aprendizado
+            5. Responda SEMPRE em JSON válido e estruturado conforme solicitado
+            6. Foque em resultados práticos e aplicáveis ao contexto empresarial específico
+
+            Você não dá respostas genéricas - cada trilha é única para cada usuário.`
           },
           {
             role: 'user',
             content: aiPrompt
           }
         ],
-        temperature: 0.2,
-        max_tokens: 3000
+        temperature: 0.3,
+        max_tokens: 4000
       }),
     });
 
@@ -370,6 +501,35 @@ RESPONDA APENAS EM JSON:
     });
   }
 });
+
+// Função auxiliar para enriquecer soluções com dados reais
+async function enrichSolutions(aiSolutions: any[], availableSolutions: any[]) {
+  return aiSolutions.map(aiSol => {
+    const realSolution = availableSolutions.find(sol => sol.id === aiSol.solution_id);
+    return {
+      ...aiSol,
+      solution_data: realSolution || null
+    };
+  }).filter(sol => sol.solution_data); // Remove soluções não encontradas
+}
+
+// Função auxiliar para formatar localização
+function formatLocation(personalInfo: any): string {
+  if (!personalInfo) return 'Localização não informada';
+  
+  const city = personalInfo.city;
+  const state = personalInfo.state;
+  
+  if (city && state) {
+    return `${city}, ${state}`;
+  } else if (state) {
+    return state;
+  } else if (city) {
+    return city;
+  }
+  
+  return 'Localização não informada';
+}
 
 // Função auxiliar para enriquecer soluções com dados reais
 async function enrichSolutions(aiSolutions: any[], availableSolutions: any[]) {
