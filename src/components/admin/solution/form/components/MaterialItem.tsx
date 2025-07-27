@@ -19,7 +19,7 @@ const MaterialItem: React.FC<MaterialItemProps> = ({ material, onRemove }) => {
   };
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-md bg-gray-50 gap-3">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-border rounded-md bg-card hover:bg-accent/50 transition-colors gap-3">
       <div className="flex items-start gap-3">
         {getFileIcon(material.type)}
         <div className="flex-1 min-w-0">
