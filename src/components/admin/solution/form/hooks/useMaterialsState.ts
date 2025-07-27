@@ -24,9 +24,10 @@ export const useMaterialsState = (solutionId: string | null) => {
       if (error) throw error;
       
       if (data) {
-        // Filter out video types and Panda Video content - they belong in the Videos tab
+        // Filter out video types, Panda Video content, and links - they belong in other tabs
         const filteredData = data.filter(
           item => item.type !== 'video' && 
+                  item.type !== 'resources' &&
                   !item.url?.includes('pandavideo') && 
                   !(item.metadata?.provider === 'panda')
         );

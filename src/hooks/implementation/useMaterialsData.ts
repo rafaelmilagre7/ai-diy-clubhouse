@@ -52,10 +52,11 @@ export const useMaterialsData = (module: Module) => {
           
           console.log("DEBUG: Raw solution data before filtering:", solutionData);
           
-          // Filter out video types and Panda Video content - they should be in the Videos tab only
+          // Filter out video types, Panda Video content, and links - they belong in other tabs
           const filteredData = (solutionData || []).filter(
             item => {
               const shouldInclude = item.type !== 'video' && 
+                                    item.type !== 'resources' &&
                                     !item.url?.includes('pandavideo') && 
                                     !(item.metadata?.provider === 'panda');
               
@@ -70,10 +71,11 @@ export const useMaterialsData = (module: Module) => {
         } else {
           console.log("DEBUG: Raw module data before filtering:", moduleData);
           
-          // Filter out video types and Panda Video content from module data too
+          // Filter out video types, Panda Video content, and links from module data too
           const filteredModuleData = moduleData.filter(
             item => {
               const shouldInclude = item.type !== 'video' && 
+                                    item.type !== 'resources' &&
                                     !item.url?.includes('pandavideo') && 
                                     !(item.metadata?.provider === 'panda');
               
