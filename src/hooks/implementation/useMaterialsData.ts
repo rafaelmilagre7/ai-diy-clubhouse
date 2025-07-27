@@ -49,16 +49,20 @@ export const useMaterialsData = (module: Module) => {
             return;
           }
           
-          // Filter out video types - they should be in the Videos tab only
+          // Filter out video types and Panda Video content - they should be in the Videos tab only
           const filteredData = (solutionData || []).filter(
-            item => item.type !== 'video'
+            item => item.type !== 'video' && 
+                    !item.url?.includes('pandavideo') && 
+                    !(item.metadata?.provider === 'panda')
           );
           
           setMaterials(filteredData);
         } else {
-          // Filter out video types from module data too
+          // Filter out video types and Panda Video content from module data too
           const filteredModuleData = moduleData.filter(
-            item => item.type !== 'video'
+            item => item.type !== 'video' && 
+                    !item.url?.includes('pandavideo') && 
+                    !(item.metadata?.provider === 'panda')
           );
           
           setMaterials(filteredModuleData);
