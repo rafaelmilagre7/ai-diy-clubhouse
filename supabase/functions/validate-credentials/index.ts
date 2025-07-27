@@ -31,18 +31,35 @@ const validateCredentials = async (): Promise<ValidationResult> => {
   
   if (pipedriveToken) {
     try {
-      // Pipedrive usa o token como parâmetro na URL, não como Bearer token
-      const response = await fetch(`https://api.pipedrive.com/v1/users/me?api_token=${pipedriveToken}`);
+      // PROBLEMA IDENTIFICADO: Pipedrive usa domínio da empresa
+      // Primeiro, vamos tentar descobrir o domínio usando uma requisição de teste
+      console.log('🔍 Testando formato de API Pipedrive...');
+      
+      // Tentar formato moderno primeiro (sem domínio da empresa)
+      let response = await fetch(`https://api.pipedrive.com/v1/users/me?api_token=${pipedriveToken}`);
+      
       if (response.ok) {
         pipedriveStatus = 'ok';
         pipedriveMessage = '✅ Token funcionando corretamente';
+        console.log('✅ Pipedrive funcionando com formato api.pipedrive.com');
       } else {
-        pipedriveStatus = 'invalid';
-        pipedriveMessage = '❌ Token inválido ou sem permissões';
+        // Se falhou, é possível que precise do domínio da empresa
+        // Como não temos o domínio, vamos informar isso no erro
+        const errorData = await response.text();
+        console.log('❌ Resposta do Pipedrive:', response.status, errorData);
+        
+        if (response.status === 401 || response.status === 403) {
+          pipedriveStatus = 'invalid';
+          pipedriveMessage = '❌ Token inválido ou formato incorreto. Pode precisar do domínio da empresa.';
+        } else {
+          pipedriveStatus = 'invalid';
+          pipedriveMessage = `❌ Erro ${response.status}: ${errorData.substring(0, 100)}`;
+        }
       }
     } catch (error) {
+      console.error('❌ Erro ao verificar Pipedrive:', error);
       pipedriveStatus = 'invalid';
-      pipedriveMessage = '❌ Erro ao verificar token';
+      pipedriveMessage = '❌ Erro ao conectar com Pipedrive';
     }
   }
   
