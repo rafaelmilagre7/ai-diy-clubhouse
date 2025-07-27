@@ -14,9 +14,16 @@ serve(async (req) => {
   try {
     const pipedriveToken = Deno.env.get('PIPEDRIVE_API_TOKEN');
     
+    console.log('🔍 Iniciando diagnóstico completo do Pipedrive...');
+    
     if (!pipedriveToken) {
+      console.error('❌ Token do Pipedrive não encontrado');
       return new Response(
-        JSON.stringify({ error: 'PIPEDRIVE_API_TOKEN não configurado' }),
+        JSON.stringify({ 
+          success: false,
+          error: 'PIPEDRIVE_API_TOKEN não configurado',
+          help: 'Configure o token em Supabase Settings > Edge Functions'
+        }),
         { 
           status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -24,19 +31,61 @@ serve(async (req) => {
       );
     }
 
-    console.log('🔍 Iniciando mapeamento COMPLETO do Pipedrive...');
+    console.log('✅ Token encontrado, testando autenticação...');
 
-    // 1. Buscar informações da conta
-    const accountResponse = await fetch('https://api.pipedrive.com/v1/users/me', {
+    // 1. Primeiro, testar autenticação
+    const authTestResponse = await fetch('https://api.pipedrive.com/v1/users/me', {
       headers: { 'Authorization': `Bearer ${pipedriveToken}` }
     });
-    const accountData = await accountResponse.json();
-    console.log('🏢 Informações da conta:', accountData);
+    
+    console.log('🔐 Status da autenticação:', authTestResponse.status);
+    
+    if (!authTestResponse.ok) {
+      const errorText = await authTestResponse.text();
+      console.error('❌ Erro de autenticação:', errorText);
+      
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Falha na autenticação do Pipedrive',
+          status_code: authTestResponse.status,
+          details: errorText,
+          help: 'Verifique se o token está correto e tem as permissões necessárias'
+        }),
+        { 
+          status: 401, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    const authData = await authTestResponse.json();
+    console.log('👤 Usuário autenticado:', authData.data?.name, authData.data?.email);
 
     // 2. Buscar todos os pipelines
+    console.log('📊 Buscando pipelines...');
     const pipelinesResponse = await fetch('https://api.pipedrive.com/v1/pipelines', {
       headers: { 'Authorization': `Bearer ${pipedriveToken}` }
     });
+    
+    if (!pipelinesResponse.ok) {
+      const errorText = await pipelinesResponse.text();
+      console.error('❌ Erro ao buscar pipelines:', errorText);
+      
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Erro ao buscar pipelines',
+          status_code: pipelinesResponse.status,
+          details: errorText
+        }),
+        { 
+          status: pipelinesResponse.status, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
     const pipelinesData = await pipelinesResponse.json();
     console.log('📊 Pipelines encontrados:', pipelinesData.data?.length || 0);
 
@@ -47,106 +96,175 @@ serve(async (req) => {
     
     if (pipelinesData.success && pipelinesData.data) {
       for (const pipeline of pipelinesData.data) {
+        console.log(`🔍 Analisando pipeline: ${pipeline.name} (ID: ${pipeline.id})`);
+        
         const stagesResponse = await fetch(`https://api.pipedrive.com/v1/stages?pipeline_id=${pipeline.id}`, {
           headers: { 'Authorization': `Bearer ${pipedriveToken}` }
         });
-        const stagesData = await stagesResponse.json();
         
-        if (stagesData.success && stagesData.data) {
-          const pipelineStages = stagesData.data.map((stage: any) => ({
-            ...stage,
-            pipeline_name: pipeline.name,
-            pipeline_id: pipeline.id
-          }));
-          allStages.push(...pipelineStages);
+        if (stagesResponse.ok) {
+          const stagesData = await stagesResponse.json();
+          console.log(`  └─ Stages encontrados: ${stagesData.data?.length || 0}`);
           
-          // Verificar se é o pipeline Inside Sales
-          if (pipeline.name === 'Inside Sales') {
-            insideSalesPipeline = pipeline;
-            qualificadoStage = pipelineStages.find((stage: any) => stage.name === 'Qualificado');
+          if (stagesData.success && stagesData.data) {
+            const pipelineStages = stagesData.data.map((stage: any) => ({
+              ...stage,
+              pipeline_name: pipeline.name,
+              pipeline_id: pipeline.id
+            }));
+            allStages.push(...pipelineStages);
+            
+            // Verificar se é o pipeline Inside Sales (busca flexível)
+            if (pipeline.name.toLowerCase().includes('inside') || 
+                pipeline.name.toLowerCase().includes('sales') ||
+                pipeline.name === 'Inside Sales') {
+              insideSalesPipeline = pipeline;
+              console.log(`🎯 Pipeline target encontrado: ${pipeline.name}`);
+              
+              // Procurar stage Qualificado
+              qualificadoStage = pipelineStages.find((stage: any) => 
+                stage.name.toLowerCase().includes('qualificado') ||
+                stage.name.toLowerCase().includes('qualified')
+              );
+              
+              if (qualificadoStage) {
+                console.log(`🎯 Stage target encontrado: ${qualificadoStage.name}`);
+              }
+            }
           }
+        } else {
+          console.warn(`⚠️ Erro ao buscar stages do pipeline ${pipeline.name}:`, stagesResponse.status);
         }
       }
     }
-    console.log('📈 Total de stages encontrados:', allStages.length);
 
-    // 4. Buscar TODOS os campos personalizados de deals
+    // 4. Buscar campos personalizados de deals
+    console.log('🏷️ Buscando campos de deals...');
     const dealFieldsResponse = await fetch('https://api.pipedrive.com/v1/dealFields', {
       headers: { 'Authorization': `Bearer ${pipedriveToken}` }
     });
-    const dealFieldsData = await dealFieldsResponse.json();
-    console.log('🏷️ Campos de deals:', dealFieldsData.data?.length || 0);
+    
+    let dealFields = [];
+    if (dealFieldsResponse.ok) {
+      const dealFieldsData = await dealFieldsResponse.json();
+      dealFields = dealFieldsData.data || [];
+      console.log('🏷️ Campos de deals:', dealFields.length);
+    } else {
+      console.warn('⚠️ Erro ao buscar campos de deals:', dealFieldsResponse.status);
+    }
 
-    // 5. Buscar TODOS os campos de pessoas
+    // 5. Buscar campos de pessoas
+    console.log('👤 Buscando campos de pessoas...');
     const personFieldsResponse = await fetch('https://api.pipedrive.com/v1/personFields', {
       headers: { 'Authorization': `Bearer ${pipedriveToken}` }
     });
-    const personFieldsData = await personFieldsResponse.json();
-    console.log('👤 Campos de pessoas:', personFieldsData.data?.length || 0);
+    
+    let personFields = [];
+    if (personFieldsResponse.ok) {
+      const personFieldsData = await personFieldsResponse.json();
+      personFields = personFieldsData.data || [];
+      console.log('👤 Campos de pessoas:', personFields.length);
+    } else {
+      console.warn('⚠️ Erro ao buscar campos de pessoas:', personFieldsResponse.status);
+    }
 
-    // 6. Buscar todos os usuários
+    // 6. Buscar usuários
+    console.log('👥 Buscando usuários...');
     const usersResponse = await fetch('https://api.pipedrive.com/v1/users', {
       headers: { 'Authorization': `Bearer ${pipedriveToken}` }
     });
-    const usersData = await usersResponse.json();
-    console.log('👥 Usuários disponíveis:', usersData.data?.length || 0);
+    
+    let users = [];
+    if (usersResponse.ok) {
+      const usersData = await usersResponse.json();
+      users = usersData.data || [];
+      console.log('👥 Usuários encontrados:', users.length);
+    } else {
+      console.warn('⚠️ Erro ao buscar usuários:', usersResponse.status);
+    }
 
     // 7. Buscar tipos de atividades
+    console.log('📅 Buscando tipos de atividades...');
     const activityTypesResponse = await fetch('https://api.pipedrive.com/v1/activityTypes', {
       headers: { 'Authorization': `Bearer ${pipedriveToken}` }
     });
-    const activityTypesData = await activityTypesResponse.json();
-    console.log('📅 Tipos de atividades:', activityTypesData.data?.length || 0);
+    
+    let activityTypes = [];
+    if (activityTypesResponse.ok) {
+      const activityTypesData = await activityTypesResponse.json();
+      activityTypes = activityTypesData.data || [];
+      console.log('📅 Tipos de atividades:', activityTypes.length);
+    }
 
     // 8. Buscar organizações (amostra)
+    console.log('🏢 Buscando organizações (amostra)...');
     const organizationsResponse = await fetch('https://api.pipedrive.com/v1/organizations?limit=10', {
       headers: { 'Authorization': `Bearer ${pipedriveToken}` }
     });
-    const organizationsData = await organizationsResponse.json();
-    console.log('🏢 Organizações (amostra):', organizationsData.data?.length || 0);
+    
+    let organizationsSample = [];
+    if (organizationsResponse.ok) {
+      const organizationsData = await organizationsResponse.json();
+      organizationsSample = organizationsData.data || [];
+      console.log('🏢 Organizações (amostra):', organizationsSample.length);
+    }
 
     // 9. Buscar produtos (se existirem)
+    console.log('🛍️ Buscando produtos (amostra)...');
     const productsResponse = await fetch('https://api.pipedrive.com/v1/products?limit=10', {
       headers: { 'Authorization': `Bearer ${pipedriveToken}` }
     });
-    const productsData = await productsResponse.json();
-    console.log('🛍️ Produtos (amostra):', productsData.data?.length || 0);
+    
+    let productsSample = [];
+    if (productsResponse.ok) {
+      const productsData = await productsResponse.json();
+      productsSample = productsData.data || [];
+      console.log('🛍️ Produtos (amostra):', productsSample.length);
+    }
 
     // Compilar resultado COMPLETO
     const mappingResult = {
       success: true,
       timestamp: new Date().toISOString(),
+      authentication: {
+        status: 'success',
+        user: {
+          name: authData.data?.name,
+          email: authData.data?.email,
+          company: authData.data?.company_name
+        }
+      },
       
       // Informações gerais da conta
       account_summary: {
-        company_name: accountData.data?.company_name || 'N/A',
-        user_name: accountData.data?.name || 'N/A',
-        email: accountData.data?.email || 'N/A',
-        currency: accountData.data?.default_currency || 'BRL',
-        timezone: accountData.data?.timezone_name || 'America/Sao_Paulo',
+        company_name: authData.data?.company_name || 'N/A',
+        user_name: authData.data?.name || 'N/A',
+        email: authData.data?.email || 'N/A',
+        currency: authData.data?.default_currency || 'BRL',
+        timezone: authData.data?.timezone_name || 'America/Sao_Paulo',
         total_pipelines: pipelinesData.data?.length || 0,
         total_stages: allStages.length,
-        total_users: usersData.data?.length || 0,
-        total_deal_fields: dealFieldsData.data?.length || 0,
-        total_person_fields: personFieldsData.data?.length || 0,
-        total_activity_types: activityTypesData.data?.length || 0,
-        total_organizations: organizationsData.data?.length || 0,
-        total_products: productsData.data?.length || 0
+        total_users: users.length,
+        total_deal_fields: dealFields.length,
+        total_person_fields: personFields.length,
+        total_activity_types: activityTypes.length,
+        total_organizations: organizationsSample.length,
+        total_products: productsSample.length
       },
       
       // Estruturas principais organizadas
       structures: {
         pipelines: pipelinesData.data || [],
         all_stages: allStages,
-        users: usersData.data || [],
-        activity_types: activityTypesData.data || [],
-        organizations_sample: organizationsData.data || [],
-        products_sample: productsData.data || []
+        users: users,
+        activity_types: activityTypes,
+        organizations_sample: organizationsSample,
+        products_sample: productsSample
       },
       
       // Campos personalizados detalhados
       custom_fields: {
-        deal_fields: (dealFieldsData.data || []).map((field: any) => ({
+        deal_fields: dealFields.map((field: any) => ({
           id: field.id,
           key: field.key,
           name: field.name,
@@ -154,7 +272,7 @@ serve(async (req) => {
           options: field.options || [],
           mandatory_flag: field.mandatory_flag
         })),
-        person_fields: (personFieldsData.data || []).map((field: any) => ({
+        person_fields: personFields.map((field: any) => ({
           id: field.id,
           key: field.key,
           name: field.name,
@@ -180,7 +298,7 @@ serve(async (req) => {
         stage_id: qualificadoStage?.id || null,
         stage_name: qualificadoStage?.name || 'Qualificado',
         title_format: "Projeto | {solution_category} | {user_name}",
-        default_owner_id: usersData.data?.find((u: any) => u.is_admin)?.id || usersData.data?.[0]?.id || null,
+        default_owner_id: users.find((u: any) => u.is_admin)?.id || users[0]?.id || null,
         
         // Mapeamento sugerido de campos
         field_mapping: {
@@ -189,13 +307,13 @@ serve(async (req) => {
             email: "email",
             phone: "phone"
           },
-          person_custom: (personFieldsData.data || []).filter((field: any) => 
+          person_custom: personFields.filter((field: any) => 
             field.name.toLowerCase().includes('empresa') ||
             field.name.toLowerCase().includes('cargo') ||
             field.name.toLowerCase().includes('whatsapp') ||
             field.name.toLowerCase().includes('telefone')
           ),
-          deal_custom: (dealFieldsData.data || []).filter((field: any) => 
+          deal_custom: dealFields.filter((field: any) => 
             field.name.toLowerCase().includes('valor') ||
             field.name.toLowerCase().includes('categoria') ||
             field.name.toLowerCase().includes('fonte') ||
@@ -212,11 +330,12 @@ serve(async (req) => {
     // Verificar configurações faltantes
     if (!insideSalesPipeline) {
       mappingResult.implementation_config.missing_config.push("⚠️ Pipeline 'Inside Sales' não encontrado");
+      console.log('⚠️ Pipelines disponíveis:', pipelinesData.data?.map((p: any) => p.name));
     }
     if (!qualificadoStage) {
       mappingResult.implementation_config.missing_config.push("⚠️ Stage 'Qualificado' não encontrado no pipeline Inside Sales");
     }
-    if (!usersData.data?.length) {
+    if (!users.length) {
       mappingResult.implementation_config.missing_config.push("⚠️ Nenhum usuário encontrado para atribuição");
     }
 
@@ -232,12 +351,13 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('❌ Erro no mapeamento completo:', error);
+    console.error('❌ Erro inesperado no mapeamento:', error);
     return new Response(
       JSON.stringify({
         success: false,
-        error: 'Erro ao mapear conta do Pipedrive',
+        error: 'Erro inesperado ao mapear conta do Pipedrive',
         details: error.message,
+        stack: error.stack,
         timestamp: new Date().toISOString()
       }),
       {
