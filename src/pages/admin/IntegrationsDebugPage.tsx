@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -124,6 +124,11 @@ const IntegrationsDebugPage = () => {
 
   // Verificar status dos secrets - será feito via edge function
   const [secretsStatus, setSecretsStatus] = useState<any>(null);
+
+  // Executar verificação inicial quando o componente carrega
+  useEffect(() => {
+    checkSecretsStatus();
+  }, []);
 
   const checkSecretsStatus = async () => {
     try {
