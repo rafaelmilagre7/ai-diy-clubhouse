@@ -1,10 +1,13 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Loader2, PlayCircle } from "lucide-react";
+import { ArrowRight, Loader2, PlayCircle, Handshake } from "lucide-react";
+import { ContractImplementationModal } from "./ContractImplementationModal";
 
 interface SolutionMobileActionsProps {
   solutionId: string;
+  solutionTitle: string;
+  solutionCategory: string;
   progress: any;
   startImplementation: () => Promise<any>;
   continueImplementation: () => Promise<any>;
@@ -13,11 +16,14 @@ interface SolutionMobileActionsProps {
 
 export const SolutionMobileActions = ({ 
   solutionId, 
+  solutionTitle,
+  solutionCategory,
   progress, 
   startImplementation, 
   continueImplementation, 
   initializing 
 }: SolutionMobileActionsProps) => {
+  const [showContractModal, setShowContractModal] = useState(false);
   return (
     <div className="md:hidden mt-8">
       <div className="relative bg-white/5 backdrop-blur-sm border border-white/10 p-6 rounded-xl shadow-2xl">
@@ -61,26 +67,46 @@ export const SolutionMobileActions = ({
               </Button>
             </div>
           ) : (
-            <Button
-              onClick={startImplementation}
-              disabled={initializing}
-              className="w-full bg-gradient-to-r from-viverblue to-viverblue-dark hover:from-viverblue-light hover:to-viverblue text-white border-0 shadow-lg hover:shadow-viverblue/20 transition-all duration-300"
-            >
-              {initializing ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Iniciando...
-                </>
-              ) : (
-                <>
-                  <PlayCircle className="h-4 w-4 mr-2" />
-                  Começar Implementação
-                </>
-              )}
-            </Button>
+            <div className="space-y-3">
+              <Button
+                onClick={startImplementation}
+                disabled={initializing}
+                className="w-full bg-gradient-to-r from-viverblue to-viverblue-dark hover:from-viverblue-light hover:to-viverblue text-white border-0 shadow-lg hover:shadow-viverblue/20 transition-all duration-300"
+              >
+                {initializing ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Iniciando...
+                  </>
+                ) : (
+                  <>
+                    <PlayCircle className="h-4 w-4 mr-2" />
+                    Começar Implementação
+                  </>
+                )}
+              </Button>
+              
+              <Button
+                onClick={() => setShowContractModal(true)}
+                variant="outline"
+                className="w-full border-viverblue/30 text-viverblue-light hover:bg-viverblue/10 hover:border-viverblue/50 transition-all duration-300"
+              >
+                <Handshake className="h-4 w-4 mr-2" />
+                Contratar Implementação
+              </Button>
+            </div>
           )}
         </div>
       </div>
+      
+      {/* Modal de Contratação */}
+      <ContractImplementationModal
+        isOpen={showContractModal}
+        onClose={() => setShowContractModal(false)}
+        solutionTitle={solutionTitle}
+        solutionCategory={solutionCategory}
+        solutionId={solutionId}
+      />
     </div>
   );
 };

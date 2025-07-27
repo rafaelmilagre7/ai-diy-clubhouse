@@ -121,6 +121,8 @@ const SolutionDetails = () => {
             <FadeTransition delay={0.3}>
               <SolutionMobileActions 
                 solutionId={solution.id}
+                solutionTitle={solution.title}
+                solutionCategory={solution.category}
                 progress={progress}
                 startImplementation={startImplementation}
                 continueImplementation={continueImplementation}
