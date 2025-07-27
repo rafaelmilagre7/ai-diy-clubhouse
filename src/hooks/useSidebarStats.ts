@@ -86,7 +86,9 @@ export const useSidebarStats = () => {
         };
       }
     },
-    staleTime: 5 * 60 * 1000, // 5 minutos
-    refetchInterval: 10 * 60 * 1000, // Atualizar a cada 10 minutos
+    staleTime: 0, // Sem cache para garantir dados atualizados  
+    refetchInterval: false, // Desabilitar refetch automático
+    refetchOnMount: true, // Sempre buscar ao montar
+    refetchOnWindowFocus: true // Buscar quando a janela ganhar foco
   });
 };
