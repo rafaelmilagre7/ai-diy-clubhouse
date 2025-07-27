@@ -12,7 +12,7 @@ export const DashboardHeader = ({ timeRange, setTimeRange }: DashboardHeaderProp
       <div>
         <h1 className="text-3xl font-bold text-white">Dashboard Admin</h1>
         <p className="text-neutral-300 dark:text-neutral-300 mt-1">
-          Visão geral da plataforma VIVER DE IA Club
+          Plataforma VIVER DE IA
         </p>
       </div>
       <Tabs value={timeRange} onValueChange={setTimeRange} className="w-[400px]">
