@@ -3916,6 +3916,13 @@ export type Database = {
             foreignKeyName: "solution_certificates_solution_id_fkey"
             columns: ["solution_id"]
             isOneToOne: false
+            referencedRelation: "solution_performance_metrics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "solution_certificates_solution_id_fkey"
+            columns: ["solution_id"]
+            isOneToOne: false
             referencedRelation: "solutions"
             referencedColumns: ["id"]
           },
@@ -4925,6 +4932,18 @@ export type Database = {
       }
     }
     Views: {
+      admin_analytics_overview: {
+        Row: {
+          active_users_24h: number | null
+          avg_implementation_time_hours: number | null
+          completed_implementations: number | null
+          completion_rate: number | null
+          new_users_30d: number | null
+          total_solutions: number | null
+          total_users: number | null
+        }
+        Relationships: []
+      }
       nps_analytics_view: {
         Row: {
           course_title: string | null
@@ -4951,6 +4970,44 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      solution_performance_metrics: {
+        Row: {
+          avg_completion_time_hours: number | null
+          category: string | null
+          completed_implementations: number | null
+          completion_rate: number | null
+          id: string | null
+          name: string | null
+          total_implementations: number | null
+        }
+        Relationships: []
+      }
+      user_growth_by_date: {
+        Row: {
+          date: string | null
+          name: string | null
+          total_users: number | null
+          users: number | null
+        }
+        Relationships: []
+      }
+      user_segmentation_analytics: {
+        Row: {
+          description: string | null
+          percentage: number | null
+          segment: string | null
+          user_count: number | null
+        }
+        Relationships: []
+      }
+      weekly_activity_patterns: {
+        Row: {
+          activity_count: number | null
+          day_name: string | null
+          day_of_week: number | null
+        }
+        Relationships: []
       }
     }
     Functions: {
