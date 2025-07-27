@@ -31,9 +31,8 @@ const validateCredentials = async (): Promise<ValidationResult> => {
   
   if (pipedriveToken) {
     try {
-      const response = await fetch('https://api.pipedrive.com/v1/users/me', {
-        headers: { 'Authorization': `Bearer ${pipedriveToken}` }
-      });
+      // Pipedrive usa o token como parâmetro na URL, não como Bearer token
+      const response = await fetch(`https://api.pipedrive.com/v1/users/me?api_token=${pipedriveToken}`);
       if (response.ok) {
         pipedriveStatus = 'ok';
         pipedriveMessage = '✅ Token funcionando corretamente';
