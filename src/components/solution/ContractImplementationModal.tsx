@@ -57,14 +57,14 @@ export const ContractImplementationModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md bg-background/95 backdrop-blur-sm border border-white/10">
+      <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-y-auto bg-background/95 backdrop-blur-sm border border-white/10">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold bg-gradient-to-r from-white to-viverblue-light bg-clip-text text-transparent">
             Contratar Implementação
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
+        <div className="space-y-4 py-4">
           {/* Dados do usuário */}
           <div className="space-y-4">
             <h3 className="text-sm font-medium text-neutral-300">Seus dados:</h3>
