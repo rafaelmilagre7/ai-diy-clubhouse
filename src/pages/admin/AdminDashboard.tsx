@@ -6,11 +6,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { DashboardHeader } from "@/components/admin/dashboard/DashboardHeader";
 import { OnboardingStatusCard } from "@/components/admin/OnboardingStatusCard";
 import { RefreshCw, Users, Activity, CheckCircle, TrendingUp, BarChart3, Zap, Star } from "lucide-react";
-
 const AdminDashboard = () => {
   const [timeRange, setTimeRange] = useState('30d');
   const [lastRefresh, setLastRefresh] = useState(new Date());
-  
   const {
     statsData,
     activityData,
@@ -37,7 +35,6 @@ const AdminDashboard = () => {
     loading,
     lastRefresh: lastRefresh.toISOString()
   });
-
   const handleRefresh = async () => {
     await refetch();
     setLastRefresh(new Date());
@@ -45,8 +42,7 @@ const AdminDashboard = () => {
 
   // Loading state with Aurora design
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+    return <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-viverblue/5 via-transparent to-transparent" />
         
         <div className="relative p-6 md:p-8">
@@ -63,24 +59,22 @@ const AdminDashboard = () => {
               </div>
             </div>
             <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
-              {Array.from({length: 4}).map((_, i) => (
-                <Card key={i} className="surface-elevated border-0 shadow-aurora p-6">
+              {Array.from({
+              length: 4
+            }).map((_, i) => <Card key={i} className="surface-elevated border-0 shadow-aurora p-6">
                   <Skeleton className="h-4 w-24 mb-2" />
                   <Skeleton className="h-8 w-16 mb-3" />
                   <Skeleton className="h-4 w-20" />
-                </Card>
-              ))}
+                </Card>)}
             </div>
           </div>
         </div>
-      </div>
-    );
+      </div>;
   }
 
   // Error state with Aurora design
   if (!statsData || !activityData) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+    return <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-viverblue/5 via-transparent to-transparent" />
         
         <div className="relative p-6 md:p-8">
@@ -111,23 +105,13 @@ const AdminDashboard = () => {
             </Card>
           </div>
         </div>
-      </div>
-    );
+      </div>;
   }
 
   // Calcular período atual para labels
-  const periodDays = timeRange === '7d' ? 7 :
-                    timeRange === '30d' ? 30 :
-                    timeRange === '90d' ? 90 :
-                    timeRange === 'all' ? 365 : 30;
-
-  const periodLabel = periodDays === 7 ? '7 dias' :
-                     periodDays === 30 ? '30 dias' :
-                     periodDays === 90 ? '90 dias' :
-                     periodDays === 365 ? 'Todo período' : `${periodDays} dias`;
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+  const periodDays = timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : timeRange === '90d' ? 90 : timeRange === 'all' ? 365 : 30;
+  const periodLabel = periodDays === 7 ? '7 dias' : periodDays === 30 ? '30 dias' : periodDays === 90 ? '90 dias' : periodDays === 365 ? 'Todo período' : `${periodDays} dias`;
+  return <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
       {/* Aurora Background Effects */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-viverblue/5 via-transparent to-transparent" />
       <div className="absolute top-0 right-0 -z-10 h-96 w-96 rounded-full bg-gradient-to-br from-viverblue/10 to-operational/10 blur-3xl animate-blob" />
@@ -138,52 +122,11 @@ const AdminDashboard = () => {
           
           {/* Modern Aurora Header */}
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-            <div className="space-y-4">
-              <div className="flex items-center space-x-4">
-                <div className="p-3 rounded-xl bg-gradient-to-r from-viverblue/20 to-operational/20 backdrop-blur-sm border border-viverblue/20">
-                  <BarChart3 className="h-8 w-8 text-viverblue" />
-                </div>
-                <div>
-                  <h1 className="text-display text-foreground bg-gradient-to-r from-viverblue to-operational bg-clip-text text-transparent">
-                    Dashboard VIA Aurora
-                  </h1>
-                  <div className="flex items-center gap-2 text-body-small text-muted-foreground">
-                    <Zap className="h-4 w-4" />
-                    <span>Período: {periodLabel}</span>
-                    <span>•</span>
-                    <span>Atualizado: {lastRefresh.toLocaleTimeString('pt-BR')}</span>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Quick Stats Preview */}
-              <div className="flex gap-4">
-                <div className="flex items-center space-x-2 px-4 py-2 rounded-lg surface-elevated">
-                  <Users className="h-4 w-4 text-viverblue" />
-                  <span className="text-caption">Usuários Ativos</span>
-                </div>
-                <div className="flex items-center space-x-2 px-4 py-2 rounded-lg surface-elevated">
-                  <TrendingUp className="h-4 w-4 text-operational" />
-                  <span className="text-caption">Crescimento</span>
-                </div>
-                <div className="flex items-center space-x-2 px-4 py-2 rounded-lg surface-elevated">
-                  <Star className="h-4 w-4 text-strategy" />
-                  <span className="text-caption">Performance</span>
-                </div>
-              </div>
-            </div>
+            
             
             <div className="flex items-center gap-3">
-              <DashboardHeader 
-                timeRange={timeRange}
-                setTimeRange={handleTimeRangeChange}
-              />
-              <Button 
-                onClick={handleRefresh} 
-                variant="outline" 
-                size="sm" 
-                className="gap-2 aurora-focus bg-viverblue/10 border-viverblue/20 hover:bg-viverblue/20"
-              >
+              <DashboardHeader timeRange={timeRange} setTimeRange={handleTimeRangeChange} />
+              <Button onClick={handleRefresh} variant="outline" size="sm" className="gap-2 aurora-focus bg-viverblue/10 border-viverblue/20 hover:bg-viverblue/20">
                 <RefreshCw className="h-4 w-4" />
                 Atualizar
               </Button>
@@ -207,12 +150,10 @@ const AdminDashboard = () => {
                 <div className="text-heading-2 text-foreground mb-2">
                   {(statsData?.newUsersInPeriod || 0).toLocaleString('pt-BR')}
                 </div>
-                {(statsData?.periodGrowthRate || 0) > 0 && (
-                  <div className="flex items-center text-caption text-emerald-600">
+                {(statsData?.periodGrowthRate || 0) > 0 && <div className="flex items-center text-caption text-emerald-600">
                     <TrendingUp className="h-3 w-3 mr-1" />
                     +{statsData.periodGrowthRate}% crescimento
-                  </div>
-                )}
+                  </div>}
                 <p className="text-caption text-muted-foreground mt-1">
                   em {periodLabel}
                 </p>
@@ -320,8 +261,7 @@ const AdminDashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {statsData?.usersByRole?.map((role, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 rounded-lg surface-elevated">
+                  {statsData?.usersByRole?.map((role, index) => <div key={index} className="flex items-center justify-between p-3 rounded-lg surface-elevated">
                       <div className="flex items-center gap-3">
                         <div className="w-3 h-3 rounded-full bg-gradient-to-r from-viverblue to-operational"></div>
                         <span className="text-label text-foreground">{role.role}</span>
@@ -329,23 +269,20 @@ const AdminDashboard = () => {
                       <span className="text-label text-foreground">
                         {role.count} usuário{role.count !== 1 ? 's' : ''}
                       </span>
-                    </div>
-                  ))}
+                    </div>)}
                 </div>
               </CardContent>
             </Card>
           </div>
 
           {/* Enhanced Activities */}
-          {activityData?.recentActivities && activityData.recentActivities.length > 0 && (
-            <Card className="surface-elevated border-0 shadow-aurora">
+          {activityData?.recentActivities && activityData.recentActivities.length > 0 && <Card className="surface-elevated border-0 shadow-aurora">
               <CardHeader>
                 <CardTitle className="text-heading-3">Atividades Recentes</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {activityData.recentActivities.slice(0, 5).map((activity: any, index: number) => (
-                    <div key={index} className="flex items-center gap-3 p-3 rounded-lg surface-elevated hover:bg-viverblue/5 transition-colors">
+                  {activityData.recentActivities.slice(0, 5).map((activity: any, index: number) => <div key={index} className="flex items-center gap-3 p-3 rounded-lg surface-elevated hover:bg-viverblue/5 transition-colors">
                       <div className="w-2 h-2 rounded-full bg-gradient-to-r from-viverblue to-operational"></div>
                       <div className="flex-1">
                         <p className="text-label">{activity.type}</p>
@@ -354,16 +291,12 @@ const AdminDashboard = () => {
                       <span className="text-caption text-muted-foreground">
                         {new Date(activity.timestamp).toLocaleString('pt-BR')}
                       </span>
-                    </div>
-                  ))}
+                    </div>)}
                 </div>
               </CardContent>
-            </Card>
-          )}
+            </Card>}
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default AdminDashboard;
