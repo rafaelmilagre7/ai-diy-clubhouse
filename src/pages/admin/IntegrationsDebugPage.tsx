@@ -19,10 +19,17 @@ import {
   RefreshCw,
   Eye,
   Settings,
-  TestTube
+  TestTube,
+  Search,
+  Target,
+  GitBranch,
+  Tag,
+  User,
+  Users
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { StatusCard } from '@/components/debug/StatusCard';
 
 const IntegrationsDebugPage = () => {
   const { toast } = useToast();
@@ -261,11 +268,11 @@ const IntegrationsDebugPage = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Eye className="h-5 w-5" />
-                Mapeamento do Pipedrive
+                <Database className="h-5 w-5" />
+                Mapeamento Completo do Pipedrive
               </CardTitle>
               <CardDescription>
-                Descubra pipelines, stages e campos da sua conta
+                Descubra toda a estrutura da sua conta Pipedrive
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -281,61 +288,182 @@ const IntegrationsDebugPage = () => {
                   </>
                 ) : (
                   <>
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Mapear Configurações
+                    <Search className="h-4 w-4 mr-2" />
+                    Mapear Conta Completa
                   </>
                 )}
               </Button>
 
+              {/* Resultados do Mapeamento */}
               {pipedriveMapping && (
-                <div className="space-y-4">
-                  {/* Pipeline Inside Sales */}
-                  <div className="border rounded-lg p-4">
-                    <h4 className="font-semibold mb-2">Pipeline "Inside Sales"</h4>
-                    {pipedriveMapping.account_info?.inside_sales_pipeline ? (
-                      <div className="space-y-2">
-                        <Badge variant="outline" className="bg-green-50 text-green-700">
-                          ✅ Encontrado: {pipedriveMapping.account_info.inside_sales_pipeline.name}
-                        </Badge>
-                        <p className="text-sm text-muted-foreground">
-                          ID: {pipedriveMapping.account_info.inside_sales_pipeline.id}
-                        </p>
+                <div className="space-y-6">
+                  
+                  {/* Resumo da Conta */}
+                  {pipedriveMapping.account_summary && (
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-blue-50 rounded-lg border">
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-blue-600">{pipedriveMapping.account_summary.total_pipelines}</div>
+                        <div className="text-sm text-gray-600">Pipelines</div>
                       </div>
-                    ) : (
-                      <Badge variant="outline" className="bg-red-50 text-red-700">
-                        ❌ Pipeline "Inside Sales" não encontrado
-                      </Badge>
-                    )}
-                  </div>
-
-                  {/* Stage Qualificado */}
-                  <div className="border rounded-lg p-4">
-                    <h4 className="font-semibold mb-2">Stage "Qualificado"</h4>
-                    {pipedriveMapping.account_info?.qualificado_stage ? (
-                      <div className="space-y-2">
-                        <Badge variant="outline" className="bg-green-50 text-green-700">
-                          ✅ Encontrado: {pipedriveMapping.account_info.qualificado_stage.name}
-                        </Badge>
-                        <p className="text-sm text-muted-foreground">
-                          ID: {pipedriveMapping.account_info.qualificado_stage.id}
-                        </p>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-green-600">{pipedriveMapping.account_summary.total_stages}</div>
+                        <div className="text-sm text-gray-600">Stages</div>
                       </div>
-                    ) : (
-                      <Badge variant="outline" className="bg-red-50 text-red-700">
-                        ❌ Stage "Qualificado" não encontrado
-                      </Badge>
-                    )}
-                  </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-purple-600">{pipedriveMapping.account_summary.total_deal_fields}</div>
+                        <div className="text-sm text-gray-600">Campos Deals</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-orange-600">{pipedriveMapping.account_summary.total_users}</div>
+                        <div className="text-sm text-gray-600">Usuários</div>
+                      </div>
+                    </div>
+                  )}
 
-                  {/* Todos os Pipelines */}
-                  {pipedriveMapping.account_info?.pipelines && (
+                  {/* Configuração Alvo - Inside Sales */}
+                  {pipedriveMapping.target_setup && (
+                    <div className="p-4 border rounded-lg">
+                      <h3 className="font-semibold mb-3 flex items-center gap-2">
+                        <Target className="h-4 w-4" />
+                        Configuração Alvo - Inside Sales
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <StatusCard
+                          title='Pipeline "Inside Sales"'
+                          success={pipedriveMapping.target_setup.found_target_pipeline}
+                          value={pipedriveMapping.target_setup.found_target_pipeline ? "Encontrado" : "Não encontrado"}
+                          icon={<Database className="h-4 w-4" />}
+                        />
+                        <StatusCard
+                          title='Stage "Qualificado"'
+                          success={pipedriveMapping.target_setup.found_target_stage}
+                          value={pipedriveMapping.target_setup.found_target_stage ? "Encontrado" : "Não encontrado"}
+                          icon={<CheckCircle className="h-4 w-4" />}
+                        />
+                      </div>
+                      
+                      {pipedriveMapping.target_setup.setup_complete && (
+                        <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                          <div className="flex items-center gap-2 text-green-700">
+                            <CheckCircle className="h-4 w-4" />
+                            <span className="font-medium">Configuração completa! Pronto para implementação.</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Pipelines e Stages */}
+                  {pipedriveMapping.structures?.pipelines && (
                     <div className="border rounded-lg p-4">
-                      <h4 className="font-semibold mb-2">Todos os Pipelines</h4>
-                      <div className="space-y-1 max-h-40 overflow-y-auto">
-                        {pipedriveMapping.account_info.pipelines.map((pipeline: any) => (
-                          <div key={pipeline.id} className="text-sm flex justify-between">
-                            <span>{pipeline.name}</span>
-                            <span className="text-muted-foreground">ID: {pipeline.id}</span>
+                      <h3 className="font-semibold mb-3 flex items-center gap-2">
+                        <GitBranch className="h-4 w-4" />
+                        Todos os Pipelines ({pipedriveMapping.structures.pipelines.length})
+                      </h3>
+                      <div className="space-y-3">
+                        {pipedriveMapping.structures.pipelines.map((pipeline: any) => {
+                          const pipelineStages = pipedriveMapping.structures?.all_stages?.filter(
+                            (stage: any) => stage.pipeline_id === pipeline.id
+                          ) || [];
+                          
+                          return (
+                            <div key={pipeline.id} className="border rounded p-3">
+                              <div className="flex items-center justify-between mb-2">
+                                <h4 className="font-medium">{pipeline.name}</h4>
+                                <span className="text-sm text-gray-500">{pipelineStages.length} stages</span>
+                              </div>
+                              {pipelineStages.length > 0 && (
+                                <div className="flex flex-wrap gap-2">
+                                  {pipelineStages.map((stage: any) => (
+                                    <span 
+                                      key={stage.id} 
+                                      className={`px-2 py-1 text-xs rounded ${
+                                        stage.name === 'Qualificado' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
+                                      }`}
+                                    >
+                                      {stage.name}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Campos Personalizados */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    
+                    {/* Campos de Deals */}
+                    {pipedriveMapping.custom_fields?.deal_fields && (
+                      <div className="border rounded-lg p-4">
+                        <h3 className="font-semibold mb-3 flex items-center gap-2">
+                          <Tag className="h-4 w-4" />
+                          Campos de Deals ({pipedriveMapping.custom_fields.deal_fields.length})
+                        </h3>
+                        <div className="space-y-2 max-h-64 overflow-y-auto">
+                          {pipedriveMapping.custom_fields.deal_fields.map((field: any) => (
+                            <div key={field.id} className="flex justify-between items-center p-2 border rounded text-sm">
+                              <div>
+                                <div className="font-medium">{field.name}</div>
+                                <div className="text-gray-500">{field.field_type}</div>
+                              </div>
+                              {field.mandatory_flag && (
+                                <span className="px-1 py-0.5 bg-red-100 text-red-700 text-xs rounded">
+                                  Obrigatório
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Campos de Pessoas */}
+                    {pipedriveMapping.custom_fields?.person_fields && (
+                      <div className="border rounded-lg p-4">
+                        <h3 className="font-semibold mb-3 flex items-center gap-2">
+                          <User className="h-4 w-4" />
+                          Campos de Pessoas ({pipedriveMapping.custom_fields.person_fields.length})
+                        </h3>
+                        <div className="space-y-2 max-h-64 overflow-y-auto">
+                          {pipedriveMapping.custom_fields.person_fields.map((field: any) => (
+                            <div key={field.id} className="flex justify-between items-center p-2 border rounded text-sm">
+                              <div>
+                                <div className="font-medium">{field.name}</div>
+                                <div className="text-gray-500">{field.field_type}</div>
+                              </div>
+                              {field.mandatory_flag && (
+                                <span className="px-1 py-0.5 bg-red-100 text-red-700 text-xs rounded">
+                                  Obrigatório
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Usuários */}
+                  {pipedriveMapping.structures?.users && (
+                    <div className="border rounded-lg p-4">
+                      <h3 className="font-semibold mb-3 flex items-center gap-2">
+                        <Users className="h-4 w-4" />
+                        Usuários Disponíveis ({pipedriveMapping.structures.users.length})
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {pipedriveMapping.structures.users.map((user: any) => (
+                          <div key={user.id} className="p-3 border rounded">
+                            <div className="font-medium">{user.name}</div>
+                            <div className="text-sm text-gray-500">{user.email}</div>
+                            {user.is_admin && (
+                              <span className="inline-block mt-1 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded">
+                                Admin
+                              </span>
+                            )}
                           </div>
                         ))}
                       </div>
@@ -343,14 +471,42 @@ const IntegrationsDebugPage = () => {
                   )}
 
                   {/* Configuração Recomendada */}
-                  {pipedriveMapping.recommended_config && (
+                  {pipedriveMapping.implementation_config && (
                     <div className="border rounded-lg p-4 bg-blue-50">
-                      <h4 className="font-semibold mb-2">Configuração Recomendada</h4>
-                       <pre className="text-sm text-green-400 bg-gray-900 p-3 rounded border border-gray-700 overflow-x-auto">
-{JSON.stringify(pipedriveMapping.recommended_config, null, 2)}
-                       </pre>
+                      <h3 className="font-semibold mb-3 flex items-center gap-2">
+                        <Settings className="h-4 w-4" />
+                        Configuração Recomendada para Implementação
+                      </h3>
+                      
+                      {/* Avisos */}
+                      {pipedriveMapping.implementation_config.missing_config?.length > 0 && (
+                        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
+                          <h4 className="font-medium text-yellow-800 mb-2">⚠️ Atenção:</h4>
+                          <ul className="text-sm text-yellow-700 space-y-1">
+                            {pipedriveMapping.implementation_config.missing_config.map((issue: string, index: number) => (
+                              <li key={index}>• {issue}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      <pre className="text-sm text-green-400 bg-gray-900 p-3 rounded border border-gray-700 overflow-x-auto">
+{JSON.stringify(pipedriveMapping.implementation_config, null, 2)}
+                      </pre>
                     </div>
                   )}
+
+                  {/* Dados Brutos (Collapsible) */}
+                  <details className="border rounded-lg">
+                    <summary className="p-4 cursor-pointer font-medium hover:bg-gray-50">
+                      📊 Ver Dados Brutos Completos
+                    </summary>
+                    <div className="p-4 border-t bg-gray-50">
+                      <pre className="text-xs text-green-400 bg-gray-900 p-3 rounded border border-gray-700 overflow-auto max-h-96">
+                        {JSON.stringify(pipedriveMapping, null, 2)}
+                      </pre>
+                    </div>
+                  </details>
                 </div>
               )}
             </CardContent>
