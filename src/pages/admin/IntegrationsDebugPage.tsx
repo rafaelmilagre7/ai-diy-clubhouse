@@ -224,7 +224,7 @@ const IntegrationsDebugPage = () => {
                 </div>
               )}
 
-              {secretsStatus && (!secretsStatus.pipedrive || !secretsStatus.discord) && (
+              {secretsStatus && secretsStatus.pipedrive !== undefined && (!secretsStatus.pipedrive || !secretsStatus.discord) && (
                 <Alert>
                   <AlertTriangle className="h-4 w-4" />
                   <AlertDescription>
