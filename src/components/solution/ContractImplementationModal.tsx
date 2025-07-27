@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { X, UserCheck, Mail, Phone, Briefcase, Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { UserCheck, Mail, Phone, Briefcase, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/auth";
 import { Badge } from "@/components/ui/badge";
 
@@ -20,6 +21,8 @@ export const ContractImplementationModal = ({
 }: ContractImplementationModalProps) => {
   const { profile } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [userEmail, setUserEmail] = useState(profile?.email || "");
+  const [userPhone, setUserPhone] = useState("");
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
@@ -28,8 +31,8 @@ export const ContractImplementationModal = ({
       // Aqui iremos implementar a integração com Pipedrive e Discord
       console.log("Solicitação de contratação enviada:", {
         userName: profile?.name,
-        userEmail: profile?.email,
-        userPhone: "N/A", // Por enquanto, até implementarmos campo de telefone
+        userEmail,
+        userPhone,
         solutionTitle,
         solutionCategory
       });
@@ -47,23 +50,18 @@ export const ContractImplementationModal = ({
     }
   };
 
+  // Sincronizar email quando profile mudar
+  useEffect(() => {
+    setUserEmail(profile?.email || "");
+  }, [profile?.email]);
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md bg-background/95 backdrop-blur-sm border border-white/10">
         <DialogHeader>
-          <div className="flex items-center justify-between">
-            <DialogTitle className="text-xl font-semibold bg-gradient-to-r from-white to-viverblue-light bg-clip-text text-transparent">
-              Contratar Implementação
-            </DialogTitle>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onClose}
-              className="h-8 w-8 rounded-full"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
+          <DialogTitle className="text-xl font-semibold bg-gradient-to-r from-white to-viverblue-light bg-clip-text text-transparent">
+            Contratar Implementação
+          </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
@@ -74,7 +72,7 @@ export const ContractImplementationModal = ({
             <div className="space-y-3">
               <div className="flex items-center gap-3 p-3 bg-white/5 rounded-lg border border-white/10">
                 <UserCheck className="h-4 w-4 text-viverblue-light" />
-                <div>
+                <div className="flex-1">
                   <p className="font-medium text-white">{profile?.name || "Nome não informado"}</p>
                   <p className="text-xs text-neutral-400">Nome completo</p>
                 </div>
@@ -82,16 +80,28 @@ export const ContractImplementationModal = ({
 
               <div className="flex items-center gap-3 p-3 bg-white/5 rounded-lg border border-white/10">
                 <Mail className="h-4 w-4 text-viverblue-light" />
-                <div>
-                  <p className="font-medium text-white">{profile?.email || "Email não informado"}</p>
+                <div className="flex-1">
+                  <Input
+                    type="email"
+                    value={userEmail}
+                    onChange={(e) => setUserEmail(e.target.value)}
+                    placeholder="Seu email de contato"
+                    className="bg-transparent border-none p-0 font-medium text-white placeholder:text-neutral-500 focus-visible:ring-0"
+                  />
                   <p className="text-xs text-neutral-400">Email de contato</p>
                 </div>
               </div>
 
               <div className="flex items-center gap-3 p-3 bg-white/5 rounded-lg border border-white/10">
                 <Phone className="h-4 w-4 text-viverblue-light" />
-                <div>
-                  <p className="font-medium text-white">Será solicitado no contato</p>
+                <div className="flex-1">
+                  <Input
+                    type="tel"
+                    value={userPhone}
+                    onChange={(e) => setUserPhone(e.target.value)}
+                    placeholder="Seu telefone (com DDD)"
+                    className="bg-transparent border-none p-0 font-medium text-white placeholder:text-neutral-500 focus-visible:ring-0"
+                  />
                   <p className="text-xs text-neutral-400">Telefone</p>
                 </div>
               </div>
