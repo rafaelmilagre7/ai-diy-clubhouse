@@ -69,6 +69,16 @@ export const SolutionSidebar = ({
                   </>
                 )}
               </Button>
+              
+              {/* Botão de Contratação - SEMPRE disponível */}
+              <Button
+                onClick={() => setShowContractModal(true)}
+                variant="outline"
+                className="w-full border-viverblue/30 text-viverblue-light hover:bg-viverblue/10 hover:border-viverblue/50 transition-all duration-300"
+              >
+                <Handshake className="h-4 w-4 mr-2" />
+                Contratar Implementação
+              </Button>
             </div>
           ) : (
             <div className="space-y-4">
@@ -96,7 +106,7 @@ export const SolutionSidebar = ({
                 )}
               </Button>
               
-              {/* Botão de Contratação */}
+              {/* Botão de Contratação - SEMPRE disponível */}
               <Button
                 onClick={() => setShowContractModal(true)}
                 variant="outline"
