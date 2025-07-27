@@ -49,21 +49,40 @@ export const useMaterialsData = (module: Module) => {
             return;
           }
           
+          
+          console.log("DEBUG: Raw solution data before filtering:", solutionData);
+          
           // Filter out video types and Panda Video content - they should be in the Videos tab only
           const filteredData = (solutionData || []).filter(
-            item => item.type !== 'video' && 
-                    !item.url?.includes('pandavideo') && 
-                    !(item.metadata?.provider === 'panda')
+            item => {
+              const shouldInclude = item.type !== 'video' && 
+                                    !item.url?.includes('pandavideo') && 
+                                    !(item.metadata?.provider === 'panda');
+              
+              console.log(`DEBUG: Item "${item.name}" (type: ${item.type}) - Include: ${shouldInclude}`);
+              return shouldInclude;
+            }
           );
+          
+          console.log("DEBUG: Filtered materials:", filteredData);
           
           setMaterials(filteredData);
         } else {
+          console.log("DEBUG: Raw module data before filtering:", moduleData);
+          
           // Filter out video types and Panda Video content from module data too
           const filteredModuleData = moduleData.filter(
-            item => item.type !== 'video' && 
-                    !item.url?.includes('pandavideo') && 
-                    !(item.metadata?.provider === 'panda')
+            item => {
+              const shouldInclude = item.type !== 'video' && 
+                                    !item.url?.includes('pandavideo') && 
+                                    !(item.metadata?.provider === 'panda');
+              
+              console.log(`DEBUG: Module Item "${item.name}" (type: ${item.type}) - Include: ${shouldInclude}`);
+              return shouldInclude;
+            }
           );
+          
+          console.log("DEBUG: Filtered module materials:", filteredModuleData);
           
           setMaterials(filteredModuleData);
         }
