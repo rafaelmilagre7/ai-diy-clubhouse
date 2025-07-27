@@ -8,7 +8,7 @@ import Dashboard from '@/pages/member/Dashboard';
 import Solutions from '@/pages/member/Solutions';
 import Tools from '@/pages/member/Tools';
 import ToolDetails from '@/pages/member/ToolDetails';
-import Profile from '@/pages/member/Profile';
+import ProfilePage from '@/pages/member/ProfilePage';
 import EditProfile from '@/pages/member/EditProfile';
 import SolutionDetails from '@/pages/member/SolutionDetails';
 import SolutionImplementation from '@/pages/member/SolutionImplementation';
@@ -64,7 +64,7 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/tools", Tools),
   createProtectedRoute("/tools/:id", ToolDetails),
   createProtectedRoute("/networking", Networking),
-  createProtectedRoute("/profile", Profile),
+  createProtectedRoute("/profile", ProfilePage),
   createProtectedRoute("/profile/edit", EditProfile),
   createProtectedRoute("/profile/notifications", NotificationSettingsPage),
   createProtectedRoute("/solution/:id", SolutionDetails),

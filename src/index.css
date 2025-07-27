@@ -141,3 +141,55 @@
 .scrollbar-track-transparent {
   scrollbar-color: hsl(var(--border)) transparent;
 }
+
+/* Profile Page Styles */
+.glass-card {
+  @apply bg-card/50 backdrop-blur-sm border border-border/50 hover:border-border/80 transition-all duration-300;
+}
+
+.glass-card:hover {
+  @apply shadow-lg shadow-primary/5;
+}
+
+/* Gradient text effect */
+.gradient-text {
+  @apply bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent;
+}
+
+/* Custom animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Profile avatar hover effect */
+.profile-avatar-container:hover .profile-avatar {
+  @apply scale-105 shadow-xl;
+}
+
+/* Custom scrollbar for tabs content */
+.tabs-content {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--muted)) transparent;
+}
+
+.tabs-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.tabs-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tabs-content::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted));
+  border-radius: 3px;
+}
+
+.tabs-content::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground));
+}

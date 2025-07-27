@@ -101,7 +101,7 @@ export const LazyNetworking = withLazyLoading(
 );
 
 export const LazyProfile = withLazyLoading(
-  () => import('@/pages/member/Profile'),
+  () => import('@/pages/member/ProfilePage'),
   'Perfil'
 );
 
