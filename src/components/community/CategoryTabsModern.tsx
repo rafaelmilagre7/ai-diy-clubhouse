@@ -3,7 +3,7 @@ import React from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CommunityCategory } from "@/types/communityTypes";
-import { MessageSquare, Hash } from "lucide-react";
+import { MessageSquare, Hash, Star, LifeBuoy, Zap, Lightbulb, Folder } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface CategoryTabsModernProps {
@@ -12,11 +12,11 @@ interface CategoryTabsModernProps {
 }
 
 const categoryIcons = {
-  'Geral': '🌟',
-  'Suporte': '🛟',
-  'Implementação': '⚡',
-  'Feedback': '💡',
-  'default': '📁'
+  'Geral': Star,
+  'Suporte': LifeBuoy,
+  'Implementação': Zap,
+  'Feedback': Lightbulb,
+  'default': Folder
 };
 
 const categoryGradients = {
@@ -65,8 +65,11 @@ export const CategoryTabsModern = ({ categories, isLoading }: CategoryTabsModern
             }`}
           >
             <div className="flex items-center gap-3">
-              <div className="text-2xl group-data-[state=active]:scale-110 transition-transform">
-                {categoryIcons[category.name as keyof typeof categoryIcons] || categoryIcons.default}
+              <div className="p-2 rounded-lg bg-gradient-to-br from-primary/20 to-accent/20 group-data-[state=active]:from-primary/30 group-data-[state=active]:to-accent/30 transition-all">
+                {(() => {
+                  const IconComponent = categoryIcons[category.name as keyof typeof categoryIcons] || categoryIcons.default;
+                  return <IconComponent className="h-4 w-4" />;
+                })()}
               </div>
               <div className="text-left">
                 <span className="font-semibold text-sm">
