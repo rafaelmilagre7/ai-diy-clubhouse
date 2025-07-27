@@ -54,6 +54,13 @@ export const ContractImplementationModal = ({
   useEffect(() => {
     setUserEmail(profile?.email || "");
     setUserPhone((profile as any)?.whatsapp_number || "");
+    
+    // Debug para verificar os dados do perfil
+    console.log("Dados do perfil no modal:", {
+      profile,
+      whatsapp_number: (profile as any)?.whatsapp_number,
+      email: profile?.email
+    });
   }, [profile?.email, profile]);
 
   return (
