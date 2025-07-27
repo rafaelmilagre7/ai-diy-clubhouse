@@ -1,6 +1,13 @@
 
-import React from "react";
-import ResourcesUploadForm from "@/components/admin/solution/form/ResourcesUploadForm";
+import React, { useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Save, Loader2, Upload, LinkIcon } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useResourcesFormData } from "@/components/admin/solution/form/hooks/useResourcesFormData";
+import ResourceMaterialsTab from "@/components/admin/solution/form/components/ResourceMaterialsTab";
+import ResourceLinksTab from "@/components/admin/solution/form/components/ResourceLinksTab";
 
 interface ResourcesTabProps {
   solutionId: string | null;
@@ -13,16 +20,86 @@ const ResourcesTab: React.FC<ResourcesTabProps> = ({
   onSave,
   saving
 }) => {
+  const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState("materials");
+  const { form, isSaving, handleSaveResources } = useResourcesFormData(solutionId);
+
+  const handleSaveWithToast = async () => {
+    try {
+      const success = await handleSaveResources();
+      if (success) {
+        onSave();
+        toast({
+          title: "Recursos salvos",
+          description: "Os materiais e links foram salvos com sucesso.",
+        });
+      }
+    } catch (error: any) {
+      console.error("Erro ao salvar recursos:", error);
+      toast({
+        title: "Erro ao salvar recursos",
+        description: error.message || "Ocorreu um erro ao tentar salvar os recursos.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="space-y-6 text-neutral-800 dark:text-white">
       <div className="space-y-4">
         <h2 className="text-xl font-semibold">Materiais da Solução</h2>
         <p className="text-muted-foreground">
-          Faça upload dos materiais e recursos relacionados a esta solução.
+          Gerencie os materiais de apoio e links externos para esta solução.
         </p>
       </div>
       
-      <ResourcesUploadForm solutionId={solutionId} onSave={onSave} saving={saving} />
+      <Card>
+        <CardHeader>
+          <CardTitle>Recursos da Solução</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="materials" className="flex items-center gap-2">
+                <Upload className="h-4 w-4" />
+                Materiais
+              </TabsTrigger>
+              <TabsTrigger value="links" className="flex items-center gap-2">
+                <LinkIcon className="h-4 w-4" />
+                Links Auxiliares
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="materials" className="space-y-4 mt-6">
+              <ResourceMaterialsTab form={form} solutionId={solutionId} />
+            </TabsContent>
+            
+            <TabsContent value="links" className="space-y-4 mt-6">
+              <ResourceLinksTab form={form} />
+            </TabsContent>
+          </Tabs>
+          
+          <div className="mt-6 pt-6 border-t">
+            <Button 
+              onClick={handleSaveWithToast}
+              disabled={isSaving || saving}
+              className="w-full bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Salvando...
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-4 w-4" />
+                  Salvar Recursos
+                </>
+              )}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

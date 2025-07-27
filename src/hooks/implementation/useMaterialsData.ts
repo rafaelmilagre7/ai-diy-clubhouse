@@ -13,13 +13,20 @@ export interface Material {
   module_id: string | null;
 }
 
+export interface ExternalLink {
+  title: string;
+  description: string;
+  url: string;
+}
+
 export const useMaterialsData = (module: Module) => {
   const [materials, setMaterials] = useState<Material[]>([]);
+  const [externalLinks, setExternalLinks] = useState<ExternalLink[]>([]);
   const [loading, setLoading] = useState(true);
   const { log, logError } = useLogging();
 
   useEffect(() => {
-    const fetchMaterials = async () => {
+    const fetchMaterialsAndLinks = async () => {
       try {
         setLoading(true);
         
@@ -56,6 +63,28 @@ export const useMaterialsData = (module: Module) => {
           
           setMaterials(filteredModuleData);
         }
+
+        // Fetch external links from solution_resources with type 'resources'
+        const { data: resourcesData, error: resourcesError } = await supabase
+          .from("solution_resources")
+          .select("*")
+          .eq("solution_id", module.solution_id)
+          .eq("type", "resources")
+          .is("module_id", null);
+
+        if (resourcesError) {
+          logError("Error fetching resources:", resourcesError);
+        } else if (resourcesData && resourcesData.length > 0) {
+          try {
+            // Parse the resources data to get external links
+            const resourcesContent = JSON.parse(resourcesData[0].url);
+            if (resourcesContent.external_links && Array.isArray(resourcesContent.external_links)) {
+              setExternalLinks(resourcesContent.external_links);
+            }
+          } catch (parseError) {
+            logError("Error parsing external links:", parseError);
+          }
+        }
       } catch (err) {
         logError("Error in materials fetch:", err);
       } finally {
@@ -63,11 +92,12 @@ export const useMaterialsData = (module: Module) => {
       }
     };
 
-    fetchMaterials();
+    fetchMaterialsAndLinks();
   }, [module.id, module.solution_id, log, logError]);
 
   return {
     materials,
+    externalLinks,
     loading
   };
 };
