@@ -42,11 +42,20 @@ export const useSidebarStats = () => {
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
         
-        const { count: eventsCount } = await supabase
+        console.log('🔍 [SIDEBAR-STATS] Período de busca:', {
+          startOfMonth: startOfMonth.toISOString(),
+          endOfMonth: endOfMonth.toISOString(),
+          currentMonth: now.getMonth() + 1,
+          currentYear: now.getFullYear()
+        });
+        
+        const { count: eventsCount, error: eventsError } = await supabase
           .from('events')
           .select('*', { count: 'exact', head: true })
           .gte('start_time', startOfMonth.toISOString())
           .lte('start_time', endOfMonth.toISOString());
+
+        console.log('📊 [SIDEBAR-STATS] Resultado eventos:', { eventsCount, eventsError });
 
         // Buscar ferramentas que têm benefícios cadastrados
         const { count: benefitsCount } = await supabase
