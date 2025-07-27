@@ -39,6 +39,8 @@ export const useEvents = () => {
       }
     },
     retry: 2,
-    staleTime: 5 * 60 * 1000, // 5 minutos
+    staleTime: 0, // Sem cache para garantir dados atualizados
+    refetchOnMount: true, // Sempre buscar dados atualizados
+    refetchOnWindowFocus: true // Atualizar quando a janela ganhar foco
   });
 };
