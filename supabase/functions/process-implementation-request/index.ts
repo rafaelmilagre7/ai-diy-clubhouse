@@ -156,9 +156,17 @@ serve(async (req) => {
     
     if (pipedriveToken && pipedriveCompanyDomain) {
       try {
+        console.log('🔍 Iniciando criação do deal no Pipedrive...');
+        console.log('Token disponível:', !!pipedriveToken);
+        console.log('Domain disponível:', pipedriveCompanyDomain);
+        
         // Buscar o pipeline "Inside Sales" e stage "Qualificado"
+        console.log('📋 Buscando pipelines...');
         const pipelinesResponse = await fetch(`https://${pipedriveCompanyDomain}.pipedrive.com/api/v1/pipelines?api_token=${pipedriveToken}`);
         const pipelinesData = await pipelinesResponse.json();
+        
+        console.log('Pipelines response status:', pipelinesResponse.status);
+        console.log('Pipelines data:', JSON.stringify(pipelinesData, null, 2));
         
         let pipelineId = null;
         let stageId = null;
@@ -170,12 +178,18 @@ serve(async (req) => {
             p.name.toLowerCase().includes('inside_sales')
           );
           
+          console.log('Pipeline Inside Sales encontrado:', insideSalesPipeline);
+          
           if (insideSalesPipeline) {
             pipelineId = insideSalesPipeline.id;
             
             // Buscar stages do pipeline
+            console.log('🎯 Buscando stages do pipeline...');
             const stagesResponse = await fetch(`https://${pipedriveCompanyDomain}.pipedrive.com/api/v1/stages?pipeline_id=${pipelineId}&api_token=${pipedriveToken}`);
             const stagesData = await stagesResponse.json();
+            
+            console.log('Stages response status:', stagesResponse.status);
+            console.log('Stages data:', JSON.stringify(stagesData, null, 2));
             
             if (stagesData.success && stagesData.data) {
               // Encontrar stage "Qualificado"
@@ -183,11 +197,15 @@ serve(async (req) => {
                 s.name.toLowerCase().includes('qualificado')
               );
               
+              console.log('Stage Qualificado encontrado:', qualificadoStage);
+              
               if (qualificadoStage) {
                 stageId = qualificadoStage.id;
               }
             }
           }
+        } else {
+          console.error('❌ Erro na resposta dos pipelines:', pipelinesData);
         }
         
         console.log('Pipedrive IDs encontrados:', { pipelineId, stageId });
