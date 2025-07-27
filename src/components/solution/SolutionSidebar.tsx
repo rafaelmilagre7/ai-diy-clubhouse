@@ -1,9 +1,10 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Solution } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Loader2, PlayCircle, Clock, Users, TrendingUp } from "lucide-react";
+import { ArrowRight, Loader2, PlayCircle, Clock, Users, TrendingUp, Handshake } from "lucide-react";
+import { ContractImplementationModal } from "./ContractImplementationModal";
 
 interface SolutionSidebarProps {
   solution: Solution;
@@ -20,6 +21,8 @@ export const SolutionSidebar = ({
   continueImplementation, 
   initializing 
 }: SolutionSidebarProps) => {
+  const [showContractModal, setShowContractModal] = useState(false);
+
   return (
     <div className="space-y-6">
       {/* Card de Implementação */}
@@ -92,6 +95,16 @@ export const SolutionSidebar = ({
                   </>
                 )}
               </Button>
+              
+              {/* Botão de Contratação */}
+              <Button
+                onClick={() => setShowContractModal(true)}
+                variant="outline"
+                className="w-full border-viverblue/30 text-viverblue-light hover:bg-viverblue/10 hover:border-viverblue/50 transition-all duration-300"
+              >
+                <Handshake className="h-4 w-4 mr-2" />
+                Contratar Implementação
+              </Button>
             </div>
           )}
         </div>
@@ -148,6 +161,14 @@ export const SolutionSidebar = ({
           </div>
         </div>
       </div>
+
+      {/* Modal de Contratação */}
+      <ContractImplementationModal
+        isOpen={showContractModal}
+        onClose={() => setShowContractModal(false)}
+        solutionTitle={solution.title}
+        solutionCategory={solution.category}
+      />
     </div>
   );
 };
