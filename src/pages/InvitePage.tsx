@@ -108,7 +108,11 @@ const InvitePage = () => {
                     prefilledEmail={validationResult.invite.email}
                     prefilledName={validationResult.invite.profile_data?.name}
                     onSuccess={() => {
-                      console.log('🎯 [INVITE] Registro concluído via InvitePage');
+                      console.log('🎯 [INVITE] Registro concluído via InvitePage - redirecionando para onboarding');
+                      // Redirecionar automaticamente para o onboarding
+                      setTimeout(() => {
+                        navigate('/onboarding');
+                      }, 1500); // Aguardar 1.5s para mostrar mensagem de sucesso
                     }}
                   />
                 </div>
