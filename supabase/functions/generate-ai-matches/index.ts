@@ -40,14 +40,43 @@ serve(async (req) => {
     }
 
     // Buscar preferências de networking do usuário
-    const { data: userPreferences } = await supabase
+    const { data: userPreferences, error: preferencesError } = await supabase
       .from('networking_preferences')
       .select('*')
       .eq('user_id', user_id)
-      .single();
+      .maybeSingle();
 
     console.log('Perfil do usuário encontrado:', userProfile.name);
     console.log('Preferências do usuário:', userPreferences);
+    
+    // Se não há preferências, criar preferências padrão
+    if (!userPreferences) {
+      console.log('Usuário sem preferências de networking, criando preferências padrão...');
+      
+      const { data: newPreferences, error: createError } = await supabase
+        .from('networking_preferences')
+        .insert({
+          user_id: user_id,
+          looking_for: {
+            types: ['customer', 'supplier', 'partner'],
+            industries: [],
+            company_sizes: ['startup', 'pequena', 'media', 'grande']
+          },
+          exclude_sectors: [],
+          min_compatibility: 0.7,
+          preferred_connections_per_week: 5,
+          is_active: true
+        })
+        .select()
+        .single();
+        
+      if (createError) {
+        console.error('Erro ao criar preferências padrão:', createError);
+        throw new Error(`Erro ao criar preferências de networking: ${createError.message}`);
+      }
+      
+      console.log('Preferências padrão criadas:', newPreferences);
+    }
 
     const currentDate = new Date();
     const monthYear = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
@@ -70,12 +99,19 @@ serve(async (req) => {
       });
     }
 
-    // Configurar filtros baseados nas preferências do usuário
-    const maxMatches = userPreferences?.preferred_connections_per_week || 5;
-    const minCompatibility = userPreferences?.min_compatibility || 0.7;
-    const preferredTypes = userPreferences?.looking_for?.types || ['customer', 'supplier', 'partner'];
-    const preferredIndustries = userPreferences?.looking_for?.industries || [];
-    const excludedSectors = userPreferences?.exclude_sectors || [];
+    // Configurar filtros baseados nas preferências do usuário (usar preferências existentes ou padrão)
+    const activePrefs = userPreferences || {
+      preferred_connections_per_week: 5,
+      min_compatibility: 0.7,
+      looking_for: { types: ['customer', 'supplier', 'partner'] },
+      exclude_sectors: []
+    };
+    
+    const maxMatches = activePrefs.preferred_connections_per_week || 5;
+    const minCompatibility = activePrefs.min_compatibility || 0.7;
+    const preferredTypes = activePrefs.looking_for?.types || ['customer', 'supplier', 'partner'];
+    const preferredIndustries = activePrefs.looking_for?.industries || [];
+    const excludedSectors = activePrefs.exclude_sectors || [];
 
     // Primeiro buscar IDs de usuários já conectados
     const { data: existingConnections, error: connectionsError } = await supabase

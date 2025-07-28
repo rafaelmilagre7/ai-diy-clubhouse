@@ -5989,6 +5989,10 @@ export type Database = {
         Args: { topic_id: string }
         Returns: undefined
       }
+      initialize_networking_preferences_for_user: {
+        Args: { target_user_id: string }
+        Returns: Json
+      }
       initialize_onboarding_for_all_users: {
         Args: Record<PropertyKey, never>
         Returns: Json
