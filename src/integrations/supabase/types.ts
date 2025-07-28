@@ -4944,6 +4944,48 @@ export type Database = {
         }
         Relationships: []
       }
+      audit_logs_secure: {
+        Row: {
+          action: string | null
+          details: Json | null
+          event_type: string | null
+          id: string | null
+          ip_address: string | null
+          resource_id: string | null
+          session_id: string | null
+          severity: string | null
+          timestamp: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action?: string | null
+          details?: never
+          event_type?: string | null
+          id?: string | null
+          ip_address?: never
+          resource_id?: never
+          session_id?: never
+          severity?: string | null
+          timestamp?: string | null
+          user_agent?: never
+          user_id?: never
+        }
+        Update: {
+          action?: string | null
+          details?: never
+          event_type?: string | null
+          id?: string | null
+          ip_address?: never
+          resource_id?: never
+          session_id?: never
+          severity?: string | null
+          timestamp?: string | null
+          user_agent?: never
+          user_id?: never
+        }
+        Relationships: []
+      }
       nps_analytics_view: {
         Row: {
           course_title: string | null
@@ -5274,6 +5316,10 @@ export type Database = {
       cleanup_old_audit_logs: {
         Args: Record<PropertyKey, never> | { retention_period?: unknown }
         Returns: number
+      }
+      cleanup_old_logs_lgpd: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
       }
       cleanup_old_rate_limits: {
         Args: Record<PropertyKey, never>
@@ -6086,6 +6132,15 @@ export type Database = {
         }
         Returns: Json
       }
+      log_auth_event_secure: {
+        Args: {
+          p_event_type: string
+          p_action: string
+          p_user_id?: string
+          p_additional_data?: Json
+        }
+        Returns: undefined
+      }
       log_critical_action: {
         Args: { p_action: string; p_details?: Json }
         Returns: undefined
@@ -6233,6 +6288,18 @@ export type Database = {
       mark_notifications_read: {
         Args: { p_user_id: string; p_notification_ids?: string[] }
         Returns: Json
+      }
+      mask_email: {
+        Args: { email_input: string }
+        Returns: string
+      }
+      mask_ip_address: {
+        Args: { ip_input: string }
+        Returns: string
+      }
+      mask_personal_name: {
+        Args: { name_input: string }
+        Returns: string
       }
       merge_json_data: {
         Args: { target: Json; source: Json }
