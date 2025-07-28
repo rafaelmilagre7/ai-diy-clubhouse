@@ -8,6 +8,7 @@ import { AuthProvider } from "@/contexts/auth";
 import { LoggingProvider } from "@/hooks/useLogging";
 import { AppRoutes } from "@/routes";
 import { PerformanceDashboard } from "@/components/dev/PerformanceDashboard";
+import { XSSProtectionProvider } from "@/components/security/XSSProtectionProvider";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -24,19 +25,21 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <LoggingProvider>
-          <AuthProvider>
-            <BrowserRouter>
-              <div className="min-h-screen bg-background font-sans antialiased">
-                <AppRoutes />
-                <Toaster />
-                <Sonner />
-                {/* Dashboard de performance apenas em desenvolvimento */}
-                <PerformanceDashboard />
-              </div>
-            </BrowserRouter>
-          </AuthProvider>
-        </LoggingProvider>
+        <XSSProtectionProvider>
+          <LoggingProvider>
+            <AuthProvider>
+              <BrowserRouter>
+                <div className="min-h-screen bg-background font-sans antialiased">
+                  <AppRoutes />
+                  <Toaster />
+                  <Sonner />
+                  {/* Dashboard de performance apenas em desenvolvimento */}
+                  <PerformanceDashboard />
+                </div>
+              </BrowserRouter>
+            </AuthProvider>
+          </LoggingProvider>
+        </XSSProtectionProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );

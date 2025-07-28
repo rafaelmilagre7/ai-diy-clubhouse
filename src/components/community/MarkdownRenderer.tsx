@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { SafeHTML } from '@/utils/security/xssProtection';
 
 interface MarkdownRendererProps {
   content: string;
@@ -44,10 +45,10 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, cla
   };
 
   return (
-    <div 
+    <SafeHTML 
+      html={renderMarkdown(content)}
       className={`prose prose-sm max-w-none ${className}`}
-      style={{ lineHeight: '1.6' }}
-      dangerouslySetInnerHTML={{ __html: renderMarkdown(content) }}
+      sanitizationLevel="comments"
     />
   );
 };

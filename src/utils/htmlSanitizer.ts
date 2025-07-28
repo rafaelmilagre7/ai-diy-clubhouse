@@ -1,5 +1,6 @@
 
 import DOMPurify from 'dompurify';
+import { sanitizeHTML, sanitizeUserContent } from '@/utils/security/xssProtection';
 
 /**
  * Configuração segura do DOMPurify para conteúdo do fórum
