@@ -6535,6 +6535,10 @@ export type Database = {
         Args: { password: string }
         Returns: Json
       }
+      validate_policy_consolidation: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       validate_profile_roles: {
         Args: Record<PropertyKey, never>
         Returns: {
