@@ -260,9 +260,20 @@ export const useOnboarding = () => {
       return false;
     }
     
+    // Validação adicional dos dados antes de salvar
+    if (!stepData || Object.keys(stepData).length === 0) {
+      console.error('[ONBOARDING] Dados vazios ou inválidos para salvamento:', stepData);
+      return false;
+    }
+    
     console.log('[ONBOARDING] Iniciando salvamento do step:', step);
-    console.log('[ONBOARDING] Dados a salvar:', stepData);
+    console.log('[ONBOARDING] Dados a salvar (detalhados):', JSON.stringify(stepData, null, 2));
     console.log('[ONBOARDING] ID do usuário:', user.id);
+    console.log('[ONBOARDING] Estado atual:', { 
+      stateId: state.id, 
+      currentStep: state.current_step, 
+      completedSteps: state.completed_steps 
+    });
     
     try {
       setIsSaving(true);

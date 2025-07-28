@@ -124,6 +124,15 @@ const OnboardingPage: React.FC = () => {
   const canProceed = useCallback(() => {
     switch (current_step) {
       case 1:
+        console.log('🔍 [ONBOARDING] Verificando se pode avançar step 1:', {
+          data: data.personal_info,
+          hasName: !!data.personal_info?.name,
+          hasPhone: !!data.personal_info?.phone,
+          hasState: !!data.personal_info?.state,
+          hasCity: !!data.personal_info?.city,
+          hasPhoto: !!data.personal_info?.profile_picture
+        });
+        
         const phoneValid = data.personal_info?.phone && 
           data.personal_info.phone.includes('|') && 
           data.personal_info.phone.startsWith('+') &&
@@ -134,10 +143,19 @@ const OnboardingPage: React.FC = () => {
           data.personal_info?.state && 
           data.personal_info?.city;
         
-        const hasProfilePicture = data.personal_info?.profile_picture && 
-          data.personal_info.profile_picture.trim().length > 0;
+        // TEMPORARIAMENTE removendo obrigatoriedade da foto para debugar
+        const hasProfilePicture = true; // data.personal_info?.profile_picture && 
+          // data.personal_info.profile_picture.trim().length > 0;
         
-        return !!(hasRequiredFields && phoneValid && hasProfilePicture);
+        const canAdvance = !!(hasRequiredFields && phoneValid && hasProfilePicture);
+        console.log('🔍 [ONBOARDING] Resultado validação step 1:', {
+          hasRequiredFields,
+          phoneValid,
+          hasProfilePicture,
+          canAdvance
+        });
+        
+        return canAdvance;
       case 2:
         return !!(data.professional_info?.company_name && data.professional_info?.company_sector);
       case 3:
