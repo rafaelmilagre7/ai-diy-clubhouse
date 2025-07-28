@@ -5777,6 +5777,15 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      get_privilege_escalation_attempts: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          attempt_date: string
+          user_email: string
+          attempted_role: string
+          details: Json
+        }[]
+      }
       get_profile_safe: {
         Args: { target_user_id?: string }
         Returns: {
@@ -6315,6 +6324,10 @@ export type Database = {
         }[]
       }
       secure_assign_role: {
+        Args: { target_user_id: string; new_role_id: string }
+        Returns: Json
+      }
+      secure_change_user_role: {
         Args: { target_user_id: string; new_role_id: string }
         Returns: Json
       }
