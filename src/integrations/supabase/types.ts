@@ -5094,6 +5094,10 @@ export type Database = {
           | { p_user_id: string; p_token: string }
         Returns: Json
       }
+      can_view_connection_secure: {
+        Args: { target_connection_id: string }
+        Returns: boolean
+      }
       change_user_role: {
         Args: { target_user_id: string; new_role_id: string }
         Returns: Json
