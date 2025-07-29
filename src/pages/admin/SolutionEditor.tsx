@@ -101,7 +101,7 @@ const SolutionEditor = () => {
       
       {!user && <AuthError />}
       
-      <Card className="border-none shadow-sm">
+      <Card className="border-border/20 shadow-none bg-card/50 backdrop-blur-sm">
         <CardContent className="p-0">
           <SolutionEditorTabs 
             activeTab={activeTab}

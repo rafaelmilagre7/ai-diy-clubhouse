@@ -56,44 +56,58 @@ const SolutionEditorTabs: React.FC<SolutionEditorTabsProps> = ({
   const showStepProgress = isStepMode && currentStep >= 0;
 
   return (
-    <div className="w-full space-y-6">
+    <div className="w-full">
       {/* Cabeçalho com progresso se estiver em modo step */}
       {showStepProgress && (
-        <div className="flex items-center justify-between border-b pb-4">
-          <div>
-            <h2 className="text-xl font-semibold">
-              {stepTitles[currentStep]} 
-              <Badge variant="outline" className="ml-2">
-                Etapa {currentStep + 1} de {totalSteps}
-              </Badge>
-            </h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              Complete todas as etapas para publicar sua solução
-            </p>
+        <div className="px-6 pt-6 pb-4 border-b border-border/20">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-semibold text-foreground">
+                {stepTitles[currentStep]} 
+                <Badge variant="secondary" className="ml-3">
+                  Etapa {currentStep + 1} de {totalSteps}
+                </Badge>
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                Complete todas as etapas para publicar sua solução
+              </p>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Abas navegáveis */}
+      {/* Abas navegáveis integradas ao design */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-6">
-          {tabItems.map((tab) => (
-            <TabsTrigger 
-              key={tab.value} 
-              value={tab.value} 
-              disabled={tab.disabled}
-              className="relative"
-            >
-              {tab.label}
-              {/* Indicador visual da aba ativa no modo step */}
-              {showStepProgress && activeTab === tab.value && (
-                <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-primary rounded-full" />
-              )}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+        <div className="border-b border-border/20 bg-muted/20">
+          <TabsList className="w-full h-auto p-0 bg-transparent grid grid-cols-6 rounded-none">
+            {tabItems.map((tab, index) => (
+              <TabsTrigger 
+                key={tab.value} 
+                value={tab.value} 
+                disabled={tab.disabled}
+                className="
+                  relative px-4 py-4 rounded-none border-r border-border/20 last:border-r-0
+                  data-[state=active]:bg-background data-[state=active]:text-foreground 
+                  data-[state=active]:shadow-sm data-[state=active]:border-b-2 
+                  data-[state=active]:border-b-primary data-[state=active]:border-t-0
+                  data-[state=active]:border-l-0 data-[state=active]:border-r-0
+                  text-muted-foreground hover:text-foreground hover:bg-background/50
+                  disabled:opacity-40 disabled:cursor-not-allowed
+                  transition-all duration-200 font-medium text-sm
+                "
+              >
+                {tab.label}
+                {/* Indicador de aba completada */}
+                {solution?.id && tab.value !== 'basic' && !tab.disabled && (
+                  <div className="absolute top-2 right-2 w-2 h-2 bg-green-500 rounded-full" />
+                )}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </div>
 
-        <div className="mt-6">
+        {/* Conteúdo da aba */}
+        <div className="p-6">
           <TabContent 
             activeTab={activeTab}
             currentStep={currentStep}
