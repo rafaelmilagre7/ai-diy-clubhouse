@@ -29,14 +29,22 @@ export const AdminUserMenu = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+        <Button 
+          variant="ghost" 
+          className="relative h-8 w-8 rounded-full hover:bg-white/10 focus:bg-white/10 focus:ring-2 focus:ring-white/20"
+        >
           <Avatar className="h-8 w-8">
             <AvatarImage src={profile?.avatar_url} alt={profile?.name || "Usuário"} />
             <AvatarFallback>{getInitials(profile?.name)}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end" forceMount>
+      <DropdownMenuContent 
+        className="w-56 z-[9999]" 
+        align="end" 
+        forceMount
+        sideOffset={8}
+      >
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none">{profile?.name || "Usuário"}</p>
