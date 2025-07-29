@@ -44,12 +44,12 @@ const ChecklistTab: React.FC<ChecklistTabProps> = ({ solutionId, onComplete }) =
     queryFn: async () => {
       console.log('ChecklistTab: Buscando checklist para solução:', solutionId);
       
-      // Buscar o checklist criado pelo admin na tabela implementation_checkpoints
+      // Buscar o template criado pelo admin na tabela implementation_checkpoints
       const { data, error } = await supabase
         .from('implementation_checkpoints')
         .select('checkpoint_data')
         .eq('solution_id', solutionId)
-        .limit(1)
+        .eq('is_template', true)
         .maybeSingle();
 
       if (error) {
@@ -82,12 +82,13 @@ const ChecklistTab: React.FC<ChecklistTabProps> = ({ solutionId, onComplete }) =
       
       console.log('ChecklistTab: Buscando progresso do usuário:', user.id, solutionId);
       
-      // Buscar o progresso do usuário para esta solução
+      // Buscar o progresso do usuário para esta solução (não template)
       const { data, error } = await supabase
         .from('implementation_checkpoints')
         .select('*')
         .eq('user_id', user.id)
         .eq('solution_id', solutionId)
+        .eq('is_template', false)
         .maybeSingle();
 
       if (error) {
@@ -122,12 +123,13 @@ const ChecklistTab: React.FC<ChecklistTabProps> = ({ solutionId, onComplete }) =
 
       console.log('ChecklistTab: Atualizando progresso:', { itemId, isCompleted, itemNotes });
 
-      // Buscar dados atuais do usuário
+      // Buscar dados atuais do usuário (não template)
       const { data: currentData, error: fetchError } = await supabase
         .from('implementation_checkpoints')
         .select('*')
         .eq('user_id', user.id)
         .eq('solution_id', solutionId)
+        .eq('is_template', false)
         .maybeSingle();
 
       if (fetchError && fetchError.code !== 'PGRST116') {
@@ -180,12 +182,12 @@ const ChecklistTab: React.FC<ChecklistTabProps> = ({ solutionId, onComplete }) =
         return data;
 
       } else {
-        // Buscar template do admin para criar novo registro
+        // Buscar template do admin para criar novo registro de progresso
         const { data: adminData, error: adminError } = await supabase
           .from('implementation_checkpoints')
           .select('checkpoint_data')
           .eq('solution_id', solutionId)
-          .limit(1)
+          .eq('is_template', true)
           .maybeSingle();
 
         if (adminError) throw adminError;
@@ -210,19 +212,20 @@ const ChecklistTab: React.FC<ChecklistTabProps> = ({ solutionId, onComplete }) =
           ? Math.round((completedSteps.length / checkpointData.items.length) * 100)
           : 0;
 
-        // Fazer INSERT
-        const { data, error } = await supabase
-          .from('implementation_checkpoints')
-          .insert({
-            user_id: user.id,
-            solution_id: solutionId,
-            checkpoint_data: checkpointData,
-            completed_steps: completedSteps,
-            total_steps: checkpointData?.items?.length || 0,
-            progress_percentage: progressPercentage
-          })
-          .select()
-          .single();
+         // Fazer INSERT do progresso do usuário (não é template)
+         const { data, error } = await supabase
+           .from('implementation_checkpoints')
+           .insert({
+             user_id: user.id,
+             solution_id: solutionId,
+             checkpoint_data: checkpointData,
+             completed_steps: completedSteps,
+             total_steps: checkpointData?.items?.length || 0,
+             progress_percentage: progressPercentage,
+             is_template: false
+           })
+           .select()
+           .single();
 
         if (error) throw error;
         return data;

@@ -51,11 +51,12 @@ const ImplementationChecklist: React.FC<ImplementationChecklistProps> = ({
       setLoading(true);
       console.log("📋 Buscando checkpoints para solução:", solutionId);
 
+      // Como admin, buscar template para esta solução
       const { data, error } = await supabase
         .from("implementation_checkpoints")
         .select("*")
         .eq("solution_id", solutionId)
-        .eq("user_id", user.id)
+        .eq("is_template", true)
         .maybeSingle();
 
       if (error) {
@@ -106,12 +107,12 @@ const ImplementationChecklist: React.FC<ImplementationChecklistProps> = ({
         ? Math.round((completedSteps.length / checklistItems.length) * 100)
         : 0;
 
-      // Verificar se já existe um registro
+      // Verificar se já existe um template para esta solução
       const { data: existingData } = await supabase
         .from("implementation_checkpoints")
         .select("id")
         .eq("solution_id", solutionId)
-        .eq("user_id", user.id)
+        .eq("is_template", true)
         .maybeSingle();
 
       if (existingData) {
@@ -129,7 +130,7 @@ const ImplementationChecklist: React.FC<ImplementationChecklistProps> = ({
 
         if (error) throw error;
       } else {
-        // Criar novo registro
+        // Criar novo template
         const { error } = await supabase
           .from("implementation_checkpoints")
           .insert({
@@ -138,7 +139,8 @@ const ImplementationChecklist: React.FC<ImplementationChecklistProps> = ({
             checkpoint_data: checkpointData,
             completed_steps: completedSteps,
             total_steps: checklistItems.length,
-            progress_percentage: progressPercentage
+            progress_percentage: progressPercentage,
+            is_template: true
           });
 
         if (error) throw error;

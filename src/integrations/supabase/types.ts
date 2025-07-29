@@ -1199,9 +1199,11 @@ export type Database = {
           completed_steps: string[] | null
           created_at: string
           id: string
+          is_template: boolean | null
           last_completed_step: string | null
           progress_percentage: number | null
           solution_id: string
+          template_id: string | null
           total_steps: number | null
           updated_at: string
           user_id: string
@@ -1211,9 +1213,11 @@ export type Database = {
           completed_steps?: string[] | null
           created_at?: string
           id?: string
+          is_template?: boolean | null
           last_completed_step?: string | null
           progress_percentage?: number | null
           solution_id: string
+          template_id?: string | null
           total_steps?: number | null
           updated_at?: string
           user_id: string
@@ -1223,14 +1227,24 @@ export type Database = {
           completed_steps?: string[] | null
           created_at?: string
           id?: string
+          is_template?: boolean | null
           last_completed_step?: string | null
           progress_percentage?: number | null
           solution_id?: string
+          template_id?: string | null
           total_steps?: number | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "implementation_checkpoints_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "implementation_checkpoints"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       implementation_requests: {
         Row: {
