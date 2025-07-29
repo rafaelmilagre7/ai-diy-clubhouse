@@ -124,13 +124,6 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   if (!isMounted || (isLoading && !forceReady && !optimisticLoad && retryCount < maxRetries)) {
     return (
       <div className="flex min-h-screen w-full bg-background dark">
-        {isMobile && sidebarOpen && (
-          <div 
-            className="fixed inset-0 bg-black/50 z-30 md:hidden"
-            onClick={() => setSidebarOpen(false)}
-            aria-label="Fechar menu"
-          />
-        )}
         
         {/* OTIMIZAÇÃO 8: Skeleton simplificado para navegação rápida */}
         <div className="w-64 border-r bg-sidebar p-4 flex flex-col">
@@ -167,9 +160,10 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   if (forceReady || optimisticLoad || (!isLoading && user && isAdmin)) {
     return (
       <div className="flex min-h-screen w-full bg-background dark">
-        {isMobile && sidebarOpen && (
+        {/* Overlay mobile - apenas quando necessário */}
+        {typeof window !== 'undefined' && window.innerWidth < 768 && sidebarOpen && (
           <div 
-            className="fixed inset-0 bg-black/50 z-30 md:hidden"
+            className="fixed inset-0 bg-black/50 z-30"
             onClick={() => setSidebarOpen(false)}
             aria-label="Fechar menu"
           />
