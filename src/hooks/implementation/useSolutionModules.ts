@@ -117,20 +117,18 @@ export const useSolutionModules = (solution: Solution | null) => {
           console.log("✅ Módulo Videos adicionado com", videos.length, "vídeos");
         }
 
-        // 5. Checklist Module (se houver checklist no Solution)
-        console.log("🔍 Verificando checklist na solução");
-        if (solution.checklist && solution.checklist.length > 0) {
-          generatedModules.push({
-            id: 'checklist',
-            type: 'checklist',
-            title: 'Lista de Verificação',
-            content: { 
-              checklist: solution.checklist 
-            },
-            order: generatedModules.length
-          });
-          console.log("✅ Módulo Checklist adicionado com", solution.checklist.length, "itens");
-        }
+        // 5. Checklist Module (sempre inclui para buscar do unified_checklists)
+        console.log("🔍 Adicionando módulo de checklist unificado");
+        generatedModules.push({
+          id: 'checklist',
+          type: 'checklist',
+          title: 'Lista de Verificação',
+          content: { 
+            hasUnifiedChecklist: true
+          },
+          order: generatedModules.length
+        });
+        console.log("✅ Módulo Checklist Unificado adicionado");
 
         // 6. Celebration Module (sempre último)
         generatedModules.push({

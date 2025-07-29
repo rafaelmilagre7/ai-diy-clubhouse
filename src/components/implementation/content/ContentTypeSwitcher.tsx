@@ -35,8 +35,10 @@ export const ContentTypeSwitcher = ({ contentType, module }: ContentTypeSwitcher
         {/* Render module-specific videos when needed */}
         <ModuleContentVideos module={module} />
         
-        {/* Render checklist for modules that need verification */}
-        <ModuleContentChecklist module={module} />
+        {/* Render checklist para módulos que precisam de verificação */}
+        {(module.type === 'checklist' || (module.content as any)?.hasUnifiedChecklist) && (
+          <ModuleContentChecklist module={module} />
+        )}
       </div>
     );
   } catch (error) {

@@ -26,6 +26,7 @@ import IntegrationsDebugPage from '@/pages/admin/IntegrationsDebugPage';
 
 import NPSAnalytics from '@/pages/admin/NPSAnalytics';
 import CertificateTemplates from '@/pages/admin/CertificateTemplates';
+import ChecklistAuditPage from '@/pages/admin/ChecklistAuditPage';
 
 // Função helper para criar rotas protegidas com AdminLayout (sempre aberto)
 const createAdminRoute = (path: string, Component: React.ComponentType<any>) => ({
@@ -63,4 +64,5 @@ export const adminRoutes: RouteObject[] = [
   
   createAdminRoute("/admin/nps", NPSAnalytics),
   createAdminRoute("/admin/certificate-templates", CertificateTemplates),
+  createAdminRoute("/admin/checklist-audit", ChecklistAuditPage),
 ];
