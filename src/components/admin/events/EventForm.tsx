@@ -114,25 +114,9 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
           .select()
           .single();
 
-        // Se é um evento recorrente novo, gerar as instâncias automaticamente
+        // Evento recorrente criado - não gera instâncias automaticamente
         if (data.is_recurring && result.data) {
-          try {
-            console.log('Gerando instâncias recorrentes para o evento:', result.data.id);
-            
-            const { data: instances, error: instancesError } = await supabase.rpc('generate_recurring_event_instances', {
-              p_event_id: result.data.id,
-              p_max_instances: 10 // Gerar 10 instâncias por padrão
-            });
-            
-            if (instancesError) {
-              console.error('Erro ao gerar instâncias recorrentes:', instancesError);
-            } else {
-              console.log('Instâncias recorrentes criadas com sucesso:', instances);
-            }
-          } catch (error) {
-            console.error('Erro ao gerar instâncias recorrentes:', error);
-            // Não falhar o processo principal, apenas logar o erro
-          }
+          console.log('Evento recorrente criado:', result.data.id);
         }
       }
 
