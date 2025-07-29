@@ -27,6 +27,8 @@ interface ChecklistItem {
 const ChecklistTab: React.FC<ChecklistTabProps> = ({ solutionId, onComplete }) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const [itemNotes, setItemNotes] = useState<Record<string, string>>({});
+  const [showSaveButtons, setShowSaveButtons] = useState<Record<string, boolean>>({});
 
   // Buscar template criado pelos admins
   const { data: checklistTemplate, isLoading } = useQuery({
@@ -201,6 +203,17 @@ const ChecklistTab: React.FC<ChecklistTabProps> = ({ solutionId, onComplete }) =
     }
   }, [checklistItems, onComplete]);
 
+  // Sincronizar itemNotes com checklistItems quando carregarem
+  useEffect(() => {
+    if (checklistItems.length > 0) {
+      const notesMap: Record<string, string> = {};
+      checklistItems.forEach(item => {
+        notesMap[item.id] = item.notes || '';
+      });
+      setItemNotes(notesMap);
+    }
+  }, [checklistItems]);
+
   if (isLoading || isLoadingProgress) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -256,22 +269,17 @@ const ChecklistTab: React.FC<ChecklistTabProps> = ({ solutionId, onComplete }) =
 
       <div className="space-y-4">
         {checklistItems.map((item) => {
-          const [currentNotes, setCurrentNotes] = useState(item.notes || '');
-          const [showNotesSave, setShowNotesSave] = useState(false);
-
-          useEffect(() => {
-            setCurrentNotes(item.notes || '');
-            setShowNotesSave(false);
-          }, [item.notes]);
+          const currentNotes = itemNotes[item.id] || '';
+          const showNotesSave = showSaveButtons[item.id] || false;
 
           const handleNotesLocalChange = (value: string) => {
-            setCurrentNotes(value);
-            setShowNotesSave(value !== (item.notes || ''));
+            setItemNotes(prev => ({ ...prev, [item.id]: value }));
+            setShowSaveButtons(prev => ({ ...prev, [item.id]: value !== (item.notes || '') }));
           };
 
           const saveNotes = () => {
             handleNotesChange(item.id, currentNotes);
-            setShowNotesSave(false);
+            setShowSaveButtons(prev => ({ ...prev, [item.id]: false }));
           };
           
           return (
