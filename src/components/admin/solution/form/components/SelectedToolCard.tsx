@@ -18,7 +18,7 @@ export const SelectedToolCard: React.FC<SelectedToolCardProps> = ({
   onToggleRequired,
 }) => {
   return (
-    <Card className="border overflow-hidden">
+    <Card className="border overflow-hidden shadow-sm bg-card text-card-foreground">
       <CardHeader className="pb-3 pt-4 px-4 flex-row items-center gap-3">
         <ToolImage tool={tool} size="small" />
         <div>

@@ -20,7 +20,7 @@ export const AvailableToolCard: React.FC<AvailableToolCardProps> = ({
   onDeselect,
 }) => {
   return (
-    <Card className={`flex flex-col h-full border overflow-hidden ${
+    <Card className={`flex flex-col h-full border overflow-hidden shadow-sm bg-card text-card-foreground ${
       isSelected ? "border-[#0ABAB5]" : ""
     }`}>
       <CardHeader className="pb-3 pt-4 px-4 flex-row items-center gap-3">
