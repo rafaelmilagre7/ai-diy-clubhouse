@@ -54,6 +54,9 @@ export const NotificationDropdown = () => {
           variant="ghost" 
           size="icon" 
           className="relative hover:bg-muted/50 transition-colors"
+          onClick={(e) => {
+            console.log("🔍 [NOTIFICATION-DROPDOWN] Clique detectado no trigger", e);
+          }}
         >
           <Bell className="w-5 h-5" />
           {unreadCount > 0 && (

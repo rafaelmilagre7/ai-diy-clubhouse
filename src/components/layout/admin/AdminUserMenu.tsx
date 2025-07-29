@@ -32,6 +32,9 @@ export const AdminUserMenu = () => {
         <Button 
           variant="ghost" 
           className="relative h-8 w-8 rounded-full hover:bg-white/10 focus:bg-white/10 focus:ring-2 focus:ring-white/20"
+          onClick={(e) => {
+            console.log("🔍 [ADMIN-USER-MENU] Clique detectado no trigger", e);
+          }}
         >
           <Avatar className="h-8 w-8">
             <AvatarImage src={profile?.avatar_url} alt={profile?.name || "Usuário"} />

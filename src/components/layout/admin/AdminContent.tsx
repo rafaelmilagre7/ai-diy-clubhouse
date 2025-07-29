@@ -22,7 +22,7 @@ export const AdminContent = ({ children, sidebarOpen, setSidebarOpen }: AdminCon
       )}
     >
       {/* Header */}
-      <header className="flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4">
+      <header className="flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4 relative z-10">
         <Button
           variant="ghost"
           size="icon"
@@ -39,7 +39,12 @@ export const AdminContent = ({ children, sidebarOpen, setSidebarOpen }: AdminCon
           <h1 className="font-semibold">Painel Administrativo</h1>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div 
+          className="flex items-center gap-2 relative z-20"
+          onClick={(e) => {
+            console.log("🔍 [ADMIN-HEADER] Clique na área de ações do usuário", e);
+          }}
+        >
           <NotificationDropdown />
           <AdminUserMenu />
         </div>
