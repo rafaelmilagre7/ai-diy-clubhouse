@@ -44,7 +44,7 @@ export const AvailableToolCard: React.FC<AvailableToolCardProps> = ({
           className={`text-sm ${
             isSelected
               ? "text-[#0ABAB5]"
-              : "text-blue-600 hover:text-blue-800"
+              : "text-blue-600"
           }`}
           onClick={isSelected ? onDeselect : onSelect}
         >
@@ -56,7 +56,7 @@ export const AvailableToolCard: React.FC<AvailableToolCardProps> = ({
             href={tool.official_url} 
             target="_blank" 
             rel="noopener noreferrer"
-            className="text-gray-500 hover:text-gray-700"
+            className="text-gray-500"
           >
             <ExternalLink className="h-4 w-4" />
           </a>

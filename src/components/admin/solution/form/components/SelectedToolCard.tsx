@@ -50,7 +50,7 @@ export const SelectedToolCard: React.FC<SelectedToolCardProps> = ({
           </label>
         </div>
         <button
-          className="text-sm text-red-600 hover:text-red-800"
+          className="text-sm text-red-600"
           onClick={() => onRemove(tool.id)}
         >
           Remover
