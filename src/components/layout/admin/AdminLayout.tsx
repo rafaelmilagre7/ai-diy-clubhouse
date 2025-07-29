@@ -126,7 +126,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       <div className="flex min-h-screen w-full bg-background dark">
         {isMobile && sidebarOpen && (
           <div 
-            className="fixed inset-0 bg-black/50 z-40 md:hidden"
+            className="fixed inset-0 bg-black/50 z-30 md:hidden"
             onClick={() => setSidebarOpen(false)}
             aria-label="Fechar menu"
           />
@@ -169,7 +169,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       <div className="flex min-h-screen w-full bg-background dark">
         {isMobile && sidebarOpen && (
           <div 
-            className="fixed inset-0 bg-black/50 z-40 md:hidden"
+            className="fixed inset-0 bg-black/50 z-30 md:hidden"
             onClick={() => setSidebarOpen(false)}
             aria-label="Fechar menu"
           />
