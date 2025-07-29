@@ -4593,6 +4593,60 @@ export type Database = {
         }
         Relationships: []
       }
+      unified_checklists: {
+        Row: {
+          checklist_data: Json
+          checklist_type: string
+          completed_at: string | null
+          completed_items: number | null
+          created_at: string
+          id: string
+          is_completed: boolean | null
+          is_template: boolean | null
+          metadata: Json | null
+          progress_percentage: number | null
+          solution_id: string
+          template_id: string | null
+          total_items: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          checklist_data?: Json
+          checklist_type?: string
+          completed_at?: string | null
+          completed_items?: number | null
+          created_at?: string
+          id?: string
+          is_completed?: boolean | null
+          is_template?: boolean | null
+          metadata?: Json | null
+          progress_percentage?: number | null
+          solution_id: string
+          template_id?: string | null
+          total_items?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          checklist_data?: Json
+          checklist_type?: string
+          completed_at?: string | null
+          completed_items?: number | null
+          created_at?: string
+          id?: string
+          is_completed?: boolean | null
+          is_template?: boolean | null
+          metadata?: Json | null
+          progress_percentage?: number | null
+          solution_id?: string
+          template_id?: string | null
+          total_items?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_activity_tracking: {
         Row: {
           activity_data: Json | null
@@ -5910,6 +5964,30 @@ export type Database = {
       get_total_referrals: {
         Args: { p_user_id: string }
         Returns: number
+      }
+      get_unified_checklist: {
+        Args: {
+          p_user_id: string
+          p_solution_id: string
+          p_checklist_type?: string
+        }
+        Returns: {
+          id: string
+          user_id: string
+          solution_id: string
+          template_id: string
+          checklist_type: string
+          checklist_data: Json
+          completed_items: number
+          total_items: number
+          progress_percentage: number
+          is_completed: boolean
+          is_template: boolean
+          created_at: string
+          updated_at: string
+          completed_at: string
+          metadata: Json
+        }[]
       }
       get_user_analytics_summary: {
         Args: { p_user_id: string; p_days_back?: number }

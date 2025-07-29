@@ -1,6 +1,6 @@
 
 import React from "react";
-import ImplementationChecklist from "@/components/admin/solution/form/ImplementationChecklist";
+import UnifiedImplementationChecklist from "@/components/admin/solution/form/UnifiedImplementationChecklist";
 
 interface ChecklistTabProps {
   solutionId: string | null;
@@ -14,7 +14,7 @@ const ChecklistTab: React.FC<ChecklistTabProps> = ({
   saving,
 }) => {
   return (
-    <ImplementationChecklist 
+    <UnifiedImplementationChecklist 
       solutionId={solutionId} 
       onSave={onSave} 
       saving={saving} 

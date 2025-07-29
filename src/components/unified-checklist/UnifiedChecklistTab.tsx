@@ -1,0 +1,277 @@
+import React, { useState, useEffect } from "react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { CheckCircle, AlertCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { 
+  useUnifiedChecklist, 
+  useUnifiedChecklistTemplate, 
+  useUpdateUnifiedChecklist,
+  type UnifiedChecklistItem,
+  type UnifiedChecklistData
+} from "@/hooks/useUnifiedChecklists";
+
+interface UnifiedChecklistTabProps {
+  solutionId: string;
+  checklistType?: 'implementation' | 'user' | 'verification';
+  onComplete?: () => void;
+}
+
+const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({ 
+  solutionId, 
+  checklistType = 'implementation', 
+  onComplete 
+}) => {
+  const [itemNotes, setItemNotes] = useState<Record<string, string>>({});
+  const [showSaveButtons, setShowSaveButtons] = useState<Record<string, boolean>>({});
+
+  // Buscar template e progresso do usuário
+  const { data: template, isLoading: isLoadingTemplate } = useUnifiedChecklistTemplate(solutionId, checklistType);
+  const { data: userProgress, isLoading: isLoadingProgress } = useUnifiedChecklist(solutionId, checklistType);
+  const updateMutation = useUpdateUnifiedChecklist();
+
+  // Combinar template com progresso para obter lista de items
+  const checklistItems: UnifiedChecklistItem[] = React.useMemo(() => {
+    if (!template?.checklist_data?.items) return [];
+    
+    const templateItems = template.checklist_data.items;
+    const progressItems = userProgress?.checklist_data?.items || [];
+    
+    return templateItems.map((templateItem: any) => {
+      const progressItem = progressItems.find((p: any) => p.id === templateItem.id);
+      
+      return {
+        id: templateItem.id,
+        title: templateItem.title,
+        description: templateItem.description,
+        completed: progressItem?.completed || false,
+        notes: progressItem?.notes || '',
+        completedAt: progressItem?.completedAt
+      };
+    });
+  }, [template, userProgress]);
+
+  // Função para atualizar item
+  const handleItemUpdate = (itemId: string, isCompleted: boolean, notes?: string) => {
+    const updatedItems = checklistItems.map(item => ({
+      ...item,
+      completed: item.id === itemId ? isCompleted : item.completed,
+      notes: item.id === itemId ? (notes !== undefined ? notes : item.notes) : item.notes,
+      completedAt: item.id === itemId && isCompleted ? new Date().toISOString() : 
+                   item.id === itemId && !isCompleted ? undefined :
+                   item.completedAt
+    }));
+
+    const checklistData: UnifiedChecklistData = {
+      id: userProgress?.id,
+      user_id: userProgress?.user_id || '',
+      solution_id: solutionId,
+      template_id: template?.id,
+      checklist_type: checklistType,
+      checklist_data: {
+        items: updatedItems,
+        lastUpdated: new Date().toISOString()
+      },
+      completed_items: 0,
+      total_items: updatedItems.length,
+      progress_percentage: 0,
+      is_completed: false,
+      is_template: false
+    };
+
+    updateMutation.mutate({
+      checklistData,
+      solutionId,
+      checklistType,
+      templateId: template?.id
+    });
+  };
+
+  const handleItemToggle = (itemId: string, isCompleted: boolean) => {
+    const item = checklistItems.find(i => i.id === itemId);
+    handleItemUpdate(itemId, isCompleted, item?.notes);
+  };
+
+  const handleNotesChange = (itemId: string, notes: string) => {
+    const item = checklistItems.find(i => i.id === itemId);
+    handleItemUpdate(itemId, item?.completed || false, notes);
+  };
+
+  // Verificar se todos os itens estão completos para chamar onComplete
+  useEffect(() => {
+    if (checklistItems.length > 0 && onComplete) {
+      const allCompleted = checklistItems.every(item => item.completed);
+      if (allCompleted) {
+        onComplete();
+      }
+    }
+  }, [checklistItems, onComplete]);
+
+  // Sincronizar itemNotes com checklistItems quando carregarem
+  useEffect(() => {
+    if (checklistItems.length > 0) {
+      const notesMap: Record<string, string> = {};
+      checklistItems.forEach(item => {
+        notesMap[item.id] = item.notes || '';
+      });
+      setItemNotes(notesMap);
+    }
+  }, [checklistItems]);
+
+  if (isLoadingTemplate || isLoadingProgress) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (!template || !checklistItems.length) {
+    return (
+      <div className="text-center py-12">
+        <AlertCircle className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+        <h3 className="text-lg font-semibold mb-2">Nenhum checklist encontrado</h3>
+        <p className="text-muted-foreground mb-4">
+          Esta solução não possui um checklist de {checklistType === 'implementation' ? 'implementação' : checklistType}.
+        </p>
+        {onComplete && (
+          <Button onClick={onComplete} variant="outline">
+            Continuar para próxima etapa
+          </Button>
+        )}
+      </div>
+    );
+  }
+
+  const completedItems = checklistItems.filter(item => item.completed);
+  const progressPercentage = Math.round((completedItems.length / checklistItems.length) * 100);
+
+  const getChecklistTitle = () => {
+    switch (checklistType) {
+      case 'implementation': return 'Checklist de Implementação';
+      case 'verification': return 'Checklist de Verificação';
+      case 'user': return 'Checklist do Usuário';
+      default: return 'Checklist';
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold mb-2">{getChecklistTitle()}</h2>
+        <p className="text-muted-foreground">
+          Confirme cada etapa conforme você progride na solução
+        </p>
+      </div>
+
+      <Card className="p-4">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="font-semibold">Progresso Geral</h3>
+          <span className="text-sm text-muted-foreground">
+            {completedItems.length} de {checklistItems.length} itens
+          </span>
+        </div>
+        <div className="w-full bg-muted rounded-full h-2 mb-2">
+          <div 
+            className="bg-gradient-to-r from-primary to-primary-glow h-2 rounded-full transition-all duration-500"
+            style={{ width: `${progressPercentage}%` }}
+          />
+        </div>
+        <p className="text-xs text-muted-foreground">
+          {progressPercentage}% concluído
+        </p>
+      </Card>
+
+      <div className="space-y-4">
+        {checklistItems.map((item) => {
+          const currentNotes = itemNotes[item.id] || '';
+          const showNotesSave = showSaveButtons[item.id] || false;
+
+          const handleNotesLocalChange = (value: string) => {
+            setItemNotes(prev => ({ ...prev, [item.id]: value }));
+            setShowSaveButtons(prev => ({ ...prev, [item.id]: value !== (item.notes || '') }));
+          };
+
+          const saveNotes = () => {
+            handleNotesChange(item.id, currentNotes);
+            setShowSaveButtons(prev => ({ ...prev, [item.id]: false }));
+          };
+          
+          return (
+            <Card key={item.id} className={cn(
+              "p-4 transition-all duration-300 border-2",
+              item.completed ? "border-primary/40 bg-primary/5" : "border-border"
+            )}>
+              <div className="space-y-3">
+                <div className="flex items-start gap-3">
+                  <Checkbox
+                    checked={item.completed}
+                    onCheckedChange={(checked) => 
+                      handleItemToggle(item.id, checked as boolean)
+                    }
+                    className="mt-1"
+                    disabled={updateMutation.isPending}
+                  />
+                  
+                  <div className="flex-1 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-medium">{item.title}</h4>
+                      {item.completed && (
+                        <Badge className="bg-primary/20 text-primary text-xs">
+                          Concluído
+                        </Badge>
+                      )}
+                    </div>
+                    
+                    {item.description && (
+                      <p className="text-sm text-muted-foreground">
+                        {item.description}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="ml-7 space-y-2">
+                  <Textarea
+                    placeholder="Adicione suas notas sobre esta etapa..."
+                    value={currentNotes}
+                    onChange={(e) => handleNotesLocalChange(e.target.value)}
+                    className="min-h-[80px]"
+                    disabled={updateMutation.isPending}
+                  />
+                  {showNotesSave && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={saveNotes}
+                      disabled={updateMutation.isPending}
+                    >
+                      {updateMutation.isPending ? 'Salvando...' : 'Salvar notas'}
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </Card>
+          );
+        })}
+      </div>
+
+      {completedItems.length === checklistItems.length && (
+        <Card className="p-4 bg-primary/10 border-primary/20">
+          <div className="flex items-center gap-2 text-primary">
+            <CheckCircle className="w-5 h-5" />
+            <span className="font-medium">
+              Parabéns! Todos os itens foram concluídos! 
+              {onComplete && " Você pode avançar para a próxima etapa."}
+            </span>
+          </div>
+        </Card>
+      )}
+    </div>
+  );
+};
+
+export default UnifiedChecklistTab;
