@@ -40,7 +40,7 @@ export const AdminUserMenu = () => {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent 
-        className="w-56 z-[9999]" 
+        className="w-56 z-50 bg-background border shadow-lg" 
         align="end" 
         forceMount
         sideOffset={8}
