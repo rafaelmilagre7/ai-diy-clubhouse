@@ -50,7 +50,7 @@ const ChecklistTab: React.FC<ChecklistTabProps> = ({ solutionId, onComplete }) =
         .select('checkpoint_data')
         .eq('solution_id', solutionId)
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.log('ChecklistTab: Nenhum checklist encontrado:', error);
@@ -88,7 +88,7 @@ const ChecklistTab: React.FC<ChecklistTabProps> = ({ solutionId, onComplete }) =
         .select('*')
         .eq('user_id', user.id)
         .eq('solution_id', solutionId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.log('ChecklistTab: Nenhum progresso encontrado:', error);
@@ -186,7 +186,7 @@ const ChecklistTab: React.FC<ChecklistTabProps> = ({ solutionId, onComplete }) =
           .select('checkpoint_data')
           .eq('solution_id', solutionId)
           .limit(1)
-          .single();
+          .maybeSingle();
 
         if (adminError) throw adminError;
 
