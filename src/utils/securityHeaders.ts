@@ -71,7 +71,7 @@ export class SecurityHeaders {
       "base-uri 'self'",
       "form-action 'self'",
       "frame-ancestors 'none'",
-      "frame-src 'none'",
+      "frame-src 'self' https://*.pandavideo.com.br https://player-vz-*.tv.pandavideo.com.br https://www.youtube.com https://www.youtube-nocookie.com",
       "child-src 'none'",
       "worker-src 'self'",
       "manifest-src 'self'",
