@@ -48,9 +48,13 @@ export const CSP_DIRECTIVES = {
     "wss://*.supabase.co" // WebSocket para Supabase
   ],
   
-  // Sem frames externos
+  // Frames permitidos para vídeos e conteúdo confiável
   'frame-src': [
-    "'none'"
+    "'self'",
+    "https://*.pandavideo.com.br", // Panda Video player
+    "https://player-vz-*.tv.pandavideo.com.br", // Panda Video CDN
+    "https://www.youtube.com", // YouTube embeds
+    "https://www.youtube-nocookie.com" // YouTube embeds sem cookies
   ],
   
   // Sem objetos/embeds
