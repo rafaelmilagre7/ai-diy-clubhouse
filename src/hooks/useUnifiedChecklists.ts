@@ -81,11 +81,17 @@ export const useUnifiedChecklistTemplate = (solutionId: string, checklistType: s
         .maybeSingle();
 
       if (error) {
-        console.error('Erro ao buscar template:', error);
+        console.error('❌ Erro ao buscar template:', error);
         return null;
       }
 
-      console.log('✅ Template encontrado:', data);
+      console.log('🎯 Query resultado para template:', data);
+      console.log('✅ Template encontrado:', !!data);
+      
+      if (data) {
+        console.log('📋 Template items:', data.checklist_data?.items?.length || 0);
+      }
+      
       return data as UnifiedChecklistData;
     },
     enabled: !!solutionId
