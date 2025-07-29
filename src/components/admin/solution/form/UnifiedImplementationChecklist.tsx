@@ -43,8 +43,12 @@ const UnifiedImplementationChecklist: React.FC<UnifiedImplementationChecklistPro
     if (template?.checklist_data?.items) {
       setChecklistItems(template.checklist_data.items);
       console.log("✅ Template carregado:", template.checklist_data.items.length, "itens");
+    } else if (!isLoading && !template) {
+      // Se não há template, inicializar com array vazio para permitir criação
+      console.log("⚠️ Nenhum template encontrado, inicializando vazio");
+      setChecklistItems([]);
     }
-  }, [template]);
+  }, [template, isLoading]);
 
   const saveCheckpoints = async () => {
     if (!solutionId || !user) return;
