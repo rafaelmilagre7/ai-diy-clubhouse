@@ -281,10 +281,8 @@ const OnboardingPage: React.FC = () => {
             onFinish={async () => {
               console.log('[ONBOARDING_PAGE] Step6Welcome onFinish chamado - finalizando onboarding');
               const success = await completeOnboarding(data.personalization);
-              if (success) {
-                console.log('[ONBOARDING_PAGE] Onboarding finalizado com sucesso - redirecionando');
-                window.location.href = '/dashboard';
-              }
+              console.log('[ONBOARDING_PAGE] Resultado do completeOnboarding:', success);
+              // Redirecionamento será feito pelo próprio hook completeOnboarding
             }}
           />
         );
