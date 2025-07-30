@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 interface OnboardingLayoutProps {
@@ -161,7 +161,25 @@ export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
               Voltar
             </Button>
 
-            
+            {onNext && (
+              <Button 
+                onClick={onNext} 
+                disabled={!canProceed || isLoading}
+                className="group bg-primary hover:bg-primary/90 text-primary-foreground"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    {loadingMessage}
+                  </>
+                ) : (
+                  <>
+                    {nextLabel}
+                    <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                  </>
+                )}
+              </Button>
+            )}
           </motion.div>
         </motion.div>
       </main>
