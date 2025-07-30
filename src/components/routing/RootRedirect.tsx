@@ -38,6 +38,12 @@ const RootRedirect = () => {
     return <Navigate to="/onboarding" replace />;
   }
 
+  // VERIFICAÇÃO ADICIONAL: Se onboarding_completed é null ou undefined, também redirecionar
+  if (user && profile && profile.onboarding_completed !== true) {
+    console.log("⚠️ [ROOT-REDIRECT] Onboarding não confirmado como completo - redirecionando");
+    return <Navigate to="/onboarding" replace />;
+  }
+
   // Usuário logado tentando acessar login
   if (location.pathname === '/login' && user && profile) {
     const targetRoute = getUserRoleName(profile) === 'formacao' 
