@@ -20,9 +20,13 @@ const getStatusDisplayName = (status: string): string => {
 
 export const useAdminSuggestions = () => {
   const [loading, setLoading] = useState(false);
+  
+  // Debug: Log para investigar estado de loading
+  console.log('🔄 [USE-ADMIN-SUGGESTIONS] Estado loading:', loading);
 
   const removeSuggestion = async (suggestionId: string): Promise<boolean> => {
     try {
+      console.log('🗑️ [REMOVE-SUGGESTION] Iniciando remoção:', suggestionId);
       setLoading(true);
       console.log('Removendo sugestão:', suggestionId);
       
@@ -49,6 +53,7 @@ export const useAdminSuggestions = () => {
 
   const updateSuggestionStatus = async (suggestionId: string, status: string): Promise<boolean> => {
     try {
+      console.log('📝 [UPDATE-STATUS] Iniciando atualização:', suggestionId, status);
       setLoading(true);
       console.log('Atualizando status da sugestão:', suggestionId, status);
       

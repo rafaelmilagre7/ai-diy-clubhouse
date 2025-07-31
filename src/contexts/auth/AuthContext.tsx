@@ -35,7 +35,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const { setupAuthSession } = useAuthStateManager(stateManagerParams);
 
   // Estados derivados memoizados
-  const isAdmin = useMemo(() => profile?.user_roles?.name === 'admin' || false, [profile?.user_roles?.name]);
+  const isAdmin = useMemo(() => {
+    const result = profile?.user_roles?.name === 'admin' || false;
+    console.log('🔍 [AUTH] Calculando isAdmin:', {
+      profileExists: !!profile,
+      userRolesExists: !!profile?.user_roles,
+      roleName: profile?.user_roles?.name,
+      isAdmin: result,
+      profileData: profile
+    });
+    return result;
+  }, [profile?.user_roles?.name]);
   const isFormacao = useMemo(() => profile?.user_roles?.name === 'formacao' || false, [profile?.user_roles?.name]);
 
   // Setup inicial com controle de execução única

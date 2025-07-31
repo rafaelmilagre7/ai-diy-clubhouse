@@ -19,6 +19,15 @@ const SuggestionDetailsPage = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const isAdminView = location.pathname.includes('/admin/');
 
+  // Debug: Log para investigar problemas de admin
+  console.log('🔍 [SUGGESTION-DETAILS] Estado do usuário:', {
+    userId: user?.id,
+    isAdmin,
+    userEmail: user?.email,
+    currentPath: location.pathname,
+    isAdminView
+  });
+
   const {
     suggestion,
     isLoading,
@@ -84,7 +93,14 @@ const SuggestionDetailsPage = () => {
           adminActionLoading={adminActionLoading}
           suggestionStatus={suggestion.status}
           onUpdateStatus={handleUpdateStatus}
-          onOpenDeleteDialog={() => setDeleteDialogOpen(true)}
+          onOpenDeleteDialog={() => {
+            console.log('🗑️ [SUGGESTION-DETAILS] Tentando abrir dialog de delete:', {
+              isAdmin,
+              adminActionLoading,
+              suggestionId: suggestion.id
+            });
+            setDeleteDialogOpen(true);
+          }}
         />
 
         <SuggestionContent

@@ -23,6 +23,13 @@ export const AdminActions = ({
   onUpdateStatus,
   onOpenDeleteDialog
 }: AdminActionsProps) => {
+  
+  // Debug: Log para investigar problemas do botão remover
+  console.log('⚙️ [ADMIN-ACTIONS] Estado atual:', {
+    adminActionLoading,
+    suggestionStatus,
+    disabledState: adminActionLoading
+  });
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -69,7 +76,13 @@ export const AdminActions = ({
         
         {/* Opção: Remover Sugestão */}
         <DropdownMenuItem 
-          onClick={onOpenDeleteDialog}
+          onClick={() => {
+            console.log('🗑️ [ADMIN-ACTIONS] Clique em Remover Sugestão:', {
+              adminActionLoading,
+              disabled: adminActionLoading
+            });
+            onOpenDeleteDialog();
+          }}
           className="text-destructive focus:text-destructive"
           disabled={adminActionLoading}
         >
