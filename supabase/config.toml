@@ -117,6 +117,9 @@ verify_jwt = true
 [functions.validate-coupon]
 verify_jwt = false
 
+[functions.audit-duplicates]
+verify_jwt = false
+
 [auth]
 enabled = true
 port = 54324
