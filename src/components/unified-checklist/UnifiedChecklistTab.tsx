@@ -6,6 +6,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   useUnifiedChecklist, 
   useUnifiedChecklistTemplate, 
@@ -31,28 +33,59 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
   // Buscar template e progresso do usuário
   const { data: template, isLoading: isLoadingTemplate } = useUnifiedChecklistTemplate(solutionId, checklistType);
   const { data: userProgress, isLoading: isLoadingProgress } = useUnifiedChecklist(solutionId, checklistType);
+  
+  // Buscar checklist específico da solução se não houver template
+  const { data: solutionChecklist, isLoading: isLoadingSolutionChecklist } = useQuery({
+    queryKey: ['solution-checklist', solutionId, checklistType],
+    queryFn: async () => {
+      console.log('🔍 Buscando checklist específico da solução:', { solutionId, checklistType });
+      
+      const { data, error } = await supabase
+        .from('unified_checklists')
+        .select('*')
+        .eq('solution_id', solutionId)
+        .eq('checklist_type', checklistType)
+        .eq('is_template', false)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) {
+        console.error('❌ Erro ao buscar checklist da solução:', error);
+        return null;
+      }
+
+      console.log('✅ Checklist da solução encontrado:', !!data);
+      return data;
+    },
+    enabled: !!solutionId && !template && !isLoadingTemplate
+  });
+  
   const updateMutation = useUpdateUnifiedChecklist();
 
-  // Combinar template com progresso para obter lista de items
+  // Combinar template/checklist com progresso para obter lista de items
   const checklistItems: UnifiedChecklistItem[] = React.useMemo(() => {
-    if (!template?.checklist_data?.items) return [];
+    // Priorizar template, depois checklist específico da solução
+    const sourceChecklist = template || solutionChecklist;
     
-    const templateItems = template.checklist_data.items;
+    if (!sourceChecklist?.checklist_data?.items) return [];
+    
+    const sourceItems = sourceChecklist.checklist_data.items;
     const progressItems = userProgress?.checklist_data?.items || [];
     
-    return templateItems.map((templateItem: any) => {
-      const progressItem = progressItems.find((p: any) => p.id === templateItem.id);
+    return sourceItems.map((sourceItem: any) => {
+      const progressItem = progressItems.find((p: any) => p.id === sourceItem.id);
       
       return {
-        id: templateItem.id,
-        title: templateItem.title,
-        description: templateItem.description,
+        id: sourceItem.id,
+        title: sourceItem.title,
+        description: sourceItem.description,
         completed: progressItem?.completed || false,
         notes: progressItem?.notes || '',
         completedAt: progressItem?.completedAt
       };
     });
-  }, [template, userProgress]);
+  }, [template, solutionChecklist, userProgress]);
 
   // Função para atualizar item
   const handleItemUpdate = (itemId: string, isCompleted: boolean, notes?: string) => {
@@ -65,11 +98,13 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
                    item.completedAt
     }));
 
+    const sourceChecklist = template || solutionChecklist;
+    
     const checklistData: UnifiedChecklistData = {
       id: userProgress?.id,
       user_id: userProgress?.user_id || '',
       solution_id: solutionId,
-      template_id: template?.id,
+      template_id: sourceChecklist?.id,
       checklist_type: checklistType,
       checklist_data: {
         items: updatedItems,
@@ -86,7 +121,7 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
       checklistData,
       solutionId,
       checklistType,
-      templateId: template?.id
+      templateId: sourceChecklist?.id
     });
   };
 
@@ -121,7 +156,7 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
     }
   }, [checklistItems]);
 
-  if (isLoadingTemplate || isLoadingProgress) {
+  if (isLoadingTemplate || isLoadingProgress || isLoadingSolutionChecklist) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -129,7 +164,7 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
     );
   }
 
-  if (!template || !checklistItems.length) {
+  if ((!template && !solutionChecklist) || !checklistItems.length) {
     return (
       <div className="text-center py-12">
         <AlertCircle className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
