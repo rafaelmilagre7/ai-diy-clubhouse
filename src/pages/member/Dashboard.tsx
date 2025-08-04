@@ -9,6 +9,8 @@ import { OnboardingBanner } from '@/components/common/OnboardingBanner';
 import { useNavigate } from 'react-router-dom';
 import { Solution } from '@/lib/supabase';
 import { useState, useCallback, useMemo } from 'react';
+import { debugAuthState, forceProfileRefresh } from '@/utils/authDebug';
+import { Button } from '@/components/ui/button';
 
 const Dashboard = () => {
   const { user, profile } = useAuth();
@@ -65,6 +67,25 @@ const Dashboard = () => {
   return (
     <ErrorBoundary>
       <div className="space-y-0">
+        {/* Debug temporário */}
+        <div className="bg-yellow-100 border border-yellow-400 p-4 m-4 rounded">
+          <p className="text-sm mb-2">
+            <strong>Debug:</strong> Onboarding Status = {profile?.onboarding_completed ? 'true' : 'false'} 
+            | User ID: {user?.id?.substring(0, 8)}...
+          </p>
+          <Button 
+            onClick={async () => {
+              const result = await debugAuthState();
+              console.log('🔍 Debug completo:', result);
+              await forceProfileRefresh();
+            }}
+            size="sm"
+            variant="outline"
+          >
+            🔍 Debug Auth State
+          </Button>
+        </div>
+        
         <OnboardingBanner />
         <DashboardLayout
           active={memoizedData.active}

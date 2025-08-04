@@ -100,6 +100,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 .maybeSingle();
 
               if (!error && profileData) {
+                console.log('✅ [AUTH] Perfil carregado:', {
+                  onboarding_completed: profileData.onboarding_completed,
+                  email: profileData.email,
+                  role: profileData.user_roles?.name
+                });
                 setProfile(profileData);
               } else {
                 console.warn('⚠️ [AUTH] Erro ao buscar perfil:', error?.message);
@@ -120,9 +125,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     );
 
+    // Listener para refresh forçado do perfil
+    const handleForceProfileRefresh = (event: CustomEvent) => {
+      console.log('🔄 [AUTH] Forçando refresh do perfil:', event.detail);
+      setProfile(event.detail);
+    };
+
+    window.addEventListener('forceProfileRefresh', handleForceProfileRefresh as EventListener);
+
     return () => {
-      console.log('🧹 [AUTH] Limpando listener de auth');
+      console.log('🧹 [AUTH] Limpando listeners de auth');
       subscription.unsubscribe();
+      window.removeEventListener('forceProfileRefresh', handleForceProfileRefresh as EventListener);
     };
   }, []);
 
