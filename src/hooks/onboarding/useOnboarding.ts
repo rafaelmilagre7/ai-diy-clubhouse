@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/auth';
 import { toast } from '@/hooks/use-toast';
+import { useProfileSync } from '@/hooks/auth/useProfileSync';
+import { useNavigate } from 'react-router-dom';
 
 export interface OnboardingData {
   // Step 1: Informações Pessoais
@@ -63,6 +65,8 @@ interface OnboardingState {
 
 export const useOnboarding = () => {
   const { user } = useAuth();
+  const { syncProfile, markProfileStale } = useProfileSync();
+  const navigate = useNavigate();
   const [state, setState] = useState<OnboardingState>({
     current_step: 1,
     completed_steps: [],
@@ -456,6 +460,18 @@ Vamos começar? Sua trilha personalizada já está pronta! 🚀`;
         throw error;
       }
 
+      // Invalidar cache e sincronizar perfil
+      console.log('[ONBOARDING] ⏱️ Sincronizando perfil...');
+      markProfileStale(); // Marcar cache como desatualizado
+      
+      // Tentar sincronizar perfil - não bloquear se falhar
+      try {
+        await syncProfile(false); // Sincronizar sem toast
+        console.log('[ONBOARDING] ✅ Perfil sincronizado com sucesso');
+      } catch (syncError) {
+        console.warn('[ONBOARDING] ⚠️ Falha na sincronização do perfil (não crítico):', syncError);
+      }
+
       // Atualizar estado local rapidamente
       console.log('[ONBOARDING] ⏱️ Atualizando estado local...');
       const stateStartTime = performance.now();
@@ -476,9 +492,11 @@ Vamos começar? Sua trilha personalizada já está pronta! 🚀`;
       console.log('[ONBOARDING] ⏱️ Tempo total de execução:', totalTime, 'ms');
       console.log('[ONBOARDING] Onboarding concluído com sucesso!');
       
-      // Redirecionar imediatamente sem toast que pode atrasar
+      // Aguardar um pouco para que a sincronização finalize e depois navegar
       console.log('[ONBOARDING] ⏱️ Iniciando redirecionamento...');
-      window.location.href = '/dashboard';
+      setTimeout(() => {
+        navigate('/dashboard', { replace: true });
+      }, 500);
       
       return true;
 
