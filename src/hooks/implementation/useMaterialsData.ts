@@ -24,7 +24,10 @@ export const useMaterialsData = (module: Module) => {
   const [loading, setLoading] = useState(true);
   const { log, logError } = useLogging();
 
+  console.log("🔥 useMaterialsData INICIADO para módulo:", module.id, "solução:", module.solution_id);
+
   useEffect(() => {
+    console.log("🔥 useEffect executando para módulo:", module.id);
     const fetchMaterialsAndLinks = async () => {
       try {
         setLoading(true);
