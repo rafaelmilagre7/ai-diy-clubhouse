@@ -6,7 +6,7 @@ import { useFileDownload } from "@/hooks/implementation/useFileDownload";
 import { MaterialsLoading } from "./materials/MaterialsLoading";
 import { MaterialsEmptyState } from "./materials/MaterialsEmptyState";
 import { MaterialItem } from "./materials/MaterialItem";
-import { LinkItem } from "./materials/LinkItem";
+import { LinksAuxiliares } from "./materials/LinksAuxiliares";
 
 interface ModuleContentMaterialsProps {
   module: Module;
@@ -46,21 +46,7 @@ export const ModuleContentMaterials: React.FC<ModuleContentMaterialsProps> = ({ 
       )}
 
       {externalLinks.length > 0 && (
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Links Auxiliares</h3>
-          <p className="text-muted-foreground">
-            Acesse recursos externos úteis para esta solução:
-          </p>
-          
-          <div className="space-y-3 mt-4">
-            {externalLinks.map((link, index) => (
-              <LinkItem 
-                key={`${link.url}-${index}`} 
-                link={link} 
-              />
-            ))}
-          </div>
-        </div>
+        <LinksAuxiliares links={externalLinks} />
       )}
     </div>
   );

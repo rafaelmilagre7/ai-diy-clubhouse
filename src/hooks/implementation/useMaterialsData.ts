@@ -44,6 +44,8 @@ export const useMaterialsData = (module: Module) => {
             .from("solution_resources")
             .select("*")
             .eq("solution_id", module.solution_id)
+            .neq("type", "resources") // Excluir completamente tipo 'resources'
+            .neq("name", "Solution Resources") // Excluir por nome também
             .is("module_id", null);
           
           if (solutionError) {
@@ -51,9 +53,9 @@ export const useMaterialsData = (module: Module) => {
             return;
           }
           
-          console.log("DEBUG: Raw solution data before filtering:", solutionData);
+          console.log("🔥 Raw solution data (já filtrado na query):", solutionData);
           
-          // Filter out video types, Panda Video content, and "Solution Resources" - they belong in other tabs
+          // Filtro adicional para garantir que nada do tipo 'resources' passe
           const filteredData = (solutionData || []).filter(
             item => {
               const shouldInclude = item.type !== 'video' && 
@@ -62,15 +64,15 @@ export const useMaterialsData = (module: Module) => {
                                     !item.url?.includes('pandavideo') && 
                                     !(item.metadata?.provider === 'panda');
               
-              console.log(`DEBUG: Item "${item.name}" (type: ${item.type}) - Include: ${shouldInclude}`);
+              console.log(`🔥 Item "${item.name}" (type: ${item.type}) - Include: ${shouldInclude}`);
               return shouldInclude;
             }
           );
           
-          console.log("DEBUG: Filtered materials:", filteredData);
+          console.log("🔥 Filtered materials:", filteredData);
           setMaterials(filteredData);
         } else {
-          console.log("DEBUG: Raw module data before filtering:", moduleData);
+          console.log("🔥 Raw module data before filtering:", moduleData);
           
           // Filter out video types, Panda Video content, and "Solution Resources" from module data too
           const filteredModuleData = moduleData.filter(
@@ -81,16 +83,17 @@ export const useMaterialsData = (module: Module) => {
                                     !item.url?.includes('pandavideo') && 
                                     !(item.metadata?.provider === 'panda');
               
-              console.log(`DEBUG: Module Item "${item.name}" (type: ${item.type}) - Include: ${shouldInclude}`);
+              console.log(`🔥 Module Item "${item.name}" (type: ${item.type}) - Include: ${shouldInclude}`);
               return shouldInclude;
             }
           );
           
-          console.log("DEBUG: Filtered module materials:", filteredModuleData);
+          console.log("🔥 Filtered module materials:", filteredModuleData);
           setMaterials(filteredModuleData);
         }
 
-        // Fetch external links from "Solution Resources" entry
+        // SEMPRE buscar external links independente de ter materiais ou não
+        console.log("🔥 Buscando external links para solução:", module.solution_id);
         const { data: resourcesData, error: resourcesError } = await supabase
           .from("solution_resources")
           .select("*")
@@ -99,35 +102,37 @@ export const useMaterialsData = (module: Module) => {
           .eq("name", "Solution Resources")
           .is("module_id", null);
 
-        console.log("DEBUG: Resources data for external links:", resourcesData);
+        console.log("🔥 Resources data encontrados:", resourcesData);
 
         if (resourcesError) {
+          console.error("🔥 Erro ao buscar resources:", resourcesError);
           logError("Error fetching resources:", resourcesError);
+          setExternalLinks([]);
         } else if (resourcesData && resourcesData.length > 0) {
           try {
             // Parse the resources data to get external links
             const resourcesContent = JSON.parse(resourcesData[0].url);
-            console.log("DEBUG: Parsed resources content:", resourcesContent);
+            console.log("🔥 Conteúdo parseado dos resources:", resourcesContent);
             
             if (resourcesContent.external_links && Array.isArray(resourcesContent.external_links)) {
-              console.log("DEBUG: Setting external links:", resourcesContent.external_links);
+              console.log("🔥 External links encontrados:", resourcesContent.external_links);
               setExternalLinks(resourcesContent.external_links);
             } else {
-              console.log("DEBUG: No external_links found in resources content");
+              console.log("🔥 Nenhum external_link encontrado no JSON");
               setExternalLinks([]);
             }
           } catch (parseError) {
+            console.error("🔥 Erro ao fazer parse dos external links:", parseError);
             logError("Error parsing external links:", parseError);
-            console.log("DEBUG: Parse error details:", parseError);
             setExternalLinks([]);
           }
         } else {
-          console.log("DEBUG: No Solution Resources found");
+          console.log("🔥 Nenhum Solution Resources encontrado");
           setExternalLinks([]);
         }
       } catch (err) {
+        console.error("🔥 Erro geral:", err);
         logError("Error in materials fetch:", err);
-        console.log("DEBUG: General error:", err);
       } finally {
         setLoading(false);
       }
