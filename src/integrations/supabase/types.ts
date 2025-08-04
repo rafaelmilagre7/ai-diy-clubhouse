@@ -4996,18 +4996,7 @@ export type Database = {
       }
     }
     Views: {
-      admin_analytics_overview: {
-        Row: {
-          active_users_24h: number | null
-          avg_implementation_time_hours: number | null
-          completed_implementations: number | null
-          completion_rate: number | null
-          new_users_30d: number | null
-          total_solutions: number | null
-          total_users: number | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       accept_invite: {
@@ -5649,6 +5638,18 @@ export type Database = {
           total_lessons: number
           active_learners: number
           completion_rate: number
+        }[]
+      }
+      get_admin_analytics_overview_secure: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          total_users: number
+          active_users_24h: number
+          new_users_30d: number
+          total_solutions: number
+          completed_implementations: number
+          completion_rate: number
+          avg_implementation_time_hours: number
         }[]
       }
       get_admin_stats: {
