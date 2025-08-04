@@ -419,31 +419,18 @@ export const useOnboarding = () => {
       
       setLoadingMessage('Gerando sua experiência personalizada...');
       
-      // Tentar gerar mensagem da NINA (com fallback)
-      let ninaMessage = 'Bem-vindo(a) ao Viver de IA! Sua jornada personalizada está pronta para começar. Explore nossa plataforma e descubra como a IA pode transformar seu negócio!';
+      // Mensagem personalizada direta (removendo chamada para edge function inexistente)
+      const userName = state.data.personal_info?.name || 'usuário';
+      const companyName = state.data.professional_info?.company_name || 'sua empresa';
+      const primaryGoal = state.data.goals_info?.primary_goal || 'transformar seu negócio';
       
-      try {
-        console.log('[ONBOARDING] Tentando gerar mensagem da NINA...');
-        const { data: ninaData, error: ninaError } = await supabase.functions
-          .invoke('generate-nina-message', {
-            body: {
-              user_id: user.id,
-              onboarding_data: {
-                ...state.data,
-                personalization: finalStepData,
-              },
-            },
-          });
+      const ninaMessage = `Olá ${userName}! 🎉 Que alegria ter você conosco no Viver de IA!
 
-        if (ninaError) {
-          console.warn('[ONBOARDING] Erro ao gerar mensagem da NINA, usando mensagem padrão:', ninaError);
-        } else if (ninaData?.message) {
-          ninaMessage = ninaData.message;
-          console.log('[ONBOARDING] Mensagem da NINA gerada com sucesso');
-        }
-      } catch (ninaError) {
-        console.warn('[ONBOARDING] Edge Function não disponível, usando mensagem padrão:', ninaError);
-      }
+Estou muito animada para acompanhar sua jornada de transformação digital na ${companyName}. Com base no que você compartilhou, vejo um grande potencial para ${primaryGoal} usando inteligência artificial.
+
+Preparei uma experiência completamente personalizada para você, com conteúdos e ferramentas que fazem sentido para seu contexto e objetivos. 
+
+Vamos começar? Sua trilha personalizada já está pronta! 🚀`;
 
       setLoadingMessage('Aplicando configurações finais...');
       
@@ -477,10 +464,8 @@ export const useOnboarding = () => {
         variant: 'default'
       });
       
-      // Redirecionar após um breve delay
-      setTimeout(() => {
-        window.location.href = '/dashboard';
-      }, 1500);
+      // Redirecionar imediatamente (removendo delay desnecessário)
+      window.location.href = '/dashboard';
       
       return true;
 
