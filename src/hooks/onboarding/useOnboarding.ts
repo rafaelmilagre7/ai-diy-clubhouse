@@ -408,11 +408,18 @@ export const useOnboarding = () => {
     if (!user?.id) return false;
     
     try {
+      console.log('[ONBOARDING] ⏱️ Iniciando completeOnboarding...');
+      const startTime = performance.now();
+      
       setIsSaving(true);
       setLoadingMessage('Finalizando sua configuração...');
       
       // Salvar dados do step 5 primeiro
+      console.log('[ONBOARDING] ⏱️ Salvando step 5...');
+      const stepStartTime = performance.now();
       const success = await saveStepData(5, finalStepData);
+      console.log('[ONBOARDING] ⏱️ Step 5 salvo em:', performance.now() - stepStartTime, 'ms');
+      
       if (!success) {
         throw new Error('Falha ao salvar dados do step 5');
       }
@@ -435,36 +442,42 @@ Vamos começar? Sua trilha personalizada já está pronta! 🚀`;
       setLoadingMessage('Aplicando configurações finais...');
       
       // Finalizar onboarding
-      console.log('[ONBOARDING] Finalizando onboarding via complete_onboarding_flow...');
+      console.log('[ONBOARDING] ⏱️ Iniciando complete_onboarding_flow...');
+      const rpcStartTime = performance.now();
+      
       const { error } = await supabase.rpc('complete_onboarding_flow', {
         p_user_id: user.id,
       });
+      
+      console.log('[ONBOARDING] ⏱️ complete_onboarding_flow concluído em:', performance.now() - rpcStartTime, 'ms');
 
       if (error) {
         console.error('[ONBOARDING] Erro na função complete_onboarding_flow:', error);
         throw error;
       }
 
-      // Atualizar estado local
+      // Atualizar estado local rapidamente
+      console.log('[ONBOARDING] ⏱️ Atualizando estado local...');
+      const stateStartTime = performance.now();
+      
       setState(prev => ({
         ...prev,
         is_completed: true,
-        completed_steps: [1, 2, 3, 4, 5], // NÃO incluir step 6 aqui para evitar "step 7 de 6"
+        completed_steps: [1, 2, 3, 4, 5],
         nina_message: ninaMessage,
       }));
+      
+      console.log('[ONBOARDING] ⏱️ Estado atualizado em:', performance.now() - stateStartTime, 'ms');
 
       // Limpar backup após sucesso
       clearLocalStorageBackup();
 
+      const totalTime = performance.now() - startTime;
+      console.log('[ONBOARDING] ⏱️ Tempo total de execução:', totalTime, 'ms');
       console.log('[ONBOARDING] Onboarding concluído com sucesso!');
       
-      toast({ 
-        title: 'Onboarding concluído!', 
-        description: 'Bem-vindo à nossa plataforma! Redirecionando para o dashboard...',
-        variant: 'default'
-      });
-      
-      // Redirecionar imediatamente (removendo delay desnecessário)
+      // Redirecionar imediatamente sem toast que pode atrasar
+      console.log('[ONBOARDING] ⏱️ Iniciando redirecionamento...');
       window.location.href = '/dashboard';
       
       return true;
