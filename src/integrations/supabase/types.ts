@@ -5058,14 +5058,6 @@ export type Database = {
         }
         Relationships: []
       }
-      solution_performance_metrics: {
-        Row: {
-          calculated_at: string | null
-          performance_score: number | null
-          solution_id: string | null
-        }
-        Relationships: []
-      }
       user_growth_by_date: {
         Row: {
           cumulative_users: number | null
@@ -5789,6 +5781,14 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_engagement_metrics_secure: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      get_implementation_stats_secure: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       get_invite_dashboard_stats: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -5842,6 +5842,10 @@ export type Database = {
         }[]
       }
       get_networking_analytics: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      get_networking_stats_secure: {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
