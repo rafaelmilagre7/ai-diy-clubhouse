@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Module, supabase } from "@/lib/supabase";
 import { useLogging } from "@/hooks/useLogging";
@@ -49,11 +48,9 @@ export const useMaterialsData = (module: Module) => {
             return;
           }
           
-          
           console.log("DEBUG: Raw solution data before filtering:", solutionData);
           
-          // Filter out video types, Panda Video content, and links - they belong in other tabs
-          // Also filter out items with name "Solution Resources" which contain external links
+          // Filter out video types, Panda Video content, and "Solution Resources" - they belong in other tabs
           const filteredData = (solutionData || []).filter(
             item => {
               const shouldInclude = item.type !== 'video' && 
@@ -68,13 +65,11 @@ export const useMaterialsData = (module: Module) => {
           );
           
           console.log("DEBUG: Filtered materials:", filteredData);
-          
           setMaterials(filteredData);
         } else {
           console.log("DEBUG: Raw module data before filtering:", moduleData);
           
-          // Filter out video types, Panda Video content, and links from module data too
-          // Also filter out items with name "Solution Resources" which contain external links
+          // Filter out video types, Panda Video content, and "Solution Resources" from module data too
           const filteredModuleData = moduleData.filter(
             item => {
               const shouldInclude = item.type !== 'video' && 
@@ -89,16 +84,16 @@ export const useMaterialsData = (module: Module) => {
           );
           
           console.log("DEBUG: Filtered module materials:", filteredModuleData);
-          
           setMaterials(filteredModuleData);
         }
 
-        // Fetch external links from solution_resources with type 'resources'
+        // Fetch external links from "Solution Resources" entry
         const { data: resourcesData, error: resourcesError } = await supabase
           .from("solution_resources")
           .select("*")
           .eq("solution_id", module.solution_id)
           .eq("type", "resources")
+          .eq("name", "Solution Resources")
           .is("module_id", null);
 
         console.log("DEBUG: Resources data for external links:", resourcesData);
@@ -114,13 +109,22 @@ export const useMaterialsData = (module: Module) => {
             if (resourcesContent.external_links && Array.isArray(resourcesContent.external_links)) {
               console.log("DEBUG: Setting external links:", resourcesContent.external_links);
               setExternalLinks(resourcesContent.external_links);
+            } else {
+              console.log("DEBUG: No external_links found in resources content");
+              setExternalLinks([]);
             }
           } catch (parseError) {
             logError("Error parsing external links:", parseError);
+            console.log("DEBUG: Parse error details:", parseError);
+            setExternalLinks([]);
           }
+        } else {
+          console.log("DEBUG: No Solution Resources found");
+          setExternalLinks([]);
         }
       } catch (err) {
         logError("Error in materials fetch:", err);
+        console.log("DEBUG: General error:", err);
       } finally {
         setLoading(false);
       }
