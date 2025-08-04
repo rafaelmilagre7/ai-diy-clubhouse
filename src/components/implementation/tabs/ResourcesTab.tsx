@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, FileText, FileImage, FileVideo, File as FileIcon, FileArchive } from "lucide-react";
+import { Download, FileText, FileImage, FileVideo, File as FileIcon, FileArchive, ExternalLink } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 
@@ -17,6 +17,12 @@ interface Resource {
   module_id: string | null;
 }
 
+interface ExternalLink {
+  title: string;
+  description: string;
+  url: string;
+}
+
 interface ResourcesTabProps {
   solutionId: string;
   onComplete?: () => void;
@@ -24,22 +30,27 @@ interface ResourcesTabProps {
 
 const ResourcesTab: React.FC<ResourcesTabProps> = ({ solutionId, onComplete }) => {
   const [resources, setResources] = useState<Resource[]>([]);
+  const [externalLinks, setExternalLinks] = useState<ExternalLink[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
     fetchResources();
+    fetchExternalLinks();
   }, [solutionId]);
 
   const fetchResources = async () => {
     try {
       setLoading(true);
       
+      console.log("🔥 RESOURCES TAB - Buscando recursos para:", solutionId);
+      
       const { data, error } = await supabase
         .from("solution_resources")
         .select("*")
         .eq("solution_id", solutionId)
-        .neq("type", "video"); // Excluir vídeos que vão na aba específica
+        .not("type", "in", "(video,resources)")  // Excluir vídeos E resources (Solution Resources)
+        .neq("name", "Solution Resources");      // Extra filtro para garantir
       
       if (error) {
         console.error("Erro ao buscar recursos:", error);
@@ -51,6 +62,7 @@ const ResourcesTab: React.FC<ResourcesTabProps> = ({ solutionId, onComplete }) =
         return;
       }
       
+      console.log("🔥 RESOURCES TAB - Recursos filtrados:", data);
       setResources(data || []);
     } catch (error) {
       console.error("Erro ao buscar recursos:", error);
@@ -61,6 +73,54 @@ const ResourcesTab: React.FC<ResourcesTabProps> = ({ solutionId, onComplete }) =
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchExternalLinks = async () => {
+    try {
+      console.log("🔥 RESOURCES TAB - Buscando external links para:", solutionId);
+      
+      const { data: resourcesData, error: resourcesError } = await supabase
+        .from("solution_resources")
+        .select("*")
+        .eq("solution_id", solutionId)
+        .eq("type", "resources")
+        .eq("name", "Solution Resources")
+        .is("module_id", null);
+
+      console.log("🔥 RESOURCES TAB - Resources data encontrados:", resourcesData);
+
+      if (resourcesError) {
+        console.error("🔥 Erro ao buscar resources:", resourcesError);
+        setExternalLinks([]);
+      } else if (resourcesData && resourcesData.length > 0) {
+        try {
+          let resourcesContent;
+          if (typeof resourcesData[0].url === 'string') {
+            resourcesContent = JSON.parse(resourcesData[0].url);
+          } else {
+            resourcesContent = resourcesData[0].url;
+          }
+          
+          console.log("🔥 RESOURCES TAB - Conteúdo parseado dos resources:", resourcesContent);
+          
+          if (resourcesContent.external_links && Array.isArray(resourcesContent.external_links)) {
+            console.log("🔥 RESOURCES TAB - External links encontrados:", resourcesContent.external_links);
+            setExternalLinks(resourcesContent.external_links);
+          } else {
+            console.log("🔥 RESOURCES TAB - Nenhum external_link encontrado no JSON");
+            setExternalLinks([]);
+          }
+        } catch (parseError) {
+          console.error("🔥 Erro ao fazer parse dos external links:", parseError);
+          setExternalLinks([]);
+        }
+      } else {
+        console.log("🔥 RESOURCES TAB - Nenhum Solution Resources encontrado");
+        setExternalLinks([]);
+      }
+    } catch (err) {
+      console.error("🔥 Erro geral ao buscar external links:", err);
     }
   };
 
@@ -227,6 +287,49 @@ const ResourcesTab: React.FC<ResourcesTabProps> = ({ solutionId, onComplete }) =
               </div>
             </Card>
           ))}
+        </div>
+      )}
+
+      {externalLinks.length > 0 && (
+        <div className="space-y-4">
+          <h3 className="text-xl font-semibold">Links Auxiliares</h3>
+          <p className="text-muted-foreground">
+            Links úteis para complementar sua implementação:
+          </p>
+          
+          <div className="grid gap-4">
+            {externalLinks.map((link, index) => (
+              <Card key={index} className="p-6 hover:shadow-lg transition-shadow">
+                <div className="flex items-start space-x-4">
+                  <div className="flex-shrink-0 bg-blue-500/10 p-3 rounded-lg">
+                    <ExternalLink className="h-6 w-6 text-blue-500" />
+                  </div>
+                  
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-lg font-semibold mb-2 text-foreground">
+                      {link.title}
+                    </h4>
+                    <p className="text-muted-foreground mb-3">
+                      {link.description}
+                    </p>
+                    <p className="text-sm text-muted-foreground/80 truncate">
+                      {link.url}
+                    </p>
+                  </div>
+                  
+                  <div className="flex-shrink-0">
+                    <Button
+                      onClick={() => window.open(link.url, '_blank', 'noopener,noreferrer')}
+                      className="bg-blue-500 hover:bg-blue-600"
+                    >
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Acessar
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
         </div>
       )}
 
