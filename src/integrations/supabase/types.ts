@@ -5579,6 +5579,10 @@ export type Database = {
         Args: { template_type: string; user_data: Json }
         Returns: Json
       }
+      generate_event_recurrence: {
+        Args: { parent_event_id: string }
+        Returns: Json
+      }
       generate_final_security_report: {
         Args: Record<PropertyKey, never>
         Returns: {

@@ -25,7 +25,7 @@ export const generateRecurringEvents = async (parentEvent: RecurringEventData) =
 
   try {
     // Usar a função do banco de dados para gerar eventos recorrentes
-    const { data, error } = await supabase.rpc('generate_recurring_event_instances', {
+    const { data, error } = await supabase.rpc('generate_event_recurrence', {
       parent_event_id: parentEvent.id
     });
 
