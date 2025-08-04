@@ -3,6 +3,7 @@ import { FC, memo } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { getTimeBasedGreeting } from "@/utils/user";
 
 interface ModernDashboardHeaderProps {
   userName: string;
@@ -10,6 +11,7 @@ interface ModernDashboardHeaderProps {
 
 export const ModernDashboardHeader: FC<ModernDashboardHeaderProps> = memo(({ userName }) => {
   const navigate = useNavigate();
+  const greeting = getTimeBasedGreeting();
 
   const handleExploreClick = () => {
     navigate('/solutions');
@@ -39,7 +41,7 @@ export const ModernDashboardHeader: FC<ModernDashboardHeaderProps> = memo(({ use
             
             <div>
               <h1 className="text-4xl md:text-5xl font-heading font-bold text-foreground mb-2">
-                Olá, {userName}! 👋
+                {greeting}, {userName}! 👋
               </h1>
               <p className="text-xl text-muted-foreground max-w-2xl">
                 Continue sua jornada de crescimento. Explore novas soluções e desenvolva seu negócio.
