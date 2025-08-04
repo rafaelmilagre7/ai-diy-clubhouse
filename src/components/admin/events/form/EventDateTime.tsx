@@ -5,7 +5,7 @@ import { UseFormReturn } from "react-hook-form";
 import type { EventFormData } from "./EventFormSchema";
 import { RecurrenceToggle } from "./recurrence/RecurrenceToggle";
 import { Info } from "lucide-react";
-import { extractLocalTime } from "@/utils/timezoneUtils";
+import { extractLocalTime, getNowInBrazil, formatDateTimeLocal } from "@/utils/timezoneUtils";
 import { TimezoneInfo } from "../TimezoneInfo";
 
 interface EventDateTimeProps {
@@ -96,9 +96,9 @@ export const EventDateTime = ({ form }: EventDateTimeProps) => {
                         type="time" 
                         value={timeValue}
                         onChange={(e) => {
-                          // Manter uma data fictícia apenas para validação
-                          const fakeDate = "2023-01-01";
-                          field.onChange(`${fakeDate}T${e.target.value}`);
+                          // Usar data atual de Brasília para eventos recorrentes
+                          const today = formatDateTimeLocal(getNowInBrazil()).split('T')[0];
+                          field.onChange(`${today}T${e.target.value}`);
                         }}
                         className="pointer-events-auto" 
                       />
@@ -124,9 +124,9 @@ export const EventDateTime = ({ form }: EventDateTimeProps) => {
                         type="time" 
                         value={timeValue}
                         onChange={(e) => {
-                          // Manter uma data fictícia apenas para validação
-                          const fakeDate = "2023-01-01";
-                          field.onChange(`${fakeDate}T${e.target.value}`);
+                          // Usar data atual de Brasília para eventos recorrentes
+                          const today = formatDateTimeLocal(getNowInBrazil()).split('T')[0];
+                          field.onChange(`${today}T${e.target.value}`);
                         }}
                         className="pointer-events-auto"
                       />

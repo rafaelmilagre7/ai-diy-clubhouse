@@ -14,7 +14,7 @@ import { EventCoverImage } from "./form/EventCoverImage";
 import { EventRecurrence } from "./form/EventRecurrence";
 import { eventSchema, type EventFormData } from "./form/EventFormSchema";
 import { type Event } from "@/types/events";
-import { formatDateTimeLocal, convertLocalToUTC } from "@/utils/timezoneUtils";
+import { formatDateTimeLocal, convertLocalToUTC, getNowInBrazil } from "@/utils/timezoneUtils";
 import { RecurrenceEditDialog } from "./RecurrenceEditDialog";
 
 interface EventFormProps {
@@ -28,13 +28,42 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
   const [pendingFormData, setPendingFormData] = useState<EventFormData | null>(null);
   const queryClient = useQueryClient();
 
+  // Função para obter valores padrão para horários
+  const getDefaultTimes = () => {
+    if (event?.start_time && event?.end_time) {
+      return {
+        start_time: formatDateTimeLocal(new Date(event.start_time)),
+        end_time: formatDateTimeLocal(new Date(event.end_time))
+      };
+    }
+    
+    // Para novos eventos, usar horário atual de Brasília como padrão
+    const nowInBrazil = getNowInBrazil();
+    const defaultStart = new Date(nowInBrazil);
+    
+    // Arredondar para a próxima hora cheia
+    defaultStart.setMinutes(0, 0, 0);
+    defaultStart.setHours(defaultStart.getHours() + 1);
+    
+    // Fim padrão: 1 hora depois do início
+    const defaultEnd = new Date(defaultStart);
+    defaultEnd.setHours(defaultEnd.getHours() + 1);
+    
+    return {
+      start_time: formatDateTimeLocal(defaultStart),
+      end_time: formatDateTimeLocal(defaultEnd)
+    };
+  };
+
+  const defaultTimes = getDefaultTimes();
+
   const form = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
     defaultValues: {
       title: event?.title || "",
       description: event?.description || "",
-      start_time: event?.start_time ? formatDateTimeLocal(new Date(event.start_time)) : "",
-      end_time: event?.end_time ? formatDateTimeLocal(new Date(event.end_time)) : "",
+      start_time: defaultTimes.start_time,
+      end_time: defaultTimes.end_time,
       location_link: event?.location_link || "",
       physical_location: event?.physical_location || "",
       cover_image_url: event?.cover_image_url || "",
