@@ -5601,7 +5601,9 @@ export type Database = {
         Returns: Json
       }
       generate_recurring_event_instances: {
-        Args: { p_event_id: string; p_max_instances?: number }
+        Args:
+          | { p_event_id: string; p_max_instances?: number }
+          | { parent_event_id: string }
         Returns: Json
       }
       generate_referral_token: {
