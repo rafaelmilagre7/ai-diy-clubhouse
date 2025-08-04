@@ -53,10 +53,12 @@ export const useMaterialsData = (module: Module) => {
           console.log("DEBUG: Raw solution data before filtering:", solutionData);
           
           // Filter out video types, Panda Video content, and links - they belong in other tabs
+          // Also filter out items with name "Solution Resources" which contain external links
           const filteredData = (solutionData || []).filter(
             item => {
               const shouldInclude = item.type !== 'video' && 
                                     item.type !== 'resources' &&
+                                    item.name !== 'Solution Resources' &&
                                     !item.url?.includes('pandavideo') && 
                                     !(item.metadata?.provider === 'panda');
               
@@ -97,13 +99,18 @@ export const useMaterialsData = (module: Module) => {
           .eq("type", "resources")
           .is("module_id", null);
 
+        console.log("DEBUG: Resources data for external links:", resourcesData);
+
         if (resourcesError) {
           logError("Error fetching resources:", resourcesError);
         } else if (resourcesData && resourcesData.length > 0) {
           try {
             // Parse the resources data to get external links
             const resourcesContent = JSON.parse(resourcesData[0].url);
+            console.log("DEBUG: Parsed resources content:", resourcesContent);
+            
             if (resourcesContent.external_links && Array.isArray(resourcesContent.external_links)) {
+              console.log("DEBUG: Setting external links:", resourcesContent.external_links);
               setExternalLinks(resourcesContent.external_links);
             }
           } catch (parseError) {
