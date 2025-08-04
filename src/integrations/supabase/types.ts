@@ -5580,7 +5580,7 @@ export type Database = {
         Returns: Json
       }
       generate_event_recurrence: {
-        Args: { parent_event_id: string }
+        Args: { input_event_id: string }
         Returns: Json
       }
       generate_final_security_report: {
