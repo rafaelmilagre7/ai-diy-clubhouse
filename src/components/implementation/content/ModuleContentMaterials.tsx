@@ -16,6 +16,12 @@ export const ModuleContentMaterials: React.FC<ModuleContentMaterialsProps> = ({ 
   const { materials, externalLinks, loading } = useMaterialsData(module);
   const { handleDownload } = useFileDownload();
 
+  // Debug logs
+  console.log("🎯 MATERIALS COMPONENT - module:", module);
+  console.log("🎯 MATERIALS COMPONENT - materials:", materials);
+  console.log("🎯 MATERIALS COMPONENT - externalLinks:", externalLinks);
+  console.log("🎯 MATERIALS COMPONENT - loading:", loading);
+
   if (loading) {
     return <MaterialsLoading />;
   }

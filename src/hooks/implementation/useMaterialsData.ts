@@ -77,6 +77,7 @@ export const useMaterialsData = (module: Module) => {
           .is("module_id", null);
 
         console.log("🔥 Resources data encontrados:", resourcesData);
+        console.log("🔥 Resources data length:", resourcesData?.length || 0);
 
         if (resourcesError) {
           console.error("🔥 Erro ao buscar resources:", resourcesError);
