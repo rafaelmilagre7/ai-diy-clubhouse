@@ -6,7 +6,6 @@ import { useFileDownload } from "@/hooks/implementation/useFileDownload";
 import { MaterialsLoading } from "./materials/MaterialsLoading";
 import { MaterialsEmptyState } from "./materials/MaterialsEmptyState";
 import { MaterialItem } from "./materials/MaterialItem";
-import { LinksAuxiliares } from "./materials/LinksAuxiliares";
 
 interface ModuleContentMaterialsProps {
   module: Module;
@@ -15,12 +14,6 @@ interface ModuleContentMaterialsProps {
 export const ModuleContentMaterials: React.FC<ModuleContentMaterialsProps> = ({ module }) => {
   const { materials, externalLinks, loading } = useMaterialsData(module);
   const { handleDownload } = useFileDownload();
-
-  // Debug logs
-  console.log("🎯 MATERIALS COMPONENT - module:", module);
-  console.log("🎯 MATERIALS COMPONENT - materials:", materials);
-  console.log("🎯 MATERIALS COMPONENT - externalLinks:", externalLinks);
-  console.log("🎯 MATERIALS COMPONENT - loading:", loading);
 
   if (loading) {
     return <MaterialsLoading />;
@@ -49,10 +42,6 @@ export const ModuleContentMaterials: React.FC<ModuleContentMaterialsProps> = ({ 
             ))}
           </div>
         </div>
-      )}
-
-      {externalLinks.length > 0 && (
-        <LinksAuxiliares links={externalLinks} />
       )}
     </div>
   );

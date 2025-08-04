@@ -43,14 +43,12 @@ const ResourcesTab: React.FC<ResourcesTabProps> = ({ solutionId, onComplete }) =
     try {
       setLoading(true);
       
-      console.log("🔥 RESOURCES TAB - Buscando recursos para:", solutionId);
-      
       const { data, error } = await supabase
         .from("solution_resources")
         .select("*")
         .eq("solution_id", solutionId)
-        .not("type", "in", "(video,resources)")  // Excluir vídeos E resources (Solution Resources)
-        .neq("name", "Solution Resources");      // Extra filtro para garantir
+        .not("type", "in", "(video,resources)")
+        .neq("name", "Solution Resources");
       
       if (error) {
         console.error("Erro ao buscar recursos:", error);
@@ -62,7 +60,6 @@ const ResourcesTab: React.FC<ResourcesTabProps> = ({ solutionId, onComplete }) =
         return;
       }
       
-      console.log("🔥 RESOURCES TAB - Recursos filtrados:", data);
       setResources(data || []);
     } catch (error) {
       console.error("Erro ao buscar recursos:", error);
@@ -78,8 +75,6 @@ const ResourcesTab: React.FC<ResourcesTabProps> = ({ solutionId, onComplete }) =
 
   const fetchExternalLinks = async () => {
     try {
-      console.log("🔥 RESOURCES TAB - Buscando external links para:", solutionId);
-      
       const { data: resourcesData, error: resourcesError } = await supabase
         .from("solution_resources")
         .select("*")
@@ -88,10 +83,7 @@ const ResourcesTab: React.FC<ResourcesTabProps> = ({ solutionId, onComplete }) =
         .eq("name", "Solution Resources")
         .is("module_id", null);
 
-      console.log("🔥 RESOURCES TAB - Resources data encontrados:", resourcesData);
-
       if (resourcesError) {
-        console.error("🔥 Erro ao buscar resources:", resourcesError);
         setExternalLinks([]);
       } else if (resourcesData && resourcesData.length > 0) {
         try {
@@ -102,25 +94,19 @@ const ResourcesTab: React.FC<ResourcesTabProps> = ({ solutionId, onComplete }) =
             resourcesContent = resourcesData[0].url;
           }
           
-          console.log("🔥 RESOURCES TAB - Conteúdo parseado dos resources:", resourcesContent);
-          
           if (resourcesContent.external_links && Array.isArray(resourcesContent.external_links)) {
-            console.log("🔥 RESOURCES TAB - External links encontrados:", resourcesContent.external_links);
             setExternalLinks(resourcesContent.external_links);
           } else {
-            console.log("🔥 RESOURCES TAB - Nenhum external_link encontrado no JSON");
             setExternalLinks([]);
           }
         } catch (parseError) {
-          console.error("🔥 Erro ao fazer parse dos external links:", parseError);
           setExternalLinks([]);
         }
       } else {
-        console.log("🔥 RESOURCES TAB - Nenhum Solution Resources encontrado");
         setExternalLinks([]);
       }
     } catch (err) {
-      console.error("🔥 Erro geral ao buscar external links:", err);
+      setExternalLinks([]);
     }
   };
 
