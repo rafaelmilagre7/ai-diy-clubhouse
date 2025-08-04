@@ -15,6 +15,7 @@ import { EventRecurrence } from "./form/EventRecurrence";
 import { eventSchema, type EventFormData } from "./form/EventFormSchema";
 import { type Event } from "@/types/events";
 import { formatDateTimeLocal, convertLocalToUTC, getNowInBrazil } from "@/utils/timezoneUtils";
+import { generateRecurringEvents } from "@/utils/recurringEvents";
 import { RecurrenceEditDialog } from "./RecurrenceEditDialog";
 
 interface EventFormProps {
@@ -143,9 +144,10 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
           .select()
           .single();
 
-        // Evento recorrente criado - não gera instâncias automaticamente
+        // Evento recorrente criado - gerar instâncias automaticamente
         if (data.is_recurring && result.data) {
           console.log('Evento recorrente criado:', result.data.id);
+          await generateRecurringEvents(result.data);
         }
       }
 
