@@ -5008,79 +5008,6 @@ export type Database = {
         }
         Relationships: []
       }
-      audit_logs_secure: {
-        Row: {
-          action: string | null
-          details: Json | null
-          event_type: string | null
-          id: string | null
-          ip_address: string | null
-          resource_id: string | null
-          session_id: string | null
-          severity: string | null
-          timestamp: string | null
-          user_agent: string | null
-          user_id: string | null
-        }
-        Insert: {
-          action?: string | null
-          details?: Json | null
-          event_type?: string | null
-          id?: string | null
-          ip_address?: string | null
-          resource_id?: string | null
-          session_id?: string | null
-          severity?: string | null
-          timestamp?: string | null
-          user_agent?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          action?: string | null
-          details?: Json | null
-          event_type?: string | null
-          id?: string | null
-          ip_address?: string | null
-          resource_id?: string | null
-          session_id?: string | null
-          severity?: string | null
-          timestamp?: string | null
-          user_agent?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      nps_analytics_view: {
-        Row: {
-          created_at: string | null
-          metric: string | null
-          value: number | null
-        }
-        Relationships: []
-      }
-      user_growth_by_date: {
-        Row: {
-          cumulative_users: number | null
-          date: string | null
-          new_users: number | null
-        }
-        Relationships: []
-      }
-      user_segmentation_analytics: {
-        Row: {
-          percentage: number | null
-          segment: string | null
-          user_count: number | null
-        }
-        Relationships: []
-      }
-      weekly_activity_patterns: {
-        Row: {
-          activity_count: number | null
-          day_of_week: number | null
-        }
-        Relationships: []
-      }
     }
     Functions: {
       accept_invite: {
@@ -5736,6 +5663,18 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      get_audit_logs_secure: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          log_id: string
+          user_id: string
+          event_type: string
+          action: string
+          log_timestamp: string
+          severity: string
+          details: Json
+        }[]
+      }
       get_benefits_safe: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -5860,6 +5799,10 @@ export type Database = {
           detractors_count: number
           response_rate: number
         }[]
+      }
+      get_nps_analytics_secure: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
       }
       get_onboarding_analytics: {
         Args: Record<PropertyKey, never>
@@ -5991,6 +5934,14 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: Json
       }
+      get_user_growth_secure: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          date_period: string
+          new_users: number
+          cumulative_users: number
+        }[]
+      }
       get_user_learning_stats: {
         Args: { target_user_id: string }
         Returns: Json
@@ -6038,6 +5989,10 @@ export type Database = {
         Args: { user_id: string }
         Returns: string[]
       }
+      get_user_segmentation_secure: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       get_users_with_roles: {
         Args: {
           limit_count?: number
@@ -6077,6 +6032,14 @@ export type Database = {
           recurrence_count: number
           recurrence_end_date: string
           parent_event_id: string
+        }[]
+      }
+      get_weekly_activity_secure: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          week_start: string
+          active_users: number
+          total_events: number
         }[]
       }
       handle_supabase_email_rate_limit_error: {
