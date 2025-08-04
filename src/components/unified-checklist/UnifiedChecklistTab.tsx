@@ -34,6 +34,15 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
   const { data: template, isLoading: isLoadingTemplate } = useUnifiedChecklistTemplate(solutionId, checklistType);
   const { data: userProgress, isLoading: isLoadingProgress } = useUnifiedChecklist(solutionId, checklistType);
   
+  console.log('📋 UnifiedChecklistTab:', {
+    solutionId,
+    checklistType,
+    hasTemplate: !!template,
+    hasUserProgress: !!userProgress,
+    isLoadingTemplate,
+    isLoadingProgress
+  });
+  
   // Buscar checklist específico da solução se não houver template
   const { data: solutionChecklist, isLoading: isLoadingSolutionChecklist } = useQuery({
     queryKey: ['solution-checklist', solutionId, checklistType],
@@ -59,6 +68,32 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
       return data;
     },
     enabled: !!solutionId && !template && !isLoadingTemplate
+  });
+
+  // Buscar checklist alternativo se não houver do tipo solicitado
+  const { data: alternativeChecklist, isLoading: isLoadingAlternative } = useQuery({
+    queryKey: ['alternative-checklist', solutionId],
+    queryFn: async () => {
+      console.log('🔍 Buscando checklist alternativo para solução:', solutionId);
+      
+      const { data, error } = await supabase
+        .from('unified_checklists')
+        .select('*')
+        .eq('solution_id', solutionId)
+        .eq('is_template', false)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) {
+        console.error('❌ Erro ao buscar checklist alternativo:', error);
+        return null;
+      }
+
+      console.log('✅ Checklist alternativo encontrado:', !!data, data?.checklist_type);
+      return data;
+    },
+    enabled: !!solutionId && !template && !solutionChecklist && !isLoadingTemplate && !isLoadingSolutionChecklist
   });
   
   const updateMutation = useUpdateUnifiedChecklist();
@@ -156,7 +191,7 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
     }
   }, [checklistItems]);
 
-  if (isLoadingTemplate || isLoadingProgress || isLoadingSolutionChecklist) {
+  if (isLoadingTemplate || isLoadingProgress || isLoadingSolutionChecklist || isLoadingAlternative) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -164,13 +199,38 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
     );
   }
 
-  if ((!template && !solutionChecklist) || !checklistItems.length) {
+  // Se não há template nem checklist específico, mas há alternativo, mostrar aviso amigável
+  if ((!template && !solutionChecklist) && alternativeChecklist) {
+    return (
+      <div className="text-center py-12">
+        <AlertCircle className="mx-auto h-12 w-12 text-yellow-500 mb-4" />
+        <h3 className="text-lg font-semibold mb-2">Checklist Disponível em Outro Formato</h3>
+        <p className="text-muted-foreground mb-4">
+          Esta solução possui um checklist do tipo <Badge variant="outline">{alternativeChecklist.checklist_type}</Badge>, 
+          mas não especificamente de <Badge variant="outline">{checklistType}</Badge>.
+        </p>
+        <p className="text-sm text-muted-foreground mb-4">
+          Visite a aba correspondente ou entre em contato com nossa equipe para mais informações.
+        </p>
+        {onComplete && (
+          <Button onClick={onComplete} variant="outline">
+            Continuar para próxima etapa
+          </Button>
+        )}
+      </div>
+    );
+  }
+
+  if ((!template && !solutionChecklist && !alternativeChecklist) || !checklistItems.length) {
     return (
       <div className="text-center py-12">
         <AlertCircle className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-        <h3 className="text-lg font-semibold mb-2">Nenhum checklist encontrado</h3>
+        <h3 className="text-lg font-semibold mb-2">Checklist em Preparação</h3>
         <p className="text-muted-foreground mb-4">
-          Esta solução não possui um checklist de {checklistType === 'implementation' ? 'implementação' : checklistType}.
+          O checklist de {checklistType === 'implementation' ? 'implementação' : checklistType} para esta solução ainda está sendo preparado pela nossa equipe.
+        </p>
+        <p className="text-sm text-muted-foreground mb-4">
+          Este conteúdo será disponibilizado em breve. Enquanto isso, você pode explorar outras partes da solução.
         </p>
         {onComplete && (
           <Button onClick={onComplete} variant="outline">
