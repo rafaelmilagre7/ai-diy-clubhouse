@@ -3097,6 +3097,7 @@ export type Database = {
           email: string
           id: string
           industry: string | null
+          is_active: boolean | null
           last_active: string | null
           linkedin_url: string | null
           name: string | null
@@ -3121,6 +3122,7 @@ export type Database = {
           email: string
           id: string
           industry?: string | null
+          is_active?: boolean | null
           last_active?: string | null
           linkedin_url?: string | null
           name?: string | null
@@ -3145,6 +3147,7 @@ export type Database = {
           email?: string
           id?: string
           industry?: string | null
+          is_active?: boolean | null
           last_active?: string | null
           linkedin_url?: string | null
           name?: string | null
@@ -5106,11 +5109,19 @@ export type Database = {
         Returns: Json
       }
       admin_force_delete_auth_user: {
-        Args: { target_user_id: string } | { user_email: string }
+        Args: { target_user_id: string }
         Returns: Json
       }
       admin_reset_user: {
-        Args: { target_user_id: string } | { user_email: string }
+        Args: { target_user_id: string }
+        Returns: Json
+      }
+      admin_reset_user_secure: {
+        Args: { user_email: string }
+        Returns: Json
+      }
+      admin_secure_delete_user_v2: {
+        Args: { target_email: string }
         Returns: Json
       }
       analyze_rls_security_issues: {
@@ -5878,6 +5889,7 @@ export type Database = {
           email: string
           id: string
           industry: string | null
+          is_active: boolean | null
           last_active: string | null
           linkedin_url: string | null
           name: string | null
@@ -6454,6 +6466,10 @@ export type Database = {
         Returns: Json
       }
       secure_change_user_role: {
+        Args: { target_user_id: string; new_role_id: string }
+        Returns: Json
+      }
+      secure_change_user_role_v2: {
         Args: { target_user_id: string; new_role_id: string }
         Returns: Json
       }
