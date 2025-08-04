@@ -67,13 +67,15 @@ export const useSolutionModules = (solution: Solution | null) => {
           console.log("✅ Módulo Tools adicionado com", tools.length, "ferramentas");
         }
 
-        // 3. Materials Module (se houver materiais)
+        // 3. Materials Module (se houver materiais que não sejam vídeos nem "resources")
         console.log("🔍 Buscando materiais para solução:", solution.id);
         const { data: materials, error: materialsError } = await supabase
           .from("solution_resources")
           .select("*")
           .eq("solution_id", solution.id)
-          .in("type", ["document", "image", "other"]);
+          .not("type", "in", "(video,resources)")
+          .neq("name", "Solution Resources")
+          .is("module_id", null);
 
         if (materialsError) {
           console.error("❌ Erro ao buscar materiais:", materialsError);
@@ -81,16 +83,18 @@ export const useSolutionModules = (solution: Solution | null) => {
           console.log("📄 Materiais encontrados:", materials?.length || 0);
         }
 
-        if (materials && materials.length > 0) {
-          generatedModules.push({
-            id: 'materials',
-            type: 'materials',
-            title: 'Materiais de Apoio',
-            content: { materials },
-            order: generatedModules.length
-          });
-          console.log("✅ Módulo Materials adicionado com", materials.length, "materiais");
-        }
+        // Sempre adicionar módulo de materiais para mostrar links auxiliares
+        generatedModules.push({
+          id: 'materials',
+          type: 'materials',
+          title: 'Materiais e Recursos',
+          content: { 
+            materials: materials || [],
+            solution_id: solution.id 
+          },
+          order: generatedModules.length
+        });
+        console.log("✅ Módulo Materials SEMPRE adicionado com", materials?.length || 0, "materiais");
 
         // 4. Videos Module (se houver vídeos)
         console.log("🔍 Buscando vídeos para solução:", solution.id);

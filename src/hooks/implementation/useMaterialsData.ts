@@ -31,31 +31,24 @@ export const useMaterialsData = (module: Module) => {
     const fetchMaterialsAndLinks = async () => {
       try {
         setLoading(true);
+        console.log("🔥 Iniciando busca de materiais e links para:", module.solution_id);
         
-        // First try to find materials specific to this module
-        let { data: moduleData, error: moduleError } = await supabase
+        // 1. Buscar materiais que não sejam vídeos nem "Solution Resources"
+        const { data: solutionData, error: solutionError } = await supabase
           .from("solution_resources")
           .select("*")
-          .eq("module_id", module.id);
+          .eq("solution_id", module.solution_id)
+          .not("type", "in", "(video,resources)")
+          .neq("name", "Solution Resources")
+          .is("module_id", null);
         
-        // If no module-specific materials or error, fetch solution-level materials
-        if (moduleError || !moduleData || moduleData.length === 0) {
-          const { data: solutionData, error: solutionError } = await supabase
-            .from("solution_resources")
-            .select("*")
-            .eq("solution_id", module.solution_id)
-            .neq("type", "resources") // Excluir completamente tipo 'resources'
-            .neq("name", "Solution Resources") // Excluir por nome também
-            .is("module_id", null);
+        if (solutionError) {
+          console.error("🔥 Erro ao buscar materiais:", solutionError);
+          logError("Error fetching materials:", solutionError);
+        } else {
+          console.log("🔥 Materiais encontrados:", solutionData);
           
-          if (solutionError) {
-            logError("Error fetching materials:", solutionError);
-            return;
-          }
-          
-          console.log("🔥 Raw solution data (já filtrado na query):", solutionData);
-          
-          // Filtro adicional para garantir que nada do tipo 'resources' passe
+          // Filtro adicional para garantir que nada indesejado passe
           const filteredData = (solutionData || []).filter(
             item => {
               const shouldInclude = item.type !== 'video' && 
@@ -69,30 +62,11 @@ export const useMaterialsData = (module: Module) => {
             }
           );
           
-          console.log("🔥 Filtered materials:", filteredData);
+          console.log("🔥 Materiais filtrados:", filteredData);
           setMaterials(filteredData);
-        } else {
-          console.log("🔥 Raw module data before filtering:", moduleData);
-          
-          // Filter out video types, Panda Video content, and "Solution Resources" from module data too
-          const filteredModuleData = moduleData.filter(
-            item => {
-              const shouldInclude = item.type !== 'video' && 
-                                    item.type !== 'resources' &&
-                                    item.name !== 'Solution Resources' &&
-                                    !item.url?.includes('pandavideo') && 
-                                    !(item.metadata?.provider === 'panda');
-              
-              console.log(`🔥 Module Item "${item.name}" (type: ${item.type}) - Include: ${shouldInclude}`);
-              return shouldInclude;
-            }
-          );
-          
-          console.log("🔥 Filtered module materials:", filteredModuleData);
-          setMaterials(filteredModuleData);
         }
 
-        // SEMPRE buscar external links independente de ter materiais ou não
+        // 2. SEMPRE buscar external links independente de ter materiais ou não
         console.log("🔥 Buscando external links para solução:", module.solution_id);
         const { data: resourcesData, error: resourcesError } = await supabase
           .from("solution_resources")
