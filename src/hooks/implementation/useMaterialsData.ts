@@ -25,6 +25,7 @@ export const useMaterialsData = (module: Module) => {
   const { log, logError } = useLogging();
 
   console.log("🔥 useMaterialsData INICIADO para módulo:", module.id, "solução:", module.solution_id);
+  console.log("🔥 Module completo:", JSON.stringify(module, null, 2));
 
   useEffect(() => {
     console.log("🔥 useEffect executando para módulo:", module.id);
@@ -86,7 +87,16 @@ export const useMaterialsData = (module: Module) => {
         } else if (resourcesData && resourcesData.length > 0) {
           try {
             // Parse the resources data to get external links
-            const resourcesContent = JSON.parse(resourcesData[0].url);
+            console.log("🔥 RAW resourcesData[0].url:", resourcesData[0].url);
+            console.log("🔥 Tipo do URL:", typeof resourcesData[0].url);
+            
+            let resourcesContent;
+            if (typeof resourcesData[0].url === 'string') {
+              resourcesContent = JSON.parse(resourcesData[0].url);
+            } else {
+              resourcesContent = resourcesData[0].url;
+            }
+            
             console.log("🔥 Conteúdo parseado dos resources:", resourcesContent);
             
             if (resourcesContent.external_links && Array.isArray(resourcesContent.external_links)) {
