@@ -6022,10 +6022,10 @@ export type Database = {
           start_time: string
           end_time: string
           location_link: string
+          physical_location: string
           cover_image_url: string
           created_at: string
           created_by: string
-          physical_location: string
           is_recurring: boolean
           recurrence_pattern: string
           recurrence_interval: number
