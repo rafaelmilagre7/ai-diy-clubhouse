@@ -74,10 +74,12 @@ export const useMaterialsData = (module: Module) => {
           console.log("DEBUG: Raw module data before filtering:", moduleData);
           
           // Filter out video types, Panda Video content, and links from module data too
+          // Also filter out items with name "Solution Resources" which contain external links
           const filteredModuleData = moduleData.filter(
             item => {
               const shouldInclude = item.type !== 'video' && 
                                     item.type !== 'resources' &&
+                                    item.name !== 'Solution Resources' &&
                                     !item.url?.includes('pandavideo') && 
                                     !(item.metadata?.provider === 'panda');
               
