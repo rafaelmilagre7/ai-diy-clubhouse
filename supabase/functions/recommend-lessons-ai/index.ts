@@ -317,8 +317,8 @@ ${index + 1}. "${lesson.title}" (ID: ${lesson.id})
 `).join('\n')}`;
     }
 
-MISSÃO CRÍTICA: Criar uma trilha de implementação ALTAMENTE PERSONALIZADA com:
-
+    // MISSÃO CRÍTICA: Criar uma trilha de implementação ALTAMENTE PERSONALIZADA
+    const systemPrompt = `
 1. **ANÁLISE CONTEXTUAL PROFUNDA**: 
    - Analise ESPECIFICAMENTE o perfil detalhado fornecido
    - Identifique oportunidades de IA únicas para este setor, cargo e contexto empresarial
