@@ -3930,13 +3930,6 @@ export type Database = {
             foreignKeyName: "solution_certificates_solution_id_fkey"
             columns: ["solution_id"]
             isOneToOne: false
-            referencedRelation: "solution_performance_metrics"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "solution_certificates_solution_id_fkey"
-            columns: ["solution_id"]
-            isOneToOne: false
             referencedRelation: "solutions"
             referencedColumns: ["id"]
           },
@@ -5028,83 +5021,58 @@ export type Database = {
         }
         Insert: {
           action?: string | null
-          details?: never
+          details?: Json | null
           event_type?: string | null
           id?: string | null
-          ip_address?: never
-          resource_id?: never
-          session_id?: never
+          ip_address?: string | null
+          resource_id?: string | null
+          session_id?: string | null
           severity?: string | null
           timestamp?: string | null
-          user_agent?: never
-          user_id?: never
+          user_agent?: string | null
+          user_id?: string | null
         }
         Update: {
           action?: string | null
-          details?: never
+          details?: Json | null
           event_type?: string | null
           id?: string | null
-          ip_address?: never
-          resource_id?: never
-          session_id?: never
+          ip_address?: string | null
+          resource_id?: string | null
+          session_id?: string | null
           severity?: string | null
           timestamp?: string | null
-          user_agent?: never
-          user_id?: never
+          user_agent?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
       nps_analytics_view: {
         Row: {
-          course_title: string | null
           created_at: string | null
-          feedback: string | null
-          id: string | null
-          lesson_description: string | null
-          lesson_id: string | null
-          lesson_title: string | null
-          module_title: string | null
-          nps_category: string | null
-          score: number | null
-          updated_at: string | null
-          user_email: string | null
-          user_id: string | null
-          user_name: string | null
+          metric: string | null
+          value: number | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "learning_lesson_nps_lesson_id_fkey"
-            columns: ["lesson_id"]
-            isOneToOne: false
-            referencedRelation: "learning_lessons"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       solution_performance_metrics: {
         Row: {
-          avg_completion_time_hours: number | null
-          category: string | null
-          completed_implementations: number | null
-          completion_rate: number | null
-          id: string | null
-          name: string | null
-          total_implementations: number | null
+          calculated_at: string | null
+          performance_score: number | null
+          solution_id: string | null
         }
         Relationships: []
       }
       user_growth_by_date: {
         Row: {
+          cumulative_users: number | null
           date: string | null
-          name: string | null
-          total_users: number | null
-          users: number | null
+          new_users: number | null
         }
         Relationships: []
       }
       user_segmentation_analytics: {
         Row: {
-          description: string | null
           percentage: number | null
           segment: string | null
           user_count: number | null
@@ -5114,7 +5082,6 @@ export type Database = {
       weekly_activity_patterns: {
         Row: {
           activity_count: number | null
-          day_name: string | null
           day_of_week: number | null
         }
         Relationships: []
