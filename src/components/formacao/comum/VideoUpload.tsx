@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { uploadFileWithFallback } from "@/lib/supabase/storage";
+import { supabase } from "@/lib/supabase";
 import { getYoutubeVideoId, getYoutubeThumbnailUrl } from "@/lib/supabase/storage";
 import { 
   Film, Link, Loader2, Video, Youtube, AlertCircle, Check, X
@@ -95,28 +95,43 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
     setError(null);
 
     try {
-      // Usar a função de upload com fallback
-      const uploadResult = await uploadFileWithFallback(
-        file,
-        STORAGE_BUCKETS.LEARNING_VIDEOS,
-        "videos",
-        (progress) => setUploadProgress(progress),
-        STORAGE_BUCKETS.FALLBACK
-      );
+      const fileName = `${Date.now()}-${file.name}`;
+      const filePath = `videos/${fileName}`;
+      
+      console.log(`Iniciando upload de vídeo para bucket: ${STORAGE_BUCKETS.LEARNING_VIDEOS}`);
+      console.log(`Fazendo upload do arquivo: ${fileName} para ${filePath}`);
+      
+      // Upload direto - funciona conforme correção dos outros uploads
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from(STORAGE_BUCKETS.LEARNING_VIDEOS)
+        .upload(filePath, file, { 
+          upsert: true,
+          cacheControl: '3600'
+        });
 
-      // Verificação adequada de tipo usando abordagem explícita
-      if ('error' in uploadResult) {
-        // Caso de erro
-        throw uploadResult.error;
+      if (uploadError) {
+        console.error("Erro no upload:", uploadError);
+        throw new Error(uploadError.message);
+      }
+
+      console.log("Upload de vídeo concluído:", uploadData);
+
+      // Obter URL pública
+      const { data: urlData } = supabase.storage
+        .from(STORAGE_BUCKETS.LEARNING_VIDEOS)
+        .getPublicUrl(filePath);
+
+      console.log("URL pública do vídeo gerada:", urlData.publicUrl);
+
+      if (!urlData.publicUrl) {
+        throw new Error("URL pública não foi gerada");
       }
       
-      // Caso de sucesso - usando uma variável com tipagem explícita
-      const successResult = uploadResult as { publicUrl: string; path: string; error: null };
       onChange(
-        successResult.publicUrl, 
+        urlData.publicUrl, 
         "direct", 
         file.name, 
-        successResult.path, 
+        uploadData.path, 
         file.size
       );
       
