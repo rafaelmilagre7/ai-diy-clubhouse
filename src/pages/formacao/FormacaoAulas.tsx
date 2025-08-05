@@ -15,6 +15,7 @@ import { AllLessonsList } from "@/components/formacao/aulas/AllLessonsList";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { NovaAulaButton } from "@/components/formacao/aulas/NovaAulaButton";
+import { MigrateImagesButton } from "@/components/formacao/admin/MigrateImagesButton";
 
 const FormacaoAulas = () => {
   const { id } = useParams<{ id: string }>();
@@ -193,12 +194,15 @@ const FormacaoAulas = () => {
           breadcrumb={false}
         >
           {isAdmin && (
-            <NovaAulaButton 
-              moduleId=""
-              buttonText="Nova Aula"
-              onSuccess={handleSuccess}
-              allowModuleSelection={true}
-            />
+            <div className="flex gap-2">
+              <NovaAulaButton 
+                moduleId=""
+                buttonText="Nova Aula"
+                onSuccess={handleSuccess}
+                allowModuleSelection={true}
+              />
+              <MigrateImagesButton />
+            </div>
           )}
         </FormacaoAulasHeader>
         

@@ -1,0 +1,167 @@
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle, 
+  AlertDialogTrigger 
+} from "@/components/ui/alert-dialog";
+import { Download, Loader2, CheckCircle, AlertCircle } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+
+export const MigrateImagesButton = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [result, setResult] = useState<any>(null);
+  const { toast } = useToast();
+
+  const handleMigration = async () => {
+    setIsLoading(true);
+    setProgress(0);
+    setResult(null);
+
+    try {
+      console.log("🚀 Iniciando migração de imagens...");
+      
+      // Simular progresso
+      const progressInterval = setInterval(() => {
+        setProgress(prev => Math.min(prev + 5, 90));
+      }, 500);
+
+      const { data, error } = await supabase.functions.invoke('migrate-lesson-images');
+      
+      clearInterval(progressInterval);
+      setProgress(100);
+
+      if (error) {
+        throw error;
+      }
+
+      setResult(data);
+      
+      if (data.success) {
+        toast({
+          title: "Migração concluída!",
+          description: data.message,
+          variant: "default",
+        });
+      } else {
+        toast({
+          title: "Erro na migração",
+          description: data.error || "Erro desconhecido",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      console.error("Erro na migração:", error);
+      setProgress(0);
+      toast({
+        title: "Erro na migração",
+        description: error.message || "Erro ao executar migração",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button 
+            variant="outline" 
+            disabled={isLoading}
+            className="w-full"
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Migrando imagens...
+              </>
+            ) : (
+              <>
+                <Download className="mr-2 h-4 w-4" />
+                Migrar Imagens do ImgBB
+              </>
+            )}
+          </Button>
+        </AlertDialogTrigger>
+        
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Migrar Imagens das Aulas</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <p>Esta ação irá:</p>
+              <ul className="list-disc pl-5 space-y-1">
+                <li>Baixar todas as imagens de capa das aulas do ImgBB</li>
+                <li>Fazer upload para o Supabase Storage</li>
+                <li>Atualizar as URLs no banco de dados</li>
+              </ul>
+              <p className="text-amber-600 font-medium">
+                ⚠️ Esta operação pode levar alguns minutos dependendo da quantidade de imagens.
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleMigration}>
+              Iniciar Migração
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {isLoading && (
+        <div className="space-y-2">
+          <Progress value={progress} className="w-full" />
+          <p className="text-sm text-muted-foreground text-center">
+            Migrando imagens... {progress}%
+          </p>
+        </div>
+      )}
+
+      {result && (
+        <div className={`p-4 rounded-lg border ${result.success ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+          <div className="flex items-center gap-2 mb-2">
+            {result.success ? (
+              <CheckCircle className="h-5 w-5 text-green-600" />
+            ) : (
+              <AlertCircle className="h-5 w-5 text-red-600" />
+            )}
+            <h4 className="font-medium">Resultado da Migração</h4>
+          </div>
+          
+          <p className="text-sm mb-2">{result.message}</p>
+          
+          {result.migrated !== undefined && (
+            <p className="text-sm">
+              <strong>Migradas:</strong> {result.migrated} de {result.total} imagens
+            </p>
+          )}
+          
+          {result.errors && result.errors.length > 0 && (
+            <details className="mt-2">
+              <summary className="text-sm font-medium cursor-pointer">
+                Erros ({result.errors.length})
+              </summary>
+              <ul className="list-disc pl-5 text-xs space-y-1 mt-1">
+                {result.errors.map((error: string, index: number) => (
+                  <li key={index}>{error}</li>
+                ))}
+              </ul>
+            </details>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
