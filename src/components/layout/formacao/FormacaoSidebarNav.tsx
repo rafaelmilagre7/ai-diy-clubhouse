@@ -5,7 +5,6 @@ import {
   BookOpen,
   Play,
   FileText,
-  Settings,
   ArrowLeft,
   GraduationCap
 } from "lucide-react";
@@ -51,12 +50,6 @@ export const FormacaoSidebarNav = ({ sidebarOpen }: FormacaoSidebarNavProps) => 
       href: "/formacao/materiais",
       isActive: location.pathname.startsWith("/formacao/materiais")
     },
-    {
-      label: "Configurações",
-      icon: Settings,
-      href: "/formacao/configuracoes",
-      isActive: location.pathname.startsWith("/formacao/configuracoes")
-    }
   ];
 
   return (
