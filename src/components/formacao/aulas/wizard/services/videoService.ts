@@ -75,7 +75,7 @@ export async function saveVideosForLesson(lessonId: string, videos: VideoFormVal
         url: video.url,
         order_index: i,
         video_type: video.type || "youtube",
-        video_file_path: video.filePath || video.video_id || null,
+        video_file_path: video.video_id || video.filePath || null,
         video_file_name: video.fileName || null,
         file_size_bytes: video.fileSize || null,
         duration_seconds: video.duration_seconds || null,
