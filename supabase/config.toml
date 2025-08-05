@@ -42,6 +42,9 @@ pop3_port = 54327
 [functions.setup-storage-buckets]
 verify_jwt = false
 
+[functions.setup-storage]
+verify_jwt = false
+
 [functions.auth-rate-limiter]
 verify_jwt = false
 

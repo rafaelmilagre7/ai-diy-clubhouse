@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { uploadFileWithFallback } from "@/lib/supabase/storage";
+import { supabase } from "@/lib/supabase";
 import { ImagePlus, Trash2, Loader2, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { STORAGE_BUCKETS, MAX_UPLOAD_SIZES } from "@/lib/supabase/config";
@@ -29,9 +30,30 @@ export const ImageUpload = ({
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
+  const setupStorageIfNeeded = async () => {
+    try {
+      console.log('⚙️ Configurando storage automaticamente...');
+      const { data, error } = await supabase.functions.invoke('setup-storage');
+      
+      if (error) {
+        console.error('Erro ao configurar storage:', error);
+        return false;
+      }
+      
+      console.log('✅ Storage configurado:', data);
+      return true;
+    } catch (error) {
+      console.error('Erro ao invocar setup-storage:', error);
+      return false;
+    }
+  };
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    
+    const fileName = `${Date.now()}-${file.name}`;
+    const filePath = folderPath ? `${folderPath}/${fileName}` : fileName;
     
     // Validar tipo de arquivo
     const fileType = file.type.split('/')[0];
@@ -63,30 +85,41 @@ export const ImageUpload = ({
 
     try {
       console.log(`Iniciando upload para bucket: ${bucketName}, pasta: ${folderPath}`);
-      
-      const fileName = `${Date.now()}-${file.name}`;
-      const filePath = folderPath ? `${folderPath}/${fileName}` : fileName;
+      console.log(`Fazendo upload do arquivo: ${fileName} para ${filePath}`);
       
       const uploadResult = await uploadFileWithFallback(
         file,
         bucketName,
         filePath,
         (progress) => {
+          console.log(`Progresso do upload: ${progress}%`);
           setProgress(Math.round(progress));
         },
         STORAGE_BUCKETS.FALLBACK // Usando o bucket de fallback definido nas constantes
       );
 
+      console.log('Resultado do upload:', uploadResult);
+
+      // Verificar se o resultado é null ou undefined
+      if (!uploadResult) {
+        console.error("Upload retornou null/undefined");
+        throw new Error("Upload falhou - resultado vazio");
+      }
+
       // Verificar se houve erro no upload
-      if (!uploadResult || 'error' in uploadResult) {
-        const errorMsg = uploadResult?.error?.message || "Erro desconhecido no upload";
-        console.error("Erro no upload:", errorMsg);
-        throw new Error(errorMsg);
+      if ('error' in uploadResult) {
+        console.error("Erro no upload:", uploadResult.error);
+        throw new Error(uploadResult.error?.message || "Erro no upload");
       }
       
       // Sucesso - uploadResult agora é garantidamente do tipo success
       const successResult = uploadResult as { publicUrl: string; path: string; error: null };
       console.log("Upload bem-sucedido:", successResult);
+      
+      if (!successResult.publicUrl) {
+        throw new Error("URL pública não foi gerada");
+      }
+      
       onChange(successResult.publicUrl);
       
       toast({
@@ -96,6 +129,47 @@ export const ImageUpload = ({
       });
     } catch (error: any) {
       console.error("Erro ao fazer upload:", error);
+      
+      // Tentar configurar storage e tentar novamente se for erro de bucket
+      if (error.message.includes('bucket') || error.message.includes('Upload falhou')) {
+        console.log('🔧 Tentando configurar storage e repetir upload...');
+        const storageConfigured = await setupStorageIfNeeded();
+        
+        if (storageConfigured) {
+          try {
+            console.log('🔄 Tentando upload novamente após configurar storage...');
+            
+            const retryResult = await uploadFileWithFallback(
+              file,
+              bucketName,
+              filePath,
+              (progress) => {
+                console.log(`Progresso do retry: ${progress}%`);
+                setProgress(Math.round(progress));
+              },
+              STORAGE_BUCKETS.FALLBACK
+            );
+
+            if (retryResult && !('error' in retryResult)) {
+              const successResult = retryResult as { publicUrl: string; path: string; error: null };
+              console.log("Retry bem-sucedido:", successResult);
+              
+              if (successResult.publicUrl) {
+                onChange(successResult.publicUrl);
+                toast({
+                  title: "Upload concluído",
+                  description: "A imagem foi enviada com sucesso após configurar storage.",
+                  variant: "default",
+                });
+                return; // Sair da função, sucesso!
+              }
+            }
+          } catch (retryError) {
+            console.error("Erro no retry após configurar storage:", retryError);
+          }
+        }
+      }
+      
       setError(error.message || "Não foi possível enviar a imagem. Tente novamente.");
       toast({
         title: "Falha no upload",
