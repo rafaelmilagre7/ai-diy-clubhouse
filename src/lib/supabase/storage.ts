@@ -102,9 +102,12 @@ export const extractPandaVideoInfo = (data: any): { videoId: string; url: string
   // Se recebermos uma string (código iframe), extrair informações do código HTML
   if (typeof data === 'string') {
     try {
+      console.log('Processando iframe do Panda Video:', data);
+      
       // Extrair src do iframe
       const srcMatch = data.match(/src=["'](https:\/\/[^"']+)["']/i);
       if (!srcMatch || !srcMatch[1]) {
+        console.error('URL não encontrada no iframe');
         throw new Error('URL não encontrada no iframe');
       }
       
@@ -112,16 +115,22 @@ export const extractPandaVideoInfo = (data: any): { videoId: string; url: string
       let videoId = '';
       let thumbnailUrl = '';
       
+      console.log('URL extraída do iframe:', iframeSrc);
+      
       // Extrair videoId do URL
       // Formato padrão: https://player-vz-d6ebf577-797.tv.pandavideo.com.br/embed/?v=VIDEO_ID
-      const videoIdMatch = iframeSrc.match(/embed\/\?v=([^&]+)/);
+      const videoIdMatch = iframeSrc.match(/embed\/\?v=([^&?]+)/);
       if (videoIdMatch && videoIdMatch[1]) {
         videoId = videoIdMatch[1];
+        console.log('Video ID extraído (formato padrão):', videoId);
       } else {
         // Formato alternativo: https://player.pandavideo.com.br/embed/VIDEO_ID
-        const altMatch = iframeSrc.match(/\/embed\/([^/?]+)/);
+        const altMatch = iframeSrc.match(/\/embed\/([^/?&]+)/);
         if (altMatch && altMatch[1]) {
           videoId = altMatch[1];
+          console.log('Video ID extraído (formato alternativo):', videoId);
+        } else {
+          console.error('Não foi possível extrair o video ID da URL:', iframeSrc);
         }
       }
       
@@ -129,13 +138,17 @@ export const extractPandaVideoInfo = (data: any): { videoId: string; url: string
       if (videoId) {
         // URL corrigida para o domínio correto do Panda Video
         thumbnailUrl = `https://b.pandavideo.com.br/${videoId}/thumb.jpg`;
+        console.log('Thumbnail URL gerada:', thumbnailUrl);
       }
       
-      return {
+      const result = {
         videoId,
         url: iframeSrc,
         thumbnailUrl
       };
+      
+      console.log('Resultado final da extração:', result);
+      return result;
     } catch (error) {
       console.error('Erro ao extrair informações do iframe do Panda Video:', error);
       return { videoId: '', url: '', thumbnailUrl: '' };
