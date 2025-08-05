@@ -64,23 +64,26 @@ export const ImageUpload = ({
     try {
       console.log(`Iniciando upload para bucket: ${bucketName}, pasta: ${folderPath}`);
       
+      const fileName = `${Date.now()}-${file.name}`;
+      const filePath = folderPath ? `${folderPath}/${fileName}` : fileName;
+      
       const uploadResult = await uploadFileWithFallback(
         file,
         bucketName,
-        folderPath,
+        filePath,
         (progress) => {
           setProgress(Math.round(progress));
         },
         STORAGE_BUCKETS.FALLBACK // Usando o bucket de fallback definido nas constantes
       );
 
-      // Verificação de tipo adequada com abordagem explícita
+      // Verificar se houve erro no upload
       if ('error' in uploadResult) {
-        // Caso de erro
+        console.error("Erro no upload:", uploadResult.error);
         throw uploadResult.error;
       }
       
-      // Caso de sucesso - usando uma variável com tipagem explícita
+      // Sucesso - uploadResult agora é garantidamente do tipo success
       const successResult = uploadResult as { publicUrl: string; path: string; error: null };
       console.log("Upload bem-sucedido:", successResult);
       onChange(successResult.publicUrl);
