@@ -10,6 +10,7 @@ import { CommunityRedirects } from '@/components/routing/CommunityRedirects';
 import NotFound from '@/pages/NotFound';
 import InvitePage from '@/pages/InvitePage';
 import OnboardingPage from '@/pages/OnboardingPage';
+import AulaView from '@/pages/formacao/aulas/AulaView';
 
 const AppRoutes = () => {
   const location = useLocation();
@@ -93,6 +94,9 @@ const AppRoutes = () => {
         {formacaoRoutes.map((route) => (
           <Route key={route.path} path={route.path} element={route.element} />
         ))}
+        
+        {/* Rota especial para visualização de aulas como membro */}
+        <Route path="/formacao/aulas/view/:cursoId/:aulaId" element={<AulaView />} />
         
         {/* Fallback route */}
         <Route path="*" element={<NotFound />} />
