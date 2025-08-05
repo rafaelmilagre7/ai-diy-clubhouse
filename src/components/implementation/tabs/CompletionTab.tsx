@@ -192,10 +192,10 @@ const CompletionTab: React.FC<CompletionTabProps> = ({
     <div className="space-y-8 animate-fade-in relative">
       {/* Celebration overlay */}
       {showCelebration && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center aurora-glass">
-          <div className="text-center p-8 aurora-glass-hover rounded-3xl text-foreground animate-scale-in aurora-glow">
-            <Trophy className="w-16 h-16 mx-auto mb-4 animate-pulse aurora-text-gradient" />
-            <h2 className="text-3xl font-bold mb-2 aurora-text-gradient">🎉 Parabéns!</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <div className="text-center p-8 bg-card border border-border rounded-3xl text-foreground animate-scale-in shadow-2xl">
+            <Trophy className="w-16 h-16 mx-auto mb-4 animate-pulse text-primary" />
+            <h2 className="text-3xl font-bold mb-2 text-primary">🎉 Parabéns!</h2>
             <p className="text-lg text-muted-foreground">Processando sua conclusão...</p>
             <div className="mt-4">
               <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
@@ -206,64 +206,67 @@ const CompletionTab: React.FC<CompletionTabProps> = ({
 
       {/* Summary Modal */}
       {showSummary && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 aurora-glass">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
           <div className="w-full max-w-2xl animate-scale-in">
-            <div className="relative aurora-glass rounded-3xl p-8 aurora-glow text-center">
-              {/* Aurora particles background */}
-              <div className="absolute inset-0 overflow-hidden rounded-3xl">
-                <div className="aurora-particle absolute top-10 left-10 w-4 h-4 bg-aurora/20 rounded-full"></div>
-                <div className="aurora-particle absolute top-20 right-20 w-3 h-3 bg-viverblue/20 rounded-full animation-delay-2000"></div>
-                <div className="aurora-particle absolute bottom-20 left-16 w-2 h-2 bg-operational/20 rounded-full animation-delay-4000"></div>
+            <div className="relative bg-card border border-border rounded-3xl p-8 shadow-2xl text-center">
+              <div className="inline-flex items-center justify-center w-20 h-20 mx-auto mb-6 bg-gradient-to-r from-primary to-secondary rounded-full">
+                <Award className="w-10 h-10 text-white" />
+              </div>
+              
+              <h2 className="text-3xl font-bold mb-4 text-primary">
+                Implementação Concluída!
+              </h2>
+              
+              <div className="mb-6">
+                <h3 className="text-xl font-semibold text-primary mb-2">
+                  "{solutionTitle}"
+                </h3>
+                <p className="text-muted-foreground">
+                  Você completou com sucesso {completedTabs.length} de {Object.keys(tabNames).length} etapas
+                </p>
               </div>
 
-              <div className="relative z-10">
-                <div className="inline-flex items-center justify-center w-20 h-20 mx-auto mb-6 aurora-gradient rounded-full aurora-glow">
-                  <Award className="w-10 h-10 text-white" />
+              <div className="bg-muted/50 rounded-xl p-6 mb-6">
+                <h4 className="font-semibold mb-3 flex items-center justify-center gap-2">
+                  <Star className="w-5 h-5 text-yellow-500" />
+                  Resumo da sua jornada
+                </h4>
+                <div className="text-sm text-muted-foreground space-y-2">
+                  <p>✅ Explorou as ferramentas necessárias</p>
+                  <p>✅ Acessou recursos importantes</p>
+                  <p>✅ Seguiu o checklist de implementação</p>
+                  <p>✅ Progresso de {Math.round(progress)}% concluído</p>
                 </div>
-                
-                <h2 className="text-3xl font-bold mb-4 aurora-text-gradient">
-                  Implementação Concluída!
-                </h2>
-                
-                <div className="mb-6">
-                  <h3 className="text-xl font-semibold text-viverblue mb-2">
-                    "{solutionTitle}"
-                  </h3>
-                  <p className="text-muted-foreground">
-                    Você completou com sucesso {completedTabs.length} de {Object.keys(tabNames).length} etapas
-                  </p>
-                </div>
+              </div>
 
-                <div className="bg-card/50 rounded-xl p-6 mb-6">
-                  <h4 className="font-semibold mb-3 flex items-center justify-center gap-2">
-                    <Star className="w-5 h-5 text-yellow-500" />
-                    Resumo da sua jornada
-                  </h4>
-                  <div className="text-sm text-muted-foreground space-y-2">
-                    <p>✅ Explorou as ferramentas necessárias</p>
-                    <p>✅ Acessou recursos importantes</p>
-                    <p>✅ Seguiu o checklist de implementação</p>
-                    <p>✅ Progresso de {Math.round(progress)}% concluído</p>
-                  </div>
-                </div>
+              <div className="mb-6">
+                <p className="text-lg text-muted-foreground mb-4">
+                  Obrigado por escolher o <span className="text-primary font-semibold">VIVER DE IA</span> para sua jornada de transformação digital!
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Continue explorando nossa plataforma para descobrir mais soluções e acelerar sua implementação de IA.
+                </p>
+              </div>
 
-                <div className="mb-6">
-                  <p className="text-lg text-muted-foreground mb-4">
-                    Obrigado por escolher o <span className="text-viverblue font-semibold">VIVER DE IA</span> para sua jornada de transformação digital!
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Continue explorando nossa plataforma para descobrir mais soluções e acelerar sua implementação de IA.
-                  </p>
-                </div>
-
+              <div className="flex gap-4 justify-center">
                 <Button
                   onClick={() => {
                     setShowSummary(false);
                     setShowCelebration(false);
+                    navigate('/trilha-implementacao');
                   }}
-                  className="aurora-gradient text-white hover:opacity-90"
+                  className="bg-gradient-to-r from-primary to-secondary text-white hover:opacity-90"
                 >
-                  Continuar explorando
+                  Ver Outras Soluções
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowSummary(false);
+                    setShowCelebration(false);
+                  }}
+                >
+                  Continuar Aqui
                 </Button>
               </div>
             </div>
