@@ -136,7 +136,13 @@ const FormacaoAulas = () => {
       if (error) throw error;
       
       toast.success("Aula excluída com sucesso!");
-      fetchAulas();
+      
+      // Usar a função de atualização correta baseada no modo de visualização
+      if (isGeneralView) {
+        refetchAllLessons();
+      } else {
+        fetchAulas();
+      }
     } catch (error) {
       console.error("Erro ao excluir aula:", error);
       toast.error("Não foi possível excluir a aula. Verifique se não há dependências.");
