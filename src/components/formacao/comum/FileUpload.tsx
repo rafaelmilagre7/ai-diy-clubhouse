@@ -4,7 +4,6 @@ import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { uploadFileWithFallback, ensureBucketExists } from "@/lib/supabase/storage";
 import { Upload, Loader2, File, X, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { STORAGE_BUCKETS, MAX_UPLOAD_SIZES } from "@/lib/supabase/config";
@@ -29,40 +28,7 @@ export const FileUpload = ({
   const [uploading, setUploading] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [bucketReady, setBucketReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Verificar status do bucket ao montar o componente
-  useEffect(() => {
-    const checkBucket = async () => {
-      try {
-        console.log(`Verificando bucket: ${bucketName}`);
-        const isReady = await ensureBucketExists(bucketName);
-        setBucketReady(isReady);
-        
-        if (!isReady) {
-          console.warn(`Bucket ${bucketName} não está pronto. Tentando criar...`);
-          // Tentativa de criar o bucket via RPC
-          const { data, error } = await supabase.rpc('create_storage_public_policy', {
-            bucket_name: bucketName
-          });
-          
-          if (error) {
-            console.error("Erro ao criar bucket via RPC:", error);
-            setError(`Não foi possível inicializar o bucket de armazenamento: ${error.message}`);
-          } else {
-            console.log("Bucket criado com sucesso via RPC:", data);
-            setBucketReady(true);
-          }
-        }
-      } catch (error) {
-        console.error("Erro ao verificar bucket:", error);
-        setError("Erro ao verificar o bucket de armazenamento. Por favor, tente novamente.");
-      }
-    };
-    
-    checkBucket();
-  }, [bucketName]);
 
   // Extract filename from URL for display
   const getFileNameFromUrl = (url: string): string => {
@@ -89,37 +55,40 @@ export const FileUpload = ({
       setUploadProgress(0);
       setError(null);
       
-      // Primeiro, verificamos se o bucket existe e está acessível
-      const bucketExists = await ensureBucketExists(bucketName);
-      if (!bucketExists) {
-        console.warn(`Bucket ${bucketName} não encontrado, usando fallback: ${STORAGE_BUCKETS.FALLBACK}`);
-        toast.warning("Usando armazenamento alternativo. O upload pode demorar um pouco mais.");
+      const fileName = `${Date.now()}-${file.name}`;
+      const filePath = folderPath ? `${folderPath}/${fileName}` : fileName;
+      
+      console.log(`Iniciando upload para bucket: ${bucketName}, pasta: ${folderPath}`);
+      console.log(`Fazendo upload do arquivo: ${fileName} para ${filePath}`);
+      
+      // Upload direto - funciona conforme teste das imagens
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from(bucketName)
+        .upload(filePath, file, { 
+          upsert: true,
+          cacheControl: '3600'
+        });
+
+      if (uploadError) {
+        console.error("Erro no upload:", uploadError);
+        throw new Error(uploadError.message);
+      }
+
+      console.log("Upload concluído:", uploadData);
+
+      // Obter URL pública
+      const { data: urlData } = supabase.storage
+        .from(bucketName)
+        .getPublicUrl(filePath);
+
+      console.log("URL pública gerada:", urlData.publicUrl);
+
+      if (!urlData.publicUrl) {
+        throw new Error("URL pública não foi gerada");
       }
       
-      // Upload com mecanismo de fallback aprimorado
-      console.log(`Iniciando upload para bucket: ${bucketName}, pasta: ${folderPath}`);
-      const uploadResult = await uploadFileWithFallback(
-        file,
-        bucketName,
-        folderPath,
-        (progress) => {
-          setUploadProgress(progress);
-          console.log(`Upload progresso: ${progress}%`);
-        },
-        STORAGE_BUCKETS.FALLBACK // Usar bucket de fallback
-      );
-      
-      // Verificação adequada de tipos para result com uma abordagem explícita
-      if ('error' in uploadResult) {
-        // Caso de erro
-        throw uploadResult.error;
-      } 
-      
-      // Caso de sucesso - definindo uma variável com o tipo explícito
-      const successResult = uploadResult as { publicUrl: string; path: string; error: null };
-      console.log("Upload concluído com sucesso:", successResult);
       setFileName(file.name);
-      onChange(successResult.publicUrl, file.type, file.size);
+      onChange(urlData.publicUrl, file.type, file.size);
       
       toast.success("Upload realizado com sucesso!");
       
@@ -190,7 +159,7 @@ export const FileUpload = ({
               type="file"
               className="hidden"
               onChange={handleFileChange}
-              disabled={uploading || disabled || !bucketReady}
+              disabled={uploading || disabled}
               accept={acceptedFileTypes}
             />
           </label>
