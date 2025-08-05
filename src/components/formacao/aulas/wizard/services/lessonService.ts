@@ -86,11 +86,15 @@ export async function saveLesson(
     
     // Salvar vídeos da aula
     setCurrentSaveStep?.("Salvando vídeos da aula...");
+    console.log("🎬 LessonService - Vídeos a serem salvos:", values.videos);
     const videosResult = await saveVideosForLesson(resultId, values.videos);
+    console.log("🎬 LessonService - Resultado do salvamento de vídeos:", videosResult);
     
     // Salvar materiais da aula
     setCurrentSaveStep?.("Salvando materiais de apoio...");
+    console.log("📁 LessonService - Materiais a serem salvos:", values.resources);
     const resourcesResult = await saveResourcesForLesson(resultId, values.resources);
+    console.log("📁 LessonService - Resultado do salvamento de materiais:", resourcesResult);
     
     // Determinar mensagem de retorno com base nos resultados
     let message: string;

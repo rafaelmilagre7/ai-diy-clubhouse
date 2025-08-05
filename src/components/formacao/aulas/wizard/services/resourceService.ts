@@ -44,10 +44,11 @@ export async function fetchLessonResources(lessonId: string): Promise<ResourceFo
 
 export async function saveResourcesForLesson(lessonId: string, resources: ResourceFormValues[]): Promise<boolean> {
   try {
-    console.log("Salvando materiais para a aula:", lessonId);
+    console.log("📁 ResourceService - Salvando materiais para a aula:", lessonId);
+    console.log("📁 ResourceService - Materiais recebidos:", resources);
     
     if (!resources || resources.length === 0) {
-      console.log("Nenhum material para salvar.");
+      console.log("📁 ResourceService - Nenhum material para salvar.");
       return true;
     }
     

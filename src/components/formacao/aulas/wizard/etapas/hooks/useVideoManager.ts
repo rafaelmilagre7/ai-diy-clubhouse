@@ -44,6 +44,14 @@ export function useVideoManager(form: UseFormReturn<AulaFormValues>): VideoManag
   };
 
   const handleEmbedChange = (index: number, embedCode: string, videoId: string, url: string, thumbnailUrl: string) => {
+    console.log("🎬 useVideoManager - handleEmbedChange chamado:", {
+      index,
+      embedCode: embedCode.substring(0, 100) + "...",
+      videoId,
+      url,
+      thumbnailUrl
+    });
+    
     const newVideos = [...form.getValues().videos];
     newVideos[index] = {
       ...newVideos[index],
@@ -55,6 +63,7 @@ export function useVideoManager(form: UseFormReturn<AulaFormValues>): VideoManag
       embedCode: embedCode
     } as VideoFormValues;
     
+    console.log("🎬 useVideoManager - Vídeo atualizado:", newVideos[index]);
     form.setValue("videos", newVideos, { shouldValidate: true });
     setValidationError(null);
   };
