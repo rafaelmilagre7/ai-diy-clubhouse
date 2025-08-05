@@ -104,13 +104,14 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const renderVideo = () => {
     // Vídeo do Panda
     if (video?.video_type === 'panda' && video.url) {
-      // Extrair o ID do vídeo do Panda da URL ou usar o campo video_file_path como fallback
-      const pandaVideoId = video.video_file_path || video.url.split('/').pop();
+      // Usar o video_file_path (que contém o videoId) ou extrair da URL
+      const pandaVideoId = video.video_file_path || video.video_id;
       
       if (pandaVideoId) {
         return (
           <PandaVideoPlayer 
             videoId={pandaVideoId} 
+            url={video.url}
             title={video.title}
             // Adaptar a propriedade onProgress para intermediar a chamada onTimeUpdate
             onProgress={(progress: number) => {
