@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { File, Trash, Plus, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 
 interface EtapaMateriaisProps {
@@ -35,13 +35,21 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
   isSaving,
   aulaId
 }) => {
-  const { toast } = useToast();
   const [savingMaterial, setSavingMaterial] = React.useState<number | null>(null);
 
   const handleContinue = async () => {
+    const currentResources = form.getValues().resources || [];
+    console.log("📁 EtapaMateriais - Recursos antes da validação:", currentResources);
+    
     const result = await form.trigger(['resources']);
     if (result) {
+      console.log("📁 EtapaMateriais - Validação bem-sucedida");
       onNext();
+    } else {
+      console.error("📁 EtapaMateriais - Falha na validação dos materiais");
+      const errors = form.formState.errors.resources;
+      console.error("📁 EtapaMateriais - Erros:", errors);
+      toast.error("Há problemas com os materiais. Verifique os campos obrigatórios.");
     }
   };
 
@@ -74,11 +82,7 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
       const resource = resources[index];
       
       if (!resource?.url || !resource?.title) {
-        toast({
-          title: "Erro ao salvar material",
-          description: "URL e título são obrigatórios.",
-          variant: "destructive",
-        });
+        toast.error("URL e título são obrigatórios para salvar o material.");
         return;
       }
 
@@ -106,20 +110,12 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
         }
 
         console.log("Material salvo com sucesso:", data);
-        
-        toast({
-          title: "Material adicionado",
-          description: "O material foi salvo com sucesso.",
-        });
+        toast.success("Material adicionado com sucesso.");
       }
       
     } catch (error: any) {
       console.error("Erro ao salvar material:", error);
-      toast({
-        title: "Erro ao salvar material",
-        description: error.message || "Ocorreu um erro ao tentar salvar o material.",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Ocorreu um erro ao tentar salvar o material.");
     } finally {
       setSavingMaterial(null);
     }

@@ -117,12 +117,11 @@ export const extractPandaVideoInfo = (data: any): { videoId: string; url: string
       
       console.log('URL extraída do iframe:', iframeSrc);
       
-      // Extrair videoId do URL
-      // Múltiplos formatos possíveis para URLs do Panda Video
+      // Extrair videoId do URL - Múltiplos formatos possíveis
       let videoIdExtracted = false;
       
       // Formato 1: https://player-vz-d6ebf577-797.tv.pandavideo.com.br/embed/?v=VIDEO_ID
-      const formatoV = iframeSrc.match(/[?&]v=([a-f0-9-]+)/i);
+      const formatoV = iframeSrc.match(/[?&]v=([a-f0-9\-]{36})/i);
       if (formatoV && formatoV[1]) {
         videoId = formatoV[1];
         videoIdExtracted = true;
@@ -131,7 +130,7 @@ export const extractPandaVideoInfo = (data: any): { videoId: string; url: string
       
       // Formato 2: https://player.pandavideo.com.br/embed/VIDEO_ID  
       if (!videoIdExtracted) {
-        const formatoEmbed = iframeSrc.match(/\/embed\/([a-f0-9-]+)/i);
+        const formatoEmbed = iframeSrc.match(/\/embed\/([a-f0-9\-]{36})/i);
         if (formatoEmbed && formatoEmbed[1]) {
           videoId = formatoEmbed[1];
           videoIdExtracted = true;
@@ -139,7 +138,7 @@ export const extractPandaVideoInfo = (data: any): { videoId: string; url: string
         }
       }
       
-      // Formato 3: Buscar qualquer UUID na URL
+      // Formato 3: Buscar qualquer UUID padrão na URL (mais específico)
       if (!videoIdExtracted) {
         const uuidMatch = iframeSrc.match(/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i);
         if (uuidMatch && uuidMatch[1]) {

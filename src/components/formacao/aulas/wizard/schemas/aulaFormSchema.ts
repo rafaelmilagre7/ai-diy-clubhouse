@@ -17,9 +17,9 @@ export const aulaFormSchema = z.object({
   videos: z.array(
     z.object({
       id: z.string().optional(),
-      title: z.string().optional(),
+      title: z.string().min(1, "Título do vídeo é obrigatório"), // CORREÇÃO: título obrigatório
       description: z.string().optional(),
-      url: z.string().url("Por favor, insira uma URL válida").optional(),
+      url: z.string().min(1, "URL do vídeo é obrigatória"), // CORREÇÃO: URL obrigatória  
       type: z.string().optional(),
       fileName: z.string().optional(),
       filePath: z.string().optional(),
@@ -28,6 +28,14 @@ export const aulaFormSchema = z.object({
       thumbnail_url: z.string().optional(),
       video_id: z.string().optional(),
       embedCode: z.string().optional(),
+    }).refine((video) => {
+      // CORREÇÃO: Validação adicional para Panda Video
+      if (video.type === "panda") {
+        return video.video_id && video.video_id.length > 0;
+      }
+      return true;
+    }, {
+      message: "Video ID do Panda Video é obrigatório"
     })
   ).max(3, { message: "É permitido no máximo 3 vídeos por aula" }).optional().default([]),
   
@@ -35,9 +43,9 @@ export const aulaFormSchema = z.object({
   resources: z.array(
     z.object({
       id: z.string().optional(),
-      title: z.string().optional(),
+      title: z.string().min(1, "Título do material é obrigatório"), // CORREÇÃO: título obrigatório
       description: z.string().optional(),
-      url: z.string().optional(),
+      url: z.string().min(1, "URL do arquivo é obrigatória"), // CORREÇÃO: URL obrigatória
       type: z.string().optional(),
       fileName: z.string().optional(),
       fileSize: z.number().optional(),

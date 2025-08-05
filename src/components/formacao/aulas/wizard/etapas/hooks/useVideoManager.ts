@@ -60,7 +60,9 @@ export function useVideoManager(form: UseFormReturn<AulaFormValues>): VideoManag
       video_id: videoId,
       filePath: videoId,
       thumbnail_url: thumbnailUrl,
-      embedCode: embedCode
+      embedCode: embedCode,
+      // CORREÇÃO: Garantir que há um título por padrão
+      title: newVideos[index].title || "Vídeo Panda Video"
     } as VideoFormValues;
     
     console.log("🎬 useVideoManager - Vídeo atualizado:", newVideos[index]);
@@ -77,7 +79,7 @@ export function useVideoManager(form: UseFormReturn<AulaFormValues>): VideoManag
     const currentVideos = form.getValues().videos || [];
     form.setValue("videos", [...currentVideos, { 
       id: `temp-video-${currentVideos.length}-${Date.now()}`,
-      title: "", 
+      title: "Novo Vídeo", // CORREÇÃO: Título padrão não vazio
       description: "", 
       url: "", 
       type: "panda",

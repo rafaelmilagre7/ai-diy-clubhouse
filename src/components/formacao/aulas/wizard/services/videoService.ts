@@ -63,9 +63,19 @@ export async function saveVideosForLesson(lessonId: string, videos: VideoFormVal
     for (let i = 0; i < videos.length; i++) {
       const video = videos[i];
       
-      // Se o vídeo não tiver URL, pular
+      // Validações obrigatórias para salvamento
       if (!video.url) {
         console.log("🎥 VideoService - Vídeo sem URL encontrado, pulando:", video);
+        continue;
+      }
+      
+      if (!video.title || video.title.trim() === "") {
+        console.log("🎥 VideoService - Vídeo sem título encontrado, pulando:", video);
+        continue;
+      }
+      
+      if (video.type === "panda" && (!video.video_id || video.video_id.trim() === "")) {
+        console.log("🎥 VideoService - Vídeo Panda sem video_id encontrado, pulando:", video);
         continue;
       }
       

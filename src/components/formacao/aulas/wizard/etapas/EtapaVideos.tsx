@@ -35,9 +35,24 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
   
   const handleContinue = async () => {
     setValidationError(null);
+    
+    // Validar se há pelo menos um vídeo válido
+    const currentVideos = form.getValues().videos || [];
+    if (currentVideos.length === 0) {
+      setValidationError("Adicione pelo menos um vídeo à aula.");
+      return;
+    }
+    
     const result = await form.trigger(['videos']);
     if (result) {
+      console.log("🎬 EtapaVideos - Validação bem-sucedida, vídeos:", currentVideos);
       onNext();
+    } else {
+      console.error("🎬 EtapaVideos - Falha na validação dos vídeos");
+      const errors = form.formState.errors.videos;
+      if (errors) {
+        setValidationError("Há problemas com os vídeos. Verifique os campos obrigatórios.");
+      }
     }
   };
 
