@@ -73,23 +73,6 @@ const EtapaMidia: React.FC<EtapaMidiaProps> = ({
           </div>
         </div>
         
-        <div className="flex justify-between pt-4">
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={onPrevious}
-            disabled={isSaving}
-          >
-            Voltar
-          </Button>
-          <Button 
-            type="button" 
-            onClick={handleContinue}
-            disabled={isSaving}
-          >
-            Continuar
-          </Button>
-        </div>
       </div>
     </Form>
   );

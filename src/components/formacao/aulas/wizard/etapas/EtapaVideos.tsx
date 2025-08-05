@@ -61,21 +61,6 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
           />
         </div>
         
-        <div className="flex justify-between pt-4 border-t">
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={onPrevious}
-          >
-            Voltar
-          </Button>
-          <Button 
-            type="button" 
-            onClick={handleContinue}
-          >
-            Continuar
-          </Button>
-        </div>
       </div>
     </Form>
   );

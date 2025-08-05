@@ -224,29 +224,6 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
           )}
         </div>
         
-        <div className="flex justify-between pt-4 border-t">
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={onPrevious}
-          >
-            Voltar
-          </Button>
-          <Button 
-            type="button" 
-            onClick={handleContinue}
-            disabled={isSaving}
-          >
-            {isSaving ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Salvando...
-              </>
-            ) : (
-              'Continuar'
-            )}
-          </Button>
-        </div>
       </div>
     </Form>
   );
