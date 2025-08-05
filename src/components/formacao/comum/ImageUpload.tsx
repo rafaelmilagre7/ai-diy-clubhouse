@@ -78,9 +78,10 @@ export const ImageUpload = ({
       );
 
       // Verificar se houve erro no upload
-      if ('error' in uploadResult) {
-        console.error("Erro no upload:", uploadResult.error);
-        throw uploadResult.error;
+      if (!uploadResult || 'error' in uploadResult) {
+        const errorMsg = uploadResult?.error?.message || "Erro desconhecido no upload";
+        console.error("Erro no upload:", errorMsg);
+        throw new Error(errorMsg);
       }
       
       // Sucesso - uploadResult agora é garantidamente do tipo success
