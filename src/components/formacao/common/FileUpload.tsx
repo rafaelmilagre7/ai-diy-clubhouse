@@ -4,7 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { uploadFileWithFallback, ensureBucketExists } from "@/lib/supabase/storage";
+import { ensureBucketExists } from "@/lib/supabase/storage";
 import { Upload, Loader2, File, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { STORAGE_BUCKETS } from "@/lib/supabase/config";
@@ -71,25 +71,40 @@ export const FileUpload = ({
       setUploading(true);
       setUploadProgress(0);
       
-      // Upload com mecanismo de fallback
-      const result = await uploadFileWithFallback(
-        file,
-        bucketName,
-        folderPath,
-        (progress) => setUploadProgress(progress),
-        STORAGE_BUCKETS.FALLBACK // Usar bucket de fallback
-      );
+      const fileName = `${Date.now()}-${file.name}`;
+      const filePath = folderPath ? `${folderPath}/${fileName}` : fileName;
       
-      // Verificar se há erro e tratar corretamente
-      if ('error' in result) {
-        throw result.error;
+      console.log(`Iniciando upload para bucket: ${bucketName}`);
+      console.log(`Fazendo upload do arquivo: ${fileName} para ${filePath}`);
+      
+      // Upload direto - funciona conforme correção dos outros uploads
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from(bucketName)
+        .upload(filePath, file, { 
+          upsert: true,
+          cacheControl: '3600'
+        });
+
+      if (uploadError) {
+        console.error("Erro no upload:", uploadError);
+        throw new Error(uploadError.message);
+      }
+
+      console.log("Upload concluído:", uploadData);
+
+      // Obter URL pública
+      const { data: urlData } = supabase.storage
+        .from(bucketName)
+        .getPublicUrl(filePath);
+
+      console.log("URL pública gerada:", urlData.publicUrl);
+
+      if (!urlData.publicUrl) {
+        throw new Error("URL pública não foi gerada");
       }
       
-      // Caso de sucesso - definindo uma variável com tipo explícito
-      const successResult = result as { publicUrl: string; path: string; error: null };
-      
       setFileName(file.name);
-      onChange(successResult.publicUrl, file.type, file.size);
+      onChange(urlData.publicUrl, file.type, file.size);
       
       toast.success("Upload realizado com sucesso!");
       

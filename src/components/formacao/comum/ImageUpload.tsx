@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { uploadFileWithFallback } from "@/lib/supabase/storage";
+
 import { supabase } from "@/lib/supabase";
 import { ImagePlus, Trash2, Loader2, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
