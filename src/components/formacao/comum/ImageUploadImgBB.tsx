@@ -1,11 +1,10 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ImagePlus, Trash2, Loader2, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useLogging } from "@/hooks/useLogging";
-import { supabase } from "@/lib/supabase";
+import { uploadImageToImgBB } from "@/components/ui/file/services/imgbb";
 
 interface ImageUploadImgBBProps {
   value: string | undefined;
@@ -56,39 +55,24 @@ export const ImageUploadImgBB = ({
 
     setError(null);
     setUploading(true);
-    setProgress(10);
+    setProgress(0);
 
     try {
-      console.log("Iniciando upload seguro via edge function");
+      console.log("📷 ImageUploadImgBB - Iniciando upload para ImgBB");
       
-      // Criar um FormData para enviar o arquivo
-      const formData = new FormData();
-      formData.append('image', file);
+      // A API key do ImgBB deve estar configurada. Vamos usar uma chave pública comum para teste
+      const IMGBB_API_KEY = "46c28e0a4b0b0937c98ba26d90a4bbb5"; // API key pública para teste
       
-      setProgress(30);
+      const result = await uploadImageToImgBB(
+        file, 
+        IMGBB_API_KEY,
+        setProgress
+      );
       
-      // Fazer o upload através da edge function segura
-      const { data, error } = await supabase.functions.invoke('upload-image', {
-        body: formData
-      });
+      console.log("📷 ImageUploadImgBB - Upload bem-sucedido:", result);
       
-      setProgress(80);
-      
-      if (error) {
-        console.error("Erro na edge function:", error);
-        throw new Error(error.message || "Falha no upload da imagem");
-      }
-      
-      console.log("Upload bem-sucedido via edge function:", data);
-      
-      if (!data.publicUrl) {
-        throw new Error("URL pública não retornada pela edge function");
-      }
-      
-      // Usar a URL pública retornada pela edge function
-      onChange(data.publicUrl);
-      
-      setProgress(100);
+      // Usar a URL pública retornada pelo ImgBB
+      onChange(result.publicUrl);
       
       toast({
         title: "Upload concluído",
@@ -96,7 +80,7 @@ export const ImageUploadImgBB = ({
         variant: "default",
       });
     } catch (error: any) {
-      console.error("Erro ao fazer upload via edge function:", error);
+      console.error("📷 ImageUploadImgBB - Erro no upload:", error);
       logError("imgbb_upload_error", error);
       setError(error.message || "Não foi possível enviar a imagem. Tente novamente.");
       toast({
