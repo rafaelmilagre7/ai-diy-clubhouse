@@ -20,9 +20,9 @@ export const getUserDisplayName = (profile: { name?: string; email?: string }): 
 };
 
 export const getTimeBasedGreeting = (): string => {
+  // Usar a função correta de timezone que já existe
   const now = new Date();
-  // Converter para horário de Brasília (UTC-3)
-  const brasiliaTime = new Date(now.getTime() - (3 * 60 * 60 * 1000));
+  const brasiliaTime = new Date(now.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
   const hour = brasiliaTime.getHours();
   
   if (hour >= 5 && hour < 12) {
