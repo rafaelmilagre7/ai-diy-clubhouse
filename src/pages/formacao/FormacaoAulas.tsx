@@ -15,6 +15,7 @@ import { AllLessonsList } from "@/components/formacao/aulas/AllLessonsList";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { NovaAulaButton } from "@/components/formacao/aulas/NovaAulaButton";
+import { TestUpload } from "@/components/formacao/admin/TestUpload";
 
 
 const FormacaoAulas = () => {
@@ -203,6 +204,11 @@ const FormacaoAulas = () => {
             />
           )}
         </FormacaoAulasHeader>
+        
+        {/* Componente de teste de upload para debug */}
+        {isAdmin && (
+          <TestUpload />
+        )}
         
         <AllLessonsList 
           lessons={allLessons}
