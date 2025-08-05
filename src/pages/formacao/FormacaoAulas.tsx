@@ -101,7 +101,8 @@ const FormacaoAulas = () => {
       fetchModulo();
       fetchAulas();
     } else {
-      // Para visualização geral, não precisamos buscar módulo específico
+      // Para visualização geral, forçar refresh dos dados
+      refetchAllLessons();
       setLoading(false);
       setLoadingAulas(false);
     }
