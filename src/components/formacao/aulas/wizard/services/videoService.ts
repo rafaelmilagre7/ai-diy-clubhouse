@@ -74,9 +74,28 @@ export async function saveVideosForLesson(lessonId: string, videos: VideoFormVal
         continue;
       }
       
-      if (video.type === "panda" && (!video.video_id || video.video_id.trim() === "")) {
-        console.log("🎥 VideoService - Vídeo Panda sem video_id encontrado, pulando:", video);
-        continue;
+      // CORREÇÃO: Validação mais flexível para Panda Video
+      // Se é tipo panda, precisa ter video_id OU poder extrair do URL
+      if (video.type === "panda") {
+        const hasVideoId = video.video_id && video.video_id.trim() !== "";
+        const hasValidUrl = video.url && (video.url.includes('pandavideo') || video.url.includes('player-vz'));
+        
+        if (!hasVideoId && !hasValidUrl) {
+          console.log("🎥 VideoService - Vídeo Panda sem identificação válida, pulando:", video);
+          continue;
+        }
+        
+        // Se não tem video_id mas tem URL válida, tentar extrair
+        if (!hasVideoId && hasValidUrl) {
+          const extractedId = video.url.match(/[?&]v=([a-f0-9\-]{36})/i) || 
+                              video.url.match(/\/embed\/([a-f0-9\-]{36})/i) ||
+                              video.url.match(/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i);
+          
+          if (extractedId && extractedId[1]) {
+            video.video_id = extractedId[1];
+            console.log("🎥 VideoService - Video ID extraído da URL:", video.video_id);
+          }
+        }
       }
       
       console.log(`🎥 VideoService - Processando vídeo ${i + 1}:`, video);
