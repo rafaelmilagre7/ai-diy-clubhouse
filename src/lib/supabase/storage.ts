@@ -118,20 +118,39 @@ export const extractPandaVideoInfo = (data: any): { videoId: string; url: string
       console.log('URL extraída do iframe:', iframeSrc);
       
       // Extrair videoId do URL
-      // Formato padrão: https://player-vz-d6ebf577-797.tv.pandavideo.com.br/embed/?v=VIDEO_ID
-      const videoIdMatch = iframeSrc.match(/embed\/\?v=([^&?]+)/);
-      if (videoIdMatch && videoIdMatch[1]) {
-        videoId = videoIdMatch[1];
-        console.log('Video ID extraído (formato padrão):', videoId);
-      } else {
-        // Formato alternativo: https://player.pandavideo.com.br/embed/VIDEO_ID
-        const altMatch = iframeSrc.match(/\/embed\/([^/?&]+)/);
-        if (altMatch && altMatch[1]) {
-          videoId = altMatch[1];
-          console.log('Video ID extraído (formato alternativo):', videoId);
-        } else {
-          console.error('Não foi possível extrair o video ID da URL:', iframeSrc);
+      // Múltiplos formatos possíveis para URLs do Panda Video
+      let videoIdExtracted = false;
+      
+      // Formato 1: https://player-vz-d6ebf577-797.tv.pandavideo.com.br/embed/?v=VIDEO_ID
+      const formatoV = iframeSrc.match(/[?&]v=([a-f0-9-]+)/i);
+      if (formatoV && formatoV[1]) {
+        videoId = formatoV[1];
+        videoIdExtracted = true;
+        console.log('Video ID extraído (formato ?v=):', videoId);
+      }
+      
+      // Formato 2: https://player.pandavideo.com.br/embed/VIDEO_ID  
+      if (!videoIdExtracted) {
+        const formatoEmbed = iframeSrc.match(/\/embed\/([a-f0-9-]+)/i);
+        if (formatoEmbed && formatoEmbed[1]) {
+          videoId = formatoEmbed[1];
+          videoIdExtracted = true;
+          console.log('Video ID extraído (formato /embed/):', videoId);
         }
+      }
+      
+      // Formato 3: Buscar qualquer UUID na URL
+      if (!videoIdExtracted) {
+        const uuidMatch = iframeSrc.match(/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i);
+        if (uuidMatch && uuidMatch[1]) {
+          videoId = uuidMatch[1];
+          videoIdExtracted = true;
+          console.log('Video ID extraído (formato UUID):', videoId);
+        }
+      }
+      
+      if (!videoIdExtracted) {
+        console.error('Não foi possível extrair o video ID da URL:', iframeSrc);
       }
       
       // Se encontramos um ID de vídeo, podemos compor a URL da thumbnail
