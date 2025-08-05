@@ -127,7 +127,8 @@ export const extractPandaVideoInfo = (data: any): { videoId: string; url: string
       
       // Se encontramos um ID de vídeo, podemos compor a URL da thumbnail
       if (videoId) {
-        thumbnailUrl = `https://thumbs.pandavideo.com.br/${videoId}.jpg`;
+        // URL corrigida para o domínio correto do Panda Video
+        thumbnailUrl = `https://b.pandavideo.com.br/${videoId}/thumb.jpg`;
       }
       
       return {
