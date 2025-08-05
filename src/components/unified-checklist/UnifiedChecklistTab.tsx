@@ -171,14 +171,21 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
   };
 
   // Verificar se todos os itens estão completos para chamar onComplete
+  const allCompleted = React.useMemo(() => {
+    if (checklistItems.length === 0) return false;
+    return checklistItems.every(item => item.completed);
+  }, [checklistItems]);
+
+  const completionCalledRef = React.useRef(false);
+
   useEffect(() => {
-    if (checklistItems.length > 0 && onComplete) {
-      const allCompleted = checklistItems.every(item => item.completed);
-      if (allCompleted) {
-        onComplete();
-      }
+    if (allCompleted && onComplete && !completionCalledRef.current) {
+      completionCalledRef.current = true;
+      onComplete();
+    } else if (!allCompleted) {
+      completionCalledRef.current = false;
     }
-  }, [checklistItems, onComplete]);
+  }, [allCompleted, onComplete]);
 
   // Sincronizar itemNotes com checklistItems quando carregarem
   useEffect(() => {
