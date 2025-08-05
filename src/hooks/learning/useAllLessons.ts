@@ -19,25 +19,62 @@ export const useAllLessons = (): UseAllLessonsResult => {
       setLoading(true);
       setError(null);
 
-      // Query com ordenação hierárquica: curso > módulo > order_index > título
+      // Query otimizada: buscar todos os campos necessários
       const { data, error: queryError } = await supabase
         .from('learning_lessons')
         .select(`
           *,
-          module:learning_modules!inner(
-            *,
-            course:learning_courses!inner(*)
-          ),
-          videos:learning_lesson_videos(*),
-          resources:learning_resources(*)
-        `);
+          module:learning_modules(
+            id,
+            title,
+            course_id,
+            order_index,
+            course:learning_courses(
+              id,
+              title,
+              slug,
+              published
+            )
+          )
+        `)
+        .eq('published', true)
+        .order('order_index', { ascending: true });
 
       if (queryError) {
         throw queryError;
       }
 
+      // Buscar vídeos e recursos separadamente para evitar query complexa
+      let lessonsWithRelations = data || [];
+      
+      if (data && data.length > 0) {
+        const lessonIds = data.map(lesson => lesson.id);
+        
+        const [videosResult, resourcesResult] = await Promise.all([
+          supabase
+            .from('learning_lesson_videos')
+            .select('*')
+            .in('lesson_id', lessonIds)
+            .order('order_index', { ascending: true }),
+          supabase
+            .from('learning_resources')
+            .select('*')
+            .in('lesson_id', lessonIds)
+            .order('order_index', { ascending: true })
+        ]);
+
+        // Associar vídeos e recursos às aulas
+        lessonsWithRelations = data.map(lesson => ({
+          ...lesson,
+          videos: videosResult.data?.filter(video => video.lesson_id === lesson.id) || [],
+          resources: resourcesResult.data?.filter(resource => resource.lesson_id === lesson.id) || []
+        }));
+
+        console.log('useAllLessons: Query otimizada executada com sucesso');
+      }
+
       // Ordenação hierárquica manual das aulas
-      const sortedData = (data || []).sort((a, b) => {
+      const sortedData = lessonsWithRelations.sort((a, b) => {
         // 1. Primeiro ordenar por curso
         const courseA = (a.module as any)?.course?.title || '';
         const courseB = (b.module as any)?.course?.title || '';
@@ -64,7 +101,7 @@ export const useAllLessons = (): UseAllLessonsResult => {
       });
 
       console.log('useAllLessons: Aulas carregadas e ordenadas:', sortedData?.length || 0);
-      setLessons(sortedData);
+      setLessons(sortedData as LearningLessonWithRelations[]);
     } catch (err) {
       console.error('useAllLessons: Erro ao buscar aulas:', err);
       setError(err instanceof Error ? err.message : 'Erro desconhecido');
