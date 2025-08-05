@@ -40,10 +40,11 @@ export async function fetchLessonVideos(lessonId: string): Promise<VideoFormValu
 
 export async function saveVideosForLesson(lessonId: string, videos: VideoFormValues[]): Promise<boolean> {
   try {
-    console.log("Salvando vídeos para a aula:", lessonId);
+    console.log("🎥 VideoService - Salvando vídeos para a aula:", lessonId);
+    console.log("🎥 VideoService - Vídeos recebidos:", videos);
     
     if (!videos || videos.length === 0) {
-      console.log("Nenhum vídeo para salvar.");
+      console.log("🎥 VideoService - Nenhum vídeo para salvar.");
       return true;
     }
     
@@ -64,9 +65,11 @@ export async function saveVideosForLesson(lessonId: string, videos: VideoFormVal
       
       // Se o vídeo não tiver URL, pular
       if (!video.url) {
-        console.log("Vídeo sem URL encontrado, pulando...");
+        console.log("🎥 VideoService - Vídeo sem URL encontrado, pulando:", video);
         continue;
       }
+      
+      console.log(`🎥 VideoService - Processando vídeo ${i + 1}:`, video);
       
       const videoData = {
         lesson_id: lessonId,
