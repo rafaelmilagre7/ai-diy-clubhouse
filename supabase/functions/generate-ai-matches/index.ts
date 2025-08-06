@@ -130,27 +130,16 @@ serve(async (req) => {
       }
     });
 
-    // Buscar usuários que completaram onboarding com seus dados reais
+    // Buscar usuários com onboarding completo usando profiles.onboarding_completed
     console.log('Buscando usuários com onboarding completo...');
     
     const { data: candidatesWithOnboarding, error: candidatesError } = await supabase
-      .from('onboarding_final')
-      .select(`
-        user_id,
-        professional_info,
-        business_info,
-        ai_experience,
-        profiles!inner (
-          id,
-          name,
-          company_name,
-          current_position,
-          industry,
-          role
-        )
-      `)
-      .eq('is_completed', true)
-      .neq('user_id', user_id);
+      .from('profiles')
+      .select('id, name, company_name, current_position, industry, role')
+      .eq('onboarding_completed', true)
+      .neq('id', user_id)
+      .not('name', 'is', null)
+      .limit(100);
 
     if (candidatesError) {
       console.error('Erro ao buscar candidatos com onboarding:', candidatesError);
@@ -162,7 +151,7 @@ serve(async (req) => {
     let potentialMatches = [];
 
     if (!candidatesWithOnboarding || candidatesWithOnboarding.length === 0) {
-      console.log('Usando fallback para todos os perfis...');
+      console.log('Fallback: usando todos os perfis válidos...');
       
       const { data: allProfiles, error: profilesError } = await supabase
         .from('profiles')
@@ -179,19 +168,9 @@ serve(async (req) => {
       potentialMatches = (allProfiles || [])
         .filter(profile => !connectedUserIds.has(profile.id));
     } else {
-      // Usar dados de onboarding completo
+      // Usar usuários com onboarding completo
       potentialMatches = candidatesWithOnboarding
-        .filter(candidate => !connectedUserIds.has(candidate.user_id))
-        .map(candidate => ({
-          ...candidate,
-          id: candidate.user_id,
-          name: candidate.profiles.name,
-          company_name: candidate.profiles.company_name,
-          industry: candidate.profiles.industry,
-          business_segment: candidate.professional_info?.company_sector,
-          company_size: candidate.professional_info?.company_size,
-          ai_level: candidate.ai_experience?.level || 'iniciante'
-        }));
+        .filter(candidate => !connectedUserIds.has(candidate.id));
     }
 
     if (!potentialMatches || potentialMatches.length === 0) {
