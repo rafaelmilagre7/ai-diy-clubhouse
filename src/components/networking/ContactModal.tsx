@@ -35,6 +35,30 @@ interface ContactData {
   linkedin_url?: string;
   location?: string;
   onboarding_data?: {
+    personal_info?: {
+      bio?: string;
+      city?: string;
+      state?: string;
+      phone?: string;
+      linkedin_url?: string;
+    };
+    location_info?: {
+      city?: string;
+      state?: string;
+      country?: string;
+    };
+    business_info?: {
+      company_name?: string;
+      current_position?: string;
+      work_experience?: string;
+      company_sector?: string;
+      company_size?: string;
+      company_website?: string;
+      annual_revenue?: string;
+      phone?: string;
+      linkedin_url?: string;
+      professional_bio?: string;
+    };
     professional_info?: {
       company_name?: string;
       current_position?: string;
@@ -45,19 +69,7 @@ interface ContactData {
       company_website?: string;
       annual_revenue?: string;
     };
-    contact_info?: {
-      phone?: string;
-      whatsapp?: string;
-      linkedin?: string;
-      linkedin_url?: string;
-      location?: string;
-    };
-    personal_info?: {
-      bio?: string;
-      city?: string;
-      state?: string;
-    };
-    networking_info?: {
+    business_context?: {
       professional_bio?: string;
     };
   };
@@ -89,7 +101,7 @@ export const ContactModal = ({ isOpen, onClose, userId, userName }: ContactModal
       // Buscar dados adicionais do onboarding se disponível
       const { data: onboarding } = await supabase
         .from('onboarding_final')
-        .select('professional_info, contact_info, personal_info, networking_info')
+        .select('personal_info, location_info, business_info, professional_info, business_context')
         .eq('user_id', userId)
         .single();
 
@@ -125,19 +137,19 @@ export const ContactModal = ({ isOpen, onClose, userId, userName }: ContactModal
     return {
       name: contactData.name,
       email: contactData.email,
-      phone: contactData.whatsapp_number || onboarding?.contact_info?.whatsapp || onboarding?.contact_info?.phone,
-      company: contactData.company_name || onboarding?.professional_info?.company_name,
-      position: contactData.current_position || onboarding?.professional_info?.current_position,
-      industry: contactData.industry || onboarding?.professional_info?.company_sector || onboarding?.professional_info?.industry,
-      linkedin: contactData.linkedin_url || onboarding?.contact_info?.linkedin_url || onboarding?.contact_info?.linkedin,
-      location: onboarding?.contact_info?.location || onboarding?.personal_info?.city ? 
-        [onboarding?.personal_info?.city, onboarding?.personal_info?.state].filter(Boolean).join(', ') : 
-        onboarding?.contact_info?.location,
-      experience: onboarding?.professional_info?.work_experience || onboarding?.networking_info?.professional_bio,
-      companySize: onboarding?.professional_info?.company_size,
-      website: onboarding?.professional_info?.company_website,
-      revenue: onboarding?.professional_info?.annual_revenue,
-      bio: onboarding?.personal_info?.bio || onboarding?.networking_info?.professional_bio
+      phone: contactData.whatsapp_number || onboarding?.personal_info?.phone || onboarding?.business_info?.phone,
+      company: contactData.company_name || onboarding?.business_info?.company_name || onboarding?.professional_info?.company_name,
+      position: contactData.current_position || onboarding?.business_info?.current_position || onboarding?.professional_info?.current_position,
+      industry: contactData.industry || onboarding?.business_info?.company_sector || onboarding?.professional_info?.industry,
+      linkedin: contactData.linkedin_url || onboarding?.personal_info?.linkedin_url || onboarding?.business_info?.linkedin_url,
+      location: onboarding?.location_info?.city && onboarding?.location_info?.state ? 
+        `${onboarding.location_info.city}, ${onboarding.location_info.state}` : 
+        onboarding?.location_info?.city || onboarding?.personal_info?.city,
+      experience: onboarding?.business_info?.work_experience || onboarding?.business_context?.professional_bio || onboarding?.personal_info?.bio,
+      companySize: onboarding?.business_info?.company_size || onboarding?.professional_info?.company_size,
+      website: onboarding?.business_info?.company_website || onboarding?.professional_info?.company_website,
+      revenue: onboarding?.business_info?.annual_revenue || onboarding?.professional_info?.annual_revenue,
+      bio: onboarding?.personal_info?.bio || onboarding?.business_info?.professional_bio
     };
   };
 
