@@ -69,6 +69,7 @@ export function useUsers() {
           industry,
           created_at,
           role_id,
+          onboarding_completed,
           user_roles:role_id (
             id,
             name,
@@ -98,6 +99,7 @@ export function useUsers() {
         industry: user.industry,
         created_at: user.created_at,
         role_id: user.role_id,
+        onboarding_completed: user.onboarding_completed,
         user_roles: user.user_roles as any,
       }));
 
