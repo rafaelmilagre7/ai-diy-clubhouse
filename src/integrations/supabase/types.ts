@@ -5894,6 +5894,18 @@ export type Database = {
         Args: { p_user_id?: string; p_days?: number }
         Returns: Json
       }
+      get_solution_performance_metrics: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          title: string
+          category: string
+          total_implementations: number
+          completion_rate: number
+          avg_rating: number
+          created_at: string
+        }[]
+      }
       get_standardized_buckets: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -5963,6 +5975,15 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: Json
       }
+      get_user_growth_by_date: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          date: string
+          name: string
+          total: number
+          novos: number
+        }[]
+      }
       get_user_growth_secure: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -6018,6 +6039,14 @@ export type Database = {
         Args: { user_id: string }
         Returns: string[]
       }
+      get_user_segmentation_analytics: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          role_name: string
+          user_count: number
+          percentage: number
+        }[]
+      }
       get_user_segmentation_secure: {
         Args: Record<PropertyKey, never>
         Returns: Json
@@ -6061,6 +6090,14 @@ export type Database = {
           recurrence_count: number
           recurrence_end_date: string
           parent_event_id: string
+        }[]
+      }
+      get_weekly_activity_patterns: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          day: string
+          day_of_week: number
+          atividade: number
         }[]
       }
       get_weekly_activity_secure: {
