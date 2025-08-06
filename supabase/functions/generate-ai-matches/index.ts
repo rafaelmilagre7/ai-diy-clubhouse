@@ -157,21 +157,41 @@ serve(async (req) => {
       throw new Error(`Erro ao buscar candidatos: ${candidatesError.message}`);
     }
 
+    let potentialMatches = [];
+
     if (!candidatesWithOnboarding || candidatesWithOnboarding.length === 0) {
-      return new Response(JSON.stringify({
-        success: true,
-        matches_generated: 0,
-        message: 'Não há usuários com onboarding completo disponíveis para matches.'
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      console.log('Nenhum candidato com onboarding encontrado, buscando todos os perfis...');
+      
+      // Buscar todos os perfis como fallback
+      const { data: allProfiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, name, company_name, current_position, industry, role')
+        .neq('id', user_id)
+        .not('name', 'is', null)
+        .limit(50);
+
+      if (profilesError) {
+        console.error('Erro ao buscar perfis:', profilesError);
+        throw new Error(`Erro ao buscar perfis: ${profilesError.message}`);
+      }
+
+      // Filtrar usuários já conectados
+      potentialMatches = (allProfiles || [])
+        .filter(profile => !connectedUserIds.has(profile.id))
+        .map(profile => ({
+          user_id: profile.id,
+          profiles: profile,
+          business_segment: null,
+          ai_level: null,
+          main_objectives: null,
+          company_size: null
+        }));
+    } else {
+      // Filtrar usuários já conectados dos candidatos com onboarding
+      potentialMatches = candidatesWithOnboarding.filter(candidate => 
+        !connectedUserIds.has(candidate.user_id)
+      );
     }
-
-    // Filtrar usuários já conectados
-    const potentialMatches = candidatesWithOnboarding.filter(candidate => 
-      !connectedUserIds.has(candidate.user_id)
-    );
-
 
     if (!potentialMatches || potentialMatches.length === 0) {
       return new Response(JSON.stringify({
@@ -210,10 +230,12 @@ serve(async (req) => {
         }
       } else {
         // Fallback: usar compatibilidade baseada em perfil básico
+        const candidateUserId = candidate.user_id || (candidate.profiles ? candidate.profiles.id : candidate.id);
+        
         const { data: basicCompatibility, error: basicError } = await supabase
           .rpc('generate_compatibility_score', {
             user1_id: user_id,
-            user2_id: candidate.user_id || candidate.profiles.id
+            user2_id: candidateUserId
           });
           
         if (!basicError && basicCompatibility) {
