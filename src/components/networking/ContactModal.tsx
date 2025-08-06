@@ -28,7 +28,7 @@ interface ContactModalProps {
 interface ContactData {
   name: string;
   email: string;
-  phone?: string;
+  whatsapp_number?: string;
   company_name?: string;
   current_position?: string;
   industry?: string;
@@ -67,7 +67,7 @@ export const ContactModal = ({ isOpen, onClose, userId, userName }: ContactModal
       // Buscar dados básicos do perfil
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('name, email, phone, company_name, current_position, industry, linkedin_url')
+        .select('name, email, company_name, current_position, industry, linkedin_url, professional_bio, skills, whatsapp_number')
         .eq('id', userId)
         .single();
 
@@ -112,7 +112,7 @@ export const ContactModal = ({ isOpen, onClose, userId, userName }: ContactModal
     return {
       name: contactData.name,
       email: contactData.email,
-      phone: contactData.phone || onboarding?.contact_info?.phone,
+      phone: contactData.whatsapp_number || onboarding?.contact_info?.phone,
       company: contactData.company_name || onboarding?.professional_info?.company_name,
       position: contactData.current_position || onboarding?.professional_info?.current_position,
       industry: contactData.industry || onboarding?.professional_info?.company_sector,
