@@ -81,23 +81,19 @@ serve(async (req) => {
     const currentDate = new Date();
     const monthYear = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
 
-    // Verificar se já existem matches para este usuário neste mês
-    const { data: existingMatches } = await supabase
-      .from('network_matches')
-      .select('id')
+    // Buscar dados de onboarding do usuário para matches mais inteligentes
+    const { data: userOnboarding, error: onboardingError } = await supabase
+      .from('quick_onboarding')
+      .select('*')
       .eq('user_id', user_id)
-      .eq('month_year', monthYear);
+      .eq('is_completed', true)
+      .maybeSingle();
 
-    if (existingMatches && existingMatches.length > 0) {
-      console.log('Usuário já possui matches gerados neste mês');
-      return new Response(JSON.stringify({
-        success: true,
-        matches_generated: 0,
-        message: 'Você já possui matches gerados para este mês. Novos matches estarão disponíveis no próximo mês!'
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    if (onboardingError) {
+      console.error('Erro ao buscar onboarding do usuário:', onboardingError);
     }
+
+    console.log('Dados de onboarding do usuário:', userOnboarding);
 
     // Configurar filtros baseados nas preferências do usuário (usar preferências existentes ou padrão)
     const activePrefs = userPreferences || {
@@ -134,36 +130,48 @@ serve(async (req) => {
       }
     });
 
-    // Construir query para buscar potenciais matches excluindo usuários já conectados
-    let query = supabase
-      .from('profiles')
-      .select('id, name, company_name, current_position, industry, role')
-      .neq('id', user_id);
+    // Buscar usuários que completaram onboarding com seus dados
+    const { data: candidatesWithOnboarding, error: candidatesError } = await supabase
+      .from('quick_onboarding')
+      .select(`
+        user_id,
+        business_segment,
+        current_position,
+        ai_level,
+        main_objectives,
+        company_size,
+        profiles!inner (
+          id,
+          name,
+          company_name,
+          current_position,
+          industry,
+          role
+        )
+      `)
+      .eq('is_completed', true)
+      .neq('user_id', user_id);
 
-    // Se há usuários conectados, excluí-los da busca
-    if (connectedUserIds.size > 0) {
-      const connectedIds = Array.from(connectedUserIds);
-      query = query.not('id', 'in', `(${connectedIds.join(',')})`);
+    if (candidatesError) {
+      console.error('Erro ao buscar candidatos com onboarding:', candidatesError);
+      throw new Error(`Erro ao buscar candidatos: ${candidatesError.message}`);
     }
 
-    // Aplicar filtros de indústria se especificados
-    if (preferredIndustries.length > 0) {
-      query = query.in('industry', preferredIndustries);
+    if (!candidatesWithOnboarding || candidatesWithOnboarding.length === 0) {
+      return new Response(JSON.stringify({
+        success: true,
+        matches_generated: 0,
+        message: 'Não há usuários com onboarding completo disponíveis para matches.'
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
-    // Aplicar filtros de exclusão de setores
-    if (excludedSectors.length > 0) {
-      query = query.not('industry', 'in', `(${excludedSectors.join(',')})`);
-    }
+    // Filtrar usuários já conectados
+    const potentialMatches = candidatesWithOnboarding.filter(candidate => 
+      !connectedUserIds.has(candidate.user_id)
+    );
 
-    query = query.limit(maxMatches);
-
-    const { data: potentialMatches, error: matchesError } = await query;
-
-    if (matchesError) {
-      console.error('Erro ao buscar potenciais matches:', matchesError);
-      throw new Error(`Erro ao buscar potenciais matches: ${matchesError.message}`);
-    }
 
     if (!potentialMatches || potentialMatches.length === 0) {
       return new Response(JSON.stringify({
@@ -177,22 +185,55 @@ serve(async (req) => {
 
     let matchesGenerated = 0;
 
-    // Gerar matches para cada usuário encontrado
-    for (const match of potentialMatches) {
-      // Calcular compatibilidade baseada nas preferências do usuário
-      let baseCompatibility = Math.floor(Math.random() * 30) + 70; // 70-100%
-      
-      // Ajustar compatibilidade baseado em preferências
-      if (preferredIndustries.length > 0 && preferredIndustries.includes(match.industry)) {
-        baseCompatibility = Math.min(100, baseCompatibility + 10); // Boost por indústria preferida
-      }
-      
-      // Verificar se atende ao mínimo de compatibilidade
-      const finalCompatibility = baseCompatibility / 100;
-      if (finalCompatibility < minCompatibility) {
-        console.log(`Match com ${match.name} rejeitado por baixa compatibilidade: ${Math.round(finalCompatibility * 100)}%`);
+    // Gerar matches usando dados de onboarding
+    const matchesWithScore = [];
+    
+    for (const candidate of potentialMatches) {
+      if (!userOnboarding) {
+        console.log('Usuário sem onboarding completo, pulando cálculo avançado');
         continue;
       }
+
+      // Usar a função calculate_business_compatibility para calcular compatibilidade real
+      const { data: compatibilityResult, error: compatibilityError } = await supabase
+        .rpc('calculate_business_compatibility', {
+          user1_segment: userOnboarding.business_segment,
+          user1_ai_level: userOnboarding.ai_level,
+          user1_objectives: userOnboarding.main_objectives,
+          user1_company_size: userOnboarding.company_size,
+          user2_segment: candidate.business_segment,
+          user2_ai_level: candidate.ai_level,
+          user2_objectives: candidate.main_objectives,
+          user2_company_size: candidate.company_size
+        });
+
+      if (compatibilityError) {
+        console.error('Erro ao calcular compatibilidade:', compatibilityError);
+        continue;
+      }
+
+      const compatibilityScore = compatibilityResult || 0.5;
+      
+      // Verificar se atende ao mínimo de compatibilidade
+      if (compatibilityScore < minCompatibility) {
+        console.log(`Match com ${candidate.profiles.name} rejeitado por baixa compatibilidade: ${Math.round(compatibilityScore * 100)}%`);
+        continue;
+      }
+
+      matchesWithScore.push({
+        candidate,
+        score: compatibilityScore
+      });
+    }
+
+    // Ordenar por compatibilidade e limitar
+    matchesWithScore.sort((a, b) => b.score - a.score);
+    const topMatches = matchesWithScore.slice(0, maxMatches);
+
+    console.log(`${topMatches.length} matches qualificados encontrados`);
+
+    // Gerar matches para os usuários com melhor compatibilidade
+    for (const { candidate, score } of topMatches) {
       
       // Selecionar tipo de match baseado nas preferências
       const matchType = preferredTypes[Math.floor(Math.random() * preferredTypes.length)];
@@ -265,19 +306,22 @@ serve(async (req) => {
         }
       };
 
+      // Criar análise inteligente baseada nos dados de onboarding
       const aiAnalysis = getAnalysisByType(matchType);
-      const matchReason = `Match personalizado baseado em suas preferências: ${matchType === 'customer' ? 'potencial cliente' : matchType === 'supplier' ? 'fornecedor especializado' : matchType === 'partner' ? 'parceria estratégica' : 'mentorship'} com ${Math.round(finalCompatibility * 100)}% de compatibilidade${preferredIndustries.includes(match.industry) ? ' e setor preferido' : ''}.`;
+      
+      // Criar match reason baseado nos dados reais de compatibilidade
+      const matchReason = `Match IA baseado em compatibilidade de ${Math.round(score * 100)}% entre perfis de negócio. Segmentos: ${userOnboarding.business_segment} ↔ ${candidate.business_segment}. Objetivos alinhados e potencial de sinergia identificado.`;
 
       // Verificar se já existe match entre estes usuários
       const { data: existingMatch } = await supabase
         .from('network_matches')
         .select('id')
         .eq('user_id', user_id)
-        .eq('matched_user_id', match.id)
-        .single();
+        .eq('matched_user_id', candidate.user_id)
+        .maybeSingle();
 
       if (existingMatch) {
-        console.log(`Match já existe com ${match.name}, pulando...`);
+        console.log(`Match já existe com ${candidate.profiles.name}, pulando...`);
         continue;
       }
 
@@ -286,9 +330,9 @@ serve(async (req) => {
         .from('network_matches')
         .insert({
           user_id: user_id,
-          matched_user_id: match.id,
+          matched_user_id: candidate.user_id,
           match_type: matchType,
-          compatibility_score: Math.round(finalCompatibility * 100),
+          compatibility_score: Math.round(score * 100),
           match_reason: matchReason,
           ai_analysis: aiAnalysis,
           month_year: monthYear,
@@ -299,14 +343,14 @@ serve(async (req) => {
         console.error('Erro ao inserir match:', insertError);
         console.error('Dados do match:', {
           user_id,
-          matched_user_id: match.id,
+          matched_user_id: candidate.user_id,
           match_type: matchType,
-          compatibility_score: Math.round(finalCompatibility * 100),
+          compatibility_score: Math.round(score * 100),
           month_year: monthYear
         });
       } else {
         matchesGenerated++;
-        console.log(`Match ${matchType} criado com ${match.name} (${Math.round(finalCompatibility * 100)}% compatibilidade)`);
+        console.log(`Match ${matchType} criado com ${candidate.profiles.name} (${Math.round(score * 100)}% compatibilidade)`);
       }
     }
 
