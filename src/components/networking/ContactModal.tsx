@@ -281,12 +281,6 @@ export const ContactModal = ({ isOpen, onClose, userId, userName }: ContactModal
                   </div>
                 )}
 
-                 {displayData.revenue && (
-                   <div className="flex items-center justify-between">
-                     <span className="text-sm text-muted-foreground">Faturamento:</span>
-                     <Badge variant="outline">{displayData.revenue}</Badge>
-                   </div>
-                 )}
 
                  {displayData.website && (
                    <div className="flex items-center justify-between bg-muted/50 rounded-lg p-3">
@@ -316,24 +310,17 @@ export const ContactModal = ({ isOpen, onClose, userId, userName }: ContactModal
             </div>
 
             {/* Ações */}
-            <div className="flex gap-3 pt-4">
-              <Button
-                onClick={() => window.open(`mailto:${displayData.email}`, '_blank')}
-                className="flex-1"
-              >
-                <Mail className="h-4 w-4 mr-2" />
-                Enviar Email
-              </Button>
-              
-              {displayData.linkedin && (
+            {displayData.linkedin && (
+              <div className="flex justify-center pt-4">
                 <Button
-                  variant="outline"
                   onClick={() => window.open(displayData.linkedin, '_blank')}
+                  className="flex items-center gap-2"
                 >
                   <Linkedin className="h-4 w-4" />
+                  Conectar no LinkedIn
                 </Button>
-              )}
-            </div>
+              </div>
+            )}
           </motion.div>
         ) : (
           <div className="text-center py-8">
