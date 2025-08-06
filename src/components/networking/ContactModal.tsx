@@ -28,6 +28,7 @@ interface ContactModalProps {
 interface ContactData {
   name: string;
   email: string;
+  avatar_url?: string;
   whatsapp_number?: string;
   company_name?: string;
   current_position?: string;
@@ -92,7 +93,7 @@ export const ContactModal = ({ isOpen, onClose, userId, userName }: ContactModal
       // Buscar dados básicos do perfil
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('name, email, company_name, current_position, industry, linkedin_url, professional_bio, skills, whatsapp_number')
+        .select('name, email, company_name, current_position, industry, linkedin_url, professional_bio, skills, whatsapp_number, avatar_url')
         .eq('id', userId)
         .single();
 
@@ -137,6 +138,7 @@ export const ContactModal = ({ isOpen, onClose, userId, userName }: ContactModal
     return {
       name: contactData.name,
       email: contactData.email,
+      avatar: contactData.avatar_url,
       phone: contactData.whatsapp_number || onboarding?.personal_info?.phone || onboarding?.business_info?.phone,
       company: contactData.company_name || onboarding?.business_info?.company_name || onboarding?.professional_info?.company_name,
       position: contactData.current_position || onboarding?.business_info?.current_position || onboarding?.professional_info?.current_position,
@@ -148,7 +150,6 @@ export const ContactModal = ({ isOpen, onClose, userId, userName }: ContactModal
       experience: onboarding?.business_info?.work_experience || onboarding?.business_context?.professional_bio || onboarding?.personal_info?.bio,
       companySize: onboarding?.business_info?.company_size || onboarding?.professional_info?.company_size,
       website: onboarding?.business_info?.company_website || onboarding?.professional_info?.company_website,
-      revenue: onboarding?.business_info?.annual_revenue || onboarding?.professional_info?.annual_revenue,
       bio: onboarding?.personal_info?.bio || onboarding?.business_info?.professional_bio
     };
   };
@@ -157,176 +158,263 @@ export const ContactModal = ({ isOpen, onClose, userId, userName }: ContactModal
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-3 text-xl">
-            <div className="p-2 bg-primary/10 rounded-full">
-              <User className="h-5 w-5 text-primary" />
-            </div>
-            Dados de Contato
-          </DialogTitle>
-        </DialogHeader>
-
-        {isLoading ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin text-primary" />
-            <span className="ml-2 text-muted-foreground">Carregando dados...</span>
-          </div>
-        ) : displayData ? (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-6"
-          >
-            {/* Header com nome */}
-            <div className="text-center pb-4 border-b border-border/50">
-              <h3 className="text-lg font-semibold text-foreground">{displayData.name}</h3>
-              {displayData.position && (
-                <p className="text-muted-foreground">{displayData.position}</p>
-              )}
-              {displayData.company && (
-                <div className="flex items-center justify-center gap-2 mt-2">
-                  <Building2 className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-medium text-foreground">{displayData.company}</span>
-                </div>
-              )}
-            </div>
-
-            {/* Informações de contato */}
-            <div className="space-y-4">
-              <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <Mail className="h-4 w-4" />
-                Contato
-              </h4>
-              
-              <div className="space-y-3">
-                {/* Email */}
-                <div className="flex items-center justify-between bg-muted/50 rounded-lg p-3">
-                  <div className="flex items-center gap-3">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">{displayData.email}</span>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => copyToClipboard(displayData.email, 'Email')}
-                  >
-                    <Copy className="h-3 w-3" />
-                  </Button>
-                </div>
-
-                {/* Telefone */}
-                {displayData.phone && (
-                  <div className="flex items-center justify-between bg-muted/50 rounded-lg p-3">
-                    <div className="flex items-center gap-3">
-                      <Phone className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">{displayData.phone}</span>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => copyToClipboard(displayData.phone!, 'Telefone')}
-                    >
-                      <Copy className="h-3 w-3" />
-                    </Button>
-                  </div>
-                )}
-
-                {/* LinkedIn */}
-                {displayData.linkedin && (
-                  <div className="flex items-center justify-between bg-muted/50 rounded-lg p-3">
-                    <div className="flex items-center gap-3">
-                      <Linkedin className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">LinkedIn</span>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => window.open(displayData.linkedin, '_blank')}
-                    >
-                      <ExternalLink className="h-3 w-3" />
-                    </Button>
-                  </div>
-                )}
-
-                {/* Localização */}
-                {displayData.location && (
-                  <div className="flex items-center gap-3 bg-muted/50 rounded-lg p-3">
-                    <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">{displayData.location}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Informações profissionais */}
-            <div className="space-y-4">
-              <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <Building2 className="h-4 w-4" />
-                Informações Profissionais
-              </h4>
-              
-              <div className="space-y-3">
-                {displayData.industry && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Setor:</span>
-                    <Badge variant="secondary">{displayData.industry}</Badge>
-                  </div>
-                )}
-
-                {displayData.companySize && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Porte da Empresa:</span>
-                    <Badge variant="outline">{displayData.companySize}</Badge>
-                  </div>
-                )}
-
-
-                 {displayData.website && (
-                   <div className="flex items-center justify-between bg-muted/50 rounded-lg p-3">
-                     <div className="flex items-center gap-3">
-                       <ExternalLink className="h-4 w-4 text-muted-foreground" />
-                       <span className="text-sm">Website da empresa</span>
-                     </div>
-                     <Button
-                       variant="ghost"
-                       size="sm"
-                       onClick={() => window.open(displayData.website, '_blank')}
-                     >
-                       <ExternalLink className="h-3 w-3" />
-                     </Button>
-                   </div>
-                 )}
-
-                 {(displayData.experience || displayData.bio) && (
-                   <div className="space-y-2">
-                     <span className="text-sm text-muted-foreground">Sobre:</span>
-                     <p className="text-sm bg-muted/50 rounded-lg p-3">
-                       {displayData.experience || displayData.bio}
-                     </p>
-                   </div>
-                 )}
-              </div>
-            </div>
-
-            {/* Ações */}
-            {displayData.linkedin && (
-              <div className="flex justify-center pt-4">
-                <Button
-                  onClick={() => window.open(displayData.linkedin, '_blank')}
-                  className="flex items-center gap-2"
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden p-0 bg-gradient-to-br from-background via-background to-background/95">
+        <div className="relative">
+          {/* Background decorativo */}
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10"></div>
+          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-primary/20 to-transparent rounded-bl-[100px] blur-xl"></div>
+          
+          <div className="relative">
+            {isLoading ? (
+              <div className="flex items-center justify-center py-20">
+                <motion.div
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="flex flex-col items-center gap-4"
                 >
-                  <Linkedin className="h-4 w-4" />
-                  Conectar no LinkedIn
-                </Button>
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-primary/20 rounded-full blur-lg animate-pulse"></div>
+                    <Loader2 className="relative h-8 w-8 animate-spin text-primary" />
+                  </div>
+                  <p className="text-muted-foreground font-medium">Carregando perfil...</p>
+                </motion.div>
+              </div>
+            ) : displayData ? (
+              <div className="overflow-y-auto max-h-[90vh]">
+                {/* Header com foto e informações principais */}
+                <div className="relative bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-8 pb-6">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex flex-col items-center text-center"
+                  >
+                    {/* Foto do perfil */}
+                    <div className="relative mb-6">
+                      <div className="absolute -inset-1 bg-gradient-to-r from-primary to-primary/60 rounded-full blur-sm opacity-75"></div>
+                      <div className="relative w-24 h-24 rounded-full overflow-hidden bg-gradient-to-br from-primary/20 to-primary/10 border-2 border-primary/20 shadow-xl">
+                        {displayData.avatar ? (
+                          <img
+                            src={displayData.avatar}
+                            alt={displayData.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                            }}
+                          />
+                        ) : null}
+                        <div className={`absolute inset-0 flex items-center justify-center text-primary ${displayData.avatar ? 'hidden' : ''}`}>
+                          <User className="h-10 w-10" />
+                        </div>
+                      </div>
+                      {/* Indicador online */}
+                      <div className="absolute bottom-1 right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-background shadow-lg"></div>
+                    </div>
+
+                    {/* Nome e cargo */}
+                    <div className="space-y-2">
+                      <h2 className="text-2xl font-bold text-foreground">{displayData.name}</h2>
+                      {displayData.position && (
+                        <p className="text-lg text-muted-foreground font-medium">{displayData.position}</p>
+                      )}
+                      {displayData.company && (
+                        <div className="flex items-center justify-center gap-2 px-4 py-2 bg-background/80 backdrop-blur rounded-full border border-border/50">
+                          <Building2 className="h-4 w-4 text-primary" />
+                          <span className="text-sm font-medium text-foreground">{displayData.company}</span>
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                </div>
+
+                <div className="p-8 pt-4 space-y-8">
+                  {/* Cards de informações */}
+                  <div className="grid gap-6">
+                    {/* Contato */}
+                    <motion.div
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.1 }}
+                      className="relative group"
+                    >
+                      <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/20 to-transparent rounded-xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      <div className="relative bg-card/50 backdrop-blur border border-border/30 rounded-xl p-6 space-y-4">
+                        <h3 className="flex items-center gap-3 text-lg font-semibold text-foreground">
+                          <div className="p-2 bg-primary/10 rounded-lg">
+                            <Mail className="h-5 w-5 text-primary" />
+                          </div>
+                          Contato
+                        </h3>
+                        
+                        <div className="space-y-3">
+                          {/* Email */}
+                          <div className="flex items-center justify-between bg-background/50 rounded-lg p-4 border border-border/30 hover:border-primary/30 transition-colors group">
+                            <div className="flex items-center gap-3">
+                              <Mail className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                              <span className="text-sm font-medium">{displayData.email}</span>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => copyToClipboard(displayData.email, 'Email')}
+                              className="hover:bg-primary/10 hover:text-primary"
+                            >
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                          </div>
+
+                          {/* Telefone */}
+                          {displayData.phone && (
+                            <div className="flex items-center justify-between bg-background/50 rounded-lg p-4 border border-border/30 hover:border-primary/30 transition-colors group">
+                              <div className="flex items-center gap-3">
+                                <Phone className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                                <span className="text-sm font-medium">{displayData.phone}</span>
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => copyToClipboard(displayData.phone!, 'Telefone')}
+                                className="hover:bg-primary/10 hover:text-primary"
+                              >
+                                <Copy className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          )}
+
+                          {/* Localização */}
+                          {displayData.location && (
+                            <div className="flex items-center gap-3 bg-background/50 rounded-lg p-4 border border-border/30">
+                              <MapPin className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-sm font-medium">{displayData.location}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
+
+                    {/* Informações Profissionais */}
+                    {(displayData.industry || displayData.companySize || displayData.website) && (
+                      <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="relative group"
+                      >
+                        <div className="absolute -inset-0.5 bg-gradient-to-r from-transparent to-primary/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <div className="relative bg-card/50 backdrop-blur border border-border/30 rounded-xl p-6 space-y-4">
+                          <h3 className="flex items-center gap-3 text-lg font-semibold text-foreground">
+                            <div className="p-2 bg-primary/10 rounded-lg">
+                              <Building2 className="h-5 w-5 text-primary" />
+                            </div>
+                            Informações Profissionais
+                          </h3>
+                          
+                          <div className="grid gap-4">
+                            {displayData.industry && (
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm text-muted-foreground">Setor:</span>
+                                <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
+                                  {displayData.industry}
+                                </Badge>
+                              </div>
+                            )}
+
+                            {displayData.companySize && (
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm text-muted-foreground">Porte da Empresa:</span>
+                                <Badge variant="outline" className="border-primary/30 text-foreground">
+                                  {displayData.companySize}
+                                </Badge>
+                              </div>
+                            )}
+
+                            {displayData.website && (
+                              <div className="flex items-center justify-between bg-background/50 rounded-lg p-4 border border-border/30 hover:border-primary/30 transition-colors group">
+                                <div className="flex items-center gap-3">
+                                  <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                                  <span className="text-sm font-medium">Website da empresa</span>
+                                </div>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => window.open(displayData.website, '_blank')}
+                                  className="hover:bg-primary/10 hover:text-primary"
+                                >
+                                  <ExternalLink className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {/* Sobre */}
+                    {(displayData.experience || displayData.bio) && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className="relative group"
+                      >
+                        <div className="absolute -inset-0.5 bg-gradient-to-br from-primary/20 to-transparent rounded-xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <div className="relative bg-card/50 backdrop-blur border border-border/30 rounded-xl p-6 space-y-4">
+                          <h3 className="flex items-center gap-3 text-lg font-semibold text-foreground">
+                            <div className="p-2 bg-primary/10 rounded-lg">
+                              <User className="h-5 w-5 text-primary" />
+                            </div>
+                            Sobre
+                          </h3>
+                          <div className="bg-background/30 rounded-lg p-4 border border-border/20">
+                            <p className="text-sm leading-relaxed text-muted-foreground">
+                              {displayData.experience || displayData.bio}
+                            </p>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </div>
+
+                  {/* CTA LinkedIn */}
+                  {displayData.linkedin && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.4 }}
+                      className="flex justify-center pt-4"
+                    >
+                      <div className="relative group">
+                        <div className="absolute -inset-1 bg-gradient-to-r from-primary to-primary/60 rounded-xl blur opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <Button
+                          onClick={() => window.open(displayData.linkedin, '_blank')}
+                          size="lg"
+                          className="relative bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl px-8 py-3 text-base font-semibold"
+                        >
+                          <Linkedin className="h-5 w-5 mr-2" />
+                          Conectar no LinkedIn
+                        </Button>
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-20">
+                <motion.div
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="space-y-4"
+                >
+                  <div className="p-4 bg-destructive/10 rounded-full w-fit mx-auto">
+                    <User className="h-8 w-8 text-destructive" />
+                  </div>
+                  <p className="text-lg font-medium text-foreground">Dados não disponíveis</p>
+                  <p className="text-muted-foreground">Não foi possível carregar as informações de contato.</p>
+                </motion.div>
               </div>
             )}
-          </motion.div>
-        ) : (
-          <div className="text-center py-8">
-            <p className="text-muted-foreground">Dados de contato não disponíveis.</p>
           </div>
-        )}
+        </div>
       </DialogContent>
     </Dialog>
   );
