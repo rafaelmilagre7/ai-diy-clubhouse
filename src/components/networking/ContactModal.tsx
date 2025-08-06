@@ -41,11 +41,24 @@ interface ContactData {
       work_experience?: string;
       company_sector?: string;
       company_size?: string;
+      industry?: string;
+      company_website?: string;
+      annual_revenue?: string;
     };
     contact_info?: {
       phone?: string;
+      whatsapp?: string;
       linkedin?: string;
+      linkedin_url?: string;
       location?: string;
+    };
+    personal_info?: {
+      bio?: string;
+      city?: string;
+      state?: string;
+    };
+    networking_info?: {
+      professional_bio?: string;
     };
   };
 }
@@ -76,7 +89,7 @@ export const ContactModal = ({ isOpen, onClose, userId, userName }: ContactModal
       // Buscar dados adicionais do onboarding se disponível
       const { data: onboarding } = await supabase
         .from('onboarding_final')
-        .select('professional_info, contact_info, personal_info')
+        .select('professional_info, contact_info, personal_info, networking_info')
         .eq('user_id', userId)
         .single();
 
@@ -112,14 +125,19 @@ export const ContactModal = ({ isOpen, onClose, userId, userName }: ContactModal
     return {
       name: contactData.name,
       email: contactData.email,
-      phone: contactData.whatsapp_number || onboarding?.contact_info?.phone,
+      phone: contactData.whatsapp_number || onboarding?.contact_info?.whatsapp || onboarding?.contact_info?.phone,
       company: contactData.company_name || onboarding?.professional_info?.company_name,
       position: contactData.current_position || onboarding?.professional_info?.current_position,
-      industry: contactData.industry || onboarding?.professional_info?.company_sector,
-      linkedin: contactData.linkedin_url || onboarding?.contact_info?.linkedin,
-      location: onboarding?.contact_info?.location,
-      experience: onboarding?.professional_info?.work_experience,
-      companySize: onboarding?.professional_info?.company_size
+      industry: contactData.industry || onboarding?.professional_info?.company_sector || onboarding?.professional_info?.industry,
+      linkedin: contactData.linkedin_url || onboarding?.contact_info?.linkedin_url || onboarding?.contact_info?.linkedin,
+      location: onboarding?.contact_info?.location || onboarding?.personal_info?.city ? 
+        [onboarding?.personal_info?.city, onboarding?.personal_info?.state].filter(Boolean).join(', ') : 
+        onboarding?.contact_info?.location,
+      experience: onboarding?.professional_info?.work_experience || onboarding?.networking_info?.professional_bio,
+      companySize: onboarding?.professional_info?.company_size,
+      website: onboarding?.professional_info?.company_website,
+      revenue: onboarding?.professional_info?.annual_revenue,
+      bio: onboarding?.personal_info?.bio || onboarding?.networking_info?.professional_bio
     };
   };
 
@@ -251,14 +269,37 @@ export const ContactModal = ({ isOpen, onClose, userId, userName }: ContactModal
                   </div>
                 )}
 
-                {displayData.experience && (
-                  <div className="space-y-2">
-                    <span className="text-sm text-muted-foreground">Experiência:</span>
-                    <p className="text-sm bg-muted/50 rounded-lg p-3">
-                      {displayData.experience}
-                    </p>
-                  </div>
-                )}
+                 {displayData.revenue && (
+                   <div className="flex items-center justify-between">
+                     <span className="text-sm text-muted-foreground">Faturamento:</span>
+                     <Badge variant="outline">{displayData.revenue}</Badge>
+                   </div>
+                 )}
+
+                 {displayData.website && (
+                   <div className="flex items-center justify-between bg-muted/50 rounded-lg p-3">
+                     <div className="flex items-center gap-3">
+                       <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                       <span className="text-sm">Website da empresa</span>
+                     </div>
+                     <Button
+                       variant="ghost"
+                       size="sm"
+                       onClick={() => window.open(displayData.website, '_blank')}
+                     >
+                       <ExternalLink className="h-3 w-3" />
+                     </Button>
+                   </div>
+                 )}
+
+                 {(displayData.experience || displayData.bio) && (
+                   <div className="space-y-2">
+                     <span className="text-sm text-muted-foreground">Sobre:</span>
+                     <p className="text-sm bg-muted/50 rounded-lg p-3">
+                       {displayData.experience || displayData.bio}
+                     </p>
+                   </div>
+                 )}
               </div>
             </div>
 
