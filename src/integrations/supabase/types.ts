@@ -5661,6 +5661,19 @@ export type Database = {
           avg_implementation_time_hours: number
         }[]
       }
+      get_admin_analytics_temp: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          total_users: number
+          total_solutions: number
+          completed_implementations: number
+          active_implementations: number
+          active_users_7d: number
+          new_users_30d: number
+          new_implementations_30d: number
+          overall_completion_rate: number
+        }[]
+      }
       get_admin_stats: {
         Args: Record<PropertyKey, never>
         Returns: Json
