@@ -53,45 +53,36 @@ export const useEnhancedAnalyticsData = (timeRange: string) => {
         setLoading(true);
         setError(null);
 
-        // Buscar overview geral
-        const { data: overviewData, error: overviewError } = await supabase
-          .from('admin_analytics_overview')
-          .select('*')
-          .single();
+        // Buscar dados usando funções seguras
+        const [
+          overviewResult,
+          userGrowthResult, 
+          weeklyActivityResult,
+          solutionPerformanceResult
+        ] = await Promise.allSettled([
+          supabase.rpc('get_admin_analytics_overview'),
+          supabase.rpc('get_user_growth_by_date'),
+          supabase.rpc('get_weekly_activity_patterns'),
+          supabase.rpc('get_solution_performance_metrics')
+        ]);
 
-        if (overviewError && overviewError.code !== 'PGRST116') {
-          console.warn('Erro ao buscar overview:', overviewError);
+        // Processar resultados das funções seguras
+        const overviewData = overviewResult.status === 'fulfilled' ? overviewResult.value.data?.[0] : null;
+        const userGrowthData = userGrowthResult.status === 'fulfilled' ? userGrowthResult.value.data || [] : [];
+        const weeklyActivityData = weeklyActivityResult.status === 'fulfilled' ? weeklyActivityResult.value.data || [] : [];
+        const solutionPerformanceData = solutionPerformanceResult.status === 'fulfilled' ? solutionPerformanceResult.value.data || [] : [];
+
+        if (overviewResult.status === 'rejected') {
+          console.warn('Erro ao buscar overview:', overviewResult.reason);
         }
-
-        // Buscar crescimento de usuários
-        const { data: userGrowthData, error: userGrowthError } = await supabase
-          .from('user_growth_by_date')
-          .select('*')
-          .order('date', { ascending: true });
-
-        if (userGrowthError) {
-          console.warn('Erro ao buscar crescimento de usuários:', userGrowthError);
+        if (userGrowthResult.status === 'rejected') {
+          console.warn('Erro ao buscar crescimento de usuários:', userGrowthResult.reason);
         }
-
-        // Buscar atividade semanal
-        const { data: weeklyActivityData, error: weeklyError } = await supabase
-          .from('weekly_activity_patterns')
-          .select('*')
-          .order('day_of_week', { ascending: true });
-
-        if (weeklyError) {
-          console.warn('Erro ao buscar atividade semanal:', weeklyError);
+        if (weeklyActivityResult.status === 'rejected') {
+          console.warn('Erro ao buscar atividade semanal:', weeklyActivityResult.reason);
         }
-
-        // Buscar performance de soluções
-        const { data: solutionPerformanceData, error: solutionError } = await supabase
-          .from('solution_performance_metrics')
-          .select('*')
-          .order('total_implementations', { ascending: false })
-          .limit(10);
-
-        if (solutionError) {
-          console.warn('Erro ao buscar performance de soluções:', solutionError);
+        if (solutionPerformanceResult.status === 'rejected') {
+          console.warn('Erro ao buscar performance de soluções:', solutionPerformanceResult.reason);
         }
 
         // Processar dados

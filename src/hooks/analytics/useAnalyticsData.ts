@@ -53,24 +53,24 @@ export const useAnalyticsData = ({ timeRange, category = 'all', difficulty = 'al
         setLoading(true);
         setError(null);
 
-        // Buscar dados das views sincronizadas
+        // Buscar dados usando funções seguras
         const [
           solutionPerformanceResult,
           userGrowthResult,
           weeklyActivityResult,
           overviewResult
         ] = await Promise.allSettled([
-          supabase.from('solution_performance_metrics').select('*').order('total_implementations', { ascending: false }).limit(10),
-          supabase.from('user_growth_by_date').select('*').order('date'),
-          supabase.from('weekly_activity_patterns').select('*').order('day_of_week'),
-          supabase.from('admin_analytics_overview').select('*').single()
+          supabase.rpc('get_solution_performance_metrics'),
+          supabase.rpc('get_user_growth_by_date'),
+          supabase.rpc('get_weekly_activity_patterns'),
+          supabase.rpc('get_admin_analytics_overview')
         ]);
 
         // Processar resultados
         const solutionData = solutionPerformanceResult.status === 'fulfilled' ? solutionPerformanceResult.value.data || [] : [];
         const userGrowthData = userGrowthResult.status === 'fulfilled' ? userGrowthResult.value.data || [] : [];
         const weeklyData = weeklyActivityResult.status === 'fulfilled' ? weeklyActivityResult.value.data || [] : [];
-        const overviewData = overviewResult.status === 'fulfilled' ? overviewResult.value.data : null;
+        const overviewData = overviewResult.status === 'fulfilled' ? overviewResult.value.data?.[0] : null;
 
         // Processar dados de popularidade de soluções
         const solutionPopularity = solutionData.slice(0, 5).map(item => ({

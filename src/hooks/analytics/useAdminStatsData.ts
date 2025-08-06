@@ -46,24 +46,24 @@ export const useAdminStatsData = () => {
         setLoading(true);
         setError(null);
 
-        // Buscar overview consolidado
-        const { data: overviewData, error: overviewError } = await supabase
-          .from('admin_analytics_overview')
-          .select('*')
-          .single();
+        // Buscar dados usando funções seguras
+        const [
+          overviewResult,
+          segmentationResult
+        ] = await Promise.allSettled([
+          supabase.rpc('get_admin_analytics_overview'),
+          supabase.rpc('get_user_segmentation_analytics')
+        ]);
 
-        if (overviewError && overviewError.code !== 'PGRST116') {
-          console.warn('Erro ao buscar overview:', overviewError);
+        // Processar resultados das funções seguras
+        const overviewData = overviewResult.status === 'fulfilled' ? overviewResult.value.data?.[0] : null;
+        const segmentationData = segmentationResult.status === 'fulfilled' ? segmentationResult.value.data || [] : [];
+
+        if (overviewResult.status === 'rejected') {
+          console.warn('Erro ao buscar overview:', overviewResult.reason);
         }
-
-        // Buscar segmentação de usuários
-        const { data: segmentationData, error: segmentationError } = await supabase
-          .from('user_segmentation_analytics')
-          .select('*')
-          .order('user_count', { ascending: false });
-
-        if (segmentationError) {
-          console.warn('Erro ao buscar segmentação:', segmentationError);
+        if (segmentationResult.status === 'rejected') {
+          console.warn('Erro ao buscar segmentação:', segmentationResult.reason);
         }
 
         // Buscar contagem de aulas
