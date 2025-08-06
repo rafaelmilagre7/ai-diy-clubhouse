@@ -130,68 +130,37 @@ serve(async (req) => {
       }
     });
 
-    // Buscar usuários que completaram onboarding com seus dados
-    const { data: candidatesWithOnboarding, error: candidatesError } = await supabase
-      .from('quick_onboarding')
-      .select(`
-        user_id,
-        business_segment,
-        current_position,
-        ai_level,
-        main_objectives,
-        company_size,
-        profiles!inner (
-          id,
-          name,
-          company_name,
-          current_position,
-          industry,
-          role
-        )
-      `)
-      .eq('is_completed', true)
-      .neq('user_id', user_id);
+    // Buscar todos os perfis válidos diretamente
+    console.log('Buscando perfis válidos para matches...');
+    
+    const { data: allProfiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id, name, company_name, current_position, industry, role')
+      .neq('id', user_id)
+      .not('name', 'is', null)
+      .limit(100);
 
-    if (candidatesError) {
-      console.error('Erro ao buscar candidatos com onboarding:', candidatesError);
-      throw new Error(`Erro ao buscar candidatos: ${candidatesError.message}`);
+    if (profilesError) {
+      console.error('Erro ao buscar perfis:', profilesError);
+      throw new Error(`Erro ao buscar perfis: ${profilesError.message}`);
     }
 
-    let potentialMatches = [];
-
-    if (!candidatesWithOnboarding || candidatesWithOnboarding.length === 0) {
-      console.log('Nenhum candidato com onboarding encontrado, buscando todos os perfis...');
-      
-      // Buscar todos os perfis como fallback
-      const { data: allProfiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, name, company_name, current_position, industry, role')
-        .neq('id', user_id)
-        .not('name', 'is', null)
-        .limit(50);
-
-      if (profilesError) {
-        console.error('Erro ao buscar perfis:', profilesError);
-        throw new Error(`Erro ao buscar perfis: ${profilesError.message}`);
-      }
-
-      // Filtrar usuários já conectados
-      potentialMatches = (allProfiles || [])
-        .filter(profile => !connectedUserIds.has(profile.id))
-        .map(profile => ({
-          user_id: profile.id,
-          profiles: profile,
-          business_segment: null,
-          ai_level: null,
-          main_objectives: null,
-          company_size: null
-        }));
-    } else {
-      // Filtrar usuários já conectados dos candidatos com onboarding
-      potentialMatches = candidatesWithOnboarding.filter(candidate => 
-        !connectedUserIds.has(candidate.user_id)
-      );
+    if (!allProfiles || allProfiles.length === 0) {
+      return new Response(JSON.stringify({
+        success: true,
+        matches_generated: 0,
+        message: 'Não há usuários disponíveis para matches no momento.'
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
+
+    // Filtrar usuários já conectados
+    const potentialMatches = allProfiles.filter(profile => 
+      !connectedUserIds.has(profile.id)
+    );
+
+    console.log(`${potentialMatches.length} candidatos encontrados para matches`);
 
     if (!potentialMatches || potentialMatches.length === 0) {
       return new Response(JSON.stringify({
@@ -230,7 +199,7 @@ serve(async (req) => {
         }
       } else {
         // Fallback: usar compatibilidade baseada em perfil básico
-        const candidateUserId = candidate.user_id || (candidate.profiles ? candidate.profiles.id : candidate.id);
+        const candidateUserId = candidate.id;
         
         const { data: basicCompatibility, error: basicError } = await supabase
           .rpc('generate_compatibility_score', {
@@ -351,11 +320,11 @@ serve(async (req) => {
         .from('network_matches')
         .select('id')
         .eq('user_id', user_id)
-        .eq('matched_user_id', candidate.user_id)
+        .eq('matched_user_id', candidate.id)
         .maybeSingle();
 
       if (existingMatch) {
-        console.log(`Match já existe com ${candidate.profiles.name}, pulando...`);
+        console.log(`Match já existe com ${candidate.name}, pulando...`);
         continue;
       }
 
@@ -364,7 +333,7 @@ serve(async (req) => {
         .from('network_matches')
         .insert({
           user_id: user_id,
-          matched_user_id: candidate.user_id,
+          matched_user_id: candidate.id,
           match_type: matchType,
           compatibility_score: Math.round(score * 100),
           match_reason: matchReason,
@@ -377,14 +346,14 @@ serve(async (req) => {
         console.error('Erro ao inserir match:', insertError);
         console.error('Dados do match:', {
           user_id,
-          matched_user_id: candidate.user_id,
+          matched_user_id: candidate.id,
           match_type: matchType,
           compatibility_score: Math.round(score * 100),
           month_year: monthYear
         });
       } else {
         matchesGenerated++;
-        console.log(`Match ${matchType} criado com ${candidate.profiles.name} (${Math.round(score * 100)}% compatibilidade)`);
+        console.log(`Match ${matchType} criado com ${candidate.name} (${Math.round(score * 100)}% compatibilidade)`);
       }
     }
 
