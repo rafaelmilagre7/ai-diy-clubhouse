@@ -9,16 +9,8 @@ export const useLMSAnalytics = (dateRange?: { from: Date; to: Date }) => {
     queryKey: ['lms-analytics', dateKey],
     queryFn: async (): Promise<LmsAnalyticsData> => {
       try {
-        // Construir filtro de data
-        let query = supabase.from('nps_analytics_view').select('*');
-        
-        if (dateRange?.from && dateRange?.to) {
-          query = query
-            .gte('created_at', dateRange.from.toISOString())
-            .lte('created_at', dateRange.to.toISOString());
-        }
-
-        const { data: npsViewData, error: viewError } = await query.order('created_at', { ascending: false });
+        // Usar função segura em vez da view
+        const { data: npsViewData, error: viewError } = await supabase.rpc('get_nps_analytics_data');
 
         if (viewError) {
           console.error('Erro ao buscar dados da view NPS:', viewError);
