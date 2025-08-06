@@ -2566,6 +2566,7 @@ export type Database = {
           created_at: string | null
           id: string
           last_activity_at: string | null
+          metric_month: string | null
           total_matches: number | null
           updated_at: string | null
           user_id: string | null
@@ -2576,6 +2577,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           last_activity_at?: string | null
+          metric_month?: string | null
           total_matches?: number | null
           updated_at?: string | null
           user_id?: string | null
@@ -2586,6 +2588,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           last_activity_at?: string | null
+          metric_month?: string | null
           total_matches?: number | null
           updated_at?: string | null
           user_id?: string | null
@@ -5067,6 +5070,10 @@ export type Database = {
         Args: { scores: number[] }
         Returns: number
       }
+      calculate_business_compatibility: {
+        Args: { user1_id: string; user2_id: string }
+        Returns: number
+      }
       can_access_benefit: {
         Args: { user_id: string; tool_id: string }
         Returns: boolean
@@ -5636,6 +5643,10 @@ export type Database = {
       generate_slug: {
         Args: { input_text: string }
         Returns: string
+      }
+      generate_smart_networking_matches: {
+        Args: { target_user_id: string; max_matches?: number }
+        Returns: Json
       }
       get_admin_analytics_overview: {
         Args: Record<PropertyKey, never>
@@ -6592,6 +6603,10 @@ export type Database = {
       update_invite_send_attempt: {
         Args: { invite_id: string }
         Returns: undefined
+      }
+      update_networking_metrics: {
+        Args: { target_user_id: string }
+        Returns: Json
       }
       update_onboarding_step: {
         Args: { p_user_id: string; p_step: number; p_data?: Json }
