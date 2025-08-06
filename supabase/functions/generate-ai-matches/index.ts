@@ -130,37 +130,69 @@ serve(async (req) => {
       }
     });
 
-    // Buscar todos os perfis válidos diretamente
-    console.log('Buscando perfis válidos para matches...');
+    // Buscar usuários que completaram onboarding com seus dados reais
+    console.log('Buscando usuários com onboarding completo...');
     
-    const { data: allProfiles, error: profilesError } = await supabase
-      .from('profiles')
-      .select('id, name, company_name, current_position, industry, role')
-      .neq('id', user_id)
-      .not('name', 'is', null)
-      .limit(100);
+    const { data: candidatesWithOnboarding, error: candidatesError } = await supabase
+      .from('onboarding_final')
+      .select(`
+        user_id,
+        professional_info,
+        business_info,
+        ai_experience,
+        profiles!inner (
+          id,
+          name,
+          company_name,
+          current_position,
+          industry,
+          role
+        )
+      `)
+      .eq('is_completed', true)
+      .neq('user_id', user_id);
 
-    if (profilesError) {
-      console.error('Erro ao buscar perfis:', profilesError);
-      throw new Error(`Erro ao buscar perfis: ${profilesError.message}`);
+    if (candidatesError) {
+      console.error('Erro ao buscar candidatos com onboarding:', candidatesError);
+      throw new Error(`Erro ao buscar candidatos: ${candidatesError.message}`);
     }
 
-    if (!allProfiles || allProfiles.length === 0) {
-      return new Response(JSON.stringify({
-        success: true,
-        matches_generated: 0,
-        message: 'Não há usuários disponíveis para matches no momento.'
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    console.log(`Encontrados ${candidatesWithOnboarding?.length || 0} usuários com onboarding completo`);
+
+    let potentialMatches = [];
+
+    if (!candidatesWithOnboarding || candidatesWithOnboarding.length === 0) {
+      console.log('Usando fallback para todos os perfis...');
+      
+      const { data: allProfiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, name, company_name, current_position, industry, role')
+        .neq('id', user_id)
+        .not('name', 'is', null)
+        .limit(50);
+
+      if (profilesError) {
+        console.error('Erro ao buscar perfis:', profilesError);
+        throw new Error(`Erro ao buscar perfis: ${profilesError.message}`);
+      }
+
+      potentialMatches = (allProfiles || [])
+        .filter(profile => !connectedUserIds.has(profile.id));
+    } else {
+      // Usar dados de onboarding completo
+      potentialMatches = candidatesWithOnboarding
+        .filter(candidate => !connectedUserIds.has(candidate.user_id))
+        .map(candidate => ({
+          ...candidate,
+          id: candidate.user_id,
+          name: candidate.profiles.name,
+          company_name: candidate.profiles.company_name,
+          industry: candidate.profiles.industry,
+          business_segment: candidate.professional_info?.company_sector,
+          company_size: candidate.professional_info?.company_size,
+          ai_level: candidate.ai_experience?.level || 'iniciante'
+        }));
     }
-
-    // Filtrar usuários já conectados
-    const potentialMatches = allProfiles.filter(profile => 
-      !connectedUserIds.has(profile.id)
-    );
-
-    console.log(`${potentialMatches.length} candidatos encontrados para matches`);
 
     if (!potentialMatches || potentialMatches.length === 0) {
       return new Response(JSON.stringify({
