@@ -238,9 +238,9 @@ serve(async (req) => {
       });
     }
 
-    // Ordenar por compatibilidade e limitar
+    // Ordenar por compatibilidade e limitar aos TOP 10
     matchesWithScore.sort((a, b) => b.score - a.score);
-    const topMatches = matchesWithScore.slice(0, maxMatches);
+    const topMatches = matchesWithScore.slice(0, 10);
 
     console.log(`${topMatches.length} matches qualificados encontrados`);
 

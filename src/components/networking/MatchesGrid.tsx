@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Brain, MessageCircle, Sparkles, TrendingUp, Users, Building2, Loader2 } from 'lucide-react';
+import { Brain, MessageCircle, Sparkles, TrendingUp, Users, Building2, Loader2, UserCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNetworkMatches } from '@/hooks/useNetworkMatches';
 import { useAIMatches } from '@/hooks/useAIMatches';
@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/auth';
 import LoadingScreen from '@/components/common/LoadingScreen';
 import { ConnectionButton } from './ConnectionButton';
 import { ChatWindow } from './ChatWindow';
+import { ContactModal } from './ContactModal';
 
 // Função para traduzir tipos de match
 const translateMatchType = (type: string) => {
@@ -26,6 +27,7 @@ const translateMatchType = (type: string) => {
 
 export const MatchesGrid = () => {
   const [activeChatMatch, setActiveChatMatch] = useState<string | null>(null);
+  const [contactModalUser, setContactModalUser] = useState<{id: string, name: string} | null>(null);
   
   const { matches, isLoading, error, refetch } = useNetworkMatches();
   const { generateMatches, isGenerating } = useAIMatches();
@@ -151,6 +153,10 @@ export const MatchesGrid = () => {
             <MatchCard 
               match={match} 
               onOpenChat={() => setActiveChatMatch(match.id)}
+              onShowContact={() => setContactModalUser({
+                id: match.matched_user_id,
+                name: match.matched_user.name
+              })}
             />
           </motion.div>
         ))}
@@ -169,6 +175,14 @@ export const MatchesGrid = () => {
           />
         )}
       </AnimatePresence>
+
+      {/* Modal de contato */}
+      <ContactModal
+        isOpen={!!contactModalUser}
+        onClose={() => setContactModalUser(null)}
+        userId={contactModalUser?.id || ''}
+        userName={contactModalUser?.name || ''}
+      />
     </div>
   );
 };
@@ -196,9 +210,10 @@ interface MatchCardProps {
     };
   };
   onOpenChat: () => void;
+  onShowContact: () => void;
 }
 
-const MatchCard = ({ match, onOpenChat }: MatchCardProps) => {
+const MatchCard = ({ match, onOpenChat, onShowContact }: MatchCardProps) => {
   const translatedType = translateMatchType(match.match_type);
   
   const getTypeColor = (type: string) => {
@@ -308,12 +323,14 @@ const MatchCard = ({ match, onOpenChat }: MatchCardProps) => {
 
           {/* Actions */}
           <div className="flex gap-2 pt-2">
-            <div className="flex-1">
-              <ConnectionButton 
-                userId={match.matched_user_id}
-                className="w-full text-xs bg-gradient-to-r from-primary to-primary/90 hover:shadow-lg hover:shadow-primary/25 transition-all duration-300"
-              />
-            </div>
+            <Button
+              onClick={onShowContact}
+              className="flex-1 text-xs bg-gradient-to-r from-primary to-primary/90 hover:shadow-lg hover:shadow-primary/25 transition-all duration-300"
+            >
+              <UserCheck className="h-3 w-3 mr-1" />
+              Ver Contato
+            </Button>
+            
             <div className="relative group/chat">
               <div className="absolute -inset-0.5 bg-gradient-to-r from-muted to-transparent rounded-lg blur opacity-0 group-hover/chat:opacity-100 transition duration-300"></div>
               <button 
