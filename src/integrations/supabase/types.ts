@@ -5012,7 +5012,9 @@ export type Database = {
           nps_category: string | null
           score: number | null
           updated_at: string | null
+          user_email: string | null
           user_id: string | null
+          user_name: string | null
         }
         Relationships: [
           {
