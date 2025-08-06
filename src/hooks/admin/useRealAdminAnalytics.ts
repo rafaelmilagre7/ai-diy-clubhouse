@@ -62,11 +62,11 @@ export const useRealAdminAnalytics = (timeRange: string = '30d') => {
           userSegmentationResult,
           weeklyActivityResult
         ] = await Promise.allSettled([
-          supabase.from('admin_analytics_overview').select('*').single(),
-          supabase.from('user_growth_by_date').select('*').order('date'),
-          supabase.from('solution_performance_metrics').select('*').order('total_implementations', { ascending: false }).limit(10),
-          supabase.from('user_segmentation_analytics').select('*').order('user_count', { ascending: false }),
-          supabase.from('weekly_activity_patterns').select('*').order('day_of_week')
+          supabase.rpc('get_admin_analytics_overview'),
+          supabase.rpc('get_user_growth_by_date'),
+          supabase.rpc('get_solution_performance_metrics'),
+          supabase.rpc('get_user_segmentation_analytics'),
+          supabase.rpc('get_weekly_activity_patterns')
         ]);
 
         // Log dos resultados brutos
@@ -79,7 +79,7 @@ export const useRealAdminAnalytics = (timeRange: string = '30d') => {
         });
 
         // Processar resultados
-        const overviewData = overviewResult.status === 'fulfilled' ? overviewResult.value.data : null;
+        const overviewData = overviewResult.status === 'fulfilled' ? overviewResult.value.data?.[0] : null;
         const userGrowthData = userGrowthResult.status === 'fulfilled' ? userGrowthResult.value.data || [] : [];
         const solutionPerformanceData = solutionPerformanceResult.status === 'fulfilled' ? solutionPerformanceResult.value.data || [] : [];
         const userSegmentationData = userSegmentationResult.status === 'fulfilled' ? userSegmentationResult.value.data || [] : [];

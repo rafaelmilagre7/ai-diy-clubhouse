@@ -28,10 +28,10 @@ export const OptimizedRealtimeStats = () => {
         setLoading(true);
         setError(null);
 
-        // Usar views otimizadas ao invés de consultas diretas
+        // Usar funções RPC seguras ao invés de views
         const [overviewResult, weeklyActivityResult] = await Promise.allSettled([
-          supabase.from('admin_analytics_overview').select('*').single(),
-          supabase.from('weekly_activity_patterns').select('*')
+          supabase.rpc('get_admin_analytics_overview'),
+          supabase.rpc('get_weekly_activity_patterns')
         ]);
 
         // Buscar usuários ativos nas últimas 24h (consulta específica necessária)
@@ -46,7 +46,7 @@ export const OptimizedRealtimeStats = () => {
         const uniqueActiveUsers = new Set(activeUsersData?.map(p => p.user_id) || []).size;
 
         // Processar dados do overview
-        const overviewData = overviewResult.status === 'fulfilled' ? overviewResult.value.data : null;
+        const overviewData = overviewResult.status === 'fulfilled' ? overviewResult.value.data?.[0] : null;
         
         // Processar atividade semanal
         const weeklyData = weeklyActivityResult.status === 'fulfilled' ? weeklyActivityResult.value.data || [] : [];
