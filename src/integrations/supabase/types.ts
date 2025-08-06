@@ -5546,6 +5546,10 @@ export type Database = {
         Args: { p_bucket_name: string }
         Returns: Json
       }
+      fix_existing_onboarding_data: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       fix_existing_users_onboarding: {
         Args: Record<PropertyKey, never>
         Returns: Json
