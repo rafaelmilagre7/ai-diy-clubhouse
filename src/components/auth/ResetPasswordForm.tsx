@@ -45,15 +45,19 @@ export const ResetPasswordForm = ({ onBackToLogin }: ResetPasswordFormProps) => 
       
       // Usar a URL atual com path completo para garantir redirecionamento correto
       const currentOrigin = window.location.origin;
-      const redirectUrl = `${currentOrigin}/reset-password/update`;
+      const redirectUrl = `${currentOrigin}/set-new-password`;
       
       console.log("URL de redirecionamento:", redirectUrl);
       
-      const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
-        redirectTo: redirectUrl,
+      // Usar nossa edge function em vez do método nativo do Supabase
+      const { error } = await supabase.functions.invoke('send-reset-password-email', {
+        body: {
+          email: data.email,
+          resetUrl: redirectUrl
+        }
       });
 
-      console.log("Resposta do Supabase:", { error });
+      console.log("Resposta da edge function:", { error });
 
       if (error) {
         console.error("Erro detalhado no reset de senha:", error);

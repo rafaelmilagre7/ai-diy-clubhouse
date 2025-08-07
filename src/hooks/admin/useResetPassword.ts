@@ -12,9 +12,12 @@ export const useResetPassword = () => {
       setIsResetting(true);
       setError(null);
 
-      // Solicitar redefinição de senha
-      const { error } = await supabase.auth.resetPasswordForEmail(userEmail, {
-        redirectTo: `${window.location.origin}/auth/reset-password`
+      // Solicitar redefinição de senha usando nossa edge function
+      const { error } = await supabase.functions.invoke('send-reset-password-email', {
+        body: {
+          email: userEmail,
+          resetUrl: `${window.location.origin}/set-new-password`
+        }
       });
 
       if (error) {
