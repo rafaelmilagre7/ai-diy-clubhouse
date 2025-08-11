@@ -55,10 +55,29 @@ export const SetNewPasswordForm = () => {
         setIsProcessingTokens(true);
         setSessionError(null);
 
-        // Verificar se existem tokens na URL
-        const accessToken = searchParams.get('access_token');
-        const refreshToken = searchParams.get('refresh_token');
-        const type = searchParams.get('type');
+        // Função para extrair parâmetros do hash
+        const getTokensFromHash = () => {
+          const hash = window.location.hash.substring(1); // Remove o #
+          const params = new URLSearchParams(hash);
+          return {
+            accessToken: params.get('access_token'),
+            refreshToken: params.get('refresh_token'),
+            type: params.get('type'),
+          };
+        };
+
+        // Verificar se existem tokens na URL (query params ou hash)
+        let accessToken = searchParams.get('access_token');
+        let refreshToken = searchParams.get('refresh_token');
+        let type = searchParams.get('type');
+
+        // Se não encontrou nos query params, tentar no hash
+        if (!accessToken) {
+          const hashTokens = getTokensFromHash();
+          accessToken = hashTokens.accessToken;
+          refreshToken = hashTokens.refreshToken;
+          type = hashTokens.type;
+        }
 
         console.log('🔍 [RESET-PASSWORD] Verificando tokens na URL:', { 
           hasAccessToken: !!accessToken, 

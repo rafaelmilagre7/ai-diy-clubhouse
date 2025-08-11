@@ -7,6 +7,7 @@ import { memberRoutes } from './MemberRoutes';
 import { formacaoRoutes } from './FormacaoRoutes';
 import { certificateRoutes } from './CertificateRoutes';
 import { CommunityRedirects } from '@/components/routing/CommunityRedirects';
+import { TokenRedirectHandler } from '@/components/auth/TokenRedirectHandler';
 import NotFound from '@/pages/NotFound';
 import InvitePage from '@/pages/InvitePage';
 import OnboardingPage from '@/pages/OnboardingPage';
@@ -61,6 +62,9 @@ const AppRoutes = () => {
     <>
       {/* Componente auxiliar para redirecionar antigas URLs - não renderizar em rotas onde não é necessário */}
       {!skipRedirects && <CommunityRedirects />}
+      
+      {/* Handler para detectar tokens de reset na URL raiz */}
+      <TokenRedirectHandler />
       
       <Routes>
         {/* Onboarding Route - Para novos usuários */}

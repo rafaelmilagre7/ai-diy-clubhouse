@@ -52,7 +52,7 @@ const handler = async (req: Request): Promise<Response> => {
       type: 'recovery',
       email: body.email,
       options: {
-        redirectTo: body.resetUrl
+        redirectTo: `${body.resetUrl.replace(/\/$/, '')}/set-new-password`
       }
     });
 
