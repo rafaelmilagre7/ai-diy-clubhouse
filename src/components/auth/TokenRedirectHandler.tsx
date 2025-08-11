@@ -1,12 +1,12 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 export const TokenRedirectHandler = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   useEffect(() => {
-    // Verificar se há tokens de reset de senha na URL
     const checkForResetTokens = () => {
       // Verificar no hash
       const hash = location.hash.substring(1);
@@ -19,9 +19,33 @@ export const TokenRedirectHandler = () => {
       const type = hashParams.get('type') || searchParams.get('type');
       
       if (accessToken && type === 'recovery') {
-        console.log('🔄 [TOKEN-REDIRECT] Tokens de reset detectados, redirecionando...');
+        console.log('🔄 [TOKEN-REDIRECT] Tokens de reset detectados');
+        console.log('🌐 [TOKEN-REDIRECT] Domínio atual:', window.location.hostname);
         
-        // Construir nova URL preservando os tokens
+        const targetDomain = 'app.viverdeia.ai';
+        const currentDomain = window.location.hostname;
+        
+        // Se não estamos no domínio correto, redirecionar
+        if (currentDomain !== targetDomain) {
+          console.log('🚀 [TOKEN-REDIRECT] Redirecionando para domínio correto:', targetDomain);
+          setIsRedirecting(true);
+          
+          // Construir URL completa com tokens para o domínio correto
+          const tokenParams = hash || location.search.substring(1);
+          const fullRedirectUrl = `https://${targetDomain}/set-new-password${hash ? '#' + hash : '?' + tokenParams}`;
+          
+          console.log('🔗 [TOKEN-REDIRECT] URL de destino:', fullRedirectUrl);
+          
+          // Pequeno delay para mostrar mensagem de carregamento
+          setTimeout(() => {
+            window.location.href = fullRedirectUrl;
+          }, 1000);
+          
+          return;
+        }
+        
+        // Se já estamos no domínio correto, apenas navegar localmente
+        console.log('✅ [TOKEN-REDIRECT] Já no domínio correto, navegando localmente');
         const tokenParams = hash || location.search.substring(1);
         const redirectUrl = `/set-new-password${hash ? '#' + hash : '?' + tokenParams}`;
         
@@ -35,5 +59,22 @@ export const TokenRedirectHandler = () => {
     }
   }, [location, navigate]);
 
-  return null; // Este componente não renderiza nada
+  // Mostrar loading durante redirecionamento cross-domain
+  if (isRedirecting) {
+    return (
+      <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
+        <div className="bg-card p-6 rounded-lg shadow-lg text-center max-w-md mx-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <h3 className="text-lg font-medium text-foreground mb-2">
+            Redirecionando para reset de senha
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            Você será redirecionado para completar o reset da sua senha...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
 };
