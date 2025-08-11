@@ -47,9 +47,32 @@ const handler = async (req: Request): Promise<Response> => {
       resetUrl: body.resetUrl
     });
 
+    // Enviar email de reset usando Supabase Auth
+    const { data, error: resetError } = await supabase.auth.admin.generateLink({
+      type: 'recovery',
+      email: body.email,
+      options: {
+        redirectTo: body.resetUrl
+      }
+    });
+
+    if (resetError) {
+      console.error('❌ [SEND-RESET-PASSWORD-EMAIL] Erro ao gerar link:', resetError);
+      throw resetError;
+    }
+
+    if (!data?.properties?.action_link) {
+      throw new Error('Link de recuperação não foi gerado');
+    }
+
+    console.log('🔗 [SEND-RESET-PASSWORD-EMAIL] Link gerado com sucesso');
+
+    // Extrair URL com tokens para usar no template
+    const resetLinkWithTokens = data.properties.action_link;
+
     // Dados do template
     const templateData = {
-      resetUrl: body.resetUrl,
+      resetUrl: resetLinkWithTokens, // Usar o link com tokens
       recipientEmail: body.email,
       companyName: 'Viver de IA',
     };

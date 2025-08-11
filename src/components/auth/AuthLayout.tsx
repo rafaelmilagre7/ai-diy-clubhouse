@@ -165,6 +165,18 @@ const AuthLayout = () => {
                     )}
                   </Button>
                 </form>
+                
+                <div className="text-center">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="text-white/70 hover:text-viverblue hover:bg-white/5 text-sm underline"
+                    onClick={() => navigate('/reset-password')}
+                    disabled={isSigningIn}
+                  >
+                    Esqueci minha senha
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
