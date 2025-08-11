@@ -47,12 +47,19 @@ const handler = async (req: Request): Promise<Response> => {
       resetUrl: body.resetUrl
     });
 
+    // Usar sempre o domínio personalizado para reset de senha
+    const customDomain = 'https://app.viverdeia.ai';
+    const resetRedirectUrl = `${customDomain}/set-new-password`;
+    
+    console.log('🔧 [SEND-RESET-PASSWORD-EMAIL] Domínio personalizado forçado:', customDomain);
+    console.log('🔧 [SEND-RESET-PASSWORD-EMAIL] URL de redirect final:', resetRedirectUrl);
+    
     // Enviar email de reset usando Supabase Auth
     const { data, error: resetError } = await supabase.auth.admin.generateLink({
       type: 'recovery',
       email: body.email,
       options: {
-        redirectTo: `${body.resetUrl.replace(/\/$/, '')}/set-new-password`
+        redirectTo: resetRedirectUrl
       }
     });
 
@@ -66,9 +73,17 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     console.log('🔗 [SEND-RESET-PASSWORD-EMAIL] Link gerado com sucesso');
+    console.log('🔍 [SEND-RESET-PASSWORD-EMAIL] Link completo gerado pelo Supabase:', data.properties.action_link);
 
     // Extrair URL com tokens para usar no template
     const resetLinkWithTokens = data.properties.action_link;
+    
+    // Verificar se o link contém o domínio correto
+    if (resetLinkWithTokens.includes('app.viverdeia.ai')) {
+      console.log('✅ [SEND-RESET-PASSWORD-EMAIL] Domínio personalizado detectado no link');
+    } else {
+      console.log('⚠️ [SEND-RESET-PASSWORD-EMAIL] Link ainda usando domínio incorreto:', resetLinkWithTokens);
+    }
 
     // Dados do template
     const templateData = {
