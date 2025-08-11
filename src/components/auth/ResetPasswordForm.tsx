@@ -8,6 +8,7 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Mail, AlertTriangle } from "lucide-react";
+import { APP_CONFIG } from "@/config/app";
 
 const resetPasswordSchema = z.object({
   email: z.string().email("E-mail inválido").min(1, "E-mail é obrigatório"),
@@ -43,9 +44,8 @@ export const ResetPasswordForm = ({ onBackToLogin }: ResetPasswordFormProps) => 
       
       console.log("Iniciando reset de senha para:", data.email);
       
-      // Usar a URL atual com path completo para garantir redirecionamento correto
-      const currentOrigin = window.location.origin;
-      const redirectUrl = `${currentOrigin}/set-new-password`;
+      // Usar sempre o domínio personalizado para reset de senha
+      const redirectUrl = APP_CONFIG.getAppUrl('/set-new-password');
       
       console.log("URL de redirecionamento:", redirectUrl);
       

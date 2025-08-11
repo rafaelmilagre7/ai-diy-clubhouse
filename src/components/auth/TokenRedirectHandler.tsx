@@ -29,8 +29,8 @@ export const TokenRedirectHandler = () => {
       }
     };
 
-    // Verificar apenas se estamos na rota raiz
-    if (location.pathname === '/') {
+    // Verificar tokens em qualquer rota (não apenas na raiz)
+    if (location.pathname !== '/set-new-password') {
       checkForResetTokens();
     }
   }, [location, navigate]);

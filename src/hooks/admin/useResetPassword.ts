@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { APP_CONFIG } from '@/config/app';
 
 export const useResetPassword = () => {
   const [isResetting, setIsResetting] = useState(false);
@@ -12,11 +13,11 @@ export const useResetPassword = () => {
       setIsResetting(true);
       setError(null);
 
-      // Solicitar redefinição de senha usando nossa edge function
+      // Usar sempre o domínio personalizado para reset de senha
       const { error } = await supabase.functions.invoke('send-reset-password-email', {
         body: {
           email: userEmail,
-          resetUrl: `${window.location.origin}/set-new-password`
+          resetUrl: APP_CONFIG.getAppUrl('/set-new-password')
         }
       });
 
