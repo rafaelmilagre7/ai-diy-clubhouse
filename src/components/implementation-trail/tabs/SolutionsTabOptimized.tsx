@@ -218,7 +218,7 @@ export const SolutionsTabOptimized: React.FC<SolutionsTabOptimizedProps> = ({ tr
             {title}
           </Badge>
           <span className="text-sm text-muted-foreground">
-            {items.length} solução{items.length !== 1 ? 's' : ''}
+            {items.length} soluç{items.length !== 1 ? 'ões' : 'ão'}
           </span>
         </div>
         
