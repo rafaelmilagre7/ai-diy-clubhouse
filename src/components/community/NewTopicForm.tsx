@@ -5,17 +5,23 @@ import { useNavigate } from "react-router-dom";
 interface NewTopicFormProps {
   categoryId?: string;
   categorySlug?: string;
+  onSuccess?: () => void;
 }
 
-export const NewTopicForm = ({ categoryId, categorySlug }: NewTopicFormProps) => {
+export const NewTopicForm = ({ categoryId, categorySlug, onSuccess }: NewTopicFormProps) => {
   const navigate = useNavigate();
 
   const handleSuccess = () => {
-    // Redirecionar para a categoria ou comunidade após sucesso
-    if (categorySlug) {
-      navigate(`/comunidade/categoria/${categorySlug}`);
+    if (onSuccess) {
+      // Se um callback customizado foi fornecido, usa ele (modal)
+      onSuccess();
     } else {
-      navigate('/comunidade');
+      // Caso contrário, navega normalmente (página normal)
+      if (categorySlug) {
+        navigate(`/comunidade/categoria/${categorySlug}`);
+      } else {
+        navigate('/comunidade');
+      }
     }
   };
 
