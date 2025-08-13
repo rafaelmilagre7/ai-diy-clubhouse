@@ -60,14 +60,27 @@ export const useRoles = () => {
   const createRole = async (roleData: CreateRoleData) => {
     try {
       setIsCreating(true);
+      console.log('🔄 Tentando criar role via método direto:', roleData);
+      
       const { data, error } = await supabase
         .from('user_roles')
         .insert([roleData])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Erro no método direto:', error);
+        
+        // Se for erro 409 (Conflict) ou 42501 (insufficient privilege), tentar RPC
+        if (error.code === '42501' || error.code === 'PGRST116' || error.message?.includes('409')) {
+          console.log('🔄 Tentando via função RPC segura...');
+          return await createRoleSecure(roleData);
+        }
+        
+        throw error;
+      }
 
+      console.log('✅ Role criado via método direto:', data);
       setRoles(prev => [...prev, data]);
       toast.success('Papel criado com sucesso');
     } catch (error) {
@@ -76,6 +89,40 @@ export const useRoles = () => {
       throw error;
     } finally {
       setIsCreating(false);
+    }
+  };
+
+  const createRoleSecure = async (roleData: CreateRoleData) => {
+    try {
+      console.log('🔐 Criando role via RPC segura:', roleData);
+      
+      const { data, error } = await supabase.rpc('secure_create_role', {
+        p_name: roleData.name,
+        p_description: roleData.description || null,
+        p_is_system: roleData.is_system || false
+      });
+
+      if (error) {
+        console.error('❌ Erro na função RPC:', error);
+        throw error;
+      }
+
+      if (!data?.success) {
+        console.error('❌ RPC retornou erro:', data);
+        throw new Error(data?.error || 'Erro desconhecido na criação do role');
+      }
+
+      console.log('✅ Role criado via RPC:', data.data);
+      
+      // Adicionar o novo role à lista
+      const newRole = data.data;
+      setRoles(prev => [...prev, newRole]);
+      toast.success(data.message || 'Papel criado com sucesso via RPC');
+      
+      return newRole;
+    } catch (error) {
+      console.error('Erro na função RPC segura:', error);
+      throw error;
     }
   };
 

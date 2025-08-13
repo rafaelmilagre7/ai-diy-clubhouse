@@ -6534,6 +6534,15 @@ export type Database = {
         Args: { target_user_id: string; new_role_id: string }
         Returns: Json
       }
+      secure_create_role: {
+        Args: {
+          p_name: string
+          p_description?: string
+          p_is_system?: boolean
+          p_user_id?: string
+        }
+        Returns: Json
+      }
       secure_credential_validation: {
         Args: { p_validation_code: string }
         Returns: Json
