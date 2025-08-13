@@ -6471,6 +6471,10 @@ export type Database = {
         Args: { user_id: string; permission_code: string }
         Returns: boolean
       }
+      reactivate_invite_secure: {
+        Args: { p_invite_id: string; p_days_extension?: number }
+        Returns: Json
+      }
       regenerate_recurring_event_dates: {
         Args: Record<PropertyKey, never>
         Returns: Json

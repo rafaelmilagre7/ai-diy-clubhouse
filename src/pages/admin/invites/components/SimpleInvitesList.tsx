@@ -18,6 +18,7 @@ interface SimpleInvitesListProps {
   invites: Invite[];
   onResend: (invite: Invite) => void;
   onDelete: (invite: Invite) => void;
+  onReactivate?: () => void;
   resendingInvites?: Set<string>;
 }
 
@@ -25,6 +26,7 @@ const SimpleInvitesList = ({
   invites, 
   onResend, 
   onDelete, 
+  onReactivate,
   resendingInvites = new Set() 
 }: SimpleInvitesListProps) => {
   if (invites.length === 0) {
@@ -123,6 +125,7 @@ const SimpleInvitesList = ({
                   invite={invite}
                   onResend={onResend}
                   onDelete={onDelete}
+                  onReactivate={onReactivate}
                   isResending={resendingInvites.has(invite.id)}
                 />
               </TableCell>

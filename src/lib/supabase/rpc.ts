@@ -75,3 +75,17 @@ export const createStoragePublicPolicy = async (bucketName: string) => {
   
   return data;
 };
+
+export const reactivateInvite = async (inviteId: string, daysExtension: number = 7) => {
+  const { data, error } = await supabase.rpc('reactivate_invite_secure', {
+    p_invite_id: inviteId,
+    p_days_extension: daysExtension
+  });
+  
+  if (error) {
+    console.error('Erro ao reativar convite:', error);
+    throw error;
+  }
+  
+  return data;
+};

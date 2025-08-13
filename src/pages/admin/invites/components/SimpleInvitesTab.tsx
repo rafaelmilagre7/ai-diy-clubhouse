@@ -162,6 +162,7 @@ const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTa
         invites={filteredInvites}
         onResend={handleResendClick}
         onDelete={handleDeleteClick}
+        onReactivate={onInvitesChange}
         resendingInvites={resendingInvites}
       />
 
