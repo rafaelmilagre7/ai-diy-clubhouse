@@ -1,15 +1,17 @@
 
 import { useState } from "react";
-import { RefreshCw, Search } from "lucide-react";
+import { RefreshCw, Search, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Invite } from "@/hooks/admin/invites/types";
 import { useInviteDelete } from "@/hooks/admin/invites/useInviteDelete";
 import { useInviteResend } from "@/hooks/admin/invites/useInviteResend";
+import { useInviteBulkReactivate } from "@/hooks/admin/invites/useInviteBulkReactivate";
 import SimpleInvitesList from "./SimpleInvitesList";
 import InviteStats from "./InviteStats";
 import ConfirmResendDialog from "./ConfirmResendDialog";
 import ConfirmDeleteDialog from "./ConfirmDeleteDialog";
+import ConfirmBulkReactivateDialog from "./ConfirmBulkReactivateDialog";
 
 interface SimpleInvitesTabProps {
   invites: Invite[];
@@ -22,11 +24,18 @@ const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTa
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "used" | "expired">("all");
   const [resendDialogOpen, setResendDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [bulkReactivateDialogOpen, setBulkReactivateDialogOpen] = useState(false);
   const [selectedInvite, setSelectedInvite] = useState<Invite | null>(null);
   const [resendingInvites, setResendingInvites] = useState<Set<string>>(new Set());
   
   const { deleteInvite, isDeleting } = useInviteDelete();
   const { resendInvite, isSending } = useInviteResend();
+  const { bulkReactivateExpiredInvites, isBulkReactivating } = useInviteBulkReactivate();
+
+  // Calcular estatísticas dos convites
+  const expiredCount = invites.filter(invite => 
+    !invite.used_at && new Date(invite.expires_at) <= new Date()
+  ).length;
 
   // Filtrar convites
   const filteredInvites = invites.filter(invite => {
@@ -94,6 +103,18 @@ const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTa
     }
   };
 
+  const handleBulkReactivateClick = () => {
+    setBulkReactivateDialogOpen(true);
+  };
+
+  const confirmBulkReactivate = async () => {
+    const success = await bulkReactivateExpiredInvites(7);
+    if (success) {
+      onInvitesChange();
+    }
+    setBulkReactivateDialogOpen(false);
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center py-12">
@@ -156,6 +177,18 @@ const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTa
           <RefreshCw className="h-4 w-4 mr-2" />
           Atualizar
         </Button>
+        
+        {expiredCount > 0 && (
+          <Button
+            variant="secondary"
+            onClick={handleBulkReactivateClick}
+            disabled={isBulkReactivating}
+            size="sm"
+          >
+            <Zap className="h-4 w-4 mr-2" />
+            Reativar Todos Expirados ({expiredCount})
+          </Button>
+        )}
       </div>
 
       <SimpleInvitesList
@@ -180,6 +213,14 @@ const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTa
         isOpen={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         isDeleting={isDeleting}
+      />
+
+      <ConfirmBulkReactivateDialog
+        expiredCount={expiredCount}
+        onConfirm={confirmBulkReactivate}
+        isOpen={bulkReactivateDialogOpen}
+        onOpenChange={setBulkReactivateDialogOpen}
+        isBulkReactivating={isBulkReactivating}
       />
     </div>
   );

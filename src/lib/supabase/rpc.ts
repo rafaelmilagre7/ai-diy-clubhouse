@@ -89,3 +89,16 @@ export const reactivateInvite = async (inviteId: string, daysExtension: number =
   
   return data;
 };
+
+export const bulkReactivateExpiredInvites = async (daysExtension: number = 7) => {
+  const { data, error } = await supabase.rpc('reactivate_all_expired_invites_secure', {
+    p_days_extension: daysExtension
+  });
+  
+  if (error) {
+    console.error('Erro ao reativar convites em lote:', error);
+    throw error;
+  }
+  
+  return data;
+};

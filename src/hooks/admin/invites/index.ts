@@ -5,5 +5,6 @@ export * from './useInviteCreate';
 export * from './useInviteDelete';
 export * from './useInviteResend';
 export * from './useInviteReactivate';
+export * from './useInviteBulkReactivate';
 export * from './useInviteEmailService';
 export * from './useInviteChannelService';
