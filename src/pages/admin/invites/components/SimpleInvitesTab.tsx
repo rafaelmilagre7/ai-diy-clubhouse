@@ -19,6 +19,7 @@ interface SimpleInvitesTabProps {
 
 const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTabProps) => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "used" | "expired">("all");
   const [resendDialogOpen, setResendDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedInvite, setSelectedInvite] = useState<Invite | null>(null);
@@ -28,10 +29,33 @@ const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTa
   const { resendInvite, isSending } = useInviteResend();
 
   // Filtrar convites
-  const filteredInvites = invites.filter(invite => 
-    invite.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (invite.role?.name || "").toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredInvites = invites.filter(invite => {
+    // Filtro de texto
+    const matchesSearch = invite.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (invite.role?.name || "").toLowerCase().includes(searchQuery.toLowerCase());
+    
+    // Filtro de status
+    let matchesStatus = true;
+    if (statusFilter !== "all") {
+      const isUsed = !!invite.used_at;
+      const isExpired = !isUsed && new Date(invite.expires_at) <= new Date();
+      const isActive = !isUsed && !isExpired;
+      
+      switch (statusFilter) {
+        case "used":
+          matchesStatus = isUsed;
+          break;
+        case "expired":
+          matchesStatus = isExpired;
+          break;
+        case "active":
+          matchesStatus = isActive;
+          break;
+      }
+    }
+    
+    return matchesSearch && matchesStatus;
+  });
 
   const handleResendClick = (invite: Invite) => {
     setSelectedInvite(invite);
@@ -81,6 +105,38 @@ const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTa
   return (
     <div className="space-y-6">
       <InviteStats invites={invites} />
+      
+      {/* Filtros de Status */}
+      <div className="flex flex-wrap gap-2">
+        <Button
+          variant={statusFilter === "all" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setStatusFilter("all")}
+        >
+          Todos
+        </Button>
+        <Button
+          variant={statusFilter === "active" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setStatusFilter("active")}
+        >
+          Ativos
+        </Button>
+        <Button
+          variant={statusFilter === "used" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setStatusFilter("used")}
+        >
+          Utilizados
+        </Button>
+        <Button
+          variant={statusFilter === "expired" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setStatusFilter("expired")}
+        >
+          Expirados
+        </Button>
+      </div>
       
       <div className="flex items-center gap-4">
         <div className="relative flex-1 max-w-sm">
