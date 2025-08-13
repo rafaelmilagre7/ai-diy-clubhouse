@@ -8,6 +8,7 @@ import { AdminSidebar } from "./AdminSidebar";
 import { AdminContent } from "./AdminContent";
 import { useSidebarControl } from "@/hooks/useSidebarControl";
 import { navigationCache } from "@/utils/navigationCache";
+import { supabase } from "@/lib/supabase";
 
 interface AdminLayoutProps {
   children?: React.ReactNode;
@@ -22,12 +23,45 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   const [forceReady, setForceReady] = useState(false);
   const [optimisticLoad, setOptimisticLoad] = useState(false);
   
+  // Estados para verificação RPC robusta
+  const [isVerifyingAdmin, setIsVerifyingAdmin] = useState(false);
+  const [rpcVerifiedAdmin, setRpcVerifiedAdmin] = useState<boolean | null>(null);
+  
   const maxRetries = 1; // Reduzido de 2 para 1
   const { sidebarOpen, setSidebarOpen, isMobile } = useSidebarControl();
 
   // Detectar navegação vinda do LMS
   const isComingFromLMS = location.state?.from?.startsWith?.('/formacao') || 
                          document.referrer.includes('/formacao');
+
+  // SOLUÇÃO 2: Verificação RPC robusta quando isAdmin é falso
+  useEffect(() => {
+    if (!isLoading && user && !isAdmin && !isVerifyingAdmin && rpcVerifiedAdmin === null) {
+      console.log("🔍 [ADMIN-LAYOUT] isAdmin=false, iniciando verificação RPC...");
+      setIsVerifyingAdmin(true);
+      
+      // Chamar RPC para verificação segura
+      const verifyAdmin = async () => {
+        try {
+          const { data, error } = await supabase.rpc('is_user_admin_secure', { target_user_id: user.id });
+          if (error) {
+            console.error("❌ [ADMIN-LAYOUT] Erro na verificação RPC:", error);
+            setRpcVerifiedAdmin(false);
+          } else {
+            console.log("✅ [ADMIN-LAYOUT] Resultado RPC:", data);
+            setRpcVerifiedAdmin(data || false);
+          }
+        } catch (err) {
+          console.error("❌ [ADMIN-LAYOUT] Falha na chamada RPC:", err);
+          setRpcVerifiedAdmin(false);
+        } finally {
+          setIsVerifyingAdmin(false);
+        }
+      };
+      
+      verifyAdmin();
+    }
+  }, [user, isAdmin, isLoading, isVerifyingAdmin, rpcVerifiedAdmin]);
 
   // OTIMIZAÇÃO 1: Cache check para navegação rápida
   useEffect(() => {
@@ -73,18 +107,32 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
         return;
       }
 
-      // FALLBACK: Se não conseguiu verificar isAdmin, tentar verificação direta
-      if (!isAdmin) {
-        // Verificação de emergência usando email (fallback)
-        const isEmergencyAdmin = user?.email === 'rafael@viverdeia.ai';
-        
-        if (!isEmergencyAdmin) {
-          console.warn("[SECURITY] Unauthorized admin access attempt");
-          toast.error("Acesso negado. Você não tem permissão para acessar a área administrativa.");
-          navigate("/dashboard", { replace: true });
+      // SOLUÇÃO 2: Verificação robusta usando RPC quando isAdmin é falso
+      if (!isAdmin && !isVerifyingAdmin) {
+        // Se RPC ainda não foi executada, aguardar
+        if (rpcVerifiedAdmin === null) {
+          console.log("⏳ [ADMIN-LAYOUT] Aguardando verificação RPC...");
           return;
+        }
+        
+        // Se RPC confirmou que é admin, permitir acesso
+        if (rpcVerifiedAdmin === true) {
+          console.info("✅ [ADMIN-LAYOUT] Acesso permitido via verificação RPC");
+          // Continuar execução
         } else {
-          console.warn("[SECURITY] Emergency admin access granted via email fallback");
+          // RPC falhou ou retornou false - tentar fallback de email
+          const isEmergencyAdmin = user?.email === 'rafael@viverdeia.ai' || 
+                                   user?.email === 'diego.malta@viverdeia.ai' ||
+                                   user?.email === 'annajullia.vaz@viverdeia.ai';
+          
+          if (!isEmergencyAdmin) {
+            console.warn("[SECURITY] Acesso negado - RPC retornou false e não é admin de emergência");
+            toast.error("Acesso negado. Você não tem permissão para acessar a área administrativa.");
+            navigate("/dashboard", { replace: true });
+            return;
+          } else {
+            console.warn("[SECURITY] Acesso de emergência garantido via email fallback após RPC falhar");
+          }
         }
       }
 
@@ -99,7 +147,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       
       setRetryCount(0);
     }
-  }, [user, isAdmin, isLoading, navigate]);
+  }, [user, isAdmin, isLoading, navigate, rpcVerifiedAdmin, isVerifyingAdmin]);
 
   // OTIMIZAÇÃO 6: Timeout com retry reduzido
   useEffect(() => {
@@ -156,8 +204,13 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     );
   }
 
-  // OTIMIZAÇÃO 9: Renderização com verificações reduzidas
-  if (forceReady || optimisticLoad || (!isLoading && user && isAdmin)) {
+  // OTIMIZAÇÃO 9: Renderização com verificações reduzidas (incluindo RPC)
+  const shouldRender = forceReady || 
+                      optimisticLoad || 
+                      (!isLoading && user && isAdmin) ||
+                      (!isLoading && user && !isAdmin && rpcVerifiedAdmin === true);
+  
+  if (shouldRender) {
     return (
       <div className="flex min-h-screen w-full bg-background dark">
         {/* Overlay mobile - apenas quando necessário */}
