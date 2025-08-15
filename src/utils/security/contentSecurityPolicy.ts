@@ -140,14 +140,7 @@ export const applySecurityHeaders = (): void => {
     document.head.appendChild(metaTag);
   }
   
-  // X-Frame-Options
-  metaTag = document.querySelector('meta[http-equiv="X-Frame-Options"]');
-  if (!metaTag) {
-    metaTag = document.createElement('meta');
-    metaTag.setAttribute('http-equiv', 'X-Frame-Options');
-    metaTag.setAttribute('content', 'DENY');
-    document.head.appendChild(metaTag);
-  }
+  // X-Frame-Options (removido - não funciona via meta tag)
   
   // Referrer Policy
   metaTag = document.querySelector('meta[name="referrer"]');

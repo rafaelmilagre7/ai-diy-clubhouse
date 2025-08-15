@@ -1,10 +1,12 @@
 
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
 import { Solution } from '@/lib/supabase/types/legacy';
 
 export const useSolutionsAdmin = () => {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [solutions, setSolutions] = useState<Solution[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,8 +57,18 @@ export const useSolutionsAdmin = () => {
   };
 
   const handleEdit = (id: string) => {
-    // Implementar navegação para edição
-    window.location.href = `/admin/solutions/${id}`;
+    console.log('🔧 [DEBUG] Iniciando edição da solução:', id);
+    try {
+      navigate(`/admin/solutions/${id}`);
+      console.log('✅ [DEBUG] Navegação para edição executada com sucesso');
+    } catch (error) {
+      console.error('❌ [DEBUG] Erro na navegação:', error);
+      toast({
+        title: 'Erro na navegação',
+        description: 'Não foi possível acessar o editor da solução.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleDelete = async (solutionId: string) => {
@@ -121,7 +133,8 @@ export const useSolutionsAdmin = () => {
   };
 
   const handleCreateNew = () => {
-    window.location.href = '/admin/solutions/new';
+    console.log('🆕 [DEBUG] Navegando para criação de nova solução');
+    navigate('/admin/solutions/new');
   };
 
   return {
