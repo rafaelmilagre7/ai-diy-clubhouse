@@ -23,7 +23,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Role, useRoles } from "@/hooks/admin/useRoles";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useAuth } from "@/contexts/auth";
+import { AlertCircle, CheckCircle, RefreshCw } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface RoleFormProps {
   open: boolean;
@@ -51,6 +54,42 @@ type RoleFormValues = z.infer<typeof roleSchema>;
 
 export function RoleForm({ open, onOpenChange, mode, role }: RoleFormProps) {
   const { createRole, updateRole, isCreating, isUpdating } = useRoles();
+  const { user, session, isAdmin } = useAuth();
+  const [authStatus, setAuthStatus] = useState<'checking' | 'valid' | 'invalid'>('checking');
+  const [retryCount, setRetryCount] = useState(0);
+
+  // Verificar status de autenticação quando o modal abrir
+  useEffect(() => {
+    if (open) {
+      checkAuthenticationStatus();
+    }
+  }, [open, user, session, isAdmin]);
+
+  const checkAuthenticationStatus = async () => {
+    setAuthStatus('checking');
+    
+    // Pequeno delay para dar tempo dos estados se atualizarem
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    console.log('🔐 [ROLE_FORM] Verificando auth:', { 
+      user: !!user, 
+      session: !!session, 
+      isAdmin 
+    });
+    
+    if (!user || !session || !isAdmin) {
+      console.warn('⚠️ [ROLE_FORM] Problemas de autenticação detectados');
+      setAuthStatus('invalid');
+    } else {
+      console.log('✅ [ROLE_FORM] Autenticação OK');
+      setAuthStatus('valid');
+    }
+  };
+
+  const handleRetryAuth = () => {
+    setRetryCount(prev => prev + 1);
+    checkAuthenticationStatus();
+  };
 
   const form = useForm<RoleFormValues>({
     resolver: zodResolver(roleSchema),
@@ -76,13 +115,22 @@ export function RoleForm({ open, onOpenChange, mode, role }: RoleFormProps) {
 
   const onSubmit = async (values: RoleFormValues) => {
     try {
+      // Verificar auth antes de submeter
+      if (authStatus !== 'valid') {
+        console.error('❌ [ROLE_FORM] Tentativa de submissão sem auth válida');
+        await checkAuthenticationStatus();
+        return;
+      }
+
       if (mode === "create") {
+        console.log('🔄 [ROLE_FORM] Criando role:', values);
         await createRole({
           name: values.name,
           description: values.description,
           is_system: false,
         });
       } else if (mode === "edit" && role) {
+        console.log('🔄 [ROLE_FORM] Editando role:', values);
         await updateRole(role.id, {
           name: values.name,
           description: values.description,
@@ -90,7 +138,7 @@ export function RoleForm({ open, onOpenChange, mode, role }: RoleFormProps) {
       }
       onOpenChange(false);
     } catch (error) {
-      console.error("Erro ao salvar papel:", error);
+      console.error("❌ [ROLE_FORM] Erro ao salvar papel:", error);
     }
   };
 
@@ -107,6 +155,45 @@ export function RoleForm({ open, onOpenChange, mode, role }: RoleFormProps) {
               : "Atualize as informações do papel"}
           </DialogDescription>
         </DialogHeader>
+
+        {/* Status de autenticação */}
+        {authStatus === 'checking' && (
+          <Alert>
+            <RefreshCw className="h-4 w-4 animate-spin" />
+            <AlertDescription>
+              Verificando permissões de administrador...
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {authStatus === 'invalid' && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription className="flex items-center justify-between">
+              <span>
+                Sessão inválida ou permissões insuficientes. Faça login como administrador.
+              </span>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleRetryAuth}
+                className="ml-2"
+              >
+                Tentar novamente
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {authStatus === 'valid' && (
+          <Alert>
+            <CheckCircle className="h-4 w-4 text-green-600" />
+            <AlertDescription>
+              Autenticação verificada. Pronto para criar papéis.
+            </AlertDescription>
+          </Alert>
+        )}
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -161,7 +248,7 @@ export function RoleForm({ open, onOpenChange, mode, role }: RoleFormProps) {
               </Button>
               <Button
                 type="submit"
-                disabled={isCreating || isUpdating}
+                disabled={isCreating || isUpdating || authStatus !== 'valid'}
               >
                 {isCreating || isUpdating ? "Salvando..." : "Salvar"}
               </Button>

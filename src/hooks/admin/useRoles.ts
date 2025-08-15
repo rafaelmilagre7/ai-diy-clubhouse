@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/auth';
 
 export interface Role {
   id: string;
@@ -24,6 +25,7 @@ export interface UpdateRoleData {
 }
 
 export const useRoles = () => {
+  const { user, session, isAdmin } = useAuth();
   const [roles, setRoles] = useState<Role[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
@@ -36,6 +38,31 @@ export const useRoles = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+
+  // Função para verificar status da sessão
+  const checkAuthStatus = async () => {
+    console.log('🔐 [ROLES] Verificando status da autenticação...');
+    console.log('📋 [ROLES] User:', user?.id);
+    console.log('📋 [ROLES] Session:', !!session);
+    console.log('📋 [ROLES] IsAdmin:', isAdmin);
+    
+    const { data: { session: currentSession } } = await supabase.auth.getSession();
+    console.log('📋 [ROLES] Current session valid:', !!currentSession);
+    
+    if (!currentSession) {
+      console.error('❌ [ROLES] Sem sessão ativa! Usuário precisa fazer login novamente.');
+      toast.error('Sessão expirada. Por favor, faça login novamente.');
+      return false;
+    }
+    
+    if (!isAdmin) {
+      console.error('❌ [ROLES] Usuário não é admin:', { userId: user?.id, isAdmin });
+      toast.error('Você não tem permissão para gerenciar papéis.');
+      return false;
+    }
+    
+    return true;
+  };
 
   const fetchRoles = async () => {
     try {
@@ -60,8 +87,17 @@ export const useRoles = () => {
   const createRole = async (roleData: CreateRoleData) => {
     try {
       setIsCreating(true);
-      console.log('🔄 Tentando criar role via método direto:', roleData);
       
+      // Verificar autenticação antes de tentar criar
+      const authValid = await checkAuthStatus();
+      if (!authValid) {
+        return;
+      }
+      
+      console.log('🔄 [ROLES] Tentando criar role:', roleData);
+      console.log('🔐 [ROLES] Auth status OK, prosseguindo...');
+      
+      // Tentar criar diretamente primeiro
       const { data, error } = await supabase
         .from('user_roles')
         .insert([roleData])
@@ -69,23 +105,29 @@ export const useRoles = () => {
         .single();
 
       if (error) {
-        console.error('❌ Erro no método direto:', error);
-        
-        // Se for erro 409 (Conflict) ou 42501 (insufficient privilege), tentar RPC
-        if (error.code === '42501' || error.code === 'PGRST116' || error.message?.includes('409')) {
-          console.log('🔄 Tentando via função RPC segura...');
-          return await createRoleSecure(roleData);
-        }
-        
-        throw error;
+        console.error('❌ [ROLES] Erro no método direto:', error);
+        console.log('🔄 [ROLES] Tentando via função RPC segura...');
+        return await createRoleSecure(roleData);
       }
 
-      console.log('✅ Role criado via método direto:', data);
+      console.log('✅ [ROLES] Role criado via método direto:', data);
       setRoles(prev => [...prev, data]);
       toast.success('Papel criado com sucesso');
-    } catch (error) {
-      console.error('Erro ao criar papel:', error);
-      toast.error('Erro ao criar papel');
+      return data;
+    } catch (error: any) {
+      console.error('❌ [ROLES] Erro ao criar papel:', error);
+      
+      // Tentar interpretar mensagens de erro específicas
+      let errorMessage = 'Erro ao criar papel';
+      if (error?.message?.includes('auth')) {
+        errorMessage = 'Erro de autenticação. Faça login novamente.';
+      } else if (error?.message?.includes('permission')) {
+        errorMessage = 'Você não tem permissão para esta operação.';
+      } else if (error?.message?.includes('duplicate') || error?.code === '23505') {
+        errorMessage = 'Já existe um papel com este nome.';
+      }
+      
+      toast.error(errorMessage);
       throw error;
     } finally {
       setIsCreating(false);
@@ -94,8 +136,17 @@ export const useRoles = () => {
 
   const createRoleSecure = async (roleData: CreateRoleData) => {
     try {
-      console.log('🔐 Criando role via RPC segura:', roleData);
+      console.log('🔐 [ROLES] Criando role via RPC segura:', roleData);
       
+      // Verificar se temos uma sessão válida antes do RPC
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      if (!currentSession) {
+        console.error('❌ [ROLES] Sem sessão para RPC!');
+        toast.error('Sessão expirada. Recarregue a página e tente novamente.');
+        throw new Error('Sessão expirada');
+      }
+      
+      console.log('🔐 [ROLES] Sessão válida, chamando RPC...');
       const { data, error } = await supabase.rpc('secure_create_role', {
         p_name: roleData.name,
         p_description: roleData.description || null,
@@ -103,25 +154,37 @@ export const useRoles = () => {
       });
 
       if (error) {
-        console.error('❌ Erro na função RPC:', error);
+        console.error('❌ [ROLES] Erro na função RPC:', error);
+        
+        // Interpretar erros específicos da RPC
+        if (error.message?.includes('Acesso negado')) {
+          toast.error('Você não tem permissão de administrador. Verifique seu login.');
+        } else if (error.message?.includes('já existe')) {
+          toast.error('Já existe um papel com este nome.');
+        } else {
+          toast.error(`Erro na função RPC: ${error.message}`);
+        }
+        
         throw error;
       }
 
       if (!data?.success) {
-        console.error('❌ RPC retornou erro:', data);
-        throw new Error(data?.error || 'Erro desconhecido na criação do role');
+        console.error('❌ [ROLES] RPC retornou erro:', data);
+        const errorMsg = data?.error || 'Erro desconhecido na criação do role';
+        toast.error(errorMsg);
+        throw new Error(errorMsg);
       }
 
-      console.log('✅ Role criado via RPC:', data.data);
+      console.log('✅ [ROLES] Role criado via RPC:', data.data);
       
       // Adicionar o novo role à lista
       const newRole = data.data;
       setRoles(prev => [...prev, newRole]);
-      toast.success(data.message || 'Papel criado com sucesso via RPC');
+      toast.success(data.message || 'Papel criado com sucesso');
       
       return newRole;
-    } catch (error) {
-      console.error('Erro na função RPC segura:', error);
+    } catch (error: any) {
+      console.error('❌ [ROLES] Erro na função RPC segura:', error);
       throw error;
     }
   };
