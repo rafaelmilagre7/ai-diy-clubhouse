@@ -10,6 +10,7 @@ import { AlertCircle, RefreshCw } from "lucide-react";
 import { DeleteUserDialog } from "@/components/admin/users/DeleteUserDialog";
 import { ToggleUserStatusDialog } from "@/components/admin/users/ToggleUserStatusDialog";
 import { ResetPasswordDialog } from "@/components/admin/users/ResetPasswordDialog";
+import { UserCourseAccessManager } from "@/components/admin/users/UserCourseAccessManager";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/auth";
 import { Button } from "@/components/ui/button";
@@ -41,6 +42,7 @@ const UserManagement = () => {
   const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
   const [resetUserDialogOpen, setResetUserDialogOpen] = useState(false);
   const [toggleStatusDialogOpen, setToggleStatusDialogOpen] = useState(false);
+  const [courseAccessDialogOpen, setCourseAccessDialogOpen] = useState(false);
 
   const handleEditRole = (user: UserProfile) => {
     setSelectedUser(user);
@@ -65,6 +67,11 @@ const UserManagement = () => {
   const handleToggleStatus = (user: UserProfile) => {
     setSelectedUser(user);
     setToggleStatusDialogOpen(true);
+  };
+
+  const handleManageCourses = (user: UserProfile) => {
+    setSelectedUser(user);
+    setCourseAccessDialogOpen(true);
   };
 
   const handleRefresh = () => {
@@ -161,6 +168,7 @@ const UserManagement = () => {
           onResetPassword={handleResetPassword}
            onResetUser={handleResetUser}
            onToggleStatus={handleToggleStatus}
+           onManageCourses={handleManageCourses}
            onRefresh={handleRefresh}
            canResetUsers={canManageUsers}
            canToggleStatus={canManageUsers}
@@ -220,6 +228,14 @@ const UserManagement = () => {
           setTimeout(() => fetchUsers(), 500);
         }}
       />
+
+      {selectedUser && (
+        <UserCourseAccessManager
+          isOpen={courseAccessDialogOpen}
+          onClose={() => setCourseAccessDialogOpen(false)}
+          user={selectedUser}
+        />
+      )}
     </div>
   );
 };

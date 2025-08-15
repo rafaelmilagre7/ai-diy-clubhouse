@@ -24,7 +24,8 @@ import {
   RotateCcw, 
   Trash2, 
   UserX,
-  UserCheck 
+  UserCheck,
+  BookOpen
 } from "lucide-react";
 import { UserProfile, getUserRoleName } from "@/lib/supabase";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
@@ -39,6 +40,7 @@ interface UsersTableProps {
   onResetPassword: (user: UserProfile) => void;
   onResetUser: (user: UserProfile) => void;
   onToggleStatus: (user: UserProfile) => void;
+  onManageCourses: (user: UserProfile) => void;
   onRefresh: () => void;
   canEditRoles: boolean;
   canDeleteUsers: boolean;
@@ -55,6 +57,7 @@ export const UsersTable: React.FC<UsersTableProps> = ({
   onResetPassword,
   onResetUser,
   onToggleStatus,
+  onManageCourses,
   onRefresh,
   canEditRoles,
   canDeleteUsers,
@@ -150,6 +153,10 @@ export const UsersTable: React.FC<UsersTableProps> = ({
                             Editar papel
                           </DropdownMenuItem>
                         )}
+                        <DropdownMenuItem onClick={() => onManageCourses(user)}>
+                          <BookOpen className="mr-2 h-4 w-4" />
+                          Gerenciar Cursos
+                        </DropdownMenuItem>
                         {canResetPasswords && (
                           <DropdownMenuItem onClick={() => onResetPassword(user)}>
                             <Key className="mr-2 h-4 w-4" />

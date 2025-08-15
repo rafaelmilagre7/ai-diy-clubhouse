@@ -10,6 +10,7 @@ import { AlertCircle, RefreshCw, Users, Plus, Activity, CheckCircle } from "luci
 import { DeleteUserDialog } from "@/components/admin/users/DeleteUserDialog";
 import { ToggleUserStatusDialog } from "@/components/admin/users/ToggleUserStatusDialog";
 import { ResetPasswordDialog } from "@/components/admin/users/ResetPasswordDialog";
+import { UserCourseAccessManager } from "@/components/admin/users/UserCourseAccessManager";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/auth";
 import { useQueryClient } from "@tanstack/react-query";
@@ -46,6 +47,7 @@ const AdminUsers = () => {
   const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
   const [resetUserDialogOpen, setResetUserDialogOpen] = useState(false);
   const [toggleStatusDialogOpen, setToggleStatusDialogOpen] = useState(false);
+  const [courseAccessDialogOpen, setCourseAccessDialogOpen] = useState(false);
   const [filterRole, setFilterRole] = useState('');
 
   const handleEditRole = (user: UserProfile) => {
@@ -71,6 +73,11 @@ const AdminUsers = () => {
   const handleToggleStatus = (user: UserProfile) => {
     setSelectedUser(user);
     setToggleStatusDialogOpen(true);
+  };
+
+  const handleManageCourses = (user: UserProfile) => {
+    setSelectedUser(user);
+    setCourseAccessDialogOpen(true);
   };
 
   const handleRefresh = () => {
@@ -373,6 +380,7 @@ const AdminUsers = () => {
             onResetPassword={handleResetPassword}
             onResetUser={handleResetUser}
             onToggleStatus={handleToggleStatus}
+            onManageCourses={handleManageCourses}
             onRefresh={handleRefresh}
             canResetUsers={canManageUsers}
             canToggleStatus={canManageUsers}
@@ -432,6 +440,14 @@ const AdminUsers = () => {
             setTimeout(() => fetchUsers(), 500);
           }}
         />
+
+        {selectedUser && (
+          <UserCourseAccessManager
+            isOpen={courseAccessDialogOpen}
+            onClose={() => setCourseAccessDialogOpen(false)}
+            user={selectedUser}
+          />
+        )}
       </div>
     </div>
   );

@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -4771,6 +4771,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_course_access: {
+        Row: {
+          access_type: string
+          course_id: string
+          created_at: string
+          expires_at: string | null
+          granted_by: string
+          id: string
+          notes: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_type?: string
+          course_id: string
+          created_at?: string
+          expires_at?: string | null
+          granted_by: string
+          id?: string
+          notes?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_type?: string
+          course_id?: string
+          created_at?: string
+          expires_at?: string | null
+          granted_by?: string
+          id?: string
+          notes?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_health_alerts: {
         Row: {
           alert_type: string
@@ -5011,10 +5047,10 @@ export type Database = {
       }
       activate_invited_user: {
         Args: {
-          p_user_id: string
           p_email: string
-          p_name: string
           p_invite_token?: string
+          p_name: string
+          p_user_id: string
         }
         Returns: Json
       }
@@ -5041,13 +5077,13 @@ export type Database = {
       analyze_rls_security_issues: {
         Args: Record<PropertyKey, never>
         Returns: {
-          table_name: string
+          issue_description: string
+          policy_definition: string
           policy_name: string
           policy_type: string
-          security_level: string
-          issue_description: string
           recommendation: string
-          policy_definition: string
+          security_level: string
+          table_name: string
         }[]
       }
       audit_legacy_references: {
@@ -5063,7 +5099,7 @@ export type Database = {
         Returns: Json
       }
       backup_table_data: {
-        Args: { p_table_name: string; p_reason?: string }
+        Args: { p_reason?: string; p_table_name: string }
         Returns: Json
       }
       calculate_average_score: {
@@ -5075,11 +5111,15 @@ export type Database = {
         Returns: number
       }
       can_access_benefit: {
-        Args: { user_id: string; tool_id: string }
+        Args: { tool_id: string; user_id: string }
         Returns: boolean
       }
       can_access_course: {
-        Args: { user_id: string; course_id: string }
+        Args: { course_id: string; user_id: string }
+        Returns: boolean
+      }
+      can_access_course_enhanced: {
+        Args: { target_course_id: string; target_user_id: string }
         Returns: boolean
       }
       can_access_learning_content: {
@@ -5091,13 +5131,13 @@ export type Database = {
         Returns: boolean
       }
       can_manage_role: {
-        Args: { user_id: string; target_role_name: string }
+        Args: { target_role_name: string; user_id: string }
         Returns: boolean
       }
       can_use_invite: {
         Args:
           | { invite_token: string; user_email: string }
-          | { p_user_id: string; p_token: string }
+          | { p_token: string; p_user_id: string }
         Returns: Json
       }
       can_view_connection_secure: {
@@ -5105,7 +5145,7 @@ export type Database = {
         Returns: boolean
       }
       change_user_role: {
-        Args: { target_user_id: string; new_role_id: string }
+        Args: { new_role_id: string; target_user_id: string }
         Returns: Json
       }
       check_admin_access: {
@@ -5132,9 +5172,9 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: {
           function_name: string
+          recommendation: string
           search_path_status: string
           security_type: string
-          recommendation: string
         }[]
       }
       check_invite_rate_limit: {
@@ -5147,11 +5187,11 @@ export type Database = {
         Returns: boolean
       }
       check_nps_rate_limit: {
-        Args: { p_user_id: string; p_lesson_id: string }
+        Args: { p_lesson_id: string; p_user_id: string }
         Returns: boolean
       }
       check_nps_rate_limit_secure: {
-        Args: { p_user_id: string; p_lesson_id: string }
+        Args: { p_lesson_id: string; p_user_id: string }
         Returns: boolean
       }
       check_onboarding_integrity: {
@@ -5162,19 +5202,19 @@ export type Database = {
         Args:
           | {
               action_type: string
-              max_attempts?: number
-              window_minutes?: number
+              max_attempts: number
+              time_window: unknown
+              user_id: string
             }
           | {
               action_type: string
-              user_id: string
-              max_attempts: number
-              time_window: unknown
+              max_attempts?: number
+              window_minutes?: number
             }
           | { p_action: string; p_limit_per_hour?: number }
           | {
-              p_identifier: string
               p_action_type: string
+              p_identifier: string
               p_max_attempts?: number
               p_window_minutes?: number
             }
@@ -5183,18 +5223,18 @@ export type Database = {
       check_rate_limit_advanced: {
         Args: {
           p_action: string
+          p_identifier?: string
           p_limit_per_hour?: number
           p_limit_per_minute?: number
-          p_identifier?: string
         }
         Returns: Json
       }
       check_rate_limit_safe: {
         Args: {
           p_action: string
+          p_identifier?: string
           p_limit_per_hour?: number
           p_limit_per_minute?: number
-          p_identifier?: string
         }
         Returns: Json
       }
@@ -5205,11 +5245,11 @@ export type Database = {
       check_rls_status: {
         Args: Record<PropertyKey, never>
         Returns: {
-          table_name: string
-          rls_enabled: boolean
           has_policies: boolean
           policy_count: number
+          rls_enabled: boolean
           security_status: string
+          table_name: string
         }[]
       }
       check_role_system_integrity: {
@@ -5217,7 +5257,7 @@ export type Database = {
         Returns: Json
       }
       check_solution_certificate_eligibility: {
-        Args: { p_user_id: string; p_solution_id: string }
+        Args: { p_solution_id: string; p_user_id: string }
         Returns: boolean
       }
       check_system_health: {
@@ -5227,10 +5267,10 @@ export type Database = {
       check_tables_without_rls: {
         Args: Record<PropertyKey, never>
         Returns: {
-          table_name: string
-          rls_status: string
-          risk_level: string
           recommendation: string
+          risk_level: string
+          rls_status: string
+          table_name: string
         }[]
       }
       check_whatsapp_config: {
@@ -5242,7 +5282,7 @@ export type Database = {
         Returns: string
       }
       clean_old_data: {
-        Args: { p_table_name: string; p_retention_period?: unknown }
+        Args: { p_retention_period?: unknown; p_table_name: string }
         Returns: Json
       }
       clean_user_onboarding_data: {
@@ -5315,8 +5355,8 @@ export type Database = {
       }
       complete_invite_registration: {
         Args:
+          | { p_invite_token: string; p_user_id: string }
           | { p_token: string; p_user_id: string }
-          | { p_user_id: string; p_invite_token: string }
         Returns: Json
       }
       complete_onboarding_and_unlock_features: {
@@ -5329,59 +5369,59 @@ export type Database = {
       }
       complete_onboarding_secure: {
         Args:
-          | { p_user_id: string }
           | {
-              p_user_id: string
-              p_onboarding_data: Json
               p_ip_address?: string
+              p_onboarding_data: Json
               p_user_agent?: string
+              p_user_id: string
             }
+          | { p_user_id: string }
         Returns: Json
       }
       create_community_notification: {
         Args: {
-          p_user_id: string
-          p_title: string
-          p_message: string
-          p_type?: string
           p_data?: Json
+          p_message: string
+          p_title: string
+          p_type?: string
+          p_user_id: string
         }
         Returns: string
       }
       create_invite: {
         Args: {
           p_email: string
-          p_role_id: string
           p_expires_in?: unknown
           p_notes?: string
+          p_role_id: string
         }
         Returns: Json
       }
       create_invite_batch: {
-        Args: { p_emails: string[]; p_role_id: string; p_expires_in?: unknown }
+        Args: { p_emails: string[]; p_expires_in?: unknown; p_role_id: string }
         Returns: Json
       }
       create_invite_hybrid: {
         Args:
           | {
-              p_email: string
-              p_role_id: string
-              p_notes?: string
-              p_whatsapp?: string
               p_channel?: string
+              p_email: string
+              p_notes?: string
+              p_role_id: string
+              p_whatsapp?: string
             }
           | {
+              p_channel_preference?: string
               p_email: string
-              p_role_id: string
-              p_phone?: string
               p_expires_in?: string
               p_notes?: string
-              p_channel_preference?: string
+              p_phone?: string
+              p_role_id: string
             }
         Returns: Json
       }
       create_learning_certificate_if_eligible: {
-        Args: { p_user_id: string; p_course_id: string }
+        Args: { p_course_id: string; p_user_id: string }
         Returns: string
       }
       create_metadata_snapshot: {
@@ -5393,34 +5433,34 @@ export type Database = {
         Returns: Json
       }
       create_network_connection: {
-        Args: { p_recipient_id: string; p_message?: string }
+        Args: { p_message?: string; p_recipient_id: string }
         Returns: Json
       }
       create_notification: {
         Args: {
-          p_user_id: string
-          p_title: string
           p_message: string
-          p_type?: string
           p_metadata?: Json
+          p_title: string
+          p_type?: string
+          p_user_id: string
         }
         Returns: Json
       }
       create_onboarding_backup: {
-        Args: { p_user_id: string; p_backup_type?: string }
+        Args: { p_backup_type?: string; p_user_id: string }
         Returns: string
       }
       create_referral: {
         Args: {
-          p_type: string
+          p_expires_in?: unknown
           p_referrer_id: string
           p_role_id?: string
-          p_expires_in?: unknown
+          p_type: string
         }
         Returns: Json
       }
       create_solution_certificate_if_eligible: {
-        Args: { p_user_id: string; p_solution_id: string }
+        Args: { p_solution_id: string; p_user_id: string }
         Returns: string
       }
       create_storage_public_policy: {
@@ -5432,11 +5472,11 @@ export type Database = {
         Returns: Json
       }
       create_user_backup: {
-        Args: { p_user_id: string; p_backup_type?: string }
+        Args: { p_backup_type?: string; p_user_id: string }
         Returns: Json
       }
       create_user_badge: {
-        Args: { user_id: string; badge_id: string }
+        Args: { badge_id: string; user_id: string }
         Returns: string
       }
       createstoragepublicpolicy: {
@@ -5452,7 +5492,7 @@ export type Database = {
         Returns: Json
       }
       decrement: {
-        Args: { row_id: string; table_name: string; column_name: string }
+        Args: { column_name: string; row_id: string; table_name: string }
         Returns: undefined
       }
       decrement_suggestion_downvote: {
@@ -5496,11 +5536,11 @@ export type Database = {
         Returns: undefined
       }
       detect_login_anomaly: {
-        Args: { p_user_id: string; p_ip_address: string }
+        Args: { p_ip_address: string; p_user_id: string }
         Returns: boolean
       }
       detect_navigation_loop: {
-        Args: { p_user_id: string; p_path: string; p_session_id?: string }
+        Args: { p_path: string; p_session_id?: string; p_user_id: string }
         Returns: Json
       }
       detect_security_changes: {
@@ -5518,18 +5558,18 @@ export type Database = {
       diagnose_stuck_users: {
         Args: Record<PropertyKey, never>
         Returns: {
-          user_id: string
-          email: string
-          current_step: number
           completed_steps: number[]
+          current_step: number
+          email: string
           hours_stuck: number
           suggested_action: string
+          user_id: string
         }[]
       }
       enhanced_rate_limit_check: {
         Args: {
-          p_identifier: string
           p_action_type: string
+          p_identifier: string
           p_max_attempts?: number
           p_window_minutes?: number
         }
@@ -5541,10 +5581,10 @@ export type Database = {
       }
       ensure_audit_log: {
         Args: {
-          p_event_type: string
           p_action: string
-          p_resource_id?: string
           p_details?: Json
+          p_event_type: string
+          p_resource_id?: string
           p_retry_count?: number
         }
         Returns: boolean
@@ -5600,10 +5640,10 @@ export type Database = {
       generate_final_security_report: {
         Args: Record<PropertyKey, never>
         Returns: {
-          report_section: string
-          status: string
           details: string
           recommendations: string
+          report_section: string
+          status: string
         }[]
       }
       generate_invite_token: {
@@ -5645,48 +5685,48 @@ export type Database = {
         Returns: string
       }
       generate_smart_networking_matches: {
-        Args: { target_user_id: string; max_matches?: number }
+        Args: { max_matches?: number; target_user_id: string }
         Returns: Json
       }
       get_admin_analytics_overview: {
         Args: Record<PropertyKey, never>
         Returns: {
-          total_users: number
-          new_users_30d: number
-          active_users_7d: number
-          completed_onboarding: number
-          total_solutions: number
-          new_solutions_30d: number
-          growth_rate: number
-          completed_implementations: number
-          total_lessons: number
           active_learners: number
+          active_users_7d: number
+          completed_implementations: number
+          completed_onboarding: number
           completion_rate: number
+          growth_rate: number
+          new_solutions_30d: number
+          new_users_30d: number
+          total_lessons: number
+          total_solutions: number
+          total_users: number
         }[]
       }
       get_admin_analytics_overview_secure: {
         Args: Record<PropertyKey, never>
         Returns: {
-          total_users: number
           active_users_24h: number
-          new_users_30d: number
-          total_solutions: number
+          avg_implementation_time_hours: number
           completed_implementations: number
           completion_rate: number
-          avg_implementation_time_hours: number
+          new_users_30d: number
+          total_solutions: number
+          total_users: number
         }[]
       }
       get_admin_analytics_temp: {
         Args: Record<PropertyKey, never>
         Returns: {
-          total_users: number
-          total_solutions: number
-          completed_implementations: number
           active_implementations: number
           active_users_7d: number
-          new_users_30d: number
+          completed_implementations: number
           new_implementations_30d: number
+          new_users_30d: number
           overall_completion_rate: number
+          total_solutions: number
+          total_users: number
         }[]
       }
       get_admin_stats: {
@@ -5704,27 +5744,27 @@ export type Database = {
       get_audit_logs_secure: {
         Args: Record<PropertyKey, never>
         Returns: {
-          log_id: string
-          user_id: string
-          event_type: string
           action: string
+          details: Json
+          event_type: string
+          log_id: string
           log_timestamp: string
           severity: string
-          details: Json
+          user_id: string
         }[]
       }
       get_benefits_safe: {
         Args: Record<PropertyKey, never>
         Returns: {
-          id: string
-          name: string
-          description: string
-          category: string
-          benefit_type: string
-          benefit_title: string
           benefit_description: string
           benefit_link: string
+          benefit_title: string
+          benefit_type: string
+          category: string
+          description: string
+          id: string
           logo_url: string
+          name: string
           status: boolean
         }[]
       }
@@ -5735,19 +5775,19 @@ export type Database = {
       get_courses_with_stats: {
         Args: Record<PropertyKey, never>
         Returns: {
-          id: string
-          title: string
-          description: string
           cover_image_url: string
-          slug: string
-          published: boolean
           created_at: string
-          updated_at: string
           created_by: string
-          order_index: number
-          module_count: number
-          lesson_count: number
+          description: string
+          id: string
           is_restricted: boolean
+          lesson_count: number
+          module_count: number
+          order_index: number
+          published: boolean
+          slug: string
+          title: string
+          updated_at: string
         }[]
       }
       get_current_user_role: {
@@ -5769,53 +5809,53 @@ export type Database = {
       get_invite_dashboard_stats: {
         Args: Record<PropertyKey, never>
         Returns: {
-          total_invites: number
           active_invites: number
-          used_invites: number
+          conversion_rate: number
           expired_invites: number
           recent_invites: number
-          conversion_rate: number
+          total_invites: number
+          used_invites: number
         }[]
       }
       get_learning_courses_with_stats: {
         Args: Record<PropertyKey, never>
         Returns: {
-          id: string
-          title: string
-          description: string
-          slug: string
           cover_image_url: string
-          published: boolean
-          order_index: number
           created_at: string
-          updated_at: string
           created_by: string
-          total_modules: number
-          total_lessons: number
+          description: string
           enrolled_users: number
+          id: string
+          order_index: number
+          published: boolean
+          slug: string
+          title: string
+          total_lessons: number
+          total_modules: number
+          updated_at: string
         }[]
       }
       get_lessons_with_relations: {
         Args: { p_course_id?: string }
         Returns: {
-          id: string
-          title: string
-          description: string
-          cover_image_url: string
-          module_id: string
-          content: Json
-          order_index: number
           ai_assistant_enabled: boolean
-          ai_assistant_prompt: string
           ai_assistant_id: string
-          published: boolean
-          difficulty_level: string
+          ai_assistant_prompt: string
+          content: Json
+          cover_image_url: string
           created_at: string
-          updated_at: string
+          description: string
+          difficulty_level: string
           estimated_time_minutes: number
+          id: string
           module: Json
-          videos: Json
+          module_id: string
+          order_index: number
+          published: boolean
           resources: Json
+          title: string
+          updated_at: string
+          videos: Json
         }[]
       }
       get_networking_analytics: {
@@ -5829,32 +5869,32 @@ export type Database = {
       get_nps_analytics: {
         Args: Record<PropertyKey, never>
         Returns: {
-          total_responses: number
           average_score: number
-          nps_score: number
-          promoters_count: number
-          passives_count: number
           detractors_count: number
+          nps_score: number
+          passives_count: number
+          promoters_count: number
           response_rate: number
+          total_responses: number
         }[]
       }
       get_nps_analytics_data: {
         Args: Record<PropertyKey, never>
         Returns: {
-          id: string
-          lesson_id: string
-          lesson_title: string
-          user_id: string
-          user_name: string
-          user_email: string
-          score: number
-          feedback: string
           created_at: string
-          updated_at: string
-          nps_category: string
-          lesson_description: string
           difficulty_level: string
           estimated_time_minutes: number
+          feedback: string
+          id: string
+          lesson_description: string
+          lesson_id: string
+          lesson_title: string
+          nps_category: string
+          score: number
+          updated_at: string
+          user_email: string
+          user_id: string
+          user_name: string
         }[]
       }
       get_nps_analytics_secure: {
@@ -5877,9 +5917,9 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: {
           attempt_date: string
-          user_email: string
           attempted_role: string
           details: Json
+          user_email: string
         }[]
       }
       get_profile_safe: {
@@ -5919,19 +5959,19 @@ export type Database = {
         Returns: Json
       }
       get_security_metrics: {
-        Args: { p_user_id?: string; p_days?: number }
+        Args: { p_days?: number; p_user_id?: string }
         Returns: Json
       }
       get_solution_performance_metrics: {
         Args: Record<PropertyKey, never>
         Returns: {
+          avg_rating: number
+          category: string
+          completion_rate: number
+          created_at: string
           id: string
           title: string
-          category: string
           total_implementations: number
-          completion_rate: number
-          avg_rating: number
-          created_at: string
         }[]
       }
       get_standardized_buckets: {
@@ -5940,8 +5980,8 @@ export type Database = {
           bucket_id: string
           bucket_name: string
           created_at: string
-          updated_at: string
           public: boolean
+          updated_at: string
         }[]
       }
       get_stats_overview: {
@@ -5962,41 +6002,41 @@ export type Database = {
       }
       get_unified_checklist: {
         Args: {
-          p_user_id: string
-          p_solution_id: string
           p_checklist_type?: string
+          p_solution_id: string
+          p_user_id: string
         }
         Returns: {
-          id: string
-          user_id: string
-          solution_id: string
-          template_id: string
-          checklist_type: string
           checklist_data: Json
+          checklist_type: string
+          completed_at: string
           completed_items: number
-          total_items: number
-          progress_percentage: number
+          created_at: string
+          id: string
           is_completed: boolean
           is_template: boolean
-          created_at: string
-          updated_at: string
-          completed_at: string
           metadata: Json
+          progress_percentage: number
+          solution_id: string
+          template_id: string
+          total_items: number
+          updated_at: string
+          user_id: string
         }[]
       }
       get_user_analytics_summary: {
-        Args: { p_user_id: string; p_days_back?: number }
+        Args: { p_days_back?: number; p_user_id: string }
         Returns: Json
       }
       get_user_badges: {
         Args: { p_user_id: string }
         Returns: {
-          id: string
-          name: string
-          description: string
-          image_url: string
           category: string
+          description: string
           earned_at: string
+          id: string
+          image_url: string
+          name: string
         }[]
       }
       get_user_complete_data: {
@@ -6008,16 +6048,16 @@ export type Database = {
         Returns: {
           date: string
           name: string
-          total: number
           novos: number
+          total: number
         }[]
       }
       get_user_growth_secure: {
         Args: Record<PropertyKey, never>
         Returns: {
+          cumulative_users: number
           date_period: string
           new_users: number
-          cumulative_users: number
         }[]
       }
       get_user_learning_stats: {
@@ -6039,14 +6079,14 @@ export type Database = {
       get_user_profile_safe: {
         Args: { target_user_id: string }
         Returns: {
-          id: string
-          email: string
-          name: string
           company_name: string
-          role_id: string
+          created_at: string
+          email: string
+          id: string
+          name: string
           onboarding_completed: boolean
           onboarding_completed_at: string
-          created_at: string
+          role_id: string
           updated_at: string
           user_roles: Json
         }[]
@@ -6070,9 +6110,9 @@ export type Database = {
       get_user_segmentation_analytics: {
         Args: Record<PropertyKey, never>
         Returns: {
+          percentage: number
           role_name: string
           user_count: number
-          percentage: number
         }[]
       }
       get_user_segmentation_secure: {
@@ -6086,54 +6126,54 @@ export type Database = {
           search_query?: string
         }
         Returns: {
-          id: string
-          email: string
-          name: string
           avatar_url: string
+          company_name: string
+          created_at: string
+          email: string
+          id: string
+          industry: string
+          name: string
           role: string
           role_id: string
           user_roles: Json
-          company_name: string
-          industry: string
-          created_at: string
         }[]
       }
       get_visible_events_for_user: {
         Args: { p_user_id: string }
         Returns: {
-          id: string
-          title: string
-          description: string
-          start_time: string
-          end_time: string
-          location_link: string
-          physical_location: string
           cover_image_url: string
           created_at: string
           created_by: string
+          description: string
+          end_time: string
+          id: string
           is_recurring: boolean
-          recurrence_pattern: string
-          recurrence_interval: number
-          recurrence_day: number
-          recurrence_count: number
-          recurrence_end_date: string
+          location_link: string
           parent_event_id: string
+          physical_location: string
+          recurrence_count: number
+          recurrence_day: number
+          recurrence_end_date: string
+          recurrence_interval: number
+          recurrence_pattern: string
+          start_time: string
+          title: string
         }[]
       }
       get_weekly_activity_patterns: {
         Args: Record<PropertyKey, never>
         Returns: {
+          atividade: number
           day: string
           day_of_week: number
-          atividade: number
         }[]
       }
       get_weekly_activity_secure: {
         Args: Record<PropertyKey, never>
         Returns: {
-          week_start: string
           active_users: number
           total_events: number
+          week_start: string
         }[]
       }
       handle_supabase_email_rate_limit_error: {
@@ -6145,7 +6185,7 @@ export type Database = {
         Returns: boolean
       }
       has_role_name: {
-        Args: { role_name: string; check_user_id?: string }
+        Args: { check_user_id?: string; role_name: string }
         Returns: boolean
       }
       hash_sensitive_data: {
@@ -6157,7 +6197,7 @@ export type Database = {
         Returns: string
       }
       increment: {
-        Args: { row_id: string; table_name: string; column_name: string }
+        Args: { column_name: string; row_id: string; table_name: string }
         Returns: undefined
       }
       increment_benefit_clicks: {
@@ -6193,7 +6233,7 @@ export type Database = {
         Returns: Json
       }
       initialize_onboarding_for_user: {
-        Args: { p_user_id: string; p_invite_token?: string }
+        Args: { p_invite_token?: string; p_user_id: string }
         Returns: Json
       }
       invalidate_profile_cache: {
@@ -6258,18 +6298,18 @@ export type Database = {
       }
       issue_solution_certificate: {
         Args: {
-          p_user_id: string
-          p_solution_id: string
           p_implementation_data?: Json
+          p_solution_id: string
+          p_user_id: string
         }
         Returns: Json
       }
       log_auth_event_secure: {
         Args: {
-          p_event_type: string
           p_action: string
-          p_user_id?: string
           p_additional_data?: Json
+          p_event_type: string
+          p_user_id?: string
         }
         Returns: undefined
       }
@@ -6279,65 +6319,65 @@ export type Database = {
       }
       log_invite_delivery: {
         Args: {
-          p_invite_id: string
           p_channel: string
-          p_status: string
-          p_provider_id?: string
           p_error_message?: string
+          p_invite_id: string
           p_metadata?: Json
+          p_provider_id?: string
+          p_status: string
         }
         Returns: string
       }
       log_invite_validation_attempt: {
-        Args: { p_token: string; p_success: boolean; p_details: string }
+        Args: { p_details: string; p_success: boolean; p_token: string }
         Returns: undefined
       }
       log_learning_action: {
         Args: {
           p_action: string
-          p_resource_type: string
-          p_resource_id: string
           p_details?: Json
+          p_resource_id: string
+          p_resource_type: string
         }
         Returns: undefined
       }
       log_onboarding_event: {
         Args: {
-          p_user_id: string
+          p_event_data?: Json
           p_event_type: string
           p_step: number
-          p_event_data?: Json
+          p_user_id: string
         }
         Returns: undefined
       }
       log_permission_change: {
         Args: {
-          user_id: string
           action_type: string
-          target_user_id?: string
+          ip_address?: string
+          new_value?: string
+          old_value?: string
+          permission_code?: string
+          permission_id?: string
           role_id?: string
           role_name?: string
-          permission_id?: string
-          permission_code?: string
-          old_value?: string
-          new_value?: string
-          ip_address?: string
+          target_user_id?: string
+          user_id: string
         }
         Returns: string
       }
       log_registration_attempt: {
-        Args: { p_email: string; p_success: boolean; p_error_details?: Json }
+        Args: { p_email: string; p_error_details?: Json; p_success: boolean }
         Returns: undefined
       }
       log_rls_violation_attempt: {
-        Args: { p_table_name: string; p_operation: string; p_user_id?: string }
+        Args: { p_operation: string; p_table_name: string; p_user_id?: string }
         Returns: undefined
       }
       log_security_access: {
         Args: {
-          p_table_name: string
           p_operation: string
           p_resource_id?: string
+          p_table_name: string
         }
         Returns: undefined
       }
@@ -6345,47 +6385,47 @@ export type Database = {
         Args:
           | {
               p_action_type: string
-              p_resource_type: string
-              p_resource_id?: string
-              p_old_values?: Json
               p_new_values?: Json
+              p_old_values?: Json
+              p_resource_id?: string
+              p_resource_type: string
             }
           | {
               p_action_type: string
-              p_resource_type: string
-              p_resource_id?: string
-              p_old_values?: string
               p_new_values?: string
+              p_old_values?: string
+              p_resource_id?: string
+              p_resource_type: string
             }
-          | { p_event_type: string; p_details?: Json; p_severity?: string }
+          | { p_details?: Json; p_event_type: string; p_severity?: string }
           | {
-              p_event_type: string
-              p_severity?: string
-              p_user_id?: string
               p_event_data?: Json
+              p_event_type: string
               p_ip_address?: unknown
+              p_severity?: string
               p_user_agent?: string
+              p_user_id?: string
             }
         Returns: undefined
       }
       log_security_violation: {
         Args:
           | {
-              p_user_id?: string
-              p_violation_type?: string
-              p_severity?: string
-              p_description?: string
-              p_ip_address?: string
-              p_user_agent?: string
-              p_resource_accessed?: string
-              p_additional_data?: Json
-              p_auto_block?: boolean
+              attempted_action: string
+              resource_table: string
+              user_context?: Json
+              violation_type: string
             }
           | {
-              violation_type: string
-              resource_table: string
-              attempted_action: string
-              user_context?: Json
+              p_additional_data?: Json
+              p_auto_block?: boolean
+              p_description?: string
+              p_ip_address?: string
+              p_resource_accessed?: string
+              p_severity?: string
+              p_user_agent?: string
+              p_user_id?: string
+              p_violation_type?: string
             }
         Returns: undefined
       }
@@ -6396,29 +6436,29 @@ export type Database = {
       log_upload_activity: {
         Args: {
           p_bucket_name: string
+          p_error_message?: string
           p_file_path: string
           p_file_size: number
           p_file_type: string
           p_success: boolean
-          p_error_message?: string
         }
         Returns: undefined
       }
       log_user_action: {
-        Args: { user_id: string; action_type: string; details?: Json }
+        Args: { action_type: string; details?: Json; user_id: string }
         Returns: undefined
       }
       manage_user_session: {
         Args: {
-          p_user_id: string
-          p_session_token: string
           p_ip_address?: string
+          p_session_token: string
           p_user_agent?: string
+          p_user_id: string
         }
         Returns: string
       }
       mark_notifications_read: {
-        Args: { p_user_id: string; p_notification_ids?: string[] }
+        Args: { p_notification_ids?: string[]; p_user_id: string }
         Returns: Json
       }
       mask_email: {
@@ -6434,7 +6474,7 @@ export type Database = {
         Returns: string
       }
       merge_json_data: {
-        Args: { target: Json; source: Json }
+        Args: { source: Json; target: Json }
         Returns: Json
       }
       migrate_existing_onboarding_data: {
@@ -6447,11 +6487,11 @@ export type Database = {
       }
       moderate_content: {
         Args: {
-          p_content_type: string
-          p_content_id: string
           p_action: string
-          p_reason: string
+          p_content_id: string
+          p_content_type: string
           p_duration_hours?: number
+          p_reason: string
         }
         Returns: Json
       }
@@ -6468,7 +6508,7 @@ export type Database = {
         Returns: Json
       }
       quick_check_permission: {
-        Args: { user_id: string; permission_code: string }
+        Args: { permission_code: string; user_id: string }
         Returns: boolean
       }
       reactivate_all_expired_invites_secure: {
@@ -6476,7 +6516,7 @@ export type Database = {
         Returns: Json
       }
       reactivate_invite_secure: {
-        Args: { p_invite_id: string; p_days_extension?: number }
+        Args: { p_days_extension?: number; p_invite_id: string }
         Returns: Json
       }
       regenerate_recurring_event_dates: {
@@ -6484,7 +6524,7 @@ export type Database = {
         Returns: Json
       }
       register_with_invite: {
-        Args: { p_token: string; p_name: string; p_password: string }
+        Args: { p_name: string; p_password: string; p_token: string }
         Returns: Json
       }
       resend_invite_manual: {
@@ -6500,7 +6540,7 @@ export type Database = {
         Returns: Json
       }
       reset_onboarding_step: {
-        Args: { p_user_id: string; p_step: number }
+        Args: { p_step: number; p_user_id: string }
         Returns: Json
       }
       reset_user_complete: {
@@ -6513,40 +6553,40 @@ export type Database = {
       }
       search_users: {
         Args: {
-          search_term?: string
-          role_filter?: string
           limit_count?: number
           offset_count?: number
+          role_filter?: string
+          search_term?: string
         }
         Returns: {
-          id: string
-          email: string
-          name: string
           avatar_url: string
           company_name: string
+          created_at: string
+          email: string
+          id: string
           industry: string
+          name: string
           role: string
           role_id: string
-          created_at: string
         }[]
       }
       secure_assign_role: {
-        Args: { target_user_id: string; new_role_id: string }
+        Args: { new_role_id: string; target_user_id: string }
         Returns: Json
       }
       secure_change_user_role: {
-        Args: { target_user_id: string; new_role_id: string }
+        Args: { new_role_id: string; target_user_id: string }
         Returns: Json
       }
       secure_change_user_role_v2: {
-        Args: { target_user_id: string; new_role_id: string }
+        Args: { new_role_id: string; target_user_id: string }
         Returns: Json
       }
       secure_create_role: {
         Args: {
-          p_name: string
           p_description?: string
           p_is_system?: boolean
+          p_name: string
           p_user_id?: string
         }
         Returns: Json
@@ -6559,10 +6599,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: {
           check_name: string
-          status: string
           critical_issues: number
-          warning_issues: number
           recommendations: string
+          status: string
+          warning_issues: number
         }[]
       }
       security_improvement_report: {
@@ -6570,7 +6610,7 @@ export type Database = {
         Returns: Json
       }
       send_direct_message: {
-        Args: { p_recipient_id: string; p_content: string; p_metadata?: Json }
+        Args: { p_content: string; p_metadata?: Json; p_recipient_id: string }
         Returns: Json
       }
       send_invite_email: {
@@ -6602,15 +6642,15 @@ export type Database = {
         Returns: Json
       }
       track_onboarding_step: {
-        Args: { p_user_id: string; p_step_name: string; p_step_data?: Json }
+        Args: { p_step_data?: Json; p_step_name: string; p_user_id: string }
         Returns: Json
       }
       track_tool_usage: {
-        Args: { p_tool_id: string; p_action?: string; p_metadata?: Json }
+        Args: { p_action?: string; p_metadata?: Json; p_tool_id: string }
         Returns: Json
       }
       track_user_event: {
-        Args: { p_event_type: string; p_event_data?: Json }
+        Args: { p_event_data?: Json; p_event_type: string }
         Returns: Json
       }
       truncate_text: {
@@ -6626,15 +6666,15 @@ export type Database = {
         Returns: Json
       }
       update_onboarding_step: {
-        Args: { p_user_id: string; p_step: number; p_data?: Json }
+        Args: { p_data?: Json; p_step: number; p_user_id: string }
         Returns: Json
       }
       update_user_preferences: {
-        Args: { p_user_id: string; p_preferences: Json }
+        Args: { p_preferences: Json; p_user_id: string }
         Returns: Json
       }
       update_user_progress: {
-        Args: { p_user_id: string; p_lesson_id: string; p_progress_data?: Json }
+        Args: { p_lesson_id: string; p_progress_data?: Json; p_user_id: string }
         Returns: Json
       }
       use_invite: {
@@ -6650,11 +6690,11 @@ export type Database = {
         Returns: Json
       }
       user_can_access_feature: {
-        Args: { p_user_id: string; p_feature: string }
+        Args: { p_feature: string; p_user_id: string }
         Returns: Json
       }
       user_has_permission: {
-        Args: { user_id: string; permission_code: string }
+        Args: { permission_code: string; user_id: string }
         Returns: boolean
       }
       validate_admin_access: {
@@ -6684,11 +6724,11 @@ export type Database = {
       validate_complete_rls_security: {
         Args: Record<PropertyKey, never>
         Returns: {
-          table_name: string
-          rls_enabled: boolean
           policy_count: number
-          security_status: string
           risk_level: string
+          rls_enabled: boolean
+          security_status: string
+          table_name: string
         }[]
       }
       validate_cpf: {
@@ -6701,10 +6741,10 @@ export type Database = {
       }
       validate_file_upload: {
         Args: {
+          bucket_name: string
           file_name: string
           file_size: number
           file_type: string
-          bucket_name: string
         }
         Returns: Json
       }
@@ -6715,14 +6755,14 @@ export type Database = {
       validate_invite_token: {
         Args: { p_token: string }
         Returns: {
-          id: string
-          email: string
-          role_id: string
-          expires_at: string
-          used_at: string
           created_at: string
           created_by: string
+          email: string
+          expires_at: string
+          id: string
           notes: string
+          role_id: string
+          used_at: string
         }[]
       }
       validate_invite_token_enhanced: {
@@ -6736,11 +6776,11 @@ export type Database = {
       validate_invite_token_secure: {
         Args: { p_token: string }
         Returns: {
-          id: string
           email: string
-          role_id: string
           expires_at: string
+          id: string
           is_valid: boolean
+          role_id: string
         }[]
       }
       validate_onboarding_state: {
@@ -6766,23 +6806,23 @@ export type Database = {
       validate_profile_roles: {
         Args: Record<PropertyKey, never>
         Returns: {
-          user_id: string
           email: string
+          expected_role_id: string
+          expected_role_name: string
+          issue_type: string
+          user_id: string
           user_role: string
           user_role_id: string
-          expected_role_name: string
-          expected_role_id: string
-          issue_type: string
         }[]
       }
       validate_role_change: {
         Args:
-          | { target_user_id: string; new_role_id: string }
           | {
-              target_user_id: string
-              new_role_id: string
               current_user_id?: string
+              new_role_id: string
+              target_user_id: string
             }
+          | { new_role_id: string; target_user_id: string }
         Returns: boolean
       }
       validate_security_fixes: {
@@ -6808,9 +6848,9 @@ export type Database = {
       verify_permissions_integrity: {
         Args: Record<PropertyKey, never>
         Returns: {
-          issue_type: string
-          description: string
           affected_resource: string
+          description: string
+          issue_type: string
           severity: string
         }[]
       }

@@ -36,6 +36,7 @@ describe('UsersTable', () => {
     onResetUser: jest.fn(),
     onRefresh: jest.fn(),
     onToggleStatus: jest.fn(),
+    onManageCourses: jest.fn(),
   };
 
   it('renders correctly with users', () => {

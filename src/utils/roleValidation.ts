@@ -72,3 +72,26 @@ export const canAccessLearningContent = async (userId?: string): Promise<boolean
     return false;
   }
 };
+
+// Função para verificar acesso a um curso específico (com override)
+export const canAccessCourseEnhanced = async (userId: string, courseId: string): Promise<boolean> => {
+  try {
+    console.log("🔍 Verificando acesso ao curso com override:", { userId, courseId });
+    
+    const { data, error } = await supabase.rpc('can_access_course_enhanced', {
+      target_user_id: userId,
+      target_course_id: courseId
+    });
+
+    if (error) {
+      console.error('❌ Erro ao verificar acesso ao curso:', error);
+      return false;
+    }
+
+    console.log("✅ Resultado can_access_course_enhanced:", data);
+    return data || false;
+  } catch (error) {
+    console.error('❌ Erro na chamada canAccessCourseEnhanced:', error);
+    return false;
+  }
+};
