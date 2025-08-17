@@ -1,47 +1,28 @@
 
-// Serviço específico para upload de imagens no ImgBB
+/**
+ * DEPRECIADO: Serviço ImgBB com chave exposta
+ * 
+ * Este arquivo foi depreciado por expor chaves de API no frontend.
+ * Use a Edge Function 'image-upload' que mantém as chaves seguras.
+ * 
+ * @deprecated Use supabase.functions.invoke('image-upload')
+ */
+
+import { logger } from '@/utils/logger';
+
 export const uploadImageToImgBB = async (
   file: File,
   apiKey: string,
   onProgressUpdate?: (progress: number) => void
 ) => {
-  try {
-    if (onProgressUpdate) onProgressUpdate(10);
-
-    const formData = new FormData();
-    formData.append("image", file);
-    formData.append("key", apiKey);
-
-    if (onProgressUpdate) onProgressUpdate(40);
-
-    const response = await fetch("https://api.imgbb.com/1/upload", {
-      method: "POST",
-      body: formData,
-    });
-
-    if (onProgressUpdate) onProgressUpdate(80);
-
-    if (!response.ok) {
-      throw new Error(`Erro na API do ImgBB: ${response.status} ${response.statusText}`);
-    }
-
-    const data = await response.json();
-
-    if (!data.success) {
-      throw new Error(data.error?.message || "Falha no upload da imagem");
-    }
-
-    if (onProgressUpdate) onProgressUpdate(100);
-
-    return {
-      publicUrl: data.data.url,
-      fileName: file.name,
-      displayUrl: data.data.display_url,
-      thumbnailUrl: data.data.thumb?.url || data.data.url
-    };
-  } catch (error) {
-    console.error("Erro ao fazer upload da imagem:", error);
-    throw error;
-  }
+  logger.error('uploadImageToImgBB está depreciado', {
+    component: 'DEPRECATED_IMGBB_SERVICE',
+    message: 'Use Edge Function image-upload para uploads seguros',
+    security: 'API key exposta no frontend'
+  });
+  
+  throw new Error(
+    'uploadImageToImgBB foi depreciado por segurança. Use a Edge Function image-upload.'
+  );
 };
 

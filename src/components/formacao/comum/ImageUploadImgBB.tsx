@@ -4,7 +4,8 @@ import { ImagePlus, Trash2, Loader2, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useLogging } from "@/hooks/useLogging";
-import { uploadImageToImgBB } from "@/components/ui/file/services/imgbb";
+import { supabase } from "@/integrations/supabase/client";
+import { validateImageUploadSecurity } from "@/utils/security/imageUploadSecurity";
 
 interface ImageUploadImgBBProps {
   value: string | undefined;
@@ -29,13 +30,15 @@ export const ImageUploadImgBB = ({
     const file = e.target.files?.[0];
     if (!file) return;
     
-    // Validar tipo de arquivo
-    const fileType = file.type.split('/')[0];
-    if (fileType !== 'image') {
-      setError("Por favor, selecione apenas arquivos de imagem");
+    // Validação de segurança robusta
+    const securityCheck = validateImageUploadSecurity(file);
+    
+    if (!securityCheck.isSecure) {
+      const errorMsg = [...securityCheck.errors, ...securityCheck.warnings].join('; ');
+      setError(errorMsg);
       toast({
-        title: "Tipo de arquivo inválido",
-        description: "Por favor, selecione apenas arquivos de imagem.",
+        title: "Arquivo rejeitado por segurança",
+        description: errorMsg,
         variant: "destructive",
       });
       return;
@@ -55,33 +58,49 @@ export const ImageUploadImgBB = ({
 
     setError(null);
     setUploading(true);
-    setProgress(0);
+    setProgress(10);
 
     try {
-      console.log("📷 ImageUploadImgBB - Iniciando upload para ImgBB");
+      console.log("📷 ImageUploadImgBB - Iniciando upload seguro via Edge Function");
+      setProgress(30);
+
+      // Criar FormData para a Edge Function segura
+      const formData = new FormData();
+      formData.append('image', file);
       
-      // A API key do ImgBB deve estar configurada. Vamos usar uma chave pública comum para teste
-      const IMGBB_API_KEY = "46c28e0a4b0b0937c98ba26d90a4bbb5"; // API key pública para teste
+      setProgress(50);
+
+      // Usar Edge Function segura ao invés de chave exposta
+      const { data, error } = await supabase.functions.invoke('image-upload', {
+        body: formData
+      });
+
+      setProgress(80);
+
+      if (error) {
+        throw new Error(error.message || 'Erro no upload da imagem');
+      }
+
+      if (!data?.success) {
+        throw new Error(data?.error || 'Falha no upload da imagem');
+      }
       
-      const result = await uploadImageToImgBB(
-        file, 
-        IMGBB_API_KEY,
-        setProgress
-      );
+      console.log("📷 ImageUploadImgBB - Upload bem-sucedido via Edge Function:", data.data);
       
-      console.log("📷 ImageUploadImgBB - Upload bem-sucedido:", result);
+      // Usar a URL pública retornada pelo ImgBB via Edge Function
+      const imageUrl = data.data.url || data.data.display_url;
+      onChange(imageUrl);
       
-      // Usar a URL pública retornada pelo ImgBB
-      onChange(result.publicUrl);
+      setProgress(100);
       
       toast({
         title: "Upload concluído",
-        description: "A imagem foi enviada com sucesso.",
+        description: "A imagem foi enviada com sucesso via conexão segura.",
         variant: "default",
       });
     } catch (error: any) {
       console.error("📷 ImageUploadImgBB - Erro no upload:", error);
-      logError("imgbb_upload_error", error);
+      logError("secure_imgbb_upload_error", error);
       setError(error.message || "Não foi possível enviar a imagem. Tente novamente.");
       toast({
         title: "Falha no upload",

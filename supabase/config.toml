@@ -130,6 +130,10 @@ verify_jwt = false
 [functions.security-headers]
 verify_jwt = false
 
+# 📷 UPLOAD DE IMAGENS - Requer autenticação para segurança
+[functions.image-upload]
+verify_jwt = true
+
 [auth]
 enabled = true
 port = 54324
