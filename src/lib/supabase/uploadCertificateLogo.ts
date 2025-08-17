@@ -4,7 +4,7 @@ import { supabase } from './client';
 export const uploadCertificateLogo = async () => {
   try {
     // Fazer download da imagem do Lovable
-    const response = await fetch('/lovable-uploads/a408c993-07fa-49f2-bee6-c66d0614298b.png');
+    const response = await fetch('/lovable-uploads/eeab53e7-f5ba-412f-8e89-991fdf7b960f.png');
     const blob = await response.blob();
     
     // Converter para File
@@ -37,4 +37,4 @@ export const uploadCertificateLogo = async () => {
 };
 
 // URL da logo local para usar nos componentes - mudando para logo local
-export const CERTIFICATE_LOGO_URL = '/lovable-uploads/a408c993-07fa-49f2-bee6-c66d0614298b.png';
+export const CERTIFICATE_LOGO_URL = '/lovable-uploads/eeab53e7-f5ba-412f-8e89-991fdf7b960f.png';
