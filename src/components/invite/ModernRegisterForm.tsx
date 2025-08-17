@@ -334,25 +334,25 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
       windowMinutes={15}
       showWarning={true}
     >
-      <div className="space-y-8">
-        <div className="text-center space-y-4">
-          <div className="w-20 h-20 bg-gradient-to-br from-primary/30 to-primary/20 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-primary/20">
-            <User className="h-10 w-10 text-white" />
+      <div className="space-y-6">
+        <div className="text-center space-y-3">
+          <div className="w-16 h-16 bg-gradient-to-br from-emerald-500/30 to-teal-500/30 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-emerald-500/20">
+            <User className="h-8 w-8 text-emerald-400" />
           </div>
-          <h2 className="font-heading text-3xl font-bold text-white">
+          <h2 className="font-heading text-xl font-bold text-white">
             Finalize seu acesso
           </h2>
-          <p className="text-white/80 text-lg leading-relaxed">
+          <p className="text-white/80 text-sm leading-relaxed">
             Complete seu cadastro para acessar a plataforma
           </p>
-          <div className="bg-primary/20 border border-primary/30 rounded-2xl p-4 max-w-sm mx-auto backdrop-blur-sm">
-            <p className="text-sm text-white font-medium">
+          <div className="bg-emerald-500/20 border border-emerald-500/30 rounded-lg p-2 max-w-xs mx-auto backdrop-blur-sm">
+            <p className="text-xs text-emerald-400 font-medium">
               ⚡ Acesso liberado em menos de 2 minutos
             </p>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
         {/* Exibir erro se houver */}
         {error && (
           <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 mb-6 backdrop-blur-sm">
@@ -367,30 +367,30 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
         )}
 
         {/* Nome */}
-        <div className="space-y-3">
-          <Label htmlFor="name" className="text-sm font-medium text-white/90">
+        <div className="space-y-2">
+          <Label htmlFor="name" className="text-xs font-medium text-white/90">
             Nome completo
           </Label>
           <div className="relative">
-            <User className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-white/60" />
+            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/60" />
             <Input
               id="name"
               type="text"
               placeholder="Seu nome completo"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="pl-12 h-14 bg-white/5 border-white/20 text-white placeholder:text-white/50 rounded-2xl backdrop-blur-sm focus:bg-white/10 focus:border-primary/50 transition-all"
+              className="pl-10 h-11 bg-slate-800/50 border-slate-600/50 text-white placeholder:text-white/50 rounded-lg backdrop-blur-sm focus:bg-slate-700/50 focus:border-emerald-500/50 transition-all"
             />
           </div>
         </div>
 
         {/* Email */}
-        <div className="space-y-3">
-          <Label htmlFor="register-email" className="text-sm font-medium text-white/90">
+        <div className="space-y-2">
+          <Label htmlFor="register-email" className="text-xs font-medium text-white/90">
             Email
           </Label>
           <div className="relative">
-            <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-white/60" />
+            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/60" />
             <Input
               id="register-email"
               type="email"
@@ -398,77 +398,77 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={!!prefilledEmail}
-              className="pl-12 h-14 bg-white/5 border-white/20 text-white placeholder:text-white/50 rounded-2xl backdrop-blur-sm focus:bg-white/10 focus:border-primary/50 transition-all disabled:opacity-60"
+              className="pl-10 h-11 bg-slate-800/50 border-slate-600/50 text-white placeholder:text-white/50 rounded-lg backdrop-blur-sm focus:bg-slate-700/50 focus:border-emerald-500/50 transition-all disabled:opacity-60"
             />
           </div>
         </div>
 
         {/* Senha */}
-        <div className="space-y-3">
-          <Label htmlFor="register-password" className="text-sm font-medium text-white/90">
+        <div className="space-y-2">
+          <Label htmlFor="register-password" className="text-xs font-medium text-white/90">
             Senha
           </Label>
           <div className="relative">
-            <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-white/60" />
+            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/60" />
             <Input
               id="register-password"
               type={showPassword ? "text" : "password"}
               placeholder="Crie uma senha forte"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="pl-12 pr-12 h-14 bg-white/5 border-white/20 text-white placeholder:text-white/50 rounded-2xl backdrop-blur-sm focus:bg-white/10 focus:border-primary/50 transition-all"
+              className="pl-10 pr-10 h-11 bg-slate-800/50 border-slate-600/50 text-white placeholder:text-white/50 rounded-lg backdrop-blur-sm focus:bg-slate-700/50 focus:border-emerald-500/50 transition-all"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white/60 hover:text-white transition-colors"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/60 hover:text-white transition-colors"
             >
-              {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
 
-          {/* Validação da senha */}
+          {/* Validação da senha - mais compacta */}
           {password && (
-            <div className="bg-white/5 border border-white/20 rounded-2xl p-4 space-y-3 backdrop-blur-sm">
+            <div className="bg-slate-800/30 border border-slate-600/30 rounded-lg p-3 space-y-2 backdrop-blur-sm">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-white/90">Força da senha:</p>
-                <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                <p className="text-xs font-medium text-white/90">Força da senha:</p>
+                <div className={`px-2 py-1 rounded-full text-xs font-medium ${
                   passwordValidation.strength === 'weak' ? 'bg-red-500/20 text-red-300 border border-red-500/30' :
                   passwordValidation.strength === 'medium' ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30' :
-                  'bg-green-500/20 text-green-300 border border-green-500/30'
+                  'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
                 }`}>
                   {passwordValidation.strength === 'weak' ? 'Fraca' :
                    passwordValidation.strength === 'medium' ? 'Média' : 'Forte'}
                 </div>
               </div>
               
-              <div className="grid grid-cols-1 gap-2 text-xs">
-                <div className={`flex items-center gap-2 ${passwordValidation.length ? 'text-green-300' : 'text-white/50'}`}>
-                  <CheckCircle className={`h-3 w-3 ${passwordValidation.length ? 'text-green-300' : 'text-white/50'}`} />
-                  Pelo menos 8 caracteres
+              <div className="grid grid-cols-2 gap-1 text-xs">
+                <div className={`flex items-center gap-1 ${passwordValidation.length ? 'text-emerald-300' : 'text-white/50'}`}>
+                  <CheckCircle className={`h-3 w-3 ${passwordValidation.length ? 'text-emerald-300' : 'text-white/50'}`} />
+                  8+ caracteres
                 </div>
-                <div className={`flex items-center gap-2 ${passwordValidation.uppercase ? 'text-green-300' : 'text-white/50'}`}>
-                  <CheckCircle className={`h-3 w-3 ${passwordValidation.uppercase ? 'text-green-300' : 'text-white/50'}`} />
-                  Uma letra maiúscula
+                <div className={`flex items-center gap-1 ${passwordValidation.uppercase ? 'text-emerald-300' : 'text-white/50'}`}>
+                  <CheckCircle className={`h-3 w-3 ${passwordValidation.uppercase ? 'text-emerald-300' : 'text-white/50'}`} />
+                  Maiúscula
                 </div>
-                <div className={`flex items-center gap-2 ${passwordValidation.lowercase ? 'text-green-300' : 'text-white/50'}`}>
-                  <CheckCircle className={`h-3 w-3 ${passwordValidation.lowercase ? 'text-green-300' : 'text-white/50'}`} />
-                  Uma letra minúscula
+                <div className={`flex items-center gap-1 ${passwordValidation.lowercase ? 'text-emerald-300' : 'text-white/50'}`}>
+                  <CheckCircle className={`h-3 w-3 ${passwordValidation.lowercase ? 'text-emerald-300' : 'text-white/50'}`} />
+                  Minúscula
                 </div>
-                <div className={`flex items-center gap-2 ${passwordValidation.number ? 'text-green-300' : 'text-white/50'}`}>
-                  <CheckCircle className={`h-3 w-3 ${passwordValidation.number ? 'text-green-300' : 'text-white/50'}`} />
-                  Um número
+                <div className={`flex items-center gap-1 ${passwordValidation.number ? 'text-emerald-300' : 'text-white/50'}`}>
+                  <CheckCircle className={`h-3 w-3 ${passwordValidation.number ? 'text-emerald-300' : 'text-white/50'}`} />
+                  Número
                 </div>
-                <div className={`flex items-center gap-2 ${passwordValidation.special ? 'text-green-300' : 'text-white/50'}`}>
-                  <CheckCircle className={`h-3 w-3 ${passwordValidation.special ? 'text-green-300' : 'text-white/50'}`} />
-                  Um caractere especial (!@#$%^&*)
+                <div className={`flex items-center gap-1 col-span-2 ${passwordValidation.special ? 'text-emerald-300' : 'text-white/50'}`}>
+                  <CheckCircle className={`h-3 w-3 ${passwordValidation.special ? 'text-emerald-300' : 'text-white/50'}`} />
+                  Especial (!@#$%)
                 </div>
               </div>
               
               {passwordValidation.score >= 4 && (
-                <div className="bg-green-500/10 border border-green-500/30 rounded-2xl p-3 flex items-center gap-2 backdrop-blur-sm">
-                  <CheckCircle className="h-4 w-4 text-green-300" />
-                  <p className="text-sm font-medium text-green-300">Senha segura!</p>
+                <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-2 flex items-center gap-2 backdrop-blur-sm">
+                  <CheckCircle className="h-3 w-3 text-emerald-300" />
+                  <p className="text-xs font-medium text-emerald-300">Senha segura!</p>
                 </div>
               )}
             </div>
@@ -476,35 +476,35 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
         </div>
 
         {/* Confirmar Senha */}
-        <div className="space-y-3">
-          <Label htmlFor="confirm-password" className="text-sm font-medium text-white/90">
+        <div className="space-y-2">
+          <Label htmlFor="confirm-password" className="text-xs font-medium text-white/90">
             Confirmar senha
           </Label>
           <div className="relative">
-            <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-white/60" />
+            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/60" />
             <Input
               id="confirm-password"
               type={showConfirmPassword ? "text" : "password"}
               placeholder="Digite a senha novamente"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="pl-12 pr-12 h-14 bg-white/5 border-white/20 text-white placeholder:text-white/50 rounded-2xl backdrop-blur-sm focus:bg-white/10 focus:border-primary/50 transition-all"
+              className="pl-10 pr-10 h-11 bg-slate-800/50 border-slate-600/50 text-white placeholder:text-white/50 rounded-lg backdrop-blur-sm focus:bg-slate-700/50 focus:border-emerald-500/50 transition-all"
             />
             <button
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white/60 hover:text-white transition-colors"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/60 hover:text-white transition-colors"
             >
-              {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
 
           {/* Validação de confirmação */}
           {confirmPassword && (
-            <div className={`flex items-center gap-2 text-sm ${
-              passwordsMatch ? 'text-green-300' : 'text-red-300'
+            <div className={`flex items-center gap-2 text-xs ${
+              passwordsMatch ? 'text-emerald-300' : 'text-red-300'
             }`}>
-              <CheckCircle className={`h-4 w-4 ${passwordsMatch ? 'text-green-300' : 'text-red-300'}`} />
+              <CheckCircle className={`h-3 w-3 ${passwordsMatch ? 'text-emerald-300' : 'text-red-300'}`} />
               {passwordsMatch ? 'Senhas coincidem' : 'As senhas não coincidem'}
             </div>
           )}
@@ -512,35 +512,31 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
 
         <Button
           type="submit"
-          className="w-full h-16 font-semibold text-lg transition-all duration-300 group bg-gradient-to-r from-primary via-primary to-primary/80 hover:from-primary/90 hover:via-primary/95 hover:to-primary/70 shadow-2xl hover:shadow-primary/25 rounded-2xl text-white border-0"
+          className="w-full h-12 font-semibold text-base transition-all duration-300 group bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 hover:from-emerald-700 hover:via-emerald-600 hover:to-teal-600 shadow-lg hover:shadow-emerald-500/25 rounded-lg text-white border-0"
           disabled={isLoading || !isPasswordValid || !passwordsMatch}
         >
           {isLoading ? (
             <>
-              <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3" />
+              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
               Criando sua conta...
             </>
           ) : (
             <>
               🚀 Entrar na comunidade agora
-              <ArrowRight className="ml-3 h-6 w-6 transition-transform group-hover:translate-x-1" />
+              <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
             </>
           )}
         </Button>
         </form>
 
         <div className="text-center">
-          <div className="bg-white/5 border border-white/20 rounded-2xl p-6 space-y-3 backdrop-blur-sm">
-            <div className="flex items-center justify-center gap-2 text-primary">
-              <CheckCircle className="h-5 w-5" />
-              <p className="text-sm font-semibold">Segurança garantida</p>
+          <div className="bg-slate-800/30 border border-slate-600/30 rounded-lg p-4 space-y-2 backdrop-blur-sm">
+            <div className="flex items-center justify-center gap-2 text-emerald-400">
+              <CheckCircle className="h-4 w-4" />
+              <p className="text-xs font-semibold">Segurança garantida</p>
             </div>
             <p className="text-xs text-white/70 leading-relaxed">
-              Seus dados são protegidos com criptografia de nível bancário. 
-              Ao se cadastrar, você concorda com nossos{" "}
-              <a href="#" className="text-primary hover:text-primary/80 font-medium underline">Termos de Uso</a>
-              {" "}e{" "}
-              <a href="#" className="text-primary hover:text-primary/80 font-medium underline">Política de Privacidade</a>
+              Seus dados são protegidos com criptografia de nível bancário.
             </p>
           </div>
         </div>
