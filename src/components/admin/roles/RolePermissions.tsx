@@ -47,120 +47,100 @@ interface PermissionsByCategory {
   [category: string]: Permission[];
 }
 
-// Reorganizar permissões de forma clara: AÇÃO vs GESTÃO
-const organizePermissions = (permissions: Permission[]) => {
-  const usagePermissions: Permission[] = [];  // O que usuários podem VER e FAZER
-  const managementPermissions: Permission[] = []; // GESTÃO - só admin
-  
-  permissions.forEach(permission => {
-    const code = permission.code.toLowerCase();
-    const name = permission.name.toLowerCase();
-    const category = permission.category.toLowerCase();
+// Reorganizar permissões por tipo de role
+const organizePermissions = (permissions: Permission[], isSystemAdmin: boolean) => {
+  if (isSystemAdmin) {
+    // Admin vê todas as permissões organizadas por categoria
+    const adminPermissions: Permission[] = [];
+    const systemPermissions: Permission[] = [];
     
-    // GESTÃO (somente admin do sistema) - tudo que envolve controlar/gerenciar/administrar
-    const isManagement = (
-      // Palavras-chave de gestão
-      code.includes('manage') || code.includes('admin') || code.includes('create') || 
-      code.includes('delete') || code.includes('edit') || code.includes('update') ||
-      name.includes('gerenciar') || name.includes('administrar') || name.includes('configurar') ||
-      name.includes('criar') || name.includes('editar') || name.includes('deletar') ||
-      name.includes('remover') || name.includes('modificar') || name.includes('alterar') ||
-      
-      // Categorias sempre administrativas
-      category === 'admin' || category === 'system' || category === 'database' ||
-      category === 'settings' || category === 'configuration' ||
-      
-      // Contextos específicos de gestão
-      code.includes('users.manage') || code.includes('roles.') || 
-      code.includes('permissions.') || code.includes('settings.') ||
-      code.includes('analytics.manage') || code.includes('system.')
-    );
+    permissions.forEach(permission => {
+      if (permission.category === 'admin') {
+        adminPermissions.push(permission);
+      } else {
+        systemPermissions.push(permission);
+      }
+    });
     
-    if (isManagement) {
-      managementPermissions.push(permission);
-    } else {
-      // USO (o que usuários podem ver/acessar/usar)
-      usagePermissions.push(permission);
-    }
-  });
-  
-  return { usagePermissions, managementPermissions };
-};
-
-// Ícones específicos para ações
-const getActionIcon = (permission: Permission) => {
-  const code = permission.code.toLowerCase();
-  const name = permission.name.toLowerCase();
-  
-  // Ícones de gestão
-  if (code.includes('manage') || name.includes('gerenciar')) return Settings;
-  if (code.includes('create') || name.includes('criar')) return Plus;
-  if (code.includes('edit') || name.includes('editar')) return Edit;
-  if (code.includes('delete') || name.includes('deletar')) return Trash2;
-  if (code.includes('admin') || name.includes('admin')) return Crown;
-  
-  // Ícones de uso/visualização
-  if (code.includes('view') || name.includes('visualizar') || code.includes('read')) return Eye;
-  if (code.includes('access') || name.includes('acessar')) return Globe;
-  if (code.includes('use') || name.includes('usar')) return Zap;
-  
-  // Por categoria
-  const category = permission.category.toLowerCase();
-  if (category.includes('community')) return MessageSquare;
-  if (category.includes('learning')) return BookOpen;
-  if (category.includes('analytics')) return BarChart3;
-  if (category.includes('content')) return FileText;
-  
-  return Eye; // Default para visualização
-};
-
-// Cores por tipo de ação
-const getPermissionTypeColor = (permission: Permission, isActive: boolean = false) => {
-  const code = permission.code.toLowerCase();
-  const name = permission.name.toLowerCase();
-  
-  // Tipo de ação determina a cor
-  let colorClass = '';
-  
-  if (code.includes('view') || code.includes('read') || name.includes('visualizar')) {
-    colorClass = isActive ? 'bg-viverblue/20 text-viverblue border-viverblue/30' : 'bg-viverblue/5 text-viverblue/70';
-  } else if (code.includes('access') || name.includes('acessar')) {
-    colorClass = isActive ? 'bg-operational/20 text-operational border-operational/30' : 'bg-operational/5 text-operational/70';
-  } else if (code.includes('use') || name.includes('usar')) {
-    colorClass = isActive ? 'bg-strategy/20 text-strategy border-strategy/30' : 'bg-strategy/5 text-strategy/70';
+    return { adminPermissions, systemPermissions, userFeatures: [] };
   } else {
-    // Gestão - vermelho para indicar cuidado
-    colorClass = isActive ? 'bg-destructive/20 text-destructive border-destructive/30' : 'bg-destructive/5 text-destructive/70';
+    // Roles personalizados veem apenas funcionalidades de uso
+    const userFeatures = permissions.filter(p => p.category === 'features');
+    return { adminPermissions: [], systemPermissions: [], userFeatures };
   }
-  
-  return `text-xs font-medium px-2 py-1 rounded ${colorClass}`;
 };
 
-// Descrições mais claras
-const getActionDescription = (permission: Permission) => {
+// Mapear ícones para funcionalidades específicas
+const getFeatureIcon = (permission: Permission) => {
   const code = permission.code.toLowerCase();
-  const name = permission.name.toLowerCase();
-  const category = permission.category.toLowerCase();
   
-  // Descrições de uso (não-gerencial)
-  if (code.includes('view') || code.includes('read')) {
-    return `Pode visualizar e consultar ${category}`;
-  }
-  if (code.includes('access')) {
-    return `Tem acesso às funcionalidades de ${category}`;
-  }
-  if (code.includes('use')) {
-    return `Pode usar as ferramentas de ${category}`;
-  }
+  const iconMap: Record<string, any> = {
+    'ai_trail.access': Zap,
+    'solutions.access': FileText,
+    'learning.access': BookOpen,
+    'certificates.access': Shield,
+    'tools.access': Settings,
+    'benefits.access': Crown,
+    'networking.access': Users,
+    'community.access': MessageSquare,
+    'events.access': Globe,
+    'suggestions.access': Edit,
+  };
   
-  // Descrições de gestão (admin)
-  if (code.includes('create')) return `Pode criar novos itens em ${category}`;
-  if (code.includes('edit') || code.includes('update')) return `Pode modificar itens em ${category}`;
-  if (code.includes('delete')) return `Pode remover itens em ${category}`;
-  if (code.includes('manage')) return `Controle total sobre ${category}`;
-  if (code.includes('admin')) return `Administração completa de ${category}`;
+  return iconMap[code] || Eye;
+};
+
+// Mapear ícones para funcionalidades administrativas
+const getAdminIcon = (permission: Permission) => {
+  const code = permission.code.toLowerCase();
   
-  return permission.description || `Funcionalidade relacionada a ${category}`;
+  if (code.includes('dashboard')) return BarChart3;
+  if (code.includes('users')) return Users;
+  if (code.includes('system')) return Settings;
+  if (code.includes('analytics')) return BarChart3;
+  if (code.includes('content')) return FileText;
+  
+  return Crown;
+};
+
+// Cores específicas por funcionalidade
+const getFeatureColor = (permission: Permission, isActive: boolean = false) => {
+  const code = permission.code.toLowerCase();
+  
+  const colorMap: Record<string, string> = {
+    'ai_trail.access': isActive ? 'bg-viverblue/20 text-viverblue border-viverblue/30' : 'bg-viverblue/5 text-viverblue/70',
+    'solutions.access': isActive ? 'bg-operational/20 text-operational border-operational/30' : 'bg-operational/5 text-operational/70',
+    'learning.access': isActive ? 'bg-strategy/20 text-strategy border-strategy/30' : 'bg-strategy/5 text-strategy/70',
+    'certificates.access': isActive ? 'bg-aurora/20 text-aurora border-aurora/30' : 'bg-aurora/5 text-aurora/70',
+    'tools.access': isActive ? 'bg-revenue/20 text-revenue border-revenue/30' : 'bg-revenue/5 text-revenue/70',
+    'benefits.access': isActive ? 'bg-viverblue/20 text-viverblue border-viverblue/30' : 'bg-viverblue/5 text-viverblue/70',
+    'networking.access': isActive ? 'bg-operational/20 text-operational border-operational/30' : 'bg-operational/5 text-operational/70',
+    'community.access': isActive ? 'bg-strategy/20 text-strategy border-strategy/30' : 'bg-strategy/5 text-strategy/70',
+    'events.access': isActive ? 'bg-aurora/20 text-aurora border-aurora/30' : 'bg-aurora/5 text-aurora/70',
+    'suggestions.access': isActive ? 'bg-revenue/20 text-revenue border-revenue/30' : 'bg-revenue/5 text-revenue/70',
+  };
+  
+  return `text-xs font-medium px-2 py-1 rounded ${colorMap[code] || (isActive ? 'bg-muted text-muted-foreground' : 'bg-muted/50 text-muted-foreground')}`;
+};
+
+// Descrições específicas por funcionalidade
+const getFeatureDescription = (permission: Permission) => {
+  const code = permission.code.toLowerCase();
+  
+  const descriptions: Record<string, string> = {
+    'ai_trail.access': 'Acesso às trilhas personalizadas de implementação com IA',
+    'solutions.access': 'Visualizar e explorar o catálogo completo de soluções',
+    'learning.access': 'Participar dos cursos e formações da plataforma',
+    'certificates.access': 'Gerar e baixar certificados de conclusão',
+    'tools.access': 'Utilizar ferramentas e recursos exclusivos',
+    'benefits.access': 'Acessar benefícios e descontos exclusivos',
+    'networking.access': 'Conectar-se com outros membros da comunidade',
+    'community.access': 'Participar de discussões e fóruns',
+    'events.access': 'Ver e participar de eventos e webinars',
+    'suggestions.access': 'Enviar sugestões de melhorias para a plataforma',
+  };
+  
+  return descriptions[code] || permission.description || 'Funcionalidade da plataforma';
 };
 
 export function RolePermissions({ open, onOpenChange, role }: RolePermissionsProps) {
@@ -169,14 +149,17 @@ export function RolePermissions({ open, onOpenChange, role }: RolePermissionsPro
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Organizar permissões por tipo
-  const { usagePermissions, managementPermissions } = organizePermissions(permissions);
+  // Verificar se é admin do sistema
+  const isSystemAdmin = role?.name === 'admin' || role?.is_system;
+  
+  // Organizar permissões baseado no tipo de role
+  const { adminPermissions, systemPermissions, userFeatures } = organizePermissions(permissions, isSystemAdmin);
   
   // Calcular estatísticas
   const totalPermissions = permissions.length;
   const activePermissions = rolePermissions.length;
-  const activeUsagePerms = usagePermissions.filter(p => rolePermissions.includes(p.code));
-  const activeMgmtPerms = managementPermissions.filter(p => rolePermissions.includes(p.code));
+  const activeFeatures = userFeatures.filter(p => rolePermissions.includes(p.code));
+  const activeAdminPerms = adminPermissions.filter(p => rolePermissions.includes(p.code));
 
   // Buscar permissões do papel
   useEffect(() => {
@@ -227,7 +210,7 @@ export function RolePermissions({ open, onOpenChange, role }: RolePermissionsPro
         if (error) throw error;
         
         setRolePermissions(prev => [...prev, permission.code]);
-        toast.success(`Permissão ativada`);
+        toast.success(`Acesso ativado`);
       } else {
         const { error } = await supabase
           .from("role_permissions")
@@ -240,7 +223,7 @@ export function RolePermissions({ open, onOpenChange, role }: RolePermissionsPro
         setRolePermissions(prev => 
           prev.filter(code => code !== permission.code)
         );
-        toast.success(`Permissão desativada`);
+        toast.success(`Acesso removido`);
       }
     } catch (err) {
       console.error("Erro ao atualizar permissão:", err);
@@ -250,50 +233,90 @@ export function RolePermissions({ open, onOpenChange, role }: RolePermissionsPro
     }
   };
 
-  const renderPermissionItem = (permission: Permission) => {
+  const renderFeatureItem = (permission: Permission) => {
     const isActive = rolePermissions.includes(permission.code);
-    const ActionIcon = getActionIcon(permission);
+    const FeatureIcon = getFeatureIcon(permission);
+    
+    return (
+      <div
+        key={permission.id}
+        className={`group relative rounded-xl border transition-all duration-300 ${
+          isActive 
+            ? 'bg-aurora/5 border-aurora/30 shadow-lg shadow-aurora/5' 
+            : 'bg-card border-border/30 hover:border-aurora/20 hover:bg-aurora/5'
+        }`}
+      >
+        <div className="flex items-center gap-4 p-5">
+          <div className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${
+            isActive 
+              ? 'bg-aurora/15 text-aurora shadow-sm' 
+              : 'bg-muted/50 text-muted-foreground group-hover:bg-aurora/10 group-hover:text-aurora'
+          }`}>
+            <FeatureIcon className="w-6 h-6" />
+          </div>
+          
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-3 mb-2">
+              <h4 className="font-semibold text-base text-foreground">
+                {permission.name}
+              </h4>
+              {isActive && (
+                <CheckCircle2 className="w-5 h-5 text-aurora flex-shrink-0" />
+              )}
+            </div>
+            
+            <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+              {getFeatureDescription(permission)}
+            </p>
+            
+            <Badge className={getFeatureColor(permission, isActive)}>
+              {permission.code}
+            </Badge>
+          </div>
+          
+          <Switch
+            checked={isActive}
+            onCheckedChange={(checked) => handlePermissionChange(permission, checked)}
+            disabled={isSaving}
+            className="flex-shrink-0 scale-110"
+          />
+        </div>
+      </div>
+    );
+  };
+
+  const renderAdminPermission = (permission: Permission) => {
+    const isActive = rolePermissions.includes(permission.code);
+    const AdminIcon = getAdminIcon(permission);
     
     return (
       <div
         key={permission.id}
         className={`group relative rounded-lg border transition-all duration-300 ${
           isActive 
-            ? 'bg-aurora/5 border-aurora/20 shadow-sm' 
-            : 'bg-card border-border/30 hover:border-border/60 hover:bg-muted/20'
+            ? 'bg-destructive/5 border-destructive/20' 
+            : 'bg-card border-border/30 hover:border-destructive/20'
         }`}
       >
-        <div className="flex items-center gap-4 p-4">
-          <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${
+        <div className="flex items-center gap-3 p-4">
+          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
             isActive 
-              ? 'bg-aurora/10 text-aurora' 
+              ? 'bg-destructive/10 text-destructive' 
               : 'bg-muted/50 text-muted-foreground'
           }`}>
-            <ActionIcon className="w-5 h-5" />
+            <AdminIcon className="w-4 h-4" />
           </div>
           
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <h4 className="font-medium text-sm text-foreground truncate">
+              <h4 className="font-medium text-sm text-foreground">
                 {permission.name}
               </h4>
-              {isActive && (
-                <CheckCircle2 className="w-4 h-4 text-aurora flex-shrink-0" />
-              )}
+              {isActive && <CheckCircle2 className="w-4 h-4 text-destructive" />}
             </div>
-            
-            <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
-              {getActionDescription(permission)}
+            <p className="text-xs text-muted-foreground">
+              {permission.description}
             </p>
-            
-            <div className="flex items-center gap-2">
-              <Badge className={getPermissionTypeColor(permission, isActive)}>
-                {permission.category}
-              </Badge>
-              <code className="text-xs text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded">
-                {permission.code}
-              </code>
-            </div>
           </div>
           
           <Switch
@@ -316,12 +339,15 @@ export function RolePermissions({ open, onOpenChange, role }: RolePermissionsPro
               <ShieldCheck className="w-6 h-6 text-aurora" />
             </div>
             <div className="flex-1">
-              <DialogTitle className="text-lg font-semibold text-foreground">
-                Configurar Permissões
+              <DialogTitle className="text-xl font-semibold text-foreground">
+                {isSystemAdmin ? 'Permissões Administrativas' : 'Funcionalidades de Acesso'}
               </DialogTitle>
               {role && (
                 <DialogDescription className="text-sm text-muted-foreground mt-1">
-                  Definindo o que usuários com o papel <span className="font-medium text-aurora">{role.name}</span> podem ver e fazer na plataforma
+                  {isSystemAdmin 
+                    ? `Controle completo do sistema para o papel ${role.name}` 
+                    : `Definir quais funcionalidades usuários com o papel "${role.name}" podem acessar`
+                  }
                 </DialogDescription>
               )}
             </div>
@@ -335,18 +361,24 @@ export function RolePermissions({ open, onOpenChange, role }: RolePermissionsPro
                   {activePermissions} ativas
                 </span>
               </div>
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/50 rounded-full">
-                <Eye className="w-4 h-4 text-viverblue" />
-                <span className="text-sm text-muted-foreground">
-                  {activeUsagePerms.length} de uso
-                </span>
-              </div>
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/50 rounded-full">
-                <Crown className="w-4 h-4 text-destructive" />
-                <span className="text-sm text-muted-foreground">
-                  {activeMgmtPerms.length} de gestão
-                </span>
-              </div>
+              
+              {!isSystemAdmin && (
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-viverblue/10 rounded-full">
+                  <Globe className="w-4 h-4 text-viverblue" />
+                  <span className="text-sm text-viverblue">
+                    {activeFeatures.length} de {userFeatures.length} funcionalidades
+                  </span>
+                </div>
+              )}
+              
+              {isSystemAdmin && (
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-destructive/10 rounded-full">
+                  <Crown className="w-4 h-4 text-destructive" />
+                  <span className="text-sm text-destructive">
+                    {activeAdminPerms.length} administrativas
+                  </span>
+                </div>
+              )}
             </div>
           )}
         </DialogHeader>
@@ -364,58 +396,81 @@ export function RolePermissions({ open, onOpenChange, role }: RolePermissionsPro
           <div className="flex-1 overflow-hidden">
             <div className="h-full overflow-y-auto space-y-6 pr-2" style={{ scrollbarGutter: 'stable' }}>
               
-              {/* Funcionalidades de Uso */}
-              {usagePermissions.length > 0 && (
-                <Card className="border border-viverblue/20">
-                  <CardHeader className="pb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-viverblue/10 flex items-center justify-center">
-                        <Eye className="w-5 h-5 text-viverblue" />
-                      </div>
-                      <div className="flex-1">
-                        <CardTitle className="text-base font-semibold text-foreground">
-                          Funcionalidades de Uso
-                        </CardTitle>
-                        <p className="text-sm text-muted-foreground">
-                          O que os usuários podem ver, acessar e usar na plataforma
-                        </p>
-                      </div>
-                      <Badge variant="outline" className="bg-viverblue/10 text-viverblue border-viverblue/20">
-                        {activeUsagePerms.length}/{usagePermissions.length}
-                      </Badge>
+              {/* Funcionalidades para Roles Personalizados */}
+              {!isSystemAdmin && userFeatures.length > 0 && (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-viverblue/20 to-aurora/20 flex items-center justify-center">
+                      <Globe className="w-5 h-5 text-viverblue" />
                     </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {usagePermissions.map(renderPermissionItem)}
-                  </CardContent>
-                </Card>
+                    <div>
+                      <h3 className="text-lg font-semibold text-foreground">
+                        Funcionalidades da Plataforma
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        Selecione quais áreas e recursos os usuários podem acessar
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid gap-4">
+                    {userFeatures.map(renderFeatureItem)}
+                  </div>
+                </div>
               )}
 
-              {/* Funcionalidades de Gestão - só para admin */}
-              {managementPermissions.length > 0 && (
-                <Card className="border border-destructive/20 bg-destructive/5">
-                  <CardHeader className="pb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center">
-                        <Crown className="w-5 h-5 text-destructive" />
-                      </div>
-                      <div className="flex-1">
-                        <CardTitle className="text-base font-semibold text-foreground">
-                          Funcionalidades de Gestão
-                        </CardTitle>
-                        <p className="text-sm text-muted-foreground">
-                          <strong className="text-destructive">Atenção:</strong> Controles administrativos - usar com cuidado
-                        </p>
-                      </div>
-                      <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20">
-                        {activeMgmtPerms.length}/{managementPermissions.length}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {managementPermissions.map(renderPermissionItem)}
-                  </CardContent>
-                </Card>
+              {/* Permissões Administrativas para Admin */}
+              {isSystemAdmin && (
+                <>
+                  {adminPermissions.length > 0 && (
+                    <Card className="border border-destructive/20">
+                      <CardHeader className="pb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center">
+                            <Crown className="w-5 h-5 text-destructive" />
+                          </div>
+                          <div className="flex-1">
+                            <CardTitle className="text-base font-semibold text-foreground">
+                              Controles Administrativos
+                            </CardTitle>
+                            <p className="text-sm text-muted-foreground">
+                              Permissões de alta segurança para gestão da plataforma
+                            </p>
+                          </div>
+                          <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20">
+                            {activeAdminPerms.length}/{adminPermissions.length}
+                          </Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        {adminPermissions.map(renderAdminPermission)}
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {systemPermissions.length > 0 && (
+                    <Card className="border border-muted">
+                      <CardHeader className="pb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center">
+                            <Settings className="w-5 h-5 text-muted-foreground" />
+                          </div>
+                          <div className="flex-1">
+                            <CardTitle className="text-base font-semibold text-foreground">
+                              Funcionalidades do Sistema
+                            </CardTitle>
+                            <p className="text-sm text-muted-foreground">
+                              Acesso às funcionalidades e recursos da plataforma
+                            </p>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        {systemPermissions.map(renderAdminPermission)}
+                      </CardContent>
+                    </Card>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -426,14 +481,16 @@ export function RolePermissions({ open, onOpenChange, role }: RolePermissionsPro
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Shield className="w-4 h-4 text-aurora" />
               <span>
-                <span className="font-medium text-aurora">{activePermissions}</span> de {totalPermissions} permissões ativas
+                <span className="font-medium text-aurora">{activePermissions}</span> de {
+                  isSystemAdmin ? totalPermissions : userFeatures.length
+                } {isSystemAdmin ? 'permissões' : 'funcionalidades'} ativas
               </span>
             </div>
             <Button 
               onClick={() => onOpenChange(false)}
               className="bg-aurora hover:bg-aurora/90 text-white px-6"
             >
-              Salvar e Fechar
+              Salvar Alterações
             </Button>
           </div>
         </DialogFooter>
