@@ -5609,6 +5609,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      fix_incomplete_onboarding_states: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       fix_orphaned_invites: {
         Args: Record<PropertyKey, never>
         Returns: Json
