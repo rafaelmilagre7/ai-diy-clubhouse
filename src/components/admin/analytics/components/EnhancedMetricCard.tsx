@@ -113,7 +113,7 @@ export const EnhancedMetricCard = ({
   return (
     <Card 
       className={cn(
-        "border-l-4 transition-all duration-200 hover:shadow-md hover:scale-[1.02]",
+        "border-l-4 transition-all duration-200 hover:shadow-md",
         "bg-gradient-to-r",
         colors.border,
         colors.gradient,

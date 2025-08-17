@@ -122,16 +122,23 @@
   background-clip: text;
 }
 
-/* Hover effects Aurora */
+/* Hover effects Aurora - Desabilitado para área admin */
 .aurora-hover-scale {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.aurora-hover-scale:hover {
+/* Aplicar hover scale apenas fora da área admin */
+:not([data-admin-area]) .aurora-hover-scale:hover {
   transform: scale(1.02) translateZ(0);
   box-shadow: 
     0 10px 40px hsl(var(--aurora) / 0.15),
     0 4px 20px hsl(var(--viverblue) / 0.1);
+}
+
+/* Desabilitar efeitos hover na área admin */
+[data-admin-area] .aurora-hover-scale:hover {
+  transform: none;
+  box-shadow: none;
 }
 
 /* Floating particles */

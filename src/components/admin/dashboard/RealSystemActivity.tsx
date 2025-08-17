@@ -132,7 +132,7 @@ export const RealSystemActivity = ({ activityData, loading }: RealSystemActivity
           activityData.recentActivities.map((activity, index) => (
             <div 
               key={`${activity.type}-${activityData.timeRange}-${index}`} 
-              className="aurora-glass rounded-lg p-4 aurora-hover-scale transition-all duration-300 hover:shadow-lg"
+              className="aurora-glass rounded-lg p-4 transition-all duration-300"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">

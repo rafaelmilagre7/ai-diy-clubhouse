@@ -73,7 +73,7 @@ export const AnalyticsMetricCard = ({
 
   return (
     <Card className={cn(
-      "border-l-4 transition-all duration-200 hover:shadow-lg hover:scale-[1.02]",
+      "border-l-4 transition-all duration-200 hover:shadow-lg",
       getColorClasses(),
       className
     )}>

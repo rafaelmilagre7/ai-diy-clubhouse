@@ -14,7 +14,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   // AdminProtectedRoutes já garante que apenas admins chegam aqui
   // Removi toda a lógica complexa de verificação
   return (
-    <div className="flex min-h-screen w-full bg-background dark">
+    <div className="flex min-h-screen w-full bg-background dark" data-admin-area>
       {/* Overlay mobile */}
       {typeof window !== 'undefined' && window.innerWidth < 768 && sidebarOpen && (
         <div 
