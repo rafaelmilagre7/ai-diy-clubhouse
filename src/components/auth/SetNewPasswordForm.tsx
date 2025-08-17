@@ -7,8 +7,11 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Check, Lock, AlertCircle, Loader2 } from "lucide-react";
+import { Check, Lock, AlertCircle, Loader2, Eye, EyeOff } from "lucide-react";
 import { performCleanupAndRedirect } from "@/utils/authStateCleanup";
+import { validatePassword } from "@/utils/passwordValidation";
+import { PasswordStrengthIndicator } from "@/components/ui/password-strength-indicator";
+import { PasswordRequirements } from "@/components/ui/password-requirements";
 
 const setNewPasswordSchema = z
   .object({
@@ -34,12 +37,15 @@ export const SetNewPasswordForm = () => {
   const [isProcessingTokens, setIsProcessingTokens] = useState(true);
   const [isValidSession, setIsValidSession] = useState(false);
   const [sessionError, setSessionError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<SetNewPasswordForm>({
     resolver: zodResolver(setNewPasswordSchema),
@@ -48,6 +54,11 @@ export const SetNewPasswordForm = () => {
       confirmPassword: "",
     },
   });
+
+  const password = watch('password');
+  const confirmPassword = watch('confirmPassword');
+  const passwordValidation = validatePassword(password || '');
+  const passwordsMatch = password === confirmPassword && password.length > 0;
 
   // Processar tokens de reset da URL
   useEffect(() => {
@@ -250,8 +261,8 @@ export const SetNewPasswordForm = () => {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="space-y-2">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <div className="space-y-3">
           <label htmlFor="password" className="block text-sm font-medium text-gray-200">
             Nova senha
           </label>
@@ -262,18 +273,40 @@ export const SetNewPasswordForm = () => {
             <input
               {...register("password")}
               id="password"
-              type="password"
-              placeholder="********"
-              className="pl-10 w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-viverblue focus:border-viverblue"
+              type={showPassword ? "text" : "password"}
+              placeholder="Digite sua nova senha"
+              className={`pl-10 pr-12 w-full py-3 px-3 bg-gray-700 border rounded-lg text-white focus:ring-2 focus:ring-viverblue focus:border-viverblue transition-colors ${
+                password && !passwordValidation.isValid ? 'border-red-500' : 
+                password && passwordValidation.isValid ? 'border-green-500' : 'border-gray-600'
+              }`}
               disabled={isLoading}
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-300 transition-colors"
+            >
+              {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+            </button>
           </div>
+          
+          {/* Indicador de força da senha */}
+          {password && password.length > 0 && (
+            <PasswordStrengthIndicator 
+              strength={passwordValidation.strength} 
+              className="mt-3"
+            />
+          )}
+          
           {errors.password && (
-            <p className="text-red-400 text-sm mt-1">{errors.password.message}</p>
+            <p className="text-red-400 text-sm flex items-center gap-2">
+              <AlertCircle className="h-4 w-4" />
+              {errors.password.message}
+            </p>
           )}
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-3">
           <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-200">
             Confirme a nova senha
           </label>
@@ -284,24 +317,74 @@ export const SetNewPasswordForm = () => {
             <input
               {...register("confirmPassword")}
               id="confirmPassword"
-              type="password"
-              placeholder="********"
-              className="pl-10 w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-viverblue focus:border-viverblue"
+              type={showConfirmPassword ? "text" : "password"}
+              placeholder="Digite novamente sua nova senha"
+              className={`pl-10 pr-12 w-full py-3 px-3 bg-gray-700 border rounded-lg text-white focus:ring-2 focus:ring-viverblue focus:border-viverblue transition-colors ${
+                confirmPassword && !passwordsMatch ? 'border-red-500' : 
+                confirmPassword && passwordsMatch ? 'border-green-500' : 'border-gray-600'
+              }`}
               disabled={isLoading}
             />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-300 transition-colors"
+            >
+              {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+            </button>
           </div>
+          
+          {/* Feedback visual de confirmação */}
+          {confirmPassword && confirmPassword.length > 0 && (
+            <div className="flex items-center gap-2 text-sm">
+              {passwordsMatch ? (
+                <>
+                  <Check className="h-4 w-4 text-green-500" />
+                  <span className="text-green-400">As senhas coincidem</span>
+                </>
+              ) : (
+                <>
+                  <AlertCircle className="h-4 w-4 text-red-500" />
+                  <span className="text-red-400">As senhas não coincidem</span>
+                </>
+              )}
+            </div>
+          )}
+          
           {errors.confirmPassword && (
-            <p className="text-red-400 text-sm mt-1">{errors.confirmPassword.message}</p>
+            <p className="text-red-400 text-sm flex items-center gap-2">
+              <AlertCircle className="h-4 w-4" />
+              {errors.confirmPassword.message}
+            </p>
           )}
         </div>
 
-        <div className="pt-2">
+        {/* Requisitos da senha */}
+        {password && password.length > 0 && (
+          <PasswordRequirements 
+            requirements={passwordValidation.requirements}
+            className="bg-gray-800/50 p-4 rounded-lg border border-gray-700"
+          />
+        )}
+
+        <div className="pt-4">
           <Button
             type="submit"
-            className="w-full bg-viverblue hover:bg-viverblue/90 text-white py-2"
-            disabled={isLoading}
+            className={`w-full py-3 font-medium transition-all ${
+              passwordValidation.isValid && passwordsMatch 
+                ? 'bg-viverblue hover:bg-viverblue/90 text-white' 
+                : 'bg-gray-600 text-gray-300 cursor-not-allowed hover:bg-gray-600'
+            }`}
+            disabled={isLoading || !passwordValidation.isValid || !passwordsMatch}
           >
-            {isLoading ? "Atualizando..." : "Atualizar senha"}
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Atualizando senha...
+              </>
+            ) : (
+              "Atualizar senha"
+            )}
           </Button>
         </div>
       </form>
