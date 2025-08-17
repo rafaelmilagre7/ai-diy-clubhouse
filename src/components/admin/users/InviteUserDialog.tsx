@@ -32,6 +32,7 @@ import { Loader2, Mail, User, UserPlus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/auth';
 
 const inviteSchema = z.object({
   email: z
@@ -64,6 +65,7 @@ export const InviteUserDialog: React.FC<InviteUserDialogProps> = ({
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   // Atualizar a lista de roles quando o dialog for aberto
   useEffect(() => {
@@ -132,6 +134,7 @@ export const InviteUserDialog: React.FC<InviteUserDialogProps> = ({
           notes: values.notes || null,
           whatsapp_number: values.whatsappNumber || null,
           preferred_channel: 'email',
+          created_by: user?.id,
         })
         .select()
         .single();
