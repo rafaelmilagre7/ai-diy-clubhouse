@@ -5849,26 +5849,7 @@ export type Database = {
       }
       get_lessons_with_relations: {
         Args: { p_course_id?: string }
-        Returns: {
-          ai_assistant_enabled: boolean
-          ai_assistant_id: string
-          ai_assistant_prompt: string
-          content: Json
-          cover_image_url: string
-          created_at: string
-          description: string
-          difficulty_level: string
-          estimated_time_minutes: number
-          id: string
-          module: Json
-          module_id: string
-          order_index: number
-          published: boolean
-          resources: Json
-          title: string
-          updated_at: string
-          videos: Json
-        }[]
+        Returns: Json
       }
       get_networking_analytics: {
         Args: Record<PropertyKey, never>
