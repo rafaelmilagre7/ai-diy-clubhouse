@@ -9,6 +9,7 @@ export const aulaFormSchema = z.object({
   description: z.string().optional(),
   moduleId: z.string().uuid({ message: "Por favor, selecione um módulo válido." }),
   difficultyLevel: z.nativeEnum(DifficultyLevel).default(DifficultyLevel.BEGINNER),
+  tags: z.array(z.string()).default([]),
   
   // Etapa 2: Imagem e Mídia
   coverImageUrl: z.string().optional(),

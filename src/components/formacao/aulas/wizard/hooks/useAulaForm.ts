@@ -8,6 +8,7 @@ import { aulaFormSchema, AulaFormValues } from "../schemas/aulaFormSchema";
 import { fetchLessonVideos } from "../services/videoService";
 import { fetchLessonResources } from "../services/resourceService";
 import { LearningLesson, LearningModule } from "@/lib/supabase/types";
+import { useLessonTagsForLesson } from "@/hooks/useLessonTags";
 
 export const useAulaForm = (
   aula?: LearningLesson | null,
@@ -18,6 +19,9 @@ export const useAulaForm = (
   const [currentSaveStep, setCurrentSaveStep] = useState<string>("");
   const [modules, setModules] = useState<LearningModule[]>([]);
   const [initialLoading, setInitialLoading] = useState(true);
+  
+  // Hook para buscar tags existentes da aula
+  const { data: existingTags } = useLessonTagsForLesson(aula?.id || '');
 
   // Inicializar formulário com valores padrão ou da aula existente
   const defaultValues: Partial<AulaFormValues> = {
@@ -29,6 +33,7 @@ export const useAulaForm = (
     published: aula?.published || false,
     aiAssistantEnabled: aula?.ai_assistant_enabled || false,
     aiAssistantId: aula?.ai_assistant_id || "",
+    tags: [],
     videos: [],
     resources: [],
   };
@@ -83,6 +88,12 @@ export const useAulaForm = (
         // Buscar recursos
         const resources = await fetchLessonResources(aula.id);
         form.setValue("resources", resources);
+        
+        // Definir tags existentes
+        if (existingTags && existingTags.length > 0) {
+          const tagIds = existingTags.map(tag => tag.lesson_tags.id);
+          form.setValue("tags", tagIds);
+        }
       } catch (error) {
         console.error("Erro ao buscar dados da aula:", error);
       } finally {
@@ -91,7 +102,7 @@ export const useAulaForm = (
     };
     
     fetchData();
-  }, [aula?.id, form]);
+  }, [aula?.id, form, existingTags]);
 
   // Resetar formulário quando a aula mudar
   useEffect(() => {

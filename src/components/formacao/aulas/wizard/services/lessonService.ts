@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { AulaFormValues } from "../schemas/aulaFormSchema";
 import { saveVideosForLesson } from "./videoService";
 import { saveResourcesForLesson } from "./resourceService";
+import { saveTagsForLesson } from "./tagService";
 
 interface SaveResult {
   success: boolean;
@@ -96,15 +97,21 @@ export async function saveLesson(
     const resourcesResult = await saveResourcesForLesson(resultId, values.resources);
     console.log("📁 LessonService - Resultado do salvamento de materiais:", resourcesResult);
     
+    // Salvar tags da aula
+    setCurrentSaveStep?.("Salvando tags da aula...");
+    console.log("🏷️ LessonService - Tags a serem salvas:", values.tags);
+    const tagsResult = await saveTagsForLesson(resultId, values.tags || []);
+    console.log("🏷️ LessonService - Resultado do salvamento de tags:", tagsResult);
+    
     // Determinar mensagem de retorno com base nos resultados
     let message: string;
     
-    if (videosResult && resourcesResult) {
+    if (videosResult && resourcesResult && tagsResult) {
       message = lessonId 
         ? "Aula atualizada com sucesso!" 
         : "Aula criada com sucesso!";
     } else {
-      message = "Aula salva, mas houve problemas com vídeos ou materiais.";
+      message = "Aula salva, mas houve problemas com vídeos, materiais ou tags.";
     }
     
     return {

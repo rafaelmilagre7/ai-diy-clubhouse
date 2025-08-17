@@ -1,4 +1,3 @@
-
 import React from "react";
 import {
   Form,
@@ -16,6 +15,7 @@ import { LearningModule } from "@/lib/supabase/types";
 import { UseFormReturn } from "react-hook-form";
 import { AulaFormValues } from "../schemas/aulaFormSchema";
 import { DifficultyLevel } from "../types/aulaTypes";
+import { LessonTagManager } from "../../../aulas/components/LessonTagManager";
 
 interface EtapaInfoBasicaProps {
   form: UseFormReturn<AulaFormValues>;
@@ -34,7 +34,7 @@ const EtapaInfoBasica: React.FC<EtapaInfoBasicaProps> = ({
 }) => {
   const handleContinue = async () => {
     // Validar apenas os campos desta etapa
-    const result = await form.trigger(['title', 'moduleId', 'description', 'difficultyLevel']);
+    const result = await form.trigger(['title', 'moduleId', 'description', 'difficultyLevel', 'tags']);
     if (result) {
       onNext();
     }
@@ -142,6 +142,9 @@ const EtapaInfoBasica: React.FC<EtapaInfoBasicaProps> = ({
               )}
             />
           </div>
+          
+          {/* Tags da Aula */}
+          <LessonTagManager form={form} fieldName="tags" />
         </div>
         
       </div>
