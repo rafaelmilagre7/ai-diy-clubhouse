@@ -54,8 +54,11 @@ export interface OnboardingData {
   };
 }
 
+export type UserType = 'entrepreneur' | 'learner';
+
 interface OnboardingState {
   id?: string;
+  userType?: UserType;
   current_step: number;
   completed_steps: number[];
   is_completed: boolean;
@@ -68,7 +71,8 @@ export const useOnboarding = () => {
   const { syncProfile, markProfileStale } = useProfileSync();
   const navigate = useNavigate();
   const [state, setState] = useState<OnboardingState>({
-    current_step: 1,
+    userType: undefined,
+    current_step: 0, // Começar no Step 0 para escolher tipo
     completed_steps: [],
     is_completed: false,
     data: {},
@@ -205,6 +209,7 @@ export const useOnboarding = () => {
         
         setState({
           id: data.id,
+          userType: data.user_type as UserType || 'entrepreneur', // Usar valor do banco ou default
           current_step: nextStep,
           completed_steps: data.completed_steps || [],
           is_completed: data.is_completed,
@@ -242,7 +247,8 @@ export const useOnboarding = () => {
           console.log('[ONBOARDING] Primeiro acesso - sem backup');
           setState({
             id: null,
-            current_step: 1,
+            userType: undefined,
+            current_step: 0, // Começar no Step 0 para novos usuários
             completed_steps: [],
             is_completed: false,
             nina_message: null,
@@ -407,6 +413,69 @@ export const useOnboarding = () => {
     }
   }, [state.current_step]);
 
+  // Salvar tipo de usuário (Step 0)
+  const saveUserType = useCallback(async (userType: UserType) => {
+    if (!user?.id) {
+      console.error('[ONBOARDING] Usuário não autenticado');
+      return false;
+    }
+
+    try {
+      console.log('[ONBOARDING] Salvando user_type:', userType);
+      
+      const updateData = {
+        user_id: user.id,
+        current_step: 1, // Avançar para step 1 após salvar tipo
+        user_type: userType,
+        completed_steps: [0], // Marcar step 0 como concluído
+      };
+
+      let recordId = state.id;
+
+      if (state.id) {
+        // Atualizar registro existente
+        const { error } = await supabase
+          .from('onboarding_final')
+          .update(updateData)
+          .eq('id', state.id);
+
+        if (error) {
+          console.error('[ONBOARDING] Erro ao atualizar user_type:', error);
+          throw error;
+        }
+      } else {
+        // Criar novo registro
+        const { data: newRecord, error } = await supabase
+          .from('onboarding_final')
+          .insert(updateData)
+          .select()
+          .single();
+
+        if (error) {
+          console.error('[ONBOARDING] Erro ao criar registro:', error);
+          throw error;
+        }
+        
+        recordId = newRecord.id;
+      }
+
+      // Atualizar estado local
+      setState(prev => ({
+        ...prev,
+        id: recordId,
+        userType,
+        current_step: 1,
+        completed_steps: [0],
+      }));
+
+      console.log('[ONBOARDING] UserType salvo com sucesso:', userType);
+      return true;
+    } catch (error) {
+      console.error('[ONBOARDING] Erro ao salvar user_type:', error);
+      return false;
+    }
+  }, [user?.id, state.id]);
+
   // Finalizar onboarding (gerar mensagem da NINA)
   const completeOnboarding = useCallback(async (finalStepData: any) => {
     if (!user?.id) return false;
@@ -539,6 +608,7 @@ Vamos começar? Sua trilha personalizada já está pronta! 🚀`;
     
     // Ações
     saveStepData,
+    saveUserType,
     goToNextStep,
     goToPrevStep,
     completeOnboarding,

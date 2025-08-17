@@ -9,6 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Target, TrendingUp, Clock, Star } from 'lucide-react';
 
+export type UserType = 'entrepreneur' | 'learner';
+
 const goalsSchema = z.object({
   primary_goal: z.string().min(1, 'Selecione seu objetivo principal'),
   timeline: z.string().optional(),
@@ -21,12 +23,14 @@ const goalsSchema = z.object({
 type GoalsFormData = z.infer<typeof goalsSchema>;
 
 interface Step4GoalsProps {
+  userType?: UserType;
   initialData?: Partial<GoalsFormData>;
   onDataChange: (data: Partial<GoalsFormData>) => void;
   onNext: () => void;
 }
 
 export const Step4Goals: React.FC<Step4GoalsProps> = ({
+  userType = 'entrepreneur',
   initialData,
   onDataChange,
   onNext,
@@ -55,9 +59,46 @@ export const Step4Goals: React.FC<Step4GoalsProps> = ({
     onNext();
   };
 
+  // Objetivos diferentes baseados no userType
+  const primaryGoals = userType === 'entrepreneur' ? [
+    { value: "productivity", label: "Aumentar produtividade da equipe" },
+    { value: "cost_reduction", label: "Reduzir custos operacionais" },
+    { value: "customer_experience", label: "Melhorar experiência do cliente" },
+    { value: "sales_growth", label: "Aumentar vendas e receita" },
+    { value: "process_automation", label: "Automatizar processos manuais" },
+    { value: "competitive_advantage", label: "Ganhar vantagem competitiva" },
+    { value: "innovation", label: "Inovar produtos/serviços" },
+    { value: "data_insights", label: "Obter insights dos dados" }
+  ] : [
+    { value: "work_efficiency", label: "Ser mais eficiente no trabalho atual" },
+    { value: "personal_automation", label: "Automatizar tarefas pessoais" },
+    { value: "skill_development", label: "Desenvolver novas habilidades" },
+    { value: "career_change", label: "Mudar de carreira para IA" },
+    { value: "practical_learning", label: "Aprender automação prática" },
+    { value: "professional_growth", label: "Destacar-me profissionalmente" },
+    { value: "personal_projects", label: "Criar projetos próprios" },
+    { value: "data_analysis", label: "Entender análise de dados" }
+  ];
+
+  // Capacidade de investimento diferente por userType
+  const investmentOptions = userType === 'entrepreneur' ? [
+    { value: "minimal", label: "Mínimo - Foco em ferramentas gratuitas" },
+    { value: "low", label: "Baixo - Até R$ 500/mês" },
+    { value: "medium", label: "Médio - R$ 500 a R$ 2.000/mês" },
+    { value: "high", label: "Alto - R$ 2.000 a R$ 10.000/mês" },
+    { value: "enterprise", label: "Corporativo - Acima de R$ 10.000/mês" }
+  ] : [
+    { value: "free", label: "Gratuito - Apenas conteúdo free" },
+    { value: "basic", label: "Básico - Até R$ 100/mês" },
+    { value: "intermediate", label: "Intermediário - R$ 100-500/mês" },
+    { value: "advanced", label: "Avançado - R$ 500-1.000/mês" },
+    { value: "premium", label: "Premium - Acima R$ 1.000/mês" }
+  ];
+
+  // Métricas de sucesso comuns para ambos os tipos
   const successMetrics = [
     'Redução de custos operacionais',
-    'Aumento de produtividade',
+    'Aumento de produtividade', 
     'Melhoria na satisfação do cliente',
     'Aceleração de processos',
     'Aumento de vendas',
@@ -99,16 +140,13 @@ export const Step4Goals: React.FC<Step4GoalsProps> = ({
              <SelectTrigger className="h-12">
                <SelectValue placeholder="Selecione seu objetivo principal" />
              </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="productivity">Aumentar produtividade da equipe</SelectItem>
-              <SelectItem value="cost_reduction">Reduzir custos operacionais</SelectItem>
-              <SelectItem value="customer_experience">Melhorar experiência do cliente</SelectItem>
-              <SelectItem value="sales_growth">Aumentar vendas e receita</SelectItem>
-              <SelectItem value="process_automation">Automatizar processos manuais</SelectItem>
-              <SelectItem value="competitive_advantage">Ganhar vantagem competitiva</SelectItem>
-              <SelectItem value="innovation">Inovar produtos/serviços</SelectItem>
-              <SelectItem value="data_insights">Obter insights dos dados</SelectItem>
-            </SelectContent>
+             <SelectContent>
+               {primaryGoals.map((goal) => (
+                 <SelectItem key={goal.value} value={goal.value}>
+                   {goal.label}
+                 </SelectItem>
+               ))}
+             </SelectContent>
           </Select>
           {form.formState.errors.primary_goal && (
             <p className="text-sm text-destructive">
@@ -205,13 +243,13 @@ export const Step4Goals: React.FC<Step4GoalsProps> = ({
              <SelectTrigger className="h-12">
                <SelectValue placeholder="Selecione sua capacidade de investimento" />
              </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="minimal">Mínimo - Foco em ferramentas gratuitas</SelectItem>
-              <SelectItem value="low">Baixo - Até R$ 500/mês</SelectItem>
-              <SelectItem value="medium">Médio - R$ 500 a R$ 2.000/mês</SelectItem>
-              <SelectItem value="high">Alto - R$ 2.000 a R$ 10.000/mês</SelectItem>
-              <SelectItem value="enterprise">Corporativo - Acima de R$ 10.000/mês</SelectItem>
-            </SelectContent>
+             <SelectContent>
+               {investmentOptions.map((option) => (
+                 <SelectItem key={option.value} value={option.value}>
+                   {option.label}
+                 </SelectItem>
+               ))}
+             </SelectContent>
           </Select>
         </div>
 

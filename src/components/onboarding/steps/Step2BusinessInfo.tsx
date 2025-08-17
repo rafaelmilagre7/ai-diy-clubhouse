@@ -9,24 +9,29 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Building2, Users, TrendingUp, Target } from 'lucide-react';
 
+export type UserType = 'entrepreneur' | 'learner';
+
 const businessInfoSchema = z.object({
   company_name: z.string().min(2, 'Nome da empresa deve ter pelo menos 2 caracteres'),
   company_size: z.string().min(1, 'Selecione o tamanho da empresa'),
   company_sector: z.string().min(1, 'Selecione o setor'),
   current_position: z.string().min(1, 'Selecione seu cargo'),
-  annual_revenue: z.string().min(1, 'Selecione o faturamento'),
+  annual_revenue: z.string().optional(), // Opcional para learners
+  experience_level: z.string().optional(), // Opcional para entrepreneurs
   main_challenge: z.string().optional(),
 });
 
 type BusinessInfoFormData = z.infer<typeof businessInfoSchema>;
 
 interface Step2BusinessInfoProps {
+  userType?: UserType;
   initialData?: Partial<BusinessInfoFormData>;
   onDataChange: (data: Partial<BusinessInfoFormData>) => void;
   onNext: () => void;
 }
 
 export const Step2BusinessInfo: React.FC<Step2BusinessInfoProps> = ({
+  userType = 'entrepreneur',
   initialData,
   onDataChange,
   onNext,
@@ -173,41 +178,79 @@ export const Step2BusinessInfo: React.FC<Step2BusinessInfoProps> = ({
             )}
           </div>
 
+          {/* Campo condicional baseado no userType */}
           <div className="space-y-2">
-            <Label className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4" />
-              Faturamento Anual
-            </Label>
-            <Select 
-              value={form.getValues('annual_revenue')} 
-              onValueChange={(value) => {
-                console.log('[STEP2] Faturamento selecionado:', value);
-                form.setValue('annual_revenue', value);
-                form.trigger('annual_revenue');
-              }}
-            >
-              <SelectTrigger className="h-12">
-                <SelectValue placeholder="Selecione o faturamento" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="0-50k">Até R$ 50 mil</SelectItem>
-                <SelectItem value="50k-100k">R$ 50 mil - R$ 100 mil</SelectItem>
-                <SelectItem value="100k-250k">R$ 100 mil - R$ 250 mil</SelectItem>
-                <SelectItem value="250k-500k">R$ 250 mil - R$ 500 mil</SelectItem>
-                <SelectItem value="500k-1m">R$ 500 mil - R$ 1 milhão</SelectItem>
-                <SelectItem value="1m-2m">R$ 1 milhão - R$ 2 milhões</SelectItem>
-                <SelectItem value="2m-5m">R$ 2 milhões - R$ 5 milhões</SelectItem>
-                <SelectItem value="5m-10m">R$ 5 milhões - R$ 10 milhões</SelectItem>
-                <SelectItem value="10m-50m">R$ 10 milhões - R$ 50 milhões</SelectItem>
-                <SelectItem value="50m-100m">R$ 50 milhões - R$ 100 milhões</SelectItem>
-                <SelectItem value="100m+">Mais de R$ 100 milhões</SelectItem>
-                <SelectItem value="nao-divulgar">Prefiro não divulgar</SelectItem>
-              </SelectContent>
-            </Select>
-            {form.formState.errors.annual_revenue && (
-              <p className="text-sm text-destructive">
-                {form.formState.errors.annual_revenue.message}
-              </p>
+            {userType === 'entrepreneur' ? (
+              <>
+                <Label className="flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4" />
+                  Faturamento Anual
+                </Label>
+                <Select 
+                  value={form.getValues('annual_revenue')} 
+                  onValueChange={(value) => {
+                    console.log('[STEP2] Faturamento selecionado:', value);
+                    form.setValue('annual_revenue', value);
+                    form.trigger('annual_revenue');
+                  }}
+                >
+                  <SelectTrigger className="h-12">
+                    <SelectValue placeholder="Selecione o faturamento" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0-50k">Até R$ 50 mil</SelectItem>
+                    <SelectItem value="50k-100k">R$ 50 mil - R$ 100 mil</SelectItem>
+                    <SelectItem value="100k-250k">R$ 100 mil - R$ 250 mil</SelectItem>
+                    <SelectItem value="250k-500k">R$ 250 mil - R$ 500 mil</SelectItem>
+                    <SelectItem value="500k-1m">R$ 500 mil - R$ 1 milhão</SelectItem>
+                    <SelectItem value="1m-2m">R$ 1 milhão - R$ 2 milhões</SelectItem>
+                    <SelectItem value="2m-5m">R$ 2 milhões - R$ 5 milhões</SelectItem>
+                    <SelectItem value="5m-10m">R$ 5 milhões - R$ 10 milhões</SelectItem>
+                    <SelectItem value="10m-50m">R$ 10 milhões - R$ 50 milhões</SelectItem>
+                    <SelectItem value="50m-100m">R$ 50 milhões - R$ 100 milhões</SelectItem>
+                    <SelectItem value="100m+">Mais de R$ 100 milhões</SelectItem>
+                    <SelectItem value="nao-divulgar">Prefiro não divulgar</SelectItem>
+                  </SelectContent>
+                </Select>
+                {form.formState.errors.annual_revenue && (
+                  <p className="text-sm text-destructive">
+                    {form.formState.errors.annual_revenue.message}
+                  </p>
+                )}
+              </>
+            ) : (
+              <>
+                <Label className="flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4" />
+                  Sua Experiência Profissional
+                </Label>
+                <Select 
+                  value={form.getValues('experience_level')} 
+                  onValueChange={(value) => {
+                    console.log('[STEP2] Experiência selecionada:', value);
+                    form.setValue('experience_level', value);
+                    form.trigger('experience_level');
+                  }}
+                >
+                  <SelectTrigger className="h-12">
+                    <SelectValue placeholder="Selecione sua experiência" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="student">Estudante universitário</SelectItem>
+                    <SelectItem value="recent-graduate">Recém-formado (0-2 anos)</SelectItem>
+                    <SelectItem value="junior">Profissional júnior (2-5 anos)</SelectItem>
+                    <SelectItem value="mid">Profissional pleno (5-10 anos)</SelectItem>
+                    <SelectItem value="senior">Profissional sênior (10+ anos)</SelectItem>
+                    <SelectItem value="entrepreneur">Empreendedor/Freelancer</SelectItem>
+                    <SelectItem value="career-change">Mudança de carreira</SelectItem>
+                  </SelectContent>
+                </Select>
+                {form.formState.errors.experience_level && (
+                  <p className="text-sm text-destructive">
+                    {form.formState.errors.experience_level.message}
+                  </p>
+                )}
+              </>
             )}
           </div>
         </div>

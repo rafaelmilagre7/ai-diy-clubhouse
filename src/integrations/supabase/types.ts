@@ -2837,6 +2837,7 @@ export type Database = {
           time_per_step: Json | null
           updated_at: string
           user_id: string
+          user_type: string | null
         }
         Insert: {
           abandonment_points?: Json | null
@@ -2869,6 +2870,7 @@ export type Database = {
           time_per_step?: Json | null
           updated_at?: string
           user_id: string
+          user_type?: string | null
         }
         Update: {
           abandonment_points?: Json | null
@@ -2901,6 +2903,7 @@ export type Database = {
           time_per_step?: Json | null
           updated_at?: string
           user_id?: string
+          user_type?: string | null
         }
         Relationships: []
       }

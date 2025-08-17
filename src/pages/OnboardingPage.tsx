@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/auth';
 import { useOnboarding } from '@/hooks/onboarding/useOnboarding';
 import { OnboardingLayout } from '@/components/onboarding/OnboardingLayout';
+import { Step0UserType } from '@/components/onboarding/steps/Step0UserType';
 import { Step1PersonalInfo } from '@/components/onboarding/steps/Step1PersonalInfo';
 import { Step2BusinessInfo } from '@/components/onboarding/steps/Step2BusinessInfo';
 import { Step3AIExperience } from '@/components/onboarding/steps/Step3AIExperience';
@@ -18,10 +19,12 @@ const OnboardingPage: React.FC = () => {
     completed_steps,
     is_completed,
     data,
+    userType,
     isLoading,
     isSaving,
     loadingMessage,
     saveStepData,
+    saveUserType,
     goToNextStep,
     goToPrevStep,
     completeOnboarding,
@@ -91,6 +94,12 @@ const OnboardingPage: React.FC = () => {
   const handleNext = useCallback(async () => {
     console.log('[ONBOARDING_PAGE] HandleNext chamado, step atual:', current_step);
     
+    // Se estivermos no step 0, não há dados para salvar, apenas avançar
+    if (current_step === 0) {
+      console.log('[ONBOARDING_PAGE] Step 0 → Step 1: sem dados para salvar');
+      return;
+    }
+    
     let stepData = null;
     let stepMapping = {
       1: data.personal_info,
@@ -119,10 +128,13 @@ const OnboardingPage: React.FC = () => {
     if (current_step < 6) {
       await goToNextStep();
     }
-  }, [current_step, data, saveStepData, completeOnboarding, goToNextStep]);
+  }, [current_step, data, saveStepData, goToNextStep]);
 
   const canProceed = useCallback(() => {
     switch (current_step) {
+      case 0:
+        // Step 0: sempre pode prosseguir (escolha será feita no componente)
+        return true;
       case 1:
         console.log('🔍 [ONBOARDING] Verificando se pode avançar step 1:', {
           data: data.personal_info,
@@ -197,14 +209,21 @@ const OnboardingPage: React.FC = () => {
   }
 
   const stepConfig = {
+    0: {
+      title: 'Bem-vindo ao Viver de IA!',
+      subtitle: 'Vamos personalizar sua experiência',
+      component: Step0UserType,
+    },
     1: {
       title: 'Vamos nos conhecer melhor',
       subtitle: 'Conte-nos um pouco sobre você para personalizarmos sua experiência',
       component: Step1PersonalInfo,
     },
     2: {
-      title: 'Contexto do seu negócio',
-      subtitle: 'Entenda como podemos ajudar sua empresa a crescer com IA',
+      title: userType === 'learner' ? 'Contexto profissional' : 'Contexto do seu negócio',
+      subtitle: userType === 'learner' 
+        ? 'Entenda como podemos ajudar no seu desenvolvimento profissional'
+        : 'Entenda como podemos ajudar sua empresa a crescer com IA',
       component: Step2BusinessInfo,
     },
     3: {
@@ -214,7 +233,9 @@ const OnboardingPage: React.FC = () => {
     },
     4: {
       title: 'Seus objetivos',
-      subtitle: 'Defina suas metas para que possamos criar o melhor plano para você',
+      subtitle: userType === 'learner'
+        ? 'Defina suas metas de aprendizado e carreira'
+        : 'Defina suas metas para que possamos criar o melhor plano para você',
       component: Step4Goals,
     },
     5: {
@@ -229,11 +250,26 @@ const OnboardingPage: React.FC = () => {
     },
   };
 
-  const currentStepConfig = stepConfig[current_step as keyof typeof stepConfig] || stepConfig[1];
+  const currentStepConfig = stepConfig[current_step as keyof typeof stepConfig] || stepConfig[0];
 
   // Função para renderizar o componente do step atual
   const renderCurrentStep = () => {
     switch (current_step) {
+      case 0:
+        return (
+          <Step0UserType
+            onUserTypeSelect={async (selectedUserType) => {
+              console.log('[ONBOARDING_PAGE] User type selecionado:', selectedUserType);
+              const success = await saveUserType(selectedUserType);
+              if (success) {
+                console.log('[ONBOARDING_PAGE] User type salvo, avançando para step 1');
+              } else {
+                console.error('[ONBOARDING_PAGE] Falha ao salvar user type');
+              }
+            }}
+            isLoading={isSaving}
+          />
+        );
       case 1:
         return (
           <Step1PersonalInfo
@@ -245,6 +281,7 @@ const OnboardingPage: React.FC = () => {
       case 2:
         return (
           <Step2BusinessInfo
+            userType={userType}
             initialData={data.professional_info}
             onDataChange={handleStep2DataChange}
             onNext={() => {}}
@@ -261,6 +298,7 @@ const OnboardingPage: React.FC = () => {
       case 4:
         return (
           <Step4Goals
+            userType={userType}
             initialData={data.goals_info}
             onDataChange={handleStep4DataChange}
             onNext={() => {}}
@@ -297,7 +335,7 @@ const OnboardingPage: React.FC = () => {
       totalSteps={6}
       title={currentStepConfig.title}
       subtitle={currentStepConfig.subtitle}
-      onPrevious={current_step > 1 ? goToPrevStep : undefined}
+      onPrevious={current_step > 0 ? goToPrevStep : undefined}
       onNext={current_step < 6 ? handleNext : undefined}
       nextLabel={current_step === 5 ? 'Ir para boas-vindas' : 'Continuar'}
       isLoading={isSaving}
