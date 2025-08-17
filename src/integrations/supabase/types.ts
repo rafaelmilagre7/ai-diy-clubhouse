@@ -6603,6 +6603,10 @@ export type Database = {
         }
         Returns: Json
       }
+      secure_create_role_safe: {
+        Args: { p_description?: string; p_is_system?: boolean; p_name: string }
+        Returns: Json
+      }
       secure_credential_validation: {
         Args: { p_validation_code: string }
         Returns: Json

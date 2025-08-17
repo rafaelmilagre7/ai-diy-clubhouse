@@ -147,7 +147,7 @@ export const useRoles = () => {
       }
       
       console.log('🔐 [ROLES] Sessão válida, chamando RPC...');
-      const { data, error } = await supabase.rpc('secure_create_role', {
+      const { data, error } = await supabase.rpc('secure_create_role_safe', {
         p_name: roleData.name,
         p_description: roleData.description || null,
         p_is_system: roleData.is_system || false
@@ -175,14 +175,13 @@ export const useRoles = () => {
         throw new Error(errorMsg);
       }
 
-      console.log('✅ [ROLES] Role criado via RPC:', data.data);
+      console.log('✅ [ROLES] Role criado via RPC:', data);
       
-      // Adicionar o novo role à lista
-      const newRole = data.data;
-      setRoles(prev => [...prev, newRole]);
+      // Recarregar a lista de roles para garantir consistência
+      await fetchRoles();
       toast.success(data.message || 'Papel criado com sucesso');
       
-      return newRole;
+      return data;
     } catch (error: any) {
       console.error('❌ [ROLES] Erro na função RPC segura:', error);
       throw error;
