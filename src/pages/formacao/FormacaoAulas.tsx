@@ -15,6 +15,7 @@ import { AllLessonsList } from "@/components/formacao/aulas/AllLessonsList";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { AllLessonsListWithTags } from "@/components/formacao/aulas/AllLessonsListWithTags";
+import { LessonsByCourseView } from "@/components/formacao/aulas/LessonsByCourseView";
 import { NovaAulaButton } from "@/components/formacao/aulas/NovaAulaButton";
 
 
@@ -202,7 +203,7 @@ const FormacaoAulas = () => {
           breadcrumb={false}
         />
         
-        <AllLessonsListWithTags 
+        <LessonsByCourseView 
           onEdit={handleEditarAula}
           onDelete={handleExcluirAula}
           onSuccess={handleSuccess}
