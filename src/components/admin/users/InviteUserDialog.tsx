@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -31,7 +31,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Loader2, Mail, User, UserPlus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 const inviteSchema = z.object({
   email: z
@@ -63,6 +63,14 @@ export const InviteUserDialog: React.FC<InviteUserDialogProps> = ({
   onSuccess,
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const queryClient = useQueryClient();
+
+  // Atualizar a lista de roles quando o dialog for aberto
+  useEffect(() => {
+    if (open) {
+      queryClient.invalidateQueries({ queryKey: ['user-roles'] });
+    }
+  }, [open, queryClient]);
 
   // Buscar roles disponíveis
   const { data: roles = [], isLoading: loadingRoles } = useQuery({
