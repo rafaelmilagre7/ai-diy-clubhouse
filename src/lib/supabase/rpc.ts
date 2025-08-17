@@ -25,12 +25,17 @@ export const incrementTopicReplies = async (topicId: string) => {
 
 export const deleteCommunityTopic = async (topicId: string) => {
   const { data, error } = await supabase.rpc('delete_community_topic', {
-    topic_id: topicId
+    p_topic_id: topicId
   });
   
   if (error) {
     console.error('Erro ao deletar tópico:', error);
     throw error;
+  }
+  
+  // Verificar se a função retornou sucesso
+  if (data && !data.success) {
+    throw new Error(data.message || 'Erro ao deletar tópico');
   }
   
   return data;

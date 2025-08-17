@@ -5512,7 +5512,7 @@ export type Database = {
         Returns: Json
       }
       delete_community_topic: {
-        Args: { topic_id: string }
+        Args: { p_topic_id: string }
         Returns: Json
       }
       delete_forum_post: {
