@@ -135,18 +135,21 @@ export const useEnhancedUserAnalytics = (params: EnhancedUserAnalyticsParams) =>
       if (progressError) console.warn('⚠️ [USER-ANALYTICS] Falha ao carregar progress, usando fallback:', progressError);
 
       // Processar dados para métricas
-      const totalUsers = (usersData as any[])?.length || 0;
-      const usersWithActivity = new Set((activityData as any[])?.map((a: any) => a.user_id) || []);
-      const activeUsers = (overviewRpc as any)?.active_users ?? usersWithActivity.size;
+      const rpcTotals = (overviewRpc as any) || {};
+      const usersArray = (users as any[]) || [];
+      const totalUsers = Math.max(usersArray.length, Number(rpcTotals.total_users || 0));
+      const usersWithActivity = new Set(((activityData as any[]) || []).map((a: any) => a.user_id));
+      const activeUsers = Number(rpcTotals.active_users || usersWithActivity.size || 0);
       
-      const completedOnboarding = (overviewRpc as any)?.completed_onboarding ?? 0;
-      const activationRate = Math.round((overviewRpc as any)?.completion_rate ?? (
+      const completedOnboarding = Number(rpcTotals.completed_onboarding || 0);
+      const activationRate = Math.round(Number(rpcTotals.completion_rate || (
         totalUsers > 0 ? (completedOnboarding / totalUsers) * 100 : 0
-      ));
+      )));
 
       console.log('📊 [USER-ANALYTICS] Dados brutos:', {
         totalUsers,
-        usersFetched: (usersData as any[])?.length,
+        usersFetched: usersArray.length,
+        rpcTotals,
         activityDataLength: (activityData as any[])?.length,
         progressDataLength: (progressData as any[])?.length,
         usersWithActivity: usersWithActivity.size,
