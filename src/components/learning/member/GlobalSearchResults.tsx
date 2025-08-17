@@ -159,15 +159,15 @@ export const GlobalSearchResults: React.FC<GlobalSearchResultsProps> = ({
 
                     {/* Metadados */}
                     <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                      {lesson.duration_minutes && (
+                      {lesson.estimated_time_minutes && (
                         <div className="flex items-center gap-1">
                           <Clock className="w-3 h-3" />
-                          <span>{lesson.duration_minutes}min</span>
+                          <span>{lesson.estimated_time_minutes}min</span>
                         </div>
                       )}
                       <div className="flex items-center gap-1">
                         <Zap className="w-3 h-3" />
-                        <span>Aula {lesson.lesson_number || '?'}</span>
+                        <span>Aula {lesson.order_index || '?'}</span>
                       </div>
                     </div>
 

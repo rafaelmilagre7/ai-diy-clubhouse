@@ -8,8 +8,8 @@ export interface LessonWithCourseInfo {
   description: string | null;
   cover_image_url: string | null;
   module_id: string;
-  lesson_number: number | null;
-  duration_minutes: number | null;
+  order_index: number | null;
+  estimated_time_minutes: number | null;
   learning_modules: {
     id: string;
     title: string;
@@ -65,8 +65,8 @@ export const useGlobalLessonSearch = ({
           description,
           cover_image_url,
           module_id,
-          lesson_number,
-          duration_minutes,
+          order_index,
+          estimated_time_minutes,
           learning_modules!inner (
             id,
             title,
@@ -79,7 +79,7 @@ export const useGlobalLessonSearch = ({
           )
         `)
         .eq('learning_modules.learning_courses.published', true)
-        .order('lesson_number', { ascending: true });
+        .order('order_index', { ascending: true });
 
       if (error) {
         console.error('Erro ao buscar aulas globalmente:', error);
@@ -93,9 +93,7 @@ export const useGlobalLessonSearch = ({
     gcTime: 10 * 60 * 1000, // Manter em cache por 10 minutos
   });
 
-  const searchResults = useMemo(() => {
-    console.log('[GLOBAL SEARCH] Iniciando busca:', { debouncedQuery, totalLessons: allLessons.length });
-    
+  const searchResults = useMemo(() => {    
     if (!debouncedQuery.trim()) {
       return {
         results: [],
@@ -201,8 +199,6 @@ export const useGlobalLessonSearch = ({
       .filter(result => result.relevanceScore > 0)
       .sort((a, b) => b.relevanceScore - a.relevanceScore)
       .slice(0, limit);
-
-    console.log('[GLOBAL SEARCH] Resultados encontrados:', scoredResults.length);
 
     // Agrupar resultados por curso para melhor visualização
     const courseGroups = scoredResults.reduce((acc, lesson) => {
