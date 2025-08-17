@@ -32,7 +32,7 @@ export const safePreloadImage = async (src: string, priority: 'high' | 'low' = '
 // Lista de recursos críticos que devem ser verificados
 export const CRITICAL_ASSETS = {
   AVATAR: '/lovable-uploads/6bdb44c0-b115-45bc-977d-4284836453c2.png',
-  LOGO: '/lovable-uploads/eeab53e7-f5ba-412f-8e89-991fdf7b960f.png',
+  LOGO: '/lovable-uploads/d847c892-aafa-4cc1-92c6-110aff1d9755.png',
   CERTIFICATE_LOGO: '/lovable-uploads/a408c993-07fa-49f2-bee6-c66d0614298b.png'
 } as const;
 

@@ -28,7 +28,7 @@ export const SidebarLogo = ({ sidebarOpen, setSidebarOpen }: SidebarLogoProps) =
         }}
       >
         <img
-          src="/lovable-uploads/eeab53e7-f5ba-412f-8e89-991fdf7b960f.png"
+          src="/lovable-uploads/fe3733f5-092e-4a4e-bdd7-650b71aaa801.png"
           alt="VIVER DE IA Club"
           className={cn(
             "transition-all duration-300 object-contain",
