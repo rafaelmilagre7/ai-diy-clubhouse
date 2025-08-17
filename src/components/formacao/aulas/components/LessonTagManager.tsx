@@ -186,86 +186,96 @@ export const LessonTagManager = ({ form, fieldName = 'tags' }: LessonTagManagerP
                 </Button>
               </PopoverTrigger>
               <PopoverContent 
-                className="w-[--radix-popover-trigger-width] max-w-[95vw] p-0 bg-background border border-border shadow-lg z-[100]" 
+                className="w-[--radix-popover-trigger-width] max-w-[95vw] min-w-[300px] p-0 bg-popover border shadow-lg z-[100]" 
                 align="start"
                 side="bottom"
                 sideOffset={4}
+                style={{ maxHeight: 'min(400px, 80vh)' }}
               >
-                 <Command className="bg-background rounded-md border border-border shadow-lg">
-                   <CommandInput
-                     placeholder="Buscar tags..."
-                     value={searchTerm}
-                     onValueChange={setSearchTerm}
-                     className="h-9 border-none bg-transparent"
-                   />
-                   <CommandList className="max-h-[200px] md:max-h-[300px] overflow-y-auto">
-                     {!isLoading && Object.keys(filteredTagsByCategory).length === 0 ? (
-                       <CommandEmpty>
-                         <div className="py-6 text-center px-4">
-                           <p className="text-sm text-muted-foreground mb-3">Nenhuma tag encontrada</p>
-                           <Button
-                             variant="ghost"
-                             size="sm"
-                             className="w-full"
-                             onClick={() => {
-                               setShowCreateTag(true);
-                               setOpen(false);
-                             }}
-                             type="button"
-                           >
-                             <Plus className="h-4 w-4 mr-2" />
-                             Criar nova tag
-                           </Button>
-                         </div>
-                       </CommandEmpty>
-                     ) : (
-                       <>
-                         {Object.entries(filteredTagsByCategory)
-                           .filter(([_, tags]) => Array.isArray(tags) && tags.length > 0)
-                           .map(([category, tags]) => (
-                             <CommandGroup key={category} heading={category}>
-                               {tags.filter(tag => tag && tag.id).map((tag) => (
-                                 <CommandItem
-                                   key={tag.id}
-                                   value={tag.name}
-                                   onSelect={() => {
-                                     handleTagSelect(tag);
-                                     setSearchTerm('');
-                                     setOpen(false);
-                                   }}
-                                 >
-                                   <div className="flex items-center gap-2 w-full">
-                                     <TagBadge 
-                                       tag={tag} 
-                                       size="sm" 
-                                       variant={selectedTagIds.includes(tag.id) ? 'default' : 'outline'}
-                                     />
-                                     {tag.description && (
-                                       <span className="text-xs text-muted-foreground truncate flex-1">
-                                         {tag.description}
-                                       </span>
-                                     )}
-                                   </div>
-                                 </CommandItem>
-                               ))}
-                             </CommandGroup>
-                           ))}
-                         
-                         <CommandItem
-                           value="criar-nova-tag"
-                           onSelect={() => {
-                             setShowCreateTag(true);
-                             setOpen(false);
-                           }}
-                         >
-                           <div className="flex items-center gap-2 w-full border-t border-border pt-2 mt-2">
-                             <Plus className="h-4 w-4" />
-                             <span className="text-sm">Criar nova tag</span>
+                 <Command className="flex flex-col h-full max-h-[320px]">
+                   <div className="flex-shrink-0 px-3 py-2 border-b border-border">
+                     <CommandInput
+                       placeholder="Buscar tags..."
+                       value={searchTerm}
+                       onValueChange={setSearchTerm}
+                       className="h-9 border-none bg-transparent"
+                     />
+                   </div>
+                   
+                   <div className="flex-1 overflow-hidden">
+                     <CommandList className="h-full overflow-y-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent px-1">
+                       {!isLoading && Object.keys(filteredTagsByCategory).length === 0 ? (
+                         <CommandEmpty>
+                           <div className="py-6 text-center px-4">
+                             <p className="text-sm text-muted-foreground mb-3">Nenhuma tag encontrada</p>
+                             <Button
+                               variant="ghost"
+                               size="sm"
+                               className="w-full"
+                               onClick={() => {
+                                 setShowCreateTag(true);
+                                 setOpen(false);
+                               }}
+                               type="button"
+                             >
+                               <Plus className="h-4 w-4 mr-2" />
+                               Criar nova tag
+                             </Button>
                            </div>
-                         </CommandItem>
-                       </>
-                     )}
-                   </CommandList>
+                         </CommandEmpty>
+                       ) : (
+                         <>
+                           {Object.entries(filteredTagsByCategory)
+                             .filter(([_, tags]) => Array.isArray(tags) && tags.length > 0)
+                             .map(([category, tags]) => (
+                               <CommandGroup key={category} heading={category} className="px-2 py-1">
+                                 {tags.filter(tag => tag && tag.id).map((tag) => (
+                                   <CommandItem
+                                     key={tag.id}
+                                     value={tag.name}
+                                     onSelect={() => {
+                                       handleTagSelect(tag);
+                                       setSearchTerm('');
+                                       setOpen(false);
+                                     }}
+                                     className="px-2 py-2 cursor-pointer rounded-sm transition-colors hover:bg-accent hover:text-accent-foreground"
+                                   >
+                                     <div className="flex items-center gap-2 w-full">
+                                       <TagBadge 
+                                         tag={tag} 
+                                         size="sm" 
+                                         variant={selectedTagIds.includes(tag.id) ? 'default' : 'outline'}
+                                       />
+                                       {tag.description && (
+                                         <span className="text-xs text-muted-foreground truncate flex-1">
+                                           {tag.description}
+                                         </span>
+                                       )}
+                                     </div>
+                                   </CommandItem>
+                                 ))}
+                               </CommandGroup>
+                             ))}
+                           
+                           <div className="border-t border-border mt-2 pt-2">
+                             <CommandItem
+                               value="criar-nova-tag"
+                               onSelect={() => {
+                                 setShowCreateTag(true);
+                                 setOpen(false);
+                               }}
+                               className="mx-2 px-2 py-2 cursor-pointer rounded-sm transition-colors hover:bg-accent hover:text-accent-foreground"
+                             >
+                               <div className="flex items-center gap-2 w-full">
+                                 <Plus className="h-4 w-4" />
+                                 <span className="text-sm">Criar nova tag</span>
+                               </div>
+                             </CommandItem>
+                           </div>
+                         </>
+                       )}
+                     </CommandList>
+                   </div>
                  </Command>
               </PopoverContent>
             </Popover>
