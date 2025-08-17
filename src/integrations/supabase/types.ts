@@ -5319,7 +5319,7 @@ export type Database = {
       }
       cleanup_old_audit_logs: {
         Args: Record<PropertyKey, never> | { retention_period?: unknown }
-        Returns: number
+        Returns: undefined
       }
       cleanup_old_logs_lgpd: {
         Args: Record<PropertyKey, never>
