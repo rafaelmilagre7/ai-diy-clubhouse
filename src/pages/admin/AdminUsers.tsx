@@ -11,6 +11,7 @@ import { DeleteUserDialog } from "@/components/admin/users/DeleteUserDialog";
 import { ToggleUserStatusDialog } from "@/components/admin/users/ToggleUserStatusDialog";
 import { ResetPasswordDialog } from "@/components/admin/users/ResetPasswordDialog";
 import { UserCourseAccessManager } from "@/components/admin/users/UserCourseAccessManager";
+import { InviteUserDialog } from "@/components/admin/users/InviteUserDialog";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/auth";
 import { useQueryClient } from "@tanstack/react-query";
@@ -48,6 +49,7 @@ const AdminUsers = () => {
   const [resetUserDialogOpen, setResetUserDialogOpen] = useState(false);
   const [toggleStatusDialogOpen, setToggleStatusDialogOpen] = useState(false);
   const [courseAccessDialogOpen, setCourseAccessDialogOpen] = useState(false);
+  const [inviteUserDialogOpen, setInviteUserDialogOpen] = useState(false);
   const [filterRole, setFilterRole] = useState('');
 
   const handleEditRole = (user: UserProfile) => {
@@ -252,11 +254,11 @@ const AdminUsers = () => {
             </Button>
             
             <Button
-              onClick={() => {/* TODO: Implementar criação de usuário */}}
+              onClick={() => setInviteUserDialogOpen(true)}
               className="aurora-focus gap-2 bg-viverblue hover:bg-viverblue/90"
             >
               <Plus className="h-4 w-4" />
-              Novo Usuário
+              Convidar Usuário
             </Button>
           </div>
         </div>
@@ -448,6 +450,13 @@ const AdminUsers = () => {
             user={selectedUser}
           />
         )}
+
+        {/* Diálogo de Convite de Usuário */}
+        <InviteUserDialog
+          open={inviteUserDialogOpen}
+          onOpenChange={setInviteUserDialogOpen}
+          onSuccess={fetchUsers}
+        />
       </div>
     </div>
   );
