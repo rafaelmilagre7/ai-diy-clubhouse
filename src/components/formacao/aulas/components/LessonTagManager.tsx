@@ -136,184 +136,219 @@ export const LessonTagManager = ({ form, fieldName = 'tags' }: LessonTagManagerP
   const categories = Object.keys(tagsByCategory);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-xl">
-          <Tag className="h-5 w-5" />
-          Tags da Aula
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Tags Selecionadas */}
-        {selectedTags.length > 0 && (
-          <div className="space-y-2">
-            <h4 className="text-sm font-medium">Tags selecionadas:</h4>
-            <div className="flex flex-wrap gap-2">
-              {selectedTags.map((tag) => (
-                <div key={tag.id} className="flex items-center">
-                  <TagBadge tag={tag} size="sm" />
-                  <button
-                    type="button"
-                    className="ml-1 p-1 hover:bg-destructive/10 rounded-full transition-colors"
-                    onClick={() => handleRemoveTag(tag.id)}
-                  >
-                    <X className="h-3 w-3 hover:text-destructive" />
-                  </button>
-                </div>
-              ))}
+    <div className="w-full">
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Tag className="h-5 w-5" />
+            Tags da Aula
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Tags Selecionadas */}
+          {selectedTags.length > 0 && (
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium">Tags selecionadas:</h4>
+              <div className="flex flex-wrap gap-2">
+                {selectedTags.map((tag) => (
+                  <div key={tag.id} className="flex items-center">
+                    <TagBadge tag={tag} size="sm" />
+                    <button
+                      type="button"
+                      className="ml-1 p-1 hover:bg-destructive/10 rounded-full transition-colors"
+                      onClick={() => handleRemoveTag(tag.id)}
+                    >
+                      <X className="h-3 w-3 hover:text-destructive" />
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Seletor de Tags */}
-        <div className="space-y-2">
-          <h4 className="text-sm font-medium">Adicionar tags:</h4>
-          
-          <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                role="combobox"
-                aria-expanded={open}
-                className="w-full justify-between"
-                type="button"
+          {/* Seletor de Tags */}
+          <div className="space-y-2 w-full">
+            <h4 className="text-sm font-medium">Adicionar tags:</h4>
+            
+            <Popover open={open} onOpenChange={setOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={open}
+                  className="w-full justify-between h-10"
+                  type="button"
+                >
+                  <div className="flex items-center gap-2">
+                    <Search className="h-4 w-4" />
+                    Buscar tags...
+                  </div>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent 
+                className="w-[--radix-popover-trigger-width] max-w-[95vw] p-0 bg-background border border-border shadow-lg z-[100]" 
+                align="start"
+                side="bottom"
+                sideOffset={4}
               >
-                <div className="flex items-center gap-2">
-                  <Search className="h-4 w-4" />
-                  Buscar tags...
-                </div>
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-full p-0 bg-card border" align="start">
-              <Command>
-                <CommandInput
-                  placeholder="Buscar tags..."
-                  value={searchTerm}
-                  onValueChange={setSearchTerm}
-                />
-                <CommandList className="max-h-60">
-                  <CommandEmpty>
-                    <div className="py-4 text-center">
-                      <p className="text-sm text-muted-foreground">Nenhuma tag encontrada</p>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="mt-2"
-                        onClick={() => setShowCreateTag(true)}
-                        type="button"
-                      >
-                        <Plus className="h-4 w-4 mr-1" />
-                        Criar nova tag
-                      </Button>
+                <div className="bg-background rounded-md border border-border shadow-lg">
+                  <Command className="bg-background">
+                    <div className="px-3 py-2 border-b border-border">
+                      <CommandInput
+                        placeholder="Buscar tags..."
+                        value={searchTerm}
+                        onValueChange={setSearchTerm}
+                        className="h-9"
+                      />
                     </div>
-                  </CommandEmpty>
-                  
-                  {Object.entries(filteredTagsByCategory).map(([category, tags]) => (
-                    <CommandGroup key={category} heading={category}>
-                      {tags.map((tag) => (
-                        <CommandItem
-                          key={tag.id}
-                          onSelect={() => {
-                            handleTagSelect(tag);
-                            setSearchTerm('');
-                          }}
-                          className="flex items-center gap-2 cursor-pointer"
-                        >
-                          <TagBadge 
-                            tag={tag} 
-                            size="sm" 
-                            variant={selectedTagIds.includes(tag.id) ? 'default' : 'outline'}
-                          />
-                          {tag.description && (
-                            <span className="text-xs text-muted-foreground">
-                              {tag.description}
-                            </span>
-                          )}
-                        </CommandItem>
+                    <CommandList className="max-h-[200px] md:max-h-[300px] overflow-y-auto bg-background">
+                      <CommandEmpty>
+                        <div className="py-6 text-center px-4">
+                          <p className="text-sm text-muted-foreground mb-3">Nenhuma tag encontrada</p>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="w-full"
+                            onClick={() => {
+                              setShowCreateTag(true);
+                              setOpen(false);
+                            }}
+                            type="button"
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Criar nova tag
+                          </Button>
+                        </div>
+                      </CommandEmpty>
+                      
+                      {Object.entries(filteredTagsByCategory).map(([category, tags]) => (
+                        <CommandGroup key={category} heading={category} className="px-2">
+                          {tags.map((tag) => (
+                            <CommandItem
+                              key={tag.id}
+                              onSelect={() => {
+                                handleTagSelect(tag);
+                                setSearchTerm('');
+                                setOpen(false);
+                              }}
+                              className="flex items-center gap-2 cursor-pointer px-2 py-2 hover:bg-accent hover:text-accent-foreground rounded-sm"
+                            >
+                              <TagBadge 
+                                tag={tag} 
+                                size="sm" 
+                                variant={selectedTagIds.includes(tag.id) ? 'default' : 'outline'}
+                              />
+                              {tag.description && (
+                                <span className="text-xs text-muted-foreground truncate flex-1">
+                                  {tag.description}
+                                </span>
+                              )}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
                       ))}
-                    </CommandGroup>
-                  ))}
-                  
-                  {Object.keys(filteredTagsByCategory).length > 0 && (
-                    <CommandGroup>
-                      <CommandItem
-                        onSelect={() => setShowCreateTag(true)}
-                        className="flex items-center gap-2 cursor-pointer border-t"
-                      >
-                        <Plus className="h-4 w-4" />
-                        <span>Criar nova tag</span>
-                      </CommandItem>
-                    </CommandGroup>
-                  )}
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
-        </div>
+                      
+                      {Object.keys(filteredTagsByCategory).length > 0 && (
+                        <div className="border-t border-border">
+                          <CommandItem
+                            onSelect={() => {
+                              setShowCreateTag(true);
+                              setOpen(false);
+                            }}
+                            className="flex items-center gap-2 cursor-pointer px-4 py-3 hover:bg-accent hover:text-accent-foreground"
+                          >
+                            <Plus className="h-4 w-4" />
+                            <span className="text-sm">Criar nova tag</span>
+                          </CommandItem>
+                        </div>
+                      )}
+                    </CommandList>
+                  </Command>
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
 
-        {/* Criar Nova Tag */}
-        {showCreateTag && (
-          <Card className="border-2 border-dashed">
-            <CardContent className="pt-6 space-y-4">
-              <h4 className="text-sm font-medium">Criar nova tag:</h4>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-xs font-medium">Nome da tag</label>
-                  <Input
-                    placeholder="Ex: Marketing Digital"
-                    value={newTagName}
-                    onChange={(e) => setNewTagName(e.target.value)}
-                  />
+          {/* Criar Nova Tag */}
+          {showCreateTag && (
+            <Card className="border-2 border-dashed border-primary/20 bg-muted/20">
+              <CardContent className="pt-4 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-medium">Criar nova tag:</h4>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowCreateTag(false)}
+                    className="h-8 w-8 p-0"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
                 </div>
                 
-                <div className="space-y-2">
-                  <label className="text-xs font-medium">Categoria</label>
-                  <Select value={newTagCategory} onValueChange={setNewTagCategory}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione..." />
-                    </SelectTrigger>
-                    <SelectContent className="bg-card border">
-                      {categories.map((category) => (
-                        <SelectItem key={category} value={category}>
-                          {category}
-                        </SelectItem>
-                      ))}
-                      <SelectItem value="Geral">Nova Categoria</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-foreground">Nome da tag</label>
+                    <Input
+                      placeholder="Ex: Marketing Digital"
+                      value={newTagName}
+                      onChange={(e) => setNewTagName(e.target.value)}
+                      className="h-9"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-foreground">Categoria</label>
+                    <Select value={newTagCategory} onValueChange={setNewTagCategory}>
+                      <SelectTrigger className="h-9">
+                        <SelectValue placeholder="Selecione uma categoria..." />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background border border-border shadow-lg z-[100]">
+                        {categories.map((category) => (
+                          <SelectItem key={category} value={category}>
+                            {category}
+                          </SelectItem>
+                        ))}
+                        <SelectItem value="Geral">Nova Categoria</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-              </div>
-              
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  onClick={handleCreateTag}
-                  disabled={createTagMutation.isPending}
-                  size="sm"
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Criar Tag
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setShowCreateTag(false)}
-                  size="sm"
-                >
-                  Cancelar
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Button
+                    type="button"
+                    onClick={handleCreateTag}
+                    disabled={createTagMutation.isPending}
+                    size="sm"
+                    className="flex-1"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    {createTagMutation.isPending ? 'Criando...' : 'Criar Tag'}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowCreateTag(false)}
+                    size="sm"
+                    className="flex-1 sm:flex-none"
+                  >
+                    Cancelar
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
-        {selectedTags.length === 0 && (
-          <p className="text-sm text-muted-foreground">
-            Nenhuma tag selecionada. Use as tags para categorizar esta aula.
-          </p>
-        )}
-      </CardContent>
-    </Card>
+          {selectedTags.length === 0 && !showCreateTag && (
+            <div className="text-center py-4 px-4 bg-muted/30 rounded-lg border border-dashed">
+              <p className="text-sm text-muted-foreground">
+                Nenhuma tag selecionada. Use as tags para categorizar esta aula e facilitar a busca.
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 };
