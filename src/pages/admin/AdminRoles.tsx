@@ -2,14 +2,12 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus } from 'lucide-react';
 import { RolesList } from '@/components/admin/roles/RolesList';
 import { RoleForm } from '@/components/admin/roles/RoleForm';
 import { DeleteRoleDialog } from '@/components/admin/roles/DeleteRoleDialog';
 import { RolePermissions } from '@/components/admin/roles/RolePermissions';
 import { RoleCourseAccess } from '@/components/admin/roles/RoleCourseAccess';
-import { RoleSyncPanel } from '@/components/admin/roles/RoleSyncPanel';
 import { useRoles, Role } from '@/hooks/admin/useRoles';
 
 const AdminRoles: React.FC = () => {
@@ -71,34 +69,21 @@ const AdminRoles: React.FC = () => {
         </Button>
       </div>
 
-      <Tabs defaultValue="roles" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="roles">Papéis do Sistema</TabsTrigger>
-          <TabsTrigger value="sync">Correção Sistêmica</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="roles" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Papéis do Sistema</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <RolesList
-                roles={roles}
-                isLoading={isLoading}
-                onEditRole={handleEditRole}
-                onDeleteRole={handleDeleteRole}
-                onManagePermissions={handleManagePermissions}
-                onManageCourseAccess={handleManageCourseAccess}
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="sync" className="space-y-6">
-          <RoleSyncPanel />
-        </TabsContent>
-      </Tabs>
+      <Card>
+        <CardHeader>
+          <CardTitle>Papéis do Sistema</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <RolesList
+            roles={roles}
+            isLoading={isLoading}
+            onEditRole={handleEditRole}
+            onDeleteRole={handleDeleteRole}
+            onManagePermissions={handleManagePermissions}
+            onManageCourseAccess={handleManageCourseAccess}
+          />
+        </CardContent>
+      </Card>
 
       <RoleForm
         open={formOpen}
