@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 
 interface EnhancedUserAnalyticsParams {
   timeRange: string;
@@ -88,7 +88,7 @@ export const useEnhancedUserAnalytics = (params: EnhancedUserAnalyticsParams) =>
 
       const { startDate, endDate } = getDateRange();
 
-      // 1. Buscar métricas gerais de usuários
+      // 1. Buscar TODOS os usuários (não filtrar por data de criação)
       const { data: overviewData, error: overviewError } = await supabase
         .from('profiles')
         .select(`
@@ -97,8 +97,7 @@ export const useEnhancedUserAnalytics = (params: EnhancedUserAnalyticsParams) =>
           onboarding_completed,
           role_id,
           user_roles(name)
-        `)
-        .gte('created_at', startDate);
+        `);
 
       if (overviewError) throw overviewError;
 
@@ -125,6 +124,47 @@ export const useEnhancedUserAnalytics = (params: EnhancedUserAnalyticsParams) =>
       
       const completedOnboarding = overviewData?.filter(u => u.onboarding_completed).length || 0;
       const activationRate = totalUsers > 0 ? Math.round((completedOnboarding / totalUsers) * 100) : 0;
+
+      console.log('📊 [USER-ANALYTICS] Dados brutos:', {
+        totalUsers,
+        overviewDataLength: overviewData?.length,
+        activityDataLength: activityData?.length,
+        progressDataLength: progressData?.length,
+        usersWithActivity: usersWithActivity.size,
+        activeUsers,
+        completedOnboarding,
+        activationRate,
+        timeRange: params.timeRange,
+        startDate,
+        endDate
+      });
+
+      // Calcular novos usuários baseado no timeRange selecionado
+      const getNewUsersCount = () => {
+        const now = Date.now();
+        let daysBack = 30;
+        
+        switch (params.timeRange) {
+          case '7d':
+            daysBack = 7;
+            break;
+          case '30d':
+            daysBack = 30;
+            break;
+          case '90d':
+            daysBack = 90;
+            break;
+          default:
+            daysBack = 365; // Para "all time", considerar último ano
+        }
+        
+        return overviewData?.filter(u => {
+          const daysSinceCreation = (now - new Date(u.created_at).getTime()) / (1000 * 60 * 60 * 24);
+          return daysSinceCreation <= daysBack;
+        }).length || 0;
+      };
+
+      const newUsers = getNewUsersCount();
 
       // Calcular Health Score baseado em múltiplos fatores
       const calculateHealthScore = (userId: string) => {
@@ -260,10 +300,7 @@ export const useEnhancedUserAnalytics = (params: EnhancedUserAnalyticsParams) =>
         overview: {
           totalUsers,
           activeUsers,
-          newUsers: overviewData?.filter(u => {
-            const daysSinceCreation = (Date.now() - new Date(u.created_at).getTime()) / (1000 * 60 * 60 * 24);
-            return daysSinceCreation <= 30;
-          }).length || 0,
+          newUsers,
           userGrowth: 12, // Mock - calcular baseado em dados históricos
           activationRate,
           activationTrend: 5, // Mock
