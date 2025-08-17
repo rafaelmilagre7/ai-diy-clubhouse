@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useEffect, ReactNode } from 'react';
-import { securityHeaders } from '@/utils/securityHeaders';
+import { applySecureCSP, setupSecureCSPMonitoring, getCurrentNonce } from '@/utils/security/secureCSP';
+import { cleanupLegacyCSP } from '@/utils/security/legacyCSPCleanup';
 import { auditLogger } from '@/utils/auditLogger';
 import { useAuth } from '@/contexts/auth';
 import { logger } from '@/utils/logger';
@@ -8,6 +9,7 @@ import { logger } from '@/utils/logger';
 interface SecurityContextType {
   isSecureEnvironment: boolean;
   reportSecurityIncident: (incident: string, severity: 'low' | 'medium' | 'high' | 'critical', details?: any) => void;
+  getCurrentCSPNonce: () => string;
 }
 
 const SecurityContext = createContext<SecurityContextType | undefined>(undefined);
@@ -71,17 +73,19 @@ export const SecurityProvider: React.FC<SecurityProviderProps> = ({ children }) 
   
   // Configurar headers de segurança
   useEffect(() => {
-    // Aplicar CSP via meta tag se não existir
-    if (!document.querySelector('meta[http-equiv="Content-Security-Policy"]')) {
-      const meta = document.createElement('meta');
-      meta.httpEquiv = 'Content-Security-Policy';
-      meta.content = securityHeaders.getCSPDirectives();
-      document.head.appendChild(meta);
-      
-      logger.info("CSP aplicado dinamicamente", {
-        component: 'SECURITY_PROVIDER'
-      });
-    }
+    // Limpar CSP legado primeiro
+    cleanupLegacyCSP();
+    
+    // Aplicar CSP segura sem unsafe-inline
+    applySecureCSP();
+    
+    // Configurar monitoramento CSP
+    setupSecureCSPMonitoring();
+    
+    logger.info("CSP segura aplicada (sem unsafe-inline)", {
+      component: 'SECURITY_PROVIDER',
+      nonce: getCurrentNonce()
+    });
     
     // Log de início da sessão de segurança
     if (user) {
@@ -149,7 +153,8 @@ export const SecurityProvider: React.FC<SecurityProviderProps> = ({ children }) 
   
   const contextValue: SecurityContextType = React.useMemo(() => ({
     isSecureEnvironment,
-    reportSecurityIncident
+    reportSecurityIncident,
+    getCurrentCSPNonce: getCurrentNonce
   }), [isSecureEnvironment, reportSecurityIncident]);
   
   return (

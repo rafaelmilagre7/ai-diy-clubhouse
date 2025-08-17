@@ -126,6 +126,10 @@ verify_jwt = false
 [functions.audit-duplicates]
 verify_jwt = false
 
+# 🔐 HEADERS DE SEGURANÇA - Público para aplicação de CSP
+[functions.security-headers]
+verify_jwt = false
+
 [auth]
 enabled = true
 port = 54324
