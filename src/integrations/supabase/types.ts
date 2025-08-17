@@ -5684,6 +5684,10 @@ export type Database = {
         Args: { token_length?: number }
         Returns: string
       }
+      generate_security_completion_report: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       generate_security_metrics: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -6426,7 +6430,7 @@ export type Database = {
               p_user_agent?: string
               p_user_id?: string
             }
-        Returns: undefined
+        Returns: string
       }
       log_security_violation: {
         Args:
