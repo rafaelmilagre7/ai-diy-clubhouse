@@ -18,19 +18,15 @@ export const useCourseDetails = (courseId: string | undefined) => {
         throw new Error("Course ID and user are required");
       }
 
-      // Verificar acesso usando função SECURITY DEFINER
-      console.log("🔍 Verificando acesso para usuário:", user.id, "Email:", user.email);
+      // Verificar acesso usando função SECURITY DEFINER (ÚNICA fonte de verdade)
+      console.log("🔍 Verificando acesso para usuário:", user.id);
       
       const hasAccess = await canAccessLearningContent(user.id);
       console.log("🎯 Resultado canAccessLearningContent:", hasAccess);
       
-      // Fallback para admin por email @viverdeia.ai
-      const isAdminByEmail = user.email?.endsWith('@viverdeia.ai');
-      console.log("🔑 É admin por email:", isAdminByEmail);
-      
-      if (!hasAccess && !isAdminByEmail) {
-        console.error("❌ Acesso negado ao curso para usuário:", user.email);
-        console.error("❌ hasAccess:", hasAccess, "isAdminByEmail:", isAdminByEmail);
+      if (!hasAccess) {
+        console.error("❌ Acesso negado ao curso para usuário:", user.id);
+        console.error("❌ hasAccess:", hasAccess);
         throw new Error("Acesso negado - Role insuficiente");
       }
 

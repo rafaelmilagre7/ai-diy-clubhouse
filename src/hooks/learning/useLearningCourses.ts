@@ -150,8 +150,8 @@ export const useLearningCourses = () => {
           })
         );
         
-        // CORREÇÃO PRINCIPAL: Admin pode ver todos os cursos, incluindo restritos
-        const isAdmin = profile?.role === 'admin' || user?.email?.includes('@viverdeia.ai');
+        // CORREÇÃO SEGURA: Usar apenas role do banco (RLS) como fonte única de verdade
+        const isAdmin = profile?.user_roles?.name === 'admin';
         
         let finalCourses = coursesWithModules;
         

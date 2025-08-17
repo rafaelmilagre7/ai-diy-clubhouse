@@ -192,7 +192,7 @@ const AdminUsers = () => {
   const totalUsers = users.length;
   const activeUsers = users.filter(user => user.status !== 'inactive').length;
   const adminUsers = users.filter(user => 
-    user.user_roles?.name === 'admin' || user.email?.includes('@viverdeia.ai')
+    user.user_roles?.name === 'admin'
   ).length;
   const onboardingCompleted = users.filter(user => user.onboarding_completed).length;
 
