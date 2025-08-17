@@ -37,7 +37,8 @@ export const Step6Welcome: React.FC<Step6WelcomeProps> = ({
         />
       )}
       
-      <div className="space-y-8 max-w-3xl mx-auto text-center">
+      {!showSuccess && (
+        <div className="space-y-8 max-w-3xl mx-auto text-center">
       <div className="space-y-4">
         
         
@@ -193,8 +194,9 @@ export const Step6Welcome: React.FC<Step6WelcomeProps> = ({
         <p className="text-xs text-muted-foreground">
           Você pode sempre ajustar suas preferências nas configurações da sua conta
         </p>
+        </div>
       </div>
-    </div>
+      )}
     </>
   );
 };

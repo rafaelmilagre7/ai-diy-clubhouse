@@ -570,12 +570,12 @@ Vamos começar? Sua trilha personalizada já está pronta! 🚀`;
       console.log('[ONBOARDING] ⏱️ Tempo total de execução:', totalTime, 'ms');
       console.log('[ONBOARDING] Onboarding concluído com sucesso!');
       
-      // Aguardar mais tempo para sincronização e celebração
+      // Aguardar mais tempo para sincronização e celebração  
       console.log('[ONBOARDING] ⏱️ Iniciando redirecionamento após celebração...');
       setTimeout(() => {
         console.log('[ONBOARDING] ✅ Redirecionando para dashboard');
         navigate('/dashboard', { replace: true });
-      }, 2000); // Aumentado para 2 segundos para dar tempo aos confetes
+      }, 3500); // Aumentado para 3.5 segundos para dar tempo à celebração completa
       
       return true;
 

@@ -33,21 +33,22 @@ const RootRedirect = () => {
   }
 
   // CRÍTICO: Verificar se usuário precisa fazer onboarding
+  // CORREÇÃO: Só redirecionar se onboarding_completed for explicitamente false
   if (user && profile && profile.onboarding_completed === false) {
     console.log("📝 [ROOT-REDIRECT] Usuário precisa fazer onboarding - redirecionando");
     return <Navigate to="/onboarding" replace />;
   }
 
-  // VERIFICAÇÃO ADICIONAL: Se onboarding_completed é null ou undefined, também redirecionar
-  if (user && profile && profile.onboarding_completed !== true) {
-    console.log("⚠️ [ROOT-REDIRECT] Onboarding não confirmado como completo - redirecionando");
-    return <Navigate to="/onboarding" replace />;
+  // Se o onboarding_completed for null/undefined, verificar no banco antes de redirecionar
+  if (user && profile && profile.onboarding_completed == null) {
+    console.log("⚠️ [ROOT-REDIRECT] Onboarding status indefinido - permanecendo na rota atual");
+    // Não redirecionar automaticamente, deixar o usuário na rota atual
   }
 
   // Usuário logado tentando acessar login
   if (location.pathname === '/login' && user && profile) {
-    // Verificar onboarding primeiro
-    if (profile.onboarding_completed !== true) {
+    // Verificar onboarding primeiro - só redirecionar se explicitamente false
+    if (profile.onboarding_completed === false) {
       console.log("📝 [ROOT-REDIRECT] Usuário no login precisa completar onboarding");
       return <Navigate to="/onboarding" replace />;
     }
@@ -62,8 +63,8 @@ const RootRedirect = () => {
 
   // Redirecionamento padrão para root
   if (location.pathname === '/' && user && profile) {
-    // Verificar onboarding primeiro
-    if (profile.onboarding_completed !== true) {
+    // Verificar onboarding primeiro - só redirecionar se explicitamente false
+    if (profile.onboarding_completed === false) {
       console.log("📝 [ROOT-REDIRECT] Usuário na root precisa completar onboarding");
       return <Navigate to="/onboarding" replace />;
     }
