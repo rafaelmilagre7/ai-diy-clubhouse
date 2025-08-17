@@ -25,9 +25,9 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <SecurityProvider>
-          <LoggingProvider>
-            <AuthProvider>
+        <AuthProvider>
+          <SecurityProvider>
+            <LoggingProvider>
               <BrowserRouter>
                 <div className="min-h-screen bg-background font-sans antialiased">
                   <AppRoutes />
@@ -37,9 +37,9 @@ function App() {
                   <PerformanceDashboard />
                 </div>
               </BrowserRouter>
-            </AuthProvider>
-          </LoggingProvider>
-        </SecurityProvider>
+            </LoggingProvider>
+          </SecurityProvider>
+        </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );
