@@ -166,18 +166,26 @@ export const useOnboarding = () => {
       if (data) {
         console.log('[ONBOARDING] Setando estado com dados carregados');
         
-        // Determinar o próximo step baseado nos dados existentes
-        let nextStep = 1;
+        // CORREÇÃO: Respeitar o user_type NULL para step 0
+        let nextStep;
         
-        // Função para verificar se um objeto tem dados válidos
-        const hasValidData = (obj: any) => {
-          if (!obj || typeof obj !== 'object') return false;
-          const keys = Object.keys(obj);
-          return keys.length > 0 && keys.some(key => obj[key] && obj[key] !== '');
-        };
-        
-        // Verificar qual é o próximo step incompleto
-        if (hasValidData(data.personal_info)) {
+        // Se user_type é NULL, usuário precisa selecionar o tipo (step 0)
+        if (!data.user_type) {
+          console.log('[ONBOARDING] user_type é NULL - redirecionando para step 0');
+          nextStep = 0;
+        } else {
+          // Determinar o próximo step baseado nos dados existentes
+          nextStep = 1;
+          
+          // Função para verificar se um objeto tem dados válidos
+          const hasValidData = (obj: any) => {
+            if (!obj || typeof obj !== 'object') return false;
+            const keys = Object.keys(obj);
+            return keys.length > 0 && keys.some(key => obj[key] && obj[key] !== '');
+          };
+          
+          // Verificar qual é o próximo step incompleto
+          if (hasValidData(data.personal_info)) {
           console.log('[ONBOARDING] Personal info válido, indo para step 2');
           nextStep = 2;
         }
@@ -194,8 +202,9 @@ export const useOnboarding = () => {
           nextStep = 5;
         }
         if (hasValidData(data.personalization)) {
-          console.log('[ONBOARDING] Personalization válido, indo para step 6');
-          nextStep = 6;
+            console.log('[ONBOARDING] Personalization válido, indo para step 6');
+            nextStep = 6;
+          }
         }
         
         console.log('[ONBOARDING] Step calculado baseado nos dados:', nextStep);
@@ -209,7 +218,7 @@ export const useOnboarding = () => {
         
         setState({
           id: data.id,
-          userType: data.user_type as UserType || 'entrepreneur', // Usar valor do banco ou default
+          userType: data.user_type as UserType || undefined, // Manter undefined se NULL
           current_step: nextStep,
           completed_steps: data.completed_steps || [],
           is_completed: data.is_completed,
