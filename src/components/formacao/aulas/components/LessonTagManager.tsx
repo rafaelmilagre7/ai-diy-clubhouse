@@ -19,14 +19,6 @@ import {
   PopoverContent, 
   PopoverTrigger 
 } from '@/components/ui/popover';
-import { 
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList
-} from '@/components/ui/command';
 import { TagBadge } from '@/components/learning/tags/TagBadge';
 import { toast } from 'sonner';
 
@@ -186,34 +178,46 @@ export const LessonTagManager = ({ form, fieldName = 'tags' }: LessonTagManagerP
                 </Button>
               </PopoverTrigger>
               <PopoverContent 
-                className="w-[var(--radix-popover-trigger-width)] max-w-[95vw] min-w-[320px] p-0 bg-popover border shadow-lg z-[100]" 
+                className="w-[var(--radix-popover-trigger-width)] max-w-[95vw] min-w-[320px] p-0 bg-popover border shadow-lg z-[200]" 
                 align="start"
                 side="bottom"
                 sideOffset={4}
+                style={{ 
+                  maxHeight: 'min(500px, 85vh)',
+                  overflowY: 'hidden'
+                }}
               >
-                <div className="flex flex-col h-[400px] bg-popover rounded-md">
-                  {/* Header fixo */}
-                  <div className="flex-shrink-0 p-3 border-b border-border bg-popover">
+                <div className="flex flex-col max-h-[500px] bg-popover rounded-md overflow-hidden">
+                  {/* Header fixo com busca */}
+                  <div className="flex-shrink-0 p-3 border-b border-border bg-popover sticky top-0 z-10">
                     <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                       <Input
                         placeholder="Buscar tags..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10 h-9 bg-background border-border"
+                        className="pl-10 h-9 bg-background border-border focus:ring-2 focus:ring-primary focus:border-primary"
                       />
                     </div>
                   </div>
 
-                  {/* Lista com scroll */}
-                  <div className="flex-1 overflow-y-auto p-2 bg-popover">
+                  {/* Área scrollável com as tags */}
+                  <div 
+                    className="flex-1 overflow-y-auto p-2 bg-popover"
+                    style={{ 
+                      maxHeight: '350px',
+                      overscrollBehavior: 'contain'
+                    }}
+                  >
                     {isLoading ? (
                       <div className="flex items-center justify-center py-8">
                         <div className="text-sm text-muted-foreground">Carregando tags...</div>
                       </div>
                     ) : Object.keys(filteredTagsByCategory).length === 0 ? (
-                      <div className="py-6 text-center px-4">
-                        <p className="text-sm text-muted-foreground mb-3">Nenhuma tag encontrada</p>
+                      <div className="py-6 text-center px-2">
+                        <p className="text-sm text-muted-foreground mb-3">
+                          {searchTerm ? 'Nenhuma tag encontrada para essa busca' : 'Nenhuma tag disponível'}
+                        </p>
                         <Button
                           variant="ghost"
                           size="sm"
@@ -229,17 +233,20 @@ export const LessonTagManager = ({ form, fieldName = 'tags' }: LessonTagManagerP
                         </Button>
                       </div>
                     ) : (
-                      <div className="space-y-3">
+                      <div className="space-y-4">
                         {Object.entries(filteredTagsByCategory)
                           .filter(([_, tags]) => Array.isArray(tags) && tags.length > 0)
                           .map(([category, tags]) => (
-                            <div key={category} className="space-y-1">
-                              <div className="px-2 py-1">
-                                <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                                  {category}
+                            <div key={category} className="space-y-2">
+                              {/* Cabeçalho da categoria */}
+                              <div className="px-2 py-1 bg-muted/50 rounded-sm sticky top-0 z-5">
+                                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                                  {category} ({tags.length})
                                 </h4>
                               </div>
-                              <div className="space-y-1">
+                              
+                              {/* Tags da categoria */}
+                              <div className="grid gap-1 px-1">
                                 {tags.filter(tag => tag && tag.id).map((tag) => (
                                   <button
                                     key={tag.id}
@@ -249,7 +256,11 @@ export const LessonTagManager = ({ form, fieldName = 'tags' }: LessonTagManagerP
                                       setSearchTerm('');
                                       setOpen(false);
                                     }}
-                                    className="w-full px-3 py-2 text-left rounded-md hover:bg-accent hover:text-accent-foreground transition-colors flex items-center gap-2"
+                                    className={`w-full px-3 py-2 text-left rounded-md transition-all duration-200 flex items-center gap-2 group ${
+                                      selectedTagIds.includes(tag.id) 
+                                        ? 'bg-primary/10 border border-primary/20 text-primary' 
+                                        : 'hover:bg-accent hover:text-accent-foreground border border-transparent'
+                                    }`}
                                   >
                                     <TagBadge 
                                       tag={tag} 
@@ -257,9 +268,12 @@ export const LessonTagManager = ({ form, fieldName = 'tags' }: LessonTagManagerP
                                       variant={selectedTagIds.includes(tag.id) ? 'default' : 'outline'}
                                     />
                                     {tag.description && (
-                                      <span className="text-xs text-muted-foreground truncate flex-1">
+                                      <span className="text-xs text-muted-foreground truncate flex-1 group-hover:text-foreground">
                                         {tag.description}
                                       </span>
+                                    )}
+                                    {selectedTagIds.includes(tag.id) && (
+                                      <span className="text-xs text-primary font-medium">✓</span>
                                     )}
                                   </button>
                                 ))}
@@ -270,11 +284,11 @@ export const LessonTagManager = ({ form, fieldName = 'tags' }: LessonTagManagerP
                     )}
                   </div>
 
-                  {/* Footer fixo */}
-                  <div className="flex-shrink-0 p-2 border-t border-border bg-popover">
+                  {/* Footer fixo com botão de criar */}
+                  <div className="flex-shrink-0 p-3 border-t border-border bg-popover sticky bottom-0 z-10">
                     <Button
-                      variant="ghost"
-                      className="w-full justify-start h-9"
+                      variant="outline"
+                      className="w-full justify-start h-9 hover:bg-accent hover:text-accent-foreground"
                       onClick={() => {
                         setShowCreateTag(true);
                         setOpen(false);
