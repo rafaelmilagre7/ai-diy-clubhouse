@@ -9,13 +9,6 @@ import { devLog, devWarn } from "@/hooks/useOptimizedLogging";
 export const useLearningCourses = () => {
   const { user, profile } = useAuth();
   
-  // DEBUG: Log estado do usuário no hook
-  console.log('🔍 [COURSES HOOK] Estado:', {
-    userId: user?.id,
-    userEmail: user?.email,
-    profileRole: profile?.user_roles?.name,
-    isAdmin: profile?.user_roles?.name === 'admin'
-  });
 
   const {
     data: courses = [],
