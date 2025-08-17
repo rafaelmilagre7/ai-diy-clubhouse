@@ -86,6 +86,7 @@ export const useGlobalLessonSearch = ({
         throw error;
       }
 
+      console.log('[GLOBAL SEARCH] Aulas carregadas:', data?.length || 0);
       return (data || []) as any[];
     },
     staleTime: 5 * 60 * 1000, // Cache por 5 minutos
@@ -93,6 +94,8 @@ export const useGlobalLessonSearch = ({
   });
 
   const searchResults = useMemo(() => {
+    console.log('[GLOBAL SEARCH] Iniciando busca:', { debouncedQuery, totalLessons: allLessons.length });
+    
     if (!debouncedQuery.trim()) {
       return {
         results: [],
@@ -198,6 +201,8 @@ export const useGlobalLessonSearch = ({
       .filter(result => result.relevanceScore > 0)
       .sort((a, b) => b.relevanceScore - a.relevanceScore)
       .slice(0, limit);
+
+    console.log('[GLOBAL SEARCH] Resultados encontrados:', scoredResults.length);
 
     // Agrupar resultados por curso para melhor visualização
     const courseGroups = scoredResults.reduce((acc, lesson) => {

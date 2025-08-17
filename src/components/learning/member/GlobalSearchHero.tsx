@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Search, Sparkles, BookOpen, Clock, X } from "lucide-react";
+import { Search, BookOpen, Clock, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface GlobalSearchHeroProps {
@@ -26,13 +26,6 @@ export const GlobalSearchHero: React.FC<GlobalSearchHeroProps> = ({
 
   const hasResults = searchQuery.length > 0;
 
-  // Sugestões de busca rápida
-  const quickSearches = [
-    { text: "Inteligência Artificial", icon: "🤖" },
-    { text: "Dashboard", icon: "📊" },
-    { text: "Programação", icon: "💻" },
-    { text: "Analytics", icon: "📈" }
-  ];
 
   return (
     <div className="relative">
@@ -53,9 +46,6 @@ export const GlobalSearchHero: React.FC<GlobalSearchHeroProps> = ({
             <h2 className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
               Encontre qualquer aula
             </h2>
-            <div className="p-3 bg-aurora/10 rounded-xl">
-              <Sparkles className="h-6 w-6 text-aurora" />
-            </div>
           </motion.div>
           
           <motion.p
@@ -126,35 +116,6 @@ export const GlobalSearchHero: React.FC<GlobalSearchHeroProps> = ({
           </div>
         </motion.div>
 
-        {/* Sugestões de busca rápida */}
-        <AnimatePresence>
-          {!hasResults && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.4, delay: 0.4 }}
-              className="flex flex-wrap items-center justify-center gap-3"
-            >
-              <span className="text-sm text-muted-foreground mb-2 sm:mb-0">Buscas populares:</span>
-              {quickSearches.map((search, index) => (
-                <motion.button
-                  key={search.text}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.3, delay: 0.5 + index * 0.1 }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => onSearchChange(search.text)}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-muted/80 hover:bg-muted text-sm rounded-full transition-all duration-200 hover:shadow-md"
-                >
-                  <span>{search.icon}</span>
-                  {search.text}
-                </motion.button>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         {/* Estatísticas da busca */}
         <AnimatePresence>
