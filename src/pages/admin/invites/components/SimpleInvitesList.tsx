@@ -13,7 +13,8 @@ import { Invite } from "@/hooks/admin/invites/types";
 import { formatDate } from "../utils/formatters";
 import InviteStatus from "./InviteStatus";
 import InviteActions from "./InviteActions";
-import { InviteTrackingDetails } from "@/components/admin/invites/InviteTrackingDetails";
+import { EmailTrackingCell } from "@/components/admin/invites/EmailTrackingCell";
+import { WhatsAppTrackingCell } from "@/components/admin/invites/WhatsAppTrackingCell";
 import { useWhatsAppStatusCheck } from "@/hooks/admin/invites/useWhatsAppStatusCheck";
 
 interface SimpleInvitesListProps {
@@ -105,7 +106,8 @@ const SimpleInvitesList = ({
             <TableHead className="font-medium">Papel</TableHead>
             <TableHead className="font-medium">Canal</TableHead>
             <TableHead className="font-medium">Status</TableHead>
-            <TableHead className="font-medium">Tracking</TableHead>
+            <TableHead className="font-medium">📧 Email</TableHead>
+            <TableHead className="font-medium">📱 WhatsApp</TableHead>
             <TableHead className="font-medium">Expira em</TableHead>
             <TableHead className="font-medium text-right">Ações</TableHead>
           </TableRow>
@@ -136,7 +138,10 @@ const SimpleInvitesList = ({
                 <InviteStatus invite={invite} />
               </TableCell>
               <TableCell>
-                <InviteTrackingDetails inviteId={invite.id} />
+                <EmailTrackingCell inviteId={invite.id} />
+              </TableCell>
+              <TableCell>
+                <WhatsAppTrackingCell inviteId={invite.id} />
               </TableCell>
               <TableCell>
                 <div className="flex items-center text-sm text-muted-foreground">
