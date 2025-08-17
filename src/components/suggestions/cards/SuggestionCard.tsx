@@ -30,11 +30,11 @@ export const SuggestionCard: React.FC<SuggestionCardProps> = ({
   return (
     <Card 
       className={`
-        group h-full cursor-pointer transition-all duration-300 
+        group h-full cursor-pointer transition-all duration-300 hover:shadow-md hover:-translate-y-1
         bg-card/50 backdrop-blur-sm
         ${suggestion.status === 'implemented' 
-          ? 'border-emerald-500/50 shadow-emerald-500/10 shadow-lg bg-emerald-50/30 dark:bg-emerald-950/20 hover:shadow-emerald-500/20 hover:shadow-xl hover:bg-emerald-50/40 dark:hover:bg-emerald-950/30' 
-          : 'border-border hover:shadow-md hover:-translate-y-1'
+          ? 'border-2 border-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.15)] bg-emerald-50/20 dark:bg-emerald-950/10' 
+          : 'border-border'
         }
       `}
       onClick={handleCardClick}
@@ -54,7 +54,7 @@ export const SuggestionCard: React.FC<SuggestionCardProps> = ({
                 ${getStatusColor(suggestion.status)} 
                 text-xs font-medium px-3 py-1 rounded-full w-fit
                 ${suggestion.status === 'implemented' 
-                  ? 'ring-2 ring-emerald-500/30 bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300' 
+                  ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700' 
                   : ''
                 }
               `}
