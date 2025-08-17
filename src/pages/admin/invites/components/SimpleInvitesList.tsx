@@ -13,6 +13,7 @@ import { Invite } from "@/hooks/admin/invites/types";
 import { formatDate } from "../utils/formatters";
 import InviteStatus from "./InviteStatus";
 import InviteActions from "./InviteActions";
+import { InviteTrackingDetails } from "@/components/admin/invites/InviteTrackingDetails";
 import { useWhatsAppStatusCheck } from "@/hooks/admin/invites/useWhatsAppStatusCheck";
 
 interface SimpleInvitesListProps {
@@ -103,8 +104,9 @@ const SimpleInvitesList = ({
             <TableHead className="font-medium">Destinatário</TableHead>
             <TableHead className="font-medium">Papel</TableHead>
             <TableHead className="font-medium">Canal</TableHead>
-            <TableHead className="font-medium">Expira em</TableHead>
             <TableHead className="font-medium">Status</TableHead>
+            <TableHead className="font-medium">Tracking</TableHead>
+            <TableHead className="font-medium">Expira em</TableHead>
             <TableHead className="font-medium text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
@@ -131,13 +133,16 @@ const SimpleInvitesList = ({
                 {getChannelBadge(invite.channel_preference, invite.phone)}
               </TableCell>
               <TableCell>
+                <InviteStatus invite={invite} />
+              </TableCell>
+              <TableCell>
+                <InviteTrackingDetails inviteId={invite.id} />
+              </TableCell>
+              <TableCell>
                 <div className="flex items-center text-sm text-muted-foreground">
                   <Calendar className="h-4 w-4 mr-2" />
                   {formatDate(invite.expires_at)}
                 </div>
-              </TableCell>
-              <TableCell>
-                <InviteStatus invite={invite} />
               </TableCell>
               <TableCell className="text-right">
                 <InviteActions
