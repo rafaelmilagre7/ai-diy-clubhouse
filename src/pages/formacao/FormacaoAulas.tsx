@@ -14,6 +14,7 @@ import { AulasList } from "@/components/formacao/aulas/AulasList";
 import { AllLessonsList } from "@/components/formacao/aulas/AllLessonsList";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
+import { AllLessonsListWithTags } from "@/components/formacao/aulas/AllLessonsListWithTags";
 import { NovaAulaButton } from "@/components/formacao/aulas/NovaAulaButton";
 
 
@@ -199,24 +200,12 @@ const FormacaoAulas = () => {
         <FormacaoAulasHeader 
           titulo="Todas as Aulas"
           breadcrumb={false}
-        >
-          {isAdmin && (
-            <NovaAulaButton 
-              moduleId=""
-              buttonText="Nova Aula"
-              onSuccess={handleSuccess}
-              allowModuleSelection={true}
-            />
-          )}
-        </FormacaoAulasHeader>
+        />
         
-        <AllLessonsList 
-          lessons={allLessons}
-          loading={loadingAllLessons} 
+        <AllLessonsListWithTags 
           onEdit={handleEditarAula}
           onDelete={handleExcluirAula}
-          isAdmin={isAdmin}
-          onRefresh={refetchAllLessons}
+          onSuccess={handleSuccess}
         />
       </div>
     );
