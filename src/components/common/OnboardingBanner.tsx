@@ -21,6 +21,7 @@ export const OnboardingBanner: React.FC = () => {
   const checkIfShouldShowBanner = async () => {
     if (!user || !profile) {
       console.log('🎯 [BANNER] Sem user ou profile:', { hasUser: !!user, hasProfile: !!profile });
+      setShowBanner(false);
       return;
     }
 
@@ -35,17 +36,38 @@ export const OnboardingBanner: React.FC = () => {
     if (dismissed) {
       console.log('🎯 [BANNER] Banner foi dismissado anteriormente');
       setIsDismissed(true);
+      setShowBanner(false);
       return;
     }
 
-    // Se usuário não completou onboarding, mostrar banner sempre
-    if (!profile.onboarding_completed) {
+    // CORREÇÃO: Verificar se onboarding está realmente incompleto
+    // Só mostrar banner se onboarding_completed for explicitamente false
+    if (profile.onboarding_completed === false) {
       console.log('🎯 [BANNER] Usuário sem onboarding concluído - mostrando banner');
+      
+      // Verificar se é usuário legado (tem dados mas onboarding incompleto)
+      try {
+        const { data: onboardingData } = await supabase
+          .from('onboarding_final')
+          .select('is_completed, current_step')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (onboardingData && onboardingData.current_step > 1) {
+          console.log('🎯 [BANNER] Usuário legado detectado - dados existem mas onboarding incompleto');
+          setIsLegacyUser(true);
+        }
+      } catch (error) {
+        console.warn('🎯 [BANNER] Erro ao verificar dados de onboarding:', error);
+      }
+
       setShowBanner(true);
       return;
     }
 
-    console.log('🎯 [BANNER] Usuário já completou onboarding - não mostrando banner');
+    // Se onboarding_completed é true ou null/undefined, não mostrar banner
+    console.log('🎯 [BANNER] Onboarding completo ou indefinido - não mostrando banner');
+    setShowBanner(false);
   };
 
   const handleStartOnboarding = async () => {

@@ -2,37 +2,42 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Sparkles, Rocket, Users, BookOpen, Calendar, CheckCircle } from 'lucide-react';
-import confetti from 'canvas-confetti';
 import { motion } from 'framer-motion';
+import { OnboardingSuccess } from '@/components/celebration/OnboardingSuccess';
 interface Step6WelcomeProps {
   ninaMessage?: string;
   onFinish: () => void;
   userType: 'entrepreneur' | 'learner';
+  userName?: string;
 }
 export const Step6Welcome: React.FC<Step6WelcomeProps> = ({
   ninaMessage,
   onFinish,
-  userType
+  userType,
+  userName = "Usuário"
 }) => {
   const [isCompleting, setIsCompleting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  
   const handleFinish = async () => {
     setIsCompleting(true);
-
-    // Lançar confete
-    confetti({
-      particleCount: 200,
-      spread: 70,
-      origin: {
-        y: 0.6
-      }
-    });
-
-    // Aguardar um pouco para mostrar o confete
-    setTimeout(() => {
-      onFinish();
-    }, 1000);
+    setShowSuccess(true);
   };
-  return <div className="space-y-8 max-w-3xl mx-auto text-center">
+
+  const handleSuccessComplete = () => {
+    onFinish();
+  };
+  return (
+    <>
+      {showSuccess && (
+        <OnboardingSuccess
+          userName={userName}
+          userType={userType}
+          onComplete={handleSuccessComplete}
+        />
+      )}
+      
+      <div className="space-y-8 max-w-3xl mx-auto text-center">
       <div className="space-y-4">
         
         
@@ -189,5 +194,7 @@ export const Step6Welcome: React.FC<Step6WelcomeProps> = ({
           Você pode sempre ajustar suas preferências nas configurações da sua conta
         </p>
       </div>
-    </div>;
+    </div>
+    </>
+  );
 };

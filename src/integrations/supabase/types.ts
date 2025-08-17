@@ -5374,6 +5374,10 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: Json
       }
+      complete_onboarding_final_flow: {
+        Args: { p_user_id: string }
+        Returns: Json
+      }
       complete_onboarding_flow: {
         Args: { p_user_id: string }
         Returns: Json

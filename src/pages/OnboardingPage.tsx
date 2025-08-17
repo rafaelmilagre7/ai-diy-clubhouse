@@ -322,6 +322,7 @@ const OnboardingPage: React.FC = () => {
         return (
           <Step6Welcome
             ninaMessage={nina_message}
+            userName={data.personal_info?.name || profile?.name || "Usuário"}
             onFinish={async () => {
               console.log('[ONBOARDING_PAGE] Step6Welcome onFinish chamado - finalizando onboarding');
               const success = await completeOnboarding(data.personalization);

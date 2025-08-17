@@ -523,18 +523,18 @@ Vamos começar? Sua trilha personalizada já está pronta! 🚀`;
 
       setLoadingMessage('Aplicando configurações finais...');
       
-      // Finalizar onboarding
-      console.log('[ONBOARDING] ⏱️ Iniciando complete_onboarding_flow...');
+      // Finalizar onboarding com nova função
+      console.log('[ONBOARDING] ⏱️ Iniciando complete_onboarding_final_flow...');
       const rpcStartTime = performance.now();
       
-      const { error } = await supabase.rpc('complete_onboarding_flow', {
+      const { error } = await supabase.rpc('complete_onboarding_final_flow', {
         p_user_id: user.id,
       });
       
-      console.log('[ONBOARDING] ⏱️ complete_onboarding_flow concluído em:', performance.now() - rpcStartTime, 'ms');
+      console.log('[ONBOARDING] ⏱️ complete_onboarding_final_flow concluído em:', performance.now() - rpcStartTime, 'ms');
 
       if (error) {
-        console.error('[ONBOARDING] Erro na função complete_onboarding_flow:', error);
+        console.error('[ONBOARDING] Erro na função complete_onboarding_final_flow:', error);
         throw error;
       }
 
@@ -570,11 +570,12 @@ Vamos começar? Sua trilha personalizada já está pronta! 🚀`;
       console.log('[ONBOARDING] ⏱️ Tempo total de execução:', totalTime, 'ms');
       console.log('[ONBOARDING] Onboarding concluído com sucesso!');
       
-      // Aguardar um pouco para que a sincronização finalize e depois navegar
-      console.log('[ONBOARDING] ⏱️ Iniciando redirecionamento...');
+      // Aguardar mais tempo para sincronização e celebração
+      console.log('[ONBOARDING] ⏱️ Iniciando redirecionamento após celebração...');
       setTimeout(() => {
+        console.log('[ONBOARDING] ✅ Redirecionando para dashboard');
         navigate('/dashboard', { replace: true });
-      }, 500);
+      }, 2000); // Aumentado para 2 segundos para dar tempo aos confetes
       
       return true;
 
