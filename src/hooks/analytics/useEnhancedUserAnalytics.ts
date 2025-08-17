@@ -114,7 +114,7 @@ export const useEnhancedUserAnalytics = (params: EnhancedUserAnalyticsParams) =>
         console.warn('⚠️ [USER-ANALYTICS] Erro inesperado ao carregar onboarding flags:', e);
       }
 
-      // Consolidar usuários com flag de onboarding
+      // Consolidar usuários com flag de onboarding completa
       const users = ((usersData as any[]) || []).map((u: any) => ({
         ...u,
         onboarding_completed: onboardingMap.get(u.id) || false,

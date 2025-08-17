@@ -16,6 +16,7 @@ import { UserSegmentChart } from './charts/UserSegmentChart';
 import { UserFunnelChart } from './charts/UserFunnelChart';
 import { UserActivityHeatmap } from './charts/UserActivityHeatmap';
 import { UserRetentionChart } from './charts/UserRetentionChart';
+import { OnboardingStatusTab } from './OnboardingStatusTab';
 import { UserDetailsTable } from './UserDetailsTable';
 
 interface EnhancedUserAnalyticsProps {
@@ -91,8 +92,9 @@ export const EnhancedUserAnalytics = ({ timeRange }: EnhancedUserAnalyticsProps)
       {/* Tabs para diferentes visões */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          <TabsList className="grid grid-cols-4 w-fit">
+          <TabsList className="grid grid-cols-5 w-fit">
             <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+            <TabsTrigger value="onboarding">Onboarding</TabsTrigger>
             <TabsTrigger value="segments">Segmentação</TabsTrigger>
             <TabsTrigger value="behavior">Comportamento</TabsTrigger>
             <TabsTrigger value="details">Detalhes</TabsTrigger>
@@ -132,6 +134,11 @@ export const EnhancedUserAnalytics = ({ timeRange }: EnhancedUserAnalyticsProps)
             <UserActivityHeatmap data={data?.activityHeatmap} loading={loading} />
             <UserGrowthTrendCard data={data?.growthTrend} loading={loading} />
           </div>
+        </TabsContent>
+
+        {/* Onboarding Status Tab */}
+        <TabsContent value="onboarding" className="space-y-6">
+          <OnboardingStatusTab data={data} loading={loading} />
         </TabsContent>
 
         {/* Segments Tab */}
