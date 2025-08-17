@@ -35,6 +35,8 @@ import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { Plus, GripVertical } from "lucide-react";
 import { toast } from "sonner";
 import { VideoFormValues } from "@/lib/supabase/types";
+import { LessonTagManager } from './components/LessonTagManager';
+import { useLessonTagsForLesson, useAddTagToLesson, useRemoveTagFromLesson } from '@/hooks/useLessonTags';
 
 const formSchema = z.object({
   title: z.string().min(2, {
@@ -49,6 +51,7 @@ const formSchema = z.object({
   aiAssistantPrompt: z.string().optional(),
   published: z.boolean().default(false),
   orderIndex: z.number().optional().default(0),
+  tags: z.array(z.string()).default([]).optional(),
   videos: z.array(
     z.object({
       id: z.string().optional(),
@@ -83,6 +86,11 @@ const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, modul
 
   // Carregamos os vídeos da aula para o estado local
   const [aulaVideos, setAulaVideos] = useState<VideoFormValues[]>([]);
+  
+  // Hooks para gerenciar tags
+  const { data: existingTags } = useLessonTagsForLesson(aula?.id || '');
+  const addTagMutation = useAddTagToLesson();
+  const removeTagMutation = useRemoveTagFromLesson();
   
   useEffect(() => {
     // Se tiver aula e ID, buscar vídeos
@@ -132,6 +140,7 @@ const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, modul
     aiAssistantPrompt: aula?.ai_assistant_prompt || "",
     published: aula?.published || false,
     orderIndex: aula?.order_index || 0,
+    tags: existingTags?.map(tag => tag.tag_id) || [],
     videos: aulaVideos || []
   };
 
@@ -141,15 +150,16 @@ const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, modul
     mode: "onChange"
   });
 
-  // Redefinir o formulário quando a aula ou os vídeos mudarem
+  // Redefinir o formulário quando a aula, vídeos ou tags mudarem
   useEffect(() => {
-    if (aula || aulaVideos.length > 0) {
+    if (aula || aulaVideos.length > 0 || existingTags) {
       form.reset({
         ...defaultValues,
-        videos: aulaVideos
+        videos: aulaVideos,
+        tags: existingTags?.map(tag => tag.tag_id) || []
       });
     }
-  }, [aula, moduleId, aulaVideos, form]);
+  }, [aula, moduleId, aulaVideos, existingTags, form]);
 
   useEffect(() => {
     const fetchModules = async () => {
@@ -195,6 +205,46 @@ const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, modul
     
     // Converter segundos para minutos e arredondar para cima
     return Math.ceil(totalDuration / 60);
+  };
+
+  const handleSaveTags = async (lessonId: string, selectedTagIds: string[]) => {
+    try {
+      console.log("Salvando tags para a aula:", lessonId, selectedTagIds);
+      
+      // Buscar tags existentes
+      const currentTags = existingTags?.map(t => t.tag_id) || [];
+      
+      // Tags para adicionar (novas)
+      const tagsToAdd = selectedTagIds.filter(tagId => !currentTags.includes(tagId));
+      
+      // Tags para remover (removidas)
+      const tagsToRemove = currentTags.filter(tagId => !selectedTagIds.includes(tagId));
+      
+      // Remover tags que não estão mais selecionadas
+      for (const tagId of tagsToRemove) {
+        try {
+          await removeTagMutation.mutateAsync({ lessonId, tagId });
+          console.log(`Tag ${tagId} removida com sucesso`);
+        } catch (error) {
+          console.error(`Erro ao remover tag ${tagId}:`, error);
+        }
+      }
+      
+      // Adicionar novas tags
+      for (const tagId of tagsToAdd) {
+        try {
+          await addTagMutation.mutateAsync({ lessonId, tagId });
+          console.log(`Tag ${tagId} adicionada com sucesso`);
+        } catch (error) {
+          console.error(`Erro ao adicionar tag ${tagId}:`, error);
+        }
+      }
+      
+      console.log("Tags atualizadas com sucesso!");
+    } catch (error) {
+      console.error("Erro ao salvar tags:", error);
+      throw error;
+    }
   };
 
   const handleSaveVideos = async (lessonId: string, videos: VideoFormValues[]) => {
@@ -346,6 +396,11 @@ const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, modul
         // Atualizar os vídeos da aula
         await handleSaveVideos(lessonId, values.videos);
         
+        // Atualizar as tags da aula
+        if (values.tags) {
+          await handleSaveTags(lessonId, values.tags);
+        }
+        
         toast.success("Aula atualizada com sucesso!");
       } else {
         // Criar nova aula
@@ -399,6 +454,11 @@ const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, modul
         // Salvar os vídeos da aula
         const newLessonId = data.id;
         await handleSaveVideos(newLessonId, values.videos);
+        
+        // Salvar as tags da aula
+        if (values.tags && values.tags.length > 0) {
+          await handleSaveTags(newLessonId, values.tags);
+        }
         
         toast.success("Aula criada com sucesso!");
       }
@@ -664,6 +724,9 @@ const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, modul
                 Adicionar Vídeo
               </Button>
             </div>
+
+            {/* Tags da Aula */}
+            <LessonTagManager form={form} fieldName="tags" />
 
             <FormField
               control={form.control}
