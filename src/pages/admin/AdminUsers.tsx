@@ -265,10 +265,10 @@ const AdminUsers = () => {
 
         {/* Enhanced Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="surface-elevated border-0 shadow-aurora hover:shadow-aurora-strong transition-all duration-300 group">
+          <Card className="surface-elevated border-0 shadow-aurora transition-all duration-300 group">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-label text-muted-foreground">Total de Usuários</CardTitle>
-              <div className="p-2 rounded-lg bg-viverblue/10 group-hover:bg-viverblue/20 transition-colors">
+              <div className="p-2 rounded-lg bg-viverblue/10 transition-colors">
                 <Users className="h-4 w-4 text-viverblue" />
               </div>
             </CardHeader>
@@ -280,10 +280,10 @@ const AdminUsers = () => {
             </CardContent>
           </Card>
 
-          <Card className="surface-elevated border-0 shadow-aurora hover:shadow-aurora-strong transition-all duration-300 group">
+          <Card className="surface-elevated border-0 shadow-aurora transition-all duration-300 group">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-label text-muted-foreground">Usuários Ativos</CardTitle>
-              <div className="p-2 rounded-lg bg-operational/10 group-hover:bg-operational/20 transition-colors">
+              <div className="p-2 rounded-lg bg-operational/10 transition-colors">
                 <Activity className="h-4 w-4 text-operational" />
               </div>
             </CardHeader>
@@ -295,10 +295,10 @@ const AdminUsers = () => {
             </CardContent>
           </Card>
 
-          <Card className="surface-elevated border-0 shadow-aurora hover:shadow-aurora-strong transition-all duration-300 group">
+          <Card className="surface-elevated border-0 shadow-aurora transition-all duration-300 group">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-label text-muted-foreground">Administradores</CardTitle>
-              <div className="p-2 rounded-lg bg-strategy/10 group-hover:bg-strategy/20 transition-colors">
+              <div className="p-2 rounded-lg bg-strategy/10 transition-colors">
                 <AlertCircle className="h-4 w-4 text-strategy" />
               </div>
             </CardHeader>
@@ -310,10 +310,10 @@ const AdminUsers = () => {
             </CardContent>
           </Card>
 
-          <Card className="surface-elevated border-0 shadow-aurora hover:shadow-aurora-strong transition-all duration-300 group">
+          <Card className="surface-elevated border-0 shadow-aurora transition-all duration-300 group">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-label text-muted-foreground">Onboarding Completo</CardTitle>
-              <div className="p-2 rounded-lg bg-revenue/10 group-hover:bg-revenue/20 transition-colors">
+              <div className="p-2 rounded-lg bg-revenue/10 transition-colors">
                 <CheckCircle className="h-4 w-4 text-revenue" />
               </div>
             </CardHeader>
