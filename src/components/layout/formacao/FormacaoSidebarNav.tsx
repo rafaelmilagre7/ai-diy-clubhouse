@@ -6,7 +6,8 @@ import {
   Play,
   FileText,
   ArrowLeft,
-  GraduationCap
+  GraduationCap,
+  Tags
 } from "lucide-react";
 import { AdminNavItem } from "../admin/AdminNavItem";
 import { cn } from "@/lib/utils";
@@ -43,6 +44,12 @@ export const FormacaoSidebarNav = ({ sidebarOpen }: FormacaoSidebarNavProps) => 
       icon: Play,
       href: "/formacao/aulas",
       isActive: location.pathname.startsWith("/formacao/aulas")
+    },
+    {
+      label: "Gestão de Tags",
+      icon: Tags,
+      href: "/formacao/tags",
+      isActive: location.pathname.startsWith("/formacao/tags")
     },
     {
       label: "Materiais",

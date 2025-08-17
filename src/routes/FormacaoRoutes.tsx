@@ -12,6 +12,7 @@ import FormacaoAulas from '@/pages/formacao/FormacaoAulas';
 import FormacaoAulaDetalhes from '@/pages/formacao/FormacaoAulaDetalhes';
 import FormacaoAulaEditar from '@/pages/formacao/FormacaoAulaEditar';
 import FormacaoMateriais from '@/pages/formacao/FormacaoMateriais';
+import FormacaoTagsGestao from '@/pages/formacao/FormacaoTagsGestao';
 
 export const formacaoRoutes: RouteObject[] = [
   {
@@ -41,6 +42,10 @@ export const formacaoRoutes: RouteObject[] = [
   {
     path: "/formacao/aulas/:id",
     element: <FormacaoProtectedRoutes><FormacaoLayout><FormacaoAulaDetalhes /></FormacaoLayout></FormacaoProtectedRoutes>
+  },
+  {
+    path: "/formacao/tags",
+    element: <FormacaoProtectedRoutes><FormacaoTagsGestao /></FormacaoProtectedRoutes>
   },
   {
     path: "/formacao/materiais",

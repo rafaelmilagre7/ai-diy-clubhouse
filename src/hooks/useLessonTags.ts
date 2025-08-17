@@ -21,6 +21,23 @@ export const useLessonTags = () => {
   });
 };
 
+// Hook para buscar todas as tags (incluindo inativas) para gestão admin
+export const useAllLessonTags = () => {
+  return useQuery({
+    queryKey: ['lesson-tags-all'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('lesson_tags')
+        .select('*')
+        .order('category', { ascending: true })
+        .order('order_index', { ascending: true });
+
+      if (error) throw error;
+      return data as LessonTag[];
+    }
+  });
+};
+
 // Hook para buscar tags por categoria (filtra categorias não desejadas)
 export const useLessonTagsByCategory = () => {
   const { data: tags = [], ...rest } = useLessonTags();
@@ -142,6 +159,7 @@ export const useCreateTag = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['lesson-tags'] });
+      queryClient.invalidateQueries({ queryKey: ['lesson-tags-all'] });
       toast({
         title: "Tag criada",
         description: "Nova tag foi criada com sucesso.",
@@ -150,6 +168,80 @@ export const useCreateTag = () => {
     onError: (error) => {
       toast({
         title: "Erro ao criar tag",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+};
+
+// Hook para editar tag (admin)
+export const useUpdateTag = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, tagData }: { id: string; tagData: Partial<LessonTag> }) => {
+      const { data, error } = await supabase
+        .from('lesson_tags')
+        .update({ ...tagData, updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data as LessonTag;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['lesson-tags'] });
+      queryClient.invalidateQueries({ queryKey: ['lesson-tags-all'] });
+      toast({
+        title: "Tag atualizada",
+        description: "Tag foi atualizada com sucesso.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao atualizar tag",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+};
+
+// Hook para deletar tag (admin)
+export const useDeleteTag = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (tagId: string) => {
+      // Primeiro, remover todas as associações da tag com as aulas
+      const { error: associationError } = await supabase
+        .from('learning_lesson_tags')
+        .delete()
+        .eq('tag_id', tagId);
+
+      if (associationError) throw associationError;
+
+      // Depois, deletar a tag
+      const { error } = await supabase
+        .from('lesson_tags')
+        .delete()
+        .eq('id', tagId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['lesson-tags'] });
+      queryClient.invalidateQueries({ queryKey: ['lesson-tags-all'] });
+      toast({
+        title: "Tag deletada",
+        description: "Tag foi deletada com sucesso.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao deletar tag",
         description: error.message,
         variant: "destructive",
       });
