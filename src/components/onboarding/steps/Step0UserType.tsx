@@ -30,50 +30,48 @@ export const Step0UserType: React.FC<Step0UserTypeProps> = ({
   const userTypes = [
     {
       id: 'entrepreneur' as UserType,
-      title: 'Sou empresário ou gestor',
-      description: 'Quero aplicar IA no meu negócio para aumentar produtividade, reduzir custos e melhorar resultados',
-      icon: Building2,
-      gradient: 'from-blue-500 to-cyan-500',
+      title: 'EMPRESÁRIO/GESTOR',
+      description: 'Meu foco é na parte de negócios e estratégia com IA',
+      gradient: 'from-emerald-500 to-teal-500',
       features: [
         'Soluções para empresas',
-        'ROI e métricas de negócio',
+        'ROI e métricas de negócio',  
         'Automação de processos',
         'Crescimento e escalabilidade'
       ]
     },
     {
       id: 'learner' as UserType,
-      title: 'Quero aprender e implementar IA',
-      description: 'Busco desenvolver habilidades em IA para crescer profissionalmente ou mudar de carreira',
-      icon: GraduationCap,
-      gradient: 'from-violet-500 to-purple-500',
+      title: 'HANDS ON, APRENDER E IMPLEMENTAR',
+      description: 'Foco em mão na massa, aprender e implementar soluções de IA',
+      gradient: 'from-blue-500 to-indigo-500',
       features: [
         'Conteúdo educacional',
         'Projetos práticos',
-        'Certificações',
+        'Certificações', 
         'Desenvolvimento de carreira'
       ]
     }
   ];
 
   return (
-    <div className="space-y-8 max-w-4xl mx-auto">
+    <div className="space-y-6 max-w-6xl mx-auto">
       {/* Header */}
-      <div className="text-center space-y-4">
+      <div className="text-center space-y-3">
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.5 }}
-          className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-primary to-accent mb-4 shadow-2xl shadow-primary/25"
+          className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-accent mb-3 shadow-2xl shadow-primary/25"
         >
-          <Briefcase className="w-10 h-10 text-primary-foreground" />
+          <Briefcase className="w-8 h-8 text-primary-foreground" />
         </motion.div>
         
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.5 }}
-          className="text-3xl font-bold text-foreground"
+          className="text-2xl sm:text-3xl font-bold text-foreground"
         >
           Vamos personalizar sua experiência
         </motion.h2>
@@ -82,16 +80,15 @@ export const Step0UserType: React.FC<Step0UserTypeProps> = ({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.5 }}
-          className="text-lg text-muted-foreground max-w-2xl mx-auto"
+          className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto"
         >
           Para oferecer a melhor experiência, precisamos entender seu objetivo principal com IA
         </motion.p>
       </div>
 
       {/* User Type Cards */}
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
         {userTypes.map((type, index) => {
-          const Icon = type.icon;
           const isSelected = selectedType === type.id;
           
           return (
@@ -109,18 +106,15 @@ export const Step0UserType: React.FC<Step0UserTypeProps> = ({
                 }`}
                 onClick={() => handleSelect(type.id)}
               >
-                <CardContent className="p-8">
+                <CardContent className="p-6 sm:p-8">
                   {/* Header */}
-                  <div className="flex items-start space-x-4 mb-6">
-                    <div className={`flex-shrink-0 w-16 h-16 rounded-2xl bg-gradient-to-br ${type.gradient} flex items-center justify-center shadow-lg`}>
-                      <Icon className="w-8 h-8 text-white" />
-                    </div>
-                    
+                  <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
-                      <h3 className="text-xl font-bold text-foreground mb-2">
+                      <div className={`inline-block w-3 h-3 rounded-full bg-gradient-to-r ${type.gradient} mb-3`} />
+                      <h3 className="text-lg sm:text-xl font-bold text-foreground mb-2">
                         {type.title}
                       </h3>
-                      <p className="text-muted-foreground leading-relaxed">
+                      <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
                         {type.description}
                       </p>
                     </div>
@@ -132,7 +126,7 @@ export const Step0UserType: React.FC<Step0UserTypeProps> = ({
                         opacity: isSelected ? 1 : 0
                       }}
                       transition={{ duration: 0.2 }}
-                      className="w-6 h-6 rounded-full bg-primary flex items-center justify-center"
+                      className="w-6 h-6 rounded-full bg-primary flex items-center justify-center ml-4"
                     >
                       <motion.div
                         animate={{ scale: isSelected ? 1 : 0 }}
@@ -144,10 +138,10 @@ export const Step0UserType: React.FC<Step0UserTypeProps> = ({
 
                   {/* Features */}
                   <div className="space-y-3">
-                    <h4 className="text-sm font-medium text-foreground/80 mb-3">
+                    <h4 className="text-xs sm:text-sm font-medium text-foreground/80 mb-3">
                       O que você encontrará:
                     </h4>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {type.features.map((feature, featureIndex) => (
                         <motion.div
                           key={featureIndex}
@@ -160,7 +154,7 @@ export const Step0UserType: React.FC<Step0UserTypeProps> = ({
                           className="flex items-center space-x-2"
                         >
                           <div className={`w-1.5 h-1.5 rounded-full bg-gradient-to-r ${type.gradient}`} />
-                          <span className="text-sm text-muted-foreground">
+                          <span className="text-xs sm:text-sm text-muted-foreground">
                             {feature}
                           </span>
                         </motion.div>
@@ -189,13 +183,13 @@ export const Step0UserType: React.FC<Step0UserTypeProps> = ({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.8, duration: 0.5 }}
-        className="flex justify-center"
+        className="flex justify-center pt-4"
       >
         <Button
           onClick={handleContinue}
           disabled={!selectedType || isLoading}
           size="lg"
-          className="group bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 rounded-2xl"
+          className="group bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-2 sm:py-3 rounded-2xl"
         >
           {isLoading ? (
             <>
