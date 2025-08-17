@@ -31,8 +31,16 @@ const AuthLayout = () => {
       
       // Pequeno delay para garantir estabilidade
       setTimeout(() => {
+        // CRÍTICO: Verificar onboarding primeiro, independente da role
+        if (profile.onboarding_completed !== true) {
+          console.log("📝 [AUTH-LAYOUT] Usuário precisa completar onboarding - redirecionando");
+          navigate('/onboarding', { replace: true });
+          return;
+        }
+
+        // Só redirecionar para role-specific pages se onboarding estiver completo
         const targetRoute = getUserRoleName(profile) === 'formacao' ? '/formacao' : '/dashboard';
-        console.log("🔄 [AUTH-LAYOUT] Redirecionando para:", targetRoute);
+        console.log("🔄 [AUTH-LAYOUT] Onboarding completo - redirecionando para:", targetRoute);
         navigate(targetRoute, { replace: true });
       }, 100);
     }

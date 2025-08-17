@@ -10,7 +10,7 @@ interface AdminProtectedRoutesProps {
 }
 
 export const AdminProtectedRoutes = ({ children }: AdminProtectedRoutesProps) => {
-  const { user, isAdmin, isLoading } = useAuth();
+  const { user, profile, isAdmin, isLoading } = useAuth();
   const location = useLocation();
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   const timeoutRef = useRef<number | null>(null);
@@ -44,6 +44,13 @@ export const AdminProtectedRoutes = ({ children }: AdminProtectedRoutesProps) =>
   if (!user) {
     toast.error("Por favor, faça login para acessar esta página");
     return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  // CRÍTICO: Verificar se usuário completou onboarding antes de verificar permissões
+  if (user && profile && profile.onboarding_completed !== true) {
+    console.log("📝 [ADMIN-PROTECTED] Usuário precisa completar onboarding primeiro");
+    toast.info("Complete seu onboarding primeiro para acessar esta área");
+    return <Navigate to="/onboarding" replace />;
   }
 
   // Se o usuário não for administrador, redireciona para o dashboard

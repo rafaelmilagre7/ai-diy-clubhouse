@@ -46,6 +46,12 @@ const RootRedirect = () => {
 
   // Usuário logado tentando acessar login
   if (location.pathname === '/login' && user && profile) {
+    // Verificar onboarding primeiro
+    if (profile.onboarding_completed !== true) {
+      console.log("📝 [ROOT-REDIRECT] Usuário no login precisa completar onboarding");
+      return <Navigate to="/onboarding" replace />;
+    }
+
     const targetRoute = getUserRoleName(profile) === 'formacao' 
       ? '/formacao' 
       : '/dashboard';
@@ -55,6 +61,12 @@ const RootRedirect = () => {
 
   // Redirecionamento padrão para root
   if (location.pathname === '/' && user && profile) {
+    // Verificar onboarding primeiro
+    if (profile.onboarding_completed !== true) {
+      console.log("📝 [ROOT-REDIRECT] Usuário na root precisa completar onboarding");
+      return <Navigate to="/onboarding" replace />;
+    }
+
     const targetRoute = getUserRoleName(profile) === 'formacao' 
       ? '/formacao' 
       : '/dashboard';

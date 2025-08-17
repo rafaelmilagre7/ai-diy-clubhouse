@@ -10,7 +10,7 @@ interface FormacaoProtectedRoutesProps {
 }
 
 export const FormacaoProtectedRoutes = ({ children }: FormacaoProtectedRoutesProps) => {
-  const { user, isAdmin, isFormacao, isLoading } = useAuth();
+  const { user, profile, isAdmin, isFormacao, isLoading } = useAuth();
   const location = useLocation();
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   const timeoutRef = useRef<number | null>(null);
@@ -44,6 +44,13 @@ export const FormacaoProtectedRoutes = ({ children }: FormacaoProtectedRoutesPro
   if (!user) {
     toast.error("Por favor, faça login para acessar esta página");
     return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  // CRÍTICO: Verificar se usuário completou onboarding antes de verificar permissões
+  if (user && profile && profile.onboarding_completed !== true) {
+    console.log("📝 [FORMACAO-PROTECTED] Usuário precisa completar onboarding primeiro");
+    toast.info("Complete seu onboarding primeiro para acessar esta área");
+    return <Navigate to="/onboarding" replace />;
   }
 
   // Se o usuário não for admin ou formacao, redireciona para o dashboard
