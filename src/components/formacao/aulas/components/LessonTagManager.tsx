@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -19,7 +19,6 @@ import {
   PopoverContent, 
   PopoverTrigger 
 } from '@/components/ui/popover';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { TagBadge } from '@/components/learning/tags/TagBadge';
 import { toast } from 'sonner';
 
@@ -37,6 +36,7 @@ export const LessonTagManager = ({ form, fieldName = 'tags' }: LessonTagManagerP
   
   const { tagsByCategory, isLoading } = useLessonTagsByCategory();
   const createTagMutation = useCreateTag();
+  const scrollRef = useRef<HTMLDivElement>(null);
   
   const selectedTagIds = form.watch(fieldName) || [];
 
@@ -202,9 +202,22 @@ export const LessonTagManager = ({ form, fieldName = 'tags' }: LessonTagManagerP
                     </div>
                   </div>
 
-                  {/* Área scrollável com as tags (com ScrollArea visível) */}
+                  {/* Área scrollável com as tags (nativa, com suporte a trackpad) */}
                   <div className="flex-1 bg-popover">
-                    <ScrollArea className="h-[350px] px-1">
+                    <div
+                      ref={scrollRef}
+                      className="h-[350px] px-1 overflow-y-auto"
+                      onWheel={(e) => {
+                        if (scrollRef.current) {
+                          scrollRef.current.scrollTop += e.deltaY
+                        }
+                        e.stopPropagation()
+                      }}
+                      onWheelCapture={(e) => e.stopPropagation()}
+                      style={{ WebkitOverflowScrolling: 'touch' }}
+                      role="listbox"
+                      aria-label="Lista de tags"
+                    >
                       {isLoading ? (
                         <div className="flex items-center justify-center py-8">
                           <div className="text-sm text-muted-foreground">Carregando tags...</div>
@@ -277,7 +290,7 @@ export const LessonTagManager = ({ form, fieldName = 'tags' }: LessonTagManagerP
                             ))}
                         </div>
                       )}
-                    </ScrollArea>
+                    </div>
                   </div>
 
                   {/* Footer fixo com botão de criar */}
