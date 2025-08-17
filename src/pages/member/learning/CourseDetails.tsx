@@ -1,24 +1,34 @@
 
 import { useParams, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { CourseDetailsSkeleton } from "@/components/learning/member/CourseDetailsSkeleton";
 import { CourseModules } from "@/components/learning/member/CourseModules";
 import { CourseHeader } from "@/components/learning/member/CourseHeader";
 import { CourseProgress } from "@/components/learning/member/CourseProgress";
+import { CourseSearchBar } from "@/components/learning/member/CourseSearchBar";
 import { ArrowLeft, AlertCircle } from "lucide-react";
 import { useCourseDetails } from "@/hooks/learning/useCourseDetails";
 import { useCourseStats } from "@/hooks/learning/useCourseStats";
+import { useCourseSearch } from "@/hooks/learning/useCourseSearch";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const CourseDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState("");
   
   const { course, modules, allLessons, userProgress, isLoading, error } = useCourseDetails(id);
   const { courseStats, firstLessonId, courseProgress } = useCourseStats({ 
     modules, 
     allLessons, 
     userProgress 
+  });
+
+  // Hook de busca inteligente
+  const { searchResults, totalResults, hasActiveFilter } = useCourseSearch({
+    allLessons: allLessons || [],
+    searchQuery
   });
 
   // Se ainda está carregando, mostrar skeleton
@@ -120,12 +130,23 @@ const CourseDetails = () => {
         
         {/* Modules Section */}
         <div className="container pb-12">
+          {/* Barra de busca inteligente */}
+          <CourseSearchBar 
+            courseId={id || ""}
+            onSearchChange={setSearchQuery}
+            searchQuery={searchQuery}
+            resultsCount={totalResults}
+            totalLessons={allLessons?.length || 0}
+          />
+          
           <CourseModules 
             modules={modules} 
             courseId={id} 
             userProgress={userProgress}
             course={course}
             expandedModules={expandedModules}
+            filteredLessons={hasActiveFilter ? searchResults : undefined}
+            searchQuery={searchQuery}
           />
         </div>
       </div>

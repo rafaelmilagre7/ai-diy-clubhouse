@@ -1,6 +1,6 @@
 
 import { useLessonsByModule } from "@/hooks/learning";
-import { LearningProgress } from "@/lib/supabase/types";
+import { LearningProgress, LearningLesson } from "@/lib/supabase/types";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { LessonThumbnail } from "./LessonThumbnail";
 import { LessonListItem } from "./LessonListItem";
@@ -13,6 +13,8 @@ interface ModuleLessonsProps {
   isLessonCompleted: (id: string) => boolean;
   isLessonInProgress: (id: string) => boolean;
   getLessonProgress: (id: string) => number;
+  filteredLessons?: LearningLesson[];
+  searchQuery?: string;
 }
 
 export const ModuleLessons = ({ 
@@ -21,20 +23,32 @@ export const ModuleLessons = ({
   userProgress, 
   isLessonCompleted, 
   isLessonInProgress,
-  getLessonProgress
+  getLessonProgress,
+  filteredLessons,
+  searchQuery = ""
 }: ModuleLessonsProps) => {
   const { data, isLoading } = useLessonsByModule(moduleId);
   
-  // Garantir que lessons seja sempre um array válido
-  const lessons = Array.isArray(data) ? data : [];
+  // Use aulas filtradas se disponíveis, senão use as aulas do módulo
+  let lessons: LearningLesson[] = [];
+  
+  if (filteredLessons && searchQuery) {
+    // Filtrar apenas as aulas que pertencem a este módulo
+    lessons = filteredLessons.filter(lesson => lesson.module_id === moduleId);
+  } else {
+    // Garantir que lessons seja sempre um array válido
+    lessons = Array.isArray(data) ? data : [];
+  }
   
   console.log(`ModuleLessons renderizado para módulo ${moduleId}:`, {
     lessonsCount: lessons.length,
     isLoading,
+    hasFilter: !!filteredLessons,
+    searchQuery,
     lessons: lessons.map(l => ({ id: l.id, title: l.title }))
   });
   
-  if (isLoading) {
+  if (isLoading && !filteredLessons) {
     return (
       <div className="p-4 text-center">
         <p className="text-neutral-300">Carregando aulas...</p>
@@ -43,12 +57,21 @@ export const ModuleLessons = ({
   }
   
   if (!lessons || lessons.length === 0) {
-    console.log(`Nenhuma aula encontrada para o módulo ${moduleId}`);
-    return (
-      <div className="p-4 text-center">
-        <p className="text-neutral-300">Este módulo ainda não possui aulas disponíveis.</p>
-      </div>
-    );
+    if (filteredLessons && searchQuery) {
+      console.log(`Nenhuma aula encontrada para a busca "${searchQuery}" no módulo ${moduleId}`);
+      return (
+        <div className="p-4 text-center">
+          <p className="text-neutral-300">Nenhuma aula encontrada neste módulo para sua busca.</p>
+        </div>
+      );
+    } else {
+      console.log(`Nenhuma aula encontrada para o módulo ${moduleId}`);
+      return (
+        <div className="p-4 text-center">
+          <p className="text-neutral-300">Este módulo ainda não possui aulas disponíveis.</p>
+        </div>
+      );
+    }
   }
   
   return (

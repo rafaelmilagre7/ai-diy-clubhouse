@@ -7,7 +7,7 @@ import {
   AccordionTrigger 
 } from "@/components/ui/accordion";
 import { Card } from "@/components/ui/card";
-import { LearningModule, LearningCourse, LearningProgress } from "@/lib/supabase/types";
+import { LearningModule, LearningCourse, LearningProgress, LearningLesson } from "@/lib/supabase/types";
 import { ChevronDown } from "lucide-react";
 import { ModuleLessons } from "./course-modules/ModuleLessons";
 import { isLessonCompleted, isLessonInProgress, getLessonProgress } from "./course-modules/CourseModulesHelpers";
@@ -18,6 +18,8 @@ interface CourseModulesProps {
   userProgress: LearningProgress[];
   course: LearningCourse;
   expandedModules?: string[];
+  filteredLessons?: LearningLesson[];
+  searchQuery?: string;
 }
 
 export const CourseModules: React.FC<CourseModulesProps> = ({ 
@@ -25,16 +27,25 @@ export const CourseModules: React.FC<CourseModulesProps> = ({
   courseId, 
   userProgress,
   course,
-  expandedModules = []
+  expandedModules = [],
+  filteredLessons,
+  searchQuery = ""
 }) => {
   console.log("CourseModules renderizado:", {
     modulesCount: modules?.length || 0,
     courseId,
-    expandedModules
+    expandedModules,
+    hasFilter: !!filteredLessons,
+    searchQuery
   });
 
   // Estado para rastrear módulos expandidos - expandir primeiro módulo por padrão
+  // Quando há busca ativa, expandir todos os módulos automaticamente
   const [openModules, setOpenModules] = useState<string[]>(() => {
+    if (filteredLessons && searchQuery) {
+      // Se há busca ativa, expandir todos os módulos
+      return modules.map(m => m.id);
+    }
     if (expandedModules.length > 0) {
       return expandedModules;
     }
@@ -42,13 +53,15 @@ export const CourseModules: React.FC<CourseModulesProps> = ({
     return modules.length > 0 ? [modules[0].id] : [];
   });
   
-  // Atualizar módulos abertos quando os módulos mudarem
+  // Expandir todos os módulos quando há busca ativa
   useEffect(() => {
-    if (modules.length > 0 && openModules.length === 0) {
+    if (filteredLessons && searchQuery) {
+      setOpenModules(modules.map(m => m.id));
+    } else if (modules.length > 0 && openModules.length === 0) {
       console.log("Expandindo primeiro módulo automaticamente:", modules[0].id);
       setOpenModules([modules[0].id]);
     }
-  }, [modules, openModules.length]);
+  }, [modules, openModules.length, filteredLessons, searchQuery]);
   
   // Caso não haja módulos, mostrar mensagem
   if (!modules || modules.length === 0) {
@@ -107,6 +120,8 @@ export const CourseModules: React.FC<CourseModulesProps> = ({
                 isLessonCompleted={(lessonId) => isLessonCompleted(lessonId, userProgress)}
                 isLessonInProgress={(lessonId) => isLessonInProgress(lessonId, userProgress)}
                 getLessonProgress={(lessonId) => getLessonProgress(lessonId, userProgress)}
+                filteredLessons={filteredLessons}
+                searchQuery={searchQuery}
               />
             </AccordionContent>
           </AccordionItem>
