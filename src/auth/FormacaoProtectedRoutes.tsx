@@ -53,12 +53,12 @@ export const FormacaoProtectedRoutes = ({ children }: FormacaoProtectedRoutesPro
     return <Navigate to="/onboarding" replace />;
   }
 
-  // Se o usuário não for admin ou formacao, redireciona para o dashboard
-  if (!(isAdmin || isFormacao)) {
+  // CORREÇÃO: Apenas admins podem acessar a gestão de LMS
+  if (!isAdmin) {
     toast.error("Você não tem permissão para acessar esta área");
     return <Navigate to="/dashboard" replace />;
   }
 
-  // Usuário é admin ou formacao, renderiza as rotas protegidas
+  // Usuário é admin, renderiza as rotas protegidas
   return <>{children}</>;
 };

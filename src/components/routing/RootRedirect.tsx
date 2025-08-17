@@ -52,7 +52,8 @@ const RootRedirect = () => {
       return <Navigate to="/onboarding" replace />;
     }
 
-    const targetRoute = getUserRoleName(profile) === 'formacao' 
+    // CORREÇÃO: Apenas admins vão para gestão LMS, formação é role regular
+    const targetRoute = getUserRoleName(profile) === 'admin' 
       ? '/formacao' 
       : '/dashboard';
     console.log("✅ [ROOT-REDIRECT] Usuário logado - redirecionando para", targetRoute);
@@ -67,7 +68,8 @@ const RootRedirect = () => {
       return <Navigate to="/onboarding" replace />;
     }
 
-    const targetRoute = getUserRoleName(profile) === 'formacao' 
+    // CORREÇÃO: Apenas admins vão para gestão LMS, formação é role regular
+    const targetRoute = getUserRoleName(profile) === 'admin' 
       ? '/formacao' 
       : '/dashboard';
     console.log("🔄 [ROOT-REDIRECT] Root redirect para", targetRoute);

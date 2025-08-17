@@ -19,11 +19,13 @@ const Auth = () => {
       // CORREÇÃO: Priorizar dashboard de membro
       const roleName = getUserRoleName(profile);
       
-      if (roleName === 'formacao') {
-        console.log("🎯 [AUTH] Formação detectado - redirecionando para /formacao");
+      // CORREÇÃO: Role "formação" é para usuários que compraram formações, não para gestão LMS
+      // Apenas admins vão para área de gestão /formacao
+      if (roleName === 'admin') {
+        console.log("🎯 [AUTH] Admin detectado - redirecionando para /formacao");
         navigate('/formacao', { replace: true });
       } else {
-        console.log("🎯 [AUTH] Usuário - redirecionando para /dashboard");
+        console.log("🎯 [AUTH] Usuário regular - redirecionando para /dashboard");
         navigate('/dashboard', { replace: true });
       }
     }
