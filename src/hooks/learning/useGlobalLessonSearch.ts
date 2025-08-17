@@ -53,11 +53,30 @@ export const useGlobalLessonSearch = ({
     return () => clearTimeout(timer);
   }, [searchQuery, debounceMs]);
 
-  // Buscar todas as aulas com informações do curso e módulo
+  // Buscar todas as aulas com informações do curso e módulo, considerando permissões
   const { data: allLessons = [], isLoading } = useQuery({
-    queryKey: ['global-lessons-search'],
+    queryKey: ['global-lessons-search', 'user-permissions'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) return [];
+
+      // Buscar role do usuário atual
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select(`
+          role_id,
+          user_roles (
+            name
+          )
+        `)
+        .eq('id', user.user.id)
+        .single();
+
+      const userRoleId = profileData?.role_id;
+      const isAdmin = profileData?.user_roles?.[0]?.name === 'admin';
+
+      // Query principal das aulas
+      let query = supabase
         .from('learning_lessons')
         .select(`
           id,
@@ -78,16 +97,55 @@ export const useGlobalLessonSearch = ({
             )
           )
         `)
-        .eq('learning_modules.learning_courses.published', true)
-        .order('order_index', { ascending: true });
+        .eq('learning_modules.learning_courses.published', true);
+
+      const { data: lessons, error } = await query.order('order_index', { ascending: true });
 
       if (error) {
         console.error('Erro ao buscar aulas globalmente:', error);
         throw error;
       }
 
-      console.log('[GLOBAL SEARCH] Aulas carregadas:', data?.length || 0);
-      return (data || []) as any[];
+      // Se for admin, retorna todas as aulas publicadas
+      if (isAdmin) {
+        console.log('[GLOBAL SEARCH] Admin - aulas carregadas:', lessons?.length || 0);
+        return (lessons || []) as any[];
+      }
+
+      // Para usuários não-admin, filtrar por permissões de acesso
+      if (!userRoleId || !lessons) {
+        return [];
+      }
+
+      // Buscar controles de acesso dos cursos
+      const courseIds = [...new Set(lessons.map(lesson => 
+        lesson.learning_modules?.[0]?.course_id
+      ).filter(Boolean))];
+
+      const { data: accessControls } = await supabase
+        .from('course_access_control')
+        .select('course_id, role_id')
+        .in('course_id', courseIds);
+
+      // Filtrar aulas baseado nas permissões
+      const filteredLessons = lessons.filter(lesson => {
+        const courseId = lesson.learning_modules?.[0]?.course_id;
+        if (!courseId) return false;
+
+        // Verificar se há restrições de acesso para este curso
+        const courseAccessControls = accessControls?.filter(ac => ac.course_id === courseId) || [];
+        
+        // Se não há restrições, curso é público
+        if (courseAccessControls.length === 0) {
+          return true;
+        }
+
+        // Se há restrições, verificar se o usuário tem o role necessário
+        return courseAccessControls.some(ac => ac.role_id === userRoleId);
+      });
+
+      console.log('[GLOBAL SEARCH] Usuário regular - aulas filtradas:', filteredLessons.length, 'de', lessons.length);
+      return filteredLessons as any[];
     },
     staleTime: 5 * 60 * 1000, // Cache por 5 minutos
     gcTime: 10 * 60 * 1000, // Manter em cache por 10 minutos
