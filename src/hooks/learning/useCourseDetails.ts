@@ -2,7 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
-import { canAccessLearningContent } from "@/utils/roleValidation";
+import { canAccessLearningContent, canAccessCourseEnhanced } from "@/utils/roleValidation";
 
 export const useCourseDetails = (courseId: string | undefined) => {
   const { user } = useAuth();
@@ -32,6 +32,21 @@ export const useCourseDetails = (courseId: string | undefined) => {
 
       console.log("✅ Acesso permitido ao curso");
 
+      // Verificar se há restrição de acesso específica ao curso
+      const { data: accessRestriction } = await supabase
+        .from("course_access_control")
+        .select("id")
+        .eq("course_id", courseId)
+        .limit(1);
+
+      if (accessRestriction && accessRestriction.length > 0) {
+        const allowed = await canAccessCourseEnhanced(user.id, courseId);
+        console.log("🔐 Restrição por curso detectada. Permitido?", allowed);
+        if (!allowed) {
+          throw new Error("Você não tem acesso a este curso.");
+        }
+      }
+
       // Buscar dados do curso
       const { data: course, error: courseError } = await supabase
         .from("learning_courses")
@@ -51,6 +66,7 @@ export const useCourseDetails = (courseId: string | undefined) => {
         .from("learning_modules")
         .select("*")
         .eq("course_id", courseId)
+        .eq("published", true)
         .order("order_index");
 
       if (modulesError) {
@@ -64,6 +80,7 @@ export const useCourseDetails = (courseId: string | undefined) => {
         .from("learning_lessons")
         .select("*")
         .in("module_id", (modules || []).map(m => m.id))
+        .eq("published", true)
         .order("order_index");
 
       if (lessonsError) {
