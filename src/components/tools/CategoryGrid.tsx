@@ -48,29 +48,29 @@ const CategoryCard = ({ category, label, icon, count, isSelected, onClick }: Cat
       whileHover={{ scale: 1.03 }}
       whileTap={{ scale: 0.97 }}
       className={cn(
-        "flex flex-col items-center justify-center p-4 rounded-lg cursor-pointer transition-all duration-200",
+        "flex flex-col items-center justify-center p-4 rounded-lg cursor-pointer transition-all duration-200 interactive-press",
         isSelected 
-          ? "bg-viverblue/15 border-2 border-viverblue text-viverblue" 
-          : "bg-backgroundLight border border-white/5 hover:border-viverblue/50 hover:bg-viverblue/5"
+          ? "surface-overlay border-2 border-aurora text-aurora shadow-aurora/20" 
+          : "surface-elevated border border-border/50 hover:border-aurora/50 hover:bg-aurora/5"
       )}
       onClick={onClick}
     >
       <div className={cn(
-        "w-10 h-10 flex items-center justify-center rounded-md mb-2",
-        isSelected ? "bg-viverblue/20" : "bg-background/50"
+        "w-10 h-10 flex items-center justify-center rounded-md mb-2 transition-colors duration-200",
+        isSelected ? "bg-aurora/20" : "bg-surface-base"
       )}>
         {icon}
       </div>
-      <p className="text-sm font-medium text-center line-clamp-2 h-10 flex items-center text-textPrimary">
+      <p className="text-body-small text-center line-clamp-2 h-10 flex items-center">
         {label}
       </p>
       <Badge 
         variant="outline" 
         className={cn(
-          "mt-1 text-xs",
+          "mt-1 text-xs transition-all duration-200",
           isSelected 
-            ? "bg-viverblue/20 border-viverblue/30 text-viverblue" 
-            : "bg-background border-white/10 text-textSecondary"
+            ? "bg-aurora/10 border-aurora/50 text-aurora" 
+            : "bg-surface-base border-border/30 text-text-muted"
         )}
       >
         {count}
@@ -105,35 +105,35 @@ export const CategoryGrid = ({ selectedCategory, onCategoryChange }: CategoryGri
   // Define ícones para cada categoria
   const getCategoryIcon = (category: string | null) => {
     const iconSize = 20;
-    const iconColor = selectedCategory === category ? "#00EAD9" : "#CDD5E0";
+    const iconColor = selectedCategory === category ? "hsl(var(--aurora))" : "hsl(var(--text-muted))";
     
     switch(category) {
       case 'Modelos de IA e Interfaces':
-        return <Layers size={iconSize} color={iconColor} />;
+        return <Layers size={iconSize} style={{ color: iconColor }} />;
       case 'Geração de Conteúdo Visual':
-        return <Image size={iconSize} color={iconColor} />;
+        return <Image size={iconSize} style={{ color: iconColor }} />;
       case 'Geração e Processamento de Áudio':
-        return <Headphones size={iconSize} color={iconColor} />;
+        return <Headphones size={iconSize} style={{ color: iconColor }} />;
       case 'Automação e Integrações':
-        return <Settings size={iconSize} color={iconColor} />;
+        return <Settings size={iconSize} style={{ color: iconColor }} />;
       case 'Comunicação e Atendimento':
-        return <MessageSquare size={iconSize} color={iconColor} />;
+        return <MessageSquare size={iconSize} style={{ color: iconColor }} />;
       case 'Captura e Análise de Dados':
-        return <Database size={iconSize} color={iconColor} />;
+        return <Database size={iconSize} style={{ color: iconColor }} />;
       case 'Pesquisa e Síntese de Informações':
-        return <Search size={iconSize} color={iconColor} />;
+        return <Search size={iconSize} style={{ color: iconColor }} />;
       case 'Gestão de Documentos e Conteúdo':
-        return <Book size={iconSize} color={iconColor} />;
+        return <Book size={iconSize} style={{ color: iconColor }} />;
       case 'Marketing e CRM':
-        return <TrendingUp size={iconSize} color={iconColor} />;
+        return <TrendingUp size={iconSize} style={{ color: iconColor }} />;
       case 'Produtividade e Organização':
-        return <Calendar size={iconSize} color={iconColor} />;
+        return <Calendar size={iconSize} style={{ color: iconColor }} />;
       case 'Desenvolvimento e Código':
-        return <Code size={iconSize} color={iconColor} />;
+        return <Code size={iconSize} style={{ color: iconColor }} />;
       case 'Plataformas de Mídia':
-        return <Monitor size={iconSize} color={iconColor} />;
+        return <Monitor size={iconSize} style={{ color: iconColor }} />;
       default: // 'Todas'
-        return <LayoutGrid size={iconSize} color={iconColor} />;
+        return <LayoutGrid size={iconSize} style={{ color: iconColor }} />;
     }
   };
 

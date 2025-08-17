@@ -38,14 +38,20 @@ const Tools = () => {
   });
 
   return (
-    <div className="space-y-6">
-      <ToolsHeader 
-        searchQuery={searchQuery} 
-        onSearchChange={setSearchQuery}
-        selectedCategory={selectedCategory}
-        onCategoryChange={setSelectedCategory}
-      />
-      <ToolGrid tools={filteredTools} />
+    <div className="min-h-screen bg-background animate-fade-in">
+      <div className="relative">
+        {/* Fundo gradiente similar ao dashboard */}
+        <div className="absolute inset-0 bg-gradient-to-br from-background via-surface-elevated to-background opacity-50" />
+        <div className="relative z-10 container mx-auto px-4 py-8 space-y-8">
+          <ToolsHeader 
+            searchQuery={searchQuery} 
+            onSearchChange={setSearchQuery}
+            selectedCategory={selectedCategory}
+            onCategoryChange={setSelectedCategory}
+          />
+          <ToolGrid tools={filteredTools} />
+        </div>
+      </div>
     </div>
   );
 };
