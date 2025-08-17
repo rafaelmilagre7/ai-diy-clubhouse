@@ -95,25 +95,9 @@ export const useRoles = () => {
       }
       
       console.log('🔄 [ROLES] Tentando criar role:', roleData);
-      console.log('🔐 [ROLES] Auth status OK, prosseguindo...');
-      
-      // Tentar criar diretamente primeiro
-      const { data, error } = await supabase
-        .from('user_roles')
-        .insert([roleData])
-        .select()
-        .single();
-
-      if (error) {
-        console.error('❌ [ROLES] Erro no método direto:', error);
-        console.log('🔄 [ROLES] Tentando via função RPC segura...');
-        return await createRoleSecure(roleData);
-      }
-
-      console.log('✅ [ROLES] Role criado via método direto:', data);
-      setRoles(prev => [...prev, data]);
-      toast.success('Papel criado com sucesso');
-      return data;
+      console.log('🔐 [ROLES] Usando caminho seguro (RPC) para evitar erros de log...');
+      const result = await createRoleSecure(roleData);
+      return result;
     } catch (error: any) {
       console.error('❌ [ROLES] Erro ao criar papel:', error);
       
