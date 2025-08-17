@@ -5378,6 +5378,10 @@ export type Database = {
           | { p_user_id: string }
         Returns: Json
       }
+      configure_auth_security_settings: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       create_community_notification: {
         Args: {
           p_data?: Json
@@ -5591,6 +5595,10 @@ export type Database = {
       }
       ensure_bucket_exists: {
         Args: { p_bucket_name: string }
+        Returns: Json
+      }
+      fix_audit_logs_rls_violations: {
+        Args: Record<PropertyKey, never>
         Returns: Json
       }
       fix_existing_onboarding_data: {
@@ -6702,6 +6710,10 @@ export type Database = {
         Returns: Json
       }
       validate_auth_integrity: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      validate_auth_security_status: {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
