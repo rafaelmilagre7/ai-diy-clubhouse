@@ -2,11 +2,18 @@
 /**
  * DEPRECIADO: Criptografia Falsa - Apenas Ofuscação
  * 
- * Este arquivo implementava apenas base64 encoding disfarçado de criptografia.
- * Foi substituído por criptografia AES-GCM real em realCryptography.ts
+ * ❌ VULNERABILIDADE CRÍTICA DE SEGURANÇA ❌
  * 
- * @deprecated Use RealCryptography para criptografia de verdade
- * @security Esta implementação é INSEGURA - apenas ofuscação
+ * Este arquivo implementava apenas base64 encoding disfarçado de criptografia.
+ * 
+ * 🚨 DADOS FACILMENTE EXPOSTOS: 
+ *    atob('dados_criptografados') = dados em texto claro!
+ * 
+ * ✅ SUBSTITUÍDO POR: secureTokenStorage.ts com AES-256-GCM REAL
+ * 
+ * @deprecated NUNCA use este arquivo - é uma vulnerabilidade de segurança
+ * @security IMPLEMENTAÇÃO INSEGURA - apenas ofuscação base64
+ * @migration Use useSecureTokenStorage ou secureTokenStorage
  */
 
 import { logger } from './logger';
@@ -24,27 +31,55 @@ export class AdvancedEncryption {
   }
   
   async encryptSensitiveData(data: any, userId: string, context: string = 'storage'): Promise<string> {
-    logger.error('AdvancedEncryption está depreciado por segurança', {
+    logger.error('🚨 VULNERABILIDADE CRÍTICA: AdvancedEncryption detectado', {
       component: 'DEPRECATED_FAKE_ENCRYPTION',
-      message: 'Esta classe faz apenas ofuscação base64, não criptografia real',
-      security: 'VULNERABILIDADE: Dados facilmente decodificáveis',
-      solution: 'Use RealCryptography com AES-GCM'
+      message: '❌ Esta classe faz apenas ofuscação base64, NÃO É CRIPTOGRAFIA REAL',
+      security: 'DADOS FACILMENTE EXPOSTOS - qualquer atacante pode decodificar',
+      solution: 'Use secureTokenStorage.ts com AES-256-GCM REAL',
+      migration: 'useSecureTokenStorage hook disponível para migração automática'
     });
     
+    console.error(`
+🚨 VULNERABILIDADE DE SEGURANÇA DETECTADA 🚨
+
+Tentativa de uso do AdvancedEncryption (criptografia FALSA):
+❌ Apenas base64 encoding - dados facilmente expostos
+❌ Qualquer atacante pode fazer: atob(dados) e ver tudo
+❌ Não oferece proteção real contra vazamentos
+
+✅ SOLUÇÃO IMEDIATA:
+  import { useSecureTokenStorage } from '@/hooks/useSecureTokenStorage';
+  // ou
+  import { secureTokenStorage } from '@/utils/secureTokenStorage';
+
+🔒 Migração automática disponível para dados existentes.
+    `);
+    
     throw new Error(
-      'AdvancedEncryption foi depreciado por ser inseguro. Use RealCryptography.'
+      '🚨 AdvancedEncryption é uma VULNERABILIDADE DE SEGURANÇA. Use secureTokenStorage com AES-256-GCM real.'
     );
   }
   
   async decryptSensitiveData(encryptedData: string, userId: string, context: string = 'storage'): Promise<any> {
-    logger.error('AdvancedEncryption está depreciado por segurança', {
+    logger.error('🚨 TENTATIVA de decodificação insegura detectada', {
       component: 'DEPRECATED_FAKE_ENCRYPTION',
-      message: 'Esta classe faz apenas decodificação base64, não descriptografia',
-      security: 'VULNERABILIDADE: Sem proteção real'
+      message: '❌ Esta classe faz apenas decodificação base64, NÃO É DESCRIPTOGRAFIA',
+      security: 'DADOS EXPOSTOS - sem proteção criptográfica real',
+      action: 'Bloqueando acesso para prevenir vulnerabilidades'
     });
     
+    console.error(`
+🚨 BLOQUEIO DE SEGURANÇA 🚨
+
+Tentativa de descriptografia com método INSEGURO detectada.
+❌ Base64 não é criptografia - dados estão expostos
+✅ Use secureTokenStorage para AES-256-GCM real
+
+Migração automática disponível.
+    `);
+    
     throw new Error(
-      'AdvancedEncryption foi depreciado por ser inseguro. Use RealCryptography.'
+      '🚨 Método inseguro bloqueado. Use secureTokenStorage com AES-256-GCM real.'
     );
   }
   
