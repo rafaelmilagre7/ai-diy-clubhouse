@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { RealAnalyticsOverview } from '@/components/admin/analytics/RealAnalyticsOverview';
 import { OptimizedRealtimeStats } from '@/components/admin/analytics/OptimizedRealtimeStats';
-import { UserAnalyticsTabContent } from '@/components/admin/analytics/users/UserAnalyticsTabContent';
+import { EnhancedUserAnalytics } from '@/components/admin/analytics/users/EnhancedUserAnalytics';
 import { SolutionsAnalyticsTabContent } from '@/components/admin/analytics/solutions/SolutionsAnalyticsTabContent';
 import { LmsAnalyticsTabContent } from '@/components/admin/analytics/tabs/LmsAnalyticsTabContent';
 import { ImplementationsAnalyticsTabContent } from '@/components/admin/analytics/implementations/ImplementationsAnalyticsTabContent';
@@ -104,7 +104,7 @@ export default function AdminAnalytics() {
           </TabsContent>
 
           <TabsContent value="users" className="space-y-6">
-            <UserAnalyticsTabContent timeRange={timeRange} />
+            <EnhancedUserAnalytics timeRange={timeRange} />
           </TabsContent>
 
           <TabsContent value="solutions" className="space-y-6">

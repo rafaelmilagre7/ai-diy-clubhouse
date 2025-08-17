@@ -1,0 +1,140 @@
+import React from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Activity, Clock } from 'lucide-react';
+
+interface UserActivityHeatmapProps {
+  data?: any;
+  loading?: boolean;
+}
+
+export const UserActivityHeatmap = ({ data, loading }: UserActivityHeatmapProps) => {
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Activity className="h-5 w-5" />
+            Heatmap de Atividade
+          </CardTitle>
+          <CardDescription>Padrões de atividade por horário</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="h-48 bg-gray-200 animate-pulse rounded" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Mock data para demonstração
+  const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+  const hours = Array.from({ length: 24 }, (_, i) => i);
+
+  // Simular dados de atividade
+  const generateActivityData = () => {
+    return days.map(day => 
+      hours.map(hour => ({
+        day,
+        hour,
+        activity: Math.random() * 100
+      }))
+    ).flat();
+  };
+
+  const activityData = generateActivityData();
+
+  const getIntensityColor = (activity: number) => {
+    if (activity < 10) return 'bg-gray-100';
+    if (activity < 25) return 'bg-blue-100';
+    if (activity < 50) return 'bg-blue-200';
+    if (activity < 75) return 'bg-blue-400';
+    return 'bg-blue-600';
+  };
+
+  const getIntensityText = (activity: number) => {
+    if (activity < 10) return 'Muito baixa';
+    if (activity < 25) return 'Baixa';
+    if (activity < 50) return 'Moderada';
+    if (activity < 75) return 'Alta';
+    return 'Muito alta';
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Activity className="h-5 w-5 text-green-600" />
+          Heatmap de Atividade
+        </CardTitle>
+        <CardDescription>
+          Distribuição da atividade dos usuários por dia da semana e horário
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {/* Legenda de horários */}
+          <div className="flex items-center justify-between text-xs text-gray-500">
+            <span>00:00</span>
+            <span>06:00</span>
+            <span>12:00</span>
+            <span>18:00</span>
+            <span>23:59</span>
+          </div>
+
+          {/* Grid do heatmap */}
+          <div className="space-y-1">
+            {days.map((day) => (
+              <div key={day} className="flex items-center space-x-1">
+                <div className="w-8 text-xs text-gray-600 font-medium">{day}</div>
+                <div className="flex space-x-px">
+                  {hours.map((hour) => {
+                    const activity = activityData.find(d => d.day === day && d.hour === hour)?.activity || 0;
+                    return (
+                      <div
+                        key={`${day}-${hour}`}
+                        className={`w-3 h-3 rounded-sm ${getIntensityColor(activity)} cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all`}
+                        title={`${day} ${hour}:00 - ${getIntensityText(activity)}: ${Math.round(activity)}% atividade`}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Legenda de intensidade */}
+          <div className="flex items-center justify-between pt-2">
+            <span className="text-xs text-gray-500">Menos ativo</span>
+            <div className="flex space-x-px">
+              <div className="w-3 h-3 bg-gray-100 rounded-sm" />
+              <div className="w-3 h-3 bg-blue-100 rounded-sm" />
+              <div className="w-3 h-3 bg-blue-200 rounded-sm" />
+              <div className="w-3 h-3 bg-blue-400 rounded-sm" />
+              <div className="w-3 h-3 bg-blue-600 rounded-sm" />
+            </div>
+            <span className="text-xs text-gray-500">Mais ativo</span>
+          </div>
+
+          {/* Insights */}
+          <div className="border-t pt-4">
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="flex items-center space-x-2">
+                <Clock className="h-4 w-4 text-blue-500" />
+                <div>
+                  <div className="font-medium">Pico de Atividade</div>
+                  <div className="text-gray-600">Terça, 14:00-16:00</div>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Activity className="h-4 w-4 text-green-500" />
+                <div>
+                  <div className="font-medium">Dia Mais Ativo</div>
+                  <div className="text-gray-600">Terça-feira</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
