@@ -17,12 +17,22 @@ export class OnboardingDataAdapter {
     );
 
     const hasBusinessInfo = !!(
-      data.professional_info?.company_name &&
-      data.professional_info?.company_sector
+      data.professional_info?.work_type || 
+      data.professional_info?.company_name || 
+      data.professional_info?.company_size || 
+      data.professional_info?.company_sector || 
+      data.professional_info?.current_position ||
+      data.professional_info?.annual_revenue ||
+      data.professional_info?.experience_level ||
+      data.professional_info?.main_challenge
     );
 
     const hasAIExperience = !!(
-      data.ai_experience?.experience_level
+      data.ai_experience?.experience_level ||
+      data.ai_experience?.current_tools?.length ||
+      data.ai_experience?.learning_goals?.length ||
+      data.ai_experience?.priority_areas?.length ||
+      data.ai_experience?.implementation_timeline
     );
 
     const hasGoals = !!(
@@ -57,8 +67,8 @@ export class OnboardingDataAdapter {
     const checks = [
       !!data.user_type,
       !!(data.personal_info?.name && data.personal_info?.phone && data.personal_info?.state && data.personal_info?.city),
-      !!(data.professional_info?.company_name && data.professional_info?.company_sector),
-      !!(data.ai_experience?.experience_level),
+      !!(data.professional_info?.work_type && data.professional_info?.current_position),
+      !!(data.ai_experience?.experience_level && data.ai_experience?.learning_goals?.length),
       !!(data.goals_info?.primary_goal),
       !!(data.personalization?.learning_style)
     ];
@@ -76,9 +86,8 @@ export class OnboardingDataAdapter {
     if (!data.personal_info?.phone) return 'Telefone';
     if (!data.personal_info?.state) return 'Estado';
     if (!data.personal_info?.city) return 'Cidade';
-    if (!data.professional_info?.company_name) return 'Nome da empresa';
-    if (!data.professional_info?.company_sector) return 'Setor da empresa';
-    if (!data.ai_experience?.experience_level) return 'Nível de experiência em IA';
+    if (!data.professional_info?.work_type && !data.professional_info?.current_position) return 'Contexto profissional';
+    if (!data.ai_experience?.experience_level || !data.ai_experience?.learning_goals?.length) return 'Experiência com IA';
     if (!data.goals_info?.primary_goal) return 'Objetivo principal';
     if (!data.personalization?.learning_style) return 'Estilo de aprendizado';
     

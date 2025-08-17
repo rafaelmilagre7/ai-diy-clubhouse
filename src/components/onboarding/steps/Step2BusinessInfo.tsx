@@ -12,13 +12,14 @@ import { Building2, Users, TrendingUp, Target } from 'lucide-react';
 export type UserType = 'entrepreneur' | 'learner';
 
 const businessInfoSchema = z.object({
-  company_name: z.string().min(2, 'Nome da empresa deve ter pelo menos 2 caracteres'),
+  company_name: z.string().optional(), // Agora opcional para freelancers/solo
   company_size: z.string().min(1, 'Selecione o tamanho da empresa'),
-  company_sector: z.string().min(1, 'Selecione o setor'),
+  company_sector: z.string().optional(), // Opcional
   current_position: z.string().min(1, 'Selecione seu cargo'),
   annual_revenue: z.string().optional(), // Opcional para learners
   experience_level: z.string().optional(), // Opcional para entrepreneurs
   main_challenge: z.string().optional(),
+  work_type: z.string().min(1, 'Selecione como você trabalha'), // Novo campo
 });
 
 type BusinessInfoFormData = z.infer<typeof businessInfoSchema>;
@@ -41,7 +42,16 @@ export const Step2BusinessInfo: React.FC<Step2BusinessInfoProps> = ({
 
   const form = useForm<BusinessInfoFormData>({
     resolver: zodResolver(businessInfoSchema),
-    defaultValues: initialData || {},
+    defaultValues: {
+      work_type: initialData?.work_type || '',
+      company_name: initialData?.company_name || '',
+      company_size: initialData?.company_size || '',
+      company_sector: initialData?.company_sector || '',
+      current_position: initialData?.current_position || '',
+      annual_revenue: initialData?.annual_revenue || '',
+      experience_level: initialData?.experience_level || '',
+      main_challenge: initialData?.main_challenge || '',
+    },
     mode: 'onChange',
   });
 
@@ -76,15 +86,50 @@ export const Step2BusinessInfo: React.FC<Step2BusinessInfoProps> = ({
       </div>
 
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        {/* Novo campo: Como você trabalha? */}
+        <div className="space-y-2">
+          <Label className="flex items-center gap-2">
+            <Building2 className="w-4 h-4" />
+            Como você trabalha atualmente?
+          </Label>
+          <Select 
+            value={form.getValues('work_type')} 
+            onValueChange={(value) => {
+              console.log('[STEP2] Tipo de trabalho selecionado:', value);
+              form.setValue('work_type', value);
+              form.trigger('work_type');
+            }}
+          >
+            <SelectTrigger className="h-12">
+              <SelectValue placeholder="Selecione como você trabalha" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="employee">Funcionário de empresa</SelectItem>
+              <SelectItem value="entrepreneur">Empreendedor com empresa</SelectItem>
+              <SelectItem value="freelancer">Freelancer / Autônomo</SelectItem>
+              <SelectItem value="consultant">Consultor independente</SelectItem>
+              <SelectItem value="student">Estudante</SelectItem>
+              <SelectItem value="other">Outro</SelectItem>
+            </SelectContent>
+          </Select>
+          {form.formState.errors.work_type && (
+            <p className="text-sm text-destructive">
+              {form.formState.errors.work_type.message}
+            </p>
+          )}
+        </div>
+
         <div className="grid md:grid-cols-2 gap-6">
           <div className="space-y-2">
             <Label htmlFor="company_name" className="flex items-center gap-2">
               <Building2 className="w-4 h-4" />
-              Nome da Empresa
+              Nome da Empresa {(['freelancer', 'consultant'].includes(form.getValues('work_type'))) && '(opcional)'}
             </Label>
             <Input
               id="company_name"
-              placeholder="Digite o nome da sua empresa"
+              placeholder={(['freelancer', 'consultant'].includes(form.getValues('work_type'))) 
+                ? "Digite sua marca pessoal ou deixe em branco" 
+                : "Digite o nome da sua empresa"}
               {...form.register('company_name')}
               className="h-12"
             />
@@ -158,7 +203,7 @@ export const Step2BusinessInfo: React.FC<Step2BusinessInfoProps> = ({
                 <SelectValue placeholder="Selecione o tamanho" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Solo">Apenas eu (Solo)</SelectItem>
+                <SelectItem value="Solo">Apenas eu (Solo/Freelancer)</SelectItem>
                 <SelectItem value="2-5">2-5 funcionários</SelectItem>
                 <SelectItem value="6-10">6-10 funcionários</SelectItem>
                 <SelectItem value="11-25">11-25 funcionários</SelectItem>
@@ -169,6 +214,7 @@ export const Step2BusinessInfo: React.FC<Step2BusinessInfoProps> = ({
                 <SelectItem value="501-1000">501-1000 funcionários</SelectItem>
                 <SelectItem value="1001-5000">1001-5000 funcionários</SelectItem>
                 <SelectItem value="5000+">Mais de 5000 funcionários</SelectItem>
+                <SelectItem value="nao-se-aplica">Não se aplica</SelectItem>
               </SelectContent>
             </Select>
             {form.formState.errors.company_size && (
@@ -258,7 +304,7 @@ export const Step2BusinessInfo: React.FC<Step2BusinessInfoProps> = ({
         <div className="space-y-2">
           <Label className="flex items-center gap-2">
             <Building2 className="w-4 h-4" />
-            Setor da Empresa
+            Setor da Empresa {(['freelancer', 'consultant'].includes(form.getValues('work_type'))) && '(opcional)'}
           </Label>
           <Select 
             value={form.getValues('company_sector')} 
@@ -269,7 +315,9 @@ export const Step2BusinessInfo: React.FC<Step2BusinessInfoProps> = ({
             }}
           >
             <SelectTrigger className="h-12">
-              <SelectValue placeholder="Selecione o setor" />
+              <SelectValue placeholder={(['freelancer', 'consultant'].includes(form.getValues('work_type'))) 
+                ? "Selecione o setor (opcional)" 
+                : "Selecione o setor"} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="Tecnologia">Tecnologia / Software</SelectItem>
@@ -298,6 +346,7 @@ export const Step2BusinessInfo: React.FC<Step2BusinessInfoProps> = ({
               <SelectItem value="Telecomunicações">Telecomunicações</SelectItem>
               <SelectItem value="Mídia">Mídia / Entretenimento</SelectItem>
               <SelectItem value="Outro">Outro</SelectItem>
+              <SelectItem value="nao-se-aplica">Não se aplica</SelectItem>
             </SelectContent>
           </Select>
           {form.formState.errors.company_sector && (

@@ -1,16 +1,19 @@
-import React, { useCallback, useRef, useEffect } from 'react';
+import React, { useCallback, useRef, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Bot, Zap } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Bot, Zap, Target, Clock, Settings } from 'lucide-react';
 
 const aiExperienceSchema = z.object({
   experience_level: z.string().min(1, 'Selecione seu nível de experiência'),
-  implementation_status: z.string().min(1, 'Selecione o status da implementação'),
-  implementation_approach: z.string().min(1, 'Selecione como pretende implementar'),
+  current_tools: z.array(z.string()).optional(), // Ferramentas atuais
+  learning_goals: z.array(z.string()).min(1, 'Selecione pelo menos um objetivo'),
+  priority_areas: z.array(z.string()).min(1, 'Selecione pelo menos uma área'),
+  implementation_timeline: z.string().min(1, 'Selecione o prazo desejado'),
 });
 
 type AIExperienceFormData = z.infer<typeof aiExperienceSchema>;
@@ -27,13 +30,18 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
   onNext,
 }) => {
   const onDataChangeRef = useRef(onDataChange);
+  const [selectedTools, setSelectedTools] = useState<string[]>(initialData?.current_tools || []);
+  const [selectedGoals, setSelectedGoals] = useState<string[]>(initialData?.learning_goals || []);
+  const [selectedAreas, setSelectedAreas] = useState<string[]>(initialData?.priority_areas || []);
 
   const form = useForm<AIExperienceFormData>({
     resolver: zodResolver(aiExperienceSchema),
     defaultValues: {
       experience_level: initialData?.experience_level || '',
-      implementation_status: initialData?.implementation_status || '',
-      implementation_approach: initialData?.implementation_approach || '',
+      current_tools: initialData?.current_tools || [],
+      learning_goals: initialData?.learning_goals || [],
+      priority_areas: initialData?.priority_areas || [],
+      implementation_timeline: initialData?.implementation_timeline || '',
     },
     mode: 'onChange',
   });
@@ -56,8 +64,10 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
     const subscription = form.watch((data) => {
       const completeData = {
         experience_level: data.experience_level || '',
-        implementation_status: data.implementation_status || '',
-        implementation_approach: data.implementation_approach || '',
+        current_tools: data.current_tools || [],
+        learning_goals: data.learning_goals || [],
+        priority_areas: data.priority_areas || [],
+        implementation_timeline: data.implementation_timeline || '',
       };
       
       console.log('[STEP3] 📝 Mudança no form detectada:', completeData);
@@ -75,7 +85,7 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
   const handleSubmit = useCallback((data: AIExperienceFormData) => {
     console.log('[STEP3] ✅ Enviando dados:', data);
     
-    if (!data.experience_level || !data.implementation_status || !data.implementation_approach) {
+    if (!data.experience_level || !data.learning_goals?.length || !data.priority_areas?.length || !data.implementation_timeline) {
       console.error('[STEP3] ❌ Campos obrigatórios não preenchidos');
       return;
     }
@@ -85,8 +95,9 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
 
   const isFormValid = form.formState.isValid && 
     form.getValues('experience_level') && 
-    form.getValues('implementation_status') && 
-    form.getValues('implementation_approach');
+    form.getValues('learning_goals')?.length > 0 && 
+    form.getValues('priority_areas')?.length > 0 &&
+    form.getValues('implementation_timeline');
 
   return (
     <div className="space-y-8 max-w-2xl mx-auto">
@@ -113,9 +124,9 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="beginner">Iniciante - Nunca usei ferramentas de IA</SelectItem>
-              <SelectItem value="basic">Básico - Uso algumas ferramentas ocasionalmente</SelectItem>
+              <SelectItem value="basic">Básico - Uso ChatGPT e algumas ferramentas simples</SelectItem>
               <SelectItem value="intermediate">Intermediário - Uso IA regularmente no trabalho</SelectItem>
-              <SelectItem value="advanced">Avançado - Implemento soluções de IA na empresa</SelectItem>
+              <SelectItem value="advanced">Avançado - Implemento e automatizo com IA</SelectItem>
             </SelectContent>
           </Select>
           {form.formState.errors.experience_level && (
@@ -125,54 +136,146 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
           )}
         </div>
 
-        {/* Status de Implementação */}
+        {/* Ferramentas Atuais */}
         <div className="space-y-2">
-          <Label>
-            Qual é o status da implementação de IA na sua empresa?
+          <Label className="flex items-center gap-2">
+            <Settings className="w-4 h-4" />
+            Quais ferramentas de IA você já usa? (opcional)
           </Label>
-          <Select 
-            onValueChange={(value) => handleSelectChange('implementation_status', value)} 
-            defaultValue={form.getValues('implementation_status') || ''}
-          >
-            <SelectTrigger className="h-12">
-              <SelectValue placeholder="Selecione o status atual" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="not_started">Ainda não começamos</SelectItem>
-              <SelectItem value="exploring">Estamos explorando possibilidades</SelectItem>
-              <SelectItem value="testing">Testando algumas ferramentas</SelectItem>
-              <SelectItem value="implementing">Implementando soluções</SelectItem>
-              <SelectItem value="advanced">Já temos IA integrada aos processos</SelectItem>
-            </SelectContent>
-          </Select>
-          {form.formState.errors.implementation_status && (
-            <p className="text-sm text-destructive">
-              {form.formState.errors.implementation_status.message}
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              'ChatGPT', 'Claude', 'Gemini', 'Typebot', 'ManyChat', 'Zapier', 
+              'N8N', 'Make.com', 'Notion AI', 'Midjourney', 'DALL-E', 'Runway',
+              'Loom AI', 'Canva AI', 'Copy.ai', 'Jasper'
+            ].map((tool) => (
+              <div key={tool} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`tool-${tool}`}
+                  checked={selectedTools.includes(tool)}
+                  onCheckedChange={(checked) => {
+                    const newTools = checked 
+                      ? [...selectedTools, tool]
+                      : selectedTools.filter(t => t !== tool);
+                    setSelectedTools(newTools);
+                    form.setValue('current_tools', newTools);
+                  }}
+                />
+                <Label htmlFor={`tool-${tool}`} className="text-sm font-normal cursor-pointer">
+                  {tool}
+                </Label>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Objetivos de Aprendizado */}
+        <div className="space-y-2">
+          <Label className="flex items-center gap-2">
+            <Target className="w-4 h-4" />
+            Quais são seus principais objetivos? (selecione até 3)
+          </Label>
+          <div className="grid grid-cols-1 gap-3">
+            {[
+              'Automatizar processos de vendas',
+              'Criar assistentes/chatbots inteligentes',
+              'Gerar leads automaticamente',
+              'Melhorar atendimento ao cliente',
+              'Criar conteúdo (textos, imagens, vídeos)',
+              'Automatizar marketing e redes sociais',
+              'Desenvolver relatórios automáticos',
+              'Integrar IA nos processos existentes',
+              'Criar ferramentas personalizadas',
+              'Aprender programação com IA'
+            ].map((goal) => (
+              <div key={goal} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`goal-${goal}`}
+                  checked={selectedGoals.includes(goal)}
+                  onCheckedChange={(checked) => {
+                    const newGoals = checked 
+                      ? [...selectedGoals, goal].slice(0, 3) // Máximo 3
+                      : selectedGoals.filter(g => g !== goal);
+                    setSelectedGoals(newGoals);
+                    form.setValue('learning_goals', newGoals);
+                  }}
+                />
+                <Label htmlFor={`goal-${goal}`} className="text-sm font-normal cursor-pointer">
+                  {goal}
+                </Label>
+              </div>
+            ))}
+          </div>
+          {selectedGoals.length > 0 && (
+            <p className="text-xs text-muted-foreground">
+              {selectedGoals.length}/3 objetivos selecionados
             </p>
           )}
         </div>
 
-        {/* Abordagem de Implementação */}
+        {/* Áreas Prioritárias */}
         <div className="space-y-2">
-          <Label>
-            Como pretende implementar IA na sua empresa?
+          <Label className="flex items-center gap-2">
+            <Target className="w-4 h-4" />
+            Em quais áreas você quer focar primeiro? (selecione até 2)
+          </Label>
+          <div className="grid grid-cols-1 gap-3">
+            {[
+              'Receita (vendas, leads, conversão)',
+              'Operacional (processos, automação)',
+              'Estratégia (planejamento, análise)',
+              'Marketing (conteúdo, campanhas)',
+              'Atendimento (suporte, relacionamento)',
+              'Produtividade pessoal'
+            ].map((area) => (
+              <div key={area} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`area-${area}`}
+                  checked={selectedAreas.includes(area)}
+                  onCheckedChange={(checked) => {
+                    const newAreas = checked 
+                      ? [...selectedAreas, area].slice(0, 2) // Máximo 2
+                      : selectedAreas.filter(a => a !== area);
+                    setSelectedAreas(newAreas);
+                    form.setValue('priority_areas', newAreas);
+                  }}
+                />
+                <Label htmlFor={`area-${area}`} className="text-sm font-normal cursor-pointer">
+                  {area}
+                </Label>
+              </div>
+            ))}
+          </div>
+          {selectedAreas.length > 0 && (
+            <p className="text-xs text-muted-foreground">
+              {selectedAreas.length}/2 áreas selecionadas
+            </p>
+          )}
+        </div>
+
+        {/* Prazo para Implementação */}
+        <div className="space-y-2">
+          <Label className="flex items-center gap-2">
+            <Clock className="w-4 h-4" />
+            Em quanto tempo você gostaria de ver resultados práticos?
           </Label>
           <Select 
-            onValueChange={(value) => handleSelectChange('implementation_approach', value)} 
-            defaultValue={form.getValues('implementation_approach') || ''}
+            onValueChange={(value) => handleSelectChange('implementation_timeline', value)} 
+            defaultValue={form.getValues('implementation_timeline') || ''}
           >
             <SelectTrigger className="h-12">
-              <SelectValue placeholder="Selecione sua abordagem" />
+              <SelectValue placeholder="Selecione o prazo" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="myself">Eu mesmo vou fazer</SelectItem>
-              <SelectItem value="team">Meu time</SelectItem>
-              <SelectItem value="hire">Quero contratar</SelectItem>
+              <SelectItem value="immediate">Imediatamente (já quero começar)</SelectItem>
+              <SelectItem value="1-month">Em até 1 mês</SelectItem>
+              <SelectItem value="3-months">Em até 3 meses</SelectItem>
+              <SelectItem value="6-months">Em até 6 meses</SelectItem>
+              <SelectItem value="no-rush">Sem pressa, quero aprender devagar</SelectItem>
             </SelectContent>
           </Select>
-          {form.formState.errors.implementation_approach && (
+          {form.formState.errors.implementation_timeline && (
             <p className="text-sm text-destructive">
-              {form.formState.errors.implementation_approach.message}
+              {form.formState.errors.implementation_timeline.message}
             </p>
           )}
         </div>
