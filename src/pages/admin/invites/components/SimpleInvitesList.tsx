@@ -1,4 +1,3 @@
-
 import { Mail, Calendar, Phone, MessageCircle, Send } from "lucide-react";
 import {
   Table,
@@ -38,16 +37,6 @@ const SimpleInvitesList = ({
       </div>
     );
   }
-
-  const getChannelIcon = (channelPreference?: string) => {
-    switch (channelPreference) {
-      case 'whatsapp': return <MessageCircle className="h-4 w-4 text-green-600" />;
-      case 'both': return <Send className="h-4 w-4 text-purple-600" />;
-      case 'email':
-      default: 
-        return <Mail className="h-4 w-4 text-blue-600" />;
-    }
-  };
 
   const getChannelBadge = (channelPreference?: string, phone?: string) => {
     switch (channelPreference) {
@@ -91,7 +80,7 @@ const SimpleInvitesList = ({
         </TableHeader>
         <TableBody>
           {invites.map((invite) => (
-            <TableRow key={invite.id} className="hover:bg-muted/20">
+            <TableRow key={invite.id}>
               <TableCell>
                 <div className="space-y-1">
                   <div className="font-medium">{invite.email}</div>
