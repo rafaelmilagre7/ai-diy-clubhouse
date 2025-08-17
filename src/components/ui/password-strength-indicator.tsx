@@ -9,7 +9,7 @@ export const PasswordStrengthIndicator = ({ strength, className = '' }: Password
   return (
     <div className={`space-y-2 ${className}`}>
       <div className="flex items-center justify-between text-sm">
-        <span className="text-muted-foreground">Força da senha:</span>
+        <span className="text-gray-300">Força da senha:</span>
         <span 
           className="font-medium"
           style={{ color: strength.color }}
@@ -18,7 +18,7 @@ export const PasswordStrengthIndicator = ({ strength, className = '' }: Password
         </span>
       </div>
       
-      <div className="w-full bg-muted rounded-full h-2">
+      <div className="w-full bg-gray-600 rounded-full h-2">
         <div
           className="h-2 rounded-full transition-all duration-300 ease-in-out"
           style={{

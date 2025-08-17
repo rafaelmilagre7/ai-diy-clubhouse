@@ -16,11 +16,19 @@ const ResetPassword = () => {
         className="w-full max-w-md"
       >
         <div className="mb-8 text-center">
-          <img
-            src="https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif"
-            alt="VIVER DE IA Club"
-            className="mx-auto h-20 w-auto"
-          />
+          <div className="mx-auto w-64 h-16 flex items-center justify-center mb-4">
+            <svg viewBox="0 0 200 50" className="h-full w-auto">
+              <text 
+                x="100" 
+                y="30" 
+                textAnchor="middle" 
+                className="fill-white text-2xl font-bold"
+                style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
+              >
+                VIVER DE IA
+              </text>
+            </svg>
+          </div>
           <h2 className="mt-4 text-2xl font-extrabold text-white">
             Recuperação de Senha
           </h2>
