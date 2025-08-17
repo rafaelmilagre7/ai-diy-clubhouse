@@ -23,12 +23,14 @@ interface Step5PersonalizationProps {
   initialData?: Partial<PersonalizationFormData>;
   onDataChange: (data: Partial<PersonalizationFormData>) => void;
   onNext: () => void;
+  userType: 'entrepreneur' | 'learner';
 }
 
 export const Step5Personalization: React.FC<Step5PersonalizationProps> = ({
   initialData,
   onDataChange,
   onNext,
+  userType,
 }) => {
   const [currentData, setCurrentData] = useState<Partial<PersonalizationFormData>>(initialData || {});
 
@@ -53,23 +55,43 @@ export const Step5Personalization: React.FC<Step5PersonalizationProps> = ({
     onNext();
   };
 
-  const contentTypes = [
-    'Vídeos explicativos',
-    'Tutoriais práticos',
-    'Templates prontos',
-    'Cases de sucesso',
-    'Workshops ao vivo',
-    'Material de leitura',
-    'Podcasts',
-    'Infográficos'
-  ];
+  const getContentTypes = () => {
+    if (userType === 'entrepreneur') {
+      return [
+        'Cases de sucesso empresariais',
+        'Templates e ferramentas prontas',
+        'Workshops de implementação',
+        'Consultorias em grupo',
+        'Vídeos práticos de negócios',
+        'Planilhas e calculadoras',
+        'Webinars ao vivo',
+        'Guias passo a passo'
+      ];
+    } else {
+      return [
+        'Vídeos explicativos',
+        'Tutoriais práticos',
+        'Cursos estruturados',
+        'Exercícios práticos',
+        'Projetos guiados',
+        'Material de leitura',
+        'Podcasts técnicos',
+        'Comunidade de aprendizado'
+      ];
+    }
+  };
+
+  const contentTypes = getContentTypes();
 
   return (
     <div className="space-y-8 max-w-2xl mx-auto">
       <div className="text-center space-y-2">
         <Settings className="w-16 h-16 mx-auto text-primary" />
         <p className="text-muted-foreground text-lg">
-          Personalize sua experiência para que a NINA possa te acompanhar da melhor forma
+          {userType === 'entrepreneur' 
+            ? 'Personalize sua experiência para que a NINA possa te acompanhar na implementação de IA no seu negócio'
+            : 'Personalize sua experiência para que a NINA possa te guiar no seu aprendizado sobre IA'
+          }
         </p>
       </div>
 

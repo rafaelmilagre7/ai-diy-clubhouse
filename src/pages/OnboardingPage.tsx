@@ -6,6 +6,7 @@ import { OnboardingLayout } from '@/components/onboarding/OnboardingLayout';
 import { Step0UserType } from '@/components/onboarding/steps/Step0UserType';
 import { Step1PersonalInfo } from '@/components/onboarding/steps/Step1PersonalInfo';
 import { Step2BusinessInfo } from '@/components/onboarding/steps/Step2BusinessInfo';
+import { Step3ExperienceLevel } from '@/components/onboarding/steps/Step3ExperienceLevel';
 import { Step3AIExperience } from '@/components/onboarding/steps/Step3AIExperience';
 import { Step4Goals } from '@/components/onboarding/steps/Step4Goals';
 import { Step5Personalization } from '@/components/onboarding/steps/Step5Personalization';
@@ -171,9 +172,7 @@ const OnboardingPage: React.FC = () => {
       case 2:
         return !!(data.professional_info?.company_name && data.professional_info?.company_sector);
       case 3:
-        return !!(data.ai_experience?.experience_level && 
-                  data.ai_experience?.implementation_status && 
-                  data.ai_experience?.implementation_approach);
+        return !!(data.ai_experience?.experience_level);
       case 4:
         return !!(data.goals_info?.primary_goal);
       case 5:
@@ -227,9 +226,11 @@ const OnboardingPage: React.FC = () => {
       component: Step2BusinessInfo,
     },
     3: {
-      title: 'Sua experiência com IA',
-      subtitle: 'Queremos saber quais ferramentas você já usa ou gostaria de usar',
-      component: Step3AIExperience,
+      title: userType === 'learner' ? 'Seu nível de conhecimento' : 'Sua experiência com IA',
+      subtitle: userType === 'learner' 
+        ? 'Vamos adaptar o conteúdo ao seu nível atual'
+        : 'Entenda onde você está na jornada de implementação',
+      component: Step3ExperienceLevel,
     },
     4: {
       title: 'Seus objetivos',
@@ -287,14 +288,15 @@ const OnboardingPage: React.FC = () => {
             onNext={() => {}}
           />
         );
-      case 3:
-        return (
-          <Step3AIExperience
-            initialData={data.ai_experience}
-            onDataChange={handleStep3DataChange}
-            onNext={() => {}}
-          />
-        );
+        case 3:
+          return (
+            <Step3ExperienceLevel 
+              initialData={data.ai_experience}
+              onDataChange={handleStep3DataChange}
+              onNext={() => {}}
+              userType={userType || 'entrepreneur'}
+            />
+          );
       case 4:
         return (
           <Step4Goals
@@ -310,6 +312,7 @@ const OnboardingPage: React.FC = () => {
             initialData={data.personalization}
             onDataChange={handleStep5DataChange}
             onNext={() => {}}
+            userType={userType || 'entrepreneur'}
           />
         );
       case 6:
@@ -322,6 +325,7 @@ const OnboardingPage: React.FC = () => {
               console.log('[ONBOARDING_PAGE] Resultado do completeOnboarding:', success);
               // Redirecionamento será feito pelo próprio hook completeOnboarding
             }}
+            userType={userType || 'entrepreneur'}
           />
         );
       default:

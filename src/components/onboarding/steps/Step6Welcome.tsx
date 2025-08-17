@@ -7,10 +7,12 @@ import { motion } from 'framer-motion';
 interface Step6WelcomeProps {
   ninaMessage?: string;
   onFinish: () => void;
+  userType: 'entrepreneur' | 'learner';
 }
 export const Step6Welcome: React.FC<Step6WelcomeProps> = ({
   ninaMessage,
-  onFinish
+  onFinish,
+  userType
 }) => {
   const [isCompleting, setIsCompleting] = useState(false);
   const handleFinish = async () => {
@@ -55,58 +57,115 @@ export const Step6Welcome: React.FC<Step6WelcomeProps> = ({
         </Card>}
 
       <div className="grid md:grid-cols-2 gap-6">
-        <Card className="p-6 hover:shadow-lg transition-shadow">
-          <div className="space-y-3">
-            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-              <BookOpen className="w-6 h-6 text-primary" />
-            </div>
-            <h3 className="font-semibold text-lg">Conteúdo Personalizado</h3>
-            <p className="text-sm text-muted-foreground">
-              Acesse materiais e ferramentas selecionados especificamente para seu perfil e objetivos
-            </p>
-          </div>
-        </Card>
+        {userType === 'entrepreneur' ? (
+          <>
+            <Card className="p-6 hover:shadow-lg transition-shadow">
+              <div className="space-y-3">
+                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Rocket className="w-6 h-6 text-primary" />
+                </div>
+                <h3 className="font-semibold text-lg">Implementação Prática</h3>
+                <p className="text-sm text-muted-foreground">
+                  Guias passo a passo para implementar IA na sua empresa de forma efetiva
+                </p>
+              </div>
+            </Card>
 
-        <Card className="p-6 hover:shadow-lg transition-shadow">
-          <div className="space-y-3">
-            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Rocket className="w-6 h-6 text-primary" />
-            </div>
-            <h3 className="font-semibold text-lg">Implementação Prática</h3>
-            <p className="text-sm text-muted-foreground">
-              Guias passo a passo para implementar IA na sua empresa de forma efetiva
-            </p>
-          </div>
-        </Card>
+            <Card className="p-6 hover:shadow-lg transition-shadow">
+              <div className="space-y-3">
+                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <BookOpen className="w-6 h-6 text-primary" />
+                </div>
+                <h3 className="font-semibold text-lg">Cases de Sucesso</h3>
+                <p className="text-sm text-muted-foreground">
+                  Acesse cases reais de empresas que implementaram IA com sucesso
+                </p>
+              </div>
+            </Card>
 
-        <Card className="p-6 hover:shadow-lg transition-shadow">
-          <div className="space-y-3">
-            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Users className="w-6 h-6 text-primary" />
-            </div>
-            <h3 className="font-semibold text-lg">Comunidade Exclusiva</h3>
-            <p className="text-sm text-muted-foreground">
-              Conecte-se com outros empreendedores e profissionais em jornadas similares
-            </p>
-          </div>
-        </Card>
+            <Card className="p-6 hover:shadow-lg transition-shadow">
+              <div className="space-y-3">
+                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Users className="w-6 h-6 text-primary" />
+                </div>
+                <h3 className="font-semibold text-lg">Rede de Empreendedores</h3>
+                <p className="text-sm text-muted-foreground">
+                  Conecte-se com outros empresários implementando IA em seus negócios
+                </p>
+              </div>
+            </Card>
 
-        <Card className="p-6 hover:shadow-lg transition-shadow">
-          <div className="space-y-3">
-            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Calendar className="w-6 h-6 text-primary" />
-            </div>
-            <h3 className="font-semibold text-lg">Acompanhamento Contínuo</h3>
-            <p className="text-sm text-muted-foreground">
-              A NINA vai te acompanhar com dicas, lembretes e conteúdos no seu ritmo
-            </p>
-          </div>
-        </Card>
+            <Card className="p-6 hover:shadow-lg transition-shadow">
+              <div className="space-y-3">
+                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Calendar className="w-6 h-6 text-primary" />
+                </div>
+                <h3 className="font-semibold text-lg">Consultoria Estratégica</h3>
+                <p className="text-sm text-muted-foreground">
+                  A NINA vai te acompanhar com insights estratégicos para seu negócio
+                </p>
+              </div>
+            </Card>
+          </>
+        ) : (
+          <>
+            <Card className="p-6 hover:shadow-lg transition-shadow">
+              <div className="space-y-3">
+                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <BookOpen className="w-6 h-6 text-primary" />
+                </div>
+                <h3 className="font-semibold text-lg">Conteúdo Estruturado</h3>
+                <p className="text-sm text-muted-foreground">
+                  Acesse cursos e materiais organizados do básico ao avançado
+                </p>
+              </div>
+            </Card>
+
+            <Card className="p-6 hover:shadow-lg transition-shadow">
+              <div className="space-y-3">
+                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Rocket className="w-6 h-6 text-primary" />
+                </div>
+                <h3 className="font-semibold text-lg">Projetos Práticos</h3>
+                <p className="text-sm text-muted-foreground">
+                  Aprenda fazendo com projetos guiados e exercícios práticos
+                </p>
+              </div>
+            </Card>
+
+            <Card className="p-6 hover:shadow-lg transition-shadow">
+              <div className="space-y-3">
+                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Users className="w-6 h-6 text-primary" />
+                </div>
+                <h3 className="font-semibold text-lg">Comunidade de Aprendizado</h3>
+                <p className="text-sm text-muted-foreground">
+                  Conecte-se com outros estudantes e profissionais de IA
+                </p>
+              </div>
+            </Card>
+
+            <Card className="p-6 hover:shadow-lg transition-shadow">
+              <div className="space-y-3">
+                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Calendar className="w-6 h-6 text-primary" />
+                </div>
+                <h3 className="font-semibold text-lg">Mentoria Personalizada</h3>
+                <p className="text-sm text-muted-foreground">
+                  A NINA vai te guiar com dicas e conteúdos adaptados ao seu ritmo
+                </p>
+              </div>
+            </Card>
+          </>
+        )}
       </div>
 
       <div className="space-y-4">
         <p className="text-muted-foreground">
-          Sua experiência personalizada já está configurada. Clique em "Concluir" para finalizar e ir para o dashboard!
+          {userType === 'entrepreneur' 
+            ? 'Sua jornada empresarial com IA está configurada. Clique em "Concluir" para acessar ferramentas e estratégias personalizadas!'
+            : 'Sua jornada de aprendizado está configurada. Clique em "Concluir" para começar seus estudos personalizados!'
+          }
         </p>
         
         <motion.div whileHover={{
