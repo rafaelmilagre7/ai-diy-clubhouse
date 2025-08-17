@@ -19,6 +19,7 @@ import {
   PopoverContent, 
   PopoverTrigger 
 } from '@/components/ui/popover';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { TagBadge } from '@/components/learning/tags/TagBadge';
 import { toast } from 'sonner';
 
@@ -201,87 +202,82 @@ export const LessonTagManager = ({ form, fieldName = 'tags' }: LessonTagManagerP
                     </div>
                   </div>
 
-                  {/* Área scrollável com as tags */}
-                  <div 
-                    className="flex-1 overflow-y-auto p-2 bg-popover"
-                    style={{ 
-                      maxHeight: '350px',
-                      overscrollBehavior: 'contain'
-                    }}
-                  >
-                    {isLoading ? (
-                      <div className="flex items-center justify-center py-8">
-                        <div className="text-sm text-muted-foreground">Carregando tags...</div>
-                      </div>
-                    ) : Object.keys(filteredTagsByCategory).length === 0 ? (
-                      <div className="py-6 text-center px-2">
-                        <p className="text-sm text-muted-foreground mb-3">
-                          {searchTerm ? 'Nenhuma tag encontrada para essa busca' : 'Nenhuma tag disponível'}
-                        </p>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="w-full"
-                          onClick={() => {
-                            setShowCreateTag(true);
-                            setOpen(false);
-                          }}
-                          type="button"
-                        >
-                          <Plus className="h-4 w-4 mr-2" />
-                          Criar nova tag
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {Object.entries(filteredTagsByCategory)
-                          .filter(([_, tags]) => Array.isArray(tags) && tags.length > 0)
-                          .map(([category, tags]) => (
-                            <div key={category} className="space-y-2">
-                              {/* Cabeçalho da categoria */}
-                              <div className="px-2 py-1 bg-muted/50 rounded-sm sticky top-0 z-5">
-                                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                                  {category} ({tags.length})
-                                </h4>
+                  {/* Área scrollável com as tags (com ScrollArea visível) */}
+                  <div className="flex-1 bg-popover">
+                    <ScrollArea className="h-[350px] px-1">
+                      {isLoading ? (
+                        <div className="flex items-center justify-center py-8">
+                          <div className="text-sm text-muted-foreground">Carregando tags...</div>
+                        </div>
+                      ) : Object.keys(filteredTagsByCategory).length === 0 ? (
+                        <div className="py-6 text-center px-2">
+                          <p className="text-sm text-muted-foreground mb-3">
+                            {searchTerm ? 'Nenhuma tag encontrada para essa busca' : 'Nenhuma tag disponível'}
+                          </p>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="w-full"
+                            onClick={() => {
+                              setShowCreateTag(true);
+                              setOpen(false);
+                            }}
+                            type="button"
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Criar nova tag
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="space-y-4 p-2 pr-3">
+                          {Object.entries(filteredTagsByCategory)
+                            .filter(([_, tags]) => Array.isArray(tags) && tags.length > 0)
+                            .map(([category, tags]) => (
+                              <div key={category} className="space-y-2">
+                                {/* Cabeçalho da categoria */}
+                                <div className="px-2 py-1 bg-muted/50 rounded-sm sticky top-0">
+                                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                                    {category} ({tags.length})
+                                  </h4>
+                                </div>
+                                {/* Tags da categoria */}
+                                <div className="grid gap-1 px-1">
+                                  {tags.filter(tag => tag && tag.id).map((tag) => (
+                                    <button
+                                      key={tag.id}
+                                      type="button"
+                                      onClick={() => {
+                                        handleTagSelect(tag);
+                                        setSearchTerm('');
+                                        setOpen(false);
+                                      }}
+                                      className={`w-full px-3 py-2 text-left rounded-md transition-all duration-200 flex items-center gap-2 group ${
+                                        selectedTagIds.includes(tag.id) 
+                                          ? 'bg-primary/10 border border-primary/20 text-primary' 
+                                          : 'hover:bg-accent hover:text-accent-foreground border border-transparent'
+                                      }`}
+                                    >
+                                      <TagBadge 
+                                        tag={tag} 
+                                        size="sm" 
+                                        variant={selectedTagIds.includes(tag.id) ? 'default' : 'outline'}
+                                      />
+                                      {tag.description && (
+                                        <span className="text-xs text-muted-foreground truncate flex-1 group-hover:text-foreground">
+                                          {tag.description}
+                                        </span>
+                                      )}
+                                      {selectedTagIds.includes(tag.id) && (
+                                        <span className="text-xs text-primary font-medium">✓</span>
+                                      )}
+                                    </button>
+                                  ))}
+                                </div>
                               </div>
-                              
-                              {/* Tags da categoria */}
-                              <div className="grid gap-1 px-1">
-                                {tags.filter(tag => tag && tag.id).map((tag) => (
-                                  <button
-                                    key={tag.id}
-                                    type="button"
-                                    onClick={() => {
-                                      handleTagSelect(tag);
-                                      setSearchTerm('');
-                                      setOpen(false);
-                                    }}
-                                    className={`w-full px-3 py-2 text-left rounded-md transition-all duration-200 flex items-center gap-2 group ${
-                                      selectedTagIds.includes(tag.id) 
-                                        ? 'bg-primary/10 border border-primary/20 text-primary' 
-                                        : 'hover:bg-accent hover:text-accent-foreground border border-transparent'
-                                    }`}
-                                  >
-                                    <TagBadge 
-                                      tag={tag} 
-                                      size="sm" 
-                                      variant={selectedTagIds.includes(tag.id) ? 'default' : 'outline'}
-                                    />
-                                    {tag.description && (
-                                      <span className="text-xs text-muted-foreground truncate flex-1 group-hover:text-foreground">
-                                        {tag.description}
-                                      </span>
-                                    )}
-                                    {selectedTagIds.includes(tag.id) && (
-                                      <span className="text-xs text-primary font-medium">✓</span>
-                                    )}
-                                  </button>
-                                ))}
-                              </div>
-                            </div>
-                          ))}
-                      </div>
-                    )}
+                            ))}
+                        </div>
+                      )}
+                    </ScrollArea>
                   </div>
 
                   {/* Footer fixo com botão de criar */}
