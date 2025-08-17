@@ -33,7 +33,7 @@ export const usePermissions = () => {
     if (isAdmin) return true;
     
     // Verificar se o usuário tem a permissão específica
-    return userPermissions.includes(permissionCode) || userPermissions.includes('admin.all');
+    return userPermissions.includes(permissionCode);
   };
 
   const fetchPermissions = async () => {
