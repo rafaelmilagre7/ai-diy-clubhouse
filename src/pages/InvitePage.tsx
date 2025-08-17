@@ -91,10 +91,10 @@ const InvitePage = () => {
 
   if (showRegisterForm && validationResult.invite) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-        <div className="container mx-auto px-4 py-8">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center">
+        <div className="container mx-auto px-4">
           <div className="max-w-7xl mx-auto">
-            <div className="grid lg:grid-cols-2 gap-16 items-center min-h-screen">
+            <div className="grid lg:grid-cols-2 gap-8 xl:gap-16 items-center">
               {/* Welcome Section */}
               <div className="order-2 lg:order-1">
                 <InviteWelcomeSection inviteData={validationResult.invite} />
@@ -102,7 +102,7 @@ const InvitePage = () => {
               
               {/* Register Form */}
               <div className="order-1 lg:order-2 flex items-center justify-center">
-                <div className="w-full max-w-md bg-white/10 backdrop-blur-lg border border-white/20 rounded-3xl p-10 shadow-2xl">
+                <div className="w-full max-w-md bg-white/10 backdrop-blur-lg border border-white/20 rounded-3xl p-8 shadow-2xl">
                   <ModernRegisterForm 
                     inviteToken={token}
                     prefilledEmail={validationResult.invite.email}
