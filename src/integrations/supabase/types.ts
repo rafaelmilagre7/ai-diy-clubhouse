@@ -6208,6 +6208,10 @@ export type Database = {
         Args: { input_text: string }
         Returns: string
       }
+      identify_insecure_functions: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       increment: {
         Args: { column_name: string; row_id: string; table_name: string }
         Returns: undefined
@@ -6646,6 +6650,10 @@ export type Database = {
         Returns: boolean
       }
       sync_profile_roles: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      sync_role_fields: {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
