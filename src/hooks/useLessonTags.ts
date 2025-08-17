@@ -21,11 +21,17 @@ export const useLessonTags = () => {
   });
 };
 
-// Hook para buscar tags por categoria
+// Hook para buscar tags por categoria (filtra categorias não desejadas)
 export const useLessonTagsByCategory = () => {
   const { data: tags = [], ...rest } = useLessonTags();
   
-  const tagsByCategory = tags.reduce((acc, tag) => {
+  // Filtrar tags removendo as categorias 'ferramenta' e 'nivel' 
+  // que já existem em outros campos da aula
+  const filteredTags = tags.filter(tag => 
+    tag.category !== 'ferramenta' && tag.category !== 'nivel'
+  );
+  
+  const tagsByCategory = filteredTags.reduce((acc, tag) => {
     if (!acc[tag.category]) {
       acc[tag.category] = [];
     }
@@ -33,7 +39,7 @@ export const useLessonTagsByCategory = () => {
     return acc;
   }, {} as Record<string, LessonTag[]>);
 
-  return { tagsByCategory, tags, ...rest };
+  return { tagsByCategory, tags: filteredTags, ...rest };
 };
 
 // Hook para buscar tags de uma lição específica
