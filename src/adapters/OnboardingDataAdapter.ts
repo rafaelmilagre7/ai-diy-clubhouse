@@ -35,11 +35,15 @@ export class OnboardingDataAdapter {
     );
 
     const hasGoals = !!(
-      data.goals_info?.primary_goal
+      data.goals_info?.primary_goal &&
+      data.goals_info?.timeline &&
+      (data.goals_info?.success_metrics?.length > 0 || data.goals_info?.priority_areas?.length > 0 || data.goals_info?.specific_objectives)
     );
 
     const hasPersonalization = !!(
-      data.personalization?.learning_style
+      data.personalization?.learning_style &&
+      data.personalization?.communication_frequency &&
+      (data.personalization?.preferred_content?.length > 0 || data.personalization?.support_level || data.personalization?.availability)
     );
 
     const hasUserType = !!(data.user_type);
@@ -68,8 +72,8 @@ export class OnboardingDataAdapter {
       !!(data.personal_info?.name && data.personal_info?.phone && data.personal_info?.state && data.personal_info?.city),
       !!(data.professional_info?.work_type && data.professional_info?.current_position),
       !!(data.ai_experience?.experience_level && data.ai_experience?.learning_goals?.length > 0 && data.ai_experience?.priority_areas?.length > 0 && data.ai_experience?.implementation_timeline),
-      !!(data.goals_info?.primary_goal),
-      !!(data.personalization?.learning_style)
+      !!(data.goals_info?.primary_goal && data.goals_info?.timeline),
+      !!(data.personalization?.learning_style && data.personalization?.communication_frequency)
     ];
 
     const completedChecks = checks.filter(Boolean).length;
@@ -88,7 +92,9 @@ export class OnboardingDataAdapter {
     if (!data.professional_info?.work_type && !data.professional_info?.current_position) return 'Contexto profissional';
     if (!data.ai_experience?.experience_level || !data.ai_experience?.learning_goals?.length || !data.ai_experience?.priority_areas?.length || !data.ai_experience?.implementation_timeline) return 'Experiência com IA';
     if (!data.goals_info?.primary_goal) return 'Objetivo principal';
+    if (!data.goals_info?.timeline) return 'Prazo esperado';
     if (!data.personalization?.learning_style) return 'Estilo de aprendizado';
+    if (!data.personalization?.communication_frequency) return 'Frequência de comunicação';
     
     return 'Onboarding completo';
   }

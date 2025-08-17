@@ -214,16 +214,50 @@ export const Step5Personalization: React.FC<Step5PersonalizationProps> = ({
           </Select>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="special_needs">
-            Há algo específico que devemos considerar no seu aprendizado? (opcional)
+        <div className="space-y-4">
+          <Label>
+            Quais são seus principais obstáculos ao aprendizado? (marque até 3)
           </Label>
-          <Textarea
-            id="special_needs"
-            placeholder="Ex: Tempo limitado, preferências específicas, necessidades especiais..."
-            {...form.register('special_needs')}
-            className="min-h-[100px]"
-          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {[
+              'Falta de tempo',
+              'Conteúdo muito técnico',
+              'Dificuldade de concentração',
+              'Falta de prática',
+              'Não sei aplicar na prática',
+              'Muita informação de uma vez',
+              'Falta de acompanhamento',
+              'Preciso de mais exemplos',
+              'Dificuldade com idiomas',
+              'Falta de feedback',
+              'Ritmo muito rápido',
+              'Falta de motivação'
+            ].map((obstacle) => (
+              <div key={obstacle} className="flex items-center space-x-2">
+                 <Checkbox
+                   id={obstacle}
+                   checked={(form.getValues('special_needs') || '').split(',').filter(Boolean).includes(obstacle)}
+                   onCheckedChange={(checked) => {
+                     const currentObstacles = (form.getValues('special_needs') || '').split(',').filter(Boolean);
+                     if (checked && currentObstacles.length < 3) {
+                       form.setValue('special_needs', [...currentObstacles, obstacle].join(','));
+                     } else if (!checked) {
+                       form.setValue('special_needs', currentObstacles.filter(o => o !== obstacle).join(','));
+                     }
+                   }}
+                   disabled={(form.getValues('special_needs') || '').split(',').filter(Boolean).length >= 3 && !(form.getValues('special_needs') || '').split(',').filter(Boolean).includes(obstacle)}
+                 />
+                <Label htmlFor={obstacle} className="text-sm font-normal cursor-pointer">
+                  {obstacle}
+                </Label>
+              </div>
+            ))}
+          </div>
+          {(form.getValues('special_needs') || '').split(',').filter(Boolean).length >= 3 && (
+            <p className="text-xs text-muted-foreground">
+              Máximo de 3 obstáculos selecionados
+            </p>
+          )}
         </div>
       </form>
     </div>

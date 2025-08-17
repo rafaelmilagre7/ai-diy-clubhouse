@@ -253,16 +253,50 @@ export const Step4Goals: React.FC<Step4GoalsProps> = ({
           </Select>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="specific_objectives">
-            Há algum objetivo específico ou desafio que gostaria de destacar? (opcional)
+        <div className="space-y-4">
+          <Label>
+            Quais são seus principais desafios atuais? (marque até 3)
           </Label>
-          <Textarea
-            id="specific_objectives"
-            placeholder="Ex: Automatizar atendimento, criar conteúdo para redes sociais, analisar dados de vendas..."
-            {...form.register('specific_objectives')}
-            className="min-h-[100px]"
-          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {[
+              'Falta de tempo para implementar',
+              'Equipe resistente a mudanças',
+              'Orçamento limitado',
+              'Não sei por onde começar',
+              'Falta de conhecimento técnico',
+              'Dificuldade para medir ROI',
+              'Integração com sistemas atuais',
+              'Escolha das ferramentas certas',
+              'Treinamento da equipe',
+              'Segurança e privacidade',
+              'Processos muito manuais',
+              'Competição no mercado'
+            ].map((challenge) => (
+              <div key={challenge} className="flex items-center space-x-2">
+                 <Checkbox
+                   id={challenge}
+                   checked={(form.getValues('specific_objectives') || '').split(',').filter(Boolean).includes(challenge)}
+                   onCheckedChange={(checked) => {
+                     const currentChallenges = (form.getValues('specific_objectives') || '').split(',').filter(Boolean);
+                     if (checked && currentChallenges.length < 3) {
+                       form.setValue('specific_objectives', [...currentChallenges, challenge].join(','));
+                     } else if (!checked) {
+                       form.setValue('specific_objectives', currentChallenges.filter(c => c !== challenge).join(','));
+                     }
+                   }}
+                   disabled={(form.getValues('specific_objectives') || '').split(',').filter(Boolean).length >= 3 && !(form.getValues('specific_objectives') || '').split(',').filter(Boolean).includes(challenge)}
+                 />
+                <Label htmlFor={challenge} className="text-sm font-normal cursor-pointer">
+                  {challenge}
+                </Label>
+              </div>
+            ))}
+          </div>
+          {(form.getValues('specific_objectives') || '').split(',').filter(Boolean).length >= 3 && (
+            <p className="text-xs text-muted-foreground">
+              Máximo de 3 desafios selecionados
+            </p>
+          )}
         </div>
       </form>
     </div>
