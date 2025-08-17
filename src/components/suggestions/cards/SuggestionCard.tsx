@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ThumbsUp, ThumbsDown, MessageSquare } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, MessageSquare, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/auth';
 import { Suggestion } from '@/types/suggestionTypes';
@@ -29,18 +29,35 @@ export const SuggestionCard: React.FC<SuggestionCardProps> = ({
   
   return (
     <Card 
-      className="group h-full cursor-pointer transition-all duration-300 hover:shadow-md hover:-translate-y-1 border-border bg-card/50 backdrop-blur-sm"
+      className={`
+        group h-full cursor-pointer transition-all duration-300 
+        bg-card/50 backdrop-blur-sm
+        ${suggestion.status === 'implemented' 
+          ? 'border-emerald-500/50 shadow-emerald-500/10 shadow-lg bg-emerald-50/30 dark:bg-emerald-950/20 hover:shadow-emerald-500/20 hover:shadow-xl hover:bg-emerald-50/40 dark:hover:bg-emerald-950/30' 
+          : 'border-border hover:shadow-md hover:-translate-y-1'
+        }
+      `}
       onClick={handleCardClick}
     >
       <CardHeader className="pb-4">
         <div className="flex justify-between items-start gap-4">
           <div className="space-y-3 flex-1 min-w-0">
             <h3 className="font-semibold text-lg text-foreground leading-tight line-clamp-2 group-hover:text-primary transition-colors">
+              {suggestion.status === 'implemented' && (
+                <CheckCircle className="inline w-5 h-5 mr-2 text-emerald-600 dark:text-emerald-400" />
+              )}
               {suggestion.title}
             </h3>
             <Badge 
               variant="secondary" 
-              className={`${getStatusColor(suggestion.status)} text-xs font-medium px-3 py-1 rounded-full w-fit`}
+              className={`
+                ${getStatusColor(suggestion.status)} 
+                text-xs font-medium px-3 py-1 rounded-full w-fit
+                ${suggestion.status === 'implemented' 
+                  ? 'ring-2 ring-emerald-500/30 bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300' 
+                  : ''
+                }
+              `}
             >
               {getStatusLabel(suggestion.status)}
             </Badge>
