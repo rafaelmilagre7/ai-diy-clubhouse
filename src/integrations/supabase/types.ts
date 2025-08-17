@@ -6725,6 +6725,10 @@ export type Database = {
         Args: { user_id: string }
         Returns: Json
       }
+      validate_all_functions_security: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       validate_auth_integrity: {
         Args: Record<PropertyKey, never>
         Returns: Json
