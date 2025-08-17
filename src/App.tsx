@@ -8,7 +8,7 @@ import { AuthProvider } from "@/contexts/auth";
 import { LoggingProvider } from "@/hooks/useLogging";
 import { AppRoutes } from "@/routes";
 import { PerformanceDashboard } from "@/components/dev/PerformanceDashboard";
-import { XSSProtectionProvider } from "@/components/security/XSSProtectionProvider";
+import { SecurityProvider } from "@/components/security/SecurityProvider";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -25,7 +25,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <XSSProtectionProvider>
+        <SecurityProvider>
           <LoggingProvider>
             <AuthProvider>
               <BrowserRouter>
@@ -39,7 +39,7 @@ function App() {
               </BrowserRouter>
             </AuthProvider>
           </LoggingProvider>
-        </XSSProtectionProvider>
+        </SecurityProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );

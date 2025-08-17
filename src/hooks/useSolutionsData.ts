@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { Solution } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
-import { useSecurityEnforcement } from "@/hooks/auth/useSecurityEnforcement";
+import { useSecurityEnforcement } from "@/hooks/security/useSecurityEnforcement";
 import { logger } from "@/utils/logger";
 
 // Cache global para evitar requests desnecessários
