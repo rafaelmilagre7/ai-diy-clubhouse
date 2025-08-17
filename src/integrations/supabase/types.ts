@@ -6111,6 +6111,10 @@ export type Database = {
         Args: { target_user_id?: string }
         Returns: string
       }
+      get_user_role_via_table: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_user_security_permissions: {
         Args: { user_id: string }
         Returns: string[]
@@ -6265,6 +6269,10 @@ export type Database = {
         Returns: boolean
       }
       is_admin_user: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_admin_via_role_table: {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
@@ -6836,6 +6844,10 @@ export type Database = {
             }
           | { new_role_id: string; target_user_id: string }
         Returns: boolean
+      }
+      validate_role_consistency: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
       }
       validate_security_fixes: {
         Args: Record<PropertyKey, never>
