@@ -1,4 +1,4 @@
-import { Mail, Calendar, Phone, MessageCircle, Send } from "lucide-react";
+import { Mail, Calendar, Phone, MessageCircle, Send, RefreshCcw } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -8,10 +8,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Invite } from "@/hooks/admin/invites/types";
 import { formatDate } from "../utils/formatters";
 import InviteStatus from "./InviteStatus";
 import InviteActions from "./InviteActions";
+import { useWhatsAppStatusCheck } from "@/hooks/admin/invites/useWhatsAppStatusCheck";
 
 interface SimpleInvitesListProps {
   invites: Invite[];
@@ -28,6 +30,12 @@ const SimpleInvitesList = ({
   onReactivate,
   resendingInvites = new Set() 
 }: SimpleInvitesListProps) => {
+  const { checkWhatsAppStatus, isChecking, lastCheckResult } = useWhatsAppStatusCheck();
+
+  const handleCheckWhatsAppStatus = async () => {
+    await checkWhatsAppStatus();
+  };
+
   if (invites.length === 0) {
     return (
       <div className="text-center py-12 text-muted-foreground">
@@ -66,8 +74,30 @@ const SimpleInvitesList = ({
   };
 
   return (
-    <div className="border rounded-lg overflow-hidden">
-      <Table>
+    <>
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex items-center gap-2">
+          <h3 className="text-lg font-semibold">Lista de Convites</h3>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleCheckWhatsAppStatus}
+            disabled={isChecking}
+            className="flex items-center gap-2"
+          >
+            <RefreshCcw className={`h-4 w-4 ${isChecking ? 'animate-spin' : ''}`} />
+            {isChecking ? 'Verificando...' : 'Verificar WhatsApp'}
+          </Button>
+        </div>
+        {lastCheckResult && (
+          <div className="text-sm text-muted-foreground">
+            Última verificação: {lastCheckResult.checked} mensagens, {lastCheckResult.updated} atualizadas
+          </div>
+        )}
+      </div>
+
+      <div className="border rounded-lg overflow-hidden">
+        <Table>
         <TableHeader>
           <TableRow className="bg-muted/50">
             <TableHead className="font-medium">Destinatário</TableHead>
@@ -123,6 +153,7 @@ const SimpleInvitesList = ({
         </TableBody>
       </Table>
     </div>
+    </>
   );
 };
 
