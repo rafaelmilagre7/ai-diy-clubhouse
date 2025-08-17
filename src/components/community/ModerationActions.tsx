@@ -5,9 +5,14 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Flag, Pin, Lock } from "lucide-react";
+import { MoreHorizontal, Flag, Pin, Lock, Trash2 } from "lucide-react";
+import { useAuth } from "@/contexts/auth";
+import { useModeration } from "@/hooks/community/useModeration";
+import { useDeleteConfirmation } from "@/hooks/community/useDeleteConfirmation";
+import { DeleteSuggestionDialog } from "@/components/suggestions/details/DeleteSuggestionDialog";
 
 interface ModerationActionsProps {
   type: "topic" | "post";
@@ -28,6 +33,35 @@ export const ModerationActions = ({
   onReport,
   onSuccess
 }: ModerationActionsProps) => {
+  const { isAdmin } = useAuth();
+  const { pinTopic, unpinTopic, lockTopic, unlockTopic, deleteTopic } = useModeration();
+  const { showDeleteDialog, isDeleting, openDeleteDialog, closeDeleteDialog, confirmDelete } = useDeleteConfirmation();
+
+  const handlePin = () => {
+    if (currentState.isPinned) {
+      unpinTopic(itemId);
+    } else {
+      pinTopic(itemId);
+    }
+    onSuccess?.();
+  };
+
+  const handleLock = () => {
+    if (currentState.isLocked) {
+      unlockTopic(itemId);
+    } else {
+      lockTopic(itemId);
+    }
+    onSuccess?.();
+  };
+
+  const handleDelete = () => {
+    openDeleteDialog(() => {
+      deleteTopic(itemId);
+      onSuccess?.();
+    });
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -41,19 +75,33 @@ export const ModerationActions = ({
           Reportar
         </DropdownMenuItem>
         
-        {type === "topic" && (
+        {type === "topic" && isAdmin && (
           <>
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handlePin}>
               <Pin className="h-4 w-4 mr-2" />
               {currentState.isPinned ? "Desafixar" : "Fixar"}
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLock}>
               <Lock className="h-4 w-4 mr-2" />
               {currentState.isLocked ? "Destravar" : "Travar"}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem 
+              onClick={handleDelete}
+              className="text-destructive focus:text-destructive"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Excluir Tópico
             </DropdownMenuItem>
           </>
         )}
       </DropdownMenuContent>
+      
+      <DeleteSuggestionDialog
+        isOpen={showDeleteDialog}
+        onOpenChange={closeDeleteDialog}
+        onConfirmDelete={confirmDelete}
+      />
     </DropdownMenu>
   );
 };

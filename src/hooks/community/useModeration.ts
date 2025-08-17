@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
+import { deleteCommunityTopic } from '@/lib/supabase/rpc';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/auth';
 
@@ -86,11 +87,27 @@ export const useModeration = () => {
     }
   });
 
+  const deleteTopic = useMutation({
+    mutationFn: async (topicId: string) => {
+      await deleteCommunityTopic(topicId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['community-topics'] });
+      queryClient.invalidateQueries({ queryKey: ['community-categories'] });
+      toast.success('Tópico excluído com sucesso');
+    },
+    onError: (error) => {
+      console.error('Erro ao excluir tópico:', error);
+      toast.error('Erro ao excluir tópico');
+    }
+  });
+
   return {
     pinTopic: pinTopic.mutate,
     unpinTopic: unpinTopic.mutate,
     lockTopic: lockTopic.mutate,
     unlockTopic: unlockTopic.mutate,
-    isLoading: pinTopic.isPending || unpinTopic.isPending || lockTopic.isPending || unlockTopic.isPending
+    deleteTopic: deleteTopic.mutate,
+    isLoading: pinTopic.isPending || unpinTopic.isPending || lockTopic.isPending || unlockTopic.isPending || deleteTopic.isPending
   };
 };
