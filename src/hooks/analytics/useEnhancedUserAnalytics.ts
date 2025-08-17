@@ -88,48 +88,67 @@ export const useEnhancedUserAnalytics = (params: EnhancedUserAnalyticsParams) =>
 
       const { startDate, endDate } = getDateRange();
 
-      // 1. Buscar TODOS os usuários (não filtrar por data de criação)
-      const { data: overviewData, error: overviewError } = await supabase
-        .from('profiles')
-        .select(`
-          id,
-          created_at,
-          onboarding_completed,
-          role_id,
-          user_roles(name)
-        `);
+      // 1. Overview via RPC seguro (bypassa RLS)
+      const { data: overviewRpc, error: overviewRpcError } = await supabase
+        .rpc('get_analytics_overview');
+      if (overviewRpcError) throw overviewRpcError;
 
-      if (overviewError) throw overviewError;
+      // 2. Lista de usuários via função SECURITY DEFINER (inclui created_at e role)
+      const { data: usersData, error: usersError } = await supabase
+        .rpc('get_users_with_roles', { limit_count: 5000, offset_count: 0, search_query: null });
+      if (usersError) throw usersError;
 
-      // 2. Buscar dados de atividade recente
+      // Buscar flags de onboarding para os usuários (com fallback seguro)
+      const userIds = (usersData as any[])?.map((u: any) => u.id) || [];
+      let onboardingMap = new Map<string, boolean>();
+      try {
+        const { data: onboardingFlags, error: onboardingError } = await supabase
+          .from('profiles')
+          .select('id, onboarding_completed')
+          .in('id', userIds);
+        if (onboardingError) {
+          console.warn('⚠️ [USER-ANALYTICS] Falha ao carregar onboarding flags, usando false:', onboardingError);
+        }
+        onboardingMap = new Map((onboardingFlags || []).map((x: any) => [x.id, x.onboarding_completed]));
+      } catch (e) {
+        console.warn('⚠️ [USER-ANALYTICS] Erro inesperado ao carregar onboarding flags:', e);
+      }
+
+      // Consolidar usuários com flag de onboarding
+      const users = ((usersData as any[]) || []).map((u: any) => ({
+        ...u,
+        onboarding_completed: onboardingMap.get(u.id) || false,
+      }));
+
+      // 3. Atividade recente (se falhar, seguimos com fallback)
       const { data: activityData, error: activityError } = await supabase
         .from('analytics')
         .select('user_id, created_at, event_type')
         .gte('created_at', startDate);
+      if (activityError) console.warn('⚠️ [USER-ANALYTICS] Falha ao carregar analytics, usando fallback:', activityError);
 
-      if (activityError) throw activityError;
-
-      // 3. Buscar progresso dos usuários
+      // 4. Progresso do usuário (se falhar, seguimos com fallback)
       const { data: progressData, error: progressError } = await supabase
         .from('progress')
         .select('user_id, solution_id, is_completed, created_at')
         .gte('created_at', startDate);
-
-      if (progressError) throw progressError;
+      if (progressError) console.warn('⚠️ [USER-ANALYTICS] Falha ao carregar progress, usando fallback:', progressError);
 
       // Processar dados para métricas
-      const totalUsers = overviewData?.length || 0;
-      const usersWithActivity = new Set(activityData?.map(a => a.user_id) || []);
-      const activeUsers = usersWithActivity.size;
+      const totalUsers = (usersData as any[])?.length || 0;
+      const usersWithActivity = new Set((activityData as any[])?.map((a: any) => a.user_id) || []);
+      const activeUsers = (overviewRpc as any)?.active_users ?? usersWithActivity.size;
       
-      const completedOnboarding = overviewData?.filter(u => u.onboarding_completed).length || 0;
-      const activationRate = totalUsers > 0 ? Math.round((completedOnboarding / totalUsers) * 100) : 0;
+      const completedOnboarding = (overviewRpc as any)?.completed_onboarding ?? 0;
+      const activationRate = Math.round((overviewRpc as any)?.completion_rate ?? (
+        totalUsers > 0 ? (completedOnboarding / totalUsers) * 100 : 0
+      ));
 
       console.log('📊 [USER-ANALYTICS] Dados brutos:', {
         totalUsers,
-        overviewDataLength: overviewData?.length,
-        activityDataLength: activityData?.length,
-        progressDataLength: progressData?.length,
+        usersFetched: (usersData as any[])?.length,
+        activityDataLength: (activityData as any[])?.length,
+        progressDataLength: (progressData as any[])?.length,
         usersWithActivity: usersWithActivity.size,
         activeUsers,
         completedOnboarding,
@@ -158,7 +177,7 @@ export const useEnhancedUserAnalytics = (params: EnhancedUserAnalyticsParams) =>
             daysBack = 365; // Para "all time", considerar último ano
         }
         
-        return overviewData?.filter(u => {
+        return (usersData as any[])?.filter((u: any) => {
           const daysSinceCreation = (now - new Date(u.created_at).getTime()) / (1000 * 60 * 60 * 24);
           return daysSinceCreation <= daysBack;
         }).length || 0;
@@ -168,9 +187,9 @@ export const useEnhancedUserAnalytics = (params: EnhancedUserAnalyticsParams) =>
 
       // Calcular Health Score baseado em múltiplos fatores
       const calculateHealthScore = (userId: string) => {
-        const userActivity = activityData?.filter(a => a.user_id === userId).length || 0;
-        const userProgress = progressData?.filter(p => p.user_id === userId).length || 0;
-        const userProfile = overviewData?.find(u => u.id === userId);
+        const userActivity = (activityData as any[])?.filter((a: any) => a.user_id === userId).length || 0;
+        const userProgress = (progressData as any[])?.filter((p: any) => p.user_id === userId).length || 0;
+        const userProfile = (users as any[])?.find((u: any) => u.id === userId);
         
         let score = 0;
         
@@ -186,7 +205,7 @@ export const useEnhancedUserAnalytics = (params: EnhancedUserAnalyticsParams) =>
         return Math.min(100, score);
       };
 
-      const userHealthScores = overviewData?.map(user => ({
+      const userHealthScores = (users as any[])?.map((user: any) => ({
         id: user.id,
         healthScore: calculateHealthScore(user.id)
       })) || [];
@@ -236,7 +255,7 @@ export const useEnhancedUserAnalytics = (params: EnhancedUserAnalyticsParams) =>
         }));
       };
 
-      const segments = segmentUsers(overviewData || []);
+      const segments = segmentUsers(users || []);
 
       // Funil de conversão
       const funnel: FunnelStep[] = [
@@ -248,13 +267,13 @@ export const useEnhancedUserAnalytics = (params: EnhancedUserAnalyticsParams) =>
         },
         {
           name: 'Primeiro Login',
-          users: Math.round(totalUsers * 0.85),
+          users: Math.round(Math.max(totalUsers, activeUsers) * 0.85),
           conversionRate: 85,
           dropoffRate: 15
         },
         {
           name: 'Onboarding Iniciado',
-          users: Math.round(totalUsers * 0.70),
+          users: Math.round(Math.max(totalUsers, activeUsers) * 0.70),
           conversionRate: 70,
           dropoffRate: 30
         },
@@ -262,13 +281,13 @@ export const useEnhancedUserAnalytics = (params: EnhancedUserAnalyticsParams) =>
           name: 'Onboarding Completo',
           users: completedOnboarding,
           conversionRate: activationRate,
-          dropoffRate: 100 - activationRate
+          dropoffRate: Math.max(0, 100 - activationRate)
         },
         {
           name: 'Primeiro Engajamento',
           users: activeUsers,
-          conversionRate: Math.round((activeUsers / totalUsers) * 100),
-          dropoffRate: Math.round(100 - (activeUsers / totalUsers) * 100)
+          conversionRate: totalUsers > 0 ? Math.round((activeUsers / totalUsers) * 100) : 0,
+          dropoffRate: totalUsers > 0 ? Math.round(100 - (activeUsers / totalUsers) * 100) : 0
         }
       ];
 
@@ -277,19 +296,19 @@ export const useEnhancedUserAnalytics = (params: EnhancedUserAnalyticsParams) =>
         roles: [
           {
             name: 'Membro Club',
-            count: overviewData?.filter(u => u.user_roles?.[0]?.name === 'membro_club').length || 0,
+            count: (users as any[])?.filter((u: any) => u.user_roles?.name === 'membro_club' || u.user_roles?.[0]?.name === 'membro_club').length || 0,
             completionRate: 75,
             engagementScore: 82
           },
           {
             name: 'Admin',
-            count: overviewData?.filter(u => u.user_roles?.[0]?.name === 'admin').length || 0,
+            count: (users as any[])?.filter((u: any) => u.user_roles?.name === 'admin' || u.user_roles?.[0]?.name === 'admin').length || 0,
             completionRate: 95,
             engagementScore: 95
           },
           {
             name: 'Formação',
-            count: overviewData?.filter(u => u.user_roles?.[0]?.name === 'formacao').length || 0,
+            count: (users as any[])?.filter((u: any) => u.user_roles?.name === 'formacao' || u.user_roles?.[0]?.name === 'formacao').length || 0,
             completionRate: 60,
             engagementScore: 70
           }
@@ -349,13 +368,13 @@ export const useEnhancedUserAnalytics = (params: EnhancedUserAnalyticsParams) =>
             }
           ]
         },
-        userDetails: overviewData?.slice(0, 50).map(user => ({
+        userDetails: (users as any[])?.slice(0, 50).map((user: any) => ({
           ...user,
           healthScore: calculateHealthScore(user.id),
-          lastActivity: activityData?.filter(a => a.user_id === user.id).sort((a, b) => 
+          lastActivity: (activityData as any[])?.filter((a: any) => a.user_id === user.id).sort((a: any, b: any) => 
             new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
           )[0]?.created_at,
-          activityCount: activityData?.filter(a => a.user_id === user.id).length || 0,
+          activityCount: (activityData as any[])?.filter((a: any) => a.user_id === user.id).length || 0,
           segment: getUserSegment(user.id, calculateHealthScore(user.id))
         })) || []
       };
