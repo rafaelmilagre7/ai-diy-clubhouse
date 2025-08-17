@@ -6427,7 +6427,7 @@ export type Database = {
               p_user_id?: string
               p_violation_type?: string
             }
-        Returns: undefined
+        Returns: string
       }
       log_unauthorized_access: {
         Args: { attempted_action: string; resource_details?: Json }
