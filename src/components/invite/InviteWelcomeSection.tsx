@@ -1,5 +1,5 @@
 import React from 'react';
-import { Star, Users, Zap, Target } from 'lucide-react';
+import { Sparkles, Brain, Users2, Rocket } from 'lucide-react';
 
 interface InviteWelcomeSectionProps {
   inviteData: {
@@ -11,63 +11,81 @@ interface InviteWelcomeSectionProps {
 }
 
 const InviteWelcomeSection: React.FC<InviteWelcomeSectionProps> = ({ inviteData }) => {
-  const features = [
+  const benefits = [
     {
-      icon: Star,
-      title: "IA Revolucionária",
-      description: "Automatize processos e aumente sua receita em até 300% com IA personalizada para seu negócio"
+      icon: Brain,
+      title: "Inteligência Artificial Aplicada",
+      description: "Aprenda a implementar IA que gera resultados reais no seu negócio"
     },
     {
-      icon: Users,
-      title: "Rede Exclusiva",
-      description: "Acesso direto a CEOs, especialistas e líderes que já implementaram IA com sucesso"
+      icon: Users2,
+      title: "Comunidade de Líderes",
+      description: "Conecte-se com empresários que já transformaram seus negócios com IA"
     },
     {
-      icon: Zap,
-      title: "Resultados em 30 dias",
-      description: "Metodologia comprovada para implementar IA e ver resultados práticos no primeiro mês"
-    },
-    {
-      icon: Target,
-      title: "ROI Garantido",
-      description: "Acompanhamento personalizado até você alcançar o retorno esperado do investimento"
+      icon: Rocket,
+      title: "Aceleração Garantida",
+      description: "Metodologia comprovada para escalar seu negócio com tecnologia"
     }
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="relative min-h-screen flex flex-col justify-center space-y-12">
+      {/* Background Elements */}
+      <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-primary/5 -z-10" />
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl -z-10 animate-pulse" />
+      <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-primary/5 rounded-full blur-2xl -z-10 animate-pulse animation-delay-2000" />
+
       {/* Logo Section */}
-      <div className="text-center mb-8">
-        <img 
-          src="https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif"
-          alt="VIVER DE IA Club"
-          className="w-32 h-auto mx-auto mb-6"
-        />
+      <div className="text-center">
+        <div className="inline-flex items-center justify-center w-24 h-24 mb-8 bg-gradient-to-br from-white/20 to-white/10 backdrop-blur-sm border border-white/20 rounded-2xl shadow-2xl">
+          <svg viewBox="0 0 100 100" className="w-12 h-12 text-white">
+            <defs>
+              <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="currentColor" stopOpacity="1" />
+                <stop offset="100%" stopColor="currentColor" stopOpacity="0.7" />
+              </linearGradient>
+            </defs>
+            <text x="50" y="60" textAnchor="middle" fontSize="24" fontWeight="bold" fill="url(#logoGradient)">
+              VIVER
+            </text>
+            <text x="50" y="80" textAnchor="middle" fontSize="16" fontWeight="normal" fill="url(#logoGradient)">
+              DE IA
+            </text>
+          </svg>
+        </div>
       </div>
 
-      {/* Header Section */}
-      <div className="text-center space-y-6">
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary/20 to-primary/10 border border-primary/30 rounded-full text-sm font-semibold text-primary mb-6 animate-pulse">
-          <Star className="h-4 w-4" />
+      {/* Main Content */}
+      <div className="text-center space-y-8">
+        <div className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary/20 to-primary/10 backdrop-blur-sm border border-primary/30 rounded-full text-sm font-semibold text-primary">
+          <Sparkles className="h-4 w-4" />
           Convite Exclusivo
         </div>
         
-        <h1 className="font-heading text-4xl md:text-6xl font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent mb-6 leading-tight">
-          Transforme sua empresa com IA
-        </h1>
-        
-        <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-          Você recebeu um convite exclusivo para entrar na <span className="text-primary font-semibold">comunidade líder em IA empresarial</span> e acelerar seus resultados
-        </p>
+        <div className="space-y-6">
+          <h1 className="font-heading text-5xl md:text-7xl font-bold text-white leading-tight">
+            Transforme seu negócio
+            <span className="block bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
+              com Inteligência Artificial
+            </span>
+          </h1>
+          
+          <p className="text-xl md:text-2xl text-white/80 max-w-3xl mx-auto leading-relaxed font-light">
+            Você foi convidado para a comunidade mais exclusiva de empreendedores 
+            que estão revolucionando seus negócios com IA.
+          </p>
+        </div>
 
-        <div className="bg-gradient-to-br from-card to-primary/5 border-2 border-primary/20 rounded-xl p-6 max-w-md mx-auto shadow-lg">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            <p className="text-sm font-medium text-primary">Convite ativo para:</p>
+        {/* Invite Card */}
+        <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-8 max-w-md mx-auto shadow-2xl">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse shadow-lg shadow-green-400/50"></div>
+            <p className="text-sm font-semibold text-white/90">Acesso liberado para:</p>
           </div>
-          <p className="font-bold text-xl text-foreground">{inviteData.email}</p>
+          <p className="font-bold text-2xl text-white mb-4">{inviteData.email}</p>
           {inviteData.role && (
-            <div className="mt-3 px-3 py-1 bg-primary/10 border border-primary/30 rounded-full inline-block">
+            <div className="inline-flex px-4 py-2 bg-primary/20 border border-primary/30 rounded-full">
               <p className="text-sm font-medium text-primary">
                 {inviteData.role.name}
               </p>
@@ -76,46 +94,38 @@ const InviteWelcomeSection: React.FC<InviteWelcomeSectionProps> = ({ inviteData 
         </div>
       </div>
 
-      {/* Features Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-        {features.map((feature, index) => (
+      {/* Benefits Section */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        {benefits.map((benefit, index) => (
           <div 
             key={index}
-            className="group bg-card border border-border rounded-lg p-6 hover:bg-accent transition-all duration-200"
+            className="group bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 hover:bg-white/10 transition-all duration-300 hover:scale-105"
           >
-            <div className="flex items-start gap-4">
-              <div className="flex-shrink-0 w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                <feature.icon className="h-6 w-6 text-primary" />
+            <div className="flex flex-col items-center text-center space-y-4">
+              <div className="w-16 h-16 bg-gradient-to-br from-primary/30 to-primary/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                <benefit.icon className="h-8 w-8 text-primary" />
               </div>
-              <div>
-                <h3 className="font-heading font-semibold text-lg mb-2 text-foreground">{feature.title}</h3>
-                <p className="text-muted-foreground">{feature.description}</p>
-              </div>
+              <h3 className="font-heading font-semibold text-xl text-white">{benefit.title}</h3>
+              <p className="text-white/70 leading-relaxed">{benefit.description}</p>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Stats Section */}
-      <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-2 border-primary/30 rounded-xl p-8 shadow-xl">
-        <h3 className="text-center text-lg font-semibold text-foreground mb-6">
-          Por que escolher nossa comunidade:
-        </h3>
+      {/* Trust Indicators */}
+      <div className="bg-gradient-to-r from-white/5 to-white/10 backdrop-blur-sm border border-white/10 rounded-2xl p-8 max-w-4xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
           <div className="space-y-2">
-            <div className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">300+</div>
-            <div className="text-sm font-medium text-muted-foreground">Empresas transformadas</div>
-            <div className="text-xs text-muted-foreground">Confiança comprovada</div>
+            <div className="text-4xl font-bold bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">500+</div>
+            <div className="text-sm font-medium text-white/70">Empresários na comunidade</div>
           </div>
           <div className="space-y-2">
-            <div className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">+Eficiência</div>
-            <div className="text-sm font-medium text-muted-foreground">Aumento de eficiência operacional</div>
-            <div className="text-xs text-muted-foreground">Processos automatizados</div>
+            <div className="text-4xl font-bold bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">300%</div>
+            <div className="text-sm font-medium text-white/70">Crescimento médio dos membros</div>
           </div>
           <div className="space-y-2">
-            <div className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">Escale</div>
-            <div className="text-sm font-medium text-muted-foreground">Escale sua empresa sem precisar</div>
-            <div className="text-xs text-muted-foreground">escalar pessoas</div>
+            <div className="text-4xl font-bold bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">30 dias</div>
+            <div className="text-sm font-medium text-white/70">Para os primeiros resultados</div>
           </div>
         </div>
       </div>
