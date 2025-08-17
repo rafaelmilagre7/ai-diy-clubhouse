@@ -186,97 +186,106 @@ export const LessonTagManager = ({ form, fieldName = 'tags' }: LessonTagManagerP
                 </Button>
               </PopoverTrigger>
               <PopoverContent 
-                className="w-[--radix-popover-trigger-width] max-w-[95vw] min-w-[300px] p-0 bg-popover border shadow-lg z-[100]" 
+                className="w-[var(--radix-popover-trigger-width)] max-w-[95vw] min-w-[320px] p-0 bg-popover border shadow-lg z-[100]" 
                 align="start"
                 side="bottom"
                 sideOffset={4}
-                style={{ maxHeight: 'min(400px, 80vh)' }}
               >
-                 <Command className="flex flex-col h-full max-h-[320px]">
-                   <div className="flex-shrink-0 px-3 py-2 border-b border-border">
-                     <CommandInput
-                       placeholder="Buscar tags..."
-                       value={searchTerm}
-                       onValueChange={setSearchTerm}
-                       className="h-9 border-none bg-transparent"
-                     />
-                   </div>
-                   
-                   <div className="flex-1 overflow-hidden">
-                     <CommandList className="h-full overflow-y-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent px-1">
-                       {!isLoading && Object.keys(filteredTagsByCategory).length === 0 ? (
-                         <CommandEmpty>
-                           <div className="py-6 text-center px-4">
-                             <p className="text-sm text-muted-foreground mb-3">Nenhuma tag encontrada</p>
-                             <Button
-                               variant="ghost"
-                               size="sm"
-                               className="w-full"
-                               onClick={() => {
-                                 setShowCreateTag(true);
-                                 setOpen(false);
-                               }}
-                               type="button"
-                             >
-                               <Plus className="h-4 w-4 mr-2" />
-                               Criar nova tag
-                             </Button>
-                           </div>
-                         </CommandEmpty>
-                       ) : (
-                         <>
-                           {Object.entries(filteredTagsByCategory)
-                             .filter(([_, tags]) => Array.isArray(tags) && tags.length > 0)
-                             .map(([category, tags]) => (
-                               <CommandGroup key={category} heading={category} className="px-2 py-1">
-                                 {tags.filter(tag => tag && tag.id).map((tag) => (
-                                   <CommandItem
-                                     key={tag.id}
-                                     value={tag.name}
-                                     onSelect={() => {
-                                       handleTagSelect(tag);
-                                       setSearchTerm('');
-                                       setOpen(false);
-                                     }}
-                                     className="px-2 py-2 cursor-pointer rounded-sm transition-colors hover:bg-accent hover:text-accent-foreground"
-                                   >
-                                     <div className="flex items-center gap-2 w-full">
-                                       <TagBadge 
-                                         tag={tag} 
-                                         size="sm" 
-                                         variant={selectedTagIds.includes(tag.id) ? 'default' : 'outline'}
-                                       />
-                                       {tag.description && (
-                                         <span className="text-xs text-muted-foreground truncate flex-1">
-                                           {tag.description}
-                                         </span>
-                                       )}
-                                     </div>
-                                   </CommandItem>
-                                 ))}
-                               </CommandGroup>
-                             ))}
-                           
-                           <div className="border-t border-border mt-2 pt-2">
-                             <CommandItem
-                               value="criar-nova-tag"
-                               onSelect={() => {
-                                 setShowCreateTag(true);
-                                 setOpen(false);
-                               }}
-                               className="mx-2 px-2 py-2 cursor-pointer rounded-sm transition-colors hover:bg-accent hover:text-accent-foreground"
-                             >
-                               <div className="flex items-center gap-2 w-full">
-                                 <Plus className="h-4 w-4" />
-                                 <span className="text-sm">Criar nova tag</span>
-                               </div>
-                             </CommandItem>
-                           </div>
-                         </>
-                       )}
-                     </CommandList>
-                   </div>
-                 </Command>
+                <div className="flex flex-col h-[400px] bg-popover rounded-md">
+                  {/* Header fixo */}
+                  <div className="flex-shrink-0 p-3 border-b border-border bg-popover">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Buscar tags..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10 h-9 bg-background border-border"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Lista com scroll */}
+                  <div className="flex-1 overflow-y-auto p-2 bg-popover">
+                    {isLoading ? (
+                      <div className="flex items-center justify-center py-8">
+                        <div className="text-sm text-muted-foreground">Carregando tags...</div>
+                      </div>
+                    ) : Object.keys(filteredTagsByCategory).length === 0 ? (
+                      <div className="py-6 text-center px-4">
+                        <p className="text-sm text-muted-foreground mb-3">Nenhuma tag encontrada</p>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="w-full"
+                          onClick={() => {
+                            setShowCreateTag(true);
+                            setOpen(false);
+                          }}
+                          type="button"
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Criar nova tag
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {Object.entries(filteredTagsByCategory)
+                          .filter(([_, tags]) => Array.isArray(tags) && tags.length > 0)
+                          .map(([category, tags]) => (
+                            <div key={category} className="space-y-1">
+                              <div className="px-2 py-1">
+                                <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                                  {category}
+                                </h4>
+                              </div>
+                              <div className="space-y-1">
+                                {tags.filter(tag => tag && tag.id).map((tag) => (
+                                  <button
+                                    key={tag.id}
+                                    type="button"
+                                    onClick={() => {
+                                      handleTagSelect(tag);
+                                      setSearchTerm('');
+                                      setOpen(false);
+                                    }}
+                                    className="w-full px-3 py-2 text-left rounded-md hover:bg-accent hover:text-accent-foreground transition-colors flex items-center gap-2"
+                                  >
+                                    <TagBadge 
+                                      tag={tag} 
+                                      size="sm" 
+                                      variant={selectedTagIds.includes(tag.id) ? 'default' : 'outline'}
+                                    />
+                                    {tag.description && (
+                                      <span className="text-xs text-muted-foreground truncate flex-1">
+                                        {tag.description}
+                                      </span>
+                                    )}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Footer fixo */}
+                  <div className="flex-shrink-0 p-2 border-t border-border bg-popover">
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start h-9"
+                      onClick={() => {
+                        setShowCreateTag(true);
+                        setOpen(false);
+                      }}
+                      type="button"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      <span className="text-sm">Criar nova tag</span>
+                    </Button>
+                  </div>
+                </div>
               </PopoverContent>
             </Popover>
           </div>
