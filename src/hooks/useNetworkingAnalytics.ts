@@ -15,15 +15,15 @@ export interface NetworkingAnalytics {
 }
 
 export interface NetworkingMetrics {
+  id: string;
   user_id: string;
-  month_year: string;
-  matches_generated: number;
-  connections_sent: number;
-  connections_accepted: number;
-  messages_sent: number;
-  meetings_scheduled: number;
-  avg_compatibility_score: number;
-  connection_success_rate: number;
+  metric_month: string;
+  total_matches: number;
+  active_connections: number;
+  compatibility_score: number;
+  last_activity_at: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export const useNetworkingAnalytics = () => {
@@ -40,15 +40,18 @@ export const useNetworkingAnalytics = () => {
         .from('networking_metrics')
         .select('*')
         .eq('user_id', user.id)
-        .order('month_year', { ascending: false });
+        .order('metric_month', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao buscar métricas de networking:', error);
+        return [];
+      }
       return data as NetworkingMetrics[];
     },
     enabled: !!user?.id,
   });
 
-  // Buscar eventos recentes
+  // Buscar eventos recentes com tratamento de erro robusto
   const { data: recentEvents, isLoading: eventsLoading } = useQuery({
     queryKey: ['networking-analytics', user?.id],
     queryFn: async () => {
@@ -61,7 +64,10 @@ export const useNetworkingAnalytics = () => {
         .order('created_at', { ascending: false })
         .limit(50);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao buscar eventos de networking:', error);
+        return [];
+      }
       return data as NetworkingAnalytics[];
     },
     enabled: !!user?.id,
@@ -97,24 +103,24 @@ export const useNetworkingAnalytics = () => {
     }
   });
 
-  // Calcular estatísticas agregadas
+  // Calcular estatísticas agregadas baseadas na estrutura real da tabela
   const currentMetrics = metrics?.[0];
   const previousMetrics = metrics?.[1];
 
   const stats = {
-    totalMatches: currentMetrics?.matches_generated || 0,
-    totalConnections: currentMetrics?.connections_accepted || 0,
-    totalMessages: currentMetrics?.messages_sent || 0,
-    totalMeetings: currentMetrics?.meetings_scheduled || 0,
-    avgCompatibility: currentMetrics?.avg_compatibility_score || 0,
-    successRate: currentMetrics?.connection_success_rate || 0,
+    totalMatches: currentMetrics?.total_matches || 0,
+    totalConnections: currentMetrics?.active_connections || 0,
+    totalMessages: 0, // Não disponível na estrutura atual
+    totalMeetings: 0, // Não disponível na estrutura atual
+    avgCompatibility: currentMetrics?.compatibility_score || 0,
+    successRate: 0, // Não disponível na estrutura atual
     
     // Comparação com mês anterior
     matchesGrowth: currentMetrics && previousMetrics 
-      ? ((currentMetrics.matches_generated - previousMetrics.matches_generated) / previousMetrics.matches_generated * 100)
+      ? ((currentMetrics.total_matches - previousMetrics.total_matches) / Math.max(previousMetrics.total_matches, 1) * 100)
       : 0,
     connectionsGrowth: currentMetrics && previousMetrics
-      ? ((currentMetrics.connections_accepted - previousMetrics.connections_accepted) / previousMetrics.connections_accepted * 100)
+      ? ((currentMetrics.active_connections - previousMetrics.active_connections) / Math.max(previousMetrics.active_connections, 1) * 100)
       : 0,
   };
 

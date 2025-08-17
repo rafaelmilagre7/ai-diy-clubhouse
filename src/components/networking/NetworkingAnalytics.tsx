@@ -58,10 +58,10 @@ export const NetworkingAnalytics = () => {
   ];
 
   const chartData = metrics?.slice(0, 6).reverse().map(metric => ({
-    month: metric.month_year,
-    matches: metric.matches_generated,
-    connections: metric.connections_accepted,
-    messages: metric.messages_sent
+    month: metric.metric_month,
+    matches: metric.total_matches,
+    connections: metric.active_connections,
+    messages: 0 // Não disponível na estrutura atual da tabela
   })) || [];
 
   return (
@@ -132,8 +132,8 @@ export const NetworkingAnalytics = () => {
               <AreaChart
                 data={chartData}
                 index="month"
-                categories={["matches", "connections", "messages"]}
-                colors={["#0D8ABC", "#22C55E", "#A855F7"]}
+                categories={["matches", "connections"]}
+                colors={["#0D8ABC", "#22C55E"]}
                 valueFormatter={(value) => value.toString()}
                 className="h-72"
               />

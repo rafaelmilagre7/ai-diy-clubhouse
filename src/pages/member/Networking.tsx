@@ -1,6 +1,8 @@
 import { NetworkingHeader } from '@/components/networking/NetworkingHeader';
 import { MatchesGrid } from '@/components/networking/MatchesGrid';
 import { useDynamicSEO } from '@/hooks/seo/useDynamicSEO';
+import { NetworkingErrorBoundary } from '@/components/networking/NetworkingErrorBoundary';
+import ErrorBoundary from '@/components/common/ErrorBoundary';
 
 const Networking = () => {
   useDynamicSEO({
@@ -10,25 +12,29 @@ const Networking = () => {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-background/95">
-      <div className="container mx-auto py-8 space-y-8">
-        {/* Header com glassmorphism */}
-        <div className="relative overflow-hidden rounded-2xl bg-card/95 backdrop-blur-xl border border-border/30 p-8 shadow-2xl shadow-primary/5">
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent"></div>
-          <div className="relative">
-            <NetworkingHeader />
+    <NetworkingErrorBoundary>
+      <ErrorBoundary>
+        <div className="min-h-screen bg-gradient-to-br from-background via-background to-background/95">
+          <div className="container mx-auto py-8 space-y-8">
+            {/* Header com glassmorphism */}
+            <div className="relative overflow-hidden rounded-2xl bg-card/95 backdrop-blur-xl border border-border/30 p-8 shadow-2xl shadow-primary/5">
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent"></div>
+              <div className="relative">
+                <NetworkingHeader />
+              </div>
+            </div>
+            
+            {/* Conteúdo - apenas Matches IA */}
+            <div className="relative overflow-hidden rounded-2xl bg-card/80 backdrop-blur-sm border border-border/50 min-h-[500px]">
+              <div className="absolute inset-0 bg-dot-pattern opacity-5"></div>
+              <div className="relative p-6">
+                <MatchesGrid />
+              </div>
+            </div>
           </div>
         </div>
-        
-        {/* Conteúdo - apenas Matches IA */}
-        <div className="relative overflow-hidden rounded-2xl bg-card/80 backdrop-blur-sm border border-border/50 min-h-[500px]">
-          <div className="absolute inset-0 bg-dot-pattern opacity-5"></div>
-          <div className="relative p-6">
-            <MatchesGrid />
-          </div>
-        </div>
-      </div>
-    </div>
+      </ErrorBoundary>
+    </NetworkingErrorBoundary>
   );
 };
 
