@@ -4,6 +4,8 @@
  * Otimizado para não quebrar builds em produção
  */
 
+import { maskEmailsInText, safeLog } from './emailMasking';
+
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
 interface LogContext {
@@ -40,7 +42,7 @@ class Logger {
 
   private sanitizeData(data: any): any {
     if (!data || typeof data !== 'object' || isProduction) {
-      return isProduction ? '[REDACTED]' : data;
+      return isProduction ? '[REDACTED]' : maskEmailsInText(data);
     }
 
     const sanitized = { ...data };
@@ -49,6 +51,11 @@ class Logger {
     if (isProduction) {
       Object.keys(sanitized).forEach(key => {
         sanitized[key] = '[REDACTED]';
+      });
+    } else {
+      // Em desenvolvimento, mascarar emails
+      Object.keys(sanitized).forEach(key => {
+        sanitized[key] = maskEmailsInText(sanitized[key]);
       });
     }
 
@@ -61,7 +68,7 @@ class Logger {
     try {
       if (this.enableConsole && isDevelopment) {
         const sanitizedContext = context ? this.sanitizeData(context) : {};
-        console.debug(`🐛 [DEBUG] ${message}`, sanitizedContext);
+        safeLog('log', `🐛 [DEBUG] ${message}`, sanitizedContext);
       }
     } catch {
       // Falha silenciosamente
@@ -74,7 +81,7 @@ class Logger {
     try {
       if (this.enableConsole && isDevelopment) {
         const sanitizedContext = context ? this.sanitizeData(context) : {};
-        console.info(`ℹ️ [INFO] ${message}`, sanitizedContext);
+        safeLog('info', `ℹ️ [INFO] ${message}`, sanitizedContext);
       }
     } catch {
       // Falha silenciosamente
@@ -87,7 +94,7 @@ class Logger {
     try {
       if (this.enableConsole && isDevelopment) {
         const sanitizedContext = context ? this.sanitizeData(context) : {};
-        console.warn(`⚠️ [WARN] ${message}`, sanitizedContext);
+        safeLog('warn', `⚠️ [WARN] ${message}`, sanitizedContext);
       }
     } catch {
       // Falha silenciosamente
@@ -101,10 +108,10 @@ class Logger {
         const sanitizedContext = this.sanitizeData(context);
         
         if (isDevelopment) {
-          console.error(`${prefix} ${message}`, sanitizedContext);
+          safeLog('error', `${prefix} ${message}`, sanitizedContext);
         } else {
           // Em produção, usar formato minimalista para erros críticos
-          console.log(`${prefix} ${message}`);
+          console.log(`${prefix} ${maskEmailsInText(message)}`);
         }
       }
     } catch {

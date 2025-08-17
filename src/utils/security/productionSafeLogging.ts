@@ -1,4 +1,5 @@
 import { logger } from '@/utils/logger';
+import { maskEmail, maskEmailsInText } from '@/utils/emailMasking';
 
 interface SecurityLogEntry {
   level: 'debug' | 'info' | 'warn' | 'error';
@@ -26,7 +27,7 @@ const SENSITIVE_FIELDS = [
  */
 const maskSensitiveData = (data: any): any => {
   if (!data || typeof data !== 'object') {
-    return data;
+    return maskEmailsInText(data);
   }
 
   if (Array.isArray(data)) {
@@ -40,7 +41,9 @@ const maskSensitiveData = (data: any): any => {
     const isSensitive = SENSITIVE_FIELDS.some(field => lowerKey.includes(field));
     
     if (isSensitive) {
-      if (typeof value === 'string' && value.length > 0) {
+      if (lowerKey.includes('email') && typeof value === 'string') {
+        masked[key] = maskEmail(value);
+      } else if (typeof value === 'string' && value.length > 0) {
         masked[key] = value.substring(0, 3) + '***';
       } else {
         masked[key] = '***';
@@ -48,7 +51,7 @@ const maskSensitiveData = (data: any): any => {
     } else if (typeof value === 'object' && value !== null) {
       masked[key] = maskSensitiveData(value);
     } else {
-      masked[key] = value;
+      masked[key] = maskEmailsInText(value);
     }
   }
   
@@ -122,7 +125,7 @@ export const authLogger = {
       level: 'info',
       message: `Login attempt: ${success ? 'SUCCESS' : 'FAILED'}`,
       data: {
-        email: email.replace(/(.{3}).*@/, '$1***@'),
+        email: maskEmail(email),
         success,
         error: error ? error.substring(0, 50) + '***' : undefined
       }
