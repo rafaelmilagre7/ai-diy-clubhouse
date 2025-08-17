@@ -24,9 +24,9 @@ export const useLearningCourses = () => {
       });
 
       try {
-        // Estratégia 1: Tentar usar a função SQL get_courses_with_stats
+        // Estratégia 1: Tentar usar a função SQL get_learning_courses_with_stats
         devLog('[COURSES] Tentativa 1: Usando função SQL');
-        const { data: sqlData, error: sqlError } = await supabase.rpc('get_courses_with_stats');
+        const { data: sqlData, error: sqlError } = await supabase.rpc('get_learning_courses_with_stats');
 
         if (sqlError) {
           devWarn('[COURSES] Função SQL falhou:', sqlError.message);
