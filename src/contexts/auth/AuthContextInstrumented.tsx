@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { fetchUserProfile } from './utils';
 import { UserProfile } from '@/lib/supabase';
 import { perfMonitor, measureAsync } from '@/utils/performanceMonitor';
+import { performCompleteAuthCleanup } from '@/utils/authStateCleanup';
 
 interface AuthContextType {
   user: User | null;
@@ -54,6 +55,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     
     // Verificar sessão atual
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('🔍 [AUTH-CONTEXT] Sessão inicial detectada:', {
+        hasSession: !!session,
+        hasUser: !!session?.user,
+        userEmail: session?.user?.email
+      });
+      
       setSession(session);
       setUser(session?.user ?? null);
       
@@ -68,6 +75,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Listener para mudanças de autenticação
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('🔄 [AUTH-CONTEXT] Mudança de estado de auth:', {
+          event,
+          hasSession: !!session,
+          hasUser: !!session?.user,
+          userEmail: session?.user?.email
+        });
+        
         perfMonitor.logEvent('AuthContext', `auth_state_change_${event}`, { hasSession: !!session });
         
         setSession(session);
@@ -110,7 +124,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await measureAsync(
       'AuthContext',
       'signOut',
-      () => supabase.auth.signOut()
+      () => performCompleteAuthCleanup('user_logout')
     );
   };
 

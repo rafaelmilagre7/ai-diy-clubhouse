@@ -8,6 +8,7 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Check, Lock, AlertCircle, Loader2 } from "lucide-react";
+import { performCleanupAndRedirect } from "@/utils/authStateCleanup";
 
 const setNewPasswordSchema = z
   .object({
@@ -152,10 +153,9 @@ export const SetNewPasswordForm = () => {
       setIsSuccess(true);
       toast.success("Senha atualizada com sucesso!");
       
-      // Fazer logout da sessão temporária e redirecionar
+      // Fazer logout completo da sessão temporária e redirecionar
       setTimeout(async () => {
-        await supabase.auth.signOut();
-        navigate("/login");
+        await performCleanupAndRedirect('/login', 'password_reset_completed');
       }, 3000);
       
     } catch (error: any) {
@@ -229,10 +229,7 @@ export const SetNewPasswordForm = () => {
         <div className="pt-4">
           <Button
             type="button"
-            onClick={async () => {
-              await supabase.auth.signOut();
-              navigate("/login");
-            }}
+            onClick={() => performCleanupAndRedirect('/login', 'manual_redirect_from_reset')}
             className="w-full bg-viverblue hover:bg-viverblue/90 text-white"
           >
             Ir para login

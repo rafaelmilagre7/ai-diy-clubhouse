@@ -16,6 +16,19 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
       setIsSigningIn(true);
       
       console.log('🔄 [AUTH] Iniciando login:', email);
+      console.log('🔍 [AUTH] Estado localStorage antes do login:', {
+        supabaseAuthKeys: Object.keys(localStorage).filter(key => 
+          key.startsWith('supabase.auth.') || key.includes('sb-')
+        ).length,
+        allKeys: Object.keys(localStorage).length
+      });
+      
+      // Verificar se há sessão ativa antes do login
+      const { data: currentSession } = await supabase.auth.getSession();
+      console.log('🔍 [AUTH] Sessão atual antes do login:', {
+        hasSession: !!currentSession.session,
+        hasUser: !!currentSession.session?.user
+      });
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -23,7 +36,11 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
       });
 
       if (error) {
-        console.error('❌ [AUTH] Erro no login:', error);
+        console.error('❌ [AUTH] Erro no login:', {
+          message: error.message,
+          status: error.status,
+          name: error.name
+        });
         toast.error('Erro no login', {
           description: error.message
         });
@@ -31,7 +48,11 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
       }
 
       if (data.user) {
-        console.log('✅ [AUTH] Login realizado com sucesso:', data.user.email);
+        console.log('✅ [AUTH] Login realizado com sucesso:', {
+          email: data.user.email,
+          userId: data.user.id,
+          hasSession: !!data.session
+        });
         
         // Buscar e atualizar role do usuário no metadata
         try {
