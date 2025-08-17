@@ -28,10 +28,9 @@ export class OnboardingDataAdapter {
     );
 
     const hasAIExperience = !!(
-      data.ai_experience?.experience_level ||
-      data.ai_experience?.current_tools?.length ||
-      data.ai_experience?.learning_goals?.length ||
-      data.ai_experience?.priority_areas?.length ||
+      data.ai_experience?.experience_level &&
+      data.ai_experience?.learning_goals?.length > 0 &&
+      data.ai_experience?.priority_areas?.length > 0 &&
       data.ai_experience?.implementation_timeline
     );
 
@@ -68,7 +67,7 @@ export class OnboardingDataAdapter {
       !!data.user_type,
       !!(data.personal_info?.name && data.personal_info?.phone && data.personal_info?.state && data.personal_info?.city),
       !!(data.professional_info?.work_type && data.professional_info?.current_position),
-      !!(data.ai_experience?.experience_level && data.ai_experience?.learning_goals?.length),
+      !!(data.ai_experience?.experience_level && data.ai_experience?.learning_goals?.length > 0 && data.ai_experience?.priority_areas?.length > 0 && data.ai_experience?.implementation_timeline),
       !!(data.goals_info?.primary_goal),
       !!(data.personalization?.learning_style)
     ];
@@ -87,7 +86,7 @@ export class OnboardingDataAdapter {
     if (!data.personal_info?.state) return 'Estado';
     if (!data.personal_info?.city) return 'Cidade';
     if (!data.professional_info?.work_type && !data.professional_info?.current_position) return 'Contexto profissional';
-    if (!data.ai_experience?.experience_level || !data.ai_experience?.learning_goals?.length) return 'Experiência com IA';
+    if (!data.ai_experience?.experience_level || !data.ai_experience?.learning_goals?.length || !data.ai_experience?.priority_areas?.length || !data.ai_experience?.implementation_timeline) return 'Experiência com IA';
     if (!data.goals_info?.primary_goal) return 'Objetivo principal';
     if (!data.personalization?.learning_style) return 'Estilo de aprendizado';
     
