@@ -5,7 +5,7 @@ import { NetworkingErrorBoundary } from '@/components/networking/NetworkingError
 import ErrorBoundary from '@/components/common/ErrorBoundary';
 import { usePermissions } from '@/hooks/auth/usePermissions';
 import { usePremiumUpgradeModal } from '@/hooks/usePremiumUpgradeModal';
-import { PremiumUpgradeModal } from '@/components/ui/premium-upgrade-modal';
+import { AuroraUpgradeModal } from '@/components/ui/aurora-upgrade-modal';
 import { UnifiedContentBlock } from '@/components/ui/UnifiedContentBlock';
 
 const Networking = () => {
@@ -54,123 +54,101 @@ const Networking = () => {
                   </div>
                 </div>
                 
-                {/* Preview do Conteúdo Premium */}
-                <div className="grid gap-6 lg:gap-8">
-                  {/* Estatísticas Simuladas */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {[
-                      { icon: "🎯", title: "Matches IA", value: "0 matches", description: "Conecte com especialistas" },
-                      { icon: "🚀", title: "Networking Score", value: "Premium", description: "Análise de compatibilidade" },
-                      { icon: "💎", title: "Conexões VIP", value: "Exclusivo", description: "Network de elite" }
-                    ].map((stat, i) => (
-                      <div key={i} className="relative group">
-                        <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                        <div className="relative bg-card/90 backdrop-blur-sm border border-border/50 rounded-2xl p-6 group-hover:border-primary/30 transition-all duration-300">
-                          <div className="text-3xl mb-3">{stat.icon}</div>
-                          <h3 className="font-semibold text-lg mb-1">{stat.title}</h3>
-                          <div className="text-2xl font-bold text-primary mb-2">{stat.value}</div>
-                          <p className="text-sm text-muted-foreground">{stat.description}</p>
+                {/* Conteúdo Principal Bloqueado */}
+                <div className="relative rounded-3xl bg-card/80 backdrop-blur-sm border border-border/50 min-h-[600px] overflow-hidden">
+                  <UnifiedContentBlock 
+                    sectionName="o networking"
+                    onClick={handleUpgradeClick}
+                  >
+                    {/* Background Pattern */}
+                    <div className="absolute inset-0 opacity-5">
+                      <div className="absolute inset-0" style={{
+                        backgroundImage: 'radial-gradient(circle at 20px 20px, hsl(var(--primary)) 1px, transparent 0)',
+                        backgroundSize: '40px 40px'
+                      }}></div>
+                    </div>
+                    
+                    {/* Conteúdo Simulado Premium */}
+                    <div className="relative p-8 space-y-8">
+                      {/* Barra de Busca Simulada */}
+                      <div className="max-w-md mx-auto">
+                        <div className="bg-muted/30 rounded-2xl p-4 border border-border/30">
+                          <div className="h-10 bg-muted-foreground/20 rounded-xl"></div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  {/* Conteúdo Principal Bloqueado */}
-                  <div className="relative rounded-3xl bg-card/80 backdrop-blur-sm border border-border/50 min-h-[600px] overflow-hidden">
-                    <UnifiedContentBlock 
-                      sectionName="o networking"
-                      onClick={handleUpgradeClick}
-                    >
-                      {/* Background Pattern */}
-                      <div className="absolute inset-0 opacity-5">
-                        <div className="absolute inset-0" style={{
-                          backgroundImage: 'radial-gradient(circle at 20px 20px, hsl(var(--primary)) 1px, transparent 0)',
-                          backgroundSize: '40px 40px'
-                        }}></div>
                       </div>
                       
-                      {/* Conteúdo Simulado Premium */}
-                      <div className="relative p-8 space-y-8">
-                        {/* Barra de Busca Simulada */}
-                        <div className="max-w-md mx-auto">
-                          <div className="bg-muted/30 rounded-2xl p-4 border border-border/30">
-                            <div className="h-10 bg-muted-foreground/20 rounded-xl"></div>
-                          </div>
-                        </div>
-                        
-                        {/* Grid de Conexões Premium */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                          {Array.from({ length: 9 }).map((_, i) => (
-                            <div key={i} className="group relative">
-                              <div className="bg-gradient-to-br from-card/60 to-card/40 backdrop-blur-sm rounded-2xl p-6 border border-border/30 group-hover:border-primary/20 transition-all duration-300">
-                                {/* Avatar */}
-                                <div className="flex items-center space-x-4 mb-4">
-                                  <div className="relative">
-                                    <div className="w-16 h-16 bg-gradient-to-br from-primary/30 to-primary/10 rounded-full flex items-center justify-center">
-                                      <div className="w-8 h-8 bg-primary/40 rounded-full"></div>
-                                    </div>
-                                    <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-500/80 rounded-full border-2 border-background"></div>
+                      {/* Grid de Conexões Premium */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                        {Array.from({ length: 9 }).map((_, i) => (
+                          <div key={i} className="group relative">
+                            <div className="bg-gradient-to-br from-card/60 to-card/40 backdrop-blur-sm rounded-2xl p-6 border border-border/30 group-hover:border-primary/20 transition-all duration-300">
+                              {/* Avatar */}
+                              <div className="flex items-center space-x-4 mb-4">
+                                <div className="relative">
+                                  <div className="w-16 h-16 bg-gradient-to-br from-primary/30 to-primary/10 rounded-full flex items-center justify-center">
+                                    <div className="w-8 h-8 bg-primary/40 rounded-full"></div>
                                   </div>
-                                  <div className="space-y-2">
-                                    <div className="h-5 bg-muted-foreground/30 rounded-lg w-32"></div>
-                                    <div className="h-4 bg-muted-foreground/20 rounded w-24"></div>
-                                  </div>
+                                  <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-500/80 rounded-full border-2 border-background"></div>
                                 </div>
-                                
-                                {/* Compatibilidade */}
-                                <div className="mb-4">
-                                  <div className="h-3 bg-muted-foreground/20 rounded-full w-20 mb-2"></div>
-                                  <div className="h-2 bg-gradient-to-r from-green-500/30 to-transparent rounded-full w-full"></div>
+                                <div className="space-y-2">
+                                  <div className="h-5 bg-muted-foreground/30 rounded-lg w-32"></div>
+                                  <div className="h-4 bg-muted-foreground/20 rounded w-24"></div>
                                 </div>
-                                
-                                {/* Tags */}
-                                <div className="flex flex-wrap gap-2 mb-4">
-                                  {[1, 2, 3].map((tag) => (
-                                    <div key={tag} className="h-6 bg-muted-foreground/20 rounded-full w-16"></div>
-                                  ))}
-                                </div>
-                                
-                                {/* Action Button */}
-                                <div className="h-10 bg-primary/20 rounded-xl w-full"></div>
                               </div>
                               
-                              {/* Hover Glow */}
-                              <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10 blur"></div>
-                            </div>
-                          ))}
-                        </div>
-                        
-                        {/* Features Premium */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-8 border-t border-border/30">
-                          {[
-                            { icon: "🤖", title: "IA Match Score", desc: "Algoritmo inteligente de compatibilidade" },
-                            { icon: "💬", title: "Chat Integrado", desc: "Converse diretamente na plataforma" },
-                            { icon: "📊", title: "Analytics", desc: "Métricas de networking e crescimento" },
-                            { icon: "🎯", title: "Filtros Avançados", desc: "Encontre exatamente quem procura" }
-                          ].map((feature, i) => (
-                            <div key={i} className="flex items-center space-x-4 p-4 bg-muted/20 rounded-xl border border-border/30">
-                              <div className="text-2xl">{feature.icon}</div>
-                              <div>
-                                <h4 className="font-semibold text-sm">{feature.title}</h4>
-                                <p className="text-xs text-muted-foreground">{feature.desc}</p>
+                              {/* Compatibilidade */}
+                              <div className="mb-4">
+                                <div className="h-3 bg-muted-foreground/20 rounded-full w-20 mb-2"></div>
+                                <div className="h-2 bg-gradient-to-r from-green-500/30 to-transparent rounded-full w-full"></div>
                               </div>
+                              
+                              {/* Tags */}
+                              <div className="flex flex-wrap gap-2 mb-4">
+                                {[1, 2, 3].map((tag) => (
+                                  <div key={tag} className="h-6 bg-muted-foreground/20 rounded-full w-16"></div>
+                                ))}
+                              </div>
+                              
+                              {/* Action Button */}
+                              <div className="h-10 bg-primary/20 rounded-xl w-full"></div>
                             </div>
-                          ))}
-                        </div>
+                            
+                            {/* Hover Glow */}
+                            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10 blur"></div>
+                          </div>
+                        ))}
                       </div>
-                    </UnifiedContentBlock>
-                  </div>
+                      
+                      {/* Features Premium */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-8 border-t border-border/30">
+                        {[
+                          { icon: "🤖", title: "IA Match Score", desc: "Algoritmo inteligente de compatibilidade" },
+                          { icon: "💬", title: "Chat Integrado", desc: "Converse diretamente na plataforma" },
+                          { icon: "📊", title: "Analytics", desc: "Métricas de networking e crescimento" },
+                          { icon: "🎯", title: "Filtros Avançados", desc: "Encontre exatamente quem procura" }
+                        ].map((feature, i) => (
+                          <div key={i} className="flex items-center space-x-4 p-4 bg-muted/20 rounded-xl border border-border/30">
+                            <div className="text-2xl">{feature.icon}</div>
+                            <div>
+                              <h4 className="font-semibold text-sm">{feature.title}</h4>
+                              <p className="text-xs text-muted-foreground">{feature.desc}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </UnifiedContentBlock>
                 </div>
               </div>
             </div>
           </ErrorBoundary>
         </NetworkingErrorBoundary>
         
-        <PremiumUpgradeModal 
+        <AuroraUpgradeModal 
           open={modalState.open}
           onOpenChange={hideUpgradeModal}
-          feature={modalState.feature}
-          itemTitle={modalState.itemTitle}
+          itemTitle="Networking AI Premium"
+          feature="solutions"
         />
       </>
     );
@@ -203,11 +181,11 @@ const Networking = () => {
         </ErrorBoundary>
       </NetworkingErrorBoundary>
       
-      <PremiumUpgradeModal 
+      <AuroraUpgradeModal 
         open={modalState.open}
         onOpenChange={hideUpgradeModal}
-        feature={modalState.feature}
-        itemTitle={modalState.itemTitle}
+        itemTitle="Networking AI Premium"
+        feature="solutions"
       />
     </>
   );
