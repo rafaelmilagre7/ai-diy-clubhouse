@@ -17,35 +17,8 @@ export const uploadFileToSupabase = async (
       ? `${folderPath}/${timestamp}-${sanitizedFileName}` 
       : `${timestamp}-${sanitizedFileName}`;
 
-    // Verificar se bucket existe
-    const { data: buckets } = await supabase.storage.listBuckets();
-    let bucketExists = buckets?.some(bucket => bucket.name === bucketName);
-    
-    // Se bucket não existe, tentar usar fallback ou criar
-    if (!bucketExists) {
-      console.warn(`[SUPABASE_SERVICE] Bucket ${bucketName} não existe`);
-      
-      // Se não é um bucket padrão, usar fallback
-      if (!Object.values(STORAGE_BUCKETS).includes(bucketName)) {
-        console.log(`[SUPABASE_SERVICE] Usando bucket fallback`);
-        bucketName = STORAGE_BUCKETS.FALLBACK;
-        bucketExists = buckets?.some(bucket => bucket.name === bucketName);
-      }
-      
-      // Se ainda não existe, tentar criar
-      if (!bucketExists) {
-        console.log(`[SUPABASE_SERVICE] Criando bucket: ${bucketName}`);
-        const { error: createError } = await supabase.storage.createBucket(bucketName, {
-          public: true,
-          fileSizeLimit: 50 * 1024 * 1024 // 50MB default
-        });
-        
-        if (createError) {
-          console.error(`[SUPABASE_SERVICE] Erro ao criar bucket:`, createError);
-          throw new Error(`Erro ao criar bucket: ${createError.message}`);
-        }
-      }
-    }
+    // Evitar operações administrativas de buckets no client (list/create)
+    // Tentamos upload direto; em caso de erro por bucket inexistente, usamos fallback
 
     if (onProgressUpdate) onProgressUpdate(10);
 

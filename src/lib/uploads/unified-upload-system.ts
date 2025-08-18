@@ -205,27 +205,11 @@ export const validateFile = (file: File, config: UploadConfig): UploadError | nu
 // =============================================
 
 export const ensureBucketExists = async (bucketName: string): Promise<boolean> => {
-  try {
-    // CORREÇÃO: Apenas verificar se bucket existe, não tentar criar
-    const { data: buckets, error } = await supabase.storage.listBuckets();
-    if (error) {
-      console.error('[UPLOAD_SYSTEM] Erro ao listar buckets:', error);
-      return false;
-    }
-
-    const bucketExists = buckets?.some(bucket => bucket.name === bucketName);
-    
-    if (!bucketExists) {
-      console.warn(`[UPLOAD_SYSTEM] Bucket ${bucketName} não encontrado`);
-      return false;
-    }
-
-    console.log(`[UPLOAD_SYSTEM] Bucket ${bucketName} verificado com sucesso`);
-    return true;
-  } catch (error) {
-    console.error(`[UPLOAD_SYSTEM] Erro ao verificar bucket ${bucketName}:`, error);
-    return false;
-  }
+  // Importante: clientes (anon key) NÃO podem listar/criar buckets.
+  // Para evitar erros 400/401, não verificamos nada aqui no client.
+  // Confiamos que os buckets já foram criados pelo backend/migrações.
+  console.debug(`[UPLOAD_SYSTEM] Skip check for bucket: ${bucketName}`);
+  return true;
 };
 
 // =============================================

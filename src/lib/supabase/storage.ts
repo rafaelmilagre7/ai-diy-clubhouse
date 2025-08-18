@@ -56,41 +56,10 @@ export const setupLearningStorageBuckets = async () => {
  * Verifica se um bucket existe e cria se necessário
  */
 export const ensureBucketExists = async (bucketName: string): Promise<boolean> => {
-  try {
-    // Verificar se o bucket já existe
-    const { data: existingBucket, error: checkError } = await supabase
-      .storage
-      .getBucket(bucketName);
-    
-    if (existingBucket) {
-      console.log(`Bucket ${bucketName} já existe`);
-      return true;
-    }
-    
-    if (checkError && checkError.message !== 'The resource was not found') {
-      console.error(`Erro ao verificar bucket ${bucketName}:`, checkError);
-      return false;
-    }
-    
-    // Criar o bucket se não existir
-    const { data, error } = await supabase
-      .storage
-      .createBucket(bucketName, {
-        public: true,
-        fileSizeLimit: 314572800 // 300MB
-      });
-      
-    if (error) {
-      console.error(`Erro ao criar bucket ${bucketName}:`, error);
-      return false;
-    }
-    
-    console.log(`Bucket ${bucketName} criado com sucesso`);
-    return true;
-  } catch (error) {
-    console.error(`Exceção ao verificar/criar bucket ${bucketName}:`, error);
-    return false;
-  }
+  // Clientes com anon key não podem listar/criar buckets via Storage API.
+  // Evitamos chamadas administrativas no front-end para não gerar 400/401.
+  console.debug(`[STORAGE] Skip bucket check/create on client for: ${bucketName}`);
+  return true;
 };
 
 /**
