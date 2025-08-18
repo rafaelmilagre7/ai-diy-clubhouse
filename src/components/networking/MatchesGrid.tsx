@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +11,7 @@ import LoadingScreen from '@/components/common/LoadingScreen';
 import { ConnectionButton } from './ConnectionButton';
 import { ChatWindow } from './ChatWindow';
 import { ContactModal } from './ContactModal';
+import { MatchFilters } from './MatchFilters';
 
 // Função para traduzir tipos de match
 const translateMatchType = (type: string) => {
@@ -28,10 +29,61 @@ const translateMatchType = (type: string) => {
 export const MatchesGrid = () => {
   const [activeChatMatch, setActiveChatMatch] = useState<string | null>(null);
   const [contactModalUser, setContactModalUser] = useState<{id: string, name: string, email?: string, phone?: string, linkedin_url?: string, avatar_url?: string, company_name?: string, current_position?: string} | null>(null);
+  const [filters, setFilters] = useState({
+    search: '',
+    matchType: 'all',
+    minCompatibility: 0,
+    sortBy: 'compatibility'
+  });
   
   const { matches, isLoading, error, refetch } = useNetworkMatches();
   const { generateMatches, isGenerating } = useAIMatches();
   const { user } = useAuth();
+
+  // Filtrar e ordenar matches
+  const filteredMatches = useMemo(() => {
+    let filtered = matches.filter(match => {
+      // Filtro de busca
+      if (filters.search) {
+        const searchTerm = filters.search.toLowerCase();
+        const matchesSearch = 
+          match.matched_user?.name?.toLowerCase().includes(searchTerm) ||
+          match.matched_user?.company_name?.toLowerCase().includes(searchTerm) ||
+          match.matched_user?.industry?.toLowerCase().includes(searchTerm);
+        if (!matchesSearch) return false;
+      }
+
+      // Filtro de tipo
+      if (filters.matchType !== 'all' && match.match_type !== filters.matchType) {
+        return false;
+      }
+
+      // Filtro de compatibilidade
+      if (match.compatibility_score < filters.minCompatibility) {
+        return false;
+      }
+
+      return true;
+    });
+
+    // Ordenação
+    filtered.sort((a, b) => {
+      switch (filters.sortBy) {
+        case 'compatibility':
+          return b.compatibility_score - a.compatibility_score;
+        case 'recent':
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        case 'name':
+          return (a.matched_user?.name || '').localeCompare(b.matched_user?.name || '');
+        case 'company':
+          return (a.matched_user?.company_name || '').localeCompare(b.matched_user?.company_name || '');
+        default:
+          return 0;
+      }
+    });
+
+    return filtered;
+  }, [matches, filters]);
 
   const handleGenerateMatches = async () => {
     if (user?.id) {
@@ -143,10 +195,26 @@ export const MatchesGrid = () => {
         </div>
       </div>
 
-      {/* Grid de Matches */}
+      {/* Filtros */}
+      <MatchFilters 
+        onFilterChange={setFilters}
+        matchesCount={filteredMatches.length}
+      />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {matches.map((match, index) => (
+      {/* Mensagem quando não há matches após filtro */}
+      {matches.length > 0 && filteredMatches.length === 0 && (
+        <div className="text-center py-10 space-y-4">
+          <div className="text-muted-foreground">
+            <p className="text-lg">Nenhum match encontrado com os filtros aplicados</p>
+            <p className="text-sm">Tente ajustar os filtros para ver mais resultados</p>
+          </div>
+        </div>
+      )}
+
+      {/* Grid de Matches */}
+      {filteredMatches.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredMatches.map((match, index) => (
           <motion.div
             key={match.id}
             initial={{ opacity: 0, y: 20 }}
@@ -168,8 +236,9 @@ export const MatchesGrid = () => {
               })}
             />
           </motion.div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       <AnimatePresence>
         {activeChatMatch && (

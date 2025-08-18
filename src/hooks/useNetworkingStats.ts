@@ -36,8 +36,8 @@ export const useNetworkingStats = () => {
         notifications: notificationsCount || 0
       };
     },
-    staleTime: 0, // Sempre buscar dados atualizados
-    refetchInterval: 5000, // Refetch a cada 5 segundos também
+    staleTime: 30 * 1000, // 30 segundos - dados não mudam tão rápido
+    refetchInterval: 30 * 1000, // Refetch a cada 30 segundos
   });
 
   // Realtime updates para refetch automático
