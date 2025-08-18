@@ -6,18 +6,23 @@ import { Tool } from '@/types/toolTypes';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
-import { Search, Gift, AlertCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Search, Gift, AlertCircle, Crown, Lock } from 'lucide-react';
 import { BenefitBadge } from '@/components/tools/BenefitBadge';
 import { MemberBenefitModal } from '@/components/tools/MemberBenefitModal';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/auth';
+import { useFeatureAccess } from '@/hooks/auth/useFeatureAccess';
+import { usePremiumUpgradeModal } from '@/hooks/usePremiumUpgradeModal';
+import { PremiumUpgradeModal } from '@/components/ui/premium-upgrade-modal';
 import { cn } from '@/lib/utils';
 
 const Benefits = () => {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [benefitType, setBenefitType] = useState<string>('all');
+  const { modalState, showUpgradeModal, hideUpgradeModal } = usePremiumUpgradeModal();
 
   // Buscar todas as ferramentas com benefícios
   const { data: tools, isLoading, error } = useQuery({
@@ -245,18 +250,110 @@ const Benefits = () => {
           </div>
         )}
       </div>
+      
+      <PremiumUpgradeModal 
+        open={modalState.open}
+        onOpenChange={hideUpgradeModal}
+        feature={modalState.feature}
+        itemTitle={modalState.itemTitle}
+      />
     </div>
   );
 };
 
 // Componente de card para cada benefício
 const BenefitCard = ({ tool }: { tool: Tool }) => {
+  const { hasFeatureAccess } = useFeatureAccess();
+  const { showUpgradeModal } = usePremiumUpgradeModal();
+  
   // Adicionar indicador visual de acesso restrito
   const isRestricted = tool.is_access_restricted === true;
-  const hasAccess = tool.has_access !== false;
+  const hasAccess = hasFeatureAccess('benefits') !== false; // Default true se não definido
   
+  const handleClick = (e: React.MouseEvent) => {
+    if (!hasAccess) {
+      e.preventDefault();
+      showUpgradeModal('benefits', tool.name);
+    }
+  };
+  
+  if (hasAccess) {
+    return (
+      <div className="group relative">
+        {/* Glow effect */}
+        <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition duration-500"></div>
+        
+        <Card className={cn(
+          "relative h-full flex flex-col overflow-hidden transition-all duration-500",
+          "bg-gradient-to-br from-card via-card to-muted/50 border border-border/50",
+          "group-hover:shadow-2xl group-hover:scale-[1.02] group-hover:border-primary/30",
+          isRestricted && !hasAccess ? 'border-l-4 border-l-amber-500/70' : '',
+          "backdrop-blur-sm"
+        )}>
+          {/* Card header com gradiente sutil */}
+          <CardHeader className="relative pb-4 pt-6">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent rounded-t-xl"></div>
+            
+            <div className="relative flex items-start gap-4">
+              {/* Logo com efeito glassmorphism */}
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-primary/10 rounded-xl blur-lg"></div>
+                <div className="relative h-12 w-12 rounded-xl bg-background/80 backdrop-blur border border-border/50 flex items-center justify-center overflow-hidden">
+                  {tool.logo_url ? (
+                    <img 
+                      src={tool.logo_url} 
+                      alt={tool.name} 
+                      className="h-8 w-8 object-contain" 
+                    />
+                  ) : (
+                    <span className="text-sm font-bold text-primary">
+                      {tool.name.substring(0, 2).toUpperCase()}
+                    </span>
+                  )}
+                </div>
+              </div>
+              
+              <div className="flex-1 min-w-0">
+                <CardTitle className="text-lg font-heading text-foreground mb-2 group-hover:text-primary transition-colors">
+                  {tool.name}
+                </CardTitle>
+                <div className="flex flex-wrap gap-2">
+                  {tool.benefit_type && (
+                    <BenefitBadge type={tool.benefit_type} />
+                  )}
+                  {isRestricted && !hasAccess && (
+                    <Badge variant="outline" className="text-xs border-amber-500/50 text-amber-400 bg-amber-500/10">
+                      Acesso Restrito
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <CardDescription className="relative line-clamp-2 text-muted-foreground mt-3">
+              {tool.benefit_title || "Benefício exclusivo para membros"}
+            </CardDescription>
+          </CardHeader>
+          
+          {/* Card content */}
+          <CardContent className="relative pt-0 pb-6 flex-1 flex flex-col">
+            <p className="text-sm text-muted-foreground line-clamp-3 mb-6 flex-1 leading-relaxed">
+              {tool.benefit_description || tool.description}
+            </p>
+            
+            {/* Button com efeito glassmorphism */}
+            <div className="relative mt-auto">
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg blur-xl opacity-0 group-hover:opacity-100 transition duration-300"></div>
+              <MemberBenefitModal tool={tool} />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
-    <div className="group relative">
+    <div className="group relative cursor-pointer" onClick={handleClick}>
       {/* Glow effect */}
       <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition duration-500"></div>
       
@@ -264,9 +361,30 @@ const BenefitCard = ({ tool }: { tool: Tool }) => {
         "relative h-full flex flex-col overflow-hidden transition-all duration-500",
         "bg-gradient-to-br from-card via-card to-muted/50 border border-border/50",
         "group-hover:shadow-2xl group-hover:scale-[1.02] group-hover:border-primary/30",
-        isRestricted && !hasAccess ? 'border-l-4 border-l-amber-500/70' : '',
         "backdrop-blur-sm"
       )}>
+        {/* Premium Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-black/40 to-black/60 z-30 flex items-center justify-center backdrop-blur-sm">
+          <div className="text-center space-y-3">
+            <div className="p-3 bg-gradient-to-r from-viverblue via-viverblue/90 to-viverblue/80 rounded-full w-fit mx-auto shadow-2xl">
+              <Crown className="h-8 w-8 text-white" />
+            </div>
+            <Badge className="bg-gradient-to-r from-viverblue via-viverblue/90 to-viverblue/80 text-white border-0 px-4 py-2 text-sm font-semibold shadow-lg">
+              <Lock className="h-3 w-3 mr-2" />
+              PREMIUM
+            </Badge>
+            <p className="text-white/90 text-sm font-medium">Clique para fazer upgrade</p>
+          </div>
+        </div>
+        
+        {/* Premium Badge no topo */}
+        <Badge 
+          className="absolute top-3 right-3 bg-gradient-to-r from-viverblue via-viverblue/90 to-viverblue/80 text-white border-0 shadow-lg backdrop-blur-sm z-20"
+        >
+          <Crown className="h-3 w-3 mr-1" />
+          PREMIUM
+        </Badge>
+        
         {/* Card header com gradiente sutil */}
         <CardHeader className="relative pb-4 pt-6">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent rounded-t-xl"></div>
@@ -298,11 +416,6 @@ const BenefitCard = ({ tool }: { tool: Tool }) => {
                 {tool.benefit_type && (
                   <BenefitBadge type={tool.benefit_type} />
                 )}
-                {isRestricted && !hasAccess && (
-                  <Badge variant="outline" className="text-xs border-amber-500/50 text-amber-400 bg-amber-500/10">
-                    Acesso Restrito
-                  </Badge>
-                )}
               </div>
             </div>
           </div>
@@ -321,7 +434,12 @@ const BenefitCard = ({ tool }: { tool: Tool }) => {
           {/* Button com efeito glassmorphism */}
           <div className="relative mt-auto">
             <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg blur-xl opacity-0 group-hover:opacity-100 transition duration-300"></div>
-            <MemberBenefitModal tool={tool} />
+            <Button 
+              className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300"
+            >
+              <Gift className="h-4 w-4 mr-2" />
+              Acessar Benefício
+            </Button>
           </div>
         </CardContent>
       </Card>
