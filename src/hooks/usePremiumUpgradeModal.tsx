@@ -27,11 +27,13 @@ export const PremiumUpgradeModalProvider = ({ children }: { children: ReactNode 
     feature: PremiumUpgradeModalState['feature'], 
     itemTitle?: string
   ) => {
+    console.log('🔥 showUpgradeModal chamado:', { feature, itemTitle });
     setModalState({
       open: true,
       feature,
       itemTitle
     });
+    console.log('🔥 Estado atualizado para:', { open: true, feature, itemTitle });
   }, []);
 
   const hideUpgradeModal = useCallback(() => {
@@ -47,6 +49,8 @@ export const PremiumUpgradeModalProvider = ({ children }: { children: ReactNode 
 
 export const usePremiumUpgradeModal = () => {
   const ctx = useContext(PremiumUpgradeModalContext);
+  console.log('🔧 usePremiumUpgradeModal chamado, contexto:', ctx ? 'encontrado' : 'não encontrado');
+  
   if (ctx) return ctx;
 
   // Fallback local state quando não estiver dentro do Provider

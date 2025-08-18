@@ -7,6 +7,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/auth";
 import { LoggingProvider } from "@/hooks/useLogging";
 import { AppRoutes } from "@/routes";
+import { PerformanceDashboard } from "@/components/dev/PerformanceDashboard";
+import { SecurityProvider } from "@/components/security/SecurityProvider";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -20,13 +22,26 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  console.log('🚀 App iniciando...');
-  
   return (
-    <div style={{ padding: '20px', background: 'white', color: 'black' }}>
-      <h1>Teste de Carregamento</h1>
-      <p>Se você está vendo isso, o App está funcionando</p>
-    </div>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <AuthProvider>
+          <SecurityProvider>
+            <LoggingProvider>
+              <BrowserRouter>
+                <div className="min-h-screen bg-background font-sans antialiased">
+                  <AppRoutes />
+                  <Toaster />
+                  <Sonner />
+                  {/* Dashboard de performance apenas em desenvolvimento */}
+                  <PerformanceDashboard />
+                </div>
+              </BrowserRouter>
+            </LoggingProvider>
+          </SecurityProvider>
+        </AuthProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
   );
 }
 

@@ -13,7 +13,7 @@ import { useCourseStats } from "@/hooks/learning/useCourseStats";
 import { useCourseSearch } from "@/hooks/learning/useCourseSearch";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { usePremiumUpgradeModal } from "@/hooks/usePremiumUpgradeModal";
-import { AuroraUpgradeModal } from "@/components/ui/aurora-upgrade-modal";
+import { PremiumUpgradeModal } from "@/components/ui/premium-upgrade-modal";
 
 const CourseDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -153,10 +153,11 @@ const CourseDetails = () => {
           />
         </div>
       </div>
-      {/* Aurora Upgrade Modal (mesmo design das soluções) */}
-      <AuroraUpgradeModal 
+      {/* Premium Upgrade Modal (padrão freemium para cursos) */}
+      <PremiumUpgradeModal 
         open={modalState.open}
         onOpenChange={hideUpgradeModal}
+        feature={modalState.feature}
         itemTitle={modalState.itemTitle}
       />
     </div>
