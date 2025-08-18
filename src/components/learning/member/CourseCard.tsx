@@ -49,36 +49,6 @@ export const CourseCard: React.FC<CourseCardProps> = ({
   return (
     <Link to={`/learning/course/${id}`} className="block h-full group">
       <Card className="overflow-hidden h-full flex flex-col transition-all duration-300 border-transparent hover:scale-105 hover:z-10 hover:shadow-xl relative">
-        {/* Exclusive Content Overlay - só aparece quando não tem acesso */}
-        {!hasAccess && (
-          <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-black/40 to-black/60 z-30 flex items-center justify-center backdrop-blur-sm group-hover:backdrop-blur-lg transition-all duration-300">
-            <div className="text-center space-y-4 group-hover:scale-105 transition-transform duration-300">
-              {/* Energy Ring with Lock */}
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-conic from-primary via-primary/50 to-primary rounded-full animate-spin-slow opacity-30 group-hover:opacity-60 transition-opacity duration-300" 
-                     style={{ width: '80px', height: '80px' }} />
-                <div className="relative p-4 bg-gradient-to-r from-primary via-primary/90 to-primary/80 rounded-full w-fit mx-auto shadow-2xl backdrop-blur-sm border border-white/10">
-                  <Lock className="h-8 w-8 text-white drop-shadow-lg" />
-                </div>
-                {/* Sparkle Particles */}
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-white rounded-full animate-pulse opacity-60" />
-                <div className="absolute -bottom-2 -left-2 w-2 h-2 bg-primary-glow rounded-full animate-ping opacity-40" />
-                <div className="absolute top-3 -left-3 w-1.5 h-1.5 bg-white rounded-full animate-bounce opacity-50" style={{ animationDelay: '0.5s' }} />
-              </div>
-              
-              <div className="space-y-2">
-                <Badge className="bg-gradient-to-r from-primary via-primary/90 to-primary/80 text-white border-0 px-4 py-2 text-sm font-semibold shadow-lg backdrop-blur-sm border border-white/10">
-                  <Lock className="h-3 w-3 mr-2" />
-                  Conteúdo Exclusivo
-                </Badge>
-                <p className="text-white/90 text-sm font-medium drop-shadow-md group-hover:text-white transition-colors duration-300">
-                  Entre para ver as aulas
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-        
         <div className="relative">
           <AspectRatio ratio={9/16}>
             <div 
@@ -102,15 +72,6 @@ export const CourseCard: React.FC<CourseCardProps> = ({
             </div>
           </AspectRatio>
           
-          {/* Exclusive Badge no topo - só aparece quando não tem acesso */}
-          {!hasAccess && (
-            <Badge 
-              className="absolute top-2 right-2 bg-gradient-to-r from-primary via-primary/90 to-primary/80 text-white border-0 shadow-lg backdrop-blur-sm z-20 border border-white/10"
-            >
-              <Lock className="h-3 w-3 mr-1" />
-              Exclusivo
-            </Badge>
-          )}
           
           <Button 
             size="icon" 
