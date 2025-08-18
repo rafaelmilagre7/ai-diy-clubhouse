@@ -5126,7 +5126,7 @@ export type Database = {
         Returns: boolean
       }
       can_access_course: {
-        Args: { course_id: string; user_id: string }
+        Args: { p_course_id: string; p_user_id: string }
         Returns: boolean
       }
       can_access_course_enhanced: {
