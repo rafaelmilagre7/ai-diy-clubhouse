@@ -9,6 +9,9 @@ import { OnboardingBanner } from '@/components/common/OnboardingBanner';
 import { useNavigate } from 'react-router-dom';
 import { Solution } from '@/lib/supabase';
 import { useState, useCallback, useMemo } from 'react';
+import { useFeatureAccess } from '@/hooks/auth/useFeatureAccess';
+import { usePremiumUpgradeModal } from '@/hooks/usePremiumUpgradeModal';
+import { AuroraUpgradeModal } from '@/components/ui/aurora-upgrade-modal';
 
 const Dashboard = () => {
   const { user, profile } = useAuth();
@@ -25,10 +28,18 @@ const Dashboard = () => {
     error: progressError
   } = useDashboardProgress(solutions);
 
+  const { hasFeatureAccess } = useFeatureAccess();
+  const { modalState, showUpgradeModal, hideUpgradeModal } = usePremiumUpgradeModal();
+  const canViewSolutions = hasFeatureAccess('solutions');
+
   // Otimização: Memoizar callbacks para evitar re-renderizações - ANTES dos early returns
   const handleSolutionClick = useCallback((solution: Solution) => {
+  if (!canViewSolutions) {
+      showUpgradeModal('solutions', 'Desbloquear Soluções');
+      return;
+    }
     navigate(`/solution/${solution.id}`);
-  }, [navigate]);
+  }, [navigate, canViewSolutions, showUpgradeModal]);
 
   const handleCategoryChange = useCallback((category: string) => {
     setSelectedCategory(category);
@@ -74,6 +85,12 @@ const Dashboard = () => {
           onCategoryChange={handleCategoryChange}
           onSolutionClick={handleSolutionClick}
           isLoading={memoizedData.isLoading}
+        />
+        <AuroraUpgradeModal 
+          open={modalState.open}
+          onOpenChange={hideUpgradeModal}
+          feature="solutions"
+          itemTitle={modalState.itemTitle || 'Desbloquear Soluções'}
         />
       </div>
     </ErrorBoundary>
