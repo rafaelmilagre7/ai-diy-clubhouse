@@ -4,15 +4,13 @@ import { useSolutionsData } from '@/hooks/useSolutionsData';
 import { SolutionCard } from '@/components/solution/SolutionCard';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, Filter, ShieldAlert } from 'lucide-react';
+import { Search, Filter } from 'lucide-react';
 import LoadingScreen from '@/components/common/LoadingScreen';
 import { Solution } from '@/lib/supabase';
 import { useToolsData } from '@/hooks/useToolsData';
 import { useLogging } from '@/contexts/logging';
 import { useDocumentTitle } from '@/hooks/use-document-title';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
+import { AccessBlocked } from '@/components/ui/access-blocked';
 
 const Solutions = () => {
   // Definir título da página
@@ -31,7 +29,8 @@ const Solutions = () => {
     setSearchQuery,
     activeCategory,
     setActiveCategory,
-    canViewSolutions
+    canViewSolutions,
+    hasSolutionsAccess
   } = useSolutionsData();
 
   // Log data for debugging
@@ -50,31 +49,9 @@ const Solutions = () => {
     { id: 'Estratégia', name: 'Estratégia' }
   ];
 
-  // Se o usuário não tem permissão para ver soluções, mostrar mensagem
-  if (!canViewSolutions) {
-    return (
-      <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-white">Soluções</h1>
-            <p className="text-neutral-300 mt-1">
-              Explore as soluções disponíveis e comece a implementá-las em seu negócio
-            </p>
-          </div>
-        </div>
-
-        <Alert variant="destructive" className="my-8">
-          <ShieldAlert className="h-5 w-5" />
-          <AlertTitle className="text-white">Acesso restrito</AlertTitle>
-          <AlertDescription className="text-neutral-200">
-            <p className="mb-4">Você não tem permissão para acessar as soluções. Entre em contato com o administrador para solicitar acesso.</p>
-            <Button variant="outline" size="sm" asChild>
-              <Link to="/dashboard">Voltar para o Dashboard</Link>
-            </Button>
-          </AlertDescription>
-        </Alert>
-      </div>
-    );
+  // Se o usuário não tem permissão para ver soluções, mostrar componente de bloqueio
+  if (!hasSolutionsAccess) {
+    return <AccessBlocked feature="solutions" />;
   }
 
   // Se estiver carregando as soluções, mostrar tela de carregamento

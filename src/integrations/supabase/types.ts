@@ -6733,6 +6733,10 @@ export type Database = {
         Args: { permission_code: string; user_id: string }
         Returns: boolean
       }
+      user_has_solutions_access: {
+        Args: { check_user_id?: string }
+        Returns: boolean
+      }
       validate_admin_access: {
         Args: { user_id: string }
         Returns: Json

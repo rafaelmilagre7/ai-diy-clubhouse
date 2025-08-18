@@ -2,6 +2,7 @@
 import React from 'react';
 import { useAuth } from '@/contexts/auth';
 import { useSidebarStats } from '@/hooks/useSidebarStats';
+import { useNavPermissions } from '@/hooks/auth/useNavPermissions';
 import { 
   Home, 
   Settings, 
@@ -28,6 +29,19 @@ interface MemberSidebarNavItemsProps {
 export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ sidebarOpen }) => {
   const { user, profile, isAdmin } = useAuth();
   const { data: stats, isLoading } = useSidebarStats();
+  const {
+    canViewSolutions,
+    canViewTools,
+    canViewLearning,
+    canViewBenefits,
+    canViewNetworking,
+    canViewCommunity,
+    canViewEvents,
+    canViewSuggestions,
+    canViewAITrail,
+    canViewCertificates,
+    loading: permissionsLoading
+  } = useNavPermissions();
 
   try {
 
@@ -50,33 +64,41 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
 
         {/* Grupo: Aprendizado */}
         <SidebarNavigationGroup title="Aprendizado" sidebarOpen={sidebarOpen}>
-          <TooltipNavItem
-            to="/trilha-implementacao"
-            label="Trilha com IA"
-            icon={Bot}
-            sidebarOpen={sidebarOpen}
-            isNew={true}
-          />
-          <TooltipNavItem
-            to="/solutions"
-            label="Soluções"
-            icon={BookOpen}
-            sidebarOpen={sidebarOpen}
-            badge={isLoading ? "..." : stats?.solutions?.toString()}
-          />
-          <TooltipNavItem
-            to="/learning"
-            label="Formação"
-            icon={GraduationCap}
-            sidebarOpen={sidebarOpen}
-            badge={isLoading ? "..." : stats?.courses?.toString()}
-          />
-          <TooltipNavItem
-            to="/learning/certificates"
-            label="Certificados"
-            icon={Award}
-            sidebarOpen={sidebarOpen}
-          />
+          {canViewAITrail && (
+            <TooltipNavItem
+              to="/trilha-implementacao"
+              label="Trilha com IA"
+              icon={Bot}
+              sidebarOpen={sidebarOpen}
+              isNew={true}
+            />
+          )}
+          {canViewSolutions && (
+            <TooltipNavItem
+              to="/solutions"
+              label="Soluções"
+              icon={BookOpen}
+              sidebarOpen={sidebarOpen}
+              badge={isLoading ? "..." : stats?.solutions?.toString()}
+            />
+          )}
+          {canViewLearning && (
+            <TooltipNavItem
+              to="/learning"
+              label="Formação"
+              icon={GraduationCap}
+              sidebarOpen={sidebarOpen}
+              badge={isLoading ? "..." : stats?.courses?.toString()}
+            />
+          )}
+          {canViewCertificates && (
+            <TooltipNavItem
+              to="/learning/certificates"
+              label="Certificados"
+              icon={Award}
+              sidebarOpen={sidebarOpen}
+            />
+          )}
         </SidebarNavigationGroup>
 
         {/* Separador visual */}
@@ -86,34 +108,42 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
 
         {/* Grupo: Ferramentas */}
         <SidebarNavigationGroup title="Ferramentas" sidebarOpen={sidebarOpen}>
-          <TooltipNavItem
-            to="/tools"
-            label="Ferramentas"
-            icon={Wrench}
-            sidebarOpen={sidebarOpen}
-            badge={isLoading ? "..." : stats?.tools?.toString()}
-          />
-          <TooltipNavItem
-            to="/benefits"
-            label="Benefícios"
-            icon={Trophy}
-            sidebarOpen={sidebarOpen}
-            badge={isLoading ? "..." : stats?.benefits?.toString()}
-          />
-          <TooltipNavItem
-            to="/networking"
-            label="Networking"
-            icon={Network}
-            sidebarOpen={sidebarOpen}
-            isNew={true}
-          />
-          <TooltipNavItem
-            to="/comunidade"
-            label="Comunidade"
-            icon={MessageSquare}
-            sidebarOpen={sidebarOpen}
-            badge={isLoading ? "..." : stats?.communityTopics?.toString()}
-          />
+          {canViewTools && (
+            <TooltipNavItem
+              to="/tools"
+              label="Ferramentas"
+              icon={Wrench}
+              sidebarOpen={sidebarOpen}
+              badge={isLoading ? "..." : stats?.tools?.toString()}
+            />
+          )}
+          {canViewBenefits && (
+            <TooltipNavItem
+              to="/benefits"
+              label="Benefícios"
+              icon={Trophy}
+              sidebarOpen={sidebarOpen}
+              badge={isLoading ? "..." : stats?.benefits?.toString()}
+            />
+          )}
+          {canViewNetworking && (
+            <TooltipNavItem
+              to="/networking"
+              label="Networking"
+              icon={Network}
+              sidebarOpen={sidebarOpen}
+              isNew={true}
+            />
+          )}
+          {canViewCommunity && (
+            <TooltipNavItem
+              to="/comunidade"
+              label="Comunidade"
+              icon={MessageSquare}
+              sidebarOpen={sidebarOpen}
+              badge={isLoading ? "..." : stats?.communityTopics?.toString()}
+            />
+          )}
         </SidebarNavigationGroup>
 
         {/* Separador visual */}
@@ -123,19 +153,23 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
 
         {/* Grupo: Eventos */}
         <SidebarNavigationGroup title="Eventos" sidebarOpen={sidebarOpen}>
-          <TooltipNavItem
-            to="/events"
-            label="Eventos"
-            icon={Calendar}
-            sidebarOpen={sidebarOpen}
-            badge={isLoading ? "..." : stats?.monthlyEvents?.toString()}
-          />
-          <TooltipNavItem
-            to="/suggestions"
-            label="Sugestões"
-            icon={Lightbulb}
-            sidebarOpen={sidebarOpen}
-          />
+          {canViewEvents && (
+            <TooltipNavItem
+              to="/events"
+              label="Eventos"
+              icon={Calendar}
+              sidebarOpen={sidebarOpen}
+              badge={isLoading ? "..." : stats?.monthlyEvents?.toString()}
+            />
+          )}
+          {canViewSuggestions && (
+            <TooltipNavItem
+              to="/suggestions"
+              label="Sugestões"
+              icon={Lightbulb}
+              sidebarOpen={sidebarOpen}
+            />
+          )}
         </SidebarNavigationGroup>
 
         {/* Separador visual */}
