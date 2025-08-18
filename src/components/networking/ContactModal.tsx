@@ -98,14 +98,13 @@ export const ContactModal = ({ isOpen, onClose, userId, userName, initialData }:
   const fetchContactData = async () => {
     setIsLoading(true);
     try {
-      // Buscar dados básicos do perfil
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('name, email, company_name, current_position, industry, linkedin_url, professional_bio, skills, whatsapp_number, avatar_url')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
-      if (profileError) throw profileError;
+      if (profileError) console.warn('Perfil não carregado (RLS?):', profileError);
 
       // Buscar dados adicionais do onboarding se disponível
       const { data: onboarding } = await supabase
