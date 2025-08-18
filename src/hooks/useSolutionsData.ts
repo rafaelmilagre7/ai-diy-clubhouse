@@ -84,7 +84,12 @@ export const useSolutionsData = () => {
           cacheAge: Math.round((now - cached.timestamp) / 1000) + 's'
         });
       }
-      return;
+      
+      // Se o cache estiver vazio, forçar uma atualização silenciosa do backend
+      if (cached.data.length > 0) {
+        return;
+      }
+      // Continua para buscar do backend e atualizar o cache/state
     }
 
     try {
