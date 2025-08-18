@@ -47,6 +47,8 @@ export const ModuleLessons = ({
     isLoading,
     hasFilter: !!filteredLessons,
     searchQuery,
+    hasAccess,
+    data: data,
     lessons: lessons.map(l => ({ id: l.id, title: l.title }))
   });
   
