@@ -3,10 +3,11 @@ import { Link } from "react-router-dom";
 import { LearningLesson, LearningProgress } from "@/lib/supabase/types";
 import { Badge } from "@/components/ui/badge";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
-import { CheckCircle, Play } from "lucide-react";
+import { CheckCircle, Play, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TagBadge } from "../../tags/TagBadge";
 import { useLessonTagsForLesson } from "@/hooks/useLessonTags";
+import { usePremiumUpgradeModal } from "@/hooks/usePremiumUpgradeModal";
 
 interface LessonThumbnailProps {
   lesson: LearningLesson;
@@ -14,6 +15,7 @@ interface LessonThumbnailProps {
   isCompleted: boolean;
   inProgress: boolean;
   progress: number;
+  hasAccess?: boolean;
 }
 
 export const LessonThumbnail = ({ 
@@ -21,13 +23,24 @@ export const LessonThumbnail = ({
   courseId, 
   isCompleted, 
   inProgress, 
-  progress 
+  progress,
+  hasAccess = true
 }: LessonThumbnailProps) => {
   const { data: lessonTags } = useLessonTagsForLesson(lesson.id);
+  const { showUpgradeModal } = usePremiumUpgradeModal();
+  
+  const handleClick = (e: React.MouseEvent) => {
+    if (!hasAccess) {
+      e.preventDefault();
+      showUpgradeModal('learning', lesson.title);
+    }
+  };
+  
   return (
     <Link 
       to={`/learning/course/${courseId}/lesson/${lesson.id}`}
       className="block group"
+      onClick={handleClick}
     >
       <div className="relative overflow-hidden rounded-xl shadow-lg">
         {/* Aspect Ratio 9:16 - Formato Netflix */}
@@ -113,7 +126,11 @@ export const LessonThumbnail = ({
           {/* Play Button - Centro */}
           <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 transform scale-90 group-hover:scale-100">
             <div className="bg-white/90 hover:bg-white rounded-full p-4 shadow-2xl backdrop-blur-sm group-hover:shadow-aurora/50 transition-all duration-300">
-              <Play className="h-6 w-6 fill-primary text-primary translate-x-0.5" />
+              {!hasAccess ? (
+                <Lock className="h-6 w-6 text-primary" />
+              ) : (
+                <Play className="h-6 w-6 fill-primary text-primary translate-x-0.5" />
+              )}
             </div>
           </div>
         </AspectRatio>

@@ -1,15 +1,18 @@
 import { Link } from "react-router-dom";
 import { LearningLesson } from "@/lib/supabase";
-import { CheckCircle, Circle, Video, Clock } from "lucide-react";
+import { CheckCircle, Circle, Video, Clock, Lock } from "lucide-react";
+import { usePremiumUpgradeModal } from "@/hooks/usePremiumUpgradeModal";
 
 interface LessonItemProps {
   lesson: LearningLesson;
   courseId: string;
   isCompleted: boolean;
   videos?: any[];
+  hasAccess?: boolean;
 }
 
-export const LessonItem = ({ lesson, courseId, isCompleted, videos = [] }: LessonItemProps) => {
+export const LessonItem = ({ lesson, courseId, isCompleted, videos = [], hasAccess = true }: LessonItemProps) => {
+  const { showUpgradeModal } = usePremiumUpgradeModal();
   // Calcular a duração total dos vídeos em minutos
   const calculateDuration = (): number => {
     if (videos.length === 0 && lesson.estimated_time_minutes) {
@@ -28,13 +31,26 @@ export const LessonItem = ({ lesson, courseId, isCompleted, videos = [] }: Lesso
   
   const duration = calculateDuration();
 
+  const handleClick = (e: React.MouseEvent) => {
+    if (!hasAccess) {
+      e.preventDefault();
+      showUpgradeModal('learning', lesson.title);
+    }
+  };
+
   return (
     <Link 
       to={`/learning/course/${courseId}/lesson/${lesson.id}`}
-      className="flex items-center px-6 py-3 hover:bg-muted/50 border-b last:border-b-0 transition-colors"
+      className="group flex items-center px-6 py-3 hover:bg-muted/50 border-b last:border-b-0 transition-colors relative"
+      onClick={handleClick}
     >
       <div className="flex-shrink-0 mr-3">
-        {isCompleted ? (
+        {!hasAccess ? (
+          <div className="relative">
+            <Circle className="h-5 w-5 text-muted-foreground" />
+            <Lock className="h-3 w-3 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+          </div>
+        ) : isCompleted ? (
           <CheckCircle className="h-5 w-5 text-green-600" />
         ) : (
           <Circle className="h-5 w-5 text-muted-foreground" />

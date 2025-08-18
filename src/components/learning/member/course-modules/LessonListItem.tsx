@@ -2,10 +2,11 @@
 import { Link } from "react-router-dom";
 import { LearningLesson } from "@/lib/supabase/types";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Play } from "lucide-react";
+import { CheckCircle, Play, Circle, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TagBadge } from "../../tags/TagBadge";
 import { useLessonTagsForLesson } from "@/hooks/useLessonTags";
+import { usePremiumUpgradeModal } from "@/hooks/usePremiumUpgradeModal";
 
 interface LessonListItemProps {
   lesson: LearningLesson;
@@ -13,6 +14,7 @@ interface LessonListItemProps {
   isCompleted: boolean;
   inProgress: boolean;
   progress: number;
+  hasAccess?: boolean;
 }
 
 export const LessonListItem = ({
@@ -20,22 +22,38 @@ export const LessonListItem = ({
   courseId,
   isCompleted,
   inProgress,
-  progress
+  progress,
+  hasAccess = true
 }: LessonListItemProps) => {
   const { data: lessonTags } = useLessonTagsForLesson(lesson.id);
+  const { showUpgradeModal } = usePremiumUpgradeModal();
+  
+  const handleClick = (e: React.MouseEvent) => {
+    if (!hasAccess) {
+      e.preventDefault();
+      showUpgradeModal('learning', lesson.title);
+    }
+  };
+  
   return (
     <Link 
       key={lesson.id}
       to={`/learning/course/${courseId}/lesson/${lesson.id}`}
       className={cn(
-        "flex items-center justify-between p-4 hover:bg-accent/20 transition-colors",
+        "group flex items-center justify-between p-4 hover:bg-accent/20 transition-colors",
         isCompleted && "bg-green-50/50 dark:bg-green-950/20",
         inProgress && !isCompleted && "bg-blue-50/50 dark:bg-blue-950/20"
       )}
+      onClick={handleClick}
     >
       <div className="flex items-center gap-3">
-        <div className="flex-shrink-0">
-          {isCompleted ? (
+        <div className="flex-shrink-0 relative">
+          {!hasAccess ? (
+            <div className="relative">
+              <Circle className="h-5 w-5 text-muted-foreground" />
+              <Lock className="h-3 w-3 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+          ) : isCompleted ? (
             <CheckCircle className="h-5 w-5 text-green-500" />
           ) : inProgress ? (
             <div className="h-5 w-5 rounded-full border-2 border-primary flex items-center justify-center">
@@ -93,7 +111,11 @@ export const LessonListItem = ({
         </div>
       </div>
       
-      <Play className="h-4 w-4 text-muted-foreground" />
+      {!hasAccess ? (
+        <Lock className="h-4 w-4 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+      ) : (
+        <Play className="h-4 w-4 text-muted-foreground" />
+      )}
     </Link>
   );
 };

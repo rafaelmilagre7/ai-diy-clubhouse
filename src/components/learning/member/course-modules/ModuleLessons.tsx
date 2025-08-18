@@ -5,6 +5,7 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { LessonThumbnail } from "./LessonThumbnail";
 import { LessonListItem } from "./LessonListItem";
 import { sortLessonsByNumber } from "./CourseModulesHelpers";
+import { useCourseIndividualAccess } from "@/hooks/learning/useCourseIndividualAccess";
 
 interface ModuleLessonsProps { 
   moduleId: string;
@@ -28,6 +29,7 @@ export const ModuleLessons = ({
   searchQuery = ""
 }: ModuleLessonsProps) => {
   const { data, isLoading } = useLessonsByModule(moduleId);
+  const { hasAccess } = useCourseIndividualAccess(courseId);
   
   // Use aulas filtradas se disponíveis, senão use as aulas do módulo
   let lessons: LearningLesson[] = [];
@@ -113,6 +115,7 @@ export const ModuleLessons = ({
                     isCompleted={completed}
                     inProgress={inProgress}
                     progress={progress}
+                    hasAccess={hasAccess}
                   />
                 </CarouselItem>
               );
@@ -150,6 +153,7 @@ export const ModuleLessons = ({
                   isCompleted={completed}
                   inProgress={inProgress}
                   progress={progress}
+                  hasAccess={hasAccess}
                 />
               );
             })}
