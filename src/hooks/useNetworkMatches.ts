@@ -33,11 +33,20 @@ export const useNetworkMatches = () => {
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) return [];
 
-      const query = supabase
+      const { data, error } = await supabase
         .from('network_matches')
         .select(`
-          *,
-          matched_user:profiles!network_matches_matched_user_id_fkey (
+          id,
+          user_id,
+          matched_user_id,
+          match_type,
+          compatibility_score,
+          match_reason,
+          ai_analysis,
+          month_year,
+          status,
+          created_at,
+          profiles!network_matches_matched_user_id_fkey (
             id,
             name,
             company_name,
@@ -50,13 +59,40 @@ export const useNetworkMatches = () => {
         .eq('status', 'pending')
         .order('created_at', { ascending: false });
 
-      const { data, error } = await query;
-
       if (error) {
         console.error('Erro ao buscar matches:', error);
         throw error;
       }
-      return (data || []) as NetworkMatch[];
+
+      // Transformar dados para o formato esperado pelo componente
+      const transformedData = (data || []).map(match => {
+        const profile = Array.isArray(match.profiles) ? match.profiles[0] : match.profiles;
+        
+        return {
+          ...match,
+          matched_user: profile ? {
+            id: profile.id,
+            name: profile.name,
+            company_name: profile.company_name,
+            current_position: profile.current_position,
+            industry: profile.industry,
+            avatar_url: profile.avatar_url
+          } : null
+        };
+      });
+
+      console.log('🔍 Debug matches transformados:', { 
+        total: transformedData.length,
+        withUser: transformedData.filter(m => m.matched_user).length,
+        withoutUser: transformedData.filter(m => !m.matched_user).length,
+        sample: transformedData[0] ? {
+          id: transformedData[0].id,
+          matched_user_name: transformedData[0].matched_user?.name,
+          hasMatchedUser: !!transformedData[0].matched_user
+        } : null
+      });
+
+      return transformedData.filter(match => match.matched_user) as NetworkMatch[];
     },
     staleTime: 2 * 60 * 1000, // 2 minutos
   });
