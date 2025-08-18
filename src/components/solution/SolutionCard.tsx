@@ -195,8 +195,8 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({
                              rounded-2xl border border-primary/40 backdrop-blur-sm shadow-2xl 
                              flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                 
-                {/* Ícone principal - Crown para premium */}
-                <Crown className="h-7 w-7 text-primary drop-shadow-lg animate-pulse" />
+                {/* Ícone de cadeado com animação de desbloqueio */}
+                <Lock className="h-7 w-7 text-primary drop-shadow-lg animate-pulse" />
                 
                 {/* Efeito de brilho */}
                 <div className="absolute inset-0 bg-gradient-to-t from-transparent via-primary/10 to-primary/20 
@@ -212,11 +212,11 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({
             <div className="space-y-3">
               <div className="space-y-1">
                 <h4 className="text-foreground font-bold text-xl tracking-tight">
-                  Conteúdo Premium
+                  Conteúdo Exclusivo
                 </h4>
                 <div className="flex items-center justify-center gap-2">
                   <div className="h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent w-8"></div>
-                  <Crown className="h-3 w-3 text-primary/60" />
+                  <Lock className="h-3 w-3 text-primary/60" />
                   <div className="h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent w-8"></div>
                 </div>
               </div>
