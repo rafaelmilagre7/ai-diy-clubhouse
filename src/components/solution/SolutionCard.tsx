@@ -5,11 +5,13 @@ import { Solution } from '@/lib/supabase';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { BarChart, TrendingUp, Settings, Zap } from 'lucide-react';
+import { BarChart, TrendingUp, Settings, Zap, Lock, Crown } from 'lucide-react';
 import { getCategoryDetails } from '@/lib/types/categoryTypes';
 
 interface SolutionCardProps {
   solution: Solution;
+  hasAccess?: boolean;
+  onUpgradeRequired?: () => void;
 }
 
 const getDifficultyBadgeStyle = (difficulty: string) => {
@@ -25,7 +27,11 @@ const getDifficultyBadgeStyle = (difficulty: string) => {
   }
 };
 
-export const SolutionCard: React.FC<SolutionCardProps> = ({ solution }) => {
+export const SolutionCard: React.FC<SolutionCardProps> = ({ 
+  solution, 
+  hasAccess = true, 
+  onUpgradeRequired 
+}) => {
   const getCategoryDetailsWithIcon = (category: string) => {
     const details = getCategoryDetails(category);
     
@@ -56,13 +62,53 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution }) => {
 
   const categoryDetails = getCategoryDetailsWithIcon(solution.category);
 
+  const handleClick = (e: React.MouseEvent) => {
+    if (!hasAccess && onUpgradeRequired) {
+      e.preventDefault();
+      onUpgradeRequired();
+    }
+  };
+
+  const CardComponent = hasAccess ? Link : 'div';
+
+  if (hasAccess) {
+    return (
+      <Link to={`/solution/${solution.id}`} className="block group cursor-pointer">
+        <CardContent />
+      </Link>
+    );
+  }
+
   return (
-    <Link to={`/solution/${solution.id}`} className="block group">
+    <div className="block group cursor-pointer" onClick={handleClick}>
+      <CardContent />
+    </div>
+  );
+
+  function CardContent() {
+    return (
       <Card className="h-full overflow-hidden transition-all duration-300 
                      bg-card/90 backdrop-blur-sm border border-border/40 
                      hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/10 
                      hover:scale-105 hover:bg-card/95 
-                     group-hover:translate-y-[-4px]">
+                     group-hover:translate-y-[-4px] relative">
+        
+        {/* Premium Overlay para usuários sem acesso */}
+        {!hasAccess && (
+          <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-black/40 to-black/60 z-30 flex items-center justify-center backdrop-blur-sm">
+            <div className="text-center space-y-3">
+              <div className="p-3 bg-gradient-to-r from-viverblue via-viverblue/90 to-viverblue/80 rounded-full w-fit mx-auto shadow-2xl">
+                <Crown className="h-8 w-8 text-white" />
+              </div>
+              <Badge className="bg-gradient-to-r from-viverblue via-viverblue/90 to-viverblue/80 text-white border-0 px-4 py-2 text-sm font-semibold shadow-lg">
+                <Lock className="h-3 w-3 mr-2" />
+                PREMIUM
+              </Badge>
+              <p className="text-white/90 text-sm font-medium">Clique para fazer upgrade</p>
+            </div>
+          </div>
+        )}
+        
         <CardHeader className="p-0">
           <div className="aspect-video relative overflow-hidden">
             {solution.thumbnail_url ? (
@@ -95,6 +141,16 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution }) => {
                 <span className="font-medium">{categoryDetails.name}</span>
               </span>
             </Badge>
+            
+            {/* Premium Badge para usuários sem acesso */}
+            {!hasAccess && (
+              <Badge 
+                className="absolute top-3 right-3 bg-gradient-to-r from-viverblue via-viverblue/90 to-viverblue/80 text-white border-0 shadow-lg backdrop-blur-sm"
+              >
+                <Crown className="h-3 w-3 mr-1" />
+                PREMIUM
+              </Badge>
+            )}
           </div>
         </CardHeader>
         
@@ -141,8 +197,12 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution }) => {
         </CardFooter>
         
         {/* Bottom glow indicator */}
-        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-primary/30 via-primary/60 to-primary/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        <div className={`absolute bottom-0 left-0 right-0 h-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
+          hasAccess 
+            ? 'bg-gradient-to-r from-primary/30 via-primary/60 to-primary/30' 
+            : 'bg-gradient-to-r from-viverblue/30 via-viverblue/60 to-viverblue/30'
+        }`}></div>
       </Card>
-    </Link>
-  );
+    );
+  }
 };

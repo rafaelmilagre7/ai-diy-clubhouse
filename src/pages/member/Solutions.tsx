@@ -10,7 +10,8 @@ import { Solution } from '@/lib/supabase';
 import { useToolsData } from '@/hooks/useToolsData';
 import { useLogging } from '@/contexts/logging';
 import { useDocumentTitle } from '@/hooks/use-document-title';
-import { AccessBlocked } from '@/components/ui/access-blocked';
+import { PremiumUpgradeModal } from '@/components/ui/premium-upgrade-modal';
+import { usePremiumUpgradeModal } from '@/hooks/usePremiumUpgradeModal';
 
 const Solutions = () => {
   // Definir título da página
@@ -29,16 +30,16 @@ const Solutions = () => {
     setSearchQuery,
     activeCategory,
     setActiveCategory,
-    canViewSolutions,
     hasSolutionsAccess
   } = useSolutionsData();
 
+  const { modalState, showUpgradeModal, hideUpgradeModal } = usePremiumUpgradeModal();
   // Log data for debugging
   log("Solutions page loaded", { 
     solutionsCount: filteredSolutions?.length || 0, 
     activeCategory,
     isLoading: loading || toolsDataLoading,
-    canViewSolutions
+    hasSolutionsAccess
   });
 
   // Atualizado para usar nomes de categorias em português
@@ -49,10 +50,8 @@ const Solutions = () => {
     { id: 'Estratégia', name: 'Estratégia' }
   ];
 
-  // Se o usuário não tem permissão para ver soluções, mostrar componente de bloqueio
-  if (!hasSolutionsAccess) {
-    return <AccessBlocked feature="solutions" />;
-  }
+  // Se o usuário não tem permissão, ainda permitir ver a listagem (freemium)
+  // O bloqueio será no clique individual de cada solução
 
   // Se estiver carregando as soluções, mostrar tela de carregamento
   // Mas não bloquear se apenas as ferramentas estiverem carregando
@@ -159,7 +158,11 @@ const Solutions = () => {
                       className="animate-scale-in"
                       style={{ animationDelay: `${index * 0.1}s` }}
                     >
-                      <SolutionCard solution={solution} />
+                      <SolutionCard 
+                        solution={solution} 
+                        hasAccess={hasSolutionsAccess}
+                        onUpgradeRequired={() => showUpgradeModal('solutions', solution.title)}
+                      />
                     </div>
                   ))}
                 </div>
@@ -167,6 +170,14 @@ const Solutions = () => {
             </TabsContent>
           ))}
         </Tabs>
+
+        {/* Modal de Upgrade Premium */}
+        <PremiumUpgradeModal
+          open={modalState.open}
+          onOpenChange={hideUpgradeModal}
+          feature={modalState.feature}
+          itemTitle={modalState.itemTitle}
+        />
       </div>
     </div>
   );
