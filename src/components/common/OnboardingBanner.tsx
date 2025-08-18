@@ -39,25 +39,32 @@ export const OnboardingBanner: React.FC = () => {
       return;
     }
 
-    // LÓGICA SIMPLIFICADA: Se onboarding_completed for true, NUNCA mostrar banner
+    // LÓGICA ROBUSTA: Verificar onboarding completo no PERFIL primeiro
     if (profile.onboarding_completed === true) {
       console.log('🎯 [BANNER] Onboarding concluído no perfil - não mostrando banner');
       setShowBanner(false);
       return;
     }
 
-    // Verificar também no banco de dados onboarding_final para dupla checagem
+    // DUPLA CHECAGEM: Verificar também no banco de dados onboarding_final
     try {
       const { data: onboardingData } = await supabase
         .from('onboarding_final')
-        .select('is_completed, completed_at')
+        .select('is_completed, completed_at, completed_steps')
         .eq('user_id', user.id)
         .maybeSingle();
 
       console.log('🎯 [BANNER] Dados onboarding_final:', onboardingData);
 
-      // Se onboarding está completo no banco, não mostrar banner
-      if (onboardingData?.is_completed === true && onboardingData?.completed_at) {
+      // MÚLTIPLAS CONDIÇÕES para considerar onboarding completo:
+      const isOnboardingComplete = (
+        // Condição 1: Marcado como completo no banco
+        (onboardingData?.is_completed === true && onboardingData?.completed_at) ||
+        // Condição 2: Tem todos os steps incluindo o 6
+        (onboardingData?.completed_steps && onboardingData.completed_steps.includes(6) && onboardingData.completed_steps.length >= 6)
+      );
+
+      if (isOnboardingComplete) {
         console.log('🎯 [BANNER] Onboarding completo no banco - não mostrando banner');
         setShowBanner(false);
         return;
@@ -65,6 +72,7 @@ export const OnboardingBanner: React.FC = () => {
 
     } catch (error) {
       console.warn('🎯 [BANNER] Erro ao verificar onboarding_final:', error);
+      // Em caso de erro, assumir que está incompleto para mostrar banner
     }
 
     // Mostrar banner apenas se onboarding NÃO estiver completo
