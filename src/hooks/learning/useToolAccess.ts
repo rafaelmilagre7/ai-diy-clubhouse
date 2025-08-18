@@ -1,13 +1,15 @@
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
+import { useFeatureAccess } from '@/hooks/auth/useFeatureAccess';
 
 export const useToolAccess = (toolId: string) => {
   const { user, profile } = useAuth();
   const userRole = profile?.user_roles?.name;
+  const { hasFeatureAccess } = useFeatureAccess();
 
   return useQuery({
-    queryKey: ['tool-access', toolId, user?.id, userRole],
+    queryKey: ['tool-access', toolId, user?.id, userRole, hasFeatureAccess('tools')],
     queryFn: async (): Promise<boolean> => {
       if (!user?.id || !toolId) {
         return false;
@@ -18,8 +20,13 @@ export const useToolAccess = (toolId: string) => {
         return true;
       }
 
+      // Se a role/permissão já libera a seção de ferramentas, conceder acesso
+      if (hasFeatureAccess('tools')) {
+        return true;
+      }
+
       try {
-        // Verificar acesso usando a função RPC
+        // Verificar acesso usando a função RPC (controle fino por ferramenta)
         const { data, error } = await supabase.rpc('can_access_tool', {
           p_tool_id: toolId,
           p_user_id: user.id
