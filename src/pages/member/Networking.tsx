@@ -147,7 +147,7 @@ const Networking = () => {
         <AuroraUpgradeModal 
           open={modalState.open}
           onOpenChange={hideUpgradeModal}
-          itemTitle="Networking AI Premium"
+          itemTitle="Desbloquear Networking AI"
           feature="solutions"
         />
       </>
@@ -184,7 +184,7 @@ const Networking = () => {
       <AuroraUpgradeModal 
         open={modalState.open}
         onOpenChange={hideUpgradeModal}
-        itemTitle="Networking AI Premium"
+        itemTitle="Desbloquear Networking AI"
         feature="solutions"
       />
     </>
