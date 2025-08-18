@@ -12,13 +12,14 @@ serve(async (req) => {
   }
 
   try {
-    const { feature, itemTitle, type, timestamp } = await req.json();
+    const { feature, itemTitle, type, timestamp, userInfo } = await req.json();
     
     console.log('📞 [SALES-NOTIFICATION] Nova notificação de interesse:', {
       feature,
       itemTitle,
       type,
-      timestamp
+      timestamp,
+      userInfo
     });
 
     // Webhook URL do Discord
@@ -47,36 +48,105 @@ serve(async (req) => {
 
     const featureName = featureNames[feature as keyof typeof featureNames] || feature;
 
-    // Criar embed rico para Discord
-    const embed = {
-      title: "🚀 Nova Oportunidade de Vendas!",
-      description: `Um usuário demonstrou interesse em fazer upgrade na plataforma`,
-      color: 0x6366f1, // Cor azul/roxo
-      fields: [
-        {
-          name: "📋 Funcionalidade",
-          value: `**${featureName}**`,
-          inline: true
+    // Criar embed rico para Discord - adaptado para interesse em upgrade
+    let embed;
+    let content;
+
+    if (type === 'upgrade_interest') {
+      // Notificação de interesse em upgrade/upsell
+      embed = {
+        title: "💰 LEAD QUENTE - Interesse em Upgrade!",
+        description: `Um usuário demonstrou interesse em assinar a plataforma premium`,
+        color: 0x10B981, // Verde para indicar oportunidade de venda
+        fields: [
+          ...(userInfo?.name ? [{
+            name: "👤 CLIENTE",
+            value: userInfo.name,
+            inline: true
+          }] : []),
+          ...(userInfo?.email ? [{
+            name: "📧 EMAIL",
+            value: userInfo.email,
+            inline: true
+          }] : []),
+          ...(userInfo?.phone ? [{
+            name: "📱 TELEFONE",
+            value: userInfo.phone,
+            inline: true
+          }] : []),
+          {
+            name: "📋 Funcionalidade de Interesse",
+            value: `**${featureName}**`,
+            inline: false
+          },
+          ...(itemTitle ? [{
+            name: "🎯 Item Específico",
+            value: itemTitle,
+            inline: false
+          }] : []),
+          {
+            name: "⚡ STATUS",
+            value: "Interessado em Upgrade Premium",
+            inline: false
+          },
+          ...(userInfo?.id ? [{
+            name: "🆔 ID do Usuário",
+            value: userInfo.id,
+            inline: true
+          }] : []),
+          {
+            name: "⏰ HORÁRIO",
+            value: new Date(timestamp).toLocaleString('pt-BR', {
+              timeZone: 'America/Sao_Paulo'
+            }),
+            inline: true
+          },
+          {
+            name: "📍 PRÓXIMOS PASSOS",
+            value: "Contatar para apresentar planos premium e benefícios",
+            inline: false
+          }
+        ],
+        footer: {
+          text: "Viver de IA Club - Sistema de Notificações de Vendas",
+          icon_url: "https://viverdeia.ai/favicon.ico"
         },
-        {
-          name: "🎯 Item Específico",
-          value: itemTitle || "Acesso geral",
-          inline: true
+        timestamp: new Date(timestamp).toISOString()
+      };
+      content = "@here 💰 **LEAD QUENTE** - Usuário quer fazer upgrade na plataforma!";
+    } else {
+      // Notificação padrão para outras situações
+      embed = {
+        title: "🚀 Nova Oportunidade de Vendas!",
+        description: `Um usuário demonstrou interesse em fazer upgrade na plataforma`,
+        color: 0x6366f1, // Cor azul/roxo
+        fields: [
+          {
+            name: "📋 Funcionalidade",
+            value: `**${featureName}**`,
+            inline: true
+          },
+          {
+            name: "🎯 Item Específico",
+            value: itemTitle || "Acesso geral",
+            inline: true
+          },
+          {
+            name: "⏰ Horário",
+            value: new Date(timestamp).toLocaleString('pt-BR', {
+              timeZone: 'America/Sao_Paulo'
+            }),
+            inline: true
+          }
+        ],
+        footer: {
+          text: "Viver de IA Club - Sistema de Notificações",
+          icon_url: "https://viverdeia.ai/favicon.ico"
         },
-        {
-          name: "⏰ Horário",
-          value: new Date(timestamp).toLocaleString('pt-BR', {
-            timeZone: 'America/Sao_Paulo'
-          }),
-          inline: true
-        }
-      ],
-      footer: {
-        text: "Viver de IA Club - Sistema de Notificações",
-        icon_url: "https://viverdeia.ai/favicon.ico"
-      },
-      timestamp: new Date(timestamp).toISOString()
-    };
+        timestamp: new Date(timestamp).toISOString()
+      };
+      content = "@here 💰 **LEAD QUENTE** - Usuário quer fazer upgrade!";
+    }
 
     // Enviar para Discord
     const discordResponse = await fetch(DISCORD_WEBHOOK_URL, {
@@ -85,7 +155,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        content: "@here 💰 **LEAD QUENTE** - Usuário quer fazer upgrade!",
+        content,
         embeds: [embed]
       })
     });

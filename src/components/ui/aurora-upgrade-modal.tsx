@@ -1,6 +1,7 @@
 import React from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   ExternalLink, 
   MessageCircle,
@@ -52,6 +53,25 @@ export const AuroraUpgradeModal: React.FC<AuroraUpgradeModalProps> = ({
 
   const handleTalkToSales = async () => {
     try {
+      // Buscar informações do usuário logado
+      const { data: { user } } = await supabase.auth.getUser();
+      let userInfo = null;
+      
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name, phone')
+          .eq('id', user.id)
+          .single();
+          
+        userInfo = {
+          id: user.id,
+          name: profile?.full_name || user.email?.split('@')[0] || 'Usuário',
+          email: user.email,
+          phone: profile?.phone
+        };
+      }
+
       const response = await fetch('https://zotzvtepvpnkcoobdubt.supabase.co/functions/v1/sales-notification', {
         method: 'POST',
         headers: {
@@ -61,7 +81,8 @@ export const AuroraUpgradeModal: React.FC<AuroraUpgradeModalProps> = ({
           feature: 'solutions',
           itemTitle,
           type: 'upgrade_interest',
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+          userInfo
         })
       });
       
