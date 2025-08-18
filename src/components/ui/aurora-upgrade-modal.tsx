@@ -191,18 +191,18 @@ export const AuroraUpgradeModal: React.FC<AuroraUpgradeModalProps> = ({
                     className="w-10 h-10 rounded-full border-2 border-background object-cover"
                   />
                   <img 
-                    src="https://ui-avatars.com/api/?name=j.pasqualli%40jfsolutions.com&background=0D8ABC&color=fff" 
-                    alt="Caio" 
+                    src="https://zotzvtepvpnkcoobdubt.supabase.co/storage/v1/object/public/profile-pictures/70733c09-74a1-4f2b-b054-5bcf48b01841/profile-1753472567476.jpg" 
+                    alt="Galante" 
                     className="w-10 h-10 rounded-full border-2 border-background object-cover"
                   />
                   <img 
-                    src="https://zotzvtepvpnkcoobdubt.supabase.co/storage/v1/object/public/profile-pictures/avatars/1755478078904-q1w2bm.png" 
-                    alt="Rafael Milagre" 
+                    src="https://zotzvtepvpnkcoobdubt.supabase.co/storage/v1/object/public/profile-pictures/2807f4bd-360c-49c4-b790-91c1791abe9d/profile-1754343191813.png" 
+                    alt="Davi Lima" 
                     className="w-10 h-10 rounded-full border-2 border-background object-cover"
                   />
                   <img 
-                    src="https://zotzvtepvpnkcoobdubt.supabase.co/storage/v1/object/public/profile_images/d207603b-a1f6-4e17-acc4-36f5fb037dc4/feb7c385-5706-4d58-8948-e1311b870ccc_WhatsApp_Image_2024-05-10_at_12.01.26.png" 
-                    alt="Caio Lima" 
+                    src="https://zotzvtepvpnkcoobdubt.supabase.co/storage/v1/object/public/profile-pictures/657c1795-74f3-4b0b-bb97-1d415eb15ebc/profile-1754507975554.jpeg" 
+                    alt="Douglas Muller" 
                     className="w-10 h-10 rounded-full border-2 border-background object-cover"
                   />
                 </div>
