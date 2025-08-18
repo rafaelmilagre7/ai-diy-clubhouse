@@ -4,12 +4,13 @@ import { Tool } from '@/types/toolTypes';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ExternalLink, Gift, Crown, Lock } from 'lucide-react';
+import { ExternalLink, Gift } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BenefitBadge } from './BenefitBadge';
 import { useFeatureAccess } from '@/hooks/auth/useFeatureAccess';
 import { useToolAccess } from '@/hooks/learning/useToolAccess';
 import { usePremiumUpgradeModal } from '@/hooks/usePremiumUpgradeModal';
+import { UnifiedContentBlock } from '@/components/ui/UnifiedContentBlock';
 
 interface ToolGridProps {
   tools: Tool[];
@@ -55,9 +56,8 @@ const ToolCard = ({ tool }: ToolCardProps) => {
     );
   }
   
-  const handleClick = (e: React.MouseEvent) => {
+  const handleToolClick = () => {
     if (!hasAccess) {
-      e.preventDefault();
       if (!hasSectionAccess) {
         showUpgradeModal('tools', tool.name);
       } else {
@@ -145,22 +145,11 @@ const ToolCard = ({ tool }: ToolCardProps) => {
   }
 
   return (
-    <div className="cursor-pointer" onClick={handleClick}>
-      <Card className="relative flex flex-col h-full overflow-hidden group surface-elevated transition-all duration-300 hover:shadow-aurora hover:border-aurora/30 hover:scale-[1.02] hover:-translate-y-1">
-        {/* Premium Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-black/40 to-black/60 z-30 flex items-center justify-center backdrop-blur-sm">
-          <div className="text-center space-y-3">
-            <div className="p-3 bg-gradient-to-r from-viverblue via-viverblue/90 to-viverblue/80 rounded-full w-fit mx-auto shadow-2xl">
-              <Crown className="h-8 w-8 text-white" />
-            </div>
-            <Badge className="bg-gradient-to-r from-viverblue via-viverblue/90 to-viverblue/80 text-white border-0 px-4 py-2 text-sm font-semibold shadow-lg">
-              <Lock className="h-3 w-3 mr-2" />
-              PREMIUM
-            </Badge>
-            <p className="text-white/90 text-sm font-medium">Clique para fazer upgrade</p>
-          </div>
-        </div>
-        
+    <Card className="relative flex flex-col h-full overflow-hidden group surface-elevated transition-all duration-300 hover:shadow-aurora hover:border-aurora/30 hover:scale-[1.02] hover:-translate-y-1">
+      <UnifiedContentBlock 
+        sectionName="as ferramentas"
+        onClick={handleToolClick}
+      >
         <div className="absolute inset-0 opacity-10 pointer-events-none">
           <div className="absolute inset-0" style={{
             backgroundImage: 'radial-gradient(circle at 1px 1px, hsl(var(--aurora) / 0.1) 1px, transparent 0)',
@@ -169,14 +158,6 @@ const ToolCard = ({ tool }: ToolCardProps) => {
         </div>
         
         <div className="absolute inset-0 bg-gradient-to-br from-aurora/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        
-        {/* Premium Badge no topo */}
-        <Badge 
-          className="absolute top-3 right-3 bg-gradient-to-r from-viverblue via-viverblue/90 to-viverblue/80 text-white border-0 shadow-lg backdrop-blur-sm z-20"
-        >
-          <Crown className="h-3 w-3 mr-1" />
-          PREMIUM
-        </Badge>
         
         <div className="relative flex flex-col h-full">
           <CardHeader className="pb-3 pt-6 px-6 flex-row items-center gap-4 relative z-10">
@@ -236,8 +217,8 @@ const ToolCard = ({ tool }: ToolCardProps) => {
             </Button>
           </CardFooter>
         </div>
-      </Card>
-    </div>
+      </UnifiedContentBlock>
+    </Card>
   );
 };
 
