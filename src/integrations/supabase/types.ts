@@ -5137,6 +5137,10 @@ export type Database = {
         Args: { target_user_id?: string }
         Returns: boolean
       }
+      can_access_tool: {
+        Args: { p_tool_id: string; p_user_id: string }
+        Returns: boolean
+      }
       can_assign_role: {
         Args: { admin_user_id: string; target_role_id: string }
         Returns: boolean
