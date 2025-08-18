@@ -22,7 +22,7 @@ serve(async (req) => {
     });
 
     // Webhook URL do Discord
-    const DISCORD_WEBHOOK_URL = Deno.env.get('DISCORD_SALES_WEBHOOK_URL');
+    const DISCORD_WEBHOOK_URL = Deno.env.get('DISCORD_WEBHOOK_URL');
     
     if (!DISCORD_WEBHOOK_URL) {
       console.error('❌ [SALES-NOTIFICATION] Discord webhook URL não configurada');
