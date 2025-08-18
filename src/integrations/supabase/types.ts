@@ -5885,6 +5885,7 @@ export type Database = {
           current_position: string
           linkedin_url: string
           phone: string
+          profile_picture: string
           user_id: string
         }[]
       }

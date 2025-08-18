@@ -136,7 +136,7 @@ export const useNetworkMatches = () => {
               company_name: matchedProfile.company_name || onboardingInfo?.company_name,
               current_position: matchedProfile.current_position || onboardingInfo?.current_position,
               industry: matchedProfile.industry,
-              avatar_url: matchedProfile.avatar_url,
+              avatar_url: matchedProfile.avatar_url || onboardingInfo?.profile_picture,
               linkedin_url: matchedProfile.linkedin_url || onboardingInfo?.linkedin_url,
               whatsapp_number: matchedProfile.whatsapp_number,
               professional_bio: matchedProfile.professional_bio,
