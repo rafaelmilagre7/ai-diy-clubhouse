@@ -20,22 +20,13 @@ const queryClient = new QueryClient({
 });
 
 function App() {
+  console.log('🚀 App iniciando...');
+  
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <AuthProvider>
-          <LoggingProvider>
-            <BrowserRouter>
-              <div className="min-h-screen bg-background font-sans antialiased">
-                <AppRoutes />
-                <Toaster />
-                <Sonner />
-              </div>
-            </BrowserRouter>
-          </LoggingProvider>
-        </AuthProvider>
-      </TooltipProvider>
-    </QueryClientProvider>
+    <div style={{ padding: '20px', background: 'white', color: 'black' }}>
+      <h1>Teste de Carregamento</h1>
+      <p>Se você está vendo isso, o App está funcionando</p>
+    </div>
   );
 }
 
