@@ -166,46 +166,55 @@ export const useOnboarding = () => {
       if (data) {
         console.log('[ONBOARDING] Setando estado com dados carregados');
         
-        // CORREÇÃO CRÍTICA: Se onboarding já está completo, ir direto para step 6 (celebração)
+        // CORREÇÃO CRÍTICA: Lógica completa de redirecionamento
         let nextStep;
         
         if (data.is_completed === true) {
-          console.log('[ONBOARDING] ⚠️ ONBOARDING JÁ COMPLETO - indo direto para Step 6 (celebração)');
+          console.log('[ONBOARDING] ✅ ONBOARDING JÁ COMPLETO - indo direto para Step 6 (celebração)');
           nextStep = 6;
         } else if (!data.user_type) {
           console.log('[ONBOARDING] user_type é NULL - redirecionando para step 0');
           nextStep = 0;
         } else {
-          // Determinar o próximo step baseado nos dados existentes
-          nextStep = 1;
+          // CORREÇÃO: Se completou todos os 5 steps mas ainda não finalizou, ir para step 6
+          const completedSteps = data.completed_steps || [];
+          const allStepsCompleted = [1,2,3,4,5].every(step => completedSteps.includes(step));
           
-          // Função para verificar se um objeto tem dados válidos
-          const hasValidData = (obj: any) => {
-            if (!obj || typeof obj !== 'object') return false;
-            const keys = Object.keys(obj);
-            return keys.length > 0 && keys.some(key => obj[key] && obj[key] !== '');
-          };
-          
-          // Verificar qual é o próximo step incompleto
-          if (hasValidData(data.personal_info)) {
-          console.log('[ONBOARDING] Personal info válido, indo para step 2');
-          nextStep = 2;
-        }
-        if (hasValidData(data.professional_info)) {
-          console.log('[ONBOARDING] Professional info válido, indo para step 3');
-          nextStep = 3;
-        }
-        if (hasValidData(data.ai_experience)) {
-          console.log('[ONBOARDING] AI experience válido, indo para step 4');
-          nextStep = 4;
-        }
-        if (hasValidData(data.goals_info)) {
-          console.log('[ONBOARDING] Goals info válido, indo para step 5');
-          nextStep = 5;
-        }
-        if (hasValidData(data.personalization)) {
-            console.log('[ONBOARDING] Personalization válido, indo para step 6');
+          if (allStepsCompleted && !data.is_completed) {
+            console.log('[ONBOARDING] 🎯 TODOS OS 5 STEPS COMPLETADOS - indo para Step 6 (finalização)');
             nextStep = 6;
+          } else {
+            // Determinar o próximo step baseado nos dados existentes
+            nextStep = 1;
+            
+            // Função para verificar se um objeto tem dados válidos
+            const hasValidData = (obj: any) => {
+              if (!obj || typeof obj !== 'object') return false;
+              const keys = Object.keys(obj);
+              return keys.length > 0 && keys.some(key => obj[key] && obj[key] !== '');
+            };
+            
+            // Verificar qual é o próximo step incompleto
+            if (hasValidData(data.personal_info)) {
+              console.log('[ONBOARDING] Personal info válido, indo para step 2');
+              nextStep = 2;
+            }
+            if (hasValidData(data.professional_info)) {
+              console.log('[ONBOARDING] Professional info válido, indo para step 3');
+              nextStep = 3;
+            }
+            if (hasValidData(data.ai_experience)) {
+              console.log('[ONBOARDING] AI experience válido, indo para step 4');
+              nextStep = 4;
+            }
+            if (hasValidData(data.goals_info)) {
+              console.log('[ONBOARDING] Goals info válido, indo para step 5');
+              nextStep = 5;
+            }
+            if (hasValidData(data.personalization)) {
+              console.log('[ONBOARDING] Personalization válido, indo para step 6');
+              nextStep = 6;
+            }
           }
         }
         
