@@ -206,6 +206,7 @@ export const validateFile = (file: File, config: UploadConfig): UploadError | nu
 
 export const ensureBucketExists = async (bucketName: string): Promise<boolean> => {
   try {
+    // CORREÇÃO: Apenas verificar se bucket existe, não tentar criar
     const { data: buckets, error } = await supabase.storage.listBuckets();
     if (error) {
       console.error('[UPLOAD_SYSTEM] Erro ao listar buckets:', error);
@@ -215,22 +216,11 @@ export const ensureBucketExists = async (bucketName: string): Promise<boolean> =
     const bucketExists = buckets?.some(bucket => bucket.name === bucketName);
     
     if (!bucketExists) {
-      console.log(`[UPLOAD_SYSTEM] Criando bucket: ${bucketName}`);
-      
-      const { error: createError } = await supabase.storage.createBucket(bucketName, {
-        public: true,
-        fileSizeLimit: 300 * 1024 * 1024, // 300MB
-        allowedMimeTypes: undefined // Permitir todos os tipos
-      });
-
-      if (createError) {
-        console.error(`[UPLOAD_SYSTEM] Erro ao criar bucket ${bucketName}:`, createError);
-        return false;
-      }
-      
-      console.log(`[UPLOAD_SYSTEM] Bucket ${bucketName} criado com sucesso`);
+      console.warn(`[UPLOAD_SYSTEM] Bucket ${bucketName} não encontrado`);
+      return false;
     }
 
+    console.log(`[UPLOAD_SYSTEM] Bucket ${bucketName} verificado com sucesso`);
     return true;
   } catch (error) {
     console.error(`[UPLOAD_SYSTEM] Erro ao verificar bucket ${bucketName}:`, error);

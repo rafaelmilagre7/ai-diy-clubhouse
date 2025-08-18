@@ -6665,6 +6665,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      test_profile_upload_access: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       test_reset_onboarding: {
         Args: { target_email: string }
         Returns: Json
