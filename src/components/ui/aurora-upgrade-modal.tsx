@@ -1,7 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/auth';
+import { useToast } from '@/hooks/use-toast';
 import { 
   ExternalLink, 
   MessageCircle,
@@ -9,7 +12,11 @@ import {
   Zap,
   Star,
   Users,
-  Trophy
+  Trophy,
+  UserCheck,
+  Mail,
+  Phone,
+  Loader2
 } from 'lucide-react';
 
 interface AuroraUpgradeModalProps {
@@ -46,55 +53,87 @@ export const AuroraUpgradeModal: React.FC<AuroraUpgradeModalProps> = ({
   onOpenChange,
   itemTitle
 }) => {
+  const { profile } = useAuth();
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [userEmail, setUserEmail] = useState(profile?.email || "");
+  const [userPhone, setUserPhone] = useState((profile as any)?.whatsapp_number || "");
+
+  // Sincronizar dados quando profile mudar
+  useEffect(() => {
+    setUserEmail(profile?.email || "");
+    setUserPhone((profile as any)?.whatsapp_number || "");
+  }, [profile?.email, profile]);
+
   const handleUpgradeNow = () => {
     window.open('https://viverdeia.ai/', '_blank');
     onOpenChange(false);
   };
 
   const handleTalkToSales = async () => {
+    setIsSubmitting(true);
+    
     try {
-      // Buscar informações do usuário logado
-      const { data: { user } } = await supabase.auth.getUser();
-      let userInfo = null;
-      
-      if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('full_name, phone')
-          .eq('id', user.id)
-          .single();
-          
-        userInfo = {
-          id: user.id,
-          name: profile?.full_name || user.email?.split('@')[0] || 'Usuário',
-          email: user.email,
-          phone: profile?.phone
-        };
+      // Validação básica
+      if (!userEmail || !profile?.name) {
+        toast({
+          title: "Erro",
+          description: "Nome e email são obrigatórios",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
       }
 
-      const response = await fetch('https://zotzvtepvpnkcoobdubt.supabase.co/functions/v1/sales-notification', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      // Chamar edge function
+      const { data, error } = await supabase.functions.invoke('sales-notification', {
+        body: {
           feature: 'solutions',
-          itemTitle,
+          itemTitle: itemTitle || 'Acesso Premium à Plataforma',
           type: 'upgrade_interest',
           timestamp: new Date().toISOString(),
-          userInfo
-        })
+          userInfo: {
+            id: profile?.id,
+            name: profile?.name,
+            email: userEmail,
+            phone: userPhone || ''
+          }
+        }
       });
-      
-      if (!response.ok) {
-        throw new Error('Erro na notificação');
+
+      if (error) {
+        console.error("Edge function error:", error);
+        toast({
+          title: "Erro ao processar solicitação",
+          description: error.message || "Tente novamente em alguns minutos",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (data?.success) {
+        toast({
+          title: "Sucesso! 🎉",
+          description: "Nossa equipe entrará em contato em breve para apresentar os planos premium.",
+        });
+        onOpenChange(false);
+      } else {
+        toast({
+          title: "Erro",
+          description: data?.error || "Erro inesperado ao processar solicitação",
+          variant: "destructive",
+        });
       }
       
-      onOpenChange(false);
     } catch (error) {
-      console.error('Erro ao notificar vendas:', error);
-      window.open('https://wa.me/5511999999999?text=Olá! Tenho interesse em fazer upgrade na plataforma Viver de IA.', '_blank');
-      onOpenChange(false);
+      console.error('Erro ao contatar vendas:', error);
+      toast({
+        title: "Erro de conexão",
+        description: "Verifique sua conexão e tente novamente",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -140,6 +179,49 @@ export const AuroraUpgradeModal: React.FC<AuroraUpgradeModalProps> = ({
                   <span className="text-sm font-medium text-foreground">{itemTitle}</span>
                 </div>
               )}
+            </div>
+
+            {/* Dados do usuário */}
+            <div className="space-y-3 mb-6">
+              <h3 className="text-sm font-medium text-muted-foreground mb-3">Seus dados para contato:</h3>
+              
+              <div className="space-y-3">
+                <div className="flex items-center gap-3 p-4 bg-card/40 rounded-xl border border-border/30">
+                  <UserCheck className="h-4 w-4 text-primary" />
+                  <div className="flex-1">
+                    <p className="font-medium text-foreground">{profile?.name || "Nome não informado"}</p>
+                    <p className="text-xs text-muted-foreground">Nome completo</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 p-4 bg-card/40 rounded-xl border border-border/30">
+                  <Mail className="h-4 w-4 text-primary" />
+                  <div className="flex-1">
+                    <Input
+                      type="email"
+                      value={userEmail}
+                      onChange={(e) => setUserEmail(e.target.value)}
+                      placeholder="Seu email de contato"
+                      className="bg-transparent border-none p-0 font-medium text-foreground placeholder:text-muted-foreground focus-visible:ring-0"
+                    />
+                    <p className="text-xs text-muted-foreground">Email de contato</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 p-4 bg-card/40 rounded-xl border border-border/30">
+                  <Phone className="h-4 w-4 text-primary" />
+                  <div className="flex-1">
+                    <Input
+                      type="tel"
+                      value={userPhone}
+                      onChange={(e) => setUserPhone(e.target.value)}
+                      placeholder="Seu telefone (com DDD)"
+                      className="bg-transparent border-none p-0 font-medium text-foreground placeholder:text-muted-foreground focus-visible:ring-0"
+                    />
+                    <p className="text-xs text-muted-foreground">Telefone</p>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div className="space-y-3 mb-6">
@@ -190,11 +272,21 @@ export const AuroraUpgradeModal: React.FC<AuroraUpgradeModalProps> = ({
                   onClick={handleTalkToSales}
                   variant="outline"
                   size="lg"
+                  disabled={isSubmitting}
                   className="h-12 px-6 text-base font-medium border-border/40 hover:bg-muted/50 
                            hover:border-primary/30 hover:scale-105 transition-all duration-300"
                 >
-                  <MessageCircle className="h-4 w-4 mr-2" />
-                  Falar com Vendas
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Enviando...
+                    </>
+                  ) : (
+                    <>
+                      <MessageCircle className="h-4 w-4 mr-2" />
+                      Falar com Vendas
+                    </>
+                  )}
                 </Button>
               </div>
 
