@@ -27,7 +27,7 @@ const translateMatchType = (type: string) => {
 
 export const MatchesGrid = () => {
   const [activeChatMatch, setActiveChatMatch] = useState<string | null>(null);
-  const [contactModalUser, setContactModalUser] = useState<{id: string, name: string} | null>(null);
+  const [contactModalUser, setContactModalUser] = useState<{id: string, name: string, email?: string, phone?: string, linkedin_url?: string, avatar_url?: string, company_name?: string, current_position?: string} | null>(null);
   
   const { matches, isLoading, error, refetch } = useNetworkMatches();
   const { generateMatches, isGenerating } = useAIMatches();
@@ -158,7 +158,13 @@ export const MatchesGrid = () => {
               onOpenChat={() => setActiveChatMatch(match.id)}
               onShowContact={() => setContactModalUser({
                 id: match.matched_user_id,
-                name: match.matched_user?.name || 'Usuário'
+                name: match.matched_user?.name || 'Usuário',
+                email: match.matched_user?.email,
+                phone: match.matched_user?.phone || match.matched_user?.whatsapp_number,
+                linkedin_url: match.matched_user?.linkedin_url,
+                avatar_url: match.matched_user?.avatar_url,
+                company_name: match.matched_user?.company_name,
+                current_position: match.matched_user?.current_position,
               })}
             />
           </motion.div>
@@ -185,6 +191,14 @@ export const MatchesGrid = () => {
         onClose={() => setContactModalUser(null)}
         userId={contactModalUser?.id || ''}
         userName={contactModalUser?.name || ''}
+        initialData={{
+          email: contactModalUser?.email,
+          phone: contactModalUser?.phone,
+          linkedin_url: contactModalUser?.linkedin_url,
+          avatar_url: contactModalUser?.avatar_url,
+          company_name: contactModalUser?.company_name,
+          current_position: contactModalUser?.current_position,
+        }}
       />
     </div>
   );

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -23,6 +23,14 @@ interface ContactModalProps {
   onClose: () => void;
   userId: string;
   userName: string;
+  initialData?: {
+    email?: string;
+    phone?: string;
+    linkedin_url?: string;
+    avatar_url?: string;
+    company_name?: string;
+    current_position?: string;
+  };
 }
 
 interface ContactData {
@@ -76,7 +84,7 @@ interface ContactData {
   };
 }
 
-export const ContactModal = ({ isOpen, onClose, userId, userName }: ContactModalProps) => {
+export const ContactModal = ({ isOpen, onClose, userId, userName, initialData }: ContactModalProps) => {
   const [contactData, setContactData] = useState<ContactData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -131,19 +139,17 @@ export const ContactModal = ({ isOpen, onClose, userId, userName }: ContactModal
   };
 
   const getDisplayData = () => {
-    if (!contactData) return null;
-
-    const onboarding = contactData.onboarding_data;
+    const onboarding = contactData?.onboarding_data;
     
     return {
-      name: contactData.name,
-      email: contactData.email,
-      avatar: contactData.avatar_url,
-      phone: contactData.whatsapp_number || onboarding?.personal_info?.phone || onboarding?.business_info?.phone,
-      company: contactData.company_name || onboarding?.business_info?.company_name || onboarding?.professional_info?.company_name,
-      position: contactData.current_position || onboarding?.business_info?.current_position || onboarding?.professional_info?.current_position,
-      industry: contactData.industry || onboarding?.business_info?.company_sector || onboarding?.professional_info?.industry,
-      linkedin: contactData.linkedin_url || onboarding?.personal_info?.linkedin_url || onboarding?.business_info?.linkedin_url,
+      name: contactData?.name || userName,
+      email: contactData?.email || initialData?.email || '',
+      avatar: contactData?.avatar_url || initialData?.avatar_url,
+      phone: contactData?.whatsapp_number || initialData?.phone || onboarding?.personal_info?.phone || onboarding?.business_info?.phone,
+      company: contactData?.company_name || initialData?.company_name || onboarding?.business_info?.company_name || onboarding?.professional_info?.company_name,
+      position: contactData?.current_position || initialData?.current_position || onboarding?.business_info?.current_position || onboarding?.professional_info?.current_position,
+      industry: contactData?.industry || onboarding?.business_info?.company_sector || onboarding?.professional_info?.industry,
+      linkedin: contactData?.linkedin_url || initialData?.linkedin_url || onboarding?.personal_info?.linkedin_url || onboarding?.business_info?.linkedin_url,
       location: onboarding?.location_info?.city && onboarding?.location_info?.state ? 
         `${onboarding.location_info.city}, ${onboarding.location_info.state}` : 
         onboarding?.location_info?.city || onboarding?.personal_info?.city,
@@ -159,13 +165,17 @@ export const ContactModal = ({ isOpen, onClose, userId, userName }: ContactModal
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden p-0 bg-gradient-to-br from-background via-background to-background/95">
+        <DialogHeader className="sr-only">
+          <DialogTitle>Contato de {userName}</DialogTitle>
+          <DialogDescription>Detalhes de contato e links profissionais</DialogDescription>
+        </DialogHeader>
         <div className="relative">
           {/* Background decorativo */}
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10"></div>
           <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-primary/20 to-transparent rounded-bl-[100px] blur-xl"></div>
           
           <div className="relative">
-            {isLoading ? (
+            {isLoading && !displayData ? (
               <div className="flex items-center justify-center py-20">
                 <motion.div
                   initial={{ scale: 0.8, opacity: 0 }}
@@ -192,20 +202,18 @@ export const ContactModal = ({ isOpen, onClose, userId, userName }: ContactModal
                     <div className="relative mb-6">
                       <div className="absolute -inset-1 bg-gradient-to-r from-primary to-primary/60 rounded-full blur-sm opacity-75"></div>
                       <div className="relative w-24 h-24 rounded-full overflow-hidden bg-gradient-to-br from-primary/20 to-primary/10 border-2 border-primary/20 shadow-xl">
-                        {displayData.avatar ? (
-                          <img
-                            src={displayData.avatar}
-                            alt={displayData.name}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                              e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                            }}
-                          />
-                        ) : null}
-                        <div className={`absolute inset-0 flex items-center justify-center text-primary ${displayData.avatar ? 'hidden' : ''}`}>
-                          <User className="h-10 w-10" />
-                        </div>
+                      <img
+                        src={displayData.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayData.name || userName)}&background=0D8ABC&color=fff&size=96`}
+                        alt={displayData.name || userName}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                        }}
+                      />
+                      <div className="absolute inset-0 hidden items-center justify-center text-primary">
+                        <User className="h-10 w-10" />
+                      </div>
                       </div>
                       {/* Indicador online */}
                       <div className="absolute bottom-1 right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-background shadow-lg"></div>
