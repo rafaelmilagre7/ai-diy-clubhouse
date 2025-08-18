@@ -3,13 +3,13 @@ import { MatchesGrid } from '@/components/networking/MatchesGrid';
 import { useDynamicSEO } from '@/hooks/seo/useDynamicSEO';
 import { NetworkingErrorBoundary } from '@/components/networking/NetworkingErrorBoundary';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
-import { useFeatureAccess } from '@/hooks/auth/useFeatureAccess';
+import { usePermissions } from '@/hooks/auth/usePermissions';
 import { usePremiumUpgradeModal } from '@/hooks/usePremiumUpgradeModal';
 import { PremiumUpgradeModal } from '@/components/ui/premium-upgrade-modal';
 import { UnifiedContentBlock } from '@/components/ui/UnifiedContentBlock';
 
 const Networking = () => {
-  const { hasFeatureAccess } = useFeatureAccess();
+  const { hasPermission, loading: permissionsLoading } = usePermissions();
   const { modalState, showUpgradeModal, hideUpgradeModal } = usePremiumUpgradeModal();
   
   useDynamicSEO({
@@ -18,34 +18,46 @@ const Networking = () => {
     keywords: 'networking AI, parcerias, IA, conexões empresariais, business matching'
   });
 
-  // Por enquanto, assumindo que networking não tem restrições (pode ajustar depois)
-  const hasAccess = hasFeatureAccess('networking') !== false; // Default true se não definido
+  // Usar sistema de permissões baseado no /admin/roles
+  const hasNetworkingAccess = hasPermission('networking.access');
   
-  const handleClick = () => {
-    if (!hasAccess) {
-      showUpgradeModal('networking');
-    }
+  const handleUpgradeClick = () => {
+    showUpgradeModal('networking');
   };
 
-  return (
-    <>
-      <NetworkingErrorBoundary>
-        <ErrorBoundary>
-          <div className="min-h-screen bg-gradient-to-br from-background via-background to-background/95">
-            <div className="container mx-auto py-8 space-y-8">
-              {/* Header com glassmorphism */}
-              <div className="relative overflow-hidden rounded-2xl bg-card/95 backdrop-blur-xl border border-border/30 p-8 shadow-2xl shadow-primary/5">
-                <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent"></div>
-                <div className="relative">
-                  <NetworkingHeader />
+  // Loading state enquanto verifica permissões
+  if (permissionsLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-background/95 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground">Verificando permissões...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Para usuários sem permissão, mostrar modal de upgrade
+  if (!hasNetworkingAccess) {
+    return (
+      <>
+        <NetworkingErrorBoundary>
+          <ErrorBoundary>
+            <div className="min-h-screen bg-gradient-to-br from-background via-background to-background/95">
+              <div className="container mx-auto py-8 space-y-8">
+                {/* Header com glassmorphism */}
+                <div className="relative overflow-hidden rounded-2xl bg-card/95 backdrop-blur-xl border border-border/30 p-8 shadow-2xl shadow-primary/5">
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent"></div>
+                  <div className="relative">
+                    <NetworkingHeader />
+                  </div>
                 </div>
-              </div>
-              
-              {!hasAccess ? (
+                
+                {/* Conteúdo bloqueado */}
                 <div className="rounded-2xl bg-card/80 backdrop-blur-sm border border-border/50 min-h-[500px]">
                   <UnifiedContentBlock 
                     sectionName="o networking"
-                    onClick={handleClick}
+                    onClick={handleUpgradeClick}
                   >
                     <div className="absolute inset-0 bg-dot-pattern opacity-5"></div>
                     <div className="relative p-6">
@@ -66,14 +78,43 @@ const Networking = () => {
                     </div>
                   </UnifiedContentBlock>
                 </div>
-              ) : (
-                <div className="relative overflow-hidden rounded-2xl bg-card/80 backdrop-blur-sm border border-border/50 min-h-[500px]">
-                  <div className="absolute inset-0 bg-dot-pattern opacity-5"></div>
-                  <div className="relative p-6">
-                    <MatchesGrid />
-                  </div>
+              </div>
+            </div>
+          </ErrorBoundary>
+        </NetworkingErrorBoundary>
+        
+        <PremiumUpgradeModal 
+          open={modalState.open}
+          onOpenChange={hideUpgradeModal}
+          feature={modalState.feature}
+          itemTitle={modalState.itemTitle}
+        />
+      </>
+    );
+  }
+
+  // Usuário tem acesso - mostrar conteúdo real do networking
+  return (
+    <>
+      <NetworkingErrorBoundary>
+        <ErrorBoundary>
+          <div className="min-h-screen bg-gradient-to-br from-background via-background to-background/95">
+            <div className="container mx-auto py-8 space-y-8">
+              {/* Header com glassmorphism */}
+              <div className="relative overflow-hidden rounded-2xl bg-card/95 backdrop-blur-xl border border-border/30 p-8 shadow-2xl shadow-primary/5">
+                <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent"></div>
+                <div className="relative">
+                  <NetworkingHeader />
                 </div>
-              )}
+              </div>
+              
+              {/* Conteúdo real do networking para usuários com acesso */}
+              <div className="relative overflow-hidden rounded-2xl bg-card/80 backdrop-blur-sm border border-border/50 min-h-[500px]">
+                <div className="absolute inset-0 bg-dot-pattern opacity-5"></div>
+                <div className="relative p-6">
+                  <MatchesGrid />
+                </div>
+              </div>
             </div>
           </div>
         </ErrorBoundary>

@@ -9,7 +9,7 @@ export const useFeatureAccess = () => {
   const { profile } = useAuth();
   const userRole = getUserRoleName(profile);
   const roleJsonPermissions = profile?.user_roles?.permissions || {};
-  const { userPermissions: permissionCodes = [] } = usePermissions();
+  const { userPermissions: permissionCodes = [], hasPermission } = usePermissions();
 
   // Mapear permission codes (ex: 'tools.access') para flags de features
   const permsFromCodes = permissionCodes.reduce<Record<string, boolean>>((acc, code) => {
@@ -30,6 +30,11 @@ export const useFeatureAccess = () => {
   usePermissionListener();
 
   const hasFeatureAccess = (featureName: string) => {
+    // Para networking, usar o sistema mais direto de permissões
+    if (featureName === 'networking') {
+      return hasPermission('networking.access');
+    }
+    
     return isFeatureEnabledForUser(featureName, userRole, effectivePermissions);
   };
 
