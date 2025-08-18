@@ -10,8 +10,6 @@ import {
   MessageCircle,
   Check,
   Zap,
-  Star,
-  Users,
   Trophy,
   UserCheck,
   Mail,
@@ -30,16 +28,6 @@ const BENEFITS = [
     icon: Zap,
     title: 'Todas as Soluções Práticas',
     description: 'Acesso completo a mais de 20+ soluções com passo a passo detalhado'
-  },
-  {
-    icon: Star,
-    title: 'Formação Completa em IA',
-    description: 'Mais de 77 aulas práticas para dominar IA no seu negócio'
-  },
-  {
-    icon: Users,
-    title: 'Comunidade Premium',
-    description: 'Networking com outros empreendedores e suporte exclusivo'
   },
   {
     icon: Trophy,
@@ -319,7 +307,7 @@ export const AuroraUpgradeModal: React.FC<AuroraUpgradeModalProps> = ({
                              hover:from-primary/90 hover:to-primary hover:scale-105 transition-all duration-300 
                              shadow-xl hover:shadow-2xl border-0 text-primary-foreground"
                   >
-                    Contratar Agora
+                    Assinar a plataforma Viver de IA
                     <ExternalLink className="h-4 w-4 ml-2" />
                   </Button>
                   
