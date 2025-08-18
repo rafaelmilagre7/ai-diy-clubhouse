@@ -10,8 +10,7 @@ import { Solution } from '@/lib/supabase';
 import { useToolsData } from '@/hooks/useToolsData';
 import { useLogging } from '@/contexts/logging';
 import { useDocumentTitle } from '@/hooks/use-document-title';
-import { PremiumUpgradeModal } from '@/components/ui/premium-upgrade-modal';
-import { usePremiumUpgradeModal } from '@/hooks/usePremiumUpgradeModal';
+import { AuroraUpgradeModal } from '@/components/ui/aurora-upgrade-modal';
 
 const Solutions = () => {
   // Definir título da página
@@ -33,7 +32,9 @@ const Solutions = () => {
     hasSolutionsAccess
   } = useSolutionsData();
 
-  const { modalState, showUpgradeModal, hideUpgradeModal } = usePremiumUpgradeModal();
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const [selectedItemTitle, setSelectedItemTitle] = useState<string | undefined>();
+
   // Log data for debugging
   log("Solutions page loaded", { 
     solutionsCount: filteredSolutions?.length || 0, 
@@ -161,7 +162,10 @@ const Solutions = () => {
                       <SolutionCard 
                         solution={solution} 
                         hasAccess={hasSolutionsAccess}
-                        onUpgradeRequired={() => showUpgradeModal('solutions', solution.title)}
+                        onUpgradeRequired={() => {
+                          setSelectedItemTitle(solution.title);
+                          setUpgradeModalOpen(true);
+                        }}
                       />
                     </div>
                   ))}
@@ -171,12 +175,11 @@ const Solutions = () => {
           ))}
         </Tabs>
 
-        {/* Modal de Upgrade Premium */}
-        <PremiumUpgradeModal
-          open={modalState.open}
-          onOpenChange={hideUpgradeModal}
-          feature={modalState.feature}
-          itemTitle={modalState.itemTitle}
+        {/* Modal de Upgrade Aurora */}
+        <AuroraUpgradeModal
+          open={upgradeModalOpen}
+          onOpenChange={setUpgradeModalOpen}
+          itemTitle={selectedItemTitle}
         />
       </div>
     </div>

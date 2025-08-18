@@ -69,7 +69,7 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({
     }
   };
 
-  const CardComponent = hasAccess ? Link : 'div';
+  const CardWrapper = hasAccess ? Link : 'div';
 
   if (hasAccess) {
     return (
@@ -170,17 +170,25 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({
                      hover:scale-105 hover:bg-card/95 
                      group-hover:translate-y-[-4px] relative">
         
-        {/* Premium Overlay para usuários sem acesso */}
-        <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-black/40 to-black/60 z-30 flex items-center justify-center backdrop-blur-sm">
-          <div className="text-center space-y-3">
-            <div className="p-3 bg-gradient-to-r from-viverblue via-viverblue/90 to-viverblue/80 rounded-full w-fit mx-auto shadow-2xl">
-              <Crown className="h-8 w-8 text-white" />
+        {/* Overlay elegante com cadeado no hover - apenas para usuários sem acesso */}
+        <div className="absolute inset-0 bg-gradient-to-br from-background/95 via-background/90 to-background/95 
+                       z-30 flex items-center justify-center backdrop-blur-sm 
+                       opacity-0 group-hover:opacity-100 transition-all duration-300 
+                       border border-border/20 group-hover:border-primary/30">
+          <div className="text-center space-y-4">
+            <div className="relative">
+              <div className="absolute inset-0 bg-primary/30 rounded-full blur-xl animate-pulse"></div>
+              <div className="relative p-4 bg-gradient-to-br from-primary/20 to-primary/10 
+                             rounded-2xl border border-primary/30 backdrop-blur-sm shadow-2xl">
+                <Lock className="h-8 w-8 text-primary" />
+              </div>
             </div>
-            <Badge className="bg-gradient-to-r from-viverblue via-viverblue/90 to-viverblue/80 text-white border-0 px-4 py-2 text-sm font-semibold shadow-lg">
-              <Lock className="h-3 w-3 mr-2" />
-              PREMIUM
-            </Badge>
-            <p className="text-white/90 text-sm font-medium">Clique para fazer upgrade</p>
+            <div className="space-y-2">
+              <p className="text-foreground font-semibold text-lg">Desbloquear Solução</p>
+              <p className="text-muted-foreground text-sm">
+                Clique para acessar todos os recursos da VIVER DE IA
+              </p>
+            </div>
           </div>
         </div>
         
@@ -215,14 +223,6 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({
                 {categoryDetails.icon}
                 <span className="font-medium">{categoryDetails.name}</span>
               </span>
-            </Badge>
-            
-            {/* Premium Badge para usuários sem acesso */}
-            <Badge 
-              className="absolute top-3 right-3 bg-gradient-to-r from-viverblue via-viverblue/90 to-viverblue/80 text-white border-0 shadow-lg backdrop-blur-sm"
-            >
-              <Crown className="h-3 w-3 mr-1" />
-              PREMIUM
             </Badge>
           </div>
         </CardHeader>
@@ -268,7 +268,7 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({
         </CardFooter>
         
         {/* Bottom glow indicator */}
-        <div className="absolute bottom-0 left-0 right-0 h-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r from-viverblue/30 via-viverblue/60 to-viverblue/30"></div>
+        <div className="absolute bottom-0 left-0 right-0 h-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r from-primary/30 via-primary/60 to-primary/30"></div>
       </Card>
     </div>
   );
