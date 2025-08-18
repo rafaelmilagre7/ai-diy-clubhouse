@@ -75,36 +75,29 @@ export const AuroraUpgradeModal: React.FC<AuroraUpgradeModalProps> = ({
         const uid = (profile as any)?.id || auth.user?.id;
         if (!uid) return;
         
-        // Buscar telefone/email tanto do perfil quanto do onboarding
-        const [profileData, onboardingData] = await Promise.all([
-          supabase
-            .from('profiles')
-            .select('whatsapp_number, phone, email, full_name')
-            .eq('id', uid)
-            .single(),
-          supabase
-            .from('onboarding_final')
-            .select('whatsapp_number, phone_number, company_phone')
-            .eq('user_id', uid)
-            .single()
+        // Buscar dados completos e escolher campos válidos dinamicamente
+        const [profileRes, onboardingRes] = await Promise.all([
+          supabase.from('profiles').select('*').eq('id', uid).maybeSingle(),
+          supabase.from('onboarding_final').select('*').eq('user_id', uid).maybeSingle()
         ]);
         
-        if (profileData.data || onboardingData.data) {
-          const profile = profileData.data;
-          const onboarding = onboardingData.data;
-          
-          // Priorizar telefone do onboarding, depois do perfil
-          const phoneNumber = onboarding?.whatsapp_number || 
-                            onboarding?.phone_number || 
-                            onboarding?.company_phone ||
-                            profile?.whatsapp_number || 
-                            profile?.phone || "";
-          
-          const emailAddress = profile?.email || "";
-          
-          setUserPhone(phoneNumber);
-          setUserEmail(emailAddress);
-        }
+        const profileData: any = profileRes.data || {};
+        const onboardingData: any = onboardingRes.data || {};
+        
+        const phoneCandidates = [
+          onboardingData.phone_number,
+          onboardingData.company_phone,
+          onboardingData.whatsapp_number,
+          profileData.whatsapp_number,
+          profileData.phone_number,
+          profileData.contact_phone,
+          profileData.phone,
+        ].filter(Boolean);
+        
+        const emailCandidate = profileData.email;
+        
+        if (phoneCandidates.length > 0) setUserPhone(phoneCandidates[0]);
+        if (emailCandidate) setUserEmail(emailCandidate);
       } catch (e) {
         console.warn('Falha ao buscar contato do perfil/onboarding:', e);
       }
