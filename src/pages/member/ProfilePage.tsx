@@ -7,6 +7,9 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabase';
 import { 
   User, 
   Settings, 
@@ -34,11 +37,14 @@ import { Link } from 'react-router-dom';
 import { formatDate } from '@/utils/dateUtils';
 import LoadingScreen from '@/components/common/LoadingScreen';
 import { ActivityWidget } from '@/components/profile/ActivityWidget';
+import { ProfileImageUpload } from '@/components/profile/ProfileImageUpload';
 
 const ProfilePage = () => {
-  const { profile } = useAuth();
+  const { profile, setProfile } = useAuth();
   const { loading, stats, implementations } = useProfileData();
   const [activeTab, setActiveTab] = useState('overview');
+  const [showImageUpload, setShowImageUpload] = useState(false);
+  const { toast } = useToast();
 
   const getInitials = (name: string | null) => {
     if (!name) return "U";
@@ -65,6 +71,37 @@ const ProfilePage = () => {
       case 'intermediario': return 'text-yellow-400';
       case 'avancado': return 'text-red-400';
       default: return 'text-gray-400';
+    }
+  };
+
+  const handleImageUpdate = async (imageUrl: string) => {
+    try {
+      if (!profile?.id) return;
+      
+      // Atualizar no banco de dados
+      const { error } = await supabase
+        .from('profiles')
+        .update({ avatar_url: imageUrl })
+        .eq('id', profile.id);
+
+      if (error) throw error;
+
+      // Atualizar o contexto local
+      setProfile({ ...profile, avatar_url: imageUrl });
+      
+      toast({
+        title: "Foto atualizada",
+        description: "Sua foto de perfil foi atualizada com sucesso.",
+      });
+      
+      setShowImageUpload(false);
+    } catch (error) {
+      console.error('Erro ao atualizar imagem de perfil:', error);
+      toast({
+        title: "Erro ao atualizar foto",
+        description: "Ocorreu um erro ao atualizar sua foto. Tente novamente.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -98,6 +135,7 @@ const ProfilePage = () => {
                   size="sm" 
                   className="absolute bottom-0 right-0 rounded-full h-8 w-8 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
                   variant="secondary"
+                  onClick={() => setShowImageUpload(true)}
                 >
                   <Camera className="h-4 w-4" />
                 </Button>
@@ -386,6 +424,23 @@ const ProfilePage = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Dialog para upload de imagem */}
+      <Dialog open={showImageUpload} onOpenChange={setShowImageUpload}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Atualizar Foto de Perfil</DialogTitle>
+          </DialogHeader>
+          <div className="flex justify-center">
+            <ProfileImageUpload
+              currentImageUrl={profile?.avatar_url}
+              userName={profile?.name}
+              userId={profile?.id}
+              onImageUpdate={handleImageUpdate}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
