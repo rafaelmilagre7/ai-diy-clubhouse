@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/auth';
+import { useRolePermissionSync } from './useRolePermissionSync';
 
 export interface Role {
   id: string;
@@ -26,6 +27,7 @@ export interface UpdateRoleData {
 
 export const useRoles = () => {
   const { user, session, isAdmin } = useAuth();
+  const { syncAllPermissions } = useRolePermissionSync();
   const [roles, setRoles] = useState<Role[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
@@ -165,6 +167,9 @@ export const useRoles = () => {
       await fetchRoles();
       toast.success(data.message || 'Papel criado com sucesso');
       
+      // 🔄 Sincronizar permissões após criação do role
+      await syncAllPermissions();
+      
       return data;
     } catch (error: any) {
       console.error('❌ [ROLES] Erro na função RPC segura:', error);
@@ -188,6 +193,9 @@ export const useRoles = () => {
         role.id === roleId ? data : role
       ));
       toast.success('Papel atualizado com sucesso');
+      
+      // 🔄 Sincronizar permissões após atualização do role
+      await syncAllPermissions();
     } catch (error) {
       console.error('Erro ao atualizar papel:', error);
       toast.error('Erro ao atualizar papel');
@@ -209,6 +217,9 @@ export const useRoles = () => {
 
       setRoles(prev => prev.filter(role => role.id !== roleId));
       toast.success('Papel removido com sucesso');
+      
+      // 🔄 Sincronizar permissões após remoção do role
+      await syncAllPermissions();
     } catch (error) {
       console.error('Erro ao remover papel:', error);
       toast.error('Erro ao remover papel');

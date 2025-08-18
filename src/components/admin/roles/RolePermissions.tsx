@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Dialog,
   DialogContent,
@@ -144,10 +145,11 @@ const getFeatureDescription = (permission: Permission) => {
 };
 
 export function RolePermissions({ open, onOpenChange, role }: RolePermissionsProps) {
-  const { permissions, loading } = usePermissions();
+  const { permissions, loading, fetchUserPermissions } = usePermissions();
   const [rolePermissions, setRolePermissions] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const queryClient = useQueryClient();
 
   // Verificar se é admin do sistema
   const isSystemAdmin = role?.name === 'admin' || role?.is_system;
@@ -225,6 +227,24 @@ export function RolePermissions({ open, onOpenChange, role }: RolePermissionsPro
         );
         toast.success(`Acesso removido`);
       }
+
+      // 🔄 INVALIDAR TODOS OS CACHES DE PERMISSÕES
+      // Invalida React Query cache
+      queryClient.invalidateQueries({ queryKey: ['user-permissions'] });
+      queryClient.invalidateQueries({ queryKey: ['permissions'] });
+      queryClient.invalidateQueries({ queryKey: ['user-roles'] });
+      queryClient.invalidateQueries({ queryKey: ['profiles'] });
+      queryClient.invalidateQueries({ queryKey: ['feature-access'] });
+      queryClient.invalidateQueries({ queryKey: ['smart-feature-access'] });
+      
+      // Força atualização do hook usePermissions para todos os usuários
+      await fetchUserPermissions();
+      
+      console.log('🔄 [ADMIN] Cache de permissões invalidado após mudança no role:', role.name);
+      toast.success('⚡ Alterações aplicadas em tempo real para todos os usuários!', {
+        description: 'As mudanças de permissão já estão ativas na plataforma'
+      });
+      
     } catch (err) {
       console.error("Erro ao atualizar permissão:", err);
       toast.error("Erro ao atualizar permissão");
