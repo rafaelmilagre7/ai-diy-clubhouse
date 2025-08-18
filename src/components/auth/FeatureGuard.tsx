@@ -1,9 +1,8 @@
 
 import React from 'react';
-import { useAuth } from '@/contexts/auth';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, Lock } from 'lucide-react';
-import { getUserRoleName } from '@/lib/supabase/types';
+import { useFeatureAccess } from '@/hooks/auth/useFeatureAccess';
 
 interface FeatureGuardProps {
   feature: string;
@@ -18,11 +17,10 @@ export const FeatureGuard: React.FC<FeatureGuardProps> = ({
   fallback,
   showUpgradeMessage = true
 }) => {
-  const { profile } = useAuth();
+  const { hasFeatureAccess } = useFeatureAccess();
   
-  // Verificação simplificada baseada apenas no papel do usuário
-  const roleName = getUserRoleName(profile);
-  const hasAccess = roleName && ['admin', 'member', 'membro_club'].includes(roleName);
+  // Usar o sistema unificado de permissões baseado no /admin/roles
+  const hasAccess = hasFeatureAccess(feature);
   
   if (hasAccess) {
     return <>{children}</>;

@@ -42,7 +42,7 @@ export const maskEmailsInText = (input: any): any => {
   }
   
   if (Array.isArray(input)) {
-    return input.map(maskEmailsInText);
+    return input.map(item => maskEmailsInText(item));
   }
   
   if (input && typeof input === 'object') {
@@ -52,7 +52,8 @@ export const maskEmailsInText = (input: any): any => {
       if (key.toLowerCase().includes('email') && typeof value === 'string') {
         masked[key] = maskEmail(value);
       } else {
-        masked[key] = maskEmailsInText(value);
+        // Só fazer recursão se o valor não for string (para evitar loop infinito)
+        masked[key] = typeof value === 'string' ? value : maskEmailsInText(value);
       }
     }
     return masked;

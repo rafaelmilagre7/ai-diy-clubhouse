@@ -93,15 +93,10 @@ export const isFeatureEnabledForUser = (
     return true;
   }
 
-  // Se não temos permissões específicas, usar regras básicas por role
+  // SEMPRE usar permissões específicas do banco (configuradas no admin)
+  // Não fazer fallback para roles hardcoded - forçar uso do sistema de permissões
   if (!userPermissions || Object.keys(userPermissions).length === 0) {
-    // Fallback para roles básicas conhecidas
-    switch (featureName) {
-      case 'learning':
-        return userRole === 'formacao' || userRole === 'member' || userRole === 'membro_club';
-      default:
-        return false;
-    }
+    return false; // Se não tem permissões configuradas, negar acesso
   }
 
   // Usar permissões específicas do banco (configuradas no admin)

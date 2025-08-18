@@ -28,9 +28,8 @@ export const useAccessControl = () => {
 
   // Verificar se usuário pode ver conteúdo premium
   const canAccessPremiumContent = (): boolean => {
-    return userRole === 'admin' || 
-           userRole === 'member' || 
-           userRole === 'membro_club';
+    // Usar verificação baseada em permissões configuradas no admin
+    return hasFeatureAccess('tools') || hasFeatureAccess('solutions') || userRole === 'admin';
   };
 
   // Obter lista de funcionalidades bloqueadas (para upsell)
