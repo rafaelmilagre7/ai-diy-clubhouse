@@ -30,6 +30,8 @@ export const useNetworkMatches = () => {
   const query = useQuery({
     queryKey: ['network-matches'],
     queryFn: async () => {
+      console.log('🔄 [NETWORK-MATCHES] Executando query para buscar matches...');
+      
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) return [];
 

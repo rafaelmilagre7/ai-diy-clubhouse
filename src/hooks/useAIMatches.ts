@@ -2,11 +2,13 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useNetworkingAnalytics } from '@/hooks/useNetworkingAnalytics';
+import { useQueryClient } from '@tanstack/react-query';
 
 export const useAIMatches = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
   const { logEvent } = useNetworkingAnalytics();
+  const queryClient = useQueryClient();
 
   const generateMatches = async (userId: string) => {
     setIsGenerating(true);
@@ -26,6 +28,9 @@ export const useAIMatches = () => {
       console.log('Resposta da função:', data);
 
       if (data.success) {
+        // Invalidar cache dos matches para forçar recarregamento
+        queryClient.invalidateQueries({ queryKey: ['network-matches'] });
+        
         // Log evento de sucesso
         logEvent.mutate({
           event_type: 'match_generated',
