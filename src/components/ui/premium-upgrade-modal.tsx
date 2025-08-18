@@ -155,6 +155,18 @@ export const PremiumUpgradeModal: React.FC<PremiumUpgradeModalProps> = ({
         
         {/* Header */}
         <DialogHeader className="relative p-8 pb-6 text-center">
+          {/* Logo Premium */}
+          <div className="flex justify-center mb-6">
+            <div className="relative">
+              <div className={`p-6 rounded-3xl bg-gradient-to-br ${config.gradient} shadow-2xl`}>
+                <div className="text-white font-bold text-2xl tracking-tight">
+                  VIVER DE IA
+                </div>
+              </div>
+              <div className={`absolute inset-0 bg-${config.glowColor}/40 rounded-3xl blur-xl scale-110 opacity-60 animate-pulse`}></div>
+            </div>
+          </div>
+
           {/* Premium Badge */}
           <div className="flex justify-center mb-6">
             <Badge 
@@ -164,16 +176,6 @@ export const PremiumUpgradeModal: React.FC<PremiumUpgradeModalProps> = ({
               <Crown className="h-4 w-4 mr-2" />
               PREMIUM
             </Badge>
-          </div>
-
-          {/* Icon with Glow */}
-          <div className="flex justify-center mb-6">
-            <div className="relative">
-              <div className={`absolute inset-0 bg-${config.glowColor}/30 rounded-full blur-2xl animate-pulse scale-150`}></div>
-              <div className={`relative p-4 rounded-2xl bg-gradient-to-br ${config.gradient} shadow-2xl`}>
-                <Icon className="h-12 w-12 text-white" />
-              </div>
-            </div>
           </div>
 
           <DialogTitle className={`text-3xl font-bold bg-gradient-to-r ${config.gradient} bg-clip-text text-transparent mb-3`}>
