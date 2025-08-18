@@ -151,28 +151,18 @@ export const useLearningCourses = () => {
           })
         );
         
-        // CORREÇÃO SEGURA: Usar apenas role do banco (RLS) como fonte única de verdade
-        const isAdmin = profile?.user_roles?.name === 'admin';
-        
+        // EXIBIR TODOS OS CURSOS: Sistema freemium - mostrar todos publicados
+        // O controle de acesso agora é feito no CourseCard individual
         let finalCourses = coursesWithModules;
         
-        // Se NÃO for admin e NÃO estiver autenticado, filtrar cursos restritos
-        if (!isAdmin && !user) {
-          const restrictedCount = finalCourses.filter(course => course.is_restricted).length;
-          finalCourses = finalCourses.filter(course => !course.is_restricted);
-          
-          devLog('[COURSES] Usuário não autenticado - filtrando cursos restritos:', {
-            totalCourses: coursesWithModules.length,
-            restrictedFiltered: restrictedCount,
-            remainingCourses: finalCourses.length
-          });
-        } else {
-          devLog('[COURSES] Admin ou usuário autenticado - mostrando todos os cursos:', {
-            isAdmin,
-            userEmail: user?.email,
-            totalCourses: finalCourses.length
-          });
-        }
+        devLog('[COURSES] Sistema freemium ativo - exibindo todos os cursos:', {
+          totalCourses: finalCourses.length,
+          courses: finalCourses.map(c => ({ 
+            id: c.id, 
+            title: c.title, 
+            is_restricted: c.is_restricted
+          }))
+        });
 
         devLog('[COURSES] Cursos finais a serem retornados:', {
           count: finalCourses.length,
