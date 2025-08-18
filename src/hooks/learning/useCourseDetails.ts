@@ -1,8 +1,6 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
-import { canAccessLearningContent, canAccessCourseEnhanced } from "@/utils/roleValidation";
 
 export const useCourseDetails = (courseId: string | undefined) => {
   const { user } = useAuth();
@@ -18,23 +16,7 @@ export const useCourseDetails = (courseId: string | undefined) => {
         throw new Error("Course ID and user are required");
       }
 
-      // Não bloquear acesso à página do curso — modo freemium: UI controla o lock por aula
-      console.log("🔍 Verificando acesso para usuário:", user.id);
-      const hasAccess = await canAccessLearningContent(user.id);
-      console.log("🎯 Resultado canAccessLearningContent:", hasAccess, "(permitindo visualização mesmo sem acesso)");
-
-      // Verificar se há restrição de acesso específica ao curso
-      const { data: accessRestriction } = await supabase
-        .from("course_access_control")
-        .select("id")
-        .eq("course_id", courseId)
-        .limit(1);
-
-      if (accessRestriction && accessRestriction.length > 0) {
-        const allowed = await canAccessCourseEnhanced(user.id, courseId);
-        console.log("🔐 Restrição por curso detectada. Permitido?", allowed, "— exibindo conteúdo com bloqueio por aula se necessário");
-        // Não lançar erro — deixamos a UI bloquear o acesso à aula individual
-      }
+      console.log("🎯 Sistema freemium: permitindo visualização de todos os cursos para usuário:", user.id);
 
       // Buscar dados do curso
       const { data: course, error: courseError } = await supabase
@@ -50,7 +32,7 @@ export const useCourseDetails = (courseId: string | undefined) => {
 
       console.log("✅ Curso encontrado:", course?.title);
 
-      // Buscar módulos do curso
+      // Buscar módulos do curso (agora funciona com as novas políticas RLS)
       const { data: modules, error: modulesError } = await supabase
         .from("learning_modules")
         .select("*")
@@ -64,7 +46,7 @@ export const useCourseDetails = (courseId: string | undefined) => {
 
       console.log("📚 Módulos encontrados:", modules?.length || 0);
 
-      // Buscar todas as aulas do curso
+      // Buscar todas as aulas do curso (agora funciona com as novas políticas RLS)
       const { data: allLessons, error: lessonsError } = await supabase
         .from("learning_lessons")
         .select("*")
