@@ -33,7 +33,10 @@ export const useNetworkMatches = () => {
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) return [];
 
-      const { data, error } = await supabase
+      console.log('🔍 [NETWORK-MATCHES] Buscando matches para usuário:', user.user.id);
+
+      // Primeiro, buscar os matches
+      const { data: matchesData, error: matchesError } = await supabase
         .from('network_matches')
         .select(`
           id,
@@ -45,54 +48,79 @@ export const useNetworkMatches = () => {
           ai_analysis,
           month_year,
           status,
-          created_at,
-          profiles!network_matches_matched_user_id_fkey (
-            id,
-            name,
-            company_name,
-            current_position,
-            industry,
-            avatar_url
-          )
+          created_at
         `)
         .eq('user_id', user.user.id)
         .eq('status', 'pending')
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Erro ao buscar matches:', error);
-        throw error;
+      if (matchesError) {
+        console.error('🚨 [NETWORK-MATCHES] Erro ao buscar matches:', matchesError);
+        throw matchesError;
       }
 
-      // Transformar dados para o formato esperado pelo componente
-      const transformedData = (data || []).map(match => {
-        const profile = Array.isArray(match.profiles) ? match.profiles[0] : match.profiles;
+      if (!matchesData || matchesData.length === 0) {
+        console.log('🔍 [NETWORK-MATCHES] Nenhum match encontrado');
+        return [];
+      }
+
+      // Buscar perfis dos usuários matched
+      const matchedUserIds = matchesData.map(match => match.matched_user_id);
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select(`
+          id,
+          name,
+          company_name,
+          current_position,
+          industry,
+          avatar_url
+        `)
+        .in('id', matchedUserIds);
+
+      if (profilesError) {
+        console.error('🚨 [NETWORK-MATCHES] Erro ao buscar perfis:', profilesError);
+        throw profilesError;
+      }
+
+      console.log('🔍 [NETWORK-MATCHES] Dados encontrados:', {
+        matches: matchesData.length,
+        profiles: profilesData?.length || 0,
+        matchedUserIds: matchedUserIds.slice(0, 3) // primeiros 3 IDs para debug
+      });
+
+      // Combinar matches com perfis
+      const transformedData = matchesData.map(match => {
+        const matchedProfile = profilesData?.find(profile => profile.id === match.matched_user_id);
         
         return {
           ...match,
-          matched_user: profile ? {
-            id: profile.id,
-            name: profile.name,
-            company_name: profile.company_name,
-            current_position: profile.current_position,
-            industry: profile.industry,
-            avatar_url: profile.avatar_url
+          matched_user: matchedProfile ? {
+            id: matchedProfile.id,
+            name: matchedProfile.name || 'Usuário',
+            company_name: matchedProfile.company_name,
+            current_position: matchedProfile.current_position,
+            industry: matchedProfile.industry,
+            avatar_url: matchedProfile.avatar_url
           } : null
         };
       });
 
-      console.log('🔍 Debug matches transformados:', { 
+      const validMatches = transformedData.filter(match => match.matched_user);
+
+      console.log('✅ [NETWORK-MATCHES] Matches processados:', { 
         total: transformedData.length,
-        withUser: transformedData.filter(m => m.matched_user).length,
-        withoutUser: transformedData.filter(m => !m.matched_user).length,
-        sample: transformedData[0] ? {
-          id: transformedData[0].id,
-          matched_user_name: transformedData[0].matched_user?.name,
-          hasMatchedUser: !!transformedData[0].matched_user
-        } : null
+        withUser: validMatches.length,
+        withoutUser: transformedData.length - validMatches.length,
+        sample: validMatches[0] ? {
+          id: validMatches[0].id,
+          matched_user_name: validMatches[0].matched_user?.name,
+          matched_user_company: validMatches[0].matched_user?.company_name,
+          hasMatchedUser: !!validMatches[0].matched_user
+        } : 'Nenhum match válido'
       });
 
-      return transformedData.filter(match => match.matched_user) as NetworkMatch[];
+      return validMatches as NetworkMatch[];
     },
     staleTime: 2 * 60 * 1000, // 2 minutos
   });
