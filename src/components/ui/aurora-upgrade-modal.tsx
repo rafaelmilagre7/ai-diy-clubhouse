@@ -75,29 +75,32 @@ export const AuroraUpgradeModal: React.FC<AuroraUpgradeModalProps> = ({
         const uid = (profile as any)?.id || auth.user?.id;
         if (!uid) return;
         
-        // Buscar dados completos e escolher campos válidos dinamicamente
+        // Buscar dados do perfil e onboarding (campos JSON)
         const [profileRes, onboardingRes] = await Promise.all([
-          supabase.from('profiles').select('*').eq('id', uid).maybeSingle(),
-          supabase.from('onboarding_final').select('*').eq('user_id', uid).maybeSingle()
+          supabase.from('profiles').select('email, whatsapp_number').eq('id', uid).maybeSingle(),
+          supabase.from('onboarding_final').select('personal_info, professional_info').eq('user_id', uid).maybeSingle()
         ]);
         
         const profileData: any = profileRes.data || {};
         const onboardingData: any = onboardingRes.data || {};
         
+        // Extrair telefone do JSON do onboarding
+        const personalInfo = onboardingData.personal_info || {};
+        const professionalInfo = onboardingData.professional_info || {};
+        
         const phoneCandidates = [
-          onboardingData.phone_number,
-          onboardingData.company_phone,
-          onboardingData.whatsapp_number,
+          personalInfo.phone,
+          personalInfo.whatsapp_number,
+          professionalInfo.phone,
           profileData.whatsapp_number,
-          profileData.phone_number,
-          profileData.contact_phone,
-          profileData.phone,
         ].filter(Boolean);
         
         const emailCandidate = profileData.email;
         
         if (phoneCandidates.length > 0) setUserPhone(phoneCandidates[0]);
         if (emailCandidate) setUserEmail(emailCandidate);
+        
+        console.log('Telefone encontrado:', phoneCandidates[0]);
       } catch (e) {
         console.warn('Falha ao buscar contato do perfil/onboarding:', e);
       }
