@@ -95,16 +95,13 @@ export const useNetworkMatches = () => {
         `)
         .in('id', matchedUserIds);
 
-      // Buscar dados de onboarding para informações adicionais
-      const { data: onboardingData } = await supabase
-        .from('onboarding_final')
-        .select(`
-          user_id,
-          personal_info,
-          business_info,
-          professional_info
-        `)
-        .in('user_id', matchedUserIds);
+      // Buscar dados de contato via função segura (bypassa RLS com dados mínimos)
+      const { data: onboardingData, error: onboardingError } = await supabase
+        .rpc('get_networking_contacts', { p_user_ids: matchedUserIds });
+
+      if (onboardingError) {
+        console.warn('⚠️ [NETWORK-MATCHES] Falha ao buscar contatos públicos (onboarding):', onboardingError.message);
+      }
 
       if (profilesError) {
         console.error('🚨 [NETWORK-MATCHES] Erro ao buscar perfis:', profilesError);
@@ -124,31 +121,26 @@ export const useNetworkMatches = () => {
         
         if (!matchedProfile) return { ...match, matched_user: null };
 
-        // Extrair dados do onboarding
-        const personalInfo = onboardingInfo?.personal_info || {};
-        const businessInfo = onboardingInfo?.business_info || {};
-        const professionalInfo = onboardingInfo?.professional_info || {};
-
         return {
           ...match,
           matched_user: {
             id: matchedProfile.id,
-            name: matchedProfile.name || personalInfo.name || 'Usuário',
+            name: matchedProfile.name || 'Usuário',
             email: matchedProfile.email,
-            company_name: matchedProfile.company_name || businessInfo.company_name || professionalInfo.company_name,
-            current_position: matchedProfile.current_position || businessInfo.current_position || professionalInfo.current_position,
-            industry: matchedProfile.industry || businessInfo.company_sector || professionalInfo.company_sector,
-            avatar_url: matchedProfile.avatar_url || personalInfo.profile_picture,
-            linkedin_url: matchedProfile.linkedin_url || personalInfo.linkedin_url || businessInfo.linkedin_url,
+            company_name: matchedProfile.company_name || onboardingInfo?.company_name,
+            current_position: matchedProfile.current_position || onboardingInfo?.current_position,
+            industry: matchedProfile.industry,
+            avatar_url: matchedProfile.avatar_url,
+            linkedin_url: matchedProfile.linkedin_url || onboardingInfo?.linkedin_url,
             whatsapp_number: matchedProfile.whatsapp_number,
-            professional_bio: matchedProfile.professional_bio || businessInfo.professional_bio,
-            // Dados extras do onboarding
-            phone: personalInfo.phone || businessInfo.phone,
-            full_company_name: businessInfo.company_name || professionalInfo.company_name,
-            full_position: businessInfo.current_position || professionalInfo.current_position,
-            full_industry: businessInfo.company_sector || professionalInfo.company_sector,
-            company_size: businessInfo.company_size || professionalInfo.company_size,
-            annual_revenue: businessInfo.annual_revenue || professionalInfo.annual_revenue,
+            professional_bio: matchedProfile.professional_bio,
+            // Dados extras vindos do RPC
+            phone: onboardingInfo?.phone || matchedProfile.whatsapp_number,
+            full_company_name: onboardingInfo?.company_name,
+            full_position: onboardingInfo?.current_position,
+            full_industry: matchedProfile.industry,
+            company_size: undefined,
+            annual_revenue: undefined,
           }
         };
       });

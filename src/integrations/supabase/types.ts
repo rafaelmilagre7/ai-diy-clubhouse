@@ -5878,6 +5878,16 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      get_networking_contacts: {
+        Args: { p_user_ids: string[] }
+        Returns: {
+          company_name: string
+          current_position: string
+          linkedin_url: string
+          phone: string
+          user_id: string
+        }[]
+      }
       get_networking_stats_secure: {
         Args: Record<PropertyKey, never>
         Returns: Json

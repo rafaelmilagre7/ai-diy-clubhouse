@@ -106,12 +106,11 @@ export const ContactModal = ({ isOpen, onClose, userId, userName, initialData }:
 
       if (profileError) console.warn('Perfil não carregado (RLS?):', profileError);
 
-      // Buscar dados adicionais do onboarding se disponível
       const { data: onboarding } = await supabase
         .from('onboarding_final')
         .select('personal_info, location_info, business_info, professional_info, business_context')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
 
       setContactData({
         ...profile,
