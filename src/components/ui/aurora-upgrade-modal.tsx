@@ -94,17 +94,13 @@ export const AuroraUpgradeModal: React.FC<AuroraUpgradeModalProps> = ({
           <div className="relative p-8">
             {/* Header */}
             <div className="text-center mb-10">
-              {/* Logo VIVER DE IA */}
+              {/* Logo VIVER DE IA Real */}
               <div className="flex justify-center mb-6">
-                <div className="relative">
-                  <div className="absolute inset-0 bg-primary/20 rounded-2xl blur-2xl animate-pulse"></div>
-                  <div className="relative px-8 py-4 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 
-                                 border border-primary/20 backdrop-blur-sm shadow-xl">
-                    <div className="text-2xl font-bold text-primary tracking-wider">
-                      VIVER DE IA
-                    </div>
-                  </div>
-                </div>
+                <img
+                  src="/lovable-uploads/fe3733f5-092e-4a4e-bdd7-650b71aaa801.png"
+                  alt="VIVER DE IA Club"
+                  className="h-16 w-auto object-contain"
+                />
               </div>
 
               <h2 className="text-2xl font-bold bg-gradient-to-r from-primary via-primary/90 to-primary/70 
@@ -181,32 +177,32 @@ export const AuroraUpgradeModal: React.FC<AuroraUpgradeModalProps> = ({
                 </Button>
               </div>
 
-              {/* Social Proof com fotos de usuários */}
+              {/* Social Proof com fotos de usuários reais */}
               <div className="flex items-center justify-center gap-3 text-sm text-muted-foreground/70">
                 <div className="flex -space-x-3">
                   <img 
-                    src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face" 
-                    alt="Usuário" 
+                    src="https://zotzvtepvpnkcoobdubt.supabase.co/storage/v1/object/public/profile-pictures/88ff5724-0ac3-4763-b948-d249684dd35b/profile-1754500837827.jpeg" 
+                    alt="Bel Battisti" 
                     className="w-10 h-10 rounded-full border-2 border-background object-cover"
                   />
                   <img 
-                    src="https://images.unsplash.com/photo-1494790108755-2616b612b1-?w=100&h=100&fit=crop&crop=face" 
-                    alt="Usuário" 
+                    src="https://zotzvtepvpnkcoobdubt.supabase.co/storage/v1/object/public/profile_images/b837c23e-e064-4eb8-8648-f1298d4cbe75/f61d0d3c-c39c-4ce8-9fd6-08d282816479_Diego_Malta.webp" 
+                    alt="Diego Malta" 
                     className="w-10 h-10 rounded-full border-2 border-background object-cover"
                   />
                   <img 
-                    src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" 
-                    alt="Usuário" 
+                    src="https://ui-avatars.com/api/?name=j.pasqualli%40jfsolutions.com&background=0D8ABC&color=fff" 
+                    alt="Caio" 
                     className="w-10 h-10 rounded-full border-2 border-background object-cover"
                   />
                   <img 
-                    src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face" 
-                    alt="Usuário" 
+                    src="https://zotzvtepvpnkcoobdubt.supabase.co/storage/v1/object/public/profile-pictures/avatars/1755478078904-q1w2bm.png" 
+                    alt="Rafael Milagre" 
                     className="w-10 h-10 rounded-full border-2 border-background object-cover"
                   />
                   <img 
-                    src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face" 
-                    alt="Usuário" 
+                    src="https://zotzvtepvpnkcoobdubt.supabase.co/storage/v1/object/public/profile_images/d207603b-a1f6-4e17-acc4-36f5fb037dc4/feb7c385-5706-4d58-8948-e1311b870ccc_WhatsApp_Image_2024-05-10_at_12.01.26.png" 
+                    alt="Caio Lima" 
                     className="w-10 h-10 rounded-full border-2 border-background object-cover"
                   />
                 </div>
