@@ -201,6 +201,12 @@ const config: Config = {
           "50%": { 
             boxShadow: "0 0 30px hsl(var(--primary) / 0.2)" 
           }
+        },
+        
+        // Rotação lenta
+        "spin-slow": {
+          "0%": { transform: "rotate(0deg)" },
+          "100%": { transform: "rotate(360deg)" }
         }
       },
       animation: {
@@ -215,6 +221,7 @@ const config: Config = {
         "shimmer": "shimmer 2s ease-in-out infinite",
         "hover-lift": "hover-lift 0.2s ease-out",
         "aurora-glow": "aurora-glow 3s ease-in-out infinite",
+        "spin-slow": "spin-slow 8s linear infinite",
         
         // Combinações de animações
         "enter": "fade-in 0.3s ease-out, scale-in 0.2s ease-out",

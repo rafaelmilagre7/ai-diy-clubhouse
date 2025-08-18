@@ -170,24 +170,68 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({
                      hover:scale-105 hover:bg-card/95 
                      group-hover:translate-y-[-4px] relative">
         
-        {/* Overlay elegante com cadeado no hover - apenas para usuários sem acesso */}
-        <div className="absolute inset-0 bg-gradient-to-br from-background/95 via-background/90 to-background/95 
-                       z-30 flex items-center justify-center backdrop-blur-sm 
-                       opacity-0 group-hover:opacity-100 transition-all duration-300 
-                       border border-border/20 group-hover:border-primary/30">
-          <div className="text-center space-y-4">
-            <div className="relative">
-              <div className="absolute inset-0 bg-primary/30 rounded-full blur-xl animate-pulse"></div>
-              <div className="relative p-4 bg-gradient-to-br from-primary/20 to-primary/10 
-                             rounded-2xl border border-primary/30 backdrop-blur-sm shadow-2xl">
-                <Lock className="h-8 w-8 text-primary" />
+        {/* Overlay premium com efeito de desbloqueio */}
+        <div className="absolute inset-0 bg-gradient-to-br from-background/98 via-background/95 to-background/98 
+                       z-30 flex items-center justify-center backdrop-blur-md 
+                       opacity-0 group-hover:opacity-100 transition-all duration-500 ease-out 
+                       border border-border/10 group-hover:border-primary/40 rounded-lg">
+          
+          {/* Partículas de brilho animadas */}
+          <div className="absolute inset-0 overflow-hidden rounded-lg">
+            <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-primary/60 rounded-full animate-ping delay-100"></div>
+            <div className="absolute top-3/4 right-1/4 w-1 h-1 bg-primary/40 rounded-full animate-ping delay-300"></div>
+            <div className="absolute bottom-1/4 left-3/4 w-1.5 h-1.5 bg-primary/50 rounded-full animate-ping delay-500"></div>
+          </div>
+          
+          <div className="text-center space-y-6 relative z-10">
+            {/* Ícone premium com animação de desbloqueio */}
+            <div className="relative flex items-center justify-center">
+              {/* Anel de energia */}
+              <div className="absolute inset-0 w-20 h-20 rounded-full border-2 border-primary/30 animate-spin-slow"></div>
+              <div className="absolute inset-2 w-16 h-16 rounded-full border border-primary/20 animate-pulse"></div>
+              
+              {/* Fundo do ícone */}
+              <div className="relative w-14 h-14 bg-gradient-to-br from-primary/20 via-primary/30 to-primary/10 
+                             rounded-2xl border border-primary/40 backdrop-blur-sm shadow-2xl 
+                             flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                
+                {/* Ícone principal - Crown para premium */}
+                <Crown className="h-7 w-7 text-primary drop-shadow-lg animate-pulse" />
+                
+                {/* Efeito de brilho */}
+                <div className="absolute inset-0 bg-gradient-to-t from-transparent via-primary/10 to-primary/20 
+                               rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </div>
+              
+              {/* Reflexo dourado */}
+              <div className="absolute inset-0 w-14 h-14 bg-gradient-to-br from-yellow-400/20 to-transparent 
+                             rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-200"></div>
             </div>
-            <div className="space-y-2">
-              <p className="text-foreground font-semibold text-lg">Desbloquear Solução</p>
-              <p className="text-muted-foreground text-sm">
-                Clique para acessar todos os recursos da VIVER DE IA
+            
+            {/* Texto melhorado */}
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <h4 className="text-foreground font-bold text-xl tracking-tight">
+                  Conteúdo Premium
+                </h4>
+                <div className="flex items-center justify-center gap-2">
+                  <div className="h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent w-8"></div>
+                  <Crown className="h-3 w-3 text-primary/60" />
+                  <div className="h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent w-8"></div>
+                </div>
+              </div>
+              
+              <p className="text-muted-foreground text-sm leading-relaxed max-w-48 mx-auto">
+                Desbloqueie esta solução e acelere seus resultados com IA
               </p>
+              
+              {/* Indicador de ação */}
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 
+                             rounded-full border border-primary/20 backdrop-blur-sm
+                             group-hover:bg-primary/20 transition-colors duration-300">
+                <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
+                <span className="text-xs font-medium text-primary">Toque para upgrade</span>
+              </div>
             </div>
           </div>
         </div>
