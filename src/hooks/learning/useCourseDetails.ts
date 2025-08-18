@@ -18,19 +18,10 @@ export const useCourseDetails = (courseId: string | undefined) => {
         throw new Error("Course ID and user are required");
       }
 
-      // Verificar acesso usando função SECURITY DEFINER (ÚNICA fonte de verdade)
+      // Não bloquear acesso à página do curso — modo freemium: UI controla o lock por aula
       console.log("🔍 Verificando acesso para usuário:", user.id);
-      
       const hasAccess = await canAccessLearningContent(user.id);
-      console.log("🎯 Resultado canAccessLearningContent:", hasAccess);
-      
-      if (!hasAccess) {
-        console.error("❌ Acesso negado ao curso para usuário:", user.id);
-        console.error("❌ hasAccess:", hasAccess);
-        throw new Error("Acesso negado - Role insuficiente");
-      }
-
-      console.log("✅ Acesso permitido ao curso");
+      console.log("🎯 Resultado canAccessLearningContent:", hasAccess, "(permitindo visualização mesmo sem acesso)");
 
       // Verificar se há restrição de acesso específica ao curso
       const { data: accessRestriction } = await supabase
@@ -41,10 +32,8 @@ export const useCourseDetails = (courseId: string | undefined) => {
 
       if (accessRestriction && accessRestriction.length > 0) {
         const allowed = await canAccessCourseEnhanced(user.id, courseId);
-        console.log("🔐 Restrição por curso detectada. Permitido?", allowed);
-        if (!allowed) {
-          throw new Error("Você não tem acesso a este curso.");
-        }
+        console.log("🔐 Restrição por curso detectada. Permitido?", allowed, "— exibindo conteúdo com bloqueio por aula se necessário");
+        // Não lançar erro — deixamos a UI bloquear o acesso à aula individual
       }
 
       // Buscar dados do curso
