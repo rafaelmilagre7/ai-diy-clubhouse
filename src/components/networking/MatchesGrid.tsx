@@ -304,25 +304,8 @@ const MatchCard = ({ match, onOpenChat, onShowContact }: MatchCardProps) => {
             </div>
           </div>
 
-          {/* Informações de contato básicas */}
+          {/* Company e Type */}
           <div className="space-y-3">
-            {/* Email */}
-            {match.matched_user.email && (
-              <div className="flex items-center gap-2 text-xs text-muted-foreground bg-background/50 rounded-lg p-2 border border-border/30">
-                <Mail className="h-3 w-3 flex-shrink-0" />
-                <span className="line-clamp-1 font-medium">{match.matched_user.email}</span>
-              </div>
-            )}
-            
-            {/* Telefone */}
-            {(match.matched_user.phone || match.matched_user.whatsapp_number) && (
-              <div className="flex items-center gap-2 text-xs text-muted-foreground bg-background/50 rounded-lg p-2 border border-border/30">
-                <Phone className="h-3 w-3 flex-shrink-0" />
-                <span className="line-clamp-1 font-medium">{match.matched_user.phone || match.matched_user.whatsapp_number}</span>
-              </div>
-            )}
-
-            {/* Company e Type */}
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Building2 className="h-4 w-4" />
               <span className="line-clamp-1">{match.matched_user.company_name || 'Empresa'}</span>
