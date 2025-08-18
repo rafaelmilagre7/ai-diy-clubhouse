@@ -2,7 +2,6 @@ import React from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { 
-  Sparkles, 
   ExternalLink, 
   MessageCircle,
   Check,
@@ -92,28 +91,29 @@ export const AuroraUpgradeModal: React.FC<AuroraUpgradeModalProps> = ({
           <div className="absolute -top-20 -left-20 w-40 h-40 bg-primary/20 rounded-full blur-3xl animate-pulse"></div>
           <div className="absolute -bottom-20 -right-20 w-40 h-40 bg-primary/20 rounded-full blur-3xl animate-pulse"></div>
           
-          <div className="relative p-12">
+          <div className="relative p-8">
             {/* Header */}
-            <div className="text-center mb-12">
-              {/* Icon with Aurora Effect */}
-              <div className="flex justify-center mb-8">
+            <div className="text-center mb-10">
+              {/* Logo VIVER DE IA */}
+              <div className="flex justify-center mb-6">
                 <div className="relative">
-                  <div className="absolute inset-0 bg-primary/30 rounded-full blur-3xl animate-pulse scale-150"></div>
-                  <div className="relative p-6 rounded-3xl bg-gradient-to-br from-primary/20 to-primary/10 
-                                 border border-primary/30 backdrop-blur-sm shadow-2xl">
-                    <Sparkles className="h-16 w-16 text-primary" />
+                  <div className="absolute inset-0 bg-primary/20 rounded-2xl blur-2xl animate-pulse"></div>
+                  <div className="relative px-8 py-4 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 
+                                 border border-primary/20 backdrop-blur-sm shadow-xl">
+                    <div className="text-2xl font-bold text-primary tracking-wider">
+                      VIVER DE IA
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <h2 className="text-4xl font-bold bg-gradient-to-r from-primary via-primary/90 to-primary/70 
-                           bg-clip-text text-transparent mb-4">
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-primary via-primary/90 to-primary/70 
+                           bg-clip-text text-transparent mb-3">
                 Desbloqueie todos os recursos
               </h2>
               
-              <p className="text-xl text-muted-foreground/80 max-w-2xl mx-auto leading-relaxed mb-6">
-                Tenha acesso completo à plataforma <span className="font-semibold text-foreground">VIVER DE IA</span> e 
-                transforme seu negócio com inteligência artificial
+              <p className="text-lg text-muted-foreground/80 max-w-xl mx-auto leading-relaxed mb-5">
+                Tenha acesso completo à plataforma e transforme seu negócio com inteligência artificial
               </p>
 
               {itemTitle && (
@@ -125,30 +125,30 @@ export const AuroraUpgradeModal: React.FC<AuroraUpgradeModalProps> = ({
               )}
             </div>
 
-            {/* Benefits Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+            <div className="space-y-3 mb-6">
+              <h3 className="text-lg font-semibold mb-4 text-center">
+                O que você vai desbloquear:
+              </h3>
               {BENEFITS.map((benefit, index) => {
                 const Icon = benefit.icon;
                 return (
                   <div 
                     key={index}
-                    className="flex items-start gap-4 p-6 rounded-2xl bg-card/60 backdrop-blur-sm 
-                             border border-border/30 hover:border-primary/30 transition-all duration-300
-                             hover:bg-card/80 group"
+                    className="flex items-center gap-3 p-4 rounded-xl bg-card/60 backdrop-blur-sm 
+                             border border-border/30 hover:border-primary/30 transition-all duration-300"
                   >
                     <div className="flex-shrink-0">
-                      <div className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 
-                                     border border-primary/20 group-hover:border-primary/40 
-                                     transition-all duration-300">
-                        <Icon className="h-6 w-6 text-primary" />
+                      <div className="p-2 rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 
+                                     border border-primary/20">
+                        <Icon className="h-4 w-4 text-primary" />
                       </div>
                     </div>
-                    <div className="space-y-2">
-                      <h3 className="font-semibold text-foreground text-lg">{benefit.title}</h3>
-                      <p className="text-muted-foreground text-sm leading-relaxed">{benefit.description}</p>
+                    <div>
+                      <h4 className="font-medium text-foreground text-sm">{benefit.title}</h4>
+                      <p className="text-muted-foreground text-xs leading-relaxed">{benefit.description}</p>
                     </div>
-                    <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <Check className="h-5 w-5 text-primary" />
+                    <div className="flex-shrink-0">
+                      <Check className="h-4 w-4 text-primary" />
                     </div>
                   </div>
                 );
@@ -156,40 +156,64 @@ export const AuroraUpgradeModal: React.FC<AuroraUpgradeModalProps> = ({
             </div>
 
             {/* CTA Section */}
-            <div className="text-center space-y-6">
-              <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-lg mx-auto">
+            <div className="text-center space-y-5">
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Button 
                   onClick={handleUpgradeNow}
                   size="lg"
-                  className="h-14 px-8 text-lg font-semibold bg-gradient-to-r from-primary to-primary/90 
+                  className="h-12 px-6 text-base font-semibold bg-gradient-to-r from-primary to-primary/90 
                            hover:from-primary/90 hover:to-primary hover:scale-105 transition-all duration-300 
-                           shadow-2xl hover:shadow-3xl border-0 text-primary-foreground flex-1"
+                           shadow-xl hover:shadow-2xl border-0 text-primary-foreground"
                 >
-                  <Sparkles className="h-5 w-5 mr-3" />
                   Contratar Agora
-                  <ExternalLink className="h-4 w-4 ml-3" />
+                  <ExternalLink className="h-4 w-4 ml-2" />
                 </Button>
                 
                 <Button 
                   onClick={handleTalkToSales}
                   variant="outline"
                   size="lg"
-                  className="h-14 px-8 text-base font-medium border-border/40 hover:bg-muted/50 
-                           hover:border-primary/30 hover:scale-105 transition-all duration-300 flex-1"
+                  className="h-12 px-6 text-base font-medium border-border/40 hover:bg-muted/50 
+                           hover:border-primary/30 hover:scale-105 transition-all duration-300"
                 >
                   <MessageCircle className="h-4 w-4 mr-2" />
                   Falar com Vendas
                 </Button>
               </div>
 
-              {/* Social Proof */}
-              <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground/70">
-                <div className="flex -space-x-2">
-                  {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/30 to-primary/10 border-2 border-background"></div>
-                  ))}
+              {/* Social Proof com fotos de usuários */}
+              <div className="flex items-center justify-center gap-3 text-sm text-muted-foreground/70">
+                <div className="flex -space-x-3">
+                  <img 
+                    src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face" 
+                    alt="Usuário" 
+                    className="w-10 h-10 rounded-full border-2 border-background object-cover"
+                  />
+                  <img 
+                    src="https://images.unsplash.com/photo-1494790108755-2616b612b1-?w=100&h=100&fit=crop&crop=face" 
+                    alt="Usuário" 
+                    className="w-10 h-10 rounded-full border-2 border-background object-cover"
+                  />
+                  <img 
+                    src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" 
+                    alt="Usuário" 
+                    className="w-10 h-10 rounded-full border-2 border-background object-cover"
+                  />
+                  <img 
+                    src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face" 
+                    alt="Usuário" 
+                    className="w-10 h-10 rounded-full border-2 border-background object-cover"
+                  />
+                  <img 
+                    src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face" 
+                    alt="Usuário" 
+                    className="w-10 h-10 rounded-full border-2 border-background object-cover"
+                  />
                 </div>
-                <span>Mais de 1000+ empreendedores já transformaram seus negócios</span>
+                <div className="text-left">
+                  <div className="font-medium text-foreground text-sm">Mais de 1000+ pessoas já estão</div>
+                  <div className="text-xs">tendo resultados com as soluções do VIVER DE IA</div>
+                </div>
               </div>
             </div>
           </div>
