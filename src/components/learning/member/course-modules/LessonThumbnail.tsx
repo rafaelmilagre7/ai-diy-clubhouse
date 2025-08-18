@@ -30,10 +30,8 @@ export const LessonThumbnail = ({
   const { showUpgradeModal } = usePremiumUpgradeModal();
   
   const handleClick = (e: React.MouseEvent) => {
-    console.log('🎯 LessonThumbnail click:', { hasAccess, lessonTitle: lesson.title });
     if (!hasAccess) {
       e.preventDefault();
-      console.log('🔐 Sem acesso - chamando showUpgradeModal');
       showUpgradeModal('learning', lesson.title);
     }
   };

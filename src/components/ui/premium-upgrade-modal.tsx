@@ -107,7 +107,6 @@ export const PremiumUpgradeModal: React.FC<PremiumUpgradeModalProps> = ({
   feature,
   itemTitle
 }) => {
-  console.log('🚀 PremiumUpgradeModal renderizado:', { open, feature, itemTitle });
   const config = FEATURE_CONFIG[feature];
   const Icon = config.icon;
 
