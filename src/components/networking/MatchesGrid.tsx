@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Brain, MessageCircle, Sparkles, TrendingUp, Users, Building2, Loader2, UserCheck } from 'lucide-react';
+import { Brain, MessageCircle, Sparkles, TrendingUp, Users, Building2, Loader2, UserCheck, Mail, Phone, Linkedin } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNetworkMatches } from '@/hooks/useNetworkMatches';
 import { useAIMatches } from '@/hooks/useAIMatches';
@@ -37,7 +37,10 @@ export const MatchesGrid = () => {
     if (user?.id) {
       try {
         await generateMatches(user.id);
-        refetch(); // Atualizar a lista de matches
+        // Aguardar um pouco e recarregar
+        setTimeout(() => {
+          refetch();
+        }, 1000);
       } catch (error) {
         console.error('Erro ao gerar matches:', error);
       }
@@ -203,10 +206,20 @@ interface MatchCardProps {
     matched_user?: {
       id: string;
       name?: string;
+      email?: string;
       company_name?: string;
       current_position?: string;
       industry?: string;
       avatar_url?: string;
+      linkedin_url?: string;
+      whatsapp_number?: string;
+      professional_bio?: string;
+      phone?: string;
+      full_company_name?: string;
+      full_position?: string;
+      full_industry?: string;
+      company_size?: string;
+      annual_revenue?: string;
     } | null;
   };
   onOpenChat: () => void;
@@ -291,8 +304,25 @@ const MatchCard = ({ match, onOpenChat, onShowContact }: MatchCardProps) => {
             </div>
           </div>
 
-          {/* Company e Type */}
+          {/* Informações de contato básicas */}
           <div className="space-y-3">
+            {/* Email */}
+            {match.matched_user.email && (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground bg-background/50 rounded-lg p-2 border border-border/30">
+                <Mail className="h-3 w-3 flex-shrink-0" />
+                <span className="line-clamp-1 font-medium">{match.matched_user.email}</span>
+              </div>
+            )}
+            
+            {/* Telefone */}
+            {(match.matched_user.phone || match.matched_user.whatsapp_number) && (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground bg-background/50 rounded-lg p-2 border border-border/30">
+                <Phone className="h-3 w-3 flex-shrink-0" />
+                <span className="line-clamp-1 font-medium">{match.matched_user.phone || match.matched_user.whatsapp_number}</span>
+              </div>
+            )}
+
+            {/* Company e Type */}
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Building2 className="h-4 w-4" />
               <span className="line-clamp-1">{match.matched_user.company_name || 'Empresa'}</span>
@@ -334,14 +364,36 @@ const MatchCard = ({ match, onOpenChat, onShowContact }: MatchCardProps) => {
           <p className="text-xs text-muted-foreground/80">{match.matched_user.industry || 'Tecnologia'}</p>
 
           {/* Actions */}
-          <div className="flex justify-center pt-2">
-            <Button
-              onClick={onShowContact}
-              className="w-full text-xs bg-gradient-to-r from-primary to-primary/90 hover:shadow-lg hover:shadow-primary/25 transition-all duration-300"
-            >
-              <UserCheck className="h-3 w-3 mr-1" />
-              Ver Contato
-            </Button>
+          <div className="flex gap-2 pt-2">
+            {match.matched_user.linkedin_url ? (
+              <>
+                <Button
+                  onClick={() => window.open(match.matched_user.linkedin_url, '_blank')}
+                  size="sm"
+                  className="text-xs bg-[#0A66C2] hover:bg-[#0A66C2]/90 text-white flex-1"
+                >
+                  <Linkedin className="h-3 w-3 mr-1" />
+                  LinkedIn
+                </Button>
+                <Button
+                  onClick={onShowContact}
+                  size="sm"
+                  variant="outline"
+                  className="text-xs flex-1"
+                >
+                  <UserCheck className="h-3 w-3 mr-1" />
+                  Contato
+                </Button>
+              </>
+            ) : (
+              <Button
+                onClick={onShowContact}
+                className="w-full text-xs bg-gradient-to-r from-primary to-primary/90 hover:shadow-lg hover:shadow-primary/25 transition-all duration-300"
+              >
+                <UserCheck className="h-3 w-3 mr-1" />
+                Ver Contato
+              </Button>
+            )}
           </div>
         </CardContent>
 
