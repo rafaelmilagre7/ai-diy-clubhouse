@@ -71,21 +71,42 @@ export const AuroraUpgradeModal: React.FC<AuroraUpgradeModalProps> = ({
     const fetchContactInfo = async () => {
       try {
         if (!open) return;
-        if (userPhone && userEmail) return;
         const { data: auth } = await supabase.auth.getUser();
         const uid = (profile as any)?.id || auth.user?.id;
         if (!uid) return;
-        const { data } = await supabase
-          .from('profiles')
-          .select('whatsapp_number, phone, email, full_name')
-          .eq('id', uid)
-          .single();
-        if (data) {
-          if (!userPhone) setUserPhone((data as any)?.whatsapp_number || (data as any)?.phone || "");
-          if (!userEmail) setUserEmail((data as any)?.email || "");
+        
+        // Buscar telefone/email tanto do perfil quanto do onboarding
+        const [profileData, onboardingData] = await Promise.all([
+          supabase
+            .from('profiles')
+            .select('whatsapp_number, phone, email, full_name')
+            .eq('id', uid)
+            .single(),
+          supabase
+            .from('onboarding_final')
+            .select('whatsapp_number, phone_number, company_phone')
+            .eq('user_id', uid)
+            .single()
+        ]);
+        
+        if (profileData.data || onboardingData.data) {
+          const profile = profileData.data;
+          const onboarding = onboardingData.data;
+          
+          // Priorizar telefone do onboarding, depois do perfil
+          const phoneNumber = onboarding?.whatsapp_number || 
+                            onboarding?.phone_number || 
+                            onboarding?.company_phone ||
+                            profile?.whatsapp_number || 
+                            profile?.phone || "";
+          
+          const emailAddress = profile?.email || "";
+          
+          setUserPhone(phoneNumber);
+          setUserEmail(emailAddress);
         }
       } catch (e) {
-        console.warn('Falha ao buscar contato do perfil:', e);
+        console.warn('Falha ao buscar contato do perfil/onboarding:', e);
       }
     };
     fetchContactInfo();
@@ -258,57 +279,113 @@ export const AuroraUpgradeModal: React.FC<AuroraUpgradeModalProps> = ({
               </div>
             )}
 
-            <div className="space-y-3 mb-6">
-              <h3 className="text-lg font-semibold mb-4 text-center">
-                O que você vai desbloquear:
-              </h3>
-              {BENEFITS.map((benefit, index) => {
-                const Icon = benefit.icon;
-                return (
-                  <div 
-                    key={index}
-                    className="flex items-center gap-3 p-4 rounded-xl bg-card/60 backdrop-blur-sm 
-                             border border-border/30 hover:border-primary/30 transition-all duration-300"
-                  >
-                    <div className="flex-shrink-0">
-                      <div className="p-2 rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 
-                                     border border-primary/20">
-                        <Icon className="h-4 w-4 text-primary" />
+            {/* Lista de benefícios - esconder quando no modo de contato */}
+            {!showContactForm && (
+              <div className="space-y-3 mb-6">
+                <h3 className="text-lg font-semibold mb-4 text-center">
+                  O que você vai desbloquear:
+                </h3>
+                {BENEFITS.map((benefit, index) => {
+                  const Icon = benefit.icon;
+                  return (
+                    <div 
+                      key={index}
+                      className="flex items-center gap-3 p-4 rounded-xl bg-card/60 backdrop-blur-sm 
+                               border border-border/30 hover:border-primary/30 transition-all duration-300"
+                    >
+                      <div className="flex-shrink-0">
+                        <div className="p-2 rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 
+                                       border border-primary/20">
+                          <Icon className="h-4 w-4 text-primary" />
+                        </div>
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-foreground text-sm">{benefit.title}</h4>
+                        <p className="text-muted-foreground text-xs leading-relaxed">{benefit.description}</p>
+                      </div>
+                      <div className="flex-shrink-0">
+                        <Check className="h-4 w-4 text-primary" />
                       </div>
                     </div>
-                    <div>
-                      <h4 className="font-medium text-foreground text-sm">{benefit.title}</h4>
-                      <p className="text-muted-foreground text-xs leading-relaxed">{benefit.description}</p>
-                    </div>
-                    <div className="flex-shrink-0">
-                      <Check className="h-4 w-4 text-primary" />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            )}
 
             {/* CTA Section */}
-            <div className="text-center space-y-5">
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            {!showContactForm && (
+              <div className="text-center space-y-5">
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Button 
+                    onClick={handleUpgradeNow}
+                    size="lg"
+                    className="h-12 px-6 text-base font-semibold bg-gradient-to-r from-primary to-primary/90 
+                             hover:from-primary/90 hover:to-primary hover:scale-105 transition-all duration-300 
+                             shadow-xl hover:shadow-2xl border-0 text-primary-foreground"
+                  >
+                    Contratar Agora
+                    <ExternalLink className="h-4 w-4 ml-2" />
+                  </Button>
+                  
+                  <Button 
+                    onClick={() => setShowContactForm(true)}
+                    variant="outline"
+                    size="lg"
+                    className="h-12 px-6 text-base font-medium border-border/40 hover:bg-muted/50 
+                             hover:border-primary/30 hover:scale-105 transition-all duration-300"
+                  >
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                    Falar com Vendas
+                  </Button>
+                </div>
+
+                {/* Social Proof com fotos de usuários reais */}
+                <div className="flex items-center justify-center gap-3 text-sm text-muted-foreground/70">
+                  <div className="flex -space-x-3">
+                    <img 
+                      src="https://zotzvtepvpnkcoobdubt.supabase.co/storage/v1/object/public/profile-pictures/88ff5724-0ac3-4763-b948-d249684dd35b/profile-1754500837827.jpeg" 
+                      alt="Bel Battisti" 
+                      className="w-10 h-10 rounded-full border-2 border-background object-cover"
+                    />
+                    <img 
+                      src="https://zotzvtepvpnkcoobdubt.supabase.co/storage/v1/object/public/profile_images/b837c23e-e064-4eb8-8648-f1298d4cbe75/f61d0d3c-c39c-4ce8-9fd6-08d282816479_Diego_Malta.webp" 
+                      alt="Diego Malta" 
+                      className="w-10 h-10 rounded-full border-2 border-background object-cover"
+                    />
+                    <img 
+                      src="https://zotzvtepvpnkcoobdubt.supabase.co/storage/v1/object/public/profile-pictures/70733c09-74a1-4f2b-b054-5bcf48b01841/profile-1753472567476.jpg" 
+                      alt="Galante" 
+                      className="w-10 h-10 rounded-full border-2 border-background object-cover"
+                    />
+                    <img 
+                      src="https://zotzvtepvpnkcoobdubt.supabase.co/storage/v1/object/public/profile-pictures/2807f4bd-360c-49c4-b790-91c1791abe9d/profile-1754343191813.png" 
+                      alt="Davi Lima" 
+                      className="w-10 h-10 rounded-full border-2 border-background object-cover"
+                    />
+                    <img 
+                      src="https://zotzvtepvpnkcoobdubt.supabase.co/storage/v1/object/public/profile-pictures/657c1795-74f3-4b0b-bb97-1d415eb15ebc/profile-1754507975554.jpeg" 
+                      alt="Douglas Muller" 
+                      className="w-10 h-10 rounded-full border-2 border-background object-cover"
+                    />
+                  </div>
+                  <div className="text-left">
+                    <div className="font-medium text-foreground text-sm">Mais de 1000+ pessoas já estão</div>
+                    <div className="text-xs">tendo resultados com as soluções do VIVER DE IA</div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Formulário de contato - aparece apenas quando selecionado */}
+            {showContactForm && (
+              <div className="text-center space-y-5">
                 <Button 
-                  onClick={handleUpgradeNow}
-                  size="lg"
-                  className="h-12 px-6 text-base font-semibold bg-gradient-to-r from-primary to-primary/90 
-                           hover:from-primary/90 hover:to-primary hover:scale-105 transition-all duration-300 
-                           shadow-xl hover:shadow-2xl border-0 text-primary-foreground"
-                >
-                  Contratar Agora
-                  <ExternalLink className="h-4 w-4 ml-2" />
-                </Button>
-                
-                <Button 
-                  onClick={() => showContactForm ? handleTalkToSales() : setShowContactForm(true)}
-                  variant="outline"
-                  size="lg"
+                  onClick={handleTalkToSales}
                   disabled={isSubmitting}
-                  className="h-12 px-6 text-base font-medium border-border/40 hover:bg-muted/50 
-                           hover:border-primary/30 hover:scale-105 transition-all duration-300"
+                  size="lg"
+                  className="h-12 px-8 text-base font-semibold bg-gradient-to-r from-primary to-primary/90 
+                           hover:from-primary/90 hover:to-primary hover:scale-105 transition-all duration-300 
+                           shadow-xl hover:shadow-2xl border-0 text-primary-foreground w-full sm:w-auto"
                 >
                   {isSubmitting ? (
                     <>
@@ -318,47 +395,12 @@ export const AuroraUpgradeModal: React.FC<AuroraUpgradeModalProps> = ({
                   ) : (
                     <>
                       <MessageCircle className="h-4 w-4 mr-2" />
-                      {showContactForm ? 'Enviar para Vendas' : 'Falar com Vendas'}
+                      Enviar para Time de Vendas
                     </>
                   )}
                 </Button>
               </div>
-
-              {/* Social Proof com fotos de usuários reais */}
-              <div className="flex items-center justify-center gap-3 text-sm text-muted-foreground/70">
-                <div className="flex -space-x-3">
-                  <img 
-                    src="https://zotzvtepvpnkcoobdubt.supabase.co/storage/v1/object/public/profile-pictures/88ff5724-0ac3-4763-b948-d249684dd35b/profile-1754500837827.jpeg" 
-                    alt="Bel Battisti" 
-                    className="w-10 h-10 rounded-full border-2 border-background object-cover"
-                  />
-                  <img 
-                    src="https://zotzvtepvpnkcoobdubt.supabase.co/storage/v1/object/public/profile_images/b837c23e-e064-4eb8-8648-f1298d4cbe75/f61d0d3c-c39c-4ce8-9fd6-08d282816479_Diego_Malta.webp" 
-                    alt="Diego Malta" 
-                    className="w-10 h-10 rounded-full border-2 border-background object-cover"
-                  />
-                  <img 
-                    src="https://zotzvtepvpnkcoobdubt.supabase.co/storage/v1/object/public/profile-pictures/70733c09-74a1-4f2b-b054-5bcf48b01841/profile-1753472567476.jpg" 
-                    alt="Galante" 
-                    className="w-10 h-10 rounded-full border-2 border-background object-cover"
-                  />
-                  <img 
-                    src="https://zotzvtepvpnkcoobdubt.supabase.co/storage/v1/object/public/profile-pictures/2807f4bd-360c-49c4-b790-91c1791abe9d/profile-1754343191813.png" 
-                    alt="Davi Lima" 
-                    className="w-10 h-10 rounded-full border-2 border-background object-cover"
-                  />
-                  <img 
-                    src="https://zotzvtepvpnkcoobdubt.supabase.co/storage/v1/object/public/profile-pictures/657c1795-74f3-4b0b-bb97-1d415eb15ebc/profile-1754507975554.jpeg" 
-                    alt="Douglas Muller" 
-                    className="w-10 h-10 rounded-full border-2 border-background object-cover"
-                  />
-                </div>
-                <div className="text-left">
-                  <div className="font-medium text-foreground text-sm">Mais de 1000+ pessoas já estão</div>
-                  <div className="text-xs">tendo resultados com as soluções do VIVER DE IA</div>
-                </div>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </DialogContent>
