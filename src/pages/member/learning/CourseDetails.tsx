@@ -19,6 +19,7 @@ const CourseDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
+  const { modalState, hideUpgradeModal } = usePremiumUpgradeModal();
   
   const { course, modules, allLessons, userProgress, isLoading, error } = useCourseDetails(id);
   const { courseStats, firstLessonId, courseProgress } = useCourseStats({ 
