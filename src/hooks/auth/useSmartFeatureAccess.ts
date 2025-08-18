@@ -49,7 +49,7 @@ export const useSmartFeatureAccess = (feature: string) => {
       }
 
       // Verificar acesso baseado no papel do usuário
-      const hasRoleAccess = isFeatureEnabledForUser(feature, userRole);
+      const hasRoleAccess = isFeatureEnabledForUser(feature, userRole, profile?.user_roles?.permissions);
       
       return {
         hasAccess: hasRoleAccess,

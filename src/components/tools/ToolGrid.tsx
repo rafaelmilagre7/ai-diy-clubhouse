@@ -8,6 +8,7 @@ import { ExternalLink, Gift, Crown, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BenefitBadge } from './BenefitBadge';
 import { useFeatureAccess } from '@/hooks/auth/useFeatureAccess';
+import { useToolAccess } from '@/hooks/learning/useToolAccess';
 import { usePremiumUpgradeModal } from '@/hooks/usePremiumUpgradeModal';
 
 interface ToolGridProps {
@@ -38,15 +39,30 @@ interface ToolCardProps {
 
 const ToolCard = ({ tool }: ToolCardProps) => {
   const { hasFeatureAccess } = useFeatureAccess();
+  const { data: hasIndividualAccess, isLoading: isCheckingAccess } = useToolAccess(tool.id);
   const { showUpgradeModal } = usePremiumUpgradeModal();
   
-  // Por enquanto, assumindo que tools não tem restrições (pode ajustar depois)
-  const hasAccess = hasFeatureAccess('tools') !== false; // Default true se não definido
+  // Verificar acesso de seção (tools) e acesso individual à ferramenta
+  const hasSectionAccess = hasFeatureAccess('tools');
+  const hasAccess = hasSectionAccess && (hasIndividualAccess !== false);
+  
+  // Se está verificando acesso individual, mostrar loading
+  if (isCheckingAccess) {
+    return (
+      <Card className="relative flex flex-col h-full overflow-hidden animate-pulse">
+        <div className="h-48 bg-muted" />
+      </Card>
+    );
+  }
   
   const handleClick = (e: React.MouseEvent) => {
     if (!hasAccess) {
       e.preventDefault();
-      showUpgradeModal('tools', tool.name);
+      if (!hasSectionAccess) {
+        showUpgradeModal('tools', tool.name);
+      } else {
+        showUpgradeModal('tools', `Ferramenta ${tool.name}`);
+      }
     }
   };
   

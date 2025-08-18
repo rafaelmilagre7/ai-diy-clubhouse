@@ -70,11 +70,12 @@ export const isFeatureEnabled = (featureName: string): boolean => {
 
 /**
  * Verifica se uma feature está habilitada para um usuário específico
- * Implementa controle de acesso baseado em roles
+ * Implementa controle de acesso baseado em roles e permissões do banco
  */
 export const isFeatureEnabledForUser = (
   featureName: string, 
-  userRole?: string
+  userRole?: string,
+  userPermissions?: Record<string, any>
 ): boolean => {
   const feature = APP_FEATURES[featureName];
   
@@ -87,34 +88,50 @@ export const isFeatureEnabledForUser = (
     return false;
   }
 
-  // Controle específico por feature baseado no role
+  // Admin sempre tem acesso total
+  if (userRole === 'admin') {
+    return true;
+  }
+
+  // Se não temos permissões específicas, usar regras básicas por role
+  if (!userPermissions || Object.keys(userPermissions).length === 0) {
+    // Fallback para roles básicas conhecidas
+    switch (featureName) {
+      case 'learning':
+        return userRole === 'formacao' || userRole === 'member' || userRole === 'membro_club';
+      default:
+        return false;
+    }
+  }
+
+  // Usar permissões específicas do banco (configuradas no admin)
   switch (featureName) {
     case 'solutions':
-      // Soluções apenas para admin e papéis específicos (não formação)
-      return userRole === 'admin' || userRole === 'member' || userRole === 'membro_club';
+      return !!userPermissions.solutions;
       
     case 'learning':
-      // Learning/Formação disponível para formacao, admin e membros
-      return userRole === 'admin' || userRole === 'formacao' || userRole === 'member' || userRole === 'membro_club';
+      return !!userPermissions.formacao || !!userPermissions.learning;
       
     case 'tools':
-      // Ferramentas para admin e membros premium
-      return userRole === 'admin' || userRole === 'member' || userRole === 'membro_club';
+      return !!userPermissions.tools || !!userPermissions.benefits;
       
     case 'benefits':
-      // Benefícios para membros pagos
-      return userRole === 'admin' || userRole === 'member' || userRole === 'membro_club';
+      return !!userPermissions.benefits || !!userPermissions.tools;
       
     case 'networking':
-      // Networking para membros premium
-      return userRole === 'admin' || userRole === 'member' || userRole === 'membro_club';
+      return !!userPermissions.networking;
       
     case 'events':
-      // Eventos para membros premium
-      return userRole === 'admin' || userRole === 'member' || userRole === 'membro_club';
+      return !!userPermissions.events;
+      
+    case 'community':
+      return !!userPermissions.community;
+      
+    case 'certificates':
+      return !!userPermissions.certificates;
       
     default:
-      // Por padrão, permitir acesso se feature está habilitada
-      return true;
+      // Por padrão, verificar se existe uma permissão com o mesmo nome da feature
+      return !!userPermissions[featureName];
   }
 };
