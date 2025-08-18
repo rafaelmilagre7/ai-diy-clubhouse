@@ -36,12 +36,8 @@ export const LessonThumbnail = ({
     }
   };
   
-  return (
-    <Link 
-      to={`/learning/course/${courseId}/lesson/${lesson.id}`}
-      className="block group"
-      onClick={handleClick}
-    >
+  const content = (
+    <div>
       <div className="relative overflow-hidden rounded-xl shadow-lg">
         {/* Aspect Ratio 9:16 - Formato Netflix */}
         <AspectRatio ratio={9/16}>
@@ -72,39 +68,111 @@ export const LessonThumbnail = ({
             </div>
           )}
           
-          {/* Aurora Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300" />
-          
-          {/* Hover Content */}
-          <div className="absolute inset-0 flex flex-col justify-end p-4 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-4 group-hover:translate-y-0">
-            <div className="space-y-2">
-              <h4 className="font-semibold text-white text-sm leading-tight line-clamp-2">
-                {lesson.title}
-              </h4>
+          {/* Overlay premium com efeito de desbloqueio - igual às soluções */}
+          {!hasAccess && (
+            <div className="absolute inset-0 bg-gradient-to-br from-background/98 via-background/95 to-background/98 
+                           z-30 flex items-center justify-center backdrop-blur-md 
+                           opacity-0 group-hover:opacity-100 transition-all duration-500 ease-out 
+                           border border-border/10 group-hover:border-primary/40 rounded-lg">
               
-              {lesson.description && (
-                <p className="text-xs text-white/80 line-clamp-2">
-                  {lesson.description}
-                </p>
-              )}
+              {/* Partículas de brilho animadas */}
+              <div className="absolute inset-0 overflow-hidden rounded-lg">
+                <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-primary/60 rounded-full animate-ping delay-100"></div>
+                <div className="absolute top-3/4 right-1/4 w-1 h-1 bg-primary/40 rounded-full animate-ping delay-300"></div>
+                <div className="absolute bottom-1/4 left-3/4 w-1.5 h-1.5 bg-primary/50 rounded-full animate-ping delay-500"></div>
+              </div>
               
-              {/* Difficulty Badge */}
-              {lesson.difficulty_level && (
-                <div className="flex">
-                  <span className={cn(
-                    "text-xs px-2 py-1 rounded-full font-medium backdrop-blur-sm",
-                    lesson.difficulty_level === 'beginner' && "bg-emerald-500/80 text-white",
-                    lesson.difficulty_level === 'intermediate' && "bg-amber-500/80 text-white",
-                    lesson.difficulty_level === 'advanced' && "bg-red-500/80 text-white"
-                  )}>
-                    {lesson.difficulty_level === 'beginner' && "Iniciante"}
-                    {lesson.difficulty_level === 'intermediate' && "Intermediário"}
-                    {lesson.difficulty_level === 'advanced' && "Avançado"}
-                  </span>
+              <div className="text-center space-y-6 relative z-10">
+                {/* Ícone premium com animação de desbloqueio */}
+                <div className="relative flex items-center justify-center">
+                  {/* Anel de energia */}
+                  <div className="absolute inset-0 w-20 h-20 rounded-full border-2 border-primary/30 animate-spin-slow"></div>
+                  <div className="absolute inset-2 w-16 h-16 rounded-full border border-primary/20 animate-pulse"></div>
+                  
+                  {/* Fundo do ícone */}
+                  <div className="relative w-14 h-14 bg-gradient-to-br from-primary/20 via-primary/30 to-primary/10 
+                                 rounded-2xl border border-primary/40 backdrop-blur-sm shadow-2xl 
+                                 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                    
+                    {/* Ícone de cadeado com animação de desbloqueio */}
+                    <Lock className="h-7 w-7 text-primary drop-shadow-lg animate-pulse" />
+                    
+                    {/* Efeito de brilho */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-transparent via-primary/10 to-primary/20 
+                                   rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  </div>
+                  
+                  {/* Reflexo dourado */}
+                  <div className="absolute inset-0 w-14 h-14 bg-gradient-to-br from-yellow-400/20 to-transparent 
+                                 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-200"></div>
                 </div>
-              )}
+                
+                {/* Texto melhorado */}
+                <div className="space-y-3">
+                  <div className="space-y-1">
+                    <h4 className="text-foreground font-bold text-xl tracking-tight">
+                      Conteúdo Exclusivo
+                    </h4>
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent w-8"></div>
+                      <Lock className="h-3 w-3 text-primary/60" />
+                      <div className="h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent w-8"></div>
+                    </div>
+                  </div>
+                  
+                  <p className="text-muted-foreground text-sm leading-relaxed max-w-48 mx-auto">
+                    Desbloqueie este curso e acelere seu aprendizado com IA
+                  </p>
+                  
+                  {/* Indicador de ação */}
+                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 
+                                 rounded-full border border-primary/20 backdrop-blur-sm
+                                 group-hover:bg-primary/20 transition-colors duration-300">
+                    <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
+                    <span className="text-xs font-medium text-primary">Toque para upgrade</span>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
+          )}
+          
+          {/* Aurora Gradient Overlay - apenas quando tem acesso */}
+          {hasAccess && (
+            <>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300" />
+              
+              {/* Hover Content */}
+              <div className="absolute inset-0 flex flex-col justify-end p-4 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-4 group-hover:translate-y-0">
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-white text-sm leading-tight line-clamp-2">
+                    {lesson.title}
+                  </h4>
+                  
+                  {lesson.description && (
+                    <p className="text-xs text-white/80 line-clamp-2">
+                      {lesson.description}
+                    </p>
+                  )}
+                  
+                  {/* Difficulty Badge */}
+                  {lesson.difficulty_level && (
+                    <div className="flex">
+                      <span className={cn(
+                        "text-xs px-2 py-1 rounded-full font-medium backdrop-blur-sm",
+                        lesson.difficulty_level === 'beginner' && "bg-emerald-500/80 text-white",
+                        lesson.difficulty_level === 'intermediate' && "bg-amber-500/80 text-white",
+                        lesson.difficulty_level === 'advanced' && "bg-red-500/80 text-white"
+                      )}>
+                        {lesson.difficulty_level === 'beginner' && "Iniciante"}
+                        {lesson.difficulty_level === 'intermediate' && "Intermediário"}
+                        {lesson.difficulty_level === 'advanced' && "Avançado"}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
           
           {/* Status Indicators */}
           {isCompleted && (
@@ -123,16 +191,14 @@ export const LessonThumbnail = ({
             </div>
           )}
           
-          {/* Play Button - Centro */}
-          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 transform scale-90 group-hover:scale-100">
-            <div className="bg-white/90 hover:bg-white rounded-full p-4 shadow-2xl backdrop-blur-sm group-hover:shadow-aurora/50 transition-all duration-300">
-              {!hasAccess ? (
-                <Lock className="h-6 w-6 text-primary" />
-              ) : (
+          {/* Play Button - Centro - apenas quando tem acesso */}
+          {hasAccess && (
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 transform scale-90 group-hover:scale-100">
+              <div className="bg-white/90 hover:bg-white rounded-full p-4 shadow-2xl backdrop-blur-sm group-hover:shadow-aurora/50 transition-all duration-300">
                 <Play className="h-6 w-6 fill-primary text-primary translate-x-0.5" />
-              )}
+              </div>
             </div>
-          </div>
+          )}
         </AspectRatio>
       </div>
       
@@ -182,6 +248,25 @@ export const LessonThumbnail = ({
           </div>
         )}
       </div>
+    </div>
+  );
+  
+  // Se não tem acesso, usar div em vez de Link
+  if (!hasAccess) {
+    return (
+      <div className="block group cursor-pointer" onClick={handleClick}>
+        {content}
+      </div>
+    );
+  }
+  
+  return (
+    <Link 
+      to={`/learning/course/${courseId}/lesson/${lesson.id}`}
+      className="block group"
+      onClick={handleClick}
+    >
+      {content}
     </Link>
   );
 };

@@ -35,23 +35,19 @@ export const LessonListItem = ({
     }
   };
   
-  return (
-    <Link 
-      key={lesson.id}
-      to={`/learning/course/${courseId}/lesson/${lesson.id}`}
-      className={cn(
-        "group flex items-center justify-between p-4 hover:bg-accent/20 transition-colors",
-        isCompleted && "bg-green-50/50 dark:bg-green-950/20",
-        inProgress && !isCompleted && "bg-blue-50/50 dark:bg-blue-950/20"
-      )}
-      onClick={handleClick}
-    >
+  const content = (
+    <div className={cn(
+      "group flex items-center justify-between p-4 hover:bg-accent/20 transition-colors",
+      isCompleted && "bg-green-50/50 dark:bg-green-950/20",
+      inProgress && !isCompleted && "bg-blue-50/50 dark:bg-blue-950/20"
+    )}>
       <div className="flex items-center gap-3">
         <div className="flex-shrink-0 relative">
           {!hasAccess ? (
             <div className="relative">
-              <Circle className="h-5 w-5 text-muted-foreground" />
-              <Lock className="h-3 w-3 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="h-5 w-5 rounded-full border-2 border-muted-foreground/50 flex items-center justify-center">
+                <Lock className="h-3 w-3 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
             </div>
           ) : isCompleted ? (
             <CheckCircle className="h-5 w-5 text-green-500" />
@@ -111,11 +107,40 @@ export const LessonListItem = ({
         </div>
       </div>
       
+      {/* Ícone de ação */}
       {!hasAccess ? (
-        <Lock className="h-4 w-4 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+        <div className="flex items-center gap-2">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 
+                         rounded-full border border-primary/20 backdrop-blur-sm
+                         opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <div className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse"></div>
+            <span className="text-xs font-medium text-primary">Upgrade</span>
+          </div>
+          <Lock className="h-4 w-4 text-primary" />
+        </div>
       ) : (
         <Play className="h-4 w-4 text-muted-foreground" />
       )}
+    </div>
+  );
+  
+  // Se não tem acesso, usar div em vez de Link
+  if (!hasAccess) {
+    return (
+      <div className="cursor-pointer" onClick={handleClick}>
+        {content}
+      </div>
+    );
+  }
+  
+  return (
+    <Link 
+      key={lesson.id}
+      to={`/learning/course/${courseId}/lesson/${lesson.id}`}
+      className="block"
+      onClick={handleClick}
+    >
+      {content}
     </Link>
   );
 };
