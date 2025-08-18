@@ -5879,7 +5879,7 @@ export type Database = {
         Returns: Json
       }
       get_networking_contacts: {
-        Args: { p_user_ids: string[] }
+        Args: { p_user_id: string } | { p_user_ids: string[] }
         Returns: {
           company_name: string
           current_position: string
