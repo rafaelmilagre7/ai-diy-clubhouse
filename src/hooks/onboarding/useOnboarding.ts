@@ -166,11 +166,13 @@ export const useOnboarding = () => {
       if (data) {
         console.log('[ONBOARDING] Setando estado com dados carregados');
         
-        // CORREÇÃO: Respeitar o user_type NULL para step 0
+        // CORREÇÃO CRÍTICA: Se onboarding já está completo, ir direto para step 6 (celebração)
         let nextStep;
         
-        // Se user_type é NULL, usuário precisa selecionar o tipo (step 0)
-        if (!data.user_type) {
+        if (data.is_completed === true) {
+          console.log('[ONBOARDING] ⚠️ ONBOARDING JÁ COMPLETO - indo direto para Step 6 (celebração)');
+          nextStep = 6;
+        } else if (!data.user_type) {
           console.log('[ONBOARDING] user_type é NULL - redirecionando para step 0');
           nextStep = 0;
         } else {
@@ -557,7 +559,7 @@ Vamos começar? Sua trilha personalizada já está pronta! 🚀`;
       setState(prev => ({
         ...prev,
         is_completed: true,
-        completed_steps: [1, 2, 3, 4, 5],
+        completed_steps: [1, 2, 3, 4, 5, 6], // Incluir step 6
         nina_message: ninaMessage,
       }));
       

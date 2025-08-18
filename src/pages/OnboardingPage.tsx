@@ -192,8 +192,8 @@ const OnboardingPage: React.FC = () => {
     return <Navigate to="/login" replace />;
   }
 
-  // Redirect se onboarding já foi completado
-  if (user && profile && profile.onboarding_completed === true) {
+  // Redirect se onboarding já foi completado E não está na celebração
+  if (user && profile && profile.onboarding_completed === true && current_step !== 6) {
     console.log("✅ [ONBOARDING] Onboarding já completado - redirecionando para dashboard");
     return <Navigate to="/dashboard" replace />;
   }
@@ -324,7 +324,16 @@ const OnboardingPage: React.FC = () => {
             ninaMessage={nina_message}
             userName={data.personal_info?.name || profile?.name || "Usuário"}
             onFinish={async () => {
-              console.log('[ONBOARDING_PAGE] Step6Welcome onFinish chamado - finalizando onboarding');
+              console.log('[ONBOARDING_PAGE] Step6Welcome onFinish chamado');
+              
+              // Se já está completo, apenas mostrar celebração e redirecionar
+              if (is_completed) {
+                console.log('[ONBOARDING_PAGE] Onboarding já completo - indo direto para celebração');
+                return true; 
+              }
+              
+              // Se não está completo, finalizar o processo
+              console.log('[ONBOARDING_PAGE] Finalizando onboarding...');
               const success = await completeOnboarding(data.personalization);
               console.log('[ONBOARDING_PAGE] Resultado do completeOnboarding:', success);
               return success;

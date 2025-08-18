@@ -20,17 +20,20 @@ export const Step6Welcome: React.FC<Step6WelcomeProps> = ({
   const [showSuccess, setShowSuccess] = useState(false);
   
   const handleFinish = async () => {
-    console.log('[STEP6] Iniciando finalização do onboarding...');
+    console.log('[STEP6] 🎉 Iniciando finalização do onboarding...');
+    console.log('[STEP6] 🎉 Estado atual - isCompleted:', isCompleting, 'showSuccess:', showSuccess);
     setIsCompleting(true);
     
     // Primeiro finalizar o onboarding no backend
+    console.log('[STEP6] 🎉 Chamando onFinish...');
     const success = await onFinish();
     
+    console.log('[STEP6] 🎉 Resultado onFinish:', success);
     if (success) {
-      console.log('[STEP6] Onboarding finalizado com sucesso - mostrando celebração');
+      console.log('[STEP6] 🎉 SUCESSO! Mostrando celebração com confetti...');
       setShowSuccess(true);
     } else {
-      console.error('[STEP6] Falha ao finalizar onboarding');
+      console.error('[STEP6] ❌ FALHA ao finalizar onboarding');
       setIsCompleting(false);
     }
   };
