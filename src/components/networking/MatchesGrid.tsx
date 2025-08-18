@@ -155,7 +155,7 @@ export const MatchesGrid = () => {
               onOpenChat={() => setActiveChatMatch(match.id)}
               onShowContact={() => setContactModalUser({
                 id: match.matched_user_id,
-                name: match.matched_user.name
+                name: match.matched_user?.name || 'Usuário'
               })}
             />
           </motion.div>
@@ -195,25 +195,36 @@ interface MatchCardProps {
     match_type: string;
     compatibility_score: number;
     match_reason: string;
-    ai_analysis: {
-      strengths: string[];
-      opportunities: string[];
-      recommended_approach: string;
+    ai_analysis?: {
+      strengths?: string[];
+      opportunities?: string[];
+      recommended_approach?: string;
     };
-    matched_user: {
+    matched_user?: {
       id: string;
-      name: string;
+      name?: string;
       company_name?: string;
       current_position?: string;
       industry?: string;
       avatar_url?: string;
-    };
+    } | null;
   };
   onOpenChat: () => void;
   onShowContact: () => void;
 }
 
 const MatchCard = ({ match, onOpenChat, onShowContact }: MatchCardProps) => {
+  // Proteção contra matched_user null
+  if (!match.matched_user) {
+    return (
+      <Card className="h-full overflow-hidden bg-card/95 backdrop-blur-sm border border-border/50">
+        <CardContent className="p-6 flex items-center justify-center">
+          <p className="text-muted-foreground text-sm">Dados do usuário não disponíveis</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   const translatedType = translateMatchType(match.match_type);
   
   const getTypeColor = (type: string) => {
@@ -237,8 +248,9 @@ const MatchCard = ({ match, onOpenChat, onShowContact }: MatchCardProps) => {
   };
 
   const TypeIcon = getTypeIcon(translatedType);
+  const userName = match.matched_user.name || 'Usuário';
   const avatar = match.matched_user.avatar_url || 
-    `https://ui-avatars.com/api/?name=${encodeURIComponent(match.matched_user.name)}&background=0D8ABC&color=fff`;
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=0D8ABC&color=fff`;
 
   return (
     <div className="group relative">
@@ -255,10 +267,10 @@ const MatchCard = ({ match, onOpenChat, onShowContact }: MatchCardProps) => {
                 <div className="relative h-16 w-16 rounded-full border-2 border-border/50 shadow-lg overflow-hidden bg-muted flex-shrink-0">
                   <img 
                     src={avatar} 
-                    alt={match.matched_user.name}
+                    alt={userName}
                     className="w-full h-full object-cover"
                     onError={(e) => {
-                      e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(match.matched_user.name)}&background=0D8ABC&color=fff&size=64`;
+                      e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=0D8ABC&color=fff&size=64`;
                     }}
                   />
                 </div>
@@ -267,7 +279,7 @@ const MatchCard = ({ match, onOpenChat, onShowContact }: MatchCardProps) => {
                 </div>
               </div>
               <div className="flex-1">
-                <h3 className="font-heading font-semibold text-foreground line-clamp-1 text-base">{match.matched_user.name}</h3>
+                <h3 className="font-heading font-semibold text-foreground line-clamp-1 text-base">{userName}</h3>
                 <p className="text-sm text-muted-foreground line-clamp-1">{match.matched_user.current_position || 'Profissional'}</p>
               </div>
             </div>
@@ -299,7 +311,7 @@ const MatchCard = ({ match, onOpenChat, onShowContact }: MatchCardProps) => {
           <div className="relative overflow-hidden bg-muted/50 backdrop-blur rounded-xl p-4 border border-border/30">
             <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent"></div>
             <p className="relative text-xs text-muted-foreground leading-relaxed">
-              <span className="text-primary font-medium">IA diz:</span> {match.match_reason || match.ai_analysis?.recommended_approach || `${match.matched_user.name} tem alta compatibilidade com seu perfil profissional. Recomendo iniciar uma conversa sobre ${match.match_type === 'customer' ? 'oportunidades de negócio' : match.match_type === 'partner' ? 'possíveis parcerias estratégicas' : 'colaboração mútua'}.`}
+              <span className="text-primary font-medium">IA diz:</span> {match.match_reason || match.ai_analysis?.recommended_approach || `${userName} tem alta compatibilidade com seu perfil profissional. Recomendo iniciar uma conversa sobre ${match.match_type === 'customer' ? 'oportunidades de negócio' : match.match_type === 'partner' ? 'possíveis parcerias estratégicas' : 'colaboração mútua'}.`}
             </p>
           </div>
 
@@ -307,7 +319,7 @@ const MatchCard = ({ match, onOpenChat, onShowContact }: MatchCardProps) => {
           <div>
             <p className="text-xs text-muted-foreground mb-2">Pontos fortes:</p>
             <div className="flex flex-wrap gap-1">
-              {match.ai_analysis.strengths.map((strength, i) => (
+              {(match.ai_analysis?.strengths || []).map((strength, i) => (
                 <div 
                   key={i} 
                   className="text-xs bg-muted/80 text-muted-foreground border border-border/50 px-2 py-1 rounded-lg"
