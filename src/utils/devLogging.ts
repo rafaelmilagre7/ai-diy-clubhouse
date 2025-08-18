@@ -4,7 +4,7 @@
  * Evita logs em produção enquanto mantém debugging local
  */
 
-const isDevelopment = process.env.NODE_ENV === 'development';
+const isDevelopment = import.meta.env.DEV;
 
 export const devLog = {
   info: (message: string, data?: any) => {

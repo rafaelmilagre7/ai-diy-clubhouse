@@ -24,7 +24,7 @@ export const SecurityProvider: React.FC<SecurityProviderProps> = ({ children }) 
   // Verificar ambiente seguro
   const isSecureEnvironment = React.useMemo(() => {
     // HTTPS em produção
-    if (process.env.NODE_ENV === 'production') {
+    if (import.meta.env.PROD) {
       return window.location.protocol === 'https:';
     }
     

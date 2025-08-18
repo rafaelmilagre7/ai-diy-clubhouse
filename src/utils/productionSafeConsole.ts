@@ -4,7 +4,7 @@
  * Para evitar falhas de build
  */
 
-const isProduction = process.env.NODE_ENV === 'production';
+const isProduction = import.meta.env.PROD;
 
 if (isProduction && typeof window !== 'undefined') {
   // Substituir todos os console methods por funções silenciosas

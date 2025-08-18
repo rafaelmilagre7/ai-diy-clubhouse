@@ -4,8 +4,8 @@
  * Remove todos os logs em produção para evitar falhas de build
  */
 
-const isProduction = process.env.NODE_ENV === 'production';
-const isDevelopment = process.env.NODE_ENV === 'development';
+const isProduction = import.meta.env.PROD;
+const isDevelopment = import.meta.env.DEV;
 
 // Função silenciosa para produção
 const silentLog = () => {};

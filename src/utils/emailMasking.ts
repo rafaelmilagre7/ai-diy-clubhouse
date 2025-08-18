@@ -3,8 +3,8 @@
  * Garante que emails não apareçam completos nos logs do console
  */
 
-const isProduction = process.env.NODE_ENV === 'production';
-const isDevelopment = process.env.NODE_ENV === 'development';
+const isProduction = import.meta.env.PROD;
+const isDevelopment = import.meta.env.DEV;
 
 /**
  * Mascara um email mantendo apenas formato básico

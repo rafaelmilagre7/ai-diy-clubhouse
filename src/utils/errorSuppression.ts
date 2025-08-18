@@ -38,6 +38,6 @@ export const suppressNonCriticalErrors = () => {
 };
 
 // Auto-inicializar em desenvolvimento
-if (process.env.NODE_ENV === 'development') {
+if (import.meta.env.DEV) {
   suppressNonCriticalErrors();
 }

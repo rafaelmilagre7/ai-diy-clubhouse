@@ -7,7 +7,7 @@ import { maskEmail, maskEmailsInText, safeLog } from './emailMasking';
 
 // Função para testar o mascaramento (apenas em desenvolvimento)
 export const testEmailMasking = () => {
-  if (process.env.NODE_ENV !== 'development') return;
+  if (!import.meta.env.DEV) return;
   
   console.log('🔒 Testando sistema de mascaramento de emails...');
   
@@ -40,7 +40,7 @@ export const testEmailMasking = () => {
 };
 
 // Executar teste automaticamente em desenvolvimento
-if (process.env.NODE_ENV === 'development') {
+if (import.meta.env.DEV) {
   // Aguardar um pouco para garantir que o sistema foi inicializado
   setTimeout(() => {
     testEmailMasking();
