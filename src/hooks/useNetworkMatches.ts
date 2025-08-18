@@ -111,39 +111,45 @@ export const useNetworkMatches = () => {
       console.log('🔍 [NETWORK-MATCHES] Dados encontrados:', {
         matches: matchesData.length,
         profiles: profilesData?.length || 0,
-        matchedUserIds: matchedUserIds.slice(0, 3) // primeiros 3 IDs para debug
+        matchedUserIds: matchedUserIds.slice(0, 3), // primeiros 3 IDs para debug
+        profilesSample: profilesData?.slice(0, 2).map(p => ({
+          id: p.id,
+          name: p.name,
+          hasAvatar: !!p.avatar_url,
+          avatar_url: p.avatar_url
+        }))
       });
 
-      // Combinar matches com perfis e dados de onboarding
-      const transformedData = matchesData.map(match => {
-        const matchedProfile = profilesData?.find(profile => profile.id === match.matched_user_id);
-        const onboardingInfo = onboardingData?.find(onb => onb.user_id === match.matched_user_id);
-        
-        if (!matchedProfile) return { ...match, matched_user: null };
+        // Combinar matches com perfis e dados de onboarding
+        const transformedData = matchesData.map(match => {
+          const matchedProfile = profilesData?.find(profile => profile.id === match.matched_user_id);
+          const onboardingInfo = onboardingData?.find(onb => onb.user_id === match.matched_user_id);
+          
+          if (!matchedProfile) return { ...match, matched_user: null };
 
-        return {
-          ...match,
-          matched_user: {
-            id: matchedProfile.id,
-            name: matchedProfile.name || 'Usuário',
-            email: matchedProfile.email,
-            company_name: matchedProfile.company_name || onboardingInfo?.company_name,
-            current_position: matchedProfile.current_position || onboardingInfo?.current_position,
-            industry: matchedProfile.industry,
-            avatar_url: matchedProfile.avatar_url,
-            linkedin_url: matchedProfile.linkedin_url || onboardingInfo?.linkedin_url,
-            whatsapp_number: matchedProfile.whatsapp_number,
-            professional_bio: matchedProfile.professional_bio,
-            // Dados extras vindos do RPC
-            phone: onboardingInfo?.phone || matchedProfile.whatsapp_number,
-            full_company_name: onboardingInfo?.company_name,
-            full_position: onboardingInfo?.current_position,
-            full_industry: matchedProfile.industry,
-            company_size: undefined,
-            annual_revenue: undefined,
-          }
-        };
-      });
+          return {
+            ...match,
+            matched_user: {
+              id: matchedProfile.id,
+              name: matchedProfile.name || 'Usuário',
+              email: matchedProfile.email,
+              company_name: matchedProfile.company_name || onboardingInfo?.company_name,
+              current_position: matchedProfile.current_position || onboardingInfo?.current_position,
+              industry: matchedProfile.industry,
+              avatar_url: matchedProfile.avatar_url,
+              linkedin_url: matchedProfile.linkedin_url || onboardingInfo?.linkedin_url,
+              whatsapp_number: matchedProfile.whatsapp_number,
+              professional_bio: matchedProfile.professional_bio,
+              // Dados extras vindos do RPC
+              phone: onboardingInfo?.phone || matchedProfile.whatsapp_number,
+              full_company_name: onboardingInfo?.company_name,
+              full_position: onboardingInfo?.current_position,
+              full_industry: matchedProfile.industry,
+              company_size: undefined,
+              annual_revenue: undefined,
+            }
+          };
+        });
 
       const validMatches = transformedData.filter(match => match.matched_user);
 
