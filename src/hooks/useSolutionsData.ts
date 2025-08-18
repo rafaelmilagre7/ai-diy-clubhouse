@@ -60,14 +60,8 @@ export const useSolutionsData = () => {
       return;
     }
 
-    // Verificar se tem permissão para acessar soluções
-    if (!hasSolutionsAccess) {
-      logger.warn('[SOLUTIONS] Usuário não tem permissão para acessar soluções');
-      setSolutions([]);
-      setLoading(false);
-      setError('Você não tem permissão para acessar as soluções');
-      return;
-    }
+    // Para estratégia freemium: sempre buscar soluções para mostrar preview
+    // O controle de acesso será feito no nível do card individual
 
     // Debounce: evitar múltiplas execuções em sequência
     const now = Date.now();
@@ -154,7 +148,7 @@ export const useSolutionsData = () => {
     } finally {
       setLoading(false);
     }
-  }, [user, profile?.role, cacheKey, logDataAccess, hasSolutionsAccess, accessLoading]);
+  }, [user, profile?.role, cacheKey, logDataAccess, accessLoading]);
 
   useEffect(() => {
     fetchSolutions();
