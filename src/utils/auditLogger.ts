@@ -154,7 +154,7 @@ export class AuditLogger {
   // Obter IP do cliente de forma segura
   private async getClientIP(): Promise<string> {
     try {
-      if (process.env.NODE_ENV === 'production') {
+      if (import.meta.env.PROD) {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 2000);
         

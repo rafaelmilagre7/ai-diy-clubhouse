@@ -128,7 +128,7 @@ export class InputValidator {
       }
       
       // Bloquear IPs locais em produção
-      if (process.env.NODE_ENV === 'production') {
+      if (import.meta.env.PROD) {
         const hostname = parsed.hostname;
         const localPatterns = [
           /^localhost$/i, /^127\./, /^192\.168\./, /^10\./, /^172\.(1[6-9]|2[0-9]|3[0-1])\./

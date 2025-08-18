@@ -2,8 +2,8 @@
 import { sanitizeForLogging } from './securityUtils';
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'security';
-const isProduction = process.env.NODE_ENV === 'production';
-const isDevelopment = process.env.NODE_ENV === 'development';
+const isProduction = import.meta.env.PROD;
+const isDevelopment = import.meta.env.DEV;
 
 interface SecureLogEntry {
   timestamp: string;

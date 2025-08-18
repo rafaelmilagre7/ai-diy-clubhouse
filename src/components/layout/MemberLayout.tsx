@@ -35,7 +35,7 @@ const MemberLayout = memo<MemberLayoutProps>(({ children }) => {
       await signOut();
       toast.success("Logout realizado com sucesso");
     } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
+      if (import.meta.env.DEV) {
         console.error('[MemberLayout] Erro no signOut:', error);
       }
       toast.error("Erro ao fazer logout");
@@ -80,7 +80,7 @@ const MemberLayout = memo<MemberLayoutProps>(({ children }) => {
       </>
     );
   } catch (error) {
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       console.error('[MemberLayout] Erro ao renderizar:', error);
     }
     return (

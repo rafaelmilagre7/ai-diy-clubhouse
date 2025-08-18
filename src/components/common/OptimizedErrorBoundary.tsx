@@ -10,7 +10,7 @@ interface ErrorFallbackProps {
 }
 
 const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error, resetErrorBoundary }) => {
-  const isDevelopment = process.env.NODE_ENV === 'development';
+  const isDevelopment = import.meta.env.DEV;
 
   return (
     <div className="min-h-[400px] flex items-center justify-center p-6">
@@ -74,7 +74,7 @@ export const OptimizedErrorBoundary: React.FC<OptimizedErrorBoundaryProps> = ({
       FallbackComponent={FallbackComponent}
       onError={(error, errorInfo) => {
         // Log apenas em desenvolvimento ou erros críticos
-        if (process.env.NODE_ENV === 'development') {
+        if (import.meta.env.DEV) {
           console.error('🚨 [ERROR-BOUNDARY] Erro capturado:', error, errorInfo);
         } else {
           // Em produção, log apenas o essencial

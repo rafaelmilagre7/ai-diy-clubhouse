@@ -7,7 +7,7 @@ export const usePerformanceDashboard = () => {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    if (process.env.NODE_ENV !== 'development') return;
+    if (!import.meta.env.DEV) return;
 
     const updateReport = () => {
       const currentReport = perfMonitor.getReport();

@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 export const PerformanceDashboard = () => {
   const { report, isVisible, setIsVisible, resetMetrics } = usePerformanceDashboard();
 
-  if (process.env.NODE_ENV !== 'development' || !isVisible) {
+  if (!import.meta.env.DEV || !isVisible) {
     return null;
   }
 

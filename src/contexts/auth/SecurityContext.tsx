@@ -82,7 +82,7 @@ export const SecurityProvider: React.FC<SecurityProviderProps> = ({ children }) 
       const original = originalConsole[methodName];
       if (typeof original === 'function') {
         (console as any)[methodName] = (...args: any[]) => {
-          if (!consoleWarningShown && process.env.NODE_ENV === 'production') {
+          if (!consoleWarningShown && import.meta.env.PROD) {
             consoleWarningShown = true;
             original.call(console, '[SECURITY] Detectada atividade no console em produção');
             logSecurityEvent('console_access');
@@ -93,7 +93,7 @@ export const SecurityProvider: React.FC<SecurityProviderProps> = ({ children }) 
     };
 
     // Aplicar override apenas para métodos que existem
-    if (process.env.NODE_ENV === 'production') {
+    if (import.meta.env.PROD) {
       overrideConsoleMethod('log');
       overrideConsoleMethod('warn');
       overrideConsoleMethod('error');
@@ -109,7 +109,7 @@ export const SecurityProvider: React.FC<SecurityProviderProps> = ({ children }) 
 
   // Detectar DevTools abertas com proteção adicional
   useEffect(() => {
-    if (process.env.NODE_ENV !== 'production') return;
+    if (!import.meta.env.PROD) return;
 
     let devToolsOpen = false;
     

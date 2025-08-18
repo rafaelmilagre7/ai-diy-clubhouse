@@ -17,13 +17,13 @@ export class EnvironmentSecurity {
   
   // Verificar se está em produção
   isProduction(): boolean {
-    return process.env.NODE_ENV === 'production' || 
+    return import.meta.env.PROD || 
            window.location.hostname.includes('viverdeia.ai');
   }
   
   // Verificar se está em desenvolvimento
   isDevelopment(): boolean {
-    return process.env.NODE_ENV === 'development' && 
+    return import.meta.env.DEV && 
            (window.location.hostname.includes('localhost') || 
             window.location.hostname.includes('127.0.0.1'));
   }
@@ -34,12 +34,12 @@ export class EnvironmentSecurity {
       logger.warn("Tentativa de usar features de teste em produção", {
         component: 'ENVIRONMENT_SECURITY',
         hostname: window.location.hostname,
-        environment: process.env.NODE_ENV
+        environment: import.meta.env.PROD ? 'production' : 'development'
       });
       
       auditLogger.logSecurityEvent('test_feature_blocked', 'medium', {
         hostname: window.location.hostname,
-        environment: process.env.NODE_ENV,
+        environment: import.meta.env.PROD ? 'production' : 'development',
         userAgent: navigator.userAgent.substring(0, 100)
       });
       

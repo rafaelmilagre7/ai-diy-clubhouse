@@ -6,7 +6,7 @@ import { maskEmailsInText, safeLog } from '@/utils/emailMasking';
  * Melhora significativamente a performance
  */
 export const useOptimizedLogging = () => {
-  const isDevelopment = process.env.NODE_ENV === 'development';
+  const isDevelopment = import.meta.env.DEV;
 
   const log = useCallback((message: string, data?: any) => {
     if (isDevelopment) {
@@ -34,7 +34,7 @@ export const useOptimizedLogging = () => {
  * Wrapper para console.log que remove logs em produção automaticamente
  */
 export const devLog = (message: string, data?: any) => {
-  if (process.env.NODE_ENV === 'development') {
+  if (import.meta.env.DEV) {
     safeLog('log', message, data);
   }
 };
@@ -43,7 +43,7 @@ export const devLog = (message: string, data?: any) => {
  * Wrapper para console.warn que funciona apenas em desenvolvimento
  */
 export const devWarn = (message: string, data?: any) => {
-  if (process.env.NODE_ENV === 'development') {
+  if (import.meta.env.DEV) {
     safeLog('warn', message, data);
   }
 };

@@ -22,7 +22,7 @@ export const PerformanceMonitor = () => {
     return () => clearInterval(interval);
   }, [getPerformanceStats]);
 
-  if (!isVisible && process.env.NODE_ENV === 'production') {
+  if (!isVisible && import.meta.env.PROD) {
     return (
       <Button
         variant="ghost"

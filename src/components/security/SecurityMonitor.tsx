@@ -30,7 +30,7 @@ export const SecurityMonitor: React.FC<SecurityMonitorProps> = ({
       try {
         // Verificar ambiente de desenvolvimento em produção
         if (!environmentSecurity.isDevelopment() && 
-            process.env.NODE_ENV === 'development') {
+            import.meta.env.DEV) {
           
           const warning = 'Development mode em ambiente não local';
           if (!warningsShown.current.has(warning)) {

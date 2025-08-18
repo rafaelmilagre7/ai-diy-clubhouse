@@ -92,12 +92,12 @@ export const generateSecureNonce = (): string => {
 export const isSecureEnvironment = (): boolean => {
   try {
     // Verificar HTTPS em produção
-    if (process.env.NODE_ENV === 'production') {
+    if (import.meta.env.PROD) {
       return window.location.protocol === 'https:';
     }
     
     // Em desenvolvimento, permitir HTTP apenas em localhost
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       const hostname = window.location.hostname;
       return hostname === 'localhost' || 
              hostname === '127.0.0.1' || 

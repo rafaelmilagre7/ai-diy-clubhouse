@@ -99,14 +99,14 @@ export function useUserRoles() {
 
   const getUserRole = useCallback(async (userId: string): Promise<UserRoleResult> => {
     if (roleCache.current.has(userId)) {
-      if (process.env.NODE_ENV !== 'production') {
+       if (!import.meta.env.PROD) {
         console.log(`🔄 [USER-ROLES] Retornando role do cache para: ${userId.substring(0, 8)}***`);
       }
       return roleCache.current.get(userId)!;
     }
     
     try {
-      if (process.env.NODE_ENV !== 'production') {
+       if (!import.meta.env.PROD) {
         console.log(`🔍 [USER-ROLES] Buscando papel para usuário: ${userId.substring(0, 8)}***`);
       }
       
@@ -152,7 +152,7 @@ export function useUserRoles() {
       const result: UserRoleResult = { roleId, roleName, roleData };
       roleCache.current.set(userId, result);
       
-      if (process.env.NODE_ENV !== 'production') {
+      if (!import.meta.env.PROD) {
         console.log(`✅ [USER-ROLES] Role carregado: ${roleName || 'undefined'} para usuário ${userId.substring(0, 8)}***`);
       }
       return result;

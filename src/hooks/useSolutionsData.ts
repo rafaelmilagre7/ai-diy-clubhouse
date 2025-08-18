@@ -37,7 +37,7 @@ export const useSolutionsData = () => {
 
   // Log apenas quando o hash muda (evita spam)
   useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       executionCountRef.current++;
       console.log('[useSolutionsData] Hook executado:', {
         execCount: executionCountRef.current,
@@ -77,7 +77,7 @@ export const useSolutionsData = () => {
       setLoading(false);
       setError(null);
       
-      if (process.env.NODE_ENV === 'development') {
+      if (import.meta.env.DEV) {
         console.log('[SOLUTIONS] Dados carregados do cache:', {
           execCount: executionCountRef.current,
           count: cached.data.length,
@@ -137,7 +137,7 @@ export const useSolutionsData = () => {
 
       setSolutions(validSolutions);
       
-      if (process.env.NODE_ENV === 'development') {
+      if (import.meta.env.DEV) {
         console.log('[SOLUTIONS] Soluções carregadas das tabelas restauradas:', {
           execCount: executionCountRef.current,
           count: validSolutions.length,

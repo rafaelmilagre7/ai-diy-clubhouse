@@ -144,7 +144,7 @@ export const detectSuspiciousEnvironment = (): string[] => {
   
   try {
     // Verificar se está em desenvolvimento mas com dados de produção
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       if (window.location.hostname !== 'localhost' && 
           window.location.hostname !== '127.0.0.1' &&
           !window.location.hostname.includes('localhost')) {
@@ -158,7 +158,7 @@ export const detectSuspiciousEnvironment = (): string[] => {
     }
     
     // Verificar se DevTools estão abertas (apenas em produção)
-    if (process.env.NODE_ENV === 'production') {
+    if (import.meta.env.PROD) {
       const threshold = 160;
       if (window.outerHeight - window.innerHeight > threshold || 
           window.outerWidth - window.innerWidth > threshold) {

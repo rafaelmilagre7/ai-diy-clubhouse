@@ -15,7 +15,7 @@ type PerformanceEvent = {
 class PerformanceMonitor {
   private events: PerformanceEvent[] = [];
   private timers: Map<string, number> = new Map();
-  private isEnabled = process.env.NODE_ENV === 'development';
+  private isEnabled = import.meta.env.DEV;
 
   startTimer(component: string, event: string, metadata?: Record<string, any>) {
     if (!this.isEnabled) return;

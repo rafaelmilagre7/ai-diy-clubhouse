@@ -177,7 +177,7 @@ export const CertificateModal = ({ certificate, isOpen, onClose }: CertificateMo
           </div>
 
           {/* Debug info (apenas em desenvolvimento) */}
-          {process.env.NODE_ENV === 'development' && (
+          {import.meta.env.DEV && (
             <div className="text-xs text-gray-500 space-y-1">
               <div>Template ID: {template.id}</div>
               <div>Template Name: {template.name}</div>

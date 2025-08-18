@@ -232,7 +232,7 @@ export const getUserRoleName = (profile: UserProfile | null): string => {
   
   // Fallback para campo legado durante migração
   if (profile.role) {
-    if (process.env.NODE_ENV !== 'production') {
+    if (!import.meta.env.PROD) {
       console.warn('⚠️ [DEPRECATED] Usando profile.role (legado). Migre para role_id/user_roles.', {
         profileId: profile.id.substring(0, 8) + '***',
         legacyRole: profile.role,

@@ -71,7 +71,7 @@ const maskUserId = (userId?: string): string => {
  */
 export const secureLogger = {
   debug: (entry: SecurityLogEntry) => {
-    if (process.env.NODE_ENV === 'production') {
+    if (import.meta.env.PROD) {
       // Em produção, não loggar debug
       return;
     }

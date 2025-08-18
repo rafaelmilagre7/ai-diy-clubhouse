@@ -25,7 +25,7 @@ export class TrailErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: any) {
     // Reportar erro em produção (sem console.log)
-    if (process.env.NODE_ENV === 'production') {
+    if (import.meta.env.PROD) {
       // Aqui você poderia enviar para um serviço de monitoramento
     }
   }

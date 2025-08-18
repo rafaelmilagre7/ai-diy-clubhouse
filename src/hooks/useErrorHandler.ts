@@ -27,7 +27,7 @@ export const useErrorHandler = () => {
     };
 
     // Log detalhado no console para desenvolvimento
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       console.group(`🔴 Error in ${context || 'Unknown'}`);
       console.error('Error:', error);
       console.log('Error Info:', errorInfo);
