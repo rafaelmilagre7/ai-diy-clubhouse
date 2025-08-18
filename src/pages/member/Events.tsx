@@ -4,7 +4,7 @@ import { Loader2, Calendar as CalendarIcon, Crown, Lock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useFeatureAccess } from '@/hooks/auth/useFeatureAccess';
 import { usePremiumUpgradeModal } from '@/hooks/usePremiumUpgradeModal';
-import { PremiumUpgradeModal } from '@/components/ui/premium-upgrade-modal';
+import { AuroraUpgradeModal } from '@/components/ui/aurora-upgrade-modal';
 
 const Events = () => {
   const { isLoading } = useEvents();
@@ -90,11 +90,11 @@ const Events = () => {
         </div>
       </div>
       
-      <PremiumUpgradeModal 
+      <AuroraUpgradeModal 
         open={modalState.open}
         onOpenChange={hideUpgradeModal}
-        feature={modalState.feature}
-        itemTitle={modalState.itemTitle}
+        itemTitle={modalState.itemTitle || "Desbloquear Eventos Premium"}
+        feature="solutions"
       />
     </>
   );

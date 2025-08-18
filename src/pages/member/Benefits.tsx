@@ -15,7 +15,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/auth';
 import { useFeatureAccess } from '@/hooks/auth/useFeatureAccess';
 import { usePremiumUpgradeModal } from '@/hooks/usePremiumUpgradeModal';
-import { PremiumUpgradeModal } from '@/components/ui/premium-upgrade-modal';
+import { AuroraUpgradeModal } from '@/components/ui/aurora-upgrade-modal';
 import { cn } from '@/lib/utils';
 
 const Benefits = () => {
@@ -251,11 +251,11 @@ const Benefits = () => {
         )}
       </div>
       
-      <PremiumUpgradeModal 
+      <AuroraUpgradeModal 
         open={modalState.open}
         onOpenChange={hideUpgradeModal}
-        feature={modalState.feature}
-        itemTitle={modalState.itemTitle}
+        itemTitle={modalState.itemTitle || "Desbloquear Benefícios Premium"}
+        feature="solutions"
       />
     </div>
   );
