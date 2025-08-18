@@ -21,25 +21,46 @@ interface AuroraUpgradeModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   itemTitle?: string;
+  feature?: 'solutions' | 'learning';
 }
 
-const BENEFITS = [
-  {
-    icon: Zap,
-    title: 'Todas as Soluções Práticas',
-    description: 'Acesso completo a mais de 20+ soluções com passo a passo detalhado'
-  },
-  {
-    icon: Trophy,
-    title: 'Ferramentas Exclusivas',
-    description: 'Acesso a automações e integrações premium'
-  }
-];
+const BENEFITS_CONFIG = {
+  solutions: [
+    {
+      icon: Zap,
+      title: 'Todas as Soluções Práticas',
+      description: 'Acesso completo a mais de 20+ soluções com passo a passo detalhado'
+    },
+    {
+      icon: Trophy,
+      title: 'Ferramentas Exclusivas',
+      description: 'Acesso a automações e integrações premium'
+    }
+  ],
+  learning: [
+    {
+      icon: Zap,
+      title: 'Formação Completa em IA',
+      description: 'Acesso a mais de 77 aulas práticas para dominar IA no seu negócio'
+    },
+    {
+      icon: Trophy,
+      title: 'Certificados e Projetos',
+      description: 'Certificados de conclusão e projetos práticos reais'
+    },
+    {
+      icon: UserCheck,
+      title: 'Mentoria da Comunidade',
+      description: 'Suporte e mentoria da comunidade premium exclusiva'
+    }
+  ]
+};
 
 export const AuroraUpgradeModal: React.FC<AuroraUpgradeModalProps> = ({
   open,
   onOpenChange,
-  itemTitle
+  itemTitle,
+  feature = 'solutions'
 }) => {
   const { profile } = useAuth();
   const { toast } = useToast();
@@ -47,6 +68,8 @@ export const AuroraUpgradeModal: React.FC<AuroraUpgradeModalProps> = ({
   const [userEmail, setUserEmail] = useState(profile?.email || "");
   const [userPhone, setUserPhone] = useState((profile as any)?.whatsapp_number || "");
   const [showContactForm, setShowContactForm] = useState(false);
+
+  const BENEFITS = BENEFITS_CONFIG[feature];
 
   // Sincronizar dados quando profile mudar
   useEffect(() => {
@@ -119,8 +142,8 @@ export const AuroraUpgradeModal: React.FC<AuroraUpgradeModalProps> = ({
       // Chamar edge function
       const { data, error } = await supabase.functions.invoke('sales-notification', {
         body: {
-          feature: 'solutions',
-          itemTitle: itemTitle || 'Acesso Premium à Plataforma',
+          feature: feature,
+          itemTitle: itemTitle || (feature === 'learning' ? 'Acesso Premium à Formação' : 'Acesso Premium à Plataforma'),
           type: 'upgrade_interest',
           timestamp: new Date().toISOString(),
           userInfo: {
