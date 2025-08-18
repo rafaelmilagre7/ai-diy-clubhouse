@@ -25,10 +25,9 @@ export const OnboardingBanner: React.FC = () => {
       return;
     }
 
-    console.log('🎯 [BANNER] Verificando se deve mostrar banner:', {
+    console.log('🎯 [BANNER] Verificando status do onboarding:', {
       userId: user.id.substring(0, 8) + '***',
-      onboardingCompleted: profile.onboarding_completed,
-      profileData: profile
+      profileOnboardingCompleted: profile.onboarding_completed
     });
 
     // Verificar se banner foi dismissado
@@ -40,57 +39,38 @@ export const OnboardingBanner: React.FC = () => {
       return;
     }
 
-    // CORREÇÃO: Verificar se onboarding está realmente incompleto
-    // Só mostrar banner se onboarding_completed for explicitamente false
-    if (profile.onboarding_completed === false || profile.onboarding_completed === null) {
-      console.log('🎯 [BANNER] Usuário sem onboarding concluído - verificando detalhes');
-      
-      // Verificar se é usuário legado (tem dados mas onboarding incompleto)
-      try {
-        const { data: onboardingData } = await supabase
-          .from('onboarding_final')
-          .select('is_completed, current_step, completed_at')
-          .eq('user_id', user.id)
-          .maybeSingle();
-
-        console.log('🎯 [BANNER] Dados de onboarding encontrados:', onboardingData);
-
-        // Se tem dados de onboarding mas não está completo, é usuário legado
-        if (onboardingData && !onboardingData.is_completed && onboardingData.current_step > 1) {
-          console.log('🎯 [BANNER] Usuário legado detectado - dados existem mas onboarding incompleto');
-          setIsLegacyUser(true);
-          setShowBanner(true);
-          return;
-        }
-
-        // Se não tem dados de onboarding e profile.onboarding_completed é false/null
-        if (!onboardingData && (profile.onboarding_completed === false || profile.onboarding_completed === null)) {
-          console.log('🎯 [BANNER] Usuário novo sem onboarding - mostrando banner');
-          setIsLegacyUser(false);
-          setShowBanner(true);
-          return;
-        }
-
-        // Se tem onboarding completo mas profile não reflete isso, sincronizar
-        if (onboardingData && onboardingData.is_completed && onboardingData.completed_at) {
-          console.log('🎯 [BANNER] Onboarding completo no DB mas profile desatualizado - não mostrando banner');
-          setShowBanner(false);
-          return;
-        }
-
-      } catch (error) {
-        console.warn('🎯 [BANNER] Erro ao verificar dados de onboarding:', error);
-        // Em caso de erro, mostrar banner se profile.onboarding_completed for false
-        if (profile.onboarding_completed === false) {
-          setShowBanner(true);
-          return;
-        }
-      }
+    // LÓGICA SIMPLIFICADA: Se onboarding_completed for true, NUNCA mostrar banner
+    if (profile.onboarding_completed === true) {
+      console.log('🎯 [BANNER] Onboarding concluído no perfil - não mostrando banner');
+      setShowBanner(false);
+      return;
     }
 
-    // Se onboarding_completed é true, nunca mostrar banner
-    console.log('🎯 [BANNER] Onboarding completo - não mostrando banner');
-    setShowBanner(false);
+    // Verificar também no banco de dados onboarding_final para dupla checagem
+    try {
+      const { data: onboardingData } = await supabase
+        .from('onboarding_final')
+        .select('is_completed, completed_at')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      console.log('🎯 [BANNER] Dados onboarding_final:', onboardingData);
+
+      // Se onboarding está completo no banco, não mostrar banner
+      if (onboardingData?.is_completed === true && onboardingData?.completed_at) {
+        console.log('🎯 [BANNER] Onboarding completo no banco - não mostrando banner');
+        setShowBanner(false);
+        return;
+      }
+
+    } catch (error) {
+      console.warn('🎯 [BANNER] Erro ao verificar onboarding_final:', error);
+    }
+
+    // Mostrar banner apenas se onboarding NÃO estiver completo
+    console.log('🎯 [BANNER] Onboarding incompleto - mostrando banner');
+    setIsLegacyUser(true);
+    setShowBanner(true);
   };
 
   const handleStartOnboarding = async () => {

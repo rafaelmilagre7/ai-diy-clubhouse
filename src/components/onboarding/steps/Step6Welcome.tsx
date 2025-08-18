@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import { OnboardingSuccess } from '@/components/celebration/OnboardingSuccess';
 interface Step6WelcomeProps {
   ninaMessage?: string;
-  onFinish: () => void;
+  onFinish: () => Promise<boolean>;
   userType: 'entrepreneur' | 'learner';
   userName?: string;
 }
@@ -20,12 +20,25 @@ export const Step6Welcome: React.FC<Step6WelcomeProps> = ({
   const [showSuccess, setShowSuccess] = useState(false);
   
   const handleFinish = async () => {
+    console.log('[STEP6] Iniciando finalização do onboarding...');
     setIsCompleting(true);
-    setShowSuccess(true);
+    
+    // Primeiro finalizar o onboarding no backend
+    const success = await onFinish();
+    
+    if (success) {
+      console.log('[STEP6] Onboarding finalizado com sucesso - mostrando celebração');
+      setShowSuccess(true);
+    } else {
+      console.error('[STEP6] Falha ao finalizar onboarding');
+      setIsCompleting(false);
+    }
   };
 
   const handleSuccessComplete = () => {
-    onFinish();
+    console.log('[STEP6] Celebração concluída - redirecionando para dashboard');
+    // Redirecionar após celebração
+    window.location.href = '/dashboard';
   };
   return (
     <>
