@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
@@ -58,12 +58,38 @@ export const AuroraUpgradeModal: React.FC<AuroraUpgradeModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [userEmail, setUserEmail] = useState(profile?.email || "");
   const [userPhone, setUserPhone] = useState((profile as any)?.whatsapp_number || "");
+  const [showContactForm, setShowContactForm] = useState(false);
 
   // Sincronizar dados quando profile mudar
   useEffect(() => {
     setUserEmail(profile?.email || "");
     setUserPhone((profile as any)?.whatsapp_number || "");
   }, [profile?.email, profile]);
+
+  // Preencher telefone/email do onboarding, se ainda estiver vazio
+  useEffect(() => {
+    const fetchContactInfo = async () => {
+      try {
+        if (!open) return;
+        if (userPhone && userEmail) return;
+        const { data: auth } = await supabase.auth.getUser();
+        const uid = (profile as any)?.id || auth.user?.id;
+        if (!uid) return;
+        const { data } = await supabase
+          .from('profiles')
+          .select('whatsapp_number, phone, email, full_name')
+          .eq('id', uid)
+          .single();
+        if (data) {
+          if (!userPhone) setUserPhone((data as any)?.whatsapp_number || (data as any)?.phone || "");
+          if (!userEmail) setUserEmail((data as any)?.email || "");
+        }
+      } catch (e) {
+        console.warn('Falha ao buscar contato do perfil:', e);
+      }
+    };
+    fetchContactInfo();
+  }, [open]);
 
   const handleUpgradeNow = () => {
     window.open('https://viverdeia.ai/', '_blank');
@@ -140,6 +166,12 @@ export const AuroraUpgradeModal: React.FC<AuroraUpgradeModalProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl p-0 overflow-hidden border-0 bg-transparent">
+        <DialogHeader>
+          <DialogTitle className="sr-only">Desbloquear recursos Premium</DialogTitle>
+          <DialogDescription className="sr-only">
+            Modal para upgrade de plano e contato com o time de vendas da VIVER DE IA
+          </DialogDescription>
+        </DialogHeader>
         <div className="relative bg-gradient-to-br from-background via-background/98 to-background/95 
                        backdrop-blur-xl border border-border/20 rounded-3xl shadow-2xl">
           
@@ -181,48 +213,50 @@ export const AuroraUpgradeModal: React.FC<AuroraUpgradeModalProps> = ({
               )}
             </div>
 
-            {/* Dados do usuário */}
-            <div className="space-y-3 mb-6">
-              <h3 className="text-sm font-medium text-muted-foreground mb-3">Seus dados para contato:</h3>
-              
-              <div className="space-y-3">
-                <div className="flex items-center gap-3 p-4 bg-card/40 rounded-xl border border-border/30">
-                  <UserCheck className="h-4 w-4 text-primary" />
-                  <div className="flex-1">
-                    <p className="font-medium text-foreground">{profile?.name || "Nome não informado"}</p>
-                    <p className="text-xs text-muted-foreground">Nome completo</p>
+            {/* Dados do usuário - aparece somente ao clicar em "Falar com Vendas" */}
+            {showContactForm && (
+              <div className="space-y-3 mb-6">
+                <h3 className="text-sm font-medium text-muted-foreground mb-3">Seus dados para contato:</h3>
+                
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3 p-4 bg-card/40 rounded-xl border border-border/30">
+                    <UserCheck className="h-4 w-4 text-primary" />
+                    <div className="flex-1">
+                      <p className="font-medium text-foreground">{profile?.name || "Nome não informado"}</p>
+                      <p className="text-xs text-muted-foreground">Nome completo</p>
+                    </div>
                   </div>
-                </div>
 
-                <div className="flex items-center gap-3 p-4 bg-card/40 rounded-xl border border-border/30">
-                  <Mail className="h-4 w-4 text-primary" />
-                  <div className="flex-1">
-                    <Input
-                      type="email"
-                      value={userEmail}
-                      onChange={(e) => setUserEmail(e.target.value)}
-                      placeholder="Seu email de contato"
-                      className="bg-transparent border-none p-0 font-medium text-foreground placeholder:text-muted-foreground focus-visible:ring-0"
-                    />
-                    <p className="text-xs text-muted-foreground">Email de contato</p>
+                  <div className="flex items-center gap-3 p-4 bg-card/40 rounded-xl border border-border/30">
+                    <Mail className="h-4 w-4 text-primary" />
+                    <div className="flex-1">
+                      <Input
+                        type="email"
+                        value={userEmail}
+                        onChange={(e) => setUserEmail(e.target.value)}
+                        placeholder="Seu email de contato"
+                        className="bg-transparent border-none p-0 font-medium text-foreground placeholder:text-muted-foreground focus-visible:ring-0"
+                      />
+                      <p className="text-xs text-muted-foreground">Email de contato</p>
+                    </div>
                   </div>
-                </div>
 
-                <div className="flex items-center gap-3 p-4 bg-card/40 rounded-xl border border-border/30">
-                  <Phone className="h-4 w-4 text-primary" />
-                  <div className="flex-1">
-                    <Input
-                      type="tel"
-                      value={userPhone}
-                      onChange={(e) => setUserPhone(e.target.value)}
-                      placeholder="Seu telefone (com DDD)"
-                      className="bg-transparent border-none p-0 font-medium text-foreground placeholder:text-muted-foreground focus-visible:ring-0"
-                    />
-                    <p className="text-xs text-muted-foreground">Telefone</p>
+                  <div className="flex items-center gap-3 p-4 bg-card/40 rounded-xl border border-border/30">
+                    <Phone className="h-4 w-4 text-primary" />
+                    <div className="flex-1">
+                      <Input
+                        type="tel"
+                        value={userPhone}
+                        onChange={(e) => setUserPhone(e.target.value)}
+                        placeholder="Seu telefone (com DDD)"
+                        className="bg-transparent border-none p-0 font-medium text-foreground placeholder:text-muted-foreground focus-visible:ring-0"
+                      />
+                      <p className="text-xs text-muted-foreground">Telefone</p>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
 
             <div className="space-y-3 mb-6">
               <h3 className="text-lg font-semibold mb-4 text-center">
@@ -269,7 +303,7 @@ export const AuroraUpgradeModal: React.FC<AuroraUpgradeModalProps> = ({
                 </Button>
                 
                 <Button 
-                  onClick={handleTalkToSales}
+                  onClick={() => showContactForm ? handleTalkToSales() : setShowContactForm(true)}
                   variant="outline"
                   size="lg"
                   disabled={isSubmitting}
@@ -284,7 +318,7 @@ export const AuroraUpgradeModal: React.FC<AuroraUpgradeModalProps> = ({
                   ) : (
                     <>
                       <MessageCircle className="h-4 w-4 mr-2" />
-                      Falar com Vendas
+                      {showContactForm ? 'Enviar para Vendas' : 'Falar com Vendas'}
                     </>
                   )}
                 </Button>
