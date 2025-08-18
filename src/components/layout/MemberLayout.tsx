@@ -6,6 +6,7 @@ import { MemberSidebar } from "./member/MemberSidebar";
 import { MemberContent } from "./member/MemberContent";
 import { useSidebarControl } from "@/hooks/useSidebarControl";
 import { toast } from "sonner";
+import { PremiumUpgradeModalProvider } from "@/hooks/usePremiumUpgradeModal";
 
 interface MemberLayoutProps {
   children: React.ReactNode;
@@ -60,20 +61,22 @@ const MemberLayout = memo<MemberLayoutProps>(({ children }) => {
           />
         )}
         
-        <BaseLayout
-          variant="member"
-          sidebarComponent={MemberSidebar}
-          contentComponent={MemberContent}
-          onSignOut={handleSignOut}
-          profileName={profileData.name}
-          profileEmail={profileData.email}
-          profileAvatar={profileData.avatar}
-          getInitials={getInitials}
-          sidebarOpen={sidebarOpen}
-          setSidebarOpen={setSidebarOpen}
-        >
-          {children}
-        </BaseLayout>
+        <PremiumUpgradeModalProvider>
+          <BaseLayout
+            variant="member"
+            sidebarComponent={MemberSidebar}
+            contentComponent={MemberContent}
+            onSignOut={handleSignOut}
+            profileName={profileData.name}
+            profileEmail={profileData.email}
+            profileAvatar={profileData.avatar}
+            getInitials={getInitials}
+            sidebarOpen={sidebarOpen}
+            setSidebarOpen={setSidebarOpen}
+          >
+            {children}
+          </BaseLayout>
+        </PremiumUpgradeModalProvider>
       </>
     );
   } catch (error) {
