@@ -4,7 +4,7 @@ import { LearningModule } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Edit, Trash2, Loader2, LucideIcon, BookOpen, Plus } from "lucide-react";
+import { Edit, Trash2, Loader2, LucideIcon, BookOpen, Plus, Play, Clock, ChevronRight } from "lucide-react";
 import { NovaAulaButton } from "@/components/formacao/aulas/NovaAulaButton";
 
 interface ModulosListProps {
@@ -24,21 +24,27 @@ export const ModulosList: React.FC<ModulosListProps> = ({
 }) => {
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <Card key={i} className="overflow-hidden">
-            <CardHeader className="pb-3">
-              <Skeleton className="h-4 w-3/4 mb-2" />
-              <Skeleton className="h-3 w-1/2" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-16 w-full" />
-            </CardContent>
-            <CardFooter className="flex justify-between border-t p-3 bg-gray-50 dark:bg-gray-800">
-              <Skeleton className="h-8 w-24" />
-              <Skeleton className="h-8 w-24" />
-            </CardFooter>
-          </Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="group">
+            <Card className="h-full bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-sm border border-border/50 overflow-hidden">
+              <CardHeader className="pb-4">
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-5 w-20 loading-skeleton" />
+                  <Skeleton className="h-8 w-8 rounded-full loading-skeleton" />
+                </div>
+                <Skeleton className="h-6 w-4/5 loading-skeleton" />
+                <Skeleton className="h-4 w-full loading-skeleton" />
+                <Skeleton className="h-4 w-3/4 loading-skeleton" />
+              </CardHeader>
+              <CardContent className="pb-4">
+                <Skeleton className="h-20 w-full rounded-lg loading-skeleton" />
+              </CardContent>
+              <CardFooter className="pt-4 border-t border-border/30">
+                <Skeleton className="h-10 w-full loading-skeleton" />
+              </CardFooter>
+            </Card>
+          </div>
         ))}
       </div>
     );
@@ -46,69 +52,151 @@ export const ModulosList: React.FC<ModulosListProps> = ({
 
   if (modulos.length === 0) {
     return (
-      <div className="text-center py-12 border rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
-        <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Nenhum módulo encontrado</h3>
-        <p className="text-muted-foreground mb-4">Ainda não existem módulos cadastrados para este curso.</p>
+      <div className="relative">
+        {/* Aurora Background */}
+        <div className="absolute inset-0 overflow-hidden rounded-2xl">
+          <div className="absolute top-10 left-10 w-40 h-40 bg-aurora/10 rounded-full mix-blend-multiply filter blur-xl animate-blob"></div>
+          <div className="absolute top-10 right-10 w-40 h-40 bg-revenue/10 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-2000"></div>
+        </div>
+        
+        <div className="relative text-center py-16 glass rounded-2xl border border-border/50">
+          <div className="mx-auto w-16 h-16 bg-gradient-to-br from-aurora/20 to-revenue/20 rounded-full flex items-center justify-center mb-6">
+            <BookOpen className="h-8 w-8 text-text-muted" />
+          </div>
+          <h3 className="text-xl font-semibold mb-3 text-text-primary">Nenhum módulo encontrado</h3>
+          <p className="text-text-secondary mb-6 max-w-md mx-auto leading-relaxed">
+            Ainda não existem módulos cadastrados para este curso. Comece criando o primeiro módulo.
+          </p>
+          {isAdmin && (
+            <Button 
+              className="bg-gradient-to-r from-aurora to-revenue hover:from-aurora-dark hover:to-revenue-dark 
+                        shadow-lg hover:shadow-xl transition-all duration-300"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Criar Primeiro Módulo
+            </Button>
+          )}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {modulos.map((modulo) => (
-        <Card key={modulo.id} className="overflow-hidden">
-          <CardHeader className="pb-3">
-            <CardTitle>{modulo.title}</CardTitle>
-            <CardDescription>
-              {modulo.description || "Este módulo não possui descrição."}
-            </CardDescription>
-          </CardHeader>
-          
-          <CardFooter className="flex flex-col gap-3 border-t p-3 bg-gray-50 dark:bg-gray-800">
-            <div className="flex justify-between items-center w-full">
-              <Link to={`/formacao/modulos/${modulo.id}`}>
-                <Button variant="secondary" size="sm">
-                  <BookOpen className="h-4 w-4 mr-2" />
-                  Ver aulas
-                </Button>
-              </Link>
-
-              {isAdmin && (
-                <NovaAulaButton 
-                  moduleId={modulo.id} 
-                  buttonText="+ Aula"
-                  variant="outline"
-                  size="sm"
-                />
-              )}
-            </div>
-
-            {isAdmin && (
-              <div className="flex justify-center gap-2 w-full">
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => onEdit(modulo)}
-                  className="flex-1"
-                >
-                  <Edit className="h-3.5 w-3.5 mr-2" />
-                  Editar
-                </Button>
-                
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => onDelete(modulo.id)}
-                  className="flex-1 text-destructive hover:text-destructive"
-                >
-                  <Trash2 className="h-3.5 w-3.5 mr-2" />
-                  Excluir
-                </Button>
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        {modulos.map((modulo, index) => (
+          <div 
+            key={modulo.id} 
+            className="group animate-fade-in"
+            style={{ animationDelay: `${index * 100}ms` }}
+          >
+            <Card className="h-full bg-gradient-to-br from-card/90 to-card/70 backdrop-blur-sm border border-border/50 
+                          hover:border-aurora/30 hover:shadow-2xl hover:shadow-aurora/10 
+                          transition-all duration-500 hover:-translate-y-2 overflow-hidden relative">
+              
+              {/* Gradient Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-br from-aurora/[0.02] via-transparent to-revenue/[0.02] 
+                            opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              
+              {/* Module Number Badge */}
+              <div className="absolute top-4 left-4 z-10">
+                <div className="w-8 h-8 bg-gradient-to-br from-aurora to-revenue rounded-full flex items-center justify-center text-white text-sm font-bold shadow-lg">
+                  {index + 1}
+                </div>
               </div>
-            )}
-          </CardFooter>
-        </Card>
-      ))}
+              
+              {/* Status Indicator */}
+              <div className="absolute top-4 right-4 z-10">
+                <div className="w-3 h-3 bg-green-400 rounded-full shadow-lg animate-pulse"></div>
+              </div>
+
+              <CardHeader className="pb-4 pt-16">
+                <CardTitle className="text-lg font-bold text-text-primary group-hover:text-aurora transition-colors duration-300 line-clamp-2">
+                  {modulo.title}
+                </CardTitle>
+                <CardDescription className="text-text-secondary line-clamp-3 leading-relaxed">
+                  {modulo.description || "Este módulo não possui descrição, mas contém conteúdo valioso para seu aprendizado."}
+                </CardDescription>
+              </CardHeader>
+              
+              <CardContent className="pb-4 flex-1">
+                {/* Progress Bar */}
+                <div className="mb-4">
+                  <div className="flex items-center justify-between text-xs text-text-muted mb-2">
+                    <span>Progresso</span>
+                    <span>100%</span>
+                  </div>
+                  <div className="w-full bg-border/30 rounded-full h-2 overflow-hidden">
+                    <div className="h-full bg-gradient-to-r from-aurora to-revenue rounded-full transition-all duration-500" 
+                         style={{ width: '100%' }}></div>
+                  </div>
+                </div>
+                
+                {/* Stats */}
+                <div className="flex items-center gap-4 text-xs text-text-muted">
+                  <div className="flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    <span>5 aulas</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Play className="h-3 w-3" />
+                    <span>2h 30min</span>
+                  </div>
+                </div>
+              </CardContent>
+
+              <CardFooter className="pt-4 border-t border-border/30 bg-surface-elevated/50 space-y-3">
+                {/* Primary Action */}
+                <Link to={`/formacao/modulos/${modulo.id}`} className="w-full block">
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-between bg-gradient-to-r from-aurora/10 to-revenue/10 
+                              hover:from-aurora/20 hover:to-revenue/20 border border-aurora/20 
+                              text-text-primary hover:text-aurora transition-all duration-300 group/btn"
+                  >
+                    <div className="flex items-center">
+                      <BookOpen className="mr-2 h-4 w-4 group-hover/btn:scale-110 transition-transform" />
+                      Ver Aulas
+                    </div>
+                    <ChevronRight className="h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />
+                  </Button>
+                </Link>
+
+                {/* Admin Actions */}
+                {isAdmin && (
+                  <div className="flex gap-2 w-full">
+                    <NovaAulaButton 
+                      moduleId={modulo.id} 
+                      buttonText="+ Aula"
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 border-operational/30 text-operational hover:bg-operational/10 hover:border-operational/50"
+                    />
+                    
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => onEdit(modulo)}
+                      className="border-aurora/30 text-aurora hover:bg-aurora/10 hover:border-aurora/50 transition-all duration-300"
+                    >
+                      <Edit className="h-3.5 w-3.5" />
+                    </Button>
+                    
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => onDelete(modulo.id)}
+                      className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:border-destructive/50 transition-all duration-300"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                )}
+              </CardFooter>
+            </Card>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
