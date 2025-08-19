@@ -120,7 +120,7 @@ export const CertificatePreview = ({
       )}
 
       {/* Hidden 1:1 capture target for PDF (no scaling, off-screen) */}
-      <div className="fixed -left-[10000px] top-0 w-[1123px] h-[920px] pointer-events-none opacity-0">
+      <div className="fixed -left-[10000px] top-0 w-[1123px] h-[950px] pointer-events-none opacity-0">
         <StaticCertificateTemplate
           data={data}
           onReady={handleCaptureReady}
@@ -133,12 +133,12 @@ export const CertificatePreview = ({
             {/* Layout wrapper reserva o espaço já em escala */}
             <div 
               className="rounded-lg" 
-              style={{ width: `${1123 * scale}px`, height: `${920 * scale}px` }}
+              style={{ width: `${1123 * scale}px`, height: `${950 * scale}px` }}
             >
               {/* Container real em tamanho 1:1, só com transform visual */}
               <div
                 ref={previewRef}
-                className="w-[1123px] h-[920px] origin-top-left"
+                className="w-[1123px] h-[950px] origin-top-left"
                 style={{
                   transform: `scale(${scale})`,
                   willChange: 'transform'

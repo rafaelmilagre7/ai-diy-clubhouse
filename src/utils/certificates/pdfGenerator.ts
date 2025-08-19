@@ -54,9 +54,9 @@ export class CertificatePDFGenerator {
         imageTimeout: 15000,
         logging: false,
         width: 1123,
-        height: 920,
+        height: 950,
         windowWidth: 1123,
-        windowHeight: 920
+        windowHeight: 950
       });
 
       console.log('📸 Canvas gerado:', {
@@ -66,7 +66,7 @@ export class CertificatePDFGenerator {
 
       // Criar PDF com dimensões customizadas para o certificado
       const pdfWidthMM = (1123 * 0.264583); // Converter px para mm (1px = 0.264583mm)
-      const pdfHeightMM = (920 * 0.264583);
+      const pdfHeightMM = (950 * 0.264583);
       
       const pdf = new jsPDF({
         orientation: 'landscape',
@@ -116,7 +116,7 @@ export class CertificatePDFGenerator {
       left: -10000px;
       top: 0;
       width: 1123px;
-      height: 920px;
+      height: 950px;
       pointer-events: none;
       z-index: -1;
       overflow: hidden;

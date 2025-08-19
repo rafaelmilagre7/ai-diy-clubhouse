@@ -43,7 +43,7 @@ export const StaticCertificateTemplate = ({
       className={`certificate-static-wrapper ${className}`}
       style={{
         width: '1123px',
-        height: '920px',
+        height: '950px',
         overflow: 'hidden'
       }}
     />

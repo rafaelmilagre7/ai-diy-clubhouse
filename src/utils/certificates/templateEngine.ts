@@ -99,7 +99,7 @@ export class CertificateTemplateEngine {
     const cssStyles = `
       .certificate-container {
         width: 1123px !important;
-        height: 794px !important;
+        height: 950px !important;
         background: linear-gradient(135deg, #0a0f1c 0%, #1a2332 100%) !important;
         color: #ffffff !important;
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
