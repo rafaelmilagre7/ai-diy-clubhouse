@@ -31,11 +31,13 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const whatsappApiKey = Deno.env.get('WHATSAPP_API_KEY');
-    const phoneNumberId = Deno.env.get('WHATSAPP_PHONE_ID');
+    const whatsappApiKey = Deno.env.get('WHATSAPP_API_KEY') || Deno.env.get('WHATSAPP_BUSINESS_TOKEN');
+    const phoneNumberId = Deno.env.get('WHATSAPP_PHONE_ID') || Deno.env.get('WHATSAPP_BUSINESS_PHONE_ID');
+    
+    console.log('🔑 [SEND-WHATSAPP] Credenciais detectadas:', { hasToken: !!whatsappApiKey, hasPhoneId: !!phoneNumberId });
     
     if (!whatsappApiKey || !phoneNumberId) {
-      console.log('⚠️ [SEND-WHATSAPP] Credenciais WhatsApp não configuradas, simulando envio...');
+      console.log('⚠️ [SEND-WHATSAPP] Credenciais ausentes (verifique nomes WHATSAPP_API_KEY/WHATSAPP_BUSINESS_TOKEN e WHATSAPP_PHONE_ID/WHATSAPP_BUSINESS_PHONE_ID). Simulando envio...');
       
       // Simular envio bem-sucedido quando não há credenciais
       const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
