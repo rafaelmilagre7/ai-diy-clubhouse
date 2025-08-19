@@ -185,72 +185,72 @@ export class CertificateTemplateEngine {
       }
 
       .intro-text {
-        font-size: 20px;
-        color: #e2e8f0;
-        margin: 0;
-        font-weight: 400;
+        font-size: 20px !important;
+        color: #e2e8f0 !important;
+        margin: 0 !important;
+        font-weight: 400 !important;
       }
 
       .user-section {
-        margin: 20px 0 30px;
+        margin: 20px 0 30px !important;
       }
 
       .user-name {
-        font-size: 42px;
-        font-weight: 800;
-        color: #ffffff;
-        margin: 0 0 15px 0;
-        letter-spacing: -0.01em;
-        text-shadow: 0 2px 15px rgba(255, 255, 255, 0.1);
+        font-size: 42px !important;
+        font-weight: 800 !important;
+        color: #ffffff !important;
+        margin: 0 0 15px 0 !important;
+        letter-spacing: -0.01em !important;
+        text-shadow: 0 2px 15px rgba(255, 255, 255, 0.1) !important;
       }
 
       .user-underline {
-        width: 300px;
-        height: 2px;
-        background: linear-gradient(90deg, transparent, #00c9a7, transparent);
-        margin: 0 auto;
-        border-radius: 1px;
+        width: 300px !important;
+        height: 2px !important;
+        background: linear-gradient(90deg, transparent, #00c9a7, transparent) !important;
+        margin: 0 auto !important;
+        border-radius: 1px !important;
       }
 
       .completion-text {
-        font-size: 20px;
-        color: #e2e8f0;
-        margin: 0;
-        font-weight: 400;
+        font-size: 20px !important;
+        color: #e2e8f0 !important;
+        margin: 0 !important;
+        font-weight: 400 !important;
       }
 
       .solution-box {
-        background: rgba(0, 201, 167, 0.08);
-        border: 1px solid rgba(0, 201, 167, 0.25);
-        border-radius: 12px;
-        padding: 30px 40px;
-        margin: 20px auto;
-        max-width: 600px;
-        backdrop-filter: blur(10px);
+        background: rgba(0, 201, 167, 0.08) !important;
+        border: 1px solid rgba(0, 201, 167, 0.25) !important;
+        border-radius: 12px !important;
+        padding: 30px 40px !important;
+        margin: 20px auto !important;
+        max-width: 600px !important;
+        backdrop-filter: blur(10px) !important;
       }
 
       .solution-name {
-        font-size: 32px;
-        font-weight: 700;
-        color: #00c9a7;
-        margin: 0 0 10px 0;
-        line-height: 1.3;
+        font-size: 32px !important;
+        font-weight: 700 !important;
+        color: #00c9a7 !important;
+        margin: 0 0 10px 0 !important;
+        line-height: 1.3 !important;
       }
 
       .solution-category {
-        font-size: 16px;
-        color: #94a3b8;
-        margin: 0;
-        font-weight: 500;
+        font-size: 16px !important;
+        color: #94a3b8 !important;
+        margin: 0 !important;
+        font-weight: 500 !important;
       }
 
       .achievement-description {
-        font-size: 18px;
-        color: #cbd5e1;
-        line-height: 1.6;
-        max-width: 700px;
-        margin: 0 auto;
-        font-weight: 400;
+        font-size: 18px !important;
+        color: #cbd5e1 !important;
+        line-height: 1.6 !important;
+        max-width: 700px !important;
+        margin: 0 auto !important;
+        font-weight: 400 !important;
       }
 
       /* Footer */
@@ -266,89 +266,89 @@ export class CertificateTemplateEngine {
 
       .footer-left,
       .footer-right {
-        flex: 1;
+        flex: 1 !important;
       }
 
       .footer-center {
-        flex: 1;
-        display: flex;
-        justify-content: center;
+        flex: 1 !important;
+        display: flex !important;
+        justify-content: center !important;
       }
 
       .footer-right {
-        text-align: right;
+        text-align: right !important;
       }
 
       .info-block {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 8px !important;
       }
 
       .info-label {
-        font-size: 12px;
-        color: #94a3b8;
-        text-transform: uppercase;
-        letter-spacing: 0.8px;
-        font-weight: 600;
+        font-size: 12px !important;
+        color: #94a3b8 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.8px !important;
+        font-weight: 600 !important;
       }
 
       .info-value {
-        font-size: 16px;
-        color: #ffffff;
-        font-weight: 600;
+        font-size: 16px !important;
+        color: #ffffff !important;
+        font-weight: 600 !important;
       }
 
       .validation-code {
-        font-size: 16px;
-        color: #00c9a7;
-        font-weight: 700;
-        background: rgba(0, 201, 167, 0.1);
-        padding: 8px 16px;
-        border-radius: 8px;
-        border: 1px solid rgba(0, 201, 167, 0.3);
-        font-family: 'JetBrains Mono', monospace;
-        letter-spacing: 0.5px;
+        font-size: 16px !important;
+        color: #00c9a7 !important;
+        font-weight: 700 !important;
+        background: rgba(0, 201, 167, 0.1) !important;
+        padding: 8px 16px !important;
+        border-radius: 8px !important;
+        border: 1px solid rgba(0, 201, 167, 0.3) !important;
+        font-family: 'JetBrains Mono', monospace !important;
+        letter-spacing: 0.5px !important;
       }
 
       .signature-area {
-        text-align: center;
+        text-align: center !important;
       }
 
       .signature-handwritten {
-        font-family: 'Brush Script MT', 'Lucida Handwriting', cursive;
-        font-size: 28px;
-        color: #00c9a7;
-        margin-bottom: 8px;
-        transform: rotate(-2deg);
-        letter-spacing: 1px;
-        text-shadow: 0 2px 4px rgba(0, 201, 167, 0.3);
-        font-weight: normal;
+        font-family: 'Brush Script MT', 'Lucida Handwriting', cursive !important;
+        font-size: 28px !important;
+        color: #00c9a7 !important;
+        margin-bottom: 8px !important;
+        transform: rotate(-2deg) !important;
+        letter-spacing: 1px !important;
+        text-shadow: 0 2px 4px rgba(0, 201, 167, 0.3) !important;
+        font-weight: normal !important;
       }
 
       .signature-line {
-        width: 200px;
-        height: 1px;
-        background: rgba(255, 255, 255, 0.3);
-        margin: 0 auto 12px;
+        width: 200px !important;
+        height: 1px !important;
+        background: rgba(255, 255, 255, 0.3) !important;
+        margin: 0 auto 12px !important;
       }
 
       .signature-info {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 4px !important;
       }
 
       .signatory-name {
-        font-size: 18px;
-        color: #ffffff;
-        font-weight: 700;
+        font-size: 18px !important;
+        color: #ffffff !important;
+        font-weight: 700 !important;
       }
 
       .signatory-title {
-        font-size: 14px;
-        color: #94a3b8;
-        font-weight: 500;
+        font-size: 14px !important;
+        color: #94a3b8 !important;
+        font-weight: 500 !important;
       }
 
       /* Print optimizations */
