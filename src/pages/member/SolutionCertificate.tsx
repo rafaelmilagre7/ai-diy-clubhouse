@@ -3,13 +3,15 @@ import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useSolutionData } from "@/hooks/useSolutionData";
 import { useSolutionCertificate } from "@/hooks/learning/useSolutionCertificate";
-import { CertificateViewer } from "@/components/learning/certificates/CertificateViewer";
+import { UnifiedCertificateViewer } from "@/components/certificates/UnifiedCertificateViewer";
 import { SolutionCertificateEligibility } from "@/components/learning/certificates/SolutionCertificateEligibility";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Award } from "lucide-react";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/auth";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 const SolutionCertificate = () => {
   const { id } = useParams<{ id: string }>();
@@ -111,12 +113,18 @@ const SolutionCertificate = () => {
 
       {/* Se tem certificado, mostrar o viewer */}
       {certificate ? (
-        <CertificateViewer
-          certificate={certificate}
-          userProfile={profile}
-          onDownload={handleDownload}
-          onShare={handleShare}
-          onOpenInNewTab={handleOpenInNewTab}
+        <UnifiedCertificateViewer
+          data={{
+            userName: profile?.name || profile?.email || "Usuário",
+            solutionTitle: solution?.title || "Solução",
+            solutionCategory: solution?.category || "Solução de IA",
+            implementationDate: format(new Date(certificate.implementation_date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR }),
+            certificateId: certificate.id,
+            validationCode: certificate.validation_code
+          }}
+          headerTitle="Certificado de Implementação"
+          headerDescription={`Parabéns! Você conquistou este certificado ao implementar com sucesso a solução "${solution?.title}".`}
+          scale={0.6}
         />
       ) : isEligible ? (
         /* Se é elegível mas não tem certificado, mostrar botão para gerar */

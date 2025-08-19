@@ -7,7 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Share2, Copy, Facebook, Twitter, Linkedin } from "lucide-react";
+import { Share2, Linkedin } from "lucide-react";
 import { toast } from "sonner";
 
 interface ShareCertificateDropdownProps {
@@ -29,25 +29,6 @@ export const ShareCertificateDropdown = ({
 }: ShareCertificateDropdownProps) => {
   const certificateUrl = `${window.location.origin}/certificado/validar/${certificate.validation_code}`;
   const shareText = `🎉 Acabei de completar a implementação da solução "${certificate.solutions.title}" no Viver de IA! Confira meu certificado:`;
-
-  const handleCopyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(certificateUrl);
-      toast.success('Link copiado para a área de transferência!');
-    } catch (error) {
-      toast.error('Erro ao copiar link');
-    }
-  };
-
-  const handleShareFacebook = () => {
-    const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(certificateUrl)}&quote=${encodeURIComponent(shareText)}`;
-    window.open(url, '_blank', 'width=600,height=400');
-  };
-
-  const handleShareTwitter = () => {
-    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(certificateUrl)}`;
-    window.open(url, '_blank', 'width=600,height=400');
-  };
 
   const handleShareLinkedIn = () => {
     const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(certificateUrl)}`;
