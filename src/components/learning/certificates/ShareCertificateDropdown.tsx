@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -7,8 +7,9 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { Share2, Linkedin, Link, Copy, ExternalLink } from "lucide-react";
+import { Share2, Linkedin, Copy, ExternalLink, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ShareCertificateDropdownProps {
   certificate: {
@@ -31,6 +32,7 @@ export const ShareCertificateDropdown = ({
   userProfile,
   compact = false
 }: ShareCertificateDropdownProps) => {
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const certificateUrl = `https://app.viverdeia.ai/certificado/validar/${certificate.validation_code}`;
   
   // Detectar tipo e título do certificado
@@ -41,16 +43,132 @@ export const ShareCertificateDropdown = ({
 
 Confira meu certificado:`;
 
+  const generatePublicPDF = async (): Promise<string | null> => {
+    try {
+      // Criar elemento temporário com o template estático
+      const tempDiv = document.createElement('div');
+      tempDiv.style.position = 'absolute';
+      tempDiv.style.left = '-9999px';
+      tempDiv.style.top = '0';
+      document.body.appendChild(tempDiv);
+
+      // Usar React para renderizar o componente
+      const { createRoot } = await import('react-dom/client');
+      const { StaticCertificateTemplate } = await import('@/components/certificates/StaticCertificateTemplate');
+      
+      const certificateData = {
+        userName: userProfile.name,
+        solutionTitle: certificateTitle,
+        solutionCategory: isSolution ? 'Solução de IA' : 'Curso',
+        implementationDate: new Date().toLocaleDateString('pt-BR'),
+        certificateId: certificate.id,
+        validationCode: certificate.validation_code
+      };
+
+      const root = createRoot(tempDiv);
+      
+      return new Promise<string | null>((resolve) => {
+        root.render(
+          React.createElement(StaticCertificateTemplate, {
+            data: certificateData,
+            onReady: async (element: HTMLElement) => {
+              try {
+                // Aguardar renderização completa
+                await new Promise(r => setTimeout(r, 1000));
+                
+                const { pdfGenerator } = await import('@/utils/certificates/pdfGenerator');
+                const blob = await pdfGenerator.generateFromElement(element, certificateData);
+                
+                // Upload para storage público
+                const fileName = `certificado-${certificate.validation_code}.pdf`;
+                const { data: uploadData, error: uploadError } = await supabase.storage
+                  .from('certificates')
+                  .upload(`public/${fileName}`, blob, {
+                    contentType: 'application/pdf',
+                    upsert: true
+                  });
+                
+                if (uploadError) {
+                  console.error('Erro no upload:', uploadError);
+                  resolve(null);
+                  return;
+                }
+
+                // Obter URL pública
+                const { data: { publicUrl } } = supabase.storage
+                  .from('certificates')
+                  .getPublicUrl(`public/${fileName}`);
+                
+                resolve(publicUrl);
+                
+              } catch (error) {
+                console.error('Erro ao gerar PDF:', error);
+                resolve(null);
+              } finally {
+                // Cleanup
+                root.unmount();
+                document.body.removeChild(tempDiv);
+              }
+            }
+          })
+        );
+      });
+      
+    } catch (error: any) {
+      console.error('Erro ao gerar PDF público:', error);
+      return null;
+    }
+  };
+
   const handleShareLinkedIn = async () => {
-    // Compartilhar no LinkedIn com texto pré-preenchido (nova API)
-    const linkedInText = encodeURIComponent(shareText);
-    const linkedInTitle = encodeURIComponent(`Novo Certificado ${isSolution ? 'de Solução' : 'de Curso'} - VIVER DE IA`);
-    
-    // Usar a nova URL de compartilhamento do LinkedIn com mais parâmetros
-    const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(certificateUrl)}&title=${linkedInTitle}&summary=${linkedInText}&source=${encodeURIComponent('VIVER DE IA')}`;
-    
-    window.open(linkedInUrl, '_blank', 'width=700,height=500');
-    toast.success("🚀 Abrindo LinkedIn para compartilhar seu certificado!");
+    setIsGeneratingPDF(true);
+    try {
+      const pdfUrl = await generatePublicPDF();
+      
+      if (pdfUrl) {
+        const linkedInText = encodeURIComponent(shareText);
+        const linkedInTitle = encodeURIComponent(`Novo Certificado ${isSolution ? 'de Solução' : 'de Curso'} - VIVER DE IA`);
+        const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(pdfUrl)}&title=${linkedInTitle}&summary=${linkedInText}&source=${encodeURIComponent('VIVER DE IA')}`;
+        
+        window.open(linkedInUrl, '_blank', 'width=700,height=500');
+        toast.success("🚀 Abrindo LinkedIn para compartilhar seu certificado!");
+      } else {
+        toast.error("Erro ao gerar PDF do certificado");
+      }
+    } catch (error) {
+      console.error('Erro ao compartilhar:', error);
+      toast.error("Erro ao gerar link para compartilhamento");
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
+  const handleShareWhatsApp = async () => {
+    setIsGeneratingPDF(true);
+    try {
+      const pdfUrl = await generatePublicPDF();
+      
+      if (pdfUrl) {
+        const whatsappText = `🎓 *Novo Certificado VIVER DE IA!*
+
+Acabei de me certificar ${isSolution ? 'na solução' : 'no curso'} *"${certificateTitle}"*!
+
+Confira meu certificado: ${pdfUrl}
+
+#ViverDeIA #InteligenciaArtificial #Certificacao`;
+        
+        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(whatsappText)}`;
+        window.open(whatsappUrl, '_blank');
+        toast.success("📱 Abrindo WhatsApp para compartilhar seu certificado!");
+      } else {
+        toast.error("Erro ao gerar PDF do certificado");
+      }
+    } catch (error) {
+      console.error('Erro ao compartilhar:', error); 
+      toast.error("Erro ao gerar link para compartilhamento");
+    } finally {
+      setIsGeneratingPDF(false);
+    }
   };
 
   const handleCopyLink = async () => {
@@ -69,21 +187,41 @@ Confira meu certificado:`;
           variant={compact ? "ghost" : "outline"}
           size={compact ? "icon" : undefined}
           className={compact ? "text-muted-foreground hover:bg-accent/20 z-20 relative" : "border-primary/50 text-primary hover:bg-primary/10"}
+          disabled={isGeneratingPDF}
         >
           <Share2 className={compact ? "h-4 w-4" : "h-4 w-4 mr-2"} />
-          {!compact && "Compartilhar"}
+          {!compact && (isGeneratingPDF ? "Gerando..." : "Compartilhar")}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-60">
+      <DropdownMenuContent align="end" className="w-64">
         <DropdownMenuItem 
           onClick={handleShareLinkedIn} 
-          className="cursor-pointer"
+          disabled={isGeneratingPDF}
+          className="cursor-pointer bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200 text-blue-700 mb-2 hover:from-blue-100 hover:to-blue-200"
         >
           <Linkedin className="h-4 w-4 mr-2 text-blue-600" />
-          <div className="flex flex-col">
-            <span className="font-medium">Compartilhar no LinkedIn</span>
-            <span className="text-xs text-muted-foreground">
-              Com link do certificado
+          <div className="flex flex-col flex-1">
+            <span className="font-medium">
+              {isGeneratingPDF ? "Gerando PDF..." : "Compartilhar no LinkedIn"}
+            </span>
+            <span className="text-xs text-blue-600">
+              Com link direto do certificado em PDF
+            </span>
+          </div>
+        </DropdownMenuItem>
+        
+        <DropdownMenuItem 
+          onClick={handleShareWhatsApp} 
+          disabled={isGeneratingPDF}
+          className="cursor-pointer bg-gradient-to-r from-green-50 to-green-100 border-green-200 text-green-700 mb-2 hover:from-green-100 hover:to-green-200"
+        >
+          <MessageCircle className="h-4 w-4 mr-2 text-green-600" />
+          <div className="flex flex-col flex-1">
+            <span className="font-medium">
+              {isGeneratingPDF ? "Gerando PDF..." : "Compartilhar no WhatsApp"}
+            </span>
+            <span className="text-xs text-green-600">
+              Com link direto do certificado em PDF
             </span>
           </div>
         </DropdownMenuItem>

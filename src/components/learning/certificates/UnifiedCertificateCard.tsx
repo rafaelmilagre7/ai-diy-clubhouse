@@ -2,7 +2,7 @@ import React from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, Star, BookOpen, Award, Eye, Lightbulb, BadgeCheck, Linkedin } from "lucide-react";
+import { Download, Star, BookOpen, Award, Eye, Lightbulb, BadgeCheck, Linkedin, MessageCircle } from "lucide-react";
 import { UnifiedCertificate } from "@/hooks/learning/useUnifiedCertificates";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -13,6 +13,8 @@ import { UnifiedCertificateViewer } from "@/components/certificates/UnifiedCerti
 import { CertificateData } from "@/utils/certificates/templateEngine";
 import { useAuth } from "@/contexts/auth";
 import { ShareCertificateDropdown } from "./ShareCertificateDropdown";
+import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 
 interface UnifiedCertificateCardProps {
   certificate: UnifiedCertificate;
@@ -24,6 +26,7 @@ export const UnifiedCertificateCard = ({
   onDownload
 }: UnifiedCertificateCardProps) => {
   const { user } = useAuth();
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   
   const isSolution = certificate.type === 'solution';
   const formattedDate = format(new Date(certificate.issued_at), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
@@ -50,6 +53,137 @@ export const UnifiedCertificateCard = ({
   
   const handleDownload = () => {
     onDownload(certificate.id);
+  };
+
+  const generatePublicPDF = async (): Promise<string | null> => {
+    try {
+      // Criar elemento temporário com o template estático
+      const tempDiv = document.createElement('div');
+      tempDiv.style.position = 'absolute';
+      tempDiv.style.left = '-9999px';
+      tempDiv.style.top = '0';
+      document.body.appendChild(tempDiv);
+
+      // Usar React para renderizar o componente
+      const { createRoot } = await import('react-dom/client');
+      const { StaticCertificateTemplate } = await import('@/components/certificates/StaticCertificateTemplate');
+      
+      const certificateData = {
+        userName: user?.user_metadata?.full_name || user?.email || "Usuário",
+        solutionTitle: certificate.title,
+        solutionCategory: isSolution ? 'Solução de IA' : 'Curso',
+        implementationDate: formattedDate,
+        certificateId: certificate.id,
+        validationCode: certificate.validation_code
+      };
+
+      const root = createRoot(tempDiv);
+      
+      return new Promise<string | null>((resolve) => {
+        root.render(
+          React.createElement(StaticCertificateTemplate, {
+            data: certificateData,
+            onReady: async (element: HTMLElement) => {
+              try {
+                // Aguardar renderização completa
+                await new Promise(r => setTimeout(r, 1000));
+                
+                const { pdfGenerator } = await import('@/utils/certificates/pdfGenerator');
+                const blob = await pdfGenerator.generateFromElement(element, certificateData);
+                
+                // Upload para storage público
+                const fileName = `certificado-${certificate.validation_code}.pdf`;
+                const { data: uploadData, error: uploadError } = await supabase.storage
+                  .from('certificates')
+                  .upload(`public/${fileName}`, blob, {
+                    contentType: 'application/pdf',
+                    upsert: true
+                  });
+                
+                if (uploadError) {
+                  console.error('Erro no upload:', uploadError);
+                  resolve(null);
+                  return;
+                }
+
+                // Obter URL pública
+                const { data: { publicUrl } } = supabase.storage
+                  .from('certificates')
+                  .getPublicUrl(`public/${fileName}`);
+                
+                resolve(publicUrl);
+                
+              } catch (error) {
+                console.error('Erro ao gerar PDF:', error);
+                resolve(null);
+              } finally {
+                // Cleanup
+                root.unmount();
+                document.body.removeChild(tempDiv);
+              }
+            }
+          })
+        );
+      });
+      
+    } catch (error: any) {
+      console.error('Erro ao gerar PDF público:', error);
+      return null;
+    }
+  };
+
+  const handleShareLinkedIn = async () => {
+    setIsGeneratingPDF(true);
+    try {
+      const pdfUrl = await generatePublicPDF();
+      
+      if (pdfUrl) {
+        const shareText = `Estou certificado ${isSolution ? 'na solução' : 'no curso'} "${certificate.title}" do VIVER DE IA! 🎓
+
+Confira meu certificado:`;
+        const linkedInText = encodeURIComponent(shareText);
+        const linkedInTitle = encodeURIComponent(`Novo Certificado ${isSolution ? 'de Solução' : 'de Curso'} - VIVER DE IA`);
+        const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(pdfUrl)}&title=${linkedInTitle}&summary=${linkedInText}&source=${encodeURIComponent('VIVER DE IA')}`;
+        
+        window.open(linkedInUrl, '_blank', 'width=700,height=500');
+        toast.success("🚀 Abrindo LinkedIn para compartilhar seu certificado!");
+      } else {
+        toast.error("Erro ao gerar PDF do certificado");
+      }
+    } catch (error) {
+      console.error('Erro ao compartilhar:', error);
+      toast.error("Erro ao gerar link para compartilhamento");
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
+  const handleShareWhatsApp = async () => {
+    setIsGeneratingPDF(true);
+    try {
+      const pdfUrl = await generatePublicPDF();
+      
+      if (pdfUrl) {
+        const shareText = `🎓 *Novo Certificado VIVER DE IA!*
+
+Acabei de me certificar ${isSolution ? 'na solução' : 'no curso'} *"${certificate.title}"*!
+
+Confira meu certificado: ${pdfUrl}
+
+#ViverDeIA #InteligenciaArtificial #Certificacao`;
+        
+        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
+        window.open(whatsappUrl, '_blank');
+        toast.success("📱 Abrindo WhatsApp para compartilhar seu certificado!");
+      } else {
+        toast.error("Erro ao gerar PDF do certificado");
+      }
+    } catch (error) {
+      console.error('Erro ao compartilhar:', error); 
+      toast.error("Erro ao gerar link para compartilhamento");
+    } finally {
+      setIsGeneratingPDF(false);
+    }
   };
   
   const coverImage = certificate.image_url || certificate.learning_courses?.cover_image_url || certificate.solutions?.thumbnail_url;
@@ -161,33 +295,37 @@ export const UnifiedCertificateCard = ({
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-6xl w-full max-h-[85vh] certificate-dialog">
-                <DialogHeader className="px-6 pt-6 pb-2 flex-row items-center justify-between">
-                  <DialogTitle className="text-xl font-semibold">
-                    {`Certificado de ${isSolution ? 'Implementação' : 'Conclusão'}`}
-                  </DialogTitle>
-                  
-                  {/* Botão de compartilhar no LinkedIn dentro do modal */}
-                  <Button
-                    onClick={() => {
-                      const certificateUrl = `https://app.viverdeia.ai/certificado/validar/${certificate.validation_code}`;
-                      const certificateTitle = certificate.title;
-                      const shareText = `Estou certificado ${isSolution ? 'na solução' : 'no curso'} "${certificateTitle}" do VIVER DE IA! 🎓
-
-Confira meu certificado:`;
-                      const linkedInText = encodeURIComponent(shareText);
-                      const linkedInTitle = encodeURIComponent(`Novo Certificado ${isSolution ? 'de Solução' : 'de Curso'} - VIVER DE IA`);
-                      const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(certificateUrl)}&title=${linkedInTitle}&summary=${linkedInText}&source=${encodeURIComponent('VIVER DE IA')}`;
+                <DialogHeader className="px-6 pt-6 pb-4 border-b">
+                  <div className="flex items-center justify-between">
+                    <DialogTitle className="text-2xl font-bold text-foreground">
+                      {`Certificado de ${isSolution ? 'Implementação' : 'Conclusão'}`}
+                    </DialogTitle>
+                    
+                    {/* Botões de compartilhamento */}
+                    <div className="flex items-center gap-3">
+                      <Button
+                        onClick={handleShareLinkedIn}
+                        disabled={isGeneratingPDF}
+                        variant="outline"
+                        size="sm"
+                        className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200 text-blue-700 hover:from-blue-100 hover:to-blue-200 hover:text-blue-800 transition-all duration-200 shadow-sm hover:shadow-md"
+                      >
+                        <Linkedin className="h-4 w-4 mr-2" />
+                        {isGeneratingPDF ? "Gerando..." : "LinkedIn"}
+                      </Button>
                       
-                      window.open(linkedInUrl, '_blank', 'width=700,height=500');
-                      toast.success("🚀 Abrindo LinkedIn para compartilhar seu certificado!");
-                    }}
-                    variant="outline"
-                    size="sm"
-                    className="border-blue-200 text-blue-600 hover:bg-blue-50"
-                  >
-                    <Linkedin className="h-4 w-4 mr-2" />
-                    Compartilhar no LinkedIn
-                  </Button>
+                      <Button
+                        onClick={handleShareWhatsApp}
+                        disabled={isGeneratingPDF}
+                        variant="outline"
+                        size="sm"
+                        className="bg-gradient-to-r from-green-50 to-green-100 border-green-200 text-green-700 hover:from-green-100 hover:to-green-200 hover:text-green-800 transition-all duration-200 shadow-sm hover:shadow-md"
+                      >
+                        <MessageCircle className="h-4 w-4 mr-2" />
+                        {isGeneratingPDF ? "Gerando..." : "WhatsApp"}
+                      </Button>
+                    </div>
+                  </div>
                 </DialogHeader>
                 <div className="px-6 pb-6 overflow-auto certificate-dialog-content">
                   <UnifiedCertificateViewer
