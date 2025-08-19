@@ -97,79 +97,90 @@ export class CertificateTemplateEngine {
 
     const cssStyles = `
       .certificate-container {
-        width: 1123px;
-        height: 794px;
-        background: linear-gradient(135deg, #0a0f1c 0%, #1a2332 100%);
-        color: #ffffff;
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-        position: relative;
-        overflow: hidden;
-        border-radius: 16px;
-        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+        width: 1123px !important;
+        height: 794px !important;
+        background: linear-gradient(135deg, #0a0f1c 0%, #1a2332 100%) !important;
+        color: #ffffff !important;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        position: relative !important;
+        overflow: hidden !important;
+        border-radius: 16px !important;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3) !important;
+        box-sizing: border-box !important;
+        margin: 0 !important;
+        padding: 0 !important;
       }
 
       .certificate-container::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
+        content: '' !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
         background: 
           radial-gradient(circle at 20% 20%, rgba(0, 201, 167, 0.15) 0%, transparent 50%),
-          radial-gradient(circle at 80% 80%, rgba(0, 201, 167, 0.1) 0%, transparent 50%);
-        pointer-events: none;
+          radial-gradient(circle at 80% 80%, rgba(0, 201, 167, 0.1) 0%, transparent 50%) !important;
+        pointer-events: none !important;
+        z-index: 0 !important;
       }
 
       .certificate-content {
-        position: relative;
-        z-index: 1;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        padding: 60px 80px;
-        box-sizing: border-box;
+        position: relative !important;
+        z-index: 1 !important;
+        height: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+        padding: 60px 80px !important;
+        box-sizing: border-box !important;
+        margin: 0 !important;
       }
 
       /* Header */
       .header {
-        text-align: center;
-        margin-bottom: 50px;
+        text-align: center !important;
+        margin-bottom: 50px !important;
+        flex-shrink: 0 !important;
       }
 
       .logo {
-        width: 140px;
-        height: auto;
-        object-fit: contain;
-        margin: 0 auto 30px;
-        filter: brightness(1.1) drop-shadow(0 4px 20px rgba(0, 201, 167, 0.3));
+        width: 140px !important;
+        height: auto !important;
+        object-fit: contain !important;
+        margin: 0 auto 30px !important;
+        filter: brightness(1.1) drop-shadow(0 4px 20px rgba(0, 201, 167, 0.3)) !important;
+        display: block !important;
       }
 
       .main-title {
-        font-size: 48px;
-        font-weight: 700;
-        color: #00c9a7;
-        margin: 0 0 20px 0;
-        letter-spacing: -0.02em;
-        text-shadow: 0 2px 10px rgba(0, 201, 167, 0.3);
+        font-size: 48px !important;
+        font-weight: 700 !important;
+        color: #00c9a7 !important;
+        margin: 0 0 20px 0 !important;
+        letter-spacing: -0.02em !important;
+        text-shadow: 0 2px 10px rgba(0, 201, 167, 0.3) !important;
+        display: block !important;
+        text-align: center !important;
       }
 
       .divider-line {
-        width: 120px;
-        height: 3px;
-        background: linear-gradient(90deg, transparent, #00c9a7, transparent);
-        margin: 0 auto;
-        border-radius: 2px;
+        width: 120px !important;
+        height: 3px !important;
+        background: linear-gradient(90deg, transparent, #00c9a7, transparent) !important;
+        margin: 0 auto !important;
+        border-radius: 2px !important;
+        display: block !important;
       }
 
       /* Body */
       .body {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        text-align: center;
-        gap: 30px;
+        flex: 1 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        text-align: center !important;
+        gap: 30px !important;
+        min-height: 400px !important;
       }
 
       .intro-text {
@@ -243,11 +254,13 @@ export class CertificateTemplateEngine {
 
       /* Footer */
       .footer {
-        display: flex;
-        align-items: flex-end;
-        justify-content: space-between;
-        margin-top: 50px;
-        gap: 40px;
+        display: flex !important;
+        align-items: flex-end !important;
+        justify-content: space-between !important;
+        margin-top: 50px !important;
+        gap: 40px !important;
+        flex-shrink: 0 !important;
+        min-height: 80px !important;
       }
 
       .footer-left,
@@ -428,25 +441,38 @@ export class CertificateTemplateEngine {
 
   public optimizeCSS(css: string): string {
     const optimizations = `
-      /* Otimizações para renderização */
-      * {
+      /* Reset e otimizações para renderização */
+      .certificate-wrapper * {
+        box-sizing: border-box !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      
+      .certificate-container * {
+        box-sizing: border-box !important;
         font-display: block !important;
         -webkit-font-feature-settings: "kern" 1;
         font-feature-settings: "kern" 1;
-        text-rendering: optimizeLegibility;
-        box-sizing: border-box;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
+        text-rendering: optimizeLegibility !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
       }
       
+      .certificate-rendered {
+        display: block !important;
+        position: relative !important;
+        overflow: hidden !important;
+      }
+      
+      /* Forçar aplicação de estilos do certificado */
       .certificate-container {
-        image-rendering: -webkit-optimize-contrast;
-        image-rendering: crisp-edges;
-        image-rendering: pixelated;
+        display: block !important;
+        position: relative !important;
+        box-sizing: border-box !important;
       }
     `;
 
-    return sanitizeCSS(css + '\n' + optimizations);
+    return optimizations + '\n' + css;
   }
 }
 

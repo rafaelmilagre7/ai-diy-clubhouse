@@ -69,12 +69,21 @@ export const CertificateTemplate = ({
   }
 
   return (
-    <div className={`certificate-wrapper ${className}`}>
+    <div className={`certificate-wrapper ${className}`} style={{ display: 'block', width: '1123px', height: '794px', margin: '0', padding: '0' }}>
       <style dangerouslySetInnerHTML={{ __html: optimizedCSS }} />
       <div 
         ref={containerRef}
         dangerouslySetInnerHTML={{ __html: processedHtml }}
         className="certificate-rendered"
+        style={{ 
+          display: 'block', 
+          position: 'relative', 
+          width: '1123px', 
+          height: '794px',
+          margin: '0',
+          padding: '0',
+          overflow: 'hidden'
+        }}
       />
     </div>
   );
