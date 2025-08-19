@@ -68,7 +68,17 @@ serve(async (req: Request) => {
     // Process different webhook types
     let processingResult = { success: true, message: 'Webhook received and stored' }
 
-    switch (payload.event || payload.type) {
+    switch (payload.type) {
+      case 'NewSale':
+      case 'NewUser':
+        processingResult = await handleLovableCourseInvite(payload, supabase)
+        break
+      
+      case 'CanceledSale':
+      case 'CanceledSubscription':
+        processingResult = await handleCourseCancellation(payload, supabase)
+        break
+      
       case 'payment.approved':
       case 'payment.completed':
         processingResult = await handlePaymentSuccess(payload, supabase)
@@ -88,8 +98,8 @@ serve(async (req: Request) => {
         break
       
       default:
-        console.log(`[Hubla Webhook] Unknown event type: ${payload.event || payload.type}`)
-        processingResult = { success: true, message: `Unknown event type stored for review: ${payload.event || payload.type}` }
+        console.log(`[Hubla Webhook] Unknown event type: ${payload.type}`)
+        processingResult = { success: true, message: `Unknown event type stored for review: [object Object]` }
     }
 
     // Update webhook record with processing result
@@ -212,6 +222,189 @@ async function handleSubscriptionCreated(payload: any, supabase: any) {
   } catch (error) {
     console.error('[Hubla Webhook] Error processing subscription creation:', error)
     return { success: false, message: `Subscription creation processing error: ${error.message}` }
+  }
+}
+
+async function handleLovableCourseInvite(payload: any, supabase: any) {
+  console.log('[Hubla Webhook] Processing Lovable course purchase/user creation')
+  
+  try {
+    const event = payload.event
+    if (!event) {
+      return { success: false, message: 'No event data found in payload' }
+    }
+
+    // Verificar se é o curso Lovable na Prática
+    const isLovableCourse = event.groupId === '3rYUFiiBV8zHXFAjnEmZ' || 
+                           event.groupName?.includes('Lovable na Prática')
+
+    if (!isLovableCourse) {
+      console.log('[Hubla Webhook] Not Lovable course, skipping invite creation')
+      return { success: true, message: 'Not Lovable course - no action needed' }
+    }
+
+    const userEmail = event.userEmail
+    const userName = event.userName
+    const userPhone = event.userPhone
+
+    if (!userEmail) {
+      return { success: false, message: 'No user email found in event data' }
+    }
+
+    console.log('[Hubla Webhook] Creating invite for Lovable course:', {
+      email: userEmail,
+      name: userName,
+      phone: userPhone,
+      groupName: event.groupName
+    })
+
+    // Buscar role ID do lovable_course
+    const { data: roleData, error: roleError } = await supabase
+      .from('user_roles')
+      .select('id')
+      .eq('name', 'lovable_course')
+      .single()
+
+    if (roleError || !roleData) {
+      console.error('[Hubla Webhook] Error finding lovable_course role:', roleError)
+      return { success: false, message: 'Failed to find lovable_course role' }
+    }
+
+    // Verificar se já existe um convite para este email
+    const { data: existingInvite } = await supabase
+      .from('invites')
+      .select('id, used_at')
+      .eq('email', userEmail)
+      .eq('role_id', roleData.id)
+      .is('used_at', null)
+      .order('created_at', { ascending: false })
+      .limit(1)
+
+    if (existingInvite && existingInvite.length > 0) {
+      console.log('[Hubla Webhook] Invite already exists for this email and role')
+      return { success: true, message: 'Invite already exists for this user' }
+    }
+
+    // Criar convite automaticamente
+    const inviteData = {
+      email: userEmail,
+      role_id: roleData.id,
+      expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 dias
+      created_by: null, // Sistema automático
+      notes: `Convite automático - Compra do curso "${event.groupName}" via Hubla`,
+      whatsapp_number: userPhone,
+      preferred_channel: userPhone ? 'both' : 'email'
+    }
+
+    const { data: newInvite, error: inviteError } = await supabase
+      .from('invites')
+      .insert([inviteData])
+      .select(`
+        *,
+        user_roles (name, description)
+      `)
+      .single()
+
+    if (inviteError) {
+      console.error('[Hubla Webhook] Error creating invite:', inviteError)
+      return { success: false, message: `Failed to create invite: ${inviteError.message}` }
+    }
+
+    console.log('[Hubla Webhook] Invite created successfully:', newInvite.id)
+
+    // Processar envio do convite (email + WhatsApp se disponível)
+    try {
+      const { data: processResult, error: processError } = await supabase.functions.invoke('process-invite', {
+        body: { invite_id: newInvite.id }
+      })
+
+      if (processError) {
+        console.error('[Hubla Webhook] Error processing invite:', processError)
+        return { 
+          success: true, // Convite criado com sucesso, mas falha no envio
+          message: `Invite created but failed to send: ${processError.message}` 
+        }
+      }
+
+      console.log('[Hubla Webhook] Invite processed and sent successfully')
+      return { 
+        success: true, 
+        message: `Lovable course invite created and sent to ${userEmail}${userPhone ? ' and ' + userPhone : ''}` 
+      }
+
+    } catch (processError) {
+      console.error('[Hubla Webhook] Error in invite processing:', processError)
+      return { 
+        success: true,
+        message: `Invite created but failed to send: ${processError.message}` 
+      }
+    }
+
+  } catch (error) {
+    console.error('[Hubla Webhook] Error in handleLovableCourseInvite:', error)
+    return { success: false, message: `Course invite processing error: ${error.message}` }
+  }
+}
+
+async function handleCourseCancellation(payload: any, supabase: any) {
+  console.log('[Hubla Webhook] Processing course cancellation')
+  
+  try {
+    const event = payload.event
+    if (!event) {
+      return { success: true, message: 'No event data found in payload' }
+    }
+
+    // Verificar se é o curso Lovable na Prática
+    const isLovableCourse = event.groupId === '3rYUFiiBV8zHXFAjnEmZ' || 
+                           event.groupName?.includes('Lovable na Prática')
+
+    if (!isLovableCourse) {
+      return { success: true, message: 'Not Lovable course - no action needed' }
+    }
+
+    const userEmail = event.userEmail
+
+    if (!userEmail) {
+      return { success: true, message: 'No user email found in event data' }
+    }
+
+    console.log('[Hubla Webhook] Processing cancellation for:', userEmail)
+
+    // Buscar role ID do lovable_course
+    const { data: roleData } = await supabase
+      .from('user_roles')
+      .select('id')
+      .eq('name', 'lovable_course')
+      .single()
+
+    if (!roleData) {
+      return { success: true, message: 'lovable_course role not found' }
+    }
+
+    // Buscar convites não utilizados deste usuário para este curso
+    const { data: invites } = await supabase
+      .from('invites')
+      .select('id')
+      .eq('email', userEmail)
+      .eq('role_id', roleData.id)
+      .is('used_at', null)
+
+    if (invites && invites.length > 0) {
+      // Marcar convites como expirados
+      await supabase
+        .from('invites')
+        .update({ expires_at: new Date().toISOString() })
+        .in('id', invites.map(i => i.id))
+
+      console.log(`[Hubla Webhook] Expired ${invites.length} unused invites for ${userEmail}`)
+    }
+
+    return { success: true, message: `Course cancellation processed for ${userEmail}` }
+
+  } catch (error) {
+    console.error('[Hubla Webhook] Error processing course cancellation:', error)
+    return { success: false, message: `Course cancellation processing error: ${error.message}` }
   }
 }
 
