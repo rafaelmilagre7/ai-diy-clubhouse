@@ -317,12 +317,21 @@ async function handleLovableCourseInvite(payload: any, supabase: any) {
       return { success: true, message: 'Invite already exists for this user' }
     }
 
-    // Criar convite automaticamente
+    // Gerar token único para o convite
+    const { data: generatedToken, error: tokenGenError } = await supabase.rpc('generate_invite_token')
+    if (tokenGenError || !generatedToken) {
+      console.error('[Hubla Webhook] Error generating invite token:', tokenGenError)
+      return { success: false, message: `Failed to generate invite token: ${tokenGenError?.message || 'Unknown error'}` }
+    }
+
+    // Criar convite automaticamente (com token e created_by de sistema)
+    const SYSTEM_CREATOR_ID = '00000000-0000-0000-0000-000000000000'
     const inviteData = {
       email: userEmail,
       role_id: roleData.id,
+      token: generatedToken,
       expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 dias
-      created_by: null, // Sistema automático
+      created_by: SYSTEM_CREATOR_ID, // Sistema automático
       notes: `Convite automático - Compra do curso "${event.groupName}" via Hubla`,
       whatsapp_number: userPhone,
       preferred_channel: userPhone ? 'both' : 'email'
