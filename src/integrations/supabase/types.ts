@@ -470,6 +470,42 @@ export type Database = {
           },
         ]
       }
+      certificate_shares: {
+        Row: {
+          certificate_id: string | null
+          id: string
+          ip_address: unknown | null
+          platform: string
+          post_data: Json | null
+          share_type: string
+          shared_at: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          certificate_id?: string | null
+          id?: string
+          ip_address?: unknown | null
+          platform?: string
+          post_data?: Json | null
+          share_type: string
+          shared_at?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          certificate_id?: string | null
+          id?: string
+          ip_address?: unknown | null
+          platform?: string
+          post_data?: Json | null
+          share_type?: string
+          shared_at?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       communication_deliveries: {
         Row: {
           clicked_at: string | null
@@ -2257,6 +2293,45 @@ export type Database = {
           name?: string
           order_index?: number | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      linkedin_connections: {
+        Row: {
+          access_token_encrypted: string
+          connected_at: string
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          last_used_at: string | null
+          linkedin_user_id: string
+          profile_data: Json | null
+          refresh_token_encrypted: string | null
+          user_id: string
+        }
+        Insert: {
+          access_token_encrypted: string
+          connected_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          last_used_at?: string | null
+          linkedin_user_id: string
+          profile_data?: Json | null
+          refresh_token_encrypted?: string | null
+          user_id: string
+        }
+        Update: {
+          access_token_encrypted?: string
+          connected_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          last_used_at?: string | null
+          linkedin_user_id?: string
+          profile_data?: Json | null
+          refresh_token_encrypted?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -4711,6 +4786,33 @@ export type Database = {
         }
         Relationships: []
       }
+      user_achievements: {
+        Row: {
+          achieved_at: string
+          achievement_data: Json
+          achievement_id: string
+          id: string
+          notified_at: string | null
+          user_id: string
+        }
+        Insert: {
+          achieved_at?: string
+          achievement_data: Json
+          achievement_id: string
+          id?: string
+          notified_at?: string | null
+          user_id: string
+        }
+        Update: {
+          achieved_at?: string
+          achievement_data?: Json
+          achievement_id?: string
+          id?: string
+          notified_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_activity_tracking: {
         Row: {
           activity_data: Json | null
@@ -6219,6 +6321,10 @@ export type Database = {
       }
       get_user_segmentation_secure: {
         Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      get_user_share_stats: {
+        Args: { user_uuid: string }
         Returns: Json
       }
       get_users_with_roles: {
