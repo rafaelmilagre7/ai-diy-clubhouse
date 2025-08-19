@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { UnifiedCertificateViewer } from "@/components/certificates/UnifiedCertificateViewer";
 import { CertificateData } from "@/utils/certificates/templateEngine";
 import { useAuth } from "@/contexts/auth";
+import { ShareCertificateDropdown } from "./ShareCertificateDropdown";
 
 interface UnifiedCertificateCardProps {
   certificate: UnifiedCertificate;
@@ -137,7 +138,7 @@ export const UnifiedCertificateCard = ({
           </motion.div>
         </CardContent>
         
-        <CardFooter className="pt-0 flex gap-3">
+        <CardFooter className="pt-0 flex gap-2">
           <Button
             onClick={handleDownload}
             className={`
@@ -177,6 +178,21 @@ export const UnifiedCertificateCard = ({
               </div>
             </DialogContent>
           </Dialog>
+          
+          {isSolution && (
+            <ShareCertificateDropdown
+              certificate={{
+                id: certificate.id,
+                validation_code: certificate.validation_code,
+                solutions: {
+                  title: certificate.title
+                }
+              }}
+              userProfile={{
+                name: user?.user_metadata?.full_name || user?.email || "Usuário"
+              }}
+            />
+          )}
         </CardFooter>
       </Card>
     </motion.div>
