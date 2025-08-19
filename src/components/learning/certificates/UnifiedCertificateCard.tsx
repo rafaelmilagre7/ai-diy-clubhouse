@@ -52,117 +52,137 @@ export const UnifiedCertificateCard = ({
     onDownload(certificate.id);
   };
   
+  const coverImage = certificate.image_url || certificate.learning_courses?.cover_image_url || certificate.solutions?.thumbnail_url;
+
   return (
-    <Card className="group relative overflow-hidden border hover:shadow-md transition-all duration-200">
-      <CardContent className="p-6">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center space-x-3">
-            <div className={`p-2 rounded-lg ${config.iconBg} border ${config.badgeClass.replace('bg-', 'border-').replace('/15', '/20')}`}>
-              <config.icon className={`h-5 w-5 ${config.iconColor}`} />
+    <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-background to-muted/20 hover:shadow-xl transition-all duration-300 animate-fade-in">
+      {/* Capa visual */}
+      <div className="relative h-48 overflow-hidden">
+        {coverImage ? (
+          <img 
+            src={coverImage} 
+            alt={certificate.title}
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        ) : (
+          <div className={`w-full h-full bg-gradient-to-br ${isSolution ? 'from-accent/20 via-accent/10 to-accent/5' : 'from-primary/20 via-primary/10 to-primary/5'} flex items-center justify-center`}>
+            <div className={`p-8 rounded-full ${config.iconBg} shadow-lg`}>
+              <config.icon className={`h-16 w-16 ${config.iconColor}`} />
             </div>
-            
-            <div className="space-y-1">
-              <h3 className="font-semibold text-foreground">
-                {certificate.title}
-              </h3>
-              <div className="flex items-center space-x-2">
-                <Badge className={`${config.badgeClass} text-xs`}>
-                  {isSolution ? <Lightbulb className="h-3 w-3 mr-1" /> : <BookOpen className="h-3 w-3 mr-1" />}
-                  {config.typeLabel}
-                </Badge>
+          </div>
+        )}
+        
+        {/* Overlay com badge do tipo */}
+        <div className="absolute top-4 left-4">
+          <Badge className={`${config.badgeClass} text-xs font-medium shadow-lg backdrop-blur-sm`}>
+            {isSolution ? <Lightbulb className="h-3 w-3 mr-1" /> : <BookOpen className="h-3 w-3 mr-1" />}
+            {config.typeLabel}
+          </Badge>
+        </div>
+
+        {/* Share button no canto */}
+        <div className="absolute top-4 right-4">
+          <ShareCertificateDropdown
+            certificate={{
+              id: certificate.id,
+              validation_code: certificate.validation_code,
+              solutions: {
+                title: certificate.title
+              }
+            }}
+            userProfile={{
+              name: user?.user_metadata?.full_name || user?.email || "Usuário"
+            }}
+            compact
+          />
+        </div>
+
+        {/* Overlay gradient */}
+        <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
+      </div>
+
+      <CardContent className="p-6 -mt-8 relative z-10">
+        <div className="space-y-4">
+          {/* Header com título */}
+          <div className="space-y-2">
+            <h3 className="font-bold text-xl text-foreground line-clamp-2 group-hover:text-primary transition-colors">
+              {certificate.title}
+            </h3>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <BadgeCheck className="h-4 w-4 text-emerald-500" />
+              <span className="font-medium">Certificado de {isSolution ? 'Implementação' : 'Conclusão'}</span>
+            </div>
+          </div>
+          
+          {/* Data de emissão */}
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="w-2 h-2 rounded-full bg-primary/60" />
+            <span>Emitido em {formattedDate}</span>
+          </div>
+          
+          {/* Código de validação */}
+          <div className="bg-gradient-to-r from-muted/80 to-muted/40 rounded-xl p-4 border border-border/50">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <div className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
+                  <Star className="h-3 w-3 text-amber-500" />
+                  Código de Validação
+                </div>
+                <div className="text-sm font-mono text-foreground bg-background/50 px-2 py-1 rounded border">
+                  {certificate.validation_code}
+                </div>
               </div>
             </div>
           </div>
           
-          <div className="flex items-center space-x-2">
-            <ShareCertificateDropdown
-              certificate={{
-                id: certificate.id,
-                validation_code: certificate.validation_code,
-                solutions: {
-                  title: certificate.title
-                }
-              }}
-              userProfile={{
-                name: user?.user_metadata?.full_name || user?.email || "Usuário"
-              }}
-              compact
-            />
-            <div className="text-xs text-muted-foreground">
-              {formattedDate}
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <BadgeCheck className="h-4 w-4 text-primary" />
-            <span>Certificado de {isSolution ? 'Implementação' : 'Conclusão'}</span>
-          </div>
-          
-          <div className="bg-muted/50 rounded-lg p-3">
-            <div className="text-xs text-muted-foreground font-medium mb-1 flex items-center gap-1">
-              <Star className="h-3 w-3" />
-              Código de Validação
-            </div>
-            <div className="text-sm text-foreground font-mono">
-              {certificate.validation_code}
-            </div>
-          </div>
-          
-          <div className="flex items-center justify-between pt-4 border-t">
-            <div className="text-xs text-muted-foreground">
-              Emitido em {formattedDate}
-            </div>
+          {/* Botões de ação */}
+          <div className="flex items-center gap-3 pt-2">
+            <Button
+              onClick={handleDownload}
+              variant="outline"
+              size="sm"
+              className="flex-1 text-sm hover:bg-primary/10 hover:border-primary/30 hover:text-primary transition-all"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Baixar PDF
+            </Button>
             
-            <div className="flex items-center space-x-2">
-              <Button
-                onClick={handleDownload}
-                variant="outline"
-                size="sm"
-                className="text-xs"
-              >
-                <Download className="h-3 w-3 mr-1" />
-                Baixar
-              </Button>
-              
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button
-                    variant="default"
-                    size="sm"
-                    className="text-xs"
-                  >
-                    <Eye className="h-3 w-3 mr-1" />
-                    Ver Certificado
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-6xl w-full max-h-[85vh] certificate-dialog">
-                  <DialogHeader className="px-6 pt-6 pb-2">
-                    <DialogTitle className="text-xl font-semibold">
-                      {`Certificado de ${isSolution ? 'Implementação' : 'Conclusão'}`}
-                    </DialogTitle>
-                  </DialogHeader>
-                  <div className="px-6 pb-6 overflow-auto certificate-dialog-content">
-                    <UnifiedCertificateViewer
-                      data={{
-                        userName: user?.user_metadata?.full_name || user?.email || "Usuário",
-                        solutionTitle: certificate.title,
-                        solutionCategory: isSolution ? "Solução de IA" : "Curso",
-                        courseTitle: !isSolution ? certificate.title : undefined,
-                        implementationDate: formattedDate,
-                        completedDate: formattedDate,
-                        certificateId: certificate.id,
-                        validationCode: certificate.validation_code
-                      } as CertificateData}
-                      showHeader={false}
-                      scale={0.5}
-                      onDownload={() => handleDownload()}
-                    />
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </div>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="flex-1 text-sm bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg"
+                >
+                  <Eye className="h-4 w-4 mr-2" />
+                  Visualizar
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-6xl w-full max-h-[85vh] certificate-dialog">
+                <DialogHeader className="px-6 pt-6 pb-2">
+                  <DialogTitle className="text-xl font-semibold">
+                    {`Certificado de ${isSolution ? 'Implementação' : 'Conclusão'}`}
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="px-6 pb-6 overflow-auto certificate-dialog-content">
+                  <UnifiedCertificateViewer
+                    data={{
+                      userName: user?.user_metadata?.full_name || user?.email || "Usuário",
+                      solutionTitle: certificate.title,
+                      solutionCategory: isSolution ? "Solução de IA" : "Curso",
+                      courseTitle: !isSolution ? certificate.title : undefined,
+                      implementationDate: formattedDate,
+                      completedDate: formattedDate,
+                      certificateId: certificate.id,
+                      validationCode: certificate.validation_code
+                    } as CertificateData}
+                    showHeader={false}
+                    scale={0.5}
+                    onDownload={() => handleDownload()}
+                  />
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
       </CardContent>
