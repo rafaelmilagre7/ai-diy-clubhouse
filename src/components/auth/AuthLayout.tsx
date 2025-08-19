@@ -94,12 +94,30 @@ const AuthLayout = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 px-4 relative overflow-hidden">
-      {/* Elementos de fundo animados */}
+    <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-black">
+      {/* Fundo tecnológico sofisticado */}
       <div className="absolute inset-0 w-full h-full">
-        <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-viverblue/20 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl animate-pulse animation-delay-2000" />
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl animate-pulse animation-delay-4000" />
+        {/* Grid pattern */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(10,171,181,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(10,171,181,0.03)_1px,transparent_1px)] bg-[size:50px_50px]" />
+        
+        {/* Animated gradient orbs */}
+        <div className="absolute top-0 left-0 w-96 h-96 bg-gradient-to-br from-viverblue/30 to-cyan-500/20 rounded-full blur-3xl animate-blob opacity-70" />
+        <div className="absolute top-1/3 right-0 w-80 h-80 bg-gradient-to-bl from-blue-500/25 to-viverblue/30 rounded-full blur-3xl animate-blob animation-delay-2000 opacity-60" />
+        <div className="absolute bottom-0 left-1/3 w-72 h-72 bg-gradient-to-tr from-cyan-400/20 to-viverblue/25 rounded-full blur-3xl animate-blob animation-delay-4000 opacity-50" />
+        
+        {/* Circuit-like elements */}
+        <div className="absolute top-20 left-20 w-32 h-32 border border-viverblue/20 rounded-lg rotate-45 animate-spin-slow" />
+        <div className="absolute bottom-20 right-20 w-24 h-24 border border-cyan-400/20 rounded-full animate-float" />
+        <div className="absolute top-1/2 left-10 w-16 h-16 bg-gradient-to-r from-viverblue/30 to-transparent rounded-full animate-pulse" />
+        <div className="absolute top-1/3 right-1/4 w-20 h-20 bg-gradient-to-l from-cyan-400/20 to-transparent rounded-lg rotate-12 animate-float animation-delay-1000" />
+        
+        {/* Floating particles */}
+        <div className="absolute top-1/4 left-1/2 w-2 h-2 bg-viverblue rounded-full animate-float animation-delay-2000 opacity-80" />
+        <div className="absolute top-3/4 left-1/4 w-1 h-1 bg-cyan-400 rounded-full animate-float animation-delay-4000 opacity-60" />
+        <div className="absolute top-1/2 right-1/3 w-1.5 h-1.5 bg-blue-400 rounded-full animate-float animation-delay-1000 opacity-70" />
+        
+        {/* Radial gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-radial from-transparent via-black/20 to-black/40" />
       </div>
 
       <div className="relative z-10 w-full max-w-md space-y-8">
@@ -121,7 +139,7 @@ const AuthLayout = () => {
                   Bem-vindo de volta
                 </CardTitle>
                 <CardDescription className="text-gray-300 text-base">
-                  Acesse sua conta do VIVER DE IA Club
+                  Acesse a plataforma de soluções e educação de IA da sua empresa
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
