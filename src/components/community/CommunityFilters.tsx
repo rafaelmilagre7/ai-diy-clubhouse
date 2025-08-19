@@ -1,23 +1,6 @@
 
-import { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Search, 
-  SlidersHorizontal, 
-  Clock, 
-  TrendingUp, 
-  MessageSquareX, 
-  CheckCircle2,
-  Filter
-} from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Search, Filter, Clock, TrendingUp, MessageSquareX, CheckCircle2 } from "lucide-react";
 import { CommunityFilterType, CommunityFiltersProps } from "@/types/communityTypes";
 
 export const CommunityFilters = ({
@@ -35,7 +18,7 @@ export const CommunityFilters = ({
     },
     {
       key: "populares" as CommunityFilterType,
-      label: "Populares",
+      label: "Populares", 
       icon: TrendingUp,
       description: "Mais visualizados e comentados"
     },
@@ -56,104 +39,53 @@ export const CommunityFilters = ({
   const activeFilterData = filters.find(f => f.key === activeFilter);
 
   return (
-    <div className="space-y-4 mb-6">
-      {/* Barra de Busca */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-        <Input
-          placeholder="Buscar tópicos na comunidade..."
-          value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
-          className="pl-10 pr-4 h-12 text-base"
-        />
-      </div>
-
-      {/* Filtros */}
-      <div className="flex items-center gap-3 flex-wrap">
+    <div className="bg-background/60 backdrop-blur-xl border border-border/50 rounded-2xl p-6 space-y-4">
+      {/* Filtros em Pills - Mais Elegante */}
+      <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-2">
-          <Filter className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm font-medium text-muted-foreground">Filtros:</span>
+          <Filter className="h-4 w-4 text-primary" />
+          <span className="text-sm font-medium">Filtrar por:</span>
         </div>
 
-        {/* Filtros Rápidos - Desktop */}
-        <div className="hidden md:flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {filters.map((filter) => {
             const Icon = filter.icon;
             const isActive = activeFilter === filter.key;
             
             return (
-              <Button
+              <Badge
                 key={filter.key}
-                variant={isActive ? "default" : "outline"}
-                size="sm"
-                onClick={() => onFilterChange(filter.key)}
-                className={`h-8 gap-2 ${
+                variant={isActive ? "default" : "secondary"}
+                className={`px-4 py-2 cursor-pointer transition-all duration-300 hover:scale-105 gap-2 ${
                   isActive 
-                    ? "bg-primary text-primary-foreground" 
-                    : "hover:bg-muted"
+                    ? "bg-gradient-to-r from-primary to-accent text-white shadow-lg" 
+                    : "bg-background/60 backdrop-blur-sm hover:bg-background/80"
                 }`}
+                onClick={() => onFilterChange(filter.key)}
               >
                 <Icon className="h-3 w-3" />
                 {filter.label}
-              </Button>
+              </Badge>
             );
           })}
         </div>
+      </div>
 
-        {/* Dropdown de Filtros - Mobile */}
-        <div className="md:hidden">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 gap-2">
-                <SlidersHorizontal className="h-3 w-3" />
-                {activeFilterData?.label || "Filtrar"}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-56">
-              {filters.map((filter) => {
-                const Icon = filter.icon;
-                const isActive = activeFilter === filter.key;
-                
-                return (
-                  <DropdownMenuItem
-                    key={filter.key}
-                    onClick={() => onFilterChange(filter.key)}
-                    className={`gap-2 ${isActive ? "bg-muted" : ""}`}
-                  >
-                    <Icon className="h-4 w-4" />
-                    <div>
-                      <div className="font-medium">{filter.label}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {filter.description}
-                      </div>
-                    </div>
-                  </DropdownMenuItem>
-                );
-              })}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-
-        {/* Badge do Filtro Ativo */}
-        <Badge variant="secondary" className="gap-1">
-          {activeFilterData && <activeFilterData.icon className="h-3 w-3" />}
-          {activeFilterData?.label}
-        </Badge>
-
-        {/* Indicador de Busca */}
-        {searchQuery && (
-          <Badge variant="outline" className="gap-1">
+      {/* Indicador de Busca */}
+      {searchQuery && (
+        <div className="flex items-center gap-2 pt-2 border-t border-border/30">
+          <Badge variant="outline" className="gap-2">
             <Search className="h-3 w-3" />
-            "{searchQuery}"
+            Buscando por: "{searchQuery}"
             <button
               onClick={() => onSearchChange("")}
-              className="ml-1 hover:bg-muted rounded-full p-0.5"
+              className="ml-1 hover:bg-muted rounded-full p-0.5 transition-colors"
             >
               ✕
             </button>
           </Badge>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

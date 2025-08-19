@@ -34,19 +34,19 @@ export const CommunityHero = ({
       <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 backdrop-blur-3xl"></div>
       
       {/* Content */}
-      <div className="relative px-6 py-16 text-center">
+      <div className="relative px-6 py-12 text-center">
         {/* Title with Gradient */}
-        <div className="mb-4">
-          <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent mb-4">
+        <div className="mb-6">
+          <h1 className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent mb-3">
             Comunidade VIVER DE IA
           </h1>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+          <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
             Conecte-se, compartilhe conhecimento e construa o futuro da IA junto com nossa comunidade exclusiva
           </p>
         </div>
 
         {/* Enhanced Search Bar */}
-        <div className="max-w-2xl mx-auto mb-8">
+        <div className="max-w-3xl mx-auto mb-6">
           <div className="relative group">
             <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-accent/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
             <div className="relative bg-background/80 backdrop-blur-xl border border-border/50 rounded-2xl p-1">
