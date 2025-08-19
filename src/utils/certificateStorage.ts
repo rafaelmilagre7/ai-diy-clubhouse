@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
-import { generateCertificatePDF, CertificateData } from './certificateGenerator';
+import { pdfGenerator } from './certificates/pdfGenerator';
+import { CertificateData } from './certificates/templateEngine';
 
 export interface StoredCertificate {
   id: string;
@@ -13,8 +14,10 @@ export const saveCertificateToStorage = async (
   userId: string
 ): Promise<StoredCertificate> => {
   try {
-    // Gerar PDF
-    const pdfBlob = await generateCertificatePDF(certificateData);
+    // Usar novo gerador unificado
+    const pdfBlob = await pdfGenerator.generateFromHTML('', '', certificateData);
+    
+    // ... manter o resto do código igual
     
     // Criar nome do arquivo
     const fileName = `certificado-${certificateData.solutionTitle.replace(/[^a-zA-Z0-9]/g, '-')}-${Date.now()}.pdf`;
