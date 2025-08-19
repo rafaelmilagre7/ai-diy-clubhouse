@@ -11,8 +11,9 @@ import { useUserProgress } from "@/hooks/learning/useUserProgress";
 import { useDynamicSEO } from "@/hooks/seo/useDynamicSEO";
 import { UnifiedCertificateViewer } from "@/components/certificates/UnifiedCertificateViewer";
 import { CertificateEligibility } from "@/components/learning/certificates/CertificateEligibility";
+import { useAuth } from "@/contexts/auth";
 
-import { 
+import {
   Award, 
   Download, 
   Share2, 
@@ -33,6 +34,7 @@ export default function CertificatesPage() {
   const [selectedCertificate, setSelectedCertificate] = useState<any>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
 
+  const { user } = useAuth();
   const { courses } = useLearningCourses();
   const { certificates, downloadCertificate, isLoading } = useUnifiedCertificates();
   const { userProgress } = useUserProgress();
@@ -322,7 +324,7 @@ export default function CertificatesPage() {
             <div className="p-4">
               <UnifiedCertificateViewer
                 data={{
-                  userName: "",
+                  userName: user?.user_metadata?.full_name || user?.email || "Usuário",
                   solutionTitle: selectedCertificate.title,
                   solutionCategory: selectedCertificate.type === 'solution' ? 'Solução de IA' : 'Curso',
                   implementationDate: format(new Date(selectedCertificate.issued_at), "dd 'de' MMMM 'de' yyyy", { locale: ptBR }),
@@ -332,6 +334,7 @@ export default function CertificatesPage() {
                 headerTitle={`Certificado de ${selectedCertificate.type === 'solution' ? 'Implementação' : 'Conclusão'}`}
                 headerDescription={`Parabéns! Você conquistou este certificado ao ${selectedCertificate.type === 'solution' ? 'implementar a solução' : 'concluir o curso'} "${selectedCertificate.title}".`}
                 scale={0.6}
+                showHeader={false}
               />
             </div>
           )}

@@ -118,7 +118,7 @@ export const CertificatePreview = ({
         <div className="relative">
           <div 
             ref={previewRef}
-            className="rounded-lg overflow-hidden bg-transparent"
+            className="rounded-lg overflow-hidden"
             style={{ 
               transform: `scale(${scale})`,
               transformOrigin: 'top left',
