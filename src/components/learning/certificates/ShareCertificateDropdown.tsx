@@ -34,7 +34,7 @@ export const ShareCertificateDropdown = ({
 }: ShareCertificateDropdownProps) => {
   const [isGeneratingLink, setIsGeneratingLink] = useState(false);
   
-  const certificateUrl = `${window.location.origin}/certificado/validar/${certificate.validation_code}`;
+  const certificateUrl = `https://app.viverdeia.ai/certificado/validar/${certificate.validation_code}`;
   
   // Detectar tipo e título do certificado
   const isSolution = certificate.type === 'solution' || (!certificate.type && certificate.solutions?.title);
