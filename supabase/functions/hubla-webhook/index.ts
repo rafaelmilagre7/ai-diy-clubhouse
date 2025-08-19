@@ -446,7 +446,7 @@ async function handleCourseCancellation(payload: any, supabase: any) {
       const { data: memberRole } = await supabase
         .from('user_roles')
         .select('id')
-        .eq('name', 'member')
+        .eq('name', 'membro_club')
         .single()
 
       const fallbackRoleId = memberRole?.id || null
@@ -463,7 +463,7 @@ async function handleCourseCancellation(payload: any, supabase: any) {
       if (downgradeError) {
         console.error('[Hubla Webhook] Error downgrading user role:', downgradeError)
       } else {
-        console.log(`[Hubla Webhook] User ${userEmail} downgraded from lovable_course to ${fallbackRoleId ? 'member' : 'no role'}`)
+        console.log(`[Hubla Webhook] User ${userEmail} downgraded from lovable_course to ${fallbackRoleId ? 'membro_club' : 'no role'}`)
       }
 
       // Log da revogação para auditoria
@@ -478,7 +478,7 @@ async function handleCourseCancellation(payload: any, supabase: any) {
             webhook_type: payload.type,
             course_group: event.groupName,
             previous_role: 'lovable_course',
-            new_role: fallbackRoleId ? 'member' : null
+            new_role: fallbackRoleId ? 'membro_club' : null
           },
           severity: 'info'
         }])
