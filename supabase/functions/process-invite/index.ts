@@ -56,7 +56,6 @@ const handler = async (req: Request): Promise<Response> => {
     const emailData = {
       inviteId: invite.id,
       email: invite.email,
-      token: invite.token,
       inviteUrl: inviteUrl,
       roleName: invite.user_roles?.name || 'Membro',
       senderName: 'Administrador',
@@ -83,9 +82,14 @@ const handler = async (req: Request): Promise<Response> => {
       console.log('📱 [PROCESS-INVITE] Enviando WhatsApp para:', invite.whatsapp_number);
       
       const whatsappData = {
-        ...emailData,
         phone: invite.whatsapp_number,
-        recipientName: invite.email,
+        inviteUrl: inviteUrl,
+        roleName: invite.user_roles?.name || 'Membro',
+        expiresAt: invite.expires_at,
+        senderName: 'Administrador',
+        notes: invite.notes,
+        inviteId: invite.id,
+        email: invite.email,
       };
 
       const whatsappResponse = await supabase.functions.invoke('send-whatsapp-invite', {
