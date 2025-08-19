@@ -11,6 +11,7 @@ import { useUserProgress } from "@/hooks/learning/useUserProgress";
 import { useDynamicSEO } from "@/hooks/seo/useDynamicSEO";
 import { UnifiedCertificateViewer } from "@/components/certificates/UnifiedCertificateViewer";
 import { CertificateEligibility } from "@/components/learning/certificates/CertificateEligibility";
+import { ShareCertificateDropdown } from "@/components/learning/certificates/ShareCertificateDropdown";
 import { useAuth } from "@/contexts/auth";
 
 import {
@@ -48,13 +49,18 @@ export default function CertificatesPage() {
   });
 
   // Calcular estatísticas
+  const courseCertificates = certificates.filter(c => c.type === 'course').length;
+  const solutionCertificates = certificates.filter(c => c.type === 'solution').length;
   const stats = {
     totalCertificates: certificates.length,
     completedCourses: courses.filter(course => 
-      certificates.some(cert => cert.course_id === course.id)
+      certificates.some(cert => cert.type === 'course' && cert.course_id === course.id)
     ).length,
     totalCourses: courses.length,
-    completionRate: courses.length > 0 ? Math.round((certificates.length / courses.length) * 100) : 0
+    completionRate: courses.length > 0 ? Math.round((courses.filter(course => 
+      certificates.some(cert => cert.type === 'course' && cert.course_id === course.id)
+    ).length / courses.length) * 100) : 0,
+    breakdown: { courseCertificates, solutionCertificates }
   };
 
   // Filtrar certificados
@@ -135,7 +141,8 @@ export default function CertificatesPage() {
                 </div>
                 <div className="text-right">
                   <div className="text-3xl font-bold text-primary">{stats.totalCertificates}</div>
-                  <div className="text-sm text-muted-foreground font-medium">Certificados</div>
+                  <div className="text-sm text-muted-foreground font-medium">Certificados (total)</div>
+                  <div className="text-xs text-muted-foreground">Cursos {stats.breakdown.courseCertificates} • Soluções {stats.breakdown.solutionCertificates}</div>
                 </div>
               </div>
             </CardContent>
@@ -180,7 +187,7 @@ export default function CertificatesPage() {
                 </div>
                 <div className="text-right">
                   <div className="text-3xl font-bold text-secondary">{eligibleCourses.length}</div>
-                  <div className="text-sm text-muted-foreground font-medium">Elegíveis</div>
+                  <div className="text-sm text-muted-foreground font-medium">Cursos elegíveis</div>
                 </div>
               </div>
             </CardContent>
@@ -255,11 +262,15 @@ export default function CertificatesPage() {
                     
                     <CardHeader className="relative pb-3">
                       <div className="flex items-start justify-between">
-                        <Badge className="mb-2 bg-gradient-to-r from-primary/10 to-viverblue/10 text-primary border-primary/20">
+                        <Badge variant="secondary" className="mb-2 bg-primary/15 text-foreground border border-primary/30">
                           <Award className="h-3 w-3 mr-1" />
                           Certificado
                         </Badge>
-                        <div className="flex space-x-1">
+                        <div className="flex items-center gap-2">
+                          <ShareCertificateDropdown 
+                            certificate={{ id: certificate.id, validation_code: certificate.validation_code, solutions: { title: certificate.title } }} 
+                            userProfile={{ name: user?.user_metadata?.full_name || user?.email || "Usuário" }}
+                          />
                           <Button
                             variant="ghost"
                             size="sm"
