@@ -4,12 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { useLearningCourses } from "@/hooks/learning/useLearningCourses";
 import { useUnifiedCertificates } from "@/hooks/learning/useUnifiedCertificates";
 import { useUserProgress } from "@/hooks/learning/useUserProgress";
 import { useDynamicSEO } from "@/hooks/seo/useDynamicSEO";
-import { CertificatePreview } from "@/components/learning/certificates/CertificatePreview";
+import { UnifiedCertificateViewer } from "@/components/certificates/UnifiedCertificateViewer";
 import { CertificateEligibility } from "@/components/learning/certificates/CertificateEligibility";
 
 import { 
@@ -310,18 +310,30 @@ export default function CertificatesPage() {
 
       {/* Preview Modal */}
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
+        <DialogContent className="max-w-6xl w-full max-h-[90vh] overflow-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Award className="h-5 w-5" />
               Preview do Certificado
             </DialogTitle>
+            <DialogDescription>Visualize o certificado exatamente como será baixado em PDF.</DialogDescription>
           </DialogHeader>
           {selectedCertificate && (
-            <CertificatePreview 
-              certificate={selectedCertificate}
-              onDownload={() => handleDownload(selectedCertificate.id)}
-            />
+            <div className="p-4">
+              <UnifiedCertificateViewer
+                data={{
+                  userName: "",
+                  solutionTitle: selectedCertificate.title,
+                  solutionCategory: selectedCertificate.type === 'solution' ? 'Solução de IA' : 'Curso',
+                  implementationDate: format(new Date(selectedCertificate.issued_at), "dd 'de' MMMM 'de' yyyy", { locale: ptBR }),
+                  certificateId: selectedCertificate.id,
+                  validationCode: selectedCertificate.validation_code
+                }}
+                headerTitle={`Certificado de ${selectedCertificate.type === 'solution' ? 'Implementação' : 'Conclusão'}`}
+                headerDescription={`Parabéns! Você conquistou este certificado ao ${selectedCertificate.type === 'solution' ? 'implementar a solução' : 'concluir o curso'} "${selectedCertificate.title}".`}
+                scale={0.6}
+              />
+            </div>
           )}
         </DialogContent>
       </Dialog>
