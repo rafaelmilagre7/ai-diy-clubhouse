@@ -66,58 +66,47 @@ export const AuroraUpgradeModal: React.FC<AuroraUpgradeModalProps> = ({
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [userEmail, setUserEmail] = useState(profile?.email || "");
-  const [userPhone, setUserPhone] = useState((profile as any)?.whatsapp_number || "");
+  const [userPhone, setUserPhone] = useState("");
   const [showContactForm, setShowContactForm] = useState(false);
 
   const BENEFITS = BENEFITS_CONFIG[feature];
 
   // Sincronizar dados quando profile mudar
   useEffect(() => {
-    setUserEmail(profile?.email || "");
-    setUserPhone((profile as any)?.whatsapp_number || "");
-  }, [profile?.email, profile]);
-
-  // Preencher telefone/email do onboarding, se ainda estiver vazio
-  useEffect(() => {
-    const fetchContactInfo = async () => {
-      try {
-        if (!open) return;
-        const { data: auth } = await supabase.auth.getUser();
-        const uid = (profile as any)?.id || auth.user?.id;
-        if (!uid) return;
-        
-        // Buscar dados do perfil e onboarding (campos JSON)
-        const [profileRes, onboardingRes] = await Promise.all([
-          supabase.from('profiles').select('email, whatsapp_number').eq('id', uid).maybeSingle(),
-          supabase.from('onboarding_final').select('personal_info, professional_info').eq('user_id', uid).maybeSingle()
-        ]);
-        
-        const profileData: any = profileRes.data || {};
-        const onboardingData: any = onboardingRes.data || {};
-        
-        // Extrair telefone do JSON do onboarding
-        const personalInfo = onboardingData.personal_info || {};
-        const professionalInfo = onboardingData.professional_info || {};
-        
-        const phoneCandidates = [
-          personalInfo.phone,
-          personalInfo.whatsapp_number,
-          professionalInfo.phone,
-          profileData.whatsapp_number,
-        ].filter(Boolean);
-        
-        const emailCandidate = profileData.email;
-        
-        if (phoneCandidates.length > 0) setUserPhone(phoneCandidates[0]);
-        if (emailCandidate) setUserEmail(emailCandidate);
-        
-        console.log('Telefone encontrado:', phoneCandidates[0]);
-      } catch (e) {
-        console.warn('Falha ao buscar contato do perfil/onboarding:', e);
+    const fetchUserData = async () => {
+      setUserEmail(profile?.email || "");
+      
+      // Buscar telefone do onboarding_final apenas se o modal estiver aberto
+      if (profile?.id && open) {
+        try {
+          const { data } = await supabase
+            .from('onboarding_final')
+            .select('personal_info, professional_info')
+            .eq('user_id', profile.id)
+            .maybeSingle();
+          
+          const personalInfo = data?.personal_info || {};
+          const professionalInfo = data?.professional_info || {};
+          
+          // Buscar telefone em ordem de prioridade
+          const phoneCandidates = [
+            personalInfo.phone,
+            personalInfo.whatsapp_number,
+            professionalInfo.phone,
+          ].filter(Boolean);
+          
+          if (phoneCandidates.length > 0) {
+            setUserPhone(phoneCandidates[0]);
+            console.log('Telefone encontrado:', phoneCandidates[0]);
+          }
+        } catch (error) {
+          console.warn('Erro ao buscar telefone do onboarding:', error);
+        }
       }
     };
-    fetchContactInfo();
-  }, [open]);
+    
+    fetchUserData();
+  }, [profile?.email, profile?.id, open]);
 
   const handleUpgradeNow = () => {
     window.open('https://viverdeia.ai/', '_blank');

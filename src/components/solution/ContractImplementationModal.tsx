@@ -27,7 +27,7 @@ export const ContractImplementationModal = ({
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [userEmail, setUserEmail] = useState(profile?.email || "");
-  const [userPhone, setUserPhone] = useState((profile as any)?.whatsapp_number || "");
+  const [userPhone, setUserPhone] = useState("");
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
@@ -114,9 +114,29 @@ export const ContractImplementationModal = ({
 
   // Sincronizar dados quando profile mudar
   useEffect(() => {
-    setUserEmail(profile?.email || "");
-    setUserPhone((profile as any)?.whatsapp_number || "");
-  }, [profile?.email, profile]);
+    const fetchUserData = async () => {
+      setUserEmail(profile?.email || "");
+      
+      // Buscar telefone do onboarding_final
+      if (profile?.id) {
+        try {
+          const { data } = await supabase
+            .from('onboarding_final')
+            .select('personal_info')
+            .eq('user_id', profile.id)
+            .maybeSingle();
+          
+          const personalInfo = data?.personal_info || {};
+          const phone = personalInfo.phone || "";
+          setUserPhone(phone);
+        } catch (error) {
+          console.warn('Erro ao buscar telefone do onboarding:', error);
+        }
+      }
+    };
+    
+    fetchUserData();
+  }, [profile?.email, profile?.id]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
