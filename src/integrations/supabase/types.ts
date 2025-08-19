@@ -1174,6 +1174,42 @@ export type Database = {
           },
         ]
       }
+      hubla_webhooks: {
+        Row: {
+          created_at: string
+          event_type: string
+          headers: Json | null
+          id: string
+          payload: Json
+          processed: boolean
+          processing_notes: string | null
+          received_at: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          headers?: Json | null
+          id?: string
+          payload: Json
+          processed?: boolean
+          processing_notes?: string | null
+          received_at?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          headers?: Json | null
+          id?: string
+          payload?: Json
+          processed?: boolean
+          processing_notes?: string | null
+          received_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       implementation_checkpoints: {
         Row: {
           checkpoint_data: Json

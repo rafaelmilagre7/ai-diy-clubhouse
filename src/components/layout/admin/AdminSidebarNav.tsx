@@ -19,7 +19,8 @@ import {
   Zap,
   ArrowLeftRight,
   Home,
-  BookOpen
+  BookOpen,
+  Webhook
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -99,6 +100,11 @@ const navigationItems = [
     title: "Pipedrive + Discord",
     href: "/admin/integrations-debug",
     icon: Zap,
+  },
+  {
+    title: "Webhooks Hubla",
+    href: "/admin/hubla-webhooks",
+    icon: Webhook,
   },
   {
     title: "Diagnósticos",

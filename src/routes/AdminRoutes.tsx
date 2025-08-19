@@ -24,6 +24,7 @@ import SupabaseDiagnostics from '@/pages/admin/SupabaseDiagnostics';
 import AdminSecurity from '@/pages/admin/AdminSecurity';
 import IntegrationsDebugPage from '@/pages/admin/IntegrationsDebugPage';
 import DataAuditPage from '@/pages/admin/DataAudit';
+import HublaWebhooks from '@/pages/admin/HublaWebhooks';
 
 import NPSAnalytics from '@/pages/admin/NPSAnalytics';
 import CertificateTemplates from '@/pages/admin/CertificateTemplates';
@@ -65,4 +66,5 @@ export const adminRoutes: RouteObject[] = [
   createAdminRoute("/admin/nps", NPSAnalytics),
   createAdminRoute("/admin/certificate-templates", CertificateTemplates),
   createAdminRoute("/admin/data-audit", DataAuditPage),
+  createAdminRoute("/admin/hubla-webhooks", HublaWebhooks),
 ];
