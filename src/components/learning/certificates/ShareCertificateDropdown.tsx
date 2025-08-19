@@ -8,11 +8,10 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { Share2, Linkedin, Link, Copy, ExternalLink, Zap, Crown } from "lucide-react";
+import { Share2, Linkedin, Link, Copy, ExternalLink, Crown } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/auth";
-import { useLinkedInIntegration } from "@/hooks/useLinkedInIntegration";
 import { ShareAchievementModal } from "@/components/gamification/ShareAchievementModal";
 
 interface ShareCertificateDropdownProps {
@@ -40,15 +39,6 @@ export const ShareCertificateDropdown = ({
   const [isGeneratingLink, setIsGeneratingLink] = useState(false);
   const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
   const [achievementModal, setAchievementModal] = useState<any>(null);
-  
-  const { 
-    isConnecting, 
-    isPosting, 
-    linkedInProfile, 
-    connectLinkedIn, 
-    postToLinkedIn,
-    disconnectLinkedIn 
-  } = useLinkedInIntegration();
   
   const certificateUrl = `${window.location.origin}/certificado/validar/${certificate.validation_code}`;
   // Detectar tipo e título do certificado
@@ -122,26 +112,45 @@ export const ShareCertificateDropdown = ({
 
   const logShareAnalytics = async (shareType: string) => {
     try {
-      // Log analytics para métricas
-      console.log("📊 [ANALYTICS] Compartilhamento:", {
-        certificateId: certificate.id,
-        shareType,
-        type: isSolution ? 'solution' : 'course',
-        title: certificateTitle,
-        timestamp: new Date().toISOString()
-      });
-      
-      // Futuramente: salvar no banco para dashboard de analytics
-      /* 
-      await supabase.from('certificate_shares').insert({
+      // Registrar compartilhamento na nova tabela
+      const { error } = await supabase.from('certificate_shares').insert({
         certificate_id: certificate.id,
         user_id: user?.id,
         share_type: shareType,
-        shared_at: new Date().toISOString()
+        platform: 'linkedin',
+        post_data: {
+          title: certificateTitle,
+          type: isSolution ? 'solution' : 'course',
+          url: certificateUrl
+        }
       });
-      */
+
+      if (error) throw error;
+
+      // Verificar conquistas automaticamente
+      if (user?.id) {
+        const { data } = await supabase.rpc('check_and_grant_achievements', { 
+          user_uuid: user.id 
+        });
+        
+        // Mostrar conquistas desbloqueadas
+        if (data?.new_achievements && data.new_achievements.length > 0) {
+          setTimeout(() => {
+            setAchievementModal(data.new_achievements[0]);
+          }, 1500);
+        }
+      }
+      
+      console.log("📊 [ANALYTICS] Compartilhamento registrado:", {
+        certificateId: certificate.id,
+        shareType,
+        type: isSolution ? 'solution' : 'course',
+        title: certificateTitle
+      });
+      
     } catch (error) {
-      console.error('Erro ao logar analytics:', error);
+      console.error('Erro ao registrar analytics:', error);
+      // Não falhar por causa de analytics
     }
   };
 
@@ -240,32 +249,13 @@ export const ShareCertificateDropdown = ({
 
   // Post direto via API do LinkedIn
   const handleLinkedInDirectPost = async () => {
-    if (!linkedInProfile) {
-      const connected = await connectLinkedIn();
-      if (!connected) return;
-    }
-
-    const postData = {
-      title: `🎉 Novo Certificado Viver de IA!`,
-      description: shareText,
-      url: certificateUrl,
-      imageUrl: await generateCertificatePreviewImage()
-    };
-
-    const success = await postToLinkedIn(postData);
-    if (success) {
-      // Verificar se desbloqueou alguma conquista
-      setTimeout(() => {
-        const mockAchievement = {
-          id: 'social_master',
-          title: '📱 Mestre Social!',
-          description: 'Postou diretamente via API do LinkedIn',
-          icon: '🚀',
-          points: 100,
-          rarity: 'epic' as const
-        };
-        setAchievementModal(mockAchievement);
-      }, 1000);
+    try {
+      // Para demo, simular conexão LinkedIn
+      toast.success("🔜 Funcionalidade Premium em breve! Por enquanto, use o LinkedIn Premium.");
+      handleShareLinkedInWithPreview();
+    } catch (error) {
+      console.error('Erro no post direto:', error);
+      handleShareLinkedInWithPreview();
     }
   };
 
@@ -371,26 +361,20 @@ export const ShareCertificateDropdown = ({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80">
-        {/* LinkedIn API Direto - Destaque */}
         <DropdownMenuItem 
-          onClick={handleLinkedInDirectPost} 
-          disabled={isPosting}
+          onClick={handleLinkedInDirectPost}
           className="cursor-pointer bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 mb-2"
         >
           <Crown className="h-4 w-4 mr-2 text-amber-500" />
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
-              <span className="font-bold text-blue-700">
-                {isPosting ? "📤 Postando..." : "👑 Post Automático"}
-              </span>
+              <span className="font-bold text-blue-700">👑 Post Automático</span>
               <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">
-                PREMIUM
+                EM BREVE
               </span>
             </div>
             <span className="text-xs text-blue-600">
-              {linkedInProfile 
-                ? `Conectado como ${linkedInProfile.firstName}` 
-                : "Post direto via API + Conquistas"}
+              API direta + Sistema de conquistas
             </span>
           </div>
         </DropdownMenuItem>

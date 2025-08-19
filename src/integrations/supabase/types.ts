@@ -5336,6 +5336,10 @@ export type Database = {
         Args: { user_id_param: string }
         Returns: Json
       }
+      check_and_grant_achievements: {
+        Args: { user_uuid: string }
+        Returns: Json
+      }
       check_comment_rate_limit: {
         Args: { p_user_id: string }
         Returns: boolean
