@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CommunityLayout } from "@/components/community/CommunityLayout";
 import { CommunityHero } from "@/components/community/CommunityHero";
-import { CommunityStatsModern } from "@/components/community/CommunityStatsModern";
 import { CommunityFilters } from "@/components/community/CommunityFilters";
 import { CategoryTabsModern } from "@/components/community/CategoryTabsModern";
 import { CommunitySidebarModern } from "@/components/community/CommunitySidebarModern";
@@ -47,9 +46,6 @@ export default function CommunityHome() {
             selectedFilter={selectedFilter}
             onFilterChange={setSelectedFilter}
           />
-
-          {/* Modern Stats */}
-          <CommunityStatsModern />
 
           {/* Main Content Grid */}
           <div className="grid grid-cols-1 xl:grid-cols-4 gap-8 mt-8">
