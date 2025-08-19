@@ -7,4 +7,5 @@ export * from './useInviteResend';
 export * from './useInviteReactivate';
 export * from './useInviteBulkReactivate';
 export * from './useInviteEmailService';
-export * from './useInviteChannelService';
+export * from './useInviteResendEmail';
+export * from './useInviteResendWhatsApp';

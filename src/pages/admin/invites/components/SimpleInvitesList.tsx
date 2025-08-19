@@ -16,6 +16,8 @@ import InviteActions from "./InviteActions";
 import { EmailTrackingCell } from "@/components/admin/invites/EmailTrackingCell";
 import { WhatsAppTrackingCell } from "@/components/admin/invites/WhatsAppTrackingCell";
 import { useWhatsAppStatusCheck } from "@/hooks/admin/invites/useWhatsAppStatusCheck";
+import { useInviteResendEmail } from "@/hooks/admin/invites/useInviteResendEmail";
+import { useInviteResendWhatsApp } from "@/hooks/admin/invites/useInviteResendWhatsApp";
 
 interface SimpleInvitesListProps {
   invites: Invite[];
@@ -27,15 +29,25 @@ interface SimpleInvitesListProps {
 
 const SimpleInvitesList = ({ 
   invites, 
-  onResend, 
+  onResend,
   onDelete, 
   onReactivate,
   resendingInvites = new Set() 
 }: SimpleInvitesListProps) => {
   const { checkWhatsAppStatus, isChecking, lastCheckResult } = useWhatsAppStatusCheck();
+  const { resendEmail, isSending: isResendingEmail } = useInviteResendEmail();
+  const { resendWhatsApp, isSending: isResendingWhatsApp } = useInviteResendWhatsApp();
 
   const handleCheckWhatsAppStatus = async () => {
     await checkWhatsAppStatus();
+  };
+
+  const handleResendEmail = async (invite: Invite) => {
+    await resendEmail(invite);
+  };
+
+  const handleResendWhatsApp = async (invite: Invite) => {
+    await resendWhatsApp(invite);
   };
 
   if (invites.length === 0) {
@@ -153,9 +165,13 @@ const SimpleInvitesList = ({
                 <InviteActions
                   invite={invite}
                   onResend={onResend}
+                  onResendEmail={handleResendEmail}
+                  onResendWhatsApp={handleResendWhatsApp}
                   onDelete={onDelete}
                   onReactivate={onReactivate}
                   isResending={resendingInvites.has(invite.id)}
+                  isResendingEmail={isResendingEmail}
+                  isResendingWhatsApp={isResendingWhatsApp}
                 />
               </TableCell>
             </TableRow>

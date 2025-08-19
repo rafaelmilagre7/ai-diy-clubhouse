@@ -1,5 +1,5 @@
 
-import { Copy, Mail, Trash2, RefreshCw } from "lucide-react";
+import { Copy, Mail, Trash2, RefreshCw, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -15,13 +15,28 @@ import { APP_CONFIG } from '@/config/app';
 interface InviteActionsProps {
   invite: Invite;
   onResend: (invite: Invite) => void;
+  onResendEmail: (invite: Invite) => void;
+  onResendWhatsApp: (invite: Invite) => void;
   onDelete: (invite: Invite) => void;
   onReactivate?: () => void;
   isResending?: boolean;
+  isResendingEmail?: boolean;
+  isResendingWhatsApp?: boolean;
 }
 
-const InviteActions = ({ invite, onResend, onDelete, onReactivate, isResending }: InviteActionsProps) => {
+const InviteActions = ({ 
+  invite, 
+  onResend, 
+  onResendEmail,
+  onResendWhatsApp,
+  onDelete, 
+  onReactivate, 
+  isResending,
+  isResendingEmail,
+  isResendingWhatsApp
+}: InviteActionsProps) => {
   const { reactivateInvite, isReactivating } = useInviteReactivate();
+  
   const copyInviteLink = () => {
     const link = APP_CONFIG.getAppUrl(`/convite/${invite.token}`);
     navigator.clipboard.writeText(link);
@@ -30,6 +45,7 @@ const InviteActions = ({ invite, onResend, onDelete, onReactivate, isResending }
 
   const canResend = !invite.used_at && new Date(invite.expires_at) >= new Date();
   const isExpired = !invite.used_at && new Date(invite.expires_at) < new Date();
+  const hasPhone = !!(invite.phone);
 
   const handleReactivate = async () => {
     const success = await reactivateInvite(invite);
@@ -56,20 +72,39 @@ const InviteActions = ({ invite, onResend, onDelete, onReactivate, isResending }
         </Tooltip>
 
         {canResend && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onResend(invite)}
-                disabled={isResending}
-                className="h-8 w-8 p-0"
-              >
-                <Mail className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Reenviar convite</TooltipContent>
-          </Tooltip>
+          <>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onResendEmail(invite)}
+                  disabled={isResendingEmail}
+                  className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700"
+                >
+                  <Mail className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Reenviar email</TooltipContent>
+            </Tooltip>
+
+            {hasPhone && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onResendWhatsApp(invite)}
+                    disabled={isResendingWhatsApp}
+                    className="h-8 w-8 p-0 text-green-600 hover:text-green-700"
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Reenviar WhatsApp</TooltipContent>
+              </Tooltip>
+            )}
+          </>
         )}
 
         {isExpired && (
