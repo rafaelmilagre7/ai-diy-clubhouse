@@ -324,14 +324,36 @@ async function handleLovableCourseInvite(payload: any, supabase: any) {
       return { success: false, message: `Failed to generate invite token: ${tokenGenError?.message || 'Unknown error'}` }
     }
 
-    // Criar convite automaticamente (com token e created_by de sistema)
-    const SYSTEM_CREATOR_ID = '00000000-0000-0000-0000-000000000000'
+    // Encontrar um criador válido (admin) para cumprir FK de invites.created_by
+    const { data: adminRole, error: adminRoleError } = await supabase
+      .from('user_roles')
+      .select('id')
+      .eq('name', 'admin')
+      .single()
+
+    let creatorId: string | null = null
+    if (!adminRoleError && adminRole?.id) {
+      const { data: adminProfiles } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('role_id', adminRole.id)
+        .order('created_at', { ascending: true })
+        .limit(1)
+      creatorId = adminProfiles?.[0]?.id ?? null
+    }
+
+    if (!creatorId) {
+      console.error('[Hubla Webhook] No admin profile found to use as creator')
+      return { success: false, message: 'Nenhum admin encontrado para vincular como criador do convite' }
+    }
+
+    // Criar convite automaticamente (com token e created_by válido)
     const inviteData = {
       email: userEmail,
       role_id: roleData.id,
       token: generatedToken,
       expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 dias
-      created_by: SYSTEM_CREATOR_ID, // Sistema automático
+      created_by: creatorId, // Criador administrativo
       notes: `Convite automático - Compra do curso "${event.groupName}" via Hubla`,
       whatsapp_number: userPhone,
       preferred_channel: userPhone ? 'both' : 'email'
