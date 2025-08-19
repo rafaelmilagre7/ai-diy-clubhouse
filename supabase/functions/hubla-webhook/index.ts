@@ -135,6 +135,35 @@ serve(async (req: Request) => {
   }
 })
 
+// Função auxiliar para formatar telefone brasileiro
+function formatBrazilianPhone(rawPhone: string): string {
+  if (!rawPhone) return null
+  
+  // Remove espaços e caracteres especiais
+  const cleaned = rawPhone.replace(/\D/g, '')
+  
+  // Se já tem 13 dígitos (55 + DDD + número), retorna com +
+  if (cleaned.length === 13 && cleaned.startsWith('55')) {
+    return `+${cleaned}`
+  }
+  
+  // Se tem 11 dígitos (DDD + número), adiciona +55
+  if (cleaned.length === 11) {
+    return `+55${cleaned}`
+  }
+  
+  // Se tem 10 dígitos (DDD sem 9 + número), adiciona 9 e +55
+  if (cleaned.length === 10) {
+    const ddd = cleaned.substring(0, 2)
+    const number = cleaned.substring(2)
+    return `+55${ddd}9${number}`
+  }
+  
+  // Formato não reconhecido, tenta adicionar +55 mesmo assim
+  console.warn(`[Hubla Webhook] Unrecognized phone format: ${rawPhone}`)
+  return `+55${cleaned}`
+}
+
 async function handlePaymentSuccess(payload: any, supabase: any) {
   console.log('[Hubla Webhook] Processing payment success:', payload.payment_id || payload.id)
   
@@ -245,7 +274,10 @@ async function handleLovableCourseInvite(payload: any, supabase: any) {
 
     const userEmail = event.userEmail
     const userName = event.userName
-    const userPhone = event.userPhone
+    const rawPhone = event.userPhone
+    
+    // Tratar formato do telefone brasileiro da Hubla
+    const userPhone = rawPhone ? formatBrazilianPhone(rawPhone) : null
 
     if (!userEmail) {
       return { success: false, message: 'No user email found in event data' }
@@ -382,7 +414,7 @@ async function handleCourseCancellation(payload: any, supabase: any) {
       return { success: true, message: 'lovable_course role not found' }
     }
 
-    // Buscar convites não utilizados deste usuário para este curso
+    // 1. Expirar convites não utilizados
     const { data: invites } = await supabase
       .from('invites')
       .select('id')
@@ -391,7 +423,6 @@ async function handleCourseCancellation(payload: any, supabase: any) {
       .is('used_at', null)
 
     if (invites && invites.length > 0) {
-      // Marcar convites como expirados
       await supabase
         .from('invites')
         .update({ expires_at: new Date().toISOString() })
@@ -400,7 +431,63 @@ async function handleCourseCancellation(payload: any, supabase: any) {
       console.log(`[Hubla Webhook] Expired ${invites.length} unused invites for ${userEmail}`)
     }
 
-    return { success: true, message: `Course cancellation processed for ${userEmail}` }
+    // 2. REVOGAR ACESSO: Buscar usuário ativo com essa role e remover
+    const { data: existingUser } = await supabase
+      .from('profiles')
+      .select('id, email, role_id, user_roles(name)')
+      .eq('email', userEmail)
+      .eq('role_id', roleData.id)
+      .single()
+
+    if (existingUser) {
+      console.log(`[Hubla Webhook] Found active user with lovable_course role: ${existingUser.id}`)
+      
+      // Buscar role "member" padrão como fallback
+      const { data: memberRole } = await supabase
+        .from('user_roles')
+        .select('id')
+        .eq('name', 'member')
+        .single()
+
+      const fallbackRoleId = memberRole?.id || null
+
+      // Downgrade para role member ou remover role
+      const { error: downgradeError } = await supabase
+        .from('profiles')
+        .update({ 
+          role_id: fallbackRoleId,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', existingUser.id)
+
+      if (downgradeError) {
+        console.error('[Hubla Webhook] Error downgrading user role:', downgradeError)
+      } else {
+        console.log(`[Hubla Webhook] User ${userEmail} downgraded from lovable_course to ${fallbackRoleId ? 'member' : 'no role'}`)
+      }
+
+      // Log da revogação para auditoria
+      await supabase
+        .from('audit_logs')
+        .insert([{
+          user_id: existingUser.id,
+          event_type: 'role_revocation',
+          action: 'course_cancellation',
+          details: {
+            reason: 'Hubla course cancellation',
+            webhook_type: payload.type,
+            course_group: event.groupName,
+            previous_role: 'lovable_course',
+            new_role: fallbackRoleId ? 'member' : null
+          },
+          severity: 'info'
+        }])
+    }
+
+    return { 
+      success: true, 
+      message: `Course cancellation processed for ${userEmail} - ${invites?.length || 0} invites expired${existingUser ? ', user access revoked' : ''}` 
+    }
 
   } catch (error) {
     console.error('[Hubla Webhook] Error processing course cancellation:', error)
