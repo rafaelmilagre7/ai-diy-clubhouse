@@ -51,7 +51,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Preparar dados para as Edge Functions
-    const inviteUrl = `https://app.viverdeia.ai/invite?token=${invite.token}`;
+    const inviteUrl = `https://app.viverdeia.ai/convite/${invite.token}`;
     
     const emailData = {
       inviteId: invite.id,
