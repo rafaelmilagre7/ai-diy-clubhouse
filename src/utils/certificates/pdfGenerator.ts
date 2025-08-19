@@ -35,7 +35,7 @@ export class CertificatePDFGenerator {
       quality = 1.0,
       format = 'a4',
       orientation = 'landscape',
-      margins = { top: 10, right: 10, bottom: 10, left: 10 }
+      margins = { top: 0, right: 0, bottom: 0, left: 0 }
     } = options;
 
     try {
@@ -48,15 +48,15 @@ export class CertificatePDFGenerator {
       // Configurar canvas
       const canvas = await html2canvas(element, {
         scale,
-        backgroundColor: '#ffffff',
+        backgroundColor: null,
         useCORS: true,
         allowTaint: false,
         imageTimeout: 15000,
         logging: false,
         width: 1123,
-        height: 794,
+        height: 920,
         windowWidth: 1123,
-        windowHeight: 794
+        windowHeight: 920
       });
 
       console.log('📸 Canvas gerado:', {
@@ -64,40 +64,24 @@ export class CertificatePDFGenerator {
         height: canvas.height
       });
 
-      // Criar PDF
+      // Criar PDF com dimensões customizadas para o certificado
+      const pdfWidthMM = (1123 * 0.264583); // Converter px para mm (1px = 0.264583mm)
+      const pdfHeightMM = (920 * 0.264583);
+      
       const pdf = new jsPDF({
-        orientation,
+        orientation: 'landscape',
         unit: 'mm',
-        format
+        format: [pdfWidthMM, pdfHeightMM]
       });
 
       const imgData = canvas.toDataURL('image/png', quality);
       
-      // Calcular dimensões
-      const pdfWidth = pdf.internal.pageSize.getWidth() - margins.left - margins.right;
-      const pdfHeight = pdf.internal.pageSize.getHeight() - margins.top - margins.bottom;
-      
-      const canvasAspectRatio = canvas.width / canvas.height;
-      const pdfAspectRatio = pdfWidth / pdfHeight;
-      
-      let finalWidth, finalHeight, x, y;
-      
-      if (canvasAspectRatio > pdfAspectRatio) {
-        // Canvas é mais largo - ajustar pela largura
-        finalWidth = pdfWidth;
-        finalHeight = pdfWidth / canvasAspectRatio;
-        x = margins.left;
-        y = margins.top + (pdfHeight - finalHeight) / 2;
-      } else {
-        // Canvas é mais alto - ajustar pela altura
-        finalHeight = pdfHeight;
-        finalWidth = pdfHeight * canvasAspectRatio;
-        x = margins.left + (pdfWidth - finalWidth) / 2;
-        y = margins.top;
-      }
+      // Usar toda a página sem margens
+      const finalWidth = pdf.internal.pageSize.getWidth();
+      const finalHeight = pdf.internal.pageSize.getHeight();
 
-      // Adicionar imagem ao PDF
-      pdf.addImage(imgData, 'PNG', x, y, finalWidth, finalHeight);
+      // Adicionar imagem ocupando toda a página
+      pdf.addImage(imgData, 'PNG', 0, 0, finalWidth, finalHeight);
 
       // Adicionar metadados
       pdf.setProperties({
@@ -129,7 +113,7 @@ export class CertificatePDFGenerator {
     tempDiv.style.left = '-9999px';
     tempDiv.style.top = '0';
     tempDiv.style.width = '1123px';
-    tempDiv.style.height = '794px';
+    tempDiv.style.height = '920px';
     
     // Adicionar estilos
     const styleEl = document.createElement('style');
