@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -32,6 +32,11 @@ export const ShareCertificateDropdown = ({
 }: ShareCertificateDropdownProps) => {
   const { user } = useAuth();
   const [isGeneratingLink, setIsGeneratingLink] = useState(false);
+  
+  // Debug log
+  useEffect(() => {
+    console.log('🚀 [SHARE DROPDOWN] Renderizando componente', { certificate, userProfile });
+  }, [certificate, userProfile]);
   
   const certificateUrl = `${window.location.origin}/certificado/validar/${certificate.validation_code}`;
   const shareText = `🎉 Acabei de conquistar um novo certificado no Viver de IA! 
