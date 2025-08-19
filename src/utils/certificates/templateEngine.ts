@@ -32,387 +32,115 @@ export class CertificateTemplateEngine {
 
   public generateDefaultTemplate(): CertificateTemplate {
     const htmlTemplate = `
-      <div class="certificate-container">
-        <div class="certificate-content">
+      <div class="certificate-container aurora-bg">
+        <div class="certificate-inner">
           <!-- Header com logo e título -->
-          <div class="certificate-header">
-            <div class="logo-container">
-              <img src="/lovable-uploads/a408c993-07fa-49f2-bee6-c66d0614298b.png" alt="VIVER DE IA" class="certificate-logo" />
-            </div>
-            <h1 class="certificate-title">Certificado de Conclusão</h1>
-            <div class="title-decoration">
-              <div class="decoration-line"></div>
-              <span class="platform-name">VIVER DE IA</span>
-              <div class="decoration-line"></div>
-            </div>
-            <p class="subtitle">A plataforma de soluções e educação de IA da sua empresa</p>
-          </div>
+          <header class="header">
+            <img src="/lovable-uploads/a408c993-07fa-49f2-bee6-c66d0614298b.png" alt="Logo VIVER DE IA" class="logo" />
+            <h1 class="title">Certificado de {{COMPLETION_TYPE}}</h1>
+            <p class="subtitle">VIVER DE IA • Plataforma de soluções e educação em IA</p>
+          </header>
 
-          <!-- Conteúdo principal -->
-          <div class="certificate-body">
-            <p class="certification-text">Certificamos que</p>
-            
-            <div class="user-name-section">
-              <h2 class="user-name">{{USER_NAME}}</h2>
-              <div class="name-underline"></div>
-            </div>
-            
-            <p class="completion-text">
-              concluiu com sucesso {{COMPLETION_TYPE}} 
+          <!-- Corpo -->
+          <main class="body">
+            <p class="lead">Certificamos que</p>
+            <h2 class="user">{{USER_NAME}}</h2>
+            <div class="divider"></div>
+            <p class="context">
+              concluiu com excelência {{COMPLETION_TYPE}}<span class="dot">:</span>
             </p>
-            
-            <div class="solution-section">
-              <h3 class="solution-title">"{{SOLUTION_TITLE}}"</h3>
-              {{#if SOLUTION_CATEGORY}}
-              <p class="solution-category">Categoria: {{SOLUTION_CATEGORY}}</p>
-              {{/if}}
-            </div>
-            
-            <p class="achievement-text">
-              demonstrando dedicação e competência na aplicação de soluções de Inteligência Artificial
-            </p>
-          </div>
+            <h3 class="subject">{{SOLUTION_TITLE}}</h3>
+            {{#if SOLUTION_CATEGORY}}
+              <p class="category">Categoria: {{SOLUTION_CATEGORY}}</p>
+            {{/if}}
+          </main>
 
-          <!-- Footer com assinatura e data -->
-          <div class="certificate-footer">
-            <div class="date-column">
-              <p class="date-label">Data de Conclusão</p>
-              <p class="date-value">{{IMPLEMENTATION_DATE}}</p>
+          <!-- Rodapé -->
+          <footer class="footer">
+            <div class="footer-col">
+              <span class="label">Data</span>
+              <span class="value">{{IMPLEMENTATION_DATE}}</span>
             </div>
-            
-            <div class="signature-column">
-              <div class="signature-section">
-                <img src="/signature-rafael.png" alt="Assinatura" class="signature-image" />
-                <div class="signature-line"></div>
-                <p class="signature-name">Rafael G Milagre</p>
-                <p class="signature-title">Founder VIVER DE IA</p>
-              </div>
-              
-              <div class="digital-seal">
-                <div class="seal-icon">
-                  <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                  </svg>
-                </div>
-                <span class="seal-text">ASSINATURA DIGITAL</span>
-              </div>
+            <div class="footer-col signature">
+              <div class="signature-line"></div>
+              <span class="sig-name">Rafael G Milagre</span>
+              <span class="sig-role">Founder • VIVER DE IA</span>
             </div>
-            
-            <div class="validation-column">
-              <p class="validation-label">Código de Validação</p>
-              <p class="validation-code">{{VALIDATION_CODE}}</p>
-              <p class="platform-credit">Emitido por VIVER DE IA</p>
+            <div class="footer-col right">
+              <span class="label">Código de Validação</span>
+              <span class="code">{{VALIDATION_CODE}}</span>
             </div>
-          </div>
+          </footer>
         </div>
-      </div>
-    `;
+      </div>`;
 
     const cssStyles = `
-      .certificate-container {
-        width: 1123px;
-        height: 794px;
-        background: #ffffff !important;
-        color: #000000 !important;
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-        position: relative;
-        padding: 60px;
-        box-sizing: border-box;
-        border: 2px solid #00c9a7;
-        border-radius: 12px;
-        overflow: hidden;
+      :root{
+        --bg-1:#0b1220;
+        --bg-2:#0e1629;
+        --fg:#e5e7eb;
+        --muted:#94a3b8;
+        --accent:#00c9a7;
+        --accent-soft:rgba(0,201,167,.15);
+        --border:rgba(255,255,255,.12);
       }
 
-      .certificate-container::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: transparent !important;
-        pointer-events: none;
+      .certificate-container{
+        position:relative; width:1123px; height:794px; color:var(--fg); background:linear-gradient(180deg,var(--bg-1),var(--bg-2));
+        border-radius:20px; overflow:hidden; border:1px solid var(--border);
+      }
+      .certificate-container::before, .certificate-container::after{
+        content:""; position:absolute; inset:-20%; pointer-events:none; opacity:.6;
+        background: radial-gradient(600px 400px at 10% 20%, rgba(124,58,237,.35), transparent 60%),
+                    radial-gradient(500px 300px at 90% 80%, rgba(0,201,167,.35), transparent 60%);
       }
 
-      .certificate-content {
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        position: relative;
-        z-index: 1;
+      .certificate-inner{ position:relative; z-index:1; display:flex; flex-direction:column; height:100%; padding:56px; }
+
+      .header{ text-align:center; margin-bottom:12px; }
+      .logo{ width:120px; height:auto; object-fit:contain; filter: drop-shadow(0 0 18px rgba(255,255,255,.2)); margin:0 auto 12px; }
+      .title{ font-size:40px; margin:0; font-weight:800; letter-spacing:.5px; color:var(--fg); }
+      .subtitle{ margin:6px 0 0; color:var(--muted); font-size:14px; }
+
+      .body{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; text-align:center; }
+      .lead{ color:var(--muted); font-size:16px; margin:0; }
+      .user{ font-size:36px; font-weight:800; margin:0; color:#fff; text-shadow:0 2px 12px rgba(0,0,0,.25); }
+      .divider{ width:220px; height:2px; background:linear-gradient(90deg, transparent, var(--accent), transparent); border-radius:2px; }
+      .context{ color:var(--fg); font-size:16px; margin:0; opacity:.9; }
+      .dot{ margin-left:4px; }
+      .subject{ font-size:28px; font-weight:700; margin:4px 0 0; color:var(--accent); }
+      .category{ margin:0; color:var(--muted); font-size:13px; background:var(--accent-soft); padding:6px 10px; border:1px solid rgba(0,201,167,.25); border-radius:8px; }
+
+      .footer{ display:flex; align-items:flex-end; justify-content:space-between; gap:24px; margin-top:24px; }
+      .footer-col{ display:flex; flex-direction:column; gap:6px; }
+      .footer-col.right{ align-items:flex-end; text-align:right; }
+      .label{ font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.6px; }
+      .value{ font-size:16px; font-weight:600; color:#fff; }
+      .code{ font-size:16px; font-weight:700; color:var(--accent); background:var(--accent-soft); padding:6px 10px; border-radius:8px; border:1px solid rgba(0,201,167,.25); }
+
+      .signature{ align-items:center; text-align:center; }
+      .signature-line{ width:200px; height:1px; background:var(--border); margin:0 auto 8px; }
+      .sig-name{ color:#fff; font-weight:700; font-size:16px; }
+      .sig-role{ color:var(--muted); font-size:12px; }
+
+      @media print{
+        .certificate-container{ width:297mm; height:210mm; border:none; }
+        *{ -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
       }
 
-      /* Header */
-      .certificate-header {
-        text-align: center;
-        margin-bottom: 40px;
-      }
-
-      .logo-container {
-        margin-bottom: 24px;
-      }
-
-      .certificate-logo {
-        width: 80px;
-        height: 80px;
-        object-fit: contain;
-      }
-
-      .certificate-title {
-        font-size: 42px;
-        font-weight: 700;
-        color: #00c9a7 !important;
-        margin: 0 0 16px 0;
-        line-height: 1.2;
-      }
-
-      .title-decoration {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 16px;
-        margin-bottom: 8px;
-      }
-
-      .decoration-line {
-        width: 40px;
-        height: 2px;
-        background: linear-gradient(90deg, #00c9a7, #00c9a7);
-        border-radius: 1px;
-      }
-
-      .platform-name {
-        font-size: 20px;
-        font-weight: 600;
-        color: #00c9a7 !important;
-        letter-spacing: 2px;
-      }
-
-      .subtitle {
-        font-size: 14px;
-        color: #666666 !important;
-        margin: 0;
-        font-weight: 400;
-      }
-
-      /* Body */
-      .certificate-body {
-        text-align: center;
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        gap: 24px;
-      }
-
-      .certification-text {
-        font-size: 18px;
-        color: #333333 !important;
-        margin: 0;
-        font-weight: 300;
-      }
-
-      .user-name-section {
-        margin: 32px 0;
-      }
-
-      .user-name {
-        font-size: 36px;
-        font-weight: 700;
-        color: #00c9a7 !important;
-        margin: 0 0 12px 0;
-        line-height: 1.2;
-      }
-
-      .name-underline {
-        width: 200px;
-        height: 2px;
-        background: linear-gradient(90deg, #00c9a7, #00c9a7);
-        margin: 0 auto;
-        border-radius: 1px;
-      }
-
-      .completion-text {
-        font-size: 18px;
-        color: #666666 !important;
-        margin: 0;
-        font-weight: 300;
-      }
-
-      .solution-section {
-        margin: 32px 0;
-        padding: 24px;
-        background: rgba(0, 201, 167, 0.05) !important;
-        border-radius: 8px;
-        border: 1px solid rgba(0, 201, 167, 0.1) !important;
-      }
-
-      .solution-title {
-        font-size: 28px;
-        font-weight: 600;
-        color: #00c9a7 !important;
-        margin: 0 0 8px 0;
-        line-height: 1.3;
-      }
-
-      .solution-category {
-        font-size: 14px;
-        color: #666666 !important;
-        margin: 0;
-        font-weight: 500;
-      }
-
-      .achievement-text {
-        font-size: 16px;
-        color: #666666 !important;
-        line-height: 1.5;
-        max-width: 600px;
-        margin: 0 auto;
-        font-weight: 400;
-      }
-
-      /* Footer */
-      .certificate-footer {
-        display: flex;
-        justify-content: space-between;
-        align-items: end;
-        margin-top: 40px;
-      }
-
-      .date-column,
-      .validation-column {
-        text-align: left;
-        flex: 1;
-      }
-
-      .signature-column {
-        text-align: center;
-        flex: 1;
-      }
-
-      .date-label,
-      .validation-label {
-        font-size: 12px;
-        color: #666666 !important;
-        margin: 0 0 4px 0;
-        font-weight: 500;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-      }
-
-      .date-value,
-      .validation-code {
-        font-size: 16px;
-        font-weight: 600;
-        color: #333333 !important;
-        margin: 0;
-      }
-
-      .platform-credit {
-        font-size: 12px;
-        color: #666666 !important;
-        margin: 8px 0 0 0;
-        font-weight: 500;
-      }
-
-      .signature-section {
-        margin-bottom: 20px;
-      }
-
-      .signature-text {
-        font-family: 'Brush Script MT', cursive, sans-serif;
-        font-size: 24px;
-        color: #333333 !important;
-        font-weight: 400;
-        margin-bottom: 8px;
-        font-style: italic;
-        transform: rotate(-2deg);
-      }
-
-      .signature-image {
-        width: 160px;
-        height: auto;
-        margin-bottom: 8px;
-      }
-
-      .signature-line {
-        width: 160px;
-        height: 1px;
-        background: #cccccc !important;
-        margin: 0 auto 8px;
-      }
-
-      .signature-name {
-        font-size: 16px;
-        font-weight: 600;
-        color: #00c9a7 !important;
-        margin: 0 0 4px 0;
-      }
-
-      .signature-title {
-        font-size: 12px;
-        color: #666666 !important;
-        margin: 0;
-        font-weight: 500;
-      }
-
-      .digital-seal {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 8px;
-        padding: 12px;
-        background: rgba(0, 201, 167, 0.05) !important;
-        border: 1px solid rgba(0, 201, 167, 0.1) !important;
-        border-radius: 8px;
-        width: 160px;
-        margin: 0 auto;
-      }
-
-      .seal-icon {
-        width: 24px;
-        height: 24px;
-        color: #00c9a7 !important;
-      }
-
-      .seal-text {
-        font-size: 10px;
-        font-weight: 700;
-        color: #00c9a7 !important;
-        letter-spacing: 0.5px;
-      }
-
-      .validation-column {
-        text-align: right;
-      }
-
-      /* Print styles */
-      @media print {
-        .certificate-container {
-          width: 297mm;
-          height: 210mm;
-          padding: 20mm;
-          border: none;
-          page-break-inside: avoid;
-        }
-        
-        * {
-          -webkit-print-color-adjust: exact !important;
-          print-color-adjust: exact !important;
-        }
-      }
+      /* Otimizações para renderização */
+      *{ box-sizing:border-box; text-rendering:optimizeLegibility; }
     `;
 
     return {
-      name: 'VIVER DE IA Default Template',
+      name: 'VIVER DE IA Aurora Template',
       html_template: htmlTemplate,
       css_styles: cssStyles,
       metadata: {
-        version: '1.0',
-        type: 'default',
+        version: '2.0',
+        type: 'aurora',
         author: 'VIVER DE IA',
-        description: 'Template padrão para certificados da plataforma'
+        description: 'Template aurora moderno, com alto contraste e ótimo para PDF'
       }
     };
   }
