@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Award, Trophy, Star, TrendingUp, Sparkles } from "lucide-react";
+import { Award, Trophy, GraduationCap, TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
 import { useUnifiedCertificates } from "@/hooks/learning/useUnifiedCertificates";
 
@@ -13,28 +13,20 @@ export const CertificatesHeader = () => {
   
   const stats = [
     {
-      icon: Award,
-      label: "Total de Certificados",
-      value: totalCertificates,
+      icon: Trophy,
+      label: "Soluções Concluídas",
+      value: solutionCertificates,
+      color: "text-accent",
+      bgColor: "bg-accent/10",
+      borderColor: "border-accent/20"
+    },
+    {
+      icon: GraduationCap,
+      label: "Cursos Concluídos",
+      value: courseCertificates,
       color: "text-primary",
       bgColor: "bg-primary/10",
       borderColor: "border-primary/20"
-    },
-    {
-      icon: Star,
-      label: "Cursos Concluídos",
-      value: courseCertificates,
-      color: "text-yellow-400",
-      bgColor: "bg-yellow-400/10",
-      borderColor: "border-yellow-400/20"
-    },
-    {
-      icon: Trophy,
-      label: "Soluções Implementadas",
-      value: solutionCertificates,
-      color: "text-green-400",
-      bgColor: "bg-green-400/10",
-      borderColor: "border-green-400/20"
     }
   ];
   
@@ -57,13 +49,6 @@ export const CertificatesHeader = () => {
             <div className="bg-gradient-to-br from-primary/20 via-primary/10 to-transparent rounded-full p-6 backdrop-blur-sm border border-primary/20">
               <Award className="h-16 w-16 text-primary" />
             </div>
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-              className="absolute -top-2 -right-2"
-            >
-              <Sparkles className="h-6 w-6 text-yellow-400" />
-            </motion.div>
           </motion.div>
         </div>
         
@@ -92,7 +77,7 @@ export const CertificatesHeader = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.5 }}
-        className="grid grid-cols-1 md:grid-cols-3 gap-6"
+        className="grid grid-cols-1 md:grid-cols-2 gap-6"
       >
         {stats.map((stat, index) => (
           <motion.div

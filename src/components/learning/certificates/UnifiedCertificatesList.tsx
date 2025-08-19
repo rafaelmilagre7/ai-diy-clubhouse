@@ -2,7 +2,7 @@ import React, { useMemo } from "react";
 import { UnifiedCertificateCard } from "./UnifiedCertificateCard";
 import { useUnifiedCertificates } from "@/hooks/learning/useUnifiedCertificates";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle, Award, BookOpen, TrendingUp, Sparkles, Zap } from "lucide-react";
+import { AlertCircle, Award, BookOpen, TrendingUp, Zap } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
@@ -147,13 +147,6 @@ export const UnifiedCertificatesList = ({
             <div className="bg-gradient-to-br from-primary/20 via-accent/20 to-primary/10 rounded-full p-8 backdrop-blur-sm border border-primary/20">
               <Award className="h-20 w-20 text-primary" />
             </div>
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-              className="absolute -top-2 -right-2"
-            >
-              <Sparkles className="h-8 w-8 text-yellow-400" />
-            </motion.div>
           </motion.div>
         </div>
         
@@ -182,19 +175,19 @@ export const UnifiedCertificatesList = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8 max-w-md mx-auto">
                 <motion.div
                   whileHover={{ scale: 1.05 }}
-                  className="p-4 rounded-xl bg-gradient-to-br from-yellow-400/10 to-amber-400/10 border border-yellow-400/20"
+                  className="p-4 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20"
                 >
-                  <BookOpen className="h-8 w-8 text-yellow-400 mx-auto mb-2" />
-                  <p className="text-sm font-medium text-yellow-400">Cursos Disponíveis</p>
+                  <BookOpen className="h-8 w-8 text-primary mx-auto mb-2" />
+                  <p className="text-sm font-medium text-primary">Cursos Disponíveis</p>
                   <p className="text-xs text-muted-foreground">Complete aulas e conquiste certificados</p>
                 </motion.div>
                 
                 <motion.div
                   whileHover={{ scale: 1.05 }}
-                  className="p-4 rounded-xl bg-gradient-to-br from-blue-400/10 to-purple-400/10 border border-blue-400/20"
+                  className="p-4 rounded-xl bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/20"
                 >
-                  <TrendingUp className="h-8 w-8 text-blue-400 mx-auto mb-2" />
-                  <p className="text-sm font-medium text-blue-400">Soluções Práticas</p>
+                  <TrendingUp className="h-8 w-8 text-accent mx-auto mb-2" />
+                  <p className="text-sm font-medium text-accent">Soluções Práticas</p>
                   <p className="text-xs text-muted-foreground">Implemente e certifique seu conhecimento</p>
                 </motion.div>
               </div>

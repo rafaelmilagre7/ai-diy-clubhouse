@@ -24,11 +24,13 @@ interface ShareCertificateDropdownProps {
   userProfile: {
     name: string;
   };
+  compact?: boolean;
 }
 
 export const ShareCertificateDropdown = ({ 
   certificate, 
-  userProfile 
+  userProfile,
+  compact = false
 }: ShareCertificateDropdownProps) => {
   const { user } = useAuth();
   const [isGeneratingLink, setIsGeneratingLink] = useState(false);
@@ -141,11 +143,12 @@ export const ShareCertificateDropdown = ({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          variant="outline"
-          className="border-primary/50 text-primary hover:bg-primary/10"
+          variant={compact ? "ghost" : "outline"}
+          size={compact ? "icon" : undefined}
+          className={compact ? "text-muted-foreground hover:bg-accent/20" : "border-primary/50 text-primary hover:bg-primary/10"}
         >
-          <Share2 className="h-4 w-4 mr-2" />
-          Compartilhar
+          <Share2 className={compact ? "h-4 w-4" : "h-4 w-4 mr-2"} />
+          {!compact && "Compartilhar"}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">

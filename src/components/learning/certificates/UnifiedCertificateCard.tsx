@@ -2,7 +2,7 @@ import React from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, Star, Calendar, BookOpen, Award, Eye, Lightbulb, Trophy, Sparkles } from "lucide-react";
+import { Download, Star, Calendar, BookOpen, Award, Eye, Lightbulb, BadgeCheck } from "lucide-react";
 import { UnifiedCertificate } from "@/hooks/learning/useUnifiedCertificates";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -28,27 +28,24 @@ export const UnifiedCertificateCard = ({
   const isSolution = certificate.type === 'solution';
   const formattedDate = format(new Date(certificate.issued_at), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
   
-  // Configurações baseadas no tipo
   const config = isSolution ? {
     icon: Lightbulb,
     typeLabel: "Solução",
-    gradient: "from-blue-500/20 via-purple-500/15 to-indigo-500/10",
-    badgeColor: "bg-blue-500/20 text-blue-300 border-blue-500/30",
-    iconColor: "text-blue-400",
-    iconBg: "bg-blue-400/20",
-    buttonGradient: "from-blue-400 to-purple-400 hover:from-blue-500 hover:to-purple-500",
-    codeGradient: "from-blue-400/10 to-purple-400/5 border-blue-400/20",
-    codeLabelColor: "text-blue-300"
+    headerBg: "from-accent/10 to-transparent",
+    badgeClass: "bg-accent/10 text-accent border-accent/20",
+    iconColor: "text-accent",
+    iconBg: "bg-accent/15",
+    codeBoxClass: "bg-accent/10 border-accent/20",
+    codeLabelColor: "text-accent"
   } : {
     icon: Award,
     typeLabel: "Curso",
-    gradient: "from-yellow-400/20 via-amber-400/15 to-orange-400/10",
-    badgeColor: "bg-yellow-400/20 text-yellow-300 border-yellow-400/30",
-    iconColor: "text-yellow-400",
-    iconBg: "bg-yellow-400/20",
-    buttonGradient: "from-yellow-400 to-amber-400 hover:from-yellow-500 hover:to-amber-500",
-    codeGradient: "from-yellow-400/10 to-amber-400/5 border-yellow-400/20",
-    codeLabelColor: "text-yellow-300"
+    headerBg: "from-primary/10 to-transparent",
+    badgeClass: "bg-primary/10 text-primary border-primary/20",
+    iconColor: "text-primary",
+    iconBg: "bg-primary/15",
+    codeBoxClass: "bg-primary/10 border-primary/20",
+    codeLabelColor: "text-primary"
   };
   
   const handleDownload = () => {
@@ -73,22 +70,13 @@ export const UnifiedCertificateCard = ({
           <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/10"></div>
         </div>
         
-        {/* Header com gradiente e animação */}
-        <div className={`bg-gradient-to-br ${config.gradient} pb-6 pt-8 relative overflow-hidden`}>
+        {/* Header com gradiente */}
+        <div className={`bg-gradient-to-br ${config.headerBg} pb-6 pt-8 relative overflow-hidden`}>
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent"></div>
-          
-          {/* Elementos decorativos */}
-          <motion.div 
-            animate={{ rotate: 360 }}
-            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-            className="absolute top-4 right-4 opacity-20"
-          >
-            <Sparkles className="h-6 w-6" />
-          </motion.div>
           
           <div className="flex justify-center relative z-10">
             <motion.div 
-              whileHover={{ scale: 1.1, rotate: 5 }}
+              whileHover={{ scale: 1.05 }}
               transition={{ type: "spring", stiffness: 300, damping: 20 }}
               className={`${config.iconBg} rounded-full p-4 group-hover:shadow-lg transition-all duration-300`}
             >
@@ -98,7 +86,7 @@ export const UnifiedCertificateCard = ({
           
           {/* Badge de tipo */}
           <div className="absolute top-4 left-4">
-            <Badge className={`${config.badgeColor} backdrop-blur-sm`}>
+            <Badge className={`${config.badgeClass} backdrop-blur-sm`}>
               {isSolution ? <Lightbulb className="h-3 w-3 mr-1" /> : <BookOpen className="h-3 w-3 mr-1" />}
               {config.typeLabel}
             </Badge>
@@ -113,7 +101,7 @@ export const UnifiedCertificateCard = ({
             {certificate.title}
           </CardTitle>
           <div className={`flex items-center gap-2 text-sm ${config.iconColor}`}>
-            <Trophy className="h-4 w-4 fill-current" />
+            <BadgeCheck className="h-4 w-4" />
             <span className="font-medium">Certificado de {isSolution ? 'Implementação' : 'Conclusão'}</span>
           </div>
         </CardHeader>
@@ -126,7 +114,7 @@ export const UnifiedCertificateCard = ({
           
           <motion.div 
             whileHover={{ scale: 1.02 }}
-            className={`bg-gradient-to-r ${config.codeGradient} rounded-lg p-4 backdrop-blur-sm`}
+            className={`${config.codeBoxClass} rounded-lg p-4 backdrop-blur-sm`}
           >
             <div className={`text-xs ${config.codeLabelColor} font-medium mb-2 flex items-center gap-1`}>
               <Star className="h-3 w-3" />
@@ -141,11 +129,7 @@ export const UnifiedCertificateCard = ({
         <CardFooter className="pt-0 flex gap-2">
           <Button
             onClick={handleDownload}
-            className={`
-              flex-1 bg-gradient-to-r ${config.buttonGradient} 
-              text-background font-semibold transition-all duration-300 
-              hover:shadow-lg hover:shadow-current/25 border-0
-            `}
+            className="flex-1"
           >
             <Download className="h-4 w-4 mr-2" />
             Baixar PDF
