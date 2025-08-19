@@ -40,6 +40,15 @@ export const ShareCertificateDropdown = ({
   const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
   const [achievementModal, setAchievementModal] = useState<any>(null);
   
+  // Debug para investigar cliques
+  const handleTriggerClick = (e: any) => {
+    console.log("🖱️ [DEBUG] Share button clicked!", {
+      certificateId: certificate.id,
+      event: e,
+      timestamp: new Date().toISOString()
+    });
+  };
+  
   const certificateUrl = `${window.location.origin}/certificado/validar/${certificate.validation_code}`;
   // Detectar tipo e título do certificado
   const isSolution = certificate.type === 'solution' || (!certificate.type && certificate.solutions?.title);
@@ -354,7 +363,8 @@ export const ShareCertificateDropdown = ({
         <Button
           variant={compact ? "ghost" : "outline"}
           size={compact ? "icon" : undefined}
-          className={compact ? "text-muted-foreground hover:bg-accent/20" : "border-primary/50 text-primary hover:bg-primary/10"}
+          className={compact ? "text-muted-foreground hover:bg-accent/20 z-20 relative" : "border-primary/50 text-primary hover:bg-primary/10"}
+          onClick={handleTriggerClick}
         >
           <Share2 className={compact ? "h-4 w-4" : "h-4 w-4 mr-2"} />
           {!compact && "Compartilhar"}

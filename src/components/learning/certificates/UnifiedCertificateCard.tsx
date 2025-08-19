@@ -81,7 +81,7 @@ export const UnifiedCertificateCard = ({
         </div>
 
         {/* Share button no canto */}
-        <div className="absolute top-4 right-4">
+        <div className="absolute top-4 right-4 z-30">
             <ShareCertificateDropdown
               certificate={{
                 id: certificate.id,
