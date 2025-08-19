@@ -128,7 +128,7 @@ export const ShareCertificateDropdown = ({
       <DropdownMenuTrigger asChild>
         <Button
           variant="outline"
-          className="border-viverblue/50 text-viverblue hover:bg-viverblue/10"
+          className="border-primary/50 text-primary hover:bg-primary/10"
         >
           <Share2 className="h-4 w-4 mr-2" />
           Compartilhar
