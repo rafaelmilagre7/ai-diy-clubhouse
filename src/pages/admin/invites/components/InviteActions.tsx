@@ -47,6 +47,19 @@ const InviteActions = ({
   const isExpired = !invite.used_at && new Date(invite.expires_at) < new Date();
   const hasPhone = !!(invite.phone);
 
+  // Debug log para verificar condições
+  console.log('🔍 [InviteActions Debug]:', {
+    inviteId: invite.id,
+    email: invite.email,
+    used_at: invite.used_at,
+    expires_at: invite.expires_at,
+    phone: invite.phone,
+    canResend,
+    isExpired,
+    hasPhone,
+    now: new Date().toISOString()
+  });
+
   const handleReactivate = async () => {
     const success = await reactivateInvite(invite);
     if (success && onReactivate) {
