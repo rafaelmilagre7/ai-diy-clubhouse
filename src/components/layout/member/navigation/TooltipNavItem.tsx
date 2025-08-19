@@ -27,18 +27,24 @@ export const TooltipNavItem: React.FC<TooltipNavItemProps> = ({
   const navContent = (
     <NavLink
       to={to}
-      className={({ isActive }) =>
-        cn(
+      className={({ isActive }) => {
+        // Para certificados, verificar se a rota atual é especificamente /learning/certificates
+        const pathname = window.location.pathname;
+        const isCertificatesActive = to === "/learning/certificates" && pathname === "/learning/certificates";
+        const isLearningActive = to === "/learning" && pathname.startsWith("/learning") && pathname !== "/learning/certificates";
+        const finalIsActive = isCertificatesActive || isLearningActive || (isActive && to !== "/learning");
+        
+        return cn(
           "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 relative",
           "hover:bg-gradient-to-r hover:from-primary/10 hover:to-primary/5",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20",
-          isActive 
+          finalIsActive 
             ? "bg-gradient-to-r from-primary/15 to-primary/10 text-primary shadow-sm border border-primary/20" 
             : "text-muted-foreground hover:text-foreground",
           !sidebarOpen && "justify-center px-2 w-10 h-10",
           adminOnly && "bg-gradient-to-r from-orange-500/10 to-red-500/10 border border-orange-500/20"
-        )
-      }
+        );
+      }}
     >
       <div className="relative flex items-center justify-center">
         <Icon className={cn(

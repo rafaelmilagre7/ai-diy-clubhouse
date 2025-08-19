@@ -9,6 +9,10 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { UnifiedCertificateViewer } from "@/components/certificates/UnifiedCertificateViewer";
+import { CertificateData } from "@/utils/certificates/templateEngine";
+import { useAuth } from "@/contexts/auth";
 
 interface CertificateCardProps {
   certificate: Certificate;
@@ -19,7 +23,7 @@ export const CertificateCard = ({
   certificate,
   onDownload
 }: CertificateCardProps) => {
-  const [showPreview, setShowPreview] = useState(false);
+  const { user } = useAuth();
   
   // Detectar tipo de certificado
   const isSolution = (certificate as any).type === 'solution';
@@ -57,9 +61,7 @@ export const CertificateCard = ({
     toast.success("Download iniciado!");
   };
 
-  const handlePreview = () => {
-    toast.info(`Preview em desenvolvimento para certificados de ${isSolution ? 'solução' : 'curso'}`);
-  };
+  const [showCertificateModal, setShowCertificateModal] = useState(false);
   
   return (
     <motion.div
@@ -157,13 +159,33 @@ export const CertificateCard = ({
             Baixar Certificado
           </Button>
           
-          <Button
-            onClick={handlePreview}
-            variant="outline"
-            className="border-border/50 hover:bg-background/80 hover:border-primary/50 transition-all duration-300"
-          >
-            <Eye className="h-4 w-4" />
-          </Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button
+                variant="outline"
+                className="border-border/50 hover:bg-background/80 hover:border-primary/50 transition-all duration-300"
+              >
+                <Eye className="h-4 w-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-7xl w-full h-[90vh] p-0">
+              <div className="h-full overflow-auto p-6">
+                <UnifiedCertificateViewer
+                  data={{
+                    userName: user?.user_metadata?.full_name || user?.email || "Usuário",
+                    solutionTitle: title,
+                    solutionCategory: isSolution ? "Solução de IA" : "Curso",
+                    implementationDate: formattedDate,
+                    certificateId: certificate.id,
+                    validationCode: certificate.validation_code
+                  } as CertificateData}
+                  headerTitle={`Certificado de ${isSolution ? 'Implementação' : 'Conclusão'}`}
+                  headerDescription={`Parabéns! Você conquistou este certificado ao ${isSolution ? 'implementar com sucesso a solução' : 'concluir o curso'} "${title}".`}
+                  scale={0.6}
+                />
+              </div>
+            </DialogContent>
+          </Dialog>
         </CardFooter>
       </Card>
     </motion.div>
