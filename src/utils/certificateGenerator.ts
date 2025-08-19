@@ -1,7 +1,11 @@
-import { pdfGenerator } from './certificates/pdfGenerator';
-import { CertificateData as UnifiedCertificateData } from './certificates/templateEngine';
+// Legacy file - DEPRECATED
+// Este arquivo é mantido apenas para compatibilidade com código antigo
+// Use o sistema unificado em /utils/certificates/ diretamente
 
-// Manter interface legacy para compatibilidade
+import { pdfGenerator } from './certificates/pdfGenerator';
+import { templateEngine, CertificateData as UnifiedCertificateData } from './certificates/templateEngine';
+
+// Interface legacy para compatibilidade
 export interface CertificateData {
   userName: string;
   solutionTitle: string;
@@ -10,7 +14,7 @@ export interface CertificateData {
 }
 
 export const generateCertificatePDF = async (certificateData: CertificateData): Promise<Blob> => {
-  console.log('⚠️  generateCertificatePDF: Usando sistema legado, considere migrar para o sistema unificado');
+  console.warn('⚠️ generateCertificatePDF: Sistema legacy em uso - migre para o sistema unificado');
   
   // Converter para formato unificado
   const unifiedData: UnifiedCertificateData = {
@@ -22,12 +26,12 @@ export const generateCertificatePDF = async (certificateData: CertificateData): 
     solutionCategory: "Solução de IA"
   };
 
-  // Usar novo gerador
-  return await pdfGenerator.generateFromHTML(
-    '', // HTML será gerado pelo template padrão
-    '', // CSS será gerado pelo template padrão  
-    unifiedData
-  );
+  // Usar sistema unificado
+  const template = templateEngine.generateDefaultTemplate();
+  const html = templateEngine.processTemplate(template, unifiedData);
+  const css = templateEngine.optimizeCSS(template.css_styles);
+
+  return await pdfGenerator.generateFromHTML(html, css, unifiedData);
 };
 
 export const downloadCertificate = async (certificateData: CertificateData) => {

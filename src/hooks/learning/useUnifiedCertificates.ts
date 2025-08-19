@@ -3,6 +3,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
 import { toast } from "sonner";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 export interface UnifiedCertificate {
   id: string;
@@ -46,8 +48,10 @@ export const useUnifiedCertificates = (courseId?: string) => {
       console.log('🔍 [UNIFIED_CERTIFICATES] Buscando certificados para usuário:', user.id);
       
       try {
-        // Buscar certificados de cursos
-        let learningQuery = supabase
+      // Buscar todos os certificados com dados das tabelas relacionadas
+      const [learningCertsResult, solutionCertsResult] = await Promise.all([
+        // Certificados de cursos
+        supabase
           .from('learning_certificates')
           .select(`
             *,
@@ -56,20 +60,12 @@ export const useUnifiedCertificates = (courseId?: string) => {
               description, 
               cover_image_url
             )
-          `);
-          
-        if (courseId) {
-          learningQuery = learningQuery.eq('course_id', courseId);
-        }
-        
-        const { data: learningCerts, error: learningError } = await learningQuery
+          `)
           .eq('user_id', user.id)
-          .order('issued_at', { ascending: false });
+          .order('issued_at', { ascending: false }),
         
-        if (learningError) throw learningError;
-
-        // Buscar certificados de soluções
-        const { data: solutionCerts, error: solutionError } = await supabase
+        // Certificados de soluções
+        supabase
           .from('solution_certificates')
           .select(`
             *,
@@ -80,19 +76,30 @@ export const useUnifiedCertificates = (courseId?: string) => {
             )
           `)
           .eq('user_id', user.id)
-          .order('issued_at', { ascending: false });
-        
-        if (solutionError) throw solutionError;
+          .order('issued_at', { ascending: false })
+      ]);
 
-        // Unificar certificados
+      const { data: learningCerts, error: learningError } = learningCertsResult;
+      const { data: solutionCerts, error: solutionError } = solutionCertsResult;
+      
+      if (learningError) throw learningError;
+      if (solutionError) throw solutionError;
+
+        // Filtrar por courseId se especificado
+        const filteredLearningCerts = courseId 
+          ? (learningCerts || []).filter(cert => cert.course_id === courseId)
+          : learningCerts || [];
+
+        // Unificar certificados com padronização de dados
         const allCertificates: UnifiedCertificate[] = [
-          ...(learningCerts || []).map(cert => ({
+          ...filteredLearningCerts.map(cert => ({
             ...cert,
             type: 'course' as const,
             title: cert.learning_courses?.title || 'Curso',
             description: cert.learning_courses?.description,
             image_url: cert.learning_courses?.cover_image_url,
-            course_id: cert.course_id
+            course_id: cert.course_id,
+            completion_date: cert.issued_at // Padronizar campo de data
           })),
           ...(solutionCerts || []).map(cert => ({
             ...cert,
@@ -100,7 +107,8 @@ export const useUnifiedCertificates = (courseId?: string) => {
             title: cert.solutions?.title || 'Solução',
             description: cert.solutions?.description,
             image_url: cert.solutions?.thumbnail_url,
-            solution_id: cert.solution_id
+            solution_id: cert.solution_id,
+            completion_date: cert.implementation_date || cert.issued_at
           }))
         ];
         
@@ -109,7 +117,12 @@ export const useUnifiedCertificates = (courseId?: string) => {
           new Date(b.issued_at).getTime() - new Date(a.issued_at).getTime()
         );
         
-        console.log('✅ [UNIFIED_CERTIFICATES] Certificados carregados:', allCertificates.length);
+        console.log('✅ [UNIFIED_CERTIFICATES] Certificados unificados:', {
+          total: allCertificates.length,
+          courses: filteredLearningCerts.length,
+          solutions: (solutionCerts || []).length
+        });
+        
         return allCertificates;
         
       } catch (error) {
@@ -161,7 +174,7 @@ export const useUnifiedCertificates = (courseId?: string) => {
     }
   });
   
-  // Download de certificado usando o novo sistema
+  // Download otimizado de certificado
   const downloadCertificate = async (certificateId: string) => {
     try {
       const certificate = certificates.find(c => c.id === certificateId);
@@ -170,48 +183,84 @@ export const useUnifiedCertificates = (courseId?: string) => {
         return;
       }
 
-      // Usar o novo sistema de PDF
+      console.log('📥 Iniciando download do certificado:', certificateId);
+      
+      // Importar sistema unificado
       const { pdfGenerator } = await import('@/utils/certificates/pdfGenerator');
       const { templateEngine } = await import('@/utils/certificates/templateEngine');
       
-      const template = templateEngine.generateDefaultTemplate();
+      // Dados padronizados
       const certificateData = {
         userName: user?.user_metadata?.full_name || user?.email || "Usuário",
         solutionTitle: certificate.title,
         solutionCategory: certificate.type === 'solution' ? 'Solução de IA' : 'Curso',
-        implementationDate: certificate.implementation_date || certificate.completion_date || certificate.issued_at,
+        implementationDate: formatDateForCertificate(
+          certificate.implementation_date || certificate.completion_date || certificate.issued_at
+        ),
         certificateId: certificate.id,
         validationCode: certificate.validation_code
       };
 
-      // Processar template
+      // Template com design aprovado
+      const template = templateEngine.generateDefaultTemplate();
       const html = templateEngine.processTemplate(template, certificateData);
       const css = templateEngine.optimizeCSS(template.css_styles);
 
-      // Criar elemento temporário
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = `<style>${css}</style>${html}`;
-      tempDiv.style.position = 'absolute';
-      tempDiv.style.left = '-9999px';
-      tempDiv.style.top = '0';
-      document.body.appendChild(tempDiv);
+      // Renderização otimizada em elemento off-screen
+      const offscreenElement = document.createElement('div');
+      offscreenElement.style.cssText = `
+        position: fixed;
+        left: -10000px;
+        top: 0;
+        width: 1123px;
+        height: 920px;
+        pointer-events: none;
+        z-index: -1;
+      `;
+      
+      offscreenElement.innerHTML = `<style>${css}</style>${html}`;
+      document.body.appendChild(offscreenElement);
 
-      // Aguardar renderização
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Aguardar renderização e fontes
+      await Promise.all([
+        new Promise(resolve => setTimeout(resolve, 1000)),
+        document.fonts?.ready || Promise.resolve()
+      ]);
 
-      const certificateElement = tempDiv.querySelector('.certificate-container') as HTMLElement;
-      if (certificateElement) {
-        const blob = await pdfGenerator.generateFromElement(certificateElement, certificateData);
-        const filename = `certificado-${certificate.title.replace(/[^a-zA-Z0-9]/g, '-')}-${certificate.validation_code}.pdf`;
-        await pdfGenerator.downloadPDF(blob, filename);
-        toast.success('Certificado baixado com sucesso!');
+      const certificateElement = offscreenElement.querySelector('.certificate-container') as HTMLElement;
+      if (!certificateElement) {
+        throw new Error('Elemento do certificado não encontrado');
       }
 
-      document.body.removeChild(tempDiv);
+      // Gerar PDF
+      const blob = await pdfGenerator.generateFromElement(certificateElement, certificateData);
+      const filename = generateFilename(certificate.title, certificate.validation_code);
+      
+      await pdfGenerator.downloadPDF(blob, filename);
+      toast.success('Certificado baixado com sucesso!');
+
+      // Cleanup
+      document.body.removeChild(offscreenElement);
+      
     } catch (error: any) {
-      console.error('Erro ao fazer download:', error);
+      console.error('❌ Erro ao fazer download:', error);
       toast.error('Erro ao fazer download do certificado');
     }
+  };
+
+  // Função utilitária para formatar data
+  const formatDateForCertificate = (dateString: string): string => {
+    try {
+      return format(new Date(dateString), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
+    } catch {
+      return format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
+    }
+  };
+
+  // Função utilitária para gerar nome do arquivo
+  const generateFilename = (title: string, validationCode: string): string => {
+    const cleanTitle = title.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '-');
+    return `certificado-${cleanTitle}-${validationCode}.pdf`;
   };
 
   return { 

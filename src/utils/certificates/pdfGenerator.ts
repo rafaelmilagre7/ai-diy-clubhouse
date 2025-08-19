@@ -107,29 +107,41 @@ export class CertificatePDFGenerator {
     data: CertificateData,
     options: PDFGenerationOptions = {}
   ): Promise<Blob> {
-    // Criar elemento temporário
+    console.log('🎨 Gerando PDF a partir de HTML...');
+    
+    // Elemento temporário otimizado
     const tempDiv = document.createElement('div');
-    tempDiv.style.position = 'absolute';
-    tempDiv.style.left = '-9999px';
-    tempDiv.style.top = '0';
-    tempDiv.style.width = '1123px';
-    tempDiv.style.height = '920px';
+    tempDiv.style.cssText = `
+      position: fixed;
+      left: -10000px;
+      top: 0;
+      width: 1123px;
+      height: 920px;
+      pointer-events: none;
+      z-index: -1;
+      overflow: hidden;
+    `;
     
-    // Adicionar estilos
-    const styleEl = document.createElement('style');
-    styleEl.textContent = css;
-    tempDiv.appendChild(styleEl);
-    
-    // Adicionar HTML
-    const contentDiv = document.createElement('div');
-    contentDiv.innerHTML = html;
-    tempDiv.appendChild(contentDiv);
-    
+    // HTML completo com estilos inline
+    tempDiv.innerHTML = `<style>${css}</style>${html}`;
     document.body.appendChild(tempDiv);
     
     try {
-      const blob = await this.generateFromElement(contentDiv, data, options);
+      // Aguardar renderização e fontes
+      await Promise.all([
+        this.waitForFonts(),
+        new Promise(resolve => setTimeout(resolve, 800))
+      ]);
+
+      const certificateElement = tempDiv.querySelector('.certificate-container') as HTMLElement;
+      if (!certificateElement) {
+        throw new Error('Elemento do certificado não encontrado no HTML');
+      }
+
+      const blob = await this.generateFromElement(certificateElement, data, options);
+      console.log('✅ PDF gerado com sucesso a partir do HTML');
       return blob;
+      
     } finally {
       document.body.removeChild(tempDiv);
     }
@@ -164,17 +176,29 @@ export class CertificatePDFGenerator {
   }
 
   private async waitForFonts(): Promise<void> {
-    if ('fonts' in document) {
+    if ('fonts' in document && document.fonts) {
       try {
         await document.fonts.ready;
         console.log('🔤 Fontes carregadas');
+        
+        // Forçar carregamento de fontes específicas do certificado
+        const fonts = [
+          'Inter',
+          'JetBrains Mono',
+          'Brush Script MT'
+        ];
+        
+        await Promise.allSettled(
+          fonts.map(font => document.fonts.load(`16px "${font}"`))
+        );
+        
       } catch (error) {
         console.warn('⚠️ Erro ao carregar fontes:', error);
       }
     }
     
-    // Aguardar um pouco extra para garantir
-    await new Promise(resolve => setTimeout(resolve, 500));
+    // Aguardar estabilização da renderização
+    await new Promise(resolve => setTimeout(resolve, 300));
   }
 
   public async downloadPDF(blob: Blob, filename: string): Promise<void> {
