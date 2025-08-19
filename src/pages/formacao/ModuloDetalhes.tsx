@@ -14,20 +14,15 @@ import { NovaAulaButton } from "@/components/formacao/aulas/NovaAulaButton";
 const ModuloDetalhes = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { profile } = useAuth();
+  const { profile, isAdmin, isFormacao } = useAuth();
   
   const [modulo, setModulo] = useState<LearningModule | null>(null);
   const [aulas, setAulas] = useState<LearningLesson[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingAulas, setLoadingAulas] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [courseTitle, setCourseTitle] = useState('Curso');
-
-  useEffect(() => {
-    if (profile) {
-      setIsAdmin(profile.role === 'admin' || profile.role === 'formacao');
-    }
-  }, [profile]);
+  
+  const canManage = isAdmin || isFormacao;
 
   // Buscar detalhes do módulo
   const fetchModulo = async () => {
@@ -195,7 +190,7 @@ const ModuloDetalhes = () => {
         loading={loadingAulas} 
         onEdit={handleEditarAula}
         onDelete={handleExcluirAula}
-        isAdmin={isAdmin}
+        isAdmin={canManage}
       />
     </div>
   );

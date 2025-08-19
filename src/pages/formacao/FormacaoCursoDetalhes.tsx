@@ -17,7 +17,7 @@ import { useModuleDelete } from "@/hooks/formacao/useModuleDelete";
 const FormacaoCursoDetalhes = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { profile } = useAuth();
+  const { profile, isAdmin, isFormacao } = useAuth();
   
   const [curso, setCurso] = useState<LearningCourse | null>(null);
   const [modulos, setModulos] = useState<LearningModule[]>([]);
@@ -151,7 +151,7 @@ const FormacaoCursoDetalhes = () => {
     );
   }
 
-  const isAdmin = profile?.role === 'admin';
+  const canManage = isAdmin || isFormacao;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-surface-base relative overflow-hidden">
@@ -167,7 +167,7 @@ const FormacaoCursoDetalhes = () => {
           curso={curso} 
           onNovoModulo={handleNovoModulo}
           onEditarCurso={handleEditarCurso}
-          isAdmin={isAdmin} 
+          isAdmin={canManage} 
         />
         
         <ModulosList 
@@ -175,7 +175,7 @@ const FormacaoCursoDetalhes = () => {
           loading={loadingModulos} 
           onEdit={handleEditarModulo}
           onDelete={handleExcluirModulo}
-          isAdmin={isAdmin}
+          isAdmin={canManage}
         />
         
         <ModuloFormDialog 
