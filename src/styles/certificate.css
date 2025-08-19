@@ -2,19 +2,19 @@
 .certificate-static {
   display: block;
   width: 1123px;
-  height: 794px;
+  height: 850px; /* Aumentei a altura para mostrar todo o conteúdo */
   margin: 0;
   padding: 0;
 }
 
 .certificate-container-static {
   width: 1123px !important;
-  height: 794px !important;
+  height: 850px !important; /* Aumentei a altura para mostrar todo o conteúdo */
   background: linear-gradient(135deg, #0a0f1c 0%, #1a2332 100%) !important;
   color: #ffffff !important;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
   position: relative !important;
-  overflow: hidden !important;
+  overflow: visible !important; /* Mudei para visible para não cortar o conteúdo */
   border-radius: 16px !important;
   box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3) !important;
   box-sizing: border-box !important;
