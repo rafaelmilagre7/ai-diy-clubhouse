@@ -16,8 +16,8 @@ export const AdminSidebarLogo = ({ sidebarOpen, setSidebarOpen }: AdminSidebarLo
     <div className="flex h-16 shrink-0 items-center justify-between px-3">
       <div className="flex items-center overflow-hidden min-w-0">
         <img
-          src="https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif"
-          alt="VIVER DE IA Club"
+          src="/lovable-uploads/fe3733f5-092e-4a4e-bdd7-650b71aaa801.png"
+          alt="VIVER DE IA"
           className={cn(
             "transition-all duration-300 object-contain",
             sidebarOpen 
