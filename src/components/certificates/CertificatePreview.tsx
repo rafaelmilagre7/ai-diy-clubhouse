@@ -13,6 +13,8 @@ interface CertificatePreviewProps {
   showActions?: boolean;
   scale?: number;
   className?: string;
+  onDownload?: () => void;
+  onOpenInNewTab?: () => void;
 }
 
 export const CertificatePreview = ({
@@ -20,7 +22,9 @@ export const CertificatePreview = ({
   template,
   showActions = true,
   scale = 0.5,
-  className = ""
+  className = "",
+  onDownload: externalOnDownload,
+  onOpenInNewTab: externalOnOpenInNewTab
 }: CertificatePreviewProps) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
@@ -36,6 +40,12 @@ export const CertificatePreview = ({
     setCertificateElement(element);
   };
   const handleDownload = async () => {
+    // Se há callback externo, usar ele em vez da lógica interna
+    if (externalOnDownload) {
+      externalOnDownload();
+      return;
+    }
+
     if (!certificateElement) {
       toast.error("Certificado ainda não está pronto para download");
       return;
@@ -58,6 +68,12 @@ export const CertificatePreview = ({
   };
 
   const handleOpenInNewTab = async () => {
+    // Se há callback externo, usar ele em vez da lógica interna
+    if (externalOnOpenInNewTab) {
+      externalOnOpenInNewTab();
+      return;
+    }
+
     if (!certificateElement) {
       toast.error("Certificado ainda não está pronto");
       return;
@@ -99,7 +115,7 @@ export const CertificatePreview = ({
           <div className="flex gap-3">
             <Button 
               onClick={handleDownload}
-              disabled={!certificateElement || isGenerating}
+              disabled={(!certificateElement && !externalOnDownload) || isGenerating}
               className="flex items-center gap-2"
             >
               <Download className="w-4 h-4" />
@@ -108,7 +124,7 @@ export const CertificatePreview = ({
             
             <Button 
               onClick={handleOpenInNewTab}
-              disabled={!certificateElement || isGenerating}
+              disabled={(!certificateElement && !externalOnOpenInNewTab) || isGenerating}
               variant="outline"
               className="flex items-center gap-2"
             >

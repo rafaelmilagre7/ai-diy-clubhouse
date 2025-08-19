@@ -11,6 +11,8 @@ interface UnifiedCertificateViewerProps {
   headerDescription?: string;
   scale?: number;
   className?: string;
+  onDownload?: () => void;
+  onOpenInNewTab?: () => void;
 }
 
 export const UnifiedCertificateViewer = ({
@@ -20,7 +22,9 @@ export const UnifiedCertificateViewer = ({
   headerTitle = "Seu Certificado",
   headerDescription = "Parabéns! Você conquistou este certificado ao concluir com sucesso.",
   scale = 0.6,
-  className = ""
+  className = "",
+  onDownload,
+  onOpenInNewTab
 }: UnifiedCertificateViewerProps) => {
   return (
     <div className={`w-full max-w-7xl mx-auto ${className}`}>
@@ -61,6 +65,8 @@ export const UnifiedCertificateViewer = ({
           scale={scale}
           showActions={true}
           className="aurora-glass-hover rounded-lg p-6"
+          onDownload={onDownload}
+          onOpenInNewTab={onOpenInNewTab}
         />
       </div>
       

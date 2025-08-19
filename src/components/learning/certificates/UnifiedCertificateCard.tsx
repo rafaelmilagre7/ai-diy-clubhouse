@@ -8,7 +8,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { UnifiedCertificateViewer } from "@/components/certificates/UnifiedCertificateViewer";
 import { CertificateData } from "@/utils/certificates/templateEngine";
 import { useAuth } from "@/contexts/auth";
@@ -137,8 +137,13 @@ export const UnifiedCertificateCard = ({
                     Ver Certificado
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-7xl w-full h-[90vh] p-0 certificate-dialog">
-                  <div className="h-full overflow-auto p-6 certificate-dialog-content">
+                <DialogContent className="max-w-6xl w-full max-h-[85vh] certificate-dialog">
+                  <DialogHeader className="px-6 pt-6 pb-2">
+                    <DialogTitle className="text-xl font-semibold">
+                      {`Certificado de ${isSolution ? 'Implementação' : 'Conclusão'}`}
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="px-6 pb-6 overflow-auto certificate-dialog-content">
                     <UnifiedCertificateViewer
                       data={{
                         userName: user?.user_metadata?.full_name || user?.email || "Usuário",
@@ -150,9 +155,9 @@ export const UnifiedCertificateCard = ({
                         certificateId: certificate.id,
                         validationCode: certificate.validation_code
                       } as CertificateData}
-                      headerTitle={`Certificado de ${isSolution ? 'Implementação' : 'Conclusão'}`}
-                      headerDescription={`Parabéns! Você conquistou este certificado ao ${isSolution ? 'implementar com sucesso a solução' : 'concluir o curso'} "${certificate.title}".`}
-                      scale={0.6}
+                      showHeader={false}
+                      scale={0.5}
+                      onDownload={() => handleDownload()}
                     />
                   </div>
                 </DialogContent>
