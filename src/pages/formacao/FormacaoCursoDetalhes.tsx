@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { CursoHeader } from "@/components/formacao/cursos/CursoHeader";
 import { ModulosList } from "@/components/formacao/modulos/ModulosList";
 import { ModuloFormDialog } from "@/components/formacao/modulos/ModuloFormDialog";
+import { ModuloDeleteDialog } from "@/components/formacao/modulos/ModuloDeleteDialog";
 import { CursoFormDialog } from "@/components/formacao/cursos/CursoFormDialog";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
@@ -23,7 +24,9 @@ const FormacaoCursoDetalhes = () => {
   const [loadingModulos, setLoadingModulos] = useState(true);
   const [isModuloDialogOpen, setIsModuloDialogOpen] = useState(false);
   const [isCursoDialogOpen, setIsCursoDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [editingModulo, setEditingModulo] = useState<LearningModule | null>(null);
+  const [deletingModulo, setDeletingModulo] = useState<LearningModule | null>(null);
 
   // Buscar detalhes do curso
   const fetchCurso = async () => {
@@ -94,21 +97,94 @@ const FormacaoCursoDetalhes = () => {
     setIsModuloDialogOpen(true);
   };
 
-  // Excluir módulo
-  const handleExcluirModulo = async (moduloId: string) => {
+  // Abrir dialog de confirmação para exclusão
+  const handleExcluirModulo = (moduloId: string) => {
+    const modulo = modulos.find(m => m.id === moduloId);
+    if (modulo) {
+      setDeletingModulo(modulo);
+      setIsDeleteDialogOpen(true);
+    }
+  };
+
+  // Confirmar exclusão do módulo
+  const handleConfirmDelete = async () => {
+    if (!deletingModulo) return;
+
     try {
-      const { error } = await supabase
+      // Primeiro, verificar se há aulas no módulo
+      const { data: aulas, error: aulasError } = await supabase
+        .from('learning_lessons')
+        .select('id')
+        .eq('module_id', deletingModulo.id);
+
+      if (aulasError) throw aulasError;
+
+      // Se há aulas, deletar todas primeiro
+      if (aulas && aulas.length > 0) {
+        // Deletar recursos das aulas
+        const { error: resourcesError } = await supabase
+          .from('learning_resources')
+          .delete()
+          .in('lesson_id', aulas.map(aula => aula.id));
+
+        if (resourcesError) throw resourcesError;
+
+        // Deletar vídeos das aulas
+        const { error: videosError } = await supabase
+          .from('learning_lesson_videos')
+          .delete()
+          .in('lesson_id', aulas.map(aula => aula.id));
+
+        if (videosError) throw videosError;
+
+        // Deletar progresso das aulas
+        const { error: progressError } = await supabase
+          .from('learning_progress')
+          .delete()
+          .in('lesson_id', aulas.map(aula => aula.id));
+
+        if (progressError) throw progressError;
+
+        // Deletar comentários das aulas
+        const { error: commentsError } = await supabase
+          .from('learning_comments')
+          .delete()
+          .in('lesson_id', aulas.map(aula => aula.id));
+
+        if (commentsError) throw commentsError;
+
+        // Deletar NPS das aulas
+        const { error: npsError } = await supabase
+          .from('learning_lesson_nps')
+          .delete()
+          .in('lesson_id', aulas.map(aula => aula.id));
+
+        if (npsError) throw npsError;
+
+        // Deletar as aulas
+        const { error: lessonsError } = await supabase
+          .from('learning_lessons')
+          .delete()
+          .eq('module_id', deletingModulo.id);
+
+        if (lessonsError) throw lessonsError;
+      }
+
+      // Finalmente, deletar o módulo
+      const { error: moduleError } = await supabase
         .from('learning_modules')
         .delete()
-        .eq('id', moduloId);
-      
-      if (error) throw error;
-      
-      toast.success("Módulo excluído com sucesso!");
+        .eq('id', deletingModulo.id);
+
+      if (moduleError) throw moduleError;
+
+      toast.success("Módulo e todas as aulas associadas foram excluídos com sucesso!");
       fetchModulos();
+      setIsDeleteDialogOpen(false);
+      setDeletingModulo(null);
     } catch (error) {
       console.error("Erro ao excluir módulo:", error);
-      toast.error("Não foi possível excluir o módulo. Verifique se não há aulas vinculadas.");
+      toast.error("Não foi possível excluir o módulo. Tente novamente.");
     }
   };
 
@@ -178,6 +254,13 @@ const FormacaoCursoDetalhes = () => {
           userId={profile?.id || ''}
         />
       )}
+
+      <ModuloDeleteDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        onConfirm={handleConfirmDelete}
+        modulo={deletingModulo}
+      />
     </div>
   );
 };
