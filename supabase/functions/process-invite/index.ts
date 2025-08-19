@@ -51,12 +51,15 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Preparar dados para as Edge Functions
+    const inviteUrl = `https://app.viverdeia.ai/invite?token=${invite.token}`;
+    
     const emailData = {
       inviteId: invite.id,
       email: invite.email,
       token: invite.token,
+      inviteUrl: inviteUrl,
       roleName: invite.user_roles?.name || 'Membro',
-      invitedByName: 'Administrador',
+      senderName: 'Administrador',
       expiresAt: invite.expires_at,
       notes: invite.notes,
     };
@@ -85,7 +88,7 @@ const handler = async (req: Request): Promise<Response> => {
         recipientName: invite.email,
       };
 
-      const whatsappResponse = await supabase.functions.invoke('send-invite-whatsapp', {
+      const whatsappResponse = await supabase.functions.invoke('send-whatsapp-invite', {
         body: whatsappData
       });
 
