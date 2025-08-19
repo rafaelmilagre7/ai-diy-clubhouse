@@ -64,44 +64,48 @@ export const ModulosList: React.FC<ModulosListProps> = ({
             </CardDescription>
           </CardHeader>
           
-          <CardFooter className="flex justify-between border-t p-3 bg-gray-50 dark:bg-gray-800">
-            <Link to={`/formacao/modulos/${modulo.id}`}>
-              <Button variant="secondary" size="sm">
-                <BookOpen className="h-4 w-4 mr-2" />
-                Ver aulas
-              </Button>
-            </Link>
+          <CardFooter className="flex flex-col gap-3 border-t p-3 bg-gray-50 dark:bg-gray-800">
+            <div className="flex justify-between items-center w-full">
+              <Link to={`/formacao/modulos/${modulo.id}`}>
+                <Button variant="secondary" size="sm">
+                  <BookOpen className="h-4 w-4 mr-2" />
+                  Ver aulas
+                </Button>
+              </Link>
 
-            <div className="flex space-x-2">
               {isAdmin && (
-                <>
-                  <NovaAulaButton 
-                    moduleId={modulo.id} 
-                    buttonText="+ Aula"
-                    variant="outline"
-                    size="sm"
-                  />
-                  
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => onEdit(modulo)}
-                  >
-                    <Edit className="h-3.5 w-3.5" />
-                    <span className="sr-only">Editar</span>
-                  </Button>
-                  
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => onDelete(modulo.id)}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                    <span className="sr-only">Excluir</span>
-                  </Button>
-                </>
+                <NovaAulaButton 
+                  moduleId={modulo.id} 
+                  buttonText="+ Aula"
+                  variant="outline"
+                  size="sm"
+                />
               )}
             </div>
+
+            {isAdmin && (
+              <div className="flex justify-center gap-2 w-full">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => onEdit(modulo)}
+                  className="flex-1"
+                >
+                  <Edit className="h-3.5 w-3.5 mr-2" />
+                  Editar
+                </Button>
+                
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => onDelete(modulo.id)}
+                  className="flex-1 text-destructive hover:text-destructive"
+                >
+                  <Trash2 className="h-3.5 w-3.5 mr-2" />
+                  Excluir
+                </Button>
+              </div>
+            )}
           </CardFooter>
         </Card>
       ))}

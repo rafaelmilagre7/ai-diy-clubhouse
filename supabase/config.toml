@@ -119,6 +119,9 @@ verify_jwt = true
 [functions.recommend-lessons-ai]
 verify_jwt = true
 
+[functions.delete-module]
+verify_jwt = true
+
 # 🛡️ VALIDAÇÃO SEGURA - Não exige JWT mas tem auditoria completa
 [functions.validate-coupon]
 verify_jwt = false

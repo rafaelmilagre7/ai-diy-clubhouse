@@ -16,13 +16,15 @@ interface ModuloDeleteDialogProps {
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
   modulo: LearningModule | null;
+  isDeleting?: boolean;
 }
 
 export const ModuloDeleteDialog = ({
   open,
   onOpenChange,
   onConfirm,
-  modulo
+  modulo,
+  isDeleting = false
 }: ModuloDeleteDialogProps) => {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -35,9 +37,20 @@ export const ModuloDeleteDialog = ({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-            Excluir
+          <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+          <AlertDialogAction 
+            onClick={onConfirm}
+            disabled={isDeleting}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            {isDeleting ? (
+              <>
+                <div className="animate-spin h-4 w-4 mr-2 border-2 border-white border-t-transparent rounded-full" />
+                Excluindo...
+              </>
+            ) : (
+              'Excluir'
+            )}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
