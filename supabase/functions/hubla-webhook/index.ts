@@ -378,7 +378,7 @@ async function handleLovableCourseInvite(payload: any, supabase: any) {
     // Processar envio do convite (email + WhatsApp se disponível)
     try {
       const { data: processResult, error: processError } = await supabase.functions.invoke('process-invite', {
-        body: { invite_id: newInvite.id }
+        body: { inviteId: newInvite.id }
       })
 
       if (processError) {
