@@ -138,10 +138,10 @@ export const UnifiedCertificateCard = ({
       const pdfUrl = await generatePublicPDF();
       
       if (pdfUrl) {
-        // Converter URL do Supabase para usar o proxy do domínio personalizado
+        // Converter URL do Supabase para usar o proxy (teste com domínio Supabase primeiro)
         const customDomainUrl = pdfUrl.replace(
-          /https:\/\/[^.]+\.supabase\.co\/storage\/v1\/object\/public\/([^\/]+)\/(.*)/,
-          'https://app.viverdeia.ai/storage-proxy/certificate/$1/$2'
+          /https:\/\/([^.]+\.supabase\.co)\/storage\/v1\/object\/public\/([^\/]+)\/(.*)/,
+          'https://$1/functions/v1/storage-proxy/certificate/$2/$3'
         );
         
         const shareText = `Estou certificado ${isSolution ? 'na solução' : 'no curso'} "${certificate.title}" do VIVER DE IA! 🎓
@@ -170,10 +170,10 @@ Confira meu certificado:`;
       const pdfUrl = await generatePublicPDF();
       
       if (pdfUrl) {
-        // Converter URL do Supabase para usar o proxy do domínio personalizado
+        // Converter URL do Supabase para usar o proxy (teste com domínio Supabase primeiro)
         const customDomainUrl = pdfUrl.replace(
-          /https:\/\/[^.]+\.supabase\.co\/storage\/v1\/object\/public\/([^\/]+)\/(.*)/,
-          'https://app.viverdeia.ai/storage-proxy/certificate/$1/$2'
+          /https:\/\/([^.]+\.supabase\.co)\/storage\/v1\/object\/public\/([^\/]+)\/(.*)/,
+          'https://$1/functions/v1/storage-proxy/certificate/$2/$3'
         );
         
         const shareText = `*Novo Certificado VIVER DE IA!*
