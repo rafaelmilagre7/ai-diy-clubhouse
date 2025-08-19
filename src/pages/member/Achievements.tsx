@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useDocumentTitle } from '@/hooks/use-document-title';
 
 const Achievements = () => {
-  useDocumentTitle('VIVER DE IA Club');
+  useDocumentTitle('VIVER DE IA');
   const navigate = useNavigate();
   
   // Redirecionar para o dashboard quando alguém tentar acessar esta página diretamente

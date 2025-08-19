@@ -44,7 +44,7 @@ export const MemberSidebar = ({
         {sidebarOpen && (
           <div className="p-4 border-t border-border/30 bg-gradient-to-r from-muted/30 to-muted/10">
             <div className="text-xs text-muted-foreground text-center">
-              <p className="font-medium">VIVER DE IA Club</p>
+              <p className="font-medium">VIVER DE IA</p>
               <p className="mt-1 opacity-70">v2.0.0</p>
             </div>
           </div>

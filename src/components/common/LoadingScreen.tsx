@@ -47,8 +47,8 @@ const LoadingScreen = ({
         {/* Logo */}
         <div className="flex items-center justify-center mb-6">
           <img
-            src="https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif"
-            alt="VIVER DE IA Club"
+            src="/lovable-uploads/fe3733f5-092e-4a4e-bdd7-650b71aaa801.png"
+            alt="VIVER DE IA"
             className="h-16 w-auto drop-shadow-md"
           />
         </div>

@@ -157,7 +157,7 @@ const Benefits = () => {
                 </h1>
               </div>
               <p className="text-lg text-muted-foreground max-w-2xl">
-                Acesse ofertas e descontos exclusivos para membros do VIVER DE IA Club
+                Acesse ofertas e descontos exclusivos para membros do VIVER DE IA
               </p>
             </div>
 

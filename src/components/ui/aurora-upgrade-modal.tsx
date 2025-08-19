@@ -207,7 +207,7 @@ export const AuroraUpgradeModal: React.FC<AuroraUpgradeModalProps> = ({
               <div className="flex justify-center mb-6">
                 <img
                   src="/lovable-uploads/fe3733f5-092e-4a4e-bdd7-650b71aaa801.png"
-                  alt="VIVER DE IA Club"
+                  alt="VIVER DE IA"
                   className="h-16 w-auto object-contain"
                 />
               </div>

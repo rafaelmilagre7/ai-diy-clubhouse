@@ -96,7 +96,7 @@ export const CelebrationModule = ({ module, onComplete }: CelebrationModuleProps
             <div>
               <h3 className="font-medium">Compartilhe seus resultados</h3>
               <p className="text-sm text-muted-foreground">
-                Compartilhe seus resultados com o time do VIVER DE IA Club e com outros membros
+                Compartilhe seus resultados com o time do VIVER DE IA e com outros membros
               </p>
             </div>
           </li>

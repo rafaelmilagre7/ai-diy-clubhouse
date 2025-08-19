@@ -44,7 +44,7 @@ export const SuggestionsEmptyState: React.FC<SuggestionsEmptyStateProps> = ({ se
         Ainda não há sugestões
       </h3>
       <p className="text-muted-foreground mb-8 max-w-md leading-relaxed">
-        Seja o primeiro a compartilhar uma ideia ou sugestão para melhorarmos o VIVER DE IA Club.
+        Seja o primeiro a compartilhar uma ideia ou sugestão para melhorarmos o VIVER DE IA.
       </p>
       <Button 
         onClick={() => navigate('/suggestions/new')}

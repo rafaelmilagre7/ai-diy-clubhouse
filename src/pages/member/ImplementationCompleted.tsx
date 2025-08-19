@@ -96,7 +96,7 @@ const ImplementationCompleted = () => {
   const shareAchievement = () => {
     if (!solution) return;
     
-    const text = `Acabei de implementar a solução "${solution.title}" com a ajuda do VIVER DE IA Club! #VIVERDEIA #IA #Implementação`;
+    const text = `Acabei de implementar a solução "${solution.title}" com a ajuda do VIVER DE IA! #VIVERDEIA #IA #Implementação`;
     const url = window.location.href;
     
     window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
@@ -183,7 +183,7 @@ const ImplementationCompleted = () => {
               </div>
               <div className="flex items-center gap-3">
                 <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
-                <span className="text-sm">+50 pontos no seu perfil do VIVER DE IA Club</span>
+                <span className="text-sm">+50 pontos no seu perfil do VIVER DE IA</span>
               </div>
               <div className="flex items-center gap-3">
                 <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />

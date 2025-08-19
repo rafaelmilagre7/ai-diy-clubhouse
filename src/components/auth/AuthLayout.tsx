@@ -114,7 +114,7 @@ const AuthLayout = () => {
                     <div className="absolute inset-0 bg-viverblue/20 rounded-full blur-xl" />
                     <img
                       src="/lovable-uploads/fe3733f5-092e-4a4e-bdd7-650b71aaa801.png"
-                      alt="VIVER DE IA Club"
+                      alt="VIVER DE IA"
                       className="relative h-20 w-auto object-contain hover:scale-105 transition-transform duration-300"
                     />
                   </div>

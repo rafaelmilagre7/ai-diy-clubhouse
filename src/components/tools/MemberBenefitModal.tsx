@@ -100,7 +100,7 @@ export const MemberBenefitModal = ({
                   {tool.benefit_title || `Benefício ${tool.name}`}
                 </DialogTitle>
                 <DialogDescription className="text-muted-foreground">
-                  Oferta exclusiva para membros do VIVER DE IA Club
+                  Oferta exclusiva para membros do VIVER DE IA
                 </DialogDescription>
               </div>
             </DialogHeader>

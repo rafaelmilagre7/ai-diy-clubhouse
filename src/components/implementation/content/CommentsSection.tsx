@@ -29,7 +29,7 @@ export const CommentsSection = ({ solutionId, moduleId }: CommentsSectionProps) 
     <div className="space-y-6 mt-8">
       <h3 className="text-lg font-semibold">Discussão</h3>
       <p className="text-muted-foreground">
-        Compartilhe suas experiências, dúvidas ou dicas sobre esta solução com outros membros do club.
+        Compartilhe suas experiências, dúvidas ou dicas sobre esta solução com outros membros da plataforma.
       </p>
       
       <CommentForm

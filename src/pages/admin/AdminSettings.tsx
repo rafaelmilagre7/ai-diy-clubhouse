@@ -83,7 +83,7 @@ const AdminSettings = () => {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Configurações</h1>
         <p className="text-muted-foreground">
-          Gerencie as configurações da plataforma VIVER DE IA Club.
+          Gerencie as configurações da plataforma VIVER DE IA.
         </p>
       </div>
       
@@ -126,7 +126,7 @@ const AdminSettings = () => {
                     <Label htmlFor="platform-name">Nome da Plataforma</Label>
                     <Input 
                       id="platform-name" 
-                      value="VIVER DE IA Club" 
+                      value="VIVER DE IA" 
                       disabled
                     />
                     <p className="text-sm text-muted-foreground mt-1">

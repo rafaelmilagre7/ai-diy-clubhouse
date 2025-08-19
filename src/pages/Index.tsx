@@ -12,7 +12,7 @@ const Index = () => {
   const [progress, setProgress] = useState(0);
   
   // Definir o título da página
-  useDocumentTitle("Viver de IA Hub");
+  useDocumentTitle("VIVER DE IA");
 
   // Redirecionar automaticamente após verificar estado de autenticação
   useEffect(() => {
@@ -65,14 +65,14 @@ const Index = () => {
               <div className="absolute inset-0 rounded-full bg-gradient-to-br from-viverblue/20 to-viverblue-dark/10 animate-pulse-subtle"></div>
               <img
                 className="mx-auto h-full w-auto relative z-10 drop-shadow-md"
-                src="https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif"
-                alt="VIVER DE IA Hub"
+                src="/lovable-uploads/fe3733f5-092e-4a4e-bdd7-650b71aaa801.png"
+                alt="VIVER DE IA"
                 loading="eager" 
               />
             </div>
             
             <h1 className="mt-6 text-center text-4xl sm:text-5xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-viverblue via-indigo-600 to-viverblue-dark animate-gradient-shift bg-size-200">
-              VIVER DE IA Hub
+              VIVER DE IA
             </h1>
             
             <p className="mt-3 text-center text-lg text-gray-600 dark:text-gray-300 max-w-sm mx-auto">
@@ -93,7 +93,7 @@ const Index = () => {
             <div className="inline-flex items-center px-5 py-3 border border-transparent text-base font-medium rounded-full shadow-md text-white bg-gradient-to-r from-viverblue to-viverblue-light hover:from-viverblue-dark hover:to-viverblue transition-all">
               {isLoading ? 'Verificando autenticação...' : 
                isRedirecting ? 'Redirecionando...' : 
-               'Bem-vindo ao VIVER DE IA Hub'
+               'Bem-vindo ao VIVER DE IA'
               }
             </div>
           </div>
@@ -114,7 +114,7 @@ const Index = () => {
         </div>
         
         <div className="absolute bottom-4 left-0 w-full flex justify-center text-xs text-gray-400">
-          © {new Date().getFullYear()} VIVER DE IA Hub • Todos os direitos reservados
+          © {new Date().getFullYear()} VIVER DE IA • Todos os direitos reservados
         </div>
       </div>
     </PageTransitionWithFallback>

@@ -82,7 +82,7 @@ const AdminSolutionCreate = () => {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Nova Solução</h1>
         <p className="text-muted-foreground">
-          Crie uma nova solução para a plataforma VIVER DE IA Club.
+          Crie uma nova solução para a plataforma VIVER DE IA.
         </p>
       </div>
       

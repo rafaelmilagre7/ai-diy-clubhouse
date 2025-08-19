@@ -26,7 +26,7 @@ const OptimizedLoadingScreen = memo<OptimizedLoadingScreenProps>(({
   // Memoizar mensagem personalizada para VIVER DE IA
   const enhancedMessage = useMemo(() => {
     const baseMessage = message === "Carregando" 
-      ? "Preparando sua experiência personalizada do VIVER DE IA Club"
+      ? "Preparando sua experiência personalizada do VIVER DE IA"
       : message;
     
     return `${baseMessage}...`;

@@ -15,7 +15,7 @@ interface BenefitAccessDeniedProps {
 export function BenefitAccessDenied({
   tool,
   title = "Acesso Restrito",
-  message = "Este benefício está disponível apenas para membros com papéis específicos no clube.",
+  message = "Este benefício está disponível apenas para membros com papéis específicos na plataforma.",
   onClose
 }: BenefitAccessDeniedProps) {
   const navigate = useNavigate();

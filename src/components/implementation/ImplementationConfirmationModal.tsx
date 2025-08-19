@@ -55,7 +55,7 @@ export const ImplementationConfirmationModal = ({
           <h3 className="font-medium mb-2">Solução: {solution.title}</h3>
           <p className="text-sm text-muted-foreground mb-4">
             A confirmação de implementação não pode ser desfeita. Isso ajuda a acompanhar 
-            seu progresso no VIVER DE IA Club e libera acesso para certificados e benefícios.
+            seu progresso no VIVER DE IA e libera acesso para certificados e benefícios.
           </p>
           
           <div className="bg-blue-50 p-3 rounded border border-blue-100">
