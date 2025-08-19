@@ -57,18 +57,18 @@ export const UnifiedCertificateCard = ({
       initial={{ opacity: 0, y: 20, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.5 }}
-      whileHover={{ y: -4, scale: 1.01 }}
-      className="group"
+      whileHover={{ y: -4, scale: 1.02 }}
+      className="group cursor-pointer certificate-card certificate-card-hover"
     >
-      <Card className="relative overflow-hidden border-border/50 backdrop-blur-sm transition-all duration-500 hover:shadow-xl hover:shadow-current/10 hover:border-primary/30 bg-card/80">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-5">
+      <Card className="relative overflow-hidden border-border/50 backdrop-blur-sm transition-all duration-500 hover:shadow-2xl hover:shadow-primary/20 hover:border-aurora/50 bg-card/90">
+        {/* Background Pattern - Não interfere com cliques */}
+        <div className="certificate-card-overlay opacity-5 pointer-events-none">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/10"></div>
         </div>
         
         {/* Header com gradiente */}
         <div className={`bg-gradient-to-br ${config.headerBg} pb-6 pt-8 relative overflow-hidden`}>
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none"></div>
           
           <div className="flex justify-center relative z-10">
             <motion.div 
@@ -81,15 +81,15 @@ export const UnifiedCertificateCard = ({
           </div>
           
           {/* Badge de tipo */}
-          <div className="absolute top-4 left-4">
-            <Badge className={`${config.badgeClass} backdrop-blur-sm font-medium`}>
+          <div className="absolute top-4 left-4 z-20">
+            <Badge className={`${config.badgeClass} backdrop-blur-sm font-medium pointer-events-none`}>
               {isSolution ? <Lightbulb className="h-3 w-3 mr-1" /> : <BookOpen className="h-3 w-3 mr-1" />}
               {config.typeLabel}
             </Badge>
           </div>
           
           {/* Botão de compartilhar no canto superior direito */}
-          <div className="absolute top-4 right-4">
+          <div className="absolute top-4 right-4 z-20">
             <ShareCertificateDropdown
               certificate={{
                 id: certificate.id,
@@ -106,7 +106,7 @@ export const UnifiedCertificateCard = ({
           </div>
         </div>
         
-        <CardHeader className="pb-3 relative">
+        <CardHeader className="pb-3 relative z-10">
           <CardTitle className="text-lg font-semibold text-foreground line-clamp-2 leading-tight group-hover:text-primary transition-colors duration-300">
             {certificate.title}
           </CardTitle>
@@ -116,7 +116,7 @@ export const UnifiedCertificateCard = ({
           </div>
         </CardHeader>
         
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 relative z-10">
           <div className={`flex items-center gap-2 text-sm text-muted-foreground`}>
             <Calendar className={`h-4 w-4 ${config.iconColor}`} />
             <span>Emitido em {formattedDate}</span>
@@ -136,10 +136,11 @@ export const UnifiedCertificateCard = ({
           </motion.div>
         </CardContent>
         
-        <CardFooter className="pt-0 flex gap-2">
+        <CardFooter className="pt-0 flex gap-2 relative z-10">
           <Button
             onClick={handleDownload}
-            className="flex-1"
+            className="flex-1 relative z-30 certificate-action-button font-medium"
+            size="default"
           >
             <Download className="h-4 w-4 mr-2" />
             Baixar PDF
@@ -149,13 +150,15 @@ export const UnifiedCertificateCard = ({
             <DialogTrigger asChild>
               <Button
                 variant="outline"
-                className="border-border/50 hover:bg-background/80 hover:border-primary/50 transition-all duration-300"
+                className="border-border/50 hover:bg-background/80 hover:border-primary/50 transition-all duration-300 relative z-30 certificate-action-button"
+                size="default"
+                title="Visualizar certificado"
               >
                 <Eye className="h-4 w-4" />
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-7xl w-full h-[90vh] p-0">
-              <div className="h-full overflow-auto p-6">
+            <DialogContent className="max-w-7xl w-full h-[90vh] p-0 certificate-dialog">
+              <div className="h-full overflow-auto p-6 certificate-dialog-content">
               <UnifiedCertificateViewer
                 data={{
                   userName: user?.user_metadata?.full_name || user?.email || "Usuário",

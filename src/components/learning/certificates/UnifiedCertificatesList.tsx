@@ -161,10 +161,11 @@ export const UnifiedCertificatesList = ({
           <Button
             onClick={handleGeneratePending}
             disabled={isGeneratingPending}
-            className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white font-semibold px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+            size="lg"
+            className="bg-gradient-to-r from-aurora to-primary hover:from-aurora/90 hover:to-primary/90 text-white font-bold px-10 py-4 rounded-2xl shadow-2xl hover:shadow-aurora/25 transition-all duration-500 transform hover:scale-105 group"
           >
-            <Zap className="h-5 w-5 mr-2" />
-            {isGeneratingPending ? "Verificando..." : "Verificar Certificados Pendentes"}
+            <Zap className="h-6 w-6 mr-3 group-hover:animate-bounce" />
+            {isGeneratingPending ? "🔍 Verificando..." : "✨ Descobrir Meus Certificados"}
           </Button>
               </div>
               
@@ -220,10 +221,11 @@ export const UnifiedCertificatesList = ({
           onClick={handleGeneratePending}
           disabled={isGeneratingPending}
           variant="outline"
-          className="border-primary/50 text-primary hover:bg-primary/10"
+          className="border-aurora/50 text-aurora hover:bg-aurora/10 hover:border-aurora transition-all duration-300 font-medium shadow-sm hover:shadow-md group"
+          title="Verifica se você tem direito a novos certificados baseado nos cursos e soluções que completou"
         >
-          <Zap className="h-4 w-4 mr-2" />
-          {isGeneratingPending ? "Verificando..." : "Verificar Pendentes"}
+          <Zap className="h-4 w-4 mr-2 group-hover:animate-pulse" />
+          {isGeneratingPending ? "Verificando..." : "🔍 Buscar Novos Certificados"}
         </Button>
       </div>
 

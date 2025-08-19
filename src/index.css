@@ -6,6 +6,7 @@
 @import './styles/utilities.css';
 @import './styles/notifications.css';
 @import './styles/aurora-effects.css';
+@import './styles/certificate.css';
 
 @tailwind base;
 @tailwind components;
