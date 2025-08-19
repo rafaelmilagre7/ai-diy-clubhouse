@@ -442,28 +442,22 @@ async function handleCourseCancellation(payload: any, supabase: any) {
     if (existingUser) {
       console.log(`[Hubla Webhook] Found active user with lovable_course role: ${existingUser.id}`)
       
-      // Buscar role "member" padrão como fallback
-      const { data: memberRole } = await supabase
-        .from('user_roles')
-        .select('id')
-        .eq('name', 'membro_club')
-        .single()
+      // Remover acesso completamente - sem fallback para outras roles
+      const fallbackRoleId = null
 
-      const fallbackRoleId = memberRole?.id || null
-
-      // Downgrade para role member ou remover role
+      // Remover role do usuário (perda de acesso total)
       const { error: downgradeError } = await supabase
         .from('profiles')
         .update({ 
-          role_id: fallbackRoleId,
+          role_id: null, // Remove acesso completamente
           updated_at: new Date().toISOString()
         })
         .eq('id', existingUser.id)
 
       if (downgradeError) {
-        console.error('[Hubla Webhook] Error downgrading user role:', downgradeError)
+        console.error('[Hubla Webhook] Error removing user access:', downgradeError)
       } else {
-        console.log(`[Hubla Webhook] User ${userEmail} downgraded from lovable_course to ${fallbackRoleId ? 'membro_club' : 'no role'}`)
+        console.log(`[Hubla Webhook] User ${userEmail} access removed - no longer has lovable_course role`)
       }
 
       // Log da revogação para auditoria
@@ -478,7 +472,7 @@ async function handleCourseCancellation(payload: any, supabase: any) {
             webhook_type: payload.type,
             course_group: event.groupName,
             previous_role: 'lovable_course',
-            new_role: fallbackRoleId ? 'membro_club' : null
+            new_role: null // Acesso removido completamente
           },
           severity: 'info'
         }])
