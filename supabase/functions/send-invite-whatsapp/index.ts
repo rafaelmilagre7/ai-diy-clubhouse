@@ -89,55 +89,131 @@ const handler = async (req: Request): Promise<Response> => {
     // URL do convite já vem pronta dos dados recebidos
     console.log('🔗 [WHATSAPP] URL do convite recebida:', body.inviteUrl)
     
-    // Limpar número de telefone (remover caracteres especiais)
-    const cleanPhone = body.phone.replace(/\D/g, '');
-    
-    // Construir mensagem WhatsApp
-    const message = `🚀 *Viver de IA - Convite Especial*
-
-Olá! *${body.invitedByName}* convidou você para acessar nossa plataforma de IA.
-
-📧 *Email:* ${body.recipientName}
-👤 *Nível de acesso:* ${body.roleName}
-
-${body.notes ? `💬 *Mensagem:* ${body.notes}\n\n` : ''}🎯 *Clique aqui para aceitar seu convite:*
-${body.inviteUrl}
-
-⚠️ Este convite tem validade limitada. Complete seu cadastro o quanto antes!
-
----
-_Mensagem automática - Viver de IA_`;
-
-    console.log('📝 [SEND-WHATSAPP] Mensagem preparada para:', cleanPhone);
-
-    // Enviar via WhatsApp Business API
-    const whatsappResponse = await fetch(
-      `https://graph.facebook.com/v18.0/${phoneNumberId}/messages`,
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${whatsappApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          messaging_product: 'whatsapp',
-          to: cleanPhone,
-          type: 'text',
-          text: {
-            body: message
-          }
-        })
+    // Normalização do telefone para formato E.164 (Brasil)
+    const rawPhone = body.phone || '';
+    const onlyDigits = rawPhone.replace(/\D/g, '').replace(/^0+/, '');
+    let e164 = onlyDigits;
+    if (!e164.startsWith('55')) {
+      if (e164.length === 11) {
+        e164 = `55${e164}`; // DDD + 9 + número
+      } else if (e164.length === 10) {
+        // Sem o 9: insere automaticamente
+        e164 = `55${e164.slice(0,2)}9${e164.slice(2)}`;
+      } else {
+        e164 = `55${e164}`;
       }
-    );
+    } else {
+      const after = e164.slice(2);
+      if (after.length === 10) {
+        e164 = `55${after.slice(0,2)}9${after.slice(2)}`;
+      }
+    }
+
+    console.log('🧹 [SEND-WHATSAPP] Telefone normalizado:', { original: body.phone, e164 });
+
+    // 1) Verificar se o número é WhatsApp válido via Contacts API
+    const contactsRes = await fetch(`https://graph.facebook.com/v18.0/${phoneNumberId}/contacts`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${whatsappApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ messaging_product: 'whatsapp', contacts: [{ input: e164 }] }),
+    });
+
+    const contactsJson = await contactsRes.json();
+    const contact = contactsJson?.contacts?.[0];
+    const isValid = contact?.status === 'valid';
+    const waId: string | undefined = contact?.wa_id;
+
+    if (!isValid) {
+      console.error('❌ [SEND-WHATSAPP] Número inválido para WhatsApp:', contactsJson);
+      const { error: deliveryErr } = await supabase
+        .from('invite_deliveries')
+        .insert({
+          invite_id: body.inviteId,
+          channel: 'whatsapp',
+          status: 'failed',
+          error_message: `Número inválido para WhatsApp (${e164})`,
+          metadata: { phone: e164, original_phone: body.phone, contacts_response: contactsJson },
+        });
+      if (deliveryErr) console.warn('⚠️ [SEND-WHATSAPP] Erro ao registrar delivery inválido:', deliveryErr);
+      return new Response(
+        JSON.stringify({ success: false, error: 'Número não é WhatsApp válido', details: contactsJson }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // 2) Construir payload (usa template se configurado)
+    const templateName = Deno.env.get('WHATSAPP_TEMPLATE_NAME');
+
+    // Mensagem de texto original (fallback)
+    const message = `🚀 *Viver de IA - Convite Especial*\n\nOlá! *${body.invitedByName}* convidou você para acessar nossa plataforma de IA.\n\n📧 *Email:* ${body.recipientName}\n👤 *Nível de acesso:* ${body.roleName}\n\n${body.notes ? `💬 *Mensagem:* ${body.notes}\n\n` : ''}🎯 *Clique aqui para aceitar seu convite:*\n${body.inviteUrl}\n\n⚠️ Este convite tem validade limitada. Complete seu cadastro o quanto antes!\n\n---\n_Mensagem automática - Viver de IA_`;
+
+    const toRecipient = waId || e164; // Usa wa_id quando disponível
+
+    const payload = templateName
+      ? {
+          messaging_product: 'whatsapp',
+          to: toRecipient,
+          type: 'template',
+          template: {
+            name: templateName,
+            language: { code: 'pt_BR' },
+            components: [
+              {
+                type: 'body',
+                parameters: [
+                  { type: 'text', text: body.recipientName || 'tudo bem' },
+                  { type: 'text', text: body.inviteUrl },
+                  { type: 'text', text: body.invitedByName || 'Equipe' },
+                ]
+              }
+            ]
+          }
+        }
+      : {
+          messaging_product: 'whatsapp',
+          to: toRecipient,
+          type: 'text',
+          text: { body: message, preview_url: true },
+        };
+
+    console.log('📝 [SEND-WHATSAPP] Mensagem preparada para:', toRecipient);
+
+    // 3) Enviar via WhatsApp Business API
+    const whatsappResponse = await fetch(`https://graph.facebook.com/v18.0/${phoneNumberId}/messages`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${whatsappApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
 
     const whatsappResult = await whatsappResponse.json();
 
     if (!whatsappResponse.ok) {
       console.error('❌ [SEND-WHATSAPP] Erro da API:', whatsappResult);
-      throw new Error(`WhatsApp API error: ${whatsappResult.error?.message || 'Unknown error'}`);
+      const { error: deliveryErr } = await supabase
+        .from('invite_deliveries')
+        .insert({
+          invite_id: body.inviteId,
+          channel: 'whatsapp',
+          status: 'failed',
+          error_message: whatsappResult?.error?.message || 'Erro desconhecido',
+          metadata: { phone: e164, original_phone: body.phone, wa_id: waId, payload_type: templateName ? 'template' : 'text' },
+        });
+      if (deliveryErr) console.warn('⚠️ [SEND-WHATSAPP] Erro ao registrar delivery failed:', deliveryErr);
+
+      return new Response(
+        JSON.stringify({ success: false, error: 'Falha ao enviar WhatsApp', details: whatsappResult }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    console.log('✅ [SEND-WHATSAPP] Mensagem enviada:', whatsappResult.messages?.[0]?.id);
+    const messageId: string | undefined = whatsappResult?.messages?.[0]?.id;
+    console.log('✅ [SEND-WHATSAPP] Mensagem enviada:', messageId);
 
     // Registrar delivery no banco
     const { error: deliveryError } = await supabase
@@ -146,12 +222,14 @@ _Mensagem automática - Viver de IA_`;
         invite_id: body.inviteId,
         channel: 'whatsapp',
         status: 'sent',
-        provider_id: whatsappResult.messages?.[0]?.id,
+        provider_id: messageId,
         sent_at: new Date().toISOString(),
         metadata: {
-          whatsapp_id: whatsappResult.messages?.[0]?.id,
-          phone: cleanPhone,
+          whatsapp_id: messageId,
+          phone: e164,
           original_phone: body.phone,
+          wa_id: waId,
+          payload_type: templateName ? 'template' : 'text',
         }
       });
 
@@ -159,26 +237,23 @@ _Mensagem automática - Viver de IA_`;
       console.warn('⚠️ [SEND-WHATSAPP] Erro ao registrar delivery:', deliveryError);
     }
 
-    // Atualizar estatísticas do convite
+    // Atualizar estatísticas do convite (incremento seguro)
+    const { data: inviteRow } = await supabase
+      .from('invites')
+      .select('send_attempts')
+      .eq('id', body.inviteId)
+      .single();
+
+    const attempts = (inviteRow?.send_attempts ?? 0) + 1;
+
     await supabase
       .from('invites')
-      .update({
-        send_attempts: 1,
-        last_sent_at: new Date().toISOString()
-      })
+      .update({ send_attempts: attempts, last_sent_at: new Date().toISOString() })
       .eq('id', body.inviteId);
 
     return new Response(
-      JSON.stringify({
-        success: true,
-        messageId: whatsappResult.messages?.[0]?.id,
-        sentAt: new Date().toISOString(),
-        recipient: cleanPhone
-      }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      JSON.stringify({ success: true, messageId, waId, recipient: e164, usedTemplate: !!templateName }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error: any) {
