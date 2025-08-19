@@ -126,9 +126,15 @@ Confira meu certificado:`;
       const pdfUrl = await generatePublicPDF();
       
       if (pdfUrl) {
+        // Converter URL do Supabase para usar o proxy do domínio personalizado
+        const customDomainUrl = pdfUrl.replace(
+          /https:\/\/[^.]+\.supabase\.co\/storage\/v1\/object\/public\/([^\/]+)\/(.*)/,
+          'https://app.viverdeia.ai/storage-proxy/certificate/$1/$2'
+        );
+        
         const linkedInText = encodeURIComponent(shareText);
         const linkedInTitle = encodeURIComponent(`Novo Certificado ${isSolution ? 'de Solução' : 'de Curso'} - VIVER DE IA`);
-        const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(pdfUrl)}&title=${linkedInTitle}&summary=${linkedInText}&source=${encodeURIComponent('VIVER DE IA')}`;
+        const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(customDomainUrl)}&title=${linkedInTitle}&summary=${linkedInText}&source=${encodeURIComponent('VIVER DE IA')}`;
         
         window.open(linkedInUrl, '_blank', 'width=700,height=500');
         toast.success("🚀 Abrindo LinkedIn para compartilhar seu certificado!");
@@ -149,11 +155,17 @@ Confira meu certificado:`;
       const pdfUrl = await generatePublicPDF();
       
       if (pdfUrl) {
+        // Converter URL do Supabase para usar o proxy do domínio personalizado
+        const customDomainUrl = pdfUrl.replace(
+          /https:\/\/[^.]+\.supabase\.co\/storage\/v1\/object\/public\/([^\/]+)\/(.*)/,
+          'https://app.viverdeia.ai/storage-proxy/certificate/$1/$2'
+        );
+        
         const whatsappText = `*Novo Certificado VIVER DE IA!*
 
 Acabei de me certificar ${isSolution ? 'na solução' : 'no curso'} *"${certificateTitle}"*!
 
-Confira meu certificado: ${pdfUrl}`;
+Confira meu certificado: ${customDomainUrl}`;
         
         const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(whatsappText)}`;
         window.open(whatsappUrl, '_blank');
