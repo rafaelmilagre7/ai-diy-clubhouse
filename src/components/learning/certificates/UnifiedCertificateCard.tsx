@@ -2,7 +2,7 @@ import React from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, Star, BookOpen, Award, Eye, Lightbulb, BadgeCheck } from "lucide-react";
+import { Download, Star, BookOpen, Award, Eye, Lightbulb, BadgeCheck, Linkedin } from "lucide-react";
 import { UnifiedCertificate } from "@/hooks/learning/useUnifiedCertificates";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -161,10 +161,33 @@ export const UnifiedCertificateCard = ({
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-6xl w-full max-h-[85vh] certificate-dialog">
-                <DialogHeader className="px-6 pt-6 pb-2">
+                <DialogHeader className="px-6 pt-6 pb-2 flex-row items-center justify-between">
                   <DialogTitle className="text-xl font-semibold">
                     {`Certificado de ${isSolution ? 'Implementação' : 'Conclusão'}`}
                   </DialogTitle>
+                  
+                  {/* Botão de compartilhar no LinkedIn dentro do modal */}
+                  <Button
+                    onClick={() => {
+                      const certificateUrl = `https://app.viverdeia.ai/certificado/validar/${certificate.validation_code}`;
+                      const certificateTitle = certificate.title;
+                      const shareText = `Estou certificado ${isSolution ? 'na solução' : 'no curso'} "${certificateTitle}" do VIVER DE IA! 🎓
+
+Confira meu certificado:`;
+                      const linkedInText = encodeURIComponent(shareText);
+                      const linkedInTitle = encodeURIComponent(`Novo Certificado ${isSolution ? 'de Solução' : 'de Curso'} - VIVER DE IA`);
+                      const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(certificateUrl)}&title=${linkedInTitle}&summary=${linkedInText}&source=${encodeURIComponent('VIVER DE IA')}`;
+                      
+                      window.open(linkedInUrl, '_blank', 'width=700,height=500');
+                      toast.success("🚀 Abrindo LinkedIn para compartilhar seu certificado!");
+                    }}
+                    variant="outline"
+                    size="sm"
+                    className="border-blue-200 text-blue-600 hover:bg-blue-50"
+                  >
+                    <Linkedin className="h-4 w-4 mr-2" />
+                    Compartilhar no LinkedIn
+                  </Button>
                 </DialogHeader>
                 <div className="px-6 pb-6 overflow-auto certificate-dialog-content">
                   <UnifiedCertificateViewer
