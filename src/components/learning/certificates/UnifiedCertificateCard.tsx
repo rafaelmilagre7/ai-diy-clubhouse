@@ -32,7 +32,7 @@ export const UnifiedCertificateCard = ({
     icon: Lightbulb,
     typeLabel: "Solução",
     headerBg: "from-accent/10 to-transparent",
-    badgeClass: "bg-accent/10 text-accent border-accent/20",
+    badgeClass: "bg-accent/15 text-accent border-accent/30",
     iconColor: "text-accent",
     iconBg: "bg-accent/15",
     codeBoxClass: "bg-accent/10 border-accent/20",
@@ -41,7 +41,7 @@ export const UnifiedCertificateCard = ({
     icon: Award,
     typeLabel: "Curso",
     headerBg: "from-primary/10 to-transparent",
-    badgeClass: "bg-primary/10 text-primary border-primary/20",
+    badgeClass: "bg-primary/15 text-primary border-primary/30",
     iconColor: "text-primary",
     iconBg: "bg-primary/15",
     codeBoxClass: "bg-primary/10 border-primary/20",
@@ -57,14 +57,10 @@ export const UnifiedCertificateCard = ({
       initial={{ opacity: 0, y: 20, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.5 }}
-      whileHover={{ y: -8, scale: 1.02 }}
+      whileHover={{ y: -4, scale: 1.01 }}
       className="group"
     >
-      <Card className={`
-        relative overflow-hidden border-border/50 backdrop-blur-sm transition-all duration-500
-        hover:shadow-2xl hover:shadow-current/20 hover:border-primary/50
-        bg-gradient-to-br from-card/80 via-card/60 to-card/40
-      `}>
+      <Card className="relative overflow-hidden border-border/50 backdrop-blur-sm transition-all duration-500 hover:shadow-xl hover:shadow-current/10 hover:border-primary/30 bg-card/80">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-5">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/10"></div>
@@ -86,18 +82,32 @@ export const UnifiedCertificateCard = ({
           
           {/* Badge de tipo */}
           <div className="absolute top-4 left-4">
-            <Badge className={`${config.badgeClass} backdrop-blur-sm`}>
+            <Badge className={`${config.badgeClass} backdrop-blur-sm font-medium`}>
               {isSolution ? <Lightbulb className="h-3 w-3 mr-1" /> : <BookOpen className="h-3 w-3 mr-1" />}
               {config.typeLabel}
             </Badge>
           </div>
+          
+          {/* Botão de compartilhar no canto superior direito */}
+          <div className="absolute top-4 right-4">
+            <ShareCertificateDropdown
+              certificate={{
+                id: certificate.id,
+                validation_code: certificate.validation_code,
+                solutions: {
+                  title: certificate.title
+                }
+              }}
+              userProfile={{
+                name: user?.user_metadata?.full_name || user?.email || "Usuário"
+              }}
+              compact
+            />
+          </div>
         </div>
         
         <CardHeader className="pb-3 relative">
-          <CardTitle className={`
-            text-lg font-semibold text-foreground line-clamp-2 leading-tight
-            group-hover:${config.iconColor} transition-colors duration-300
-          `}>
+          <CardTitle className="text-lg font-semibold text-foreground line-clamp-2 leading-tight group-hover:text-primary transition-colors duration-300">
             {certificate.title}
           </CardTitle>
           <div className={`flex items-center gap-2 text-sm ${config.iconColor}`}>
@@ -162,19 +172,6 @@ export const UnifiedCertificateCard = ({
               </div>
             </DialogContent>
           </Dialog>
-          
-          <ShareCertificateDropdown
-            certificate={{
-              id: certificate.id,
-              validation_code: certificate.validation_code,
-              solutions: {
-                title: certificate.title
-              }
-            }}
-            userProfile={{
-              name: user?.user_metadata?.full_name || user?.email || "Usuário"
-            }}
-          />
         </CardFooter>
       </Card>
     </motion.div>
