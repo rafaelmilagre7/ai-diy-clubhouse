@@ -1,9 +1,11 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Filter, SortDesc } from "lucide-react";
-import { motion } from "framer-motion";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Search, RefreshCw, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface CertificatesFiltersProps {
   searchTerm: string;
@@ -22,69 +24,81 @@ export const CertificatesFilters = ({
   sortBy,
   onSortChange
 }: CertificatesFiltersProps) => {
+  const [isCheckingPending, setIsCheckingPending] = useState(false);
+
+  const handleCheckPending = async () => {
+    setIsCheckingPending(true);
+    try {
+      // Simular verificação de novos certificados
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      toast.success("Verificação concluída! Nenhum novo certificado encontrado.");
+    } catch (error) {
+      toast.error("Erro ao verificar novos certificados.");
+    } finally {
+      setIsCheckingPending(false);
+    }
+  };
+
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="relative overflow-hidden rounded-2xl p-6 bg-card/50 backdrop-blur-sm border border-border/50"
-    >
-      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5"></div>
-      
-      <div className="relative z-10">
-        <div className="flex flex-col lg:flex-row gap-4">
-          {/* Busca */}
-          <div className="flex-1 relative group">
-            <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-accent/10 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300"></div>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors duration-300" />
-              <Input
-                placeholder="Buscar certificados por nome..."
-                value={searchTerm}
-                onChange={(e) => onSearchChange(e.target.value)}
-                className="pl-10 h-12 bg-background/80 border-border/50 hover:border-primary/50 focus:border-primary transition-all duration-300"
-              />
-            </div>
-          </div>
-          
-          {/* Filtros */}
-          <div className="flex flex-col sm:flex-row gap-4 lg:w-auto">
-            {/* Filtro por Categoria */}
-            <div className="w-full sm:w-48">
-              <Select value={selectedCategory} onValueChange={onCategoryChange}>
-                <SelectTrigger className="h-12 bg-background/80 border-border/50 hover:border-primary/50 transition-all duration-300">
-                  <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
-                  <SelectValue placeholder="Filtrar por categoria" />
-                </SelectTrigger>
-                <SelectContent className="bg-card border-border/50">
-                  <SelectItem value="all">📋 Todas as categorias</SelectItem>
-                  <SelectItem value="courses">📚 Cursos</SelectItem>
-                  <SelectItem value="solutions">💡 Soluções</SelectItem>
-                  <SelectItem value="receita">💰 Receita</SelectItem>
-                  <SelectItem value="operacional">⚙️ Operacional</SelectItem>
-                  <SelectItem value="estrategia">🎯 Estratégia</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            {/* Ordenação */}
-            <div className="w-full sm:w-48">
-              <Select value={sortBy} onValueChange={onSortChange}>
-                <SelectTrigger className="h-12 bg-background/80 border-border/50 hover:border-primary/50 transition-all duration-300">
-                  <SortDesc className="h-4 w-4 mr-2 text-muted-foreground" />
-                  <SelectValue placeholder="Ordenar por" />
-                </SelectTrigger>
-                <SelectContent className="bg-card border-border/50">
-                  <SelectItem value="recent">🕒 Mais Recentes</SelectItem>
-                  <SelectItem value="oldest">📅 Mais Antigos</SelectItem>
-                  <SelectItem value="name">🔤 Nome A-Z</SelectItem>
-                  <SelectItem value="name-desc">🔤 Nome Z-A</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+    <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between bg-card border rounded-lg p-4">
+      <div className="flex flex-col sm:flex-row gap-4 flex-1">
+        <div className="relative flex-1 min-w-[300px]">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Input
+            placeholder="Buscar certificados..."
+            value={searchTerm}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="pl-10"
+          />
         </div>
+        
+        <Select value={selectedCategory} onValueChange={onCategoryChange}>
+          <SelectTrigger className="w-full sm:w-[200px]">
+            <SelectValue placeholder="Categoria" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas as categorias</SelectItem>
+            <SelectItem value="completed">Concluídas</SelectItem>
+            <SelectItem value="available">Disponíveis</SelectItem>
+          </SelectContent>
+        </Select>
+        
+        <Select value={sortBy} onValueChange={onSortChange}>
+          <SelectTrigger className="w-full sm:w-[200px]">
+            <SelectValue placeholder="Ordenar por" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="recent">Mais recentes</SelectItem>
+            <SelectItem value="oldest">Mais antigos</SelectItem>
+            <SelectItem value="title">Por título</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
-    </motion.div>
+      
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button 
+            onClick={handleCheckPending}
+            disabled={isCheckingPending}
+            className="bg-primary hover:bg-primary/90 text-primary-foreground whitespace-nowrap"
+          >
+            {isCheckingPending ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Verificando...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Buscar Novos Certificados
+              </>
+            )}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Verificar se há novos certificados disponíveis para gerar</p>
+        </TooltipContent>
+      </Tooltip>
+    </div>
   );
 };

@@ -2,7 +2,7 @@ import React from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, Star, Calendar, BookOpen, Award, Eye, Lightbulb, BadgeCheck } from "lucide-react";
+import { Download, Star, BookOpen, Award, Eye, Lightbulb, BadgeCheck } from "lucide-react";
 import { UnifiedCertificate } from "@/hooks/learning/useUnifiedCertificates";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -53,43 +53,28 @@ export const UnifiedCertificateCard = ({
   };
   
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.5 }}
-      whileHover={{ y: -4, scale: 1.02 }}
-      className="group cursor-pointer certificate-card certificate-card-hover"
-    >
-      <Card className="relative overflow-hidden border-border/50 backdrop-blur-sm transition-all duration-500 hover:shadow-2xl hover:shadow-primary/20 hover:border-aurora/50 bg-card/90">
-        {/* Background Pattern - Não interfere com cliques */}
-        <div className="certificate-card-overlay opacity-5 pointer-events-none">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/10"></div>
-        </div>
-        
-        {/* Header com gradiente */}
-        <div className={`bg-gradient-to-br ${config.headerBg} pb-6 pt-8 relative overflow-hidden`}>
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none"></div>
-          
-          <div className="flex justify-center relative z-10">
-            <motion.div 
-              whileHover={{ scale: 1.05 }}
-              transition={{ type: "spring", stiffness: 300, damping: 20 }}
-              className={`${config.iconBg} rounded-full p-4 group-hover:shadow-lg transition-all duration-300`}
-            >
-              <config.icon className={`h-16 w-16 ${config.iconColor}`} />
-            </motion.div>
+    <Card className="group relative overflow-hidden border hover:shadow-md transition-all duration-200">
+      <CardContent className="p-6">
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center space-x-3">
+            <div className={`p-2 rounded-lg ${config.iconBg} border ${config.badgeClass.replace('bg-', 'border-').replace('/15', '/20')}`}>
+              <config.icon className={`h-5 w-5 ${config.iconColor}`} />
+            </div>
+            
+            <div className="space-y-1">
+              <h3 className="font-semibold text-foreground">
+                {certificate.title}
+              </h3>
+              <div className="flex items-center space-x-2">
+                <Badge className={`${config.badgeClass} text-xs`}>
+                  {isSolution ? <Lightbulb className="h-3 w-3 mr-1" /> : <BookOpen className="h-3 w-3 mr-1" />}
+                  {config.typeLabel}
+                </Badge>
+              </div>
+            </div>
           </div>
           
-          {/* Badge de tipo */}
-          <div className="absolute top-4 left-4 z-20">
-            <Badge className={`${config.badgeClass} backdrop-blur-sm font-medium pointer-events-none`}>
-              {isSolution ? <Lightbulb className="h-3 w-3 mr-1" /> : <BookOpen className="h-3 w-3 mr-1" />}
-              {config.typeLabel}
-            </Badge>
-          </div>
-          
-          {/* Botão de compartilhar no canto superior direito */}
-          <div className="absolute top-4 right-4 z-20">
+          <div className="flex items-center space-x-2">
             <ShareCertificateDropdown
               certificate={{
                 id: certificate.id,
@@ -103,82 +88,79 @@ export const UnifiedCertificateCard = ({
               }}
               compact
             />
+            <div className="text-xs text-muted-foreground">
+              {formattedDate}
+            </div>
           </div>
         </div>
-        
-        <CardHeader className="pb-3 relative z-10">
-          <CardTitle className="text-lg font-semibold text-foreground line-clamp-2 leading-tight group-hover:text-primary transition-colors duration-300">
-            {certificate.title}
-          </CardTitle>
-          <div className={`flex items-center gap-2 text-sm ${config.iconColor}`}>
-            <BadgeCheck className="h-4 w-4" />
-            <span className="font-medium">Certificado de {isSolution ? 'Implementação' : 'Conclusão'}</span>
-          </div>
-        </CardHeader>
-        
-        <CardContent className="space-y-4 relative z-10">
-          <div className={`flex items-center gap-2 text-sm text-muted-foreground`}>
-            <Calendar className={`h-4 w-4 ${config.iconColor}`} />
-            <span>Emitido em {formattedDate}</span>
+
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <BadgeCheck className="h-4 w-4 text-primary" />
+            <span>Certificado de {isSolution ? 'Implementação' : 'Conclusão'}</span>
           </div>
           
-          <motion.div 
-            whileHover={{ scale: 1.02 }}
-            className={`${config.codeBoxClass} rounded-lg p-4 backdrop-blur-sm`}
-          >
-            <div className={`text-xs ${config.codeLabelColor} font-medium mb-2 flex items-center gap-1`}>
+          <div className="bg-muted/50 rounded-lg p-3">
+            <div className="text-xs text-muted-foreground font-medium mb-1 flex items-center gap-1">
               <Star className="h-3 w-3" />
               Código de Validação
             </div>
-            <div className="text-sm text-foreground font-mono bg-background/50 px-3 py-2 rounded border border-border/50">
+            <div className="text-sm text-foreground font-mono">
               {certificate.validation_code}
             </div>
-          </motion.div>
-        </CardContent>
-        
-        <CardFooter className="pt-0 flex gap-2 relative z-10">
-          <Button
-            onClick={handleDownload}
-            className="flex-1 relative z-30 certificate-action-button font-medium"
-            size="default"
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Baixar PDF
-          </Button>
+          </div>
           
-          <Dialog>
-            <DialogTrigger asChild>
+          <div className="flex items-center justify-between pt-4 border-t">
+            <div className="text-xs text-muted-foreground">
+              Emitido em {formattedDate}
+            </div>
+            
+            <div className="flex items-center space-x-2">
               <Button
+                onClick={handleDownload}
                 variant="outline"
-                className="border-border/50 hover:bg-background/80 hover:border-primary/50 transition-all duration-300 relative z-30 certificate-action-button"
-                size="default"
-                title="Visualizar certificado"
+                size="sm"
+                className="text-xs"
               >
-                <Eye className="h-4 w-4" />
+                <Download className="h-3 w-3 mr-1" />
+                Baixar
               </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-7xl w-full h-[90vh] p-0 certificate-dialog">
-              <div className="h-full overflow-auto p-6 certificate-dialog-content">
-              <UnifiedCertificateViewer
-                data={{
-                  userName: user?.user_metadata?.full_name || user?.email || "Usuário",
-                  solutionTitle: certificate.title,
-                  solutionCategory: isSolution ? "Solução de IA" : "Curso",
-                  courseTitle: !isSolution ? certificate.title : undefined,
-                  implementationDate: formattedDate,
-                  completedDate: formattedDate,
-                  certificateId: certificate.id,
-                  validationCode: certificate.validation_code
-                } as CertificateData}
-                  headerTitle={`Certificado de ${isSolution ? 'Implementação' : 'Conclusão'}`}
-                  headerDescription={`Parabéns! Você conquistou este certificado ao ${isSolution ? 'implementar com sucesso a solução' : 'concluir o curso'} "${certificate.title}".`}
-                  scale={0.6}
-                />
-              </div>
-            </DialogContent>
-          </Dialog>
-        </CardFooter>
-      </Card>
-    </motion.div>
+              
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    className="text-xs"
+                  >
+                    <Eye className="h-3 w-3 mr-1" />
+                    Ver Certificado
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-7xl w-full h-[90vh] p-0 certificate-dialog">
+                  <div className="h-full overflow-auto p-6 certificate-dialog-content">
+                    <UnifiedCertificateViewer
+                      data={{
+                        userName: user?.user_metadata?.full_name || user?.email || "Usuário",
+                        solutionTitle: certificate.title,
+                        solutionCategory: isSolution ? "Solução de IA" : "Curso",
+                        courseTitle: !isSolution ? certificate.title : undefined,
+                        implementationDate: formattedDate,
+                        completedDate: formattedDate,
+                        certificateId: certificate.id,
+                        validationCode: certificate.validation_code
+                      } as CertificateData}
+                      headerTitle={`Certificado de ${isSolution ? 'Implementação' : 'Conclusão'}`}
+                      headerDescription={`Parabéns! Você conquistou este certificado ao ${isSolution ? 'implementar com sucesso a solução' : 'concluir o curso'} "${certificate.title}".`}
+                      scale={0.6}
+                    />
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
