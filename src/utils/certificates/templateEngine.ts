@@ -77,6 +77,7 @@ export class CertificateTemplateEngine {
             
             <div class="footer-center">
               <div class="signature-area">
+                <div class="signature-handwritten">Rafael G Milagre</div>
                 <div class="signature-line"></div>
                 <div class="signature-info">
                   <span class="signatory-name">Rafael G Milagre</span>
@@ -144,7 +145,7 @@ export class CertificateTemplateEngine {
       }
 
       .logo {
-        width: 140px !important;
+        width: 200px !important;
         height: auto !important;
         object-fit: contain !important;
         margin: 0 auto 30px !important;
@@ -312,6 +313,17 @@ export class CertificateTemplateEngine {
 
       .signature-area {
         text-align: center;
+      }
+
+      .signature-handwritten {
+        font-family: 'Brush Script MT', 'Lucida Handwriting', cursive;
+        font-size: 28px;
+        color: #00c9a7;
+        margin-bottom: 8px;
+        transform: rotate(-2deg);
+        letter-spacing: 1px;
+        text-shadow: 0 2px 4px rgba(0, 201, 167, 0.3);
+        font-weight: normal;
       }
 
       .signature-line {
