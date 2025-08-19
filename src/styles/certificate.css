@@ -2,14 +2,14 @@
 .certificate-static {
   display: block;
   width: 1123px;
-  height: 850px; /* Aumentei a altura para mostrar todo o conteúdo */
+  height: 920px; /* Aumentei ainda mais a altura */
   margin: 0;
   padding: 0;
 }
 
 .certificate-container-static {
   width: 1123px !important;
-  height: 850px !important; /* Aumentei a altura para mostrar todo o conteúdo */
+  height: 920px !important; /* Aumentei ainda mais a altura */
   background: linear-gradient(135deg, #0a0f1c 0%, #1a2332 100%) !important;
   color: #ffffff !important;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
@@ -42,7 +42,7 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  padding: 60px 80px;
+  padding: 50px 60px 40px; /* Reduzi o padding para otimizar o espaço */
   box-sizing: border-box;
   margin: 0;
 }
@@ -50,7 +50,7 @@
 /* Header */
 .header-static {
   text-align: center;
-  margin-bottom: 50px;
+  margin-bottom: 35px; /* Reduzi o espaçamento */
   flex-shrink: 0;
 }
 
@@ -90,8 +90,9 @@
   flex-direction: column;
   justify-content: center;
   text-align: center;
-  gap: 30px;
-  min-height: 400px;
+  gap: 25px; /* Reduzi o gap */
+  min-height: 350px; /* Reduzi a altura mínima */
+  max-height: 450px; /* Limitei a altura máxima */
 }
 
 .intro-text-static {
@@ -168,10 +169,11 @@
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  margin-top: 50px;
+  margin-top: 30px; /* Reduzi o margin-top */
   gap: 40px;
   flex-shrink: 0;
-  min-height: 80px;
+  min-height: 90px; /* Aumentei um pouco a altura mínima do footer */
+  padding-bottom: 10px; /* Adicionei padding no bottom */
 }
 
 .footer-left-static,
