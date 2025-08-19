@@ -82,19 +82,21 @@ export const UnifiedCertificateCard = ({
 
         {/* Share button no canto */}
         <div className="absolute top-4 right-4">
-          <ShareCertificateDropdown
-            certificate={{
-              id: certificate.id,
-              validation_code: certificate.validation_code,
-              solutions: {
-                title: certificate.title
-              }
-            }}
-            userProfile={{
-              name: user?.user_metadata?.full_name || user?.email || "Usuário"
-            }}
-            compact
-          />
+            <ShareCertificateDropdown
+              certificate={{
+                id: certificate.id,
+                validation_code: certificate.validation_code,
+                solutions: {
+                  title: certificate.title
+                },
+                title: certificate.title,
+                type: certificate.type
+              }}
+              userProfile={{
+                name: user?.user_metadata?.full_name || user?.email || "Usuário"
+              }}
+              compact
+            />
         </div>
 
         {/* Overlay gradient */}

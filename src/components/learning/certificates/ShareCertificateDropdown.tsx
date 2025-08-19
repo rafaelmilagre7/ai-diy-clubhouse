@@ -17,9 +17,11 @@ interface ShareCertificateDropdownProps {
   certificate: {
     id: string;
     validation_code: string;
-    solutions: {
+    solutions?: {
       title: string;
     };
+    title?: string;
+    type?: 'course' | 'solution';
   };
   userProfile: {
     name: string;
@@ -36,18 +38,49 @@ export const ShareCertificateDropdown = ({
   const [isGeneratingLink, setIsGeneratingLink] = useState(false);
   
   const certificateUrl = `${window.location.origin}/certificado/validar/${certificate.validation_code}`;
-  const shareText = `🎉 Acabei de conquistar um novo certificado no Viver de IA! 
+  // Detectar tipo e título do certificado
+  const isSolution = certificate.type === 'solution' || (!certificate.type && certificate.solutions?.title);
+  const certificateTitle = certificate.title || certificate.solutions?.title || 'Certificado';
+  
+  const shareText = isSolution 
+    ? `🚀 NOVA CONQUISTA DESBLOQUEADA! 
+    
+🎯 Acabei de concluir com sucesso a implementação da solução "${certificateTitle}" na plataforma Viver de IA!
 
-🚀 Completei com sucesso a implementação da solução "${certificate.solutions.title}"
+💡 Este certificado oficial comprova minha capacidade de aplicar Inteligência Artificial em projetos reais e resolver problemas complexos com soluções práticas.
 
-💡 Este certificado comprova minha capacidade de implementar soluções práticas de IA e aplicar conhecimentos avançados em projetos reais.
+🏆 Mais uma etapa vencida na minha jornada de especialização em IA!
 
-🔗 Confira meu certificado oficial:`;
+👨‍💻 Quer também dominar as ferramentas de IA mais avançadas do mercado?
+
+#InteligenciaArtificial #IA #MachineLearning #Inovacao #TechCareer #ViverDeIA #Certificacao #DesenvolvedorIA #FuturoDoTrabalho #TechSkills`
+    : `🎓 CERTIFICADO CONQUISTADO!
+
+📚 Finalizei com sucesso o curso "${certificateTitle}" na plataforma Viver de IA!
+
+🚀 Mais conhecimentos práticos em Inteligência Artificial adquiridos e aplicados!
+
+💪 Cada certificado é um passo a mais rumo ao domínio completo das tecnologias de IA que estão transformando o mercado.
+
+🔥 A jornada continua! Próximo objetivo já definido.
+
+👉 Se você também quer se destacar no mercado de IA, conheça a Viver de IA!
+
+#EducacaoContinua #InteligenciaArtificial #AprendizadoIA #TechEducation #ViverDeIA #CarreiraEmTech #InovacaoDigital #FuturoDoTrabalho #SkillsIA #TechProfessional`;
 
   const handleShareLinkedIn = () => {
     const linkedInText = encodeURIComponent(shareText);
-    const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(certificateUrl)}&summary=${linkedInText}`;
-    window.open(url, '_blank', 'width=600,height=400');
+    const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(certificateUrl)}&summary=${linkedInText}`;
+    
+    // Analytics de compartilhamento (opcional - para métricas futuras)
+    console.log("📊 [ANALYTICS] Compartilhamento LinkedIn iniciado:", {
+      certificateId: certificate.id,
+      type: isSolution ? 'solution' : 'course',
+      title: certificateTitle
+    });
+    
+    window.open(linkedInUrl, '_blank', 'width=700,height=500');
+    toast.success("🚀 Abrindo LinkedIn! Compartilhe sua conquista com sua rede!");
   };
 
   const handleCopyLink = async () => {
@@ -75,8 +108,8 @@ export const ShareCertificateDropdown = ({
       
       const certificateData = {
         userName: userProfile.name,
-        solutionTitle: certificate.solutions.title,
-        solutionCategory: 'Solução de IA',
+        solutionTitle: certificateTitle,
+        solutionCategory: isSolution ? 'Solução de IA' : 'Curso',
         implementationDate: new Date().toLocaleDateString('pt-BR'),
         certificateId: certificate.id,
         validationCode: certificate.validation_code
@@ -151,10 +184,13 @@ export const ShareCertificateDropdown = ({
           {!compact && "Compartilhar"}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-64">
-        <DropdownMenuItem onClick={handleShareLinkedIn}>
+      <DropdownMenuContent align="end" className="w-80">{/* Aumentei a largura para mostrar melhor os textos */}
+        <DropdownMenuItem onClick={handleShareLinkedIn} className="cursor-pointer">
           <Linkedin className="h-4 w-4 mr-2 text-blue-600" />
-          Compartilhar no LinkedIn
+          <div className="flex flex-col">
+            <span className="font-medium">Compartilhar no LinkedIn</span>
+            <span className="text-xs text-muted-foreground">Mostre sua conquista para sua rede!</span>
+          </div>
         </DropdownMenuItem>
         
         <DropdownMenuSeparator />
