@@ -43,6 +43,7 @@ const moduloFormSchema = z.object({
   description: z.string().optional(),
   cover_image_url: z.string().optional(),
   published: z.boolean().default(false),
+  blocked: z.boolean().default(false),
 });
 
 type ModuloFormValues = z.infer<typeof moduloFormSchema>;
@@ -64,6 +65,7 @@ export const ModuloFormDialog = ({
       description: modulo?.description || "",
       cover_image_url: modulo?.cover_image_url || "",
       published: modulo?.published || false,
+      blocked: (modulo as any)?.blocked || false,
     },
   });
 
@@ -77,6 +79,7 @@ export const ModuloFormDialog = ({
         description: modulo.description || "",
         cover_image_url: modulo.cover_image_url || "",
         published: modulo.published || false,
+        blocked: (modulo as any).blocked || false,
       });
     } else if (open) {
       console.log("Inicializando formulário para novo módulo");
@@ -86,6 +89,7 @@ export const ModuloFormDialog = ({
         description: "",
         cover_image_url: "",
         published: false,
+        blocked: false,
       });
     }
   }, [modulo, open, form.reset]);
@@ -104,6 +108,7 @@ export const ModuloFormDialog = ({
             description: values.description,
             cover_image_url: values.cover_image_url,
             published: values.published,
+            blocked: values.blocked,
             updated_at: new Date().toISOString(),
           })
           .eq('id', modulo.id);
@@ -137,6 +142,7 @@ export const ModuloFormDialog = ({
             description: values.description,
             cover_image_url: values.cover_image_url,
             published: values.published,
+            blocked: values.blocked,
             course_id: cursoId,
             order_index: nextOrder,
           });
@@ -246,6 +252,27 @@ export const ModuloFormDialog = ({
                     <FormLabel className="text-base">Publicar módulo</FormLabel>
                     <FormDescription>
                       Quando ativado, o módulo será visível para os alunos.
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="blocked"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Bloquear módulo</FormLabel>
+                    <FormDescription>
+                      Quando ativado, o módulo ficará bloqueado para os alunos.
                     </FormDescription>
                   </div>
                   <FormControl>

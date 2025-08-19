@@ -2097,6 +2097,7 @@ export type Database = {
       }
       learning_modules: {
         Row: {
+          blocked: boolean
           course_id: string
           cover_image_url: string | null
           created_at: string
@@ -2108,6 +2109,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          blocked?: boolean
           course_id: string
           cover_image_url?: string | null
           created_at?: string
@@ -2119,6 +2121,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          blocked?: boolean
           course_id?: string
           cover_image_url?: string | null
           created_at?: string
