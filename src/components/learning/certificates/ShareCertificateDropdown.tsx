@@ -42,9 +42,12 @@ export const ShareCertificateDropdown = ({
 Confira meu certificado:`;
 
   const handleShareLinkedIn = async () => {
-    // Compartilhar no LinkedIn com o link bonito do domínio
+    // Compartilhar no LinkedIn com texto pré-preenchido (nova API)
     const linkedInText = encodeURIComponent(shareText);
-    const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(certificateUrl)}&summary=${linkedInText}`;
+    const linkedInTitle = encodeURIComponent(`Novo Certificado ${isSolution ? 'de Solução' : 'de Curso'} - VIVER DE IA`);
+    
+    // Usar a nova URL de compartilhamento do LinkedIn com mais parâmetros
+    const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(certificateUrl)}&title=${linkedInTitle}&summary=${linkedInText}&source=${encodeURIComponent('VIVER DE IA')}`;
     
     window.open(linkedInUrl, '_blank', 'width=700,height=500');
     toast.success("🚀 Abrindo LinkedIn para compartilhar seu certificado!");
