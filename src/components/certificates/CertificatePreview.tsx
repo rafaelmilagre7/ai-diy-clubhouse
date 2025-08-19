@@ -24,12 +24,16 @@ export const CertificatePreview = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [certificateElement, setCertificateElement] = useState<HTMLElement | null>(null);
+  const [previewElement, setPreviewElement] = useState<HTMLElement | null>(null);
   const previewRef = useRef<HTMLDivElement>(null);
 
-  const handleCertificateReady = (element: HTMLElement) => {
-    setCertificateElement(element);
+  const handlePreviewReady = (element: HTMLElement) => {
+    setPreviewElement(element);
   };
 
+  const handleCaptureReady = (element: HTMLElement) => {
+    setCertificateElement(element);
+  };
   const handleDownload = async () => {
     if (!certificateElement) {
       toast.error("Certificado ainda não está pronto para download");
@@ -114,6 +118,15 @@ export const CertificatePreview = ({
         </div>
       )}
 
+      {/* Hidden 1:1 capture target for PDF (no scaling, off-screen) */}
+      <div style={{ position: 'fixed', left: '-10000px', top: 0, width: '1123px', height: '794px', pointerEvents: 'none', opacity: 0 }}>
+        <CertificateTemplate
+          template={template}
+          data={data}
+          onReady={handleCaptureReady}
+        />
+      </div>
+
       {isVisible && (
         <div className="relative">
           <div 
@@ -129,12 +142,12 @@ export const CertificatePreview = ({
             <CertificateTemplate
               template={template}
               data={data}
-              onReady={handleCertificateReady}
+              onReady={handlePreviewReady}
               className="origin-top-left"
             />
           </div>
           
-          {!certificateElement && (
+          {!previewElement && (
             <div className="absolute inset-0 flex items-center justify-center bg-background/80 rounded-lg">
               <div className="flex flex-col items-center gap-2">
                 <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
