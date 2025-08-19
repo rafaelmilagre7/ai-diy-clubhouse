@@ -82,7 +82,7 @@ export class CertificateTemplateEngine {
             
             <div class="signature-column">
               <div class="signature-section">
-                <img src="/src/assets/certificates/signature-rafael.png" alt="Assinatura" class="signature-image" />
+                <img src="/signature-rafael.png" alt="Assinatura" class="signature-image" />
                 <div class="signature-line"></div>
                 <p class="signature-name">Rafael G Milagre</p>
                 <p class="signature-title">Founder VIVER DE IA</p>
@@ -112,12 +112,13 @@ export class CertificateTemplateEngine {
       .certificate-container {
         width: 1123px;
         height: 794px;
-        background: #ffffff;
+        background: #ffffff !important;
+        color: #000000 !important;
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
         position: relative;
         padding: 60px;
         box-sizing: border-box;
-        border: 2px solid hsl(var(--primary));
+        border: 2px solid #00c9a7;
         border-radius: 12px;
         overflow: hidden;
       }
@@ -129,11 +130,7 @@ export class CertificateTemplateEngine {
         left: 0;
         right: 0;
         bottom: 0;
-        background: linear-gradient(135deg, 
-          hsla(var(--primary), 0.03) 0%, 
-          transparent 25%, 
-          transparent 75%, 
-          hsla(var(--accent), 0.03) 100%);
+        background: transparent !important;
         pointer-events: none;
       }
 
@@ -165,7 +162,7 @@ export class CertificateTemplateEngine {
       .certificate-title {
         font-size: 42px;
         font-weight: 700;
-        color: hsl(var(--primary));
+        color: #00c9a7 !important;
         margin: 0 0 16px 0;
         line-height: 1.2;
       }
@@ -181,20 +178,20 @@ export class CertificateTemplateEngine {
       .decoration-line {
         width: 40px;
         height: 2px;
-        background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--accent)));
+        background: linear-gradient(90deg, #00c9a7, #00c9a7);
         border-radius: 1px;
       }
 
       .platform-name {
         font-size: 20px;
         font-weight: 600;
-        color: hsl(var(--primary));
+        color: #00c9a7 !important;
         letter-spacing: 2px;
       }
 
       .subtitle {
         font-size: 14px;
-        color: hsl(var(--muted-foreground));
+        color: #666666 !important;
         margin: 0;
         font-weight: 400;
       }
@@ -211,7 +208,7 @@ export class CertificateTemplateEngine {
 
       .certification-text {
         font-size: 18px;
-        color: hsl(var(--foreground));
+        color: #333333 !important;
         margin: 0;
         font-weight: 300;
       }
@@ -223,7 +220,7 @@ export class CertificateTemplateEngine {
       .user-name {
         font-size: 36px;
         font-weight: 700;
-        color: hsl(var(--primary));
+        color: #00c9a7 !important;
         margin: 0 0 12px 0;
         line-height: 1.2;
       }
@@ -231,14 +228,14 @@ export class CertificateTemplateEngine {
       .name-underline {
         width: 200px;
         height: 2px;
-        background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--accent)));
+        background: linear-gradient(90deg, #00c9a7, #00c9a7);
         margin: 0 auto;
         border-radius: 1px;
       }
 
       .completion-text {
         font-size: 18px;
-        color: hsl(var(--muted-foreground));
+        color: #666666 !important;
         margin: 0;
         font-weight: 300;
       }
@@ -246,29 +243,29 @@ export class CertificateTemplateEngine {
       .solution-section {
         margin: 32px 0;
         padding: 24px;
-        background: hsla(var(--primary), 0.05);
+        background: rgba(0, 201, 167, 0.05) !important;
         border-radius: 8px;
-        border: 1px solid hsla(var(--primary), 0.1);
+        border: 1px solid rgba(0, 201, 167, 0.1) !important;
       }
 
       .solution-title {
         font-size: 28px;
         font-weight: 600;
-        color: hsl(var(--primary));
+        color: #00c9a7 !important;
         margin: 0 0 8px 0;
         line-height: 1.3;
       }
 
       .solution-category {
         font-size: 14px;
-        color: hsl(var(--muted-foreground));
+        color: #666666 !important;
         margin: 0;
         font-weight: 500;
       }
 
       .achievement-text {
         font-size: 16px;
-        color: hsl(var(--muted-foreground));
+        color: #666666 !important;
         line-height: 1.5;
         max-width: 600px;
         margin: 0 auto;
@@ -297,7 +294,7 @@ export class CertificateTemplateEngine {
       .date-label,
       .validation-label {
         font-size: 12px;
-        color: hsl(var(--muted-foreground));
+        color: #666666 !important;
         margin: 0 0 4px 0;
         font-weight: 500;
         text-transform: uppercase;
@@ -308,19 +305,29 @@ export class CertificateTemplateEngine {
       .validation-code {
         font-size: 16px;
         font-weight: 600;
-        color: hsl(var(--foreground));
+        color: #333333 !important;
         margin: 0;
       }
 
       .platform-credit {
         font-size: 12px;
-        color: hsl(var(--muted-foreground));
+        color: #666666 !important;
         margin: 8px 0 0 0;
         font-weight: 500;
       }
 
       .signature-section {
         margin-bottom: 20px;
+      }
+
+      .signature-text {
+        font-family: 'Brush Script MT', cursive, sans-serif;
+        font-size: 24px;
+        color: #333333 !important;
+        font-weight: 400;
+        margin-bottom: 8px;
+        font-style: italic;
+        transform: rotate(-2deg);
       }
 
       .signature-image {
@@ -332,20 +339,20 @@ export class CertificateTemplateEngine {
       .signature-line {
         width: 160px;
         height: 1px;
-        background: hsl(var(--border));
+        background: #cccccc !important;
         margin: 0 auto 8px;
       }
 
       .signature-name {
         font-size: 16px;
         font-weight: 600;
-        color: hsl(var(--primary));
+        color: #00c9a7 !important;
         margin: 0 0 4px 0;
       }
 
       .signature-title {
         font-size: 12px;
-        color: hsl(var(--muted-foreground));
+        color: #666666 !important;
         margin: 0;
         font-weight: 500;
       }
@@ -356,8 +363,8 @@ export class CertificateTemplateEngine {
         align-items: center;
         gap: 8px;
         padding: 12px;
-        background: hsla(var(--primary), 0.05);
-        border: 1px solid hsla(var(--primary), 0.1);
+        background: rgba(0, 201, 167, 0.05) !important;
+        border: 1px solid rgba(0, 201, 167, 0.1) !important;
         border-radius: 8px;
         width: 160px;
         margin: 0 auto;
@@ -366,13 +373,13 @@ export class CertificateTemplateEngine {
       .seal-icon {
         width: 24px;
         height: 24px;
-        color: hsl(var(--primary));
+        color: #00c9a7 !important;
       }
 
       .seal-text {
         font-size: 10px;
         font-weight: 700;
-        color: hsl(var(--primary));
+        color: #00c9a7 !important;
         letter-spacing: 0.5px;
       }
 
