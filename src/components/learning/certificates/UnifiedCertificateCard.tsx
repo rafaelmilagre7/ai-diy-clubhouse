@@ -1,10 +1,9 @@
-
-import React, { useState } from "react";
+import React from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Download, Star, Calendar, BookOpen, Award, Eye, Lightbulb, Trophy, Sparkles } from "lucide-react";
-import { Certificate } from "@/types/learningTypes";
+import { UnifiedCertificate } from "@/hooks/learning/useUnifiedCertificates";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
@@ -14,23 +13,18 @@ import { UnifiedCertificateViewer } from "@/components/certificates/UnifiedCerti
 import { CertificateData } from "@/utils/certificates/templateEngine";
 import { useAuth } from "@/contexts/auth";
 
-interface CertificateCardProps {
-  certificate: Certificate;
+interface UnifiedCertificateCardProps {
+  certificate: UnifiedCertificate;
   onDownload: (certificateId: string) => void;
 }
 
-export const CertificateCard = ({
+export const UnifiedCertificateCard = ({
   certificate,
   onDownload
-}: CertificateCardProps) => {
+}: UnifiedCertificateCardProps) => {
   const { user } = useAuth();
   
-  // Detectar tipo de certificado
-  const isSolution = (certificate as any).type === 'solution';
-  const course = (certificate as any).learning_courses;
-  const solution = (certificate as any).solutions;
-  
-  const title = (certificate as any).title || course?.title || solution?.title || "Certificado";
+  const isSolution = certificate.type === 'solution';
   const formattedDate = format(new Date(certificate.issued_at), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
   
   // Configurações baseadas no tipo
@@ -58,10 +52,7 @@ export const CertificateCard = ({
   
   const handleDownload = () => {
     onDownload(certificate.id);
-    toast.success("Download iniciado!");
   };
-
-  const [showCertificateModal, setShowCertificateModal] = useState(false);
   
   return (
     <motion.div
@@ -118,7 +109,7 @@ export const CertificateCard = ({
             text-lg font-semibold text-foreground line-clamp-2 leading-tight
             group-hover:${config.iconColor} transition-colors duration-300
           `}>
-            {title}
+            {certificate.title}
           </CardTitle>
           <div className={`flex items-center gap-2 text-sm ${config.iconColor}`}>
             <Trophy className="h-4 w-4 fill-current" />
@@ -156,7 +147,7 @@ export const CertificateCard = ({
             `}
           >
             <Download className="h-4 w-4 mr-2" />
-            Baixar Certificado
+            Baixar PDF
           </Button>
           
           <Dialog>
@@ -173,14 +164,14 @@ export const CertificateCard = ({
                 <UnifiedCertificateViewer
                   data={{
                     userName: user?.user_metadata?.full_name || user?.email || "Usuário",
-                    solutionTitle: title,
+                    solutionTitle: certificate.title,
                     solutionCategory: isSolution ? "Solução de IA" : "Curso",
                     implementationDate: formattedDate,
                     certificateId: certificate.id,
                     validationCode: certificate.validation_code
                   } as CertificateData}
                   headerTitle={`Certificado de ${isSolution ? 'Implementação' : 'Conclusão'}`}
-                  headerDescription={`Parabéns! Você conquistou este certificado ao ${isSolution ? 'implementar com sucesso a solução' : 'concluir o curso'} "${title}".`}
+                  headerDescription={`Parabéns! Você conquistou este certificado ao ${isSolution ? 'implementar com sucesso a solução' : 'concluir o curso'} "${certificate.title}".`}
                   scale={0.6}
                 />
               </div>

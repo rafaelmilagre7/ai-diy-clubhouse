@@ -1,8 +1,8 @@
 
 import React, { useState } from "react";
-import { CertificatesList } from "@/components/learning/certificates/CertificatesList";
 import { CertificatesHeader } from "@/components/learning/certificates/CertificatesHeader";
 import { CertificatesFilters } from "@/components/learning/certificates/CertificatesFilters";
+import { UnifiedCertificatesList } from "@/components/learning/certificates/UnifiedCertificatesList";
 import { useAuth } from "@/contexts/auth";
 
 const MemberCertificates = () => {
@@ -30,7 +30,7 @@ const MemberCertificates = () => {
               onSortChange={setSortBy}
             />
             
-            <CertificatesList 
+            <UnifiedCertificatesList 
               searchTerm={searchTerm}
               selectedCategory={selectedCategory}
               sortBy={sortBy}

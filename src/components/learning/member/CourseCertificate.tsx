@@ -1,7 +1,7 @@
 
 import React from "react";
 import { CertificateEligibility } from "@/components/learning/certificates/CertificateEligibility";
-import { CertificatesList } from "@/components/learning/certificates/CertificatesList";
+import { UnifiedCertificatesList } from "@/components/learning/certificates/UnifiedCertificatesList";
 import { LearningCourse } from "@/lib/supabase/types";
 
 interface CourseCertificateProps {
@@ -26,7 +26,7 @@ export const CourseCertificate = ({
       
       <div>
         <h3 className="text-lg font-medium mb-4">Certificados deste curso</h3>
-        <CertificatesList courseId={course.id} />
+        <UnifiedCertificatesList courseId={course.id} />
       </div>
     </div>
   );

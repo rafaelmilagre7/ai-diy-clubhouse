@@ -5101,6 +5101,14 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      auto_generate_course_certificate: {
+        Args: { p_course_id: string; p_user_id: string }
+        Returns: Json
+      }
+      auto_generate_solution_certificate: {
+        Args: { p_solution_id: string; p_user_id: string }
+        Returns: Json
+      }
       automated_security_monitor: {
         Args: Record<PropertyKey, never>
         Returns: Json
@@ -5181,6 +5189,10 @@ export type Database = {
       }
       check_comment_rate_limit_secure: {
         Args: { p_user_id: string }
+        Returns: boolean
+      }
+      check_course_completion: {
+        Args: { p_course_id: string; p_user_id: string }
         Returns: boolean
       }
       check_function_security_status: {
@@ -5272,6 +5284,10 @@ export type Database = {
         Returns: Json
       }
       check_solution_certificate_eligibility: {
+        Args: { p_solution_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      check_solution_completion: {
         Args: { p_solution_id: string; p_user_id: string }
         Returns: boolean
       }
@@ -5683,6 +5699,10 @@ export type Database = {
       }
       generate_networking_matches_for_user: {
         Args: { target_user_id: string }
+        Returns: Json
+      }
+      generate_pending_certificates: {
+        Args: { p_user_id?: string }
         Returns: Json
       }
       generate_personalized_completion_message: {

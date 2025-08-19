@@ -1,47 +1,53 @@
 import React, { useMemo } from "react";
-import { CertificateCard } from "./CertificateCard";
-import { useCertificates } from "@/hooks/learning/useCertificates";
+import { UnifiedCertificateCard } from "./UnifiedCertificateCard";
+import { useUnifiedCertificates } from "@/hooks/learning/useUnifiedCertificates";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle, Award, BookOpen, TrendingUp, Sparkles } from "lucide-react";
+import { AlertCircle, Award, BookOpen, TrendingUp, Sparkles, Zap } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 
-interface CertificatesListProps {
+interface UnifiedCertificatesListProps {
   courseId?: string;
   searchTerm?: string;
   selectedCategory?: string;
   sortBy?: string;
 }
 
-export const CertificatesList = ({ 
+export const UnifiedCertificatesList = ({ 
   courseId, 
   searchTerm = "", 
   selectedCategory = "all", 
   sortBy = "recent" 
-}: CertificatesListProps) => {
+}: UnifiedCertificatesListProps) => {
   const { 
     certificates, 
     isLoading, 
     error, 
-    downloadCertificate
-  } = useCertificates(courseId);
+    downloadCertificate,
+    generatePendingCertificates,
+    isGeneratingPending
+  } = useUnifiedCertificates(courseId);
   
   const handleDownload = (certificateId: string) => {
     downloadCertificate(certificateId);
   };
 
+  const handleGeneratePending = () => {
+    generatePendingCertificates();
+  };
+
   // Filtrar e ordenar certificados
   const filteredAndSortedCertificates = useMemo(() => {
     let filtered = certificates.filter(cert => {
-      const matchesSearch = !searchTerm || (cert as any).title?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = !searchTerm || cert.title?.toLowerCase().includes(searchTerm.toLowerCase());
       
       let matchesCategory = true;
       if (selectedCategory !== "all") {
         if (selectedCategory === "courses") {
-          matchesCategory = (cert as any).type === 'course';
+          matchesCategory = cert.type === 'course';
         } else if (selectedCategory === "solutions") {
-          matchesCategory = (cert as any).type === 'solution';
+          matchesCategory = cert.type === 'solution';
         }
       }
       
@@ -162,6 +168,17 @@ export const CertificatesList = ({
                 e construir um portfólio sólido de competências.
               </p>
               
+              <div className="flex justify-center mt-6">
+                <Button
+                  onClick={handleGeneratePending}
+                  disabled={isGeneratingPending}
+                  className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white font-semibold px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+                >
+                  <Zap className="h-5 w-5 mr-2" />
+                  {isGeneratingPending ? "Verificando..." : "Verificar Certificados Pendentes"}
+                </Button>
+              </div>
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8 max-w-md mx-auto">
                 <motion.div
                   whileHover={{ scale: 1.05 }}
@@ -209,6 +226,16 @@ export const CertificatesList = ({
         <p className="text-muted-foreground">
           Exibindo <span className="font-semibold text-foreground">{filteredAndSortedCertificates.length}</span> certificado{filteredAndSortedCertificates.length !== 1 ? 's' : ''}
         </p>
+        
+        <Button
+          onClick={handleGeneratePending}
+          disabled={isGeneratingPending}
+          variant="outline"
+          className="border-primary/50 text-primary hover:bg-primary/10"
+        >
+          <Zap className="h-4 w-4 mr-2" />
+          {isGeneratingPending ? "Verificando..." : "Verificar Pendentes"}
+        </Button>
       </div>
 
       {/* Grid de Certificados */}
@@ -220,7 +247,7 @@ export const CertificatesList = ({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: index * 0.1 }}
           >
-            <CertificateCard
+            <UnifiedCertificateCard
               certificate={certificate}
               onDownload={handleDownload}
             />

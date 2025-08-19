@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useLearningCourses } from "@/hooks/learning/useLearningCourses";
-import { useCertificates } from "@/hooks/learning/useCertificates";
+import { useUnifiedCertificates } from "@/hooks/learning/useUnifiedCertificates";
 import { useUserProgress } from "@/hooks/learning/useUserProgress";
 import { useDynamicSEO } from "@/hooks/seo/useDynamicSEO";
 import { CertificatePreview } from "@/components/learning/certificates/CertificatePreview";
@@ -34,7 +34,7 @@ export default function CertificatesPage() {
   const [previewOpen, setPreviewOpen] = useState(false);
 
   const { courses } = useLearningCourses();
-  const { certificates, downloadCertificate, isLoading } = useCertificates();
+  const { certificates, downloadCertificate, isLoading } = useUnifiedCertificates();
   const { userProgress } = useUserProgress();
 
   // SEO otimizado
@@ -56,7 +56,7 @@ export default function CertificatesPage() {
 
   // Filtrar certificados
   const filteredCertificates = certificates.filter(cert =>
-    (cert as any).learning_courses?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    cert.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     cert.validation_code.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -224,10 +224,10 @@ export default function CertificatesPage() {
                       </div>
                     </div>
                     <CardTitle className="text-lg line-clamp-2">
-                      {(certificate as any).learning_courses?.title}
+                      {certificate.title}
                     </CardTitle>
                     <CardDescription className="line-clamp-2">
-                      {(certificate as any).learning_courses?.description}
+                      {certificate.description}
                     </CardDescription>
                   </CardHeader>
 

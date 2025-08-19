@@ -2,10 +2,10 @@
 import React from "react";
 import { Award, Trophy, Star, TrendingUp, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
-import { useCertificates } from "@/hooks/learning/useCertificates";
+import { useUnifiedCertificates } from "@/hooks/learning/useUnifiedCertificates";
 
 export const CertificatesHeader = () => {
-  const { certificates } = useCertificates();
+  const { certificates } = useUnifiedCertificates();
   
   const totalCertificates = certificates.length;
   const courseCertificates = certificates.filter(cert => cert.type === 'course').length;

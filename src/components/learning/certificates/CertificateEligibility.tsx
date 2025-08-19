@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { useCertificates } from "@/hooks/learning/useCertificates";
+import { useUnifiedCertificates } from "@/hooks/learning/useUnifiedCertificates";
 import { Award, Loader2, CheckCircle2 } from "lucide-react";
 import {
   Alert,
@@ -24,32 +24,21 @@ export const CertificateEligibility = ({
   const {
     certificates,
     isLoading,
-    checkEligibility,
-    generateCertificate,
-    isGenerating,
-  } = useCertificates(courseId);
+    generatePendingCertificates,
+    isGeneratingPending,
+  } = useUnifiedCertificates(courseId);
   
   const hasCertificate = certificates.length > 0;
   const isCompleted = progressPercentage >= 100;
   
   useEffect(() => {
-    const handleCheckEligibility = async () => {
-      if (!courseId || hasCertificate || !isCompleted) return;
-      
-      setIsChecking(true);
-      try {
-        const eligible = await checkEligibility(courseId);
-        setIsEligible(eligible);
-      } catch (error) {
-        console.error("Erro ao verificar elegibilidade:", error);
-        setIsEligible(false);
-      } finally {
-        setIsChecking(false);
-      }
-    };
-
-    handleCheckEligibility();
-  }, [courseId, hasCertificate, isCompleted, checkEligibility]);
+    // Auto-detecção baseada no progresso
+    if (isCompleted && !hasCertificate) {
+      setIsEligible(true);
+    } else {
+      setIsEligible(false);
+    }
+  }, [courseId, hasCertificate, isCompleted]);
   
   if (isLoading || isChecking) {
     return (
@@ -95,11 +84,11 @@ export const CertificateEligibility = ({
         </p>
         
         <Button
-          onClick={() => generateCertificate(courseId)}
-          disabled={isGenerating}
+          onClick={() => generatePendingCertificates()}
+          disabled={isGeneratingPending}
           className="w-full bg-gradient-to-r from-viverblue to-viverblue-light hover:from-viverblue/90 hover:to-viverblue-light/90 text-white"
         >
-          {isGenerating ? (
+          {isGeneratingPending ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Gerando certificado...
