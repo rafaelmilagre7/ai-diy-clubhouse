@@ -156,15 +156,17 @@ export const UnifiedCertificateCard = ({
             </DialogTrigger>
             <DialogContent className="max-w-7xl w-full h-[90vh] p-0">
               <div className="h-full overflow-auto p-6">
-                <UnifiedCertificateViewer
-                  data={{
-                    userName: user?.user_metadata?.full_name || user?.email || "Usuário",
-                    solutionTitle: certificate.title,
-                    solutionCategory: isSolution ? "Solução de IA" : "Curso",
-                    implementationDate: formattedDate,
-                    certificateId: certificate.id,
-                    validationCode: certificate.validation_code
-                  } as CertificateData}
+              <UnifiedCertificateViewer
+                data={{
+                  userName: user?.user_metadata?.full_name || user?.email || "Usuário",
+                  solutionTitle: certificate.title,
+                  solutionCategory: isSolution ? "Solução de IA" : "Curso",
+                  courseTitle: !isSolution ? certificate.title : undefined,
+                  implementationDate: formattedDate,
+                  completedDate: formattedDate,
+                  certificateId: certificate.id,
+                  validationCode: certificate.validation_code
+                } as CertificateData}
                   headerTitle={`Certificado de ${isSolution ? 'Implementação' : 'Conclusão'}`}
                   headerDescription={`Parabéns! Você conquistou este certificado ao ${isSolution ? 'implementar com sucesso a solução' : 'concluir o curso'} "${certificate.title}".`}
                   scale={0.6}

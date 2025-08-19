@@ -29,10 +29,6 @@ export const UnifiedCertificatesList = ({
     isGeneratingPending
   } = useUnifiedCertificates(courseId);
   
-  const handleDownload = (certificateId: string) => {
-    downloadCertificate(certificateId);
-  };
-
   const handleGeneratePending = () => {
     generatePendingCertificates();
   };
@@ -162,14 +158,14 @@ export const UnifiedCertificatesList = ({
               </p>
               
               <div className="flex justify-center mt-6">
-                <Button
-                  onClick={handleGeneratePending}
-                  disabled={isGeneratingPending}
-                  className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white font-semibold px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
-                >
-                  <Zap className="h-5 w-5 mr-2" />
-                  {isGeneratingPending ? "Verificando..." : "Verificar Certificados Pendentes"}
-                </Button>
+          <Button
+            onClick={handleGeneratePending}
+            disabled={isGeneratingPending}
+            className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white font-semibold px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+          >
+            <Zap className="h-5 w-5 mr-2" />
+            {isGeneratingPending ? "Verificando..." : "Verificar Certificados Pendentes"}
+          </Button>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8 max-w-md mx-auto">
@@ -242,7 +238,7 @@ export const UnifiedCertificatesList = ({
           >
             <UnifiedCertificateCard
               certificate={certificate}
-              onDownload={handleDownload}
+              onDownload={downloadCertificate}
             />
           </motion.div>
         ))}

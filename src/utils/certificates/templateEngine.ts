@@ -402,30 +402,33 @@ export class CertificateTemplateEngine {
   public processTemplate(template: CertificateTemplate, data: CertificateData): string {
     let processedHtml = template.html_template;
 
-    // Determinar tipo de conclusão
+    // Determinar tipo de conclusão automaticamente
     const completionType = data.courseTitle 
       ? `o curso`
       : `a implementação da solução`;
 
-    // Substituições básicas
+    // Mapeamento completo de variáveis do template
     const replacements = {
-      '{{USER_NAME}}': data.userName,
-      '{{SOLUTION_TITLE}}': data.solutionTitle || data.courseTitle || '',
-      '{{SOLUTION_CATEGORY}}': data.solutionCategory || '',
-      '{{IMPLEMENTATION_DATE}}': data.implementationDate || data.completedDate || '',
-      '{{VALIDATION_CODE}}': data.validationCode,
-      '{{CERTIFICATE_ID}}': data.certificateId,
+      '{{USER_NAME}}': data.userName || 'Usuário',
+      '{{SOLUTION_TITLE}}': data.solutionTitle || data.courseTitle || 'Certificado',
+      '{{COURSE_TITLE}}': data.courseTitle || data.solutionTitle || 'Certificado',
+      '{{SOLUTION_CATEGORY}}': data.solutionCategory || 'Certificado',
+      '{{COURSE_CATEGORY}}': data.solutionCategory || 'Curso',
+      '{{IMPLEMENTATION_DATE}}': data.implementationDate || data.completedDate || new Date().toLocaleDateString('pt-BR'),
+      '{{COMPLETION_DATE}}': data.completedDate || data.implementationDate || new Date().toLocaleDateString('pt-BR'),
+      '{{VALIDATION_CODE}}': data.validationCode || '',
+      '{{CERTIFICATE_ID}}': data.certificateId || '',
       '{{COMPLETION_TYPE}}': completionType,
       '{{BENEFITS}}': data.benefits?.join(', ') || ''
     };
 
-    // Aplicar substituições
+    // Aplicar substituições com proteção contra valores undefined
     for (const [placeholder, value] of Object.entries(replacements)) {
       const regex = new RegExp(placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
-      processedHtml = processedHtml.replace(regex, value || '');
+      processedHtml = processedHtml.replace(regex, String(value || ''));
     }
 
-    // Processamento condicional simples
+    // Processamento condicional aprimorado
     processedHtml = this.processConditionals(processedHtml, data);
 
     return sanitizeCertificateHTML(processedHtml);

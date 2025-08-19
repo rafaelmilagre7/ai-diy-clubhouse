@@ -3,9 +3,10 @@ import React, { useState } from "react";
 import { CertificatesHeader } from "@/components/learning/certificates/CertificatesHeader";
 import { CertificatesFilters } from "@/components/learning/certificates/CertificatesFilters";
 import { UnifiedCertificatesList } from "@/components/learning/certificates/UnifiedCertificatesList";
+import { CertificateErrorBoundary } from "@/components/certificates/CertificateErrorBoundary";
 import { useAuth } from "@/contexts/auth";
 
-const MemberCertificates = () => {
+const CertificatesPage = () => {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -18,28 +19,30 @@ const MemberCertificates = () => {
       
       <div className="relative z-10">
         <div className="container mx-auto px-4 py-8 space-y-8 max-w-7xl">
-          <CertificatesHeader />
-          
-          <div className="space-y-6">
-            <CertificatesFilters
-              searchTerm={searchTerm}
-              onSearchChange={setSearchTerm}
-              selectedCategory={selectedCategory}
-              onCategoryChange={setSelectedCategory}
-              sortBy={sortBy}
-              onSortChange={setSortBy}
-            />
+          <CertificateErrorBoundary>
+            <CertificatesHeader />
             
-            <UnifiedCertificatesList 
-              searchTerm={searchTerm}
-              selectedCategory={selectedCategory}
-              sortBy={sortBy}
-            />
-          </div>
+            <div className="space-y-6">
+              <CertificatesFilters
+                searchTerm={searchTerm}
+                onSearchChange={setSearchTerm}
+                selectedCategory={selectedCategory}
+                onCategoryChange={setSelectedCategory}
+                sortBy={sortBy}
+                onSortChange={setSortBy}
+              />
+              
+              <UnifiedCertificatesList 
+                searchTerm={searchTerm}
+                selectedCategory={selectedCategory}
+                sortBy={sortBy}
+              />
+            </div>
+          </CertificateErrorBoundary>
         </div>
       </div>
     </div>
   );
 };
 
-export default MemberCertificates;
+export default CertificatesPage;

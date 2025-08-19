@@ -19,6 +19,8 @@ export interface UnifiedCertificate {
   solution_id?: string;
   implementation_date?: string;
   completion_date?: string;
+  template_id?: string;
+  metadata?: Record<string, any>;
   learning_courses?: {
     title: string;
     description?: string;
@@ -90,7 +92,7 @@ export const useUnifiedCertificates = (courseId?: string) => {
           ? (learningCerts || []).filter(cert => cert.course_id === courseId)
           : learningCerts || [];
 
-        // Unificar certificados com padronização de dados
+        // Unificar certificados com padronização de dados otimizada
         const allCertificates: UnifiedCertificate[] = [
           ...filteredLearningCerts.map(cert => ({
             ...cert,
@@ -99,7 +101,9 @@ export const useUnifiedCertificates = (courseId?: string) => {
             description: cert.learning_courses?.description,
             image_url: cert.learning_courses?.cover_image_url,
             course_id: cert.course_id,
-            completion_date: cert.issued_at // Padronizar campo de data
+            completion_date: cert.completion_date || cert.issued_at,
+            template_id: cert.template_id,
+            metadata: cert.metadata || {}
           })),
           ...(solutionCerts || []).map(cert => ({
             ...cert,
@@ -108,7 +112,9 @@ export const useUnifiedCertificates = (courseId?: string) => {
             description: cert.solutions?.description,
             image_url: cert.solutions?.thumbnail_url,
             solution_id: cert.solution_id,
-            completion_date: cert.implementation_date || cert.issued_at
+            completion_date: cert.completion_date || cert.implementation_date || cert.issued_at,
+            template_id: cert.template_id,
+            metadata: cert.metadata || {}
           }))
         ];
         
@@ -133,44 +139,56 @@ export const useUnifiedCertificates = (courseId?: string) => {
     enabled: !!user
   });
   
-  // Gerar certificados pendentes
+  // Gerar certificados pendentes - versão otimizada com tratamento de erro
   const generatePendingCertificates = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error("Usuário não autenticado");
       
-      const { data, error } = await supabase.rpc('generate_pending_certificates');
+      console.log('🔄 Verificando certificados pendentes...');
       
-      if (error) throw error;
-      return data;
+      // Tentar função otimizada primeiro
+      try {
+        const { data, error } = await supabase.rpc('generate_pending_certificates_optimized');
+        if (error) throw error;
+        return data;
+      } catch (optimizedError) {
+        // Fallback para função original
+        console.log('⚠️ Função otimizada não disponível, usando original...');
+        const { data, error } = await supabase.rpc('generate_pending_certificates');
+        if (error) throw error;
+        return data;
+      }
     },
     onSuccess: (data) => {
       const totalGenerated = data.total_generated || 0;
       
+      console.log('✅ Verificação de certificados concluída:', { totalGenerated });
+      
       if (totalGenerated > 0) {
         toast.success(`${totalGenerated} certificado${totalGenerated > 1 ? 's' : ''} gerado${totalGenerated > 1 ? 's' : ''} com sucesso!`);
         
-        // Exibir detalhes dos certificados gerados
+        // Exibir detalhes se disponíveis
         if (data.generated_courses?.length > 0) {
           data.generated_courses.forEach((cert: any) => {
-            toast.success(`Certificado de curso gerado: ${cert.course_title}`);
+            toast.success(`📚 Certificado de curso: ${cert.course_title}`);
           });
         }
         
         if (data.generated_solutions?.length > 0) {
           data.generated_solutions.forEach((cert: any) => {
-            toast.success(`Certificado de solução gerado: ${cert.solution_title}`);
+            toast.success(`💡 Certificado de solução: ${cert.solution_title}`);
           });
         }
       } else {
-        toast.info('Nenhum certificado novo foi gerado. Você já possui todos os certificados disponíveis.');
+        toast.info('✨ Você já possui todos os certificados disponíveis!');
       }
       
       // Invalidar cache para recarregar certificados
       queryClient.invalidateQueries({ queryKey: ['unified-certificates'] });
     },
     onError: (error: any) => {
-      console.error("Erro ao gerar certificados pendentes:", error);
-      toast.error('Erro ao gerar certificados. Tente novamente.');
+      console.error("❌ Erro ao gerar certificados pendentes:", error);
+      toast.error('Erro ao verificar certificados pendentes. Tente novamente.');
     }
   });
   
@@ -189,17 +207,21 @@ export const useUnifiedCertificates = (courseId?: string) => {
       const { pdfGenerator } = await import('@/utils/certificates/pdfGenerator');
       const { templateEngine } = await import('@/utils/certificates/templateEngine');
       
-      // Dados padronizados
-      const certificateData = {
-        userName: user?.user_metadata?.full_name || user?.email || "Usuário",
-        solutionTitle: certificate.title,
-        solutionCategory: certificate.type === 'solution' ? 'Solução de IA' : 'Curso',
-        implementationDate: formatDateForCertificate(
-          certificate.implementation_date || certificate.completion_date || certificate.issued_at
-        ),
-        certificateId: certificate.id,
-        validationCode: certificate.validation_code
-      };
+        // Dados padronizados para certificado
+        const certificateData = {
+          userName: user?.user_metadata?.full_name || user?.email || "Usuário",
+          solutionTitle: certificate.title,
+          courseTitle: certificate.type === 'course' ? certificate.title : undefined,
+          solutionCategory: certificate.type === 'solution' ? 'Solução de IA' : 'Curso',
+          implementationDate: formatDateForCertificate(
+            certificate.completion_date || certificate.implementation_date || certificate.issued_at
+          ),
+          completedDate: formatDateForCertificate(
+            certificate.completion_date || certificate.issued_at
+          ),
+          certificateId: certificate.id,
+          validationCode: certificate.validation_code
+        };
 
       // Template com design aprovado
       const template = templateEngine.generateDefaultTemplate();
@@ -248,7 +270,7 @@ export const useUnifiedCertificates = (courseId?: string) => {
     }
   };
 
-  // Função utilitária para formatar data
+  // Função utilitária para formatar data para certificado
   const formatDateForCertificate = (dateString: string): string => {
     try {
       return format(new Date(dateString), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
@@ -257,9 +279,13 @@ export const useUnifiedCertificates = (courseId?: string) => {
     }
   };
 
-  // Função utilitária para gerar nome do arquivo
+  // Função utilitária para gerar nome limpo do arquivo
   const generateFilename = (title: string, validationCode: string): string => {
-    const cleanTitle = title.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '-');
+    const cleanTitle = title
+      .replace(/[^a-zA-Z0-9\s]/g, '')
+      .replace(/\s+/g, '-')
+      .toLowerCase()
+      .substring(0, 50); // Limitar tamanho
     return `certificado-${cleanTitle}-${validationCode}.pdf`;
   };
 
