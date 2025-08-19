@@ -1645,31 +1645,85 @@ export type Database = {
           },
         ]
       }
+      learning_certificate_templates: {
+        Row: {
+          course_id: string | null
+          created_at: string
+          created_by: string | null
+          css_styles: string | null
+          description: string | null
+          html_template: string
+          id: string
+          is_active: boolean
+          is_default: boolean
+          metadata: Json | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          course_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          css_styles?: string | null
+          description?: string | null
+          html_template: string
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          metadata?: Json | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          course_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          css_styles?: string | null
+          description?: string | null
+          html_template?: string
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          metadata?: Json | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       learning_certificates: {
         Row: {
           certificate_url: string | null
+          completion_date: string | null
           course_id: string
           created_at: string
           id: string
           issued_at: string
+          metadata: Json | null
+          template_id: string | null
           user_id: string
           validation_code: string
         }
         Insert: {
           certificate_url?: string | null
+          completion_date?: string | null
           course_id: string
           created_at?: string
           id?: string
           issued_at?: string
+          metadata?: Json | null
+          template_id?: string | null
           user_id: string
           validation_code?: string
         }
         Update: {
           certificate_url?: string | null
+          completion_date?: string | null
           course_id?: string
           created_at?: string
           id?: string
           issued_at?: string
+          metadata?: Json | null
+          template_id?: string | null
           user_id?: string
           validation_code?: string
         }
@@ -3901,14 +3955,13 @@ export type Database = {
       }
       solution_certificates: {
         Row: {
-          certificate_filename: string | null
-          certificate_pdf_path: string | null
-          certificate_pdf_url: string | null
           certificate_url: string | null
+          completion_date: string | null
           created_at: string
           id: string
           implementation_date: string
           issued_at: string
+          metadata: Json | null
           solution_id: string
           template_id: string | null
           updated_at: string
@@ -3916,14 +3969,13 @@ export type Database = {
           validation_code: string
         }
         Insert: {
-          certificate_filename?: string | null
-          certificate_pdf_path?: string | null
-          certificate_pdf_url?: string | null
           certificate_url?: string | null
+          completion_date?: string | null
           created_at?: string
           id?: string
           implementation_date: string
           issued_at?: string
+          metadata?: Json | null
           solution_id: string
           template_id?: string | null
           updated_at?: string
@@ -3931,14 +3983,13 @@ export type Database = {
           validation_code?: string
         }
         Update: {
-          certificate_filename?: string | null
-          certificate_pdf_path?: string | null
-          certificate_pdf_url?: string | null
           certificate_url?: string | null
+          completion_date?: string | null
           created_at?: string
           id?: string
           implementation_date?: string
           issued_at?: string
+          metadata?: Json | null
           solution_id?: string
           template_id?: string | null
           updated_at?: string
