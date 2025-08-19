@@ -66,18 +66,6 @@ export const ShareCertificateDropdown = ({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuItem onClick={handleCopyLink}>
-          <Copy className="h-4 w-4 mr-2" />
-          Copiar link
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={handleShareFacebook}>
-          <Facebook className="h-4 w-4 mr-2" />
-          Compartilhar no Facebook
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={handleShareTwitter}>
-          <Twitter className="h-4 w-4 mr-2" />
-          Compartilhar no Twitter
-        </DropdownMenuItem>
         <DropdownMenuItem onClick={handleShareLinkedIn}>
           <Linkedin className="h-4 w-4 mr-2" />
           Compartilhar no LinkedIn
