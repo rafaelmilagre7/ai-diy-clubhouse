@@ -10,6 +10,8 @@ import { LessonTagsFilter } from '@/components/learning/tags/LessonTagsFilter';
 import { TagBadge } from '@/components/learning/tags/TagBadge';
 import { NovaAulaButton } from './NovaAulaButton';
 import { useAuth } from '@/contexts/auth';
+import { useFeatureAccess } from '@/hooks/auth/useFeatureAccess';
+import { usePremiumUpgradeModal } from '@/hooks/usePremiumUpgradeModal';
 import { useNavigate } from 'react-router-dom';
 import {
   AlertDialog,
@@ -37,6 +39,8 @@ export const AllLessonsListWithTags: React.FC<AllLessonsListWithTagsProps> = ({
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const { isAdmin } = useAuth();
+  const { hasFeatureAccess } = useFeatureAccess();
+  const { showUpgradeModal } = usePremiumUpgradeModal();
   const navigate = useNavigate();
 
   // Buscar aulas com filtros aplicados
@@ -75,6 +79,10 @@ export const AllLessonsListWithTags: React.FC<AllLessonsListWithTagsProps> = ({
   };
 
   const handleView = (lesson: any) => {
+    if (!hasFeatureAccess('learning')) {
+      showUpgradeModal('learning', lesson.title);
+      return;
+    }
     // Buscar course_id através do módulo
     const courseId = lesson.learning_modules?.course_id || lesson.module_id;
     navigate(`/learning/course/${courseId}/lesson/${lesson.id}`);

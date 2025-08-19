@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useNavigate } from 'react-router-dom';
+import { useFeatureAccess } from '@/hooks/auth/useFeatureAccess';
+import { usePremiumUpgradeModal } from '@/hooks/usePremiumUpgradeModal';
 import { 
   PlayCircle, 
   Clock, 
@@ -33,8 +35,14 @@ export const PersonalizedLessonsGrid: React.FC<PersonalizedLessonsGridProps> = (
   showPersonalizationScore = false
 }) => {
   const navigate = useNavigate();
+  const { hasFeatureAccess } = useFeatureAccess();
+  const { showUpgradeModal } = usePremiumUpgradeModal();
 
   const handleLessonClick = (lesson: any, index: number) => {
+    if (!hasFeatureAccess('learning')) {
+      showUpgradeModal('learning', lesson.title);
+      return;
+    }
     if (onLessonClick) {
       onLessonClick(lesson.lessonId, index);
     }

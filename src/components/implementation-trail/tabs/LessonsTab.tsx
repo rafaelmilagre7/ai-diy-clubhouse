@@ -16,6 +16,8 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useNavigate } from 'react-router-dom';
+import { useFeatureAccess } from '@/hooks/auth/useFeatureAccess';
+import { usePremiumUpgradeModal } from '@/hooks/usePremiumUpgradeModal';
 import { useLessonTagsForLesson } from '@/hooks/useLessonTags';
 import { ImplementationTrailData, RecommendedLesson } from '@/types/implementationTrail';
 import { PersonalizationInsights } from '@/components/personalized-learning/PersonalizationInsights';
@@ -45,6 +47,8 @@ export const LessonsTab = ({ trail }: LessonsTabProps) => {
   const [lessons, setLessons] = useState<Record<string, Lesson>>({});
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { hasFeatureAccess } = useFeatureAccess();
+  const { showUpgradeModal } = usePremiumUpgradeModal();
 
   useEffect(() => {
     const fetchLessons = async () => {
@@ -234,7 +238,13 @@ export const LessonsTab = ({ trail }: LessonsTabProps) => {
         </div>
 
         {/* Content */}
-        <div className="flex-1 p-4 flex flex-col justify-between min-w-0" onClick={() => navigate(`/learning/lesson/${lesson.id}`)}>
+        <div className="flex-1 p-4 flex flex-col justify-between min-w-0" onClick={() => {
+          if (!hasFeatureAccess('learning')) {
+            showUpgradeModal('learning', lesson.title);
+            return;
+          }
+          navigate(`/learning/lesson/${lesson.id}`);
+        }}>
           <div className="space-y-2">
             {/* Header with title and priority badge */}
             <div className="flex items-start justify-between gap-2">
@@ -283,6 +293,10 @@ export const LessonsTab = ({ trail }: LessonsTabProps) => {
               className="h-7 px-3 text-xs hover:bg-primary hover:text-primary-foreground transition-all duration-200"
               onClick={(e) => {
                 e.stopPropagation();
+                if (!hasFeatureAccess('learning')) {
+                  showUpgradeModal('learning', lesson.title);
+                  return;
+                }
                 navigate(`/learning/lesson/${lesson.id}`);
               }}
             >
