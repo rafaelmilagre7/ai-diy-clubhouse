@@ -179,20 +179,18 @@ export const UnifiedCertificateCard = ({
             </DialogContent>
           </Dialog>
           
-          {isSolution && (
-            <ShareCertificateDropdown
-              certificate={{
-                id: certificate.id,
-                validation_code: certificate.validation_code,
-                solutions: {
-                  title: certificate.title
-                }
-              }}
-              userProfile={{
-                name: user?.user_metadata?.full_name || user?.email || "Usuário"
-              }}
-            />
-          )}
+          <ShareCertificateDropdown
+            certificate={{
+              id: certificate.id,
+              validation_code: certificate.validation_code,
+              solutions: {
+                title: certificate.title
+              }
+            }}
+            userProfile={{
+              name: user?.user_metadata?.full_name || user?.email || "Usuário"
+            }}
+          />
         </CardFooter>
       </Card>
     </motion.div>
