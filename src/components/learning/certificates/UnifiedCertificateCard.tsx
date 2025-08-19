@@ -164,13 +164,17 @@ Confira meu certificado:`;
       const pdfUrl = await generatePublicPDF();
       
       if (pdfUrl) {
-        const shareText = `🎓 *Novo Certificado VIVER DE IA!*
+        // Trocar URL do Supabase pelo domínio personalizado
+        const customDomainUrl = pdfUrl.replace(
+          /https:\/\/[^.]+\.supabase\.co\/storage\/v1\/object\/public/,
+          'https://app.viverdeia.ai/storage'
+        );
+        
+        const shareText = `*Novo Certificado VIVER DE IA!*
 
 Acabei de me certificar ${isSolution ? 'na solução' : 'no curso'} *"${certificate.title}"*!
 
-Confira meu certificado: ${pdfUrl}
-
-#ViverDeIA #InteligenciaArtificial #Certificacao`;
+Confira meu certificado: ${customDomainUrl}`;
         
         const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
         window.open(whatsappUrl, '_blank');
