@@ -130,19 +130,18 @@ export default function CertificatesPage() {
       </div>
 
       <div className="container mx-auto px-4 md:px-6 space-y-8">
-        {/* Estatísticas Modernas */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        {/* Estatísticas Simplificadas */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
           <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-primary/5 via-primary/3 to-transparent backdrop-blur-sm hover:from-primary/8 hover:scale-105 transition-all duration-300">
             <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent opacity-50" />
-            <CardContent className="relative p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 backdrop-blur-sm border border-primary/20">
-                  <Medal className="h-6 w-6 text-primary" />
+            <CardContent className="relative p-6 text-center">
+              <div className="flex flex-col items-center space-y-4">
+                <div className="p-4 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 backdrop-blur-sm border border-primary/20">
+                  <Trophy className="h-8 w-8 text-primary" />
                 </div>
-                <div className="text-right">
-                  <div className="text-3xl font-bold text-primary">{stats.totalCertificates}</div>
-                  <div className="text-sm text-muted-foreground font-medium">Certificados (total)</div>
-                  <div className="text-xs text-muted-foreground">Cursos {stats.breakdown.courseCertificates} • Soluções {stats.breakdown.solutionCertificates}</div>
+                <div>
+                  <div className="text-4xl font-bold text-primary mb-1">{stats.breakdown.solutionCertificates}</div>
+                  <div className="text-sm text-muted-foreground font-medium">Soluções Concluídas</div>
                 </div>
               </div>
             </CardContent>
@@ -150,44 +149,14 @@ export default function CertificatesPage() {
 
           <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-viverblue/5 via-viverblue/3 to-transparent backdrop-blur-sm hover:from-viverblue/8 hover:scale-105 transition-all duration-300">
             <div className="absolute inset-0 bg-gradient-to-r from-viverblue/10 to-transparent opacity-50" />
-            <CardContent className="relative p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 rounded-xl bg-gradient-to-br from-viverblue/20 to-viverblue/10 backdrop-blur-sm border border-viverblue/20">
-                  <CheckCircle className="h-6 w-6 text-viverblue" />
+            <CardContent className="relative p-6 text-center">
+              <div className="flex flex-col items-center space-y-4">
+                <div className="p-4 rounded-xl bg-gradient-to-br from-viverblue/20 to-viverblue/10 backdrop-blur-sm border border-viverblue/20">
+                  <CheckCircle className="h-8 w-8 text-viverblue" />
                 </div>
-                <div className="text-right">
-                  <div className="text-3xl font-bold text-viverblue">{stats.completedCourses}</div>
+                <div>
+                  <div className="text-4xl font-bold text-viverblue mb-1">{stats.breakdown.courseCertificates}</div>
                   <div className="text-sm text-muted-foreground font-medium">Cursos Concluídos</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-accent/5 via-accent/3 to-transparent backdrop-blur-sm hover:from-accent/8 hover:scale-105 transition-all duration-300">
-            <div className="absolute inset-0 bg-gradient-to-r from-accent/10 to-transparent opacity-50" />
-            <CardContent className="relative p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 rounded-xl bg-gradient-to-br from-accent/20 to-accent/10 backdrop-blur-sm border border-accent/20">
-                  <Star className="h-6 w-6 text-accent" />
-                </div>
-                <div className="text-right">
-                  <div className="text-3xl font-bold text-accent">{stats.completionRate}%</div>
-                  <div className="text-sm text-muted-foreground font-medium">Taxa de Conclusão</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-secondary/5 via-secondary/3 to-transparent backdrop-blur-sm hover:from-secondary/8 hover:scale-105 transition-all duration-300">
-            <div className="absolute inset-0 bg-gradient-to-r from-secondary/10 to-transparent opacity-50" />
-            <CardContent className="relative p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 rounded-xl bg-gradient-to-br from-secondary/20 to-secondary/10 backdrop-blur-sm border border-secondary/20">
-                  <Clock className="h-6 w-6 text-secondary" />
-                </div>
-                <div className="text-right">
-                  <div className="text-3xl font-bold text-secondary">{eligibleCourses.length}</div>
-                  <div className="text-sm text-muted-foreground font-medium">Cursos elegíveis</div>
                 </div>
               </div>
             </CardContent>
@@ -203,7 +172,7 @@ export default function CertificatesPage() {
                 className="flex items-center gap-2 h-full rounded-lg font-semibold data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary/10 data-[state=active]:to-viverblue/10 data-[state=active]:text-primary data-[state=active]:border data-[state=active]:border-primary/20"
               >
                 <Award className="h-4 w-4" />
-                Meus Certificados ({stats.totalCertificates})
+              Meus Certificados ({stats.totalCertificates})
               </TabsTrigger>
               <TabsTrigger 
                 value="eligible" 
@@ -266,20 +235,14 @@ export default function CertificatesPage() {
                           <Award className="h-3 w-3 mr-1" />
                           Certificado
                         </Badge>
-                        <div className="flex items-center gap-2">
-                          <ShareCertificateDropdown 
-                            certificate={{ id: certificate.id, validation_code: certificate.validation_code, solutions: { title: certificate.title } }} 
-                            userProfile={{ name: user?.user_metadata?.full_name || user?.email || "Usuário" }}
-                          />
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handlePreview(certificate)}
-                            className="h-8 w-8 p-0 hover:bg-primary/10 hover:text-primary"
-                          >
-                            <Award className="h-4 w-4" />
-                          </Button>
-                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handlePreview(certificate)}
+                          className="h-8 w-8 p-0 hover:bg-primary/10 hover:text-primary"
+                        >
+                          <Award className="h-4 w-4" />
+                        </Button>
                       </div>
                       <CardTitle className="text-lg line-clamp-2 group-hover:text-primary transition-colors">
                         {certificate.title}
@@ -300,24 +263,33 @@ export default function CertificatesPage() {
                         <p className="font-mono text-sm font-semibold text-primary">{certificate.validation_code}</p>
                       </div>
 
-                      <div className="flex space-x-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handlePreview(certificate)}
-                          className="flex-1 bg-card/50 backdrop-blur-sm border-border/50 hover:bg-primary/10 hover:border-primary/20 hover:text-primary"
-                        >
-                          <Award className="h-4 w-4 mr-2" />
-                          Visualizar
-                        </Button>
-                        <Button
-                          size="sm"
-                          onClick={() => handleDownload(certificate.id)}
-                          className="flex-1 bg-gradient-to-r from-primary to-viverblue hover:from-primary/90 hover:to-viverblue/90 shadow-lg hover:shadow-primary/20"
-                        >
-                          <Download className="h-4 w-4 mr-2" />
-                          Baixar
-                        </Button>
+                      <div className="flex flex-col space-y-2">
+                        <div className="flex space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handlePreview(certificate)}
+                            className="flex-1 bg-card/50 backdrop-blur-sm border-border/50 hover:bg-primary/10 hover:border-primary/20 hover:text-primary"
+                          >
+                            <Award className="h-4 w-4 mr-2" />
+                            Visualizar
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={() => handleDownload(certificate.id)}
+                            className="flex-1 bg-gradient-to-r from-primary to-viverblue hover:from-primary/90 hover:to-viverblue/90 shadow-lg hover:shadow-primary/20"
+                          >
+                            <Download className="h-4 w-4 mr-2" />
+                            Baixar
+                          </Button>
+                        </div>
+                        
+                        <div className="flex justify-center">
+                          <ShareCertificateDropdown 
+                            certificate={{ id: certificate.id, validation_code: certificate.validation_code, solutions: { title: certificate.title } }} 
+                            userProfile={{ name: user?.user_metadata?.full_name || user?.email || "Usuário" }}
+                          />
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
