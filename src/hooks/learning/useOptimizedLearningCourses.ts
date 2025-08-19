@@ -21,7 +21,7 @@ interface OptimizedCourse {
   all_lessons: any[];
 }
 
-export const useOptimizedLearningCourses = () => {
+export const useOptimizedLearningCourses = (includeUnpublished = false) => {
   const { user } = useAuth();
 
   const {
@@ -29,11 +29,11 @@ export const useOptimizedLearningCourses = () => {
     isLoading,
     error
   } = useQuery({
-    queryKey: ["optimized-learning-courses", user?.id],
+    queryKey: ["optimized-learning-courses", user?.id, includeUnpublished],
     queryFn: async () => {
       try {
         // Buscar cursos com contagem de módulos e aulas em uma query otimizada
-        const { data: coursesData, error: coursesError } = await supabase
+        let query = supabase
           .from("learning_courses")
           .select(`
             id,
@@ -46,8 +46,14 @@ export const useOptimizedLearningCourses = () => {
             updated_at,
             order_index,
             created_by
-          `)
-          .eq("published", true)
+          `);
+
+        // Filtrar apenas publicados se não for para incluir não publicados
+        if (!includeUnpublished) {
+          query = query.eq("published", true);
+        }
+
+        const { data: coursesData, error: coursesError } = await query
           .order("order_index", { ascending: true });
 
         if (coursesError) {

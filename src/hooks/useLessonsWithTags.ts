@@ -17,13 +17,14 @@ interface UseLessonsWithTagsOptions {
   courseId?: string;
   selectedTagIds?: string[];
   searchTerm?: string;
+  includeUnpublished?: boolean;
 }
 
 export const useLessonsWithTags = (options: UseLessonsWithTagsOptions = {}) => {
-  const { courseId, selectedTagIds = [], searchTerm = '' } = options;
+  const { courseId, selectedTagIds = [], searchTerm = '', includeUnpublished = false } = options;
 
   return useQuery({
-    queryKey: ['lessons-with-tags', courseId, selectedTagIds, searchTerm],
+    queryKey: ['lessons-with-tags', courseId, selectedTagIds, searchTerm, includeUnpublished],
     queryFn: async () => {
       let query = supabase
         .from('learning_lessons')
@@ -37,8 +38,12 @@ export const useLessonsWithTags = (options: UseLessonsWithTagsOptions = {}) => {
           learning_lesson_tags(
             lesson_tags(*)
           )
-        `)
-        .eq('published', true);
+        `);
+
+      // Filtrar apenas publicadas se não for para incluir não publicadas
+      if (!includeUnpublished) {
+        query = query.eq('published', true);
+      }
 
       // Filtro por curso se especificado
       if (courseId) {

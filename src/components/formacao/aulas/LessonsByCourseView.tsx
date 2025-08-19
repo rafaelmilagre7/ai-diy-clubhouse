@@ -25,11 +25,14 @@ export const LessonsByCourseView: React.FC<LessonsByCourseViewProps> = ({
   onSuccess,
 }) => {
   const { isAdmin } = useAuth();
-  const { courses, isLoading, error } = useOptimizedLearningCourses();
+  const { courses, isLoading, error } = useOptimizedLearningCourses(true); // Incluir não publicados na área administrativa
   const [searchTerm, setSearchTerm] = useState('');
   const [openCourses, setOpenCourses] = useState<Set<string>>(new Set());
   
-  const { data: allLessonsWithTags } = useLessonsWithTags({ searchTerm });
+  const { data: allLessonsWithTags } = useLessonsWithTags({ 
+    searchTerm, 
+    includeUnpublished: true 
+  });
 
   const toggleCourse = (courseId: string) => {
     const newOpenCourses = new Set(openCourses);
