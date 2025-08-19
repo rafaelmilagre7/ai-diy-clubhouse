@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,16 +27,6 @@ export const UnifiedCertificateCard = ({
   
   const isSolution = certificate.type === 'solution';
   const formattedDate = format(new Date(certificate.issued_at), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
-  
-  // Debug log
-  useEffect(() => {
-    console.log('🔍 [SHARE BUTTON DEBUG]', {
-      certificateId: certificate.id,
-      certificateType: certificate.type,
-      isSolution,
-      shouldRenderShareButton: true
-    });
-  }, [certificate.id, certificate.type, isSolution]);
   
   // Configurações baseadas no tipo
   const config = isSolution ? {

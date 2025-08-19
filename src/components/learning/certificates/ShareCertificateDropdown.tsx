@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -33,11 +33,6 @@ export const ShareCertificateDropdown = ({
   const { user } = useAuth();
   const [isGeneratingLink, setIsGeneratingLink] = useState(false);
   
-  // Debug log
-  useEffect(() => {
-    console.log('🚀 [SHARE DROPDOWN] Renderizando componente', { certificate, userProfile });
-  }, [certificate, userProfile]);
-  
   const certificateUrl = `${window.location.origin}/certificado/validar/${certificate.validation_code}`;
   const shareText = `🎉 Acabei de conquistar um novo certificado no Viver de IA! 
 
@@ -65,11 +60,17 @@ export const ShareCertificateDropdown = ({
   const handleGeneratePublicPDF = async () => {
     setIsGeneratingLink(true);
     try {
-      // Usar o novo sistema de PDF
-      const { pdfGenerator } = await import('@/utils/certificates/pdfGenerator');
-      const { templateEngine } = await import('@/utils/certificates/templateEngine');
+      // Criar elemento temporário com o novo template estático
+      const tempDiv = document.createElement('div');
+      tempDiv.style.position = 'absolute';
+      tempDiv.style.left = '-9999px';
+      tempDiv.style.top = '0';
+      document.body.appendChild(tempDiv);
+
+      // Usar React para renderizar o componente
+      const { createRoot } = await import('react-dom/client');
+      const { StaticCertificateTemplate } = await import('@/components/certificates/StaticCertificateTemplate');
       
-      const template = templateEngine.generateDefaultTemplate();
       const certificateData = {
         userName: userProfile.name,
         solutionTitle: certificate.solutions.title,
@@ -79,47 +80,55 @@ export const ShareCertificateDropdown = ({
         validationCode: certificate.validation_code
       };
 
-      // Processar template
-      const html = templateEngine.processTemplate(template, certificateData);
-      const css = templateEngine.optimizeCSS(template.css_styles);
+      const root = createRoot(tempDiv);
+      
+      await new Promise<void>((resolve) => {
+        root.render(
+          React.createElement(StaticCertificateTemplate, {
+            data: certificateData,
+            onReady: async (element: HTMLElement) => {
+              try {
+                // Aguardar um pouco mais para garantir renderização completa
+                await new Promise(r => setTimeout(r, 1000));
+                
+                const { pdfGenerator } = await import('@/utils/certificates/pdfGenerator');
+                const blob = await pdfGenerator.generateFromElement(element, certificateData);
+                
+                // Upload para storage público
+                const fileName = `certificado-publico-${certificate.validation_code}.pdf`;
+                const { data: uploadData, error: uploadError } = await supabase.storage
+                  .from('certificates')
+                  .upload(`public/${fileName}`, blob, {
+                    contentType: 'application/pdf',
+                    upsert: true
+                  });
+                
+                if (uploadError) throw uploadError;
 
-      // Criar elemento temporário
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = `<style>${css}</style>${html}`;
-      tempDiv.style.position = 'absolute';
-      tempDiv.style.left = '-9999px';
-      tempDiv.style.top = '0';
-      document.body.appendChild(tempDiv);
-
-      // Aguardar renderização
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      const certificateElement = tempDiv.querySelector('.certificate-container') as HTMLElement;
-      if (certificateElement) {
-        const blob = await pdfGenerator.generateFromElement(certificateElement, certificateData);
-        
-        // Upload para storage público
-        const fileName = `certificado-publico-${certificate.validation_code}.pdf`;
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('certificates')
-          .upload(`public/${fileName}`, blob, {
-            contentType: 'application/pdf',
-            upsert: true
-          });
-        
-        if (uploadError) throw uploadError;
-
-        // Obter URL pública
-        const { data: { publicUrl } } = supabase.storage
-          .from('certificates')
-          .getPublicUrl(`public/${fileName}`);
-        
-        // Copiar link
-        await navigator.clipboard.writeText(publicUrl);
-        toast.success("Link público do PDF gerado e copiado!");
-      }
-
-      document.body.removeChild(tempDiv);
+                // Obter URL pública
+                const { data: { publicUrl } } = supabase.storage
+                  .from('certificates')
+                  .getPublicUrl(`public/${fileName}`);
+                
+                // Copiar link
+                await navigator.clipboard.writeText(publicUrl);
+                toast.success("Link público do PDF gerado e copiado!");
+                
+                resolve();
+              } catch (error) {
+                console.error('Erro ao gerar PDF:', error);
+                toast.error('Erro ao gerar link público do PDF');
+                resolve();
+              } finally {
+                // Cleanup
+                root.unmount();
+                document.body.removeChild(tempDiv);
+              }
+            }
+          })
+        );
+      });
+      
     } catch (error: any) {
       console.error('Erro ao gerar PDF público:', error);
       toast.error('Erro ao gerar link público do PDF');

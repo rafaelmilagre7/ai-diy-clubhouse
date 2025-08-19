@@ -1,10 +1,11 @@
 import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Download, ExternalLink, Eye, EyeOff } from "lucide-react";
-import { CertificateTemplate } from "./CertificateTemplate";
+import { StaticCertificateTemplate } from "./StaticCertificateTemplate";
 import { pdfGenerator } from "@/utils/certificates/pdfGenerator";
 import { CertificateData, CertificateTemplate as TemplateType } from "@/utils/certificates/templateEngine";
 import { toast } from "sonner";
+import "@/styles/certificate.css";
 
 interface CertificatePreviewProps {
   data: CertificateData;
@@ -120,8 +121,7 @@ export const CertificatePreview = ({
 
       {/* Hidden 1:1 capture target for PDF (no scaling, off-screen) */}
       <div className="fixed -left-[10000px] top-0 w-[1123px] h-[794px] pointer-events-none opacity-0">
-        <CertificateTemplate
-          template={template}
+        <StaticCertificateTemplate
           data={data}
           onReady={handleCaptureReady}
         />
@@ -144,8 +144,7 @@ export const CertificatePreview = ({
                   willChange: 'transform'
                 }}
               >
-                <CertificateTemplate
-                  template={template}
+                <StaticCertificateTemplate
                   data={data}
                   onReady={handlePreviewReady}
                   className="origin-top-left"

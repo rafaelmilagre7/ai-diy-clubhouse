@@ -1,0 +1,262 @@
+/* Estilos estáticos para o certificado - Não violam CSP */
+.certificate-static {
+  display: block;
+  width: 1123px;
+  height: 794px;
+  margin: 0;
+  padding: 0;
+}
+
+.certificate-container-static {
+  width: 1123px !important;
+  height: 794px !important;
+  background: linear-gradient(135deg, #0a0f1c 0%, #1a2332 100%) !important;
+  color: #ffffff !important;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+  position: relative !important;
+  overflow: hidden !important;
+  border-radius: 16px !important;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3) !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.certificate-container-static::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 20%, rgba(0, 201, 167, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(0, 201, 167, 0.1) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.certificate-content-static {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 60px 80px;
+  box-sizing: border-box;
+  margin: 0;
+}
+
+/* Header */
+.header-static {
+  text-align: center;
+  margin-bottom: 50px;
+  flex-shrink: 0;
+}
+
+.logo-static {
+  width: 200px;
+  height: auto;
+  object-fit: contain;
+  margin: 0 auto 30px;
+  filter: brightness(1.1) drop-shadow(0 4px 20px rgba(0, 201, 167, 0.3));
+  display: block;
+}
+
+.main-title-static {
+  font-size: 48px;
+  font-weight: 700;
+  color: #00c9a7;
+  margin: 0 0 20px 0;
+  letter-spacing: -0.02em;
+  text-shadow: 0 2px 10px rgba(0, 201, 167, 0.3);
+  display: block;
+  text-align: center;
+}
+
+.divider-line-static {
+  width: 120px;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #00c9a7, transparent);
+  margin: 0 auto;
+  border-radius: 2px;
+  display: block;
+}
+
+/* Body */
+.body-static {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+  gap: 30px;
+  min-height: 400px;
+}
+
+.intro-text-static {
+  font-size: 20px;
+  color: #e2e8f0;
+  margin: 0;
+  font-weight: 400;
+}
+
+.user-section-static {
+  margin: 20px 0 30px;
+}
+
+.user-name-static {
+  font-size: 42px;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0 0 15px 0;
+  letter-spacing: -0.01em;
+  text-shadow: 0 2px 15px rgba(255, 255, 255, 0.1);
+}
+
+.user-underline-static {
+  width: 300px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #00c9a7, transparent);
+  margin: 0 auto;
+  border-radius: 1px;
+}
+
+.completion-text-static {
+  font-size: 20px;
+  color: #e2e8f0;
+  margin: 0;
+  font-weight: 400;
+}
+
+.solution-box-static {
+  background: rgba(0, 201, 167, 0.08);
+  border: 1px solid rgba(0, 201, 167, 0.25);
+  border-radius: 12px;
+  padding: 30px 40px;
+  margin: 20px auto;
+  max-width: 600px;
+  backdrop-filter: blur(10px);
+}
+
+.solution-name-static {
+  font-size: 32px;
+  font-weight: 700;
+  color: #00c9a7;
+  margin: 0 0 10px 0;
+  line-height: 1.3;
+}
+
+.solution-category-static {
+  font-size: 16px;
+  color: #94a3b8;
+  margin: 0;
+  font-weight: 500;
+}
+
+.achievement-description-static {
+  font-size: 18px;
+  color: #cbd5e1;
+  line-height: 1.6;
+  max-width: 700px;
+  margin: 0 auto;
+  font-weight: 400;
+}
+
+/* Footer */
+.footer-static {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-top: 50px;
+  gap: 40px;
+  flex-shrink: 0;
+  min-height: 80px;
+}
+
+.footer-left-static,
+.footer-right-static {
+  flex: 1;
+}
+
+.footer-center-static {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.footer-right-static {
+  text-align: right;
+}
+
+.info-block-static {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.info-label-static {
+  font-size: 12px;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-weight: 600;
+}
+
+.info-value-static {
+  font-size: 16px;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.validation-code-static {
+  font-size: 16px;
+  color: #00c9a7;
+  font-weight: 700;
+  background: rgba(0, 201, 167, 0.1);
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 201, 167, 0.3);
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.5px;
+}
+
+.signature-area-static {
+  text-align: center;
+}
+
+.signature-handwritten-static {
+  font-family: 'Brush Script MT', 'Lucida Handwriting', cursive;
+  font-size: 28px;
+  color: #00c9a7;
+  margin-bottom: 8px;
+  transform: rotate(-2deg);
+  letter-spacing: 1px;
+  text-shadow: 0 2px 4px rgba(0, 201, 167, 0.3);
+  font-weight: normal;
+}
+
+.signature-line-static {
+  width: 200px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.3);
+  margin: 0 auto 12px;
+}
+
+.signature-info-static {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.signatory-name-static {
+  font-size: 18px;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.signatory-title-static {
+  font-size: 14px;
+  color: #94a3b8;
+  font-weight: 500;
+}
