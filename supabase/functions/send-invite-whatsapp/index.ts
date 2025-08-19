@@ -9,7 +9,7 @@ const corsHeaders = {
 interface SendWhatsAppRequest {
   inviteId: string;
   phone: string;
-  token: string;
+  inviteUrl: string;
   recipientName: string;
   invitedByName: string;
   roleName: string;
@@ -84,10 +84,9 @@ const handler = async (req: Request): Promise<Response> => {
       invitedBy: body.invitedByName
     });
 
-    // Construir URL do convite
-    const baseUrl = supabaseUrl.replace('.supabase.co', '.lovableproject.com');
-    const inviteUrl = `${baseUrl}/invite/${body.token}`;
-
+    // URL do convite já vem pronta dos dados recebidos
+    console.log('🔗 [WHATSAPP] URL do convite recebida:', body.inviteUrl)
+    
     // Limpar número de telefone (remover caracteres especiais)
     const cleanPhone = body.phone.replace(/\D/g, '');
     
@@ -100,7 +99,7 @@ Olá! *${body.invitedByName}* convidou você para acessar nossa plataforma de IA
 👤 *Nível de acesso:* ${body.roleName}
 
 ${body.notes ? `💬 *Mensagem:* ${body.notes}\n\n` : ''}🎯 *Clique aqui para aceitar seu convite:*
-${inviteUrl}
+${body.inviteUrl}
 
 ⚠️ Este convite tem validade limitada. Complete seu cadastro o quanto antes!
 
