@@ -129,22 +129,28 @@ export const CertificatePreview = ({
 
       {isVisible && (
         <div className="relative">
-          <div 
-            ref={previewRef}
-            className="rounded-lg overflow-hidden"
-            style={{ 
-              transform: `scale(${scale})`,
-              transformOrigin: 'top left',
-              width: `${1123 * scale}px`,
-              height: `${794 * scale}px`
-            }}
-          >
-            <CertificateTemplate
-              template={template}
-              data={data}
-              onReady={handlePreviewReady}
-              className="origin-top-left"
-            />
+          <div className="relative">
+            {/* Layout wrapper reserva o espaço já em escala */}
+            <div className="rounded-lg" style={{ width: `${1123 * scale}px`, height: `${794 * scale}px` }}>
+              {/* Container real em tamanho 1:1, só com transform visual */}
+              <div
+                ref={previewRef}
+                style={{
+                  width: '1123px',
+                  height: '794px',
+                  transform: `scale(${scale})`,
+                  transformOrigin: 'top left',
+                  willChange: 'transform'
+                }}
+              >
+                <CertificateTemplate
+                  template={template}
+                  data={data}
+                  onReady={handlePreviewReady}
+                  className="origin-top-left"
+                />
+              </div>
+            </div>
           </div>
           
           {!previewElement && (
