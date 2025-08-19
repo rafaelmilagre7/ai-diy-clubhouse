@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,11 +7,9 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { Share2, Linkedin, Link, Copy, ExternalLink, Crown } from "lucide-react";
+import { Share2, Linkedin, Link, Copy, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/auth";
-import { ShareAchievementModal } from "@/components/gamification/ShareAchievementModal";
 
 interface ShareCertificateDropdownProps {
   certificate: {
@@ -35,252 +32,45 @@ export const ShareCertificateDropdown = ({
   userProfile,
   compact = false
 }: ShareCertificateDropdownProps) => {
-  const { user } = useAuth();
   const [isGeneratingLink, setIsGeneratingLink] = useState(false);
-  const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
-  const [achievementModal, setAchievementModal] = useState<any>(null);
-  
-  // Debug para investigar cliques
-  const handleTriggerClick = (e: any) => {
-    console.log("🖱️ [DEBUG] Share button clicked!", {
-      certificateId: certificate.id,
-      event: e,
-      timestamp: new Date().toISOString()
-    });
-  };
   
   const certificateUrl = `${window.location.origin}/certificado/validar/${certificate.validation_code}`;
+  
   // Detectar tipo e título do certificado
   const isSolution = certificate.type === 'solution' || (!certificate.type && certificate.solutions?.title);
   const certificateTitle = certificate.title || certificate.solutions?.title || 'Certificado';
   
-  const shareText = isSolution 
-    ? `🚀 NOVA CONQUISTA DESBLOQUEADA! 
-    
-🎯 Acabei de concluir com sucesso a implementação da solução "${certificateTitle}" na plataforma Viver de IA!
+  const shareText = `Estou certificado ${isSolution ? 'na solução' : 'no curso'} "${certificateTitle}" do VIVER DE IA! 🎓
 
-💡 Este certificado oficial comprova minha capacidade de aplicar Inteligência Artificial em projetos reais e resolver problemas complexos com soluções práticas.
-
-🏆 Mais uma etapa vencida na minha jornada de especialização em IA!
-
-👨‍💻 Quer também dominar as ferramentas de IA mais avançadas do mercado?
-
-#InteligenciaArtificial #IA #MachineLearning #Inovacao #TechCareer #ViverDeIA #Certificacao #DesenvolvedorIA #FuturoDoTrabalho #TechSkills`
-    : `🎓 CERTIFICADO CONQUISTADO!
-
-📚 Finalizei com sucesso o curso "${certificateTitle}" na plataforma Viver de IA!
-
-🚀 Mais conhecimentos práticos em Inteligência Artificial adquiridos e aplicados!
-
-💪 Cada certificado é um passo a mais rumo ao domínio completo das tecnologias de IA que estão transformando o mercado.
-
-🔥 A jornada continua! Próximo objetivo já definido.
-
-👉 Se você também quer se destacar no mercado de IA, conheça a Viver de IA!
-
-#EducacaoContinua #InteligenciaArtificial #AprendizadoIA #TechEducation #ViverDeIA #CarreiraEmTech #InovacaoDigital #FuturoDoTrabalho #SkillsIA #TechProfessional`;
-
-  const handleShareLinkedInWithPreview = async () => {
-    setIsGeneratingPreview(true);
-    try {
-      // Gerar imagem preview do certificado
-      const previewImageUrl = await generateCertificatePreviewImage();
-      
-      if (previewImageUrl) {
-        // LinkedIn com imagem preview personalizada
-        const linkedInText = encodeURIComponent(shareText + `\n\n🔗 Confira meu certificado:`);
-        const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(certificateUrl)}&title=${encodeURIComponent('🎉 Novo Certificado Viver de IA!')}&summary=${linkedInText}&source=${encodeURIComponent('Viver de IA')}`;
-        
-        // Analytics
-        await logShareAnalytics('linkedin_with_preview');
-        
-        window.open(linkedInUrl, '_blank', 'width=700,height=500');
-        toast.success("🎨 Compartilhamento com preview personalizado! Sua conquista vai brilhar no LinkedIn!");
-      } else {
-        // Fallback para compartilhamento simples
-        handleShareLinkedIn();
-      }
-    } catch (error) {
-      console.error('Erro ao gerar preview:', error);
-      handleShareLinkedIn(); // Fallback
-    } finally {
-      setIsGeneratingPreview(false);
-    }
-  };
+Confira meu certificado:`;
 
   const handleShareLinkedIn = async () => {
-    const linkedInText = encodeURIComponent(shareText);
-    const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(certificateUrl)}&summary=${linkedInText}`;
-    
-    // Analytics de compartilhamento
-    await logShareAnalytics('linkedin_simple');
-    
-    window.open(linkedInUrl, '_blank', 'width=700,height=500');
-    toast.success("🚀 Abrindo LinkedIn! Compartilhe sua conquista com sua rede!");
-  };
-
-  const logShareAnalytics = async (shareType: string) => {
-    try {
-      // Registrar compartilhamento na nova tabela
-      const { error } = await supabase.from('certificate_shares').insert({
-        certificate_id: certificate.id,
-        user_id: user?.id,
-        share_type: shareType,
-        platform: 'linkedin',
-        post_data: {
-          title: certificateTitle,
-          type: isSolution ? 'solution' : 'course',
-          url: certificateUrl
-        }
-      });
-
-      if (error) throw error;
-
-      // Verificar conquistas automaticamente
-      if (user?.id) {
-        const { data } = await supabase.rpc('check_and_grant_achievements', { 
-          user_uuid: user.id 
-        });
-        
-        // Mostrar conquistas desbloqueadas
-        if (data?.new_achievements && data.new_achievements.length > 0) {
-          setTimeout(() => {
-            setAchievementModal(data.new_achievements[0]);
-          }, 1500);
-        }
-      }
-      
-      console.log("📊 [ANALYTICS] Compartilhamento registrado:", {
-        certificateId: certificate.id,
-        shareType,
-        type: isSolution ? 'solution' : 'course',
-        title: certificateTitle
-      });
-      
-    } catch (error) {
-      console.error('Erro ao registrar analytics:', error);
-      // Não falhar por causa de analytics
-    }
-  };
-
-  const generateCertificatePreviewImage = async (): Promise<string | null> => {
-    try {
-      // Criar elemento temporário para captura
-      const tempDiv = document.createElement('div');
-      tempDiv.style.cssText = `
-        position: fixed;
-        left: -9999px;
-        top: 0;
-        width: 1123px;
-        height: 950px;
-        background: white;
-        z-index: -1;
-      `;
-      document.body.appendChild(tempDiv);
-
-      // Renderizar certificado
-      const { createRoot } = await import('react-dom/client');
-      const { StaticCertificateTemplate } = await import('@/components/certificates/StaticCertificateTemplate');
-      
-      const certificateData = {
-        userName: userProfile.name,
-        solutionTitle: certificateTitle,
-        solutionCategory: isSolution ? 'Solução de IA' : 'Curso',
-        implementationDate: new Date().toLocaleDateString('pt-BR'),
-        certificateId: certificate.id,
-        validationCode: certificate.validation_code
-      };
-
-      const root = createRoot(tempDiv);
-      
-      return new Promise<string | null>((resolve) => {
-        root.render(
-          React.createElement(StaticCertificateTemplate, {
-            data: certificateData,
-            onReady: async (element: HTMLElement) => {
-              try {
-                // Aguardar renderização
-                await new Promise(r => setTimeout(r, 1000));
-                
-                // Capturar como canvas
-                const html2canvas = (await import('html2canvas')).default;
-                const canvas = await html2canvas(element, {
-                  width: 1123,
-                  height: 950,
-                  scale: 1,
-                  backgroundColor: '#ffffff',
-                  useCORS: true,
-                  logging: false
-                });
-                
-                // Converter para blob
-                canvas.toBlob(async (blob) => {
-                  if (blob) {
-                    // Upload para storage
-                    const fileName = `certificate-preview-${certificate.validation_code}-${Date.now()}.png`;
-                    const { data: uploadData, error: uploadError } = await supabase.storage
-                      .from('certificates')
-                      .upload(`previews/${fileName}`, blob, {
-                        contentType: 'image/png',
-                        upsert: true
-                      });
-                    
-                    if (!uploadError) {
-                      const { data: { publicUrl } } = supabase.storage
-                        .from('certificates')
-                        .getPublicUrl(`previews/${fileName}`);
-                      resolve(publicUrl);
-                    } else {
-                      resolve(null);
-                    }
-                  } else {
-                    resolve(null);
-                  }
-                }, 'image/png', 0.9);
-                
-              } catch (error) {
-                console.error('Erro ao capturar imagem:', error);
-                resolve(null);
-              } finally {
-                root.unmount();
-                document.body.removeChild(tempDiv);
-              }
-            }
-          })
-        );
-      });
-      
-    } catch (error) {
-      console.error('Erro ao gerar preview:', error);
-      return null;
-    }
-  };
-
-  // Post direto via API do LinkedIn
-  const handleLinkedInDirectPost = async () => {
-    try {
-      // Para demo, simular conexão LinkedIn
-      toast.success("🔜 Funcionalidade Premium em breve! Por enquanto, use o LinkedIn Premium.");
-      handleShareLinkedInWithPreview();
-    } catch (error) {
-      console.error('Erro no post direto:', error);
-      handleShareLinkedInWithPreview();
-    }
-  };
-
-  const handleCopyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(certificateUrl);
-      toast.success("Link copiado para a área de transferência!");
-    } catch (error) {
-      toast.error("Erro ao copiar link");
-    }
-  };
-
-  const handleGeneratePublicPDF = async () => {
+    // Primeiro gerar o PDF público
     setIsGeneratingLink(true);
     try {
-      // Criar elemento temporário com o novo template estático
+      const pdfUrl = await generatePublicPDF();
+      
+      if (pdfUrl) {
+        // Compartilhar no LinkedIn com o link do PDF
+        const linkedInText = encodeURIComponent(shareText);
+        const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(pdfUrl)}&summary=${linkedInText}`;
+        
+        window.open(linkedInUrl, '_blank', 'width=700,height=500');
+        toast.success("🚀 Abrindo LinkedIn para compartilhar seu certificado!");
+      } else {
+        toast.error("Erro ao gerar PDF do certificado");
+      }
+    } catch (error) {
+      console.error('Erro ao compartilhar:', error);
+      toast.error("Erro ao gerar link para compartilhamento");
+    } finally {
+      setIsGeneratingLink(false);
+    }
+  };
+
+  const generatePublicPDF = async (): Promise<string | null> => {
+    try {
+      // Criar elemento temporário com o template estático
       const tempDiv = document.createElement('div');
       tempDiv.style.position = 'absolute';
       tempDiv.style.left = '-9999px';
@@ -302,20 +92,20 @@ export const ShareCertificateDropdown = ({
 
       const root = createRoot(tempDiv);
       
-      await new Promise<void>((resolve) => {
+      return new Promise<string | null>((resolve) => {
         root.render(
           React.createElement(StaticCertificateTemplate, {
             data: certificateData,
             onReady: async (element: HTMLElement) => {
               try {
-                // Aguardar um pouco mais para garantir renderização completa
+                // Aguardar renderização completa
                 await new Promise(r => setTimeout(r, 1000));
                 
                 const { pdfGenerator } = await import('@/utils/certificates/pdfGenerator');
                 const blob = await pdfGenerator.generateFromElement(element, certificateData);
                 
                 // Upload para storage público
-                const fileName = `certificado-publico-${certificate.validation_code}.pdf`;
+                const fileName = `certificado-${certificate.validation_code}.pdf`;
                 const { data: uploadData, error: uploadError } = await supabase.storage
                   .from('certificates')
                   .upload(`public/${fileName}`, blob, {
@@ -323,22 +113,22 @@ export const ShareCertificateDropdown = ({
                     upsert: true
                   });
                 
-                if (uploadError) throw uploadError;
+                if (uploadError) {
+                  console.error('Erro no upload:', uploadError);
+                  resolve(null);
+                  return;
+                }
 
                 // Obter URL pública
                 const { data: { publicUrl } } = supabase.storage
                   .from('certificates')
                   .getPublicUrl(`public/${fileName}`);
                 
-                // Copiar link
-                await navigator.clipboard.writeText(publicUrl);
-                toast.success("Link público do PDF gerado e copiado!");
+                resolve(publicUrl);
                 
-                resolve();
               } catch (error) {
                 console.error('Erro ao gerar PDF:', error);
-                toast.error('Erro ao gerar link público do PDF');
-                resolve();
+                resolve(null);
               } finally {
                 // Cleanup
                 root.unmount();
@@ -351,9 +141,16 @@ export const ShareCertificateDropdown = ({
       
     } catch (error: any) {
       console.error('Erro ao gerar PDF público:', error);
-      toast.error('Erro ao gerar link público do PDF');
-    } finally {
-      setIsGeneratingLink(false);
+      return null;
+    }
+  };
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(certificateUrl);
+      toast.success("Link copiado para a área de transferência!");
+    } catch (error) {
+      toast.error("Erro ao copiar link");
     }
   };
 
@@ -364,50 +161,26 @@ export const ShareCertificateDropdown = ({
           variant={compact ? "ghost" : "outline"}
           size={compact ? "icon" : undefined}
           className={compact ? "text-muted-foreground hover:bg-accent/20 z-20 relative" : "border-primary/50 text-primary hover:bg-primary/10"}
-          onClick={handleTriggerClick}
+          disabled={isGeneratingLink}
         >
           <Share2 className={compact ? "h-4 w-4" : "h-4 w-4 mr-2"} />
-          {!compact && "Compartilhar"}
+          {!compact && (isGeneratingLink ? "Gerando..." : "Compartilhar")}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80">
+      <DropdownMenuContent align="end" className="w-60">
         <DropdownMenuItem 
-          onClick={handleLinkedInDirectPost}
-          className="cursor-pointer bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 mb-2"
+          onClick={handleShareLinkedIn} 
+          disabled={isGeneratingLink}
+          className="cursor-pointer"
         >
-          <Crown className="h-4 w-4 mr-2 text-amber-500" />
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-blue-700">👑 Post Automático</span>
-              <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">
-                EM BREVE
-              </span>
-            </div>
-            <span className="text-xs text-blue-600">
-              API direta + Sistema de conquistas
-            </span>
-          </div>
-        </DropdownMenuItem>
-
-        <DropdownMenuSeparator />
-        
-        <DropdownMenuItem onClick={handleShareLinkedInWithPreview} disabled={isGeneratingPreview} className="cursor-pointer">
           <Linkedin className="h-4 w-4 mr-2 text-blue-600" />
           <div className="flex flex-col">
             <span className="font-medium">
-              {isGeneratingPreview ? "🎨 Gerando preview..." : "🚀 LinkedIn Premium"}
+              {isGeneratingLink ? "Gerando PDF..." : "Compartilhar no LinkedIn"}
             </span>
             <span className="text-xs text-muted-foreground">
-              {isGeneratingPreview ? "Criando imagem personalizada" : "Com preview visual do seu certificado!"}
+              Com link do certificado em PDF
             </span>
-          </div>
-        </DropdownMenuItem>
-        
-        <DropdownMenuItem onClick={handleShareLinkedIn} className="cursor-pointer">
-          <Linkedin className="h-4 w-4 mr-2 text-blue-400" />
-          <div className="flex flex-col">
-            <span className="font-medium">LinkedIn Simples</span>
-            <span className="text-xs text-muted-foreground">Compartilhamento rápido</span>
           </div>
         </DropdownMenuItem>
         
@@ -415,12 +188,7 @@ export const ShareCertificateDropdown = ({
         
         <DropdownMenuItem onClick={handleCopyLink}>
           <Copy className="h-4 w-4 mr-2" />
-          Copiar link do certificado
-        </DropdownMenuItem>
-        
-        <DropdownMenuItem onClick={handleGeneratePublicPDF} disabled={isGeneratingLink}>
-          <Link className="h-4 w-4 mr-2" />
-          {isGeneratingLink ? "Gerando..." : "Gerar link público do PDF"}
+          Copiar link de validação
         </DropdownMenuItem>
         
         <DropdownMenuItem onClick={() => window.open(certificateUrl, '_blank')}>
@@ -428,17 +196,6 @@ export const ShareCertificateDropdown = ({
           Abrir página de validação
         </DropdownMenuItem>
       </DropdownMenuContent>
-      
-      {/* Modal de Conquista */}
-      <ShareAchievementModal
-        achievement={achievementModal}
-        isOpen={!!achievementModal}
-        onClose={() => setAchievementModal(null)}
-        onShare={() => {
-          handleShareLinkedInWithPreview();
-          setAchievementModal(null);
-        }}
-      />
     </DropdownMenu>
   );
 };

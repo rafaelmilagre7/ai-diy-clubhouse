@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { CertificatesFilters } from "@/components/learning/certificates/CertificatesFilters";
 import { UnifiedCertificatesList } from "@/components/learning/certificates/UnifiedCertificatesList";
 import { CertificateErrorBoundary } from "@/components/certificates/CertificateErrorBoundary";
-import { ShareStatsWidget } from "@/components/gamification/ShareStatsWidget";
 import { useAuth } from "@/contexts/auth";
 import { Award } from "lucide-react";
 
@@ -51,9 +50,6 @@ const CertificatesPage = () => {
       
       <CertificateErrorBoundary>
         <div className="space-y-8">
-          {/* Widget de estatísticas de compartilhamento */}
-          <ShareStatsWidget />
-          
           <CertificatesFilters
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}

@@ -298,33 +298,6 @@ export type Database = {
         }
         Relationships: []
       }
-      badges: {
-        Row: {
-          category: string
-          created_at: string
-          description: string
-          id: string
-          image_url: string
-          name: string
-        }
-        Insert: {
-          category: string
-          created_at?: string
-          description: string
-          id?: string
-          image_url: string
-          name: string
-        }
-        Update: {
-          category?: string
-          created_at?: string
-          description?: string
-          id?: string
-          image_url?: string
-          name?: string
-        }
-        Relationships: []
-      }
       benefit_access_control: {
         Row: {
           created_at: string
@@ -469,42 +442,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      certificate_shares: {
-        Row: {
-          certificate_id: string | null
-          id: string
-          ip_address: unknown | null
-          platform: string
-          post_data: Json | null
-          share_type: string
-          shared_at: string
-          user_agent: string | null
-          user_id: string
-        }
-        Insert: {
-          certificate_id?: string | null
-          id?: string
-          ip_address?: unknown | null
-          platform?: string
-          post_data?: Json | null
-          share_type: string
-          shared_at?: string
-          user_agent?: string | null
-          user_id: string
-        }
-        Update: {
-          certificate_id?: string | null
-          id?: string
-          ip_address?: unknown | null
-          platform?: string
-          post_data?: Json | null
-          share_type?: string
-          shared_at?: string
-          user_agent?: string | null
-          user_id?: string
-        }
-        Relationships: []
       }
       communication_deliveries: {
         Row: {
@@ -4786,33 +4723,6 @@ export type Database = {
         }
         Relationships: []
       }
-      user_achievements: {
-        Row: {
-          achieved_at: string
-          achievement_data: Json
-          achievement_id: string
-          id: string
-          notified_at: string | null
-          user_id: string
-        }
-        Insert: {
-          achieved_at?: string
-          achievement_data: Json
-          achievement_id: string
-          id?: string
-          notified_at?: string | null
-          user_id: string
-        }
-        Update: {
-          achieved_at?: string
-          achievement_data?: Json
-          achievement_id?: string
-          id?: string
-          notified_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
       user_activity_tracking: {
         Row: {
           activity_data: Json | null
@@ -4878,35 +4788,6 @@ export type Database = {
           total_records_deleted?: number
         }
         Relationships: []
-      }
-      user_badges: {
-        Row: {
-          badge_id: string
-          earned_at: string
-          id: string
-          user_id: string
-        }
-        Insert: {
-          badge_id: string
-          earned_at?: string
-          id?: string
-          user_id: string
-        }
-        Update: {
-          badge_id?: string
-          earned_at?: string
-          id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_badges_badge_id_fkey"
-            columns: ["badge_id"]
-            isOneToOne: false
-            referencedRelation: "badges"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       user_checklists: {
         Row: {
@@ -5334,10 +5215,6 @@ export type Database = {
       }
       check_and_fix_onboarding_data: {
         Args: { user_id_param: string }
-        Returns: Json
-      }
-      check_and_grant_achievements: {
-        Args: { user_uuid: string }
         Returns: Json
       }
       check_comment_rate_limit: {
