@@ -82,16 +82,17 @@ const handler = async (req: Request): Promise<Response> => {
       console.log('📱 [PROCESS-INVITE] Enviando WhatsApp para:', invite.whatsapp_number);
       
       const whatsappData = {
-        inviteId: invite.id,
         phone: invite.whatsapp_number,
         inviteUrl: inviteUrl,
-        recipientName: invite.email,
-        invitedByName: 'Administrador',
         roleName: invite.user_roles?.name || 'Membro',
+        expiresAt: invite.expires_at,
+        senderName: 'Administrador',
         notes: invite.notes,
+        inviteId: invite.id,
+        email: invite.email
       };
 
-      const whatsappResponse = await supabase.functions.invoke('send-invite-whatsapp', {
+      const whatsappResponse = await supabase.functions.invoke('send-whatsapp-invite', {
         body: whatsappData
       });
 
