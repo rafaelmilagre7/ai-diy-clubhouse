@@ -114,7 +114,7 @@ export function useUserRoles() {
         .from("profiles")
         .select(`
           role_id,
-          user_roles!role_id (
+          user_roles (
             id,
             name,
             description,
