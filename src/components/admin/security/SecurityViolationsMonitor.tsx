@@ -128,157 +128,241 @@ export const SecurityViolationsMonitor: React.FC = () => {
 
   if (loading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5" />
-            Monitor de Violações de Segurança
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center p-8">
-            <RefreshCw className="h-6 w-6 animate-spin" />
-            <span className="ml-2">Carregando dados de segurança...</span>
+      <div className="space-y-6 animate-fade-in">
+        {/* Loading Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="aurora-glass rounded-2xl border border-orange-500/20 backdrop-blur-md overflow-hidden animate-pulse">
+              <div className="bg-gradient-to-r from-orange-500/10 to-red-500/5 p-6">
+                <div className="w-12 h-8 bg-gradient-to-r from-orange-500/20 to-red-500/10 rounded-lg mb-2"></div>
+                <div className="w-16 h-3 bg-gradient-to-r from-orange-500/20 to-red-500/10 rounded-full"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        {/* Loading Content */}
+        <div className="aurora-glass rounded-2xl border border-orange-500/20 backdrop-blur-md p-8">
+          <div className="flex items-center justify-center py-12">
+            <div className="relative">
+              <div className="w-16 h-16 aurora-glass rounded-full border-4 border-orange-500/30 border-t-orange-500 animate-spin"></div>
+              <div className="absolute inset-2 bg-gradient-to-br from-orange-500/20 to-red-500/10 rounded-full aurora-pulse"></div>
+            </div>
+            <div className="ml-4">
+              <h3 className="text-lg font-semibold aurora-text-gradient">Carregando Dados de Segurança</h3>
+              <p className="text-muted-foreground">Analisando violações do sistema...</p>
+            </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Estatísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold">{stats.total}</div>
-            <div className="text-sm text-muted-foreground">Total</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold text-red-500">{stats.critical}</div>
-            <div className="text-sm text-muted-foreground">Críticas</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold text-orange-500">{stats.high}</div>
-            <div className="text-sm text-muted-foreground">Altas</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold text-yellow-500">{stats.medium}</div>
-            <div className="text-sm text-muted-foreground">Médias</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold">{stats.last24h}</div>
-            <div className="text-sm text-muted-foreground">Últimas 24h</div>
-          </CardContent>
-        </Card>
+    <div className="space-y-8">
+      {/* Enhanced Statistics Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+        {[
+          {
+            label: "Total",
+            value: stats.total,
+            gradient: "from-blue-500/20 to-cyan-500/10",
+            border: "border-blue-500/30",
+            icon: "🛡️"
+          },
+          {
+            label: "Críticas",
+            value: stats.critical,
+            gradient: "from-destructive/20 to-red-500/10",
+            border: "border-destructive/30",
+            icon: "🚨"
+          },
+          {
+            label: "Altas",
+            value: stats.high,
+            gradient: "from-orange-500/20 to-red-500/10",
+            border: "border-orange-500/30",
+            icon: "⚠️"
+          },
+          {
+            label: "Médias",
+            value: stats.medium,
+            gradient: "from-amber-500/20 to-yellow-500/10",
+            border: "border-amber-500/30",
+            icon: "⚡"
+          },
+          {
+            label: "Últimas 24h",
+            value: stats.last24h,
+            gradient: "from-green-500/20 to-emerald-500/10",
+            border: "border-green-500/30",
+            icon: "🕐"
+          }
+        ].map((stat, index) => (
+          <div 
+            key={stat.label}
+            className={`aurora-glass rounded-2xl border ${stat.border} backdrop-blur-md overflow-hidden group cursor-pointer transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl animate-fade-in`}
+            style={{ animationDelay: `${index * 100}ms` }}
+          >
+            <div className={`bg-gradient-to-r ${stat.gradient} p-6 border-b border-white/10`}>
+              <div className="flex items-center justify-between">
+                <div className="text-2xl">{stat.icon}</div>
+                <div className="text-right">
+                  <p className="text-3xl font-bold aurora-text-gradient group-hover:scale-110 transition-transform duration-300">
+                    {stat.value}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="p-4">
+              <p className="font-medium text-foreground group-hover:text-foreground transition-colors duration-300">
+                {stat.label}
+              </p>
+            </div>
+          </div>
+        ))}
       </div>
 
-      {/* Alertas Críticos */}
+      {/* Critical Alerts */}
       {stats.critical > 0 && (
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>Violações Críticas Detectadas</AlertTitle>
-          <AlertDescription>
-            {stats.critical} violação(ões) crítica(s) detectada(s). Revise imediatamente as atividades suspeitas abaixo.
-          </AlertDescription>
-        </Alert>
+        <div className="aurora-glass rounded-2xl border border-destructive/30 backdrop-blur-md overflow-hidden animate-fade-in">
+          <div className="bg-gradient-to-r from-destructive/15 via-red-500/10 to-transparent p-6 border-b border-destructive/20">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-destructive/25 to-red-500/15 aurora-glass">
+                <AlertTriangle className="h-6 w-6 text-destructive aurora-pulse" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-destructive">⚠️ Violações Críticas Detectadas</h3>
+                <p className="text-muted-foreground font-medium">
+                  {stats.critical} violação(ões) crítica(s) detectada(s). Revise imediatamente as atividades suspeitas abaixo.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
-      {/* Lista de Violações */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5" />
-            Violações Recentes
-          </CardTitle>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={loadViolations}
-            disabled={loading}
-          >
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-            Atualizar
-          </Button>
-        </CardHeader>
-        <CardContent>
+      {/* Enhanced Violations List */}
+      <div className="aurora-glass rounded-2xl border border-orange-500/20 backdrop-blur-md overflow-hidden">
+        <div className="bg-gradient-to-r from-orange-500/10 via-red-500/5 to-transparent p-6 border-b border-orange-500/20">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500/20 to-red-500/10 aurora-glass">
+                <Shield className="h-6 w-6 text-orange-500" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold aurora-text-gradient">Violações Recentes</h3>
+                <p className="text-muted-foreground font-medium">
+                  Monitoramento em tempo real de atividades suspeitas
+                </p>
+              </div>
+            </div>
+            <Button 
+              onClick={loadViolations}
+              disabled={loading}
+              className="h-12 px-6 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300"
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+              Atualizar
+            </Button>
+          </div>
+        </div>
+        
+        <div className="p-8">
           {violations.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <Shield className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>Nenhuma violação de segurança detectada</p>
-              <p className="text-sm">Sistema funcionando normalmente</p>
+            <div className="text-center py-16">
+              <div className="p-6 rounded-2xl bg-gradient-to-br from-green-500/20 to-emerald-500/10 aurora-glass mx-auto w-fit mb-6">
+                <Shield className="h-16 w-16 text-green-500 aurora-pulse" />
+              </div>
+              <h4 className="text-2xl font-bold aurora-text-gradient mb-4">Sistema Protegido</h4>
+              <p className="text-lg text-muted-foreground mb-2">
+                Nenhuma violação de segurança detectada
+              </p>
+              <p className="text-sm text-muted-foreground">
+                O sistema está funcionando normalmente e todas as atividades estão sendo monitoradas.
+              </p>
             </div>
           ) : (
-            <div className="space-y-4">
-              {violations.map((violation) => (
+            <div className="space-y-6">
+              {violations.map((violation, index) => (
                 <div 
                   key={violation.id}
-                  className="flex items-start gap-4 p-4 border rounded-lg"
+                  className="aurora-glass rounded-2xl p-6 border border-muted/20 backdrop-blur-sm animate-fade-in"
+                  style={{ animationDelay: `${index * 100}ms` }}
                 >
-                  <div className="flex-shrink-0">
-                    {getSeverityIcon(violation.severity)}
-                  </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Badge variant={getSeverityColor(violation.severity) as any}>
-                        {violation.severity.toUpperCase()}
-                      </Badge>
-                      <Badge variant="outline">
-                        {violation.event_type}
-                      </Badge>
+                  <div className="flex items-start gap-4">
+                    <div className={`p-4 rounded-xl aurora-glass ${
+                      violation.severity === 'critical' ? 'bg-gradient-to-br from-destructive/25 to-red-500/15' :
+                      violation.severity === 'high' ? 'bg-gradient-to-br from-orange-500/25 to-red-500/15' :
+                      violation.severity === 'medium' ? 'bg-gradient-to-br from-amber-500/25 to-yellow-500/15' :
+                      'bg-gradient-to-br from-blue-500/25 to-cyan-500/15'
+                    }`}>
+                      {getSeverityIcon(violation.severity)}
                     </div>
                     
-                    <h4 className="font-medium mb-1">
-                      {formatViolationDescription(violation)}
-                    </h4>
-                    
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      {violation.user_id && (
-                        <div className="flex items-center gap-1">
-                          <User className="h-3 w-3" />
-                          <span>{violation.user_id.substring(0, 8)}***</span>
-                        </div>
-                      )}
+                    <div className="flex-1 min-w-0 space-y-4">
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <Badge 
+                          variant={getSeverityColor(violation.severity) as any} 
+                          className="font-medium text-sm px-3 py-1"
+                        >
+                          {violation.severity === 'critical' && '🚨'} 
+                          {violation.severity.toUpperCase()}
+                        </Badge>
+                        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
+                          {violation.event_type}
+                        </Badge>
+                      </div>
                       
-                      {violation.resource_id && (
-                        <div className="flex items-center gap-1">
-                          <Database className="h-3 w-3" />
-                          <span>{violation.resource_id}</span>
+                      <div>
+                        <h4 className="text-lg font-bold text-foreground mb-2">
+                          {formatViolationDescription(violation)}
+                        </h4>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-muted-foreground">
+                          {violation.user_id && (
+                            <div className="flex items-center gap-2 p-2 aurora-glass rounded-lg">
+                              <User className="h-4 w-4 text-blue-500" />
+                              <span className="font-mono">{violation.user_id.substring(0, 8)}***</span>
+                            </div>
+                          )}
+                          
+                          {violation.resource_id && (
+                            <div className="flex items-center gap-2 p-2 aurora-glass rounded-lg">
+                              <Database className="h-4 w-4 text-green-500" />
+                              <span className="font-mono">{violation.resource_id}</span>
+                            </div>
+                          )}
+                          
+                          <div className="flex items-center gap-2 p-2 aurora-glass rounded-lg">
+                            <Clock className="h-4 w-4 text-orange-500" />
+                            <span>{new Date(violation.timestamp).toLocaleString('pt-BR')}</span>
+                          </div>
                         </div>
-                      )}
-                      
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        <span>{new Date(violation.timestamp).toLocaleString('pt-BR')}</span>
+                        
+                        {violation.details && Object.keys(violation.details).length > 0 && (
+                          <details className="mt-4 group">
+                            <summary className="cursor-pointer p-3 aurora-glass rounded-lg hover:bg-muted/10 transition-colors duration-300">
+                              <span className="font-medium text-primary group-open:text-primary-dark">
+                                🔍 Ver detalhes técnicos
+                              </span>
+                            </summary>
+                            <div className="mt-3 p-4 aurora-glass rounded-lg border border-muted/20">
+                              <pre className="text-xs overflow-auto max-h-40 text-muted-foreground font-mono">
+                                {JSON.stringify(violation.details, null, 2)}
+                              </pre>
+                            </div>
+                          </details>
+                        )}
                       </div>
                     </div>
-                    
-                    {violation.details && Object.keys(violation.details).length > 0 && (
-                      <details className="mt-2">
-                        <summary className="text-sm cursor-pointer hover:text-primary">
-                          Ver detalhes técnicos
-                        </summary>
-                        <pre className="mt-2 p-2 bg-muted rounded text-xs overflow-auto">
-                          {JSON.stringify(violation.details, null, 2)}
-                        </pre>
-                      </details>
-                    )}
                   </div>
                 </div>
               ))}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 };

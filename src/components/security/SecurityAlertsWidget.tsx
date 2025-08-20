@@ -18,32 +18,32 @@ export function SecurityAlertsWidget() {
 
   if (!isMonitoring) {
     return (
-      <Card className="border-muted">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5" />
-            Monitoramento de Segurança
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">
-            Acesso restrito a administradores
-          </p>
-        </CardContent>
-      </Card>
+      <div className="aurora-glass rounded-2xl p-8 border border-muted/30 backdrop-blur-md">
+        <div className="text-center space-y-4">
+          <div className="p-4 rounded-xl bg-gradient-to-br from-muted/20 to-muted/10 aurora-glass mx-auto w-fit">
+            <Shield className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold aurora-text-gradient mb-2">Monitoramento de Segurança</h3>
+            <p className="text-muted-foreground">
+              Acesso restrito a administradores do sistema
+            </p>
+          </div>
+        </div>
+      </div>
     );
   }
 
   const getAlertIcon = (type: string) => {
     switch (type) {
       case 'critical':
-        return <AlertTriangle className="h-4 w-4 text-destructive" />;
+        return <AlertTriangle className="h-5 w-5 text-destructive" />;
       case 'high':
-        return <AlertTriangle className="h-4 w-4 text-orange-500" />;
+        return <AlertTriangle className="h-5 w-5 text-orange-500" />;
       case 'medium':
-        return <Activity className="h-4 w-4 text-yellow-500" />;
+        return <Activity className="h-5 w-5 text-yellow-500" />;
       default:
-        return <Activity className="h-4 w-4 text-blue-500" />;
+        return <Activity className="h-5 w-5 text-blue-500" />;
     }
   };
 
@@ -60,165 +60,216 @@ export function SecurityAlertsWidget() {
     }
   };
 
+  const getAlertGradient = (type: string) => {
+    switch (type) {
+      case 'critical':
+        return 'from-destructive/20 to-red-500/10';
+      case 'high':
+        return 'from-orange-500/20 to-red-500/10';
+      case 'medium':
+        return 'from-amber-500/20 to-yellow-500/10';
+      default:
+        return 'from-blue-500/20 to-cyan-500/10';
+    }
+  };
+
   return (
-    <div className="space-y-4">
-      {/* Métricas Resumidas */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Shield className="h-5 w-5" />
-              Status de Segurança
+    <div className="space-y-6">
+      {/* Enhanced Security Metrics */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+        {[
+          {
+            label: "Violações (24h)",
+            value: metrics.recentViolations,
+            icon: AlertTriangle,
+            gradient: "from-destructive/20 to-red-500/10",
+            iconColor: "text-destructive",
+            border: "border-destructive/30"
+          },
+          {
+            label: "Falhas de Login",
+            value: metrics.failedLogins,
+            icon: Shield,
+            gradient: "from-orange-500/20 to-amber-500/10",
+            iconColor: "text-orange-500",
+            border: "border-orange-500/30"
+          },
+          {
+            label: "IPs Suspeitos",
+            value: metrics.suspiciousIPs.length,
+            icon: Activity,
+            gradient: "from-amber-500/20 to-yellow-500/10",
+            iconColor: "text-amber-500",
+            border: "border-amber-500/30"
+          },
+          {
+            label: "Total Violações",
+            value: metrics.totalViolations,
+            icon: X,
+            gradient: "from-blue-500/20 to-cyan-500/10",
+            iconColor: "text-blue-500",
+            border: "border-blue-500/30"
+          }
+        ].map((metric, index) => (
+          <div 
+            key={metric.label} 
+            className={`aurora-glass rounded-2xl border ${metric.border} backdrop-blur-md overflow-hidden group cursor-pointer transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl animate-fade-in`}
+            style={{ animationDelay: `${index * 100}ms` }}
+          >
+            <div className={`bg-gradient-to-r ${metric.gradient} p-6 border-b border-white/10`}>
+              <div className="flex items-center justify-between">
+                <div className={`p-3 rounded-xl aurora-glass bg-gradient-to-br ${metric.gradient}`}>
+                  <metric.icon className={`h-6 w-6 ${metric.iconColor}`} />
+                </div>
+                <div className="text-right">
+                  <p className="text-3xl font-bold aurora-text-gradient group-hover:scale-110 transition-transform duration-300">
+                    {metric.value}
+                  </p>
+                </div>
+              </div>
             </div>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={runSecurityScan}
-              className="text-xs"
-            >
-              <Activity className="h-3 w-3 mr-1" />
-              Varredura
-            </Button>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-muted-foreground">
-                {metrics.recentViolations}
-              </div>
-              <div className="text-xs text-muted-foreground">
-                Violações (24h)
-              </div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-muted-foreground">
-                {metrics.failedLogins}
-              </div>
-              <div className="text-xs text-muted-foreground">
-                Login Falhas (24h)
-              </div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-muted-foreground">
-                {metrics.suspiciousIPs.length}
-              </div>
-              <div className="text-xs text-muted-foreground">
-                IPs Suspeitos
-              </div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-muted-foreground">
-                {metrics.totalViolations}
-              </div>
-              <div className="text-xs text-muted-foreground">
-                Total Violações
-              </div>
+            <div className="p-4">
+              <p className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors duration-300">
+                {metric.label}
+              </p>
             </div>
           </div>
-          
-          {metrics.lastSecurityScan && (
-            <p className="text-xs text-muted-foreground mt-2 text-center">
-              Última varredura: {metrics.lastSecurityScan.toLocaleTimeString()}
-            </p>
-          )}
-        </CardContent>
-      </Card>
+        ))}
+      </div>
 
-      {/* Alertas Ativos */}
+      {/* Scan Control */}
+      <div className="aurora-glass rounded-2xl p-6 border border-aurora/20 backdrop-blur-md">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-bold aurora-text-gradient mb-1">Controle de Varredura</h3>
+            <p className="text-sm text-muted-foreground">
+              {metrics.lastSecurityScan 
+                ? `Última varredura: ${metrics.lastSecurityScan.toLocaleString('pt-BR')}`
+                : 'Nenhuma varredura executada'
+              }
+            </p>
+          </div>
+          <Button 
+            onClick={runSecurityScan}
+            className="h-12 px-6 bg-gradient-to-r from-aurora to-viverblue hover:from-aurora-dark hover:to-viverblue-dark text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300"
+          >
+            <Activity className="h-4 w-4 mr-2" />
+            Nova Varredura
+          </Button>
+        </div>
+      </div>
+
+      {/* Enhanced Active Alerts */}
       {alerts.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-orange-500" />
-              Alertas de Segurança ({alerts.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {alerts.map((alert) => (
-              <Alert 
-                key={alert.id} 
-                variant={getAlertVariant(alert.type)}
-                className="relative"
-              >
+        <div className="space-y-4">
+          {alerts.map((alert, index) => (
+            <div 
+              key={alert.id} 
+              className={`aurora-glass rounded-2xl border backdrop-blur-md overflow-hidden animate-fade-in`}
+              style={{ animationDelay: `${index * 100}ms` }}
+            >
+              <div className={`bg-gradient-to-r ${getAlertGradient(alert.type)} p-6 border-b border-white/10`}>
                 <div className="flex items-start justify-between">
-                  <div className="flex items-start gap-2 flex-1">
-                    {getAlertIcon(alert.type)}
+                  <div className="flex items-start gap-4 flex-1">
+                    <div className={`p-3 rounded-xl aurora-glass bg-gradient-to-br ${getAlertGradient(alert.type)}`}>
+                      {getAlertIcon(alert.type)}
+                    </div>
                     <div className="flex-1">
-                      <AlertTitle className="flex items-center gap-2">
-                        <Badge variant={getAlertVariant(alert.type)}>
+                      <div className="flex items-center gap-3 mb-2">
+                        <Badge variant={getAlertVariant(alert.type)} className="font-medium">
                           {alert.type.toUpperCase()}
                         </Badge>
-                        <span className="text-xs text-muted-foreground">
-                          {alert.timestamp.toLocaleTimeString()}
+                        <span className="text-sm text-muted-foreground font-medium">
+                          {alert.timestamp.toLocaleString('pt-BR')}
                         </span>
-                      </AlertTitle>
-                      <AlertDescription className="mt-1">
+                      </div>
+                      <p className="font-medium text-foreground mb-2">
                         {alert.message}
-                        {alert.action && (
-                          <div className="text-xs mt-1 font-medium">
-                            Ação recomendada: {alert.action}
-                          </div>
-                        )}
-                      </AlertDescription>
+                      </p>
+                      {alert.action && (
+                        <div className="p-3 aurora-glass rounded-lg bg-gradient-to-r from-white/5 to-transparent">
+                          <p className="text-sm font-medium text-amber-600 dark:text-amber-400">
+                            💡 Ação recomendada: {alert.action}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => dismissAlert(alert.id)}
-                    className="h-6 w-6 p-0"
+                    className="h-8 w-8 p-0 hover:bg-white/10 rounded-full"
                   >
-                    <X className="h-3 w-3" />
+                    <X className="h-4 w-4" />
                   </Button>
                 </div>
-              </Alert>
-            ))}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* IPs Suspeitos */}
-      {metrics.suspiciousIPs.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Activity className="h-5 w-5 text-orange-500" />
-              IPs Suspeitos Detectados
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {metrics.suspiciousIPs.map((ip) => (
-                <div key={ip} className="flex items-center justify-between p-2 bg-muted rounded">
-                  <code className="text-sm">{ip}</code>
-                  <Button 
-                    variant="destructive" 
-                    size="sm"
-                    onClick={() => {
-                      // TODO: Implementar bloqueio de IP
-                      console.log(`Bloqueando IP: ${ip}`);
-                    }}
-                  >
-                    Bloquear
-                  </Button>
-                </div>
-              ))}
+              </div>
             </div>
-          </CardContent>
-        </Card>
+          ))}
+        </div>
       )}
 
-      {/* Status Saudável */}
+      {/* Enhanced Suspicious IPs */}
+      {metrics.suspiciousIPs.length > 0 && (
+        <div className="aurora-glass rounded-2xl border border-orange-500/20 backdrop-blur-md overflow-hidden">
+          <div className="bg-gradient-to-r from-orange-500/10 via-red-500/5 to-transparent p-6 border-b border-orange-500/20">
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500/20 to-red-500/10 aurora-glass">
+                <Activity className="h-5 w-5 text-orange-500" />
+              </div>
+              <h3 className="text-lg font-bold aurora-text-gradient">
+                IPs Suspeitos Detectados
+              </h3>
+            </div>
+          </div>
+          <div className="p-6 space-y-3">
+            {metrics.suspiciousIPs.map((ip, index) => (
+              <div 
+                key={ip} 
+                className="flex items-center justify-between p-4 aurora-glass rounded-xl border border-orange-500/20 animate-fade-in"
+                style={{ animationDelay: `${index * 50}ms` }}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-3 h-3 bg-gradient-to-r from-red-500 to-orange-500 rounded-full aurora-pulse"></div>
+                  <code className="font-mono font-medium">{ip}</code>
+                </div>
+                <Button 
+                  variant="destructive" 
+                  size="sm"
+                  className="hover:shadow-lg transition-all duration-300"
+                  onClick={() => {
+                    console.log(`Bloqueando IP: ${ip}`);
+                  }}
+                >
+                  Bloquear
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Enhanced Healthy Status */}
       {alerts.length === 0 && metrics.recentViolations === 0 && (
-        <Alert>
-          <Shield className="h-4 w-4 text-green-500" />
-          <AlertTitle className="text-green-700">Sistema Seguro</AlertTitle>
-          <AlertDescription>
-            Nenhuma atividade suspeita detectada nas últimas 24 horas.
-            Monitoramento ativo desde {metrics.lastSecurityScan?.toLocaleString()}.
-          </AlertDescription>
-        </Alert>
+        <div className="aurora-glass rounded-2xl p-8 border border-green-500/20 backdrop-blur-md">
+          <div className="text-center space-y-4">
+            <div className="p-4 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-500/10 aurora-glass mx-auto w-fit">
+              <Shield className="h-8 w-8 text-green-500 aurora-pulse" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold aurora-text-gradient mb-2">Sistema Seguro</h3>
+              <p className="text-muted-foreground">
+                Nenhuma atividade suspeita detectada nas últimas 24 horas.
+              </p>
+              {metrics.lastSecurityScan && (
+                <p className="text-sm text-muted-foreground mt-2">
+                  Monitoramento ativo desde {metrics.lastSecurityScan.toLocaleString('pt-BR')}.
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
