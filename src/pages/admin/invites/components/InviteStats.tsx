@@ -1,5 +1,5 @@
 
-import { Mail, Users, Clock, CheckCircle } from "lucide-react";
+import { Mail, Users, Clock, CheckCircle, TrendingUp } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Invite } from "@/hooks/admin/invites/types";
 
@@ -17,47 +17,94 @@ const InviteStats = ({ invites }: InviteStatsProps) => {
     !invite.used_at && new Date(invite.expires_at) <= new Date()
   ).length;
 
+  const conversionRate = totalInvites > 0 ? Math.round((usedInvites / totalInvites) * 100) : 0;
+
   const stats = [
     {
-      label: "Total",
+      label: "Total de Convites",
       value: totalInvites,
       icon: Mail,
-      color: "text-blue-600"
+      gradient: "from-aurora/20 to-viverblue/10",
+      iconColor: "text-aurora",
+      border: "border-aurora/30",
+      glow: "aurora-glow"
     },
     {
-      label: "Utilizados",
+      label: "Convites Utilizados",
       value: usedInvites,
       icon: CheckCircle,
-      color: "text-green-600"
+      gradient: "from-green-500/20 to-emerald-500/10",
+      iconColor: "text-green-500",
+      border: "border-green-500/30",
+      glow: "hover:shadow-green-500/20"
     },
     {
-      label: "Ativos",
+      label: "Convites Ativos",
       value: activeInvites,
       icon: Clock,
-      color: "text-orange-600"
+      gradient: "from-amber-500/20 to-orange-500/10",
+      iconColor: "text-amber-500",
+      border: "border-amber-500/30",
+      glow: "hover:shadow-amber-500/20"
     },
     {
-      label: "Expirados",
-      value: expiredInvites,
-      icon: Users,
-      color: "text-gray-600"
+      label: "Taxa de Conversão",
+      value: `${conversionRate}%`,
+      icon: TrendingUp,
+      gradient: "from-revenue/20 to-operational/10",
+      iconColor: "text-revenue",
+      border: "border-revenue/30",
+      glow: "hover:shadow-revenue/20"
     }
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-      {stats.map((stat) => (
-        <Card key={stat.label}>
-          <CardContent className="p-4">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      {stats.map((stat, index) => (
+        <div 
+          key={stat.label} 
+          className={`aurora-glass rounded-2xl border ${stat.border} backdrop-blur-md overflow-hidden group cursor-pointer transition-all duration-500 hover:scale-[1.02] ${stat.glow} hover:shadow-2xl animate-fade-in`}
+          style={{ animationDelay: `${index * 100}ms` }}
+        >
+          {/* Gradient Header */}
+          <div className={`bg-gradient-to-r ${stat.gradient} p-4 border-b border-white/10`}>
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">{stat.label}</p>
-                <p className="text-2xl font-bold">{stat.value}</p>
+              <div className={`p-3 rounded-xl aurora-glass bg-gradient-to-br ${stat.gradient}`}>
+                <stat.icon className={`h-5 w-5 ${stat.iconColor}`} />
               </div>
-              <stat.icon className={`h-8 w-8 ${stat.color}`} />
+              <div className="text-right">
+                <p className="text-2xl font-bold aurora-text-gradient group-hover:scale-110 transition-transform duration-300">
+                  {stat.value}
+                </p>
+              </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+          
+          {/* Content */}
+          <div className="p-4">
+            <p className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors duration-300">
+              {stat.label}
+            </p>
+            
+            {/* Progress indicator for conversion rate */}
+            {stat.label.includes("Conversão") && (
+              <div className="mt-3">
+                <div className="w-full bg-muted/30 rounded-full h-1.5 overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-revenue to-operational rounded-full transition-all duration-1000 aurora-glow"
+                    style={{ 
+                      width: `${conversionRate}%`,
+                      animationDelay: '500ms' 
+                    }}
+                  ></div>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          {/* Hover effect overlay */}
+          <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/5 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+        </div>
       ))}
     </div>
   );
