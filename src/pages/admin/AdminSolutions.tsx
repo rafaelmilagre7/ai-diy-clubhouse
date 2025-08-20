@@ -7,11 +7,9 @@ import { supabase } from "@/lib/supabase";
 import { Solution } from "@/lib/supabase";
 import { toast } from "sonner";
 import LoadingScreen from "@/components/common/LoadingScreen";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { SolutionsManagementSidebar } from "@/components/admin/solutions/SolutionsManagementSidebar";
 import { SolutionsTable } from "@/components/admin/solutions/SolutionsTable";
 import { SolutionsMetrics } from "@/components/admin/solutions/SolutionsMetrics";
-import { SolutionDetailsPanel } from "@/components/admin/solutions/SolutionDetailsPanel";
+import { SolutionsFiltersAside } from "@/components/admin/solutions/SolutionsFiltersAside";
 
 const AdminSolutions = () => {
   const navigate = useNavigate();
@@ -139,72 +137,57 @@ const AdminSolutions = () => {
   }
 
   return (
-    <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-background">
-        {/* Management Sidebar */}
-        <SolutionsManagementSidebar 
-          filters={filters}
-          onFilterChange={updateFilter}
-          onResetFilters={resetFilters}
-          totalSolutions={solutions.length}
-          filteredCount={filteredSolutions.length}
-        />
+    <div className="container mx-auto py-6 px-4">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Soluções</h1>
+          <p className="text-muted-foreground">
+            Gerencie todas as soluções disponíveis na plataforma. 
+            {solutions.length > 0 && (
+              <span className="ml-1">
+                {filteredSolutions.length} de {solutions.length} soluções
+              </span>
+            )}
+          </p>
+        </div>
+        <Button onClick={() => navigate("/admin/solutions/new")}>
+          <Plus className="mr-2 h-4 w-4" />
+          Nova Solução
+        </Button>
+      </div>
+
+      {/* Metrics */}
+      <div className="mb-6">
+        <SolutionsMetrics solutions={solutions} />
+      </div>
+
+      {/* Content with Aside Filters */}
+      <div className="flex gap-6">
+        {/* Filters Aside */}
+        <aside className="w-64 flex-shrink-0">
+          <SolutionsFiltersAside
+            filters={filters}
+            onFilterChange={updateFilter}
+            onResetFilters={resetFilters}
+            totalSolutions={solutions.length}
+            filteredCount={filteredSolutions.length}
+          />
+        </aside>
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col">
-          {/* Header */}
-          <header className="h-16 flex items-center justify-between px-6 border-b bg-card/30 backdrop-blur-sm">
-            <div className="flex items-center gap-4">
-              <SidebarTrigger />
-              <div>
-                <h1 className="text-xl font-semibold">Gestão de Soluções</h1>
-                <p className="text-sm text-muted-foreground">
-                  {filteredSolutions.length} de {solutions.length} soluções
-                </p>
-              </div>
-            </div>
-            
-            <Button onClick={() => navigate("/admin/solutions/new")} className="gap-2">
-              <Plus className="h-4 w-4" />
-              Nova Solução
-            </Button>
-          </header>
-
-          {/* Metrics */}
-          <div className="p-6 border-b">
-            <SolutionsMetrics solutions={solutions} />
-          </div>
-
-          {/* Content Area */}
-          <div className="flex-1 flex">
-            {/* Solutions Table */}
-            <div className={`transition-all duration-300 ${selectedSolution ? 'flex-[2]' : 'flex-1'}`}>
-              <SolutionsTable
-                solutions={filteredSolutions}
-                onSolutionSelect={setSelectedSolution}
-                onEdit={(id) => navigate(`/admin/solutions/${id}/edit`)}
-                onDelete={handleDeleteSolution}
-                onTogglePublish={handleTogglePublish}
-                selectedSolution={selectedSolution}
-              />
-            </div>
-
-            {/* Details Panel */}
-            {selectedSolution && (
-              <div className="flex-1 border-l">
-                <SolutionDetailsPanel
-                  solution={selectedSolution}
-                  onClose={() => setSelectedSolution(null)}
-                  onEdit={() => navigate(`/admin/solutions/${selectedSolution.id}/edit`)}
-                  onDelete={() => handleDeleteSolution(selectedSolution.id)}
-                  onTogglePublish={(published) => handleTogglePublish(selectedSolution.id, published)}
-                />
-              </div>
-            )}
-          </div>
+        <div className="flex-1">
+          <SolutionsTable
+            solutions={filteredSolutions}
+            onSolutionSelect={setSelectedSolution}
+            onEdit={(id) => navigate(`/admin/solutions/${id}/edit`)}
+            onDelete={handleDeleteSolution}
+            onTogglePublish={handleTogglePublish}
+            selectedSolution={selectedSolution}
+          />
         </div>
       </div>
-    </SidebarProvider>
+    </div>
   );
 };
 
