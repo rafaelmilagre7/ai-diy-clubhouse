@@ -8,7 +8,6 @@ import { Solution } from "@/lib/supabase";
 import { toast } from "sonner";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { SolutionsTable } from "@/components/admin/solutions/SolutionsTable";
-import { SolutionsHeader } from "@/components/admin/solutions/SolutionsHeader";
 import { SolutionsFilters } from "@/components/admin/solutions/SolutionsFilters";
 import { useSolutionsFilters } from "@/hooks/admin/useSolutionsFilters";
 import { getCategoryDetails } from "@/lib/types/categoryTypes";
@@ -103,11 +102,24 @@ const SolutionsList = () => {
 
   return (
     <div className="container mx-auto py-6 px-4">
-      <SolutionsHeader
-        totalSolutions={solutions.length}
-        publishedSolutions={solutions.filter(s => s.published).length}
-        onCreateNew={() => navigate("/admin/solutions/new")}
-      />
+      {/* Header */}
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Soluções</h1>
+          <p className="text-muted-foreground">
+            Gerencie todas as soluções disponíveis na plataforma. 
+            {solutions.length > 0 && (
+              <span className="ml-1">
+                {solutions.length} total, {solutions.filter(s => s.published).length} publicadas
+              </span>
+            )}
+          </p>
+        </div>
+        <Button onClick={() => navigate("/admin/solutions/new")}>
+          <Plus className="mr-2 h-4 w-4" />
+          Nova Solução
+        </Button>
+      </div>
 
       <SolutionsFilters
         filters={filters}
