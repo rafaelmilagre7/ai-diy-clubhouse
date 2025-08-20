@@ -21,12 +21,18 @@ import {
   Clock,
   XCircle,
   AlertCircle,
-  Trash2
+  Trash2,
+  MessageSquare,
+  RefreshCw,
+  User,
+  ThumbsUp,
+  ThumbsDown
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { useAdminSuggestions } from '@/hooks/suggestions/useAdminSuggestions';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
 const AdminSuggestions = () => {
   const navigate = useNavigate();
@@ -63,14 +69,12 @@ const AdminSuggestions = () => {
         throw error;
       }
       
-      // Mapear dados para o formato esperado pela interface
       const mappedData = (data || []).map(suggestion => ({
         ...suggestion,
         user_name: suggestion.profiles?.name || 'Usuário Anônimo',
         user_email: suggestion.profiles?.email || null
       }));
       
-      console.log('Sugestões carregadas:', mappedData.length);
       return mappedData;
     }
   });
@@ -81,44 +85,44 @@ const AdminSuggestions = () => {
         return {
           label: 'Nova',
           icon: AlertCircle,
-          className: 'bg-blue-500/10 text-blue-700 border-blue-500/20 dark:text-blue-400',
-          dotColor: 'bg-blue-500'
+          className: 'bg-viverblue/10 text-viverblue border-viverblue/30',
+          dotColor: 'bg-viverblue'
         };
       case 'under_review':
         return {
           label: 'Em Análise',
           icon: Clock,
-          className: 'bg-yellow-500/10 text-yellow-700 border-yellow-500/20 dark:text-yellow-400',
-          dotColor: 'bg-yellow-500'
+          className: 'bg-operational/10 text-operational border-operational/30',
+          dotColor: 'bg-operational'
         };
       case 'in_development':
         return {
           label: 'Em Desenvolvimento',
           icon: Clock,
-          className: 'bg-orange-500/10 text-orange-700 border-orange-500/20 dark:text-orange-400',
-          dotColor: 'bg-orange-500'
+          className: 'bg-strategy/10 text-strategy border-strategy/30',
+          dotColor: 'bg-strategy'
         };
       case 'completed':
       case 'implemented':
         return {
           label: 'Implementada',
           icon: CheckCircle,
-          className: 'bg-green-500/10 text-green-700 border-green-500/20 dark:text-green-400',
-          dotColor: 'bg-green-500'
+          className: 'bg-revenue/10 text-revenue border-revenue/30',
+          dotColor: 'bg-revenue'
         };
       case 'declined':
       case 'rejected':
         return {
           label: 'Recusada',
           icon: XCircle,
-          className: 'bg-red-500/10 text-red-700 border-red-500/20 dark:text-red-400',
-          dotColor: 'bg-red-500'
+          className: 'bg-destructive/10 text-destructive border-destructive/30',
+          dotColor: 'bg-destructive'
         };
       default:
         return {
           label: status,
           icon: AlertCircle,
-          className: 'bg-muted text-muted-foreground border-border',
+          className: 'bg-muted/10 text-muted-foreground border-muted/30',
           dotColor: 'bg-muted-foreground'
         };
     }
@@ -142,316 +146,420 @@ const AdminSuggestions = () => {
     navigate(`/admin/suggestions/${suggestionId}`);
   };
 
-  // Calcular estatísticas das sugestões
+  // Enhanced stats calculation
   const stats = {
     total: suggestions.length,
     new: suggestions.filter(s => s.status === 'new').length,
     inProgress: suggestions.filter(s => ['under_review', 'in_development'].includes(s.status)).length,
     completed: suggestions.filter(s => s.status === 'completed' || s.status === 'implemented').length,
+    declined: suggestions.filter(s => s.status === 'declined' || s.status === 'rejected').length,
+    totalVotes: suggestions.reduce((acc, s) => acc + (s.upvotes || 0) + (s.downvotes || 0), 0),
+    avgRating: suggestions.length > 0 ? (suggestions.reduce((acc, s) => acc + ((s.upvotes || 0) - (s.downvotes || 0)), 0) / suggestions.length) : 0
   };
 
-  if (isLoading) {
-    return (
-      <div className="container py-6 space-y-6">
-        <div className="animate-pulse">
-          <div className="h-8 bg-muted rounded-md w-64 mb-6"></div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-24 bg-muted rounded-lg"></div>
-            ))}
-          </div>
-          <div className="space-y-4">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-32 bg-muted rounded-lg"></div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Filter and search logic
+  const filteredSuggestions = suggestions.filter(suggestion => {
+    const matchesSearch = suggestion.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (suggestion.description?.toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    const matchesFilter = statusFilter === 'all' || suggestion.status === statusFilter;
+    
+    return matchesSearch && matchesFilter;
+  });
 
   return (
-    <div className="container py-6 space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Gerenciar Sugestões</h1>
-          <p className="text-muted-foreground">
-            Gerencie e acompanhe as sugestões da comunidade
-          </p>
-        </div>
-      </div>
-
-      {/* Estatísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="border-border bg-card">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+      {/* Aurora Background Effects */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-viverblue/5 via-transparent to-transparent" />
+      <div className="absolute top-0 right-0 -z-10 h-96 w-96 rounded-full bg-gradient-to-br from-operational/10 to-strategy/10 blur-3xl animate-blob" />
+      <div className="absolute bottom-0 left-0 -z-10 h-96 w-96 rounded-full bg-gradient-to-tr from-revenue/10 to-viverblue/10 blur-3xl animate-blob animation-delay-2000" />
+      
+      <div className="relative p-6 md:p-8 space-y-8">
+        {/* Modern Header */}
+        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-6">
+          <div className="space-y-4">
+            <div className="flex items-center space-x-4">
+              <div className="p-3 rounded-xl bg-gradient-to-r from-viverblue/20 to-operational/20 backdrop-blur-sm border border-viverblue/20">
+                <MessageSquare className="h-8 w-8 text-viverblue" />
+              </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Total</p>
-                <p className="text-2xl font-bold text-foreground">{stats.total}</p>
+                <h1 className="text-display text-foreground bg-gradient-to-r from-viverblue to-operational bg-clip-text text-transparent">
+                  Gerenciar Sugestões
+                </h1>
+                <p className="text-body-large text-muted-foreground">
+                  Gerencie e acompanhe {stats.total} sugestões da comunidade
+                </p>
               </div>
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <Users className="h-5 w-5 text-primary" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-border bg-card">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Novas</p>
-                <p className="text-2xl font-bold text-foreground">{stats.new}</p>
-              </div>
-              <div className="p-2 bg-blue-500/10 rounded-lg">
-                <AlertCircle className="h-5 w-5 text-blue-500" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-border bg-card">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Em Progresso</p>
-                <p className="text-2xl font-bold text-foreground">{stats.inProgress}</p>
-              </div>
-              <div className="p-2 bg-orange-500/10 rounded-lg">
-                <Clock className="h-5 w-5 text-orange-500" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-border bg-card">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Implementadas</p>
-                <p className="text-2xl font-bold text-foreground">{stats.completed}</p>
-              </div>
-              <div className="p-2 bg-green-500/10 rounded-lg">
-                <CheckCircle className="h-5 w-5 text-green-500" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Filtros */}
-      <Card className="border-border bg-card">
-        <CardContent className="p-6">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder="Buscar sugestões..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 bg-background border-border text-foreground placeholder:text-muted-foreground"
-              />
             </div>
             
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-muted-foreground" />
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-48 bg-background border-border text-foreground">
-                  <SelectValue placeholder="Filtrar por status" />
-                </SelectTrigger>
-                <SelectContent className="bg-popover border-border">
-                  <SelectItem value="all">Todos os Status</SelectItem>
-                  <SelectItem value="new">Nova</SelectItem>
-                  <SelectItem value="under_review">Em Análise</SelectItem>
-                  <SelectItem value="in_development">Em Desenvolvimento</SelectItem>
-                  <SelectItem value="completed">Implementada</SelectItem>
-                  <SelectItem value="implemented">Implementada</SelectItem>
-                  <SelectItem value="declined">Recusada</SelectItem>
-                  <SelectItem value="rejected">Recusada</SelectItem>
-                </SelectContent>
-              </Select>
+            {/* Quick Stats Badges */}
+            <div className="flex gap-4">
+              <Badge variant="secondary" className="surface-elevated">
+                {stats.new} Novas
+              </Badge>
+              <Badge variant="secondary" className="surface-elevated">
+                {stats.inProgress} Em Progresso
+              </Badge>
+              <Badge variant="secondary" className="surface-elevated">
+                {stats.completed} Implementadas
+              </Badge>
             </div>
           </div>
-        </CardContent>
-      </Card>
+          
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              onClick={() => refetch()}
+              disabled={isLoading}
+              className="aurora-focus gap-2 bg-card/50 backdrop-blur-sm"
+            >
+              <RefreshCw className="h-4 w-4" />
+              {isLoading ? "Atualizando..." : "Atualizar"}
+            </Button>
+          </div>
+        </div>
 
-      {/* Lista de Sugestões */}
-      <div className="space-y-4">
-        {suggestions.map((suggestion) => {
-          const statusConfig = getStatusConfig(suggestion.status);
-          const StatusIcon = statusConfig.icon;
-          const netVotes = (suggestion.upvotes || 0) - (suggestion.downvotes || 0);
+        {/* Enhanced Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
+          <Card className="surface-elevated border-0 shadow-aurora transition-all duration-300 hover:shadow-aurora-strong group">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-label text-muted-foreground">Total</CardTitle>
+              <div className="p-2 rounded-lg bg-gradient-to-br from-viverblue/20 to-viverblue/10 transition-all duration-300 group-hover:from-viverblue/30 group-hover:to-viverblue/20">
+                <MessageSquare className="h-4 w-4 text-viverblue" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-heading-2 text-foreground mb-2 bg-gradient-to-r from-viverblue to-viverblue/80 bg-clip-text text-transparent">
+                {stats.total}
+              </div>
+              <p className="text-caption text-muted-foreground">
+                Sugestões
+              </p>
+            </CardContent>
+          </Card>
 
-          return (
-            <Card key={suggestion.id} className="border-border bg-card hover:bg-muted/50 transition-colors">
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 space-y-3">
-                    {/* Cabeçalho */}
-                    <div className="flex items-start gap-3">
-                      <div className={`p-1 rounded-full ${statusConfig.dotColor.replace('bg-', 'bg-opacity-20 bg-')} flex-shrink-0 mt-1`}>
-                        <div className={`w-2 h-2 rounded-full ${statusConfig.dotColor}`}></div>
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-foreground leading-tight">
-                          {suggestion.title}
-                        </h3>
-                        <div className="flex items-center gap-3 mt-2">
-                          <Badge variant="outline" className={statusConfig.className}>
-                            <StatusIcon className="h-3 w-3 mr-1" />
-                            {statusConfig.label}
-                          </Badge>
-                          <span className="text-sm text-muted-foreground flex items-center gap-1">
-                            <Users className="h-3 w-3" />
-                            {suggestion.user_name || 'Usuário Anônimo'}
-                          </span>
-                          <span className="text-sm text-muted-foreground flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            {new Date(suggestion.created_at).toLocaleDateString('pt-BR')}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
+          <Card className="surface-elevated border-0 shadow-aurora transition-all duration-300 hover:shadow-aurora-strong group">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-label text-muted-foreground">Novas</CardTitle>
+              <div className="p-2 rounded-lg bg-gradient-to-br from-operational/20 to-operational/10 transition-all duration-300 group-hover:from-operational/30 group-hover:to-operational/20">
+                <AlertCircle className="h-4 w-4 text-operational" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-heading-2 text-foreground mb-2 bg-gradient-to-r from-operational to-operational/80 bg-clip-text text-transparent">
+                {stats.new}
+              </div>
+              <p className="text-caption text-muted-foreground">
+                Aguardando análise
+              </p>
+            </CardContent>
+          </Card>
 
-                    {/* Descrição */}
-                    <p className="text-muted-foreground line-clamp-2 text-sm leading-relaxed">
-                      {suggestion.description}
-                    </p>
+          <Card className="surface-elevated border-0 shadow-aurora transition-all duration-300 hover:shadow-aurora-strong group">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-label text-muted-foreground">Em Progresso</CardTitle>
+              <div className="p-2 rounded-lg bg-gradient-to-br from-strategy/20 to-strategy/10 transition-all duration-300 group-hover:from-strategy/30 group-hover:to-strategy/20">
+                <Clock className="h-4 w-4 text-strategy" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-heading-2 text-foreground mb-2 bg-gradient-to-r from-strategy to-strategy/80 bg-clip-text text-transparent">
+                {stats.inProgress}
+              </div>
+              <p className="text-caption text-muted-foreground">
+                Em desenvolvimento
+              </p>
+            </CardContent>
+          </Card>
 
-                    {/* Métricas */}
-                    <div className="flex items-center gap-6">
-                      <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-1 text-sm">
-                          <TrendingUp className="h-4 w-4 text-green-500" />
-                          <span className="font-medium text-foreground">{suggestion.upvotes || 0}</span>
-                          <span className="text-muted-foreground">positivos</span>
-                        </div>
-                        <div className="flex items-center gap-1 text-sm">
-                          <TrendingDown className="h-4 w-4 text-red-500" />
-                          <span className="font-medium text-foreground">{suggestion.downvotes || 0}</span>
-                          <span className="text-muted-foreground">negativos</span>
-                        </div>
-                        <Separator orientation="vertical" className="h-4" />
-                        <div className="flex items-center gap-1 text-sm">
-                          <span className="text-muted-foreground">Total:</span>
-                          <span className={`font-semibold ${
-                            netVotes > 0 ? 'text-green-600 dark:text-green-400' : 
-                            netVotes < 0 ? 'text-red-600 dark:text-red-400' : 
-                            'text-muted-foreground'
-                          }`}>
-                            {netVotes > 0 ? `+${netVotes}` : netVotes}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+          <Card className="surface-elevated border-0 shadow-aurora transition-all duration-300 hover:shadow-aurora-strong group">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-label text-muted-foreground">Implementadas</CardTitle>
+              <div className="p-2 rounded-lg bg-gradient-to-br from-revenue/20 to-revenue/10 transition-all duration-300 group-hover:from-revenue/30 group-hover:to-revenue/20">
+                <CheckCircle className="h-4 w-4 text-revenue" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-heading-2 text-foreground mb-2 bg-gradient-to-r from-revenue to-revenue/80 bg-clip-text text-transparent">
+                {stats.completed}
+              </div>
+              <p className="text-caption text-muted-foreground">
+                Concluídas
+              </p>
+            </CardContent>
+          </Card>
 
-                  {/* Ações */}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56 bg-popover border-border">
-                      <DropdownMenuItem 
-                        onClick={() => handleViewSuggestion(suggestion.id)}
-                        className="text-foreground hover:bg-muted"
-                      >
-                        <Eye className="mr-2 h-4 w-4" />
-                        Ver Detalhes
-                      </DropdownMenuItem>
-                      
-                      <DropdownMenuSeparator className="bg-border" />
-                      
-                      <DropdownMenuItem 
-                        onClick={() => handleStatusUpdate(suggestion.id, 'under_review')}
-                        disabled={adminActionLoading || suggestion.status === 'under_review'}
-                        className="text-foreground hover:bg-muted"
-                      >
-                        <Clock className="mr-2 h-4 w-4" />
-                        Marcar como Em Análise
-                      </DropdownMenuItem>
-                      
-                      <DropdownMenuItem 
-                        onClick={() => handleStatusUpdate(suggestion.id, 'in_development')}
-                        disabled={adminActionLoading || suggestion.status === 'in_development'}
-                        className="text-foreground hover:bg-muted"
-                      >
-                        <Clock className="mr-2 h-4 w-4" />
-                        Marcar como Em Desenvolvimento
-                      </DropdownMenuItem>
-                      
-                      <DropdownMenuItem 
-                        onClick={() => handleStatusUpdate(suggestion.id, 'completed')}
-                        disabled={adminActionLoading || suggestion.status === 'completed'}
-                        className="text-foreground hover:bg-muted"
-                      >
-                        <CheckCircle className="mr-2 h-4 w-4" />
-                        Marcar como Implementada
-                      </DropdownMenuItem>
-                      
-                      <DropdownMenuItem 
-                        onClick={() => handleStatusUpdate(suggestion.id, 'declined')}
-                        disabled={adminActionLoading || suggestion.status === 'declined'}
-                        className="text-foreground hover:bg-muted"
-                      >
-                        <XCircle className="mr-2 h-4 w-4" />
-                        Marcar como Recusada
-                      </DropdownMenuItem>
-                      
-                      <DropdownMenuSeparator className="bg-border" />
-                      
-                      <DropdownMenuItem 
-                        onClick={() => handleRemoveSuggestion(suggestion.id)}
-                        className="text-destructive hover:bg-destructive/10 focus:text-destructive"
-                        disabled={adminActionLoading}
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Remover Sugestão
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+          <Card className="surface-elevated border-0 shadow-aurora transition-all duration-300 hover:shadow-aurora-strong group">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-label text-muted-foreground">Recusadas</CardTitle>
+              <div className="p-2 rounded-lg bg-gradient-to-br from-destructive/20 to-destructive/10 transition-all duration-300 group-hover:from-destructive/30 group-hover:to-destructive/20">
+                <XCircle className="h-4 w-4 text-destructive" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-heading-2 text-foreground mb-2 bg-gradient-to-r from-destructive to-destructive/80 bg-clip-text text-transparent">
+                {stats.declined}
+              </div>
+              <p className="text-caption text-muted-foreground">
+                Não aprovadas
+              </p>
+            </CardContent>
+          </Card>
 
-      {/* Estado vazio */}
-      {suggestions.length === 0 && (
-        <Card className="border-border bg-card">
-          <CardContent className="p-12 text-center">
-            <div className="mx-auto w-24 h-24 bg-muted rounded-full flex items-center justify-center mb-4">
-              <AlertCircle className="h-12 w-12 text-muted-foreground" />
-            </div>
-            <h3 className="text-lg font-semibold text-foreground mb-2">
-              Nenhuma sugestão encontrada
-            </h3>
-            <p className="text-muted-foreground max-w-md mx-auto">
-              {searchTerm || statusFilter !== 'all' 
-                ? 'Nenhuma sugestão encontrada com os filtros aplicados. Tente ajustar os filtros de busca.'
-                : 'Não há sugestões registradas no sistema no momento. As sugestões aparecerão aqui quando forem criadas pela comunidade.'
-              }
-            </p>
-            {(searchTerm || statusFilter !== 'all') && (
-              <Button 
-                variant="outline" 
+          <Card className="surface-elevated border-0 shadow-aurora transition-all duration-300 hover:shadow-aurora-strong group">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-label text-muted-foreground">Engajamento</CardTitle>
+              <div className="p-2 rounded-lg bg-gradient-to-br from-surface-accent/20 to-surface-accent/10 transition-all duration-300 group-hover:from-surface-accent/30 group-hover:to-surface-accent/20">
+                <Users className="h-4 w-4 text-surface-accent" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-heading-2 text-foreground mb-2 bg-gradient-to-r from-surface-accent to-surface-accent/80 bg-clip-text text-transparent">
+                {stats.totalVotes}
+              </div>
+              <p className="text-caption text-muted-foreground">
+                Total de votos
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Enhanced Filters */}
+        <Card className="surface-elevated border-0 shadow-aurora">
+          <CardHeader>
+            <CardTitle className="text-heading-3 flex items-center gap-2">
+              <Filter className="h-5 w-5" />
+              Filtros e Busca
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar sugestões por título ou descrição..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="aurora-focus pl-10"
+                />
+              </div>
+              <div className="w-full sm:w-64">
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="aurora-focus">
+                    <SelectValue placeholder="Filtrar por status" />
+                  </SelectTrigger>
+                  <SelectContent className="surface-elevated border-0 shadow-aurora">
+                    <SelectItem value="all">Todos os Status</SelectItem>
+                    <SelectItem value="new">Nova</SelectItem>
+                    <SelectItem value="under_review">Em Análise</SelectItem>
+                    <SelectItem value="in_development">Em Desenvolvimento</SelectItem>
+                    <SelectItem value="completed">Implementada</SelectItem>
+                    <SelectItem value="implemented">Implementada</SelectItem>
+                    <SelectItem value="declined">Recusada</SelectItem>
+                    <SelectItem value="rejected">Recusada</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button
+                variant="outline"
                 onClick={() => {
                   setSearchTerm('');
                   setStatusFilter('all');
                 }}
-                className="mt-4"
+                className="aurora-focus"
               >
-                Limpar Filtros
+                Limpar
               </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Enhanced Suggestions Grid */}
+        <Card className="surface-elevated border-0 shadow-aurora">
+          <CardHeader>
+            <CardTitle className="text-heading-3 flex items-center justify-between">
+              <span>Lista de Sugestões</span>
+              <Badge variant="outline" className="text-xs">
+                {filteredSuggestions.length} de {suggestions.length}
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <Card key={i} className="surface-elevated border-0 shadow-aurora">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center space-x-3">
+                        <div className="skeleton h-10 w-10 rounded-full" />
+                        <div className="space-y-2 flex-1">
+                          <div className="skeleton h-4 w-3/4" />
+                          <div className="skeleton h-3 w-1/2" />
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="skeleton h-4 w-full" />
+                      <div className="skeleton h-4 w-2/3" />
+                      <div className="skeleton h-8 w-full" />
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : filteredSuggestions.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="p-4 rounded-xl bg-gradient-to-r from-muted/20 to-muted/10 backdrop-blur-sm border border-muted/20 inline-block mb-4">
+                  <MessageSquare className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <h3 className="text-heading-3 text-foreground mb-2">Nenhuma sugestão encontrada</h3>
+                <p className="text-body text-muted-foreground">
+                  Tente ajustar os filtros ou aguarde novas sugestões da comunidade
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredSuggestions.map((suggestion, index) => {
+                  const statusConfig = getStatusConfig(suggestion.status);
+                  const StatusIcon = statusConfig.icon;
+                  const netVotes = (suggestion.upvotes || 0) - (suggestion.downvotes || 0);
+                  const createdDate = new Date(suggestion.created_at);
+                  const isRecentSuggestion = Date.now() - createdDate.getTime() < 7 * 24 * 60 * 60 * 1000;
+
+                  return (
+                    <motion.div
+                      key={suggestion.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ 
+                        duration: 0.3, 
+                        delay: index * 0.1,
+                        ease: 'easeOut' 
+                      }}
+                    >
+                      <Card className="surface-elevated border-0 shadow-aurora transition-all duration-300 hover:shadow-aurora-strong group h-full">
+                        <CardHeader className="pb-3">
+                          <div className="flex items-start justify-between">
+                            <div className="flex items-start gap-3 flex-1">
+                              <div className={`p-2 rounded-lg ${statusConfig.dotColor.replace('bg-', 'bg-gradient-to-br from-')} to-${statusConfig.dotColor.replace('bg-', '')}/50 transition-all duration-300 group-hover:scale-110`}>
+                                <StatusIcon className={`h-5 w-5 ${statusConfig.className.split(' ')[1]}`} />
+                              </div>
+                              
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-start gap-2 mb-2">
+                                  <h3 className="text-body-large font-semibold text-foreground line-clamp-2 group-hover:text-viverblue transition-colors">
+                                    {suggestion.title}
+                                  </h3>
+                                  {isRecentSuggestion && (
+                                    <Badge variant="outline" className="text-xs bg-operational/10 text-operational border-operational/20 flex-shrink-0">
+                                      Nova
+                                    </Badge>
+                                  )}
+                                </div>
+                                
+                                <Badge variant="outline" className={`${statusConfig.className} text-xs`}>
+                                  <StatusIcon className="h-3 w-3 mr-1" />
+                                  {statusConfig.label}
+                                </Badge>
+                              </div>
+                            </div>
+
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 opacity-60 hover:opacity-100 transition-opacity">
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="surface-elevated border-0 shadow-aurora">
+                                <DropdownMenuItem onClick={() => handleViewSuggestion(suggestion.id)}>
+                                  <Eye className="mr-2 h-4 w-4" />
+                                  Ver Detalhes
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => handleStatusUpdate(suggestion.id, 'under_review')} disabled={adminActionLoading || suggestion.status === 'under_review'}>
+                                  <Clock className="mr-2 h-4 w-4" />
+                                  Em Análise
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleStatusUpdate(suggestion.id, 'in_development')} disabled={adminActionLoading || suggestion.status === 'in_development'}>
+                                  <Clock className="mr-2 h-4 w-4" />
+                                  Em Desenvolvimento
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleStatusUpdate(suggestion.id, 'completed')} disabled={adminActionLoading || suggestion.status === 'completed'}>
+                                  <CheckCircle className="mr-2 h-4 w-4" />
+                                  Implementada
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleStatusUpdate(suggestion.id, 'declined')} disabled={adminActionLoading || suggestion.status === 'declined'}>
+                                  <XCircle className="mr-2 h-4 w-4" />
+                                  Recusada
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => handleRemoveSuggestion(suggestion.id)} className="text-destructive" disabled={adminActionLoading}>
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Remover
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </CardHeader>
+                        
+                        <CardContent className="space-y-4">
+                          {/* Description */}
+                          <p className="text-body-small text-muted-foreground line-clamp-3">
+                            {suggestion.description}
+                          </p>
+
+                          {/* User Info */}
+                          <div className="flex items-center gap-2 text-body-small text-muted-foreground">
+                            <User className="h-3 w-3" />
+                            <span>{suggestion.user_name || 'Usuário Anônimo'}</span>
+                            <Separator orientation="vertical" className="h-3" />
+                            <Calendar className="h-3 w-3" />
+                            <span>{createdDate.toLocaleDateString('pt-BR')}</span>
+                          </div>
+
+                          {/* Voting Metrics */}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4 text-body-small">
+                              <div className="flex items-center gap-1">
+                                <ThumbsUp className="h-3 w-3 text-revenue" />
+                                <span className="font-medium">{suggestion.upvotes || 0}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <ThumbsDown className="h-3 w-3 text-destructive" />
+                                <span className="font-medium">{suggestion.downvotes || 0}</span>
+                              </div>
+                            </div>
+                            
+                            <div className={`text-body-small font-semibold ${
+                              netVotes > 0 ? 'text-revenue' : 
+                              netVotes < 0 ? 'text-destructive' : 
+                              'text-muted-foreground'
+                            }`}>
+                              {netVotes > 0 ? `+${netVotes}` : netVotes}
+                            </div>
+                          </div>
+
+                          {/* Actions */}
+                          <div className="flex gap-2 pt-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => handleViewSuggestion(suggestion.id)}
+                              className="flex-1 h-8 text-xs aurora-focus"
+                            >
+                              <Eye className="h-3 w-3 mr-1" />
+                              Visualizar
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  );
+                })}
+              </div>
             )}
           </CardContent>
         </Card>
-      )}
+      </div>
     </div>
   );
 };
