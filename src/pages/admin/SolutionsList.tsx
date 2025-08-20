@@ -129,10 +129,11 @@ const SolutionsList = () => {
 
       <SolutionsTable
         solutions={filteredSolutions}
+        onSolutionSelect={() => {}} // Placeholder - SolutionsList doesn't need selection
         onEdit={(id) => navigate(`/admin/solutions/${id}/edit`)}
         onDelete={handleDeleteSolution}
         onTogglePublish={handleTogglePublish}
-        getCategoryDetails={getCategoryDetails}
+        selectedSolution={null}
       />
     </div>
   );

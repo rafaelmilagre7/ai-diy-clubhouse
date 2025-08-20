@@ -70,8 +70,8 @@ export const SolutionDetailsPanel = ({
         <Card>
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <div className={`p-2 rounded ${categoryDetails.bgColor}`}>
-                <categoryDetails.icon className={`h-4 w-4 ${categoryDetails.color}`} />
+              <div className={`p-2 rounded ${categoryDetails.bgColor} flex items-center justify-center`}>
+                <span className="text-lg">{categoryDetails.icon}</span>
               </div>
               {solution.title}
             </CardTitle>
