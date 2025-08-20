@@ -5,6 +5,7 @@ import { usePermissions } from "@/hooks/auth/usePermissions";
 import { useInvitesList } from "@/hooks/admin/invites/useInvitesList";
 import SimpleCreateInviteDialog from "./components/SimpleCreateInviteDialog";
 import SimpleInvitesTab from "./components/SimpleInvitesTab";
+import { BulkInviteUpload } from "@/components/admin/invites/BulkInviteUpload";
 import { WhatsAppDebugPanel } from "@/components/admin/WhatsAppDebugPanel";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -49,8 +50,9 @@ const InvitesManagement = () => {
       </div>
 
       <Tabs defaultValue="invites" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="invites">Lista de Convites</TabsTrigger>
+          <TabsTrigger value="bulk">Convites em Lote</TabsTrigger>
           <TabsTrigger value="whatsapp-debug">Debug WhatsApp</TabsTrigger>
         </TabsList>
         
@@ -67,6 +69,25 @@ const InvitesManagement = () => {
                 invites={invites}
                 loading={invitesLoading}
                 onInvitesChange={handleInvitesChange}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="bulk" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Convites em Lote</CardTitle>
+              <CardDescription>
+                Envie convites para múltiplos usuários de uma vez, com limpeza automática de dados
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <BulkInviteUpload
+                onProceedWithContacts={(contacts) => {
+                  // TODO: Implementar criação de convites em lote
+                  console.log('Contacts to invite:', contacts);
+                }}
               />
             </CardContent>
           </Card>
