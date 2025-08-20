@@ -114,7 +114,7 @@ export function useUserRoles() {
         .from("profiles")
         .select(`
           role_id,
-          user_roles:role_id (
+          user_roles!role_id (
             id,
             name,
             description,
@@ -123,7 +123,7 @@ export function useUserRoles() {
           )
         `)
         .eq("id", userId)
-        .single();
+        .maybeSingle();
       
       if (error) {
         // Log de erro sempre visível (crítico)
@@ -131,11 +131,22 @@ export function useUserRoles() {
         return { roleId: null, roleName: null, roleData: null };
       }
       
-      const roleId = data?.role_id ? String(data.role_id) : null;
+      // Se não há dados, retornar valores nulos
+      if (!data) {
+        console.warn('⚠️ [USER-ROLES] Usuário não encontrado:', userId.substring(0, 8));
+        return { roleId: null, roleName: null, roleData: null };
+      }
+      
+      const roleId = data.role_id ? String(data.role_id) : null;
       let roleName: string | null = null;
       let roleData: any = null;
       
-      if (data?.user_roles) {
+      // Log para debug
+      if (!import.meta.env.PROD) {
+        console.log('🔍 [USER-ROLES] Dados brutos:', data);
+      }
+      
+      if (data.user_roles) {
         if (Array.isArray(data.user_roles)) {
           if (data.user_roles.length > 0) {
             const firstRole = data.user_roles[0] as UserRoleData;
