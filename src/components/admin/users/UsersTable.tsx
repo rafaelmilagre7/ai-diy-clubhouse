@@ -1,12 +1,4 @@
 import React, { useState } from "react";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
@@ -17,6 +9,7 @@ import {
   DropdownMenuSeparator 
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   MoreHorizontal, 
   UserCog, 
@@ -25,12 +18,16 @@ import {
   Trash2, 
   UserX,
   UserCheck,
-  BookOpen
+  BookOpen,
+  Calendar,
+  Mail,
+  CheckCircle
 } from "lucide-react";
 import { UserProfile, getUserRoleName } from "@/lib/supabase";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { UserResetDialog } from "./UserResetDialog";
 import { ToggleUserStatusDialog } from "./ToggleUserStatusDialog";
+import { motion } from "framer-motion";
 
 interface UsersTableProps {
   users: UserProfile[];
@@ -85,92 +82,133 @@ export const UsersTable: React.FC<UsersTableProps> = ({
 
   if (loading) {
     return (
-      <div className="text-center py-8">
-        <LoadingSpinner className="h-8 w-8 mx-auto" />
-        <p className="mt-2 text-muted-foreground">Carregando usuários...</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <Card key={i} className="surface-elevated border-0 shadow-aurora">
+            <CardHeader className="pb-3">
+              <div className="flex items-center space-x-3">
+                <div className="skeleton h-12 w-12 rounded-full" />
+                <div className="space-y-2">
+                  <div className="skeleton h-4 w-32" />
+                  <div className="skeleton h-3 w-48" />
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="skeleton h-4 w-20" />
+              <div className="skeleton h-4 w-16" />
+              <div className="skeleton h-8 w-full" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  if (users.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <div className="p-4 rounded-xl bg-gradient-to-r from-muted/20 to-muted/10 backdrop-blur-sm border border-muted/20 inline-block mb-4">
+          <UserCog className="h-8 w-8 text-muted-foreground" />
+        </div>
+        <h3 className="text-heading-3 text-foreground mb-2">Nenhum usuário encontrado</h3>
+        <p className="text-body text-muted-foreground">
+          Tente ajustar os filtros ou aguarde novos usuários se cadastrarem
+        </p>
       </div>
     );
   }
 
   return (
     <>
-      <div className="border rounded-lg">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Usuário</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Papel</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Criado em</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {users.map((user) => {
-              const roleName = getUserRoleName(user);
-              const isActive = (user.status || 'active') === 'active';
-              
-              return (
-                <TableRow key={user.id}>
-                  <TableCell>
-                    <div className="flex items-center space-x-3">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={user.avatar_url || undefined} />
-                        <AvatarFallback>
-                          {user.name?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="font-medium">{user.name || 'Sem nome'}</span>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {users.map((user, index) => {
+          const roleName = getUserRoleName(user);
+          const isActive = (user.status || 'active') === 'active';
+          const createdDate = new Date(user.created_at);
+          const isNewUser = Date.now() - createdDate.getTime() < 7 * 24 * 60 * 60 * 1000; // 7 days
+          
+          return (
+            <motion.div
+              key={user.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ 
+                duration: 0.3, 
+                delay: index * 0.1,
+                ease: 'easeOut' 
+              }}
+            >
+              <Card className="surface-elevated border-0 shadow-aurora transition-all duration-300 hover:shadow-aurora-strong group">
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center space-x-3 flex-1">
+                      <div className="relative">
+                        <Avatar className="h-12 w-12 ring-2 ring-primary/10 transition-all duration-300 group-hover:ring-primary/20">
+                          <AvatarImage src={user.avatar_url || undefined} />
+                          <AvatarFallback className="bg-gradient-to-br from-viverblue/20 to-operational/20 text-viverblue font-semibold">
+                            {user.name?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        {isNewUser && (
+                          <div className="absolute -top-1 -right-1 h-4 w-4 bg-gradient-to-r from-operational to-revenue rounded-full animate-pulse" />
+                        )}
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="text-body-large font-semibold text-foreground truncate">
+                            {user.name || 'Sem nome'}
+                          </h3>
+                          {isNewUser && (
+                            <Badge variant="outline" className="text-xs bg-operational/10 text-operational border-operational/20">
+                              Novo
+                            </Badge>
+                          )}
+                        </div>
+                        
+                        <div className="flex items-center gap-1 text-body-small text-muted-foreground truncate">
+                          <Mail className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">{user.email}</span>
+                        </div>
+                      </div>
                     </div>
-                  </TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>
-                    <Badge variant={roleName === 'admin' ? 'default' : 'secondary'}>
-                      {roleName}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={isActive ? 'default' : 'destructive'}>
-                      {isActive ? 'Ativo' : 'Inativo'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {new Date(user.created_at).toLocaleDateString('pt-BR')}
-                  </TableCell>
-                  <TableCell className="text-right">
+
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
+                        <Button 
+                          variant="ghost" 
+                          className="h-8 w-8 p-0 opacity-60 hover:opacity-100 transition-opacity"
+                        >
                           <span className="sr-only">Abrir menu</span>
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
+                      <DropdownMenuContent align="end" className="surface-elevated border-0 shadow-aurora">
                         {canEditRoles && (
-                          <DropdownMenuItem onClick={() => onEditRole(user)}>
+                          <DropdownMenuItem onClick={() => onEditRole(user)} className="cursor-pointer">
                             <UserCog className="mr-2 h-4 w-4" />
                             Editar papel
                           </DropdownMenuItem>
                         )}
-                        <DropdownMenuItem onClick={() => onManageCourses(user)}>
+                        <DropdownMenuItem onClick={() => onManageCourses(user)} className="cursor-pointer">
                           <BookOpen className="mr-2 h-4 w-4" />
                           Gerenciar Cursos
                         </DropdownMenuItem>
                         {canResetPasswords && (
-                          <DropdownMenuItem onClick={() => onResetPassword(user)}>
+                          <DropdownMenuItem onClick={() => onResetPassword(user)} className="cursor-pointer">
                             <Key className="mr-2 h-4 w-4" />
                             Redefinir senha
                           </DropdownMenuItem>
                         )}
                         {canResetUsers && (
-                          <DropdownMenuItem onClick={() => handleResetUser(user)}>
+                          <DropdownMenuItem onClick={() => handleResetUser(user)} className="cursor-pointer">
                             <RotateCcw className="mr-2 h-4 w-4" />
                             Resetar usuário
                           </DropdownMenuItem>
                         )}
                         {canToggleStatus && (
-                          <DropdownMenuItem onClick={() => handleToggleStatus(user)}>
+                          <DropdownMenuItem onClick={() => handleToggleStatus(user)} className="cursor-pointer">
                             {isActive ? (
                               <>
                                 <UserX className="mr-2 h-4 w-4" />
@@ -189,7 +227,7 @@ export const UsersTable: React.FC<UsersTableProps> = ({
                             <DropdownMenuSeparator />
                             <DropdownMenuItem 
                               onClick={() => onDeleteUser(user)}
-                              className="text-destructive"
+                              className="text-destructive cursor-pointer"
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
                               Excluir usuário
@@ -198,12 +236,85 @@ export const UsersTable: React.FC<UsersTableProps> = ({
                         )}
                       </DropdownMenuContent>
                     </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+                  </div>
+                </CardHeader>
+                
+                <CardContent className="space-y-4">
+                  {/* Status and Role */}
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <Badge 
+                          variant={roleName === 'admin' ? 'default' : 'secondary'}
+                          className={
+                            roleName === 'admin' 
+                              ? 'bg-gradient-to-r from-revenue to-strategy text-white border-0' 
+                              : 'bg-surface-accent/20 text-surface-accent border-surface-accent/30'
+                          }
+                        >
+                          {roleName}
+                        </Badge>
+                        
+                        <Badge 
+                          variant={isActive ? 'default' : 'destructive'}
+                          className={
+                            isActive 
+                              ? 'bg-gradient-to-r from-operational to-viverblue text-white border-0' 
+                              : 'bg-destructive/20 text-destructive border-destructive/30'
+                          }
+                        >
+                          {isActive ? 'Ativo' : 'Inativo'}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Additional Info */}
+                  <div className="space-y-2 text-body-small">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Calendar className="h-3 w-3" />
+                      <span>Criado em {createdDate.toLocaleDateString('pt-BR')}</span>
+                    </div>
+                    
+                    {user.onboarding_completed && (
+                      <div className="flex items-center gap-2 text-operational">
+                        <CheckCircle className="h-3 w-3" />
+                        <span className="text-xs">Onboarding completo</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Quick Actions */}
+                  <div className="flex gap-2 pt-2">
+                    {canEditRoles && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => onEditRole(user)}
+                        className="flex-1 h-8 text-xs aurora-focus"
+                      >
+                        <UserCog className="h-3 w-3 mr-1" />
+                        Papel
+                      </Button>
+                    )}
+                    
+                    {canResetPasswords && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => onResetPassword(user)}
+                        className="flex-1 h-8 text-xs aurora-focus"
+                      >
+                        <Key className="h-3 w-3 mr-1" />
+                        Reset
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          );
+        })}
       </div>
 
       <UserResetDialog 

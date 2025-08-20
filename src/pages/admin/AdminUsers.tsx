@@ -197,6 +197,11 @@ const AdminUsers = () => {
     user.user_roles?.name === 'admin'
   ).length;
   const onboardingCompleted = users.filter(user => user.onboarding_completed).length;
+  const newUsersToday = users.filter(user => {
+    const today = new Date();
+    const userDate = new Date(user.created_at);
+    return today.toDateString() === userDate.toDateString();
+  }).length;
 
   const filteredUsers = users.filter(user => {
     if (filterRole && user.role_id !== filterRole) return false;
@@ -264,65 +269,88 @@ const AdminUsers = () => {
         </div>
 
         {/* Enhanced Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="surface-elevated border-0 shadow-aurora transition-all duration-300 group">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+          <Card className="surface-elevated border-0 shadow-aurora transition-all duration-300 hover:shadow-aurora-strong group">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-label text-muted-foreground">Total de Usuários</CardTitle>
-              <div className="p-2 rounded-lg bg-viverblue/10 transition-colors">
+              <div className="p-2 rounded-lg bg-gradient-to-br from-viverblue/20 to-viverblue/10 transition-all duration-300 group-hover:from-viverblue/30 group-hover:to-viverblue/20">
                 <Users className="h-4 w-4 text-viverblue" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-heading-2 text-foreground mb-2">{totalUsers}</div>
+              <div className="text-heading-2 text-foreground mb-2 bg-gradient-to-r from-viverblue to-viverblue/80 bg-clip-text text-transparent">
+                {totalUsers}
+              </div>
               <p className="text-caption text-muted-foreground">
-                +12 nos últimos 30 dias
+                +{newUsersToday} hoje
               </p>
             </CardContent>
           </Card>
 
-          <Card className="surface-elevated border-0 shadow-aurora transition-all duration-300 group">
+          <Card className="surface-elevated border-0 shadow-aurora transition-all duration-300 hover:shadow-aurora-strong group">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-label text-muted-foreground">Usuários Ativos</CardTitle>
-              <div className="p-2 rounded-lg bg-operational/10 transition-colors">
+              <div className="p-2 rounded-lg bg-gradient-to-br from-operational/20 to-operational/10 transition-all duration-300 group-hover:from-operational/30 group-hover:to-operational/20">
                 <Activity className="h-4 w-4 text-operational" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-heading-2 text-foreground mb-2">{activeUsers}</div>
+              <div className="text-heading-2 text-foreground mb-2 bg-gradient-to-r from-operational to-operational/80 bg-clip-text text-transparent">
+                {activeUsers}
+              </div>
               <p className="text-caption text-muted-foreground">
-                +8 nos últimos 30 dias
+                {Math.round((activeUsers / totalUsers) * 100)}% do total
               </p>
             </CardContent>
           </Card>
 
-          <Card className="surface-elevated border-0 shadow-aurora transition-all duration-300 group">
+          <Card className="surface-elevated border-0 shadow-aurora transition-all duration-300 hover:shadow-aurora-strong group">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-label text-muted-foreground">Administradores</CardTitle>
-              <div className="p-2 rounded-lg bg-strategy/10 transition-colors">
-                <AlertCircle className="h-4 w-4 text-strategy" />
+              <CardTitle className="text-label text-muted-foreground">Novos Usuários</CardTitle>
+              <div className="p-2 rounded-lg bg-gradient-to-br from-strategy/20 to-strategy/10 transition-all duration-300 group-hover:from-strategy/30 group-hover:to-strategy/20">
+                <CheckCircle className="h-4 w-4 text-strategy" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-heading-2 text-foreground mb-2">{adminUsers}</div>
+              <div className="text-heading-2 text-foreground mb-2 bg-gradient-to-r from-strategy to-strategy/80 bg-clip-text text-transparent">
+                {newUsersToday}
+              </div>
+              <p className="text-caption text-muted-foreground">
+                Registrados hoje
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="surface-elevated border-0 shadow-aurora transition-all duration-300 hover:shadow-aurora-strong group">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-label text-muted-foreground">Administradores</CardTitle>
+              <div className="p-2 rounded-lg bg-gradient-to-br from-revenue/20 to-revenue/10 transition-all duration-300 group-hover:from-revenue/30 group-hover:to-revenue/20">
+                <AlertCircle className="h-4 w-4 text-revenue" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-heading-2 text-foreground mb-2 bg-gradient-to-r from-revenue to-revenue/80 bg-clip-text text-transparent">
+                {adminUsers}
+              </div>
               <p className="text-caption text-muted-foreground">
                 Acesso total
               </p>
             </CardContent>
           </Card>
 
-          <Card className="surface-elevated border-0 shadow-aurora transition-all duration-300 group">
+          <Card className="surface-elevated border-0 shadow-aurora transition-all duration-300 hover:shadow-aurora-strong group">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-label text-muted-foreground">Onboarding Completo</CardTitle>
-              <div className="p-2 rounded-lg bg-revenue/10 transition-colors">
-                <CheckCircle className="h-4 w-4 text-revenue" />
+              <CardTitle className="text-label text-muted-foreground">Onboarding</CardTitle>
+              <div className="p-2 rounded-lg bg-gradient-to-br from-surface-accent/20 to-surface-accent/10 transition-all duration-300 group-hover:from-surface-accent/30 group-hover:to-surface-accent/20">
+                <CheckCircle className="h-4 w-4 text-surface-accent" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-heading-2 text-foreground mb-2">
+              <div className="text-heading-2 text-foreground mb-2 bg-gradient-to-r from-surface-accent to-surface-accent/80 bg-clip-text text-transparent">
                 {Math.round((onboardingCompleted / totalUsers) * 100)}%
               </div>
               <p className="text-caption text-muted-foreground">
-                +15% nos últimos 30 dias
+                {onboardingCompleted} completos
               </p>
             </CardContent>
           </Card>
