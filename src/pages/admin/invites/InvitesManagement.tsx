@@ -6,8 +6,7 @@ import { useInvitesList } from "@/hooks/admin/invites/useInvitesList";
 import SimpleCreateInviteDialog from "./components/SimpleCreateInviteDialog";
 import SimpleInvitesTab from "./components/SimpleInvitesTab";
 import { BulkInviteUpload } from "@/components/admin/invites/BulkInviteUpload";
-import { WhatsAppDebugPanel } from "@/components/admin/WhatsAppDebugPanel";
-import { Mail, Users, MessageSquare } from "lucide-react";
+import { Mail, Users } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const InvitesManagement = () => {
@@ -91,7 +90,7 @@ const InvitesManagement = () => {
 
       {/* Enhanced Tabs with Aurora Style */}
       <Tabs defaultValue="invites" className="w-full relative">
-        <TabsList className="grid w-full grid-cols-3 aurora-glass border-aurora/20 backdrop-blur-md h-14 rounded-2xl p-1.5">
+        <TabsList className="grid w-full grid-cols-2 aurora-glass border-aurora/20 backdrop-blur-md h-14 rounded-2xl p-1.5">
           <TabsTrigger 
             value="invites"
             className="data-[state=active]:aurora-glass data-[state=active]:bg-gradient-to-r data-[state=active]:from-aurora/20 data-[state=active]:to-viverblue/10 data-[state=active]:text-aurora data-[state=active]:shadow-lg transition-all duration-300 rounded-xl font-medium"
@@ -103,12 +102,6 @@ const InvitesManagement = () => {
             className="data-[state=active]:aurora-glass data-[state=active]:bg-gradient-to-r data-[state=active]:from-operational/20 data-[state=active]:to-revenue/10 data-[state=active]:text-operational data-[state=active]:shadow-lg transition-all duration-300 rounded-xl font-medium"
           >
             Convites em Lote
-          </TabsTrigger>
-          <TabsTrigger 
-            value="whatsapp-debug"
-            className="data-[state=active]:aurora-glass data-[state=active]:bg-gradient-to-r data-[state=active]:from-strategy/20 data-[state=active]:to-aurora/10 data-[state=active]:text-strategy data-[state=active]:shadow-lg transition-all duration-300 rounded-xl font-medium"
-          >
-            Debug WhatsApp
           </TabsTrigger>
         </TabsList>
         
@@ -159,27 +152,6 @@ const InvitesManagement = () => {
                   console.log('Contacts to invite:', contacts);
                 }}
               />
-            </div>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="whatsapp-debug" className="mt-8 animate-fade-in">
-          <div className="aurora-glass rounded-2xl border border-strategy/20 backdrop-blur-md overflow-hidden">
-            <div className="bg-gradient-to-r from-strategy/10 via-aurora/5 to-transparent p-8 border-b border-strategy/20">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-xl bg-gradient-to-br from-strategy/20 to-aurora/10 aurora-glass">
-                  <MessageSquare className="h-6 w-6 text-strategy" />
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold aurora-text-gradient">Debug WhatsApp</h2>
-                  <p className="text-muted-foreground font-medium">
-                    Ferramentas avançadas para diagnóstico e testes
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="p-8">
-              <WhatsAppDebugPanel />
             </div>
           </div>
         </TabsContent>
