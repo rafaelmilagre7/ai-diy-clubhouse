@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Search, BookOpen, Clock, X } from "lucide-react";
+import { Search, BookOpen, Clock, X, RotateCcw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface GlobalSearchHeroProps {
@@ -10,13 +10,15 @@ interface GlobalSearchHeroProps {
   searchQuery: string;
   isLoading?: boolean;
   totalResults?: number;
+  onRefresh?: () => void;
 }
 
 export const GlobalSearchHero: React.FC<GlobalSearchHeroProps> = ({
   onSearchChange,
   searchQuery,
   isLoading = false,
-  totalResults = 0
+  totalResults = 0,
+  onRefresh
 }) => {
   const [isFocused, setIsFocused] = useState(false);
 
@@ -102,11 +104,23 @@ export const GlobalSearchHero: React.FC<GlobalSearchHeroProps> = ({
                   <div className="text-sm text-muted-foreground bg-muted/80 px-3 py-1 rounded-full">
                     {totalResults} resultado{totalResults !== 1 ? 's' : ''}
                   </div>
+                  {onRefresh && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={onRefresh}
+                      className="h-8 w-8 p-0 hover:bg-primary/10 hover:text-primary rounded-full"
+                      title="Atualizar resultados"
+                    >
+                      <RotateCcw className="h-4 w-4" />
+                    </Button>
+                  )}
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={handleClear}
                     className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive rounded-full"
+                    title="Limpar busca"
                   >
                     <X className="h-4 w-4" />
                   </Button>

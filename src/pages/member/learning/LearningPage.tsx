@@ -9,6 +9,7 @@ import { useUserProgress } from "@/hooks/learning/useUserProgress";
 import { useGlobalLessonSearch } from "@/hooks/learning/useGlobalLessonSearch";
 import { ContinueLearning } from "@/components/learning/member/ContinueLearning";
 import { useDynamicSEO } from "@/hooks/seo/useDynamicSEO";
+import { useInvalidateSearch } from "@/hooks/learning/useInvalidateSearch";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function LearningPage() {
@@ -35,6 +36,9 @@ export default function LearningPage() {
     limit: 30 
   });
 
+  // Hook para invalidação de cache
+  const { invalidateGlobalSearch } = useInvalidateSearch();
+
   // SEO otimizado para página de aprendizado
   useDynamicSEO({
     title: 'Cursos de IA',
@@ -52,6 +56,7 @@ export default function LearningPage() {
         searchQuery={searchQuery}
         isLoading={isSearching}
         totalResults={totalResults}
+        onRefresh={invalidateGlobalSearch}
       />
 
       <AnimatePresence mode="wait">

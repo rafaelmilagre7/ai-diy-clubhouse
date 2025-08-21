@@ -53,30 +53,20 @@ export const useGlobalLessonSearch = ({
     return () => clearTimeout(timer);
   }, [searchQuery, debounceMs]);
 
-  // Buscar todas as aulas com informações do curso e módulo, considerando permissões
+  // Buscar todas as aulas com informações do curso e módulo, usando RPC para permissões
   const { data: allLessons = [], isLoading } = useQuery({
-    queryKey: ['global-lessons-search', 'user-permissions'],
+    queryKey: ['global-lessons-search', 'v2'],
     queryFn: async () => {
       const { data: user } = await supabase.auth.getUser();
-      if (!user.user) return [];
+      if (!user.user) {
+        console.log('[GLOBAL SEARCH] Usuário não autenticado');
+        return [];
+      }
 
-      // Buscar role do usuário atual
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select(`
-          role_id,
-          user_roles (
-            name
-          )
-        `)
-        .eq('id', user.user.id)
-        .single();
+      console.log('[GLOBAL SEARCH] Iniciando busca para usuário:', user.user.id);
 
-      const userRoleId = profileData?.role_id;
-      const isAdmin = profileData?.user_roles?.[0]?.name === 'admin';
-
-      // Query principal das aulas
-      let query = supabase
+      // Buscar todas as aulas publicadas com informações do curso e módulo
+      const { data: lessons, error } = await supabase
         .from('learning_lessons')
         .select(`
           id,
@@ -97,55 +87,54 @@ export const useGlobalLessonSearch = ({
             )
           )
         `)
-        .eq('learning_modules.learning_courses.published', true);
-
-      const { data: lessons, error } = await query.order('order_index', { ascending: true });
+        .eq('learning_modules.learning_courses.published', true)
+        .order('order_index', { ascending: true });
 
       if (error) {
-        console.error('Erro ao buscar aulas globalmente:', error);
+        console.error('[GLOBAL SEARCH] Erro ao buscar aulas:', error);
         throw error;
       }
 
-      // Se for admin, retorna todas as aulas publicadas
-      if (isAdmin) {
-        console.log('[GLOBAL SEARCH] Admin - aulas carregadas:', lessons?.length || 0);
-        return (lessons || []) as any[];
-      }
-
-      // Para usuários não-admin, filtrar por permissões de acesso
-      if (!userRoleId || !lessons) {
+      if (!lessons || lessons.length === 0) {
+        console.log('[GLOBAL SEARCH] Nenhuma aula encontrada');
         return [];
       }
 
-      // Buscar controles de acesso dos cursos
-      const courseIds = [...new Set(lessons.map(lesson => 
-        lesson.learning_modules?.[0]?.course_id
-      ).filter(Boolean))];
+      console.log('[GLOBAL SEARCH] Total de aulas carregadas:', lessons.length);
 
-      const { data: accessControls } = await supabase
-        .from('course_access_control')
-        .select('course_id, role_id')
-        .in('course_id', courseIds);
-
-      // Filtrar aulas baseado nas permissões
-      const filteredLessons = lessons.filter(lesson => {
+      // Usar RPC para filtrar aulas baseado em permissões
+      const filteredLessons: LessonWithCourseInfo[] = [];
+      
+      for (const lesson of lessons) {
         const courseId = lesson.learning_modules?.[0]?.course_id;
-        if (!courseId) return false;
-
-        // Verificar se há restrições de acesso para este curso
-        const courseAccessControls = accessControls?.filter(ac => ac.course_id === courseId) || [];
-        
-        // Se não há restrições, curso é público
-        if (courseAccessControls.length === 0) {
-          return true;
+        if (!courseId) {
+          console.warn('[GLOBAL SEARCH] Aula sem curso ID:', lesson.id);
+          continue;
         }
 
-        // Se há restrições, verificar se o usuário tem o role necessário
-        return courseAccessControls.some(ac => ac.role_id === userRoleId);
-      });
+        try {
+          // Usar a função RPC para verificar acesso ao conteúdo de aprendizado
+          const { data: hasAccess, error: rpcError } = await supabase.rpc('can_access_learning_content', {
+            content_type: 'course',
+            content_id: courseId
+          });
 
-      console.log('[GLOBAL SEARCH] Usuário regular - aulas filtradas:', filteredLessons.length, 'de', lessons.length);
-      return filteredLessons as any[];
+          if (rpcError) {
+            console.warn('[GLOBAL SEARCH] Erro RPC para curso', courseId, ':', rpcError);
+            continue;
+          }
+
+          if (hasAccess) {
+            filteredLessons.push(lesson as LessonWithCourseInfo);
+          }
+        } catch (error) {
+          console.warn('[GLOBAL SEARCH] Erro ao verificar acesso à aula', lesson.id, ':', error);
+        }
+      }
+
+      console.log('[GLOBAL SEARCH] Aulas com acesso autorizado:', filteredLessons.length, 'de', lessons.length);
+      
+      return filteredLessons;
     },
     staleTime: 5 * 60 * 1000, // Cache por 5 minutos
     gcTime: 10 * 60 * 1000, // Manter em cache por 10 minutos
