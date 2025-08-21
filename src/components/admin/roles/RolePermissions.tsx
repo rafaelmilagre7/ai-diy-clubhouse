@@ -66,7 +66,7 @@ const organizePermissions = (permissions: Permission[], isSystemAdmin: boolean) 
     return { adminPermissions, systemPermissions, userFeatures: [] };
   } else {
     // Roles personalizados veem apenas funcionalidades de uso
-    const userFeatures = permissions.filter(p => p.category === 'features');
+    const userFeatures = permissions.filter(p => p.category === 'features' || p.category === 'feature');
     return { adminPermissions: [], systemPermissions: [], userFeatures };
   }
 };
