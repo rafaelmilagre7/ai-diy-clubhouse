@@ -180,7 +180,7 @@ const AdminSolutions = () => {
           <SolutionsTable
             solutions={filteredSolutions}
             onSolutionSelect={setSelectedSolution}
-            onEdit={(id) => navigate(`/admin/solutions/${id}/edit`)}
+            onEdit={(id) => navigate(`/admin/solutions/${id}`)}
             onDelete={handleDeleteSolution}
             onTogglePublish={handleTogglePublish}
             selectedSolution={selectedSolution}
