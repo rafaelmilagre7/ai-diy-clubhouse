@@ -6777,6 +6777,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      sync_role_permissions_to_jsonb: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       test_profile_upload_access: {
         Args: Record<PropertyKey, never>
         Returns: Json

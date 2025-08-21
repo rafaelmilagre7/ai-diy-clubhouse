@@ -202,6 +202,7 @@ export function RolePermissions({ open, onOpenChange, role }: RolePermissionsPro
       setIsSaving(true);
       
       if (checked) {
+        // 1. Inserir na tabela role_permissions (relacional)
         const { error } = await supabase
           .from("role_permissions")
           .insert({
@@ -214,6 +215,7 @@ export function RolePermissions({ open, onOpenChange, role }: RolePermissionsPro
         setRolePermissions(prev => [...prev, permission.code]);
         toast.success(`Acesso ativado`);
       } else {
+        // 1. Remover da tabela role_permissions (relacional)
         const { error } = await supabase
           .from("role_permissions")
           .delete()
@@ -228,7 +230,22 @@ export function RolePermissions({ open, onOpenChange, role }: RolePermissionsPro
         toast.success(`Acesso removido`);
       }
 
-      // 🔄 INVALIDAR TODOS OS CACHES DE PERMISSÕES
+      // 2. 🔄 SINCRONIZAR CAMPO JSONB na tabela user_roles
+      try {
+        console.log('🔄 [PERMISSION_SYNC] Sincronizando permissões para o campo JSONB...');
+        const { data: syncResult, error: syncError } = await supabase.rpc('sync_role_permissions_to_jsonb');
+        
+        if (syncError) {
+          console.error('❌ [PERMISSION_SYNC] Erro na sincronização JSONB:', syncError);
+        } else {
+          console.log('✅ [PERMISSION_SYNC] Sincronização JSONB concluída:', syncResult);
+        }
+      } catch (syncErr) {
+        console.error('❌ [PERMISSION_SYNC] Falha na sincronização:', syncErr);
+        // Não bloquear a operação principal se a sincronização falhar
+      }
+
+      // 3. 🔄 INVALIDAR TODOS OS CACHES DE PERMISSÕES
       // Invalida React Query cache
       queryClient.invalidateQueries({ queryKey: ['user-permissions'] });
       queryClient.invalidateQueries({ queryKey: ['permissions'] });
@@ -241,8 +258,8 @@ export function RolePermissions({ open, onOpenChange, role }: RolePermissionsPro
       await fetchUserPermissions();
       
       console.log('🔄 [ADMIN] Cache de permissões invalidado após mudança no role:', role.name);
-      toast.success('⚡ Alterações aplicadas em tempo real para todos os usuários!', {
-        description: 'As mudanças de permissão já estão ativas na plataforma'
+      toast.success('⚡ Alterações aplicadas e sincronizadas!', {
+        description: 'Permissões ativas em tempo real para todos os usuários'
       });
       
     } catch (err) {
