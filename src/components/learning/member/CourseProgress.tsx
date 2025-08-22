@@ -2,15 +2,18 @@
 import { Progress } from "@/components/ui/progress";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { RefreshProgressButton } from "./RefreshProgressButton";
 
 interface CourseProgressProps {
   percentage: number;
   className?: string;
+  courseId?: string;
 }
 
 export const CourseProgress: React.FC<CourseProgressProps> = ({ 
   percentage, 
-  className 
+  className,
+  courseId
 }) => {
   const isCompleted = percentage >= 100;
   
@@ -18,12 +21,15 @@ export const CourseProgress: React.FC<CourseProgressProps> = ({
     <Card className={cn("p-6", className)}>
       <div className="flex items-center justify-between mb-2">
         <h3 className="font-semibold">Seu progresso</h3>
-        <span className={cn(
-          "font-medium",
-          isCompleted ? "text-green-500" : "text-primary"
-        )}>
-          {percentage}%
-        </span>
+        <div className="flex items-center gap-2">
+          <span className={cn(
+            "font-medium",
+            isCompleted ? "text-green-500" : "text-primary"
+          )}>
+            {percentage}%
+          </span>
+          <RefreshProgressButton courseId={courseId} />
+        </div>
       </div>
       
       <Progress

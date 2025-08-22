@@ -5,6 +5,7 @@ import { CheckCircle, ArrowLeft, ArrowRight } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { useNavigate } from "react-router-dom";
 import { LearningLesson } from "@/lib/supabase/types";
+import { RefreshProgressButton } from "./RefreshProgressButton";
 
 interface LessonNavigationProps {
   courseId: string;
@@ -28,8 +29,21 @@ export const LessonNavigation: React.FC<LessonNavigationProps> = ({
   const navigate = useNavigate();
 
   const handleCompleteLesson = async () => {
+    console.log('[LESSON-NAV] 🎯 Iniciando conclusão da aula:', currentLesson.id);
+    
     if (onComplete) {
-      await onComplete();
+      try {
+        await onComplete();
+        console.log('[LESSON-NAV] ✅ Aula concluída com sucesso');
+        
+        // Pequeno delay para garantir que o estado seja atualizado
+        setTimeout(() => {
+          console.log('[LESSON-NAV] 🔄 Forçando refresh da página para sincronização');
+          window.location.reload();
+        }, 1500);
+      } catch (error) {
+        console.error('[LESSON-NAV] ❌ Erro ao concluir aula:', error);
+      }
     }
   };
 
@@ -67,6 +81,10 @@ export const LessonNavigation: React.FC<LessonNavigationProps> = ({
         <span className="text-xs text-muted-foreground whitespace-nowrap">
           Aula {lessonNumber} de {totalLessons}
         </span>
+        <RefreshProgressButton 
+          lessonId={currentLesson.id} 
+          courseId={courseId}
+        />
       </div>
       
       {/* Botões de navegação */}

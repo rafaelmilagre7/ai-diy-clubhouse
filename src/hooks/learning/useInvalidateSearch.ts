@@ -25,7 +25,7 @@ export const useInvalidateSearch = () => {
   }, [queryClient]);
 
   const invalidateAllLearningData = useCallback(() => {
-    console.log('[CACHE] Invalidando todo o cache de aprendizado');
+    console.log('[CACHE] 🔄 Invalidando TODOS os caches de aprendizado');
     queryClient.invalidateQueries({ 
       queryKey: ['global-lessons-search'] 
     });
@@ -38,11 +38,46 @@ export const useInvalidateSearch = () => {
     queryClient.invalidateQueries({ 
       queryKey: ['user-progress'] 
     });
+    queryClient.invalidateQueries({ 
+      queryKey: ['learning-user-progress'] 
+    });
+    queryClient.invalidateQueries({ 
+      queryKey: ['learning-lesson-progress'] 
+    });
+    queryClient.invalidateQueries({ 
+      queryKey: ['learning-completed-lessons'] 
+    });
+    queryClient.invalidateQueries({ 
+      queryKey: ['course-details'] 
+    });
+  }, [queryClient]);
+
+  const invalidateProgressData = useCallback((lessonId?: string) => {
+    console.log('[CACHE] 🎯 Invalidando dados de progresso:', { lessonId });
+    queryClient.invalidateQueries({ 
+      queryKey: ['learning-lesson-progress'] 
+    });
+    queryClient.invalidateQueries({ 
+      queryKey: ['learning-user-progress'] 
+    });
+    queryClient.invalidateQueries({ 
+      queryKey: ['learning-completed-lessons'] 
+    });
+    queryClient.invalidateQueries({ 
+      queryKey: ['course-details'] 
+    });
+    
+    if (lessonId) {
+      queryClient.refetchQueries({ 
+        queryKey: ['learning-lesson-progress', lessonId] 
+      });
+    }
   }, [queryClient]);
 
   return {
     invalidateGlobalSearch,
     invalidateCourseSearch,
-    invalidateAllLearningData
+    invalidateAllLearningData,
+    invalidateProgressData
   };
 };

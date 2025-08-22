@@ -14,10 +14,23 @@ export const LessonCompleteButton: React.FC<LessonCompleteButtonProps> = ({
   onComplete,
   className = ""
 }) => {
+  const handleClick = async () => {
+    console.log('[LESSON-COMPLETE-BTN] 🎯 Botão de conclusão clicado:', { isCompleted });
+    
+    if (!isCompleted && onComplete) {
+      try {
+        await onComplete();
+        console.log('[LESSON-COMPLETE-BTN] ✅ Conclusão processada com sucesso');
+      } catch (error) {
+        console.error('[LESSON-COMPLETE-BTN] ❌ Erro ao processar conclusão:', error);
+      }
+    }
+  };
+
   return (
     <div className={`flex justify-end ${className}`}>
       <Button
-        onClick={onComplete}
+        onClick={handleClick}
         disabled={isCompleted}
         className="gap-2"
         variant={isCompleted ? "outline" : "default"}

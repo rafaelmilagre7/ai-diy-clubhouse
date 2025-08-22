@@ -124,6 +124,8 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
       return { ...data, completed: completed };
     },
     onSuccess: (result) => {
+      console.log('[PROGRESS-LEGACY] ✅ Progresso salvo com sucesso:', { completed: result.completed, lessonId });
+      
       setIsCompleted(result.completed);
       refetchProgress();
       
@@ -131,7 +133,20 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
         toast.success("Aula concluída com sucesso!");
       }
       
+      // Invalidar TODAS as queries relacionadas
+      console.log('[PROGRESS-LEGACY] 🔄 Invalidando todas as queries relacionadas');
       queryClient.invalidateQueries({ queryKey: ["learning-completed-lessons"] });
+      queryClient.invalidateQueries({ queryKey: ["learning-lesson-progress"] });
+      queryClient.invalidateQueries({ queryKey: ["learning-user-progress"] });
+      queryClient.invalidateQueries({ queryKey: ["course-details"] });
+      queryClient.invalidateQueries({ queryKey: ["learning-courses"] });
+      
+      // Forçar refresh após delay
+      setTimeout(() => {
+        console.log('[PROGRESS-LEGACY] 🔄 Refresh automático das queries');
+        queryClient.refetchQueries({ queryKey: ["learning-lesson-progress", lessonId] });
+        queryClient.refetchQueries({ queryKey: ["course-details"] });
+      }, 500);
     },
     onError: (error: any) => {
       console.error("Erro ao salvar progresso:", error);
