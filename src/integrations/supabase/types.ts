@@ -1777,6 +1777,7 @@ export type Database = {
       }
       learning_comments: {
         Row: {
+          admin_replied: boolean | null
           content: string
           created_at: string
           id: string
@@ -1788,6 +1789,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          admin_replied?: boolean | null
           content: string
           created_at?: string
           id?: string
@@ -1799,6 +1801,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          admin_replied?: boolean | null
           content?: string
           created_at?: string
           id?: string
@@ -5857,6 +5860,35 @@ export type Database = {
           total_users: number
         }[]
       }
+      get_admin_comment_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      get_admin_learning_comments: {
+        Args: {
+          p_course_id?: string
+          p_lesson_id?: string
+          p_limit?: number
+          p_offset?: number
+          p_status?: string
+        }
+        Returns: {
+          admin_replied: boolean
+          content: string
+          course_title: string
+          created_at: string
+          id: string
+          lesson_id: string
+          lesson_title: string
+          module_title: string
+          parent_id: string
+          replies_count: number
+          updated_at: string
+          user_avatar_url: string
+          user_id: string
+          user_name: string
+        }[]
+      }
       get_admin_stats: {
         Args: Record<PropertyKey, never>
         Returns: Json
@@ -6605,6 +6637,10 @@ export type Database = {
           p_user_id: string
         }
         Returns: string
+      }
+      mark_comment_as_replied: {
+        Args: { p_comment_id: string }
+        Returns: Json
       }
       mark_notifications_read: {
         Args: { p_notification_ids?: string[]; p_user_id: string }
