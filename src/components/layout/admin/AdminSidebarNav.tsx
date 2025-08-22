@@ -57,11 +57,6 @@ const navigationItems = [
     icon: Star,
   },
   {
-    title: "Comentários das Aulas",
-    href: "/admin/learning-comments",
-    icon: MessageSquare,
-  },
-  {
     title: "Analytics",
     href: "/admin/analytics",
     icon: BarChart3,

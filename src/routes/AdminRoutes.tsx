@@ -28,7 +28,7 @@ import HublaWebhooks from '@/pages/admin/HublaWebhooks';
 
 import NPSAnalytics from '@/pages/admin/NPSAnalytics';
 import CertificateTemplates from '@/pages/admin/CertificateTemplates';
-import AdminLearningComments from '@/pages/admin/AdminLearningComments';
+
 
 // Função helper para criar rotas protegidas com AdminLayout
 const createAdminRoute = (path: string, Component: React.ComponentType<any>) => ({
@@ -66,7 +66,7 @@ export const adminRoutes: RouteObject[] = [
   
   createAdminRoute("/admin/nps", NPSAnalytics),
   createAdminRoute("/admin/certificate-templates", CertificateTemplates),
-  createAdminRoute("/admin/learning-comments", AdminLearningComments),
+  
   createAdminRoute("/admin/data-audit", DataAuditPage),
   createAdminRoute("/admin/hubla-webhooks", HublaWebhooks),
 ];

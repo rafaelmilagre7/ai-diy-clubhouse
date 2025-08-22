@@ -49,8 +49,8 @@ export const FormacaoSidebarNav = ({ sidebarOpen }: FormacaoSidebarNavProps) => 
     {
       label: "Comentários das Aulas",
       icon: MessageSquare,
-      href: "/admin/learning-comments",
-      isActive: location.pathname.startsWith("/admin/learning-comments")
+      href: "/formacao/comentarios",
+      isActive: location.pathname.startsWith("/formacao/comentarios")
     },
     {
       label: "Gestão de Tags",

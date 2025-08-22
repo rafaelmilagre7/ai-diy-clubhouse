@@ -13,7 +13,7 @@ import { CommentReplyModal } from "@/components/admin/learning/CommentReplyModal
 import { useAdminLearningComments } from "@/hooks/admin/useAdminLearningComments";
 import { useCommentStats } from "@/hooks/admin/useCommentStats";
 
-const AdminLearningComments = () => {
+const FormacaoComentarios = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [courseFilter, setCourseFilter] = useState<string>("all");
@@ -92,13 +92,6 @@ const AdminLearningComments = () => {
             <Filter className="h-4 w-4" />
             Filtros
           </Button>
-          
-          <Button asChild variant="outline" className="gap-2">
-            <Link to="/formacao">
-              <ExternalLink className="h-4 w-4" />
-              Ir para o LMS
-            </Link>
-          </Button>
         </div>
       </div>
 
@@ -172,4 +165,4 @@ const AdminLearningComments = () => {
   );
 };
 
-export default AdminLearningComments;
+export default FormacaoComentarios;
