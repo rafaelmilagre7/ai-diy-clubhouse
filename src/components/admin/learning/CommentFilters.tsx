@@ -48,7 +48,7 @@ export const CommentFilters: React.FC<CommentFiltersProps> = ({
             <SelectValue placeholder="Todos os cursos" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todos os cursos</SelectItem>
+            <SelectItem value="all">Todos os cursos</SelectItem>
             {courses.map((course) => (
               <SelectItem key={course.id} value={course.id}>
                 {course.title}

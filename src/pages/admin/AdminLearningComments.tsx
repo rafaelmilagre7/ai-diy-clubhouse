@@ -16,7 +16,7 @@ import { useCommentStats } from "@/hooks/admin/useCommentStats";
 const AdminLearningComments = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [courseFilter, setCourseFilter] = useState<string>("");
+  const [courseFilter, setCourseFilter] = useState<string>("all");
   const [showFilters, setShowFilters] = useState(false);
   const [selectedCommentId, setSelectedCommentId] = useState<string | null>(null);
 
@@ -31,7 +31,7 @@ const AdminLearningComments = () => {
     loadMore
   } = useAdminLearningComments({
     status: statusFilter === "all" ? undefined : statusFilter,
-    courseId: courseFilter || undefined,
+    courseId: courseFilter === "all" ? undefined : courseFilter,
     search: searchTerm
   });
 
@@ -139,7 +139,7 @@ const AdminLearningComments = () => {
                 courseFilter={courseFilter}
                 setCourseFilter={setCourseFilter}
                 onReset={() => {
-                  setCourseFilter("");
+                  setCourseFilter("all");
                   setStatusFilter("all");
                   setSearchTerm("");
                 }}
