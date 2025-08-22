@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, Save, CheckCircle } from "lucide-react";
+import { Plus, Trash2, Save, CheckCircle, ChevronUp, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/auth";
 import { 
@@ -104,6 +104,30 @@ const UnifiedImplementationChecklist: React.FC<UnifiedImplementationChecklistPro
     setChecklistItems(items => items.filter(item => item.id !== id));
   };
 
+  const moveItemUp = (id: string) => {
+    setChecklistItems(items => {
+      const currentIndex = items.findIndex(item => item.id === id);
+      if (currentIndex > 0) {
+        const newItems = [...items];
+        [newItems[currentIndex - 1], newItems[currentIndex]] = [newItems[currentIndex], newItems[currentIndex - 1]];
+        return newItems;
+      }
+      return items;
+    });
+  };
+
+  const moveItemDown = (id: string) => {
+    setChecklistItems(items => {
+      const currentIndex = items.findIndex(item => item.id === id);
+      if (currentIndex < items.length - 1) {
+        const newItems = [...items];
+        [newItems[currentIndex], newItems[currentIndex + 1]] = [newItems[currentIndex + 1], newItems[currentIndex]];
+        return newItems;
+      }
+      return items;
+    });
+  };
+
   const completedCount = checklistItems.filter(item => item.completed).length;
   const progressPercentage = checklistItems.length > 0 
     ? Math.round((completedCount / checklistItems.length) * 100)
@@ -152,7 +176,7 @@ const UnifiedImplementationChecklist: React.FC<UnifiedImplementationChecklistPro
       <Card>
         <CardContent className="pt-6">
           <div className="space-y-4">
-            {checklistItems.map((item) => (
+            {checklistItems.map((item, index) => (
               <div key={item.id} className="border rounded-lg p-4">
                 <div className="flex items-start gap-3">
                   <div className="flex items-center pt-2">
@@ -183,14 +207,39 @@ const UnifiedImplementationChecklist: React.FC<UnifiedImplementationChecklistPro
                     />
                   </div>
                   
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeChecklistItem(item.id)}
-                    className="text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <div className="flex flex-col gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => moveItemUp(item.id)}
+                      disabled={index === 0}
+                      className="h-8 w-8 p-0"
+                      title="Mover para cima"
+                    >
+                      <ChevronUp className="h-4 w-4" />
+                    </Button>
+                    
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => moveItemDown(item.id)}
+                      disabled={index === checklistItems.length - 1}
+                      className="h-8 w-8 p-0"
+                      title="Mover para baixo"
+                    >
+                      <ChevronDown className="h-4 w-4" />
+                    </Button>
+                    
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeChecklistItem(item.id)}
+                      className="text-destructive hover:text-destructive h-8 w-8 p-0"
+                      title="Remover item"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             ))}
