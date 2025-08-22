@@ -31,12 +31,12 @@ export const CourseModules: React.FC<CourseModulesProps> = ({
   filteredLessons,
   searchQuery = ""
 }) => {
-  console.log("CourseModules renderizado:", {
+  console.log(`[FORMACAO_DEBUG] CourseModules renderizado - courseId: ${courseId}`, {
     modulesCount: modules?.length || 0,
-    courseId,
     expandedModules,
     hasFilter: !!filteredLessons,
-    searchQuery
+    searchQuery,
+    timestamp: new Date().toISOString()
   });
 
   // Estado para rastrear módulos expandidos - expandir primeiro módulo por padrão
@@ -44,36 +44,50 @@ export const CourseModules: React.FC<CourseModulesProps> = ({
   const [openModules, setOpenModules] = useState<string[]>(() => {
     if (filteredLessons && searchQuery) {
       // Se há busca ativa, expandir todos os módulos
+      console.log(`[FORMACAO_DEBUG] Expandindo todos os módulos devido à busca: "${searchQuery}"`);
       return modules.map(m => m.id);
     }
     if (expandedModules.length > 0) {
+      console.log(`[FORMACAO_DEBUG] Usando módulos expandidos especificados:`, expandedModules);
       return expandedModules;
     }
     // Se não há módulos expandidos especificados, expandir o primeiro módulo
-    return modules.length > 0 ? [modules[0].id] : [];
+    const firstModule = modules.length > 0 ? [modules[0].id] : [];
+    console.log(`[FORMACAO_DEBUG] Expandindo primeiro módulo automaticamente:`, firstModule);
+    return firstModule;
   });
   
   // Expandir todos os módulos quando há busca ativa
   useEffect(() => {
     if (filteredLessons && searchQuery) {
+      console.log(`[FORMACAO_DEBUG] Expandindo todos os módulos para busca: "${searchQuery}"`);
       setOpenModules(modules.map(m => m.id));
     } else if (modules.length > 0 && openModules.length === 0) {
-      console.log("Expandindo primeiro módulo automaticamente:", modules[0].id);
+      console.log(`[FORMACAO_DEBUG] Expandindo primeiro módulo automaticamente:`, modules[0].id);
       setOpenModules([modules[0].id]);
     }
   }, [modules, openModules.length, filteredLessons, searchQuery]);
   
-  // Caso não haja módulos, mostrar mensagem
+  // Caso não haja módulos, mostrar mensagem detalhada
   if (!modules || modules.length === 0) {
-    console.log("Nenhum módulo encontrado para exibir");
+    console.log(`[FORMACAO_DEBUG] Nenhum módulo encontrado para courseId: ${courseId}`);
     return (
-      <Card className="p-6 text-center text-muted-foreground">
+      <Card className="p-6 text-center text-muted-foreground space-y-2">
         <p>Este curso ainda não possui módulos disponíveis.</p>
+        <p className="text-xs">
+          CourseId: {courseId} | Timestamp: {new Date().toLocaleTimeString()}
+        </p>
+        <button
+          onClick={() => window.location.reload()}
+          className="mt-2 px-3 py-1 text-xs bg-muted hover:bg-muted/80 rounded-md transition-colors"
+        >
+          Recarregar página
+        </button>
       </Card>
     );
   }
   
-  console.log("Renderizando", modules.length, "módulos:", 
+  console.log(`[FORMACAO_DEBUG] Renderizando ${modules.length} módulos:`, 
     modules.map(m => ({ id: m.id, title: m.title })));
   
   return (
@@ -82,7 +96,7 @@ export const CourseModules: React.FC<CourseModulesProps> = ({
         type="multiple" 
         value={openModules}
         onValueChange={(newOpenModules) => {
-          console.log("Módulos abertos alterados:", newOpenModules);
+          console.log(`[FORMACAO_DEBUG] Módulos abertos alterados de [${openModules.join(', ')}] para [${newOpenModules.join(', ')}]`);
           setOpenModules(newOpenModules);
         }}
         className="space-y-4"

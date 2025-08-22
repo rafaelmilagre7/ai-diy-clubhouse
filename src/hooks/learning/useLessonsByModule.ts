@@ -11,6 +11,8 @@ export const useLessonsByModule = (moduleId: string) => {
   return useQuery({
     queryKey: ["learning-module-lessons", moduleId],
     queryFn: async (): Promise<LearningLesson[]> => {
+      const startTime = performance.now();
+      console.log(`[FORMACAO_DEBUG] Iniciando busca de aulas - moduleId: ${moduleId}, timestamp: ${new Date().toISOString()}`);
       try {
         if (!moduleId) {
           console.log("useLessonsByModule: moduleId não fornecido");
@@ -60,14 +62,32 @@ export const useLessonsByModule = (moduleId: string) => {
           }))
         );
         
+        const endTime = performance.now();
+        const duration = Math.round(endTime - startTime);
+        
+        console.log(`[FORMACAO_DEBUG] Busca concluída com sucesso - moduleId: ${moduleId}, aulas: ${sortedLessons.length}, duração: ${duration}ms`);
+        
         return sortedLessons;
       } catch (err) {
-        console.error("Erro inesperado ao buscar lições:", err);
+        const endTime = performance.now();
+        const duration = Math.round(endTime - startTime);
+        
+        console.error(`[FORMACAO_DEBUG] ERRO na busca de aulas - moduleId: ${moduleId}, duração: ${duration}ms, erro:`, err);
         return [];
       }
     },
     enabled: !!moduleId,
     staleTime: 5 * 60 * 1000, // 5 minutos
-    refetchOnWindowFocus: false
+    refetchOnWindowFocus: false,
+    retry: (failureCount, error) => {
+      console.log(`[FORMACAO_DEBUG] Tentativa de retry ${failureCount} para moduleId: ${moduleId}`, error);
+      return failureCount < 3; // Máximo 3 tentativas
+    },
+    retryDelay: (attemptIndex) => {
+      const delay = Math.min(1000 * Math.pow(2, attemptIndex), 10000); // Exponential backoff
+      console.log(`[FORMACAO_DEBUG] Aguardando ${delay}ms antes do retry para moduleId: ${moduleId}`);
+      return delay;
+    },
+    gcTime: 10 * 60 * 1000 // 10 minutos de cache
   });
 };

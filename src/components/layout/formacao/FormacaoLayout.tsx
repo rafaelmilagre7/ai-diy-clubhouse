@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/auth";
 import BaseLayout from "../BaseLayout";
 import { FormacaoSidebar } from "./FormacaoSidebar";
 import { FormacaoContent } from "./FormacaoContent";
+import { FormacaoHealthCheck } from "@/components/learning/member/FormacaoHealthCheck";
 import { toast } from "sonner";
 
 /**
@@ -34,18 +35,23 @@ const FormacaoLayout = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <BaseLayout
-      variant="formacao"
-      sidebarComponent={FormacaoSidebar}
-      contentComponent={FormacaoContent}
-      onSignOut={handleSignOut}
-      profileName={profile?.name || null}
-      profileEmail={profile?.email || null}
-      profileAvatar={profile?.avatar_url}
-      getInitials={getInitials}
-    >
-      {children}
-    </BaseLayout>
+    <>
+      <BaseLayout
+        variant="formacao"
+        sidebarComponent={FormacaoSidebar}
+        contentComponent={FormacaoContent}
+        onSignOut={handleSignOut}
+        profileName={profile?.name || null}
+        profileEmail={profile?.email || null}
+        profileAvatar={profile?.avatar_url}
+        getInitials={getInitials}
+      >
+        {children}
+      </BaseLayout>
+      
+      {/* Monitor de saúde da API */}
+      <FormacaoHealthCheck />
+    </>
   );
 };
 

@@ -28,8 +28,21 @@ export const ModuleLessons = ({
   filteredLessons,
   searchQuery = ""
 }: ModuleLessonsProps) => {
-  const { data, isLoading } = useLessonsByModule(moduleId);
+  const { data, isLoading, error, isRefetching, failureCount } = useLessonsByModule(moduleId);
   const { hasAccess } = useCourseIndividualAccess(courseId);
+  
+  // Debug detalhado do carregamento
+  console.log(`[FORMACAO_DEBUG] ModuleLessons renderizado - moduleId: ${moduleId}`, {
+    isLoading,
+    isRefetching,
+    hasError: !!error,
+    failureCount,
+    dataLength: data?.length || 0,
+    hasFilteredLessons: !!filteredLessons,
+    searchQuery,
+    hasAccess,
+    timestamp: new Date().toISOString()
+  });
   
   // Use aulas filtradas se disponíveis, senão use as aulas do módulo
   let lessons: LearningLesson[] = [];
@@ -37,46 +50,89 @@ export const ModuleLessons = ({
   if (filteredLessons && searchQuery) {
     // Filtrar apenas as aulas que pertencem a este módulo
     lessons = filteredLessons.filter(lesson => lesson.module_id === moduleId);
+    console.log(`[FORMACAO_DEBUG] Usando aulas filtradas - moduleId: ${moduleId}, encontradas: ${lessons.length}`);
   } else {
     // Garantir que lessons seja sempre um array válido
     lessons = Array.isArray(data) ? data : [];
+    console.log(`[FORMACAO_DEBUG] Usando dados do hook - moduleId: ${moduleId}, total: ${lessons.length}`);
   }
   
-  console.log(`ModuleLessons renderizado para módulo ${moduleId}:`, {
-    lessonsCount: lessons.length,
-    isLoading,
-    hasFilter: !!filteredLessons,
-    searchQuery,
-    hasAccess,
-    data: data,
-    lessons: lessons.map(l => ({ id: l.id, title: l.title }))
-  });
-  
-  if (isLoading && !filteredLessons) {
+  // Exibir loading detalhado
+  if (isLoading || isRefetching) {
+    const loadingMessage = isRefetching ? 'Recarregando aulas...' : 'Carregando aulas...';
+    const retryInfo = failureCount > 0 ? ` (tentativa ${failureCount + 1})` : '';
+    
+    console.log(`[FORMACAO_DEBUG] Loading state - moduleId: ${moduleId}, message: ${loadingMessage}${retryInfo}`);
+    
     return (
-      <div className="p-4 text-center">
-        <p className="text-neutral-300">Carregando aulas...</p>
+      <div className="p-6">
+        <div className="flex flex-col items-center justify-center space-y-3">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <span className="text-sm text-muted-foreground">{loadingMessage}{retryInfo}</span>
+          {failureCount > 0 && (
+            <span className="text-xs text-yellow-600">
+              Reconectando com o servidor...
+            </span>
+          )}
+        </div>
       </div>
     );
   }
   
+  // Tratar erros com opção de retry
+  if (error && !filteredLessons) {
+    console.error(`[FORMACAO_DEBUG] Erro ao carregar aulas - moduleId: ${moduleId}:`, error);
+    
+    return (
+      <div className="p-6 text-center space-y-4">
+        <div className="text-destructive">
+          <p className="font-medium">Erro ao carregar aulas</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            Falha na conexão com o servidor
+          </p>
+        </div>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm hover:bg-primary/90 transition-colors"
+        >
+          Tentar novamente
+        </button>
+      </div>
+    );
+  }
+  
+  // Verificar se não há aulas com informações detalhadas
   if (!lessons || lessons.length === 0) {
     if (filteredLessons && searchQuery) {
-      console.log(`Nenhuma aula encontrada para a busca "${searchQuery}" no módulo ${moduleId}`);
+      console.log(`[FORMACAO_DEBUG] Nenhuma aula encontrada para busca "${searchQuery}" no módulo ${moduleId}`);
       return (
-        <div className="p-4 text-center">
-          <p className="text-neutral-300">Nenhuma aula encontrada neste módulo para sua busca.</p>
+        <div className="p-6 text-center text-muted-foreground space-y-2">
+          <p>Nenhuma aula encontrada neste módulo para sua busca.</p>
+          <p className="text-xs">
+            Busca: "{searchQuery}" | Módulo: {moduleId}
+          </p>
         </div>
       );
     } else {
-      console.log(`Nenhuma aula encontrada para o módulo ${moduleId}`);
+      console.log(`[FORMACAO_DEBUG] Nenhuma aula encontrada para o módulo ${moduleId}`);
       return (
-        <div className="p-4 text-center">
-          <p className="text-neutral-300">Este módulo ainda não possui aulas disponíveis.</p>
+        <div className="p-6 text-center text-muted-foreground space-y-2">
+          <p>Este módulo ainda não possui aulas disponíveis.</p>
+          <p className="text-xs">
+            ModuleId: {moduleId} | Timestamp: {new Date().toLocaleTimeString()}
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-2 px-3 py-1 text-xs bg-muted hover:bg-muted/80 rounded-md transition-colors"
+          >
+            Recarregar página
+          </button>
         </div>
       );
     }
   }
+  
+  console.log(`[FORMACAO_DEBUG] Renderizando ${lessons.length} aulas para módulo ${moduleId}`);
   
   return (
     <div className="space-y-6">

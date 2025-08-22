@@ -151,27 +151,39 @@ export class AuditLogger {
     return userAgent.substring(0, 255).replace(/[<>'"]/g, '');
   }
   
-  // Obter IP do cliente de forma segura
+  // Obter IP do cliente de forma segura (sem violação CSP)
   private async getClientIP(): Promise<string> {
     try {
-      if (import.meta.env.PROD) {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 2000);
+      // Usar informações do navegador localmente para evitar violação CSP
+      if (typeof window !== 'undefined') {
+        // Tentar obter IP de headers se disponível (proxy/CDN)
+        const headers = [
+          'x-forwarded-for',
+          'x-real-ip',
+          'cf-connecting-ip',
+          'x-client-ip'
+        ];
         
-        const response = await fetch('https://api.ipify.org?format=json', {
-          signal: controller.signal
-        });
-        
-        clearTimeout(timeoutId);
-        
-        if (response.ok) {
-          const data = await response.json();
-          return data.ip || 'unknown';
+        // Se estivermos em desenvolvimento, usar localhost
+        if (!import.meta.env.PROD) {
+          return 'localhost-dev';
         }
+        
+        // Em produção, usar identificador baseado em sessão
+        const sessionId = await this.getSessionId();
+        if (sessionId) {
+          return `session-${sessionId.substring(0, 8)}`;
+        }
+        
+        return 'client-browser';
       }
-      return 'localhost';
-    } catch {
-      return 'unknown';
+      return 'server-side';
+    } catch (error) {
+      logger.warn("Erro ao obter identificador do cliente", {
+        component: 'AUDIT_LOGGER',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+      return 'unknown-client';
     }
   }
   
