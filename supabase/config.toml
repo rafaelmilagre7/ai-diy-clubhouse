@@ -3,13 +3,14 @@ project_id = "zotzvtepvpnkcoobdubt"
 [api]
 enabled = true
 port = 54321
-schemas = ["public", "graphql_public"]
+schemas = ["public", "storage", "graphql_public"]
 extra_search_path = ["public", "extensions"]
 max_rows = 1000
 
 [db]
 enabled = true
 port = 54322
+shadow_port = 54320
 major_version = 15
 
 [db.pooler]
@@ -22,154 +23,127 @@ max_client_conn = 100
 [realtime]
 enabled = true
 ip_version = "ipv4"
-port = 54323
-max_header_length = 4096
 
 [studio]
 enabled = true
-port = 54324
-api_url = "http://127.0.0.1:54321"
-openai_api_key = "env(OPENAI_API_KEY)"
+port = 54323
+api_url = "http://127.0.0.1"
 
 [inbucket]
 enabled = true
-port = 54325
-smtp_port = 54326
-pop3_port = 54327
+port = 54324
 
-# EDGE FUNCTIONS SECURITY CONFIGURATION
-# ✅ PÚBLICAS - Não exigem JWT (apenas para webhooks/sistemas externos)
-[functions.setup-storage-buckets]
+[storage]
+enabled = true
+file_size_limit = "50MiB"
+
+[auth]
+enabled = true
+additional_redirect_urls = ["https://localhost:3000"]
+jwt_expiry = 3600
+enable_refresh_token_rotation = true
+refresh_token_reuse_interval = 10
+
+[functions]
+enabled = true
+
+# Novas funções de otimização de conexões
+[functions.audit-logs-cleaner]
 verify_jwt = false
 
-[functions.setup-storage]
+[functions.connection-monitor]
 verify_jwt = false
 
-[functions.auth-rate-limiter]
-verify_jwt = false
-
-[functions.send-invite-email]
-verify_jwt = false
-
-[functions.send-reset-password-email]
-verify_jwt = false
-
-[functions.send-invite-whatsapp] 
-verify_jwt = false
-
-[functions.process-invite]
-verify_jwt = false
-
-# 🔒 PRIVADAS - Exigem JWT (funções de usuário autenticado)
-[functions.send-communication-email]
-verify_jwt = true
-
-[functions.send-whatsapp-invite]
-verify_jwt = true
-
-[functions.get-assistant-messages]
-verify_jwt = true
-
-[functions.enhance-trail-with-ai]
-verify_jwt = true
-
-[functions.generate-smart-trail]
-verify_jwt = true
-
-[functions.generate-implementation-trail]
-verify_jwt = true
-
-[functions.list-panda-videos]
-verify_jwt = true
-
-[functions.generate-onboarding-message]
-verify_jwt = true
-
+# Funções existentes otimizadas com singleton pattern
 [functions.admin-delete-user]
-verify_jwt = true
-
-[functions.security-log-processor]
-verify_jwt = true
-
-[functions.generate-ai-matches]
-verify_jwt = true
-
-[functions.classify-lessons]
-verify_jwt = true
-
-[functions.classify-lessons-simple]
-verify_jwt = true
-
-[functions.validate-credentials]
-verify_jwt = true
-
-[functions.process-implementation-request]
-verify_jwt = true
-
-[functions.debug-pipedrive-mapping]
 verify_jwt = false
 
-# 🧪 TESTE/DEBUG - Apenas para desenvolvimento (remover em produção)
-[functions.classify-lessons-test]
-verify_jwt = false
-
-[functions.calculate-ai-compatibility]
-verify_jwt = true
-
-[functions.recommend-lessons-ai]
-verify_jwt = true
-
-[functions.delete-module]
-verify_jwt = true
-
-# 🛡️ VALIDAÇÃO SEGURA - Não exige JWT mas tem auditoria completa
-[functions.validate-coupon]
+[functions.anomaly-detector]
 verify_jwt = false
 
 [functions.audit-duplicates]
 verify_jwt = false
 
-# 🔐 HEADERS DE SEGURANÇA - Público para aplicação de CSP
-[functions.security-headers]
+[functions.auth-rate-limiter]
 verify_jwt = false
 
-# 📷 UPLOAD DE IMAGENS - Requer autenticação para segurança
-[functions.image-upload]
-verify_jwt = true
-
-# 🗂️ PROXY DE STORAGE - Público para acessar arquivos via domínio personalizado
-[functions.storage-proxy]
+[functions.calculate-ai-compatibility]
 verify_jwt = false
 
-# 💳 WEBHOOKS DA HUBLA - Público para receber webhooks de pagamento
+[functions.classify-lessons-simple]
+verify_jwt = false
+
+[functions.create-assistant-thread]
+verify_jwt = false
+
+[functions.delete-module]
+verify_jwt = false
+
+[functions.enhance-trail-with-ai]
+verify_jwt = false
+
+[functions.generate-ai-matches]
+verify_jwt = false
+
+[functions.generate-implementation-trail]
+verify_jwt = false
+
+[functions.generate-networking-matches]
+verify_jwt = false
+
+[functions.generate-nina-message]
+verify_jwt = false
+
+[functions.generate-sitemap]
+verify_jwt = false
+
+[functions.generate-smart-trail]
+verify_jwt = false
+
+[functions.get-assistant-messages]
+verify_jwt = false
+
 [functions.hubla-webhook]
 verify_jwt = false
 
-[auth]
-enabled = true
-port = 54324
-site_url = "http://127.0.0.1:3000"
-additional_redirect_urls = ["https://127.0.0.1:3000"]
-jwt_expiry = 3600
-refresh_token_rotation_enabled = true
-refresh_token_reuse_interval = 10
-enable_manual_linking = false
+[functions.migrate-lesson-images]
+verify_jwt = false
 
-[auth.email]
-enable_signup = true
-double_confirm_changes = true
-enable_confirmations = false
+[functions.process-implementation-request]
+verify_jwt = false
 
-[auth.sms]
-enable_signup = true
-enable_confirmations = false
-template = "Your code is {{ .Code }}"
+[functions.process-invite]
+verify_jwt = false
 
-[auth.external.google]
-enabled = true
-client_id = "env(GOOGLE_CLIENT_ID)"
-secret = "env(GOOGLE_CLIENT_SECRET)"
+[functions.recommend-lessons-ai]
+verify_jwt = false
 
-[edge_runtime]
-policy = "per_worker"
-inspector_port = 8083
+[functions.resend-webhook]
+verify_jwt = false
+
+[functions.schedule-networking-matches]
+verify_jwt = false
+
+[functions.security-alert-sender]
+verify_jwt = false
+
+[functions.security-log-processor]
+verify_jwt = false
+
+[functions.send-communication]
+verify_jwt = false
+
+[functions.send-connection-email]
+verify_jwt = false
+
+[functions.send-invite-email]
+verify_jwt = false
+
+[functions.send-whatsapp-invite]
+verify_jwt = false
+
+[functions.test-discord-webhook]
+verify_jwt = false
+
+[functions.update_invite_send_stats]
+verify_jwt = false

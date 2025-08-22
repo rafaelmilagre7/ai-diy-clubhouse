@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
+import { getSupabaseServiceClient, cleanupConnections } from '../_shared/supabase-client.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -7,8 +7,6 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
 }
 
-const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const hublaToken = Deno.env.get('HUBLA_API_TOKEN')!
 
 serve(async (req: Request) => {
@@ -20,7 +18,7 @@ serve(async (req: Request) => {
   }
 
   try {
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    const supabase = getSupabaseServiceClient()
     
     // Get webhook payload
     const payload = await req.json()
@@ -132,6 +130,8 @@ serve(async (req: Request) => {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     })
+  } finally {
+    cleanupConnections();
   }
 })
 

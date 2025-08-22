@@ -1,6 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { getSupabaseServiceClient, cleanupConnections } from '../_shared/supabase-client.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -64,11 +64,8 @@ serve(async (req) => {
     }
 
     // Initialize Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    
     console.log('🔧 Configurando cliente Supabase...');
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase = getSupabaseServiceClient();
 
     // Fetch available solutions
     console.log('📋 Buscando soluções disponíveis...');
@@ -182,6 +179,8 @@ serve(async (req) => {
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
+  } finally {
+    cleanupConnections();
   }
 });
 

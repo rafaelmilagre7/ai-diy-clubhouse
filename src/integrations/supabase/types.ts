@@ -5422,8 +5422,8 @@ export type Database = {
         Returns: Json
       }
       cleanup_old_audit_logs: {
-        Args: Record<PropertyKey, never> | { retention_period?: unknown }
-        Returns: undefined
+        Args: { retention_period?: unknown }
+        Returns: number
       }
       cleanup_old_logs_lgpd: {
         Args: Record<PropertyKey, never>
@@ -5899,6 +5899,19 @@ export type Database = {
       get_cached_profile: {
         Args: { target_user_id: string }
         Returns: Json
+      }
+      get_connection_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          application_name: string
+          backend_start: string
+          client_addr: unknown
+          pid: number
+          query_start: string
+          state: string
+          state_change: string
+          usename: string
+        }[]
       }
       get_courses_with_stats: {
         Args: Record<PropertyKey, never>
