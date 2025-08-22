@@ -7,7 +7,8 @@ import {
   FileText,
   ArrowLeft,
   GraduationCap,
-  Tags
+  Tags,
+  MessageSquare
 } from "lucide-react";
 import { AdminNavItem } from "../admin/AdminNavItem";
 import { cn } from "@/lib/utils";
@@ -44,6 +45,12 @@ export const FormacaoSidebarNav = ({ sidebarOpen }: FormacaoSidebarNavProps) => 
       icon: Play,
       href: "/formacao/aulas",
       isActive: location.pathname.startsWith("/formacao/aulas")
+    },
+    {
+      label: "Comentários das Aulas",
+      icon: MessageSquare,
+      href: "/admin/learning-comments",
+      isActive: location.pathname.startsWith("/admin/learning-comments")
     },
     {
       label: "Gestão de Tags",
