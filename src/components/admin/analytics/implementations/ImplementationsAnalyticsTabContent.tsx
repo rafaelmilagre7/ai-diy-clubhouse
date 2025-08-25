@@ -3,7 +3,8 @@ import React from 'react';
 import { AnalyticsTabContainer, AnalyticsMetricsGrid, AnalyticsChartsGrid } from '../components/AnalyticsTabContainer';
 import { AnalyticsMetricCard } from '../components/AnalyticsMetricCard';
 import { EnhancedAreaChart, EnhancedBarChart, EnhancedPieChart } from '../charts';
-import { useAnalyticsData } from '@/hooks/analytics/useAnalyticsData';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAnalyticsData } from "@/hooks/analytics/useAnalyticsData";
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle, PlayCircle, CheckCircle, Clock, TrendingUp, Users, Target, Activity } from 'lucide-react';
 
@@ -28,56 +29,35 @@ export const ImplementationsAnalyticsTabContent = ({ timeRange }: Implementation
     );
   }
 
-  // Calcular métricas baseadas nos dados disponíveis
-  const totalImplementations = data?.implementationsByCategory?.reduce((sum, cat) => sum + cat.value, 0) || 0;
-  const completedImplementations = data?.userCompletionRate?.find(item => item.name === 'Concluídas')?.value || 0;
-  const inProgressImplementations = data?.userCompletionRate?.find(item => item.name === 'Em andamento')?.value || 0;
-  const completionRate = totalImplementations > 0 
-    ? Math.round((completedImplementations / (completedImplementations + inProgressImplementations)) * 100) 
-    : 0;
-
+  // Calcular métricas baseadas nos dados reais
   const metrics = [
     {
       title: "Total de Implementações",
-      value: totalImplementations,
-      icon: <PlayCircle className="h-5 w-5" />,
-      colorScheme: 'blue' as const,
-      trend: { value: 18, label: "crescimento mensal" }
-    },
-    {
-      title: "Implementações Concluídas",
-      value: completedImplementations,
-      icon: <CheckCircle className="h-5 w-5" />,
-      colorScheme: 'green' as const,
-      trend: { value: 12, label: "finalizações por semana" }
+      value: data?.totalImplementations || 0,
+      icon: PlayCircle,
+      color: "text-blue-500",
+      trend: null
     },
     {
       title: "Taxa de Conclusão",
-      value: `${completionRate}%`,
-      icon: <Target className="h-5 w-5" />,
-      colorScheme: 'cyan' as const,
-      trend: { value: 6, label: "melhoria contínua" }
+      value: data?.completionRate ? `${Math.round(data.completionRate)}%` : "0%",
+      icon: CheckCircle,
+      color: "text-green-500",
+      trend: null
     },
     {
       title: "Em Andamento",
-      value: inProgressImplementations,
-      icon: <Activity className="h-5 w-5" />,
-      colorScheme: 'orange' as const,
-      trend: { value: 22, label: "novas implementações" }
+      value: data?.inProgressImplementations || 0,
+      icon: Clock,
+      color: "text-yellow-500",
+      trend: null
     },
     {
-      title: "Tempo Médio Conclusão",
-      value: "4.2 dias",
-      icon: <Clock className="h-5 w-5" />,
-      colorScheme: 'purple' as const,
-      trend: { value: -15, label: "otimização de processo" }
-    },
-    {
-      title: "Usuários Ativos",
-      value: "156",
-      icon: <Users className="h-5 w-5" />,
-      colorScheme: 'indigo' as const,
-      trend: { value: 9, label: "engajamento alto" }
+      title: "Usuários Implementando",
+      value: data?.activeUsers || 0,
+      icon: Users,
+      color: "text-purple-500",
+      trend: null
     }
   ];
 
@@ -86,15 +66,23 @@ export const ImplementationsAnalyticsTabContent = ({ timeRange }: Implementation
       {/* Metric Cards */}
       <AnalyticsMetricsGrid columns={3}>
         {metrics.map((metric, index) => (
-          <AnalyticsMetricCard
-            key={index}
-            title={metric.title}
-            value={metric.value}
-            icon={metric.icon}
-            colorScheme={metric.colorScheme}
-            trend={metric.trend}
-            loading={loading}
-          />
+          <Card key={index}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                {metric.title}
+              </CardTitle>
+              <metric.icon className={`h-4 w-4 ${metric.color}`} />
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-2xl font-bold">{metric.value}</div>
+                <DataStatusIndicator isDataReal={!loading && !error} loading={loading} error={error} />
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Dados atualizados automaticamente
+              </p>
+            </CardContent>
+          </Card>
         ))}
       </AnalyticsMetricsGrid>
 

@@ -7,11 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
-  Users, UserCheck, UserPlus, Activity, Clock, Target,
+  Users, UserCheck, Activity, BarChart3,
   TrendingUp, TrendingDown, AlertTriangle, Search,
   Filter, Download, UserX, Zap, Award, Eye
 } from 'lucide-react';
-import { useEnhancedUserAnalytics } from '@/hooks/analytics/useEnhancedUserAnalytics';
 import { UserSegmentChart } from './charts/UserSegmentChart';
 import { UserFunnelChart } from './charts/UserFunnelChart';
 import { UserActivityHeatmap } from './charts/UserActivityHeatmap';
@@ -28,158 +27,167 @@ export const EnhancedUserAnalytics = ({ timeRange }: EnhancedUserAnalyticsProps)
   const [selectedSegment, setSelectedSegment] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const { data, loading, error } = useEnhancedUserAnalytics({
-    timeRange,
-    segment: selectedSegment,
-    search: searchQuery
-  });
+  const { 
+    data, 
+    loading, 
+    error,
+    isDataReal
+  } = useRealAnalyticsData(timeRange);
 
-  if (error) {
-    return (
-      <Card className="border-red-200">
-        <CardContent className="flex items-center justify-center p-8">
-          <div className="text-center">
-            <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <h3 className="font-semibold text-lg mb-2">Erro ao carregar dados</h3>
-            <p className="text-gray-600">{error}</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  // Calcular métricas principais baseadas nos dados reais
+  const metrics = [
+    {
+      title: "Usuários Ativos Diários",
+      value: Math.round(data?.engagement_metrics.daily_active_users || 0),
+      icon: Users,
+      description: "Média dos últimos dias",
+      color: "text-blue-500",
+      trend: null
+    },
+    {
+      title: "Usuários Ativos Semanais", 
+      value: data?.engagement_metrics.weekly_active_users || 0,
+      icon: UserCheck,
+      description: "Últimos 7 dias",
+      color: "text-green-500",
+      trend: null
+    },
+    {
+      title: "Taxa de Rejeição",
+      value: `${Math.round(data?.engagement_metrics.bounce_rate_percentage || 0)}%`,
+      icon: BarChart3,
+      description: "Sessões de um evento",
+      color: "text-purple-500", 
+      trend: null
+    },
+    {
+      title: "Tempo Médio de Sessão",
+      value: `${Math.round(data?.engagement_metrics.avg_session_time_minutes || 0)}min`,
+      icon: Activity,
+      description: "Por sessão",
+      color: "text-orange-500",
+      trend: null
+    }
+  ];
 
   return (
     <div className="space-y-6">
       {/* Header com KPIs Principais */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <UserKPICard
-          title="Total de Usuários"
-          value={data?.overview?.totalUsers || 0}
-          change={data?.overview?.userGrowth || 0}
-          icon={<Users className="h-5 w-5" />}
-          color="blue"
-          loading={loading}
-        />
-        
-        <UserKPICard
-          title="Taxa de Ativação"
-          value={`${data?.overview?.activationRate || 0}%`}
-          change={data?.overview?.activationTrend || 0}
-          icon={<UserCheck className="h-5 w-5" />}
-          color="green"
-          loading={loading}
-        />
-        
-        <UserKPICard
-          title="Health Score Médio"
-          value={`${data?.overview?.avgHealthScore || 0}/100`}
-          change={data?.overview?.healthTrend || 0}
-          icon={<Activity className="h-5 w-5" />}
-          color="purple"
-          loading={loading}
-        />
-        
-        <UserKPICard
-          title="Retenção (30d)"
-          value={`${data?.overview?.retentionRate || 0}%`}
-          change={data?.overview?.retentionTrend || 0}
-          icon={<Target className="h-5 w-5" />}
-          color="orange"
-          loading={loading}
-        />
+        {metrics.map((metric, index) => (
+          <Card key={index}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                {metric.title}
+              </CardTitle>
+              <metric.icon className={`h-4 w-4 ${metric.color}`} />
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-2xl font-bold">{metric.value}</div>
+                <DataStatusIndicator isDataReal={isDataReal} loading={loading} error={error} />
+              </div>
+              <div className="flex items-center mt-1">
+                <span className="text-xs text-muted-foreground">
+                  {metric.description}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      {/* Tabs para diferentes visões */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          <TabsList className="grid grid-cols-5 w-fit">
-            <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-            <TabsTrigger value="onboarding">Onboarding</TabsTrigger>
-            <TabsTrigger value="segments">Segmentação</TabsTrigger>
-            <TabsTrigger value="behavior">Comportamento</TabsTrigger>
-            <TabsTrigger value="details">Detalhes</TabsTrigger>
-          </TabsList>
-          
-          <div className="flex gap-2">
-            <Select value={selectedSegment} onValueChange={setSelectedSegment}>
-              <SelectTrigger className="w-40">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os usuários</SelectItem>
-                <SelectItem value="power_users">Power Users</SelectItem>
-                <SelectItem value="active">Ativos</SelectItem>
-                <SelectItem value="dormant">Dormentes</SelectItem>
-                <SelectItem value="at_risk">Em risco</SelectItem>
-                <SelectItem value="new">Novos</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <Button variant="outline" size="sm">
-              <Download className="h-4 w-4 mr-2" />
-              Exportar
-            </Button>
+      {/* Gráfico de Crescimento de Usuários */}
+      <Card className="col-span-1 md:col-span-2">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Crescimento de Usuários</CardTitle>
+            <CardDescription>
+              Evolução do número de usuários ao longo do tempo
+            </CardDescription>
           </div>
-        </div>
-
-        {/* Overview Tab */}
-        <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <UserFunnelChart data={data?.funnel} loading={loading} />
-            <UserSegmentChart data={data?.segments} loading={loading} />
-          </div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <UserRetentionChart data={data?.retention} loading={loading} />
-            <UserActivityHeatmap data={data?.activityHeatmap} loading={loading} />
-            <UserGrowthTrendCard data={data?.growthTrend} loading={loading} />
-          </div>
-        </TabsContent>
-
-        {/* Onboarding Status Tab */}
-        <TabsContent value="onboarding" className="space-y-6">
-          <OnboardingStatusTab data={data} loading={loading} />
-        </TabsContent>
-
-        {/* Segments Tab */}
-        <TabsContent value="segments" className="space-y-6">
-          <UserSegmentBreakdown data={data?.segmentDetails} loading={loading} />
-          <UserRoleAnalysis data={data?.roleAnalysis} loading={loading} />
-        </TabsContent>
-
-        {/* Behavior Tab */}
-        <TabsContent value="behavior" className="space-y-6">
-          <UserEngagementMetrics data={data?.engagement} loading={loading} />
-          <UserJourneyAnalysis data={data?.userJourney} loading={loading} />
-        </TabsContent>
-
-        {/* Details Tab */}
-        <TabsContent value="details" className="space-y-6">
-          <div className="flex gap-4 mb-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                placeholder="Buscar usuários por nome ou email..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
+          <DataStatusIndicator isDataReal={isDataReal} loading={loading} error={error} />
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <Skeleton className="h-[300px] w-full" />
+          ) : data?.user_growth.growth_data && data.user_growth.growth_data.length > 0 ? (
+            <LineChart
+              data={data.user_growth.growth_data.map(item => ({
+                data: item.date,
+                usuarios: item.new_users,
+                total: item.total_users
+              }))}
+              categories={['usuarios', 'total']}
+              index="data"
+              colors={['blue', 'green']}
+              valueFormatter={(value) => `${value} usuários`}
+              className="h-[300px]"
+            />
+          ) : (
+            <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+              Dados de crescimento não disponíveis para o período selecionado
             </div>
-            <Button variant="outline">
-              <Filter className="h-4 w-4 mr-2" />
-              Filtros
-            </Button>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Funil de Conversão */}
+      <Card className="col-span-1 md:col-span-2">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Funil de Conversão</CardTitle>
+            <CardDescription>
+              Jornada do usuário desde o cadastro até a implementação
+            </CardDescription>
           </div>
-          
-          <UserDetailsTable 
-            users={data?.userDetails || []} 
-            loading={loading}
-            onUserAction={(userId, action) => {
-              console.log('User action:', userId, action);
-            }}
-          />
-        </TabsContent>
-      </Tabs>
+          <DataStatusIndicator isDataReal={isDataReal} loading={loading} error={error} />
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <Skeleton className="h-[300px] w-full" />
+          ) : data?.user_journey.funnel_data ? (
+            <BarChart
+              data={[
+                { 
+                  etapa: "Cadastro", 
+                  usuarios: data.user_journey.funnel_data.total_users,
+                  taxa: 100
+                },
+                { 
+                  etapa: "Onboarding", 
+                  usuarios: data.user_journey.funnel_data.completed_onboarding,
+                  taxa: Math.round(data.user_journey.conversion_rates.onboarding_conversion)
+                },
+                { 
+                  etapa: "Primeira Solução", 
+                  usuarios: data.user_journey.funnel_data.started_solution,
+                  taxa: Math.round(data.user_journey.conversion_rates.solution_start_conversion)
+                },
+                { 
+                  etapa: "Solução Completa", 
+                  usuarios: data.user_journey.funnel_data.completed_solution,
+                  taxa: Math.round(data.user_journey.conversion_rates.solution_completion_conversion)
+                },
+                { 
+                  etapa: "Implementação", 
+                  usuarios: data.user_journey.funnel_data.requested_implementation,
+                  taxa: Math.round(data.user_journey.conversion_rates.implementation_request_conversion)
+                }
+              ]}
+              categories={['usuarios']}
+              index="etapa"
+              colors={['purple']}
+              valueFormatter={(value) => `${value} usuários`}
+              className="h-[300px]"
+            />
+          ) : (
+            <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+              Dados do funil não disponíveis para o período selecionado
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };

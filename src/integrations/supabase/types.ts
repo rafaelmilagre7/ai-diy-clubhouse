@@ -5913,6 +5913,10 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_average_implementation_time: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       get_benefits_safe: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -6238,6 +6242,10 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: Json
       }
+      get_user_engagement_metrics: {
+        Args: { time_range?: string }
+        Returns: Json
+      }
       get_user_growth_by_date: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -6254,6 +6262,14 @@ export type Database = {
           date_period: string
           new_users: number
         }[]
+      }
+      get_user_growth_trends: {
+        Args: { time_range?: string }
+        Returns: Json
+      }
+      get_user_journey_analytics: {
+        Args: { time_range?: string }
+        Returns: Json
       }
       get_user_learning_stats: {
         Args: { target_user_id: string }

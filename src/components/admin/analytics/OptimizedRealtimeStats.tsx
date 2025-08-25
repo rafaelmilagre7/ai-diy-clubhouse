@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Activity, Clock, Users, Award } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { Skeleton } from '@/components/ui/skeleton';
+import { DataStatusIndicator } from "./DataStatusIndicator";
 
 interface RealtimeStatsData {
   activeUsers24h: number;
@@ -28,36 +29,44 @@ export const OptimizedRealtimeStats = () => {
         setLoading(true);
         setError(null);
 
-        // Usar funções RPC seguras ao invés de views
-        const [overviewResult, weeklyActivityResult] = await Promise.allSettled([
-          supabase.rpc('get_admin_analytics_overview'),
-          supabase.rpc('get_weekly_activity_patterns')
-        ]);
+        // Buscar dados de visão geral
+        const { data: overviewData, error: overviewError } = await supabase
+          .rpc('get_admin_analytics_overview');
 
-        // Buscar usuários ativos nas últimas 24h (consulta específica necessária)
-        const oneDayAgo = new Date();
-        oneDayAgo.setDate(oneDayAgo.getDate() - 1);
-        
-        const { data: activeUsersData } = await supabase
-          .from('progress')
+        if (overviewError) throw overviewError;
+
+        // Buscar atividade semanal
+        const { data: weeklyData, error: weeklyError } = await supabase
+          .rpc('get_weekly_activity_patterns');
+
+        if (weeklyError) throw weeklyError;
+
+        // Buscar usuários ativos nas últimas 24h
+        const { data: activeUsersData, error: activeUsersError } = await supabase
+          .from('analytics')
           .select('user_id')
-          .gte('last_activity', oneDayAgo.toISOString());
+          .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+          .then(result => ({
+            ...result,
+            data: result.data ? new Set(result.data.map(r => r.user_id)).size : 0
+          }));
 
-        const uniqueActiveUsers = new Set(activeUsersData?.map(p => p.user_id) || []).size;
+        if (activeUsersError) throw activeUsersError;
 
-        // Processar dados do overview
-        const overviewData = overviewResult.status === 'fulfilled' ? overviewResult.value.data?.[0] : null;
-        
-        // Processar atividade semanal
-        const weeklyData = weeklyActivityResult.status === 'fulfilled' ? weeklyActivityResult.value.data || [] : [];
-        const totalWeeklyActivity = weeklyData.reduce((sum, item) => sum + (item.atividade || 0), 0);
+        // Buscar tempo médio de implementação (dados reais)
+        const { data: avgTimeData, error: avgTimeError } = await supabase
+          .rpc('get_average_implementation_time');
 
-        setStats({
-          activeUsers24h: uniqueActiveUsers,
-          avgImplementationTime: 240, // 4 horas (pode vir de cálculo mais específico no futuro)
-          totalCompletions: overviewData?.completed_implementations || 0,
-          weeklyActivity: totalWeeklyActivity
-        });
+        if (avgTimeError) throw avgTimeError;
+
+        const newStats = {
+          activeUsers24h: activeUsersData || 0,
+          avgImplementationTime: avgTimeData ? (avgTimeData * 24 * 60) : 0, // Converter dias para minutos
+          totalCompletions: overviewData?.total_implementations || 0,
+          weeklyActivity: weeklyData?.total_events || 0
+        };
+
+        setStats(newStats);
 
       } catch (error: any) {
         console.error("Erro ao buscar estatísticas em tempo real:", error);
@@ -164,7 +173,10 @@ export const OptimizedRealtimeStats = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <p className="text-xs text-muted-foreground">{item.description}</p>
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-muted-foreground">{item.description}</p>
+                <DataStatusIndicator isDataReal={!loading && !error} loading={loading} error={error} />
+              </div>
             </CardContent>
           </Card>
         );

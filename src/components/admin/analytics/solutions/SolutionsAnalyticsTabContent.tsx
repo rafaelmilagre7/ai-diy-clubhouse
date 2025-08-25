@@ -3,7 +3,8 @@ import React from 'react';
 import { AnalyticsTabContainer, AnalyticsMetricsGrid, AnalyticsChartsGrid } from '../components/AnalyticsTabContainer';
 import { AnalyticsMetricCard } from '../components/AnalyticsMetricCard';
 import { EnhancedAreaChart, EnhancedBarChart, EnhancedPieChart } from '../charts';
-import { useAnalyticsData } from '@/hooks/analytics/useAnalyticsData';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAnalyticsData } from "@/hooks/analytics/useAnalyticsData";
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle, FileText, TrendingUp, Target, BarChart3, CheckCircle, Clock, Users } from 'lucide-react';
 
@@ -28,58 +29,41 @@ export const SolutionsAnalyticsTabContent = ({ timeRange }: SolutionsAnalyticsTa
     );
   }
 
-  // Calcular métricas baseadas nos dados disponíveis
-  const totalSolutions = data?.solutionPopularity?.length || 0;
-  const totalImplementations = data?.implementationsByCategory?.reduce((sum, cat) => sum + cat.value, 0) || 0;
-  const avgCompletionRate = data?.userCompletionRate?.length > 0 
-    ? Math.round((data.userCompletionRate.find(item => item.name === 'Concluídas')?.value || 0) / 
-                 data.userCompletionRate.reduce((sum, item) => sum + item.value, 0) * 100) || 0
-    : 75;
-
-  const metrics = [
+  // Calcular métricas baseadas nos dados reais
+  const solutionMetrics = [
     {
       title: "Total de Soluções",
-      value: totalSolutions,
-      icon: <FileText className="h-5 w-5" />,
-      colorScheme: 'blue' as const,
-      trend: { value: 8, label: "novas este mês" }
+      value: data?.solutions_count || 0,
+      icon: FileText,
+      description: "Soluções ativas na plataforma",
+      color: "text-blue-500",
+      trend: null
     },
     {
       title: "Implementações Ativas",
-      value: totalImplementations,
-      icon: <BarChart3 className="h-5 w-5" />,
-      colorScheme: 'green' as const,
-      trend: { value: 15, label: "crescimento mensal" }
+      value: data?.total_implementations || 0,
+      icon: TrendingUp,
+      description: "Em andamento ou concluídas",
+      color: "text-green-500",
+      trend: null
     },
     {
       title: "Taxa de Conclusão",
-      value: `${avgCompletionRate}%`,
-      icon: <CheckCircle className="h-5 w-5" />,
-      colorScheme: 'cyan' as const,
-      trend: { value: 5, label: "melhoria contínua" }
+      value: data?.completed_implementations && data?.total_implementations 
+        ? `${Math.round((data.completed_implementations / data.total_implementations) * 100)}%`
+        : "0%",
+      icon: Target,
+      description: "Implementações concluídas",
+      color: "text-purple-500",
+      trend: null
     },
     {
-      title: "Popularidade Média",
-      value: data?.solutionPopularity?.length > 0 
-        ? Math.round(data.solutionPopularity.reduce((sum, sol) => sum + sol.value, 0) / data.solutionPopularity.length)
-        : 0,
-      icon: <TrendingUp className="h-5 w-5" />,
-      colorScheme: 'purple' as const,
-      trend: { value: 12, label: "engajamento alto" }
-    },
-    {
-      title: "Tempo Médio Implementação",
-      value: "2.3 dias",
-      icon: <Clock className="h-5 w-5" />,
-      colorScheme: 'orange' as const,
-      trend: { value: -8, label: "otimização contínua" }
-    },
-    {
-      title: "Usuários Únicos",
-      value: "1.2k",
-      icon: <Users className="h-5 w-5" />,
-      colorScheme: 'indigo' as const,
-      trend: { value: 18, label: "alcance crescente" }
+      title: "Usuários Ativos",
+      value: data?.active_users || 0,
+      icon: Users,
+      description: "Implementando soluções",
+      color: "text-orange-500",
+      trend: null
     }
   ];
 
@@ -87,16 +71,26 @@ export const SolutionsAnalyticsTabContent = ({ timeRange }: SolutionsAnalyticsTa
     <AnalyticsTabContainer>
       {/* Metric Cards */}
       <AnalyticsMetricsGrid columns={3}>
-        {metrics.map((metric, index) => (
-          <AnalyticsMetricCard
-            key={index}
-            title={metric.title}
-            value={metric.value}
-            icon={metric.icon}
-            colorScheme={metric.colorScheme}
-            trend={metric.trend}
-            loading={loading}
-          />
+        {solutionMetrics.map((metric, index) => (
+          <Card key={index}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                {metric.title}
+              </CardTitle>
+              <metric.icon className={`h-4 w-4 ${metric.color}`} />
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-2xl font-bold">{metric.value}</div>
+                <DataStatusIndicator isDataReal={!loading && !error} loading={loading} error={error} />
+              </div>
+              <div className="flex items-center mt-1">
+                <span className="text-xs text-muted-foreground">
+                  {metric.description}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
         ))}
       </AnalyticsMetricsGrid>
 
