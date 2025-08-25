@@ -6,6 +6,7 @@ import { EnhancedAreaChart, EnhancedBarChart, EnhancedPieChart } from '../charts
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAnalyticsData } from "@/hooks/analytics/useAnalyticsData";
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { DataStatusIndicator } from '../DataStatusIndicator';
 import { AlertTriangle, FileText, TrendingUp, Target, BarChart3, CheckCircle, Clock, Users } from 'lucide-react';
 
 interface SolutionsAnalyticsTabContentProps {
@@ -30,10 +31,15 @@ export const SolutionsAnalyticsTabContent = ({ timeRange }: SolutionsAnalyticsTa
   }
 
   // Calcular métricas baseadas nos dados reais
+  const totalSolutions = data?.solutionPopularity?.length || 0;
+  const totalImplementations = data?.userCompletionRate?.reduce((acc, item) => acc + item.value, 0) || 0;
+  const completedImplementations = data?.userCompletionRate?.find(item => item.name === 'Concluídas')?.value || 0;
+  const activeUsers = data?.usersByTime?.length || 0;
+  
   const solutionMetrics = [
     {
       title: "Total de Soluções",
-      value: data?.solutions_count || 0,
+      value: totalSolutions,
       icon: FileText,
       description: "Soluções ativas na plataforma",
       color: "text-blue-500",
@@ -41,7 +47,7 @@ export const SolutionsAnalyticsTabContent = ({ timeRange }: SolutionsAnalyticsTa
     },
     {
       title: "Implementações Ativas",
-      value: data?.total_implementations || 0,
+      value: totalImplementations,
       icon: TrendingUp,
       description: "Em andamento ou concluídas",
       color: "text-green-500",
@@ -49,8 +55,8 @@ export const SolutionsAnalyticsTabContent = ({ timeRange }: SolutionsAnalyticsTa
     },
     {
       title: "Taxa de Conclusão",
-      value: data?.completed_implementations && data?.total_implementations 
-        ? `${Math.round((data.completed_implementations / data.total_implementations) * 100)}%`
+      value: totalImplementations > 0 
+        ? `${Math.round((completedImplementations / totalImplementations) * 100)}%`
         : "0%",
       icon: Target,
       description: "Implementações concluídas",
@@ -59,7 +65,7 @@ export const SolutionsAnalyticsTabContent = ({ timeRange }: SolutionsAnalyticsTa
     },
     {
       title: "Usuários Ativos",
-      value: data?.active_users || 0,
+      value: activeUsers,
       icon: Users,
       description: "Implementando soluções",
       color: "text-orange-500",

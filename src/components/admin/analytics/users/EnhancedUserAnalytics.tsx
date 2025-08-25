@@ -1,23 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Skeleton } from '@/components/ui/skeleton';
+import { DataStatusIndicator } from '../DataStatusIndicator';
+import { useAnalyticsData } from "@/hooks/analytics/useAnalyticsData";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { 
-  Users, UserCheck, Activity, BarChart3,
-  TrendingUp, TrendingDown, AlertTriangle, Search,
-  Filter, Download, UserX, Zap, Award, Eye
+  Users, 
+  TrendingUp, 
+  TrendingDown,
+  Clock, 
+  Award,
+  Activity,
+  UserCheck,
+  UserPlus,
+  Star,
+  Zap,
+  Eye
 } from 'lucide-react';
-import { UserSegmentChart } from './charts/UserSegmentChart';
-import { UserFunnelChart } from './charts/UserFunnelChart';
-import { UserActivityHeatmap } from './charts/UserActivityHeatmap';
-import { UserRetentionChart } from './charts/UserRetentionChart';
-import { OnboardingStatusTab } from './OnboardingStatusTab';
-import { UserDetailsTable } from './UserDetailsTable';
-
+import { Progress } from '@/components/ui/progress';
 interface EnhancedUserAnalyticsProps {
   timeRange: string;
 }
@@ -27,18 +29,13 @@ export const EnhancedUserAnalytics = ({ timeRange }: EnhancedUserAnalyticsProps)
   const [selectedSegment, setSelectedSegment] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const { 
-    data, 
-    loading, 
-    error,
-    isDataReal
-  } = useRealAnalyticsData(timeRange);
+  const { data, loading, error } = useAnalyticsData({ timeRange });
 
   // Calcular métricas principais baseadas nos dados reais
   const metrics = [
     {
       title: "Usuários Ativos Diários",
-      value: Math.round(data?.engagement_metrics.daily_active_users || 0),
+      value: data?.usersByTime?.length || 0,
       icon: Users,
       description: "Média dos últimos dias",
       color: "text-blue-500",
@@ -46,25 +43,25 @@ export const EnhancedUserAnalytics = ({ timeRange }: EnhancedUserAnalyticsProps)
     },
     {
       title: "Usuários Ativos Semanais", 
-      value: data?.engagement_metrics.weekly_active_users || 0,
+      value: data?.usersByTime?.filter(u => u.novos > 0)?.length || 0,
       icon: UserCheck,
       description: "Últimos 7 dias",
       color: "text-green-500",
       trend: null
     },
     {
-      title: "Taxa de Rejeição",
-      value: `${Math.round(data?.engagement_metrics.bounce_rate_percentage || 0)}%`,
-      icon: BarChart3,
+      title: "Taxa de Engajamento",
+      value: `${Math.round((data?.dayOfWeekActivity?.reduce((acc, d) => acc + d.atividade, 0) || 0) / (data?.dayOfWeekActivity?.length || 1))}%`,
+      icon: Activity,
       description: "Sessões de um evento",
       color: "text-purple-500", 
       trend: null
     },
     {
-      title: "Tempo Médio de Sessão",
-      value: `${Math.round(data?.engagement_metrics.avg_session_time_minutes || 0)}min`,
-      icon: Activity,
-      description: "Por sessão",
+      title: "Implementações Ativas",
+      value: data?.userCompletionRate?.reduce((acc, item) => acc + item.value, 0) || 0,
+      icon: Award,
+      description: "Por usuário ativo",
       color: "text-orange-500",
       trend: null
     }
@@ -85,7 +82,7 @@ export const EnhancedUserAnalytics = ({ timeRange }: EnhancedUserAnalyticsProps)
             <CardContent>
               <div className="flex items-center justify-between mb-2">
                 <div className="text-2xl font-bold">{metric.value}</div>
-                <DataStatusIndicator isDataReal={isDataReal} loading={loading} error={error} />
+                <DataStatusIndicator isDataReal={!loading && !error} loading={loading} error={error} />
               </div>
               <div className="flex items-center mt-1">
                 <span className="text-xs text-muted-foreground">
@@ -106,24 +103,22 @@ export const EnhancedUserAnalytics = ({ timeRange }: EnhancedUserAnalyticsProps)
               Evolução do número de usuários ao longo do tempo
             </CardDescription>
           </div>
-          <DataStatusIndicator isDataReal={isDataReal} loading={loading} error={error} />
+          <DataStatusIndicator isDataReal={!loading && !error} loading={loading} error={error} />
         </CardHeader>
         <CardContent>
           {loading ? (
             <Skeleton className="h-[300px] w-full" />
-          ) : data?.user_growth.growth_data && data.user_growth.growth_data.length > 0 ? (
-            <LineChart
-              data={data.user_growth.growth_data.map(item => ({
-                data: item.date,
-                usuarios: item.new_users,
-                total: item.total_users
-              }))}
-              categories={['usuarios', 'total']}
-              index="data"
-              colors={['blue', 'green']}
-              valueFormatter={(value) => `${value} usuários`}
-              className="h-[300px]"
-            />
+          ) : data?.usersByTime && data.usersByTime.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={data.usersByTime}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip />
+                <Line type="monotone" dataKey="usuarios" stroke="#8884d8" strokeWidth={2} />
+                <Line type="monotone" dataKey="total" stroke="#82ca9d" strokeWidth={2} />
+              </LineChart>
+            </ResponsiveContainer>
           ) : (
             <div className="flex items-center justify-center h-[300px] text-muted-foreground">
               Dados de crescimento não disponíveis para o período selecionado
@@ -141,46 +136,21 @@ export const EnhancedUserAnalytics = ({ timeRange }: EnhancedUserAnalyticsProps)
               Jornada do usuário desde o cadastro até a implementação
             </CardDescription>
           </div>
-          <DataStatusIndicator isDataReal={isDataReal} loading={loading} error={error} />
+          <DataStatusIndicator isDataReal={!loading && !error} loading={loading} error={error} />
         </CardHeader>
         <CardContent>
           {loading ? (
             <Skeleton className="h-[300px] w-full" />
-          ) : data?.user_journey.funnel_data ? (
-            <BarChart
-              data={[
-                { 
-                  etapa: "Cadastro", 
-                  usuarios: data.user_journey.funnel_data.total_users,
-                  taxa: 100
-                },
-                { 
-                  etapa: "Onboarding", 
-                  usuarios: data.user_journey.funnel_data.completed_onboarding,
-                  taxa: Math.round(data.user_journey.conversion_rates.onboarding_conversion)
-                },
-                { 
-                  etapa: "Primeira Solução", 
-                  usuarios: data.user_journey.funnel_data.started_solution,
-                  taxa: Math.round(data.user_journey.conversion_rates.solution_start_conversion)
-                },
-                { 
-                  etapa: "Solução Completa", 
-                  usuarios: data.user_journey.funnel_data.completed_solution,
-                  taxa: Math.round(data.user_journey.conversion_rates.solution_completion_conversion)
-                },
-                { 
-                  etapa: "Implementação", 
-                  usuarios: data.user_journey.funnel_data.requested_implementation,
-                  taxa: Math.round(data.user_journey.conversion_rates.implementation_request_conversion)
-                }
-              ]}
-              categories={['usuarios']}
-              index="etapa"
-              colors={['purple']}
-              valueFormatter={(value) => `${value} usuários`}
-              className="h-[300px]"
-            />
+          ) : data?.implementationsByCategory ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={data.implementationsByCategory}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="value" fill="#8884d8" />
+              </BarChart>
+            </ResponsiveContainer>
           ) : (
             <div className="flex items-center justify-center h-[300px] text-muted-foreground">
               Dados do funil não disponíveis para o período selecionado

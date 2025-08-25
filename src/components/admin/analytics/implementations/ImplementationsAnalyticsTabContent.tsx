@@ -6,6 +6,7 @@ import { EnhancedAreaChart, EnhancedBarChart, EnhancedPieChart } from '../charts
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAnalyticsData } from "@/hooks/analytics/useAnalyticsData";
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { DataStatusIndicator } from '../DataStatusIndicator';
 import { AlertTriangle, PlayCircle, CheckCircle, Clock, TrendingUp, Users, Target, Activity } from 'lucide-react';
 
 interface ImplementationsAnalyticsTabContentProps {
@@ -30,31 +31,36 @@ export const ImplementationsAnalyticsTabContent = ({ timeRange }: Implementation
   }
 
   // Calcular métricas baseadas nos dados reais
+  const totalImplementations = data?.userCompletionRate?.reduce((acc, item) => acc + item.value, 0) || 0;
+  const completedImplementations = data?.userCompletionRate?.find(item => item.name === 'Concluídas')?.value || 0;
+  const inProgressImplementations = data?.userCompletionRate?.find(item => item.name === 'Em andamento')?.value || 0;
+  const completionRate = totalImplementations > 0 ? Math.round((completedImplementations / totalImplementations) * 100) : 0;
+  
   const metrics = [
     {
       title: "Total de Implementações",
-      value: data?.totalImplementations || 0,
+      value: totalImplementations,
       icon: PlayCircle,
       color: "text-blue-500",
       trend: null
     },
     {
       title: "Taxa de Conclusão",
-      value: data?.completionRate ? `${Math.round(data.completionRate)}%` : "0%",
+      value: `${completionRate}%`,
       icon: CheckCircle,
       color: "text-green-500",
       trend: null
     },
     {
       title: "Em Andamento",
-      value: data?.inProgressImplementations || 0,
+      value: inProgressImplementations,
       icon: Clock,
       color: "text-yellow-500",
       trend: null
     },
     {
       title: "Usuários Implementando",
-      value: data?.activeUsers || 0,
+      value: data?.usersByTime?.length || 0,
       icon: Users,
       color: "text-purple-500",
       trend: null
