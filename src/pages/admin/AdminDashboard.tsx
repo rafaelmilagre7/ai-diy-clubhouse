@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DashboardHeader } from "@/components/admin/dashboard/DashboardHeader";
 import { OnboardingStatusCard } from "@/components/admin/OnboardingStatusCard";
+import { RecentActivitiesCard } from "@/components/admin/analytics/RecentActivitiesCard";
 import { RefreshCw, Users, Activity, CheckCircle, TrendingUp, BarChart3, Zap, Star } from "lucide-react";
 const AdminDashboard = () => {
   const [timeRange, setTimeRange] = useState('30d');
@@ -275,26 +276,50 @@ const AdminDashboard = () => {
             </Card>
           </div>
 
-          {/* Enhanced Activities */}
-          {activityData?.recentActivities && activityData.recentActivities.length > 0 && <Card className="surface-elevated border-0 shadow-aurora">
+          {/* Enhanced Activities with New Component */}
+          <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
+            <RecentActivitiesCard 
+              activities={[]} // Dados serão integrados com o hook unificado em breve
+              loading={loading}
+            />
+            
+            {/* Card de Estatísticas Adicionais */}
+            <Card className="surface-elevated border-0 shadow-aurora">
               <CardHeader>
-                <CardTitle className="text-heading-3">Atividades Recentes</CardTitle>
+                <CardTitle className="text-heading-3">Estatísticas do Período</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  {activityData.recentActivities.slice(0, 5).map((activity: any, index: number) => <div key={index} className="flex items-center gap-3 p-3 rounded-lg surface-elevated hover:bg-viverblue/5 transition-colors">
-                      <div className="w-2 h-2 rounded-full bg-gradient-to-r from-viverblue to-operational"></div>
-                      <div className="flex-1">
-                        <p className="text-label">{activity.type}</p>
-                        <p className="text-caption text-muted-foreground">{activity.description}</p>
-                      </div>
-                      <span className="text-caption text-muted-foreground">
-                        {new Date(activity.timestamp).toLocaleString('pt-BR')}
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 gap-3">
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-viverblue/5">
+                      <span className="text-label text-muted-foreground">Taxa de Crescimento</span>
+                      <span className="text-heading-3 text-viverblue">
+                        {statsData?.periodGrowthRate ? `+${statsData.periodGrowthRate}%` : 'N/A'}
                       </span>
-                    </div>)}
+                    </div>
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-operational/5">
+                      <span className="text-label text-muted-foreground">Taxa de Conclusão</span>
+                      <span className="text-heading-3 text-operational">
+                        {statsData?.completedInPeriod && statsData?.implementationsInPeriod 
+                          ? `${Math.round((statsData.completedInPeriod / statsData.implementationsInPeriod) * 100)}%`
+                          : 'N/A'
+                        }
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-strategy/5">
+                      <span className="text-label text-muted-foreground">Usuários/Implementação</span>
+                      <span className="text-heading-3 text-strategy">
+                        {statsData?.activeUsersInPeriod && statsData?.implementationsInPeriod
+                          ? Math.round(statsData.activeUsersInPeriod / Math.max(statsData.implementationsInPeriod, 1))
+                          : 'N/A'
+                        }
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
-            </Card>}
+            </Card>
+          </div>
         </div>
       </div>
     </div>;

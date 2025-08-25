@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
 
 interface EngagementData {
   name: string;
@@ -10,91 +11,89 @@ interface EngagementData {
 export const useEngagementData = (timeRange: string) => {
   const [engagementData, setEngagementData] = useState<EngagementData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isDataReal, setIsDataReal] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchEngagementData = async () => {
-      try {
-        setLoading(true);
-        
-        // Calcular período baseado no timeRange
-        let startDate = new Date();
-        switch (timeRange) {
-          case '7d':
-            startDate.setDate(startDate.getDate() - 7);
-            break;
-          case '30d':
-            startDate.setDate(startDate.getDate() - 30);
-            break;
-          case '90d':
-            startDate.setDate(startDate.getDate() - 90);
-            break;
-          default:
-            startDate = new Date('2024-01-01'); // Todo período
+      let retryCount = 0;
+      const maxRetries = 3;
+
+      while (retryCount < maxRetries) {
+        try {
+          setLoading(true);
+          setError(null);
+          
+          // Usar nova RPC para dados reais
+          const { data: rpcData, error: rpcError } = await supabase
+            .rpc('get_engagement_metrics_by_period', { time_range: timeRange });
+
+          if (rpcError) {
+            throw rpcError;
+          }
+
+          if (rpcData && rpcData.length > 0) {
+            setEngagementData(rpcData.map((item: any) => ({
+              name: item.name,
+              value: Number(item.value)
+            })));
+            setIsDataReal(true);
+            return;
+          } else {
+            // Se não há dados, mostrar mensagem apropriada
+            setEngagementData([]);
+            setIsDataReal(true);
+            setError('Nenhum dado de engajamento disponível para o período selecionado');
+            return;
+          }
+
+        } catch (err: any) {
+          console.error(`Tentativa ${retryCount + 1} falhou:`, err);
+          retryCount++;
+          
+          if (retryCount >= maxRetries) {
+            setError('Falha ao carregar dados de engajamento após 3 tentativas');
+            setEngagementData([]);
+            setIsDataReal(false);
+            
+            toast({
+              title: "Erro ao carregar dados",
+              description: "Não foi possível carregar dados de engajamento. Verifique sua conexão.",
+              variant: "destructive",
+            });
+          } else {
+            // Aguardar antes da próxima tentativa
+            await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+          }
+        } finally {
+          if (retryCount >= maxRetries || !loading) {
+            setLoading(false);
+          }
         }
-
-        // Tentar buscar dados reais
-        const { data: analyticsData, error } = await supabase
-          .from('analytics')
-          .select('created_at, event_type')
-          .gte('created_at', startDate.toISOString());
-
-        if (error || !analyticsData) {
-          // Fallback para dados mock se houver erro
-          console.warn('Usando dados mock para engajamento:', error?.message);
-          setEngagementData([
-            { name: 'Jan', value: 65 },
-            { name: 'Fev', value: 78 },
-            { name: 'Mar', value: 92 },
-            { name: 'Abr', value: 85 },
-            { name: 'Mai', value: 110 },
-            { name: 'Jun', value: 95 }
-          ]);
-        } else {
-          // Processar dados reais por mês
-          const monthlyData = analyticsData.reduce((acc: any, item) => {
-            const month = new Date(item.created_at).toLocaleDateString('pt-BR', { month: 'short' });
-            acc[month] = (acc[month] || 0) + 1;
-            return acc;
-          }, {});
-
-          const formattedData = Object.entries(monthlyData).map(([name, value]) => ({
-            name,
-            value: value as number
-          }));
-
-          setEngagementData(formattedData.length > 0 ? formattedData : [
-            { name: 'Dados', value: analyticsData.length || 1 }
-          ]);
-        }
-      } catch (error) {
-        console.error('Erro ao buscar dados de engajamento:', error);
-        // Dados mock como fallback final
-        setEngagementData([
-          { name: 'Jan', value: 45 },
-          { name: 'Fev', value: 68 },
-          { name: 'Mar', value: 82 },
-          { name: 'Abr', value: 75 }
-        ]);
-      } finally {
-        setLoading(false);
       }
     };
 
-    // Timeout para evitar loading infinito
+    // Timeout expandido para 30 segundos
     const timeoutId = setTimeout(() => {
       if (loading) {
-        console.warn('Timeout no carregamento de dados de engajamento');
-        setEngagementData([
-          { name: 'Timeout', value: 50 }
-        ]);
         setLoading(false);
+        setError('Timeout no carregamento de dados - operação cancelada');
+        setEngagementData([]);
+        setIsDataReal(false);
       }
-    }, 10000);
+    }, 30000);
 
     fetchEngagementData();
 
     return () => clearTimeout(timeoutId);
-  }, [timeRange]);
+  }, [timeRange, toast]);
 
-  return { engagementData, loading };
+  return { 
+    engagementData, 
+    loading, 
+    error, 
+    isDataReal,
+    isEmpty: engagementData.length === 0 && !loading
+  };
 };

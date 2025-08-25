@@ -5932,6 +5932,13 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: Json
       }
+      get_completion_rate_by_solution: {
+        Args: { time_range?: string }
+        Returns: {
+          completion: number
+          name: string
+        }[]
+      }
       get_connection_stats: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -5970,6 +5977,13 @@ export type Database = {
       get_current_user_role_safe: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_engagement_metrics_by_period: {
+        Args: { time_range?: string }
+        Returns: {
+          name: string
+          value: number
+        }[]
       }
       get_engagement_metrics_secure: {
         Args: Record<PropertyKey, never>
@@ -6119,6 +6133,18 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      get_recent_system_activities: {
+        Args: { limit_count?: number }
+        Returns: {
+          created_at: string
+          event_type: string
+          id: string
+          solution: string
+          user_email: string
+          user_id: string
+          user_name: string
+        }[]
+      }
       get_security_configuration_reminders: {
         Args: Record<PropertyKey, never>
         Returns: Json
@@ -6164,6 +6190,10 @@ export type Database = {
       get_total_referrals: {
         Args: { p_user_id: string }
         Returns: number
+      }
+      get_unified_analytics_data: {
+        Args: { time_range?: string }
+        Returns: Json
       }
       get_unified_checklist: {
         Args: {

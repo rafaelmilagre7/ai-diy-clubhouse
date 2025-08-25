@@ -23,124 +23,81 @@ export const useAdminDashboardData = (timeRange: string) => {
   const { engagementData, loading: engagementLoading } = useEngagementData(timeRange);
   const { completionRateData, loading: completionLoading } = useCompletionRateData(timeRange);
 
-  // Carregar atividades recentes com timeout e fallback
+  // Carregar atividades recentes usando RPC
   useEffect(() => {
     const loadRecentActivities = async () => {
-      setLoading(true);
-      
-      try {
-        // Timeout para evitar loading infinito
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Timeout')), 8000)
-        );
+      let retryCount = 0;
+      const maxRetries = 3;
 
-        const dataPromise = supabase
-          .from('analytics')
-          .select(`
-            id,
-            user_id,
-            event_type,
-            solution_id,
-            created_at,
-            solutions:solution_id (
-              title
-            )
-          `)
-          .order('created_at', { ascending: false })
-          .limit(10);
+      while (retryCount < maxRetries) {
+        try {
+          setLoading(true);
+          
+          // Usar nova RPC para dados reais
+          const { data: rpcData, error: rpcError } = await supabase
+            .rpc('get_recent_system_activities', { limit_count: 10 });
 
-        const { data: analyticsData, error } = await Promise.race([
-          dataPromise,
-          timeoutPromise
-        ]) as any;
-
-        if (error) {
-          console.warn("Erro ao carregar atividades, usando mock:", error);
-          // Dados mock como fallback
-          setRecentActivities([
-            {
-              id: "1",
-              user_id: "user_001",
-              event_type: "login",
-              created_at: new Date().toISOString()
-            },
-            {
-              id: "2", 
-              user_id: "user_002",
-              event_type: "view",
-              solution: "Assistente WhatsApp",
-              created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString()
-            },
-            {
-              id: "3",
-              user_id: "user_003", 
-              event_type: "start",
-              solution: "Automação Email",
-              created_at: new Date(Date.now() - 1000 * 60 * 120).toISOString()
-            },
-            {
-              id: "4",
-              user_id: "user_004",
-              event_type: "complete",
-              solution: "Chatbot Website", 
-              created_at: new Date(Date.now() - 1000 * 60 * 240).toISOString()
-            }
-          ]);
-          return;
-        }
-
-        // Transformar dados reais
-        const activities: RecentActivity[] = (analyticsData || []).map(item => {
-          const solutionData = item.solutions as any;
-          return {
-            id: item.id,
-            user_id: item.user_id,
-            event_type: item.event_type,
-            solution: solutionData?.title || 'Solução não identificada',
-            created_at: item.created_at
-          };
-        });
-        
-        setRecentActivities(activities);
-      } catch (error: any) {
-        console.warn("Timeout ou erro ao carregar atividades:", error?.message);
-        
-        // Fallback final com dados mock
-        setRecentActivities([
-          {
-            id: "mock_1",
-            user_id: "demo_user",
-            event_type: "login",
-            created_at: new Date().toISOString()
-          },
-          {
-            id: "mock_2",
-            user_id: "demo_user_2", 
-            event_type: "view",
-            solution: "Demo Solution",
-            created_at: new Date(Date.now() - 1000 * 60 * 15).toISOString()
+          if (rpcError) {
+            throw rpcError;
           }
-        ]);
-      } finally {
-        setLoading(false);
+
+          if (rpcData && rpcData.length > 0) {
+            const activities: RecentActivity[] = rpcData.map((item: any) => ({
+              id: item.id,
+              user_id: item.user_id,
+              event_type: item.event_type,
+              solution: item.solution,
+              created_at: item.created_at
+            }));
+            
+            setRecentActivities(activities);
+            return;
+          } else {
+            // Se não há dados, definir array vazio
+            setRecentActivities([]);
+            return;
+          }
+
+        } catch (err: any) {
+          console.error(`Tentativa ${retryCount + 1} falhou ao carregar atividades:`, err);
+          retryCount++;
+          
+          if (retryCount >= maxRetries) {
+            console.error('Falha ao carregar atividades após 3 tentativas');
+            setRecentActivities([]);
+            
+            toast({
+              title: "Erro ao carregar atividades",
+              description: "Não foi possível carregar as atividades recentes.",
+              variant: "destructive",
+            });
+          } else {
+            // Aguardar antes da próxima tentativa
+            await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+          }
+        } finally {
+          if (retryCount >= maxRetries || !loading) {
+            setLoading(false);
+          }
+        }
       }
     };
 
     loadRecentActivities();
-  }, [timeRange]);
+  }, [timeRange, toast]);
 
-  // Implementar timeout global para evitar loading infinito
+  // Timeout global expandido para 45 segundos
   useEffect(() => {
     const globalTimeout = setTimeout(() => {
       if (statsLoading || engagementLoading || completionLoading || loading) {
         console.warn('Timeout global detectado no dashboard admin');
         toast({
           title: "Carregamento demorado",
-          description: "Alguns dados podem não estar disponíveis no momento.",
+          description: "Dados reais estão sendo carregados. Isso pode demorar alguns momentos.",
           variant: "default",
         });
       }
-    }, 15000);
+    }, 45000);
 
     return () => clearTimeout(globalTimeout);
   }, [statsLoading, engagementLoading, completionLoading, loading, toast]);
