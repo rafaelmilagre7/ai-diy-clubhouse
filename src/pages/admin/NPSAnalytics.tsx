@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Calendar, TrendingUp, Users, Star, MessageSquare, Filter, Download, Search } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { ActionPlanAssistant } from '@/components/admin/nps/ActionPlanAssistant';
 
 interface NPSResponse {
   id: string;
@@ -312,6 +313,7 @@ const NPSAnalytics: React.FC = () => {
           <TabsTrigger value="recent">Avaliações Recentes</TabsTrigger>
           <TabsTrigger value="feedback">Feedbacks</TabsTrigger>
           <TabsTrigger value="trends">Tendências</TabsTrigger>
+          <TabsTrigger value="action-plan">Plano de Ação</TabsTrigger>
         </TabsList>
 
         <TabsContent value="recent" className="space-y-4">
@@ -410,6 +412,14 @@ const NPSAnalytics: React.FC = () => {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="action-plan" className="space-y-4">
+          <ActionPlanAssistant 
+            npsData={analyticsData?.npsData || { overall: 0, distribution: { promoters: 0, neutrals: 0, detractors: 0 } }}
+            feedbackData={analyticsData?.feedbackData || []}
+            timeRange={timeRange}
+          />
         </TabsContent>
 
         <TabsContent value="trends" className="space-y-4">
