@@ -24,6 +24,10 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useInviteCreate } from "@/hooks/admin/invites/useInviteCreate";
 import { toast } from "sonner";
+import { PhoneInput } from 'react-international-phone';
+import 'react-international-phone/style.css';
+import '@/styles/phone-input.css';
+import { validateInternationalPhone } from "@/utils/validationUtils";
 
 interface SimpleCreateInviteDialogProps {
   roles: any[];
@@ -41,19 +45,8 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
   
   const { createInvite, isCreating } = useInviteCreate();
 
-  const formatPhone = (value: string) => {
-    // Remove tudo que não é dígito
-    const numbers = value.replace(/\D/g, '');
-    
-    // Aplica máscara: (XX) XXXXX-XXXX
-    if (numbers.length <= 2) return `(${numbers}`;
-    if (numbers.length <= 7) return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
-    return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7, 11)}`;
-  };
-
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatPhone(e.target.value);
-    setPhone(formatted);
+  const handlePhoneChange = (phoneValue: string) => {
+    setPhone(phoneValue);
   };
 
   const validateForm = () => {
@@ -69,9 +62,8 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
 
     // Validar formato do telefone se fornecido
     if (phone) {
-      const cleanPhone = phone.replace(/\D/g, '');
-      if (cleanPhone.length < 10 || cleanPhone.length > 11) {
-        toast.error("Formato de telefone inválido. Use: (XX) XXXXX-XXXX");
+      if (!validateInternationalPhone(phone)) {
+        toast.error("Formato de telefone internacional inválido");
         return false;
       }
     }
@@ -84,9 +76,9 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
     
     if (!validateForm()) return;
 
-    const cleanPhone = phone ? phone.replace(/\D/g, '') : undefined;
+    const internationalPhone = phone || undefined;
     
-    const result = await createInvite(email, roleId, notes, expiration, cleanPhone, channelPreference);
+    const result = await createInvite(email, roleId, notes, expiration, internationalPhone, channelPreference);
     if (result) {
       setEmail("");
       setPhone("");
@@ -143,17 +135,18 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
               <Label htmlFor="phone" className="text-sm text-white">
                 Telefone {(channelPreference === 'whatsapp' || channelPreference === 'both') && '*'}
               </Label>
-              <Input
-                id="phone"
-                type="tel"
-                placeholder="(11) 99999-9999"
+              <PhoneInput
+                defaultCountry="br"
                 value={phone}
                 onChange={handlePhoneChange}
-                maxLength={15}
-                className="h-9 bg-gray-800 border-gray-700 text-white placeholder:text-gray-400"
+                inputClassName="h-9 bg-gray-800 border-gray-700 text-white placeholder:text-gray-400 flex-1"
+                countrySelectorStyleProps={{
+                  className: "h-9 bg-gray-800 border-gray-700"
+                }}
+                className="phone-input-container"
               />
               <p className="text-xs text-gray-400">
-                Necessário para WhatsApp
+                Selecione o país e digite o número (necessário para WhatsApp)
               </p>
             </div>
             

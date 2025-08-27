@@ -1,0 +1,37 @@
+/* Estilos customizados para react-international-phone */
+.phone-input-container {
+  display: flex;
+  gap: 0;
+}
+
+.phone-input-container .react-international-phone-country-selector-button {
+  background: rgb(31, 41, 55) !important;
+  border: 1px solid rgb(75, 85, 99) !important;
+  color: white !important;
+  border-radius: 0.375rem 0 0 0.375rem !important;
+  height: 2.25rem !important;
+  padding: 0 0.5rem !important;
+}
+
+.phone-input-container .react-international-phone-country-selector-button:hover {
+  background: rgb(55, 65, 81) !important;
+}
+
+.phone-input-container .react-international-phone-input {
+  border-radius: 0 0.375rem 0.375rem 0 !important;
+  border-left: none !important;
+}
+
+.phone-input-container .react-international-phone-country-selector-dropdown {
+  background: rgb(31, 41, 55) !important;
+  border: 1px solid rgb(75, 85, 99) !important;
+  color: white !important;
+}
+
+.phone-input-container .react-international-phone-country-selector-dropdown__list-item {
+  color: white !important;
+}
+
+.phone-input-container .react-international-phone-country-selector-dropdown__list-item:hover {
+  background: rgb(55, 65, 81) !important;
+}

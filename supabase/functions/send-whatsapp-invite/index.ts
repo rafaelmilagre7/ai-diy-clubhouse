@@ -50,14 +50,23 @@ serve(async (req) => {
       throw new Error('Telefone e URL do convite são obrigatórios')
     }
 
-    // Limpar e validar número de telefone brasileiro
-    const cleanPhone = phone.replace(/\D/g, '')
-    let formattedPhone = cleanPhone
-
-    // Adicionar código do país se não tiver
-    if (!formattedPhone.startsWith('55') && formattedPhone.length === 11) {
-      formattedPhone = '55' + formattedPhone
-    } else if (!formattedPhone.startsWith('55') && formattedPhone.length === 10) {
+    // Processar número de telefone internacional
+    let formattedPhone = phone.replace(/\D/g, '')
+    
+    // Se o telefone está no formato internacional "+dialCode|phoneNumber"
+    if (phone.includes('|')) {
+      const [dialCode, phoneNumber] = phone.split('|')
+      const cleanDialCode = dialCode.replace('+', '')
+      const cleanPhoneNumber = phoneNumber.replace(/\D/g, '')
+      formattedPhone = cleanDialCode + cleanPhoneNumber
+    }
+    // Se já tem código de país (número longo), usar como está
+    else if (formattedPhone.length > 11) {
+      // Já tem código do país
+      formattedPhone = formattedPhone
+    }
+    // Se é número brasileiro sem código
+    else if (formattedPhone.length === 11 || formattedPhone.length === 10) {
       formattedPhone = '55' + formattedPhone
     }
 
