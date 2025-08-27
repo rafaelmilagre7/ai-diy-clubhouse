@@ -57,6 +57,13 @@ export const IntegrationsDebugPage = () => {
   const [testResult, setTestResult] = useState<any>(null);
   const [logs, setLogs] = useState<string[]>([]);
 
+  // Configurações do Pipedrive
+  const [pipedriveSettings, setPipedriveSettings] = useState({
+    token: '',
+    domain: ''
+  });
+  const [settingsResult, setSettingsResult] = useState<any>(null);
+
   // Teste de implementação
   const [testData, setTestData] = useState<TestData>({
     solutionId: `test-id-${Date.now()}`,
@@ -162,13 +169,181 @@ export const IntegrationsDebugPage = () => {
         </div>
       </div>
 
-      <Tabs defaultValue="pipedrive" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+      <Tabs defaultValue="configurar" className="w-full">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="configurar">Configurar</TabsTrigger>
           <TabsTrigger value="pipedrive">Pipedrive</TabsTrigger>
           <TabsTrigger value="discord">Discord</TabsTrigger>
           <TabsTrigger value="teste">Teste</TabsTrigger>
           <TabsTrigger value="logs">Logs</TabsTrigger>
         </TabsList>
+
+        {/* Configurar Tab */}
+        <TabsContent value="configurar" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Settings className="h-5 w-5" />
+                Configurações do Pipedrive
+              </CardTitle>
+              <CardDescription>
+                Altere o token e subdomínio da sua integração com o Pipedrive
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Token da API do Pipedrive</label>
+                  <input 
+                    type="password" 
+                    value={pipedriveSettings.token}
+                    onChange={(e) => setPipedriveSettings({...pipedriveSettings, token: e.target.value})}
+                    placeholder="Cole aqui seu token do Pipedrive"
+                    className="w-full p-3 border rounded-md bg-background"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Encontre seu token em: Pipedrive → Settings → Personal preferences → API
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Subdomínio da Empresa (Opcional)</label>
+                  <input 
+                    type="text" 
+                    value={pipedriveSettings.domain}
+                    onChange={(e) => setPipedriveSettings({...pipedriveSettings, domain: e.target.value})}
+                    placeholder="exemplo: minhaempresa (sem .pipedrive.com)"
+                    className="w-full p-3 border rounded-md bg-background"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Se sua conta usa um subdomínio personalizado como minhaempresa.pipedrive.com, digite apenas "minhaempresa"
+                  </p>
+                </div>
+
+                <Alert>
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>
+                    <strong>Importante:</strong> Ao alterar essas configurações, todas as integrações que dependem do Pipedrive serão afetadas. Certifique-se de que o token está correto antes de aplicar.
+                  </AlertDescription>
+                </Alert>
+
+                <Button 
+                  onClick={async () => {
+                    if (!pipedriveSettings.token.trim()) {
+                      toast.error('Token do Pipedrive é obrigatório');
+                      return;
+                    }
+
+                    try {
+                      setIsLoading(true);
+                      
+                      const { data, error } = await supabase.functions.invoke('update-pipedrive-settings', {
+                        body: {
+                          token: pipedriveSettings.token.trim(),
+                          domain: pipedriveSettings.domain.trim()
+                        }
+                      });
+                      
+                      if (error) {
+                        throw error;
+                      }
+                      
+                      if (data?.success) {
+                        setSettingsResult(data);
+                        toast.success('Configurações validadas com sucesso!');
+                        
+                        // Limpar campos após sucesso
+                        setPipedriveSettings({ token: '', domain: '' });
+                        
+                        // Revalidar status após atualização
+                        setTimeout(() => {
+                          checkSecretsStatus();
+                        }, 2000);
+                      } else {
+                        throw new Error(data?.error || 'Erro na validação');
+                      }
+                      
+                    } catch (error: any) {
+                      console.error('Erro na atualização:', error);
+                      toast.error(`Erro: ${error.message}`);
+                      setSettingsResult({ 
+                        success: false, 
+                        error: error.message 
+                      });
+                    } finally {
+                      setIsLoading(false);
+                    }
+                  }}
+                  disabled={isLoading || !pipedriveSettings.token.trim()}
+                  className="w-full"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Validando configurações...
+                    </>
+                  ) : (
+                    <>
+                      <Settings className="h-4 w-4 mr-2" />
+                      Validar e Aplicar Configurações
+                    </>
+                  )}
+                </Button>
+
+                {settingsResult && (
+                  <div className={`mt-4 p-4 rounded-lg ${settingsResult.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+                    <h4 className="font-semibold mb-2">Resultado da Validação:</h4>
+                    {settingsResult.success && (
+                      <div className="space-y-2">
+                        <p className="text-sm text-green-800">✅ Token validado com sucesso!</p>
+                        <p className="text-sm">
+                          <strong>Conta:</strong> {settingsResult.validation?.account_name || 'N/A'}
+                        </p>
+                        <p className="text-sm">
+                          <strong>Domínio usado:</strong> {settingsResult.validation?.domain_used || 'api.pipedrive.com'}
+                        </p>
+                        
+                        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded">
+                          <h5 className="font-semibold text-blue-800 mb-2">Próximos Passos:</h5>
+                          <div className="space-y-1">
+                            <p className="text-sm text-blue-700">1. Copie os valores abaixo</p>
+                            <p className="text-sm text-blue-700">2. Acesse o Supabase Dashboard</p>
+                            <p className="text-sm text-blue-700">3. Vá em Settings → Environment Variables</p>
+                            <p className="text-sm text-blue-700">4. Atualize os secrets com os novos valores</p>
+                          </div>
+                          
+                          <div className="mt-3 p-2 bg-background rounded border">
+                            <p className="text-xs font-mono">PIPEDRIVE_API_TOKEN = {settingsResult.instructions?.pipedrive_api_token}</p>
+                            {settingsResult.instructions?.pipedrive_company_domain && (
+                              <p className="text-xs font-mono">PIPEDRIVE_COMPANY_DOMAIN = {settingsResult.instructions.pipedrive_company_domain}</p>
+                            )}
+                          </div>
+                          
+                          <Button 
+                            onClick={() => window.open('https://supabase.com/dashboard/project/zotzvtepvpnkcoobdubt/settings/functions', '_blank')}
+                            variant="outline"
+                            size="sm"
+                            className="mt-2"
+                          >
+                            <Settings className="h-4 w-4 mr-2" />
+                            Abrir Supabase Dashboard
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {!settingsResult.success && (
+                      <div className="space-y-2">
+                        <p className="text-sm text-red-800">❌ Erro na validação</p>
+                        <p className="text-sm text-red-700">{settingsResult.error}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         {/* Pipedrive Tab */}
         <TabsContent value="pipedrive" className="space-y-4">

@@ -150,3 +150,6 @@ verify_jwt = false
 
 [functions.update_invite_send_stats]
 verify_jwt = false
+
+[functions.update-pipedrive-settings]
+verify_jwt = false
