@@ -3,34 +3,79 @@
  * Validates an international phone number in formats:
  * - "+dialCode|phoneNumber" (legacy format)
  * - "+dialCodePhoneNumber" (standard international format)
+ * 
+ * Supports Brazilian numbers: +55 11 99999-9999 (11 digits local)
+ * Supports international numbers with proper country code detection
  */
 export const validateInternationalPhone = (phone: string): boolean => {
-  if (!phone || typeof phone !== 'string') return false;
+  console.log('🔍 [DEBUG] Validating phone:', phone);
+  
+  if (!phone || typeof phone !== 'string') {
+    console.log('❌ [DEBUG] Invalid input - not a string or empty');
+    return false;
+  }
   
   // Check if phone starts with +
-  if (!phone.startsWith('+')) return false;
+  if (!phone.startsWith('+')) {
+    console.log('❌ [DEBUG] Phone does not start with +');
+    return false;
+  }
   
   let dialCode: string;
   let number: string;
   
   // Handle legacy format with separator "|"
   if (phone.includes('|')) {
+    console.log('🔧 [DEBUG] Processing legacy format with |');
     const parts = phone.split('|');
-    if (parts.length !== 2) return false;
+    if (parts.length !== 2) {
+      console.log('❌ [DEBUG] Invalid legacy format - wrong number of parts');
+      return false;
+    }
     [dialCode, number] = parts;
   } else {
+    console.log('🔧 [DEBUG] Processing standard international format');
     // Handle standard international format "+CountryCodePhoneNumber"
-    // Extract country code (1-4 digits after +)
     const phoneWithoutPlus = phone.substring(1);
     
-    // Try to extract country code (common country codes are 1-4 digits)
-    let countryCodeLength = 1;
-    const commonCountryCodes = ['1', '7', '20', '27', '30', '31', '32', '33', '34', '36', '39', '40', '41', '43', '44', '45', '46', '47', '48', '49', '51', '52', '53', '54', '55', '56', '57', '58', '60', '61', '62', '63', '64', '65', '66', '81', '82', '84', '86', '90', '91', '92', '93', '94', '95', '98', '212', '213', '216', '218', '220', '221', '222', '223', '224', '225', '226', '227', '228', '229', '230', '231', '232', '233', '234', '235', '236', '237', '238', '239', '240', '241', '242', '243', '244', '245', '246', '248', '249', '250', '251', '252', '253', '254', '255', '256', '257', '258', '260', '261', '262', '263', '264', '265', '266', '267', '268', '269', '290', '291', '297', '298', '299', '350', '351', '352', '353', '354', '355', '356', '357', '358', '359', '370', '371', '372', '373', '374', '375', '376', '377', '378', '380', '381', '382', '383', '385', '386', '387', '389', '420', '421', '423', '500', '501', '502', '503', '504', '505', '506', '507', '508', '509', '590', '591', '592', '593', '594', '595', '596', '597', '598', '599', '670', '672', '673', '674', '675', '676', '677', '678', '679', '680', '681', '682', '683', '684', '685', '686', '687', '688', '689', '690', '691', '692', '850', '852', '853', '855', '856', '880', '886', '960', '961', '962', '963', '964', '965', '966', '967', '968', '970', '971', '972', '973', '974', '975', '976', '977', '992', '993', '994', '995', '996', '998'];
+    // Country code mapping for better detection
+    const countryCodeMap: { [key: string]: number } = {
+      // 1-digit codes
+      '1': 1, '7': 1, 
+      // 2-digit codes (including Brazil +55)
+      '20': 2, '27': 2, '30': 2, '31': 2, '32': 2, '33': 2, '34': 2, '36': 2, '39': 2, '40': 2,
+      '41': 2, '43': 2, '44': 2, '45': 2, '46': 2, '47': 2, '48': 2, '49': 2, '51': 2, '52': 2,
+      '53': 2, '54': 2, '55': 2, '56': 2, '57': 2, '58': 2, '60': 2, '61': 2, '62': 2, '63': 2,
+      '64': 2, '65': 2, '66': 2, '81': 2, '82': 2, '84': 2, '86': 2, '90': 2, '91': 2, '92': 2,
+      '93': 2, '94': 2, '95': 2, '98': 2,
+      // 3-digit codes
+      '212': 3, '213': 3, '216': 3, '218': 3, '220': 3, '221': 3, '222': 3, '223': 3, '224': 3,
+      '225': 3, '226': 3, '227': 3, '228': 3, '229': 3, '230': 3, '231': 3, '232': 3, '233': 3,
+      '234': 3, '235': 3, '236': 3, '237': 3, '238': 3, '239': 3, '240': 3, '241': 3, '242': 3,
+      '243': 3, '244': 3, '245': 3, '246': 3, '248': 3, '249': 3, '250': 3, '251': 3, '252': 3,
+      '253': 3, '254': 3, '255': 3, '256': 3, '257': 3, '258': 3, '260': 3, '261': 3, '262': 3,
+      '263': 3, '264': 3, '265': 3, '266': 3, '267': 3, '268': 3, '269': 3, '290': 3, '291': 3,
+      '297': 3, '298': 3, '299': 3, '350': 3, '351': 3, '352': 3, '353': 3, '354': 3, '355': 3,
+      '356': 3, '357': 3, '358': 3, '359': 3, '370': 3, '371': 3, '372': 3, '373': 3, '374': 3,
+      '375': 3, '376': 3, '377': 3, '378': 3, '380': 3, '381': 3, '382': 3, '383': 3, '385': 3,
+      '386': 3, '387': 3, '389': 3, '420': 3, '421': 3, '423': 3, '500': 3, '501': 3, '502': 3,
+      '503': 3, '504': 3, '505': 3, '506': 3, '507': 3, '508': 3, '509': 3, '590': 3, '591': 3,
+      '592': 3, '593': 3, '594': 3, '595': 3, '596': 3, '597': 3, '598': 3, '599': 3, '670': 3,
+      '672': 3, '673': 3, '674': 3, '675': 3, '676': 3, '677': 3, '678': 3, '679': 3, '680': 3,
+      '681': 3, '682': 3, '683': 3, '684': 3, '685': 3, '686': 3, '687': 3, '688': 3, '689': 3,
+      '690': 3, '691': 3, '692': 3, '850': 3, '852': 3, '853': 3, '855': 3, '856': 3, '880': 3,
+      '886': 3, '960': 3, '961': 3, '962': 3, '963': 3, '964': 3, '965': 3, '966': 3, '967': 3,
+      '968': 3, '970': 3, '971': 3, '972': 3, '973': 3, '974': 3, '975': 3, '976': 3, '977': 3,
+      '992': 3, '993': 3, '994': 3, '995': 3, '996': 3, '998': 3
+    };
     
-    // Find the longest matching country code
-    for (let len = 4; len >= 1; len--) {
+    // Find the correct country code length
+    let countryCodeLength = 1; // Default to 1 digit
+    
+    // Try 3-digit codes first, then 2-digit, then 1-digit
+    for (let len = 3; len >= 1; len--) {
       const possibleCode = phoneWithoutPlus.substring(0, len);
-      if (commonCountryCodes.includes(possibleCode)) {
+      if (countryCodeMap[possibleCode] === len) {
         countryCodeLength = len;
         break;
       }
@@ -38,18 +83,41 @@ export const validateInternationalPhone = (phone: string): boolean => {
     
     dialCode = '+' + phoneWithoutPlus.substring(0, countryCodeLength);
     number = phoneWithoutPlus.substring(countryCodeLength);
+    
+    console.log('🔧 [DEBUG] Extracted - dialCode:', dialCode, 'number:', number);
   }
   
   // Validate dial code format
   if (!dialCode.startsWith('+') || dialCode.length < 2 || dialCode.length > 5) {
+    console.log('❌ [DEBUG] Invalid dial code format:', dialCode);
     return false;
   }
   
-  // Validate phone number (at least 4 digits for international format, max 15 total)
+  // Clean the number (remove all non-digits)
   const cleanNumber = number.replace(/\D/g, '');
-  const totalLength = (dialCode.substring(1) + cleanNumber).length;
+  console.log('🔧 [DEBUG] Clean number:', cleanNumber, 'length:', cleanNumber.length);
   
-  return cleanNumber.length >= 4 && totalLength <= 15;
+  // Special validation for Brazilian numbers (+55)
+  if (dialCode === '+55') {
+    console.log('🇧🇷 [DEBUG] Validating Brazilian number');
+    // Brazilian mobile numbers: 11 digits (DDD + 9 + 8 digits)
+    // Brazilian landline numbers: 10 digits (DDD + 7-8 digits)
+    const isValidBrazilian = cleanNumber.length === 10 || cleanNumber.length === 11;
+    console.log('🇧🇷 [DEBUG] Brazilian validation result:', isValidBrazilian);
+    return isValidBrazilian;
+  }
+  
+  // General international validation
+  // Most international numbers: 4-15 digits total (including country code)
+  const countryCodeDigits = dialCode.substring(1);
+  const totalLength = countryCodeDigits.length + cleanNumber.length;
+  
+  console.log('🌍 [DEBUG] International validation - total length:', totalLength);
+  
+  const isValid = cleanNumber.length >= 4 && totalLength >= 7 && totalLength <= 15;
+  console.log('✅ [DEBUG] Final validation result:', isValid);
+  
+  return isValid;
 };
 
 /**
