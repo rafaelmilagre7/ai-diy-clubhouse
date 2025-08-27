@@ -3,6 +3,11 @@ import { cn } from '@/lib/utils';
 
 export type InviteStep = 'form' | 'creating' | 'sending' | 'success' | 'error';
 
+interface ChannelStatus {
+  email?: 'pending' | 'sending' | 'success' | 'error';
+  whatsapp?: 'pending' | 'sending' | 'success' | 'error';
+}
+
 interface StepInfo {
   label: string;
   icon: React.ComponentType<{ className?: string }>;
@@ -40,11 +45,15 @@ const steps: Record<InviteStep, StepInfo> = {
 interface InviteProgressStepsProps {
   currentStep: InviteStep;
   className?: string;
+  channelStatus?: ChannelStatus;
+  estimatedTime?: number;
 }
 
 export const InviteProgressSteps: React.FC<InviteProgressStepsProps> = ({ 
   currentStep, 
-  className 
+  className,
+  channelStatus,
+  estimatedTime = 6
 }) => {
   const stepOrder: InviteStep[] = ['form', 'creating', 'sending', 'success'];
   const currentIndex = stepOrder.indexOf(currentStep);
@@ -131,11 +140,50 @@ export const InviteProgressSteps: React.FC<InviteProgressStepsProps> = ({
         </div>
       )}
       
-      {/* Tempo estimado */}
+      {/* Status dos canais quando enviando */}
+      {currentStep === 'sending' && channelStatus && (
+        <div className="mt-4 p-3 bg-muted/30 rounded-md">
+          <div className="text-xs font-medium text-muted-foreground mb-2">Status dos envios:</div>
+          <div className="flex gap-4">
+            {channelStatus.email && (
+              <div className="flex items-center gap-2">
+                <Mail className="h-3 w-3" />
+                <span className="text-xs">Email:</span>
+                <span className={cn(
+                  "text-xs font-medium",
+                  channelStatus.email === 'success' && "text-green-600",
+                  channelStatus.email === 'error' && "text-destructive",
+                  channelStatus.email === 'sending' && "text-primary"
+                )}>
+                  {channelStatus.email === 'success' ? '✅' : 
+                   channelStatus.email === 'error' ? '❌' : '⏳'}
+                </span>
+              </div>
+            )}
+            {channelStatus.whatsapp && (
+              <div className="flex items-center gap-2">
+                <Send className="h-3 w-3" />
+                <span className="text-xs">WhatsApp:</span>
+                <span className={cn(
+                  "text-xs font-medium",
+                  channelStatus.whatsapp === 'success' && "text-green-600",
+                  channelStatus.whatsapp === 'error' && "text-destructive",
+                  channelStatus.whatsapp === 'sending' && "text-primary"
+                )}>
+                  {channelStatus.whatsapp === 'success' ? '✅' : 
+                   channelStatus.whatsapp === 'error' ? '❌' : '⏳'}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Tempo estimado otimizado */}
       {(currentStep === 'creating' || currentStep === 'sending') && (
         <div className="mt-3 text-center">
           <div className="text-xs text-muted-foreground">
-            Tempo estimado: ~2 segundos
+            Tempo estimado: ~{estimatedTime} segundos
           </div>
         </div>
       )}

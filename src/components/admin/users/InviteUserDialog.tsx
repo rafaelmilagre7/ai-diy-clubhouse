@@ -106,9 +106,9 @@ export const InviteUserDialog: React.FC<InviteUserDialogProps> = ({
     try {
       setStep('creating');
       
-      // Timeout de segurança para evitar travamentos
+      // Timeout otimizado para nova arquitetura paralela
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Operação expirou após 30 segundos')), 30000)
+        setTimeout(() => reject(new Error('Operação expirou após 15 segundos')), 15000)
       );
       
       // Promise principal
@@ -190,8 +190,11 @@ export const InviteUserDialog: React.FC<InviteUserDialogProps> = ({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-            {/* Indicador de progresso */}
-            <InviteProgressSteps currentStep={step} />
+            {/* Indicador de progresso otimizado */}
+            <InviteProgressSteps 
+              currentStep={step}
+              estimatedTime={step === 'creating' ? 3 : 6}
+            />
             
             <div className={cn("space-y-4", step !== 'form' && "opacity-60")}>
               <FormField

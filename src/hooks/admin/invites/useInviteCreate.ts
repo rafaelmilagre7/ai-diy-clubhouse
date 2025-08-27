@@ -171,84 +171,102 @@ const sendInviteNotification = async ({
         method: 'whatsapp'
       };
     } else if (channelPreference === 'both' && phone) {
-      // Enviar via ambos os canais
+      // Enviar via ambos os canais EM PARALELO com timeout individualizado
+      console.log("🚀 [INVITE-SEND] Iniciando envios paralelos (email + WhatsApp)");
+
+      const emailPromise = supabase.functions.invoke('send-invite-email', {
+        body: {
+          email,
+          inviteUrl,
+          roleName,
+          expiresAt,
+          senderName,
+          notes,
+          inviteId,
+          forceResend: true
+        }
+      });
+
+      const whatsappPromise = supabase.functions.invoke('send-whatsapp-invite', {
+        body: {
+          phone,
+          inviteUrl,
+          roleName,
+          expiresAt,
+          senderName,
+          notes,
+          inviteId,
+          email
+        }
+      });
+
+      // Timeout individualizado de 5s para cada canal
+      const emailWithTimeout = Promise.race([
+        emailPromise,
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout email (5s)')), 5000)
+        )
+      ]);
+
+      const whatsappWithTimeout = Promise.race([
+        whatsappPromise,
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout WhatsApp (5s)')), 5000)
+        )
+      ]);
+
+      // Executar ambos em paralelo
+      const results = await Promise.allSettled([emailWithTimeout, whatsappWithTimeout]);
+      
+      const [emailResult, whatsappResult] = results;
       let emailSuccess = false;
       let whatsappSuccess = false;
-      let lastError = '';
+      let errors: string[] = [];
 
-      // Tentar email primeiro
-      try {
-        const { data: emailData, error: emailError } = await supabase.functions.invoke('send-invite-email', {
-          body: {
-            email,
-            inviteUrl,
-            roleName,
-            expiresAt,
-            senderName,
-            notes,
-            inviteId,
-            forceResend: true
-          }
-        });
-
-        if (!emailError && emailData.success) {
+      // Verificar resultado do email
+      if (emailResult.status === 'fulfilled') {
+        const { data: emailData, error: emailError } = emailResult.value as any;
+        if (!emailError && emailData?.success) {
           emailSuccess = true;
+          console.log("✅ [PARALLEL] Email enviado com sucesso");
         } else {
-          lastError += `Email: ${emailData?.error || emailError?.message || 'Erro desconhecido'}; `;
+          errors.push(`Email: ${emailData?.error || emailError?.message || 'Falha no envio'}`);
+          console.warn("⚠️ [PARALLEL] Falha no email:", emailData?.error || emailError?.message);
         }
-      } catch (err: any) {
-        lastError += `Email: ${err.message}; `;
+      } else {
+        errors.push(`Email: ${emailResult.reason?.message || 'Erro desconhecido'}`);
+        console.warn("⚠️ [PARALLEL] Email rejeitado:", emailResult.reason?.message);
       }
 
-      // Tentar WhatsApp
-      try {
-        console.log("📱 [DEBUG] Iniciando chamada WhatsApp com dados:", {
-          phone,
-          inviteUrl: inviteUrl.substring(0, 50) + "...",
-          roleName,
-          email
-        });
-
-        const { data: whatsappData, error: whatsappError } = await supabase.functions.invoke('send-whatsapp-invite', {
-          body: {
-            phone,
-            inviteUrl,
-            roleName,
-            expiresAt,
-            senderName,
-            notes,
-            inviteId,
-            email
-          }
-        });
-
-        console.log("📱 [DEBUG] Resposta WhatsApp:", { 
-          data: whatsappData, 
-          error: whatsappError,
-          hasData: !!whatsappData,
-          hasError: !!whatsappError 
-        });
-
-        if (!whatsappError && whatsappData.success) {
+      // Verificar resultado do WhatsApp
+      if (whatsappResult.status === 'fulfilled') {
+        const { data: whatsappData, error: whatsappError } = whatsappResult.value as any;
+        if (!whatsappError && whatsappData?.success) {
           whatsappSuccess = true;
-          console.log("✅ [DEBUG] WhatsApp enviado com sucesso!");
+          console.log("✅ [PARALLEL] WhatsApp enviado com sucesso");
         } else {
-          console.error("❌ [DEBUG] Erro no WhatsApp:", whatsappData?.error || whatsappError?.message);
-          lastError += `WhatsApp: ${whatsappData?.error || whatsappError?.message || 'Erro desconhecido'}`;
+          errors.push(`WhatsApp: ${whatsappData?.error || whatsappError?.message || 'Falha no envio'}`);
+          console.warn("⚠️ [PARALLEL] Falha no WhatsApp:", whatsappData?.error || whatsappError?.message);
         }
-      } catch (err: any) {
-        console.error("❌ [DEBUG] Exceção no WhatsApp:", err);
-        lastError += `WhatsApp: ${err.message}`;
+      } else {
+        errors.push(`WhatsApp: ${whatsappResult.reason?.message || 'Erro desconhecido'}`);
+        console.warn("⚠️ [PARALLEL] WhatsApp rejeitado:", whatsappResult.reason?.message);
       }
 
+      // Se ambos falharam, retornar erro
       if (!emailSuccess && !whatsappSuccess) {
-        throw new Error(`Falha em ambos os canais: ${lastError}`);
+        throw new Error(`Falha em ambos os canais: ${errors.join(', ')}`);
       }
+
+      // Determinar método usado
+      const method = emailSuccess && whatsappSuccess ? 'email+whatsapp' : 
+                    emailSuccess ? 'email (WhatsApp falhou)' : 'whatsapp (Email falhou)';
+
+      console.log(`✅ [PARALLEL] Envio concluído via: ${method}`);
 
       return {
         success: true,
-        method: emailSuccess && whatsappSuccess ? 'email+whatsapp' : 
-                emailSuccess ? 'email' : 'whatsapp'
+        method
       };
     } else {
       // Enviar apenas via email (padrão)
