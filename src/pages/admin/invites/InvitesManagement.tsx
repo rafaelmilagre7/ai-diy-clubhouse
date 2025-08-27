@@ -147,6 +147,8 @@ const InvitesManagement = () => {
             </div>
             <div className="p-8">
               <BulkInviteUpload
+                roles={roles}
+                rolesLoading={rolesLoading}
                 onProceedWithContacts={(contacts) => {
                   // TODO: Implementar criação de convites em lote
                   console.log('Contacts to invite:', contacts);

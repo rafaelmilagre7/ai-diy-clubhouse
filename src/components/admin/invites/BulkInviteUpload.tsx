@@ -11,11 +11,19 @@ import { DataCleaningResults } from "./DataCleaningResults";
 import { toast } from "sonner";
 import { type ContactData, type CleanedContact } from "@/utils/contactDataCleaner";
 
+interface UserRole {
+  id: string;
+  name: string;
+  description?: string;
+}
+
 interface BulkInviteUploadProps {
+  roles: UserRole[];
+  rolesLoading?: boolean;
   onProceedWithContacts: (contacts: CleanedContact[]) => void;
 }
 
-export function BulkInviteUpload({ onProceedWithContacts }: BulkInviteUploadProps) {
+export function BulkInviteUpload({ roles, rolesLoading = false, onProceedWithContacts }: BulkInviteUploadProps) {
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [manualContacts, setManualContacts] = useState('');
   const [selectedRoleId, setSelectedRoleId] = useState<string>('');
@@ -23,12 +31,8 @@ export function BulkInviteUpload({ onProceedWithContacts }: BulkInviteUploadProp
   
   const { processContacts, clearResults, isProcessing, cleaningResult } = useContactDataCleaner();
 
-  // Dados mockados de roles - na implementação real viria de uma query
-  const availableRoles = [
-    { id: '1', name: 'Membro Club', description: 'Acesso básico à plataforma' },
-    { id: '2', name: 'Admin', description: 'Acesso completo de administrador' },
-    { id: '3', name: 'Formação', description: 'Acesso ao módulo de formação' }
-  ];
+  // Usar roles reais vindos do banco de dados
+  const availableRoles = roles || [];
 
   const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -213,17 +217,38 @@ export function BulkInviteUpload({ onProceedWithContacts }: BulkInviteUploadProp
               <Label htmlFor="role-select">Papel dos novos usuários</Label>
               <Select value={selectedRoleId} onValueChange={setSelectedRoleId}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione o papel para os convidados" />
+                  <SelectValue placeholder={
+                    rolesLoading 
+                      ? "Carregando papéis..." 
+                      : availableRoles.length > 0 
+                        ? "Selecione o papel para os convidados" 
+                        : "Nenhum papel disponível"
+                  } />
                 </SelectTrigger>
                 <SelectContent>
-                  {availableRoles.map(role => (
-                    <SelectItem key={role.id} value={role.id}>
-                      <div>
-                        <div className="font-medium">{role.name}</div>
-                        <div className="text-sm text-muted-foreground">{role.description}</div>
+                  {rolesLoading ? (
+                    <SelectItem value="" disabled>
+                      <div className="flex items-center gap-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                        <span>Carregando...</span>
                       </div>
                     </SelectItem>
-                  ))}
+                  ) : availableRoles.length > 0 ? (
+                    availableRoles.map(role => (
+                      <SelectItem key={role.id} value={role.id}>
+                        <div>
+                          <div className="font-medium">{role.name}</div>
+                          {role.description && (
+                            <div className="text-sm text-muted-foreground">{role.description}</div>
+                          )}
+                        </div>
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="" disabled>
+                      <div className="text-muted-foreground">Nenhum papel disponível</div>
+                    </SelectItem>
+                  )}
                 </SelectContent>
               </Select>
             </div>
