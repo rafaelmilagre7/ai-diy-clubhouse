@@ -28,11 +28,14 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, Mail, User, UserPlus } from 'lucide-react';
+import { Loader2, Mail, User, UserPlus, CheckCircle, Send } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/auth';
+import { useInviteCreate } from '@/hooks/admin/invites/useInviteCreate';
+import { InviteProgressSteps, type InviteStep } from '@/components/admin/invites/InviteProgressSteps';
+import { cn } from '@/lib/utils';
 
 const inviteSchema = z.object({
   email: z
@@ -63,9 +66,10 @@ export const InviteUserDialog: React.FC<InviteUserDialogProps> = ({
   onOpenChange,
   onSuccess,
 }) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [step, setStep] = useState<InviteStep>('form');
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { createInvite, isCreating } = useInviteCreate();
 
   // Atualizar a lista de roles quando o dialog for aberto
   useEffect(() => {
@@ -100,75 +104,76 @@ export const InviteUserDialog: React.FC<InviteUserDialogProps> = ({
 
   const handleSubmit = async (values: InviteFormValues) => {
     try {
-      setIsSubmitting(true);
+      setStep('creating');
+      
+      // Timeout de segurança para evitar travamentos
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Operação expirou após 30 segundos')), 30000)
+      );
+      
+      // Promise principal
+      const invitePromise = (async () => {
+        const result = await createInvite(
+          values.email.toLowerCase(),
+          values.roleId,
+          values.notes || undefined,
+          '7 days',
+          values.whatsappNumber || undefined,
+          'email'
+        );
+        
+        if (!result) {
+          throw new Error('Falha ao criar convite');
+        }
+        
+        return result;
+      })();
+      
+      // Race entre timeout e criação do convite
+      const result = await Promise.race([invitePromise, timeoutPromise]);
 
-      // Verificar se o email já existe
-      const { data: existingUser, error: checkError } = await supabase
-        .from('profiles')
-        .select('email')
-        .eq('email', values.email.toLowerCase())
-        .maybeSingle();
-
-      if (checkError) throw checkError;
-
-      if (existingUser) {
-        toast.error('Este email já está cadastrado na plataforma');
-        return;
-      }
-
-      // Calcular data de expiração (7 dias)
-      const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + 7);
-
-      // Gerar token único
-      const token = crypto.randomUUID();
-
-      // Criar convite
-      const { data: inviteData, error: inviteError } = await supabase
-        .from('invites')
-        .insert({
-          email: values.email.toLowerCase(),
-          role_id: values.roleId,
-          token,
-          expires_at: expiresAt.toISOString(),
-          notes: values.notes || null,
-          whatsapp_number: values.whatsappNumber || null,
-          preferred_channel: 'email',
-          created_by: user?.id,
-        })
-        .select()
-        .single();
-
-      if (inviteError) throw inviteError;
-
-      // Enviar email de convite via edge function
-      const { error: emailError } = await supabase.functions.invoke('send-invite-email', {
-        body: { inviteId: inviteData.id }
-      });
-
-      if (emailError) {
-        console.error('Erro ao enviar email:', emailError);
-        // Não falha a operação principal se o email não for enviado
-        toast.warning('Convite criado, mas houve problema ao enviar o email. Verifique com o usuário.');
+      if (result) {
+        setStep('success');
+        
+        // Mostrar sucesso por um momento antes de fechar
+        setTimeout(() => {
+          form.reset();
+          setStep('form');
+          onOpenChange(false);
+          onSuccess?.();
+        }, 1200);
       } else {
-        toast.success('Convite enviado com sucesso!');
+        throw new Error('Resultado inválido');
       }
-      form.reset();
-      onOpenChange(false);
-      onSuccess?.();
-
     } catch (error: any) {
-      console.error('Erro ao enviar convite:', error);
-      toast.error(`Erro ao enviar convite: ${error.message}`);
-    } finally {
-      setIsSubmitting(false);
+      console.error('❌ [INVITE-DIALOG] Erro no processo:', error);
+      setStep('error');
+      
+      // Voltar ao form após mostrar erro
+      setTimeout(() => {
+        setStep('form');
+      }, 3000);
+      
+      toast.error('Erro ao criar convite', {
+        description: error.message || 'Tente novamente em alguns instantes.'
+      });
     }
   };
 
   const handleCancel = () => {
-    form.reset();
-    onOpenChange(false);
+    if (step !== 'creating' && step !== 'sending') {
+      form.reset();
+      setStep('form');
+      onOpenChange(false);
+    }
   };
+
+  // Reset step quando dialog abre/fecha
+  useEffect(() => {
+    if (!open) {
+      setStep('form');
+    }
+  }, [open]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -185,7 +190,10 @@ export const InviteUserDialog: React.FC<InviteUserDialogProps> = ({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-            <div className="space-y-4">
+            {/* Indicador de progresso */}
+            <InviteProgressSteps currentStep={step} />
+            
+            <div className={cn("space-y-4", step !== 'form' && "opacity-60")}>
               <FormField
                 control={form.control}
                 name="email"
@@ -200,7 +208,7 @@ export const InviteUserDialog: React.FC<InviteUserDialogProps> = ({
                         {...field}
                         type="email"
                         placeholder="usuario@exemplo.com"
-                        disabled={isSubmitting}
+                        disabled={isCreating}
                       />
                     </FormControl>
                     <FormMessage />
@@ -220,7 +228,7 @@ export const InviteUserDialog: React.FC<InviteUserDialogProps> = ({
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
-                      disabled={isSubmitting || loadingRoles}
+                      disabled={isCreating || loadingRoles}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -257,7 +265,7 @@ export const InviteUserDialog: React.FC<InviteUserDialogProps> = ({
                       <Input
                         {...field}
                         placeholder="(11) 99999-9999"
-                        disabled={isSubmitting}
+                        disabled={isCreating}
                       />
                     </FormControl>
                     <FormMessage />
@@ -276,7 +284,7 @@ export const InviteUserDialog: React.FC<InviteUserDialogProps> = ({
                         {...field}
                         placeholder="Informações adicionais sobre o convite..."
                         rows={3}
-                        disabled={isSubmitting}
+                        disabled={isCreating}
                       />
                     </FormControl>
                     <FormMessage />
@@ -290,15 +298,25 @@ export const InviteUserDialog: React.FC<InviteUserDialogProps> = ({
                 type="button"
                 variant="outline"
                 onClick={handleCancel}
-                disabled={isSubmitting}
+                disabled={isCreating}
               >
                 Cancelar
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? (
+              <Button type="submit" disabled={isCreating}>
+                {step === 'creating' ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Enviando...
+                    Criando convite...
+                  </>
+                ) : step === 'sending' ? (
+                  <>
+                    <Send className="mr-2 h-4 w-4" />
+                    Enviando email...
+                  </>
+                ) : step === 'success' ? (
+                  <>
+                    <CheckCircle className="mr-2 h-4 w-4" />
+                    Enviado com sucesso!
                   </>
                 ) : (
                   <>

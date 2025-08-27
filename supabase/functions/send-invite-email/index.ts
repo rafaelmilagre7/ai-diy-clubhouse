@@ -5,6 +5,8 @@ import { renderAsync } from 'npm:@react-email/components@0.0.22';
 import React from 'npm:react@18.3.1';
 import { InviteEmail } from './_templates/invite-email.tsx';
 
+declare const EdgeRuntime: { waitUntil: (promise: Promise<any>) => void };
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -95,40 +97,52 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('✅ [SEND-INVITE-EMAIL] Email enviado com sucesso:', emailResult?.id);
 
-    // Registrar delivery no banco
-    const { error: deliveryError } = await supabase
-      .from('invite_deliveries')
-      .insert({
-        invite_id: body.inviteId,
-        channel: 'email',
-        status: 'sent',
-        provider_id: emailResult?.id,
-        sent_at: new Date().toISOString(),
-        metadata: {
-          resend_id: emailResult?.id,
-          recipient: body.email,
-          template: 'invite-email',
+    // Mover operações de log para background para resposta imediata
+    EdgeRuntime.waitUntil(
+      (async () => {
+        try {
+          // Registrar delivery no banco
+          const { error: deliveryError } = await supabase
+            .from('invite_deliveries')
+            .insert({
+              invite_id: body.inviteId,
+              channel: 'email',
+              status: 'sent',
+              provider_id: emailResult?.id,
+              sent_at: new Date().toISOString(),
+              metadata: {
+                resend_id: emailResult?.id,
+                recipient: body.email,
+                template: 'invite-email',
+              }
+            });
+
+          if (deliveryError) {
+            console.warn('⚠️ [SEND-INVITE-EMAIL] Erro ao registrar delivery:', deliveryError);
+          }
+
+          // Atualizar estatísticas do convite
+          const { error: updateError } = await supabase
+            .from('invites')
+            .update({
+              send_attempts: 1,
+              last_sent_at: new Date().toISOString()
+            })
+            .eq('id', body.inviteId);
+
+          if (updateError) {
+            console.warn('⚠️ [SEND-INVITE-EMAIL] Erro ao atualizar convite:', updateError);
+          }
+
+          console.log('✅ [SEND-INVITE-EMAIL] Logs e estatísticas atualizados em background');
+        } catch (bgError: any) {
+          console.error('❌ [SEND-INVITE-EMAIL] Erro em background task:', bgError);
         }
-      });
+      })()
+    );
 
-    if (deliveryError) {
-      console.warn('⚠️ [SEND-INVITE-EMAIL] Erro ao registrar delivery:', deliveryError);
-    }
-
-    // Atualizar estatísticas do convite
-    const { error: updateError } = await supabase
-      .from('invites')
-      .update({
-        send_attempts: 1,
-        last_sent_at: new Date().toISOString()
-      })
-      .eq('id', body.inviteId);
-
-    if (updateError) {
-      console.warn('⚠️ [SEND-INVITE-EMAIL] Erro ao atualizar convite:', updateError);
-    }
-
-    return new Response(
+    // Resposta imediata após sucesso do Resend para melhor UX
+    const immediateResponse = new Response(
       JSON.stringify({
         success: true,
         messageId: emailResult?.id,
@@ -140,6 +154,8 @@ const handler = async (req: Request): Promise<Response> => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
+
+    return immediateResponse;
 
   } catch (error: any) {
     console.error('❌ [SEND-INVITE-EMAIL] Erro geral:', error);

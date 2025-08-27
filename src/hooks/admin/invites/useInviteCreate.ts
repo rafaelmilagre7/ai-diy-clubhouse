@@ -54,8 +54,10 @@ export const useInviteCreate = () => {
 
       console.log("✅ [INVITE-CREATE] Convite criado:", data);
 
-      // Gerar URL padronizada
+      // Gerar URL padronizada  
       const inviteUrl = generateInviteUrl(data.token);
+      
+      console.log("📤 [INVITE-CREATE] Iniciando envio em paralelo...");
       
       // Buscar nome do papel para o envio
       const { data: roleData } = await supabase
@@ -64,7 +66,7 @@ export const useInviteCreate = () => {
         .eq('id', roleId)
         .single();
 
-      // Enviar convite via email/WhatsApp
+      // Enviar convite via email/WhatsApp (otimizado para resposta rápida)
       const sendResult = await sendInviteNotification({
         email,
         phone,
