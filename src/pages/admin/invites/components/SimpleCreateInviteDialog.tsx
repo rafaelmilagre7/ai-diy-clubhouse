@@ -144,6 +144,7 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
                   className: "h-9 bg-gray-800 border-gray-700"
                 }}
                 className="phone-input-container"
+                preferredCountries={['br', 'us', 'ar', 'cl', 'co', 'mx']}
               />
               <p className="text-xs text-gray-400">
                 Selecione o país e digite o número (necessário para WhatsApp)
