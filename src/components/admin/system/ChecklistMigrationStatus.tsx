@@ -25,8 +25,8 @@ const ChecklistMigrationStatus: React.FC = () => {
       // Verificar dados na tabela unificada
       const { data: unifiedData } = await supabase
         .from('unified_checklists')
-        .select('checklist_type, is_template')
-        .limit(100);
+        .select('checklist_type, is_template, solution_id')
+        .limit(1000);
 
       // Contar por tipo
       const stats = unifiedData?.reduce((acc, item) => {
@@ -35,11 +35,22 @@ const ChecklistMigrationStatus: React.FC = () => {
         return acc;
       }, {} as Record<string, number>) || {};
 
+      // Verificar quantas soluções únicas têm templates
+      const templatesPerSolution = unifiedData?.filter(item => item.is_template) || [];
+      const uniqueSolutionsWithTemplates = new Set(templatesPerSolution.map(t => t.solution_id)).size;
+
+      // Verificar quantas soluções únicas têm user checklists
+      const userChecklistsPerSolution = unifiedData?.filter(item => !item.is_template) || [];
+      const uniqueSolutionsWithUserChecklists = new Set(userChecklistsPerSolution.map(u => u.solution_id)).size;
+
       return {
         oldImplementationCount: oldImplementation?.length || 0,
         oldUserChecklistsCount: oldUserChecklists?.length || 0,
         unifiedStats: stats,
         totalUnified: unifiedData?.length || 0,
+        uniqueSolutionsWithTemplates,
+        uniqueSolutionsWithUserChecklists,
+        templatesConsistency: uniqueSolutionsWithUserChecklists === uniqueSolutionsWithTemplates,
         migrationComplete: (unifiedData?.length || 0) > 0
       };
     }
@@ -121,10 +132,16 @@ const ChecklistMigrationStatus: React.FC = () => {
         <div className={`p-4 rounded-lg ${isSuccess ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'}`}>
           {isSuccess ? (
             <div>
-              <div className="font-medium mb-1">✅ Migração Concluída com Sucesso!</div>
-              <div className="text-sm">
-                O sistema agora usa uma única tabela unificada para todos os checklists. 
-                Os dados da Anna e outros usuários foram preservados e migrados corretamente.
+              <div className="font-medium mb-1">✅ Migração e Correção Concluída com Sucesso!</div>
+              <div className="text-sm space-y-1">
+                <div>• Sistema unificado implementado com {migrationStatus?.totalUnified} checklists</div>
+                <div>• {migrationStatus?.uniqueSolutionsWithTemplates} soluções com templates criados</div>
+                <div>• {migrationStatus?.uniqueSolutionsWithUserChecklists} soluções com checklists de usuários</div>
+                {migrationStatus?.templatesConsistency ? (
+                  <div className="text-green-700 font-medium">• ✅ Todas as soluções com checklists têm templates (problema corrigido)</div>
+                ) : (
+                  <div className="text-red-700 font-medium">• ⚠️ Algumas soluções ainda não têm templates</div>
+                )}
               </div>
             </div>
           ) : (
@@ -138,9 +155,9 @@ const ChecklistMigrationStatus: React.FC = () => {
         </div>
 
         <div className="text-xs text-gray-500 space-y-1">
-          <div><strong>Problema Original:</strong> Anna criou checklists que "sumiram" porque o sistema tinha duas tabelas separadas (implementation_checkpoints e user_checklists).</div>
-          <div><strong>Solução Implementada:</strong> Criação da tabela unified_checklists que centraliza todos os tipos de checklist em um local único.</div>
-          <div><strong>Benefícios:</strong> Não haverá mais confusão sobre onde os dados estão armazenados, e todos os checklists são visíveis em uma interface unificada.</div>
+          <div><strong>Problema Original:</strong> Checklists não apareciam no Admin porque soluções tinham checklists de usuários mas não tinham templates.</div>
+          <div><strong>Solução Implementada:</strong> Sistema unificado + correção automática criando templates para todas as soluções baseados nos dados existentes.</div>
+          <div><strong>Benefícios:</strong> Checklists aparecem corretamente tanto no Admin quanto no dashboard de Membros, com dados consistentes.</div>
         </div>
       </CardContent>
     </Card>
