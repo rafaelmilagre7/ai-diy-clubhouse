@@ -6,14 +6,20 @@ import { useInvitesList } from "@/hooks/admin/invites/useInvitesList";
 import SimpleCreateInviteDialog from "./components/SimpleCreateInviteDialog";
 import SimpleInvitesTab from "./components/SimpleInvitesTab";
 import { BulkInviteUpload } from "@/components/admin/invites/BulkInviteUpload";
+import { BulkInviteProgress } from "@/components/admin/invites/BulkInviteProgress";
+import { useInviteBulkCreate } from "@/hooks/admin/invites/useInviteBulkCreate";
+import { type CleanedContact } from "@/utils/contactDataCleaner";
 import { Mail, Users } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "sonner";
 
 const InvitesManagement = () => {
   useDocumentTitle("Gerenciar Convites | Admin");
   
   const { roles, loading: rolesLoading } = usePermissions();
   const { invites, loading: invitesLoading, fetchInvites } = useInvitesList();
+  const { createBulkInvites, progress, resetProgress, isCreating } = useInviteBulkCreate();
+  const [showProgressModal, setShowProgressModal] = useState(false);
 
   useEffect(() => {
     fetchInvites();
@@ -149,15 +155,40 @@ const InvitesManagement = () => {
               <BulkInviteUpload
                 roles={roles}
                 rolesLoading={rolesLoading}
-                onProceedWithContacts={(contacts) => {
-                  // TODO: Implementar criação de convites em lote
-                  console.log('Contacts to invite:', contacts);
+                onProceedWithContacts={async (contacts, roleId) => {
+                  if (!roleId) {
+                    toast.error('Selecione um papel para os convites');
+                    return;
+                  }
+
+                  setShowProgressModal(true);
+                  
+                  const result = await createBulkInvites(contacts, roleId);
+                  
+                  if (result) {
+                    // Atualizar lista de convites após o processamento
+                    fetchInvites();
+                  }
                 }}
               />
             </div>
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Modal de Progresso */}
+      <BulkInviteProgress
+        isOpen={showProgressModal}
+        onClose={() => {
+          setShowProgressModal(false);
+          resetProgress();
+        }}
+        progress={progress}
+        onCancel={() => {
+          // TODO: Implementar cancelamento se necessário
+          console.log('Cancel bulk invite requested');
+        }}
+      />
     </div>
   );
 };

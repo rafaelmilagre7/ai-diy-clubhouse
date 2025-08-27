@@ -20,7 +20,7 @@ interface UserRole {
 interface BulkInviteUploadProps {
   roles: UserRole[];
   rolesLoading?: boolean;
-  onProceedWithContacts: (contacts: CleanedContact[]) => void;
+  onProceedWithContacts: (contacts: CleanedContact[], roleId: string) => void;
 }
 
 export function BulkInviteUpload({ roles, rolesLoading = false, onProceedWithContacts }: BulkInviteUploadProps) {
@@ -173,8 +173,12 @@ export function BulkInviteUpload({ roles, rolesLoading = false, onProceedWithCon
   };
 
   const handleProceedWithContacts = (contacts: CleanedContact[]) => {
+    if (!selectedRoleId) {
+      toast.error('Selecione um papel para os convites');
+      return;
+    }
     clearResults();
-    onProceedWithContacts(contacts);
+    onProceedWithContacts(contacts, selectedRoleId);
   };
 
   const downloadSampleCsv = () => {
