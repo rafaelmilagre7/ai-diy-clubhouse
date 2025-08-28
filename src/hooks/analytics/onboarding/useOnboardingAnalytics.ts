@@ -154,7 +154,7 @@ export const useOnboardingAnalytics = (timeRange: string = '30d') => {
 
         onboardingData.forEach(user => {
           const professional = user.professional_info;
-          if (professional) {
+          if (professional && typeof professional === 'object' && Object.keys(professional).length > 0) {
             // Sector
             const sector = professional.company_sector || 'Não informado';
             sectorCounts[sector] = (sectorCounts[sector] || 0) + 1;
@@ -180,7 +180,7 @@ export const useOnboardingAnalytics = (timeRange: string = '30d') => {
 
         onboardingData.forEach(user => {
           const aiExp = user.ai_experience;
-          if (aiExp) {
+          if (aiExp && typeof aiExp === 'object' && Object.keys(aiExp).length > 0) {
             // Experience level
             const level = aiExp.experience_level || 'Não informado';
             experienceLevelCounts[level] = (experienceLevelCounts[level] || 0) + 1;
@@ -203,15 +203,17 @@ export const useOnboardingAnalytics = (timeRange: string = '30d') => {
 
         onboardingData.forEach(user => {
           const goals = user.goals_info;
-          if (goals) {
+          if (goals && typeof goals === 'object' && Object.keys(goals).length > 0) {
             // Primary goal
             const primaryGoal = goals.primary_goal || 'Não informado';
             primaryGoalCounts[primaryGoal] = (primaryGoalCounts[primaryGoal] || 0) + 1;
 
             // Priority areas (array field)
-            if (Array.isArray(goals.priority_areas)) {
+            if (Array.isArray(goals.priority_areas) && goals.priority_areas.length > 0) {
               goals.priority_areas.forEach((area: string) => {
-                priorityAreaCounts[area] = (priorityAreaCounts[area] || 0) + 1;
+                if (area && area.trim()) {
+                  priorityAreaCounts[area] = (priorityAreaCounts[area] || 0) + 1;
+                }
               });
             }
 
@@ -233,11 +235,13 @@ export const useOnboardingAnalytics = (timeRange: string = '30d') => {
 
         onboardingData.forEach(user => {
           const preferences = user.personalization;
-          if (preferences) {
+          if (preferences && typeof preferences === 'object' && Object.keys(preferences).length > 0) {
             // Preferred content (array field)
-            if (Array.isArray(preferences.preferred_content)) {
+            if (Array.isArray(preferences.preferred_content) && preferences.preferred_content.length > 0) {
               preferences.preferred_content.forEach((content: string) => {
-                contentTypeCounts[content] = (contentTypeCounts[content] || 0) + 1;
+                if (content && content.trim()) {
+                  contentTypeCounts[content] = (contentTypeCounts[content] || 0) + 1;
+                }
               });
             }
 
@@ -280,7 +284,8 @@ export const useOnboardingAnalytics = (timeRange: string = '30d') => {
         // Helper function to create distribution arrays
         const createDistribution = (counts: Record<string, number>) => {
           const total = Object.values(counts).reduce((sum, count) => sum + count, 0);
-          return Object.entries(counts)
+          const distribution = Object.entries(counts)
+            .filter(([name, value]) => name !== 'Não informado' || value > 0) // Keep "Não informado" only if it has values
             .map(([name, value]) => ({
               name,
               value,
@@ -288,6 +293,9 @@ export const useOnboardingAnalytics = (timeRange: string = '30d') => {
             }))
             .sort((a, b) => b.value - a.value)
             .slice(0, 10); // Top 10
+          
+          console.log('Distribution created:', { total, distribution });
+          return distribution;
         };
 
         // Weekly trends (simplified - would need more complex date grouping for real implementation)
