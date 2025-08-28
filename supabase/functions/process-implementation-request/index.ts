@@ -178,23 +178,55 @@ serve(async (req) => {
     let pipedriveData: PipedriveResponse | null = null;
     
     // 🔍 DEBUG: Verificação detalhada das variáveis de ambiente
-    console.log('🔍 PIPEDRIVE ENVIRONMENT DEBUG:');
-    console.log('- Variáveis de ambiente disponíveis:', Object.keys(Deno.env.toObject()).length);
-    console.log('- PIPEDRIVE_API_TOKEN existe:', 'PIPEDRIVE_API_TOKEN' in Deno.env.toObject());
-    console.log('- PIPEDRIVE_COMPANY_DOMAIN existe:', 'PIPEDRIVE_COMPANY_DOMAIN' in Deno.env.toObject());
+    // 🚨 FORCE NEW DEPLOYMENT - V2.1 - Debugging secrets recreation issue
+    console.log('🔍 PIPEDRIVE SECRETS DEBUG - DEPLOYMENT V2.1');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     
-    const pipedriveToken = Deno.env.get('PIPEDRIVE_API_TOKEN');
-    const pipedriveCompanyDomain = Deno.env.get('PIPEDRIVE_COMPANY_DOMAIN');
+    // Verificar se as secrets foram recriadas corretamente
+    const allEnvVars = Deno.env.toObject();
+    const pipedriveVars = Object.keys(allEnvVars).filter(k => k.includes('PIPEDRIVE'));
     
-    console.log('🔑 Token length:', pipedriveToken ? pipedriveToken.length : 0);
-    console.log('🌐 Domain value:', pipedriveCompanyDomain ? `"${pipedriveCompanyDomain}"` : 'null');
-    console.log('🔍 Token starts with:', pipedriveToken ? pipedriveToken.substring(0, 10) + '...' : 'N/A');
+    console.log('📊 ENVIRONMENT STATUS:');
+    console.log('- Total environment variables:', Object.keys(allEnvVars).length);
+    console.log('- PIPEDRIVE related vars:', pipedriveVars);
+    console.log('- All env keys containing "API":', Object.keys(allEnvVars).filter(k => k.includes('API')));
     
-    // Verificação adicional de tipos
-    console.log('🔍 Token type:', typeof pipedriveToken);
-    console.log('🔍 Domain type:', typeof pipedriveCompanyDomain);
-    console.log('🔍 Token truthy:', !!pipedriveToken);
-    console.log('🔍 Domain truthy:', !!pipedriveCompanyDomain);
+    // Tentar diferentes formas de acessar as variáveis
+    const tokenMethods = {
+      direct: Deno.env.get('PIPEDRIVE_API_TOKEN'),
+      fromObject: allEnvVars['PIPEDRIVE_API_TOKEN'],
+      withSpaces: Deno.env.get('PIPEDRIVE_API_TOKEN '),
+      withNewline: Deno.env.get('PIPEDRIVE_API_TOKEN\n'),
+      withCarriage: Deno.env.get('PIPEDRIVE_API_TOKEN\r'),
+      combined: Deno.env.get('PIPEDRIVE_API_TOKEN\r\n')
+    };
+    
+    const domainMethods = {
+      direct: Deno.env.get('PIPEDRIVE_COMPANY_DOMAIN'),
+      fromObject: allEnvVars['PIPEDRIVE_COMPANY_DOMAIN'],
+      withSpaces: Deno.env.get('PIPEDRIVE_COMPANY_DOMAIN '),
+      withNewline: Deno.env.get('PIPEDRIVE_COMPANY_DOMAIN\n'),
+      withCarriage: Deno.env.get('PIPEDRIVE_COMPANY_DOMAIN\r')
+    };
+    
+    console.log('🔑 TOKEN ACCESS METHODS:');
+    Object.entries(tokenMethods).forEach(([method, value]) => {
+      console.log(`  - ${method}:`, value ? `LENGTH=${value.length}, STARTS="${value.substring(0, 5)}..."` : 'NULL/UNDEFINED');
+    });
+    
+    console.log('🌐 DOMAIN ACCESS METHODS:');
+    Object.entries(domainMethods).forEach(([method, value]) => {
+      console.log(`  - ${method}:`, value ? `"${value}"` : 'NULL/UNDEFINED');
+    });
+    
+    // Escolher o melhor método que retornou valor
+    const pipedriveToken = tokenMethods.direct || tokenMethods.fromObject || tokenMethods.combined;
+    const pipedriveCompanyDomain = domainMethods.direct || domainMethods.fromObject;
+    
+    console.log('🎯 FINAL SELECTED VALUES:');
+    console.log('- Token selected:', pipedriveToken ? 'FOUND' : 'NOT_FOUND');
+    console.log('- Domain selected:', pipedriveCompanyDomain || 'NOT_FOUND');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     
     if (pipedriveToken && pipedriveCompanyDomain) {
       try {
