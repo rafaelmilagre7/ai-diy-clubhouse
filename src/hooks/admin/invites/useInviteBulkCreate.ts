@@ -110,7 +110,7 @@ export const useInviteBulkCreate = () => {
         .map(item => ({
           inviteId: item.inviteId!,
           email: item.contact.cleaned.email,
-          phone: item.contact.cleaned.phone,
+          whatsapp_number: item.contact.cleaned.phone,
           name: item.contact.cleaned.name,
           roleId: roleId
         }));

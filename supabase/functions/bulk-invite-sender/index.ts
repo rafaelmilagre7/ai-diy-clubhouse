@@ -14,7 +14,7 @@ interface BulkInviteRequest {
   invites: Array<{
     inviteId: string;
     email: string;
-    phone?: string;
+    whatsapp_number?: string;
     name: string;
     roleId: string;
   }>;
@@ -72,7 +72,7 @@ const handler = async (req: Request): Promise<Response> => {
         token,
         expires_at,
         email,
-        phone,
+        whatsapp_number,
         notes,
         role_id,
         user_roles!invites_role_id_fkey(name)
@@ -107,7 +107,7 @@ const handler = async (req: Request): Promise<Response> => {
         const inviteUrl = `https://app.viverdeia.ai/convite/${inviteData.token}`;
         
         // Determinar método de envio
-        const hasPhone = inviteRequest.phone && whatsappToken && whatsappPhoneId;
+        const hasPhone = inviteRequest.whatsapp_number && whatsappToken && whatsappPhoneId;
         const shouldSendWhatsApp = hasPhone;
         
         let emailSent = false;
@@ -167,7 +167,7 @@ const handler = async (req: Request): Promise<Response> => {
         // Tentar envio via WhatsApp se disponível
         if (shouldSendWhatsApp) {
           try {
-            const phoneFormatted = inviteRequest.phone!.replace(/\D/g, '');
+            const phoneFormatted = inviteRequest.whatsapp_number!.replace(/\D/g, '');
             
             const whatsappData = {
               messaging_product: "whatsapp",
