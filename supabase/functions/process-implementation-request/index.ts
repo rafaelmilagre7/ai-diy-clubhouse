@@ -159,7 +159,73 @@ serve(async (req) => {
         console.log('🔍 Iniciando criação do deal no Pipedrive...');
         console.log('Token disponível:', !!pipedriveToken);
         console.log('Domain disponível:', pipedriveCompanyDomain);
-        console.log('Usando stage_id fixo: 6');
+        
+        // Buscar o pipeline "inside sales viver de ia" e stage "oportunidade"
+        console.log('📋 Buscando pipelines...');
+        const pipelinesResponse = await fetch(`https://${pipedriveCompanyDomain}.pipedrive.com/api/v1/pipelines?api_token=${pipedriveToken}`);
+        const pipelinesData = await pipelinesResponse.json();
+        
+        console.log('Pipelines response status:', pipelinesResponse.status);
+        console.log('Pipelines encontrados:', pipelinesData.data?.length || 0);
+        
+        let pipelineId = null;
+        let stageId = null;
+        let pipelineName = '';
+        let stageName = '';
+        
+        if (pipelinesData.success && pipelinesData.data) {
+          // Encontrar pipeline "inside sales viver de ia" (busca flexível)
+          const targetPipeline = pipelinesData.data.find((p: any) => {
+            const name = p.name.toLowerCase();
+            return name.includes('inside sales') && name.includes('viver de ia');
+          });
+          
+          console.log('Pipeline alvo encontrado:', targetPipeline);
+          
+          if (targetPipeline) {
+            pipelineId = targetPipeline.id;
+            pipelineName = targetPipeline.name;
+            console.log(`✅ Pipeline encontrado: "${pipelineName}" (ID: ${pipelineId})`);
+            
+            // Buscar stages do pipeline
+            console.log('🎯 Buscando stages do pipeline...');
+            const stagesResponse = await fetch(`https://${pipedriveCompanyDomain}.pipedrive.com/api/v1/stages?pipeline_id=${pipelineId}&api_token=${pipedriveToken}`);
+            const stagesData = await stagesResponse.json();
+            
+            console.log('Stages response status:', stagesResponse.status);
+            console.log('Stages encontrados:', stagesData.data?.length || 0);
+            
+            if (stagesData.success && stagesData.data) {
+              // Encontrar stage "oportunidade"
+              const targetStage = stagesData.data.find((s: any) => 
+                s.name.toLowerCase().includes('oportunidade')
+              );
+              
+              console.log('Stage alvo encontrado:', targetStage);
+              
+              if (targetStage) {
+                stageId = targetStage.id;
+                stageName = targetStage.name;
+                console.log(`✅ Stage encontrado: "${stageName}" (ID: ${stageId})`);
+              } else {
+                console.log('⚠️ Stage "oportunidade" não encontrado, listando stages disponíveis:');
+                stagesData.data.forEach((s: any) => console.log(`- ${s.name} (ID: ${s.id})`));
+              }
+            }
+          } else {
+            console.log('⚠️ Pipeline "inside sales viver de ia" não encontrado, listando pipelines disponíveis:');
+            pipelinesData.data.forEach((p: any) => console.log(`- ${p.name} (ID: ${p.id})`));
+          }
+        } else {
+          console.error('❌ Erro na resposta dos pipelines:', pipelinesData);
+        }
+        
+        console.log('🔧 Pipedrive IDs para criação do deal:', { 
+          pipelineId, 
+          stageId,
+          pipelineName: pipelineName || 'não encontrado',
+          stageName: stageName || 'não encontrado'
+        });
         
         const dealPayload = {
           title: `Projeto | Plataforma do Club | ${requestData.userName}`,
@@ -167,7 +233,8 @@ serve(async (req) => {
           currency: 'BRL',
           status: 'open',
           visible_to: '3',
-          stage_id: 6,
+          ...(pipelineId && { pipeline_id: pipelineId }),
+          ...(stageId && { stage_id: stageId }),
           person_id: null,
           org_id: null
         };
@@ -231,7 +298,7 @@ serve(async (req) => {
               },
               {
                 name: "⚡ STATUS",
-                value: `🆔 \`${implementationRequest.id}\`\n⏰ ${new Date().toLocaleString('pt-BR')}\n📍 Pipeline: Inside Sales → Qualificado`,
+                value: `🆔 \`${implementationRequest.id}\`\n⏰ ${new Date().toLocaleString('pt-BR')}\n📍 Pipeline: ${pipelineName || 'Padrão'} → ${stageName || 'Oportunidade'}`,
                 inline: false
               }
             ],
