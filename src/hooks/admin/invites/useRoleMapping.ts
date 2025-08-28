@@ -67,7 +67,22 @@ export const useRoleMapping = () => {
   };
 
   const getAvailableRoles = (): string[] => {
-    return Object.keys(roleMapping);
+    const availableRoles = Object.keys(roleMapping);
+    console.log('🔑 [ROLE-MAPPING] getAvailableRoles chamado:', {
+      loading,
+      roleMapping,
+      availableRoles,
+      roleCount: roles.length
+    });
+    
+    // Se ainda está carregando ou roleMapping vazio, retornar lista padrão
+    if (loading || availableRoles.length === 0) {
+      const fallbackRoles = ['admin', 'convidado', 'hands_on', 'lovable_course'];
+      console.log('⚠️ [ROLE-MAPPING] Usando fallback roles:', fallbackRoles);
+      return fallbackRoles;
+    }
+    
+    return availableRoles;
   };
 
   return {

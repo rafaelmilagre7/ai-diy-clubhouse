@@ -114,7 +114,14 @@ class ContactDataCleaner {
    */
   private validateRole(role: string, validRoles?: string[]): boolean {
     const defaultValidRoles = ['admin', 'convidado', 'hands_on', 'lovable_course'];
-    const rolesToCheck = validRoles || defaultValidRoles;
+    const rolesToCheck = validRoles && validRoles.length > 0 ? validRoles : defaultValidRoles;
+    
+    console.log('🔍 [CONTACT-CLEANER] Validando papel:', {
+      role: role.toLowerCase(),
+      rolesToCheck,
+      isValid: rolesToCheck.includes(role.toLowerCase())
+    });
+    
     return rolesToCheck.includes(role.toLowerCase());
   }
   
