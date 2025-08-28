@@ -115,6 +115,15 @@ serve(async (req) => {
 
     console.log('User authenticated:', user.id);
 
+    // 🟦 [1/5] INICIANDO: Salvamento da solicitação no banco
+    console.log('🟦 [1/5] INICIANDO: Salvamento da solicitação no banco');
+    console.log('📋 Dados recebidos:', {
+      solutionId: requestData.solutionId,
+      userName: requestData.userName,
+      userEmail: requestData.userEmail,
+      solutionTitle: requestData.solutionTitle
+    });
+
     // 1. Salvar solicitação no banco de dados
     const { data: implementationRequest, error: dbError } = await supabase
       .from('implementation_requests')
@@ -147,13 +156,23 @@ serve(async (req) => {
       );
     }
 
-    console.log('Implementation request saved:', implementationRequest.id);
+    console.log('🟩 [1/5] SUCESSO: Solicitação salva no banco - ID:', implementationRequest.id);
 
+    // 🟦 [2/5] INICIANDO: Criação do deal no Pipedrive
+    console.log('🟦 [2/5] INICIANDO: Criação do deal no Pipedrive');
+    
     // Declarar variáveis no escopo global da função (para usar no Pipedrive e Discord)
     let pipelineId: number = 2;                    // Valor padrão
     let stageId: number = 6;                       // Valor padrão  
     let pipelineName: string = 'Pipeline Padrão';  // Valor padrão
     let stageName: string = 'Oportunidade';        // Valor padrão
+    
+    console.log('📊 Estado inicial das variáveis globais:', {
+      pipelineId,
+      stageId,
+      pipelineName,
+      stageName
+    });
 
     // 2. Criar deal no Pipedrive
     let pipedriveData: PipedriveResponse | null = null;
@@ -290,28 +309,59 @@ serve(async (req) => {
         }
 
         if (pipedriveData?.success && pipedriveData.data) {
+          console.log('🎉 DEAL CRIADA COM SUCESSO!');
+          console.log('💰 Deal ID capturado:', pipedriveData.data.id);
+          console.log('📋 Deal title:', pipedriveData.data.title);
+          console.log('📊 Deal data completa:', JSON.stringify(pipedriveData.data, null, 2));
+          
           // Atualizar registro com ID do Pipedrive
-          await supabase
+          console.log('💾 Salvando Deal ID no banco...');
+          const updateResult = await supabase
             .from('implementation_requests')
             .update({ 
               pipedrive_deal_id: pipedriveData.data.id.toString(),
               metadata: {
                 ...implementationRequest.metadata,
                 pipedrive_created: true,
-                pipedrive_deal_title: pipedriveData.data.title
+                pipedrive_deal_title: pipedriveData.data.title,
+                pipedrive_deal_id_saved: pipedriveData.data.id
               }
             })
             .eq('id', implementationRequest.id);
           
-          console.log('Pipedrive deal created:', pipedriveData.data.id);
+          console.log('💾 Resultado do salvamento no banco:', updateResult);
+          console.log('🟩 [2/5] SUCESSO: Deal criada - ID:', pipedriveData.data.id);
+        } else {
+          console.log('❌ [2/5] FALHA: Erro na criação da deal');
+          console.log('📋 Response data:', pipedriveData);
         }
       } catch (pipedriveError) {
-        console.error('Pipedrive error:', pipedriveError);
+        console.error('❌ [2/5] ERRO: Falha no Pipedrive:', pipedriveError);
+        console.error('❌ Stack trace:', pipedriveError.stack);
+        console.log('⚠️ [2/5] CONTINUANDO: Processo continuará sem Pipedrive');
         // Não falhar a requisição por erro no Pipedrive
       }
+    } else {
+      console.log('⚠️ [2/5] PULADO: Token ou domínio do Pipedrive não configurados');
+      console.log('📊 Estado final das variáveis (valores padrão):', {
+        pipelineId,
+        stageId,
+        pipelineName,
+        stageName
+      });
     }
+    
+    console.log('📊 Estado das variáveis antes do Discord:', {
+      pipelineId,
+      stageId,
+      pipelineName,
+      stageName,
+      pipedriveSuccess: !!pipedriveData?.success,
+      dealId: pipedriveData?.data?.id || 'N/A'
+    });
 
-    // 3. Enviar notificação para Discord
+    // 🟦 [3/5] INICIANDO: Envio de notificação Discord
+    console.log('🟦 [3/5] INICIANDO: Envio de notificação Discord');
     let discordSent = false;
     const discordWebhookUrl = Deno.env.get('DISCORD_WEBHOOK_URL');
     
@@ -351,15 +401,19 @@ serve(async (req) => {
         };
 
         if (pipedriveData?.success && pipedriveData.data) {
+          console.log('💼 Adicionando campo Deal ID ao Discord:', pipedriveData.data.id);
           discordData.embeds[0].fields.push({
             name: "💼 Pipedrive Deal",
             value: `Deal #${pipedriveData.data.id} criado`,
             inline: false
           });
+        } else {
+          console.log('⚠️ Sem deal ID para adicionar ao Discord');
         }
 
         console.log('📤 Discord payload sendo enviado:', JSON.stringify(discordData, null, 2));
 
+        console.log('🌐 Enviando requisição ao Discord...');
         const discordResponse = await fetch(discordWebhookUrl, {
           method: 'POST',
           headers: {
@@ -376,21 +430,31 @@ serve(async (req) => {
 
         if (discordResponse.ok) {
           discordSent = true;
-          console.log('✅ Discord notification sent successfully');
+          console.log('🟩 [3/5] SUCESSO: Notificação Discord enviada');
         } else {
-          console.error('❌ Discord response error:', discordResponseText);
+          console.error('❌ [3/5] FALHA: Erro na resposta do Discord:', discordResponseText);
         }
       } catch (discordError) {
-        console.error('❌ Discord error:', discordError);
-        console.error('❌ Discord error stack:', discordError.stack);
+        console.error('❌ [3/5] ERRO: Falha no Discord:', discordError);
+        console.error('❌ Stack trace:', discordError.stack);
+        console.log('⚠️ [3/5] CONTINUANDO: Processo continuará sem Discord');
         // Não falhar a requisição por erro no Discord
       }
     } else {
-      console.log('⚠️ Discord webhook URL não configurada');
+      console.log('⚠️ [3/5] PULADO: Discord webhook URL não configurada');
     }
 
+    // 🟦 [4/5] INICIANDO: Atualização final do status
+    console.log('🟦 [4/5] INICIANDO: Atualização final do status');
+    console.log('📊 Resumo do processamento:', {
+      implementationRequestId: implementationRequest.id,
+      pipedriveSuccess: !!pipedriveData?.success,
+      pipedriveId: pipedriveData?.data?.id || null,
+      discordSent: discordSent
+    });
+
     // 4. Atualizar status final
-    await supabase
+    const finalUpdateResult = await supabase
       .from('implementation_requests')
       .update({ 
         status: 'completed',
@@ -399,25 +463,37 @@ serve(async (req) => {
           ...implementationRequest.metadata,
           pipedrive_success: !!pipedriveData?.success,
           discord_sent: discordSent,
-          processing_completed_at: new Date().toISOString()
+          processing_completed_at: new Date().toISOString(),
+          final_deal_id: pipedriveData?.data?.id || null
         }
       })
       .eq('id', implementationRequest.id);
+    
+    console.log('💾 Resultado da atualização final:', finalUpdateResult);
+    console.log('🟩 [4/5] SUCESSO: Status atualizado para completed');
+
+    // 🟦 [5/5] FINALIZANDO: Preparando resposta de sucesso
+    console.log('🟦 [5/5] FINALIZANDO: Preparando resposta de sucesso');
+    
+    const finalResponse = {
+      success: true,
+      message: 'Solicitação processada com sucesso! Nossa equipe entrará em contato em breve.',
+      requestId: implementationRequest.id,
+      pipedrive: {
+        success: !!pipedriveData?.success,
+        dealId: pipedriveData?.data?.id || null
+      },
+      discord: {
+        sent: discordSent
+      }
+    };
+    
+    console.log('📤 Resposta final preparada:', JSON.stringify(finalResponse, null, 2));
+    console.log('🟩 [5/5] CONCLUÍDO: Processo finalizado com sucesso');
 
     // 5. Resposta de sucesso
     return new Response(
-      JSON.stringify({
-        success: true,
-        message: 'Solicitação processada com sucesso! Nossa equipe entrará em contato em breve.',
-        requestId: implementationRequest.id,
-        pipedrive: {
-          success: !!pipedriveData?.success,
-          dealId: pipedriveData?.data?.id || null
-        },
-        discord: {
-          sent: discordSent
-        }
-      }),
+      JSON.stringify(finalResponse),
       {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
