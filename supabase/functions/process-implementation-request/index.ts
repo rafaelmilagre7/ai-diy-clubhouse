@@ -176,8 +176,25 @@ serve(async (req) => {
 
     // 2. Criar deal no Pipedrive
     let pipedriveData: PipedriveResponse | null = null;
+    
+    // 🔍 DEBUG: Verificação detalhada das variáveis de ambiente
+    console.log('🔍 PIPEDRIVE ENVIRONMENT DEBUG:');
+    console.log('- Variáveis de ambiente disponíveis:', Object.keys(Deno.env.toObject()).length);
+    console.log('- PIPEDRIVE_API_TOKEN existe:', 'PIPEDRIVE_API_TOKEN' in Deno.env.toObject());
+    console.log('- PIPEDRIVE_COMPANY_DOMAIN existe:', 'PIPEDRIVE_COMPANY_DOMAIN' in Deno.env.toObject());
+    
     const pipedriveToken = Deno.env.get('PIPEDRIVE_API_TOKEN');
     const pipedriveCompanyDomain = Deno.env.get('PIPEDRIVE_COMPANY_DOMAIN');
+    
+    console.log('🔑 Token length:', pipedriveToken ? pipedriveToken.length : 0);
+    console.log('🌐 Domain value:', pipedriveCompanyDomain ? `"${pipedriveCompanyDomain}"` : 'null');
+    console.log('🔍 Token starts with:', pipedriveToken ? pipedriveToken.substring(0, 10) + '...' : 'N/A');
+    
+    // Verificação adicional de tipos
+    console.log('🔍 Token type:', typeof pipedriveToken);
+    console.log('🔍 Domain type:', typeof pipedriveCompanyDomain);
+    console.log('🔍 Token truthy:', !!pipedriveToken);
+    console.log('🔍 Domain truthy:', !!pipedriveCompanyDomain);
     
     if (pipedriveToken && pipedriveCompanyDomain) {
       try {
@@ -343,6 +360,12 @@ serve(async (req) => {
       }
     } else {
       console.log('⚠️ [2/5] PULADO: Token ou domínio do Pipedrive não configurados');
+      console.log('🔍 DEBUG DETALHADO - Variáveis não encontradas:');
+      console.log('- Todas as env vars:', JSON.stringify(Object.keys(Deno.env.toObject()).sort(), null, 2));
+      console.log('- Env vars que começam com PIPEDRIVE:', Object.keys(Deno.env.toObject()).filter(k => k.startsWith('PIPEDRIVE')));
+      console.log('- Valores exatos das variáveis:');
+      console.log('  - PIPEDRIVE_API_TOKEN:', Deno.env.get('PIPEDRIVE_API_TOKEN') || 'UNDEFINED');
+      console.log('  - PIPEDRIVE_COMPANY_DOMAIN:', Deno.env.get('PIPEDRIVE_COMPANY_DOMAIN') || 'UNDEFINED');
       console.log('📊 Estado final das variáveis (valores padrão):', {
         pipelineId,
         stageId,
