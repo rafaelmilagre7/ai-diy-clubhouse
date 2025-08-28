@@ -9,6 +9,7 @@ import { EnhancedUserAnalytics } from '@/components/admin/analytics/users/Enhanc
 import { SolutionsAnalyticsTabContent } from '@/components/admin/analytics/solutions/SolutionsAnalyticsTabContent';
 import { LmsAnalyticsTabContent } from '@/components/admin/analytics/tabs/LmsAnalyticsTabContent';
 import { ImplementationsAnalyticsTabContent } from '@/components/admin/analytics/implementations/ImplementationsAnalyticsTabContent';
+import { OnboardingAnalyticsTabContent } from '@/components/admin/analytics/onboarding/OnboardingAnalyticsTabContent';
 import { TrendingUp, BarChart3, Activity } from 'lucide-react';
 
 export default function AdminAnalytics() {
@@ -91,9 +92,10 @@ export default function AdminAnalytics() {
 
         {/* Enhanced Analytics Tabs */}
         <Tabs defaultValue="overview" className="space-y-8">
-          <TabsList className="grid w-full grid-cols-5 surface-elevated border-0 shadow-aurora p-1">
+          <TabsList className="grid w-full grid-cols-6 surface-elevated border-0 shadow-aurora p-1">
             <TabsTrigger value="overview" className="aurora-focus">Visão Geral</TabsTrigger>
             <TabsTrigger value="users" className="aurora-focus">Usuários</TabsTrigger>
+            <TabsTrigger value="onboarding" className="aurora-focus">Onboarding</TabsTrigger>
             <TabsTrigger value="solutions" className="aurora-focus">Soluções</TabsTrigger>
             <TabsTrigger value="learning" className="aurora-focus">Aprendizado</TabsTrigger>
             <TabsTrigger value="implementations" className="aurora-focus">Implementações</TabsTrigger>
@@ -105,6 +107,10 @@ export default function AdminAnalytics() {
 
           <TabsContent value="users" className="space-y-6">
             <EnhancedUserAnalytics timeRange={timeRange} />
+          </TabsContent>
+
+          <TabsContent value="onboarding" className="space-y-6">
+            <OnboardingAnalyticsTabContent timeRange={timeRange} />
           </TabsContent>
 
           <TabsContent value="solutions" className="space-y-6">
