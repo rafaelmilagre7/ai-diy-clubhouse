@@ -1,9 +1,11 @@
 import { useState, useCallback } from 'react';
 import { contactDataCleaner, type ContactData, type DataCleaningResult } from '@/utils/contactDataCleaner';
+import { useRoleMapping } from './useRoleMapping';
 
 export function useContactDataCleaner() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [cleaningResult, setCleaningResult] = useState<DataCleaningResult | null>(null);
+  const { getAvailableRoles } = useRoleMapping();
 
   const processContacts = useCallback(async (contacts: ContactData[]): Promise<DataCleaningResult> => {
     setIsProcessing(true);
@@ -14,14 +16,18 @@ export function useContactDataCleaner() {
         await new Promise(resolve => setTimeout(resolve, 500));
       }
       
-      const result = contactDataCleaner.processContacts(contacts);
+      // Atualizar papéis válidos no cleaner antes de processar
+      const validRoles = getAvailableRoles();
+      console.log('📋 [CONTACT-CLEANER] Papéis válidos:', validRoles);
+      
+      const result = contactDataCleaner.processContacts(contacts, validRoles);
       setCleaningResult(result);
       
       return result;
     } finally {
       setIsProcessing(false);
     }
-  }, []);
+  }, [getAvailableRoles]);
 
   const clearResults = useCallback(() => {
     setCleaningResult(null);

@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 import { usePermissions } from "@/hooks/auth/usePermissions";
 import { useInvitesList } from "@/hooks/admin/invites/useInvitesList";
+import { useRoleMapping } from "@/hooks/admin/invites/useRoleMapping";
 import SimpleCreateInviteDialog from "./components/SimpleCreateInviteDialog";
 import SimpleInvitesTab from "./components/SimpleInvitesTab";
 import { BulkInviteUpload } from "@/components/admin/invites/BulkInviteUpload";
@@ -16,7 +17,8 @@ import { toast } from "sonner";
 const InvitesManagement = () => {
   useDocumentTitle("Gerenciar Convites | Admin");
   
-  const { roles, loading: rolesLoading } = usePermissions();
+  const { roles } = usePermissions();
+  const { roles: mappedRoles, loading: rolesLoading } = useRoleMapping();
   const { invites, loading: invitesLoading, fetchInvites } = useInvitesList();
   const { createBulkInvites, progress, resetProgress, isCreating } = useInviteBulkCreate();
   const [showProgressModal, setShowProgressModal] = useState(false);
@@ -153,14 +155,11 @@ const InvitesManagement = () => {
             </div>
             <div className="p-8">
               <BulkInviteUpload
-                roles={roles}
+                roles={mappedRoles}
                 rolesLoading={rolesLoading}
                 onProceedWithContacts={async (contacts, roleId) => {
-                  if (!roleId) {
-                    toast.error('Selecione um papel para os convites');
-                    return;
-                  }
-
+                  console.log(`🚀 [INVITES-MGT] Iniciando criação de ${contacts.length} convites com roleId: ${roleId}`);
+                  
                   setShowProgressModal(true);
                   
                   const result = await createBulkInvites(contacts, roleId);

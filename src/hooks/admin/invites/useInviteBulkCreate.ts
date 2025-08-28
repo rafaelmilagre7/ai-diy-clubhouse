@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
 import { toast } from 'sonner';
 import { type CleanedContact } from '@/utils/contactDataCleaner';
+import { useRoleMapping } from './useRoleMapping';
 
 export interface BulkInviteItem {
   contact: CleanedContact;
@@ -23,6 +24,7 @@ export interface BulkInviteProgress {
 
 export const useInviteBulkCreate = () => {
   const { user } = useAuth();
+  const { getRoleId, getDefaultRoleId } = useRoleMapping();
   const [progress, setProgress] = useState<BulkInviteProgress>({
     total: 0,
     processed: 0,
@@ -45,6 +47,13 @@ export const useInviteBulkCreate = () => {
     try {
       console.log(`📦 [BULK-INVITE] Iniciando criação em lote de ${contacts.length} convites`);
 
+      // Verificar se contatos têm papéis individuais
+      const hasIndividualRoles = contacts.some(contact => 
+        contact.cleaned.role && contact.cleaned.role !== 'convidado'
+      );
+
+      console.log(`🔍 [BULK-INVITE] Contatos com papéis individuais: ${hasIndividualRoles}`);
+
       // Inicializar progresso
       const items: BulkInviteItem[] = contacts.map(contact => ({
         contact,
@@ -60,28 +69,54 @@ export const useInviteBulkCreate = () => {
         isRunning: true
       });
 
-      // Preparar emails para RPC batch
-      const emails = contacts.map(contact => contact.cleaned.email);
+      let batchResult;
 
-      // Criar convites em lote usando RPC
-      console.log('📧 [BULK-INVITE] Criando convites via RPC...');
-      const { data: batchResult, error: batchError } = await supabase.rpc('create_invite_batch', {
-        p_emails: emails,
-        p_role_id: roleId,
-        p_expires_in: `${expiresIn}`
-      });
+      if (hasIndividualRoles) {
+        // Processar individualmente quando têm papéis diversos
+        console.log('🔄 [BULK-INVITE] Processando convites individualmente...');
+        batchResult = await processIndividualInvites(contacts);
+      } else {
+        // Usar RPC batch quando todos têm o mesmo papel
+        console.log('📧 [BULK-INVITE] Criando convites via RPC batch...');
+        
+        // Determinar papel a usar
+        const finalRoleId = roleId === 'default' ? getDefaultRoleId() : roleId;
+        if (!finalRoleId) {
+          throw new Error('Papel não encontrado. Selecione um papel válido.');
+        }
 
-      if (batchError) {
-        console.error('❌ [BULK-INVITE] Erro no RPC:', batchError);
-        throw batchError;
+        const emails = contacts.map(contact => contact.cleaned.email);
+        const { data, error: batchError } = await supabase.rpc('create_invite_batch', {
+          p_emails: emails,
+          p_role_id: finalRoleId,
+          p_expires_in: expiresIn
+        });
+
+        if (batchError) {
+          console.error('❌ [BULK-INVITE] Erro no RPC:', batchError);
+          throw batchError;
+        }
+
+        batchResult = data;
       }
 
       console.log('✅ [BULK-INVITE] Convites criados:', batchResult);
 
       // Atualizar status dos items criados
       const updatedItems = items.map((item, index) => {
-        const batchItem = batchResult.invites?.[index];
-        if (batchItem?.success) {
+        let batchItem;
+        
+        if (hasIndividualRoles) {
+          // Para processamento individual, buscar resultado por email
+          batchItem = batchResult.invites?.find(inv => 
+            inv.email === item.contact.cleaned.email
+          );
+        } else {
+          // Para processamento batch, usar índice
+          batchItem = batchResult.invites?.[index];
+        }
+
+        if (batchItem?.success || batchItem?.invite_id) {
           return {
             ...item,
             status: 'creating' as const,
@@ -199,6 +234,63 @@ export const useInviteBulkCreate = () => {
         description: error.message || 'Não foi possível processar os convites'
       });
     }
+  };
+
+  // Função para processar convites individualmente
+  const processIndividualInvites = async (contacts: CleanedContact[]) => {
+    const results = [];
+    
+    for (const contact of contacts) {
+      try {
+        const contactRole = contact.cleaned.role || 'convidado';
+        const contactRoleId = getRoleId(contactRole);
+        
+        if (!contactRoleId) {
+          results.push({
+            success: false,
+            error: `Papel "${contactRole}" não encontrado`,
+            email: contact.cleaned.email
+          });
+          continue;
+        }
+
+        console.log(`📧 [INDIVIDUAL-INVITE] Criando convite para ${contact.cleaned.email} com papel ${contactRole}`);
+        
+        const { data, error } = await supabase.rpc('create_invite_batch', {
+          p_emails: [contact.cleaned.email],
+          p_role_id: contactRoleId,
+          p_expires_in: contact.cleaned.expires_in || '7 days'
+        });
+
+        if (error) {
+          results.push({
+            success: false,
+            error: error.message,
+            email: contact.cleaned.email
+          });
+        } else if (data?.invites?.[0]) {
+          results.push({
+            success: true,
+            invite_id: data.invites[0].invite_id,
+            email: contact.cleaned.email
+          });
+        } else {
+          results.push({
+            success: false,
+            error: 'Resposta inesperada do servidor',
+            email: contact.cleaned.email
+          });
+        }
+      } catch (error: any) {
+        results.push({
+          success: false,
+          error: error.message,
+          email: contact.cleaned.email
+        });
+      }
+    }
+    
+    return { invites: results };
   };
 
   const resetProgress = () => {

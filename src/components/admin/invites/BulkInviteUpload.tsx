@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useContactDataCleaner } from "@/hooks/admin/invites/useContactDataCleaner";
+import { useRoleMapping } from "@/hooks/admin/invites/useRoleMapping";
 import { DataCleaningResults } from "./DataCleaningResults";
 import { toast } from "sonner";
 import { type ContactData, type CleanedContact } from "@/utils/contactDataCleaner";
@@ -30,6 +31,7 @@ export function BulkInviteUpload({ roles, rolesLoading = false, onProceedWithCon
   const [rawContacts, setRawContacts] = useState<ContactData[]>([]);
   
   const { processContacts, clearResults, isProcessing, cleaningResult } = useContactDataCleaner();
+  const { validateRole, getAvailableRoles } = useRoleMapping();
 
   // Usar roles reais vindos do banco de dados
   const availableRoles = roles || [];
@@ -176,8 +178,33 @@ export function BulkInviteUpload({ roles, rolesLoading = false, onProceedWithCon
   };
 
   const handleProceedWithContacts = (contacts: CleanedContact[]) => {
+    // Verificar se contatos têm papéis individuais válidos
+    const hasIndividualRoles = contacts.some(contact => 
+      contact.cleaned.role && contact.cleaned.role !== 'convidado'
+    );
+
+    // Validar papéis se existirem
+    if (hasIndividualRoles) {
+      const invalidRoles = contacts
+        .map(c => c.cleaned.role)
+        .filter((role, index, arr) => role && arr.indexOf(role) === index) // únicos
+        .filter(role => role && !validateRole(role));
+
+      if (invalidRoles.length > 0) {
+        toast.error(`Papéis inválidos encontrados: ${invalidRoles.join(', ')}`);
+        return;
+      }
+    }
+
+    // Se não há papéis individuais e nenhum papel global selecionado, usar padrão
+    const finalRoleId = hasIndividualRoles 
+      ? 'individual' // Flag para indicar processamento individual
+      : selectedRoleId || 'default';
+
+    console.log(`🎯 [UPLOAD] Procedendo com ${contacts.length} contatos, papel: ${finalRoleId}`);
+    
     clearResults();
-    onProceedWithContacts(contacts, selectedRoleId || 'default');
+    onProceedWithContacts(contacts, finalRoleId);
   };
 
   const downloadSampleCsv = () => {

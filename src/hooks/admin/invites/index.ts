@@ -13,3 +13,4 @@ export * from './useInviteResendWhatsApp';
 export * from './useWhatsAppConfigCheck';
 export * from './useWhatsAppDeliveryTest';
 export * from './useContactDataCleaner';
+export * from './useRoleMapping';

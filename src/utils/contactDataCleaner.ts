@@ -112,9 +112,10 @@ class ContactDataCleaner {
   /**
    * Valida papel (roles reais do sistema)
    */
-  private validateRole(role: string): boolean {
-    const validRoles = ['admin', 'convidado', 'hands_on', 'lovable_course'];
-    return validRoles.includes(role.toLowerCase());
+  private validateRole(role: string, validRoles?: string[]): boolean {
+    const defaultValidRoles = ['admin', 'convidado', 'hands_on', 'lovable_course'];
+    const rolesToCheck = validRoles || defaultValidRoles;
+    return rolesToCheck.includes(role.toLowerCase());
   }
   
   /**
@@ -136,7 +137,7 @@ class ContactDataCleaner {
   /**
    * Limpa um contato individual
    */
-  private cleanContact(contact: ContactData): CleanedContact {
+  private cleanContact(contact: ContactData, validRoles?: string[]): CleanedContact {
     const corrections: string[] = [];
     const errors: string[] = [];
     
@@ -163,8 +164,9 @@ class ContactDataCleaner {
     
     // Valida papel se fornecido
     let cleanedRole = contact.role?.toLowerCase() || 'convidado';
-    if (contact.role && !this.validateRole(contact.role)) {
-      errors.push('Papel inválido. Valores aceitos: admin, convidado, hands_on, lovable_course');
+    if (contact.role && !this.validateRole(contact.role, validRoles)) {
+      const rolesList = validRoles?.join(', ') || 'admin, convidado, hands_on, lovable_course';
+      errors.push(`Papel inválido. Valores aceitos: ${rolesList}`);
     }
     
     // Valida canal se fornecido
@@ -231,11 +233,14 @@ class ContactDataCleaner {
   /**
    * Processa lista de contatos e retorna resultado da limpeza
    */
-  public processContacts(contacts: ContactData[]): DataCleaningResult {
+  public processContacts(contacts: ContactData[], validRoles?: string[]): DataCleaningResult {
     console.log(`🧹 Iniciando limpeza de ${contacts.length} contatos...`);
+    if (validRoles) {
+      console.log(`📋 Papéis válidos: ${validRoles.join(', ')}`);
+    }
     
     // Limpa cada contato
-    const cleanedContacts = contacts.map(contact => this.cleanContact(contact));
+    const cleanedContacts = contacts.map(contact => this.cleanContact(contact, validRoles));
     
     // Separa por status
     const valid = cleanedContacts.filter(c => c.status === 'valid');
