@@ -220,11 +220,21 @@ serve(async (req) => {
           console.error('❌ Erro na resposta dos pipelines:', pipelinesData);
         }
         
-        console.log('🔧 Pipedrive IDs para criação do deal:', { 
+        // Fallback: se não encontrou pipeline ou stage, usar IDs fixos
+        if (!pipelineId || !stageId) {
+          console.log('🔄 Aplicando fallback para IDs fixos...');
+          pipelineId = pipelineId || 2;
+          stageId = stageId || 6;
+          pipelineName = pipelineName || 'Pipeline Padrão';
+          stageName = stageName || 'Oportunidade';
+          console.log(`✅ Usando fallback - Pipeline ID: ${pipelineId}, Stage ID: ${stageId}`);
+        }
+        
+        console.log('🔧 Pipedrive IDs finais para criação do deal:', { 
           pipelineId, 
           stageId,
-          pipelineName: pipelineName || 'não encontrado',
-          stageName: stageName || 'não encontrado'
+          pipelineName,
+          stageName
         });
         
         const dealPayload = {
