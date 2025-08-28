@@ -10,3 +10,5 @@ export * from './useInviteBulkReactivate';
 export * from './useInviteEmailService';
 export * from './useInviteResendEmail';
 export * from './useInviteResendWhatsApp';
+export * from './useWhatsAppConfigCheck';
+export * from './useWhatsAppDeliveryTest';

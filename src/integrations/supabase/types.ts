@@ -6884,6 +6884,10 @@ export type Database = {
         Args: { target_email: string }
         Returns: Json
       }
+      test_whatsapp_delivery: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       toggle_topic_solved: {
         Args: { p_topic_id: string; p_user_id?: string } | { topic_id: string }
         Returns: Json
