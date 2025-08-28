@@ -1,12 +1,13 @@
 
 import { useState } from "react";
-import { RefreshCw, Search, Zap } from "lucide-react";
+import { RefreshCw, Search, Zap, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Invite } from "@/hooks/admin/invites/types";
 import { useInviteDelete } from "@/hooks/admin/invites/useInviteDelete";
 import { useInviteResend } from "@/hooks/admin/invites/useInviteResend";
 import { useInviteBulkReactivate } from "@/hooks/admin/invites/useInviteBulkReactivate";
+import { useInviteCSVExport } from "@/hooks/admin/invites/useInviteCSVExport";
 import SimpleInvitesList from "./SimpleInvitesList";
 import InviteStats from "./InviteStats";
 import ConfirmResendDialog from "./ConfirmResendDialog";
@@ -31,11 +32,14 @@ const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTa
   const { deleteInvite, isDeleting } = useInviteDelete();
   const { resendInvite, isSending } = useInviteResend();
   const { bulkReactivateExpiredInvites, isBulkReactivating } = useInviteBulkReactivate();
+  const { exportActiveInvitesCSV, getActiveInvitesCount, isExporting } = useInviteCSVExport();
 
   // Calcular estatísticas dos convites
   const expiredCount = invites.filter(invite => 
     !invite.used_at && new Date(invite.expires_at) <= new Date()
   ).length;
+
+  const activeInvitesCount = getActiveInvitesCount(invites);
 
   // Filtrar convites
   const filteredInvites = invites.filter(invite => {
@@ -249,6 +253,21 @@ const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTa
               >
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Atualizar
+              </Button>
+
+              <Button
+                variant="outline"
+                onClick={() => exportActiveInvitesCSV(invites)}
+                disabled={isExporting || activeInvitesCount === 0}
+                size="default"
+                className="h-12 px-6 aurora-glass border-aurora/30 hover:border-aurora/50 hover:bg-aurora/10 text-aurora font-medium backdrop-blur-sm"
+              >
+                {isExporting ? (
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4 mr-2" />
+                )}
+                Baixar CSV Ativos ({activeInvitesCount})
               </Button>
               
               {expiredCount > 0 && (
