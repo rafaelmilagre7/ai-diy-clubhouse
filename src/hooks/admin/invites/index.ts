@@ -12,3 +12,4 @@ export * from './useInviteResendEmail';
 export * from './useInviteResendWhatsApp';
 export * from './useWhatsAppConfigCheck';
 export * from './useWhatsAppDeliveryTest';
+export * from './useContactDataCleaner';

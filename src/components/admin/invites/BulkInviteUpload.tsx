@@ -183,10 +183,11 @@ export function BulkInviteUpload({ roles, rolesLoading = false, onProceedWithCon
   const downloadSampleCsv = () => {
     const csvContent = [
       'Email,Telefone,Papel,Canal,Validade,Observacoes',
-      'joao@example.com,(11) 99999-9999,membro_club,email,7 days,Contato via LinkedIn',
+      'joao@example.com,(11) 99999-9999,convidado,email,7 days,Contato via LinkedIn',
       'maria@example.com,+55 11 88888-8888,admin,both,14 days,Gerente de vendas',
-      'pedro@example.com,,formacao,email,30 days,Professor convidado',
-      'ana@example.com,(21) 77777-7777,membro_club,whatsapp,3 days,Indicação cliente'
+      'pedro@example.com,,hands_on,email,30 days,Workshop presencial',
+      'ana@example.com,(21) 77777-7777,lovable_course,whatsapp,3 days,Curso online',
+      'carlos@example.com,+55 21 99999-0000,convidado,both,1 day,Convite urgente'
     ].join('\n');
     
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' });
@@ -282,7 +283,7 @@ export function BulkInviteUpload({ roles, rolesLoading = false, onProceedWithCon
                     </Button>
                     <div className="text-xs text-muted-foreground max-w-md">
                       <p><strong>Campos obrigatórios:</strong> Email</p>
-                      <p><strong>Campos opcionais:</strong> Telefone, Papel (admin/membro_club/formacao), Canal (email/whatsapp/both), Validade (1-30 days), Observações</p>
+                      <p><strong>Campos opcionais:</strong> Telefone, Papel (admin/convidado/hands_on/lovable_course), Canal (email/whatsapp/both), Validade (1-30 days), Observações</p>
                     </div>
                   </div>
 

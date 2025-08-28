@@ -110,10 +110,10 @@ class ContactDataCleaner {
   }
   
   /**
-   * Valida papel
+   * Valida papel (roles reais do sistema)
    */
   private validateRole(role: string): boolean {
-    const validRoles = ['admin', 'membro_club', 'formacao', 'member'];
+    const validRoles = ['admin', 'convidado', 'hands_on', 'lovable_course'];
     return validRoles.includes(role.toLowerCase());
   }
   
@@ -162,9 +162,9 @@ class ContactDataCleaner {
     }
     
     // Valida papel se fornecido
-    let cleanedRole = contact.role?.toLowerCase() || 'membro_club';
+    let cleanedRole = contact.role?.toLowerCase() || 'convidado';
     if (contact.role && !this.validateRole(contact.role)) {
-      errors.push('Papel inválido (admin, membro_club, formacao, member)');
+      errors.push('Papel inválido. Valores aceitos: admin, convidado, hands_on, lovable_course');
     }
     
     // Valida canal se fornecido

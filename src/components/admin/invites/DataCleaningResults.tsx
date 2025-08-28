@@ -65,10 +65,12 @@ export function DataCleaningResults({
           )}
           
           {contact.status === 'corrected' && (
-            <div className="mt-2 p-2 bg-orange-50 rounded text-xs">
-              <p className="font-medium">Original:</p>
-              <p>E-mail: {contact.original.email}</p>
-              {contact.original.phone && <p>Tel: {contact.original.phone}</p>}
+            <div className="mt-2 p-2 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded text-xs">
+              <p className="font-medium text-slate-900 dark:text-slate-100">Original:</p>
+              <p className="text-slate-700 dark:text-slate-300">E-mail: {contact.original.email}</p>
+              {contact.original.phone && <p className="text-slate-700 dark:text-slate-300">Tel: {contact.original.phone}</p>}
+              {contact.original.role && <p className="text-slate-700 dark:text-slate-300">Papel: {contact.original.role}</p>}
+              {contact.original.channel && <p className="text-slate-700 dark:text-slate-300">Canal: {contact.original.channel}</p>}
             </div>
           )}
         </div>
