@@ -15,10 +15,12 @@ interface BulkInviteRequest {
     inviteId: string;
     email: string;
     whatsapp_number?: string;
-    name: string;
     roleId: string;
+    channel?: 'email' | 'whatsapp' | 'both';
+    expiresIn?: string;
+    notes?: string;
   }>;
-  expiresIn?: string;
+  senderName?: string;
 }
 
 interface InviteResult {
@@ -106,15 +108,18 @@ const handler = async (req: Request): Promise<Response> => {
         // Gerar URL do convite
         const inviteUrl = `https://app.viverdeia.ai/convite/${inviteData.token}`;
         
-        // Determinar método de envio
+        // Determinar método de envio baseado no channel do convite
+        const channel = inviteRequest.channel || 'email';
         const hasPhone = inviteRequest.whatsapp_number && whatsappToken && whatsappPhoneId;
-        const shouldSendWhatsApp = hasPhone;
+        const shouldSendEmail = channel === 'email' || channel === 'both';
+        const shouldSendWhatsApp = (channel === 'whatsapp' || channel === 'both') && hasPhone;
         
         let emailSent = false;
         let whatsappSent = false;
         let lastError = '';
 
-        // Tentar envio via email
+        // Tentar envio via Email se configurado
+        if (shouldSendEmail) {
         try {
           const templateData = {
             inviteUrl,
@@ -123,7 +128,7 @@ const handler = async (req: Request): Promise<Response> => {
             roleName: inviteData.user_roles?.name || 'membro',
             companyName: 'Viver de IA',
             expiresAt: inviteData.expires_at,
-            notes: inviteData.notes || '',
+            notes: inviteRequest.notes || inviteData.notes || '',
           };
 
           const emailHtml = await renderAsync(
@@ -157,11 +162,12 @@ const handler = async (req: Request): Promise<Response> => {
                 recipient: inviteRequest.email,
                 template: 'invite-email',
               }
-            });
+              });
+            }
+          } catch (emailErr: any) {
+            console.error(`❌ [BULK-INVITE-SENDER] Exceção no email para ${inviteRequest.email}:`, emailErr);
+            lastError += `Email: ${emailErr.message}; `;
           }
-        } catch (emailErr: any) {
-          console.error(`❌ [BULK-INVITE-SENDER] Exceção no email para ${inviteRequest.email}:`, emailErr);
-          lastError += `Email: ${emailErr.message}; `;
         }
 
         // Tentar envio via WhatsApp se disponível
@@ -179,7 +185,7 @@ const handler = async (req: Request): Promise<Response> => {
                 components: [{
                   type: "body",
                   parameters: [
-                    { type: "text", text: inviteRequest.name },
+                    { type: "text", text: inviteRequest.email.split('@')[0] },
                     { type: "text", text: inviteUrl }
                   ]
                 }]

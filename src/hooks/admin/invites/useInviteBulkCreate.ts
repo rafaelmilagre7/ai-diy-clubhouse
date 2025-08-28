@@ -111,8 +111,10 @@ export const useInviteBulkCreate = () => {
           inviteId: item.inviteId!,
           email: item.contact.cleaned.email,
           whatsapp_number: item.contact.cleaned.phone,
-          name: item.contact.cleaned.name,
-          roleId: roleId
+          roleId: roleId,
+          channel: item.contact.cleaned.channel || 'email',
+          expiresIn: item.contact.cleaned.expires_in || '7 days',
+          notes: item.contact.cleaned.notes
         }));
 
       const { data: sendResult, error: sendError } = await supabase.functions.invoke('bulk-invite-sender', {

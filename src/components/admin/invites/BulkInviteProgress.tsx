@@ -110,7 +110,7 @@ export function BulkInviteProgress({
                     {getStatusIcon(item)}
                     <div className="flex-1 min-w-0">
                       <div className="font-medium truncate">
-                        {item.contact.cleaned.name}
+                        {item.contact.cleaned.email.split('@')[0]}
                       </div>
                       <div className="text-sm text-muted-foreground truncate">
                         {item.contact.cleaned.email}

@@ -1,8 +1,10 @@
 export interface ContactData {
-  name: string;
   email: string;
   phone?: string;
-  role_id?: string;
+  role?: string;
+  channel?: 'email' | 'whatsapp' | 'both';
+  expires_in?: string;
+  notes?: string;
 }
 
 export interface CleanedContact {
@@ -108,55 +110,27 @@ class ContactDataCleaner {
   }
   
   /**
-   * Limpa nome próprio
+   * Valida papel
    */
-  private cleanName(name: string): { cleaned: string; corrections: string[] } {
-    const corrections: string[] = [];
-    let cleaned = name.trim();
-    
-    if (name !== cleaned) {
-      corrections.push('Removidos espaços extras');
-    }
-    
-    // Remove espaços duplos
-    const singleSpaced = cleaned.replace(/\s+/g, ' ');
-    if (cleaned !== singleSpaced) {
-      corrections.push('Corrigidos espaços duplos');
-      cleaned = singleSpaced;
-    }
-    
-    // Capitaliza corretamente (primeira letra de cada palavra)
-    const capitalized = cleaned.toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
-    
-    // Exceções para preposições brasileiras
-    const exceptions = ['da', 'de', 'do', 'das', 'dos', 'e', 'em', 'na', 'no', 'nas', 'nos'];
-    const words = capitalized.split(' ');
-    const correctedWords = words.map((word, index) => {
-      // Primeira e última palavra sempre maiúsculas
-      if (index === 0 || index === words.length - 1) {
-        return word;
-      }
-      // Preposições em minúsculas
-      if (exceptions.includes(word.toLowerCase())) {
-        return word.toLowerCase();
-      }
-      return word;
-    });
-    
-    const finalName = correctedWords.join(' ');
-    if (cleaned !== finalName) {
-      corrections.push('Corrigida capitalização');
-      cleaned = finalName;
-    }
-    
-    return { cleaned, corrections };
+  private validateRole(role: string): boolean {
+    const validRoles = ['admin', 'membro_club', 'formacao', 'member'];
+    return validRoles.includes(role.toLowerCase());
   }
   
   /**
-   * Valida nome (deve ter pelo menos 2 caracteres)
+   * Valida canal de envio
    */
-  private validateName(name: string): boolean {
-    return name.trim().length >= 2 && /^[a-zA-ZÀ-ÿ\s]+$/.test(name.trim());
+  private validateChannel(channel: string): boolean {
+    const validChannels = ['email', 'whatsapp', 'both'];
+    return validChannels.includes(channel.toLowerCase());
+  }
+  
+  /**
+   * Valida validade do convite
+   */
+  private validateExpiresIn(expiresIn: string): boolean {
+    const validExpiries = ['1 day', '3 days', '7 days', '14 days', '30 days'];
+    return validExpiries.includes(expiresIn.toLowerCase());
   }
   
   /**
@@ -166,16 +140,7 @@ class ContactDataCleaner {
     const corrections: string[] = [];
     const errors: string[] = [];
     
-    // Limpa nome
-    const nameResult = this.cleanName(contact.name);
-    const cleanedName = nameResult.cleaned;
-    corrections.push(...nameResult.corrections);
-    
-    if (!this.validateName(cleanedName)) {
-      errors.push('Nome inválido');
-    }
-    
-    // Limpa e-mail
+    // Limpa e-mail (obrigatório)
     const emailResult = this.cleanEmail(contact.email);
     const cleanedEmail = emailResult.cleaned;
     corrections.push(...emailResult.corrections);
@@ -196,11 +161,36 @@ class ContactDataCleaner {
       }
     }
     
+    // Valida papel se fornecido
+    let cleanedRole = contact.role?.toLowerCase() || 'membro_club';
+    if (contact.role && !this.validateRole(contact.role)) {
+      errors.push('Papel inválido (admin, membro_club, formacao, member)');
+    }
+    
+    // Valida canal se fornecido
+    let cleanedChannel = (contact.channel?.toLowerCase() || 'email') as 'email' | 'whatsapp' | 'both';
+    if (contact.channel && !this.validateChannel(contact.channel)) {
+      errors.push('Canal inválido (email, whatsapp, both)');
+    }
+    
+    // Valida validade se fornecida
+    let cleanedExpiresIn = contact.expires_in?.toLowerCase() || '7 days';
+    if (contact.expires_in && !this.validateExpiresIn(contact.expires_in)) {
+      errors.push('Validade inválida (1 day, 3 days, 7 days, 14 days, 30 days)');
+    }
+    
+    // Verifica se telefone é necessário para WhatsApp
+    if ((cleanedChannel === 'whatsapp' || cleanedChannel === 'both') && !cleanedPhone) {
+      errors.push('Telefone obrigatório para envio via WhatsApp');
+    }
+    
     const cleaned: ContactData = {
-      name: cleanedName,
       email: cleanedEmail,
       phone: cleanedPhone,
-      role_id: contact.role_id
+      role: cleanedRole,
+      channel: cleanedChannel,
+      expires_in: cleanedExpiresIn,
+      notes: contact.notes?.trim() || undefined
     };
     
     let status: 'valid' | 'corrected' | 'invalid' = 'valid';

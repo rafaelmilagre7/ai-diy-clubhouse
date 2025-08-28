@@ -52,24 +52,29 @@ export function BulkInviteUpload({ roles, rolesLoading = false, onProceedWithCon
 
     // Assume primeira linha como cabeçalho
     const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
-    const nameIndex = headers.findIndex(h => h.includes('nome') || h.includes('name'));
     const emailIndex = headers.findIndex(h => h.includes('email') || h.includes('e-mail'));
     const phoneIndex = headers.findIndex(h => h.includes('telefone') || h.includes('phone') || h.includes('whatsapp'));
+    const roleIndex = headers.findIndex(h => h.includes('papel') || h.includes('role') || h.includes('cargo'));
+    const channelIndex = headers.findIndex(h => h.includes('canal') || h.includes('channel') || h.includes('envio'));
+    const expiresIndex = headers.findIndex(h => h.includes('validade') || h.includes('expires') || h.includes('expira'));
+    const notesIndex = headers.findIndex(h => h.includes('observ') || h.includes('notes') || h.includes('nota'));
 
-    if (nameIndex === -1 || emailIndex === -1) {
-      throw new Error('CSV deve conter colunas "Nome" e "Email"');
+    if (emailIndex === -1) {
+      throw new Error('CSV deve conter coluna "Email"');
     }
 
     const contacts: ContactData[] = [];
     for (let i = 1; i < lines.length; i++) {
       const values = lines[i].split(',').map(v => v.trim().replace(/^["']|["']$/g, ''));
       
-      if (values.length >= Math.max(nameIndex, emailIndex) + 1) {
+      if (values.length > emailIndex && values[emailIndex]) {
         contacts.push({
-          name: values[nameIndex] || '',
-          email: values[emailIndex] || '',
+          email: values[emailIndex],
           phone: phoneIndex >= 0 ? values[phoneIndex] : undefined,
-          role_id: selectedRoleId
+          role: roleIndex >= 0 ? values[roleIndex] : undefined,
+          channel: channelIndex >= 0 ? (values[channelIndex] as 'email' | 'whatsapp' | 'both') : undefined,
+          expires_in: expiresIndex >= 0 ? values[expiresIndex] : undefined,
+          notes: notesIndex >= 0 ? values[notesIndex] : undefined
         });
       }
     }
@@ -118,10 +123,8 @@ export function BulkInviteUpload({ roles, rolesLoading = false, onProceedWithCon
         }
 
         contacts.push({
-          name: name || email.split('@')[0],
           email,
-          phone: phone || undefined,
-          role_id: selectedRoleId
+          phone: phone || undefined
         });
       }
     }
@@ -130,8 +133,8 @@ export function BulkInviteUpload({ roles, rolesLoading = false, onProceedWithCon
   };
 
   const handleProcessCsv = async () => {
-    if (!csvFile || !selectedRoleId) {
-      toast.error('Selecione um arquivo CSV e um papel para os usuários');
+    if (!csvFile) {
+      toast.error('Selecione um arquivo CSV');
       return;
     }
 
@@ -152,8 +155,8 @@ export function BulkInviteUpload({ roles, rolesLoading = false, onProceedWithCon
   };
 
   const handleProcessManual = async () => {
-    if (!manualContacts.trim() || !selectedRoleId) {
-      toast.error('Digite os contatos e selecione um papel para os usuários');
+    if (!manualContacts.trim()) {
+      toast.error('Digite os contatos');
       return;
     }
 
@@ -173,21 +176,24 @@ export function BulkInviteUpload({ roles, rolesLoading = false, onProceedWithCon
   };
 
   const handleProceedWithContacts = (contacts: CleanedContact[]) => {
-    if (!selectedRoleId) {
-      toast.error('Selecione um papel para os convites');
-      return;
-    }
     clearResults();
-    onProceedWithContacts(contacts, selectedRoleId);
+    onProceedWithContacts(contacts, selectedRoleId || 'default');
   };
 
   const downloadSampleCsv = () => {
-    const csv = 'Nome,Email,Telefone\nJoão Silva,joao@example.com,(11) 99999-9999\nMaria Santos,maria@example.com,+55 11 88888-8888';
-    const blob = new Blob([csv], { type: 'text/csv' });
+    const csvContent = [
+      'Email,Telefone,Papel,Canal,Validade,Observacoes',
+      'joao@example.com,(11) 99999-9999,membro_club,email,7 days,Contato via LinkedIn',
+      'maria@example.com,+55 11 88888-8888,admin,both,14 days,Gerente de vendas',
+      'pedro@example.com,,formacao,email,30 days,Professor convidado',
+      'ana@example.com,(21) 77777-7777,membro_club,whatsapp,3 days,Indicação cliente'
+    ].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'exemplo-contatos.csv';
+    a.download = 'exemplo-convites.csv';
     a.click();
     window.URL.revokeObjectURL(url);
   };
@@ -210,52 +216,20 @@ export function BulkInviteUpload({ roles, rolesLoading = false, onProceedWithCon
             <UserPlus className="h-5 w-5" />
             Convites em Massa
           </CardTitle>
-          <CardDescription>
-            Importe uma lista de contatos para enviar convites em lote. 
-            Os dados serão validados e limpos automaticamente.
-          </CardDescription>
+            <CardDescription>
+              Importe uma lista de contatos para enviar convites em lote. 
+              Formato esperado: Email, Telefone, Papel, Canal, Validade, Observações.
+            </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="role-select">Papel dos novos usuários</Label>
-              <Select value={selectedRoleId} onValueChange={setSelectedRoleId}>
-                <SelectTrigger>
-                  <SelectValue placeholder={
-                    rolesLoading 
-                      ? "Carregando papéis..." 
-                      : availableRoles.length > 0 
-                        ? "Selecione o papel para os convidados" 
-                        : "Nenhum papel disponível"
-                  } />
-                </SelectTrigger>
-                <SelectContent>
-                  {rolesLoading ? (
-                    <SelectItem value="" disabled>
-                      <div className="flex items-center gap-2">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                        <span>Carregando...</span>
-                      </div>
-                    </SelectItem>
-                  ) : availableRoles.length > 0 ? (
-                    availableRoles.map(role => (
-                      <SelectItem key={role.id} value={role.id}>
-                        <div>
-                          <div className="font-medium">{role.name}</div>
-                          {role.description && (
-                            <div className="text-sm text-muted-foreground">{role.description}</div>
-                          )}
-                        </div>
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <SelectItem value="" disabled>
-                      <div className="text-muted-foreground">Nenhum papel disponível</div>
-                    </SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
+            <div className="space-y-4">
+              <div className="bg-muted/50 p-4 rounded-lg">
+                <p className="text-sm font-medium mb-2">Novo formato CSV padronizado:</p>
+                <p className="text-xs text-muted-foreground">
+                  O sistema foi atualizado para aceitar campos individuais por convite. 
+                  Use o botão "Baixar exemplo" para ver todas as opções disponíveis.
+                </p>
+              </div>
 
             <Tabs defaultValue="csv" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
@@ -270,45 +244,51 @@ export function BulkInviteUpload({ roles, rolesLoading = false, onProceedWithCon
               </TabsList>
 
               <TabsContent value="csv" className="space-y-4">
-                <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6">
-                  <div className="text-center space-y-4">
-                    <Upload className="h-10 w-10 text-muted-foreground mx-auto" />
-                    <div>
-                      <Label htmlFor="csv-upload" className="cursor-pointer">
-                        <div className="font-medium">Clique para selecionar arquivo CSV</div>
-                        <div className="text-sm text-muted-foreground">
-                          Ou arraste e solte aqui
-                        </div>
-                      </Label>
-                      <input
-                        id="csv-upload"
-                        type="file"
-                        accept=".csv"
-                        onChange={handleFileUpload}
-                        className="hidden"
-                      />
-                    </div>
-                    {csvFile && (
-                      <div className="text-sm text-green-600">
-                        ✓ {csvFile.name} carregado
+                  <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6">
+                    <div className="text-center space-y-4">
+                      <Upload className="h-10 w-10 text-muted-foreground mx-auto" />
+                      <div>
+                        <Label htmlFor="csv-upload" className="cursor-pointer">
+                          <div className="font-medium">Clique para selecionar arquivo CSV</div>
+                          <div className="text-sm text-muted-foreground">
+                            Formato: Email, Telefone, Papel, Canal, Validade, Observações
+                          </div>
+                        </Label>
+                        <input
+                          id="csv-upload"
+                          type="file"
+                          accept=".csv"
+                          onChange={handleFileUpload}
+                          className="hidden"
+                        />
                       </div>
-                    )}
+                      {csvFile && (
+                        <div className="text-sm text-green-600">
+                          ✓ {csvFile.name} carregado
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
 
                 <div className="flex justify-between items-center">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={downloadSampleCsv}
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    Baixar exemplo CSV
-                  </Button>
+                  <div className="space-y-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={downloadSampleCsv}
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Baixar exemplo CSV completo
+                    </Button>
+                    <div className="text-xs text-muted-foreground max-w-md">
+                      <p><strong>Campos obrigatórios:</strong> Email</p>
+                      <p><strong>Campos opcionais:</strong> Telefone, Papel (admin/membro_club/formacao), Canal (email/whatsapp/both), Validade (1-30 days), Observações</p>
+                    </div>
+                  </div>
 
                   <Button
                     onClick={handleProcessCsv}
-                    disabled={!csvFile || !selectedRoleId || isProcessing}
+                    disabled={!csvFile || isProcessing}
                   >
                     {isProcessing ? 'Processando...' : 'Processar CSV'}
                   </Button>
@@ -336,7 +316,7 @@ Um contato por linha`}
                 <div className="flex justify-end">
                   <Button
                     onClick={handleProcessManual}
-                    disabled={!manualContacts.trim() || !selectedRoleId || isProcessing}
+                    disabled={!manualContacts.trim() || isProcessing}
                   >
                     {isProcessing ? 'Processando...' : 'Processar Lista'}
                   </Button>

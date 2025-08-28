@@ -25,7 +25,7 @@ export function DataCleaningResults({
         <div className="space-y-2">
           <div className="flex justify-between items-start">
             <div>
-              <p className="font-medium">{contact.cleaned.name}</p>
+              <p className="font-medium">{contact.cleaned.email.split('@')[0]}</p>
               <p className="text-sm text-muted-foreground">{contact.cleaned.email}</p>
               {contact.cleaned.phone && (
                 <p className="text-sm text-muted-foreground">{contact.cleaned.phone}</p>
@@ -67,7 +67,6 @@ export function DataCleaningResults({
           {contact.status === 'corrected' && (
             <div className="mt-2 p-2 bg-orange-50 rounded text-xs">
               <p className="font-medium">Original:</p>
-              <p>Nome: {contact.original.name}</p>
               <p>E-mail: {contact.original.email}</p>
               {contact.original.phone && <p>Tel: {contact.original.phone}</p>}
             </div>
@@ -86,7 +85,7 @@ export function DataCleaningResults({
       <CardContent className="space-y-2">
         {group.map((contact, idx) => (
           <div key={idx} className="p-2 border rounded text-sm">
-            <p className="font-medium">{contact.cleaned.name}</p>
+            <p className="font-medium">{contact.cleaned.email.split('@')[0]}</p>
             {contact.cleaned.phone && <p className="text-muted-foreground">{contact.cleaned.phone}</p>}
           </div>
         ))}
