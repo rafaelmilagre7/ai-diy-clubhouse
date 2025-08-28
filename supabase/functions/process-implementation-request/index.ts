@@ -237,6 +237,15 @@ serve(async (req) => {
           stageName
         });
         
+        // Verificar se o token está presente
+        if (!pipedriveToken) {
+          console.error('❌ Token do Pipedrive não encontrado!');
+          throw new Error('Token do Pipedrive não configurado');
+        }
+        
+        console.log('🔑 Token do Pipedrive presente:', pipedriveToken ? 'SIM' : 'NÃO');
+        console.log('🌐 Pipedrive Domain:', pipedriveCompanyDomain);
+        
         const dealPayload = {
           title: `Projeto | Plataforma do Club | ${requestData.userName}`,
           value: 0,
@@ -249,7 +258,8 @@ serve(async (req) => {
           org_id: null
         };
 
-        console.log('Deal payload being sent:', JSON.stringify(dealPayload, null, 2));
+        console.log('📤 Deal payload sendo enviado:', JSON.stringify(dealPayload, null, 2));
+        console.log('🌐 URL de criação do deal:', `https://${pipedriveCompanyDomain}.pipedrive.com/api/v1/deals`);
 
         const pipedriveResponse = await fetch(`https://${pipedriveCompanyDomain}.pipedrive.com/api/v1/deals?api_token=${pipedriveToken}`, {
           method: 'POST',
@@ -259,8 +269,20 @@ serve(async (req) => {
           body: JSON.stringify(dealPayload)
         });
 
-        pipedriveData = await pipedriveResponse.json();
-        console.log('Pipedrive response:', JSON.stringify(pipedriveData, null, 2));
+        console.log('📥 Pipedrive response status:', pipedriveResponse.status);
+        console.log('📥 Pipedrive response headers:', Object.fromEntries(pipedriveResponse.headers.entries()));
+        
+        const responseText = await pipedriveResponse.text();
+        console.log('📥 Pipedrive response raw text:', responseText);
+        
+        try {
+          pipedriveData = JSON.parse(responseText);
+          console.log('✅ Pipedrive response parsed successfully:', JSON.stringify(pipedriveData, null, 2));
+        } catch (parseError) {
+          console.error('❌ Erro ao parsear resposta do Pipedrive:', parseError);
+          console.error('❌ Resposta raw:', responseText);
+          throw new Error(`Erro ao parsear resposta do Pipedrive: ${parseError.message}`);
+        }
 
         if (pipedriveData?.success && pipedriveData.data) {
           // Atualizar registro com ID do Pipedrive
@@ -287,6 +309,9 @@ serve(async (req) => {
     // 3. Enviar notificação para Discord
     let discordSent = false;
     const discordWebhookUrl = Deno.env.get('DISCORD_WEBHOOK_URL');
+    
+    console.log('🎯 Iniciando envio do Discord...');
+    console.log('Discord webhook URL presente:', !!discordWebhookUrl);
     
     if (discordWebhookUrl) {
       try {
@@ -328,6 +353,8 @@ serve(async (req) => {
           });
         }
 
+        console.log('📤 Discord payload sendo enviado:', JSON.stringify(discordData, null, 2));
+
         const discordResponse = await fetch(discordWebhookUrl, {
           method: 'POST',
           headers: {
@@ -336,16 +363,25 @@ serve(async (req) => {
           body: JSON.stringify(discordData)
         });
 
+        console.log('📥 Discord response status:', discordResponse.status);
+        console.log('📥 Discord response headers:', Object.fromEntries(discordResponse.headers.entries()));
+        
+        const discordResponseText = await discordResponse.text();
+        console.log('📥 Discord response text:', discordResponseText);
+
         if (discordResponse.ok) {
           discordSent = true;
-          console.log('Discord notification sent successfully');
+          console.log('✅ Discord notification sent successfully');
         } else {
-          console.error('Discord response error:', await discordResponse.text());
+          console.error('❌ Discord response error:', discordResponseText);
         }
       } catch (discordError) {
-        console.error('Discord error:', discordError);
+        console.error('❌ Discord error:', discordError);
+        console.error('❌ Discord error stack:', discordError.stack);
         // Não falhar a requisição por erro no Discord
       }
+    } else {
+      console.log('⚠️ Discord webhook URL não configurada');
     }
 
     // 4. Atualizar status final
