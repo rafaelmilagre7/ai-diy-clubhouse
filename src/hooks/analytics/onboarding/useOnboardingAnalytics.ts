@@ -82,7 +82,9 @@ export const useOnboardingAnalytics = (timeRange: string = '30d') => {
     queryKey: ['onboarding-analytics', timeRange],
     queryFn: async (): Promise<OnboardingAnalyticsData> => {
       try {
-        // Calculate date range
+        console.log('🔍 [ONBOARDING ANALYTICS] Iniciando busca de dados para timeRange:', timeRange);
+        
+        // Calculate date range - Use broader fallback
         const now = new Date();
         let startDate = new Date();
         
@@ -97,10 +99,12 @@ export const useOnboardingAnalytics = (timeRange: string = '30d') => {
             startDate.setDate(now.getDate() - 90);
             break;
           default:
-            startDate = new Date('2020-01-01');
+            startDate = new Date('2020-01-01'); // Very broad fallback
         }
 
-        // Fetch main onboarding data
+        console.log('📅 [ONBOARDING ANALYTICS] Período de busca:', { startDate: startDate.toISOString(), endDate: now.toISOString() });
+
+        // Fetch main onboarding data - Remove date filter first to test
         const { data: onboardingData, error } = await supabase
           .from('onboarding_final')
           .select(`
@@ -114,17 +118,30 @@ export const useOnboardingAnalytics = (timeRange: string = '30d') => {
             ai_experience,
             goals_info,
             personalization
-          `)
-          .gte('created_at', startDate.toISOString());
+          `);
 
         if (error) {
-          console.error('Error fetching onboarding data:', error);
+          console.error('❌ [ONBOARDING ANALYTICS] Erro ao buscar dados:', error);
           return defaultData;
         }
 
+        console.log('📊 [ONBOARDING ANALYTICS] Dados brutos encontrados:', onboardingData?.length || 0);
+        
         if (!onboardingData || onboardingData.length === 0) {
+          console.warn('⚠️ [ONBOARDING ANALYTICS] Nenhum dado encontrado');
           return defaultData;
         }
+
+        // Log first few records to understand structure
+        console.log('🔍 [ONBOARDING ANALYTICS] Primeiros registros:', {
+          total: onboardingData.length,
+          sample: onboardingData.slice(0, 2).map(user => ({
+            professional_info: user.professional_info,
+            ai_experience: user.ai_experience,
+            goals_info: user.goals_info,
+            personalization: user.personalization
+          }))
+        });
 
         const totalUsers = onboardingData.length;
         const completedUsers = onboardingData.filter(user => user.is_completed).length;
@@ -152,9 +169,17 @@ export const useOnboardingAnalytics = (timeRange: string = '30d') => {
         const positionCounts: Record<string, number> = {};
         const revenueCounts: Record<string, number> = {};
 
-        onboardingData.forEach(user => {
+        console.log('🔍 [PROFESSIONAL INFO] Iniciando análise de informações profissionais...');
+        
+        onboardingData.forEach((user, index) => {
           const professional = user.professional_info;
-          if (professional && typeof professional === 'object' && Object.keys(professional).length > 0) {
+          
+          // Simplified validation - just check if it exists and is an object
+          if (professional && typeof professional === 'object') {
+            if (index < 3) { // Log first 3 for debugging
+              console.log(`👔 [PROFESSIONAL INFO] Usuário ${index + 1}:`, professional);
+            }
+            
             // Sector
             const sector = professional.company_sector || 'Não informado';
             sectorCounts[sector] = (sectorCounts[sector] || 0) + 1;
@@ -170,17 +195,29 @@ export const useOnboardingAnalytics = (timeRange: string = '30d') => {
             // Revenue
             const revenue = professional.annual_revenue || 'Não informado';
             revenueCounts[revenue] = (revenueCounts[revenue] || 0) + 1;
+          } else if (index < 3) {
+            console.log(`❌ [PROFESSIONAL INFO] Usuário ${index + 1} sem dados profissionais válidos:`, professional);
           }
         });
+
+        console.log('📊 [PROFESSIONAL INFO] Contagens finais:', { sectorCounts, companySizeCounts, positionCounts, revenueCounts });
 
         // AI Experience Analysis
         const experienceLevelCounts: Record<string, number> = {};
         const implementationApproachCounts: Record<string, number> = {};
         const implementationStatusCounts: Record<string, number> = {};
 
-        onboardingData.forEach(user => {
+        console.log('🤖 [AI EXPERIENCE] Iniciando análise de experiência em IA...');
+
+        onboardingData.forEach((user, index) => {
           const aiExp = user.ai_experience;
-          if (aiExp && typeof aiExp === 'object' && Object.keys(aiExp).length > 0) {
+          
+          // Simplified validation
+          if (aiExp && typeof aiExp === 'object') {
+            if (index < 3) {
+              console.log(`🤖 [AI EXPERIENCE] Usuário ${index + 1}:`, aiExp);
+            }
+            
             // Experience level
             const level = aiExp.experience_level || 'Não informado';
             experienceLevelCounts[level] = (experienceLevelCounts[level] || 0) + 1;
@@ -192,8 +229,12 @@ export const useOnboardingAnalytics = (timeRange: string = '30d') => {
             // Implementation status
             const status = aiExp.implementation_status || 'Não informado';
             implementationStatusCounts[status] = (implementationStatusCounts[status] || 0) + 1;
+          } else if (index < 3) {
+            console.log(`❌ [AI EXPERIENCE] Usuário ${index + 1} sem dados de IA válidos:`, aiExp);
           }
         });
+
+        console.log('📊 [AI EXPERIENCE] Contagens finais:', { experienceLevelCounts, implementationApproachCounts, implementationStatusCounts });
 
         // Goals Analysis
         const primaryGoalCounts: Record<string, number> = {};
@@ -201,20 +242,41 @@ export const useOnboardingAnalytics = (timeRange: string = '30d') => {
         const investmentCapacityCounts: Record<string, number> = {};
         const timelineCounts: Record<string, number> = {};
 
-        onboardingData.forEach(user => {
+        console.log('🎯 [GOALS] Iniciando análise de objetivos e metas...');
+
+        onboardingData.forEach((user, index) => {
           const goals = user.goals_info;
-          if (goals && typeof goals === 'object' && Object.keys(goals).length > 0) {
+          
+          // Simplified validation
+          if (goals && typeof goals === 'object') {
+            if (index < 3) {
+              console.log(`🎯 [GOALS] Usuário ${index + 1}:`, goals);
+            }
+            
             // Primary goal
             const primaryGoal = goals.primary_goal || 'Não informado';
             primaryGoalCounts[primaryGoal] = (primaryGoalCounts[primaryGoal] || 0) + 1;
 
-            // Priority areas (array field)
-            if (Array.isArray(goals.priority_areas) && goals.priority_areas.length > 0) {
-              goals.priority_areas.forEach((area: string) => {
-                if (area && area.trim()) {
-                  priorityAreaCounts[area] = (priorityAreaCounts[area] || 0) + 1;
+            // Priority areas (array field) - Handle both array and string cases
+            if (goals.priority_areas) {
+              let priorityAreas = goals.priority_areas;
+              
+              // Handle if it's a string (maybe JSON stringified)
+              if (typeof priorityAreas === 'string') {
+                try {
+                  priorityAreas = JSON.parse(priorityAreas);
+                } catch (e) {
+                  priorityAreas = [priorityAreas]; // Treat as single item
                 }
-              });
+              }
+              
+              if (Array.isArray(priorityAreas) && priorityAreas.length > 0) {
+                priorityAreas.forEach((area: string) => {
+                  if (area && area.trim()) {
+                    priorityAreaCounts[area] = (priorityAreaCounts[area] || 0) + 1;
+                  }
+                });
+              }
             }
 
             // Investment capacity
@@ -224,8 +286,12 @@ export const useOnboardingAnalytics = (timeRange: string = '30d') => {
             // Timeline
             const timeline = goals.timeline || 'Não informado';
             timelineCounts[timeline] = (timelineCounts[timeline] || 0) + 1;
+          } else if (index < 3) {
+            console.log(`❌ [GOALS] Usuário ${index + 1} sem dados de objetivos válidos:`, goals);
           }
         });
+
+        console.log('📊 [GOALS] Contagens finais:', { primaryGoalCounts, priorityAreaCounts, investmentCapacityCounts, timelineCounts });
 
         // Learning Preferences Analysis
         const contentTypeCounts: Record<string, number> = {};
@@ -233,16 +299,37 @@ export const useOnboardingAnalytics = (timeRange: string = '30d') => {
         const availabilityCounts: Record<string, number> = {};
         const communicationFreqCounts: Record<string, number> = {};
 
-        onboardingData.forEach(user => {
+        console.log('📚 [LEARNING PREFERENCES] Iniciando análise de preferências de aprendizado...');
+
+        onboardingData.forEach((user, index) => {
           const preferences = user.personalization;
-          if (preferences && typeof preferences === 'object' && Object.keys(preferences).length > 0) {
-            // Preferred content (array field)
-            if (Array.isArray(preferences.preferred_content) && preferences.preferred_content.length > 0) {
-              preferences.preferred_content.forEach((content: string) => {
-                if (content && content.trim()) {
-                  contentTypeCounts[content] = (contentTypeCounts[content] || 0) + 1;
+          
+          // Simplified validation
+          if (preferences && typeof preferences === 'object') {
+            if (index < 3) {
+              console.log(`📚 [LEARNING PREFERENCES] Usuário ${index + 1}:`, preferences);
+            }
+            
+            // Preferred content (array field) - Handle both array and string cases
+            if (preferences.preferred_content) {
+              let preferredContent = preferences.preferred_content;
+              
+              // Handle if it's a string (maybe JSON stringified)
+              if (typeof preferredContent === 'string') {
+                try {
+                  preferredContent = JSON.parse(preferredContent);
+                } catch (e) {
+                  preferredContent = [preferredContent]; // Treat as single item
                 }
-              });
+              }
+              
+              if (Array.isArray(preferredContent) && preferredContent.length > 0) {
+                preferredContent.forEach((content: string) => {
+                  if (content && content.trim()) {
+                    contentTypeCounts[content] = (contentTypeCounts[content] || 0) + 1;
+                  }
+                });
+              }
             }
 
             // Learning style
@@ -256,8 +343,12 @@ export const useOnboardingAnalytics = (timeRange: string = '30d') => {
             // Communication frequency
             const freq = preferences.communication_frequency || 'Não informado';
             communicationFreqCounts[freq] = (communicationFreqCounts[freq] || 0) + 1;
+          } else if (index < 3) {
+            console.log(`❌ [LEARNING PREFERENCES] Usuário ${index + 1} sem dados de preferências válidos:`, preferences);
           }
         });
+
+        console.log('📊 [LEARNING PREFERENCES] Contagens finais:', { contentTypeCounts, learningStyleCounts, availabilityCounts, communicationFreqCounts });
 
         // Process Metrics
         const stepCounts = [1, 2, 3, 4, 5].map(step => {
