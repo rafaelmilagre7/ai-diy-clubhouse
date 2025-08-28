@@ -149,6 +149,12 @@ serve(async (req) => {
 
     console.log('Implementation request saved:', implementationRequest.id);
 
+    // Declarar variáveis no escopo global da função (para usar no Pipedrive e Discord)
+    let pipelineId: number = 2;                    // Valor padrão
+    let stageId: number = 6;                       // Valor padrão  
+    let pipelineName: string = 'Pipeline Padrão';  // Valor padrão
+    let stageName: string = 'Oportunidade';        // Valor padrão
+
     // 2. Criar deal no Pipedrive
     let pipedriveData: PipedriveResponse | null = null;
     const pipedriveToken = Deno.env.get('PIPEDRIVE_API_TOKEN');
@@ -168,10 +174,9 @@ serve(async (req) => {
         console.log('Pipelines response status:', pipelinesResponse.status);
         console.log('Pipelines encontrados:', pipelinesData.data?.length || 0);
         
-        let pipelineId = null;
-        let stageId = null;
-        let pipelineName = '';
-        let stageName = '';
+        // Reset para buscar valores dinâmicos (manterá padrões se não encontrar)
+        let tempPipelineId = null;
+        let tempStageId = null;
         
         if (pipelinesData.success && pipelinesData.data) {
           // Encontrar pipeline "inside sales viver de ia" (busca flexível)
