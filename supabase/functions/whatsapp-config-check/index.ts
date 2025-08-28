@@ -576,6 +576,57 @@ async function getAllTemplates() {
   return result
 }
 
+// Função para formatar número de telefone
+function formatPhoneNumber(phone: string): string {
+  // Remove todos os caracteres não numéricos
+  const cleanPhone = phone.replace(/\D/g, '');
+  
+  // Se já tem código do país, usar como está
+  if (cleanPhone.startsWith('55')) {
+    return cleanPhone;
+  }
+  
+  // Se tem 11 dígitos (celular brasileiro), adicionar 55
+  if (cleanPhone.length === 11) {
+    return '55' + cleanPhone;
+  }
+  
+  // Se tem 10 dígitos (fixo brasileiro), adicionar 55
+  if (cleanPhone.length === 10) {
+    return '55' + cleanPhone;
+  }
+  
+  // Caso contrário, retornar como está
+  return cleanPhone;
+}
+
+// Mapeamento de templates conhecidos com seus parâmetros de teste
+const TEMPLATE_TEST_MAPPING = {
+  'convitevia': {
+    parameterCount: 2,
+    testValues: [
+      { type: "text", text: "Teste Usuario" },
+      { type: "text", text: "https://test.example.com/convite/TEST123" }
+    ]
+  },
+  'fluxo_captacao': {
+    parameterCount: 1,
+    testValues: [
+      { type: "text", text: "Teste Usuario" }
+    ]
+  },
+  'anuncioclub_25_08': {
+    parameterCount: 1,
+    testValues: [
+      { type: "text", text: "Teste Usuario" }
+    ]
+  },
+  'ads_relatorio_day': {
+    parameterCount: 0,
+    testValues: []
+  }
+};
+
 // NOVA FUNÇÃO: Testar template específico
 async function testSpecificTemplate(templateName: string, testPhone: string) {
   console.log(`🧪 Testando template "${templateName}" para ${testPhone}...`)
@@ -632,34 +683,64 @@ async function testSpecificTemplate(templateName: string, testPhone: string) {
     result.details.push(`📊 Status: ${template.status}`)
     result.details.push(`🌐 Idioma: ${template.language}`)
 
+    // Buscar mapeamento do template ou usar fallback
+    const templateConfig = TEMPLATE_TEST_MAPPING[templateName as keyof typeof TEMPLATE_TEST_MAPPING];
+    
+    let templateComponents = [];
+    
+    if (templateConfig) {
+      // Usar configuração conhecida
+      console.log(`📋 Usando configuração conhecida para template "${templateName}"`);
+      result.details.push(`🔧 Parâmetros configurados: ${templateConfig.parameterCount}`);
+      
+      if (templateConfig.parameterCount > 0) {
+        templateComponents = [{
+          type: "body",
+          parameters: templateConfig.testValues
+        }];
+      }
+    } else {
+      // Tentar detectar automaticamente (fallback)
+      console.log(`⚠️ Template "${templateName}" não mapeado, tentando detectar parâmetros...`);
+      result.warnings.push(`Template "${templateName}" não mapeado - usando detecção automática`);
+      
+      // Procurar por componentes body com variáveis
+      const bodyComponent = template.components?.find((c: any) => c.type === 'BODY');
+      if (bodyComponent?.example?.body_text?.[0]?.length > 0) {
+        const exampleText = bodyComponent.example.body_text[0][0];
+        const parameterCount = (exampleText.match(/\{\{[0-9]+\}\}/g) || []).length;
+        
+        console.log(`🔍 Detectados ${parameterCount} parâmetros no template`);
+        result.details.push(`🔍 Parâmetros detectados: ${parameterCount}`);
+        
+        if (parameterCount > 0) {
+          templateComponents = [{
+            type: "body",
+            parameters: Array(parameterCount).fill(null).map((_, index) => ({
+              type: "text",
+              text: `Teste_${index + 1}`
+            }))
+          }];
+        }
+      }
+    }
+
     // Preparar dados do template para envio
     const templateData = {
       messaging_product: "whatsapp",
-      to: testPhone.replace(/\D/g, '').replace(/^(\d{11})$/, '55$1'), // Formatar número
+      to: formatPhoneNumber(testPhone),
       type: "template",
       template: {
         name: templateName,
         language: {
           code: template.language || "pt_BR"
         },
-        components: []
+        components: templateComponents
       }
     }
 
-    // Se o template tem componentes de parâmetros, adicionar valores de teste
-    if (template.components && Array.isArray(template.components)) {
-      template.components.forEach((component: any) => {
-        if (component.type === 'BODY' && component.parameters) {
-          templateData.template.components.push({
-            type: "body",
-            parameters: component.parameters.map((param: any, index: number) => ({
-              type: "text",
-              text: `TESTE_${index + 1}`
-            }))
-          })
-        }
-      })
-    }
+    console.log(`📤 Dados do template para envio:`, JSON.stringify(templateData, null, 2));
+    result.details.push(`📤 Enviando para: ${templateData.to}`);
 
     // Enviar mensagem via API
     const sendResponse = await fetch(
@@ -684,6 +765,9 @@ async function testSpecificTemplate(templateName: string, testPhone: string) {
       result.details.push(`📱 Número de destino: ${templateData.to}`)
     } else {
       result.errors.push(`Falha no envio: ${sendData.error?.message || 'Erro desconhecido'}`)
+      if (sendData.error?.error_data) {
+        result.errors.push(`Detalhes: ${JSON.stringify(sendData.error.error_data)}`)
+      }
       console.error('❌ Erro no envio:', sendData)
     }
 
