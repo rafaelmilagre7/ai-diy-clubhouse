@@ -5513,7 +5513,9 @@ export type Database = {
         Returns: Json
       }
       create_invite_batch: {
-        Args: { p_emails: string[]; p_expires_in?: unknown; p_role_id: string }
+        Args:
+          | { p_emails: string[]; p_expires_in?: unknown; p_role_id: string }
+          | { p_invites: Json }
         Returns: Json
       }
       create_invite_hybrid: {

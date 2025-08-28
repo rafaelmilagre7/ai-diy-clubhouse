@@ -85,11 +85,17 @@ export const useInviteBulkCreate = () => {
           throw new Error('Papel não encontrado. Selecione um papel válido.');
         }
 
-        const emails = contacts.map(contact => contact.cleaned.email);
+        // Preparar dados para a nova estrutura da RPC
+        const inviteData = contacts.map(contact => ({
+          email: contact.cleaned.email,
+          role_id: finalRoleId,
+          whatsapp_number: contact.cleaned.phone,
+          notes: contact.cleaned.notes,
+          preferred_channel: contact.cleaned.channel || (contact.cleaned.phone ? 'whatsapp' : 'email')
+        }));
+
         const { data, error: batchError } = await supabase.rpc('create_invite_batch', {
-          p_emails: emails,
-          p_role_id: finalRoleId,
-          p_expires_in: expiresIn
+          p_invites: inviteData
         });
 
         if (batchError) {
@@ -102,33 +108,51 @@ export const useInviteBulkCreate = () => {
 
       console.log('✅ [BULK-INVITE] Convites criados:', batchResult);
 
-      // Atualizar status dos items criados
-      const updatedItems = items.map((item, index) => {
-        let batchItem;
-        
-        if (hasIndividualRoles) {
-          // Para processamento individual, buscar resultado por email
-          batchItem = batchResult.invites?.find(inv => 
-            inv.email === item.contact.cleaned.email
-          );
-        } else {
-          // Para processamento batch, usar índice
-          batchItem = batchResult.invites?.[index];
-        }
+      // Verificar se RPC retornou sucesso
+      if (!batchResult || !batchResult.success) {
+        throw new Error(batchResult?.error || 'Erro na criação dos convites');
+      }
 
-        if (batchItem?.success || batchItem?.invite_id) {
+      // Atualizar status dos items criados usando nova estrutura
+      const createdInvites = batchResult.created || [];
+      const failedInvites = batchResult.failed || [];
+      
+      console.log('📝 [BULK-INVITE] Convites criados:', createdInvites);
+      console.log('❌ [BULK-INVITE] Convites falharam:', failedInvites);
+
+      const updatedItems = items.map(item => {
+        // Buscar convite criado por email
+        const createdInvite = createdInvites.find((inv: any) => 
+          inv.email === item.contact.cleaned.email
+        );
+        
+        if (createdInvite) {
           return {
             ...item,
             status: 'creating' as const,
-            inviteId: batchItem.invite_id
+            inviteId: createdInvite.invite_id
           };
-        } else {
+        }
+
+        // Buscar se falhou
+        const failedInvite = failedInvites.find((inv: any) => 
+          inv.email === item.contact.cleaned.email
+        );
+        
+        if (failedInvite) {
           return {
             ...item,
             status: 'error' as const,
-            error: batchItem?.error || 'Erro na criação'
+            error: failedInvite.error || 'Erro na criação'
           };
         }
+
+        // Se não encontrou nem em created nem em failed
+        return {
+          ...item,
+          status: 'error' as const,
+          error: 'Status desconhecido'
+        };
       });
 
       setProgress(prev => ({
@@ -256,10 +280,16 @@ export const useInviteBulkCreate = () => {
 
         console.log(`📧 [INDIVIDUAL-INVITE] Criando convite para ${contact.cleaned.email} com papel ${contactRole}`);
         
+        const inviteData = [{
+          email: contact.cleaned.email,
+          role_id: contactRoleId,
+          whatsapp_number: contact.cleaned.phone,
+          notes: contact.cleaned.notes,
+          preferred_channel: contact.cleaned.channel || (contact.cleaned.phone ? 'whatsapp' : 'email')
+        }];
+
         const { data, error } = await supabase.rpc('create_invite_batch', {
-          p_emails: [contact.cleaned.email],
-          p_role_id: contactRoleId,
-          p_expires_in: contact.cleaned.expires_in || '7 days'
+          p_invites: inviteData
         });
 
         if (error) {
@@ -268,16 +298,16 @@ export const useInviteBulkCreate = () => {
             error: error.message,
             email: contact.cleaned.email
           });
-        } else if (data?.invites?.[0]) {
+        } else if (data?.success && data.created?.[0]) {
           results.push({
             success: true,
-            invite_id: data.invites[0].invite_id,
+            invite_id: data.created[0].invite_id,
             email: contact.cleaned.email
           });
         } else {
           results.push({
             success: false,
-            error: 'Resposta inesperada do servidor',
+            error: data?.failed?.[0]?.error || 'Resposta inesperada do servidor',
             email: contact.cleaned.email
           });
         }
@@ -290,7 +320,22 @@ export const useInviteBulkCreate = () => {
       }
     }
     
-    return { invites: results };
+    return { 
+      success: true,
+      created: results.filter(r => r.success).map(r => ({
+        invite_id: r.invite_id,
+        email: r.email
+      })),
+      failed: results.filter(r => !r.success).map(r => ({
+        email: r.email,
+        error: r.error
+      })),
+      stats: {
+        total: results.length,
+        successful: results.filter(r => r.success).length,
+        failed: results.filter(r => !r.success).length
+      }
+    };
   };
 
   const resetProgress = () => {
