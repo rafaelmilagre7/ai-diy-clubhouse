@@ -22,17 +22,20 @@ export const useInviteCreate = () => {
       return null;
     }
 
+    const processStartTime = performance.now();
     try {
       setIsCreating(true);
       
-      console.log("📧 [INVITE-CREATE-OPTIMIZED] Criando convite:", {
+      console.log("🚀 [INVITE-CREATE-TIMED] Iniciando criação:", {
         email,
         roleId,
         channelPreference,
-        hasPhone: !!phone
+        hasPhone: !!phone,
+        startTime: new Date().toISOString()
       });
 
-      // ETAPA 1: Criar convite na base de dados (resposta IMEDIATA)
+      // ETAPA 1: Criar convite na base de dados (TEMPORIZANDO)
+      const dbStartTime = performance.now();
       const { data, error } = await supabase.rpc('create_invite_hybrid', {
         p_email: email,
         p_role_id: roleId,
@@ -40,6 +43,12 @@ export const useInviteCreate = () => {
         p_expires_in: `${expiresIn}`,
         p_notes: notes,
         p_channel_preference: channelPreference
+      });
+      const dbDuration = performance.now() - dbStartTime;
+
+      console.log("⏱️ [TIMING-DB] Criação no banco:", {
+        duration: `${Math.round(dbDuration)}ms`,
+        success: !error
       });
 
       if (error) {
@@ -52,7 +61,11 @@ export const useInviteCreate = () => {
         throw new Error(data.message);
       }
 
-      console.log("✅ [INVITE-CREATE-OPTIMIZED] Convite criado na DB:", data);
+      const totalCreationTime = performance.now() - processStartTime;
+      console.log("✅ [TIMING-TOTAL] Convite criado na DB:", {
+        totalDuration: `${Math.round(totalCreationTime)}ms`,
+        data: data
+      });
 
       // FEEDBACK IMEDIATO ao usuário
       toast.success('Convite criado com sucesso!', {
@@ -60,7 +73,7 @@ export const useInviteCreate = () => {
       });
 
       // ETAPA 2: Processar envio EM BACKGROUND (sem aguardar)
-      processInviteDeliveryInBackground(data, email, roleId, phone, channelPreference, notes);
+      processInviteDeliveryInBackground(data, email, roleId, phone, channelPreference, notes, processStartTime);
 
       return data;
 
@@ -86,23 +99,36 @@ const processInviteDeliveryInBackground = async (
   roleId: string,
   phone?: string,
   channelPreference: 'email' | 'whatsapp' | 'both' = 'email',
-  notes?: string
+  notes?: string,
+  processStartTime?: number
 ) => {
   // Não aguardar - processar em background
   setTimeout(async () => {
+    const backgroundStartTime = performance.now();
     try {
-      console.log("🚀 [BACKGROUND-DELIVERY] Iniciando envio assíncrono...");
+      console.log("🚀 [BACKGROUND-DELIVERY-TIMED] Iniciando envio assíncrono:", {
+        totalElapsed: processStartTime ? `${Math.round(performance.now() - processStartTime)}ms` : 'N/A',
+        startTime: new Date().toISOString()
+      });
 
       const inviteUrl = generateInviteUrl(inviteData.token);
 
-      // Buscar role name (cache local se possível)
+      // Buscar role name (TEMPORIZANDO)
+      const roleStartTime = performance.now();
       const { data: roleData } = await supabase
         .from('user_roles')
         .select('name')
         .eq('id', roleId)
         .single();
+      const roleDuration = performance.now() - roleStartTime;
+
+      console.log("⏱️ [TIMING-ROLE] Busca de role:", {
+        duration: `${Math.round(roleDuration)}ms`,
+        roleName: roleData?.name
+      });
 
       // Usar sistema de envio otimizado
+      const sendStartTime = performance.now();
       const sendResult = await sendInviteNotificationOptimized({
         email,
         phone,
@@ -114,10 +140,18 @@ const processInviteDeliveryInBackground = async (
         inviteId: inviteData.invite_id,
         channelPreference
       });
+      const sendDuration = performance.now() - sendStartTime;
 
-      // Toast de feedback após envio em background
+      console.log("⏱️ [TIMING-SEND] Envio completo:", {
+        duration: `${Math.round(sendDuration)}ms`,
+        success: sendResult.success,
+        method: sendResult.method
+      });
+
+      // Toast de feedback específico por canal
       if (sendResult.success) {
-        toast.success('📧 Convite enviado!', {
+        const methodEmoji = sendResult.method?.includes('email') ? '📧' : '📱';
+        toast.success(`${methodEmoji} Convite enviado!`, {
           description: `Enviado para ${email} via ${sendResult.method}`
         });
       } else {
@@ -125,6 +159,12 @@ const processInviteDeliveryInBackground = async (
           description: sendResult.error || 'Tentaremos reenviar automaticamente'
         });
       }
+
+      const totalBackgroundTime = performance.now() - backgroundStartTime;
+      console.log("⏱️ [TIMING-BACKGROUND] Processamento completo:", {
+        totalDuration: `${Math.round(totalBackgroundTime)}ms`,
+        success: sendResult.success
+      });
 
     } catch (bgError: any) {
       console.error('❌ [BACKGROUND-DELIVERY] Erro:', bgError);
@@ -229,23 +269,31 @@ const sendInviteNotificationOptimized = async ({
         }
       });
 
-      // Timeout REDUZIDO para 3s (otimização)
+      // Timeouts OTIMIZADOS: Email 5s, WhatsApp 8s (para cold start)
       const emailWithTimeout = Promise.race([
         emailPromise,
         new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Timeout email (3s)')), 3000)
+          setTimeout(() => reject(new Error('Timeout email (5s)')), 5000)
         )
       ]);
 
       const whatsappWithTimeout = Promise.race([
         whatsappPromise,
         new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Timeout WhatsApp (3s)')), 3000)
+          setTimeout(() => reject(new Error('Timeout WhatsApp (8s)')), 8000)
         )
       ]);
 
-      // Executar ambos em paralelo
+      // Executar ambos em paralelo COM TIMING
+      const parallelStartTime = performance.now();
       const results = await Promise.allSettled([emailWithTimeout, whatsappWithTimeout]);
+      const parallelDuration = performance.now() - parallelStartTime;
+      
+      console.log("⏱️ [TIMING-PARALLEL] Execução paralela:", {
+        duration: `${Math.round(parallelDuration)}ms`,
+        emailStatus: results[0].status,
+        whatsappStatus: results[1].status
+      });
       
       const [emailResult, whatsappResult] = results;
       let emailSuccess = false;
