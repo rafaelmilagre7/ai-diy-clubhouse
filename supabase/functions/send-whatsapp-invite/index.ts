@@ -88,7 +88,13 @@ serve(async (req) => {
       }
     }
 
-    console.log('📱 [WHATSAPP] Enviando template...')
+    console.log('📱 [WHATSAPP-DETAILED] Enviando template:', {
+      templateName: 'convitevia',
+      templateData: JSON.stringify(templateData, null, 2),
+      recipientPhone: formattedPhone,
+      phoneNumberId,
+      timestamp: new Date().toISOString()
+    })
 
     // ENVIAR COM TIMEOUT OTIMIZADO (10s) + RETRY
     const sendStartTime = Date.now();
@@ -123,9 +129,19 @@ serve(async (req) => {
         clearTimeout(timeoutId);
         const attemptDuration = Date.now() - attemptStartTime;
         
-        console.log(`⏱️ [TIMING-ATTEMPT-${attempt}] Tentativa completa:`, {
+        // LOGS DETALHADOS DA RESPOSTA DA API META
+        const responseHeaders = {};
+        whatsappResponse.headers.forEach((value, key) => {
+          responseHeaders[key] = value;
+        });
+        
+        console.log(`📱 [META-API-DETAILED-${attempt}] Resposta completa:`, {
+          status: whatsappResponse.status,
+          statusText: whatsappResponse.statusText,
+          headers: responseHeaders,
           duration: `${attemptDuration}ms`,
-          status: whatsappResponse.status
+          url: whatsappResponse.url,
+          templateUsed: 'convitevia'
         });
         
         // Se sucesso, sair do loop
@@ -186,18 +202,34 @@ serve(async (req) => {
     const whatsappResult = await whatsappResponse.json();
     const parseDuration = Date.now() - parseStartTime;
     
-    console.log(`⏱️ [TIMING-PARSE] Parse da resposta:`, {
+    // LOGS DETALHADOS DA RESPOSTA JSON
+    console.log(`📱 [META-RESPONSE-DETAILED] Resposta JSON completa:`, {
+      responseBody: JSON.stringify(whatsappResult, null, 2),
       duration: `${parseDuration}ms`,
-      responseOk: whatsappResponse.ok
+      responseOk: whatsappResponse.ok,
+      hasMessages: !!whatsappResult.messages,
+      hasError: !!whatsappResult.error,
+      timestamp: new Date().toISOString()
     });
 
     if (!whatsappResponse.ok) {
       const errorMsg = `Erro ${whatsappResponse.status}: ${whatsappResult.error?.message || whatsappResult.message || 'Erro desconhecido'}`;
-      console.error('❌ [WHATSAPP] Erro da API:', {
-        status: whatsappResponse.status,
-        error: errorMsg,
-        fullResponse: whatsappResult
+      
+      // LOGS CRÍTICOS DE ERRO DA API META
+      console.error('🚨 [META-ERROR-CRITICAL] Erro detalhado da API:', {
+        httpStatus: whatsappResponse.status,
+        httpStatusText: whatsappResponse.statusText,
+        errorCode: whatsappResult.error?.code,
+        errorSubcode: whatsappResult.error?.error_subcode,
+        errorMessage: whatsappResult.error?.message,
+        errorType: whatsappResult.error?.type,
+        errorDetails: whatsappResult.error?.error_data,
+        fullErrorResponse: JSON.stringify(whatsappResult, null, 2),
+        templateName: 'convitevia',
+        recipientPhone: formattedPhone,
+        timestamp: new Date().toISOString()
       });
+      
       throw new Error(errorMsg);
     }
 
