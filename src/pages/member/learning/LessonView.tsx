@@ -23,12 +23,23 @@ const LessonView = () => {
     videos,
     courseInfo,
     moduleData,
-    allCourseLessons, // Nova propriedade com todas as aulas do curso
+    allCourseLessons,
     isLoading,
-    error
+    error,
+    extractedCourseId // Novo campo com courseId extraído
   } = useLessonData({ 
     lessonId, 
     courseId 
+  });
+  
+  // Usar courseId válido (extraído da lição se necessário)
+  const validCourseId = extractedCourseId || courseId;
+  
+  console.log('🔧 [LESSON-VIEW] CourseId Status:', {
+    fromParams: courseId,
+    extracted: extractedCourseId,
+    final: validCourseId,
+    isValid: validCourseId && validCourseId !== 'undefined'
   });
   
   // Garantir que temos arrays válidos
@@ -44,7 +55,7 @@ const LessonView = () => {
     navigateToNext,
     navigateToPrevious
   } = useLessonNavigation({
-    courseId,
+    courseId: validCourseId, // Usar courseId válido
     currentLessonId: lessonId,
     lessons: safeAllCourseLessons // Usar todas as aulas do curso em vez de apenas do módulo
   });
@@ -137,7 +148,7 @@ const LessonView = () => {
               title={lesson?.title || ""} 
               moduleTitle={moduleData?.module?.title || ""}
               courseTitle={courseInfo?.title}
-              courseId={courseId}
+              courseId={validCourseId} // Usar courseId válido
               progress={isCompleted ? 100 : 0}
             />
             
@@ -156,7 +167,7 @@ const LessonView = () => {
                   onComplete={completeLesson}
                   prevLesson={prevLesson}
                   nextLesson={nextLesson}
-                  courseId={courseId}
+                  courseId={validCourseId} // Usar courseId válido
                   allLessons={safeAllCourseLessons}
                   onNextLesson={navigateToNext}
                   onPreviousLesson={navigateToPrevious}

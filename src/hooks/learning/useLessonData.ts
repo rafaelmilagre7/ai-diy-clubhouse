@@ -1,5 +1,6 @@
 
 import { useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { LearningLessonVideo, LearningResource } from "@/lib/supabase/types";
 import { LearningLessonWithRelations } from "@/lib/supabase/types/extended";
@@ -20,6 +21,13 @@ export interface LessonModule {
 }
 
 export function useLessonData({ lessonId, courseId }: UseLessonDataProps) {
+  // Extrair courseId automaticamente da lição se não fornecido ou inválido
+  const validCourseId = useMemo(() => {
+    if (courseId && courseId !== 'undefined' && courseId !== 'null' && courseId.length > 10) {
+      return courseId;
+    }
+    return null;
+  }, [courseId]);
   // Buscar detalhes da lição - OTIMIZADO para carregamento mais rápido
   const { 
     data: lesson, 
@@ -104,29 +112,31 @@ export function useLessonData({ lessonId, courseId }: UseLessonDataProps) {
   const { 
     data: courseInfo 
   } = useQuery({
-    queryKey: ["learning-course", courseId],
+    queryKey: ["learning-course", validCourseId || lesson?.module?.course_id],
     queryFn: async () => {
-      if (!courseId) return null;
+      const actualCourseId = validCourseId || lesson?.module?.course_id;
+      if (!actualCourseId) return null;
       
       const { data, error } = await supabase
         .from("learning_courses")
         .select("*")
-        .eq("id", courseId)
+        .eq("id", actualCourseId)
         .maybeSingle();
         
       if (error) return null;
       return data;
     },
-    enabled: !!courseId
+    enabled: !!(validCourseId || lesson?.module?.course_id)
   });
   
   // Buscar TODAS as aulas do curso para navegação correta
   const { 
     data: allCourseLessons = [] 
   } = useQuery({
-    queryKey: ["learning-course-all-lessons", courseId],
+    queryKey: ["learning-course-all-lessons", validCourseId || lesson?.module?.course_id],
     queryFn: async () => {
-      if (!courseId) return [];
+      const actualCourseId = validCourseId || lesson?.module?.course_id;
+      if (!actualCourseId) return [];
       
       // Buscar todos os módulos do curso com suas aulas (todos os campos)
       const { data: modules, error: modulesError } = await supabase
@@ -135,7 +145,7 @@ export function useLessonData({ lessonId, courseId }: UseLessonDataProps) {
           *,
           lessons:learning_lessons(*)
         `)
-        .eq("course_id", courseId)
+        .eq("course_id", actualCourseId)
         .eq("published", true)
         .order("order_index", { ascending: true });
         
@@ -189,7 +199,7 @@ export function useLessonData({ lessonId, courseId }: UseLessonDataProps) {
       
       return allLessons;
     },
-    enabled: !!courseId
+    enabled: !!(validCourseId || lesson?.module?.course_id)
   });
   
   // Buscar informações do módulo atual para compatibilidade
@@ -216,14 +226,18 @@ export function useLessonData({ lessonId, courseId }: UseLessonDataProps) {
     enabled: !!lesson?.module_id && allCourseLessons.length > 0
   });
 
+  // Extrair courseId da lição se não foi fornecido um válido
+  const extractedCourseId = lesson?.module?.course_id || validCourseId;
+  
   return {
     lesson,
     resources,
     videos,
     courseInfo,
     moduleData,
-    allCourseLessons, // Nova propriedade com todas as aulas do curso
+    allCourseLessons,
     isLoading: isLoadingLesson || isLoadingResources || isLoadingVideos,
-    error: lessonError
+    error: lessonError,
+    extractedCourseId // Novo campo com courseId extraído
   };
 }

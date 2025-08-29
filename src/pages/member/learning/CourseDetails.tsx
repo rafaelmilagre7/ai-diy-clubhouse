@@ -21,6 +21,20 @@ const CourseDetails = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const { modalState, hideUpgradeModal } = usePremiumUpgradeModal();
   
+  // Validação UUID antes de fazer queries
+  const isValidUUID = (uuid?: string): boolean => {
+    if (!uuid || uuid === 'undefined' || uuid === 'null') return false;
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(uuid);
+  };
+  
+  // Redirecionar se courseId for inválido
+  if (!isValidUUID(id)) {
+    console.warn('⚠️ [COURSE-DETAILS] CourseId inválido detectado:', id);
+    navigate('/learning', { replace: true });
+    return null;
+  }
+  
   const { course, modules, allLessons, userProgress, isLoading, error } = useCourseDetails(id);
   const { courseStats, firstLessonId, courseProgress } = useCourseStats({ 
     modules, 

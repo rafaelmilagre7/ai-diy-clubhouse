@@ -21,12 +21,36 @@ export function useLessonNavigation({
 }: UseLessonNavigationProps) {
   const navigate = useNavigate();
 
+  // Função auxiliar para extrair courseId válido
+  const getValidCourseId = useCallback((): string | null => {
+    // 1. Verificar se courseId fornecido é válido
+    if (courseId && courseId !== 'undefined' && courseId !== 'null' && courseId.length > 10) {
+      return courseId;
+    }
+    
+    // 2. Tentar extrair da lição atual
+    if (lessons.length > 0 && currentLessonId) {
+      const currentLesson = lessons.find(lesson => lesson.id === currentLessonId);
+      if (currentLesson?.module?.course_id) {
+        console.log('🔧 [NAVIGATION-FALLBACK] CourseId extraído da lição:', currentLesson.module.course_id);
+        return currentLesson.module.course_id;
+      }
+    }
+    
+    // 3. Tentar extrair de qualquer lição disponível
+    if (lessons.length > 0 && lessons[0]?.module?.course_id) {
+      console.log('🔧 [NAVIGATION-FALLBACK] CourseId extraído da primeira lição:', lessons[0].module.course_id);
+      return lessons[0].module.course_id;
+    }
+    
+    console.warn('⚠️ [NAVIGATION-FALLBACK] Nenhum courseId válido encontrado');
+    return null;
+  }, [courseId, currentLessonId, lessons]);
+
   const findAdjacentLessons = useCallback((): AdjacentLessons => {
     if (!lessons.length || !currentLessonId) {
       return { prev: null, next: null };
     }
-    
-    // As aulas já vêm ordenadas do hook useLessonData
     
     const currentIndex = lessons.findIndex(lesson => lesson.id === currentLessonId);
     
@@ -38,7 +62,6 @@ export function useLessonNavigation({
     const prevLesson = currentIndex > 0 ? lessons[currentIndex - 1] : null;
     const nextLesson = currentIndex < lessons.length - 1 ? lessons[currentIndex + 1] : null;
     
-    
     return {
       prev: prevLesson,
       next: nextLesson
@@ -48,25 +71,37 @@ export function useLessonNavigation({
   const { prev, next } = findAdjacentLessons();
 
   const navigateToPrevious = useCallback(() => {
-    if (prev && courseId) {
-      navigate(`/learning/course/${courseId}/lesson/${prev.id}`);
+    const validCourseId = getValidCourseId();
+    
+    if (prev && validCourseId) {
+      navigate(`/learning/course/${validCourseId}/lesson/${prev.id}`);
     }
-  }, [prev, courseId, navigate]);
+  }, [prev, getValidCourseId, navigate]);
 
   const navigateToNext = useCallback(() => {
-    if (next && courseId) {
-      navigate(`/learning/course/${courseId}/lesson/${next.id}`);
-    } else if (courseId) {
+    const validCourseId = getValidCourseId();
+    
+    if (next && validCourseId) {
+      navigate(`/learning/course/${validCourseId}/lesson/${next.id}`);
+    } else if (validCourseId) {
       // Voltar para a página do curso se não houver próxima aula
-      navigate(`/learning/course/${courseId}`);
+      navigate(`/learning/course/${validCourseId}`);
+    } else {
+      navigate('/learning');
     }
-  }, [next, courseId, navigate]);
+  }, [next, getValidCourseId, navigate]);
 
   const navigateToCourse = useCallback(() => {
-    if (courseId) {
-      navigate(`/learning/course/${courseId}`);
+    const validCourseId = getValidCourseId();
+    
+    if (validCourseId) {
+      console.log('🔧 [NAVIGATION] Navegando para curso:', validCourseId);
+      navigate(`/learning/course/${validCourseId}`);
+    } else {
+      console.warn('⚠️ [NAVIGATION-ERROR] CourseId inválido, redirecionando para /learning');
+      navigate('/learning');
     }
-  }, [courseId, navigate]);
+  }, [getValidCourseId, navigate]);
 
   return {
     prevLesson: prev,
