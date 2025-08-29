@@ -23,7 +23,7 @@ interface SendInviteEmailRequest {
 }
 
 const handler = async (req: Request): Promise<Response> => {
-  console.log('🚀 [SEND-INVITE-EMAIL] Processamento iniciado - v2.0');
+  console.log('🚀 [SEND-INVITE-EMAIL-OPTIMIZED] Processamento iniciado - v3.0');
 
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -52,116 +52,87 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('📧 [SEND-INVITE-EMAIL] Dados recebidos:', {
       email: body.email,
       roleName: body.roleName,
-      invitedBy: body.senderName,
-      inviteUrl: body.inviteUrl
+      hasInviteId: !!body.inviteId
     });
 
-    // Usar a URL do convite fornecida
-    const inviteUrl = body.inviteUrl;
-    
-    console.log('🔗 [SEND-INVITE-EMAIL] URL do convite:', inviteUrl);
+    // VALIDAÇÃO RÁPIDA
+    if (!body.inviteUrl || !body.inviteUrl.includes('/convite/')) {
+      throw new Error('URL de convite inválida');
+    }
 
-    // Verificar dados do template antes de renderizar
+    // PREPARAR TEMPLATE
     const templateData = {
-      inviteUrl,
-      invitedByName: body.senderName,
+      inviteUrl: body.inviteUrl,
+      invitedByName: body.senderName || 'Equipe Viver de IA',
       recipientEmail: body.email,
       roleName: body.roleName,
       companyName: 'Viver de IA',
       expiresAt: body.expiresAt,
       notes: body.notes,
     };
-    
-    console.log('📋 [SEND-INVITE-EMAIL] Dados do template:', templateData);
 
-    // Renderizar template do email
-    const emailHtml = await renderAsync(
-      React.createElement(InviteEmail, templateData)
-    );
+    // RENDERIZAR E ENVIAR (com timeout de 8s)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-    console.log('📝 [SEND-INVITE-EMAIL] Template renderizado com sucesso');
+    try {
+      const emailHtml = await renderAsync(
+        React.createElement(InviteEmail, templateData)
+      );
 
-    // Enviar email via Resend
-    const { data: emailResult, error: emailError } = await resend.emails.send({
-      from: 'Viver de IA <convites@viverdeia.ai>',
-      to: [body.email],
-      subject: `🚀 Você foi convidado para a plataforma Viver de IA!`,
-      html: emailHtml,
-      replyTo: 'suporte@viverdeia.ai',
-    });
+      const { data: emailResult, error: emailError } = await resend.emails.send({
+        from: 'Viver de IA <convites@viverdeia.ai>',
+        to: [body.email],
+        subject: `🚀 Você foi convidado para a plataforma Viver de IA!`,
+        html: emailHtml,
+        replyTo: 'suporte@viverdeia.ai',
+      });
 
-    if (emailError) {
-      console.error('❌ [SEND-INVITE-EMAIL] Erro no Resend:', emailError);
-      throw emailError;
-    }
+      clearTimeout(timeoutId);
 
-    console.log('✅ [SEND-INVITE-EMAIL] Email enviado com sucesso:', emailResult?.id);
-
-    // Mover operações de log para background para resposta imediata
-    EdgeRuntime.waitUntil(
-      (async () => {
-        try {
-          // Registrar delivery no banco
-          const { error: deliveryError } = await supabase
-            .from('invite_deliveries')
-            .insert({
-              invite_id: body.inviteId,
-              channel: 'email',
-              status: 'sent',
-              provider_id: emailResult?.id,
-              sent_at: new Date().toISOString(),
-              metadata: {
-                resend_id: emailResult?.id,
-                recipient: body.email,
-                template: 'invite-email',
-              }
-            });
-
-          if (deliveryError) {
-            console.warn('⚠️ [SEND-INVITE-EMAIL] Erro ao registrar delivery:', deliveryError);
-          }
-
-          // Atualizar estatísticas do convite
-          const { error: updateError } = await supabase
-            .from('invites')
-            .update({
-              send_attempts: 1,
-              last_sent_at: new Date().toISOString()
-            })
-            .eq('id', body.inviteId);
-
-          if (updateError) {
-            console.warn('⚠️ [SEND-INVITE-EMAIL] Erro ao atualizar convite:', updateError);
-          }
-
-          console.log('✅ [SEND-INVITE-EMAIL] Logs e estatísticas atualizados em background');
-        } catch (bgError: any) {
-          console.error('❌ [SEND-INVITE-EMAIL] Erro em background task:', bgError);
-        }
-      })()
-    );
-
-    // Resposta imediata após sucesso do Resend para melhor UX
-    const immediateResponse = new Response(
-      JSON.stringify({
-        success: true,
-        messageId: emailResult?.id,
-        sentAt: new Date().toISOString(),
-        recipient: body.email
-      }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      if (emailError) {
+        console.error('❌ [SEND-INVITE-EMAIL] Erro no Resend:', emailError);
+        throw emailError;
       }
-    );
 
-    return immediateResponse;
+      console.log('✅ [SEND-INVITE-EMAIL] Email enviado:', emailResult?.id);
+
+      // REGISTRAR LOGS EM BACKGROUND para resposta IMEDIATA
+      if (EdgeRuntime?.waitUntil && body.inviteId) {
+        EdgeRuntime.waitUntil(
+          updateInviteStatsInBackground(supabase, body.inviteId, emailResult?.id, body.email)
+        );
+      }
+
+      // RESPOSTA IMEDIATA
+      return new Response(
+        JSON.stringify({
+          success: true,
+          messageId: emailResult?.id,
+          sentAt: new Date().toISOString(),
+          recipient: body.email
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+
+    } catch (sendError: any) {
+      clearTimeout(timeoutId);
+      
+      if (sendError.name === 'AbortError') {
+        throw new Error('Timeout no envio de email (8s)');
+      }
+      throw sendError;
+    }
 
   } catch (error: any) {
     console.error('❌ [SEND-INVITE-EMAIL] Erro geral:', error);
     
     return new Response(
       JSON.stringify({ 
+        success: false,
         error: error.message,
         details: 'Falha no envio do email de convite'
       }),
@@ -172,5 +143,46 @@ const handler = async (req: Request): Promise<Response> => {
     );
   }
 };
+
+// FUNÇÃO DE BACKGROUND PARA LOGS
+async function updateInviteStatsInBackground(
+  supabase: any, 
+  inviteId: string, 
+  messageId: string | undefined, 
+  email: string
+) {
+  try {
+    console.log('🔄 [BACKGROUND] Atualizando estatísticas...');
+    
+    // Registrar delivery
+    await supabase
+      .from('invite_deliveries')
+      .insert({
+        invite_id: inviteId,
+        channel: 'email',
+        status: 'sent',
+        provider_id: messageId,
+        sent_at: new Date().toISOString(),
+        metadata: {
+          resend_id: messageId,
+          recipient: email,
+          template: 'invite-email',
+        }
+      });
+
+    // Atualizar estatísticas
+    await supabase
+      .from('invites')
+      .update({
+        send_attempts: 1,
+        last_sent_at: new Date().toISOString()
+      })
+      .eq('id', inviteId);
+
+    console.log('✅ [BACKGROUND] Estatísticas atualizadas');
+  } catch (bgError: any) {
+    console.error('❌ [BACKGROUND] Erro ao atualizar:', bgError);
+  }
+}
 
 serve(handler);

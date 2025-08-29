@@ -15,3 +15,4 @@ export * from './useWhatsAppDeliveryTest';
 export * from './useContactDataCleaner';
 export * from './useRoleMapping';
 export * from './useInviteCSVExport';
+export * from './useInviteCreateMonitoring';

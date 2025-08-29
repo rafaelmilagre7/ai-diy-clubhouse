@@ -154,5 +154,8 @@ verify_jwt = false
 [functions.update-pipedrive-settings]
 verify_jwt = false
 
+[functions.warmup-invites]
+verify_jwt = false
+
 [functions.whatsapp-test-delivery]
 verify_jwt = false

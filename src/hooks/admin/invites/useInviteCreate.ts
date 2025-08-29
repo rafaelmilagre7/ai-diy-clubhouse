@@ -25,14 +25,14 @@ export const useInviteCreate = () => {
     try {
       setIsCreating(true);
       
-      console.log("📧 [INVITE-CREATE] Criando convite:", {
+      console.log("📧 [INVITE-CREATE-OPTIMIZED] Criando convite:", {
         email,
         roleId,
         channelPreference,
         hasPhone: !!phone
       });
 
-      // Usar a função híbrida que suporta diferentes canais
+      // ETAPA 1: Criar convite na base de dados (resposta IMEDIATA)
       const { data, error } = await supabase.rpc('create_invite_hybrid', {
         p_email: email,
         p_role_id: roleId,
@@ -52,46 +52,18 @@ export const useInviteCreate = () => {
         throw new Error(data.message);
       }
 
-      console.log("✅ [INVITE-CREATE] Convite criado:", data);
+      console.log("✅ [INVITE-CREATE-OPTIMIZED] Convite criado na DB:", data);
 
-      // Gerar URL padronizada  
-      const inviteUrl = generateInviteUrl(data.token);
-      
-      console.log("📤 [INVITE-CREATE] Iniciando envio em paralelo...");
-      
-      // Buscar nome do papel para o envio
-      const { data: roleData } = await supabase
-        .from('user_roles')
-        .select('name')
-        .eq('id', roleId)
-        .single();
-
-      // Enviar convite via email/WhatsApp (otimizado para resposta rápida)
-      const sendResult = await sendInviteNotification({
-        email,
-        phone,
-        inviteUrl,
-        roleName: roleData?.name || 'membro',
-        expiresAt: data.expires_at,
-        senderName: email.split('@')[0].replace(/[._-]/g, ' ').trim(),
-        notes,
-        inviteId: data.invite_id,
-        channelPreference
+      // FEEDBACK IMEDIATO ao usuário
+      toast.success('Convite criado com sucesso!', {
+        description: `Processando envio para ${email}...`
       });
 
-      if (!sendResult.success) {
-        console.warn("⚠️ [INVITE-CREATE] Problema no envio:", sendResult.error);
-        toast.warning('Convite criado, mas houve um problema no envio', {
-          description: sendResult.error || 'O sistema tentará reenviar automaticamente.'
-        });
-      } else {
-        console.log("✅ [INVITE-CREATE] Envio bem-sucedido:", sendResult.method);
-        toast.success('Convite criado e enviado com sucesso', {
-          description: `Convite para ${email} foi enviado via ${sendResult.method}.`
-        });
-      }
+      // ETAPA 2: Processar envio EM BACKGROUND (sem aguardar)
+      processInviteDeliveryInBackground(data, email, roleId, phone, channelPreference, notes);
 
       return data;
+
     } catch (err: any) {
       console.error('❌ [INVITE-CREATE] Erro crítico:', err);
       toast.error('Erro ao criar convite', {
@@ -106,8 +78,65 @@ export const useInviteCreate = () => {
   return { createInvite, isCreating };
 };
 
-// Função auxiliar para envio de notificações
-const sendInviteNotification = async ({
+// ========== PROCESSAMENTO EM BACKGROUND (OTIMIZADO) ==========
+
+const processInviteDeliveryInBackground = async (
+  inviteData: any,
+  email: string,
+  roleId: string,
+  phone?: string,
+  channelPreference: 'email' | 'whatsapp' | 'both' = 'email',
+  notes?: string
+) => {
+  // Não aguardar - processar em background
+  setTimeout(async () => {
+    try {
+      console.log("🚀 [BACKGROUND-DELIVERY] Iniciando envio assíncrono...");
+
+      const inviteUrl = generateInviteUrl(inviteData.token);
+
+      // Buscar role name (cache local se possível)
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('name')
+        .eq('id', roleId)
+        .single();
+
+      // Usar sistema de envio otimizado
+      const sendResult = await sendInviteNotificationOptimized({
+        email,
+        phone,
+        inviteUrl,
+        roleName: roleData?.name || 'membro',
+        expiresAt: inviteData.expires_at,
+        senderName: email.split('@')[0].replace(/[._-]/g, ' ').trim(),
+        notes,
+        inviteId: inviteData.invite_id,
+        channelPreference
+      });
+
+      // Toast de feedback após envio em background
+      if (sendResult.success) {
+        toast.success('📧 Convite enviado!', {
+          description: `Enviado para ${email} via ${sendResult.method}`
+        });
+      } else {
+        toast.warning('⚠️ Problema no envio', {
+          description: sendResult.error || 'Tentaremos reenviar automaticamente'
+        });
+      }
+
+    } catch (bgError: any) {
+      console.error('❌ [BACKGROUND-DELIVERY] Erro:', bgError);
+      toast.error('Erro no envio do convite', {
+        description: 'Use a opção "Reenviar" se necessário'
+      });
+    }
+  }, 100); // 100ms delay para não bloquear resposta
+};
+
+// Sistema de envio OTIMIZADO com timeouts reduzidos
+const sendInviteNotificationOptimized = async ({
   email,
   phone,
   inviteUrl,
@@ -200,18 +229,18 @@ const sendInviteNotification = async ({
         }
       });
 
-      // Timeout individualizado de 5s para cada canal
+      // Timeout REDUZIDO para 3s (otimização)
       const emailWithTimeout = Promise.race([
         emailPromise,
         new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Timeout email (5s)')), 5000)
+          setTimeout(() => reject(new Error('Timeout email (3s)')), 3000)
         )
       ]);
 
       const whatsappWithTimeout = Promise.race([
         whatsappPromise,
         new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Timeout WhatsApp (5s)')), 5000)
+          setTimeout(() => reject(new Error('Timeout WhatsApp (3s)')), 3000)
         )
       ]);
 

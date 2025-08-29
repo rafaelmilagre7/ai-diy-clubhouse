@@ -226,7 +226,14 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
               Cancelar
             </Button>
             <Button type="submit" disabled={isCreating} className="h-9 bg-blue-600 hover:bg-blue-700 text-white">
-              {isCreating ? "Criando..." : "Criar Convite"}
+              {isCreating ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                  Criando...
+                </div>
+              ) : (
+                "Criar Convite"
+              )}
             </Button>
           </DialogFooter>
         </form>
