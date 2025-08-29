@@ -10,16 +10,10 @@ export interface LessonWithCourseInfo {
   module_id: string;
   order_index: number | null;
   estimated_time_minutes: number | null;
-  learning_modules: {
-    id: string;
-    title: string;
-    course_id: string;
-    learning_courses: {
-      id: string;
-      title: string;
-      published: boolean;
-    }[];
-  }[];
+  course_id: string;
+  course_title: string;
+  course_published: boolean;
+  module_title: string;
 }
 
 export interface GlobalSearchResult extends LessonWithCourseInfo {
@@ -53,20 +47,20 @@ export const useGlobalLessonSearch = ({
     return () => clearTimeout(timer);
   }, [searchQuery, debounceMs]);
 
-  // Buscar todas as aulas com informações do curso e módulo, usando RPC para permissões
+  // Buscar todas as aulas com informações do curso e módulo
   const { data: allLessons = [], isLoading } = useQuery({
-    queryKey: ['global-lessons-search', 'v2'],
+    queryKey: ['global-lessons-search', 'v4', new Date().getHours()], // Cache renovado a cada hora
     queryFn: async () => {
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) {
-        console.log('[GLOBAL SEARCH] Usuário não autenticado');
+        console.log('🔍 [GLOBAL SEARCH] Usuário não autenticado');
         return [];
       }
 
-      console.log('[GLOBAL SEARCH] Iniciando busca para usuário:', user.user.id);
+      console.log('🔍 [GLOBAL SEARCH] Iniciando busca para usuário:', user.user.id);
 
-      // Buscar todas as aulas com informações do curso e módulo
-      const { data: lessons, error } = await supabase
+      // Query simplificada - buscar aulas com JOIN direto
+      const { data: lessonsData, error } = await supabase
         .from('learning_lessons')
         .select(`
           id,
@@ -76,11 +70,11 @@ export const useGlobalLessonSearch = ({
           module_id,
           order_index,
           estimated_time_minutes,
-          learning_modules!inner (
+          learning_modules (
             id,
             title,
             course_id,
-            learning_courses!inner (
+            learning_courses (
               id,
               title,
               published
@@ -90,39 +84,59 @@ export const useGlobalLessonSearch = ({
         .order('order_index', { ascending: true });
 
       if (error) {
-        console.error('[GLOBAL SEARCH] Erro ao buscar aulas:', error);
+        console.error('❌ [GLOBAL SEARCH] Erro na query principal:', error);
         throw error;
       }
 
-      if (!lessons || lessons.length === 0) {
-        console.log('[GLOBAL SEARCH] Nenhuma aula encontrada');
+      if (!lessonsData || lessonsData.length === 0) {
+        console.log('⚠️ [GLOBAL SEARCH] Nenhuma aula encontrada na query');
         return [];
       }
 
-      console.log('[GLOBAL SEARCH] Total de aulas carregadas:', lessons.length);
+      console.log('✅ [GLOBAL SEARCH] Dados brutos carregados:', lessonsData.length);
 
-      // Filtrar apenas aulas de cursos publicados
-      const publishedLessons = lessons.filter(lesson => {
-        const courseInfo = lesson.learning_modules?.[0]?.learning_courses?.[0];
-        return courseInfo?.published === true;
-      });
+      // Mapear dados para formato simplificado
+      const mappedLessons: LessonWithCourseInfo[] = [];
+      
+      for (const lesson of lessonsData) {
+        // Verificar se a estrutura de dados está correta
+        const module = lesson.learning_modules as any;
+        const course = module?.learning_courses as any;
+        
+        if (!module || !course) {
+          console.log('⚠️ [GLOBAL SEARCH] Aula sem módulo/curso:', lesson.id, lesson.title);
+          continue;
+        }
 
-      console.log('[GLOBAL SEARCH] Aulas de cursos publicados:', publishedLessons.length);
+        mappedLessons.push({
+          ...lesson,
+          course_id: course.id,
+          course_title: course.title,
+          course_published: course.published,
+          module_title: module.title
+        });
+      }
 
-      // Verificar acesso usando role do usuário (método mais simples e confiável)
+      console.log('📊 [GLOBAL SEARCH] Aulas mapeadas:', mappedLessons.length);
+
+      // Filtrar apenas cursos publicados
+      const publishedLessons = mappedLessons.filter(lesson => lesson.course_published);
+      console.log('✅ [GLOBAL SEARCH] Aulas de cursos publicados:', publishedLessons.length);
+
+      // Verificar acesso do usuário
       const userAccess = await checkUserAccess(user.user.id);
       
       if (!userAccess.hasAccess) {
-        console.log('[GLOBAL SEARCH] Usuário não tem acesso ao conteúdo de aprendizado. Role:', userAccess.userRole);
+        console.log('🚫 [GLOBAL SEARCH] Acesso negado. Role:', userAccess.userRole);
         return [];
       }
 
-      console.log('[GLOBAL SEARCH] Usuário autorizado com role:', userAccess.userRole, '- Aulas liberadas:', publishedLessons.length);
+      console.log('🎯 [GLOBAL SEARCH] Busca finalizada - Aulas liberadas:', publishedLessons.length, '| Role:', userAccess.userRole);
       
       return publishedLessons;
     },
-    staleTime: 5 * 60 * 1000, // Cache por 5 minutos
-    gcTime: 10 * 60 * 1000, // Manter em cache por 10 minutos
+    staleTime: 2 * 60 * 1000, // Cache por 2 minutos
+    gcTime: 5 * 60 * 1000, // Manter em cache por 5 minutos
   });
 
   const searchResults = useMemo(() => {    
@@ -147,12 +161,9 @@ export const useGlobalLessonSearch = ({
         const title = lesson.title?.toLowerCase() || '';
         const description = lesson.description?.toLowerCase() || '';
         
-        // Obter informações do módulo e curso (primeiro item do array)
-        const moduleInfo = lesson.learning_modules?.[0];
-        const courseInfo = moduleInfo?.learning_courses?.[0];
-        
-        const courseName = courseInfo?.title?.toLowerCase() || '';
-        const moduleTitle = moduleInfo?.title?.toLowerCase() || '';
+        // Usar os novos campos simplificados
+        const courseName = lesson.course_title?.toLowerCase() || '';
+        const moduleTitle = lesson.module_title?.toLowerCase() || '';
         
         // Pontuação por correspondência exata no título (peso maior)
         if (title.includes(query)) {
@@ -207,7 +218,8 @@ export const useGlobalLessonSearch = ({
         const techKeywords = [
           'ia', 'inteligência artificial', 'ai', 'programação', 'dashboard', 
           'analytics', 'automação', 'api', 'desenvolvimento', 'código',
-          'machine learning', 'dados', 'análise', 'relatório', 'gestão'
+          'machine learning', 'dados', 'análise', 'relatório', 'gestão',
+          'lovable', 'nocode', 'no-code', 'low-code'
         ];
         
         techKeywords.forEach(keyword => {
@@ -224,8 +236,8 @@ export const useGlobalLessonSearch = ({
           matchedFields,
           highlightedTitle: highlightText(lesson.title || '', queryWords),
           highlightedDescription: highlightText(lesson.description || '', queryWords),
-          courseName: courseInfo?.title,
-          moduleTitle: moduleInfo?.title
+          courseName: lesson.course_title,
+          moduleTitle: lesson.module_title
         } as GlobalSearchResult;
       })
       .filter(result => result.relevanceScore > 0)
@@ -234,8 +246,7 @@ export const useGlobalLessonSearch = ({
 
     // Agrupar resultados por curso para melhor visualização
     const courseGroups = scoredResults.reduce((acc, lesson) => {
-      const moduleInfo = lesson.learning_modules?.[0];
-      const courseId = moduleInfo?.course_id || 'unknown';
+      const courseId = lesson.course_id || 'unknown';
       const courseName = lesson.courseName || 'Curso sem nome';
       
       if (!acc[courseId]) {
@@ -273,7 +284,7 @@ export const useGlobalLessonSearch = ({
 // Função para verificar acesso do usuário baseado em role
 async function checkUserAccess(userId: string): Promise<{ hasAccess: boolean; userRole: string }> {
   try {
-    console.log('[GLOBAL SEARCH] Verificando acesso para usuário:', userId);
+    console.log('🔒 [GLOBAL SEARCH] Verificando acesso para usuário:', userId);
     
     // Buscar role do usuário
     const { data: profile } = await supabase
@@ -293,7 +304,7 @@ async function checkUserAccess(userId: string): Promise<{ hasAccess: boolean; us
       ? userRolesData[0]?.name 
       : userRolesData?.name || 'member';
     
-    console.log('[GLOBAL SEARCH] Role do usuário:', userRole);
+    console.log('👤 [GLOBAL SEARCH] Role do usuário:', userRole);
 
     // Roles que têm acesso ao conteúdo de aprendizado
     const allowedRoles = [
@@ -307,11 +318,11 @@ async function checkUserAccess(userId: string): Promise<{ hasAccess: boolean; us
     
     const hasAccess = allowedRoles.includes(userRole);
     
-    console.log('[GLOBAL SEARCH] Acesso liberado:', hasAccess, '- Role:', userRole);
+    console.log('✅ [GLOBAL SEARCH] Acesso liberado:', hasAccess, '- Role:', userRole);
     
     return { hasAccess, userRole };
   } catch (error) {
-    console.error('[GLOBAL SEARCH] Erro ao verificar acesso do usuário:', error);
+    console.error('❌ [GLOBAL SEARCH] Erro ao verificar acesso do usuário:', error);
     // Em caso de erro, permitir acesso para não bloquear a funcionalidade
     return { hasAccess: true, userRole: 'unknown' };
   }

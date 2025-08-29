@@ -190,7 +190,7 @@ export const GlobalSearchResults: React.FC<GlobalSearchResultsProps> = ({
                     {/* Botão de ação */}
                     <Button asChild className="w-full group/btn">
                       <Link 
-                        to={`/learning/course/${lesson.learning_modules?.[0]?.course_id}/lesson/${lesson.id}`}
+                        to={`/learning/course/${lesson.course_id}/lesson/${lesson.id}`}
                         className="flex items-center justify-center gap-2"
                       >
                         <span>Assistir Aula</span>
