@@ -145,21 +145,32 @@ const processInviteDeliveryInBackground = async (
         method: sendResult.method
       });
 
-      // Toast de feedback específico e detalhado por canal
+      // 🎯 TOAST OTIMIZADO - Apenas resultado final com mais informações
       if (sendResult.success) {
+        const totalTime = Math.round(performance.now() - processStartTime!);
         const methodEmoji = sendResult.method?.includes('email') ? '📧' : 
                            sendResult.method?.includes('whatsapp') ? '📱' : '📬';
-        toast.success(`${methodEmoji} Convite enviado com sucesso!`, {
-          description: `✅ ${email} recebeu o convite via ${sendResult.method}`,
-          duration: 6000
+        const channelText = sendResult.method === 'email+whatsapp' ? 'Email + WhatsApp' : 
+                           sendResult.method?.includes('whatsapp') ? 'WhatsApp' : 'Email';
+        
+        toast.success(`${methodEmoji} Convite entregue com sucesso!`, {
+          description: `✅ ${email} via ${channelText} (${totalTime}ms)`,
+          duration: 4000
         });
       } else {
         // 🚨 IMPORTANTE: Salvar convite falhado para o filtro
         await saveFailedInvite(email, sendResult.error || 'Erro desconhecido', inviteData);
         
-        toast.error('❌ Falha no envio do convite', {
-          description: `${email}: ${sendResult.error}\nUse o filtro "Falhados" para tentar novamente`,
-          duration: 8000
+        toast.error('❌ Falha na entrega do convite', {
+          description: `${email}: ${sendResult.error}`,
+          duration: 6000,
+          action: {
+            label: "Ver Falhados",
+            onClick: () => {
+              // Trigger para abrir filtro de falhados (se disponível)
+              console.log("🚨 Usuário clicou para ver convites falhados");
+            }
+          }
         });
       }
 
@@ -175,12 +186,16 @@ const processInviteDeliveryInBackground = async (
       // Salvar convite falhado
       await saveFailedInvite(email, bgError.message || 'Erro desconhecido no background', inviteData);
       
-      toast.error('❌ Erro crítico no envio', {
-        description: `${email}: ${bgError.message}\nConvite salvo na lista de "Falhados"`,
-        duration: 8000
+      toast.error('❌ Erro crítico no processamento', {
+        description: `${email}: ${bgError.message}`,
+        duration: 6000,
+        action: {
+          label: "Ver Falhados", 
+          onClick: () => console.log("🚨 Abrir lista de falhados")
+        }
       });
     }
-  }, 100); // 100ms delay para não bloquear resposta
+  }, 50); // 50ms delay otimizado para resposta instantânea
 };
 
 // Sistema de envio OTIMIZADO com timeouts reduzidos

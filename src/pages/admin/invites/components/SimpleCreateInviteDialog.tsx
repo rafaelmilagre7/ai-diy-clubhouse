@@ -78,9 +78,7 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
 
     const internationalPhone = phone || undefined;
     
-    // 🚀 NOVA UX: Fechar modal imediatamente e mostrar feedback instantâneo
-    const channelEmoji = channelPreference === 'email' ? '📧' : 
-                        channelPreference === 'whatsapp' ? '📱' : '📬';
+    // 🚀 NOVA UX: Fechar modal imediatamente sem toast de processamento
     
     // Resetar formulário e fechar modal IMEDIATAMENTE
     const formData = { email, roleId, notes, expiration, phone: internationalPhone, channelPreference };
@@ -92,13 +90,7 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
     setChannelPreference('email');
     setOpen(false);
     
-    // Toast instantâneo de processamento
-    toast.loading(`${channelEmoji} Processando convite para ${email}...`, {
-      id: `invite-${email}`,
-      description: `Canal: ${channelPreference === 'both' ? 'Email + WhatsApp' : channelPreference}`
-    });
-    
-    // Processar convite em background (não bloquear UI)
+    // Processar convite em background (não bloquear UI) - SEM TOAST INTERMEDIÁRIO
     setTimeout(async () => {
       try {
         const result = await createInvite(
@@ -118,9 +110,6 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
         // Erro já tratado no hook, apenas garantir atualização da lista
         onInviteCreated();
       }
-      
-      // Remover toast de loading
-      toast.dismiss(`invite-${formData.email}`);
     }, 50); // 50ms para permitir que modal feche primeiro
   };
 
