@@ -9,24 +9,25 @@ export function useInvitesList() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  // Buscar todos os convites com duas queries otimizadas
+  // ⚡ BUSCAR CONVITES ATIVOS - Filtrar apenas convites não deletados (Soft Delete)
   const fetchInvites = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       
-      // Query 1: Buscar convites com roles
+      // Query 1: Buscar apenas convites ATIVOS (não deletados) com roles
       const { data: invitesData, error: invitesError } = await supabase
         .from('invites')
         .select(`
           *,
           role:role_id(name)
         `)
+        .is('deleted_at', null) // 🚀 FILTRO SOFT DELETE - Apenas convites ativos
         .order('created_at', { ascending: false });
       
       if (invitesError) throw invitesError;
       
-      // Se não há convites, retornar lista vazia
+      // Se não há convites ativos, retornar lista vazia
       if (!invitesData || invitesData.length === 0) {
         setInvites([]);
         return;
@@ -56,9 +57,10 @@ export function useInvitesList() {
         creator_email: creatorsMap[invite.created_by]?.email
       }));
       
+      console.log(`✅ Convites ativos carregados: ${enrichedInvites.length} (filtrados por soft delete)`);
       setInvites(enrichedInvites);
     } catch (err: any) {
-      console.error('Erro ao buscar convites:', err);
+      console.error('❌ Erro ao buscar convites:', err);
       setError(err);
       toast.error('Erro ao carregar convites', {
         description: err.message || 'Não foi possível carregar a lista de convites.'

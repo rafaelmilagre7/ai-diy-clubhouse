@@ -1602,6 +1602,7 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string
+          deleted_at: string | null
           email: string
           expires_at: string
           id: string
@@ -1617,6 +1618,7 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by: string
+          deleted_at?: string | null
           email: string
           expires_at: string
           id?: string
@@ -1632,6 +1634,7 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string
+          deleted_at?: string | null
           email?: string
           expires_at?: string
           id?: string
@@ -6865,6 +6868,10 @@ export type Database = {
       simple_health_check: {
         Args: Record<PropertyKey, never>
         Returns: boolean
+      }
+      soft_delete_invite_fast: {
+        Args: { p_invite_id: string }
+        Returns: Json
       }
       sync_profile_roles: {
         Args: Record<PropertyKey, never>
