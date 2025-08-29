@@ -78,17 +78,50 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
 
     const internationalPhone = phone || undefined;
     
-    const result = await createInvite(email, roleId, notes, expiration, internationalPhone, channelPreference);
-    if (result) {
-      setEmail("");
-      setPhone("");
-      setRoleId("");
-      setNotes("");
-      setExpiration("7 days");
-      setChannelPreference('email');
-      setOpen(false);
-      onInviteCreated();
-    }
+    // 🚀 NOVA UX: Fechar modal imediatamente e mostrar feedback instantâneo
+    const channelEmoji = channelPreference === 'email' ? '📧' : 
+                        channelPreference === 'whatsapp' ? '📱' : '📬';
+    
+    // Resetar formulário e fechar modal IMEDIATAMENTE
+    const formData = { email, roleId, notes, expiration, phone: internationalPhone, channelPreference };
+    setEmail("");
+    setPhone("");
+    setRoleId("");
+    setNotes("");
+    setExpiration("7 days");
+    setChannelPreference('email');
+    setOpen(false);
+    
+    // Toast instantâneo de processamento
+    toast.loading(`${channelEmoji} Processando convite para ${email}...`, {
+      id: `invite-${email}`,
+      description: `Canal: ${channelPreference === 'both' ? 'Email + WhatsApp' : channelPreference}`
+    });
+    
+    // Processar convite em background (não bloquear UI)
+    setTimeout(async () => {
+      try {
+        const result = await createInvite(
+          formData.email, 
+          formData.roleId, 
+          formData.notes, 
+          formData.expiration, 
+          formData.phone, 
+          formData.channelPreference
+        );
+        
+        if (result) {
+          // Atualizar lista após sucesso
+          onInviteCreated();
+        }
+      } catch (error: any) {
+        // Erro já tratado no hook, apenas garantir atualização da lista
+        onInviteCreated();
+      }
+      
+      // Remover toast de loading
+      toast.dismiss(`invite-${formData.email}`);
+    }, 50); // 50ms para permitir que modal feche primeiro
   };
 
   const getChannelIcon = (channel: string) => {

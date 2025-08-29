@@ -67,10 +67,7 @@ export const useInviteCreate = () => {
         data: data
       });
 
-      // FEEDBACK IMEDIATO ao usuário
-      toast.success('Convite criado com sucesso!', {
-        description: `Processando envio para ${email}...`
-      });
+      // FEEDBACK IMEDIATO ao usuário (removido daqui pois vem do modal)
 
       // ETAPA 2: Processar envio EM BACKGROUND (sem aguardar)
       processInviteDeliveryInBackground(data, email, roleId, phone, channelPreference, notes, processStartTime);
@@ -148,15 +145,21 @@ const processInviteDeliveryInBackground = async (
         method: sendResult.method
       });
 
-      // Toast de feedback específico por canal
+      // Toast de feedback específico e detalhado por canal
       if (sendResult.success) {
-        const methodEmoji = sendResult.method?.includes('email') ? '📧' : '📱';
-        toast.success(`${methodEmoji} Convite enviado!`, {
-          description: `Enviado para ${email} via ${sendResult.method}`
+        const methodEmoji = sendResult.method?.includes('email') ? '📧' : 
+                           sendResult.method?.includes('whatsapp') ? '📱' : '📬';
+        toast.success(`${methodEmoji} Convite enviado com sucesso!`, {
+          description: `✅ ${email} recebeu o convite via ${sendResult.method}`,
+          duration: 6000
         });
       } else {
-        toast.warning('⚠️ Problema no envio', {
-          description: sendResult.error || 'Tentaremos reenviar automaticamente'
+        // 🚨 IMPORTANTE: Salvar convite falhado para o filtro
+        await saveFailedInvite(email, sendResult.error || 'Erro desconhecido', inviteData);
+        
+        toast.error('❌ Falha no envio do convite', {
+          description: `${email}: ${sendResult.error}\nUse o filtro "Falhados" para tentar novamente`,
+          duration: 8000
         });
       }
 
@@ -168,8 +171,13 @@ const processInviteDeliveryInBackground = async (
 
     } catch (bgError: any) {
       console.error('❌ [BACKGROUND-DELIVERY] Erro:', bgError);
-      toast.error('Erro no envio do convite', {
-        description: 'Use a opção "Reenviar" se necessário'
+      
+      // Salvar convite falhado
+      await saveFailedInvite(email, bgError.message || 'Erro desconhecido no background', inviteData);
+      
+      toast.error('❌ Erro crítico no envio', {
+        description: `${email}: ${bgError.message}\nConvite salvo na lista de "Falhados"`,
+        duration: 8000
       });
     }
   }, 100); // 100ms delay para não bloquear resposta
@@ -380,5 +388,46 @@ const sendInviteNotificationOptimized = async ({
       success: false,
       error: err.message || 'Erro desconhecido no envio'
     };
+  }
+};
+
+// ========== SISTEMA DE TRACKING DE CONVITES FALHADOS ==========
+
+const saveFailedInvite = async (email: string, errorMessage: string, inviteData?: any) => {
+  try {
+    console.log("💾 [FAILED-INVITE] Salvando convite falhado:", { email, errorMessage });
+    
+    if (!inviteData?.invite_id) {
+      console.warn("⚠️ [FAILED-INVITE] Sem ID do convite, pulando salvamento");
+      return;
+    }
+    
+    // Primeiro buscar o valor atual, depois incrementar
+    const { data: currentInvite } = await supabase
+      .from('invites')
+      .select('send_attempts')
+      .eq('id', inviteData.invite_id)
+      .single();
+    
+    const currentAttempts = currentInvite?.send_attempts || 0;
+    
+    // Atualizar o convite com status de falha
+    const { error } = await supabase
+      .from('invites')
+      .update({
+        delivery_status: 'failed',
+        last_error: errorMessage,
+        send_attempts: currentAttempts + 1,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', inviteData.invite_id);
+    
+    if (error) {
+      console.error("❌ [FAILED-INVITE] Erro ao salvar:", error);
+    } else {
+      console.log("✅ [FAILED-INVITE] Status de falha salvo com sucesso");
+    }
+  } catch (err: any) {
+    console.error("❌ [FAILED-INVITE] Erro crítico:", err);
   }
 };

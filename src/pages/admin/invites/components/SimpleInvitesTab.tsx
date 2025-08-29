@@ -22,7 +22,7 @@ interface SimpleInvitesTabProps {
 
 const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTabProps) => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "used" | "expired">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "used" | "expired" | "failed">("all");
   const [resendDialogOpen, setResendDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [bulkReactivateDialogOpen, setBulkReactivateDialogOpen] = useState(false);
@@ -39,6 +39,14 @@ const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTa
     !invite.used_at && new Date(invite.expires_at) <= new Date()
   ).length;
 
+  // 🚨 NOVO: Contar convites falhados
+  const failedCount = invites.filter(invite => {
+    // Convites com delivery_status = 'failed' ou send_attempts > 3
+    return (invite as any).delivery_status === 'failed' || 
+           ((invite as any).send_attempts && (invite as any).send_attempts > 3) ||
+           ((invite as any).last_error && !(invite as any).used_at);
+  }).length;
+
   const activeInvitesCount = getActiveInvitesCount(invites);
 
   // Filtrar convites
@@ -54,6 +62,11 @@ const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTa
       const isExpired = !isUsed && new Date(invite.expires_at) <= new Date();
       const isActive = !isUsed && !isExpired;
       
+      // 🚨 NOVO: Detectar convites falhados
+      const isFailed = (invite as any).delivery_status === 'failed' || 
+                      ((invite as any).send_attempts && (invite as any).send_attempts > 3) ||
+                      ((invite as any).last_error && !isUsed);
+      
       switch (statusFilter) {
         case "used":
           matchesStatus = isUsed;
@@ -63,6 +76,9 @@ const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTa
           break;
         case "active":
           matchesStatus = isActive;
+          break;
+        case "failed":
+          matchesStatus = isFailed;
           break;
       }
     }
@@ -204,7 +220,8 @@ const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTa
               { key: "all", label: "Todos", icon: "📊" },
               { key: "active", label: "Ativos", icon: "🟢" },
               { key: "used", label: "Utilizados", icon: "✅" },
-              { key: "expired", label: "Expirados", icon: "⏰" }
+              { key: "expired", label: "Expirados", icon: "⏰" },
+              { key: "failed", label: `🚨 Falhados ${failedCount > 0 ? `(${failedCount})` : ''}`, icon: "❌", count: failedCount }
             ].map((filter) => (
               <button
                 key={filter.key}
@@ -212,8 +229,12 @@ const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTa
                 className={`
                   relative px-4 py-2.5 rounded-xl font-medium transition-all duration-300 backdrop-blur-sm
                   ${statusFilter === filter.key 
-                    ? 'aurora-glass bg-gradient-to-r from-aurora/20 to-viverblue/10 text-aurora border border-aurora/30 shadow-lg' 
-                    : 'bg-muted/30 hover:bg-muted/50 text-muted-foreground hover:text-foreground border border-muted/20'
+                    ? filter.key === 'failed' 
+                      ? 'aurora-glass bg-gradient-to-r from-red-500/20 to-orange-500/10 text-red-400 border border-red-400/30 shadow-lg animate-pulse' 
+                      : 'aurora-glass bg-gradient-to-r from-aurora/20 to-viverblue/10 text-aurora border border-aurora/30 shadow-lg'
+                    : filter.key === 'failed' && (filter as any).count > 0
+                      ? 'bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-400/20 hover:border-red-400/40'
+                      : 'bg-muted/30 hover:bg-muted/50 text-muted-foreground hover:text-foreground border border-muted/20'
                   }
                 `}
               >
