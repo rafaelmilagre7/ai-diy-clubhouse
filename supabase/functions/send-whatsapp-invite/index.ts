@@ -54,19 +54,18 @@ serve(async (req) => {
       throw new Error('Credenciais WhatsApp não configuradas')
     }
 
-    // PROCESSAR TELEFONE
-    let formattedPhone = phone.replace(/\D/g, '')
+    // PROCESSAR TELEFONE - FORMATO PADRONIZADO (igual ao bulk que funciona)
+    console.log('📱 [PHONE-FORMAT-COMPARISON] Número original recebido:', phone);
     
-    if (phone.includes('|')) {
-      const [dialCode, phoneNumber] = phone.split('|')
-      const cleanDialCode = dialCode.replace('+', '')
-      const cleanPhoneNumber = phoneNumber.replace(/\D/g, '')
-      formattedPhone = cleanDialCode + cleanPhoneNumber
-    } else if (formattedPhone.length > 11) {
-      formattedPhone = formattedPhone
-    } else if (formattedPhone.length === 11 || formattedPhone.length === 10) {
-      formattedPhone = '55' + formattedPhone
-    }
+    // Usar mesma lógica simples do bulk que funciona
+    const formattedPhone = phone.replace(/\D/g, '');
+    
+    console.log('📱 [PHONE-FORMAT-COMPARISON] Número formatado final:', {
+      original: phone,
+      formatted: formattedPhone,
+      length: formattedPhone.length,
+      method: 'simple_replace_like_bulk'
+    });
 
     // PREPARAR TEMPLATE
     const userName = email ? email.split('@')[0].replace(/[._-]/g, ' ').trim() : 'Novo Membro'
