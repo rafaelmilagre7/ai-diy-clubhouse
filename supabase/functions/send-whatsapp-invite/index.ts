@@ -46,12 +46,24 @@ serve(async (req) => {
       throw new Error('Telefone e URL do convite são obrigatórios')
     }
 
-    // VERIFICAR CREDENCIAIS
-    const whatsappToken = Deno.env.get('WHATSAPP_BUSINESS_TOKEN')
-    const phoneNumberId = Deno.env.get('WHATSAPP_BUSINESS_PHONE_ID')
+    // VERIFICAR CREDENCIAIS - PADRONIZADAS (iguais ao bulk que funciona)
+    const whatsappToken = Deno.env.get('WHATSAPP_ACCESS_TOKEN')
+    const phoneNumberId = Deno.env.get('WHATSAPP_PHONE_NUMBER_ID')
+
+    console.log('🔑 [ENV-VARS-CHECK] Variáveis de ambiente carregadas:', {
+      hasWhatsappToken: !!whatsappToken,
+      hasPhoneNumberId: !!phoneNumberId,
+      tokenLength: whatsappToken ? whatsappToken.length : 0,
+      phoneIdLength: phoneNumberId ? phoneNumberId.length : 0,
+      vars_used: 'WHATSAPP_ACCESS_TOKEN + WHATSAPP_PHONE_NUMBER_ID'
+    })
 
     if (!whatsappToken || !phoneNumberId) {
-      throw new Error('Credenciais WhatsApp não configuradas')
+      console.error('❌ [ENV-VARS-MISSING] Credenciais não configuradas:', {
+        WHATSAPP_ACCESS_TOKEN: !!whatsappToken,
+        WHATSAPP_PHONE_NUMBER_ID: !!phoneNumberId
+      })
+      throw new Error('Credenciais WhatsApp não configuradas - verificar WHATSAPP_ACCESS_TOKEN e WHATSAPP_PHONE_NUMBER_ID')
     }
 
     // PROCESSAR TELEFONE - FORMATO PADRONIZADO (igual ao bulk que funciona)
@@ -250,9 +262,10 @@ serve(async (req) => {
             sent_at: new Date().toISOString(),
             provider_id: messageId,
             metadata: { 
-              phone: formattedPhone,
-              message_id: messageId,
-              template_used: 'convitevia'
+              whatsapp_id: messageId,
+              recipient: formattedPhone,
+              template: 'convitevia',
+              method: 'manual_invite'
             }
           })
 
