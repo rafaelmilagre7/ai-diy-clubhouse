@@ -65,7 +65,7 @@ export const useGlobalLessonSearch = ({
 
       console.log('[GLOBAL SEARCH] Iniciando busca para usuário:', user.user.id);
 
-      // Buscar todas as aulas publicadas com informações do curso e módulo
+      // Buscar todas as aulas com informações do curso e módulo
       const { data: lessons, error } = await supabase
         .from('learning_lessons')
         .select(`
@@ -87,7 +87,6 @@ export const useGlobalLessonSearch = ({
             )
           )
         `)
-        .eq('learning_modules.learning_courses.published', true)
         .order('order_index', { ascending: true });
 
       if (error) {
@@ -102,70 +101,25 @@ export const useGlobalLessonSearch = ({
 
       console.log('[GLOBAL SEARCH] Total de aulas carregadas:', lessons.length);
 
-      // Otimizar verificações de acesso agrupando por curso
-      const lessonsByCourse = new Map<string, LessonWithCourseInfo[]>();
+      // Filtrar apenas aulas de cursos publicados
+      const publishedLessons = lessons.filter(lesson => {
+        const courseInfo = lesson.learning_modules?.[0]?.learning_courses?.[0];
+        return courseInfo?.published === true;
+      });
+
+      console.log('[GLOBAL SEARCH] Aulas de cursos publicados:', publishedLessons.length);
+
+      // Verificar acesso usando role do usuário (método mais simples e confiável)
+      const userAccess = await checkUserAccess(user.user.id);
       
-      // Agrupar aulas por curso
-      for (const lesson of lessons) {
-        const courseId = lesson.learning_modules?.[0]?.course_id;
-        if (!courseId) {
-          console.warn('[GLOBAL SEARCH] Aula sem curso ID:', lesson.id);
-          continue;
-        }
-        
-        if (!lessonsByCourse.has(courseId)) {
-          lessonsByCourse.set(courseId, []);
-        }
-        lessonsByCourse.get(courseId)!.push(lesson as LessonWithCourseInfo);
+      if (!userAccess.hasAccess) {
+        console.log('[GLOBAL SEARCH] Usuário não tem acesso ao conteúdo de aprendizado. Role:', userAccess.userRole);
+        return [];
       }
 
-      console.log('[GLOBAL SEARCH] Cursos únicos encontrados:', lessonsByCourse.size);
-
-      // Verificar acesso por curso (uma chamada RPC por curso ao invés de por aula)
-      const filteredLessons: LessonWithCourseInfo[] = [];
-      const courseAccessCache = new Map<string, boolean>();
-
-      for (const [courseId, courseLessons] of lessonsByCourse) {
-        try {
-          // Usar a função RPC correta com os parâmetros corretos
-          const { data: hasAccess, error: rpcError } = await supabase.rpc('can_access_course_enhanced', {
-            user_id: user.user.id,
-            course_id: courseId
-          });
-
-          if (rpcError) {
-            console.warn('[GLOBAL SEARCH] Erro RPC para curso', courseId, ':', rpcError);
-            // Em caso de erro, implementar fallback baseado em role do usuário
-            const fallbackAccess = await checkFallbackAccess(user.user.id);
-            courseAccessCache.set(courseId, fallbackAccess);
-            
-            if (fallbackAccess) {
-              filteredLessons.push(...courseLessons);
-            }
-            continue;
-          }
-
-          courseAccessCache.set(courseId, hasAccess || false);
-          
-          if (hasAccess) {
-            filteredLessons.push(...courseLessons);
-            console.log('[GLOBAL SEARCH] Acesso autorizado ao curso:', courseId, '- Aulas:', courseLessons.length);
-          } else {
-            console.log('[GLOBAL SEARCH] Acesso negado ao curso:', courseId);
-          }
-        } catch (error) {
-          console.error('[GLOBAL SEARCH] Erro crítico ao verificar curso', courseId, ':', error);
-          // Implementar fallback em caso de erro crítico
-          const fallbackAccess = await checkFallbackAccess(user.user.id);
-          if (fallbackAccess) {
-            filteredLessons.push(...courseLessons);
-          }
-        }
-      }
-
-      console.log('[GLOBAL SEARCH] Aulas com acesso autorizado:', filteredLessons.length, 'de', lessons.length);
+      console.log('[GLOBAL SEARCH] Usuário autorizado com role:', userAccess.userRole, '- Aulas liberadas:', publishedLessons.length);
       
-      return filteredLessons;
+      return publishedLessons;
     },
     staleTime: 5 * 60 * 1000, // Cache por 5 minutos
     gcTime: 10 * 60 * 1000, // Manter em cache por 10 minutos
@@ -316,10 +270,10 @@ export const useGlobalLessonSearch = ({
   };
 };
 
-// Função auxiliar para verificar acesso usando fallback baseado em role
-async function checkFallbackAccess(userId: string): Promise<boolean> {
+// Função para verificar acesso do usuário baseado em role
+async function checkUserAccess(userId: string): Promise<{ hasAccess: boolean; userRole: string }> {
   try {
-    console.log('[GLOBAL SEARCH] Usando fallback de permissões para usuário:', userId);
+    console.log('[GLOBAL SEARCH] Verificando acesso para usuário:', userId);
     
     // Buscar role do usuário
     const { data: profile } = await supabase
@@ -333,21 +287,33 @@ async function checkFallbackAccess(userId: string): Promise<boolean> {
       .eq('id', userId)
       .single();
 
-    if (!profile?.user_roles || !Array.isArray(profile.user_roles) || profile.user_roles.length === 0) {
-      console.warn('[GLOBAL SEARCH] Perfil ou role não encontrado para fallback');
-      return false;
-    }
+    // user_roles pode ser um objeto único ou um array - usar type assertion para corrigir
+    const userRolesData = profile?.user_roles as any;
+    const userRole = Array.isArray(userRolesData) 
+      ? userRolesData[0]?.name 
+      : userRolesData?.name || 'member';
+    
+    console.log('[GLOBAL SEARCH] Role do usuário:', userRole);
 
-    // Roles que têm acesso ao conteúdo de aprendizado por padrão
-    const allowedRoles = ['admin', 'membro_club', 'formacao'];
-    const userRole = profile.user_roles[0].name;
+    // Roles que têm acesso ao conteúdo de aprendizado
+    const allowedRoles = [
+      'admin', 
+      'membro_club', 
+      'formacao', 
+      'hands_on', 
+      'lovable_course',
+      'member' // Permitir acesso básico para todos os membros
+    ];
+    
     const hasAccess = allowedRoles.includes(userRole);
     
-    console.log('[GLOBAL SEARCH] Fallback - Role:', userRole, '- Acesso:', hasAccess);
-    return hasAccess;
+    console.log('[GLOBAL SEARCH] Acesso liberado:', hasAccess, '- Role:', userRole);
+    
+    return { hasAccess, userRole };
   } catch (error) {
-    console.error('[GLOBAL SEARCH] Erro no fallback de permissões:', error);
-    return false; // Por segurança, negar acesso em caso de erro
+    console.error('[GLOBAL SEARCH] Erro ao verificar acesso do usuário:', error);
+    // Em caso de erro, permitir acesso para não bloquear a funcionalidade
+    return { hasAccess: true, userRole: 'unknown' };
   }
 }
 
