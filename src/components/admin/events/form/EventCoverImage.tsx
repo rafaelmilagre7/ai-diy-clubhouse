@@ -27,7 +27,7 @@ export const EventCoverImage = ({ form }: EventCoverImageProps) => {
       const formData = new FormData();
       formData.append('image', file);
 
-      const { data, error } = await supabase.functions.invoke('upload-image', {
+      const { data, error } = await supabase.functions.invoke('image-upload', {
         body: formData
       });
 
