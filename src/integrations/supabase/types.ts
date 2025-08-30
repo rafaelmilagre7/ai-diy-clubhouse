@@ -5221,7 +5221,7 @@ export type Database = {
         Returns: boolean
       }
       can_access_learning_content: {
-        Args: { target_user_id?: string }
+        Args: { target_user_id: string }
         Returns: boolean
       }
       can_access_tool: {
