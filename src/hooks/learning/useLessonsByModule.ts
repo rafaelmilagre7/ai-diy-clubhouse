@@ -13,28 +13,29 @@ export const useLessonsByModule = (moduleId: string) => {
   const { user, isAdmin } = useAuth();
   
   return useQuery({
-    queryKey: ["learning-module-lessons", moduleId, Date.now()], // Cache busting
+    queryKey: ["learning-module-lessons-v2-rls-fixed", moduleId, user?.id, Date.now()], // Nova chave após correção RLS
     queryFn: async (): Promise<LearningLesson[]> => {
       const startTime = performance.now();
       
-      // LOGGING DETALHADO - Estado inicial
-      console.log(`[FORMACAO_DEBUG] 🔍 INÍCIO DA BUSCA DE AULAS`, {
+      // LOGGING DETALHADO - Estado inicial após correção RLS
+      console.log(`[FORMACAO_DEBUG_V2] 🔍 BUSCA PÓS-CORREÇÃO RLS`, {
         moduleId,
         userId: user?.id?.substring(0, 8) + '***' || 'sem usuário',
         isAdmin,
         userEmail: user?.email?.substring(0, 10) + '***' || 'sem email',
         timestamp: new Date().toISOString(),
-        hasAuth: !!user
+        hasAuth: !!user,
+        version: "v2-rls-fixed"
       });
 
       try {
         if (!moduleId) {
-          console.warn("[FORMACAO_DEBUG] ❌ ModuleId não fornecido");
+          console.warn("[FORMACAO_DEBUG_V2] ❌ ModuleId não fornecido");
           return [];
         }
 
         if (!user?.id) {
-          console.warn("[FORMACAO_DEBUG] ❌ Usuário não autenticado", {
+          console.warn("[FORMACAO_DEBUG_V2] ❌ Usuário não autenticado", {
             hasUser: !!user,
             userId: user?.id || 'null'
           });
@@ -43,25 +44,40 @@ export const useLessonsByModule = (moduleId: string) => {
 
         // VERIFICAÇÃO DE AUTENTICAÇÃO NO SUPABASE
         const { data: sessionCheck } = await supabase.auth.getSession();
-        console.log(`[FORMACAO_DEBUG] 🔐 Verificação de sessão`, {
+        console.log(`[FORMACAO_DEBUG_V2] 🔐 Verificação de sessão pós-RLS`, {
           hasSession: !!sessionCheck?.session,
           userId: sessionCheck?.session?.user?.id?.substring(0, 8) + '***' || 'sem sessão',
           sessionValid: !!sessionCheck?.session?.access_token
         });
 
-        console.log(`[FORMACAO_DEBUG] 📋 Executando query para módulo ${moduleId}...`);
+        console.log(`[FORMACAO_DEBUG_V2] 📋 Query com políticas RLS corrigidas...`);
 
-        // QUERY PRINCIPAL com logging detalhado
+        // QUERY PRINCIPAL com políticas RLS corrigidas
         const queryStart = performance.now();
         const { data: allLessonsData, error } = await supabase
           .from("learning_lessons")
-          .select("*, videos:learning_lesson_videos(*)")
+          .select(`
+            *,
+            learning_lesson_videos (
+              id,
+              title,
+              video_url,
+              video_type,
+              video_id,
+              embed_code,
+              duration,
+              thumbnail_url,
+              order_index,
+              created_at,
+              updated_at
+            )
+          `)
           .eq("module_id", moduleId)
           .order("order_index", { ascending: true });
         const queryDuration = Math.round(performance.now() - queryStart);
         
-        // LOGGING DETALHADO - Resposta da query
-        console.log(`[FORMACAO_DEBUG] 📊 RESPOSTA DA QUERY`, {
+        // LOGGING DETALHADO - Resposta da query V2
+        console.log(`[FORMACAO_DEBUG_V2] 📊 RESPOSTA QUERY V2`, {
           moduleId,
           hasError: !!error,
           rawDataLength: Array.isArray(allLessonsData) ? allLessonsData.length : 0,
@@ -70,46 +86,19 @@ export const useLessonsByModule = (moduleId: string) => {
             message: error.message,
             code: error.code,
             hint: error.hint,
-            details: error.details
+            details: error.details,
+            isTransactionError: error.message?.includes('read-only transaction')
           } : null
         });
         
         if (error) {
-          console.error(`[FORMACAO_DEBUG] ❌ ERRO CRÍTICO na query:`, {
+          console.error(`[FORMACAO_DEBUG_V2] ❌ ERRO após correção RLS:`, {
             error,
             moduleId,
             isAdmin,
-            userId: user?.id?.substring(0, 8) + '***'
+            userId: user?.id?.substring(0, 8) + '***',
+            stillHasTransactionError: error.message?.includes('read-only transaction')
           });
-          
-          // FALLBACK PARA ADMIN - Tentar query com privilégios elevados
-          if (isAdmin) {
-            console.log(`[FORMACAO_DEBUG] 🔧 TENTANDO FALLBACK DE ADMIN...`);
-            try {
-              const { data: adminData, error: adminError } = await supabase
-                .from("learning_lessons")
-                .select("*, videos:learning_lesson_videos(*)")
-                .eq("module_id", moduleId)
-                .order("order_index", { ascending: true });
-                
-              if (adminError) {
-                console.error(`[FORMACAO_DEBUG] ❌ FALLBACK ADMIN FALHOU:`, adminError);
-              } else {
-                console.log(`[FORMACAO_DEBUG] ✅ FALLBACK ADMIN SUCESSO:`, {
-                  adminDataLength: Array.isArray(adminData) ? adminData.length : 0
-                });
-                // Continuar processamento com dados do admin
-                const allLessons = Array.isArray(adminData) ? adminData : [];
-                const publishedLessons = allLessons.filter(lesson => lesson.published);
-                const sortedLessons = sortLessonsByNumber(publishedLessons);
-                
-                console.log(`[FORMACAO_DEBUG] ✅ ADMIN FALLBACK - Retornando ${sortedLessons.length} aulas`);
-                return sortedLessons;
-              }
-            } catch (adminErr) {
-              console.error(`[FORMACAO_DEBUG] ❌ EXCEÇÃO NO FALLBACK ADMIN:`, adminErr);
-            }
-          }
           
           return [];
         }
@@ -117,15 +106,16 @@ export const useLessonsByModule = (moduleId: string) => {
         // Garantir que data é sempre um array
         const allLessons = Array.isArray(allLessonsData) ? allLessonsData : [];
         
-        console.log(`[FORMACAO_DEBUG] 📝 PROCESSANDO DADOS`, {
+        console.log(`[FORMACAO_DEBUG_V2] 📝 PROCESSAMENTO V2`, {
           moduleId,
           totalLessons: allLessons.length,
+          lessonsWithVideos: allLessons.filter(l => l.learning_lesson_videos?.length > 0).length,
           lessonDetails: allLessons.map(l => ({
             id: l.id.substring(0, 8) + '***', 
             title: l.title?.substring(0, 30) + '...' || 'sem título',
             order_index: l.order_index,
             published: l.published,
-            hasVideos: Array.isArray(l.videos) ? l.videos.length : 0
+            videoCount: l.learning_lesson_videos?.length || 0
           }))
         });
         
@@ -135,7 +125,7 @@ export const useLessonsByModule = (moduleId: string) => {
           lessonsToReturn = allLessons.filter(lesson => lesson.published);
         }
         
-        console.log(`[FORMACAO_DEBUG] 📋 FILTRAGEM`, {
+        console.log(`[FORMACAO_DEBUG_V2] 📋 FILTRAGEM V2`, {
           moduleId,
           isAdmin,
           totalLessons: allLessons.length,
@@ -143,18 +133,25 @@ export const useLessonsByModule = (moduleId: string) => {
           lessonsToReturn: lessonsToReturn.length
         });
         
-        // Ordenar as aulas por número no título e garantir consistência
-        const sortedLessons = sortLessonsByNumber(lessonsToReturn);
+        // Converter videos para o formato esperado
+        const processedLessons = lessonsToReturn.map(lesson => ({
+          ...lesson,
+          videos: lesson.learning_lesson_videos || []
+        }));
+        
+        // Ordenar as aulas por número no título
+        const sortedLessons = sortLessonsByNumber(processedLessons);
         
         const endTime = performance.now();
         const duration = Math.round(endTime - startTime);
         
-        console.log(`[FORMACAO_DEBUG] ✅ SUCESSO COMPLETO`, {
+        console.log(`[FORMACAO_DEBUG_V2] ✅ SUCESSO V2 - RLS CORRIGIDO`, {
           moduleId,
           finalLessonsCount: sortedLessons.length,
           totalDuration: `${duration}ms`,
           isAdmin,
-          sortedLessonTitles: sortedLessons.map(l => l.title?.substring(0, 30) + '...')
+          version: "v2-rls-fixed",
+          rlsWorking: true
         });
         
         return sortedLessons;
@@ -162,36 +159,37 @@ export const useLessonsByModule = (moduleId: string) => {
         const endTime = performance.now();
         const duration = Math.round(endTime - startTime);
         
-        console.error(`[FORMACAO_DEBUG] 💥 EXCEÇÃO CRÍTICA`, {
+        console.error(`[FORMACAO_DEBUG_V2] 💥 EXCEÇÃO V2`, {
           moduleId,
           duration: `${duration}ms`,
           isAdmin,
           userId: user?.id?.substring(0, 8) + '***',
           errorType: err instanceof Error ? err.constructor.name : typeof err,
           errorMessage: err instanceof Error ? err.message : String(err),
-          stackTrace: err instanceof Error ? err.stack?.split('\n').slice(0, 3) : null
+          version: "v2-rls-fixed"
         });
         
         return [];
       }
     },
     enabled: !!moduleId && !!user, // Garantir que usuário existe
-    staleTime: 0, // Sem cache para debug
-    refetchOnWindowFocus: true, // Forçar refresh
+    staleTime: 0, // Cache bust total
+    refetchOnWindowFocus: true,
+    refetchOnMount: true, // Força refresh ao montar
     retry: (failureCount, error) => {
-      console.log(`[FORMACAO_DEBUG] 🔄 RETRY ${failureCount}`, {
+      console.log(`[FORMACAO_DEBUG_V2] 🔄 RETRY V2 ${failureCount}`, {
         moduleId,
         errorMessage: error instanceof Error ? error.message : String(error),
         isAdmin,
-        maxRetries: 5
+        maxRetries: 3
       });
-      return failureCount < 5; // Mais tentativas para admin
+      return failureCount < 3;
     },
     retryDelay: (attemptIndex) => {
-      const delay = Math.min(500 * Math.pow(1.5, attemptIndex), 5000); // Delay menor e mais agressivo
-      console.log(`[FORMACAO_DEBUG] ⏱️ RETRY DELAY: ${delay}ms (tentativa ${attemptIndex + 1})`);
+      const delay = Math.min(1000 * Math.pow(2, attemptIndex), 5000);
+      console.log(`[FORMACAO_DEBUG_V2] ⏱️ RETRY DELAY V2: ${delay}ms`);
       return delay;
     },
-    gcTime: 0 // Sem cache para debug
+    gcTime: 0 // Cache bust total
   });
 };
