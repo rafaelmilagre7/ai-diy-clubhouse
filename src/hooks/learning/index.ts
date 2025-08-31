@@ -1,5 +1,6 @@
 
 export { useLessonsByModule } from './useLessonsByModule';
+export { useAdminLessonDebug } from './useAdminLessonDebug';
 export { useVideoProgress } from './useVideoProgress';
 export { useLessonNPS } from './useLessonNPS';
 export { useCourseDetails } from './useCourseDetails';

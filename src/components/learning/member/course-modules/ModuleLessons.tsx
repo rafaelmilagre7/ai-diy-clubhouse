@@ -1,11 +1,13 @@
 
 import { useLessonsByModule } from "@/hooks/learning";
+import { useAdminLessonDebug } from "@/hooks/learning/useAdminLessonDebug";
 import { LearningProgress, LearningLesson } from "@/lib/supabase/types";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { LessonThumbnail } from "./LessonThumbnail";
 import { LessonListItem } from "./LessonListItem";
 import { sortLessonsByNumber } from "./CourseModulesHelpers";
 import { useCourseIndividualAccess } from "@/hooks/learning/useCourseIndividualAccess";
+import { useAuth } from "@/contexts/auth";
 
 interface ModuleLessonsProps { 
   moduleId: string;
@@ -28,19 +30,32 @@ export const ModuleLessons = ({
   filteredLessons,
   searchQuery = ""
 }: ModuleLessonsProps) => {
+  const { isAdmin } = useAuth();
   const { data, isLoading, error, isRefetching, failureCount } = useLessonsByModule(moduleId);
   const { hasAccess } = useCourseIndividualAccess(courseId);
   
+  // Hook de debug para admin
+  const { data: debugData } = useAdminLessonDebug(moduleId);
+  
   // Debug detalhado do carregamento
-  console.log(`[FORMACAO_DEBUG] ModuleLessons renderizado - moduleId: ${moduleId}`, {
+  console.log(`[FORMACAO_DEBUG] 🎯 ModuleLessons renderizado`, {
+    moduleId,
     isLoading,
     isRefetching,
     hasError: !!error,
+    errorMessage: error instanceof Error ? error.message : String(error || ''),
     failureCount,
     dataLength: data?.length || 0,
     hasFilteredLessons: !!filteredLessons,
     searchQuery,
     hasAccess,
+    isAdmin,
+    debugData: debugData ? {
+      connectionOK: debugData.connectionOK,
+      sessionValid: debugData.sessionValid,
+      rawLessonsCount: debugData.rawLessonsCount,
+      moduleExists: debugData.moduleExists
+    } : null,
     timestamp: new Date().toISOString()
   });
   
