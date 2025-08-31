@@ -6885,6 +6885,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      test_learning_access_debug: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       test_profile_upload_access: {
         Args: Record<PropertyKey, never>
         Returns: Json

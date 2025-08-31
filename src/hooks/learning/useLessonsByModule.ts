@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { LearningLesson } from "@/lib/supabase/types";
 import { sortLessonsByNumber } from "@/components/learning/member/course-modules/CourseModulesHelpers";
 import { useAuth } from "@/contexts/auth";
+import { canAccessLearningContent } from "@/utils/roleValidation";
 
 /**
  * Hook para buscar lições de um módulo específico
@@ -13,20 +14,31 @@ export const useLessonsByModule = (moduleId: string) => {
   const { user, isAdmin } = useAuth();
   
   return useQuery({
-    queryKey: ["learning-module-lessons-v2-rls-fixed", moduleId, user?.id, Date.now()], // Nova chave após correção RLS
+    queryKey: ["learning-module-lessons-v3-definitivo", moduleId, user?.id, Date.now()], // Nova chave V3
     queryFn: async (): Promise<LearningLesson[]> => {
       const startTime = performance.now();
       
-      // LOGGING DETALHADO - Estado inicial após correção RLS
-      console.log(`[FORMACAO_DEBUG_V2] 🔍 BUSCA PÓS-CORREÇÃO RLS`, {
+      // LOGGING DETALHADO - Estado inicial V3 DEFINITIVO
+      console.log(`[FORMACAO_DEBUG_V3] 🔍 BUSCA DEFINITIVA - CAN_ACCESS_LEARNING_CONTENT CORRIGIDO`, {
         moduleId,
         userId: user?.id?.substring(0, 8) + '***' || 'sem usuário',
         isAdmin,
         userEmail: user?.email?.substring(0, 10) + '***' || 'sem email',
         timestamp: new Date().toISOString(),
         hasAuth: !!user,
-        version: "v2-rls-fixed"
+        version: "v3-definitivo"
       });
+
+      // TESTE DA FUNÇÃO CORRIGIDA
+      try {
+        const { data: debugData, error: debugError } = await supabase.rpc('test_learning_access_debug');
+        console.log('🧪 [FORMACAO_DEBUG_V3] Teste da função corrigida:', debugData);
+        if (debugError) {
+          console.error('❌ [FORMACAO_DEBUG_V3] Erro no teste:', debugError);
+        }
+      } catch (debugErr) {
+        console.error('❌ [FORMACAO_DEBUG_V3] Exceção no teste:', debugErr);
+      }
 
       try {
         if (!moduleId) {
@@ -76,8 +88,8 @@ export const useLessonsByModule = (moduleId: string) => {
           .order("order_index", { ascending: true });
         const queryDuration = Math.round(performance.now() - queryStart);
         
-        // LOGGING DETALHADO - Resposta da query V2
-        console.log(`[FORMACAO_DEBUG_V2] 📊 RESPOSTA QUERY V2`, {
+        // LOGGING DETALHADO - Resposta da query V3
+        console.log(`[FORMACAO_DEBUG_V3] 📊 RESPOSTA QUERY V3 - POLÍTICAS RLS SIMPLIFICADAS`, {
           moduleId,
           hasError: !!error,
           rawDataLength: Array.isArray(allLessonsData) ? allLessonsData.length : 0,
@@ -87,7 +99,8 @@ export const useLessonsByModule = (moduleId: string) => {
             code: error.code,
             hint: error.hint,
             details: error.details,
-            isTransactionError: error.message?.includes('read-only transaction')
+            isTransactionError: error.message?.includes('read-only transaction'),
+            isVideoUrlError: error.message?.includes('video_url does not exist')
           } : null
         });
         
