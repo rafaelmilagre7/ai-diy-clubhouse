@@ -54,22 +54,46 @@ export function useInviteCSVExport() {
     // Remove todos os caracteres não numéricos
     const cleanPhone = phone.replace(/\D/g, '');
     
-    // Verifica se tem formato brasileiro (DDI + DDD + número)
+    if (!cleanPhone) return 'Não informado';
+    
+    let ddi = '55';
+    let ddd = '';
+    let number = '';
+    
+    // Formato com DDI (13+ dígitos começando com 55)
     if (cleanPhone.length >= 13 && cleanPhone.startsWith('55')) {
-      const ddi = cleanPhone.slice(0, 2); // 55
-      const ddd = cleanPhone.slice(2, 4); // ex: 11
-      const number = cleanPhone.slice(4);  // ex: 999999999
-      
-      // Formatar como +55 (11) 99999-9999
-      if (number.length >= 8) {
-        const firstPart = number.slice(0, -4);
-        const lastPart = number.slice(-4);
-        return `+${ddi} (${ddd}) ${firstPart}-${lastPart}`;
-      }
+      ddi = cleanPhone.slice(0, 2);
+      ddd = cleanPhone.slice(2, 4);
+      number = cleanPhone.slice(4);
+    }
+    // Formato sem DDI (10-11 dígitos: DDD + número)
+    else if (cleanPhone.length >= 10 && cleanPhone.length <= 11) {
+      ddd = cleanPhone.slice(0, 2);
+      number = cleanPhone.slice(2);
+    }
+    // Formato sem DDI (8-9 dígitos: apenas número, usar DDD padrão)
+    else if (cleanPhone.length >= 8 && cleanPhone.length <= 9) {
+      ddd = '11'; // DDD padrão para números sem DDD identificado
+      number = cleanPhone;
+    }
+    // Se não conseguir identificar o padrão, retorna o número original
+    else {
+      return cleanPhone;
     }
     
-    // Se não conseguir formatar, retorna o número original ou padrão
-    return cleanPhone || 'Não informado';
+    // Formatar o número com hífen
+    if (number.length >= 8) {
+      const firstPart = number.slice(0, -4);
+      const lastPart = number.slice(-4);
+      return `+${ddi} (${ddd}) ${firstPart}-${lastPart}`;
+    } else if (number.length >= 7) {
+      const firstPart = number.slice(0, -4);
+      const lastPart = number.slice(-4);
+      return `+${ddi} (${ddd}) ${firstPart}-${lastPart}`;
+    }
+    
+    // Fallback: retorna o número original se não conseguir formatar
+    return cleanPhone;
   }, []);
 
   const formatChannelPreference = useCallback((preference?: string): string => {
