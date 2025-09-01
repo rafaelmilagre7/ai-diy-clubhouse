@@ -1,493 +1,297 @@
-import { useState } from "react";
-import { useUsers } from "@/hooks/admin/useUsers";
-import { UsersHeader } from "@/components/admin/users/UsersHeader";
-import { UsersTable } from "@/components/admin/users/UsersTable";
-import { UserRoleManager } from "@/components/admin/users/UserRoleManager";
-import { UserResetDialog } from "@/components/admin/users/UserResetDialog";
-import { UserProfile } from "@/lib/supabase";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, RefreshCw, Users, Plus, Activity, CheckCircle } from "lucide-react";
-import { DeleteUserDialog } from "@/components/admin/users/DeleteUserDialog";
-import { ToggleUserStatusDialog } from "@/components/admin/users/ToggleUserStatusDialog";
-import { ResetPasswordDialog } from "@/components/admin/users/ResetPasswordDialog";
-import { UserCourseAccessManager } from "@/components/admin/users/UserCourseAccessManager";
-import { InviteUserDialog } from "@/components/admin/users/InviteUserDialog";
-import { toast } from "sonner";
-import { useAuth } from "@/contexts/auth";
-import { useQueryClient } from "@tanstack/react-query";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+import React, { useState, useMemo } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { 
+  Users, 
+  Search, 
+  RefreshCw, 
+  UserCheck, 
+  UserPlus,
+  Shield,
+  Crown,
+  AlertCircle
+} from 'lucide-react';
+import { useUsers } from '@/hooks/admin/useUsers';
+import { useUserRoles } from '@/hooks/admin/useUserRoles';
+import { useRoles, Role } from '@/hooks/admin/useRoles';
+import { UserProfile } from '@/lib/supabase';
+import { UserRoleDialog } from '@/components/admin/users/UserRoleDialog';
+import { getUserRoleName } from '@/lib/supabase/types';
+import { toast } from 'sonner';
 
-const AdminUsers = () => {
-  const {
-    users,
-    availableRoles,
-    loading,
-    isRefreshing,
-    searchQuery,
+export default function AdminUsers() {
+  const { 
+    users, 
+    loading, 
+    isRefreshing, 
+    searchQuery, 
     setSearchQuery,
-    selectedUser,
-    setSelectedUser,
     fetchUsers,
     canManageUsers,
-    canAssignRoles,
-    canDeleteUsers,
-    canResetPasswords,
-    error
+    canAssignRoles
   } = useUsers();
 
-  const { isAdmin } = useAuth();
-  const queryClient = useQueryClient();
+  const { assignRoleToUser, isUpdating: isAssigningRole } = useUserRoles();
+  const { roles } = useRoles();
   
-  const [roleManagerOpen, setRoleManagerOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
-  const [resetUserDialogOpen, setResetUserDialogOpen] = useState(false);
-  const [toggleStatusDialogOpen, setToggleStatusDialogOpen] = useState(false);
-  const [courseAccessDialogOpen, setCourseAccessDialogOpen] = useState(false);
-  const [inviteUserDialogOpen, setInviteUserDialogOpen] = useState(false);
-  const [filterRole, setFilterRole] = useState('');
+  const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
+  const [newRoleId, setNewRoleId] = useState<string>('');
+  const [showRoleDialog, setShowRoleDialog] = useState(false);
 
-  const handleEditRole = (user: UserProfile) => {
-    setSelectedUser(user);
-    setRoleManagerOpen(true);
+  // Converter roles do useRoles para o formato esperado
+  const availableRoles: Role[] = useMemo(() => {
+    return roles.map(role => ({
+      ...role,
+      permissions: role.permissions || {}
+    }));
+  }, [roles]);
+
+  const handleRoleChange = (userId: string, currentRoleId: string | null) => {
+    const user = users.find(u => u.id === userId);
+    if (user) {
+      setSelectedUser(user);
+      setNewRoleId(currentRoleId || '');
+      setShowRoleDialog(true);
+    }
   };
 
-  const handleDeleteUser = (user: UserProfile) => {
-    setSelectedUser(user);
-    setDeleteDialogOpen(true);
+  const handleUpdateRole = async () => {
+    if (!selectedUser || !newRoleId) return;
+    
+    try {
+      await assignRoleToUser(selectedUser.id, newRoleId);
+      setShowRoleDialog(false);
+      setSelectedUser(null);
+      setNewRoleId('');
+      // Recarregar a lista de usuários para refletir a mudança
+      fetchUsers();
+    } catch (error) {
+      console.error('Erro ao atualizar papel do usuário:', error);
+    }
   };
 
-  const handleResetPassword = (user: UserProfile) => {
-    setSelectedUser(user);
-    setResetPasswordDialogOpen(true);
+  const getRoleBadgeVariant = (roleName: string) => {
+    switch (roleName) {
+      case 'admin':
+        return 'destructive';
+      case 'formacao':
+        return 'default';
+      default:
+        return 'secondary';
+    }
   };
 
-  const handleResetUser = (user: UserProfile) => {
-    setSelectedUser(user);
-    setResetUserDialogOpen(true);
+  const getRoleIcon = (roleName: string) => {
+    switch (roleName) {
+      case 'admin':
+        return <Crown className="h-3 w-3" />;
+      case 'formacao':
+        return <Shield className="h-3 w-3" />;
+      default:
+        return <UserCheck className="h-3 w-3" />;
+    }
   };
 
-  const handleToggleStatus = (user: UserProfile) => {
-    setSelectedUser(user);
-    setToggleStatusDialogOpen(true);
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('pt-BR');
   };
 
-  const handleManageCourses = (user: UserProfile) => {
-    setSelectedUser(user);
-    setCourseAccessDialogOpen(true);
-  };
-
-  const handleRefresh = () => {
-    toast.info("Atualizando lista de usuários...");
-    fetchUsers();
-  };
-
-  const handleForceRefresh = async () => {
-    toast.info("Forçando atualização dos dados...");
-    await queryClient.invalidateQueries({ queryKey: ['users'] });
-    await queryClient.invalidateQueries({ queryKey: ['user-roles'] });
-    await queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-    fetchUsers();
-  };
-
-  // Verificação de acesso usando o contexto de auth
-  if (!isAdmin) {
+  if (!canManageUsers) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-        <div className="relative p-6 md:p-8">
-          <Alert variant="destructive" className="surface-elevated border-0 shadow-aurora bg-destructive/5">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Acesso restrito</AlertTitle>
-            <AlertDescription>
-              Você não tem permissão para visualizar a lista de usuários.
-            </AlertDescription>
-          </Alert>
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <AlertCircle className="mx-auto h-12 w-12 text-muted-foreground" />
+          <h3 className="mt-4 text-lg font-semibold">Acesso Negado</h3>
+          <p className="mt-2 text-muted-foreground">
+            Você não tem permissão para gerenciar usuários.
+          </p>
         </div>
       </div>
     );
   }
-
-  // Error state
-  if (error && !users.length) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-viverblue/5 via-transparent to-transparent" />
-        
-        <div className="relative p-6 md:p-8 space-y-8">
-          <div className="flex items-center space-x-4">
-            <div className="p-3 rounded-xl bg-gradient-to-r from-viverblue/20 to-operational/20 backdrop-blur-sm border border-viverblue/20">
-              <Users className="h-8 w-8 text-viverblue" />
-            </div>
-            <div>
-              <h1 className="text-display text-foreground">Usuários</h1>
-              <p className="text-body-large text-muted-foreground">Gerencie usuários e permissões do sistema</p>
-            </div>
-          </div>
-          
-          <Alert variant="destructive" className="surface-elevated border-0 shadow-aurora bg-destructive/5">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Erro ao carregar usuários</AlertTitle>
-            <AlertDescription className="space-y-2">
-              <p>Ocorreu um problema ao carregar a lista de usuários:</p>
-              <p className="font-mono text-sm bg-destructive/10 p-2 rounded">
-                {error.message}
-              </p>
-              <div className="flex gap-2 mt-4">
-                <Button 
-                  variant="outline"
-                  onClick={handleRefresh} 
-                  disabled={isRefreshing}
-                  className="aurora-focus gap-2"
-                >
-                  <RefreshCw className="h-4 w-4" />
-                  {isRefreshing ? "Atualizando..." : "Tentar novamente"}
-                </Button>
-                
-                <Button onClick={handleForceRefresh} className="aurora-focus">
-                  Recarregar página
-                </Button>
-              </div>
-            </AlertDescription>
-          </Alert>
-        </div>
-      </div>
-    );
-  }
-
-  // Loading state
-  if (loading && !users.length) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-viverblue/5 via-transparent to-transparent" />
-        
-        <div className="relative p-6 md:p-8 space-y-8">
-          <div className="flex items-center space-x-4">
-            <div className="p-3 rounded-xl bg-gradient-to-r from-viverblue/20 to-operational/20 backdrop-blur-sm">
-              <div className="skeleton h-8 w-8" />
-            </div>
-            <div className="space-y-2">
-              <div className="skeleton h-8 w-64" />
-              <div className="skeleton h-4 w-96" />
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Card key={i} className="surface-elevated border-0 shadow-aurora p-6">
-                <div className="skeleton h-4 w-24 mb-2" />
-                <div className="skeleton h-8 w-16 mb-3" />
-                <div className="skeleton h-4 w-20" />
-              </Card>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Estatísticas dos usuários
-  const totalUsers = users.length;
-  const activeUsers = users.filter(user => user.status !== 'inactive').length;
-  const adminUsers = users.filter(user => 
-    user.user_roles?.name === 'admin'
-  ).length;
-  const onboardingCompleted = users.filter(user => user.onboarding_completed).length;
-  const newUsersToday = users.filter(user => {
-    const today = new Date();
-    const userDate = new Date(user.created_at);
-    return today.toDateString() === userDate.toDateString();
-  }).length;
-
-  const filteredUsers = users.filter(user => {
-    if (filterRole && user.role_id !== filterRole) return false;
-    return true;
-  });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-      {/* Aurora Background Effects */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-viverblue/5 via-transparent to-transparent" />
-      <div className="absolute top-0 right-0 -z-10 h-96 w-96 rounded-full bg-gradient-to-br from-viverblue/10 to-operational/10 blur-3xl animate-blob" />
-      <div className="absolute bottom-0 left-0 -z-10 h-96 w-96 rounded-full bg-gradient-to-tr from-strategy/10 to-revenue/10 blur-3xl animate-blob animation-delay-2000" />
-      
-      <div className="relative p-6 md:p-8 space-y-8">
-        {/* Modern Header */}
-        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-6">
-          <div className="space-y-4">
-            <div className="flex items-center space-x-4">
-              <div className="p-3 rounded-xl bg-gradient-to-r from-viverblue/20 to-operational/20 backdrop-blur-sm border border-viverblue/20">
-                <Users className="h-8 w-8 text-viverblue" />
-              </div>
-              <div>
-                <h1 className="text-display text-foreground bg-gradient-to-r from-viverblue to-operational bg-clip-text text-transparent">
-                  Usuários
-                </h1>
-                <p className="text-body-large text-muted-foreground">
-                  Gerencie {totalUsers} usuários e suas permissões no sistema
-                </p>
-              </div>
-            </div>
-            
-            {/* Quick Action Badges */}
-            <div className="flex gap-4">
-              <Badge variant="secondary" className="surface-elevated">
-                {activeUsers} Ativos
-              </Badge>
-              <Badge variant="secondary" className="surface-elevated">
-                {adminUsers} Admins
-              </Badge>
-              <Badge variant="secondary" className="surface-elevated">
-                {Math.round((onboardingCompleted / totalUsers) * 100)}% Onboarding
-              </Badge>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              onClick={handleRefresh}
-              disabled={isRefreshing}
-              className="aurora-focus gap-2 bg-card/50 backdrop-blur-sm"
-            >
-              <RefreshCw className="h-4 w-4" />
-              {isRefreshing ? "Atualizando..." : "Atualizar"}
-            </Button>
-            
-            <Button
-              onClick={() => setInviteUserDialogOpen(true)}
-              className="aurora-focus gap-2 bg-viverblue hover:bg-viverblue/90"
-            >
-              <Plus className="h-4 w-4" />
-              Convidar Usuário
-            </Button>
-          </div>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Gestão de Usuários</h1>
+          <p className="text-muted-foreground">
+            Gerencie usuários e suas permissões
+          </p>
         </div>
+        <Button
+          onClick={fetchUsers}
+          disabled={isRefreshing}
+          size="sm"
+          variant="outline"
+        >
+          <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          {isRefreshing ? 'Atualizando...' : 'Atualizar'}
+        </Button>
+      </div>
 
-        {/* Enhanced Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-          <Card className="surface-elevated border-0 shadow-aurora transition-all duration-300 hover:shadow-aurora-strong group">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-label text-muted-foreground">Total de Usuários</CardTitle>
-              <div className="p-2 rounded-lg bg-gradient-to-br from-viverblue/20 to-viverblue/10 transition-all duration-300 group-hover:from-viverblue/30 group-hover:to-viverblue/20">
-                <Users className="h-4 w-4 text-viverblue" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-heading-2 text-foreground mb-2 bg-gradient-to-r from-viverblue to-viverblue/80 bg-clip-text text-transparent">
-                {totalUsers}
-              </div>
-              <p className="text-caption text-muted-foreground">
-                +{newUsersToday} hoje
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="surface-elevated border-0 shadow-aurora transition-all duration-300 hover:shadow-aurora-strong group">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-label text-muted-foreground">Usuários Ativos</CardTitle>
-              <div className="p-2 rounded-lg bg-gradient-to-br from-operational/20 to-operational/10 transition-all duration-300 group-hover:from-operational/30 group-hover:to-operational/20">
-                <Activity className="h-4 w-4 text-operational" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-heading-2 text-foreground mb-2 bg-gradient-to-r from-operational to-operational/80 bg-clip-text text-transparent">
-                {activeUsers}
-              </div>
-              <p className="text-caption text-muted-foreground">
-                {Math.round((activeUsers / totalUsers) * 100)}% do total
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="surface-elevated border-0 shadow-aurora transition-all duration-300 hover:shadow-aurora-strong group">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-label text-muted-foreground">Novos Usuários</CardTitle>
-              <div className="p-2 rounded-lg bg-gradient-to-br from-strategy/20 to-strategy/10 transition-all duration-300 group-hover:from-strategy/30 group-hover:to-strategy/20">
-                <CheckCircle className="h-4 w-4 text-strategy" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-heading-2 text-foreground mb-2 bg-gradient-to-r from-strategy to-strategy/80 bg-clip-text text-transparent">
-                {newUsersToday}
-              </div>
-              <p className="text-caption text-muted-foreground">
-                Registrados hoje
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="surface-elevated border-0 shadow-aurora transition-all duration-300 hover:shadow-aurora-strong group">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-label text-muted-foreground">Administradores</CardTitle>
-              <div className="p-2 rounded-lg bg-gradient-to-br from-revenue/20 to-revenue/10 transition-all duration-300 group-hover:from-revenue/30 group-hover:to-revenue/20">
-                <AlertCircle className="h-4 w-4 text-revenue" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-heading-2 text-foreground mb-2 bg-gradient-to-r from-revenue to-revenue/80 bg-clip-text text-transparent">
-                {adminUsers}
-              </div>
-              <p className="text-caption text-muted-foreground">
-                Acesso total
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="surface-elevated border-0 shadow-aurora transition-all duration-300 hover:shadow-aurora-strong group">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-label text-muted-foreground">Onboarding</CardTitle>
-              <div className="p-2 rounded-lg bg-gradient-to-br from-surface-accent/20 to-surface-accent/10 transition-all duration-300 group-hover:from-surface-accent/30 group-hover:to-surface-accent/20">
-                <CheckCircle className="h-4 w-4 text-surface-accent" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-heading-2 text-foreground mb-2 bg-gradient-to-r from-surface-accent to-surface-accent/80 bg-clip-text text-transparent">
-                {Math.round((onboardingCompleted / totalUsers) * 100)}%
-              </div>
-              <p className="text-caption text-muted-foreground">
-                {onboardingCompleted} completos
-              </p>
-            </CardContent>
-          </Card>
+      {/* Search */}
+      <div className="flex items-center space-x-2">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Buscar usuários..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-8"
+          />
         </div>
+      </div>
 
-        {/* Enhanced Filters */}
-        <Card className="surface-elevated border-0 shadow-aurora">
-          <CardHeader>
-            <CardTitle className="text-heading-3">Filtros</CardTitle>
+      {/* Stats */}
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total de Usuários</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <Input
-                  placeholder="Buscar por nome ou email..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="aurora-focus"
-                />
-              </div>
-              <div className="w-full sm:w-48">
-                <select
-                  value={filterRole}
-                  onChange={(e) => setFilterRole(e.target.value)}
-                  className="w-full px-3 py-2 rounded-md border border-input bg-background aurora-focus"
-                >
-                  <option value="">Todos os papéis</option>
-                  {availableRoles.map(role => (
-                    <option key={role.id} value={role.id}>{role.name}</option>
-                  ))}
-                </select>
-              </div>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setSearchQuery('');
-                  setFilterRole('');
-                }}
-                className="aurora-focus"
-              >
-                Limpar
-              </Button>
+            <div className="text-2xl font-bold">{users.length}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Administradores</CardTitle>
+            <Crown className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {users.filter(u => getUserRoleName(u) === 'admin').length}
             </div>
           </CardContent>
         </Card>
-
-        {/* Enhanced Users Table */}
-        <Card className="surface-elevated border-0 shadow-aurora">
-          <UsersTable 
-            users={filteredUsers}
-            loading={loading}
-            canEditRoles={canAssignRoles}
-            canDeleteUsers={canDeleteUsers}
-            canResetPasswords={canResetPasswords}
-            onEditRole={handleEditRole}
-            onDeleteUser={handleDeleteUser}
-            onResetPassword={handleResetPassword}
-            onResetUser={handleResetUser}
-            onToggleStatus={handleToggleStatus}
-            onManageCourses={handleManageCourses}
-            onRefresh={handleRefresh}
-            canResetUsers={canManageUsers}
-            canToggleStatus={canManageUsers}
-          />
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Formação</CardTitle>
+            <Shield className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {users.filter(u => getUserRoleName(u) === 'formacao').length}
+            </div>
+          </CardContent>
         </Card>
-        
-        {users.length > 0 && !isRefreshing && (
-          <div className="text-body-small text-muted-foreground text-right">
-            {filteredUsers.length} de {users.length} usuários
-          </div>
-        )}
-        
-        {/* Diálogos */}
-        {canAssignRoles && (
-          <UserRoleManager 
-            open={roleManagerOpen}
-            onOpenChange={setRoleManagerOpen}
-            user={selectedUser}
-            availableRoles={availableRoles}
-            onSuccess={() => {
-              setTimeout(() => fetchUsers(), 500);
-            }}
-          />
-        )}
-        
-        {canDeleteUsers && (
-          <DeleteUserDialog 
-            open={deleteDialogOpen}
-            onOpenChange={setDeleteDialogOpen}
-            user={selectedUser}
-            onSuccess={fetchUsers}
-          />
-        )}
-        
-        {canResetPasswords && (
-          <ResetPasswordDialog 
-            open={resetPasswordDialogOpen}
-            onOpenChange={setResetPasswordDialogOpen}
-            user={selectedUser}
-          />
-        )}
-        
-        {canManageUsers && (
-          <ToggleUserStatusDialog 
-            open={toggleStatusDialogOpen}
-            onOpenChange={setToggleStatusDialogOpen}
-            user={selectedUser}
-            onSuccess={fetchUsers}
-          />
-        )}
-
-        <UserResetDialog 
-          open={resetUserDialogOpen}
-          onOpenChange={setResetUserDialogOpen}
-          user={selectedUser}
-          onSuccess={() => {
-            setTimeout(() => fetchUsers(), 500);
-          }}
-        />
-
-        {selectedUser && (
-          <UserCourseAccessManager
-            isOpen={courseAccessDialogOpen}
-            onClose={() => setCourseAccessDialogOpen(false)}
-            user={selectedUser}
-          />
-        )}
-
-        {/* Diálogo de Convite de Usuário */}
-        <InviteUserDialog
-          open={inviteUserDialogOpen}
-          onOpenChange={setInviteUserDialogOpen}
-          onSuccess={fetchUsers}
-        />
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Membros</CardTitle>
+            <UserCheck className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {users.filter(u => {
+                const role = getUserRoleName(u);
+                return role === 'membro_club' || role === 'user' || !role;
+              }).length}
+            </div>
+          </CardContent>
+        </Card>
       </div>
+
+      {/* Users List */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Lista de Usuários</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="space-y-4">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="flex items-center space-x-4 p-4 border rounded-lg animate-pulse">
+                  <div className="h-10 w-10 bg-muted rounded-full" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-muted rounded w-1/4" />
+                    <div className="h-3 bg-muted rounded w-1/3" />
+                  </div>
+                  <div className="h-6 w-16 bg-muted rounded" />
+                </div>
+              ))}
+            </div>
+          ) : users.length === 0 ? (
+            <div className="text-center py-8">
+              <UserPlus className="mx-auto h-12 w-12 text-muted-foreground" />
+              <h3 className="mt-4 text-lg font-semibold">Nenhum usuário encontrado</h3>
+              <p className="mt-2 text-muted-foreground">
+                {searchQuery ? 'Tente ajustar sua pesquisa.' : 'Não há usuários cadastrados.'}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {users.map((user) => {
+                const roleName = getUserRoleName(user);
+                return (
+                  <div
+                    key={user.id}
+                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-center space-x-4">
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage src={user.avatar_url || undefined} />
+                        <AvatarFallback>
+                          {user.name ? user.name.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <div className="font-medium">{user.name || user.email}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {user.email}
+                          {user.company_name && (
+                            <span className="ml-2">• {user.company_name}</span>
+                          )}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Cadastrado em {formatDate(user.created_at)}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Badge variant={getRoleBadgeVariant(roleName)}>
+                        {getRoleIcon(roleName)}
+                        <span className="ml-1 capitalize">
+                          {roleName === 'membro_club' ? 'Membro' : roleName}
+                        </span>
+                      </Badge>
+                      
+                      {canAssignRoles && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleRoleChange(user.id, user.role_id)}
+                          disabled={isAssigningRole}
+                        >
+                          Alterar Papel
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Role Assignment Dialog */}
+      <UserRoleDialog
+        open={showRoleDialog}
+        onOpenChange={setShowRoleDialog}
+        selectedUser={selectedUser}
+        newRoleId={newRoleId}
+        onRoleChange={setNewRoleId}
+        onUpdateRole={handleUpdateRole}
+        saving={isAssigningRole}
+        availableRoles={availableRoles}
+      />
     </div>
   );
-};
-
-export default AdminUsers;
+}
