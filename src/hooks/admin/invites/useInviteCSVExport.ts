@@ -6,6 +6,7 @@ import { csvExporter } from '@/utils/csvExporter';
 
 export interface CSVExportData {
   destinatario: string;
+  telefone: string;
   papel: string;
   canal: string;
   status: string;
@@ -47,6 +48,30 @@ export function useInviteCSVExport() {
     }
   }, []);
 
+  const formatPhoneNumber = useCallback((phone?: string): string => {
+    if (!phone) return 'Não informado';
+    
+    // Remove todos os caracteres não numéricos
+    const cleanPhone = phone.replace(/\D/g, '');
+    
+    // Verifica se tem formato brasileiro (DDI + DDD + número)
+    if (cleanPhone.length >= 13 && cleanPhone.startsWith('55')) {
+      const ddi = cleanPhone.slice(0, 2); // 55
+      const ddd = cleanPhone.slice(2, 4); // ex: 11
+      const number = cleanPhone.slice(4);  // ex: 999999999
+      
+      // Formatar como +55 (11) 99999-9999
+      if (number.length >= 8) {
+        const firstPart = number.slice(0, -4);
+        const lastPart = number.slice(-4);
+        return `+${ddi} (${ddd}) ${firstPart}-${lastPart}`;
+      }
+    }
+    
+    // Se não conseguir formatar, retorna o número original ou padrão
+    return cleanPhone || 'Não informado';
+  }, []);
+
   const formatChannelPreference = useCallback((preference?: string): string => {
     switch (preference) {
       case 'email':
@@ -63,6 +88,7 @@ export function useInviteCSVExport() {
   const generateCSVData = useCallback((activeInvites: Invite[]): CSVExportData[] => {
     return activeInvites.map(invite => ({
       destinatario: invite.email,
+      telefone: formatPhoneNumber(invite.phone),
       papel: invite.role?.name || 'N/A',
       canal: formatChannelPreference(invite.channel_preference),
       status: 'Ativo',
@@ -70,7 +96,7 @@ export function useInviteCSVExport() {
       whatsapp: formatSendStatus(invite, 'whatsapp'),
       linkCadastro: APP_CONFIG.getAppUrl(`/convite/${invite.token}`)
     }));
-  }, [formatSendStatus, formatChannelPreference]);
+  }, [formatSendStatus, formatChannelPreference, formatPhoneNumber]);
 
   const exportActiveInvitesCSV = useCallback(async (invites: Invite[]) => {
     if (isExporting) return;
@@ -94,6 +120,7 @@ export function useInviteCSVExport() {
       // Configurar cabeçalhos do CSV
       const headers = {
         destinatario: 'Destinatário',
+        telefone: 'Telefone',
         papel: 'Papel',
         canal: 'Canal',
         status: 'Status',
