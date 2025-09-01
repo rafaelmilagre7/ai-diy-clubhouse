@@ -32,8 +32,11 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
   const [cspBlocked, setCspBlocked] = useState(false);
   const [iframeBlocked, setIframeBlocked] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [silentRetryCount, setSilentRetryCount] = useState(0);
+  const [showFallbackButtons, setShowFallbackButtons] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const loadTimeoutRef = useRef<NodeJS.Timeout>();
+  const readyTimeoutRef = useRef<NodeJS.Timeout>();
   
   // Determinar a URL baseada no videoId ou usar a URL fornecida diretamente
   const playerUrl = url || `https://player-vz-d6ebf577-797.tv.pandavideo.com.br/embed/?v=${videoId}`;
@@ -80,6 +83,15 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
           setError(null);
           setCspBlocked(false);
           setIframeBlocked(false);
+          setShowFallbackButtons(false);
+          
+          // Limpar todos os timeouts
+          if (loadTimeoutRef.current) {
+            clearTimeout(loadTimeoutRef.current);
+          }
+          if (readyTimeoutRef.current) {
+            clearTimeout(readyTimeoutRef.current);
+          }
         }
       } catch (err) {
         devLog('❌ [PANDA-ENHANCED] Erro ao processar mensagem:', err);
@@ -93,19 +105,34 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
   const handleLoad = () => {
     devLog('✅ [PANDA-ENHANCED] Iframe carregado');
     
-    // Limpar timeout de detecção
-    if (loadTimeoutRef.current) {
-      clearTimeout(loadTimeoutRef.current);
-    }
-    
-    // Aguardar um pouco para ver se recebemos mensagens do player
-    setTimeout(() => {
+    // Aguardar mais tempo para comunicação do player (8 segundos)
+    readyTimeoutRef.current = setTimeout(() => {
       if (loading) {
-        devLog('⚠️ [PANDA-ENHANCED] Iframe carregou mas sem comunicação - possível CSP');
-        setCspBlocked(true);
-        setLoading(false);
+        devLog('⚠️ [PANDA-ENHANCED] Iframe carregou mas sem comunicação do player');
+        
+        // Primeiro tentar retry silencioso
+        if (silentRetryCount < 2) {
+          devLog('🔄 [SILENT-RETRY] Tentativa silenciosa:', silentRetryCount + 1);
+          setSilentRetryCount(prev => prev + 1);
+          
+          // Recarregar iframe silenciosamente
+          if (iframeRef.current) {
+            const currentSrc = iframeRef.current.src;
+            iframeRef.current.src = '';
+            setTimeout(() => {
+              if (iframeRef.current) {
+                iframeRef.current.src = currentSrc;
+              }
+            }, 100);
+          }
+        } else {
+          // Após 2 tentativas silenciosas, mostrar que pode ser CSP
+          setCspBlocked(true);
+          setLoading(false);
+          setShowFallbackButtons(true);
+        }
       }
-    }, 3000);
+    }, 8000);
   };
 
   const handleError = (event: any) => {
@@ -127,33 +154,54 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
   const detectCSPBlocking = () => {
     devLog('🔍 [CSP-DETECT] Iniciando detecção de bloqueio...');
     
-    // Timeout para detectar se o iframe não consegue se comunicar
+    // Timeout mais longo para detectar problemas reais (20 segundos)
     loadTimeoutRef.current = setTimeout(() => {
       if (loading) {
-        devLog('🚨 [CSP-DETECT] Timeout - possível bloqueio de CSP detectado');
-        setCspBlocked(true);
-        setIframeBlocked(true);
-        setLoading(false);
-        setError("Vídeo pode estar sendo bloqueado por políticas de segurança");
+        devLog('🚨 [CSP-DETECT] Timeout final - tentando retry automático...');
+        
+        // Primeiro retry automático
+        if (retryCount < 1) {
+          handleRetry();
+        } else {
+          // Após retry, considerar bloqueio real
+          setCspBlocked(true);
+          setIframeBlocked(true);
+          setLoading(false);
+          setShowFallbackButtons(true);
+          setError("Vídeo pode estar sendo bloqueado por políticas de segurança");
+        }
       }
-    }, 10000); // 10 segundos timeout
+    }, 20000); // 20 segundos timeout
   };
   
   const handleRetry = () => {
     devLog('🔄 [PANDA-ENHANCED] Tentando novamente...', { retryCount: retryCount + 1 });
     
     setRetryCount(prev => prev + 1);
+    setSilentRetryCount(0);
     setLoading(true);
     setError(null);
     setCspBlocked(false);
     setIframeBlocked(false);
+    setShowFallbackButtons(false);
+    
+    // Limpar timeouts existentes
+    if (loadTimeoutRef.current) {
+      clearTimeout(loadTimeoutRef.current);
+    }
+    if (readyTimeoutRef.current) {
+      clearTimeout(readyTimeoutRef.current);
+    }
     
     // Reiniciar detecção
     detectCSPBlocking();
     
-    toast.info('Recarregando vídeo...', {
-      description: 'Tentando carregar o vídeo novamente'
-    });
+    // Só mostrar toast em retry manual
+    if (retryCount > 0) {
+      toast.info('Recarregando vídeo...', {
+        description: 'Tentando carregar o vídeo novamente'
+      });
+    }
   };
   
   const openVideoDirectly = () => {
@@ -182,10 +230,14 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
       if (loadTimeoutRef.current) {
         clearTimeout(loadTimeoutRef.current);
       }
+      if (readyTimeoutRef.current) {
+        clearTimeout(readyTimeoutRef.current);
+      }
     };
   }, []);
 
-  if (error || cspBlocked || iframeBlocked) {
+  // Só mostrar erro se os botões de fallback estiverem habilitados
+  if ((error || cspBlocked || iframeBlocked) && showFallbackButtons) {
     return (
       <Card className={`w-full ${className}`}>
         <CardContent className="p-0">
