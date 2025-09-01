@@ -25,6 +25,7 @@ describe('UserRoleDialog', () => {
       id: 'membro-club-role-id', 
       name: 'membro_club', 
       description: 'Membro do Club', 
+      permissions: { learning: true },
       is_system: true, 
       created_at: '2024-01-01T00:00:00Z',
       updated_at: '2024-01-01T00:00:00Z'
@@ -33,6 +34,7 @@ describe('UserRoleDialog', () => {
       id: 'admin-role-id', 
       name: 'admin', 
       description: 'Administrador', 
+      permissions: { all: true },
       is_system: true, 
       created_at: '2024-01-01T00:00:00Z',
       updated_at: '2024-01-01T00:00:00Z'

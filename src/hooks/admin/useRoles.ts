@@ -18,6 +18,9 @@ export const useRoles = () => {
   const { isAdmin } = useAuth();
   const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchRoles = async () => {
     if (!isAdmin) return;
@@ -30,7 +33,14 @@ export const useRoles = () => {
         .order('name');
 
       if (error) throw error;
-      setRoles(data || []);
+      
+      // Garantir que permissions sempre seja um objeto
+      const rolesWithPermissions = (data || []).map(role => ({
+        ...role,
+        permissions: role.permissions || {}
+      }));
+      
+      setRoles(rolesWithPermissions);
     } catch (error: any) {
       console.error('Erro ao carregar roles:', error);
       toast.error('Erro ao carregar roles');
@@ -40,6 +50,7 @@ export const useRoles = () => {
   };
 
   const createRole = async (roleData: Omit<Role, 'id' | 'created_at' | 'updated_at'>) => {
+    setIsCreating(true);
     try {
       const { data, error } = await supabase
         .from('user_roles')
@@ -56,10 +67,13 @@ export const useRoles = () => {
       console.error('Erro ao criar role:', error);
       toast.error('Erro ao criar role: ' + error.message);
       throw error;
+    } finally {
+      setIsCreating(false);
     }
   };
 
   const updateRole = async (roleId: string, updates: Partial<Role>) => {
+    setIsUpdating(true);
     try {
       const { error } = await supabase
         .from('user_roles')
@@ -74,10 +88,13 @@ export const useRoles = () => {
       console.error('Erro ao atualizar role:', error);
       toast.error('Erro ao atualizar role: ' + error.message);
       throw error;
+    } finally {
+      setIsUpdating(false);
     }
   };
 
   const deleteRole = async (roleId: string) => {
+    setIsDeleting(true);
     try {
       // Verificar se há usuários usando esta role
       const { data: usersWithRole, error: usersError } = await supabase
@@ -105,6 +122,8 @@ export const useRoles = () => {
       console.error('Erro ao deletar role:', error);
       toast.error('Erro ao deletar role: ' + error.message);
       throw error;
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -117,9 +136,14 @@ export const useRoles = () => {
   return {
     roles,
     loading,
+    isLoading: loading,
+    isCreating,
+    isUpdating,
+    isDeleting,
     createRole,
     updateRole,
     deleteRole,
-    refetch: fetchRoles
+    refetch: fetchRoles,
+    fetchRoles
   };
 };
