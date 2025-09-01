@@ -37,7 +37,7 @@ export const useAdminLessonDebug = (moduleId: string) => {
 
         // 3. Testar RLS bypass (só admin)
         const { data: rpcTest, error: rpcError } = await supabase
-          .rpc('get_user_role', { user_uuid: user!.id });
+          .rpc('get_user_role_secure', { target_user_id: user!.id });
         
         console.log(`[ADMIN_DEBUG] 🔐 RPC Test:`, {
           hasRpcError: !!rpcError,

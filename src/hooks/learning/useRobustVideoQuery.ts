@@ -36,7 +36,7 @@ export const useRobustVideoQuery = ({
           .from('learning_lesson_videos')
           .select('*')
           .eq('lesson_id', lessonId)
-          .order('video_index', { ascending: true });
+          .order('order_index', { ascending: true });
 
         if (error) {
           devLog('❌ [ROBUST-QUERY] Erro na primeira tentativa:', error);
@@ -63,7 +63,7 @@ export const useRobustVideoQuery = ({
                 .from('learning_lesson_videos')
                 .select('*')
                 .eq('lesson_id', lessonId)
-                .order('video_index', { ascending: true });
+                .order('order_index', { ascending: true });
               
               if (retryResult.error) {
                 devLog('❌ [ROBUST-QUERY] Erro na segunda tentativa:', retryResult.error);
