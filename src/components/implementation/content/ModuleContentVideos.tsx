@@ -28,12 +28,19 @@ export const ModuleContentVideos: React.FC<ModuleContentVideosProps> = ({ module
       try {
         setLoading(true);
         
+        // Verificar se existe solution_id
+        if (!module.solution_id) {
+          log("No solution_id found in module", { module_id: module.id });
+          setVideos([]);
+          return;
+        }
+        
         // Fetch solution data
         const { data, error } = await supabase
           .from("solutions")
           .select("*")
           .eq("id", module.solution_id)
-          .single();
+          .maybeSingle();
         
         if (error) {
           logError("Error fetching solution for videos:", error);

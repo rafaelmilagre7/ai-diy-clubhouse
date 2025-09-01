@@ -14,7 +14,7 @@ export const useLessonsByModule = (moduleId: string) => {
   const { user, isAdmin } = useAuth();
   
   return useQuery({
-    queryKey: ["learning-module-lessons-v3-definitivo", moduleId, user?.id, Date.now()], // Nova chave V3
+    queryKey: ["learning-module-lessons-v4-corrected", moduleId, user?.id], // Nova chave V4 com correções
     queryFn: async (): Promise<LearningLesson[]> => {
       const startTime = performance.now();
       
@@ -73,11 +73,11 @@ export const useLessonsByModule = (moduleId: string) => {
             learning_lesson_videos (
               id,
               title,
-              video_url,
+              url,
               video_type,
               video_id,
               embed_code,
-              duration,
+              duration_seconds,
               thumbnail_url,
               order_index,
               created_at,
@@ -186,7 +186,7 @@ export const useLessonsByModule = (moduleId: string) => {
       }
     },
     enabled: !!moduleId && !!user, // Garantir que usuário existe
-    staleTime: 0, // Cache bust total
+    staleTime: 1000 * 60 * 5, // 5 minutos
     refetchOnWindowFocus: true,
     refetchOnMount: true, // Força refresh ao montar
     retry: (failureCount, error) => {
@@ -203,6 +203,6 @@ export const useLessonsByModule = (moduleId: string) => {
       console.log(`[FORMACAO_DEBUG_V2] ⏱️ RETRY DELAY V2: ${delay}ms`);
       return delay;
     },
-    gcTime: 0 // Cache bust total
+    gcTime: 1000 * 60 * 10 // 10 minutos
   });
 };

@@ -7,11 +7,13 @@ import { useVideoProgress } from "@/hooks/learning/useVideoProgress";
 
 interface LessonVideoPlayerProps {
   videos: LearningLessonVideo[];
+  lessonId: string;
   onProgress?: (videoId: string, progress: number) => void;
 }
 
 export const LessonVideoPlayer: React.FC<LessonVideoPlayerProps> = ({
   videos,
+  lessonId,
   onProgress
 }) => {
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
@@ -31,7 +33,7 @@ export const LessonVideoPlayer: React.FC<LessonVideoPlayerProps> = ({
 
   // Hook para gerenciar progresso do vídeo
   const { updateProgress } = useVideoProgress({
-    lessonId: "", // Será passado pelo componente pai se necessário
+    lessonId: lessonId,
     videoId: currentVideo?.id || "",
     duration: currentVideo?.duration_seconds || 0,
     onProgressUpdate: (progress) => {

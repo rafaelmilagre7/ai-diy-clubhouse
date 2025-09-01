@@ -108,6 +108,7 @@ export const LessonContent: React.FC<LessonContentProps> = ({
         <div className="w-full">
           <LessonVideoPlayer 
             videos={safeVideos}
+            lessonId={lesson.id}
             onProgress={(videoId, progress) => handleVideoProgress(videoId, progress)}
           />
         </div>
