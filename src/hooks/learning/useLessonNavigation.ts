@@ -2,6 +2,7 @@
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { LearningLessonWithRelations } from "@/lib/supabase/types/extended";
+import { correctId } from "@/utils/learningValidation";
 
 interface UseLessonNavigationProps {
   courseId?: string;
@@ -23,9 +24,11 @@ export function useLessonNavigation({
 
   // Função auxiliar para extrair courseId válido
   const getValidCourseId = useCallback((): string | null => {
-    // 1. Verificar se courseId fornecido é válido
+    // 1. Verificar se courseId fornecido é válido e corrigi-lo se necessário
     if (courseId && courseId !== 'undefined' && courseId !== 'null' && courseId.length > 10) {
-      return courseId;
+      const correctedCourseId = correctId(courseId);
+      console.log('🔧 [NAVIGATION] CourseId corrigido:', courseId, '→', correctedCourseId);
+      return correctedCourseId;
     }
     
     // 2. Tentar extrair da lição atual

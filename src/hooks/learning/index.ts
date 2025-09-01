@@ -7,3 +7,6 @@ export { useCourseDetails } from './useCourseDetails';
 export { useCourseStats } from './useCourseStats';
 export { useUserProgress } from './useUserProgress';
 export { useTestAccess } from './useTestAccess';
+export { useLearningRedirect } from './useLearningRedirect';
+export { useClearLearningCache } from './useClearLearningCache';
+export { useLessonNavigation } from './useLessonNavigation';

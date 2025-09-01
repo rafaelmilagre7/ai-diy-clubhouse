@@ -1,11 +1,19 @@
 import { useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useLearningRedirect } from '@/hooks/learning/useLearningRedirect';
 import { supabase } from '@/lib/supabase';
 import { LessonLoadingSkeleton } from '@/components/learning/LessonLoadingSkeleton';
 
 const LessonRedirect = () => {
   const { lessonId } = useParams<{ lessonId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Sistema de validação e redirecionamento automático
+  useLearningRedirect({
+    lessonId,
+    currentPath: location.pathname
+  });
 
   useEffect(() => {
     const redirectToLesson = async () => {

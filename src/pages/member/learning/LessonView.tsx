@@ -1,6 +1,7 @@
 
 import { useEffect, Suspense } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
+import { useLearningRedirect } from '@/hooks/learning/useLearningRedirect';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, ArrowLeft } from "lucide-react";
@@ -15,6 +16,14 @@ import { supabase } from "@/lib/supabase";
 
 const LessonView = () => {
   const { courseId, lessonId } = useParams<{ courseId: string; lessonId: string }>();
+  const location = useLocation();
+  
+  // Sistema de validação e redirecionamento automático
+  useLearningRedirect({
+    courseId,
+    lessonId,
+    currentPath: location.pathname
+  });
   
   // Buscar dados da lição usando hooks personalizados
   const {

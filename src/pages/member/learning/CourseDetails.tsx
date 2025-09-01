@@ -1,5 +1,6 @@
 
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useLearningRedirect } from '@/hooks/learning/useLearningRedirect';
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { CourseDetailsSkeleton } from "@/components/learning/member/CourseDetailsSkeleton";
@@ -18,8 +19,15 @@ import { AuroraUpgradeModal } from "@/components/ui/aurora-upgrade-modal";
 const CourseDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const { modalState, hideUpgradeModal } = usePremiumUpgradeModal();
+  
+  // Sistema de validação e redirecionamento automático
+  useLearningRedirect({
+    courseId: id,
+    currentPath: location.pathname
+  });
   
   // Validação UUID antes de fazer queries
   const isValidUUID = (uuid?: string): boolean => {
