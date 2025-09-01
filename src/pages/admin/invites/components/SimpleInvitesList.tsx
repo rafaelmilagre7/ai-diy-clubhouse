@@ -130,10 +130,10 @@ const SimpleInvitesList = ({
               <TableCell>
                 <div className="space-y-1">
                   <div className="font-medium">{invite.email}</div>
-                  {invite.phone && (
+                  {invite.whatsapp_number && (
                     <div className="flex items-center text-sm text-muted-foreground">
                       <Phone className="h-3 w-3 mr-1" />
-                      {invite.phone}
+                      {invite.whatsapp_number}
                     </div>
                   )}
                 </div>
@@ -144,7 +144,7 @@ const SimpleInvitesList = ({
                 </Badge>
               </TableCell>
               <TableCell>
-                {getChannelBadge(invite.channel_preference, invite.phone)}
+                {getChannelBadge(invite.preferred_channel, invite.whatsapp_number)}
               </TableCell>
               <TableCell>
                 <InviteStatus invite={invite} />

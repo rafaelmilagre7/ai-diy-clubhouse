@@ -1,7 +1,7 @@
 export interface Invite {
   id: string;
   email: string;
-  phone?: string;
+  whatsapp_number?: string;
   role_id: string;
   token: string;
   expires_at: string;
@@ -9,7 +9,7 @@ export interface Invite {
   created_by: string;
   created_at: string;
   notes: string | null;
-  channel_preference?: 'email' | 'whatsapp' | 'both';
+  preferred_channel?: 'email' | 'whatsapp' | 'both';
   email_provider?: string;
   email_id?: string;
   role?: {

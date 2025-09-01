@@ -13,7 +13,7 @@ export function useInviteResendWhatsApp() {
       setIsSending(true);
       setSendError(null);
 
-      console.log("📱 Reenviando WhatsApp para:", invite.phone);
+      console.log("📱 Reenviando WhatsApp para:", invite.whatsapp_number);
 
       // Verificar se não expirou
       if (new Date(invite.expires_at) < new Date()) {
@@ -22,7 +22,7 @@ export function useInviteResendWhatsApp() {
       }
 
       // Verificar se tem telefone
-      if (!invite.phone) {
+      if (!invite.whatsapp_number) {
         toast.error("Convite não possui número de telefone");
         return null;
       }
@@ -39,7 +39,7 @@ export function useInviteResendWhatsApp() {
       // Enviar WhatsApp usando o template aprovado "convitevia"
       const { data, error } = await supabase.functions.invoke('send-whatsapp-invite', {
         body: {
-          phone: invite.phone,
+          phone: invite.whatsapp_number,
           inviteUrl,
           roleName: roleData?.name || invite.role?.name || 'membro',
           expiresAt: invite.expires_at,
@@ -58,7 +58,7 @@ export function useInviteResendWhatsApp() {
         throw new Error(data?.message || data?.error || 'Resposta inválida da função');
       }
 
-      toast.success(`WhatsApp reenviado para ${invite.phone}`, {
+      toast.success(`WhatsApp reenviado para ${invite.whatsapp_number}`, {
         description: `Template "convitevia" enviado com sucesso`
       });
 

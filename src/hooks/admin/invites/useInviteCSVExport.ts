@@ -88,9 +88,9 @@ export function useInviteCSVExport() {
   const generateCSVData = useCallback((activeInvites: Invite[]): CSVExportData[] => {
     return activeInvites.map(invite => ({
       destinatario: invite.email,
-      telefone: formatPhoneNumber(invite.phone),
+      telefone: formatPhoneNumber(invite.whatsapp_number),
       papel: invite.role?.name || 'N/A',
-      canal: formatChannelPreference(invite.channel_preference),
+      canal: formatChannelPreference(invite.preferred_channel),
       status: 'Ativo',
       email: formatSendStatus(invite, 'email'),
       whatsapp: formatSendStatus(invite, 'whatsapp'),

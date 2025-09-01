@@ -45,7 +45,7 @@ const InviteActions = ({
 
   const canResend = !invite.used_at && new Date(invite.expires_at) >= new Date();
   const isExpired = !invite.used_at && new Date(invite.expires_at) < new Date();
-  const hasPhone = !!(invite.phone);
+  const hasPhone = !!(invite.whatsapp_number);
 
   // Debug log para verificar condições
   console.log('🔍 [InviteActions Debug]:', {
@@ -53,7 +53,7 @@ const InviteActions = ({
     email: invite.email,
     used_at: invite.used_at,
     expires_at: invite.expires_at,
-    phone: invite.phone,
+    whatsapp_number: invite.whatsapp_number,
     canResend,
     isExpired,
     hasPhone,

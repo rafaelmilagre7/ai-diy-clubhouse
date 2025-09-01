@@ -40,25 +40,25 @@ export function useInviteResend() {
       }
 
       console.log("📨 Reenviando via sistema híbrido...");
-      console.log("Canal de preferência:", invite.channel_preference);
+      console.log("Canal de preferência:", invite.preferred_channel);
 
       // Reenviar usando o sistema híbrido
       const sendResult = await sendHybridInvite({
         email: invite.email,
-        phone: invite.phone,
+        phone: invite.whatsapp_number,
         inviteUrl,
         roleName: roleData?.name || invite.role?.name || 'membro',
         expiresAt: invite.expires_at,
         notes: invite.notes || undefined,
         inviteId: invite.id,
-        channelPreference: invite.channel_preference || 'email'
+        channelPreference: invite.preferred_channel || 'email'
       });
 
       console.log("📨 Resultado do reenvio híbrido:", sendResult);
 
       if (sendResult.success) {
-        const channelText = invite.channel_preference === 'both' ? 'email e WhatsApp' : 
-                           invite.channel_preference === 'whatsapp' ? 'WhatsApp' : 'email';
+        const channelText = invite.preferred_channel === 'both' ? 'email e WhatsApp' : 
+                           invite.preferred_channel === 'whatsapp' ? 'WhatsApp' : 'email';
         toast.success(`Convite reenviado para ${invite.email}`, {
           description: `${sendResult.message}. Canal: ${channelText}.`
         });
