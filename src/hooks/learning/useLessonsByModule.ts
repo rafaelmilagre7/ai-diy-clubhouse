@@ -14,58 +14,17 @@ export const useLessonsByModule = (moduleId: string) => {
   const { user, isAdmin } = useAuth();
   
   return useQuery({
-    queryKey: ["learning-module-lessons-v4-corrected", moduleId, user?.id], // Nova chave V4 com correções
+    queryKey: ["learning-module-lessons-v5-final", moduleId, user?.id], // Nova versão final
     queryFn: async (): Promise<LearningLesson[]> => {
-      const startTime = performance.now();
-      
-      // LOGGING DETALHADO - Estado inicial V3 DEFINITIVO
-      console.log(`[FORMACAO_DEBUG_V3] 🔍 BUSCA DEFINITIVA - CAN_ACCESS_LEARNING_CONTENT CORRIGIDO`, {
-        moduleId,
-        userId: user?.id?.substring(0, 8) + '***' || 'sem usuário',
-        isAdmin,
-        userEmail: user?.email?.substring(0, 10) + '***' || 'sem email',
-        timestamp: new Date().toISOString(),
-        hasAuth: !!user,
-        version: "v3-definitivo"
-      });
-
-      // TESTE DA FUNÇÃO CORRIGIDA
-      try {
-        const { data: debugData, error: debugError } = await supabase.rpc('test_learning_access_debug');
-        console.log('🧪 [FORMACAO_DEBUG_V3] Teste da função corrigida:', debugData);
-        if (debugError) {
-          console.error('❌ [FORMACAO_DEBUG_V3] Erro no teste:', debugError);
-        }
-      } catch (debugErr) {
-        console.error('❌ [FORMACAO_DEBUG_V3] Exceção no teste:', debugErr);
-      }
+      console.log(`[FORMACAO] 🔍 Buscando aulas para módulo: ${moduleId}`);
 
       try {
-        if (!moduleId) {
-          console.warn("[FORMACAO_DEBUG_V2] ❌ ModuleId não fornecido");
+        if (!moduleId || !user?.id) {
+          console.warn("[FORMACAO] ❌ Parâmetros inválidos");
           return [];
         }
 
-        if (!user?.id) {
-          console.warn("[FORMACAO_DEBUG_V2] ❌ Usuário não autenticado", {
-            hasUser: !!user,
-            userId: user?.id || 'null'
-          });
-          return [];
-        }
-
-        // VERIFICAÇÃO DE AUTENTICAÇÃO NO SUPABASE
-        const { data: sessionCheck } = await supabase.auth.getSession();
-        console.log(`[FORMACAO_DEBUG_V2] 🔐 Verificação de sessão pós-RLS`, {
-          hasSession: !!sessionCheck?.session,
-          userId: sessionCheck?.session?.user?.id?.substring(0, 8) + '***' || 'sem sessão',
-          sessionValid: !!sessionCheck?.session?.access_token
-        });
-
-        console.log(`[FORMACAO_DEBUG_V2] 📋 Query com políticas RLS corrigidas...`);
-
-        // QUERY PRINCIPAL com políticas RLS corrigidas
-        const queryStart = performance.now();
+        // Query corrigida com campos que existem
         const { data: allLessonsData, error } = await supabase
           .from("learning_lessons")
           .select(`
@@ -76,7 +35,6 @@ export const useLessonsByModule = (moduleId: string) => {
               url,
               video_type,
               video_id,
-              embed_code,
               duration_seconds,
               thumbnail_url,
               order_index,
@@ -86,65 +44,22 @@ export const useLessonsByModule = (moduleId: string) => {
           `)
           .eq("module_id", moduleId)
           .order("order_index", { ascending: true });
-        const queryDuration = Math.round(performance.now() - queryStart);
-        
-        // LOGGING DETALHADO - Resposta da query V3
-        console.log(`[FORMACAO_DEBUG_V3] 📊 RESPOSTA QUERY V3 - POLÍTICAS RLS SIMPLIFICADAS`, {
-          moduleId,
-          hasError: !!error,
-          rawDataLength: Array.isArray(allLessonsData) ? allLessonsData.length : 0,
-          queryDuration: `${queryDuration}ms`,
-          errorDetails: error ? {
-            message: error.message,
-            code: error.code,
-            hint: error.hint,
-            details: error.details,
-            isTransactionError: error.message?.includes('read-only transaction'),
-            isVideoUrlError: error.message?.includes('video_url does not exist')
-          } : null
-        });
         
         if (error) {
-          console.error(`[FORMACAO_DEBUG_V2] ❌ ERRO após correção RLS:`, {
-            error,
-            moduleId,
-            isAdmin,
-            userId: user?.id?.substring(0, 8) + '***',
-            stillHasTransactionError: error.message?.includes('read-only transaction')
-          });
-          
+          console.error(`[FORMACAO] ❌ Erro na query:`, error);
           return [];
         }
         
         // Garantir que data é sempre um array
         const allLessons = Array.isArray(allLessonsData) ? allLessonsData : [];
         
-        console.log(`[FORMACAO_DEBUG_V2] 📝 PROCESSAMENTO V2`, {
-          moduleId,
-          totalLessons: allLessons.length,
-          lessonsWithVideos: allLessons.filter(l => l.learning_lesson_videos?.length > 0).length,
-          lessonDetails: allLessons.map(l => ({
-            id: l.id.substring(0, 8) + '***', 
-            title: l.title?.substring(0, 30) + '...' || 'sem título',
-            order_index: l.order_index,
-            published: l.published,
-            videoCount: l.learning_lesson_videos?.length || 0
-          }))
-        });
+        console.log(`[FORMACAO] 📝 Processando ${allLessons.length} aulas`);
         
-        // Filtrar apenas aulas publicadas (admin vê todas para debug)
+        // Filtrar apenas aulas publicadas (admin vê todas)
         let lessonsToReturn = allLessons;
         if (!isAdmin) {
           lessonsToReturn = allLessons.filter(lesson => lesson.published);
         }
-        
-        console.log(`[FORMACAO_DEBUG_V2] 📋 FILTRAGEM V2`, {
-          moduleId,
-          isAdmin,
-          totalLessons: allLessons.length,
-          publishedLessons: allLessons.filter(l => l.published).length,
-          lessonsToReturn: lessonsToReturn.length
-        });
         
         // Converter videos para o formato esperado
         const processedLessons = lessonsToReturn.map(lesson => ({
@@ -155,54 +70,17 @@ export const useLessonsByModule = (moduleId: string) => {
         // Ordenar as aulas por número no título
         const sortedLessons = sortLessonsByNumber(processedLessons);
         
-        const endTime = performance.now();
-        const duration = Math.round(endTime - startTime);
-        
-        console.log(`[FORMACAO_DEBUG_V2] ✅ SUCESSO V2 - RLS CORRIGIDO`, {
-          moduleId,
-          finalLessonsCount: sortedLessons.length,
-          totalDuration: `${duration}ms`,
-          isAdmin,
-          version: "v2-rls-fixed",
-          rlsWorking: true
-        });
-        
+        console.log(`[FORMACAO] ✅ ${sortedLessons.length} aulas retornadas`);
         return sortedLessons;
+        
       } catch (err) {
-        const endTime = performance.now();
-        const duration = Math.round(endTime - startTime);
-        
-        console.error(`[FORMACAO_DEBUG_V2] 💥 EXCEÇÃO V2`, {
-          moduleId,
-          duration: `${duration}ms`,
-          isAdmin,
-          userId: user?.id?.substring(0, 8) + '***',
-          errorType: err instanceof Error ? err.constructor.name : typeof err,
-          errorMessage: err instanceof Error ? err.message : String(err),
-          version: "v2-rls-fixed"
-        });
-        
+        console.error(`[FORMACAO] 💥 Exceção:`, err);
         return [];
       }
     },
-    enabled: !!moduleId && !!user, // Garantir que usuário existe
+    enabled: !!moduleId && !!user,
     staleTime: 1000 * 60 * 5, // 5 minutos
-    refetchOnWindowFocus: true,
-    refetchOnMount: true, // Força refresh ao montar
-    retry: (failureCount, error) => {
-      console.log(`[FORMACAO_DEBUG_V2] 🔄 RETRY V2 ${failureCount}`, {
-        moduleId,
-        errorMessage: error instanceof Error ? error.message : String(error),
-        isAdmin,
-        maxRetries: 3
-      });
-      return failureCount < 3;
-    },
-    retryDelay: (attemptIndex) => {
-      const delay = Math.min(1000 * Math.pow(2, attemptIndex), 5000);
-      console.log(`[FORMACAO_DEBUG_V2] ⏱️ RETRY DELAY V2: ${delay}ms`);
-      return delay;
-    },
-    gcTime: 1000 * 60 * 10 // 10 minutos
+    refetchOnWindowFocus: false,
+    retry: 2
   });
 };

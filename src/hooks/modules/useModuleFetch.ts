@@ -12,24 +12,41 @@ export const useModuleFetch = (solutionId: string | null) => {
   const { toast } = useToast();
 
   // Function to fetch modules from Supabase
+  // CORREÇÃO: A tabela 'modules' não existe - criando módulos mock baseados nos recursos
   const fetchModules = async () => {
     if (!solutionId) return;
     
     try {
       setIsLoading(true);
       
-      const { data, error } = await supabase
-        .from("modules")
+      // Buscar a solução para obter dados básicos
+      const { data: solutionData, error: solutionError } = await supabase
+        .from("solutions")
         .select("*")
-        .eq("solution_id", solutionId)
-        .order("module_order", { ascending: true });
+        .eq("id", solutionId)
+        .single();
       
-      if (error) {
-        throw error;
+      if (solutionError) {
+        throw solutionError;
       }
       
-      if (data) {
-        setModules(data as Module[]);
+      // Criar um módulo padrão para a solução
+      if (solutionData) {
+        const mockModule: Module = {
+          id: `module-${solutionId}`,
+          title: solutionData.title || "Implementação",
+          type: "implementation",
+          content: {
+            blocks: [],
+            videos: solutionData.videos || []
+          },
+          solution_id: solutionId,
+          module_order: 1,
+          created_at: solutionData.created_at,
+          updated_at: solutionData.updated_at
+        };
+        
+        setModules([mockModule]);
       }
     } catch (error) {
       console.error("Error fetching modules:", error);

@@ -32,6 +32,7 @@ export const ModuleContentVideos: React.FC<ModuleContentVideosProps> = ({ module
         if (!module.solution_id) {
           log("No solution_id found in module", { module_id: module.id });
           setVideos([]);
+          setLoading(false);
           return;
         }
         
@@ -44,6 +45,36 @@ export const ModuleContentVideos: React.FC<ModuleContentVideosProps> = ({ module
         
         if (error) {
           logError("Error fetching solution for videos:", error);
+          setLoading(false);
+          return;
+        }
+        
+        if (!data) {
+          log("No solution found", { solution_id: module.solution_id });
+          // Buscar vídeos diretamente dos recursos mesmo sem dados da solution
+          const { data: resourcesData, error: resourcesError } = await supabase
+            .from("solution_resources")
+            .select("*")
+            .eq("solution_id", module.solution_id)
+            .eq("type", "video");
+            
+          if (!resourcesError && resourcesData && resourcesData.length > 0) {
+            const videoResources = resourcesData.map(resource => ({
+              title: resource.name,
+              description: resource.format || "",
+              url: resource.url,
+              youtube_id: resource.url.includes("youtube.com/embed/") 
+                ? resource.url.split("youtube.com/embed/")[1]?.split("?")[0] 
+                : null
+            }));
+            
+            setVideos(videoResources);
+            log("Found videos in resources (no solution data)", { count: videoResources.length });
+          } else {
+            setVideos([]);
+            log("No solution or resources found");
+          }
+          setLoading(false);
           return;
         }
         
