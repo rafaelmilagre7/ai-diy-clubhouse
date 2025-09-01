@@ -21,7 +21,16 @@ export const LessonVideoPlayer: React.FC<LessonVideoPlayerProps> = ({
   // Garantir que temos videos válidos
   const safeVideos = Array.isArray(videos) ? videos : [];
   
+  // Log detalhado dos dados recebidos
+  console.log('LessonVideoPlayer: Dados recebidos', {
+    lessonId,
+    videosCount: safeVideos.length,
+    videos: safeVideos,
+    currentVideoIndex
+  });
+  
   if (safeVideos.length === 0) {
+    console.warn('LessonVideoPlayer: Nenhum vídeo disponível', { lessonId, videos });
     return (
       <div className="w-full aspect-video bg-muted rounded-lg flex items-center justify-center">
         <p className="text-muted-foreground">Nenhum vídeo disponível para esta aula</p>

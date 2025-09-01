@@ -4,12 +4,15 @@ import { Module, Solution, supabase } from "@/lib/supabase";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLogging } from "@/hooks/useLogging";
 import { YoutubeEmbed } from "@/components/common/YoutubeEmbed";
+import { PandaVideoPlayer } from "@/components/formacao/comum/PandaVideoPlayer";
 
 interface Video {
   title?: string;
   description?: string;
   url?: string;
   youtube_id?: string;
+  video_type?: string;
+  video_id?: string;
 }
 
 interface ModuleContentVideosProps {
@@ -63,6 +66,10 @@ export const ModuleContentVideos: React.FC<ModuleContentVideosProps> = ({ module
               title: resource.name,
               description: resource.format || "",
               url: resource.url,
+              video_type: resource.url.includes("pandavideo.com") ? "panda" : 
+                         resource.url.includes("youtube.com") ? "youtube" : "direct",
+              video_id: resource.url.includes("pandavideo.com") ? 
+                       extractPandaVideoId(resource.url) : null,
               youtube_id: resource.url.includes("youtube.com/embed/") 
                 ? resource.url.split("youtube.com/embed/")[1]?.split("?")[0] 
                 : null
@@ -107,6 +114,10 @@ export const ModuleContentVideos: React.FC<ModuleContentVideosProps> = ({ module
               title: resource.name,
               description: resource.format || "",
               url: resource.url,
+              video_type: resource.url.includes("pandavideo.com") ? "panda" : 
+                         resource.url.includes("youtube.com") ? "youtube" : "direct",
+              video_id: resource.url.includes("pandavideo.com") ? 
+                       extractPandaVideoId(resource.url) : null,
               youtube_id: resource.url.includes("youtube.com/embed/") 
                 ? resource.url.split("youtube.com/embed/")[1]?.split("?")[0] 
                 : null
@@ -143,6 +154,32 @@ export const ModuleContentVideos: React.FC<ModuleContentVideosProps> = ({ module
       return null;
     }
   };
+  
+  // Extract Panda Video ID from URL
+  const extractPandaVideoId = (url: string): string | null => {
+    try {
+      // Padrões possíveis para URLs do Panda Video
+      const patterns = [
+        /pandavideo\.com\.br\/embed\/\?v=([^&]+)/,
+        /player-vz-[^.]+\.tv\.pandavideo\.com\.br\/embed\/\?v=([^&]+)/,
+        /pandavideo\.com\.br\/.*v=([^&]+)/
+      ];
+      
+      for (const pattern of patterns) {
+        const match = url.match(pattern);
+        if (match && match[1]) {
+          log("Extracted Panda Video ID", { url, videoId: match[1] });
+          return match[1];
+        }
+      }
+      
+      log("Could not extract Panda Video ID", { url });
+      return null;
+    } catch (error) {
+      logError("Error extracting Panda Video ID:", error);
+      return null;
+    }
+  };
 
   if (loading) {
     return (
@@ -176,17 +213,37 @@ export const ModuleContentVideos: React.FC<ModuleContentVideosProps> = ({ module
           // Log video data for debugging
           log("Processing video", { video, index });
           
-          // Get video ID from provided youtube_id or extract from URL
+          // Determinar tipo de vídeo e IDs
           const youtubeId = video.youtube_id || (video.url ? getYouTubeId(video.url) : null);
+          const pandaVideoId = video.video_id || (video.url ? extractPandaVideoId(video.url) : null);
+          const videoType = video.video_type || (
+            pandaVideoId ? "panda" : 
+            youtubeId ? "youtube" : 
+            "direct"
+          );
           
-          if (!youtubeId && !video.url) {
-            log("Skipping video - no youtube_id or url", { video });
+          log("Video analysis", { 
+            videoType, 
+            youtubeId, 
+            pandaVideoId, 
+            originalUrl: video.url 
+          });
+          
+          if (!youtubeId && !pandaVideoId && !video.url) {
+            log("Skipping video - no valid ID or URL", { video });
             return null;
           }
           
           return (
             <div key={index} className="space-y-2">
-              {youtubeId ? (
+              {/* Renderizar baseado no tipo de vídeo */}
+              {videoType === "panda" && pandaVideoId ? (
+                <PandaVideoPlayer 
+                  videoId={pandaVideoId}
+                  url={video.url}
+                  title={video.title || `Vídeo ${index + 1}`}
+                />
+              ) : videoType === "youtube" && youtubeId ? (
                 <YoutubeEmbed youtubeId={youtubeId} title={video.title} />
               ) : video.url ? (
                 <div className="aspect-video rounded-md overflow-hidden">
