@@ -32,8 +32,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const isFormacao = useMemo(() => {
     const roleName = profile?.user_roles?.name;
     const permissions = profile?.user_roles?.permissions || {};
-    return roleName === 'formacao' || roleName === 'admin' || 
-           permissions.learning === true || permissions.formacao === true || 
+    
+    console.log('🔍 [AUTH] Verificando acesso formação:', {
+      roleName,
+      permissions,
+      isAdmin: roleName === 'admin' || permissions.all === true
+    });
+    
+    return roleName === 'formacao' || 
+           roleName === 'admin' || 
+           roleName === 'lovable_e_formacao' ||
+           roleName?.includes('formacao') ||
+           permissions.learning === true || 
+           permissions.formacao === true || 
            permissions.all === true || false;
   }, [profile?.user_roles?.name, profile?.user_roles?.permissions]);
 
