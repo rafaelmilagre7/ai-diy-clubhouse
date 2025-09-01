@@ -23,8 +23,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const { signIn, signOut } = useAuthMethods({ setIsLoading });
 
   // Estados derivados memoizados
-  const isAdmin = useMemo(() => profile?.user_roles?.name === 'admin' || false, [profile?.user_roles?.name]);
-  const isFormacao = useMemo(() => profile?.user_roles?.name === 'formacao' || false, [profile?.user_roles?.name]);
+  const isAdmin = useMemo(() => {
+    const roleName = profile?.user_roles?.name;
+    const permissions = profile?.user_roles?.permissions || {};
+    return roleName === 'admin' || permissions.all === true || false;
+  }, [profile?.user_roles?.name, profile?.user_roles?.permissions]);
+  
+  const isFormacao = useMemo(() => {
+    const roleName = profile?.user_roles?.name;
+    const permissions = profile?.user_roles?.permissions || {};
+    return roleName === 'formacao' || roleName === 'admin' || 
+           permissions.learning === true || permissions.formacao === true || 
+           permissions.all === true || false;
+  }, [profile?.user_roles?.name, profile?.user_roles?.permissions]);
 
   // Função para buscar perfil do usuário
   const fetchUserProfile = useCallback(async (userId: string) => {

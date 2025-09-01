@@ -53,8 +53,14 @@ export const FormacaoProtectedRoutes = ({ children }: FormacaoProtectedRoutesPro
     return <Navigate to="/onboarding" replace />;
   }
 
-  // CORREÇÃO: Apenas admins podem acessar a gestão de LMS
-  if (!isAdmin) {
+  // CORREÇÃO: Verificar se usuário tem acesso à formação (admin ou formacao)
+  if (!isAdmin && !isFormacao) {
+    console.log("🚫 [FORMACAO-PROTECTED] Usuário sem permissão de formação:", {
+      isAdmin,
+      isFormacao,
+      role: profile?.user_roles?.name,
+      permissions: profile?.user_roles?.permissions
+    });
     toast.error("Você não tem permissão para acessar esta área");
     return <Navigate to="/dashboard" replace />;
   }
