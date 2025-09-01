@@ -1,9 +1,16 @@
 
-import React, { useState } from "react";
+import React, { useState, useCallback } from 'react';
 import { LearningLessonVideo } from "@/lib/supabase/types";
-import { VideoPlayer } from "@/components/formacao/aulas/VideoPlayer";
-import { VideoPlaylist } from "./VideoPlaylist";
-import { useVideoProgress } from "@/hooks/learning/useVideoProgress";
+import { VideoPlayer } from '@/components/formacao/aulas/VideoPlayer';
+import { VideoPlaylist } from './VideoPlaylist';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { useVideoProgress } from '@/hooks/useVideoProgress';
+import { useRobustVideoQuery } from '@/hooks/learning/useRobustVideoQuery';
+import { useClearLearningCache } from '@/hooks/learning/useClearLearningCache';
+import { devLog } from '@/hooks/useOptimizedLogging';
+import { RefreshCw, AlertTriangle } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface LessonVideoPlayerProps {
   videos: LearningLessonVideo[];
@@ -18,50 +25,154 @@ export const LessonVideoPlayer: React.FC<LessonVideoPlayerProps> = ({
 }) => {
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   
+  // Hook robusto para buscar vídeos (fallback se videos prop estiver vazia)
+  const { 
+    data: robustVideos, 
+    isLoading: loadingRobustVideos,
+    error: robustVideosError,
+    refetch: refetchVideos 
+  } = useRobustVideoQuery({ 
+    lessonId, 
+    retryOnSchemaError: true,
+    enableFallback: true 
+  });
+  
+  // Cache management
+  const { clearAllLearningCache, forceVideoDataReload } = useClearLearningCache();
+  
   // Garantir que temos videos válidos
   const safeVideos = Array.isArray(videos) ? videos : [];
   
-  // Log detalhado dos dados recebidos
-  console.log('LessonVideoPlayer: Dados recebidos', {
+  // Determinar quais vídeos usar (props ou fallback robust query)
+  const effectiveVideos = safeVideos.length > 0 ? safeVideos : (robustVideos || []);
+  
+  devLog('🎬 [LESSON-PLAYER] Estado dos vídeos:', {
+    propsVideos: safeVideos.length,
+    robustVideos: robustVideos?.length || 0,
+    effectiveVideos: effectiveVideos.length,
+    currentIndex: currentVideoIndex,
     lessonId,
-    videosCount: safeVideos.length,
-    videos: safeVideos,
-    currentVideoIndex
+    loadingRobustVideos,
+    hasError: !!robustVideosError
   });
   
-  if (safeVideos.length === 0) {
-    console.warn('LessonVideoPlayer: Nenhum vídeo disponível', { lessonId, videos });
+  const handleForceReload = useCallback(async () => {
+    devLog('🔄 [LESSON-PLAYER] Forçando reload dos dados...');
+    
+    try {
+      await forceVideoDataReload();
+      await refetchVideos();
+      
+      toast.success('Dados recarregados', {
+        description: 'Vídeos foram atualizados com sucesso'
+      });
+    } catch (error) {
+      devLog('❌ [LESSON-PLAYER] Erro no reload:', error);
+      toast.error('Erro ao recarregar', {
+        description: 'Não foi possível atualizar os vídeos'
+      });
+    }
+  }, [forceVideoDataReload, refetchVideos]);
+
+  const handleClearCache = useCallback(async () => {
+    devLog('🧹 [LESSON-PLAYER] Limpando todo o cache...');
+    
+    try {
+      await clearAllLearningCache();
+      await refetchVideos();
+      
+      toast.success('Cache limpo', {
+        description: 'Cache foi limpo e dados recarregados'
+      });
+    } catch (error) {
+      devLog('❌ [LESSON-PLAYER] Erro na limpeza:', error);
+    }
+  }, [clearAllLearningCache, refetchVideos]);
+
+  // Se está carregando dados robustos
+  if (loadingRobustVideos && effectiveVideos.length === 0) {
     return (
-      <div className="w-full aspect-video bg-muted rounded-lg flex items-center justify-center">
-        <p className="text-muted-foreground">Nenhum vídeo disponível para esta aula</p>
-      </div>
+      <Card>
+        <CardContent className="p-8 text-center">
+          <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-muted-foreground">
+            Carregando vídeos da aula...
+          </p>
+        </CardContent>
+      </Card>
     );
   }
 
-  const currentVideo = safeVideos[currentVideoIndex];
+  // Se houver erro e não há vídeos alternativos
+  if (robustVideosError && effectiveVideos.length === 0) {
+    return (
+      <Card>
+        <CardContent className="p-8 text-center">
+          <AlertTriangle className="w-12 h-12 text-rose-500 mx-auto mb-4" />
+          <h3 className="font-semibold mb-2">Erro ao Carregar Vídeos</h3>
+          <p className="text-muted-foreground mb-4">
+            Houve um problema ao carregar os vídeos desta aula.
+          </p>
+          <div className="flex gap-2 justify-center">
+            <Button onClick={handleForceReload} variant="outline" size="sm">
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Recarregar
+            </Button>
+            <Button onClick={handleClearCache} variant="outline" size="sm">
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Limpar Cache
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
-  // Hook para gerenciar progresso do vídeo
-  const { updateProgress } = useVideoProgress({
-    lessonId: lessonId,
-    videoId: currentVideo?.id || "",
-    duration: currentVideo?.duration_seconds || 0,
-    onProgressUpdate: (progress) => {
-      if (onProgress && currentVideo) {
-        // Simplificar para progresso binário
-        const binaryProgress = progress >= 95 ? 100 : 0;
-        onProgress(currentVideo.id, binaryProgress);
-      }
-    }
+  // Se não houver vídeos após todas as tentativas
+  if (effectiveVideos.length === 0) {
+    devLog('⚠️ [LESSON-PLAYER] Nenhum vídeo disponível', { lessonId, videos, robustVideos });
+    return (
+      <Card>
+        <CardContent className="p-8 text-center">
+          <p className="text-muted-foreground mb-4">
+            Nenhum vídeo disponível para esta aula.
+          </p>
+          <Button onClick={handleForceReload} variant="outline" size="sm">
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Tentar Recarregar
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const currentVideo = effectiveVideos[currentVideoIndex];
+  
+  devLog('🎬 [LESSON-PLAYER] Vídeo atual:', {
+    currentVideo: currentVideo?.id || 'none',
+    title: currentVideo?.title,
+    url: currentVideo?.url,
+    videoType: currentVideo?.video_type
   });
 
+  // Hook para gerenciar progresso do vídeo
+  const { updateVideoProgress } = useVideoProgress(lessonId);
+
   const handleVideoSelect = (index: number) => {
+    devLog('🎬 [LESSON-PLAYER] Selecionando vídeo:', { index, total: effectiveVideos.length });
     setCurrentVideoIndex(index);
   };
 
   const handleTimeUpdate = (currentTime: number, duration: number) => {
-    if (duration > 0) {
+    if (duration > 0 && currentVideo) {
       const progress = (currentTime / duration) * 100;
-      updateProgress(currentTime, duration);
+      updateVideoProgress(currentVideo.id, progress, effectiveVideos);
+      
+      // Callback para componente pai
+      if (onProgress) {
+        const binaryProgress = progress >= 95 ? 100 : 0;
+        onProgress(currentVideo.id, binaryProgress);
+      }
     }
   };
 
@@ -76,14 +187,26 @@ export const LessonVideoPlayer: React.FC<LessonVideoPlayerProps> = ({
       </div>
 
       {/* Playlist abaixo do vídeo */}
-      {safeVideos.length > 1 && (
+      {effectiveVideos.length > 1 && (
         <div className="w-full">
           <h3 className="text-lg font-semibold mb-4">Vídeos da aula</h3>
           <VideoPlaylist
-            videos={safeVideos}
+            videos={effectiveVideos}
             currentVideoIndex={currentVideoIndex}
             onSelectVideo={handleVideoSelect}
           />
+        </div>
+      )}
+      
+      {/* Debug info (apenas em desenvolvimento) */}
+      {import.meta.env.DEV && (
+        <div className="mt-4 p-2 bg-gray-100 dark:bg-gray-800 rounded text-xs">
+          <strong>Debug Info:</strong><br/>
+          Vídeos Props: {safeVideos.length} | 
+          Vídeos Robust: {robustVideos?.length || 0} | 
+          Efetivos: {effectiveVideos.length} | 
+          Atual: {currentVideoIndex} | 
+          Loading: {loadingRobustVideos ? 'Sim' : 'Não'}
         </div>
       )}
     </div>

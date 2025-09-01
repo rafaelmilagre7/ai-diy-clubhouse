@@ -1,5 +1,10 @@
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { devLog } from '@/hooks/useOptimizedLogging';
+import { RefreshCw, AlertTriangle, ExternalLink } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface PandaVideoPlayerProps {
   videoId: string;
@@ -22,96 +27,248 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
   onProgress,
   onEnded
 }) => {
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [cspBlocked, setCspBlocked] = useState(false);
+  const [iframeBlocked, setIframeBlocked] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  
-  // Log detalhado dos parâmetros recebidos
-  React.useEffect(() => {
-    console.log('PandaVideoPlayer: Parâmetros recebidos', { 
-      videoId, 
-      url, 
-      title,
-      finalPlayerUrl: url || `https://player-vz-d6ebf577-797.tv.pandavideo.com.br/embed/?v=${videoId}`
-    });
-  }, [videoId, url, title]);
+  const loadTimeoutRef = useRef<NodeJS.Timeout>();
   
   // Determinar a URL baseada no videoId ou usar a URL fornecida diretamente
   const playerUrl = url || `https://player-vz-d6ebf577-797.tv.pandavideo.com.br/embed/?v=${videoId}`;
+  
+  devLog('🐼 [PANDA-ENHANCED] Iniciando carregamento:', { 
+    videoId, 
+    url: playerUrl, 
+    title,
+    retryCount,
+    cspBlocked,
+    iframeBlocked 
+  });
 
   // Efeito para configurar o listener de mensagens para comunicação com o iframe
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
+      // Verificar origem do Panda Video
+      if (!event.origin.includes('pandavideo.com')) return;
+      
+      devLog('🐼 [PANDA-ENHANCED] Mensagem recebida:', event.data);
+      
       try {
-        // Verificar se a mensagem vem do domínio do Panda Video
-        if (!event.origin.includes('pandavideo.com.br')) return;
-        
         const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
         
-        // Detectar progresso do vídeo - simplificar para binário
-        if (data.event === 'progress' && onProgress && typeof data.percent === 'number') {
+        // Lidar com progresso do vídeo
+        if ((data.event === 'progress' || data.type === 'progress') && onProgress) {
+          const progress = data.percent || data.progress || 0;
           // Converter para progresso binário: >= 95% é considerado concluído
-          const binaryProgress = data.percent >= 95 ? 100 : 0;
+          const binaryProgress = progress >= 95 ? 100 : 0;
           onProgress(binaryProgress);
-          console.log(`PandaVideoPlayer: progresso ${data.percent}% (binário: ${binaryProgress}%)`);
+          devLog(`🐼 [PROGRESS] ${progress}% (binário: ${binaryProgress}%)`);
         }
         
-        // Detectar final do vídeo
-        if (data.event === 'ended' && onEnded) {
+        // Lidar com fim do vídeo
+        if ((data.event === 'ended' || data.type === 'ended') && onEnded) {
           onEnded();
-          console.log('PandaVideoPlayer: vídeo finalizado');
+          devLog('🐼 [ENDED] Vídeo finalizado');
         }
-      } catch (error) {
-        console.error('Erro ao processar mensagem do iframe:', error);
+        
+        // Detectar se o iframe carregou com sucesso
+        if (data.event === 'ready' || data.type === 'ready' || data.event === 'loaded') {
+          devLog('✅ [PANDA-ENHANCED] Player pronto');
+          setLoading(false);
+          setError(null);
+          setCspBlocked(false);
+          setIframeBlocked(false);
+        }
+      } catch (err) {
+        devLog('❌ [PANDA-ENHANCED] Erro ao processar mensagem:', err);
       }
     };
-
-    // Adicionar listener para mensagens
-    window.addEventListener('message', handleMessage);
     
-    // Remover listener quando o componente for desmontado
-    return () => {
-      window.removeEventListener('message', handleMessage);
-    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
   }, [onProgress, onEnded]);
 
   const handleLoad = () => {
-    console.log("PandaVideoPlayer: iframe carregado com sucesso", { playerUrl });
-    setLoading(false);
-    setError(null);
+    devLog('✅ [PANDA-ENHANCED] Iframe carregado');
+    
+    // Limpar timeout de detecção
+    if (loadTimeoutRef.current) {
+      clearTimeout(loadTimeoutRef.current);
+    }
+    
+    // Aguardar um pouco para ver se recebemos mensagens do player
+    setTimeout(() => {
+      if (loading) {
+        devLog('⚠️ [PANDA-ENHANCED] Iframe carregou mas sem comunicação - possível CSP');
+        setCspBlocked(true);
+        setLoading(false);
+      }
+    }, 3000);
   };
 
   const handleError = (event: any) => {
-    console.error("PandaVideoPlayer: erro ao carregar iframe", { 
+    devLog('❌ [PANDA-ENHANCED] Erro direto no iframe:', { 
       playerUrl, 
       videoId, 
-      error: event,
-      possibleCause: "CSP bloqueio, URL inválida ou problema de rede"
+      error: event 
     });
-    setError("Erro ao carregar o vídeo. Verifique sua conexão ou tente novamente.");
+    
+    if (loadTimeoutRef.current) {
+      clearTimeout(loadTimeoutRef.current);
+    }
+    
     setLoading(false);
+    setIframeBlocked(true);
+    setError("Iframe bloqueado - pode ser um problema de CSP ou firewall");
   };
   
-  // Detectar se iframe foi bloqueado por CSP
-  React.useEffect(() => {
-    const checkIframeBlocked = () => {
-      if (iframeRef.current && !loading) {
-        try {
-          // Tentar acessar o iframe - se CSP bloqueou, isso falhará
-          const iframeDoc = iframeRef.current.contentDocument;
-          if (!iframeDoc) {
-            console.warn("PandaVideoPlayer: Possível bloqueio CSP detectado");
-            setError("Vídeo pode estar bloqueado por políticas de segurança.");
-          }
-        } catch (e) {
-          console.warn("PandaVideoPlayer: Não foi possível verificar iframe", e);
-        }
+  const detectCSPBlocking = () => {
+    devLog('🔍 [CSP-DETECT] Iniciando detecção de bloqueio...');
+    
+    // Timeout para detectar se o iframe não consegue se comunicar
+    loadTimeoutRef.current = setTimeout(() => {
+      if (loading) {
+        devLog('🚨 [CSP-DETECT] Timeout - possível bloqueio de CSP detectado');
+        setCspBlocked(true);
+        setIframeBlocked(true);
+        setLoading(false);
+        setError("Vídeo pode estar sendo bloqueado por políticas de segurança");
+      }
+    }, 10000); // 10 segundos timeout
+  };
+  
+  const handleRetry = () => {
+    devLog('🔄 [PANDA-ENHANCED] Tentando novamente...', { retryCount: retryCount + 1 });
+    
+    setRetryCount(prev => prev + 1);
+    setLoading(true);
+    setError(null);
+    setCspBlocked(false);
+    setIframeBlocked(false);
+    
+    // Reiniciar detecção
+    detectCSPBlocking();
+    
+    toast.info('Recarregando vídeo...', {
+      description: 'Tentando carregar o vídeo novamente'
+    });
+  };
+  
+  const openVideoDirectly = () => {
+    devLog('🔗 [EXTERNAL] Abrindo vídeo em nova aba');
+    window.open(playerUrl, '_blank', 'noopener,noreferrer');
+    
+    toast.info('Vídeo aberto', {
+      description: 'Vídeo foi aberto em uma nova aba'
+    });
+  };
+  
+  // Iniciar detecção quando componente monta
+  useEffect(() => {
+    detectCSPBlocking();
+    
+    return () => {
+      if (loadTimeoutRef.current) {
+        clearTimeout(loadTimeoutRef.current);
       }
     };
-    
-    const timer = setTimeout(checkIframeBlocked, 3000);
-    return () => clearTimeout(timer);
-  }, [loading]);
+  }, [playerUrl]);
+  
+  // Cleanup no unmount
+  useEffect(() => {
+    return () => {
+      if (loadTimeoutRef.current) {
+        clearTimeout(loadTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  if (error || cspBlocked || iframeBlocked) {
+    return (
+      <Card className={`w-full ${className}`}>
+        <CardContent className="p-0">
+          <div 
+            className="flex flex-col items-center justify-center bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 rounded-lg"
+            style={{ width, height }}
+          >
+            <AlertTriangle className="w-12 h-12 mb-4" />
+            
+            {cspBlocked ? (
+              <>
+                <h3 className="font-semibold mb-2">Vídeo Bloqueado</h3>
+                <p className="text-center px-4 mb-4 text-sm">
+                  O vídeo foi bloqueado por políticas de segurança do navegador. 
+                  Tente abrir em uma nova aba ou desabilite bloqueadores.
+                </p>
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={openVideoDirectly} 
+                    variant="outline" 
+                    size="sm"
+                    className="border-blue-200 hover:bg-blue-100 dark:border-blue-800 dark:hover:bg-blue-900/20"
+                  >
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    Abrir em Nova Aba
+                  </Button>
+                  <Button 
+                    onClick={handleRetry} 
+                    variant="outline" 
+                    size="sm"
+                    className="border-rose-200 hover:bg-rose-100 dark:border-rose-800 dark:hover:bg-rose-900/20"
+                  >
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Tentar Novamente
+                  </Button>
+                </div>
+              </>
+            ) : iframeBlocked ? (
+              <>
+                <h3 className="font-semibold mb-2">Carregamento Bloqueado</h3>
+                <p className="text-center px-4 mb-4 text-sm">
+                  O iframe do vídeo foi bloqueado. Pode ser um problema de rede ou firewall.
+                </p>
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={openVideoDirectly} 
+                    variant="outline" 
+                    size="sm"
+                    className="border-blue-200 hover:bg-blue-100 dark:border-blue-800 dark:hover:bg-blue-900/20"
+                  >
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    Ver Vídeo Diretamente
+                  </Button>
+                  <Button 
+                    onClick={handleRetry} 
+                    variant="outline" 
+                    size="sm"
+                    className="border-rose-200 hover:bg-rose-100 dark:border-rose-800 dark:hover:bg-rose-900/20"
+                  >
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Retry ({retryCount}/3)
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="text-center px-4 mb-4 font-medium">{error}</p>
+                <Button 
+                  onClick={handleRetry} 
+                  variant="outline" 
+                  size="sm"
+                  className="border-rose-200 hover:bg-rose-100 dark:border-rose-800 dark:hover:bg-rose-900/20"
+                >
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Tentar Novamente
+                </Button>
+              </>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className={`relative w-full aspect-video ${className || ''}`}>
@@ -119,32 +276,11 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
         <div className="absolute inset-0 flex items-center justify-center bg-slate-900/90 rounded-md z-10">
           <div className="flex flex-col items-center space-y-3">
             <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent"></div>
-            <div className="text-white text-sm">Carregando vídeo...</div>
+            <div className="text-white text-sm">Carregando vídeo do Panda...</div>
           </div>
         </div>
       )}
       
-      {error && (
-        <div className="absolute inset-0 flex items-center justify-center bg-rose-50 rounded-md z-10">
-          <div className="text-center p-4">
-            <p className="text-rose-500 font-medium mb-2">Falha ao carregar vídeo</p>
-            <p className="text-rose-400 text-sm">{error}</p>
-            <button 
-              onClick={() => {
-                setError(null);
-                setLoading(true);
-                // Recarregar iframe
-                if (iframeRef.current) {
-                  iframeRef.current.src = iframeRef.current.src;
-                }
-              }}
-              className="mt-3 px-4 py-2 bg-rose-500 text-white rounded-md text-sm hover:bg-rose-600 transition-colors"
-            >
-              Tentar novamente
-            </button>
-          </div>
-        </div>
-      )}
       <iframe
         ref={iframeRef}
         src={playerUrl}
