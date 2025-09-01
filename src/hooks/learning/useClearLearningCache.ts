@@ -16,7 +16,13 @@ export function useClearLearningCache() {
     devLog('🧹 [CACHE-ENHANCED] Iniciando limpeza COMPLETA do cache de learning...');
     
     try {
-      // 1. Remover TODAS as queries relacionadas (mais agressivo)
+      // 1. Versioning: Incrementar versão para forçar refresh de queries antigas
+      const currentVersion = localStorage.getItem('video-cache-version') || '1';
+      const newVersion = String(parseInt(currentVersion) + 1);
+      localStorage.setItem('video-cache-version', newVersion);
+      devLog('🔄 Cache version atualizada:', newVersion);
+
+      // 2. Remover TODAS as queries relacionadas - incluindo solution-video-resources
       queryClient.removeQueries({
         predicate: (query) => {
           const queryKey = query.queryKey;
@@ -29,22 +35,40 @@ export function useClearLearningCache() {
               key.includes('video') ||
               key.includes('progress') ||
               key.includes('formacao') ||
-              key.includes('solution')
+              key.includes('solution') ||
+              key.includes('resource') ||
+              key.includes('panda')
             )
           );
         }
       });
       
-      // 2. Limpar localStorage e sessionStorage
+      // 3. Limpar localStorage e sessionStorage - incluindo solution e panda
       clearLearningCaches();
       
-      // 3. Limpar cache de queries específicas problemáticas
+      // Limpar chaves específicas relacionadas ao problema
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (
+          key.includes('solution') || 
+          key.includes('panda') ||
+          key.includes('video_url') ||
+          key.includes('video-resources')
+        )) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+      
+      // 4. Limpar cache de queries específicas problemáticas
       queryClient.removeQueries({ queryKey: ['learning_lesson_videos'] });
       queryClient.removeQueries({ queryKey: ['learning-lessons'] });
       queryClient.removeQueries({ queryKey: ['learning-courses'] });
       queryClient.removeQueries({ queryKey: ['learning-modules'] });
+      queryClient.removeQueries({ queryKey: ['solution-video-resources'] });
       
-      // 4. Invalidar queries restantes
+      // 5. Invalidar queries restantes
       queryClient.invalidateQueries({
         predicate: (query) => {
           const queryKey = query.queryKey;
@@ -55,19 +79,20 @@ export function useClearLearningCache() {
               key.includes('lesson') || 
               key.includes('module') ||
               key.includes('video') ||
-              key.includes('solution')
+              key.includes('solution') ||
+              key.includes('resource')
             )
           );
         }
       });
       
-      // 5. Forçar garbage collection do cache
+      // 6. Forçar garbage collection do cache
       queryClient.clear();
       
-      devLog('✅ [CACHE-ENHANCED] Limpeza completa concluída com sucesso');
+      devLog('✅ [CACHE-ENHANCED] Limpeza completa concluída - versão:', newVersion);
       
       toast.success('Cache limpo', {
-        description: 'Cache de aprendizado foi limpo completamente'
+        description: `Cache de aprendizado foi limpo completamente (v${newVersion})`
       });
       
     } catch (error) {

@@ -16,7 +16,7 @@ interface VideoLesson {
   id: string;
   title: string;
   description?: string;
-  video_url: string;
+  url: string;
   video_id?: string;
   order_index?: number;
 }
@@ -48,7 +48,7 @@ const VideoTab: React.FC<VideoTabProps> = ({ solutionId, onComplete }) => {
         id: resource.id,
         title: resource.name,
         description: resource.description || resource.format,
-        video_url: resource.url,
+        url: resource.url,
         video_id: resource.metadata?.videoId || resource.id,
         order_index: resource.order_index || 0
       })) || [];
@@ -108,8 +108,8 @@ const VideoTab: React.FC<VideoTabProps> = ({ solutionId, onComplete }) => {
             {/* Video Player Only */}
             <div className="aspect-video rounded-lg overflow-hidden shadow-lg border bg-black/5">
               <PandaVideoPlayer
-                videoId={video.video_id || video.video_url}
-                url={video.video_url}
+                videoId={video.video_id || video.url}
+                url={video.url}
                 title={video.title}
                 className="w-full h-full"
                 onProgress={handleVideoProgress}

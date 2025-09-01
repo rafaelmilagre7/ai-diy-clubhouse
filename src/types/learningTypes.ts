@@ -71,7 +71,7 @@ export interface LearningCourseFormData {
 export interface VideoLesson {
   id: string;
   title: string;
-  video_url: string;
+  url: string;
   description?: string;
   duration?: number;
   order_index: number;

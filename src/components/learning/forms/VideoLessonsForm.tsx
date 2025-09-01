@@ -26,7 +26,7 @@ export const VideoLessonsForm = ({ form }: VideoLessonsFormProps) => {
       const newLesson = {
         id: crypto.randomUUID(),
         title: fileName.split('.')[0],
-        video_url: url,
+        url: url,
         description: '',
         duration: 0,
         order_index: videoLessons.length
@@ -53,7 +53,7 @@ export const VideoLessonsForm = ({ form }: VideoLessonsFormProps) => {
     const newLesson = {
       id: crypto.randomUUID(),
       title: '',
-      video_url: '',
+      url: '',
       description: '',
       duration: 0,
       order_index: videoLessons.length
@@ -161,14 +161,14 @@ export const VideoLessonsForm = ({ form }: VideoLessonsFormProps) => {
                 </div>
               </div>
               
-              <div>
-                <Label>URL do Vídeo</Label>
-                <Input
-                  value={lesson.video_url}
-                  onChange={(e) => updateVideoLesson(index, 'video_url', e.target.value)}
-                  placeholder="https://..."
-                />
-              </div>
+                <div>
+                  <Label>URL do Vídeo</Label>
+                  <Input
+                    value={lesson.url}
+                    onChange={(e) => updateVideoLesson(index, 'url', e.target.value)}
+                    placeholder="https://..."
+                  />
+                </div>
               
               <div>
                 <Label>Descrição</Label>
