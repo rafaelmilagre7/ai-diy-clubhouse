@@ -129,3 +129,5 @@ export const InviteSystemStatusIndicator: React.FC<InviteSystemStatusIndicatorPr
     </div>
   );
 };
+
+export default InviteSystemStatusIndicator;
