@@ -23,6 +23,7 @@ import { UsersTable } from '@/components/admin/users/UsersTable';
 import { UserRoleDialog } from '@/components/admin/users/UserRoleDialog';
 import { DeleteUserDialog } from '@/components/admin/users/DeleteUserDialog';
 import { ResetPasswordDialog } from '@/components/admin/users/ResetPasswordDialog';
+import { UserCourseAccessManager } from '@/components/admin/users/UserCourseAccessManager';
 import { getUserRoleName } from '@/lib/supabase/types';
 import { toast } from 'sonner';
 
@@ -50,6 +51,7 @@ export default function AdminUsers() {
   const [showRoleDialog, setShowRoleDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showPasswordResetDialog, setShowPasswordResetDialog] = useState(false);
+  const [showCourseManagerDialog, setShowCourseManagerDialog] = useState(false);
 
   // Converter roles do useRoles para o formato esperado
   const availableRoles: Role[] = useMemo(() => {
@@ -91,7 +93,8 @@ export default function AdminUsers() {
   };
 
   const handleManageCourses = (user: UserProfile) => {
-    toast.success(`Gerenciamento de cursos para ${user.name || user.email} será implementado em breve.`);
+    setSelectedUser(user);
+    setShowCourseManagerDialog(true);
   };
 
   const handleUpdateRole = async () => {
@@ -255,6 +258,14 @@ export default function AdminUsers() {
         onOpenChange={setShowPasswordResetDialog}
         user={selectedUser}
       />
+
+      {selectedUser && (
+        <UserCourseAccessManager
+          isOpen={showCourseManagerDialog}
+          onClose={() => setShowCourseManagerDialog(false)}
+          user={selectedUser}
+        />
+      )}
     </div>
   );
 }
