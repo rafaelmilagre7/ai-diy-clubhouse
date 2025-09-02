@@ -6,18 +6,8 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Viver de IA</title>
-    <meta http-equiv="Content-Security-Policy" content="
-      default-src 'self';
-      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com;
-      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-      font-src 'self' https://fonts.gstatic.com;
-      img-src 'self' data: blob: https: http:;
-      connect-src 'self' https://zotzvtepvpnkcoobdubt.supabase.co wss://zotzvtepvpnkcoobdubt.supabase.co https://api.openai.com https://api.resend.com https://resend.com https://*.pandavideo.com.br;
-      frame-src 'self' https://www.youtube.com https://player.vimeo.com https://*.pandavideo.com.br;
-      object-src 'none';
-      base-uri 'self';
-      form-action 'self';
-    ">
+    <!-- CSP será aplicada dinamicamente via SecurityProvider para evitar conflitos -->
+    <meta name="csp-mode" content="dynamic">
   </head>
   <body>
     <div id="root"></div>

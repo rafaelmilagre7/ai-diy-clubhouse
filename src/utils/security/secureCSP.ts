@@ -77,12 +77,18 @@ export const SECURE_CSP_DIRECTIVES = {
   'connect-src': [
     "'self'",
     "https://*.supabase.co",
-    "wss://*.supabase.co"
+    "wss://*.supabase.co",
+    "https://api.openai.com",
+    "https://api.resend.com", 
+    "https://resend.com",
+    "https://*.pandavideo.com.br"
   ],
   
   // Frames: vídeos específicos
   'frame-src': [
     "'self'",
+    "https://www.youtube.com",
+    "https://player.vimeo.com",
     "https://*.pandavideo.com.br",
     "https://player-vz-*.tv.pandavideo.com.br"
   ],

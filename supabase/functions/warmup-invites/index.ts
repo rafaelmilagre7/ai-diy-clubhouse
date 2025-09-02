@@ -35,7 +35,7 @@ serve(async (req) => {
       try {
         console.log(`🔥 [WARMUP] Aquecendo ${functionName}...`);
         
-        // Health check básico para manter function ativa
+        // Health check básico para manter function ativa - timeout otimizado
         const response = await fetch(`${supabaseUrl}/functions/v1/${functionName}`, {
           method: 'POST',
           headers: {
@@ -43,8 +43,8 @@ serve(async (req) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ warmup: true, timestamp: Date.now() }),
-          // Timeout curto para warmup
-          signal: AbortSignal.timeout(3000)
+          // Timeout reduzido para warmup mais rápido
+          signal: AbortSignal.timeout(2000)
         });
 
         const result = {

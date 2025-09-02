@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { SendInviteResponse } from './types';
 import { APP_CONFIG } from '@/config/app';
+import { useInvitePerformanceOptimizer } from './useInvitePerformanceOptimizer';
 
 interface SendInviteEmailParams {
   email: string;
@@ -19,6 +20,7 @@ interface SendInviteEmailParams {
 export function useInviteEmailService() {
   const [isSending, setIsSending] = useState(false);
   const [sendError, setSendError] = useState<Error | null>(null);
+  const { measureInvitePerformance, isReady, metrics } = useInvitePerformanceOptimizer();
 
   const sendInviteEmail = useCallback(async ({
     email,
@@ -46,20 +48,23 @@ export function useInviteEmailService() {
       }
 
       console.log("📧 Chamando sistema híbrido com template profissional...");
+      console.log("🔥 Status do sistema:", { isReady, warmupStatus: metrics.warmupStatus, avgTime: metrics.averageInviteTime });
 
-      // Chamar edge function com sistema melhorado
-      const { data, error } = await supabase.functions.invoke('send-invite-email', {
-        body: {
-          email,
-          inviteUrl,
-          roleName,
-          expiresAt,
-          senderName,
-          notes,
-          inviteId,
-          forceResend
-        }
-      });
+      // Usar medição de performance para monitorar a operação
+      const { data, error } = await measureInvitePerformance(async () => {
+        return await supabase.functions.invoke('send-invite-email', {
+          body: {
+            email,
+            inviteUrl,
+            roleName,
+            expiresAt,
+            senderName,
+            notes,
+            inviteId,
+            forceResend
+          }
+        });
+      }, `invite_email_${email}`);
 
       if (error) {
         console.error("❌ Erro da edge function:", error);

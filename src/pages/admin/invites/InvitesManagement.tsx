@@ -13,6 +13,7 @@ import { type CleanedContact } from "@/utils/contactDataCleaner";
 import { Mail, Users } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import { InviteSystemStatusIndicator } from '@/components/admin/invites/InviteSystemStatusIndicator';
 
 const InvitesManagement = () => {
   useDocumentTitle("Gerenciar Convites | Admin");
@@ -90,7 +91,8 @@ const InvitesManagement = () => {
             </div>
           </div>
           
-          <div className="flex gap-3">
+          <div className="flex items-center gap-4">
+            <InviteSystemStatusIndicator />
             <SimpleCreateInviteDialog roles={roles} onInviteCreated={handleInvitesChange} />
           </div>
         </div>

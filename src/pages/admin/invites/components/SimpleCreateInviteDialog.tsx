@@ -42,6 +42,8 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
   const [notes, setNotes] = useState("");
   const [expiration, setExpiration] = useState("7 days");
   const [channelPreference, setChannelPreference] = useState<'email' | 'whatsapp' | 'both'>('email');
+  const [loadingStep, setLoadingStep] = useState<string>('preparing');
+  const [loadingProgress, setLoadingProgress] = useState(0);
   
   const { createInvite, isCreating } = useInviteCreate();
 
