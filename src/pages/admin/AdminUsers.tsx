@@ -3,8 +3,6 @@ import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
   Users, 
   Search, 
@@ -18,8 +16,13 @@ import {
 import { useUsers } from '@/hooks/admin/useUsers';
 import { useUserRoles } from '@/hooks/admin/useUserRoles';
 import { useRoles, Role } from '@/hooks/admin/useRoles';
+import { useDeleteUser } from '@/hooks/admin/useDeleteUser';
+import { useToggleUserStatus } from '@/hooks/admin/useToggleUserStatus';
 import { UserProfile } from '@/lib/supabase';
+import { UsersTable } from '@/components/admin/users/UsersTable';
 import { UserRoleDialog } from '@/components/admin/users/UserRoleDialog';
+import { DeleteUserDialog } from '@/components/admin/users/DeleteUserDialog';
+import { ResetPasswordDialog } from '@/components/admin/users/ResetPasswordDialog';
 import { getUserRoleName } from '@/lib/supabase/types';
 import { toast } from 'sonner';
 
@@ -32,15 +35,21 @@ export default function AdminUsers() {
     setSearchQuery,
     fetchUsers,
     canManageUsers,
-    canAssignRoles
+    canAssignRoles,
+    canDeleteUsers,
+    canResetPasswords
   } = useUsers();
 
   const { assignRoleToUser, isUpdating: isAssigningRole } = useUserRoles();
   const { roles } = useRoles();
+  const { deleteUser } = useDeleteUser();
+  const { toggleUserStatus } = useToggleUserStatus();
   
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [newRoleId, setNewRoleId] = useState<string>('');
   const [showRoleDialog, setShowRoleDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showPasswordResetDialog, setShowPasswordResetDialog] = useState(false);
 
   // Converter roles do useRoles para o formato esperado
   const availableRoles: Role[] = useMemo(() => {
@@ -50,13 +59,39 @@ export default function AdminUsers() {
     }));
   }, [roles]);
 
-  const handleRoleChange = (userId: string, currentRoleId: string | null) => {
-    const user = users.find(u => u.id === userId);
-    if (user) {
-      setSelectedUser(user);
-      setNewRoleId(currentRoleId || '');
-      setShowRoleDialog(true);
+  // Handlers para todas as ações
+  const handleEditRole = (user: UserProfile) => {
+    setSelectedUser(user);
+    setNewRoleId(user.role_id || '');
+    setShowRoleDialog(true);
+  };
+
+  const handleDeleteUser = (user: UserProfile) => {
+    setSelectedUser(user);
+    setShowDeleteDialog(true);
+  };
+
+  const handleResetPassword = (user: UserProfile) => {
+    setSelectedUser(user);
+    setShowPasswordResetDialog(true);
+  };
+
+  const handleResetUser = (user: UserProfile) => {
+    toast.success(`Funcionalidade de reset do usuário ${user.name || user.email} será implementada em breve.`);
+  };
+
+  const handleToggleStatus = async (user: UserProfile) => {
+    try {
+      const currentStatus = (user.status || 'active') as string;
+      await toggleUserStatus(user.id, user.email, currentStatus);
+      fetchUsers(); // Recarregar lista
+    } catch (error) {
+      console.error('Erro ao alterar status:', error);
     }
+  };
+
+  const handleManageCourses = (user: UserProfile) => {
+    toast.success(`Gerenciamento de cursos para ${user.name || user.email} será implementado em breve.`);
   };
 
   const handleUpdateRole = async () => {
@@ -67,37 +102,18 @@ export default function AdminUsers() {
       setShowRoleDialog(false);
       setSelectedUser(null);
       setNewRoleId('');
-      // Recarregar a lista de usuários para refletir a mudança
       fetchUsers();
+      toast.success('Papel do usuário atualizado com sucesso!');
     } catch (error) {
       console.error('Erro ao atualizar papel do usuário:', error);
+      toast.error('Erro ao atualizar papel do usuário');
     }
   };
 
-  const getRoleBadgeVariant = (roleName: string) => {
-    switch (roleName) {
-      case 'admin':
-        return 'destructive';
-      case 'formacao':
-        return 'default';
-      default:
-        return 'secondary';
-    }
-  };
-
-  const getRoleIcon = (roleName: string) => {
-    switch (roleName) {
-      case 'admin':
-        return <Crown className="h-3 w-3" />;
-      case 'formacao':
-        return <Shield className="h-3 w-3" />;
-      default:
-        return <UserCheck className="h-3 w-3" />;
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR');
+  const handleDeleteSuccess = () => {
+    setShowDeleteDialog(false);
+    setSelectedUser(null);
+    fetchUsers();
   };
 
   if (!canManageUsers) {
@@ -197,91 +213,25 @@ export default function AdminUsers() {
         </Card>
       </div>
 
-      {/* Users List */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Lista de Usuários</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="space-y-4">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="flex items-center space-x-4 p-4 border rounded-lg animate-pulse">
-                  <div className="h-10 w-10 bg-muted rounded-full" />
-                  <div className="flex-1 space-y-2">
-                    <div className="h-4 bg-muted rounded w-1/4" />
-                    <div className="h-3 bg-muted rounded w-1/3" />
-                  </div>
-                  <div className="h-6 w-16 bg-muted rounded" />
-                </div>
-              ))}
-            </div>
-          ) : users.length === 0 ? (
-            <div className="text-center py-8">
-              <UserPlus className="mx-auto h-12 w-12 text-muted-foreground" />
-              <h3 className="mt-4 text-lg font-semibold">Nenhum usuário encontrado</h3>
-              <p className="mt-2 text-muted-foreground">
-                {searchQuery ? 'Tente ajustar sua pesquisa.' : 'Não há usuários cadastrados.'}
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {users.map((user) => {
-                const roleName = getUserRoleName(user);
-                return (
-                  <div
-                    key={user.id}
-                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="flex items-center space-x-4">
-                      <Avatar className="h-10 w-10">
-                        <AvatarImage src={user.avatar_url || undefined} />
-                        <AvatarFallback>
-                          {user.name ? user.name.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <div className="font-medium">{user.name || user.email}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {user.email}
-                          {user.company_name && (
-                            <span className="ml-2">• {user.company_name}</span>
-                          )}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          Cadastrado em {formatDate(user.created_at)}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <Badge variant={getRoleBadgeVariant(roleName)}>
-                        {getRoleIcon(roleName)}
-                        <span className="ml-1 capitalize">
-                          {roleName === 'membro_club' ? 'Membro' : roleName}
-                        </span>
-                      </Badge>
-                      
-                      {canAssignRoles && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleRoleChange(user.id, user.role_id)}
-                          disabled={isAssigningRole}
-                        >
-                          Alterar Papel
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* Users Table with Cards Layout */}
+      <UsersTable
+        users={users}
+        loading={loading}
+        onEditRole={handleEditRole}
+        onDeleteUser={handleDeleteUser}
+        onResetPassword={handleResetPassword}
+        onResetUser={handleResetUser}
+        onToggleStatus={handleToggleStatus}
+        onManageCourses={handleManageCourses}
+        onRefresh={fetchUsers}
+        canEditRoles={canAssignRoles}
+        canDeleteUsers={canDeleteUsers}
+        canResetPasswords={canResetPasswords}
+        canResetUsers={canManageUsers}
+        canToggleStatus={canManageUsers}
+      />
 
-      {/* Role Assignment Dialog */}
+      {/* Dialogs */}
       <UserRoleDialog
         open={showRoleDialog}
         onOpenChange={setShowRoleDialog}
@@ -291,6 +241,19 @@ export default function AdminUsers() {
         onUpdateRole={handleUpdateRole}
         saving={isAssigningRole}
         availableRoles={availableRoles}
+      />
+
+      <DeleteUserDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        user={selectedUser}
+        onSuccess={handleDeleteSuccess}
+      />
+
+      <ResetPasswordDialog
+        open={showPasswordResetDialog}
+        onOpenChange={setShowPasswordResetDialog}
+        user={selectedUser}
       />
     </div>
   );
