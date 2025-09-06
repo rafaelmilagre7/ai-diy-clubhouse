@@ -5148,6 +5148,14 @@ export type Database = {
         Args: { target_user_id: string } | { user_email: string }
         Returns: Json
       }
+      admin_correct_auth_email: {
+        Args: {
+          admin_notes?: string
+          new_email: string
+          target_user_id: string
+        }
+        Returns: Json
+      }
       admin_force_delete_auth_user: {
         Args: { target_user_id: string }
         Returns: Json
