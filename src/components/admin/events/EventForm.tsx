@@ -12,11 +12,13 @@ import { EventDateTime } from "./form/EventDateTime";
 import { EventLocation } from "./form/EventLocation";
 import { EventCoverImage } from "./form/EventCoverImage";
 import { EventRecurrence } from "./form/EventRecurrence";
+import { EventRoleAccess } from "./form/EventRoleAccess";
 import { eventSchema, type EventFormData } from "./form/EventFormSchema";
 import { type Event } from "@/types/events";
 import { formatDateTimeLocal, convertLocalToUTC, getNowInBrazil } from "@/utils/timezoneUtils";
 import { generateRecurringEvents } from "@/utils/recurringEvents";
 import { RecurrenceEditDialog } from "./RecurrenceEditDialog";
+import { useEventAccessControl } from "@/hooks/useEventAccessControl";
 
 interface EventFormProps {
   event?: Event;
@@ -28,6 +30,14 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
   const [showRecurrenceDialog, setShowRecurrenceDialog] = useState(false);
   const [pendingFormData, setPendingFormData] = useState<EventFormData | null>(null);
   const queryClient = useQueryClient();
+
+  const {
+    selectedRoles,
+    updateSelectedRoles,
+    saveAccessControl,
+    isLoading: isLoadingAccessControl,
+    isSaving: isSavingAccessControl
+  } = useEventAccessControl({ eventId: event?.id });
 
   // Função para obter valores padrão para horários
   const getDefaultTimes = () => {
@@ -157,6 +167,18 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
       }
 
       console.log('Evento salvo com sucesso:', result.data);
+
+      // Salvar controle de acesso após salvar o evento
+      if (result.data && result.data.id) {
+        try {
+          await saveAccessControl(result.data.id);
+          console.log('Controle de acesso salvo com sucesso');
+        } catch (accessError) {
+          console.error('Erro ao salvar controle de acesso:', accessError);
+          toast.error("Evento salvo, mas houve erro no controle de acesso.");
+          return;
+        }
+      }
 
       toast.success(event ? "Evento atualizado com sucesso!" : "Evento criado com sucesso!");
       
@@ -328,14 +350,19 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
           <EventLocation form={form} />
           <EventCoverImage form={form} />
           <EventRecurrence form={form} />
+          
+          <EventRoleAccess 
+            selectedRoles={selectedRoles}
+            onChange={updateSelectedRoles}
+          />
 
           <div className="flex justify-end gap-3 pt-6 border-t border-border/50">
             <Button 
               type="submit" 
-              disabled={isSubmitting}
+              disabled={isSubmitting || isLoadingAccessControl || isSavingAccessControl}
               className="bg-viverblue hover:bg-viverblue/90 text-white shadow-aurora min-w-[120px]"
             >
-              {isSubmitting ? "Salvando..." : (event ? "Salvar Alterações" : "Criar Evento")}
+              {(isSubmitting || isSavingAccessControl) ? "Salvando..." : (event ? "Salvar Alterações" : "Criar Evento")}
             </Button>
           </div>
         </form>
