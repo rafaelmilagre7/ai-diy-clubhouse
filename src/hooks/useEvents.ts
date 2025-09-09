@@ -11,7 +11,7 @@ export const useEvents = () => {
         // Primeiro, tentar buscar eventos usando a função RPC se disponível
         const { data: rpcData, error: rpcError } = await supabase
           .rpc('get_visible_events_for_user', { 
-            user_id: (await supabase.auth.getUser()).data.user?.id 
+            p_user_id: (await supabase.auth.getUser()).data.user?.id 
           });
 
         if (!rpcError && rpcData) {
