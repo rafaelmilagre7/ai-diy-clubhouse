@@ -1,0 +1,98 @@
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Lock, Calendar, Users } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+
+interface EventAccessBlockedProps {
+  eventTitle: string;
+  allowedRoles: Array<{
+    id: string;
+    name: string;
+    description?: string;
+  }>;
+  onClose: () => void;
+  className?: string;
+}
+
+export const EventAccessBlocked: React.FC<EventAccessBlockedProps> = ({
+  eventTitle,
+  allowedRoles,
+  onClose,
+  className = ''
+}) => {
+  return (
+    <div className={`flex items-center justify-center min-h-[400px] p-4 ${className}`}>
+      <Card className="max-w-md w-full bg-operational/5 border-operational/20 border-2">
+        <CardHeader className="text-center">
+          <div className="mx-auto p-3 rounded-full bg-operational/5 w-fit mb-4">
+            <div className="relative">
+              <Calendar className="h-6 w-6 text-operational" />
+              <Lock className="h-3 w-3 text-operational absolute -top-1 -right-1 bg-surface-card rounded-full p-0.5" />
+            </div>
+          </div>
+          <CardTitle className="text-xl text-operational">
+            Evento Restrito
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Alert className="border-operational/20 bg-operational/5">
+            <AlertDescription className="text-center text-text-muted">
+              Você não tem permissão para acessar o evento "{eventTitle}".
+            </AlertDescription>
+          </Alert>
+          
+          {allowedRoles.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-text-muted">
+                <Users className="h-4 w-4" />
+                <span className="text-sm font-medium">Acesso permitido para:</span>
+              </div>
+              <div className="space-y-2">
+                {allowedRoles.map((role) => (
+                  <div 
+                    key={role.id}
+                    className="p-2 rounded-lg bg-surface-elevated border border-border/50"
+                  >
+                    <div className="font-medium text-text-primary capitalize">
+                      {role.name}
+                    </div>
+                    {role.description && (
+                      <div className="text-sm text-text-muted">
+                        {role.description}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          <div className="text-center space-y-3">
+            <p className="text-sm text-text-muted">
+              Entre em contato com o administrador para solicitar acesso a este evento.
+            </p>
+            
+            <div className="flex flex-col gap-2">
+              <Button 
+                variant="outline"
+                className="text-operational border-operational/20 hover:bg-operational/5"
+                onClick={() => window.open('mailto:contato@viverdeia.ai?subject=Solicitação de Acesso ao Evento', '_blank')}
+              >
+                Solicitar Acesso
+              </Button>
+              
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={onClose}
+              >
+                Voltar
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};

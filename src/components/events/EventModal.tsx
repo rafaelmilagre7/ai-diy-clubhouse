@@ -10,6 +10,9 @@ import { Event } from '@/types/events';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Calendar as CalendarIcon, Clock, MapPin, ExternalLink } from 'lucide-react';
+import { useEventPermissions } from '@/hooks/useEventPermissions';
+import { EventAccessBlocked } from './EventAccessBlocked';
+import { useState, useEffect } from 'react';
 
 interface EventModalProps {
   event: Event;
@@ -17,6 +20,24 @@ interface EventModalProps {
 }
 
 export const EventModal = ({ event, onClose }: EventModalProps) => {
+  const { checkEventAccess, getEventRoleInfo } = useEventPermissions();
+  const [hasAccess, setHasAccess] = useState<boolean | null>(null);
+  const [allowedRoles, setAllowedRoles] = useState<Array<{ id: string; name: string; description?: string }>>([]);
+
+  useEffect(() => {
+    const verifyAccess = async () => {
+      const access = await checkEventAccess(event.id);
+      setHasAccess(access);
+      
+      if (!access) {
+        const roles = await getEventRoleInfo(event.id);
+        setAllowedRoles(roles);
+      }
+    };
+
+    verifyAccess();
+  }, [event.id, checkEventAccess, getEventRoleInfo]);
+
   const generateGoogleCalendarLink = () => {
     const start = new Date(event.start_time).toISOString().replace(/-|:|\.\d\d\d/g, '');
     const end = new Date(event.end_time).toISOString().replace(/-|:|\.\d\d\d/g, '');
@@ -26,6 +47,26 @@ export const EventModal = ({ event, onClose }: EventModalProps) => {
   const formattedDate = format(new Date(event.start_time), "EEEE, d 'de' MMMM", { locale: ptBR });
   const startTime = format(new Date(event.start_time), "HH:mm", { locale: ptBR });
   const endTime = format(new Date(event.end_time), "HH:mm", { locale: ptBR });
+
+  // Se ainda está verificando permissões, não renderiza nada
+  if (hasAccess === null) {
+    return null;
+  }
+
+  // Se não tem acesso, mostra o componente de bloqueio
+  if (!hasAccess) {
+    return (
+      <Dialog open onOpenChange={() => onClose()}>
+        <DialogContent className="max-w-2xl surface-modal border-border/50 shadow-aurora-strong p-0 overflow-hidden">
+          <EventAccessBlocked
+            eventTitle={event.title}
+            allowedRoles={allowedRoles}
+            onClose={onClose}
+          />
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open onOpenChange={() => onClose()}>
