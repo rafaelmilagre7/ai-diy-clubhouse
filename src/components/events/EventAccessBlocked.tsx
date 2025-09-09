@@ -38,58 +38,18 @@ export const EventAccessBlocked: React.FC<EventAccessBlockedProps> = ({
         <CardContent className="space-y-4">
           <Alert className="border-operational/20 bg-operational/5">
             <AlertDescription className="text-center text-text-muted">
-              Você não tem permissão para acessar o evento "{eventTitle}".
+              O seu usuário não possui permissão para acessar esse evento
             </AlertDescription>
           </Alert>
           
-          {allowedRoles.length > 0 && (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-text-muted">
-                <Users className="h-4 w-4" />
-                <span className="text-sm font-medium">Acesso permitido para:</span>
-              </div>
-              <div className="space-y-2">
-                {allowedRoles.map((role) => (
-                  <div 
-                    key={role.id}
-                    className="p-2 rounded-lg bg-surface-elevated border border-border/50"
-                  >
-                    <div className="font-medium text-text-primary capitalize">
-                      {role.name}
-                    </div>
-                    {role.description && (
-                      <div className="text-sm text-text-muted">
-                        {role.description}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-          
-          <div className="text-center space-y-3">
-            <p className="text-sm text-text-muted">
-              Entre em contato com o administrador para solicitar acesso a este evento.
-            </p>
-            
-            <div className="flex flex-col gap-2">
-              <Button 
-                variant="outline"
-                className="text-operational border-operational/20 hover:bg-operational/5"
-                onClick={() => window.open('mailto:contato@viverdeia.ai?subject=Solicitação de Acesso ao Evento', '_blank')}
-              >
-                Solicitar Acesso
-              </Button>
-              
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={onClose}
-              >
-                Voltar
-              </Button>
-            </div>
+          <div className="text-center">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={onClose}
+            >
+              Voltar
+            </Button>
           </div>
         </CardContent>
       </Card>
