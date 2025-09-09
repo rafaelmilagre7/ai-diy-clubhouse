@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -32,7 +32,6 @@ export const useEventAccessControl = ({ eventId }: UseEventAccessControlProps) =
       
       if (error) {
         console.error("useEventAccessControl - Error fetching access control data:", error);
-        // Não lançar erro para evitar bloquear a interface
         return [];
       }
       
@@ -42,32 +41,21 @@ export const useEventAccessControl = ({ eventId }: UseEventAccessControlProps) =
     },
     enabled: !!eventId,
     retry: 1,
-    staleTime: 30000 // 30 seconds
+    staleTime: 30000
   });
 
-  // Atualizar estado local quando os dados carregarem
+  // Usar useCallback para estabilizar a função de atualização
+  const updateSelectedRoles = useCallback((roleIds: string[]) => {
+    console.log("useEventAccessControl - Updating selected roles:", roleIds);
+    setSelectedRoles(roleIds);
+  }, []);
+
+  // Sincronizar apenas uma vez quando os dados chegam
   useEffect(() => {
-    if (accessControlData) {
-      console.log("useEventAccessControl - Updating selectedRoles with:", accessControlData);
-      setSelectedRoles(prev => {
-        // Evitar atualizações desnecessárias comparando arrays
-        if (JSON.stringify(prev) !== JSON.stringify(accessControlData)) {
-          return accessControlData;
-        }
-        return prev;
-      });
-    } else if (!isLoading && !error && eventId) {
-      // Se não há dados mas também não há erro nem loading, significa que é um evento público
-      console.log("useEventAccessControl - No access control data, event is public");
-      setSelectedRoles(prev => {
-        // Só atualizar se não estiver vazio
-        if (prev.length > 0) {
-          return [];
-        }
-        return prev;
-      });
+    if (accessControlData !== undefined) {
+      setSelectedRoles(accessControlData);
     }
-  }, [accessControlData, isLoading, error, eventId]);
+  }, [accessControlData]);
 
   // Mutation para salvar controle de acesso
   const saveAccessControlMutation = useMutation({
@@ -129,11 +117,6 @@ export const useEventAccessControl = ({ eventId }: UseEventAccessControlProps) =
     }
   });
 
-  const updateSelectedRoles = (roleIds: string[]) => {
-    console.log("useEventAccessControl - Updating selected roles:", roleIds);
-    setSelectedRoles(roleIds);
-  };
-
   const saveAccessControl = async (eventId: string) => {
     console.log("useEventAccessControl - Starting save access control for event:", eventId, "with roles:", selectedRoles);
     try {
@@ -141,7 +124,7 @@ export const useEventAccessControl = ({ eventId }: UseEventAccessControlProps) =
       console.log("useEventAccessControl - Access control save completed");
     } catch (error) {
       console.error("useEventAccessControl - Error in saveAccessControl:", error);
-      throw error; // Re-throw para que o EventForm possa capturar
+      throw error;
     }
   };
 
@@ -149,7 +132,7 @@ export const useEventAccessControl = ({ eventId }: UseEventAccessControlProps) =
     selectedRoles,
     updateSelectedRoles,
     saveAccessControl,
-    isLoading: isLoading && !!eventId, // Só mostrar loading se realmente está carregando dados existentes
+    isLoading: isLoading && !!eventId,
     isSaving: saveAccessControlMutation.isPending
   };
 };

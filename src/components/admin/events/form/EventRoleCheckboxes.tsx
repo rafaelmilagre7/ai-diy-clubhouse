@@ -87,12 +87,11 @@ export const EventRoleCheckboxes = ({ selectedRoles, onChange }: EventRoleCheckb
             return (
               <div 
                 key={role.id}
-                className={`flex items-start space-x-2 rounded-md p-2 transition-colors cursor-pointer ${
+                className={`flex items-start space-x-2 rounded-md p-2 transition-colors ${
                   isChecked 
                     ? "bg-viverblue/10 dark:bg-viverblue/20 border border-viverblue/30 dark:border-viverblue/40" 
                     : "hover:bg-muted/50 dark:hover:bg-muted/30 border border-transparent"
                 }`}
-                onClick={() => handleCheckedChange(!isChecked, role.id)}
               >
                 <Checkbox
                   id={`role-${role.id}`}
