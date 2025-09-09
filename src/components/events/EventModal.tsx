@@ -21,20 +21,44 @@ interface EventModalProps {
 
 export const EventModal = ({ event, onClose }: EventModalProps) => {
   const { checkEventAccess, getEventRoleInfo } = useEventPermissions();
-  const [hasAccess, setHasAccess] = useState<boolean | null>(null);
+  
+  // FASE 2: Estado inicial como false (BLOQUEADO) até verificação ser concluída
+  const [hasAccess, setHasAccess] = useState<boolean>(false);
   const [allowedRoles, setAllowedRoles] = useState<Array<{ id: string; name: string; description?: string }>>([]);
+  const [isVerifying, setIsVerifying] = useState<boolean>(true);
 
   useEffect(() => {
     const verifyAccess = async () => {
-      const access = await checkEventAccess(event.id);
-      setHasAccess(access);
+      console.log('[DEBUG] EventModal: Iniciando verificação de acesso');
+      console.log('[DEBUG] EventModal: Event ID:', event.id);
+      console.log('[DEBUG] EventModal: Event title:', event.title);
       
-      if (!access) {
-        const roles = await getEventRoleInfo(event.id);
-        setAllowedRoles(roles);
+      setIsVerifying(true);
+      
+      try {
+        const access = await checkEventAccess(event.id);
+        
+        console.log('[DEBUG] EventModal: Resultado da verificação:', access);
+        setHasAccess(access);
+        
+        if (!access) {
+          console.log('[DEBUG] EventModal: Usuário bloqueado, buscando roles permitidos');
+          const roles = await getEventRoleInfo(event.id);
+          console.log('[DEBUG] EventModal: Roles permitidos:', roles);
+          setAllowedRoles(roles);
+        } else {
+          console.log('[DEBUG] EventModal: Usuário tem acesso ao evento');
+        }
+      } catch (error) {
+        console.error('[DEBUG] EventModal: Erro na verificação:', error);
+        setHasAccess(false); // Em caso de erro, bloquear acesso
+      } finally {
+        setIsVerifying(false);
+        console.log('[DEBUG] EventModal: Verificação concluída');
       }
     };
 
+    console.log('[DEBUG] EventModal: useEffect disparado para evento:', event.id);
     verifyAccess();
   }, [event.id, checkEventAccess, getEventRoleInfo]);
 
@@ -48,25 +72,34 @@ export const EventModal = ({ event, onClose }: EventModalProps) => {
   const startTime = format(new Date(event.start_time), "HH:mm", { locale: ptBR });
   const endTime = format(new Date(event.end_time), "HH:mm", { locale: ptBR });
 
-  // Se ainda está verificando permissões, não renderiza nada
-  if (hasAccess === null) {
-    return null;
-  }
-
-  // Se não tem acesso, mostra o componente de bloqueio
-  if (!hasAccess) {
+  // FASE 3: Verificação Síncrona - Se ainda está verificando OU não tem acesso, bloquear
+  console.log('[DEBUG] EventModal: Renderizando - isVerifying:', isVerifying, 'hasAccess:', hasAccess);
+  
+  if (isVerifying || !hasAccess) {
+    console.log('[DEBUG] EventModal: Bloqueando acesso - verificando:', isVerifying, 'tem acesso:', hasAccess);
+    
     return (
       <Dialog open onOpenChange={() => onClose()}>
         <DialogContent className="max-w-2xl surface-modal border-border/50 shadow-aurora-strong p-0 overflow-hidden">
-          <EventAccessBlocked
-            eventTitle={event.title}
-            allowedRoles={allowedRoles}
-            onClose={onClose}
-          />
+          {isVerifying ? (
+            <div className="p-8 text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-viverblue mx-auto mb-4"></div>
+              <p className="text-body text-text-muted">Verificando permissões...</p>
+            </div>
+          ) : (
+            <EventAccessBlocked
+              eventTitle={event.title}
+              allowedRoles={allowedRoles}
+              onClose={onClose}
+            />
+          )}
         </DialogContent>
       </Dialog>
     );
   }
+
+  // Se chegou aqui, usuário tem acesso confirmado
+  console.log('[DEBUG] EventModal: Usuário autenticado com acesso, renderizando evento completo');
 
   return (
     <Dialog open onOpenChange={() => onClose()}>
