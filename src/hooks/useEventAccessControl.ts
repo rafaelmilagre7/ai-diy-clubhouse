@@ -49,13 +49,25 @@ export const useEventAccessControl = ({ eventId }: UseEventAccessControlProps) =
   useEffect(() => {
     if (accessControlData) {
       console.log("useEventAccessControl - Updating selectedRoles with:", accessControlData);
-      setSelectedRoles(accessControlData);
-    } else if (!isLoading && !error) {
+      setSelectedRoles(prev => {
+        // Evitar atualizações desnecessárias comparando arrays
+        if (JSON.stringify(prev) !== JSON.stringify(accessControlData)) {
+          return accessControlData;
+        }
+        return prev;
+      });
+    } else if (!isLoading && !error && eventId) {
       // Se não há dados mas também não há erro nem loading, significa que é um evento público
       console.log("useEventAccessControl - No access control data, event is public");
-      setSelectedRoles([]);
+      setSelectedRoles(prev => {
+        // Só atualizar se não estiver vazio
+        if (prev.length > 0) {
+          return [];
+        }
+        return prev;
+      });
     }
-  }, [accessControlData, isLoading, error]);
+  }, [accessControlData, isLoading, error, eventId]);
 
   // Mutation para salvar controle de acesso
   const saveAccessControlMutation = useMutation({
