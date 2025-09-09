@@ -28,6 +28,9 @@ setupEmailMaskingInterceptor();
 // Testar sistema de mascaramento (apenas desenvolvimento)
 import './utils/testEmailMasking';
 
+// Console administrativo (apenas para admins)
+import './utils/adminConsole';
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <App />

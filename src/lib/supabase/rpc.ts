@@ -107,3 +107,41 @@ export const bulkReactivateExpiredInvites = async (daysExtension: number = 7) =>
   
   return data;
 };
+
+export const createInviteHybrid = async (params: {
+  email: string;
+  roleId: string;
+  phone?: string;
+  expiresIn?: string;
+  notes?: string;
+  channelPreference?: string;
+}) => {
+  const { data, error } = await supabase.rpc('create_invite_hybrid', {
+    p_email: params.email,
+    p_role_id: params.roleId,
+    p_phone: params.phone || null,
+    p_expires_in: params.expiresIn || '7 days',
+    p_notes: params.notes || null,
+    p_channel_preference: params.channelPreference || 'email'
+  });
+  
+  if (error) {
+    console.error('Erro ao criar convite híbrido:', error);
+    throw error;
+  }
+  
+  return data;
+};
+
+export const adminResetUser = async (userEmail: string) => {
+  const { data, error } = await supabase.rpc('admin_reset_user', {
+    user_email: userEmail
+  });
+  
+  if (error) {
+    console.error('Erro no reset administrativo:', error);
+    throw error;
+  }
+  
+  return data;
+};
