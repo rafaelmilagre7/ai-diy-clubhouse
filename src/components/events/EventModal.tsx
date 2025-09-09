@@ -26,12 +26,30 @@ export const EventModal = ({ event, onClose }: EventModalProps) => {
   const [hasAccess, setHasAccess] = useState<boolean>(false);
   const [allowedRoles, setAllowedRoles] = useState<Array<{ id: string; name: string; description?: string }>>([]);
   const [isVerifying, setIsVerifying] = useState<boolean>(true);
+  const [verificationCount, setVerificationCount] = useState(0);
 
   useEffect(() => {
+    // FASE 4: Contador para detectar loops infinitos
+    const currentCount = verificationCount + 1;
+    setVerificationCount(currentCount);
+    
+    if (currentCount > 3) {
+      console.error('[DEBUG] EventModal: LOOP INFINITO DETECTADO - Abortando verificação');
+      setHasAccess(false);
+      setIsVerifying(false);
+      return;
+    }
+    
     const verifyAccess = async () => {
-      console.log('[DEBUG] EventModal: Iniciando verificação de acesso');
+      console.log('[DEBUG] EventModal: Verificação #', currentCount);
       console.log('[DEBUG] EventModal: Event ID:', event.id);
-      console.log('[DEBUG] EventModal: Event title:', event.title);
+      
+      // FASE 3: Timeout de segurança para evitar loading infinito
+      const timeoutId = setTimeout(() => {
+        console.warn('[DEBUG] EventModal: Timeout na verificação - Bloqueando acesso');
+        setHasAccess(false);
+        setIsVerifying(false);
+      }, 10000); // 10 segundos máximo
       
       setIsVerifying(true);
       
@@ -39,6 +57,7 @@ export const EventModal = ({ event, onClose }: EventModalProps) => {
         const access = await checkEventAccess(event.id);
         
         console.log('[DEBUG] EventModal: Resultado da verificação:', access);
+        clearTimeout(timeoutId);
         setHasAccess(access);
         
         if (!access) {
@@ -51,6 +70,7 @@ export const EventModal = ({ event, onClose }: EventModalProps) => {
         }
       } catch (error) {
         console.error('[DEBUG] EventModal: Erro na verificação:', error);
+        clearTimeout(timeoutId);
         setHasAccess(false); // Em caso de erro, bloquear acesso
       } finally {
         setIsVerifying(false);
@@ -60,7 +80,9 @@ export const EventModal = ({ event, onClose }: EventModalProps) => {
 
     console.log('[DEBUG] EventModal: useEffect disparado para evento:', event.id);
     verifyAccess();
-  }, [event.id, checkEventAccess, getEventRoleInfo]);
+    
+    // FASE 2: APENAS event.id como dependência - funções estabilizadas não causam re-renders
+  }, [event.id]); // Removendo checkEventAccess e getEventRoleInfo - agora são estáveis
 
   const generateGoogleCalendarLink = () => {
     const start = new Date(event.start_time).toISOString().replace(/-|:|\.\d\d\d/g, '');

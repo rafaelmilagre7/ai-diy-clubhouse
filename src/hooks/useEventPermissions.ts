@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
 
@@ -6,7 +6,8 @@ export const useEventPermissions = () => {
   const [loading, setLoading] = useState(false);
   const { profile, isAdmin } = useAuth();
 
-  const checkEventAccess = async (eventId: string): Promise<boolean> => {
+  // FASE 1: Estabilizar função com useCallback para evitar recriações desnecessárias
+  const checkEventAccess = useCallback(async (eventId: string): Promise<boolean> => {
     if (!profile?.id) {
       console.log('[DEBUG] EventPermissions: Usuário não logado');
       return false;
@@ -66,9 +67,10 @@ export const useEventPermissions = () => {
       console.error('Erro ao verificar permissões do evento:', error);
       return false;
     }
-  };
+  }, [profile?.id, profile?.email, profile?.role_id, isAdmin]); // Dependências estáveis
 
-  const getEventRoleInfo = async (eventId: string) => {
+  // FASE 1: Estabilizar função com useCallback 
+  const getEventRoleInfo = useCallback(async (eventId: string) => {
     try {
       const { data: accessControl, error } = await supabase
         .from('event_access_control')
@@ -92,7 +94,7 @@ export const useEventPermissions = () => {
       console.error('Erro ao buscar informações dos roles do evento:', error);
       return [];
     }
-  };
+  }, []); // Sem dependências pois usa apenas Supabase
 
   return {
     checkEventAccess,
