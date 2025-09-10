@@ -55,6 +55,9 @@ verify_jwt = false
 verify_jwt = false
 
 # Funções existentes otimizadas com singleton pattern
+[functions.admin-cleanup-wagner]
+verify_jwt = false
+
 [functions.admin-delete-user]
 verify_jwt = false
 
