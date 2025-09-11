@@ -26,12 +26,12 @@ export const useCertificateRefresh = () => {
     localStorage.setItem('certificate-template-updated', JSON.stringify({
       template: newTemplate,
       timestamp: Date.now(),
-      version: '4.0'
+      version: '5.0'
     }));
     
     refreshCertificates();
     
-    console.log('🎨 Template de certificado atualizado para versão 4.0');
+    console.log('🎨 Template de certificado atualizado para versão 5.0 - VIVER DE IA Neon');
   }, [refreshCertificates]);
 
   return {
