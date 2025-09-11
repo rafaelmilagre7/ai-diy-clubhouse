@@ -52,263 +52,244 @@ export class CertificateTemplateEngine {
           min-width: 1200px;
           min-height: 900px;
           aspect-ratio: 4/3;
-          background-color: #0A0D0F;
+          background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
           position: relative;
-          font-family: Inter, Poppins, Manrope, sans-serif;
+          font-family: Inter, system-ui, sans-serif;
           -webkit-font-smoothing: antialiased;
           -moz-osx-font-smoothing: grayscale;
         "
       >
-        <!-- Main Frame with Turquoise Border -->
+        <!-- Certificate Border -->
         <div
           style="
             position: absolute;
-            top: 48px;
-            left: 48px;
-            right: 48px;
-            bottom: 48px;
-            border-radius: 40px;
-            background: linear-gradient(135deg, #7CF6FF 0%, #37DFF2 100%);
-            box-shadow: 0 0 0 6px rgba(55, 223, 242, 0.15);
-            padding: 24px;
+            top: 32px;
+            left: 32px;
+            right: 32px;
+            bottom: 32px;
+            border: 3px solid #0f172a;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 64px 48px;
           "
         >
-          <!-- Inner Dark Area -->
+          <!-- Header -->
           <div
             style="
-              width: 100%;
-              height: 100%;
-              background-color: #0F1114;
-              border-radius: 32px;
-              box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03);
-              position: relative;
-              padding: 48px;
+              text-align: center;
+              margin-bottom: 48px;
+              border-bottom: 2px solid #e2e8f0;
+              padding-bottom: 32px;
             "
           >
-            <!-- Main Title - VIVER DE IA -->
-            <div
+            <h1
               style="
-                position: absolute;
-                top: 64px;
-                left: 48px;
-                right: 48px;
-                text-align: center;
+                font-size: 28px;
+                font-weight: 700;
+                color: #0f172a;
+                margin: 0 0 8px 0;
+                letter-spacing: 0.05em;
+                text-transform: uppercase;
               "
             >
-              <h1
-                style="
-                  font-size: 32px;
-                  font-weight: 600;
-                  letter-spacing: 0.24em;
-                  text-transform: uppercase;
-                  margin: 0;
-                  line-height: 1;
-                  color: #EAF2F6;
-                "
-              >
-                VIVER 
-                <span
-                  style="
-                    background: linear-gradient(180deg, #79F0FF 0%, #28D6EE 100%);
-                    -webkit-background-clip: text;
-                    -webkit-text-fill-color: transparent;
-                    background-clip: text;
-                  "
-                >
-                  DE IA
-                </span>
-              </h1>
-            </div>
-
-            <!-- Subtitle - CERTIFICAMOS QUE -->
+              CERTIFICADO DE CONCLUSÃO
+            </h1>
             <div
               style="
-                position: absolute;
-                top: 192px;
-                left: 48px;
-                right: 48px;
-                text-align: center;
+                font-size: 16px;
+                color: #64748b;
+                font-weight: 500;
               "
             >
-              <h2
-                style="
-                  font-size: 26px;
-                  font-weight: 600;
-                  letter-spacing: 0.08em;
-                  text-transform: uppercase;
-                  margin: 0;
-                  line-height: 1;
-                  color: #EAF2F6;
-                  opacity: 0.85;
-                "
-              >
-                CERTIFICAMOS QUE
-              </h2>
+              VIVER DE IA
             </div>
+          </div>
 
-            <!-- Dynamic Content Area -->
+          <!-- Main Content -->
+          <div
+            style="
+              text-align: center;
+              margin-bottom: 48px;
+            "
+          >
+            <!-- User Name -->
             <div
               style="
-                position: absolute;
-                top: 280px;
-                left: 48px;
-                right: 48px;
-                bottom: 48px;
+                font-size: 20px;
+                color: #475569;
+                margin-bottom: 24px;
+                font-weight: 400;
+              "
+            >
+              Certificamos que
+            </div>
+            
+            <div
+              style="
+                font-size: 32px;
+                font-weight: 600;
+                color: #0f172a;
+                margin-bottom: 32px;
+                border-bottom: 2px solid #3b82f6;
+                padding-bottom: 8px;
+                display: inline-block;
+              "
+            >
+              {{USER_NAME}}
+            </div>
+
+            <!-- Completion Text -->
+            <div
+              style="
+                font-size: 18px;
+                color: #475569;
+                margin-bottom: 16px;
+                line-height: 1.5;
+              "
+            >
+              concluiu com sucesso o curso
+            </div>
+
+            <!-- Course Title -->
+            <div
+              style="
+                font-size: 26px;
+                font-weight: 600;
+                color: #3b82f6;
+                margin-bottom: 24px;
+                line-height: 1.3;
+                max-width: 800px;
+                margin-left: auto;
+                margin-right: auto;
+              "
+            >
+              {{SOLUTION_TITLE}}
+            </div>
+
+            <!-- Description -->
+            <div
+              style="
+                font-size: 16px;
+                color: #64748b;
+                margin-bottom: 32px;
+                line-height: 1.6;
+                max-width: 700px;
+                margin-left: auto;
+                margin-right: auto;
+                font-style: italic;
+              "
+            >
+              {{DESCRIPTION}}
+            </div>
+
+            <!-- Course Details -->
+            <div
+              style="
                 display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: flex-start;
-                gap: 24px;
+                justify-content: center;
+                gap: 48px;
+                margin-bottom: 32px;
+                flex-wrap: wrap;
               "
             >
-              <!-- User Name -->
               <div
                 style="
-                  font-size: 36px;
-                  font-weight: 700;
-                  color: #79F0FF;
                   text-align: center;
-                  letter-spacing: 0.02em;
-                "
-              >
-                {{USER_NAME}}
-              </div>
-
-              <!-- Course Completion Text -->
-              <div
-                style="
-                  font-size: 24px;
-                  font-weight: 500;
-                  color: #EAF2F6;
-                  text-align: center;
-                  opacity: 0.9;
-                  max-width: 800px;
-                "
-              >
-                Concluiu com sucesso a formação
-              </div>
-
-              <!-- Course Title -->
-              <div
-                style="
-                  font-size: 28px;
-                  font-weight: 600;
-                  color: #37DFF2;
-                  text-align: center;
-                  letter-spacing: 0.02em;
-                  max-width: 900px;
-                "
-              >
-                "{{SOLUTION_TITLE}}"
-              </div>
-
-              <!-- Description -->
-              <div
-                style="
-                  font-size: 18px;
-                  font-weight: 400;
-                  color: #EAF2F6;
-                  text-align: center;
-                  opacity: 0.8;
-                  max-width: 800px;
-                  margin: 16px 0;
-                "
-              >
-                {{DESCRIPTION}}
-              </div>
-
-              <!-- Course Details -->
-              <div
-                style="
-                  display: flex;
-                  gap: 32px;
-                  align-items: center;
-                  justify-content: center;
-                  flex-wrap: wrap;
-                  margin-top: 24px;
                 "
               >
                 <div
                   style="
-                    font-size: 16px;
+                    font-size: 14px;
+                    color: #64748b;
+                    margin-bottom: 4px;
                     font-weight: 500;
-                    color: #79F0FF;
-                    text-align: center;
-                    padding: 8px 16px;
-                    background: rgba(55, 223, 242, 0.1);
-                    border-radius: 16px;
-                    border: 1px solid rgba(55, 223, 242, 0.2);
                   "
                 >
-                  📚 {{WORKLOAD}}
+                  Duração Total
                 </div>
-
                 <div
                   style="
-                    font-size: 16px;
-                    font-weight: 500;
-                    color: #79F0FF;
-                    text-align: center;
-                    padding: 8px 16px;
-                    background: rgba(55, 223, 242, 0.1);
-                    border-radius: 16px;
-                    border: 1px solid rgba(55, 223, 242, 0.2);
+                    font-size: 18px;
+                    font-weight: 600;
+                    color: #0f172a;
                   "
                 >
-                  ⭐ {{DIFFICULTY}}
+                  {{WORKLOAD}}
                 </div>
               </div>
 
-              <!-- Category and Date -->
               <div
                 style="
-                  display: flex;
-                  gap: 48px;
-                  align-items: center;
-                  justify-content: center;
-                  flex-wrap: wrap;
-                  margin-top: 24px;
+                  text-align: center;
                 "
               >
                 <div
                   style="
-                    font-size: 16px;
+                    font-size: 14px;
+                    color: #64748b;
+                    margin-bottom: 4px;
                     font-weight: 500;
-                    color: #EAF2F6;
-                    opacity: 0.7;
-                    text-align: center;
                   "
                 >
-                  Categoria: {{SOLUTION_CATEGORY}}
+                  Data de Conclusão
                 </div>
-
                 <div
                   style="
-                    font-size: 16px;
-                    font-weight: 500;
-                    color: #EAF2F6;
-                    opacity: 0.7;
-                    text-align: center;
+                    font-size: 18px;
+                    font-weight: 600;
+                    color: #0f172a;
                   "
                 >
-                  Concluído em: {{IMPLEMENTATION_DATE}}
+                  {{IMPLEMENTATION_DATE}}
                 </div>
               </div>
+            </div>
+          </div>
 
-              <!-- Validation Code -->
+          <!-- Footer -->
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              border-top: 2px solid #e2e8f0;
+              padding-top: 24px;
+              margin-top: auto;
+            "
+          >
+            <div
+              style="
+                font-size: 14px;
+                color: #64748b;
+              "
+            >
+              Plataforma: VIVER DE IA
+            </div>
+            
+            <div
+              style="
+                text-align: right;
+              "
+            >
               <div
                 style="
-                  position: absolute;
-                  bottom: 24px;
-                  right: 0px;
                   font-size: 12px;
-                  font-weight: 400;
-                  color: #EAF2F6;
-                  opacity: 0.5;
+                  color: #64748b;
+                  margin-bottom: 4px;
+                "
+              >
+                Código de Validação
+              </div>
+              <div
+                style="
+                  font-size: 14px;
+                  font-weight: 600;
+                  color: #0f172a;
                   font-family: monospace;
                 "
               >
-                Código: {{VALIDATION_CODE}}
+                {{VALIDATION_CODE}}
               </div>
             </div>
           </div>
@@ -323,9 +304,9 @@ export class CertificateTemplateEngine {
         min-width: 1200px !important;
         min-height: 900px !important;
         aspect-ratio: 4/3 !important;
-        background-color: #0A0D0F !important;
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%) !important;
         position: relative !important;
-        font-family: Inter, Poppins, Manrope, sans-serif !important;
+        font-family: Inter, system-ui, sans-serif !important;
         -webkit-font-smoothing: antialiased !important;
         -moz-osx-font-smoothing: grayscale !important;
         overflow: hidden !important;
@@ -341,7 +322,7 @@ export class CertificateTemplateEngine {
         .pixel-perfect-certificate {
           width: 297mm !important;
           height: 210mm !important;
-          background-color: #0A0D0F !important;
+          background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%) !important;
           -webkit-print-color-adjust: exact !important;
           print-color-adjust: exact !important;
         }
@@ -454,19 +435,33 @@ export class CertificateTemplateEngine {
     ];
   }
 
-  // Função auxiliar para calcular carga horária
+  // Função auxiliar para calcular carga horária baseada nos dados reais
   private calculateWorkload(data: CertificateData): string {
     if (data.workload) return data.workload;
     
-    // Estimar baseado em número de módulos/lições
-    const totalContent = (data.totalModules || 0) + (data.totalLessons || 0);
+    // Se temos dados específicos de lições
+    const totalLessons = data.totalLessons || 0;
+    const totalModules = data.totalModules || 0;
     
-    if (totalContent >= 20) return '12+ horas';
-    if (totalContent >= 15) return '8-10 horas';  
-    if (totalContent >= 10) return '6-8 horas';
-    if (totalContent >= 5) return '4-6 horas';
+    // Calcular baseado em dados reais das aulas
+    if (totalLessons > 0) {
+      // Fórmula: 30 minutos por aula em média
+      const estimatedHours = Math.ceil(totalLessons * 0.5);
+      return `${estimatedHours} horas`;
+    }
     
-    return '2-4 horas';
+    if (totalModules > 0) {
+      // Fórmula: 2 horas por módulo em média
+      const estimatedHours = totalModules * 2;
+      return `${estimatedHours} horas`;
+    }
+    
+    // Fallback baseado no tipo de conteúdo
+    if (data.solutionTitle?.toLowerCase().includes('formação')) {
+      return '8+ horas';
+    }
+    
+    return '4-6 horas';
   }
 
   // Função auxiliar para determinar nível de dificuldade

@@ -58,26 +58,29 @@ export class CertificatePDFGenerator {
       ]);
 
       console.log('📸 [PDF-ELEMENT] Capturando canvas...');
-      // Canvas generation com configurações otimizadas
+      // Canvas generation com configurações super otimizadas
       const canvasPromise = html2canvas(element, {
-        scale,
-        backgroundColor: '#0A0D0F',
-        useCORS: true,
-        allowTaint: false,
-        imageTimeout: 8000,
-        logging: true, // Habilitar logs para debug
-        width: 1123,
-        height: 950,
-        windowWidth: 1123,
-        windowHeight: 950,
+        scale: 3, // Maior escala para melhor qualidade
+        backgroundColor: '#ffffff',
+        useCORS: false, // Desabilitar CORS para evitar problemas
+        allowTaint: true, // Permitir taint para gradientes complexos
+        imageTimeout: 15000, // Timeout maior para imagens
+        logging: false, // Desabilitar logs para performance
+        width: 1200,
+        height: 900,
+        windowWidth: 1200,
+        windowHeight: 900,
         scrollX: 0,
         scrollY: 0,
-        foreignObjectRendering: false, // Desabilitar para melhor compatibilidade
-        removeContainer: true, // Limpar container após uso
+        foreignObjectRendering: true, // Habilitar para melhor renderização
+        removeContainer: false, // Manter container
+        x: 0,
+        y: 0,
         ignoreElements: (el) => {
           return el.classList?.contains('ignore-pdf') || 
                  el.tagName === 'SCRIPT' || 
-                 el.tagName === 'STYLE';
+                 el.tagName === 'NOSCRIPT' ||
+                 (el as HTMLElement).style?.display === 'none';
         },
         onclone: (clonedDoc, element) => {
           console.log('🔧 [PDF-ELEMENT] Configurando clone para captura...');

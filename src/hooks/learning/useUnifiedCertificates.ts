@@ -52,7 +52,7 @@ export const useUnifiedCertificates = (courseId?: string) => {
       try {
       // Buscar todos os certificados com dados das tabelas relacionadas
       const [learningCertsResult, solutionCertsResult] = await Promise.all([
-        // Certificados de cursos com dados completos
+        // Certificados de cursos com dados completos incluindo lessons
         supabase
           .from('learning_certificates')
           .select(`
@@ -62,7 +62,12 @@ export const useUnifiedCertificates = (courseId?: string) => {
               description, 
               cover_image_url,
               created_at,
-              updated_at
+              updated_at,
+              video_lessons (
+                id,
+                title,
+                duration
+              )
             )
           `)
           .eq('user_id', user.id)
@@ -99,17 +104,26 @@ export const useUnifiedCertificates = (courseId?: string) => {
 
         // Unificar certificados com padronização de dados otimizada
         const allCertificates: UnifiedCertificate[] = [
-          ...filteredLearningCerts.map(cert => ({
-            ...cert,
-            type: 'course' as const,
-            title: cert.learning_courses?.title || 'Curso',
-            description: cert.learning_courses?.description,
-            image_url: cert.learning_courses?.cover_image_url,
-            course_id: cert.course_id,
-            completion_date: cert.completion_date || cert.issued_at,
-            template_id: cert.template_id,
-            metadata: cert.metadata || {}
-          })),
+          ...filteredLearningCerts.map(cert => {
+            const course = cert.learning_courses;
+            const lessons = course?.video_lessons || [];
+            
+            return {
+              ...cert,
+              type: 'course' as const,
+              title: course?.title || 'Curso',
+              description: course?.description,
+              image_url: course?.cover_image_url,
+              course_id: cert.course_id,
+              completion_date: cert.completion_date || cert.issued_at,
+              template_id: cert.template_id,
+              metadata: {
+                ...cert.metadata,
+                totalLessons: lessons.length,
+                totalDuration: lessons.reduce((acc: number, lesson: any) => acc + (lesson.duration || 30), 0)
+              }
+            };
+          }),
           ...(solutionCerts || []).map(cert => ({
             ...cert,
             type: 'solution' as const,
@@ -246,8 +260,8 @@ export const useUnifiedCertificates = (courseId?: string) => {
         position: fixed;
         left: -10000px;
         top: 0;
-        width: 1123px;
-        height: 920px;
+        width: 1200px;
+        height: 900px;
         pointer-events: none;
         z-index: -1;
       `;
@@ -261,7 +275,7 @@ export const useUnifiedCertificates = (courseId?: string) => {
         document.fonts?.ready || Promise.resolve()
       ]);
 
-      const certificateElement = offscreenElement.querySelector('.certificate-container') as HTMLElement;
+      const certificateElement = offscreenElement.querySelector('.pixel-perfect-certificate') as HTMLElement;
       if (!certificateElement) {
         throw new Error('Elemento do certificado não encontrado');
       }
@@ -312,19 +326,29 @@ export const useUnifiedCertificates = (courseId?: string) => {
     }
   };
 
-  // Função auxiliar para calcular carga horária baseada no tipo e conteúdo
+  // Função auxiliar para calcular carga horária baseada no tipo e conteúdo real
   const generateWorkload = (certificate: UnifiedCertificate): string => {
-    // Se tem dados específicos de módulos/lições
-    const totalModules = certificate.metadata?.totalModules || 0;
+    // Se tem dados específicos de duração total
+    const totalDuration = certificate.metadata?.totalDuration;
+    if (totalDuration) {
+      const hours = Math.ceil(totalDuration / 60); // Converter minutos para horas
+      return `${hours} horas`;
+    }
+    
+    // Se tem dados específicos de lições
     const totalLessons = certificate.metadata?.totalLessons || 0;
-    const totalContent = totalModules + totalLessons;
+    if (totalLessons > 0) {
+      const estimatedHours = Math.ceil(totalLessons * 0.5); // 30min por lição
+      return `${estimatedHours} horas`;
+    }
     
-    if (totalContent >= 20) return '12+ horas';
-    if (totalContent >= 15) return '8-10 horas';
-    if (totalContent >= 10) return '6-8 horas';
-    if (totalContent >= 5) return '4-6 horas';
+    // Estimar baseado no tipo e título
+    const title = certificate.title.toLowerCase();
     
-    // Estimar baseado no tipo
+    if (title.includes('formação') || title.includes('mastery')) {
+      return '12+ horas';
+    }
+    
     if (certificate.type === 'course') {
       return '6-8 horas'; // Cursos tendem a ser mais longos
     } else {
