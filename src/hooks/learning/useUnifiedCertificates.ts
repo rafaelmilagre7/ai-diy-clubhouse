@@ -63,10 +63,14 @@ export const useUnifiedCertificates = (courseId?: string) => {
               cover_image_url,
               created_at,
               updated_at,
-              video_lessons (
+              learning_modules (
                 id,
                 title,
-                duration
+                learning_lessons (
+                  id,
+                  title,
+                  estimated_time_minutes
+                )
               )
             )
           `)
@@ -106,7 +110,8 @@ export const useUnifiedCertificates = (courseId?: string) => {
         const allCertificates: UnifiedCertificate[] = [
           ...filteredLearningCerts.map(cert => {
             const course = cert.learning_courses;
-            const lessons = course?.video_lessons || [];
+            // Extrair lições de todos os módulos
+            const allLessons = course?.learning_modules?.flatMap(module => module.learning_lessons || []) || [];
             
             return {
               ...cert,
@@ -119,8 +124,9 @@ export const useUnifiedCertificates = (courseId?: string) => {
               template_id: cert.template_id,
               metadata: {
                 ...cert.metadata,
-                totalLessons: lessons.length,
-                totalDuration: lessons.reduce((acc: number, lesson: any) => acc + (lesson.duration || 30), 0)
+                totalModules: course?.learning_modules?.length || 0,
+                totalLessons: allLessons.length,
+                totalDuration: allLessons.reduce((acc: number, lesson: any) => acc + (lesson.estimated_time_minutes || 30), 0)
               }
             };
           }),
