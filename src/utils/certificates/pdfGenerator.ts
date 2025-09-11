@@ -222,9 +222,10 @@ export class CertificatePDFGenerator {
           new Promise(resolve => setTimeout(resolve, 800))
         ]);
 
-        const certificateElement = tempDiv!.querySelector('.certificate-container') as HTMLElement;
+        const certificateElement = tempDiv!.querySelector('.certificate-container, .pixel-perfect-certificate') as HTMLElement;
         if (!certificateElement) {
-          throw new Error('Elemento .certificate-container não encontrado no HTML');
+          console.error('❌ [PDF-GEN] Elementos não encontrados. HTML inserido:', tempDiv!.innerHTML.substring(0, 300));
+          throw new Error('Elemento do certificado não encontrado no template - verifique se .certificate-container ou .pixel-perfect-certificate existe');
         }
 
         console.log('📸 [PDF-GEN] Elemento encontrado, gerando canvas...');

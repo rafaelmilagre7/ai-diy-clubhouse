@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Download, ExternalLink, Eye, EyeOff } from "lucide-react";
 import { StaticCertificateTemplate } from "./StaticCertificateTemplate";
@@ -30,13 +30,23 @@ export const CertificatePreview = ({
   const [isVisible, setIsVisible] = useState(true);
   const [certificateElement, setCertificateElement] = useState<HTMLElement | null>(null);
   const [previewElement, setPreviewElement] = useState<HTMLElement | null>(null);
+  const [previewError, setPreviewError] = useState<string | null>(null);
+  const [previewTimeout, setPreviewTimeout] = useState(false);
   const previewRef = useRef<HTMLDivElement>(null);
+  const timeoutRef = useRef<NodeJS.Timeout>();
 
   const handlePreviewReady = (element: HTMLElement) => {
+    console.log('🖼️ [PREVIEW] Preview pronto!');
     setPreviewElement(element);
+    setPreviewError(null);
+    setPreviewTimeout(false);
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
   };
 
   const handleCaptureReady = (element: HTMLElement) => {
+    console.log('📷 [CAPTURE] Elemento de captura pronto!');
     setCertificateElement(element);
   };
   const handleDownload = async () => {
@@ -95,6 +105,22 @@ export const CertificatePreview = ({
   const toggleVisibility = () => {
     setIsVisible(!isVisible);
   };
+
+  // Timeout para preview que não carrega
+  useEffect(() => {
+    if (!previewElement && !previewTimeout && !previewError) {
+      timeoutRef.current = setTimeout(() => {
+        console.warn('⚠️ [PREVIEW] Timeout - preview não carregou em 10s');
+        setPreviewTimeout(true);
+      }, 10000);
+    }
+
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [previewElement, previewTimeout, previewError]);
 
   return (
     <div className={`space-y-6 ${className}`}>
@@ -169,11 +195,60 @@ export const CertificatePreview = ({
             </div>
           </div>
           
-          {!previewElement && (
+          {/* Loading state */}
+          {!previewElement && !previewError && !previewTimeout && (
             <div className="absolute inset-0 flex items-center justify-center bg-background/80 rounded-lg">
               <div className="flex flex-col items-center gap-2">
                 <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
                 <p className="text-sm text-muted-foreground">Preparando certificado...</p>
+              </div>
+            </div>
+          )}
+
+          {/* Timeout state */}
+          {previewTimeout && !previewElement && (
+            <div className="absolute inset-0 flex items-center justify-center bg-background/80 rounded-lg">
+              <div className="flex flex-col items-center gap-3 text-center">
+                <div className="w-8 h-8 text-yellow-500">⚠️</div>
+                <div>
+                  <p className="text-sm font-medium text-foreground">Tempo esgotado</p>
+                  <p className="text-xs text-muted-foreground mt-1">O certificado está demorando para carregar</p>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    setPreviewTimeout(false);
+                    setPreviewError(null);
+                    setPreviewElement(null);
+                  }}
+                >
+                  Tentar novamente
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Error state */}
+          {previewError && (
+            <div className="absolute inset-0 flex items-center justify-center bg-background/80 rounded-lg">
+              <div className="flex flex-col items-center gap-3 text-center">
+                <div className="w-8 h-8 text-red-500">❌</div>
+                <div>
+                  <p className="text-sm font-medium text-foreground">Erro na visualização</p>
+                  <p className="text-xs text-muted-foreground mt-1">{previewError}</p>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    setPreviewError(null);
+                    setPreviewTimeout(false);
+                    setPreviewElement(null);
+                  }}
+                >
+                  Tentar novamente
+                </Button>
               </div>
             </div>
           )}

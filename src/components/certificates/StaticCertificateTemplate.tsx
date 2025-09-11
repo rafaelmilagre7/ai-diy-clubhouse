@@ -18,23 +18,58 @@ export const StaticCertificateTemplate = ({
     const container = containerRef.current;
     if (!container) return;
 
-    // Usar o template engine unificado para manter o design aprovado
-    const template = templateEngine.generateDefaultTemplate();
-    const html = templateEngine.processTemplate(template, data);
-    const css = templateEngine.optimizeCSS(template.css_styles);
+    console.log('🎨 [STATIC-CERT] Iniciando renderização...');
 
-    // Inserir conteúdo processado
-    container.innerHTML = `<style>${css}</style>${html}`;
+    try {
+      // Usar o template engine unificado para manter o design aprovado
+      const template = templateEngine.generateDefaultTemplate();
+      const html = templateEngine.processTemplate(template, data);
+      const css = templateEngine.optimizeCSS(template.css_styles);
 
-    // Aguardar renderização e notificar quando pronto
-    const timer = setTimeout(() => {
-      const certificateElement = container.querySelector('.certificate-container') as HTMLElement;
-      if (certificateElement && onReady) {
-        onReady(certificateElement);
-      }
-    }, 200);
+      // Inserir conteúdo processado
+      container.innerHTML = `<style>${css}</style><div class="certificate-container">${html}</div>`;
 
-    return () => clearTimeout(timer);
+      console.log('🔄 [STATIC-CERT] HTML inserido, aguardando renderização...');
+
+      // Aguardar renderização com verificações robustas
+      let attempts = 0;
+      const maxAttempts = 10;
+      const checkInterval = 300;
+
+      const checkAndNotify = () => {
+        attempts++;
+        const certificateElement = container.querySelector('.certificate-container, .pixel-perfect-certificate') as HTMLElement;
+        
+        console.log(`🔍 [STATIC-CERT] Tentativa ${attempts}/${maxAttempts} - Elemento encontrado:`, !!certificateElement);
+        
+        if (certificateElement) {
+          // Verificar se o elemento tem conteúdo visível
+          const hasContent = certificateElement.children.length > 0 || certificateElement.textContent?.trim();
+          
+          if (hasContent && onReady) {
+            console.log('✅ [STATIC-CERT] Certificado pronto com conteúdo!');
+            onReady(certificateElement);
+            return;
+          }
+        }
+
+        if (attempts < maxAttempts) {
+          setTimeout(checkAndNotify, checkInterval);
+        } else {
+          console.error('❌ [STATIC-CERT] Timeout - certificado não renderizou após', maxAttempts * checkInterval, 'ms');
+          // Mesmo assim, tentar retornar o que temos
+          if (certificateElement && onReady) {
+            onReady(certificateElement);
+          }
+        }
+      };
+
+      // Começar verificação
+      setTimeout(checkAndNotify, checkInterval);
+
+    } catch (error) {
+      console.error('❌ [STATIC-CERT] Erro na renderização:', error);
+    }
   }, [data, onReady]);
 
   return (
