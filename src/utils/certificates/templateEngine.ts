@@ -11,6 +11,13 @@ export interface CertificateData {
   validationCode: string;
   courseTitle?: string;
   benefits?: string[];
+  // Novos campos enriquecidos
+  description?: string;
+  workload?: string;
+  difficulty?: string;
+  categoryDetailed?: string;
+  totalModules?: number;
+  totalLessons?: number;
 }
 
 export interface CertificateTemplate {
@@ -195,6 +202,63 @@ export class CertificateTemplateEngine {
                 "{{SOLUTION_TITLE}}"
               </div>
 
+              <!-- Description -->
+              <div
+                style="
+                  font-size: 18px;
+                  font-weight: 400;
+                  color: #EAF2F6;
+                  text-align: center;
+                  opacity: 0.8;
+                  max-width: 800px;
+                  margin: 16px 0;
+                "
+              >
+                {{DESCRIPTION}}
+              </div>
+
+              <!-- Course Details -->
+              <div
+                style="
+                  display: flex;
+                  gap: 32px;
+                  align-items: center;
+                  justify-content: center;
+                  flex-wrap: wrap;
+                  margin-top: 24px;
+                "
+              >
+                <div
+                  style="
+                    font-size: 16px;
+                    font-weight: 500;
+                    color: #79F0FF;
+                    text-align: center;
+                    padding: 8px 16px;
+                    background: rgba(55, 223, 242, 0.1);
+                    border-radius: 16px;
+                    border: 1px solid rgba(55, 223, 242, 0.2);
+                  "
+                >
+                  📚 {{WORKLOAD}}
+                </div>
+
+                <div
+                  style="
+                    font-size: 16px;
+                    font-weight: 500;
+                    color: #79F0FF;
+                    text-align: center;
+                    padding: 8px 16px;
+                    background: rgba(55, 223, 242, 0.1);
+                    border-radius: 16px;
+                    border: 1px solid rgba(55, 223, 242, 0.2);
+                  "
+                >
+                  ⭐ {{DIFFICULTY}}
+                </div>
+              </div>
+
               <!-- Category and Date -->
               <div
                 style="
@@ -203,7 +267,7 @@ export class CertificateTemplateEngine {
                   align-items: center;
                   justify-content: center;
                   flex-wrap: wrap;
-                  margin-top: 32px;
+                  margin-top: 24px;
                 "
               >
                 <div
@@ -321,7 +385,12 @@ export class CertificateTemplateEngine {
       '{{VALIDATION_CODE}}': data.validationCode || 'Código não informado',
       '{{CERTIFICATE_ID}}': data.certificateId || 'ID não informado',
       '{{COMPLETION_TYPE}}': 'Formação',
-      '{{COURSE_TITLE}}': data.courseTitle || data.solutionTitle || 'Curso'
+      '{{COURSE_TITLE}}': data.courseTitle || data.solutionTitle || 'Curso',
+      // Novos campos enriquecidos
+      '{{DESCRIPTION}}': data.description || 'Certificado de conclusão de formação em inteligência artificial',
+      '{{WORKLOAD}}': data.workload || this.calculateWorkload(data),
+      '{{DIFFICULTY}}': data.difficulty || this.getDifficultyLevel(data),
+      '{{CATEGORY_DETAILED}}': data.categoryDetailed || data.solutionCategory || 'Formação'
     };
 
     // Aplicar substituições
@@ -383,6 +452,38 @@ export class CertificateTemplateEngine {
     return [
       this.generatePixelPerfectTemplate()
     ];
+  }
+
+  // Função auxiliar para calcular carga horária
+  private calculateWorkload(data: CertificateData): string {
+    if (data.workload) return data.workload;
+    
+    // Estimar baseado em número de módulos/lições
+    const totalContent = (data.totalModules || 0) + (data.totalLessons || 0);
+    
+    if (totalContent >= 20) return '12+ horas';
+    if (totalContent >= 15) return '8-10 horas';  
+    if (totalContent >= 10) return '6-8 horas';
+    if (totalContent >= 5) return '4-6 horas';
+    
+    return '2-4 horas';
+  }
+
+  // Função auxiliar para determinar nível de dificuldade
+  private getDifficultyLevel(data: CertificateData): string {
+    if (data.difficulty) return data.difficulty;
+    
+    const title = (data.solutionTitle || '').toLowerCase();
+    
+    if (title.includes('avançado') || title.includes('expert') || title.includes('mastery')) {
+      return 'Avançado';
+    }
+    
+    if (title.includes('intermediário') || title.includes('intermediate') || title.includes('plus')) {
+      return 'Intermediário';
+    }
+    
+    return 'Iniciante';
   }
 }
 

@@ -52,7 +52,7 @@ export const useUnifiedCertificates = (courseId?: string) => {
       try {
       // Buscar todos os certificados com dados das tabelas relacionadas
       const [learningCertsResult, solutionCertsResult] = await Promise.all([
-        // Certificados de cursos
+        // Certificados de cursos com dados completos
         supabase
           .from('learning_certificates')
           .select(`
@@ -60,13 +60,15 @@ export const useUnifiedCertificates = (courseId?: string) => {
             learning_courses:course_id (
               title, 
               description, 
-              cover_image_url
+              cover_image_url,
+              created_at,
+              updated_at
             )
           `)
           .eq('user_id', user.id)
           .order('issued_at', { ascending: false }),
         
-        // Certificados de soluções
+        // Certificados de soluções com dados completos
         supabase
           .from('solution_certificates')
           .select(`
@@ -74,7 +76,10 @@ export const useUnifiedCertificates = (courseId?: string) => {
             solutions (
               title, 
               description, 
-              thumbnail_url
+              thumbnail_url,
+              category,
+              difficulty,
+              created_at
             )
           `)
           .eq('user_id', user.id)
@@ -207,7 +212,7 @@ export const useUnifiedCertificates = (courseId?: string) => {
       const { pdfGenerator } = await import('@/utils/certificates/pdfGenerator');
       const { templateEngine } = await import('@/utils/certificates/templateEngine');
       
-        // Dados padronizados para certificado
+        // Dados padronizados enriquecidos para certificado
         const certificateData = {
           userName: user?.user_metadata?.full_name || user?.email || "Usuário",
           solutionTitle: certificate.title,
@@ -220,7 +225,14 @@ export const useUnifiedCertificates = (courseId?: string) => {
             certificate.completion_date || certificate.issued_at
           ),
           certificateId: certificate.id,
-          validationCode: certificate.validation_code
+          validationCode: certificate.validation_code,
+          // Campos enriquecidos
+          description: certificate.description || generateDescription(certificate),
+          workload: generateWorkload(certificate),
+          difficulty: generateDifficulty(certificate),
+          categoryDetailed: certificate.type === 'solution' ? 'Solução de IA' : 'Formação',
+          totalModules: certificate.metadata?.totalModules,
+          totalLessons: certificate.metadata?.totalLessons
         };
 
       // Template com design aprovado
@@ -287,6 +299,52 @@ export const useUnifiedCertificates = (courseId?: string) => {
       .toLowerCase()
       .substring(0, 50); // Limitar tamanho
     return `certificado-${cleanTitle}-${validationCode}.pdf`;
+  };
+
+  // Função auxiliar para gerar descrição automática
+  const generateDescription = (certificate: UnifiedCertificate): string => {
+    if (certificate.description) return certificate.description;
+    
+    if (certificate.type === 'course') {
+      return `Certificado de conclusão do curso ${certificate.title}, demonstrando domínio das competências necessárias.`;
+    } else {
+      return `Certificado de implementação da solução ${certificate.title}, validando a aplicação prática dos conhecimentos.`;
+    }
+  };
+
+  // Função auxiliar para calcular carga horária baseada no tipo e conteúdo
+  const generateWorkload = (certificate: UnifiedCertificate): string => {
+    // Se tem dados específicos de módulos/lições
+    const totalModules = certificate.metadata?.totalModules || 0;
+    const totalLessons = certificate.metadata?.totalLessons || 0;
+    const totalContent = totalModules + totalLessons;
+    
+    if (totalContent >= 20) return '12+ horas';
+    if (totalContent >= 15) return '8-10 horas';
+    if (totalContent >= 10) return '6-8 horas';
+    if (totalContent >= 5) return '4-6 horas';
+    
+    // Estimar baseado no tipo
+    if (certificate.type === 'course') {
+      return '6-8 horas'; // Cursos tendem a ser mais longos
+    } else {
+      return '2-4 horas'; // Soluções são mais práticas
+    }
+  };
+
+  // Função auxiliar para determinar dificuldade
+  const generateDifficulty = (certificate: UnifiedCertificate): string => {
+    const title = certificate.title.toLowerCase();
+    
+    if (title.includes('avançado') || title.includes('expert') || title.includes('mastery')) {
+      return 'Avançado';
+    }
+    
+    if (title.includes('intermediário') || title.includes('intermediate') || title.includes('plus')) {
+      return 'Intermediário';
+    }
+    
+    return 'Iniciante';
   };
 
   return { 

@@ -106,8 +106,32 @@ export class CertificatePDFGenerator {
           });
         }
       }).catch((canvasError) => {
-        console.error('❌ [PDF-ELEMENT] html2canvas falhou:', canvasError);
-        throw new Error(`Falha no html2canvas: ${canvasError.message || 'Erro desconhecido'}`);
+        console.error('❌ [PDF-ELEMENT] html2canvas falhou:', {
+          message: canvasError?.message,
+          name: canvasError?.name,
+          stack: canvasError?.stack,
+          errorType: typeof canvasError,
+          canvasError
+        });
+        
+        // Diagnosticar erro específico do html2canvas
+        let errorMessage = 'Falha na conversão para imagem';
+        
+        if (canvasError?.message?.includes('SecurityError')) {
+          errorMessage = 'Erro de segurança - Problema com CORS ou imagens externas';
+        } else if (canvasError?.message?.includes('InvalidStateError')) {
+          errorMessage = 'Estado inválido - Elemento não renderizado corretamente';
+        } else if (canvasError?.message?.includes('NetworkError')) {
+          errorMessage = 'Erro de rede - Verifique sua conexão';
+        } else if (canvasError?.message?.includes('timeout')) {
+          errorMessage = 'Tempo esgotado na captura da imagem';
+        } else if (canvasError?.name === 'AbortError') {
+          errorMessage = 'Operação cancelada durante a captura';
+        } else if (canvasError?.message) {
+          errorMessage = `Erro html2canvas: ${canvasError.message}`;
+        }
+        
+        throw new Error(errorMessage);
       });
       
       // Corrida entre canvas generation e timeout
@@ -222,11 +246,22 @@ export class CertificatePDFGenerator {
           new Promise(resolve => setTimeout(resolve, 800))
         ]);
 
+        // Aguardar elementos estarem prontos
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
         const certificateElement = tempDiv!.querySelector('.certificate-container, .pixel-perfect-certificate') as HTMLElement;
         if (!certificateElement) {
-          console.error('❌ [PDF-GEN] Elementos não encontrados. HTML inserido:', tempDiv!.innerHTML.substring(0, 300));
-          throw new Error('Elemento do certificado não encontrado no template - verifique se .certificate-container ou .pixel-perfect-certificate existe');
+          console.error('❌ [PDF-GEN] Elementos não encontrados no DOM. Verificando seletores...');
+          
+          // Diagnóstico detalhado
+          const allElements = tempDiv!.querySelectorAll('*');
+          console.error('❌ [PDF-GEN] Elementos encontrados:', Array.from(allElements).map(el => el.className || el.tagName).slice(0, 10));
+          console.error('❌ [PDF-GEN] HTML atual (primeiros 500 chars):', tempDiv!.innerHTML.substring(0, 500));
+          
+          throw new Error('Elemento do certificado não encontrado (.certificate-container ou .pixel-perfect-certificate)');
         }
+        
+        console.log('✅ [PDF-GEN] Elemento encontrado:', certificateElement.className, certificateElement.offsetWidth, 'x', certificateElement.offsetHeight);
 
         console.log('📸 [PDF-GEN] Elemento encontrado, gerando canvas...');
         return this.generateFromElement(certificateElement, data, options);
