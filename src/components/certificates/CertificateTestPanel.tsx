@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,8 +8,8 @@ import { templateEngine, pdfGenerator } from '@/utils/certificates';
 import { toast } from 'sonner';
 
 export const CertificateTestPanel = () => {
-  const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isGeneratingPreview, setIsGeneratingPreview] = React.useState(false);
+  const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
 
   const generateTestCertificate = async () => {
     setIsGeneratingPreview(true);
@@ -25,8 +25,8 @@ export const CertificateTestPanel = () => {
         validationCode: 'LOVABLE-' + Math.random().toString(36).substr(2, 8).toUpperCase()
       };
 
-      // Gerar template com novo design
-      const template = templateEngine.generateDefaultTemplate();
+      // Gerar template pixel-perfect
+      const template = templateEngine.generatePixelPerfectTemplate();
       const html = templateEngine.processTemplate(template, testData);
       const css = templateEngine.optimizeCSS(template.css_styles);
 
@@ -35,8 +35,8 @@ export const CertificateTestPanel = () => {
       const url = URL.createObjectURL(blob);
       setPreviewUrl(url);
 
-      toast.success('Certificado de teste gerado!', {
-        description: 'Novo design verde/turquesa aplicado com sucesso'
+      toast.success('Certificado pixel-perfect gerado!', {
+        description: 'Novo design baseado na imagem de referência aplicado'
       });
 
     } catch (error) {
@@ -130,13 +130,13 @@ export const CertificateTestPanel = () => {
         </div>
 
         <div className="mt-4 p-4 bg-emerald-50 rounded-lg border border-emerald-200">
-          <h4 className="font-medium text-emerald-900 mb-2">Correções Aplicadas:</h4>
+          <h4 className="font-medium text-emerald-900 mb-2">Novo Design Pixel-Perfect:</h4>
           <ul className="text-sm text-emerald-800 space-y-1">
-            <li>✅ Fundo branco corrigido</li>
-            <li>✅ Novo gradiente verde/turquesa</li>
-            <li>✅ Melhor contraste de texto</li>
+            <li>✅ Design idêntico à imagem de referência</li>
+            <li>✅ Fundo escuro (#0A0D0F) com moldura turquesa</li>
+            <li>✅ Tipografia precisa "VIVER DE IA"</li>
+            <li>✅ Proporção 4:3 responsiva (1200×900px)</li>
             <li>✅ Background preservado no PDF</li>
-            <li>✅ Design moderno VIVER DE IA</li>
           </ul>
         </div>
       </CardContent>

@@ -24,6 +24,9 @@ export { UnifiedCertificateViewer } from '@/components/certificates/UnifiedCerti
 export { StaticCertificateTemplate } from '@/components/certificates/StaticCertificateTemplate';
 export { CertificateErrorBoundary } from '@/components/certificates/CertificateErrorBoundary';
 export { CertificateTemplateSelector } from '@/components/certificates/CertificateTemplateSelector';
+export { CertificateRefreshButton } from '@/components/certificates/CertificateRefreshButton';
+export { CertificateTestPanel } from '@/components/certificates/CertificateTestPanel';
+export { PixelPerfectCertificateTemplate } from '@/components/certificates/PixelPerfectCertificateTemplate';
 
 // Hooks especializados
 export { useUnifiedCertificates } from '@/hooks/learning/useUnifiedCertificates';
