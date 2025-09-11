@@ -38,20 +38,33 @@ export class CertificatePDFGenerator {
       margins = { top: 0, right: 0, bottom: 0, left: 0 }
     } = options;
 
+    let canvasTimeoutId: NodeJS.Timeout;
+    
     try {
-      console.log('🎨 Iniciando geração de PDF do certificado...');
+      console.log('🎨 [PDF-ELEMENT] Iniciando geração de PDF do elemento...');
 
-      // Garantir que o elemento esteja pronto
-      await this.waitForImages(element);
-      await this.waitForFonts();
+      // Timeout para html2canvas
+      const canvasTimeoutPromise = new Promise((_, reject) => {
+        canvasTimeoutId = setTimeout(() => {
+          reject(new Error('Timeout no html2canvas (20s)'));
+        }, 20000);
+      });
+      
+      console.log('⏳ [PDF-ELEMENT] Aguardando imagens e fontes...');
+      // Garantir que o elemento esteja pronto com timeout reduzido
+      await Promise.all([
+        this.waitForImages(element),
+        this.waitForFonts()
+      ]);
 
-      // Configurar canvas com fundo preservado
-      const canvas = await html2canvas(element, {
+      console.log('📸 [PDF-ELEMENT] Capturando canvas...');
+      // Canvas generation com timeout
+      const canvasPromise = html2canvas(element, {
         scale,
-        backgroundColor: '#0a0f1c',
+        backgroundColor: '#0A0D0F',
         useCORS: true,
         allowTaint: false,
-        imageTimeout: 15000,
+        imageTimeout: 10000, // Reduzido de 15s para 10s
         logging: false,
         width: 1123,
         height: 950,
@@ -59,14 +72,19 @@ export class CertificatePDFGenerator {
         windowHeight: 950,
         ignoreElements: (el) => el.classList?.contains('ignore-pdf'),
         onclone: (clonedDoc) => {
-          // Forçar aplicação de backgrounds no clone
+          // Garantir backgrounds no clone
           const certificateContainer = clonedDoc.querySelector('.certificate-container') as HTMLElement;
           if (certificateContainer) {
-            certificateContainer.style.background = 'linear-gradient(135deg, #00c9a7 0%, #00a688 50%, #008f75 100%)';
+            certificateContainer.style.background = '#0F1114';
             certificateContainer.style.backgroundAttachment = 'local';
           }
         }
       });
+      
+      // Corrida entre canvas generation e timeout
+      const canvas = await Promise.race([canvasPromise, canvasTimeoutPromise]) as HTMLCanvasElement;
+      
+      clearTimeout(canvasTimeoutId);
 
       console.log('📸 Canvas gerado:', {
         width: canvas.width,
@@ -116,43 +134,81 @@ export class CertificatePDFGenerator {
     data: CertificateData,
     options: PDFGenerationOptions = {}
   ): Promise<Blob> {
-    console.log('🎨 Gerando PDF a partir de HTML...');
-    
-    // Elemento temporário otimizado
-    const tempDiv = document.createElement('div');
-    tempDiv.style.cssText = `
-      position: fixed;
-      left: -10000px;
-      top: 0;
-      width: 1123px;
-      height: 950px;
-      pointer-events: none;
-      z-index: -1;
-      overflow: hidden;
-    `;
-    
-    // HTML completo com estilos inline
-    tempDiv.innerHTML = `<style>${css}</style>${html}`;
-    document.body.appendChild(tempDiv);
+    console.log('🎨 [PDF-GEN] Iniciando geração a partir de HTML...');
+    let tempDiv: HTMLDivElement | null = null;
+    let timeoutId: NodeJS.Timeout;
     
     try {
-      // Aguardar renderização e fontes
-      await Promise.all([
-        this.waitForFonts(),
-        new Promise(resolve => setTimeout(resolve, 800))
-      ]);
+      // Timeout interno de 25 segundos
+      const timeoutPromise = new Promise((_, reject) => {
+        timeoutId = setTimeout(() => {
+          reject(new Error('Timeout na renderização HTML (25s)'));
+        }, 25000);
+      });
+      
+      // Elemento temporário otimizado
+      tempDiv = document.createElement('div');
+      tempDiv.style.cssText = `
+        position: fixed;
+        left: -10000px;
+        top: 0;
+        width: 1123px;
+        height: 950px;
+        pointer-events: none;
+        z-index: -1;
+        overflow: hidden;
+      `;
+      
+      console.log('🔧 [PDF-GEN] Inserindo HTML no DOM...');
+      tempDiv.innerHTML = `<style>${css}</style>${html}`;
+      document.body.appendChild(tempDiv);
+      
+      // Aguardar renderização com timeout
+      const renderingPromise = (async () => {
+        console.log('⏳ [PDF-GEN] Aguardando fontes e renderização...');
+        await Promise.all([
+          this.waitForFonts(),
+          new Promise(resolve => setTimeout(resolve, 800))
+        ]);
 
-      const certificateElement = tempDiv.querySelector('.certificate-container') as HTMLElement;
-      if (!certificateElement) {
-        throw new Error('Elemento do certificado não encontrado no HTML');
-      }
+        const certificateElement = tempDiv!.querySelector('.certificate-container') as HTMLElement;
+        if (!certificateElement) {
+          throw new Error('Elemento .certificate-container não encontrado no HTML');
+        }
 
-      const blob = await this.generateFromElement(certificateElement, data, options);
-      console.log('✅ PDF gerado com sucesso a partir do HTML');
+        console.log('📸 [PDF-GEN] Elemento encontrado, gerando canvas...');
+        return this.generateFromElement(certificateElement, data, options);
+      })();
+      
+      // Corrida entre renderização e timeout
+      const blob = await Promise.race([renderingPromise, timeoutPromise]) as Blob;
+      
+      clearTimeout(timeoutId!);
+      console.log('✅ [PDF-GEN] PDF gerado com sucesso a partir do HTML');
       return blob;
       
+    } catch (error: any) {
+      clearTimeout(timeoutId!);
+      console.error('❌ [PDF-GEN] Erro na geração:', error);
+      
+      if (error.message?.includes('Timeout')) {
+        throw new Error('Timeout na renderização HTML - tente novamente');
+      } else if (error.message?.includes('não encontrado')) {
+        throw new Error('Estrutura HTML inválida - elemento certificado não encontrado');
+      }
+      
+      throw error;
+      
     } finally {
-      document.body.removeChild(tempDiv);
+      // Cleanup seguro
+      if (tempDiv && tempDiv.parentNode) {
+        try {
+          document.body.removeChild(tempDiv);
+          console.log('🧹 [PDF-GEN] Cleanup do DOM concluído');
+        } catch (cleanupError) {
+          console.warn('⚠️ [PDF-GEN] Erro no cleanup (não crítico):', cleanupError);
+        }
+      }
     }
   }
 

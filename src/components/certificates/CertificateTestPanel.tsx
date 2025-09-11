@@ -1,49 +1,62 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { FileImage, Download, ExternalLink, RefreshCw } from 'lucide-react';
-import { CertificateRefreshButton } from './CertificateRefreshButton';
+import { RefreshCw, FileImage, Download, ExternalLink, X } from 'lucide-react';
 import { templateEngine, pdfGenerator } from '@/utils/certificates';
+import { CertificateRefreshButton } from './CertificateRefreshButton';
+import { useOptimizedCertificateGeneration } from '@/hooks/useOptimizedCertificateGeneration';
+import OptimizedLoadingScreen from '@/components/common/OptimizedLoadingScreen';
 import { toast } from 'sonner';
 
 export const CertificateTestPanel = () => {
-  const [isGeneratingPreview, setIsGeneratingPreview] = React.useState(false);
-  const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  
+  const { 
+    generateWithRetry, 
+    generationState, 
+    loadingState,
+    updateProgress,
+    cancelGeneration,
+    isGenerating 
+  } = useOptimizedCertificateGeneration({
+    maxAttempts: 3,
+    timeoutMs: 30000,
+    showProgress: true
+  });
 
   const generateTestCertificate = async () => {
-    setIsGeneratingPreview(true);
-    
-    try {
-      // Dados de teste
+    if (isGenerating) return;
+
+    const result = await generateWithRetry(async () => {
+      console.log('🧪 [CERT-TEST] Iniciando geração de certificado de teste...');
+      
       const testData = {
-        userName: 'Nicholas Machado',
-        solutionTitle: 'Formação Lovable - Desenvolvimento IA',
-        solutionCategory: 'Formação Técnica',
-        implementationDate: new Date().toLocaleDateString('pt-BR'),
-        certificateId: 'TEST-' + Date.now(),
-        validationCode: 'LOVABLE-' + Math.random().toString(36).substr(2, 8).toUpperCase()
+        userName: "João Silva Santos",
+        solutionTitle: "Sistema de Automação com IA",
+        solutionCategory: "Inteligência Artificial",
+        implementationDate: "15 de dezembro de 2024",
+        certificateId: `TEST-${Date.now()}`,
+        validationCode: `VAL-${Math.random().toString(36).substring(2, 8).toUpperCase()}`
       };
 
-      // Gerar template pixel-perfect
-      const template = templateEngine.generatePixelPerfectTemplate();
+      updateProgress('Processando template...', 20);
+      const template = templateEngine.generateDefaultTemplate();
       const html = templateEngine.processTemplate(template, testData);
       const css = templateEngine.optimizeCSS(template.css_styles);
-
-      // Gerar PDF
+      
+      updateProgress('Gerando PDF...', 60);
       const blob = await pdfGenerator.generateFromHTML(html, css, testData);
+      
+      updateProgress('Criando preview...', 90);
       const url = URL.createObjectURL(blob);
       setPreviewUrl(url);
+      
+      return { blob, url };
+    }, 'certificado de teste');
 
-      toast.success('Certificado pixel-perfect gerado!', {
-        description: 'Novo design baseado na imagem de referência aplicado'
-      });
-
-    } catch (error) {
-      console.error('Erro ao gerar certificado de teste:', error);
-      toast.error('Erro ao gerar certificado de teste');
-    } finally {
-      setIsGeneratingPreview(false);
+    if (result) {
+      console.log('🎉 [CERT-TEST] Certificado de teste gerado com sucesso');
     }
   };
 
@@ -72,11 +85,11 @@ export const CertificateTestPanel = () => {
               Teste do Novo Design
             </CardTitle>
             <CardDescription>
-              Teste o certificado com o novo fundo verde/turquesa
+              Teste o certificado com timeout e retry automático
             </CardDescription>
           </div>
           <Badge variant="secondary" className="bg-emerald-100 text-emerald-800">
-            Versão 4.0
+            Versão 5.0
           </Badge>
         </div>
       </CardHeader>
@@ -90,13 +103,14 @@ export const CertificateTestPanel = () => {
 
           <Button 
             onClick={generateTestCertificate}
-            disabled={isGeneratingPreview}
+            disabled={isGenerating}
             className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
           >
-            {isGeneratingPreview ? (
+            {isGenerating ? (
               <>
                 <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                Gerando Certificado...
+                {generationState.currentStep || 'Gerando...'}
+                {loadingState.progress > 0 && ` (${Math.round(loadingState.progress)}%)`}
               </>
             ) : (
               <>
@@ -105,6 +119,29 @@ export const CertificateTestPanel = () => {
               </>
             )}
           </Button>
+
+          {isGenerating && (
+            <Button
+              onClick={cancelGeneration}
+              variant="outline"
+              size="sm"
+              className="w-full border-red-200 text-red-600 hover:bg-red-50"
+            >
+              <X className="w-4 h-4 mr-2" />
+              Cancelar Geração
+            </Button>
+          )}
+
+          {isGenerating && (
+            <OptimizedLoadingScreen
+              message={`${generationState.currentStep} (Tentativa ${generationState.attempt}/${generationState.maxAttempts})`}
+              showProgress={true}
+              progressValue={loadingState.progress}
+              variant="dots"
+              size="sm"
+              className="py-4"
+            />
+          )}
 
           {previewUrl && (
             <div className="flex gap-2">
@@ -130,13 +167,14 @@ export const CertificateTestPanel = () => {
         </div>
 
         <div className="mt-4 p-4 bg-emerald-50 rounded-lg border border-emerald-200">
-          <h4 className="font-medium text-emerald-900 mb-2">Novo Design Pixel-Perfect:</h4>
+          <h4 className="font-medium text-emerald-900 mb-2">Correções Implementadas:</h4>
           <ul className="text-sm text-emerald-800 space-y-1">
-            <li>✅ Design idêntico à imagem de referência</li>
-            <li>✅ Fundo escuro (#0A0D0F) com moldura turquesa</li>
-            <li>✅ Tipografia precisa "VIVER DE IA"</li>
-            <li>✅ Proporção 4:3 responsiva (1200×900px)</li>
-            <li>✅ Background preservado no PDF</li>
+            <li>✅ Timeout máximo de 30 segundos</li>
+            <li>✅ Sistema de retry (até 3 tentativas)</li>
+            <li>✅ Error handling robusto</li>
+            <li>✅ Cleanup automático de DOM</li>
+            <li>✅ Loading state detalhado</li>
+            <li>✅ Botão de cancelar operação</li>
           </ul>
         </div>
       </CardContent>
