@@ -45,10 +45,10 @@ export class CertificatePDFGenerator {
       await this.waitForImages(element);
       await this.waitForFonts();
 
-      // Configurar canvas
+      // Configurar canvas com fundo preservado
       const canvas = await html2canvas(element, {
         scale,
-        backgroundColor: null,
+        backgroundColor: '#0a0f1c',
         useCORS: true,
         allowTaint: false,
         imageTimeout: 15000,
@@ -56,7 +56,16 @@ export class CertificatePDFGenerator {
         width: 1123,
         height: 950,
         windowWidth: 1123,
-        windowHeight: 950
+        windowHeight: 950,
+        ignoreElements: (el) => el.classList?.contains('ignore-pdf'),
+        onclone: (clonedDoc) => {
+          // Forçar aplicação de backgrounds no clone
+          const certificateContainer = clonedDoc.querySelector('.certificate-container') as HTMLElement;
+          if (certificateContainer) {
+            certificateContainer.style.background = 'linear-gradient(135deg, #00c9a7 0%, #00a688 50%, #008f75 100%)';
+            certificateContainer.style.backgroundAttachment = 'local';
+          }
+        }
       });
 
       console.log('📸 Canvas gerado:', {

@@ -10,3 +10,6 @@ export { useTestAccess } from './useTestAccess';
 export { useLearningRedirect } from './useLearningRedirect';
 export { useClearLearningCache } from './useClearLearningCache';
 export { useLessonNavigation } from './useLessonNavigation';
+
+// Hooks de certificados
+export { useCertificateRefresh } from '../certificates/useCertificateRefresh';

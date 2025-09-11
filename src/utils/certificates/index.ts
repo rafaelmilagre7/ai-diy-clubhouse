@@ -7,6 +7,12 @@ export { pdfGenerator } from './pdfGenerator';
 export { templateEngine } from './templateEngine';
 export { validateCertificateCode, generateValidationUrl, isValidValidationCodeFormat } from './validationUtils';
 
+// Utilitários de correção
+export { applyCertificateBackgroundFix } from './backgroundFix';
+
+// Hooks especializados
+export { useCertificateRefresh } from '@/hooks/certificates/useCertificateRefresh';
+
 // Types e interfaces unificadas
 export type { CertificateData, CertificateTemplate } from './templateEngine';
 export type { PDFGenerationOptions } from './pdfGenerator';

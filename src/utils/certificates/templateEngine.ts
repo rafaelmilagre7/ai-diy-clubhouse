@@ -1,4 +1,5 @@
 import { sanitizeCertificateHTML, sanitizeCSS } from '@/utils/htmlSanitizer';
+import '@/utils/certificates/backgroundFix'; // Auto-aplicar fix de background
 
 export interface CertificateData {
   userName: string;
@@ -100,7 +101,8 @@ export class CertificateTemplateEngine {
       .certificate-container {
         width: 1123px !important;
         height: 950px !important;
-        background: linear-gradient(135deg, #0a0f1c 0%, #1a2332 100%) !important;
+        background: linear-gradient(135deg, #00c9a7 0%, #00a688 50%, #008f75 100%) !important;
+        background-attachment: local !important;
         color: #ffffff !important;
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
         position: relative !important;
@@ -120,8 +122,9 @@ export class CertificateTemplateEngine {
         right: 0 !important;
         bottom: 0 !important;
         background: 
-          radial-gradient(circle at 20% 20%, rgba(0, 201, 167, 0.15) 0%, transparent 50%),
-          radial-gradient(circle at 80% 80%, rgba(0, 201, 167, 0.1) 0%, transparent 50%) !important;
+          radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 40%),
+          radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.08) 0%, transparent 40%),
+          radial-gradient(circle at 50% 10%, rgba(0, 150, 130, 0.3) 0%, transparent 60%) !important;
         pointer-events: none !important;
         z-index: 0 !important;
       }
@@ -156,10 +159,10 @@ export class CertificateTemplateEngine {
       .main-title {
         font-size: 48px !important;
         font-weight: 700 !important;
-        color: #00c9a7 !important;
+        color: #ffffff !important;
         margin: 0 0 20px 0 !important;
         letter-spacing: -0.02em !important;
-        text-shadow: 0 2px 10px rgba(0, 201, 167, 0.3) !important;
+        text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
         display: block !important;
         text-align: center !important;
       }
@@ -167,7 +170,7 @@ export class CertificateTemplateEngine {
       .divider-line {
         width: 120px !important;
         height: 3px !important;
-        background: linear-gradient(90deg, transparent, #00c9a7, transparent) !important;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent) !important;
         margin: 0 auto !important;
         border-radius: 2px !important;
         display: block !important;
@@ -207,7 +210,7 @@ export class CertificateTemplateEngine {
       .user-underline {
         width: 300px !important;
         height: 2px !important;
-        background: linear-gradient(90deg, transparent, #00c9a7, transparent) !important;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent) !important;
         margin: 0 auto !important;
         border-radius: 1px !important;
       }
@@ -220,8 +223,8 @@ export class CertificateTemplateEngine {
       }
 
       .solution-box {
-        background: rgba(0, 201, 167, 0.08) !important;
-        border: 1px solid rgba(0, 201, 167, 0.25) !important;
+        background: rgba(255, 255, 255, 0.15) !important;
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
         border-radius: 12px !important;
         padding: 30px 40px !important;
         margin: 20px auto !important;
@@ -232,9 +235,10 @@ export class CertificateTemplateEngine {
       .solution-name {
         font-size: 32px !important;
         font-weight: 700 !important;
-        color: #00c9a7 !important;
+        color: #ffffff !important;
         margin: 0 0 10px 0 !important;
         line-height: 1.3 !important;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2) !important;
       }
 
       .solution-category {
@@ -301,12 +305,12 @@ export class CertificateTemplateEngine {
 
       .validation-code {
         font-size: 16px !important;
-        color: #00c9a7 !important;
+        color: #ffffff !important;
         font-weight: 700 !important;
-        background: rgba(0, 201, 167, 0.1) !important;
+        background: rgba(255, 255, 255, 0.2) !important;
         padding: 8px 16px !important;
         border-radius: 8px !important;
-        border: 1px solid rgba(0, 201, 167, 0.3) !important;
+        border: 1px solid rgba(255, 255, 255, 0.4) !important;
         font-family: 'JetBrains Mono', monospace !important;
         letter-spacing: 0.5px !important;
       }
@@ -318,11 +322,11 @@ export class CertificateTemplateEngine {
       .signature-handwritten {
         font-family: 'Brush Script MT', 'Lucida Handwriting', cursive !important;
         font-size: 28px !important;
-        color: #00c9a7 !important;
+        color: #ffffff !important;
         margin-bottom: 8px !important;
         transform: rotate(-2deg) !important;
         letter-spacing: 1px !important;
-        text-shadow: 0 2px 4px rgba(0, 201, 167, 0.3) !important;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
         font-weight: normal !important;
       }
 
@@ -358,11 +362,14 @@ export class CertificateTemplateEngine {
           height: 210mm;
           border-radius: 0;
           box-shadow: none;
+          background: linear-gradient(135deg, #00c9a7 0%, #00a688 50%, #008f75 100%) !important;
+          background-attachment: local !important;
         }
         
         * {
           -webkit-print-color-adjust: exact !important;
           print-color-adjust: exact !important;
+          color-adjust: exact !important;
         }
       }
 
@@ -387,14 +394,17 @@ export class CertificateTemplateEngine {
     `;
 
     return {
-      name: 'VIVER DE IA Certificado Moderno',
+      name: 'VIVER DE IA Certificado Verde 2025',
       html_template: htmlTemplate,
       css_styles: cssStyles,
       metadata: {
-        version: '3.0',
-        type: 'modern',
+        version: '4.0',
+        type: 'lovable_modern',
         author: 'VIVER DE IA',
-        description: 'Template moderno com as cores da plataforma e layout espaçado'
+        description: 'Template moderno com fundo verde/turquesa baseado no novo design VIVER DE IA',
+        backgroundColor: '#00c9a7',
+        backgroundGradient: 'linear-gradient(135deg, #00c9a7 0%, #00a688 50%, #008f75 100%)',
+        updated: new Date().toISOString()
       }
     };
   }
@@ -471,6 +481,7 @@ export class CertificateTemplateEngine {
         text-rendering: optimizeLegibility !important;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
+        color-adjust: exact !important;
       }
       
       .certificate-rendered {
@@ -484,6 +495,8 @@ export class CertificateTemplateEngine {
         display: block !important;
         position: relative !important;
         box-sizing: border-box !important;
+        background: linear-gradient(135deg, #00c9a7 0%, #00a688 50%, #008f75 100%) !important;
+        background-attachment: local !important;
       }
     `;
 
