@@ -1,10 +1,10 @@
 
 import React from "react";
 import { CertificateTemplate } from "@/components/certificates/CertificateTemplate";
-import { CertificateData, type CertificateTemplate as TemplateType } from "@/utils/certificates/templateEngine";
+import { CertificateData, templateEngine } from "@/utils/certificates/templateEngine";
 
 interface CertificateRendererProps {
-  template: {
+  template?: {
     id?: string;
     name?: string;
     html_template: string;
@@ -22,27 +22,25 @@ interface CertificateRendererProps {
 }
 
 export const CertificateRenderer = ({ template, data, onReady }: CertificateRendererProps) => {
-  // Converter para formato unificado
-  const unifiedTemplate: TemplateType = {
-    id: template.id,
-    name: template.name,
-    html_template: template.html_template,
-    css_styles: template.css_styles
-  };
+  // SEMPRE usar o template hardcoded "VIVER DE IA" neon
+  // Ignorar completamente o template do banco de dados
+  const hardcodedTemplate = templateEngine.generateDefaultTemplate();
+  
+  console.log('🎨 CertificateRenderer: Forçando uso do template hardcoded VIVER DE IA');
 
   const unifiedData: CertificateData = {
     userName: data.userName,
     solutionTitle: data.solutionTitle,
     solutionCategory: data.solutionCategory,
     implementationDate: data.implementationDate,
-    certificateId: data.validationCode, // Usar validation code como ID temporário
+    certificateId: data.validationCode,
     validationCode: data.validationCode,
     benefits: data.benefits
   };
 
   return (
     <CertificateTemplate
-      template={unifiedTemplate}
+      template={hardcodedTemplate}
       data={unifiedData}
       onReady={onReady}
     />

@@ -22,16 +22,17 @@ export const useCertificateRefresh = () => {
     // Forçar regeneração do template padrão
     const newTemplate = templateEngine.generateDefaultTemplate();
     
-    // Armazenar versão atualizada no localStorage temporariamente
+    // Limpar cache do template engine e forçar versão 5.0
+    localStorage.removeItem('certificate-template-cache');
     localStorage.setItem('certificate-template-updated', JSON.stringify({
       template: newTemplate,
       timestamp: Date.now(),
-      version: '5.0'
+      version: '5.0-hardcoded'
     }));
     
     refreshCertificates();
     
-    console.log('🎨 Template de certificado atualizado para versão 5.0 - VIVER DE IA Neon');
+    console.log('🎨 Template hardcoded VIVER DE IA neon ativo - versão 5.0');
   }, [refreshCertificates]);
 
   return {

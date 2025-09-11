@@ -3,7 +3,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Download, ExternalLink, X, RefreshCw, Printer } from "lucide-react";
 import { CertificateRenderer } from "./CertificateRenderer";
-import { useCertificateTemplate } from "@/hooks/learning/useCertificateTemplate";
 import { usePDFGenerator } from "@/hooks/learning/usePDFGenerator";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -19,7 +18,9 @@ interface CertificateModalProps {
 export const CertificateModal = ({ certificate, isOpen, onClose }: CertificateModalProps) => {
   const { user } = useAuth();
   const certificateRef = useRef<HTMLDivElement>(null);
-  const { data: template, isLoading: templateLoading, clearCache } = useCertificateTemplate();
+  // Não usar mais template do banco - sempre usar hardcoded
+  const template = { id: 'hardcoded', name: 'VIVER DE IA Neon', html_template: '', css_styles: '' };
+  const templateLoading = false;
   const { generatePDF, downloadPDF, openCertificateInNewTab, isGenerating } = usePDFGenerator();
 
   const solution = certificate.solutions;
@@ -49,9 +50,8 @@ export const CertificateModal = ({ certificate, isOpen, onClose }: CertificateMo
   }, [template]);
 
   const handleRefreshTemplate = () => {
-    console.log('🔄 Forçando refresh do template...');
-    clearCache();
-    toast.info('Template atualizado!');
+    console.log('🔄 Template hardcoded VIVER DE IA sempre ativo');
+    toast.info('Template VIVER DE IA neon ativo!');
   };
 
   const handleDownload = async () => {
@@ -83,33 +83,7 @@ export const CertificateModal = ({ certificate, isOpen, onClose }: CertificateMo
     await openCertificateInNewTab(certificateRef.current, certificateData);
   };
 
-  if (templateLoading) {
-    return (
-      <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-[#0a0b14] border-neutral-700">
-          <div className="flex items-center justify-center h-64">
-            <div className="text-white">Carregando template...</div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
-  if (!template) {
-    return (
-      <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-[#0a0b14] border-neutral-700">
-          <div className="flex flex-col items-center justify-center h-64 space-y-4">
-            <div className="text-red-400">Erro: Template não encontrado</div>
-            <Button onClick={handleRefreshTemplate} variant="outline" size="sm">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Tentar Novamente
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
-  }
+  // Template hardcoded sempre disponível - remover loading states
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -172,18 +146,16 @@ export const CertificateModal = ({ certificate, isOpen, onClose }: CertificateMo
           {/* Info do Template */}
           <div className="text-center">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 text-sm">
-              ✓ Template: {template.name} (ID: {template.id})
+              ✓ Template: VIVER DE IA Neon (Hardcoded)
             </div>
           </div>
 
           {/* Debug info (apenas em desenvolvimento) */}
           {import.meta.env.DEV && (
             <div className="text-xs text-gray-500 space-y-1">
-              <div>Template ID: {template.id}</div>
-              <div>Template Name: {template.name}</div>
+              <div>Template: Hardcoded VIVER DE IA</div>
               <div>Certificate ID: {certificate.id}</div>
-              <div>HTML Length: {template.html_template?.length || 0}</div>
-              <div>CSS Length: {template.css_styles?.length || 0}</div>
+              <div>Layout: Fundo escuro + moldura neon turquesa</div>
             </div>
           )}
         </div>
