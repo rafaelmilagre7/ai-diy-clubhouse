@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { CertificatesFilters } from "@/components/learning/certificates/CertificatesFilters";
 import { UnifiedCertificatesList } from "@/components/learning/certificates/UnifiedCertificatesList";
 import { CertificateErrorBoundary } from "@/components/certificates/CertificateErrorBoundary";
-import { CertificateTestPanel } from "@/components/certificates/CertificateTestPanel";
+
 import { useAuth } from "@/contexts/auth";
 import { Award } from "lucide-react";
 
@@ -51,9 +51,6 @@ const CertificatesPage = () => {
       
       <CertificateErrorBoundary>
         <div className="space-y-8">
-          {/* Painel de teste do novo design */}
-          <CertificateTestPanel />
-          
           <CertificatesFilters
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}

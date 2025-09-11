@@ -58,27 +58,56 @@ export class CertificatePDFGenerator {
       ]);
 
       console.log('📸 [PDF-ELEMENT] Capturando canvas...');
-      // Canvas generation com timeout
+      // Canvas generation com configurações otimizadas
       const canvasPromise = html2canvas(element, {
         scale,
         backgroundColor: '#0A0D0F',
         useCORS: true,
         allowTaint: false,
-        imageTimeout: 10000, // Reduzido de 15s para 10s
-        logging: false,
+        imageTimeout: 8000,
+        logging: true, // Habilitar logs para debug
         width: 1123,
         height: 950,
         windowWidth: 1123,
         windowHeight: 950,
-        ignoreElements: (el) => el.classList?.contains('ignore-pdf'),
-        onclone: (clonedDoc) => {
-          // Garantir backgrounds no clone
+        scrollX: 0,
+        scrollY: 0,
+        foreignObjectRendering: false, // Desabilitar para melhor compatibilidade
+        removeContainer: true, // Limpar container após uso
+        ignoreElements: (el) => {
+          return el.classList?.contains('ignore-pdf') || 
+                 el.tagName === 'SCRIPT' || 
+                 el.tagName === 'STYLE';
+        },
+        onclone: (clonedDoc, element) => {
+          console.log('🔧 [PDF-ELEMENT] Configurando clone para captura...');
+          
+          // Garantir backgrounds e estilos no clone
           const certificateContainer = clonedDoc.querySelector('.certificate-container') as HTMLElement;
           if (certificateContainer) {
-            certificateContainer.style.background = '#0F1114';
-            certificateContainer.style.backgroundAttachment = 'local';
+            certificateContainer.style.cssText += `
+              background: #0F1114 !important;
+              background-attachment: local !important;
+              display: block !important;
+              visibility: visible !important;
+              opacity: 1 !important;
+            `;
           }
+          
+          // Aplicar estilos críticos a todos os elementos
+          const allElements = clonedDoc.querySelectorAll('*');
+          allElements.forEach((el: any) => {
+            if (el.style) {
+              el.style.webkitTransform = 'none';
+              el.style.transform = 'none';
+              el.style.webkitFilter = 'none';
+              el.style.filter = 'none';
+            }
+          });
         }
+      }).catch((canvasError) => {
+        console.error('❌ [PDF-ELEMENT] html2canvas falhou:', canvasError);
+        throw new Error(`Falha no html2canvas: ${canvasError.message || 'Erro desconhecido'}`);
       });
       
       // Corrida entre canvas generation e timeout
@@ -122,9 +151,31 @@ export class CertificatePDFGenerator {
       console.log('✅ PDF gerado com sucesso');
       return pdf.output('blob');
 
-    } catch (error) {
-      console.error('❌ Erro ao gerar PDF:', error);
-      throw new Error(`Falha na geração do PDF: ${error.message}`);
+    } catch (error: any) {
+      clearTimeout(canvasTimeoutId!);
+      
+      // Log detalhado para debug
+      console.error('❌ [PDF-ELEMENT] Erro detalhado:', {
+        message: error?.message,
+        name: error?.name,
+        stack: error?.stack,
+        canvasError: error
+      });
+      
+      // Diagnosticar e fornecer mensagem específica
+      let errorMessage = 'Erro na geração do PDF';
+      
+      if (error?.message?.includes('Timeout')) {
+        errorMessage = 'Tempo esgotado na captura da imagem. Tente novamente.';
+      } else if (error?.message?.includes('SecurityError')) {
+        errorMessage = 'Erro de segurança - Problema com imagens ou CORS';
+      } else if (error?.message?.includes('html2canvas')) {
+        errorMessage = 'Falha na conversão para imagem';
+      } else if (error?.message) {
+        errorMessage = `Erro: ${error.message}`;
+      }
+      
+      throw new Error(errorMessage);
     }
   }
 
@@ -189,15 +240,31 @@ export class CertificatePDFGenerator {
       
     } catch (error: any) {
       clearTimeout(timeoutId!);
-      console.error('❌ [PDF-GEN] Erro na geração:', error);
       
-      if (error.message?.includes('Timeout')) {
-        throw new Error('Timeout na renderização HTML - tente novamente');
-      } else if (error.message?.includes('não encontrado')) {
-        throw new Error('Estrutura HTML inválida - elemento certificado não encontrado');
+      // Log detalhado do erro para debug
+      console.error('❌ [PDF-GEN] Erro na geração:', {
+        message: error?.message,
+        name: error?.name,
+        stack: error?.stack,
+        error: error
+      });
+      
+      // Diagnosticar tipo de erro
+      let errorMessage = 'Erro desconhecido na geração do PDF';
+      
+      if (error?.message?.includes('Timeout')) {
+        errorMessage = 'Tempo esgotado - O processo de geração demorou muito. Tente novamente.';
+      } else if (error?.message?.includes('não encontrado')) {
+        errorMessage = 'Template inválido - Estrutura do certificado não encontrada';
+      } else if (error?.message?.includes('html2canvas')) {
+        errorMessage = 'Erro na captura - Falha ao converter o certificado em imagem';
+      } else if (error?.name === 'NetworkError') {
+        errorMessage = 'Erro de conexão - Verifique sua internet e tente novamente';
+      } else if (error?.message) {
+        errorMessage = `Falha na geração: ${error.message}`;
       }
       
-      throw error;
+      throw new Error(errorMessage);
       
     } finally {
       // Cleanup seguro

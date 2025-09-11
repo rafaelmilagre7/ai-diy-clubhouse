@@ -25,7 +25,7 @@ export { StaticCertificateTemplate } from '@/components/certificates/StaticCerti
 export { CertificateErrorBoundary } from '@/components/certificates/CertificateErrorBoundary';
 export { CertificateTemplateSelector } from '@/components/certificates/CertificateTemplateSelector';
 export { CertificateRefreshButton } from '@/components/certificates/CertificateRefreshButton';
-export { CertificateTestPanel } from '@/components/certificates/CertificateTestPanel';
+
 export { PixelPerfectCertificateTemplate } from '@/components/certificates/PixelPerfectCertificateTemplate';
 
 // Hooks especializados
