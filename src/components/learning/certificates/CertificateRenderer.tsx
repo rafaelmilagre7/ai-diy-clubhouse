@@ -1,7 +1,8 @@
 
 import React from "react";
-import { CertificateTemplate } from "@/components/certificates/CertificateTemplate";
+import { PixelPerfectCertificateTemplate } from "@/components/certificates/PixelPerfectCertificateTemplate";
 import { CertificateData, templateEngine } from "@/utils/certificates/templateEngine";
+import '@/styles/pixel-perfect-certificate.css';
 
 interface CertificateRendererProps {
   template?: {
@@ -22,11 +23,8 @@ interface CertificateRendererProps {
 }
 
 export const CertificateRenderer = ({ template, data, onReady }: CertificateRendererProps) => {
-  // SEMPRE usar o template hardcoded "VIVER DE IA" neon
-  // Ignorar completamente o template do banco de dados
-  const hardcodedTemplate = templateEngine.generateDefaultTemplate();
-  
-  console.log('🎨 CertificateRenderer: Forçando uso do template hardcoded VIVER DE IA');
+  // SEMPRE usar o template pixel-perfect "VIVER DE IA" neon v5.0
+  console.log('🎨 CertificateRenderer: Usando template pixel-perfect VIVER DE IA v5.0');
 
   const unifiedData: CertificateData = {
     userName: data.userName,
@@ -35,14 +33,21 @@ export const CertificateRenderer = ({ template, data, onReady }: CertificateRend
     implementationDate: data.implementationDate,
     certificateId: data.validationCode,
     validationCode: data.validationCode,
-    benefits: data.benefits
+    benefits: data.benefits,
+    // Campos enriquecidos com valores padrão inteligentes
+    description: 'Certificado de conclusão de formação em inteligência artificial',
+    workload: '20 horas',
+    difficulty: 'Intermediário',
+    categoryDetailed: data.solutionCategory || 'Formação IA'
   };
 
   return (
-    <CertificateTemplate
-      template={hardcodedTemplate}
-      data={unifiedData}
-      onReady={onReady}
-    />
+    <div className="certificate-preview-container">
+      <PixelPerfectCertificateTemplate
+        data={unifiedData}
+        onReady={onReady}
+        className="certificate-scale-preview"
+      />
+    </div>
   );
 };

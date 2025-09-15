@@ -1,0 +1,213 @@
+/* ===== ESTILOS PIXEL-PERFECT PARA CERTIFICADOS VIVER DE IA ===== */
+
+:root {
+  /* Cores pixel-perfect do certificado */
+  --certificate-bg-global: #0A0D0F;
+  --certificate-bg-inner: #0F1114;
+  --certificate-neon-primary: #7CF6FF;
+  --certificate-neon-secondary: #37DFF2;
+  --certificate-text-primary: #EAF2F6;
+  --certificate-text-neon: #79F0FF;
+  --certificate-text-accent: #28D6EE;
+}
+
+/* Container principal do certificado */
+.viver-de-ia-certificate {
+  width: 1200px !important;
+  height: 900px !important;
+  min-width: 1200px !important;
+  min-height: 900px !important;
+  aspect-ratio: 4/3 !important;
+  background: var(--certificate-bg-global) !important;
+  position: relative !important;
+  font-family: Inter, Poppins, Manrope, system-ui, sans-serif !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+  margin: 0 auto !important;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+  color-adjust: exact !important;
+}
+
+/* Garantir que gradientes funcionem em todos os browsers */
+.viver-de-ia-certificate [style*="linear-gradient"] {
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+}
+
+/* Efeitos de texto neon específicos */
+.certificate-neon-text {
+  background: linear-gradient(180deg, var(--certificate-neon-primary) 0%, var(--certificate-text-accent) 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+  color: transparent !important;
+}
+
+/* Moldura neon otimizada */
+.certificate-neon-frame {
+  background: linear-gradient(135deg, var(--certificate-neon-primary) 0%, var(--certificate-neon-secondary) 100%) !important;
+  box-shadow: 
+    0 0 0 6px rgba(55, 223, 242, 0.15),
+    0 0 20px rgba(55, 223, 242, 0.1),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Área interna com sombra sutil */
+.certificate-inner-area {
+  background: var(--certificate-bg-inner) !important;
+  box-shadow: 
+    inset 0 0 0 1px rgba(255, 255, 255, 0.03),
+    inset 0 0 20px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Tipografia pixel-perfect */
+.certificate-title-main {
+  font-size: 32px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.24em !important;
+  text-transform: uppercase !important;
+  line-height: 1.2 !important;
+  margin: 0 !important;
+}
+
+.certificate-title-sub {
+  font-size: 26px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  color: var(--certificate-text-primary) !important;
+  opacity: 0.85 !important;
+  margin: 0 !important;
+}
+
+.certificate-user-name {
+  font-size: 28px !important;
+  font-weight: 600 !important;
+  color: var(--certificate-neon-primary) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+}
+
+.certificate-course-title {
+  font-size: 24px !important;
+  font-weight: 600 !important;
+  color: var(--certificate-neon-secondary) !important;
+  line-height: 1.3 !important;
+}
+
+/* Responsividade mantendo proporções */
+@media (max-width: 1200px) {
+  .viver-de-ia-certificate {
+    width: 100% !important;
+    height: 75vw !important;
+    min-width: 320px !important;
+    min-height: 240px !important;
+    padding: 24px !important;
+  }
+  
+  .certificate-title-main {
+    font-size: 24px !important;
+    letter-spacing: 0.2em !important;
+  }
+  
+  .certificate-title-sub {
+    font-size: 20px !important;
+    letter-spacing: 0.06em !important;
+  }
+  
+  .certificate-user-name {
+    font-size: 22px !important;
+  }
+  
+  .certificate-course-title {
+    font-size: 18px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .viver-de-ia-certificate {
+    padding: 16px !important;
+  }
+  
+  .certificate-title-main {
+    font-size: 20px !important;
+    letter-spacing: 0.15em !important;
+  }
+  
+  .certificate-title-sub {
+    font-size: 16px !important;
+    letter-spacing: 0.05em !important;
+  }
+  
+  .certificate-user-name {
+    font-size: 18px !important;
+  }
+  
+  .certificate-course-title {
+    font-size: 16px !important;
+  }
+}
+
+/* Estilos para impressão e PDF */
+@media print {
+  .viver-de-ia-certificate {
+    width: 297mm !important;
+    height: 210mm !important;
+    background: var(--certificate-bg-global) !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    page-break-inside: avoid !important;
+  }
+  
+  .certificate-neon-frame {
+    box-shadow: none !important;
+    border: 2px solid var(--certificate-neon-primary) !important;
+  }
+}
+
+/* Otimizações de performance */
+.viver-de-ia-certificate * {
+  transform: translateZ(0) !important;
+  -webkit-backface-visibility: hidden !important;
+  backface-visibility: hidden !important;
+}
+
+/* Container de preview responsivo */
+.certificate-preview-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: auto;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.certificate-preview-container .viver-de-ia-certificate {
+  max-width: 100%;
+  max-height: 80vh;
+  width: auto;
+  height: auto;
+  aspect-ratio: 4/3;
+  transform-origin: center center;
+}
+
+/* Escalas específicas para diferentes contextos */
+.certificate-scale-preview {
+  transform: scale(0.5) !important;
+  transform-origin: top left !important;
+}
+
+.certificate-scale-modal {
+  transform: scale(0.6) !important;
+  transform-origin: center center !important;
+}
+
+.certificate-scale-fullscreen {
+  transform: scale(0.8) !important;
+  transform-origin: center center !important;
+}
