@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback, memo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 import { usePermissions } from "@/hooks/auth/usePermissions";
 import { useInvitesList } from "@/hooks/admin/invites/useInvitesList";
@@ -15,7 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { InviteSystemStatusIndicator } from '@/components/admin/invites/InviteSystemStatusIndicator';
 
-const InvitesManagement = memo(() => {
+const InvitesManagement = () => {
   useDocumentTitle("Gerenciar Convites | Admin");
   
   const { roles } = usePermissions();
@@ -192,8 +192,6 @@ const InvitesManagement = memo(() => {
       />
     </div>
   );
-});
-
-InvitesManagement.displayName = 'InvitesManagement';
+};
 
 export default InvitesManagement;

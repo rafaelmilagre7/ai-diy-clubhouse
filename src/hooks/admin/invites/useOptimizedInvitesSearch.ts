@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useDebouncedState } from '@/hooks/performance/useOptimizedState';
 import { Invite } from './types';
 
@@ -93,40 +93,40 @@ export const useOptimizedInvitesSearch = ({
   }, [invites, filteredInvites.length, currentPage, pageSize]);
 
   // Funções de navegação otimizadas
-  const goToPage = (page: number) => {
+  const goToPage = useCallback((page: number) => {
     if (page >= 1 && page <= stats.totalPages) {
       setCurrentPage(page);
     }
-  };
+  }, [stats.totalPages]);
 
-  const goToNextPage = () => {
+  const goToNextPage = useCallback(() => {
     if (stats.hasNextPage) {
       setCurrentPage(prev => prev + 1);
     }
-  };
+  }, [stats.hasNextPage]);
 
-  const goToPrevPage = () => {
+  const goToPrevPage = useCallback(() => {
     if (stats.hasPrevPage) {
       setCurrentPage(prev => prev - 1);
     }
-  };
+  }, [stats.hasPrevPage]);
 
-  const resetFilters = () => {
+  const resetFilters = useCallback(() => {
     setSearchQuery('');
     setStatusFilter('all');
     setCurrentPage(1);
-  };
+  }, [setSearchQuery]);
 
   // Reset da pagina quando filtros mudam
-  const handleSearchChange = (query: string) => {
+  const handleSearchChange = useCallback((query: string) => {
     setSearchQuery(query);
     setCurrentPage(1);
-  };
+  }, [setSearchQuery]);
 
-  const handleStatusFilterChange = (status: typeof statusFilter) => {
+  const handleStatusFilterChange = useCallback((status: typeof statusFilter) => {
     setStatusFilter(status);
     setCurrentPage(1);
-  };
+  }, []);
 
   return {
     // Estados

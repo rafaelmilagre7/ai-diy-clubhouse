@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback, memo } from "react";
+import { useState, useCallback, memo } from "react";
 import { RefreshCw, Search, Zap, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,7 +22,7 @@ interface SimpleInvitesTabProps {
   onInvitesChange: () => void;
 }
 
-const SimpleInvitesTab = memo<SimpleInvitesTabProps>(({ invites, loading, onInvitesChange }) => {
+const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTabProps) => {
   const [resendDialogOpen, setResendDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [bulkReactivateDialogOpen, setBulkReactivateDialogOpen] = useState(false);
@@ -366,8 +366,6 @@ const SimpleInvitesTab = memo<SimpleInvitesTabProps>(({ invites, loading, onInvi
       />
     </div>
   );
-});
-
-SimpleInvitesTab.displayName = 'SimpleInvitesTab';
+};
 
 export default SimpleInvitesTab;
