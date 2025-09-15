@@ -43,11 +43,11 @@ export class CertificatePDFGenerator {
     try {
       console.log('🎨 [PDF-ELEMENT] Iniciando geração de PDF do elemento...');
 
-      // Timeout para html2canvas
+      // Timeout reduzido para html2canvas
       const canvasTimeoutPromise = new Promise((_, reject) => {
         canvasTimeoutId = setTimeout(() => {
-          reject(new Error('Timeout no html2canvas (20s)'));
-        }, 20000);
+          reject(new Error('Timeout no html2canvas (10s)'));
+        }, 10000);
       });
       
       console.log('⏳ [PDF-ELEMENT] Aguardando imagens e fontes...');

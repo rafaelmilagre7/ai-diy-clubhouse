@@ -217,7 +217,7 @@ export const useUnifiedCertificates = (courseId?: string) => {
     }
   });
   
-  // Download otimizado de certificado
+  // Download simplificado usando React component
   const downloadCertificate = async (certificateId: string) => {
     try {
       const certificate = certificates.find(c => c.id === certificateId);
@@ -226,43 +226,29 @@ export const useUnifiedCertificates = (courseId?: string) => {
         return;
       }
 
-      console.log('📥 Iniciando download do certificado:', certificateId);
+      console.log('📥 [UNIFIED-DOWNLOAD] Iniciando download usando React component');
       
-      // Importar sistema unificado
+      // Importar componente React e PDF generator
       const { pdfGenerator } = await import('@/utils/certificates/pdfGenerator');
-      const { templateEngine } = await import('@/utils/certificates/templateEngine');
+      const { PixelPerfectCertificateTemplate } = await import('@/components/certificates/PixelPerfectCertificateTemplate');
+      const { createElement } = await import('react');
+      const { createRoot } = await import('react-dom/client');
       
-        // Dados padronizados enriquecidos para certificado
-        const certificateData = {
-          userName: user?.user_metadata?.full_name || user?.email || "Usuário",
-          solutionTitle: certificate.title,
-          courseTitle: certificate.type === 'course' ? certificate.title : undefined,
-          solutionCategory: certificate.type === 'solution' ? 'Solução de IA' : 'Curso',
-          implementationDate: formatDateForCertificate(
-            certificate.completion_date || certificate.implementation_date || certificate.issued_at
-          ),
-          completedDate: formatDateForCertificate(
-            certificate.completion_date || certificate.issued_at
-          ),
-          certificateId: certificate.id,
-          validationCode: certificate.validation_code,
-          // Campos enriquecidos
-          description: certificate.description || generateDescription(certificate),
-          workload: generateWorkload(certificate),
-          difficulty: generateDifficulty(certificate),
-          categoryDetailed: certificate.type === 'solution' ? 'Solução de IA' : 'Formação',
-          totalModules: certificate.metadata?.totalModules,
-          totalLessons: certificate.metadata?.totalLessons
-        };
+      // Dados para o certificado
+      const certificateData = {
+        userName: user?.user_metadata?.full_name || user?.email || "Usuário",
+        solutionTitle: certificate.title,
+        solutionCategory: certificate.type === 'solution' ? 'Solução de IA' : 'Curso',
+        implementationDate: formatDateForCertificate(
+          certificate.completion_date || certificate.implementation_date || certificate.issued_at
+        ),
+        certificateId: certificate.id,
+        validationCode: certificate.validation_code
+      };
 
-      // Template com design aprovado
-      const template = templateEngine.generateDefaultTemplate();
-      const html = templateEngine.processTemplate(template, certificateData);
-      const css = templateEngine.optimizeCSS(template.css_styles);
-
-      // Renderização otimizada em elemento off-screen
-      const offscreenElement = document.createElement('div');
-      offscreenElement.style.cssText = `
+      // Criar elemento temporário off-screen
+      const tempContainer = document.createElement('div');
+      tempContainer.style.cssText = `
         position: fixed;
         left: -10000px;
         top: 0;
@@ -271,22 +257,39 @@ export const useUnifiedCertificates = (courseId?: string) => {
         pointer-events: none;
         z-index: -1;
       `;
+      document.body.appendChild(tempContainer);
+
+      // Renderizar o componente React
+      const root = createRoot(tempContainer);
       
-      offscreenElement.innerHTML = `<style>${css}</style>${html}`;
-      document.body.appendChild(offscreenElement);
+      let certificateElement: HTMLElement | null = null;
+      
+      await new Promise<void>((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('Timeout na renderização do certificado'));
+        }, 10000);
 
-      // Aguardar renderização e fontes
-      await Promise.all([
-        new Promise(resolve => setTimeout(resolve, 1000)),
-        document.fonts?.ready || Promise.resolve()
-      ]);
+        const handleReady = (element: HTMLElement) => {
+          console.log('✅ [UNIFIED-DOWNLOAD] Certificado renderizado');
+          certificateElement = element;
+          clearTimeout(timeout);
+          resolve();
+        };
 
-      const certificateElement = offscreenElement.querySelector('.pixel-perfect-certificate') as HTMLElement;
+        const CertificateComponent = createElement(PixelPerfectCertificateTemplate, {
+          data: certificateData,
+          onReady: handleReady
+        });
+
+        root.render(CertificateComponent);
+      });
+
       if (!certificateElement) {
-        throw new Error('Elemento do certificado não encontrado');
+        throw new Error('Falha ao renderizar certificado');
       }
 
       // Gerar PDF
+      console.log('📄 [UNIFIED-DOWNLOAD] Gerando PDF...');
       const blob = await pdfGenerator.generateFromElement(certificateElement, certificateData);
       const filename = generateFilename(certificate.title, certificate.validation_code);
       
@@ -294,10 +297,11 @@ export const useUnifiedCertificates = (courseId?: string) => {
       toast.success('Certificado baixado com sucesso!');
 
       // Cleanup
-      document.body.removeChild(offscreenElement);
+      root.unmount();
+      document.body.removeChild(tempContainer);
       
     } catch (error: any) {
-      console.error('❌ Erro ao fazer download:', error);
+      console.error('❌ [UNIFIED-DOWNLOAD] Erro:', error);
       toast.error('Erro ao fazer download do certificado');
     }
   };
