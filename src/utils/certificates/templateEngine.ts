@@ -93,7 +93,7 @@ export class CertificateTemplateEngine {
             <div
               style="
                 text-align: center;
-                margin-bottom: 64px;
+                margin-bottom: 128px;
               "
             >
               <h1
@@ -109,11 +109,12 @@ export class CertificateTemplateEngine {
                 <span style="color: #EAF2F6;">VIVER</span>
                 <span 
                   style="
-                    background: linear-gradient(180deg, #79F0FF 0%, #28D6EE 100%);
+                    background: linear-gradient(180deg, hsl(186, 100%, 74%) 0%, hsl(190, 85%, 54%) 100%);
                     -webkit-background-clip: text;
                     -webkit-text-fill-color: transparent;
                     background-clip: text;
-                    color: transparent;
+                    color: hsl(186, 100%, 74%);
+                    display: inline-block;
                   "
                 > DE IA</span>
               </h1>
@@ -123,7 +124,6 @@ export class CertificateTemplateEngine {
             <div
               style="
                 text-align: center;
-                margin-bottom: 48px;
               "
             >
               <h2
@@ -140,196 +140,8 @@ export class CertificateTemplateEngine {
                 CERTIFICAMOS QUE
               </h2>
             </div>
-
-            <!-- User Name -->
-            <div
-              style="
-                text-align: center;
-                margin-bottom: 32px;
-              "
-            >
-              <div
-                style="
-                  font-size: 28px;
-                  font-weight: 600;
-                  color: #7CF6FF;
-                  margin-bottom: 8px;
-                  text-transform: uppercase;
-                  letter-spacing: 0.05em;
-                "
-              >
-                {{USER_NAME}}
-              </div>
-            </div>
-
-            <!-- Completion Text -->
-            <div
-              style="
-                text-align: center;
-                margin-bottom: 24px;
-              "
-            >
-              <div
-                style="
-                  font-size: 18px;
-                  color: #EAF2F6;
-                  opacity: 0.8;
-                  margin-bottom: 16px;
-                "
-              >
-                concluiu com sucesso a formação
-              </div>
-            </div>
-
-            <!-- Course Title -->
-            <div
-              style="
-                text-align: center;
-                margin-bottom: 32px;
-              "
-            >
-              <div
-                style="
-                  font-size: 24px;
-                  font-weight: 600;
-                  color: #37DFF2;
-                  line-height: 1.3;
-                  max-width: 700px;
-                  margin: 0 auto;
-                "
-              >
-                {{SOLUTION_TITLE}}
-              </div>
-            </div>
-
-            <!-- Description -->
-            <div
-              style="
-                text-align: center;
-                margin-bottom: 40px;
-              "
-            >
-              <div
-                style="
-                  font-size: 16px;
-                  color: #EAF2F6;
-                  opacity: 0.7;
-                  line-height: 1.5;
-                  max-width: 600px;
-                  margin: 0 auto;
-                  font-style: italic;
-                "
-              >
-                {{DESCRIPTION}}
-              </div>
-            </div>
-
-            <!-- Course Details -->
-            <div
-              style="
-                display: flex;
-                justify-content: center;
-                gap: 64px;
-                margin-bottom: 40px;
-                flex-wrap: wrap;
-              "
-            >
-              <div style="text-align: center;">
-                <div
-                  style="
-                    font-size: 14px;
-                    color: #EAF2F6;
-                    opacity: 0.6;
-                    margin-bottom: 8px;
-                    text-transform: uppercase;
-                    letter-spacing: 0.05em;
-                  "
-                >
-                  Carga Horária
-                </div>
-                <div
-                  style="
-                    font-size: 20px;
-                    font-weight: 600;
-                    color: #7CF6FF;
-                  "
-                >
-                  {{WORKLOAD}}
-                </div>
-              </div>
-
-              <div style="text-align: center;">
-                <div
-                  style="
-                    font-size: 14px;
-                    color: #EAF2F6;
-                    opacity: 0.6;
-                    margin-bottom: 8px;
-                    text-transform: uppercase;
-                    letter-spacing: 0.05em;
-                  "
-                >
-                  Conclusão
-                </div>
-                <div
-                  style="
-                    font-size: 20px;
-                    font-weight: 600;
-                    color: #7CF6FF;
-                  "
-                >
-                  {{IMPLEMENTATION_DATE}}
-                </div>
-              </div>
-            </div>
-
-            <!-- Footer -->
-            <div
-              style="
-                margin-top: auto;
-                display: flex;
-                justify-content: space-between;
-                align-items: end;
-                padding-top: 24px;
-                border-top: 1px solid rgba(234, 242, 246, 0.1);
-              "
-            >
-              <div
-                style="
-                  font-size: 14px;
-                  color: #EAF2F6;
-                  opacity: 0.6;
-                "
-              >
-                Plataforma: VIVER DE IA
-              </div>
-              
-              <div style="text-align: right;">
-                <div
-                  style="
-                    font-size: 12px;
-                    color: #EAF2F6;
-                    opacity: 0.5;
-                    margin-bottom: 4px;
-                  "
-                >
-                  Código de Validação
-                </div>
-                <div
-                  style="
-                    font-size: 14px;
-                    font-weight: 600;
-                    color: #37DFF2;
-                    font-family: monospace;
-                  "
-                >
-                  {{VALIDATION_CODE}}
-                </div>
-              </div>
-            </div>
           </div>
         </div>
-      </div>
     `;
 
     const cssStyles = `
