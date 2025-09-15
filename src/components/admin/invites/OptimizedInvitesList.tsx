@@ -2,10 +2,13 @@ import React, { memo, useCallback } from 'react';
 import { Invite } from '@/hooks/admin/invites/types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Mail, MessageCircle, MoreHorizontal, RefreshCw, Trash2, Calendar, User, Clock } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Mail, MessageCircle, MoreHorizontal, RefreshCw, Trash2, Calendar, User, Clock, Copy } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { formatDistanceToNow, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { toast } from 'sonner';
+import { APP_CONFIG } from '@/config/app';
 
 interface OptimizedInvitesListProps {
   invites: Invite[];
@@ -30,6 +33,20 @@ const InviteListItem = memo<{
   const handleDeleteClick = useCallback(() => {
     onDelete(invite);
   }, [invite, onDelete]);
+
+  const copyInviteLink = useCallback(async () => {
+    const inviteUrl = APP_CONFIG.getAppUrl(`/convite/${invite.token}`);
+    try {
+      await navigator.clipboard.writeText(inviteUrl);
+      toast.success('Link copiado!', {
+        description: 'O link do convite foi copiado para a área de transferência.'
+      });
+    } catch (error) {
+      toast.error('Erro ao copiar link', {
+        description: 'Não foi possível copiar o link. Tente novamente.'
+      });
+    }
+  }, [invite.token]);
 
   const getStatusBadge = useCallback(() => {
     const isUsed = !!invite.used_at;
@@ -114,6 +131,33 @@ const InviteListItem = memo<{
 
       {/* Actions */}
       <div className="flex items-center gap-2 ml-4">
+        <TooltipProvider>
+          {/* Botão Copiar Link - sempre visível */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={copyInviteLink}>
+                <Copy className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Copiar link do convite</p>
+            </TooltipContent>
+          </Tooltip>
+
+          {/* Botão Deletar - sempre visível */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive hover:text-destructive" onClick={handleDeleteClick}>
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Deletar convite</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
+        {/* Dropdown para ações secundárias */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
@@ -128,10 +172,6 @@ const InviteListItem = memo<{
                 <RefreshCw className="h-4 w-4 mr-2" />
               )}
               Reenviar
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleDeleteClick} className="text-destructive focus:text-destructive">
-              <Trash2 className="h-4 w-4 mr-2" />
-              Excluir
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
