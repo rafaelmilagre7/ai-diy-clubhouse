@@ -1,7 +1,7 @@
 
 import React from "react";
 import { PixelPerfectCertificateTemplate } from "@/components/certificates/PixelPerfectCertificateTemplate";
-import { CertificateData, templateEngine } from "@/utils/certificates/templateEngine";
+import { CertificateData } from "@/utils/certificates/templateEngine";
 import '@/styles/pixel-perfect-certificate.css';
 
 interface CertificateRendererProps {
@@ -23,28 +23,23 @@ interface CertificateRendererProps {
 }
 
 export const CertificateRenderer = ({ template, data, onReady }: CertificateRendererProps) => {
-  // SEMPRE usar o template pixel-perfect "VIVER DE IA" neon v5.0
-  console.log('🎨 CertificateRenderer: Usando template pixel-perfect VIVER DE IA v5.0');
+  // TEMPLATE PIXEL-PERFECT BASE - Apenas layout fundamental
+  console.log('🎨 CertificateRenderer: Usando template pixel-perfect VIVER DE IA v6.0 - Layout Base');
 
-  const unifiedData: CertificateData = {
-    userName: data.userName,
-    solutionTitle: data.solutionTitle,
-    solutionCategory: data.solutionCategory,
-    implementationDate: data.implementationDate,
+  // Preparar dados mínimos para o template base
+  const baseData: CertificateData = {
+    userName: data.userName || "Nome do Usuário", 
+    solutionTitle: data.solutionTitle || "Curso de Formação",
+    solutionCategory: data.solutionCategory || "IA",
+    implementationDate: data.implementationDate || new Date().toLocaleDateString('pt-BR'),
     certificateId: data.validationCode,
-    validationCode: data.validationCode,
-    benefits: data.benefits,
-    // Campos enriquecidos com valores padrão inteligentes
-    description: 'Certificado de conclusão de formação em inteligência artificial',
-    workload: '20 horas',
-    difficulty: 'Intermediário',
-    categoryDetailed: data.solutionCategory || 'Formação IA'
+    validationCode: data.validationCode
   };
 
   return (
     <div className="certificate-preview-container">
       <PixelPerfectCertificateTemplate
-        data={unifiedData}
+        data={baseData}
         onReady={onReady}
         className="certificate-scale-preview"
       />

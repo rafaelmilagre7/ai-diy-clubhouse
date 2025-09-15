@@ -2,7 +2,7 @@ import React from 'react';
 import { CertificateData } from '@/utils/certificates/templateEngine';
 
 interface PixelPerfectTemplateProps {
-  data: CertificateData;
+  data?: CertificateData;
   onReady?: (element: HTMLElement) => void;
   className?: string;
 }
@@ -24,12 +24,10 @@ export const PixelPerfectCertificateTemplate = React.forwardRef<HTMLDivElement, 
           if (typeof ref === 'function') ref(el);
           else if (ref) ref.current = el;
         }}
-        className={`viver-de-ia-certificate pixel-perfect-certificate ${className}`}
+        className={`pixel-perfect-certificate ${className}`}
         style={{
           width: '1200px',
           height: '900px',
-          minWidth: '1200px',
-          minHeight: '900px',
           aspectRatio: '4/3',
           background: '#0A0D0F',
           position: 'relative',
@@ -67,17 +65,19 @@ export const PixelPerfectCertificateTemplate = React.forwardRef<HTMLDivElement, 
               borderRadius: '32px',
               position: 'relative',
               boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.03)',
-              padding: '64px 48px',
               boxSizing: 'border-box',
               display: 'flex',
-              flexDirection: 'column'
+              flexDirection: 'column',
+              justifyContent: 'flex-start',
+              alignItems: 'center',
+              paddingTop: '64px'
             }}
           >
             {/* Header Title: VIVER DE IA */}
             <div
               style={{
                 textAlign: 'center',
-                marginBottom: '64px'
+                marginBottom: '128px'
               }}
             >
               <h1
@@ -106,8 +106,7 @@ export const PixelPerfectCertificateTemplate = React.forwardRef<HTMLDivElement, 
             {/* Subtitle: CERTIFICAMOS QUE */}
             <div
               style={{
-                textAlign: 'center',
-                marginBottom: '48px'
+                textAlign: 'center'
               }}
             >
               <h2
@@ -123,193 +122,6 @@ export const PixelPerfectCertificateTemplate = React.forwardRef<HTMLDivElement, 
               >
                 CERTIFICAMOS QUE
               </h2>
-            </div>
-
-            {/* User Name */}
-            <div
-              style={{
-                textAlign: 'center',
-                marginBottom: '32px'
-              }}
-            >
-              <div
-                style={{
-                  fontSize: '28px',
-                  fontWeight: 600,
-                  color: '#7CF6FF',
-                  marginBottom: '8px',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em'
-                }}
-              >
-                {data.userName}
-              </div>
-            </div>
-
-            {/* Completion Text */}
-            <div
-              style={{
-                textAlign: 'center',
-                marginBottom: '24px'
-              }}
-            >
-              <div
-                style={{
-                  fontSize: '18px',
-                  color: '#EAF2F6',
-                  opacity: 0.8,
-                  marginBottom: '16px'
-                }}
-              >
-                concluiu com sucesso a formação
-              </div>
-            </div>
-
-            {/* Course Title */}
-            <div
-              style={{
-                textAlign: 'center',
-                marginBottom: '32px'
-              }}
-            >
-              <div
-                style={{
-                  fontSize: '24px',
-                  fontWeight: 600,
-                  color: '#37DFF2',
-                  lineHeight: 1.3,
-                  maxWidth: '700px',
-                  margin: '0 auto'
-                }}
-              >
-                {data.solutionTitle}
-              </div>
-            </div>
-
-            {/* Description */}
-            <div
-              style={{
-                textAlign: 'center',
-                marginBottom: '40px'
-              }}
-            >
-              <div
-                style={{
-                  fontSize: '16px',
-                  color: '#EAF2F6',
-                  opacity: 0.7,
-                  lineHeight: 1.5,
-                  maxWidth: '600px',
-                  margin: '0 auto',
-                  fontStyle: 'italic'
-                }}
-              >
-                {data.description || 'Certificado de conclusão de formação em inteligência artificial'}
-              </div>
-            </div>
-
-            {/* Course Details */}
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'center',
-                gap: '64px',
-                marginBottom: '40px',
-                flexWrap: 'wrap'
-              }}
-            >
-              <div style={{ textAlign: 'center' }}>
-                <div
-                  style={{
-                    fontSize: '14px',
-                    color: '#EAF2F6',
-                    opacity: 0.6,
-                    marginBottom: '8px',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em'
-                  }}
-                >
-                  Carga Horária
-                </div>
-                <div
-                  style={{
-                    fontSize: '20px',
-                    fontWeight: 600,
-                    color: '#7CF6FF'
-                  }}
-                >
-                  {data.workload || '20 horas'}
-                </div>
-              </div>
-
-              <div style={{ textAlign: 'center' }}>
-                <div
-                  style={{
-                    fontSize: '14px',
-                    color: '#EAF2F6',
-                    opacity: 0.6,
-                    marginBottom: '8px',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em'
-                  }}
-                >
-                  Conclusão
-                </div>
-                <div
-                  style={{
-                    fontSize: '20px',
-                    fontWeight: 600,
-                    color: '#7CF6FF'
-                  }}
-                >
-                  {data.implementationDate}
-                </div>
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div
-              style={{
-                marginTop: 'auto',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'end',
-                paddingTop: '24px',
-                borderTop: '1px solid rgba(234, 242, 246, 0.1)'
-              }}
-            >
-              <div
-                style={{
-                  fontSize: '14px',
-                  color: '#EAF2F6',
-                  opacity: 0.6
-                }}
-              >
-                Plataforma: VIVER DE IA
-              </div>
-              
-              <div style={{ textAlign: 'right' }}>
-                <div
-                  style={{
-                    fontSize: '12px',
-                    color: '#EAF2F6',
-                    opacity: 0.5,
-                    marginBottom: '4px'
-                  }}
-                >
-                  Código de Validação
-                </div>
-                <div
-                  style={{
-                    fontSize: '14px',
-                    fontWeight: 600,
-                    color: '#37DFF2',
-                    fontFamily: 'monospace'
-                  }}
-                >
-                  {data.validationCode}
-                </div>
-              </div>
             </div>
           </div>
         </div>
