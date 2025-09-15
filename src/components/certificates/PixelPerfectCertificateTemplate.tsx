@@ -148,23 +148,6 @@ export const PixelPerfectCertificateTemplate = React.forwardRef<HTMLDivElement, 
               >
                 {data?.solutionTitle || "Curso de Formação"}
               </div>
-              
-              <div
-                style={{
-                  fontSize: '18px',
-                  fontWeight: 400,
-                  color: '#EAF2F6',
-                  opacity: 0.85,
-                  lineHeight: 1.5,
-                  letterSpacing: '0.02em',
-                  maxWidth: '600px',
-                  margin: '0 auto'
-                }}
-              >
-                Este curso capacita o aluno a desempenhar suas funções com excelência, 
-                aplicando os conhecimentos adquiridos em {data?.solutionCategory || "Inteligência Artificial"} 
-                de forma prática e eficiente no mercado de trabalho.
-              </div>
             </div>
 
             {/* Student Info and Validation */}
