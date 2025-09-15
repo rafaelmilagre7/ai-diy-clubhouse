@@ -103,42 +103,45 @@ export const PixelPerfectCertificateTemplate = React.forwardRef<HTMLDivElement, 
               </h1>
             </div>
 
-            {/* Subtitle: CERTIFICADO DE CONCLUSÃO */}
+            {/* Subtitle: CERTIFICAMOS QUE */}
             <div
               style={{
                 textAlign: 'center',
-                marginBottom: '48px'
+                marginBottom: '24px'
               }}
             >
               <h2
                 style={{
-                  fontSize: '20px',
-                  fontWeight: 600,
+                  fontSize: '18px',
+                  fontWeight: 500,
                   margin: 0,
-                  letterSpacing: '0.12em',
+                  letterSpacing: '0.08em',
                   color: '#EAF2F6',
                   textTransform: 'uppercase',
                   opacity: 0.9,
                   lineHeight: 1
                 }}
               >
-                CERTIFICADO DE CONCLUSÃO
+                CERTIFICAMOS QUE
               </h2>
             </div>
 
-            {/* Course Name and Description */}
+            {/* User Name and Description */}
             <div
               style={{
                 textAlign: 'center',
-                marginBottom: '80px'
+                marginBottom: '48px',
+                maxWidth: '800px',
+                margin: '0 auto 48px auto'
               }}
             >
+              {/* User Name in Highlight */}
               <div
                 style={{
-                  fontSize: '36px',
+                  fontSize: '42px',
                   fontWeight: 700,
                   margin: 0,
-                  letterSpacing: '0.04em',
+                  letterSpacing: '0.02em',
                   color: '#7CF6FF',
                   lineHeight: 1.1,
                   textShadow: '0 0 20px rgba(124, 246, 255, 0.3)',
@@ -146,11 +149,31 @@ export const PixelPerfectCertificateTemplate = React.forwardRef<HTMLDivElement, 
                   textTransform: 'uppercase'
                 }}
               >
-                {data?.solutionTitle || "Curso de Formação"}
+                {data?.userName || "Nome do Usuário"}
+              </div>
+              
+              {/* Descriptive Text */}
+              <div
+                style={{
+                  fontSize: '16px',
+                  fontWeight: 400,
+                  color: '#EAF2F6',
+                  opacity: 0.9,
+                  lineHeight: 1.6,
+                  letterSpacing: '0.01em',
+                  textAlign: 'center',
+                  margin: '0 auto',
+                  maxWidth: '600px'
+                }}
+              >
+                Participou do <strong style={{ color: '#7CF6FF', fontWeight: 600 }}>{data?.solutionTitle || "Curso de Formação"}</strong>, 
+                no período de {data?.implementationDate ? new Date(data.implementationDate).toLocaleDateString('pt-BR') : new Date().toLocaleDateString('pt-BR')}, 
+                adquirindo conhecimentos sobre <strong style={{ color: '#7CF6FF', fontWeight: 600 }}>{data?.solutionCategory || "Inteligência Artificial"}</strong>, 
+                com carga horária de <strong style={{ color: '#7CF6FF', fontWeight: 600 }}>8 horas</strong>.
               </div>
             </div>
 
-            {/* Student Info and Validation */}
+            {/* Signature and Validation */}
             <div
               style={{
                 position: 'absolute',
@@ -162,41 +185,48 @@ export const PixelPerfectCertificateTemplate = React.forwardRef<HTMLDivElement, 
                 alignItems: 'flex-end'
               }}
             >
-              {/* Student Info - Left Side */}
+              {/* Signature - Left Side */}
               <div
                 style={{
-                  textAlign: 'left'
+                  textAlign: 'center',
+                  flex: 1
                 }}
               >
+                {/* Signature Line */}
                 <div
                   style={{
-                    fontSize: '18px',
-                    fontWeight: 600,
+                    width: '200px',
+                    height: '1px',
+                    background: 'linear-gradient(90deg, transparent 0%, #7CF6FF 50%, transparent 100%)',
+                    margin: '0 auto 8px auto'
+                  }}
+                ></div>
+                
+                {/* Signature Script */}
+                <div
+                  style={{
+                    fontSize: '28px',
+                    fontFamily: 'Brush Script MT, cursive, serif',
                     color: '#7CF6FF',
-                    marginBottom: '12px',
-                    letterSpacing: '0.02em'
+                    marginBottom: '4px',
+                    fontWeight: 400,
+                    textShadow: '0 0 10px rgba(124, 246, 255, 0.2)'
                   }}
                 >
-                  {data?.userName || "Nome do Usuário"}
+                  Rafael Milagre
                 </div>
+                
+                {/* Printed Name */}
                 <div
                   style={{
-                    fontSize: '14px',
+                    fontSize: '12px',
                     color: '#EAF2F6',
                     opacity: 0.8,
-                    marginBottom: '6px'
+                    letterSpacing: '0.05em',
+                    textTransform: 'uppercase'
                   }}
                 >
-                  Data de Conclusão: {data?.implementationDate || new Date().toLocaleDateString('pt-BR')}
-                </div>
-                <div
-                  style={{
-                    fontSize: '14px',
-                    color: '#EAF2F6',
-                    opacity: 0.8
-                  }}
-                >
-                  Duração do Curso: 8 horas
+                  Rafael Milagre
                 </div>
               </div>
 
