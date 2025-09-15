@@ -180,3 +180,5 @@ export const OptimizedInvitesList = memo<OptimizedInvitesListProps>(({
 });
 
 OptimizedInvitesList.displayName = 'OptimizedInvitesList';
+
+export default OptimizedInvitesList;

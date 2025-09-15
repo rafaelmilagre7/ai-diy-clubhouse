@@ -1,4 +1,4 @@
-import React, { useState, useCallback, memo, Suspense } from "react";
+import React, { useState, useCallback, memo } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -6,9 +6,7 @@ import {
   DialogContent,
   DialogTrigger,
 } from "@/components/ui/dialog";
-
-// Lazy loading do conteúdo do modal
-const CreateInviteContent = React.lazy(() => import('./CreateInviteContent'));
+import CreateInviteContent from './CreateInviteContent';
 
 interface OptimizedCreateInviteDialogProps {
   roles: any[];
@@ -46,25 +44,13 @@ const OptimizedCreateInviteDialog = memo<OptimizedCreateInviteDialogProps>(({ ro
         </Button>
       </DialogTrigger>
       <DialogContent className="dark max-w-md max-h-[90vh] overflow-y-auto bg-gray-900 text-white border-gray-700">
-        <Suspense fallback={
-          <div className="p-8 flex flex-col items-center justify-center min-h-[400px]">
-            <div className="relative mb-4">
-              <div className="w-12 h-12 border-4 border-gray-700 border-t-blue-500 rounded-full animate-spin"></div>
-            </div>
-            <h3 className="text-lg font-semibold text-white mb-2">Carregando...</h3>
-            <p className="text-gray-400 text-center text-sm">
-              Preparando formulário de convite
-            </p>
-          </div>
-        }>
-          {(open || shouldPreload) && (
-            <CreateInviteContent 
-              roles={roles}
-              onInviteCreated={handleInviteCreated}
-              onClose={() => setOpen(false)}
-            />
-          )}
-        </Suspense>
+        {open && (
+          <CreateInviteContent 
+            roles={roles}
+            onInviteCreated={handleInviteCreated}
+            onClose={() => setOpen(false)}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );

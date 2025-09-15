@@ -165,3 +165,5 @@ export const InvitesPagination = memo<InvitesPaginationProps>(({
 });
 
 InvitesPagination.displayName = 'InvitesPagination';
+
+export default InvitesPagination;
