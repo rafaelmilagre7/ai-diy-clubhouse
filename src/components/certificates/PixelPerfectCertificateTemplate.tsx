@@ -103,7 +103,7 @@ export const PixelPerfectCertificateTemplate = React.forwardRef<HTMLDivElement, 
               </h1>
             </div>
 
-            {/* Subtitle: CERTIFICAMOS QUE */}
+            {/* Subtitle: CERTIFICADO DE CONCLUSÃO */}
             <div
               style={{
                 textAlign: 'center',
@@ -112,87 +112,62 @@ export const PixelPerfectCertificateTemplate = React.forwardRef<HTMLDivElement, 
             >
               <h2
                 style={{
-                  fontSize: '26px',
+                  fontSize: '20px',
                   fontWeight: 600,
                   margin: 0,
-                  letterSpacing: '0.08em',
-                  textTransform: 'uppercase',
+                  letterSpacing: '0.12em',
                   color: '#EAF2F6',
-                  opacity: 0.85
+                  textTransform: 'uppercase',
+                  opacity: 0.9,
+                  lineHeight: 1
                 }}
               >
-                CERTIFICAMOS QUE
+                CERTIFICADO DE CONCLUSÃO
               </h2>
             </div>
 
-            {/* User Name */}
+            {/* Course Name and Description */}
             <div
               style={{
                 textAlign: 'center',
-                marginBottom: '64px'
+                marginBottom: '80px'
               }}
             >
-              <h3
+              <div
                 style={{
-                  fontSize: '48px',
+                  fontSize: '36px',
                   fontWeight: 700,
                   margin: 0,
                   letterSpacing: '0.04em',
                   color: '#7CF6FF',
                   lineHeight: 1.1,
-                  textShadow: '0 0 20px rgba(124, 246, 255, 0.3)'
-                }}
-              >
-                {data?.userName || "Nome do Usuário"}
-              </h3>
-            </div>
-
-            {/* Course Completion */}
-            <div
-              style={{
-                textAlign: 'center',
-                marginBottom: '48px'
-              }}
-            >
-              <div
-                style={{
-                  fontSize: '22px',
-                  fontWeight: 500,
-                  color: '#EAF2F6',
-                  opacity: 0.9,
-                  lineHeight: 1.4,
-                  letterSpacing: '0.02em'
-                }}
-              >
-                CONCLUIU COM SUCESSO O CURSO
-              </div>
-              <div
-                style={{
-                  fontSize: '28px',
-                  fontWeight: 600,
-                  color: '#FFFFFF',
-                  marginTop: '16px',
-                  letterSpacing: '0.04em',
+                  textShadow: '0 0 20px rgba(124, 246, 255, 0.3)',
+                  marginBottom: '32px',
                   textTransform: 'uppercase'
                 }}
               >
                 {data?.solutionTitle || "Curso de Formação"}
               </div>
+              
               <div
                 style={{
                   fontSize: '18px',
                   fontWeight: 400,
-                  color: '#7CF6FF',
-                  marginTop: '8px',
-                  letterSpacing: '0.06em',
-                  textTransform: 'uppercase'
+                  color: '#EAF2F6',
+                  opacity: 0.85,
+                  lineHeight: 1.5,
+                  letterSpacing: '0.02em',
+                  maxWidth: '600px',
+                  margin: '0 auto'
                 }}
               >
-                CATEGORIA: {data?.solutionCategory || "IA"}
+                Este curso capacita o aluno a desempenhar suas funções com excelência, 
+                aplicando os conhecimentos adquiridos em {data?.solutionCategory || "Inteligência Artificial"} 
+                de forma prática e eficiente no mercado de trabalho.
               </div>
             </div>
 
-            {/* Date and Validation */}
+            {/* Student Info and Validation */}
             <div
               style={{
                 position: 'absolute',
@@ -201,9 +176,10 @@ export const PixelPerfectCertificateTemplate = React.forwardRef<HTMLDivElement, 
                 right: '48px',
                 display: 'flex',
                 justifyContent: 'space-between',
-                alignItems: 'center'
+                alignItems: 'flex-end'
               }}
             >
+              {/* Student Info - Left Side */}
               <div
                 style={{
                   textAlign: 'left'
@@ -211,25 +187,37 @@ export const PixelPerfectCertificateTemplate = React.forwardRef<HTMLDivElement, 
               >
                 <div
                   style={{
-                    fontSize: '14px',
-                    color: '#EAF2F6',
-                    opacity: 0.7,
-                    marginBottom: '4px'
+                    fontSize: '18px',
+                    fontWeight: 600,
+                    color: '#7CF6FF',
+                    marginBottom: '12px',
+                    letterSpacing: '0.02em'
                   }}
                 >
-                  DATA DE CONCLUSÃO
+                  {data?.userName || "Nome do Usuário"}
                 </div>
                 <div
                   style={{
-                    fontSize: '16px',
-                    fontWeight: 600,
-                    color: '#FFFFFF'
+                    fontSize: '14px',
+                    color: '#EAF2F6',
+                    opacity: 0.8,
+                    marginBottom: '6px'
                   }}
                 >
-                  {data?.implementationDate || new Date().toLocaleDateString('pt-BR')}
+                  Data de Conclusão: {data?.implementationDate || new Date().toLocaleDateString('pt-BR')}
+                </div>
+                <div
+                  style={{
+                    fontSize: '14px',
+                    color: '#EAF2F6',
+                    opacity: 0.8
+                  }}
+                >
+                  Duração do Curso: 8 horas
                 </div>
               </div>
 
+              {/* Validation Code - Right Side */}
               <div
                 style={{
                   textAlign: 'right'
