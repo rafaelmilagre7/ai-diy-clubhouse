@@ -85,26 +85,45 @@ export class CertificatePDFGenerator {
         onclone: (clonedDoc, element) => {
           console.log('🔧 [PDF-ELEMENT] Configurando clone para captura...');
           
-          // Garantir backgrounds e estilos no clone
-          const certificateContainer = clonedDoc.querySelector('.certificate-container') as HTMLElement;
-          if (certificateContainer) {
-            certificateContainer.style.cssText += `
-              background: #0F1114 !important;
-              background-attachment: local !important;
-              display: block !important;
-              visibility: visible !important;
-              opacity: 1 !important;
-            `;
+          // Garantir backgrounds e estilos no clone - compatível com pdf template
+          const certificateContainers = [
+            '.certificate-container', 
+            '.pixel-perfect-certificate',
+            '.pdf-certificate-template'
+          ];
+          
+          for (const selector of certificateContainers) {
+            const container = clonedDoc.querySelector(selector) as HTMLElement;
+            if (container) {
+              container.style.cssText += `
+                background: #0A0D0F !important;
+                background-attachment: local !important;
+                display: block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+                position: relative !important;
+              `;
+              break;
+            }
           }
           
-          // Aplicar estilos críticos a todos os elementos
+          // Remover propriedades problemáticas para html2canvas
           const allElements = clonedDoc.querySelectorAll('*');
           allElements.forEach((el: any) => {
             if (el.style) {
+              // Remover transforms e filters
               el.style.webkitTransform = 'none';
               el.style.transform = 'none';
               el.style.webkitFilter = 'none';
               el.style.filter = 'none';
+              
+              // Substituir background-clip: text por cor sólida
+              if (el.style.backgroundClip === 'text' || el.style.webkitBackgroundClip === 'text') {
+                el.style.backgroundClip = 'unset';
+                el.style.webkitBackgroundClip = 'unset';
+                el.style.webkitTextFillColor = 'unset';
+                el.style.color = '#7CF6FF'; // Fallback color
+              }
             }
           });
         }
@@ -252,7 +271,19 @@ export class CertificatePDFGenerator {
         // Aguardar elementos estarem prontos
         await new Promise(resolve => setTimeout(resolve, 500));
         
-        const certificateElement = tempDiv!.querySelector('.certificate-container, .pixel-perfect-certificate') as HTMLElement;
+        const selectorsList = [
+          '.certificate-container', 
+          '.pixel-perfect-certificate',
+          '.pdf-certificate-template'
+        ];
+        
+        let certificateElement: HTMLElement | null = null;
+        
+        for (const selector of selectorsList) {
+          certificateElement = tempDiv!.querySelector(selector) as HTMLElement;
+          if (certificateElement) break;
+        }
+        
         if (!certificateElement) {
           console.error('❌ [PDF-GEN] Elementos não encontrados no DOM. Verificando seletores...');
           
@@ -261,7 +292,7 @@ export class CertificatePDFGenerator {
           console.error('❌ [PDF-GEN] Elementos encontrados:', Array.from(allElements).map(el => el.className || el.tagName).slice(0, 10));
           console.error('❌ [PDF-GEN] HTML atual (primeiros 500 chars):', tempDiv!.innerHTML.substring(0, 500));
           
-          throw new Error('Elemento do certificado não encontrado (.certificate-container ou .pixel-perfect-certificate)');
+          throw new Error('Elemento do certificado não encontrado (.certificate-container, .pixel-perfect-certificate ou .pdf-certificate-template)');
         }
         
         console.log('✅ [PDF-GEN] Elemento encontrado:', certificateElement.className, certificateElement.offsetWidth, 'x', certificateElement.offsetHeight);
