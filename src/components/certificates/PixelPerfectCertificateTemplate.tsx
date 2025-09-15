@@ -106,7 +106,8 @@ export const PixelPerfectCertificateTemplate = React.forwardRef<HTMLDivElement, 
             {/* Subtitle: CERTIFICAMOS QUE */}
             <div
               style={{
-                textAlign: 'center'
+                textAlign: 'center',
+                marginBottom: '48px'
               }}
             >
               <h2
@@ -122,6 +123,139 @@ export const PixelPerfectCertificateTemplate = React.forwardRef<HTMLDivElement, 
               >
                 CERTIFICAMOS QUE
               </h2>
+            </div>
+
+            {/* User Name */}
+            <div
+              style={{
+                textAlign: 'center',
+                marginBottom: '64px'
+              }}
+            >
+              <h3
+                style={{
+                  fontSize: '48px',
+                  fontWeight: 700,
+                  margin: 0,
+                  letterSpacing: '0.04em',
+                  color: '#7CF6FF',
+                  lineHeight: 1.1,
+                  textShadow: '0 0 20px rgba(124, 246, 255, 0.3)'
+                }}
+              >
+                {data?.userName || "Nome do Usuário"}
+              </h3>
+            </div>
+
+            {/* Course Completion */}
+            <div
+              style={{
+                textAlign: 'center',
+                marginBottom: '48px'
+              }}
+            >
+              <div
+                style={{
+                  fontSize: '22px',
+                  fontWeight: 500,
+                  color: '#EAF2F6',
+                  opacity: 0.9,
+                  lineHeight: 1.4,
+                  letterSpacing: '0.02em'
+                }}
+              >
+                CONCLUIU COM SUCESSO O CURSO
+              </div>
+              <div
+                style={{
+                  fontSize: '28px',
+                  fontWeight: 600,
+                  color: '#FFFFFF',
+                  marginTop: '16px',
+                  letterSpacing: '0.04em',
+                  textTransform: 'uppercase'
+                }}
+              >
+                {data?.solutionTitle || "Curso de Formação"}
+              </div>
+              <div
+                style={{
+                  fontSize: '18px',
+                  fontWeight: 400,
+                  color: '#7CF6FF',
+                  marginTop: '8px',
+                  letterSpacing: '0.06em',
+                  textTransform: 'uppercase'
+                }}
+              >
+                CATEGORIA: {data?.solutionCategory || "IA"}
+              </div>
+            </div>
+
+            {/* Date and Validation */}
+            <div
+              style={{
+                position: 'absolute',
+                bottom: '48px',
+                left: '48px',
+                right: '48px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}
+            >
+              <div
+                style={{
+                  textAlign: 'left'
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: '14px',
+                    color: '#EAF2F6',
+                    opacity: 0.7,
+                    marginBottom: '4px'
+                  }}
+                >
+                  DATA DE CONCLUSÃO
+                </div>
+                <div
+                  style={{
+                    fontSize: '16px',
+                    fontWeight: 600,
+                    color: '#FFFFFF'
+                  }}
+                >
+                  {data?.implementationDate || new Date().toLocaleDateString('pt-BR')}
+                </div>
+              </div>
+
+              <div
+                style={{
+                  textAlign: 'right'
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: '14px',
+                    color: '#EAF2F6',
+                    opacity: 0.7,
+                    marginBottom: '4px'
+                  }}
+                >
+                  CÓDIGO DE VALIDAÇÃO
+                </div>
+                <div
+                  style={{
+                    fontSize: '16px',
+                    fontWeight: 600,
+                    color: '#7CF6FF',
+                    letterSpacing: '0.1em'
+                  }}
+                >
+                  {data?.validationCode || "VIVER-IA-2024"}
+                </div>
+              </div>
             </div>
           </div>
         </div>
