@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import React, { useState, useCallback, memo } from "react";
 import { RefreshCw, Search, Zap, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,9 @@ import { useInviteDelete } from "@/hooks/admin/invites/useInviteDelete";
 import { useInviteResend } from "@/hooks/admin/invites/useInviteResend";
 import { useInviteBulkReactivate } from "@/hooks/admin/invites/useInviteBulkReactivate";
 import { useInviteCSVExport } from "@/hooks/admin/invites/useInviteCSVExport";
-import SimpleInvitesList from "./SimpleInvitesList";
+import { useOptimizedInvitesSearch } from "@/hooks/admin/invites/useOptimizedInvitesSearch";
+import { OptimizedInvitesList } from "@/components/admin/invites/OptimizedInvitesList";
+import { InvitesPagination } from "@/components/admin/invites/InvitesPagination";
 import InviteStats from "./InviteStats";
 import ConfirmResendDialog from "./ConfirmResendDialog";
 import ConfirmDeleteDialog from "./ConfirmDeleteDialog";
@@ -20,9 +22,7 @@ interface SimpleInvitesTabProps {
   onInvitesChange: () => void;
 }
 
-const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTabProps) => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "used" | "expired" | "failed">("all");
+const SimpleInvitesTab = memo<SimpleInvitesTabProps>(({ invites, loading, onInvitesChange }) => {
   const [resendDialogOpen, setResendDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [bulkReactivateDialogOpen, setBulkReactivateDialogOpen] = useState(false);
@@ -34,69 +34,40 @@ const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTa
   const { bulkReactivateExpiredInvites, isBulkReactivating } = useInviteBulkReactivate();
   const { exportActiveInvitesCSV, getActiveInvitesCount, isExporting } = useInviteCSVExport();
 
-  // Calcular estatísticas dos convites
-  const expiredCount = invites.filter(invite => 
-    !invite.used_at && new Date(invite.expires_at) <= new Date()
-  ).length;
-
-  // 🚨 NOVO: Contar convites falhados
-  const failedCount = invites.filter(invite => {
-    // Convites com delivery_status = 'failed' ou send_attempts > 3
-    return (invite as any).delivery_status === 'failed' || 
-           ((invite as any).send_attempts && (invite as any).send_attempts > 3) ||
-           ((invite as any).last_error && !(invite as any).used_at);
-  }).length;
+  // 🚀 OTIMIZAÇÃO: Hook centralizado para busca, filtros e paginação
+  const {
+    searchQuery,
+    debouncedSearchQuery,
+    statusFilter,
+    currentPage,
+    pageSize,
+    paginatedInvites,
+    filteredInvites,
+    stats,
+    setSearchQuery,
+    setStatusFilter,
+    setPageSize,
+    goToPage,
+    goToNextPage,
+    goToPrevPage,
+    resetFilters,
+    isSearching
+  } = useOptimizedInvitesSearch({ invites, initialPageSize: 50 });
 
   const activeInvitesCount = getActiveInvitesCount(invites);
 
-  // Filtrar convites
-  const filteredInvites = invites.filter(invite => {
-    // Filtro de texto
-    const matchesSearch = invite.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (invite.role?.name || "").toLowerCase().includes(searchQuery.toLowerCase());
-    
-    // Filtro de status
-    let matchesStatus = true;
-    if (statusFilter !== "all") {
-      const isUsed = !!invite.used_at;
-      const isExpired = !isUsed && new Date(invite.expires_at) <= new Date();
-      const isActive = !isUsed && !isExpired;
-      
-      // 🚨 NOVO: Detectar convites falhados
-      const isFailed = (invite as any).delivery_status === 'failed' || 
-                      ((invite as any).send_attempts && (invite as any).send_attempts > 3) ||
-                      ((invite as any).last_error && !isUsed);
-      
-      switch (statusFilter) {
-        case "used":
-          matchesStatus = isUsed;
-          break;
-        case "expired":
-          matchesStatus = isExpired;
-          break;
-        case "active":
-          matchesStatus = isActive;
-          break;
-        case "failed":
-          matchesStatus = isFailed;
-          break;
-      }
-    }
-    
-    return matchesSearch && matchesStatus;
-  });
-
-  const handleResendClick = (invite: Invite) => {
+  // 🚀 OTIMIZAÇÃO: useCallback para evitar re-renders desnecessários
+  const handleResendClick = useCallback((invite: Invite) => {
     setSelectedInvite(invite);
     setResendDialogOpen(true);
-  };
+  }, []);
 
-  const handleDeleteClick = (invite: Invite) => {
+  const handleDeleteClick = useCallback((invite: Invite) => {
     setSelectedInvite(invite);
     setDeleteDialogOpen(true);
-  };
+  }, []);
 
-  const confirmResend = async () => {
+  const confirmResend = useCallback(async () => {
     if (selectedInvite) {
       setResendingInvites(prev => new Set(prev).add(selectedInvite.id));
       try {
@@ -111,9 +82,9 @@ const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTa
       }
       setResendDialogOpen(false);
     }
-  };
+  }, [selectedInvite, resendInvite, onInvitesChange]);
 
-  const confirmDelete = async () => {
+  const confirmDelete = useCallback(async () => {
     if (selectedInvite) {
       const success = await deleteInvite(selectedInvite.id);
       if (success) {
@@ -121,19 +92,19 @@ const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTa
       }
       setDeleteDialogOpen(false);
     }
-  };
+  }, [selectedInvite, deleteInvite, onInvitesChange]);
 
-  const handleBulkReactivateClick = () => {
+  const handleBulkReactivateClick = useCallback(() => {
     setBulkReactivateDialogOpen(true);
-  };
+  }, []);
 
-  const confirmBulkReactivate = async () => {
+  const confirmBulkReactivate = useCallback(async () => {
     const success = await bulkReactivateExpiredInvites(7);
     if (success) {
       onInvitesChange();
     }
     setBulkReactivateDialogOpen(false);
-  };
+  }, [bulkReactivateExpiredInvites, onInvitesChange]);
 
   if (loading) {
     return (
@@ -221,7 +192,7 @@ const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTa
               { key: "active", label: "Ativos", icon: "🟢" },
               { key: "used", label: "Utilizados", icon: "✅" },
               { key: "expired", label: "Expirados", icon: "⏰" },
-              { key: "failed", label: `🚨 Falhados ${failedCount > 0 ? `(${failedCount})` : ''}`, icon: "❌", count: failedCount }
+              { key: "failed", label: `🚨 Falhados ${stats.failedCount > 0 ? `(${stats.failedCount})` : ''}`, icon: "❌", count: stats.failedCount }
             ].map((filter) => (
               <button
                 key={filter.key}
@@ -259,6 +230,12 @@ const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTa
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-12 h-12 aurora-glass border-aurora/30 bg-background/50 backdrop-blur-sm focus:border-aurora/50 focus:ring-aurora/20 font-medium"
               />
+              {/* Indicador de busca ativa */}
+              {isSearching && (
+                <div className="absolute right-12 top-1/2 transform -translate-y-1/2">
+                  <div className="w-4 h-4 border-2 border-aurora/30 border-t-aurora rounded-full animate-spin"></div>
+                </div>
+              )}
               <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
                 <div className="w-2 h-2 bg-gradient-to-r from-aurora to-viverblue rounded-full aurora-pulse"></div>
               </div>
@@ -291,7 +268,7 @@ const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTa
                 Baixar CSV Ativos ({activeInvitesCount})
               </Button>
               
-              {expiredCount > 0 && (
+              {stats.expiredCount > 0 && (
                 <Button
                   variant="default"
                   onClick={handleBulkReactivateClick}
@@ -304,32 +281,63 @@ const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTa
                   ) : (
                     <Zap className="h-4 w-4 mr-2" />
                   )}
-                  Reativar Todos Expirados ({expiredCount})
+                  Reativar Todos Expirados ({stats.expiredCount})
+                </Button>
+              )}
+              
+              {/* Botão de reset de filtros */}
+              {(searchQuery || statusFilter !== "all") && (
+                <Button
+                  variant="ghost"
+                  onClick={resetFilters}
+                  size="default"
+                  className="h-12 px-4 text-muted-foreground hover:text-foreground"
+                >
+                  Limpar Filtros
                 </Button>
               )}
             </div>
           </div>
           
           {/* Results Counter */}
-          {searchQuery || statusFilter !== "all" ? (
+          {(searchQuery || statusFilter !== "all") && (
             <div className="mt-4 pt-4 border-t border-aurora/20">
               <p className="text-sm text-muted-foreground flex items-center gap-2">
                 <div className="w-2 h-2 bg-aurora rounded-full aurora-pulse"></div>
-                Exibindo <span className="font-bold text-aurora">{filteredInvites.length}</span> de <span className="font-bold">{invites.length}</span> convites
+                Exibindo <span className="font-bold text-aurora">{stats.totalFiltered}</span> de <span className="font-bold">{stats.totalInvites}</span> convites
+                {stats.totalPages > 1 && (
+                  <span>• Página {currentPage} de {stats.totalPages}</span>
+                )}
               </p>
             </div>
-          ) : null}
+          )}
         </div>
       </div>
 
-      {/* Enhanced Invites List */}
+      {/* Enhanced Invites List with Pagination */}
       <div className="aurora-glass rounded-2xl border border-aurora/20 backdrop-blur-md overflow-hidden">
-        <SimpleInvitesList
-          invites={filteredInvites}
+        <OptimizedInvitesList
+          invites={paginatedInvites}
           onResend={handleResendClick}
           onDelete={handleDeleteClick}
           onReactivate={onInvitesChange}
           resendingInvites={resendingInvites}
+        />
+        
+        {/* Paginação */}
+        <InvitesPagination
+          currentPage={currentPage}
+          totalPages={stats.totalPages}
+          pageSize={pageSize}
+          totalItems={stats.totalFiltered}
+          hasNextPage={stats.hasNextPage}
+          hasPrevPage={stats.hasPrevPage}
+          startIndex={stats.startIndex}
+          endIndex={stats.endIndex}
+          onPageChange={goToPage}
+          onPageSizeChange={setPageSize}
+          onNextPage={goToNextPage}
+          onPrevPage={goToPrevPage}
         />
       </div>
 
@@ -350,7 +358,7 @@ const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTa
       />
 
       <ConfirmBulkReactivateDialog
-        expiredCount={expiredCount}
+        expiredCount={stats.expiredCount}
         onConfirm={confirmBulkReactivate}
         isOpen={bulkReactivateDialogOpen}
         onOpenChange={setBulkReactivateDialogOpen}
@@ -358,6 +366,8 @@ const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTa
       />
     </div>
   );
-};
+});
+
+SimpleInvitesTab.displayName = 'SimpleInvitesTab';
 
 export default SimpleInvitesTab;

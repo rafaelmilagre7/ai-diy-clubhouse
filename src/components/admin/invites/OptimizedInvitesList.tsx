@@ -1,0 +1,182 @@
+import React, { memo, useCallback } from 'react';
+import { Invite } from '@/hooks/admin/invites/types';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Mail, MessageCircle, MoreHorizontal, RefreshCw, Trash2, Calendar, User, Clock } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { formatDistanceToNow, format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+
+interface OptimizedInvitesListProps {
+  invites: Invite[];
+  onResend: (invite: Invite) => void;
+  onDelete: (invite: Invite) => void;
+  onReactivate: () => void;
+  resendingInvites: Set<string>;
+}
+
+// Componente de item individual otimizado com memo
+const InviteListItem = memo<{ 
+  invite: Invite; 
+  onResend: (invite: Invite) => void;
+  onDelete: (invite: Invite) => void;
+  isResending: boolean;
+}>(({ invite, onResend, onDelete, isResending }) => {
+  
+  const handleResendClick = useCallback(() => {
+    onResend(invite);
+  }, [invite, onResend]);
+
+  const handleDeleteClick = useCallback(() => {
+    onDelete(invite);
+  }, [invite, onDelete]);
+
+  const getStatusBadge = useCallback(() => {
+    const isUsed = !!invite.used_at;
+    const isExpired = !isUsed && new Date(invite.expires_at) <= new Date();
+    const isActive = !isUsed && !isExpired;
+    
+    // Detectar convites falhados
+    const isFailed = (invite as any).delivery_status === 'failed' || 
+                    ((invite as any).send_attempts && (invite as any).send_attempts > 3) ||
+                    ((invite as any).last_error && !isUsed);
+    
+    if (isFailed) {
+      return <Badge variant="destructive" className="text-xs">❌ Falhado</Badge>;
+    }
+    
+    if (isUsed) {
+      return <Badge variant="default" className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">✅ Usado</Badge>;
+    }
+    
+    if (isExpired) {
+      return <Badge variant="secondary" className="bg-amber-500/20 text-amber-400 border-amber-500/30 text-xs">⏰ Expirado</Badge>;
+    }
+    
+    if (isActive) {
+      return <Badge variant="outline" className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-xs">🟢 Ativo</Badge>;
+    }
+    
+    return null;
+  }, [invite]);
+
+  const getChannelIcon = useCallback(() => {
+    const channel = invite.preferred_channel;
+    if (channel === 'whatsapp') return <MessageCircle className="h-3 w-3 text-green-500" />;
+    if (channel === 'both') return <div className="flex gap-1"><Mail className="h-3 w-3 text-blue-500" /><MessageCircle className="h-3 w-3 text-green-500" /></div>;
+    return <Mail className="h-3 w-3 text-blue-500" />;
+  }, [invite.preferred_channel]);
+
+  return (
+    <div className="flex items-center justify-between p-4 border-b border-muted/20 hover:bg-muted/30 transition-colors duration-200">
+      <div className="flex-1 min-w-0 space-y-2">
+        {/* Linha principal - Email e Status */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              {getChannelIcon()}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-foreground truncate">{invite.email}</p>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <User className="h-3 w-3" />
+                <span>{invite.role?.name || 'Papel não definido'}</span>
+              </div>
+            </div>
+          </div>
+          {getStatusBadge()}
+        </div>
+
+        {/* Linha secundária - Datas e informações */}
+        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+          <div className="flex items-center gap-1">
+            <Calendar className="h-3 w-3" />
+            <span>Criado {formatDistanceToNow(new Date(invite.created_at), { locale: ptBR, addSuffix: true })}</span>
+          </div>
+          
+          {invite.used_at ? (
+            <div className="flex items-center gap-1 text-green-400">
+              <Clock className="h-3 w-3" />
+              <span>Usado {formatDistanceToNow(new Date(invite.used_at), { locale: ptBR, addSuffix: true })}</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              <span>Expira em {format(new Date(invite.expires_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</span>
+            </div>
+          )}
+          
+          {invite.creator_name && (
+            <span>por {invite.creator_name}</span>
+          )}
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="flex items-center gap-2 ml-4">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem onClick={handleResendClick} disabled={isResending}>
+              {isResending ? (
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4 mr-2" />
+              )}
+              Reenviar
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleDeleteClick} className="text-destructive focus:text-destructive">
+              <Trash2 className="h-4 w-4 mr-2" />
+              Excluir
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </div>
+  );
+});
+
+InviteListItem.displayName = 'InviteListItem';
+
+// Lista principal otimizada
+export const OptimizedInvitesList = memo<OptimizedInvitesListProps>(({ 
+  invites, 
+  onResend, 
+  onDelete, 
+  onReactivate, 
+  resendingInvites 
+}) => {
+  if (invites.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-center">
+        <div className="w-20 h-20 aurora-glass rounded-full border-4 border-aurora/30 flex items-center justify-center mb-6">
+          <Mail className="h-8 w-8 text-aurora/70" />
+        </div>
+        <h3 className="text-lg font-semibold aurora-text-gradient mb-2">Nenhum convite encontrado</h3>
+        <p className="text-muted-foreground max-w-sm">
+          Não há convites que correspondam aos filtros selecionados. Tente ajustar os critérios de busca.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="divide-y divide-muted/10">
+      {invites.map((invite) => (
+        <InviteListItem
+          key={invite.id}
+          invite={invite}
+          onResend={onResend}
+          onDelete={onDelete}
+          isResending={resendingInvites.has(invite.id)}
+        />
+      ))}
+    </div>
+  );
+});
+
+OptimizedInvitesList.displayName = 'OptimizedInvitesList';

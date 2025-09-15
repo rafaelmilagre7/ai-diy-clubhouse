@@ -1,10 +1,10 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, memo } from "react";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 import { usePermissions } from "@/hooks/auth/usePermissions";
 import { useInvitesList } from "@/hooks/admin/invites/useInvitesList";
 import { useRoleMapping } from "@/hooks/admin/invites/useRoleMapping";
-import SimpleCreateInviteDialog from "./components/SimpleCreateInviteDialog";
+import OptimizedCreateInviteDialog from "@/components/admin/invites/OptimizedCreateInviteDialog";
 import SimpleInvitesTab from "./components/SimpleInvitesTab";
 import { BulkInviteUpload } from "@/components/admin/invites/BulkInviteUpload";
 import { BulkInviteProgress } from "@/components/admin/invites/BulkInviteProgress";
@@ -15,7 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { InviteSystemStatusIndicator } from '@/components/admin/invites/InviteSystemStatusIndicator';
 
-const InvitesManagement = () => {
+const InvitesManagement = memo(() => {
   useDocumentTitle("Gerenciar Convites | Admin");
   
   const { roles } = usePermissions();
@@ -28,9 +28,9 @@ const InvitesManagement = () => {
     fetchInvites();
   }, [fetchInvites]);
 
-  const handleInvitesChange = () => {
+  const handleInvitesChange = useCallback(() => {
     fetchInvites();
-  };
+  }, [fetchInvites]);
 
   if (rolesLoading) {
     return (
@@ -93,7 +93,7 @@ const InvitesManagement = () => {
           
           <div className="flex items-center gap-4">
             <InviteSystemStatusIndicator />
-            <SimpleCreateInviteDialog roles={roles} onInviteCreated={handleInvitesChange} />
+            <OptimizedCreateInviteDialog roles={roles} onInviteCreated={handleInvitesChange} />
           </div>
         </div>
       </div>
@@ -192,6 +192,8 @@ const InvitesManagement = () => {
       />
     </div>
   );
-};
+});
+
+InvitesManagement.displayName = 'InvitesManagement';
 
 export default InvitesManagement;
