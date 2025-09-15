@@ -8,6 +8,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/auth";
+import { getCategoryDetails } from "@/lib/types/categoryTypes";
 
 interface CertificateModalProps {
   certificate: any;
@@ -29,7 +30,7 @@ export const CertificateModal = ({ certificate, isOpen, onClose }: CertificateMo
   const certificateData = {
     userName: user?.user_metadata?.name || user?.email || 'Usuário',
     solutionTitle: solution?.title || 'Solução',
-    solutionCategory: solution?.category || 'Categoria',
+    solutionCategory: solution?.category ? getCategoryDetails(solution.category).description : 'Inteligência Artificial',
     implementationDate,
     validationCode: certificate.validation_code,
     benefits: [] // Pode ser expandido futuramente
