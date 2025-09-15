@@ -230,7 +230,7 @@ export const useUnifiedCertificates = (courseId?: string) => {
       
       // Importar componente React e PDF generator
       const { pdfGenerator } = await import('@/utils/certificates/pdfGenerator');
-      const { PDFCertificateTemplate } = await import('@/components/certificates/PDFCertificateTemplate');
+      const { PixelPerfectCertificateTemplate } = await import('@/components/certificates/PixelPerfectCertificateTemplate');
       const { createElement } = await import('react');
       const { createRoot } = await import('react-dom/client');
       
@@ -276,7 +276,7 @@ export const useUnifiedCertificates = (courseId?: string) => {
           resolve();
         };
 
-        const CertificateComponent = createElement(PDFCertificateTemplate, {
+        const CertificateComponent = createElement(PixelPerfectCertificateTemplate, {
           data: certificateData,
           onReady: handleReady
         });

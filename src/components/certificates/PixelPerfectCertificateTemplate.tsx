@@ -93,13 +93,12 @@ export const PixelPerfectCertificateTemplate = React.forwardRef<HTMLDivElement, 
                 <span style={{ color: '#EAF2F6' }}>VIVER</span>
                 <span 
                   style={{
-                    background: 'linear-gradient(180deg, hsl(186, 100%, 74%) 0%, hsl(190, 85%, 54%) 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text',
-                    color: 'hsl(186, 100%, 74%)', // fallback para browsers sem suporte
-                    display: 'inline-block' // necessário para background-clip funcionar
+                    // Fallback robusto para html2canvas - usar cor sólida
+                    color: '#7CF6FF',
+                    display: 'inline-block',
+                    fontWeight: 'inherit'
                   }}
+                  className="certificate-gradient-text"
                 > DE IA</span>
               </h1>
             </div>

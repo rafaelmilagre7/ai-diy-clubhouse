@@ -7,424 +7,159 @@ export interface PDFGenerationOptions {
   quality?: number;
   format?: 'a4' | 'letter';
   orientation?: 'landscape' | 'portrait';
-  margins?: {
-    top: number;
-    right: number;
-    bottom: number;
-    left: number;
-  };
 }
 
-export class CertificatePDFGenerator {
-  private static instance: CertificatePDFGenerator;
-
-  public static getInstance(): CertificatePDFGenerator {
-    if (!CertificatePDFGenerator.instance) {
-      CertificatePDFGenerator.instance = new CertificatePDFGenerator();
-    }
-    return CertificatePDFGenerator.instance;
-  }
-
-  public async generateFromElement(
-    element: HTMLElement, 
-    data: CertificateData,
-    options: PDFGenerationOptions = {}
-  ): Promise<Blob> {
-    const {
-      scale = 2,
-      quality = 1.0,
-      format = 'a4',
-      orientation = 'landscape',
-      margins = { top: 0, right: 0, bottom: 0, left: 0 }
-    } = options;
-
-    let canvasTimeoutId: NodeJS.Timeout;
+export const pdfGenerator = {
+  generateFromElement: async (element: HTMLElement, data: CertificateData): Promise<Blob> => {
+    console.log('🎯 pdfGenerator.generateFromElement: Iniciando captura do elemento');
     
+    if (!element) {
+      throw new Error('Elemento não fornecido para captura');
+    }
+
+    // Renderizar temporariamente na tela para captura
+    const originalPosition = element.style.position;
+    const originalTop = element.style.top;
+    const originalLeft = element.style.left;
+    const originalZIndex = element.style.zIndex;
+    const originalVisibility = element.style.visibility;
+
     try {
-      console.log('🎨 [PDF-ELEMENT] Iniciando geração de PDF do elemento...');
+      // Posicionar elemento temporariamente na tela
+      element.style.position = 'fixed';
+      element.style.top = '0px';
+      element.style.left = '0px';
+      element.style.zIndex = '9999';
+      element.style.visibility = 'visible';
 
-      // Timeout reduzido para html2canvas
-      const canvasTimeoutPromise = new Promise((_, reject) => {
-        canvasTimeoutId = setTimeout(() => {
-          reject(new Error('Timeout no html2canvas (10s)'));
-        }, 10000);
-      });
-      
-      console.log('⏳ [PDF-ELEMENT] Aguardando imagens e fontes...');
-      // Garantir que o elemento esteja pronto com timeout reduzido
-      await Promise.all([
-        this.waitForImages(element),
-        this.waitForFonts()
-      ]);
+      // Aguardar renderização
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      console.log('📸 [PDF-ELEMENT] Capturando canvas...');
-      // Canvas generation com configurações super otimizadas
-      const canvasPromise = html2canvas(element, {
-        scale: 3, // Maior escala para melhor qualidade
-        backgroundColor: '#ffffff',
-        useCORS: false, // Desabilitar CORS para evitar problemas
-        allowTaint: true, // Permitir taint para gradientes complexos
-        imageTimeout: 15000, // Timeout maior para imagens
-        logging: false, // Desabilitar logs para performance
+      const canvas = await html2canvas(element, {
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#0A0D0F',
+        scale: 2,
         width: 1200,
         height: 900,
-        windowWidth: 1200,
-        windowHeight: 900,
-        scrollX: 0,
-        scrollY: 0,
-        foreignObjectRendering: true, // Habilitar para melhor renderização
-        removeContainer: false, // Manter container
-        x: 0,
-        y: 0,
-        ignoreElements: (el) => {
-          return el.classList?.contains('ignore-pdf') || 
-                 el.tagName === 'SCRIPT' || 
-                 el.tagName === 'NOSCRIPT' ||
-                 (el as HTMLElement).style?.display === 'none';
-        },
-        onclone: (clonedDoc, element) => {
-          console.log('🔧 [PDF-ELEMENT] Configurando clone para captura...');
-          
-          // Garantir backgrounds e estilos no clone - compatível com pdf template
-          const certificateContainers = [
-            '.certificate-container', 
-            '.pixel-perfect-certificate',
-            '.pdf-certificate-template'
-          ];
-          
-          for (const selector of certificateContainers) {
-            const container = clonedDoc.querySelector(selector) as HTMLElement;
-            if (container) {
-              container.style.cssText += `
-                background: #0A0D0F !important;
-                background-attachment: local !important;
-                display: block !important;
-                visibility: visible !important;
-                opacity: 1 !important;
-                position: relative !important;
-              `;
-              break;
-            }
+        logging: true,
+        onclone: (clonedDoc) => {
+          console.log('🔄 html2canvas: Documento clonado para captura');
+          const clonedElement = clonedDoc.querySelector('.pixel-perfect-certificate');
+          if (clonedElement) {
+            console.log('✅ html2canvas: Elemento encontrado no clone');
+            // Aplicar estilos compatíveis com html2canvas
+            const gradientTexts = clonedElement.querySelectorAll('.certificate-gradient-text');
+            gradientTexts.forEach(text => {
+              (text as HTMLElement).style.color = '#7CF6FF';
+              (text as HTMLElement).style.background = 'none';
+              (text as HTMLElement).style.webkitBackgroundClip = 'unset';
+              (text as HTMLElement).style.webkitTextFillColor = 'unset';
+            });
+          } else {
+            console.warn('⚠️ html2canvas: Elemento não encontrado no clone');
           }
-          
-          // Remover propriedades problemáticas para html2canvas
-          const allElements = clonedDoc.querySelectorAll('*');
-          allElements.forEach((el: any) => {
-            if (el.style) {
-              // Remover transforms e filters
-              el.style.webkitTransform = 'none';
-              el.style.transform = 'none';
-              el.style.webkitFilter = 'none';
-              el.style.filter = 'none';
-              
-              // Substituir background-clip: text por cor sólida
-              if (el.style.backgroundClip === 'text' || el.style.webkitBackgroundClip === 'text') {
-                el.style.backgroundClip = 'unset';
-                el.style.webkitBackgroundClip = 'unset';
-                el.style.webkitTextFillColor = 'unset';
-                el.style.color = '#7CF6FF'; // Fallback color
-              }
-            }
-          });
         }
-      }).catch((canvasError) => {
-        console.error('❌ [PDF-ELEMENT] html2canvas falhou:', {
-          message: canvasError?.message,
-          name: canvasError?.name,
-          stack: canvasError?.stack,
-          errorType: typeof canvasError,
-          canvasError
-        });
-        
-        // Diagnosticar erro específico do html2canvas
-        let errorMessage = 'Falha na conversão para imagem';
-        
-        if (canvasError?.message?.includes('SecurityError')) {
-          errorMessage = 'Erro de segurança - Problema com CORS ou imagens externas';
-        } else if (canvasError?.message?.includes('InvalidStateError')) {
-          errorMessage = 'Estado inválido - Elemento não renderizado corretamente';
-        } else if (canvasError?.message?.includes('NetworkError')) {
-          errorMessage = 'Erro de rede - Verifique sua conexão';
-        } else if (canvasError?.message?.includes('timeout')) {
-          errorMessage = 'Tempo esgotado na captura da imagem';
-        } else if (canvasError?.name === 'AbortError') {
-          errorMessage = 'Operação cancelada durante a captura';
-        } else if (canvasError?.message) {
-          errorMessage = `Erro html2canvas: ${canvasError.message}`;
-        }
-        
-        throw new Error(errorMessage);
-      });
-      
-      // Corrida entre canvas generation e timeout
-      const canvas = await Promise.race([canvasPromise, canvasTimeoutPromise]) as HTMLCanvasElement;
-      
-      clearTimeout(canvasTimeoutId);
-
-      console.log('📸 Canvas gerado:', {
-        width: canvas.width,
-        height: canvas.height
       });
 
-      // Criar PDF com dimensões customizadas para o certificado
-      const pdfWidthMM = (1123 * 0.264583); // Converter px para mm (1px = 0.264583mm)
-      const pdfHeightMM = (950 * 0.264583);
+      console.log(`📊 html2canvas: Canvas criado com dimensões ${canvas.width}x${canvas.height}`);
       
+      if (canvas.width === 0 || canvas.height === 0) {
+        throw new Error('Canvas gerado com dimensões inválidas');
+      }
+
+      // Debug: Verificar se o canvas tem conteúdo
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const hasContent = imageData.data.some(channel => channel !== 0);
+        console.log(`🔍 Canvas tem conteúdo: ${hasContent}`);
+
+        if (!hasContent) {
+          console.warn('⚠️ Canvas capturado está vazio - tentativa de fallback');
+        }
+      }
+
+      // Criar PDF com dimensões exatas do certificado
       const pdf = new jsPDF({
         orientation: 'landscape',
-        unit: 'mm',
-        format: [pdfWidthMM, pdfHeightMM]
+        unit: 'px',
+        format: [1200, 900]
       });
 
-      const imgData = canvas.toDataURL('image/png', quality);
+      const imgData = canvas.toDataURL('image/png', 1.0);
       
-      // Usar toda a página sem margens
-      const finalWidth = pdf.internal.pageSize.getWidth();
-      const finalHeight = pdf.internal.pageSize.getHeight();
-
       // Adicionar imagem ocupando toda a página
-      pdf.addImage(imgData, 'PNG', 0, 0, finalWidth, finalHeight);
+      pdf.addImage(imgData, 'PNG', 0, 0, 1200, 900);
 
-      // Adicionar metadados
+      // Metadados do PDF
       pdf.setProperties({
         title: `Certificado - ${data.userName}`,
         subject: `Certificado de conclusão - ${data.solutionTitle}`,
         author: 'VIVER DE IA',
-        creator: 'VIVER DE IA Platform',
-        keywords: 'certificado, VIVER DE IA, IA, inteligência artificial'
+        creator: 'VIVER DE IA Platform'
       });
 
+      const pdfBlob = pdf.output('blob');
       console.log('✅ PDF gerado com sucesso');
-      return pdf.output('blob');
-
-    } catch (error: any) {
-      clearTimeout(canvasTimeoutId!);
       
-      // Log detalhado para debug
-      console.error('❌ [PDF-ELEMENT] Erro detalhado:', {
-        message: error?.message,
-        name: error?.name,
-        stack: error?.stack,
-        canvasError: error
-      });
-      
-      // Diagnosticar e fornecer mensagem específica
-      let errorMessage = 'Erro na geração do PDF';
-      
-      if (error?.message?.includes('Timeout')) {
-        errorMessage = 'Tempo esgotado na captura da imagem. Tente novamente.';
-      } else if (error?.message?.includes('SecurityError')) {
-        errorMessage = 'Erro de segurança - Problema com imagens ou CORS';
-      } else if (error?.message?.includes('html2canvas')) {
-        errorMessage = 'Falha na conversão para imagem';
-      } else if (error?.message) {
-        errorMessage = `Erro: ${error.message}`;
-      }
-      
-      throw new Error(errorMessage);
+      return pdfBlob;
+    } catch (error) {
+      console.error('❌ Erro na captura do elemento:', error);
+      throw error;
+    } finally {
+      // Restaurar posição original do elemento
+      element.style.position = originalPosition;
+      element.style.top = originalTop;
+      element.style.left = originalLeft;
+      element.style.zIndex = originalZIndex;
+      element.style.visibility = originalVisibility;
     }
-  }
+  },
 
-  public async generateFromHTML(
-    html: string, 
-    css: string, 
-    data: CertificateData,
-    options: PDFGenerationOptions = {}
-  ): Promise<Blob> {
-    console.log('🎨 [PDF-GEN] Iniciando geração a partir de HTML...');
-    let tempDiv: HTMLDivElement | null = null;
-    let timeoutId: NodeJS.Timeout;
+  generateFromHTML: async (html: string, css: string, data: CertificateData): Promise<Blob> => {
+    console.log('🎨 pdfGenerator.generateFromHTML: Gerando PDF do HTML');
+    
+    // Criar elemento temporário
+    const tempDiv = document.createElement('div');
+    tempDiv.style.position = 'fixed';
+    tempDiv.style.left = '-9999px';
+    tempDiv.style.top = '0';
+    tempDiv.style.width = '1200px';
+    tempDiv.style.height = '900px';
+    tempDiv.innerHTML = `<style>${css}</style>${html}`;
+    
+    document.body.appendChild(tempDiv);
     
     try {
-      // Timeout interno de 25 segundos
-      const timeoutPromise = new Promise((_, reject) => {
-        timeoutId = setTimeout(() => {
-          reject(new Error('Timeout na renderização HTML (25s)'));
-        }, 25000);
-      });
+      // Aguardar renderização
+      await new Promise(resolve => setTimeout(resolve, 500));
       
-      // Elemento temporário otimizado
-      tempDiv = document.createElement('div');
-      tempDiv.style.cssText = `
-        position: fixed;
-        left: -10000px;
-        top: 0;
-        width: 1123px;
-        height: 950px;
-        pointer-events: none;
-        z-index: -1;
-        overflow: hidden;
-      `;
-      
-      console.log('🔧 [PDF-GEN] Inserindo HTML no DOM...');
-      tempDiv.innerHTML = `<style>${css}</style>${html}`;
-      document.body.appendChild(tempDiv);
-      
-      // Aguardar renderização com timeout
-      const renderingPromise = (async () => {
-        console.log('⏳ [PDF-GEN] Aguardando fontes e renderização...');
-        await Promise.all([
-          this.waitForFonts(),
-          new Promise(resolve => setTimeout(resolve, 800))
-        ]);
-
-        // Aguardar elementos estarem prontos
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        const selectorsList = [
-          '.certificate-container', 
-          '.pixel-perfect-certificate',
-          '.pdf-certificate-template'
-        ];
-        
-        let certificateElement: HTMLElement | null = null;
-        
-        for (const selector of selectorsList) {
-          certificateElement = tempDiv!.querySelector(selector) as HTMLElement;
-          if (certificateElement) break;
-        }
-        
-        if (!certificateElement) {
-          console.error('❌ [PDF-GEN] Elementos não encontrados no DOM. Verificando seletores...');
-          
-          // Diagnóstico detalhado
-          const allElements = tempDiv!.querySelectorAll('*');
-          console.error('❌ [PDF-GEN] Elementos encontrados:', Array.from(allElements).map(el => el.className || el.tagName).slice(0, 10));
-          console.error('❌ [PDF-GEN] HTML atual (primeiros 500 chars):', tempDiv!.innerHTML.substring(0, 500));
-          
-          throw new Error('Elemento do certificado não encontrado (.certificate-container, .pixel-perfect-certificate ou .pdf-certificate-template)');
-        }
-        
-        console.log('✅ [PDF-GEN] Elemento encontrado:', certificateElement.className, certificateElement.offsetWidth, 'x', certificateElement.offsetHeight);
-
-        console.log('📸 [PDF-GEN] Elemento encontrado, gerando canvas...');
-        return this.generateFromElement(certificateElement, data, options);
-      })();
-      
-      // Corrida entre renderização e timeout
-      const blob = await Promise.race([renderingPromise, timeoutPromise]) as Blob;
-      
-      clearTimeout(timeoutId!);
-      console.log('✅ [PDF-GEN] PDF gerado com sucesso a partir do HTML');
-      return blob;
-      
-    } catch (error: any) {
-      clearTimeout(timeoutId!);
-      
-      // Log detalhado do erro para debug
-      console.error('❌ [PDF-GEN] Erro na geração:', {
-        message: error?.message,
-        name: error?.name,
-        stack: error?.stack,
-        error: error
-      });
-      
-      // Diagnosticar tipo de erro
-      let errorMessage = 'Erro desconhecido na geração do PDF';
-      
-      if (error?.message?.includes('Timeout')) {
-        errorMessage = 'Tempo esgotado - O processo de geração demorou muito. Tente novamente.';
-      } else if (error?.message?.includes('não encontrado')) {
-        errorMessage = 'Template inválido - Estrutura do certificado não encontrada';
-      } else if (error?.message?.includes('html2canvas')) {
-        errorMessage = 'Erro na captura - Falha ao converter o certificado em imagem';
-      } else if (error?.name === 'NetworkError') {
-        errorMessage = 'Erro de conexão - Verifique sua internet e tente novamente';
-      } else if (error?.message) {
-        errorMessage = `Falha na geração: ${error.message}`;
+      const certificateElement = tempDiv.querySelector('.pixel-perfect-certificate, .certificate-container') as HTMLElement;
+      if (!certificateElement) {
+        throw new Error('Elemento do certificado não encontrado');
       }
       
-      throw new Error(errorMessage);
-      
+      return await pdfGenerator.generateFromElement(certificateElement, data);
     } finally {
-      // Cleanup seguro
-      if (tempDiv && tempDiv.parentNode) {
-        try {
-          document.body.removeChild(tempDiv);
-          console.log('🧹 [PDF-GEN] Cleanup do DOM concluído');
-        } catch (cleanupError) {
-          console.warn('⚠️ [PDF-GEN] Erro no cleanup (não crítico):', cleanupError);
-        }
-      }
+      document.body.removeChild(tempDiv);
     }
-  }
+  },
 
-  private async waitForImages(element: HTMLElement): Promise<void> {
-    const images = element.querySelectorAll('img');
-    const promises = Array.from(images).map(img => {
-      if (img.complete) return Promise.resolve();
-      
-      return new Promise<void>((resolve, reject) => {
-        const timeout = setTimeout(() => {
-          console.warn('⚠️ Timeout ao carregar imagem:', img.src);
-          resolve(); // Continuar mesmo com timeout
-        }, 10000);
-
-        img.onload = () => {
-          clearTimeout(timeout);
-          resolve();
-        };
-        
-        img.onerror = () => {
-          clearTimeout(timeout);
-          console.warn('⚠️ Erro ao carregar imagem:', img.src);
-          resolve(); // Continuar mesmo com erro
-        };
-      });
-    });
-    
-    await Promise.all(promises);
-    console.log('🖼️ Todas as imagens carregadas');
-  }
-
-  private async waitForFonts(): Promise<void> {
-    if ('fonts' in document && document.fonts) {
-      try {
-        await document.fonts.ready;
-        console.log('🔤 Fontes carregadas');
-        
-        // Forçar carregamento de fontes específicas do certificado
-        const fonts = [
-          'Inter',
-          'JetBrains Mono',
-          'Brush Script MT'
-        ];
-        
-        await Promise.allSettled(
-          fonts.map(font => document.fonts.load(`16px "${font}"`))
-        );
-        
-      } catch (error) {
-        console.warn('⚠️ Erro ao carregar fontes:', error);
-      }
-    }
-    
-    // Aguardar estabilização da renderização
-    await new Promise(resolve => setTimeout(resolve, 300));
-  }
-
-  public async downloadPDF(blob: Blob, filename: string): Promise<void> {
+  downloadPDF: async (blob: Blob, filename: string): Promise<void> => {
     const url = URL.createObjectURL(blob);
-    
     const link = document.createElement('a');
     link.href = url;
     link.download = filename;
-    
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    
-    // Limpar URL após um delay
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-  }
+    URL.revokeObjectURL(url);
+  },
 
-  public async openPDFInNewTab(blob: Blob): Promise<void> {
+  openPDFInNewTab: async (blob: Blob): Promise<void> => {
     const url = URL.createObjectURL(blob);
     window.open(url, '_blank');
-    
-    // Limpar URL após um delay
     setTimeout(() => URL.revokeObjectURL(url), 10000);
   }
-}
-
-export const pdfGenerator = CertificatePDFGenerator.getInstance();
+};
