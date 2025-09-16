@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { DashboardHeader } from "@/components/admin/dashboard/DashboardHeader";
 import { OnboardingStatusCard } from "@/components/admin/OnboardingStatusCard";
 import { RecentActivitiesCard } from "@/components/admin/analytics/RecentActivitiesCard";
-import { TestVideoDurations } from "@/components/admin/TestVideoDurations";
+
 import { RefreshCw, Users, Activity, CheckCircle, TrendingUp, BarChart3, Zap, Star } from "lucide-react";
 const AdminDashboard = () => {
   const [timeRange, setTimeRange] = useState('30d');
@@ -229,8 +229,6 @@ const AdminDashboard = () => {
             {/* Card de Status do Onboarding */}
             <OnboardingStatusCard />
             
-            {/* Teste das Durações dos Vídeos */}
-            <TestVideoDurations />
             
             {/* Card de Dados Gerais */}
             <Card className="surface-elevated border-0 shadow-aurora">

@@ -6,7 +6,7 @@ import { CertificateErrorBoundary } from "@/components/certificates/CertificateE
 import { useAuth } from "@/contexts/auth";
 import { Award } from "lucide-react";
 import { executeVideoDurationUpdate } from "@/utils/executeVideoDurationUpdate";
-import { ManualUpdateButton } from "@/components/admin/ManualUpdateButton";
+
 
 const CertificatesPage = () => {
   const { user } = useAuth();
@@ -76,8 +76,6 @@ const CertificatesPage = () => {
         </div>
       </CertificateErrorBoundary>
       
-      {/* Botão flutuante para atualização manual */}
-      <ManualUpdateButton />
     </div>
   );
 };

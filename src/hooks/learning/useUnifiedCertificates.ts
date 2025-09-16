@@ -368,8 +368,10 @@ export const useUnifiedCertificates = (courseId?: string) => {
   const generateWorkload = (certificate: UnifiedCertificate): string => {
     // Se tem dados específicos de duração total real dos vídeos
     const realVideoDuration = certificate.metadata?.realVideoDuration;
+    const videoCount = certificate.metadata?.videoCount || 0;
+    
     if (realVideoDuration && realVideoDuration > 0) {
-      return formatDurationForCertificate(realVideoDuration);
+      return formatDurationForCertificate(realVideoDuration, videoCount);
     }
     
     // Se tem dados específicos de duração total estimada
@@ -377,6 +379,11 @@ export const useUnifiedCertificates = (courseId?: string) => {
     if (totalDuration) {
       const hours = Math.ceil(totalDuration / 60); // Converter minutos para horas
       return `${hours} hora${hours > 1 ? 's' : ''}`;
+    }
+    
+    // Se tem apenas contagem de vídeos, usar estimativa
+    if (videoCount > 0) {
+      return formatDurationForCertificate(0, videoCount);
     }
     
     // Se tem dados específicos de lições
@@ -403,8 +410,10 @@ export const useUnifiedCertificates = (courseId?: string) => {
   // Nova função específica para gerar workload com duração real
   const generateWorkloadFromRealDuration = (certificate: UnifiedCertificate): string => {
     const realVideoDuration = certificate.metadata?.realVideoDuration;
+    const videoCount = certificate.metadata?.videoCount || 0;
+    
     if (realVideoDuration && realVideoDuration > 0) {
-      return formatDurationForCertificate(realVideoDuration);
+      return formatDurationForCertificate(realVideoDuration, videoCount);
     }
     
     // Fallback para método anterior
