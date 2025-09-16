@@ -169,7 +169,7 @@ export const PixelPerfectCertificateTemplate = React.forwardRef<HTMLDivElement, 
                 Concluiu o curso <strong style={{ color: '#7CF6FF', fontWeight: 600 }}>{data?.solutionTitle || "Curso de Formação"}</strong>, 
                 adquirindo conhecimentos sobre <strong style={{ color: '#7CF6FF', fontWeight: 600 }}>{data?.solutionCategory}</strong>, 
                 em <strong style={{ color: '#7CF6FF', fontWeight: 600 }}>{data?.implementationDate || new Date().toLocaleDateString('pt-BR')}</strong>, 
-                com carga horária de <strong style={{ color: '#7CF6FF', fontWeight: 600 }}>8 horas</strong>.
+                com carga horária de <strong style={{ color: '#7CF6FF', fontWeight: 600 }}>{data?.workloadHours || '8 horas'}</strong>.
               </div>
             </div>
 

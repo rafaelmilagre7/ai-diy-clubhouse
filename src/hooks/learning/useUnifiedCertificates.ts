@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { getCourseCapacitationDescription } from "@/utils/certificates/courseCapacitationUtils";
+import { calculateCourseDuration, formatDurationForCertificate } from "@/utils/courseDurationCalculator";
 
 export interface UnifiedCertificate {
   id: string;
@@ -53,7 +54,7 @@ export const useUnifiedCertificates = (courseId?: string) => {
       try {
       // Buscar todos os certificados com dados das tabelas relacionadas
       const [learningCertsResult, solutionCertsResult] = await Promise.all([
-        // Certificados de cursos com dados completos incluindo lessons
+        // Certificados de cursos com dados completos incluindo lessons e vídeos
         supabase
           .from('learning_certificates')
           .select(`
@@ -70,7 +71,11 @@ export const useUnifiedCertificates = (courseId?: string) => {
                 learning_lessons (
                   id,
                   title,
-                  estimated_time_minutes
+                  estimated_time_minutes,
+                  learning_lesson_videos (
+                    id,
+                    duration_seconds
+                  )
                 )
               )
             )
@@ -114,6 +119,19 @@ export const useUnifiedCertificates = (courseId?: string) => {
             // Extrair lições de todos os módulos
             const allLessons = course?.learning_modules?.flatMap(module => module.learning_lessons || []) || [];
             
+            // Calcular duração real dos vídeos
+            let totalVideoDuration = 0;
+            let totalVideoCount = 0;
+            
+            allLessons.forEach(lesson => {
+              lesson.learning_lesson_videos?.forEach(video => {
+                if (video.duration_seconds && video.duration_seconds > 0) {
+                  totalVideoDuration += video.duration_seconds;
+                  totalVideoCount++;
+                }
+              });
+            });
+            
             return {
               ...cert,
               type: 'course' as const,
@@ -127,7 +145,9 @@ export const useUnifiedCertificates = (courseId?: string) => {
                 ...cert.metadata,
                 totalModules: course?.learning_modules?.length || 0,
                 totalLessons: allLessons.length,
-                totalDuration: allLessons.reduce((acc: number, lesson: any) => acc + (lesson.estimated_time_minutes || 30), 0)
+                totalDuration: allLessons.reduce((acc: number, lesson: any) => acc + (lesson.estimated_time_minutes || 30), 0),
+                realVideoDuration: totalVideoDuration, // Nova propriedade com duração real
+                totalVideoCount: totalVideoCount
               }
             };
           }),
@@ -248,7 +268,10 @@ export const useUnifiedCertificates = (courseId?: string) => {
           certificate.completion_date || certificate.implementation_date || certificate.issued_at
         ),
         certificateId: certificate.id,
-        validationCode: certificate.validation_code
+        validationCode: certificate.validation_code,
+        // Adicionar duração real calculada
+        workloadHours: generateWorkloadFromRealDuration(certificate),
+        durationSeconds: certificate.metadata?.realVideoDuration || 0
       };
 
       // Criar elemento temporário off-screen
@@ -343,18 +366,24 @@ export const useUnifiedCertificates = (courseId?: string) => {
 
   // Função auxiliar para calcular carga horária baseada no tipo e conteúdo real
   const generateWorkload = (certificate: UnifiedCertificate): string => {
-    // Se tem dados específicos de duração total
+    // Se tem dados específicos de duração total real dos vídeos
+    const realVideoDuration = certificate.metadata?.realVideoDuration;
+    if (realVideoDuration && realVideoDuration > 0) {
+      return formatDurationForCertificate(realVideoDuration);
+    }
+    
+    // Se tem dados específicos de duração total estimada
     const totalDuration = certificate.metadata?.totalDuration;
     if (totalDuration) {
       const hours = Math.ceil(totalDuration / 60); // Converter minutos para horas
-      return `${hours} horas`;
+      return `${hours} hora${hours > 1 ? 's' : ''}`;
     }
     
     // Se tem dados específicos de lições
     const totalLessons = certificate.metadata?.totalLessons || 0;
     if (totalLessons > 0) {
       const estimatedHours = Math.ceil(totalLessons * 0.5); // 30min por lição
-      return `${estimatedHours} horas`;
+      return `${estimatedHours} hora${estimatedHours > 1 ? 's' : ''}`;
     }
     
     // Estimar baseado no tipo e título
@@ -369,6 +398,17 @@ export const useUnifiedCertificates = (courseId?: string) => {
     } else {
       return '2-4 horas'; // Soluções são mais práticas
     }
+  };
+
+  // Nova função específica para gerar workload com duração real
+  const generateWorkloadFromRealDuration = (certificate: UnifiedCertificate): string => {
+    const realVideoDuration = certificate.metadata?.realVideoDuration;
+    if (realVideoDuration && realVideoDuration > 0) {
+      return formatDurationForCertificate(realVideoDuration);
+    }
+    
+    // Fallback para método anterior
+    return generateWorkload(certificate);
   };
 
   // Função auxiliar para determinar dificuldade

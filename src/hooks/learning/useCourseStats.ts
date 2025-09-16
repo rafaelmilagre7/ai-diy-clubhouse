@@ -11,30 +11,45 @@ interface CourseStatsProps {
 
 export function useCourseStats({ modules, allLessons, userProgress }: CourseStatsProps) {
   
-  // Calcular estatísticas do curso
+  // Calcular estatísticas do curso com durações reais
   const courseStats = useMemo(() => {
     if (!allLessons) return {};
     
     let totalVideos = 0;
-    let totalDuration = 0;
+    let totalDuration = 0; // Em segundos, baseado em duration_seconds real
+    let totalEstimatedMinutes = 0; // Fallback para estimated_time_minutes
     
     allLessons.forEach(lesson => {
       if (lesson.videos && Array.isArray(lesson.videos)) {
         totalVideos += lesson.videos.length;
         
         lesson.videos.forEach(video => {
-          if (video.duration_seconds) {
+          // Priorizar duration_seconds real se disponível
+          if (video.duration_seconds && video.duration_seconds > 0) {
             totalDuration += video.duration_seconds;
+          } else if (lesson.estimated_time_minutes) {
+            // Fallback: usar tempo estimado da lição dividido pelo número de vídeos
+            totalEstimatedMinutes += lesson.estimated_time_minutes / lesson.videos.length;
           }
         });
+      } else if (lesson.estimated_time_minutes) {
+        // Se não tem vídeos, usar tempo estimado da lição
+        totalEstimatedMinutes += lesson.estimated_time_minutes;
       }
     });
+    
+    // Se não temos durações reais de vídeos, usar estimativas
+    const finalDurationMinutes = totalDuration > 0 
+      ? Math.ceil(totalDuration / 60) 
+      : totalEstimatedMinutes;
     
     return {
       moduleCount: modules?.length || 0,
       lessonCount: allLessons.length,
       videoCount: totalVideos,
-      durationMinutes: Math.ceil(totalDuration / 60)
+      durationMinutes: Math.ceil(finalDurationMinutes),
+      realVideoDuration: totalDuration, // Nova propriedade com duração real em segundos
+      hasRealDurations: totalDuration > 0 // Flag para indicar se temos durações reais
     };
   }, [allLessons, modules]);
   

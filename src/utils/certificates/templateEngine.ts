@@ -14,10 +14,12 @@ export interface CertificateData {
   // Novos campos enriquecidos
   description?: string;
   workload?: string;
+  workloadHours?: string;
   difficulty?: string;
   categoryDetailed?: string;
   totalModules?: number;
   totalLessons?: number;
+  durationSeconds?: number;
 }
 
 export interface CertificateTemplate {
@@ -213,22 +215,23 @@ export class CertificateTemplateEngine {
   public processTemplate(template: CertificateTemplate, data: CertificateData): string {
     let processedHTML = template.html_template;
 
-    // Substituir placeholders com dados reais
-    const replacements = {
-      '{{USER_NAME}}': data.userName || 'Nome não informado',
-      '{{SOLUTION_TITLE}}': data.solutionTitle || 'Título não informado',
-      '{{SOLUTION_CATEGORY}}': data.solutionCategory || 'Categoria não informada',
-      '{{IMPLEMENTATION_DATE}}': data.implementationDate || 'Data não informada',
-      '{{VALIDATION_CODE}}': data.validationCode || 'Código não informado',
-      '{{CERTIFICATE_ID}}': data.certificateId || 'ID não informado',
-      '{{COMPLETION_TYPE}}': 'Formação',
-      '{{COURSE_TITLE}}': data.courseTitle || data.solutionTitle || 'Curso',
-      // Novos campos enriquecidos
-      '{{DESCRIPTION}}': data.description || 'Certificado de conclusão de formação em inteligência artificial',
-      '{{WORKLOAD}}': data.workload || this.calculateWorkload(data),
-      '{{DIFFICULTY}}': data.difficulty || this.getDifficultyLevel(data),
-      '{{CATEGORY_DETAILED}}': data.categoryDetailed || data.solutionCategory || 'Formação'
-    };
+      // Substituir placeholders com dados reais
+      const replacements = {
+        '{{USER_NAME}}': data.userName || 'Nome não informado',
+        '{{SOLUTION_TITLE}}': data.solutionTitle || 'Título não informado',
+        '{{SOLUTION_CATEGORY}}': data.solutionCategory || 'Categoria não informada',
+        '{{IMPLEMENTATION_DATE}}': data.implementationDate || 'Data não informada',
+        '{{VALIDATION_CODE}}': data.validationCode || 'Código não informado',
+        '{{CERTIFICATE_ID}}': data.certificateId || 'ID não informado',
+        '{{COMPLETION_TYPE}}': 'Formação',
+        '{{COURSE_TITLE}}': data.courseTitle || data.solutionTitle || 'Curso',
+        '{{WORKLOAD_HOURS}}': data.workloadHours || this.calculateWorkload(data),
+        // Novos campos enriquecidos
+        '{{DESCRIPTION}}': data.description || 'Certificado de conclusão de formação em inteligência artificial',
+        '{{WORKLOAD}}': data.workload || this.calculateWorkload(data),
+        '{{DIFFICULTY}}': data.difficulty || this.getDifficultyLevel(data),
+        '{{CATEGORY_DETAILED}}': data.categoryDetailed || data.solutionCategory || 'Formação'
+      };
 
     // Aplicar substituições
     Object.entries(replacements).forEach(([placeholder, value]) => {
@@ -294,6 +297,12 @@ export class CertificateTemplateEngine {
   // Função auxiliar para calcular carga horária baseada nos dados reais
   private calculateWorkload(data: CertificateData): string {
     if (data.workload) return data.workload;
+    
+    // Usar duração real se disponível
+    if (data.durationSeconds && data.durationSeconds > 0) {
+      const hours = Math.ceil(data.durationSeconds / 3600);
+      return `${hours} hora${hours > 1 ? 's' : ''}`;
+    }
     
     // Se temos dados específicos de lições
     const totalLessons = data.totalLessons || 0;
