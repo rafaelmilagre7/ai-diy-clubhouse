@@ -119,15 +119,17 @@ export const useUnifiedCertificates = (courseId?: string) => {
             // Extrair lições de todos os módulos
             const allLessons = course?.learning_modules?.flatMap(module => module.learning_lessons || []) || [];
             
-            // Calcular duração real dos vídeos
+            // Calcular duração real dos vídeos e contagem total
             let totalVideoDuration = 0;
             let totalVideoCount = 0;
+            let videosWithDuration = 0;
             
             allLessons.forEach(lesson => {
               lesson.learning_lesson_videos?.forEach(video => {
+                totalVideoCount++; // Contar todos os vídeos
                 if (video.duration_seconds && video.duration_seconds > 0) {
                   totalVideoDuration += video.duration_seconds;
-                  totalVideoCount++;
+                  videosWithDuration++;
                 }
               });
             });
@@ -147,7 +149,9 @@ export const useUnifiedCertificates = (courseId?: string) => {
                 totalLessons: allLessons.length,
                 totalDuration: allLessons.reduce((acc: number, lesson: any) => acc + (lesson.estimated_time_minutes || 30), 0),
                 realVideoDuration: totalVideoDuration, // Nova propriedade com duração real
-                totalVideoCount: totalVideoCount
+                totalVideoCount: totalVideoCount, // Total de vídeos (incluindo sem duração)
+                videosWithDuration: videosWithDuration, // Vídeos que têm duração
+                videoCount: totalVideoCount // Alias para compatibilidade
               }
             };
           }),
@@ -410,14 +414,27 @@ export const useUnifiedCertificates = (courseId?: string) => {
   // Nova função específica para gerar workload com duração real
   const generateWorkloadFromRealDuration = (certificate: UnifiedCertificate): string => {
     const realVideoDuration = certificate.metadata?.realVideoDuration;
-    const videoCount = certificate.metadata?.videoCount || 0;
+    const totalVideoCount = certificate.metadata?.totalVideoCount || certificate.metadata?.videoCount || 0;
     
-    if (realVideoDuration && realVideoDuration > 0) {
-      return formatDurationForCertificate(realVideoDuration, videoCount);
+    console.log('🔍 [WORKLOAD] Gerando workload para certificado:', {
+      certificateId: certificate.id,
+      title: certificate.title,
+      realVideoDuration,
+      totalVideoCount,
+      metadata: certificate.metadata
+    });
+    
+    // Se há vídeos mas não há duração real, usar estimativa baseada na contagem
+    if (totalVideoCount > 0) {
+      const estimatedDuration = formatDurationForCertificate(realVideoDuration || 0, totalVideoCount);
+      console.log('✅ [WORKLOAD] Usando estimativa baseada em vídeos:', estimatedDuration);
+      return estimatedDuration;
     }
     
     // Fallback para método anterior
-    return generateWorkload(certificate);
+    const fallback = generateWorkload(certificate);
+    console.log('⚠️ [WORKLOAD] Usando fallback:', fallback);
+    return fallback;
   };
 
   // Função auxiliar para determinar dificuldade

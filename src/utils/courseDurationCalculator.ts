@@ -7,6 +7,25 @@ export const calculateCourseDuration = async (courseId: string): Promise<number>
   try {
     console.log('🔍 Calculando duração para curso:', courseId);
     
+    // Buscar todos os módulos do curso primeiro
+    const { data: courseModules, error: moduleError } = await supabase
+      .from('learning_modules')
+      .select('id')
+      .eq('course_id', courseId);
+
+    if (moduleError) {
+      console.error('❌ Erro ao buscar módulos do curso:', moduleError);
+      return 0;
+    }
+
+    if (!courseModules || courseModules.length === 0) {
+      console.log('⚠️ Nenhum módulo encontrado para o curso:', courseId);
+      return 0;
+    }
+
+    const moduleIds = courseModules.map(m => m.id);
+    
+    // Buscar todas as lições desses módulos com seus vídeos
     const { data: courseLessons, error } = await supabase
       .from('learning_lessons')
       .select(`
@@ -17,11 +36,7 @@ export const calculateCourseDuration = async (courseId: string): Promise<number>
           duration_seconds
         )
       `)
-      .eq('module_id', supabase
-        .from('learning_modules')
-        .select('id')
-        .eq('course_id', courseId)
-      );
+      .in('module_id', moduleIds);
 
     if (error) {
       console.error('❌ Erro ao buscar lições do curso:', error);
@@ -45,7 +60,9 @@ export const calculateCourseDuration = async (courseId: string): Promise<number>
     // Se não temos durações reais, usar estimativa baseada no número de vídeos
     if (totalSeconds === 0 && totalVideos > 0) {
       totalSeconds = estimateDurationFromVideoCount(totalVideos);
-      console.log(`📊 Usando estimativa para curso ${courseId}: ${totalVideos} vídeos = ${Math.round(totalSeconds / 3600)} horas`);
+      console.log(`📊 Usando estimativa para curso ${courseId}: ${totalVideos} vídeos = ${Math.round(totalSeconds / 3600)} horas (${Math.round(totalSeconds / 60)} min)`);
+    } else if (totalSeconds === 0) {
+      console.log(`⚠️ Nenhum vídeo encontrado para o curso ${courseId}`);
     }
 
     console.log('✅ Duração calculada:', {
