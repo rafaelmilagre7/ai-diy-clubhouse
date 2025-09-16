@@ -302,6 +302,23 @@ export const useUnifiedCertificates = (courseId?: string) => {
         return;
       }
 
+      // Buscar durações reais para o download
+      const { data: courseDurations } = await supabase
+        .from('course_durations')
+        .select('course_id, calculated_hours, total_duration_seconds, sync_status');
+      
+      // Criar mapa de durações por curso
+      const durationMap = new Map();
+      if (courseDurations) {
+        courseDurations.forEach(duration => {
+          durationMap.set(duration.course_id, {
+            calculatedHours: duration.calculated_hours,
+            totalDurationSeconds: duration.total_duration_seconds,
+            syncStatus: duration.sync_status
+          });
+        });
+      }
+
       console.log('📥 [UNIFIED-DOWNLOAD] Iniciando download usando React component');
       
       // Importar componente React e PDF generator
@@ -326,7 +343,7 @@ export const useUnifiedCertificates = (courseId?: string) => {
         validationCode: certificate.validation_code,
         // Duração REAL calculada baseada na sincronização da API Panda Video
         workloadHours: (() => {
-          const calculatedWorkload = generateWorkloadFromRealDuration(certificate);
+          const calculatedWorkload = generateWorkloadFromRealDuration(certificate, durationMap);
           console.log('🏆 [CERTIFICATE_DATA] WorkloadHours REAL calculado:', {
             certificateId: certificate.id,
             title: certificate.title,
@@ -431,7 +448,7 @@ export const useUnifiedCertificates = (courseId?: string) => {
   };
 
   // Função auxiliar para calcular carga horária baseada no tipo e conteúdo real
-  const generateWorkload = (certificate: UnifiedCertificate): string => {
+  const generateWorkload = (certificate: UnifiedCertificate, durationMap: Map<string, any>): string => {
     // Se tem dados específicos de duração total real dos vídeos
     const realVideoDuration = certificate.metadata?.realVideoDuration;
     const videoCount = certificate.metadata?.videoCount || 0;
@@ -467,14 +484,26 @@ export const useUnifiedCertificates = (courseId?: string) => {
     }
     
     if (certificate.type === 'course') {
-      return '6-8 horas'; // Cursos tendem a ser mais longos
+      // Usar duração da tabela course_durations se disponível
+      const courseDuration = durationMap.get(certificate.course_id);
+      if (courseDuration && courseDuration.syncStatus === 'completed' && courseDuration.calculatedHours !== '0 horas') {
+        return courseDuration.calculatedHours;
+      } else {
+        return '6-8 horas'; // Cursos tendem a ser mais longos
+      }
     } else {
-      return '2-4 horas'; // Soluções são mais práticas
+      // Para soluções, usar duração da tabela course_durations se disponível
+      const courseDuration = durationMap.get(certificate.course_id);
+      if (courseDuration && courseDuration.syncStatus === 'completed' && courseDuration.calculatedHours !== '0 horas') {
+        return courseDuration.calculatedHours;
+      } else {
+        return '2-4 horas'; // Soluções são mais práticas
+      }
     }
   };
 
   // Nova função específica para gerar workload com duração real
-  const generateWorkloadFromRealDuration = (certificate: UnifiedCertificate): string => {
+  const generateWorkloadFromRealDuration = (certificate: UnifiedCertificate, durationMap?: Map<string, any>): string => {
     const realVideoDuration = certificate.metadata?.realVideoDuration;
     const totalVideoCount = certificate.metadata?.totalVideoCount || certificate.metadata?.videoCount || 0;
     
@@ -513,8 +542,18 @@ export const useUnifiedCertificates = (courseId?: string) => {
         calculatedDuration = `${hours} hora${hours > 1 ? 's' : ''}`;
         console.warn('⚠️ [WORKLOAD] Usando fallback de emergência:', calculatedDuration);
       } else {
-        calculatedDuration = '4 horas'; // Fallback final
-        console.warn('⚠️ [WORKLOAD] Usando fallback final:', calculatedDuration);
+        // Usar duração da tabela course_durations como fallback se disponível
+        if (durationMap && certificate.course_id) {
+          const courseDuration = durationMap.get(certificate.course_id);
+          if (courseDuration && courseDuration.syncStatus === 'completed' && courseDuration.calculatedHours !== '0 horas') {
+            calculatedDuration = courseDuration.calculatedHours;
+            console.log('✅ [WORKLOAD] Usando duração da tabela course_durations como fallback:', calculatedDuration);
+            return calculatedDuration;
+          }
+        }
+        
+        calculatedDuration = '4 horas'; // Fallback final absoluto
+        console.warn('⚠️ [WORKLOAD] Usando fallback final absoluto:', calculatedDuration);
       }
     }
     

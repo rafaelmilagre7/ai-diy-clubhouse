@@ -20,6 +20,7 @@ export interface CertificateData {
   totalModules?: number;
   totalLessons?: number;
   durationSeconds?: number;
+  courseDuration?: string;
 }
 
 export interface CertificateTemplate {

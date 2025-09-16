@@ -72,7 +72,7 @@ async function processCourse(courseId: string, supabase: any) {
       .from('learning_lesson_videos')
       .select(`
         id,
-        panda_video_id,
+        video_id,
         duration_seconds,
         lesson:learning_lessons!inner(
           module:learning_modules!inner(
@@ -102,13 +102,13 @@ async function processCourse(courseId: string, supabase: any) {
 
     // Processar cada vídeo
     for (const video of videos || []) {
-      if (!video.panda_video_id) {
-        console.log(`⚠️ Vídeo ${video.id} sem panda_video_id do Panda`);
+      if (!video.video_id) {
+        console.log(`⚠️ Vídeo ${video.id} sem video_id do Panda`);
         continue;
       }
 
       try {
-        const duration = await fetchPandaVideoDuration(video.panda_video_id, apiKey);
+        const duration = await fetchPandaVideoDuration(video.video_id, apiKey);
         
         if (duration > 0) {
           // Atualizar duração no banco
