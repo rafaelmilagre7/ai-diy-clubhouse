@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { CertificatesFilters } from "@/components/learning/certificates/CertificatesFilters";
 import { UnifiedCertificatesList } from "@/components/learning/certificates/UnifiedCertificatesList";
 import { CertificateErrorBoundary } from "@/components/certificates/CertificateErrorBoundary";
 
 import { useAuth } from "@/contexts/auth";
 import { Award } from "lucide-react";
-import { executeVideoDurationUpdate } from "@/utils/executeVideoDurationUpdate";
 
 
 const CertificatesPage = () => {
@@ -13,12 +12,6 @@ const CertificatesPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortBy, setSortBy] = useState("recent");
-  
-  // Executar atualização das durações quando a página carregar
-  useEffect(() => {
-    console.log('🎯 Página de certificados carregada - iniciando atualização de durações...');
-    executeVideoDurationUpdate();
-  }, []);
   
   return (
     <div className="space-y-8">

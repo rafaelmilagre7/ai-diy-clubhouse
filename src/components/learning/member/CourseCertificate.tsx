@@ -1,10 +1,9 @@
 
-import React, { useEffect } from "react";
+import React from "react";
 import { CertificateEligibility } from "@/components/learning/certificates/CertificateEligibility";
 import { UnifiedCertificatesList } from "@/components/learning/certificates/UnifiedCertificatesList";
 
 import { LearningCourse } from "@/lib/supabase/types";
-import { executeVideoDurationUpdate } from "@/utils/executeVideoDurationUpdate";
 
 interface CourseCertificateProps {
   course: LearningCourse;
@@ -15,16 +14,6 @@ export const CourseCertificate = ({
   course,
   progressPercentage
 }: CourseCertificateProps) => {
-
-  // Executar atualização otimizada das durações quando o componente carregar
-  useEffect(() => {
-    console.log('🎯 Componente de certificado carregado - verificando durações...');
-    
-    // Execução discreta em background sem bloquear a UI
-    setTimeout(() => {
-      executeVideoDurationUpdate().catch(console.error);
-    }, 1000);
-  }, [course.id]);
 
   return (
     <div className="space-y-6">

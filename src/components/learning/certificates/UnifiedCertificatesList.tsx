@@ -1,6 +1,5 @@
 import React, { useMemo } from "react";
 import { UnifiedCertificateCard } from "./UnifiedCertificateCard";
-import { CourseDurationSync } from "./CourseDurationSync";
 import { useUnifiedCertificates } from "@/hooks/learning/useUnifiedCertificates";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircle, Award, BookOpen, TrendingUp, Zap } from "lucide-react";
@@ -219,8 +218,6 @@ export const UnifiedCertificatesList = ({
         </p>
         
         <div className="flex items-center gap-2">
-          <CourseDurationSync />
-          
           <Button
             onClick={handleGeneratePending}
             disabled={isGeneratingPending}
