@@ -36,6 +36,9 @@ export const CertificateRenderer = ({ template, data, onReady }: CertificateRend
     validationCode: data.validationCode
   };
 
+  // DEBUG: Log do CertificateRenderer
+  console.log('🎨 [CertificateRenderer] solutionCategory:', baseData.solutionCategory);
+
   return (
     <div className="certificate-preview-container">
       <PixelPerfectCertificateTemplate
