@@ -15,6 +15,7 @@ import { useAuth } from "@/contexts/auth";
 import { ShareCertificateDropdown } from "./ShareCertificateDropdown";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
+import { getCourseCapacitationDescription, getCertificateTypeLabel } from "@/utils/certificates/courseCapacitationUtils";
 
 interface UnifiedCertificateCardProps {
   certificate: UnifiedCertificate;
@@ -33,7 +34,7 @@ export const UnifiedCertificateCard = ({
   
   const config = isSolution ? {
     icon: Lightbulb,
-    typeLabel: "Solução",
+    typeLabel: getCertificateTypeLabel('solution', certificate.title),
     headerBg: "from-accent/10 to-transparent",
     badgeClass: "bg-accent/15 text-accent border-accent/30",
     iconColor: "text-accent",
@@ -42,7 +43,7 @@ export const UnifiedCertificateCard = ({
     codeLabelColor: "text-accent"
   } : {
     icon: Award,
-    typeLabel: "Curso",
+    typeLabel: getCertificateTypeLabel('course', certificate.title),
     headerBg: "from-primary/10 to-transparent",
     badgeClass: "bg-primary/15 text-primary border-primary/30",
     iconColor: "text-primary",
@@ -71,7 +72,11 @@ export const UnifiedCertificateCard = ({
       const certificateData = {
         userName: user?.user_metadata?.full_name || user?.email || "Usuário",
         solutionTitle: certificate.title,
-        solutionCategory: isSolution ? 'Solução de IA' : 'Curso',
+        solutionCategory: getCourseCapacitationDescription({
+          title: certificate.title,
+          type: certificate.type,
+          metadata: certificate.metadata
+        }),
         implementationDate: formattedDate,
         certificateId: certificate.id,
         validationCode: certificate.validation_code
@@ -342,7 +347,11 @@ Confira meu certificado: ${customDomainUrl}`;
                     data={{
                       userName: user?.user_metadata?.full_name || user?.email || "Usuário",
                       solutionTitle: certificate.title,
-                      solutionCategory: isSolution ? "Solução de IA" : "Curso",
+                      solutionCategory: getCourseCapacitationDescription({
+                        title: certificate.title,
+                        type: certificate.type,
+                        metadata: certificate.metadata
+                      }),
                       courseTitle: !isSolution ? certificate.title : undefined,
                       implementationDate: formattedDate,
                       completedDate: formattedDate,

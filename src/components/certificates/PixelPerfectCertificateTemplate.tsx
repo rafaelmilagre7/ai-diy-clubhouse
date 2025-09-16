@@ -11,9 +11,6 @@ export const PixelPerfectCertificateTemplate = React.forwardRef<HTMLDivElement, 
   ({ data, onReady, className = "" }, ref) => {
     const containerRef = React.useRef<HTMLDivElement>(null);
 
-    // DEBUG: Log do Template
-    console.log('📜 [PixelPerfectTemplate] solutionCategory:', data?.solutionCategory);
-
     React.useEffect(() => {
       if (containerRef.current && onReady) {
         onReady(containerRef.current);

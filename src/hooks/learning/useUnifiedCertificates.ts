@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/auth";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { getCourseCapacitationDescription } from "@/utils/certificates/courseCapacitationUtils";
 
 export interface UnifiedCertificate {
   id: string;
@@ -238,7 +239,11 @@ export const useUnifiedCertificates = (courseId?: string) => {
       const certificateData = {
         userName: user?.user_metadata?.full_name || user?.email || "Usuário",
         solutionTitle: certificate.title,
-        solutionCategory: certificate.type === 'solution' ? 'Solução de IA' : 'Curso',
+        solutionCategory: getCourseCapacitationDescription({
+          title: certificate.title,
+          type: certificate.type,
+          metadata: certificate.metadata
+        }),
         implementationDate: formatDateForCertificate(
           certificate.completion_date || certificate.implementation_date || certificate.issued_at
         ),

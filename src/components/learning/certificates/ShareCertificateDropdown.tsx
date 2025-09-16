@@ -10,6 +10,7 @@ import {
 import { Share2, Linkedin, Copy, ExternalLink, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { getCourseCapacitationDescription } from "@/utils/certificates/courseCapacitationUtils";
 
 interface ShareCertificateDropdownProps {
   certificate: {
@@ -59,7 +60,10 @@ Confira meu certificado:`;
       const certificateData = {
         userName: userProfile.name,
         solutionTitle: certificateTitle,
-        solutionCategory: isSolution ? 'Solução de IA' : 'Curso',
+        solutionCategory: getCourseCapacitationDescription({
+          title: certificateTitle,
+          type: certificate.type || (isSolution ? 'solution' : 'course')
+        }),
         implementationDate: new Date().toLocaleDateString('pt-BR'),
         certificateId: certificate.id,
         validationCode: certificate.validation_code

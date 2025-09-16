@@ -61,9 +61,6 @@ export const CertificateModal = ({ certificate, isOpen, onClose }: CertificateMo
     benefits: [] // Pode ser expandido futuramente
   };
 
-  // DEBUG: Log do CertificateModal
-  console.log('🎯 [CertificateModal] solutionCategory:', certificateData.solutionCategory);
-
   // Debug: Log do template quando carregado
   useEffect(() => {
     if (template) {
