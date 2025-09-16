@@ -11,6 +11,14 @@ export const PixelPerfectCertificateTemplate = React.forwardRef<HTMLDivElement, 
   ({ data, onReady, className = "" }, ref) => {
     const containerRef = React.useRef<HTMLDivElement>(null);
 
+    // LOG DETALHADO dos dados recebidos
+    console.log('🎨 [TEMPLATE] PixelPerfectCertificateTemplate recebeu dados:', {
+      userName: data?.userName,
+      solutionTitle: data?.solutionTitle,
+      workloadHours: data?.workloadHours,
+      data: data
+    });
+
     React.useEffect(() => {
       if (containerRef.current && onReady) {
         onReady(containerRef.current);
@@ -169,7 +177,7 @@ export const PixelPerfectCertificateTemplate = React.forwardRef<HTMLDivElement, 
                 Concluiu o curso <strong style={{ color: '#7CF6FF', fontWeight: 600 }}>{data?.solutionTitle || "Curso de Formação"}</strong>, 
                 adquirindo conhecimentos sobre <strong style={{ color: '#7CF6FF', fontWeight: 600 }}>{data?.solutionCategory}</strong>, 
                 em <strong style={{ color: '#7CF6FF', fontWeight: 600 }}>{data?.implementationDate || new Date().toLocaleDateString('pt-BR')}</strong>, 
-                com carga horária de <strong style={{ color: '#7CF6FF', fontWeight: 600 }}>{data?.workloadHours}</strong>.
+                com carga horária de <strong style={{ color: '#7CF6FF', fontWeight: 600 }}>{data?.workloadHours || "4 horas"}</strong>.
               </div>
             </div>
 

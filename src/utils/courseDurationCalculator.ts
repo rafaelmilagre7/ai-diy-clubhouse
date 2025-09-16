@@ -115,12 +115,17 @@ export const formatDurationForCertificate = (seconds: number, videoCount: number
   
   console.log('✅ [FORMAT_DURATION] Resultado final:', { finalSeconds, hours });
   
+  // Garantir sempre um resultado válido
   if (hours < 1) {
     const minutes = Math.ceil(finalSeconds / 60);
-    return `${minutes} minutos`;
+    const result = `${minutes} minutos`;
+    console.log('📝 [FORMAT_DURATION] Retornando em minutos:', result);
+    return result;
   }
 
-  return `${hours} hora${hours > 1 ? 's' : ''}`;
+  const result = `${hours} hora${hours > 1 ? 's' : ''}`;
+  console.log('📝 [FORMAT_DURATION] Retornando em horas:', result);
+  return result;
 };
 
 /**
