@@ -63,29 +63,8 @@ async function fetchPandaVideoDuration(videoId: string, apiKey: string): Promise
   return 0;
 }
 
-Deno.serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
+async function processCourse(courseId: string, supabase: any) {
   try {
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
-
-    const { courseId } = await req.json();
-    
-    if (!courseId) {
-      return new Response(
-        JSON.stringify({ error: 'Course ID é obrigatório' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    console.log(`🎯 Iniciando sincronização para curso: ${courseId}`);
-
     // Marcar como 'syncing'
     await supabase
       .from('course_durations')
@@ -117,10 +96,7 @@ Deno.serve(async (req) => {
         .update({ sync_status: 'failed' })
         .eq('course_id', courseId);
       
-      return new Response(
-        JSON.stringify({ error: 'Erro ao buscar vídeos' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return { success: false, error: 'Erro ao buscar vídeos' };
     }
 
     console.log(`📹 Encontrados ${videos?.length || 0} vídeos do Panda Video para sincronizar`);
@@ -133,10 +109,7 @@ Deno.serve(async (req) => {
         .update({ sync_status: 'failed' })
         .eq('course_id', courseId);
       
-      return new Response(
-        JSON.stringify({ error: 'API Key do Panda Video não configurada' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return { success: false, error: 'API Key do Panda Video não configurada' };
     }
 
     let totalDurationSeconds = 0;
@@ -206,17 +179,109 @@ Deno.serve(async (req) => {
 
     console.log(`🎉 Sincronização concluída: ${syncedVideos}/${totalVideos} vídeos, ${calculatedHours} total`);
 
+    return {
+      success: true,
+      courseId,
+      totalVideos,
+      syncedVideos,
+      totalDurationSeconds,
+      calculatedHours,
+      message: `Sincronização concluída: ${syncedVideos}/${totalVideos} vídeos processados`
+    };
+  } catch (error) {
+    console.error(`❌ Erro ao processar curso ${courseId}:`, error);
+    await supabase
+      .from('course_durations')
+      .update({ sync_status: 'failed' })
+      .eq('course_id', courseId);
+    
+    return { success: false, error: error.message };
+  }
+}
+
+Deno.serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    const { courseId, syncAll } = await req.json();
+    
+    if (!courseId && !syncAll) {
+      return new Response(
+        JSON.stringify({ error: 'Course ID ou syncAll é obrigatório' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (syncAll) {
+      console.log(`🎯 Iniciando sincronização de TODOS os cursos`);
+      
+      // Buscar todos os cursos
+      const { data: courses, error: coursesError } = await supabase
+        .from('learning_courses')
+        .select('id, title')
+        .eq('published', true);
+
+      if (coursesError) {
+        console.error('❌ Erro ao buscar cursos:', coursesError);
+        return new Response(
+          JSON.stringify({ error: 'Erro ao buscar cursos' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      console.log(`📚 Encontrados ${courses?.length || 0} cursos para sincronizar`);
+
+      let totalProcessed = 0;
+      let successCount = 0;
+      let failedCount = 0;
+
+      // Processar cada curso
+      for (const course of courses || []) {
+        try {
+          console.log(`🔄 Processando curso: ${course.title} (${course.id})`);
+          
+          const result = await processCourse(course.id, supabase);
+          if (result.success) {
+            successCount++;
+          } else {
+            failedCount++;
+          }
+          totalProcessed++;
+        } catch (error) {
+          console.error(`❌ Erro ao processar curso ${course.title}:`, error);
+          failedCount++;
+          totalProcessed++;
+        }
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: `Sincronização completa: ${successCount} sucessos, ${failedCount} falhas`,
+          totalProcessed,
+          successCount,
+          failedCount
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log(`🎯 Iniciando sincronização para curso: ${courseId}`);
+
+    // Processar curso individual
+    const result = await processCourse(courseId, supabase);
+    
     return new Response(
-      JSON.stringify({
-        success: true,
-        courseId,
-        totalVideos,
-        syncedVideos,
-        totalDurationSeconds,
-        calculatedHours,
-        message: `Sincronização concluída: ${syncedVideos}/${totalVideos} vídeos processados`
-      }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify(result),
+      { status: result.success ? 200 : 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
