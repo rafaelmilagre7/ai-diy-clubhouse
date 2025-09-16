@@ -1,14 +1,10 @@
 import { supabase } from "@/lib/supabase";
-import { toast } from "sonner";
 
 /**
- * Atualiza durações de vídeos usando a edge function
- * Esta é a forma correta de chamar a edge function do JavaScript
+ * Atualiza durações de vídeos usando a edge function corrigida
  */
 export const updateVideoDurations = async (lessonId?: string): Promise<boolean> => {
   try {
-    toast.info("Atualizando durações de vídeos...");
-    
     console.log('🔄 Chamando edge function update-video-durations', { lessonId });
     
     // Chamar edge function usando o método correto do cliente Supabase
@@ -24,27 +20,26 @@ export const updateVideoDurations = async (lessonId?: string): Promise<boolean> 
     console.log('✅ Resposta da edge function:', data);
     
     if (data.totalProcessed === 0) {
-      toast.info("Nenhum vídeo encontrado para atualização");
+      console.log("ℹ️ Nenhum vídeo encontrado para atualização");
       return true;
     }
     
     if (data.success > 0) {
-      toast.success(`Durações de ${data.success} vídeo(s) atualizadas com sucesso!`);
+      console.log(`✅ Durações de ${data.success} vídeo(s) atualizadas com sucesso!`);
       
       if (data.failed > 0) {
-        toast.warning(`Não foi possível atualizar ${data.failed} vídeo(s)`);
+        console.log(`⚠️ Não foi possível atualizar ${data.failed} vídeo(s)`);
       }
       
       return true;
     } else {
-      toast.info("Nenhuma duração de vídeo precisou ser atualizada.");
+      console.log("ℹ️ Nenhuma duração de vídeo precisou ser atualizada.");
       return true;
     }
     
   } catch (error: any) {
     console.error("❌ Erro ao executar atualização de durações:", error);
-    toast.error("Falha ao atualizar durações: " + (error.message || "Erro desconhecido"));
-    return false;
+    throw error;
   }
 };
 
