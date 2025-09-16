@@ -8,96 +8,141 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Função para buscar metadados dos vídeos do Panda Video API
-async function fetchPandaVideoMetadata(videoId: string) {
-  try {
-    console.log(`Buscando metadados do Panda Video para ID: ${videoId}`);
-    
-    // Obter API key do ambiente
-    const pandaApiKey = Deno.env.get('PANDA_API_KEY');
-    
-    if (!pandaApiKey) {
-      throw new Error('PANDA_API_KEY não definida');
-    }
-    
-    // Construir URL da API
-    const url = `https://api-v2.pandavideo.com.br/videos/${videoId}`;
-    
-    // Fazer requisição para API do Panda Video
-    const response = await fetch(url, {
-      headers: {
-        'Authorization': pandaApiKey,
-        'Content-Type': 'application/json',
-      },
-    });
-    
-    if (!response.ok) {
-      const text = await response.text();
-      console.error(`Erro na resposta da API do Panda: ${response.status} ${text}`);
-      throw new Error(`Erro ao buscar vídeo: ${response.status} ${response.statusText}`);
-    }
-    
-    // Processar resposta
-    const data = await response.json();
-    
-    // LOG DETALHADO: Mostrar estrutura completa dos dados
-    console.log(`=== RESPOSTA COMPLETA DA API PANDA PARA ${videoId} ===`);
-    console.log('Dados completos:', JSON.stringify(data, null, 2));
-    console.log('Campos disponíveis:', Object.keys(data));
-    
-    // Verificar múltiplos campos possíveis para duração
-    let durationSeconds = 0;
-    const possibleDurationFields = [
-      'duration', 
-      'duration_seconds', 
-      'duration_in_seconds',
-      'length',
-      'time',
-      'video_duration',
-      'media_duration'
-    ];
-    
-    console.log('Verificando campos de duração possíveis...');
-    for (const field of possibleDurationFields) {
-      if (data[field] !== undefined && data[field] !== null) {
-        console.log(`Campo ${field} encontrado:`, data[field], typeof data[field]);
+// Rate limiting e retry configs
+const RATE_LIMIT_DELAY = 1000; // 1 segundo entre requests
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 2000; // 2 segundos entre tentativas
+
+// Função para buscar metadados dos vídeos do Panda Video API com retry
+async function fetchPandaVideoMetadata(videoId: string): Promise<{ duration_seconds: number; thumbnail_url: string | null }> {
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      console.log(`[Tentativa ${attempt}/${MAX_RETRIES}] Buscando metadados do Panda Video para ID: ${videoId}`);
+      
+      // Obter API key do ambiente (nome atualizado)
+      const pandaApiKey = Deno.env.get('PANDA_VIDEO_API_KEY');
+      
+      if (!pandaApiKey) {
+        throw new Error('PANDA_VIDEO_API_KEY não definida nas variáveis de ambiente');
+      }
+      
+      console.log('✅ API Key encontrada, fazendo requisição...');
+      
+      // Construir URL da API conforme documentação oficial
+      const url = `https://api-v2.pandavideo.com.br/videos/${videoId}`;
+      console.log(`📡 URL da requisição: ${url}`);
+      
+      // Fazer requisição para API do Panda Video seguindo documentação
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': pandaApiKey,  // Conforme documentação: Authorization: API_KEY
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+      });
+      
+      console.log(`📊 Status da resposta: ${response.status} ${response.statusText}`);
+      
+      if (!response.ok) {
+        const text = await response.text();
+        console.error(`❌ Erro na resposta da API do Panda: ${response.status} ${text}`);
         
-        // Converter para número se necessário
-        let value = data[field];
-        if (typeof value === 'string') {
-          value = parseFloat(value);
+        // Se for 401, é problema de autenticação - não tentar novamente
+        if (response.status === 401) {
+          throw new Error(`Erro de autenticação com a API do Panda Video. Verifique a PANDA_VIDEO_API_KEY.`);
         }
-        if (typeof value === 'number' && !isNaN(value) && value > 0) {
-          durationSeconds = Math.round(value);
-          console.log(`✅ Usando duração do campo '${field}': ${durationSeconds} segundos`);
-          break;
+        
+        // Se for 429 ou 5xx, pode ser temporário - tentar novamente
+        if (attempt < MAX_RETRIES && (response.status === 429 || response.status >= 500)) {
+          console.log(`⏳ Erro temporário (${response.status}), tentando novamente em ${RETRY_DELAY}ms...`);
+          await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+          continue;
+        }
+        
+        throw new Error(`Erro ao buscar vídeo: ${response.status} ${response.statusText} - ${text}`);
+      }
+      
+      // Processar resposta
+      const data = await response.json();
+      
+      console.log(`=== RESPOSTA DA API PANDA PARA ${videoId} ===`);
+      console.log('Estrutura dos dados:', Object.keys(data));
+      
+      // Extrair duração - verificar campos mais prováveis primeiro
+      let durationSeconds = 0;
+      
+      // Campos ordenados por probabilidade baseado na API do Panda Video
+      const durationFields = [
+        'duration',           // Campo mais comum
+        'length',            // Campo alternativo
+        'duration_seconds',  // Possível campo direto
+        'time',             // Campo de tempo genérico
+        'video_duration',   // Campo específico de vídeo
+        'media_duration',   // Campo de mídia
+        'duration_in_seconds' // Variação do campo
+      ];
+      
+      for (const field of durationFields) {
+        if (data[field] !== undefined && data[field] !== null) {
+          let value = data[field];
+          
+          // Converter string para número se necessário
+          if (typeof value === 'string') {
+            value = parseFloat(value);
+          }
+          
+          if (typeof value === 'number' && !isNaN(value) && value > 0) {
+            durationSeconds = Math.round(value);
+            console.log(`✅ Duração encontrada no campo '${field}': ${durationSeconds} segundos (${Math.round(durationSeconds/60)} min)`);
+            break;
+          }
         }
       }
+      
+      // Extrair thumbnail
+      let thumbnailUrl = null;
+      if (data.thumbnail) {
+        if (typeof data.thumbnail === 'string') {
+          thumbnailUrl = data.thumbnail;
+        } else if (typeof data.thumbnail === 'object') {
+          thumbnailUrl = data.thumbnail.url || data.thumbnail.src || data.thumbnail.image || null;
+        }
+        if (thumbnailUrl) {
+          console.log(`📷 Thumbnail encontrada: ${thumbnailUrl}`);
+        }
+      }
+      
+      const result = {
+        duration_seconds: durationSeconds,
+        thumbnail_url: thumbnailUrl,
+      };
+      
+      console.log(`✅ Resultado processado para ${videoId}:`, result);
+      
+      // Rate limiting para não sobrecarregar a API
+      if (RATE_LIMIT_DELAY > 0) {
+        await new Promise(resolve => setTimeout(resolve, RATE_LIMIT_DELAY));
+      }
+      
+      return result;
+      
+    } catch (error) {
+      console.error(`❌ [Tentativa ${attempt}] Erro ao buscar metadados:`, error.message);
+      
+      // Se não for o último attempt, tentar novamente
+      if (attempt < MAX_RETRIES) {
+        console.log(`⏳ Tentando novamente em ${RETRY_DELAY}ms...`);
+        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+        continue;
+      }
+      
+      // Último attempt falhou
+      throw new Error(`Falha após ${MAX_RETRIES} tentativas: ${error.message}`);
     }
-    
-    if (durationSeconds === 0) {
-      console.log('⚠️ Nenhum campo de duração válido encontrado nos dados da API');
-    }
-    
-    // Verificar thumbnail
-    let thumbnailUrl = null;
-    if (data.thumbnail) {
-      console.log('Dados do thumbnail:', JSON.stringify(data.thumbnail, null, 2));
-      thumbnailUrl = data.thumbnail.url || data.thumbnail.src || null;
-    }
-    
-    const result = {
-      duration_seconds: durationSeconds,
-      thumbnail_url: thumbnailUrl,
-    };
-    
-    console.log(`Resultado final para ${videoId}:`, result);
-    
-    return result;
-  } catch (error) {
-    console.error('Erro ao buscar metadados do Panda Video:', error);
-    throw error;
   }
+  
+  throw new Error(`Erro inesperado no fetch de metadados para ${videoId}`);
 }
 
 // Função para atualizar a duração de um vídeo no banco de dados
@@ -245,15 +290,20 @@ serve(async (req) => {
     // Resultados das atualizações
     const results = [];
     
-    // Processar cada vídeo
+    console.log(`🚀 Iniciando processamento de ${videos.length} vídeos`);
+    let processedCount = 0;
+    
+    // Processar cada vídeo com controle de progresso
     for (const video of videos) {
       try {
-        console.log(`Processando vídeo ${video.id}`);
+        processedCount++;
+        console.log(`\n📹 [${processedCount}/${videos.length}] Processando vídeo ${video.id}`);
         
         // Obter o ID do vídeo no Panda Video
         const pandaVideoId = video.video_id || video.video_file_path || '';
         
         if (!pandaVideoId) {
+          console.log(`⚠️ Vídeo ${video.id}: ID do Panda Video não encontrado`);
           results.push({ 
             success: false, 
             videoId: video.id, 
@@ -262,9 +312,16 @@ serve(async (req) => {
           continue;
         }
         
-        // Buscar metadados
+        console.log(`🔍 Vídeo ${video.id}: Buscando metadados para Panda ID: ${pandaVideoId}`);
+        
+        // Buscar metadados com retry automático
         const metadata = await fetchPandaVideoMetadata(pandaVideoId);
-        console.log(`Metadados obtidos para ${video.id}: duração=${metadata.duration_seconds}s`);
+        
+        if (metadata.duration_seconds > 0) {
+          console.log(`⏱️ Vídeo ${video.id}: Duração obtida: ${metadata.duration_seconds}s (${Math.round(metadata.duration_seconds/60)} min)`);
+        } else {
+          console.log(`⚠️ Vídeo ${video.id}: Duração não disponível na API`);
+        }
         
         // Atualizar no banco de dados
         const result = await updateVideoDuration(
@@ -274,9 +331,16 @@ serve(async (req) => {
           metadata.thumbnail_url
         );
         
+        if (result.success) {
+          console.log(`✅ Vídeo ${video.id}: Atualizado no banco de dados`);
+        } else {
+          console.log(`❌ Vídeo ${video.id}: Erro no banco: ${result.error}`);
+        }
+        
         results.push(result);
+        
       } catch (error) {
-        console.error(`Erro ao processar vídeo ${video.id}:`, error);
+        console.error(`💥 Vídeo ${video.id}: Erro no processamento:`, error.message);
         results.push({ 
           success: false, 
           videoId: video.id, 

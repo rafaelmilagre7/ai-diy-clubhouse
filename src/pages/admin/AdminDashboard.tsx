@@ -8,6 +8,7 @@ import { OnboardingStatusCard } from "@/components/admin/OnboardingStatusCard";
 import { RecentActivitiesCard } from "@/components/admin/analytics/RecentActivitiesCard";
 
 import { RefreshCw, Users, Activity, CheckCircle, TrendingUp, BarChart3, Zap, Star } from "lucide-react";
+import { VideoDurationSync } from "@/components/admin/VideoDurationSync";
 const AdminDashboard = () => {
   const [timeRange, setTimeRange] = useState('30d');
   const [lastRefresh, setLastRefresh] = useState(new Date());
@@ -321,6 +322,11 @@ const AdminDashboard = () => {
                 </div>
               </CardContent>
             </Card>
+          </div>
+
+          {/* Sincronização de Durações dos Vídeos */}
+          <div className="grid gap-6 grid-cols-1">
+            <VideoDurationSync />
           </div>
         </div>
       </div>

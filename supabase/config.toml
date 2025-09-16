@@ -162,3 +162,9 @@ verify_jwt = false
 
 [functions.whatsapp-test-delivery]
 verify_jwt = false
+
+[functions.update-video-durations]
+verify_jwt = false
+
+[functions.list-panda-videos]
+verify_jwt = false
