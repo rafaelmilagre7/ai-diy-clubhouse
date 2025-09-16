@@ -515,52 +515,53 @@ export const useUnifiedCertificates = (courseId?: string) => {
       metadata: certificate.metadata
     });
     
-    // CÁLCULO BASEADO EM DURAÇÕES REAIS DA API PANDA VIDEO
+    // PRIORIDADE 1: Usar duração da tabela course_durations se disponível e completada
+    if (durationMap && certificate.course_id) {
+      const courseDuration = durationMap.get(certificate.course_id);
+      if (courseDuration && courseDuration.syncStatus === 'completed' && courseDuration.calculatedHours !== '0 horas') {
+        console.log('✅ [WORKLOAD] Usando duração da tabela course_durations (PRIORITÁRIA):', {
+          courseId: certificate.course_id,
+          duration: courseDuration.calculatedHours,
+          syncStatus: courseDuration.syncStatus
+        });
+        return courseDuration.calculatedHours;
+      }
+    }
+    
+    // PRIORIDADE 2: Usar duração real sincronizada da API Panda Video (se > 0)
+    if (realVideoDuration && realVideoDuration > 0) {
+      console.log('🎯 [WORKLOAD] Usando duração real sincronizada da API:', realVideoDuration);
+      const calculatedDuration = formatDurationForCertificate(realVideoDuration, totalVideoCount);
+      console.log('📊 [WORKLOAD] Duração formatada da API:', calculatedDuration);
+      return calculatedDuration;
+    }
+    
+    // FALLBACK: Estimativa baseada no número de vídeos se não há dados reais
     let calculatedDuration = '';
     
-    console.log('🔍 [WORKLOAD] Dados disponíveis para cálculo:', {
-      realVideoDuration,
-      totalVideoCount,
-      hasRealData: realVideoDuration > 0,
-      certificateType: certificate.type,
-      title: certificate.title
-    });
-    
     try {
-      // SEMPRE usar formatDurationForCertificate que agora prioriza durações reais
-      calculatedDuration = formatDurationForCertificate(realVideoDuration || 0, totalVideoCount);
-      
-      console.log('🎯 [WORKLOAD] Duração calculada via formatDurationForCertificate:', calculatedDuration);
+      calculatedDuration = formatDurationForCertificate(0, totalVideoCount);
+      console.log('⚠️ [WORKLOAD] Usando estimativa baseada em vídeos:', calculatedDuration);
       
     } catch (error) {
       console.error('❌ [WORKLOAD] Erro em formatDurationForCertificate:', error);
       
-      // FALLBACK de emergência apenas se a função falhar completamente
+      // FALLBACK de emergência
       if (totalVideoCount > 0) {
         const estimatedMinutes = totalVideoCount * 6;
         const hours = Math.ceil(estimatedMinutes / 60);
         calculatedDuration = `${hours} hora${hours > 1 ? 's' : ''}`;
-        console.warn('⚠️ [WORKLOAD] Usando fallback de emergência:', calculatedDuration);
+        console.warn('🚨 [WORKLOAD] Usando fallback de emergência:', calculatedDuration);
       } else {
-        // Usar duração da tabela course_durations como fallback se disponível
-        if (durationMap && certificate.course_id) {
-          const courseDuration = durationMap.get(certificate.course_id);
-          if (courseDuration && courseDuration.syncStatus === 'completed' && courseDuration.calculatedHours !== '0 horas') {
-            calculatedDuration = courseDuration.calculatedHours;
-            console.log('✅ [WORKLOAD] Usando duração da tabela course_durations como fallback:', calculatedDuration);
-            return calculatedDuration;
-          }
-        }
-        
-        calculatedDuration = '4 horas'; // Fallback final absoluto
-        console.warn('⚠️ [WORKLOAD] Usando fallback final absoluto:', calculatedDuration);
+        calculatedDuration = 'Duração não disponível';
+        console.warn('⚠️ [WORKLOAD] Nenhum dado disponível para cálculo');
       }
     }
     
     console.log('✅ [WORKLOAD] Duração FINAL para certificado:', {
       calculatedDuration,
-      basedOnRealData: realVideoDuration > 0,
-      videoCount: totalVideoCount
+      courseId: certificate.course_id,
+      title: certificate.title
     });
     return calculatedDuration;
   };
