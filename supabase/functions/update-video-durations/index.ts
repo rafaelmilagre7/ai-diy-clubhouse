@@ -39,13 +39,61 @@ async function fetchPandaVideoMetadata(videoId: string) {
     
     // Processar resposta
     const data = await response.json();
-    console.log(`Obtidos metadados do Panda Video para ${videoId}`);
     
-    // Retornar dados relevantes
-    return {
-      duration_seconds: Math.round(data.duration) || 0,
-      thumbnail_url: data.thumbnail?.url || null,
+    // LOG DETALHADO: Mostrar estrutura completa dos dados
+    console.log(`=== RESPOSTA COMPLETA DA API PANDA PARA ${videoId} ===`);
+    console.log('Dados completos:', JSON.stringify(data, null, 2));
+    console.log('Campos disponíveis:', Object.keys(data));
+    
+    // Verificar múltiplos campos possíveis para duração
+    let durationSeconds = 0;
+    const possibleDurationFields = [
+      'duration', 
+      'duration_seconds', 
+      'duration_in_seconds',
+      'length',
+      'time',
+      'video_duration',
+      'media_duration'
+    ];
+    
+    console.log('Verificando campos de duração possíveis...');
+    for (const field of possibleDurationFields) {
+      if (data[field] !== undefined && data[field] !== null) {
+        console.log(`Campo ${field} encontrado:`, data[field], typeof data[field]);
+        
+        // Converter para número se necessário
+        let value = data[field];
+        if (typeof value === 'string') {
+          value = parseFloat(value);
+        }
+        if (typeof value === 'number' && !isNaN(value) && value > 0) {
+          durationSeconds = Math.round(value);
+          console.log(`✅ Usando duração do campo '${field}': ${durationSeconds} segundos`);
+          break;
+        }
+      }
+    }
+    
+    if (durationSeconds === 0) {
+      console.log('⚠️ Nenhum campo de duração válido encontrado nos dados da API');
+    }
+    
+    // Verificar thumbnail
+    let thumbnailUrl = null;
+    if (data.thumbnail) {
+      console.log('Dados do thumbnail:', JSON.stringify(data.thumbnail, null, 2));
+      thumbnailUrl = data.thumbnail.url || data.thumbnail.src || null;
+    }
+    
+    const result = {
+      duration_seconds: durationSeconds,
+      thumbnail_url: thumbnailUrl,
     };
+    
+    console.log(`Resultado final para ${videoId}:`, result);
+    
+    return result;
   } catch (error) {
     console.error('Erro ao buscar metadados do Panda Video:', error);
     throw error;
