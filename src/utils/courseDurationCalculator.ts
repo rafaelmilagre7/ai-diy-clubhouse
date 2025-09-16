@@ -95,20 +95,25 @@ const estimateDurationFromVideoCount = (videoCount: number): number => {
  * Formata segundos em string legível para certificados
  */
 export const formatDurationForCertificate = (seconds: number, videoCount: number = 0): string => {
+  console.log('🎯 [FORMAT_DURATION] Formatando duração:', { seconds, videoCount });
+  
   let finalSeconds = seconds;
   
   // Se não há duração real, usar estimativa baseada no número de vídeos
   if (seconds === 0 && videoCount > 0) {
     finalSeconds = estimateDurationFromVideoCount(videoCount);
-    console.log(`📊 Estimando duração para ${videoCount} vídeos: ${Math.round(finalSeconds / 3600)} horas`);
+    console.log(`📊 [FORMAT_DURATION] Estimando duração para ${videoCount} vídeos: ${Math.round(finalSeconds / 3600)} horas`);
   }
   
-  // Fallback final para compatibilidade (quando não temos nem duração nem contagem)
+  // Se ainda não tem duração, usar estimativa mínima (assumir pelo menos 4 vídeos)
   if (finalSeconds === 0) {
-    return '8 horas';
+    console.log('⚠️ [FORMAT_DURATION] Sem duração nem vídeos, usando estimativa mínima');
+    finalSeconds = estimateDurationFromVideoCount(4); // 4 vídeos = ~24 min = ~1 hora
   }
 
   const hours = Math.ceil(finalSeconds / 3600);
+  
+  console.log('✅ [FORMAT_DURATION] Resultado final:', { finalSeconds, hours });
   
   if (hours < 1) {
     const minutes = Math.ceil(finalSeconds / 60);

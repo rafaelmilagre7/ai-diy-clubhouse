@@ -424,17 +424,11 @@ export const useUnifiedCertificates = (courseId?: string) => {
       metadata: certificate.metadata
     });
     
-    // Se há vídeos mas não há duração real, usar estimativa baseada na contagem
-    if (totalVideoCount > 0) {
-      const estimatedDuration = formatDurationForCertificate(realVideoDuration || 0, totalVideoCount);
-      console.log('✅ [WORKLOAD] Usando estimativa baseada em vídeos:', estimatedDuration);
-      return estimatedDuration;
-    }
+    // SEMPRE usar a função formatDurationForCertificate que tem estimativa inteligente
+    const calculatedDuration = formatDurationForCertificate(realVideoDuration || 0, totalVideoCount);
+    console.log('✅ [WORKLOAD] Duração calculada:', calculatedDuration);
     
-    // Fallback para método anterior
-    const fallback = generateWorkload(certificate);
-    console.log('⚠️ [WORKLOAD] Usando fallback:', fallback);
-    return fallback;
+    return calculatedDuration;
   };
 
   // Função auxiliar para determinar dificuldade
