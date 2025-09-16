@@ -1,71 +1,98 @@
-import React, { useState } from "react";
+import React from "react";
 import { Button } from "@/components/ui/button";
-import { Timer, RefreshCw, Zap } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { useQueryClient } from "@tanstack/react-query";
+import { Timer, RefreshCw, X, Clock } from "lucide-react";
+import { useOptimizedCourseDurationSync } from "@/hooks/useOptimizedCourseDurationSync";
+import { Progress } from "@/components/ui/progress";
 
 export const CourseDurationSync = () => {
-  const [isSyncing, setIsSyncing] = useState(false);
-  const queryClient = useQueryClient();
+  const { 
+    syncAllCourses, 
+    generationState, 
+    loadingState, 
+    cancelGeneration, 
+    isProcessing 
+  } = useOptimizedCourseDurationSync();
 
   const handleSyncAll = async () => {
-    if (isSyncing) return;
-    
-    setIsSyncing(true);
-    
-    try {
-      toast.info("🔄 Iniciando sincronização de durações dos cursos...");
-      
-      const { data, error } = await supabase.functions.invoke('calculate-course-durations', {
-        body: { syncAll: true }
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      // Invalidar caches relacionados
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['course-durations'] }),
-        queryClient.invalidateQueries({ queryKey: ['unified-certificates'] }),
-        queryClient.invalidateQueries({ queryKey: ['course-stats'] }),
-        queryClient.invalidateQueries({ queryKey: ['learning-courses'] })
-      ]);
-
-      toast.success(
-        `✅ Sincronização concluída! ${data.successCount} cursos atualizados`,
-        {
-          description: data.failedCount > 0 
-            ? `${data.failedCount} cursos falharam - verifique os logs`
-            : "Todas as durações foram atualizadas com sucesso"
-        }
-      );
-      
-    } catch (error: any) {
-      console.error('❌ Erro na sincronização:', error);
-      toast.error("Erro na sincronização", {
-        description: error.message || "Não foi possível sincronizar as durações"
-      });
-    } finally {
-      setIsSyncing(false);
-    }
+    if (isProcessing) return;
+    await syncAllCourses();
   };
 
+  const handleCancel = () => {
+    cancelGeneration();
+  };
+
+  const showProgress = generationState.isGenerating && generationState.progress > 0;
+  const showLoadingBar = loadingState.isLoading && loadingState.progress > 0;
+  
   return (
-    <Button
-      onClick={handleSyncAll}
-      disabled={isSyncing}
-      variant="outline"
-      className="border-primary/50 text-primary hover:bg-primary/10 hover:border-primary transition-all duration-300 font-medium shadow-sm hover:shadow-md group"
-      title="Sincronizar durações de todos os cursos para certificados mais precisos"
-    >
-      {isSyncing ? (
-        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-      ) : (
-        <Timer className="h-4 w-4 mr-2 group-hover:animate-pulse" />
+    <div className="space-y-3">
+      <div className="flex items-center gap-2">
+        <Button
+          onClick={handleSyncAll}
+          disabled={isProcessing}
+          variant="outline"
+          className="border-primary/50 text-primary hover:bg-primary/10 hover:border-primary transition-all duration-300 font-medium shadow-sm hover:shadow-md group"
+          title="Sincronizar durações de todos os cursos para certificados mais precisos"
+        >
+          {isProcessing ? (
+            <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <Timer className="h-4 w-4 mr-2 group-hover:animate-pulse" />
+          )}
+          {isProcessing ? "Sincronizando..." : "⏱️ Sincronizar Durações"}
+        </Button>
+        
+        {isProcessing && (
+          <Button
+            onClick={handleCancel}
+            variant="ghost"
+            size="sm"
+            className="text-destructive hover:bg-destructive/10"
+            title="Cancelar sincronização"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
+
+      {/* Progresso da sincronização */}
+      {showProgress && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-primary" />
+              <span className="text-muted-foreground">
+                {generationState.currentStep}
+              </span>
+            </div>
+            <span className="text-primary font-medium">
+              {generationState.progress}%
+            </span>
+          </div>
+          <Progress value={generationState.progress} className="h-2" />
+        </div>
       )}
-      {isSyncing ? "Sincronizando..." : "⏱️ Sincronizar Durações"}
-    </Button>
+
+      {/* Progresso do loading otimizado */}
+      {showLoadingBar && !showProgress && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">Processando...</span>
+            <span className="text-primary font-medium">
+              {loadingState.progress}%
+            </span>
+          </div>
+          <Progress value={loadingState.progress} className="h-2" />
+        </div>
+      )}
+
+      {/* Timeout warning */}
+      {loadingState.hasTimedOut && (
+        <div className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-md">
+          ⚠️ Operação demorou mais que o esperado. Verifique os logs ou tente novamente.
+        </div>
+      )}
+    </div>
   );
 };

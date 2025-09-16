@@ -16,10 +16,14 @@ export const CourseCertificate = ({
   progressPercentage
 }: CourseCertificateProps) => {
 
-  // Executar atualização das durações quando o componente carregar
+  // Executar atualização otimizada das durações quando o componente carregar
   useEffect(() => {
-    console.log('🎯 Componente de certificado do curso carregado - atualizando durações...');
-    executeVideoDurationUpdate();
+    console.log('🎯 Componente de certificado carregado - verificando durações...');
+    
+    // Execução discreta em background sem bloquear a UI
+    setTimeout(() => {
+      executeVideoDurationUpdate().catch(console.error);
+    }, 1000);
   }, [course.id]);
 
   return (

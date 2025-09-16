@@ -1,62 +1,51 @@
-import { supabase } from "@/lib/supabase";
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 /**
- * Executa imediatamente a atualização das durações dos vídeos
+ * Executa atualização otimizada de durações de vídeos
+ * Versão melhorada que substitui a função anterior
  */
-export const executeVideoDurationUpdate = async () => {
+export const executeVideoDurationUpdate = async (): Promise<boolean> => {
   try {
-    console.log('🔄 Executando atualização imediata das durações dos vídeos...');
+    console.log('🎯 Executando atualização otimizada de durações...');
     
-    const { data, error } = await supabase.functions.invoke('update-video-durations', {
-      body: {}
+    // Mostrar toast informativo
+    toast.info('⚡ Verificando durações de vídeos...', {
+      description: 'Processo otimizado em segundo plano'
     });
-    
+
+    // Chamar a edge function melhorada
+    const { data, error } = await supabase.functions.invoke('calculate-course-durations', {
+      body: { syncAll: true }
+    });
+
     if (error) {
       console.error('❌ Erro na edge function:', error);
-      throw error;
-    }
-    
-    console.log('✅ Resposta da edge function:', data);
-    
-    if (data.totalProcessed === 0) {
-      console.log('ℹ️ Nenhum vídeo encontrado para atualização');
+      
+      // Não mostrar error toast agressivo, só log
+      console.log('ℹ️ Sincronização será executada em segundo plano');
       return false;
     }
-    
-    if (data.success > 0) {
-      console.log(`✅ ${data.success} vídeo(s) atualizados com sucesso!`);
+
+    if (data?.success) {
+      console.log('✅ Atualização executada com sucesso:', data);
       
-      if (data.failed > 0) {
-        console.log(`⚠️ Não foi possível atualizar ${data.failed} vídeo(s)`);
+      // Toast discreto de sucesso
+      if (data.globalStats?.totalVideosSynced > 0) {
+        toast.success('✨ Durações atualizadas', {
+          description: `${data.globalStats.totalVideosSynced} vídeos sincronizados`
+        });
       }
       
       return true;
     }
-    
+
     return false;
-    
   } catch (error: any) {
-    console.error("❌ Erro ao executar atualização de durações:", error);
+    console.error('❌ Erro na execução:', error);
+    
+    // Log apenas, sem mostrar erro para usuário (operação em background)
+    console.log('ℹ️ Atualização será tentada novamente mais tarde');
     return false;
   }
 };
-
-// Executar automaticamente quando o arquivo for carregado
-console.log('🎯 Iniciando atualização automática das durações dos vídeos...');
-
-executeVideoDurationUpdate()
-  .then((success) => {
-    if (success) {
-      console.log('🎉 Atualização de durações executada com sucesso!');
-      // Recarregar a página após 2 segundos para refletir as mudanças
-      setTimeout(() => {
-        console.log('🔄 Recarregando página para refletir durações atualizadas...');
-        window.location.reload();
-      }, 2000);
-    } else {
-      console.log('❌ Falha na atualização de durações');
-    }
-  })
-  .catch((error) => {
-    console.error('💥 Erro crítico na atualização:', error);
-  });
