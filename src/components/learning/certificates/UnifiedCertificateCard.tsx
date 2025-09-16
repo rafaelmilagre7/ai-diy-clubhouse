@@ -2,7 +2,7 @@ import React from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, Star, BookOpen, Award, Eye, Lightbulb, BadgeCheck, Linkedin, MessageCircle } from "lucide-react";
+import { Download, Star, BookOpen, Award, Eye, Lightbulb, BadgeCheck, Linkedin, MessageCircle, Clock } from "lucide-react";
 import { UnifiedCertificate } from "@/hooks/learning/useUnifiedCertificates";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -265,10 +265,20 @@ Confira meu certificado: ${customDomainUrl}`;
             </div>
           </div>
           
-          {/* Data de emissão */}
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <div className="w-2 h-2 rounded-full bg-primary/60" />
-            <span>Emitido em {formattedDate}</span>
+          {/* Data de emissão e duração */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="w-2 h-2 rounded-full bg-primary/60" />
+              <span>Emitido em {formattedDate}</span>
+            </div>
+            
+            {/* Badge de duração para cursos */}
+            {!isSolution && certificate.workloadHours && (
+              <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 text-xs">
+                <Clock className="h-3 w-3 mr-1" />
+                {certificate.workloadHours}
+              </Badge>
+            )}
           </div>
           
           {/* Código de validação */}

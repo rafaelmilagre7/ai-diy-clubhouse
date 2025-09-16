@@ -23,6 +23,7 @@ export interface UnifiedCertificate {
   completion_date?: string;
   template_id?: string;
   metadata?: Record<string, any>;
+  workloadHours?: string; // Nova propriedade para duração real
   learning_courses?: {
     title: string;
     description?: string;
@@ -52,6 +53,23 @@ export const useUnifiedCertificates = (courseId?: string) => {
       console.log('🔍 [UNIFIED_CERTIFICATES] Buscando certificados para usuário:', user.id);
       
       try {
+      // Buscar durações reais dos cursos da nova tabela
+      const { data: courseDurations } = await supabase
+        .from('course_durations')
+        .select('course_id, calculated_hours, total_duration_seconds, sync_status');
+      
+      // Criar mapa de durações por curso
+      const durationMap = new Map();
+      if (courseDurations) {
+        courseDurations.forEach(duration => {
+          durationMap.set(duration.course_id, {
+            calculatedHours: duration.calculated_hours,
+            totalDurationSeconds: duration.total_duration_seconds,
+            syncStatus: duration.sync_status
+          });
+        });
+      }
+      
       // Buscar todos os certificados com dados das tabelas relacionadas
       const [learningCertsResult, solutionCertsResult] = await Promise.all([
         // Certificados de cursos com dados completos incluindo lessons e vídeos
@@ -143,6 +161,39 @@ export const useUnifiedCertificates = (courseId?: string) => {
               course_id: cert.course_id,
               completion_date: cert.completion_date || cert.issued_at,
               template_id: cert.template_id,
+              // Usar duração real da nova tabela course_durations
+              workloadHours: (() => {
+                const courseDuration = durationMap.get(cert.course_id);
+                if (courseDuration && courseDuration.syncStatus === 'completed') {
+                  console.log('✅ [WORKLOAD] Usando duração REAL sincronizada:', {
+                    courseId: cert.course_id,
+                    calculatedHours: courseDuration.calculatedHours
+                  });
+                  return courseDuration.calculatedHours;
+                }
+                
+                // Fallback para duração estimada se não sincronizado
+                if (totalVideoDuration > 0) {
+                  const hours = Math.floor(totalVideoDuration / 3600);
+                  const minutes = Math.floor((totalVideoDuration % 3600) / 60);
+                  let duration = '';
+                  if (hours > 0 && minutes > 0) {
+                    duration = `${hours}h ${minutes}min`;
+                  } else if (hours > 0) {
+                    duration = `${hours}h`;
+                  } else if (minutes > 0) {
+                    duration = `${minutes}min`;
+                  } else {
+                    duration = '0min';
+                  }
+                  console.log('⚠️ [WORKLOAD] Usando cálculo de fallback:', duration);
+                  return duration;
+                }
+                
+                // Estimativa padrão se não há dados
+                const estimatedHours = Math.max(1, Math.ceil(allLessons.length * 0.5));
+                return `~${estimatedHours}h`;
+              })(),
               metadata: {
                 ...cert.metadata,
                 totalModules: course?.learning_modules?.length || 0,

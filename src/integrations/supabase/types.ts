@@ -963,6 +963,53 @@ export type Database = {
           },
         ]
       }
+      course_durations: {
+        Row: {
+          calculated_hours: string
+          course_id: string
+          created_at: string
+          id: string
+          last_sync_at: string | null
+          sync_status: string
+          synced_videos: number
+          total_duration_seconds: number
+          total_videos: number
+          updated_at: string
+        }
+        Insert: {
+          calculated_hours?: string
+          course_id: string
+          created_at?: string
+          id?: string
+          last_sync_at?: string | null
+          sync_status?: string
+          synced_videos?: number
+          total_duration_seconds?: number
+          total_videos?: number
+          updated_at?: string
+        }
+        Update: {
+          calculated_hours?: string
+          course_id?: string
+          created_at?: string
+          id?: string
+          last_sync_at?: string | null
+          sync_status?: string
+          synced_videos?: number
+          total_duration_seconds?: number
+          total_videos?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_durations_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: true
+            referencedRelation: "learning_courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       direct_messages: {
         Row: {
           content: string
