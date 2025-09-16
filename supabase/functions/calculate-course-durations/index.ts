@@ -65,37 +65,26 @@ async function fetchPandaVideoDuration(videoId: string, apiKey: string): Promise
 
 async function processCourse(courseId: string, supabase: any) {
   try {
-    // Marcar como 'syncing'
-    await supabase
-      .from('course_durations')
-      .update({ sync_status: 'syncing', last_sync_at: new Date().toISOString() })
-      .eq('course_id', courseId);
+    console.log(`🔄 Iniciando processamento do curso: ${courseId}`);
 
     // Buscar vídeos do curso
     const { data: videos, error: videosError } = await supabase
       .from('learning_lesson_videos')
       .select(`
         id,
-        video_id,
+        panda_video_id,
         duration_seconds,
-        lesson_id,
-        learning_lessons!inner(
-          module_id,
-          learning_modules!inner(
+        lesson:learning_lessons!inner(
+          module:learning_modules!inner(
             course_id
           )
         )
       `)
-      .eq('learning_lessons.learning_modules.course_id', courseId)
-      .eq('type', 'panda');
+      .eq('lesson.module.course_id', courseId)
+      .eq('video_type', 'panda');
 
     if (videosError) {
       console.error('❌ Erro ao buscar vídeos:', videosError);
-      await supabase
-        .from('course_durations')
-        .update({ sync_status: 'failed' })
-        .eq('course_id', courseId);
-      
       return { success: false, error: 'Erro ao buscar vídeos' };
     }
 
@@ -104,11 +93,6 @@ async function processCourse(courseId: string, supabase: any) {
     const apiKey = Deno.env.get('PANDA_VIDEO_API_KEY');
     if (!apiKey) {
       console.error('❌ API Key do Panda Video não configurada');
-      await supabase
-        .from('course_durations')
-        .update({ sync_status: 'failed' })
-        .eq('course_id', courseId);
-      
       return { success: false, error: 'API Key do Panda Video não configurada' };
     }
 
@@ -118,13 +102,13 @@ async function processCourse(courseId: string, supabase: any) {
 
     // Processar cada vídeo
     for (const video of videos || []) {
-      if (!video.video_id) {
-        console.log(`⚠️ Vídeo ${video.id} sem video_id do Panda`);
+      if (!video.panda_video_id) {
+        console.log(`⚠️ Vídeo ${video.id} sem panda_video_id do Panda`);
         continue;
       }
 
       try {
-        const duration = await fetchPandaVideoDuration(video.video_id, apiKey);
+        const duration = await fetchPandaVideoDuration(video.panda_video_id, apiKey);
         
         if (duration > 0) {
           // Atualizar duração no banco
@@ -160,18 +144,21 @@ async function processCourse(courseId: string, supabase: any) {
       calculatedHours = '0min';
     }
 
-    // Atualizar registro na tabela course_durations
+    // Atualizar registro na tabela course_durations usando UPSERT
     const { error: updateError } = await supabase
       .from('course_durations')
-      .update({
+      .upsert({
+        course_id: courseId,
         total_duration_seconds: totalDurationSeconds,
         total_videos: totalVideos,
         synced_videos: syncedVideos,
         calculated_hours: calculatedHours,
         sync_status: syncedVideos > 0 ? 'completed' : 'failed',
-        last_sync_at: new Date().toISOString()
-      })
-      .eq('course_id', courseId);
+        last_sync_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'course_id'
+      });
 
     if (updateError) {
       console.error('❌ Erro ao atualizar course_durations:', updateError);
@@ -190,11 +177,6 @@ async function processCourse(courseId: string, supabase: any) {
     };
   } catch (error) {
     console.error(`❌ Erro ao processar curso ${courseId}:`, error);
-    await supabase
-      .from('course_durations')
-      .update({ sync_status: 'failed' })
-      .eq('course_id', courseId);
-    
     return { success: false, error: error.message };
   }
 }
