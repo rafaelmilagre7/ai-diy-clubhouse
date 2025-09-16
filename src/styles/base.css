@@ -162,12 +162,11 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Utilitários de Hierarquia Visual */
-@layer utilities {
-  /* Typography Scale */
-  .text-display {
-    @apply text-4xl font-bold tracking-tight;
-    color: hsl(var(--text-primary));
-    line-height: 1.1;
+/* Typography Scale */
+.text-display {
+  @apply text-4xl font-bold tracking-tight;
+  color: hsl(var(--text-primary));
+  line-height: 1.1;
   }
 
   .text-heading-1 {
@@ -337,4 +336,3 @@ h1, h2, h3, h4, h5, h6 {
     color: hsl(221 83% 53%);
     border-color: hsl(221 83% 53% / 0.2);
   }
-}

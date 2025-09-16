@@ -10,6 +10,28 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/auth";
 import { getCategoryDetails } from "@/lib/types/categoryTypes";
 
+const getCourseCapacitationDescription = (category: string, courseTitle: string) => {
+  // Primeiro, tentar inferir pela categoria
+  switch (category) {
+    case 'Receita':
+      return 'implementação de estratégias de IA para aumento de receita e otimização comercial';
+    case 'Operacional': 
+      return 'automação de processos operacionais e otimização de workflows com inteligência artificial';
+    case 'Estratégia':
+      return 'planejamento estratégico e tomada de decisões baseadas em dados e IA';
+    default:
+      // Fallback baseado no título do curso
+      if (courseTitle.toLowerCase().includes('copy')) {
+        return 'criação de copy persuasivo e conteúdo otimizado com inteligência artificial';
+      } else if (courseTitle.toLowerCase().includes('lovable')) {
+        return 'desenvolvimento de aplicações web modernas com ferramentas de IA';
+      } else if (courseTitle.toLowerCase().includes('formação')) {
+        return 'aplicação prática de inteligência artificial em negócios e processos';
+      }
+      return 'aplicação de inteligência artificial e automação de processos empresariais';
+  }
+};
+
 interface CertificateModalProps {
   certificate: any;
   isOpen: boolean;
@@ -30,7 +52,10 @@ export const CertificateModal = ({ certificate, isOpen, onClose }: CertificateMo
   const certificateData = {
     userName: user?.user_metadata?.name || user?.email || 'Usuário',
     solutionTitle: solution?.title || 'Solução',
-    solutionCategory: solution?.category ? getCategoryDetails(solution.category).description : 'Inteligência Artificial',
+    solutionCategory: getCourseCapacitationDescription(
+      solution?.category || 'Geral', 
+      solution?.title || ''
+    ),
     implementationDate,
     validationCode: certificate.validation_code,
     benefits: [] // Pode ser expandido futuramente
