@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import { UnifiedCertificateCard } from "./UnifiedCertificateCard";
+import { CourseDurationSync } from "./CourseDurationSync";
 import { useUnifiedCertificates } from "@/hooks/learning/useUnifiedCertificates";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircle, Award, BookOpen, TrendingUp, Zap } from "lucide-react";
@@ -217,16 +218,20 @@ export const UnifiedCertificatesList = ({
           Exibindo <span className="font-semibold text-foreground">{filteredAndSortedCertificates.length}</span> certificado{filteredAndSortedCertificates.length !== 1 ? 's' : ''}
         </p>
         
-        <Button
-          onClick={handleGeneratePending}
-          disabled={isGeneratingPending}
-          variant="outline"
-          className="border-aurora/50 text-aurora hover:bg-aurora/10 hover:border-aurora transition-all duration-300 font-medium shadow-sm hover:shadow-md group"
-          title="Verifica se você tem direito a novos certificados baseado nos cursos e soluções que completou"
-        >
-          <Zap className="h-4 w-4 mr-2 group-hover:animate-pulse" />
-          {isGeneratingPending ? "Verificando..." : "🔍 Buscar Novos Certificados"}
-        </Button>
+        <div className="flex items-center gap-2">
+          <CourseDurationSync />
+          
+          <Button
+            onClick={handleGeneratePending}
+            disabled={isGeneratingPending}
+            variant="outline"
+            className="border-aurora/50 text-aurora hover:bg-aurora/10 hover:border-aurora transition-all duration-300 font-medium shadow-sm hover:shadow-md group"
+            title="Verifica se você tem direito a novos certificados baseado nos cursos e soluções que completou"
+          >
+            <Zap className="h-4 w-4 mr-2 group-hover:animate-pulse" />
+            {isGeneratingPending ? "Verificando..." : "🔍 Buscar Novos Certificados"}
+          </Button>
+        </div>
       </div>
 
       {/* Grid de Certificados */}
