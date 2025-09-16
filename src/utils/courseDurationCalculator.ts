@@ -1,83 +1,121 @@
 import { supabase } from "@/lib/supabase";
 
 /**
- * Calcula a duração total de um curso baseada nos vídeos das aulas
+ * Calcula a duração total de um curso somando as durações dos vídeos de todas as aulas
+ * PRIORIZA DURAÇÕES REAIS DA API DO PANDA VIDEO
  */
 export const calculateCourseDuration = async (courseId: string): Promise<number> => {
   try {
-    console.log('🔍 Calculando duração para curso:', courseId);
+    console.log('🔄 [CALC_DURATION] Iniciando cálculo REAL para curso:', courseId);
     
-    // Buscar todos os módulos do curso primeiro
-    const { data: courseModules, error: moduleError } = await supabase
+    // Buscar todos os módulos do curso
+    const { data: modules, error: modulesError } = await supabase
       .from('learning_modules')
       .select('id')
-      .eq('course_id', courseId);
+      .eq('course_id', courseId)
+      .eq('is_active', true);
 
-    if (moduleError) {
-      console.error('❌ Erro ao buscar módulos do curso:', moduleError);
+    if (modulesError) {
+      console.error('❌ [CALC_DURATION] Erro ao buscar módulos:', modulesError);
+      throw modulesError;
+    }
+
+    if (!modules || modules.length === 0) {
+      console.log('⚠️ [CALC_DURATION] Nenhum módulo encontrado para o curso');
       return 0;
     }
 
-    if (!courseModules || courseModules.length === 0) {
-      console.log('⚠️ Nenhum módulo encontrado para o curso:', courseId);
-      return 0;
-    }
+    const moduleIds = modules.map(m => m.id);
+    console.log('📚 [CALC_DURATION] Módulos encontrados:', moduleIds.length);
 
-    const moduleIds = courseModules.map(m => m.id);
-    
-    // Buscar todas as lições desses módulos com seus vídeos
-    const { data: courseLessons, error } = await supabase
+    // Buscar todas as aulas dos módulos com os vídeos
+    const { data: lessons, error: lessonsError } = await supabase
       .from('learning_lessons')
       .select(`
         id,
         title,
-        learning_lesson_videos (
+        learning_lesson_videos!inner(
           id,
+          title,
           duration_seconds
         )
       `)
-      .in('module_id', moduleIds);
+      .in('module_id', moduleIds)
+      .eq('is_active', true);
 
-    if (error) {
-      console.error('❌ Erro ao buscar lições do curso:', error);
-      return 0;
+    if (lessonsError) {
+      console.error('❌ [CALC_DURATION] Erro ao buscar aulas:', lessonsError);
+      throw lessonsError;
     }
 
-    let totalSeconds = 0;
-    let totalVideos = 0;
-    let videosWithDuration = 0;
+    console.log('🎥 [CALC_DURATION] Aulas com vídeos encontradas:', lessons?.length || 0);
 
-    courseLessons?.forEach(lesson => {
-      lesson.learning_lesson_videos?.forEach(video => {
-        totalVideos++;
-        if (video.duration_seconds && video.duration_seconds > 0) {
-          totalSeconds += video.duration_seconds;
-          videosWithDuration++;
+    let totalRealDurationSeconds = 0;
+    let totalVideoCount = 0;
+    let videosWithRealDuration = 0;
+
+    if (lessons && lessons.length > 0) {
+      for (const lesson of lessons) {
+        if (lesson.learning_lesson_videos && lesson.learning_lesson_videos.length > 0) {
+          for (const video of lesson.learning_lesson_videos) {
+            totalVideoCount++;
+            
+            // APENAS durações REAIS da API (duration_seconds > 0)
+            if (video.duration_seconds && video.duration_seconds > 0) {
+              totalRealDurationSeconds += video.duration_seconds;
+              videosWithRealDuration++;
+              console.log(`✅ [VIDEO_REAL] ${video.title}: ${video.duration_seconds}s`);
+            } else {
+              console.log(`⏳ [VIDEO_PENDING] ${video.title}: aguardando sincronização`);
+            }
+          }
         }
-      });
-    });
-
-    // Se não temos durações reais, usar estimativa baseada no número de vídeos
-    if (totalSeconds === 0 && totalVideos > 0) {
-      totalSeconds = estimateDurationFromVideoCount(totalVideos);
-      console.log(`📊 Usando estimativa para curso ${courseId}: ${totalVideos} vídeos = ${Math.round(totalSeconds / 3600)} horas (${Math.round(totalSeconds / 60)} min)`);
-    } else if (totalSeconds === 0) {
-      console.log(`⚠️ Nenhum vídeo encontrado para o curso ${courseId}`);
+      }
     }
 
-    console.log('✅ Duração calculada:', {
-      courseId,
-      totalSeconds,
-      totalVideos,
-      videosWithDuration,
-      isEstimated: videosWithDuration === 0 && totalVideos > 0,
-      totalMinutes: Math.round(totalSeconds / 60),
-      totalHours: Math.round(totalSeconds / 3600)
+    console.log('📊 [CALC_DURATION] Estatísticas REAIS:', {
+      totalVideoCount,
+      videosWithRealDuration,
+      totalRealDurationSeconds,
+      percentageSynced: totalVideoCount > 0 ? Math.round((videosWithRealDuration / totalVideoCount) * 100) : 0
     });
 
-    return totalSeconds;
+    // PRIORIDADE 1: Se temos durações reais, usar apenas elas
+    if (videosWithRealDuration > 0) {
+      console.log(`🏆 [CALC_DURATION] USANDO DURAÇÕES REAIS: ${videosWithRealDuration}/${totalVideoCount} vídeos = ${totalRealDurationSeconds}s`);
+      
+      // Se temos todas as durações, retornar total real
+      if (videosWithRealDuration === totalVideoCount) {
+        console.log('🎯 [CALC_DURATION] 100% das durações são reais!');
+        return totalRealDurationSeconds;
+      }
+      
+      // Se temos pelo menos 30% das durações, fazer projeção inteligente
+      if (videosWithRealDuration >= totalVideoCount * 0.3) {
+        const avgRealDurationPerVideo = totalRealDurationSeconds / videosWithRealDuration;
+        const projectedTotal = avgRealDurationPerVideo * totalVideoCount;
+        
+        console.log(`📈 [CALC_DURATION] Projeção baseada em durações reais: ${Math.round(avgRealDurationPerVideo)}s/vídeo × ${totalVideoCount} = ${Math.round(projectedTotal)}s`);
+        return Math.round(projectedTotal);
+      }
+      
+      // Se temos poucas durações reais, usar apenas o que temos (sem projeção para evitar subestimativas)
+      console.log(`⚖️ [CALC_DURATION] Poucas durações reais (${videosWithRealDuration}), usando apenas valores confirmados: ${totalRealDurationSeconds}s`);
+      return totalRealDurationSeconds;
+    }
+    
+    // PRIORIDADE 2: Se não há durações reais, usar estimativa de 6 min por vídeo
+    if (totalVideoCount > 0) {
+      const fallbackDuration = estimateDurationFromVideoCount(totalVideoCount);
+      console.log(`🔮 [CALC_DURATION] FALLBACK: ${totalVideoCount} vídeos × 6min = ${fallbackDuration}s`);
+      return fallbackDuration;
+    }
+    
+    console.log('⚠️ [CALC_DURATION] Nenhum vídeo encontrado, retornando 0');
+    return 0;
+
   } catch (error) {
-    console.error('❌ Erro ao calcular duração do curso:', error);
+    console.error('💥 [CALC_DURATION] Erro no cálculo:', error);
     return 0;
   }
 };
@@ -85,37 +123,74 @@ export const calculateCourseDuration = async (courseId: string): Promise<number>
 /**
  * Estima duração baseada no número de vídeos quando durações reais não estão disponíveis
  */
-const estimateDurationFromVideoCount = (videoCount: number): number => {
-  // Estimativa conservadora: 5-8 minutos por vídeo em média
+export const estimateDurationFromVideoCount = (videoCount: number): number => {
+  // Estimativa: 6 minutos por vídeo em média
   const averageMinutesPerVideo = 6;
   return videoCount * averageMinutesPerVideo * 60; // retorna em segundos
 };
 
 /**
- * Formata segundos em string legível para certificados
+ * Formata uma duração em segundos para um formato legível para certificados
+ * PRIORIZA DURAÇÕES REAIS e aplica arredondamento inteligente
  */
 export const formatDurationForCertificate = (seconds: number, videoCount: number = 0): string => {
-  console.log('🎯 [FORMAT_DURATION] Formatando duração:', { seconds, videoCount });
-  
+  console.log('⏱️ [FORMAT_DURATION] Formatando duração REAL:', { seconds, videoCount });
+
   let finalSeconds = seconds;
-  
-  // Se não há duração real, usar estimativa baseada no número de vídeos
-  if (seconds === 0 && videoCount > 0) {
-    finalSeconds = estimateDurationFromVideoCount(videoCount);
-    console.log(`📊 [FORMAT_DURATION] Estimando duração para ${videoCount} vídeos: ${Math.round(finalSeconds / 3600)} horas`);
+
+  // PRIORIDADE: Se temos duração real, usar ela
+  if (seconds > 0) {
+    console.log('🎯 [FORMAT_DURATION] Usando duração REAL da sincronização:', seconds, 'segundos');
+    finalSeconds = seconds;
   }
-  
-  // Se ainda não tem duração, usar estimativa mínima (assumir pelo menos 4 vídeos)
-  if (finalSeconds === 0) {
-    console.log('⚠️ [FORMAT_DURATION] Sem duração nem vídeos, usando estimativa mínima');
-    finalSeconds = estimateDurationFromVideoCount(4); // 4 vídeos = ~24 min = ~1 hora
+  // FALLBACK: Se não temos duração real mas temos contagem de vídeos, estimar
+  else if (videoCount > 0) {
+    finalSeconds = estimateDurationFromVideoCount(videoCount);
+    console.log('🔮 [FORMAT_DURATION] Usando estimativa por contagem de vídeos:', finalSeconds, 'segundos');
+  }
+  // ÚLTIMO RECURSO: Duração mínima
+  else {
+    finalSeconds = 2 * 3600; // 2 horas mínimas
+    console.log('⚠️ [FORMAT_DURATION] Usando duração mínima padrão:', finalSeconds, 'segundos');
   }
 
-  const hours = Math.ceil(finalSeconds / 3600);
+  // Converter para horas e aplicar arredondamento REALISTA
+  const exactHours = finalSeconds / 3600;
+  let hours: number;
+
+  console.log('📐 [FORMAT_DURATION] Horas exatas calculadas:', exactHours);
+
+  if (exactHours < 0.5) {
+    // Menos de 30 min: 1 hora
+    hours = 1;
+    console.log('🕐 [FORMAT_DURATION] Menos de 30min -> arredondando para 1 hora');
+  } else if (exactHours < 1) {
+    // Entre 30min-1h: 1 hora
+    hours = 1;
+    console.log('🕐 [FORMAT_DURATION] 30min-1h -> arredondando para 1 hora');
+  } else if (exactHours < 1.5) {
+    // Entre 1h-1h30: 1 ou 2 horas (mais próximo)
+    hours = exactHours < 1.25 ? 1 : 2;
+    console.log('🕑 [FORMAT_DURATION] 1h-1h30 -> arredondando para', hours, 'hora(s)');
+  } else if (exactHours < 3) {
+    // Entre 1h30-3h: arredondar para múltiplos de 0.5h para mais precisão
+    hours = Math.round(exactHours * 2) / 2;
+    if (hours < 2) hours = 2; // Mínimo 2h para cursos substanciais
+    console.log('🕑 [FORMAT_DURATION] 1h30-3h -> arredondando para', hours, 'hora(s)');
+  } else {
+    // Mais de 3h: arredondar para múltiplos de 1h
+    hours = Math.round(exactHours);
+    console.log('🕒 [FORMAT_DURATION] >3h -> arredondando para', hours, 'hora(s)');
+  }
   
-  console.log('✅ [FORMAT_DURATION] Resultado final:', { finalSeconds, hours });
+  console.log('✅ [FORMAT_DURATION] Resultado final:', { 
+    originalSeconds: seconds,
+    finalSeconds, 
+    exactHours: exactHours.toFixed(2), 
+    roundedHours: hours 
+  });
   
-  // Garantir sempre um resultado válido
+  // Retornar formato adequado
   if (hours < 1) {
     const minutes = Math.ceil(finalSeconds / 60);
     const result = `${minutes} minutos`;
@@ -123,7 +198,17 @@ export const formatDurationForCertificate = (seconds: number, videoCount: number
     return result;
   }
 
-  const result = `${hours} hora${hours > 1 ? 's' : ''}`;
+  // Formato especial para horas fracionárias
+  if (hours % 1 === 0.5) {
+    const wholeHours = Math.floor(hours);
+    const result = wholeHours > 0 
+      ? `${wholeHours}h30min` 
+      : '30 minutos';
+    console.log('📝 [FORMAT_DURATION] Retornando formato fracionário:', result);
+    return result;
+  }
+
+  const result = `${Math.floor(hours)} hora${hours > 1 ? 's' : ''}`;
   console.log('📝 [FORMAT_DURATION] Retornando em horas:', result);
   return result;
 };

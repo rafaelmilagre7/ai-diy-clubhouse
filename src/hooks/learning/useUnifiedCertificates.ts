@@ -273,14 +273,16 @@ export const useUnifiedCertificates = (courseId?: string) => {
         ),
         certificateId: certificate.id,
         validationCode: certificate.validation_code,
-        // Adicionar duração real calculada com LOG DETALHADO
+        // Duração REAL calculada baseada na sincronização da API Panda Video
         workloadHours: (() => {
           const calculatedWorkload = generateWorkloadFromRealDuration(certificate);
-          console.log('📄 [CERTIFICATE_DATA] WorkloadHours calculado para download:', {
+          console.log('🏆 [CERTIFICATE_DATA] WorkloadHours REAL calculado:', {
             certificateId: certificate.id,
             title: certificate.title,
             workloadHours: calculatedWorkload,
-            metadata: certificate.metadata
+            realDuration: certificate.metadata?.realVideoDuration,
+            videoCount: certificate.metadata?.totalVideoCount,
+            isRealData: (certificate.metadata?.realVideoDuration || 0) > 0
           });
           return calculatedWorkload;
         })(),
@@ -433,37 +435,43 @@ export const useUnifiedCertificates = (courseId?: string) => {
       metadata: certificate.metadata
     });
     
-    // Tentar formatDurationForCertificate primeiro
+    // CÁLCULO BASEADO EM DURAÇÕES REAIS DA API PANDA VIDEO
     let calculatedDuration = '';
+    
+    console.log('🔍 [WORKLOAD] Dados disponíveis para cálculo:', {
+      realVideoDuration,
+      totalVideoCount,
+      hasRealData: realVideoDuration > 0,
+      certificateType: certificate.type,
+      title: certificate.title
+    });
+    
     try {
+      // SEMPRE usar formatDurationForCertificate que agora prioriza durações reais
       calculatedDuration = formatDurationForCertificate(realVideoDuration || 0, totalVideoCount);
+      
+      console.log('🎯 [WORKLOAD] Duração calculada via formatDurationForCertificate:', calculatedDuration);
+      
     } catch (error) {
       console.error('❌ [WORKLOAD] Erro em formatDurationForCertificate:', error);
-    }
-    
-    // FALLBACK ROBUSTO - se formatDurationForCertificate falhar ou retornar vazio
-    if (!calculatedDuration || calculatedDuration.trim() === '') {
-      console.warn('⚠️ [WORKLOAD] formatDurationForCertificate retornou vazio, usando fallback...');
       
+      // FALLBACK de emergência apenas se a função falhar completamente
       if (totalVideoCount > 0) {
-        // Estimativa: 6 minutos por vídeo em média
         const estimatedMinutes = totalVideoCount * 6;
         const hours = Math.ceil(estimatedMinutes / 60);
         calculatedDuration = `${hours} hora${hours > 1 ? 's' : ''}`;
+        console.warn('⚠️ [WORKLOAD] Usando fallback de emergência:', calculatedDuration);
       } else {
-        // Fallback final baseado no tipo de certificado
-        const title = certificate.title?.toLowerCase() || '';
-        if (title.includes('formação')) {
-          calculatedDuration = '8 horas';
-        } else if (certificate.type === 'course') {
-          calculatedDuration = '4 horas';
-        } else {
-          calculatedDuration = '2 horas';
-        }
+        calculatedDuration = '4 horas'; // Fallback final
+        console.warn('⚠️ [WORKLOAD] Usando fallback final:', calculatedDuration);
       }
     }
     
-    console.log('✅ [WORKLOAD] Duração final calculada:', calculatedDuration);
+    console.log('✅ [WORKLOAD] Duração FINAL para certificado:', {
+      calculatedDuration,
+      basedOnRealData: realVideoDuration > 0,
+      videoCount: totalVideoCount
+    });
     return calculatedDuration;
   };
 

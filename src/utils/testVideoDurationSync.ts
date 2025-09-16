@@ -1,71 +1,110 @@
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from "@/lib/supabase";
+import { toast } from 'sonner';
 
 /**
- * Função auxiliar para testar a sincronização de durações dos vídeos
- * Pode ser executada no console do navegador ou em testes
+ * Função global para testar sincronização de durações via console
  */
 export const testVideoDurationSync = async () => {
   try {
-    console.log('🔧 TESTE: Iniciando sincronização de durações dos vídeos...');
+    console.log('🎯 [SYNC] Iniciando sincronização de durações...');
+    toast.info('Iniciando sincronização das durações dos vídeos...');
     
     const { data, error } = await supabase.functions.invoke('update-video-durations', {
       body: {}
     });
     
     if (error) {
-      console.error('❌ TESTE: Erro na função:', error);
-      return { success: false, error };
+      console.error('❌ [SYNC] Erro na edge function:', error);
+      toast.error(`Erro na sincronização: ${error.message}`);
+      return false;
     }
     
-    console.log('✅ TESTE: Resposta da função:', data);
+    console.log('📊 [SYNC] Resultado da sincronização:', data);
     
-    return { 
-      success: true, 
-      data,
-      summary: `${data.success} sucessos, ${data.failed} falhas, ${data.totalProcessed} processados`
-    };
+    if (data.totalProcessed === 0) {
+      console.log('ℹ️ [SYNC] Nenhum vídeo encontrado para processamento');
+      toast.info('Nenhum vídeo encontrado para sincronização');
+      return false;
+    }
     
-  } catch (error) {
-    console.error('💥 TESTE: Erro geral:', error);
-    return { success: false, error };
+    if (data.success > 0) {
+      console.log(`✅ [SYNC] ${data.success} vídeo(s) sincronizados com sucesso!`);
+      toast.success(`${data.success} vídeos sincronizados com sucesso!`);
+      
+      if (data.failed > 0) {
+        console.warn(`⚠️ [SYNC] ${data.failed} vídeo(s) falharam na sincronização`);
+        toast.warning(`${data.failed} vídeos falharam na sincronização`);
+      }
+      
+      // Aguardar um pouco antes de verificar os resultados
+      setTimeout(async () => {
+        await checkSyncResults();
+      }, 2000);
+      
+      return true;
+    }
+    
+    return false;
+    
+  } catch (error: any) {
+    console.error("💥 [SYNC] Erro crítico:", error);
+    toast.error(`Erro crítico: ${error.message}`);
+    return false;
   }
 };
 
 /**
- * Função para testar apenas alguns vídeos de uma aula específica
+ * Verifica os resultados da sincronização
  */
-export const testSpecificLesson = async (lessonId: string) => {
+const checkSyncResults = async () => {
   try {
-    console.log(`🔧 TESTE: Sincronizando vídeos da aula ${lessonId}...`);
+    console.log('🔍 [CHECK] Verificando resultados da sincronização...');
     
-    const { data, error } = await supabase.functions.invoke('update-video-durations', {
-      body: { lessonId }
-    });
+    const { data, error } = await supabase
+      .from('learning_lesson_videos')
+      .select(`
+        id,
+        title,
+        duration_seconds,
+        lesson:learning_lessons(
+          title,
+          module:learning_modules(
+            course:learning_courses(title)
+          )
+        )
+      `)
+      .not('duration_seconds', 'is', null)
+      .gt('duration_seconds', 0)
+      .limit(10);
     
     if (error) {
-      console.error('❌ TESTE: Erro na função:', error);
-      return { success: false, error };
+      console.error('❌ [CHECK] Erro ao verificar resultados:', error);
+      return;
     }
     
-    console.log('✅ TESTE: Resposta da função:', data);
+    console.log('📈 [CHECK] Vídeos com durações sincronizadas:', data?.length || 0);
     
-    return { 
-      success: true, 
-      data,
-      summary: `Aula ${lessonId}: ${data.success} sucessos, ${data.failed} falhas`
-    };
+    if (data && data.length > 0) {
+      console.log('✅ [CHECK] Exemplos de vídeos sincronizados:', data.slice(0, 3));
+      toast.success(`${data.length} vídeos têm durações sincronizadas!`);
+      
+      // Informar que os certificados serão atualizados
+      setTimeout(() => {
+        toast.info('Certificados serão atualizados com as novas durações...');
+      }, 1000);
+      
+    } else {
+      console.log('⚠️ [CHECK] Nenhum vídeo com duração encontrado ainda');
+      toast.warning('Ainda processando durações. Aguarde mais alguns segundos...');
+    }
     
   } catch (error) {
-    console.error('💥 TESTE: Erro geral:', error);
-    return { success: false, error };
+    console.error('💥 [CHECK] Erro ao verificar resultados:', error);
   }
 };
 
-// Expor no window para uso no console (apenas em desenvolvimento)
-if (typeof window !== 'undefined' && import.meta.env.DEV) {
-  (window as any).testVideoDurationSync = testVideoDurationSync;
-  (window as any).testSpecificLesson = testSpecificLesson;
-  console.log('🔧 Funções de teste disponíveis no console:');
-  console.log('- testVideoDurationSync()');
-  console.log('- testSpecificLesson(lessonId)');
-}
+// Disponibilizar globalmente para uso no console
+(window as any).testVideoDurationSync = testVideoDurationSync;
+
+console.log('🔧 [SETUP] Função testVideoDurationSync() disponível no console');
+console.log('💡 [HELP] Execute: testVideoDurationSync() para sincronizar durações');
