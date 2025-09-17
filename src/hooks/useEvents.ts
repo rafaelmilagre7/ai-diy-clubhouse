@@ -8,19 +8,8 @@ export const useEvents = () => {
     queryKey: ['events'],
     queryFn: async (): Promise<Event[]> => {
       try {
-        // Primeiro, tentar buscar eventos usando a função RPC se disponível
-        const { data: rpcData, error: rpcError } = await supabase
-          .rpc('get_visible_events_for_user', { 
-            p_user_id: (await supabase.auth.getUser()).data.user?.id 
-          });
-
-        if (!rpcError && rpcData) {
-          return rpcData as Event[];
-        }
-
-        // Fallback: buscar eventos diretamente
-        console.log("RPC não disponível, usando query direta");
-        
+        // Buscar todos os eventos diretamente sem filtração por permissões
+        // A verificação de acesso será feita apenas no modal individual
         const { data: events, error } = await supabase
           .from('events')
           .select('*')
