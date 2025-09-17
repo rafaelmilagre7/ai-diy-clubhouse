@@ -6,8 +6,11 @@ export const useEventPermissions = () => {
   const [loading, setLoading] = useState(false);
   const { profile, isAdmin } = useAuth();
 
-  // Melhorado com logs detalhados e validação de integridade
+  // VERSÃO CORRIGIDA - Mais restritiva e segura
   const checkEventAccess = useCallback(async (eventId: string): Promise<boolean> => {
+    // PRINCÍPIO: NEGADO POR PADRÃO, LIBERADO APENAS EXPLICITAMENTE
+    let hasAccess = false;
+    
     const debugInfo = {
       eventId,
       userId: profile?.id,
@@ -17,19 +20,26 @@ export const useEventPermissions = () => {
       timestamp: new Date().toISOString()
     };
 
+    // 1. VALIDAÇÕES BÁSICAS - ACESSO NEGADO SE FALHAR
     if (!profile?.id) {
       console.log('[🔒 EventPermissions] ACESSO NEGADO - Usuário não logado', debugInfo);
+      return false;
+    }
+
+    if (!eventId || eventId.trim() === '') {
+      console.log('[🔒 EventPermissions] ACESSO NEGADO - EventId inválido', debugInfo);
       return false;
     }
     
     console.log('[🔍 EventPermissions] INICIANDO verificação de acesso', debugInfo);
     
-    // Validação de integridade básica
+    // 2. VALIDAÇÃO DE INTEGRIDADE DO USUÁRIO
     if (!profile.role_id) {
-      console.warn('[⚠️ EventPermissions] INCONSISTÊNCIA - Usuário sem role_id definido', debugInfo);
+      console.error('[🔒 EventPermissions] ACESSO NEGADO - Usuário sem role_id definido', debugInfo);
+      return false; // MUDANÇA: Antes era warning, agora é NEGAÇÃO
     }
     
-    // Admin sempre tem acesso
+    // 3. ADMIN TEM ACESSO (ÚNICO CASO DE BYPASS)
     if (isAdmin) {
       console.log('[✅ EventPermissions] ACESSO LIBERADO - Admin tem acesso total', debugInfo);
       return true;
@@ -77,41 +87,62 @@ export const useEventPermissions = () => {
 
       console.log('[📊 EventPermissions] DADOS COLETADOS', enhancedDebugInfo);
 
-      // Validação de integridade do usuário
+      // 4. VALIDAÇÃO CRÍTICA DE INTEGRIDADE
       if (profile.role_id && !userRole) {
-        console.error('[🚨 EventPermissions] INCONSISTÊNCIA CRÍTICA - Role do usuário não existe no banco', {
+        console.error('[🚨 EventPermissions] ACESSO NEGADO - Role do usuário não existe no banco', {
           ...enhancedDebugInfo,
           issue: 'user_role_not_found'
         });
+        return false; // MUDANÇA: Antes continuava, agora NEGA acesso
       }
       
+      // 5. LÓGICA PRINCIPAL DE CONTROLE DE ACESSO
+      // MUDANÇA CRÍTICA: EVENTO SEM CONTROLE = ACESSO NEGADO (não público)
       if (!accessControl || accessControl.length === 0) {
-        console.log('[🌍 EventPermissions] ACESSO LIBERADO - Evento público (sem controle de acesso)', enhancedDebugInfo);
-        return true;
+        console.log('[🔒 EventPermissions] ACESSO NEGADO - Evento sem controle de acesso configurado', {
+          ...enhancedDebugInfo,
+          securityNote: 'Por segurança, eventos sem controle explícito são privados'
+        });
+        return false; // MUDANÇA: Antes retornava true, agora false
       }
 
-      // Evento COM controle específico = verificar apenas roles permitidos
-      const allowedRoleIds = accessControl.map(ac => ac.role_id);
+      // 6. VERIFICAÇÃO ESTRITA DE ROLES PERMITIDOS
+      const allowedRoleIds = accessControl.map(ac => ac.role_id).filter(id => id); // Remove nulls
       const userRoleId = profile.role_id;
       
-      const hasAccess = userRoleId ? allowedRoleIds.includes(userRoleId) : false;
+      if (!userRoleId) {
+        console.log('[🔒 EventPermissions] ACESSO NEGADO - Usuário sem role válido', enhancedDebugInfo);
+        return false;
+      }
+      
+      hasAccess = allowedRoleIds.includes(userRoleId);
       
       const finalDebugInfo = {
         ...enhancedDebugInfo,
         allowedRoleIds,
+        userRoleId,
         userHasAccess: hasAccess,
-        reason: hasAccess ? 'user_role_in_allowed_list' : 'user_role_not_in_allowed_list'
+        reason: hasAccess ? 'user_role_in_allowed_list' : 'user_role_not_in_allowed_list',
+        securityCheck: 'STRICT_MODE_ENABLED'
       };
       
       if (hasAccess) {
         console.log('[✅ EventPermissions] ACESSO LIBERADO - Usuário tem role permitido', finalDebugInfo);
+        
+        // Log de auditoria para acessos liberados
+        console.info('[📋 EventPermissions] AUDITORIA - Acesso autorizado', {
+          ...finalDebugInfo,
+          auditNote: 'Acesso liberado com base em role válido'
+        });
       } else {
         console.log('[🔒 EventPermissions] ACESSO NEGADO - Role do usuário não está na lista permitida', finalDebugInfo);
         
         // Log adicional de auditoria para acesso negado
         console.warn('[📋 EventPermissions] AUDITORIA - Tentativa de acesso bloqueada', {
           ...finalDebugInfo,
-          suggestedAction: 'Verificar se o usuário deveria ter acesso a este evento'
+          suggestedAction: 'Verificar se o usuário deveria ter acesso a este evento',
+          userRoleFound: userRole?.name || 'Não encontrado',
+          expectedRoles: accessControl.map(ac => (ac.user_roles as any)?.name).join(', ')
         });
       }
       
@@ -120,8 +151,11 @@ export const useEventPermissions = () => {
     } catch (error) {
       console.error('[💥 EventPermissions] ERRO CRÍTICO - Falha na verificação de permissões', {
         ...debugInfo,
-        error: error instanceof Error ? error.message : error
+        error: error instanceof Error ? error.message : error,
+        securityNote: 'Erro crítico resulta em ACESSO NEGADO por segurança'
       });
+      
+      // Em caso de erro, SEMPRE negar acesso por segurança
       return false;
     }
   }, [profile?.id, profile?.email, profile?.role_id, isAdmin]);
