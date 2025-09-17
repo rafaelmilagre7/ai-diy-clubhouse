@@ -183,9 +183,13 @@ const CreateInviteContent = memo<CreateInviteContentProps>(({ roles, onInviteCre
             className="grid grid-cols-1 gap-1.5"
           >
             {(['email', 'whatsapp', 'both'] as const).map((channel) => (
-              <div key={channel} className="flex items-center space-x-2 border border-gray-700 rounded-md p-2 hover:bg-gray-800/50">
-                <RadioGroupItem value={channel} id={channel} className="border-gray-700 text-white" />
-                <Label htmlFor={channel} className="flex items-center gap-2 cursor-pointer flex-1 text-sm text-white">
+              <div 
+                key={channel} 
+                className="flex items-center space-x-2 border border-gray-700 rounded-md p-2 hover:bg-gray-800/50 cursor-pointer transition-colors"
+                onClick={() => setChannelPreference(channel)}
+              >
+                <RadioGroupItem value={channel} id={`channel-${channel}`} className="border-gray-700 text-white" />
+                <Label htmlFor={`channel-${channel}`} className="flex items-center gap-2 cursor-pointer flex-1 text-sm text-white">
                   {getChannelIcon(channel)}
                   <div>
                     <div className="font-medium">
