@@ -1,15 +1,17 @@
 
 import { FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { EventRoleCheckboxes } from "./EventRoleCheckboxes";
+import { EventAccessPreview } from "../debug/EventAccessPreview";
 import { Users } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface EventRoleAccessProps {
   selectedRoles: string[];
   onChange: (selectedIds: string[]) => void;
+  eventId?: string;
 }
 
-export const EventRoleAccess = ({ selectedRoles, onChange }: EventRoleAccessProps) => {
+export const EventRoleAccess = ({ selectedRoles, onChange, eventId }: EventRoleAccessProps) => {
   return (
     <div className="space-y-4">
       <h3 className="font-medium text-sm flex items-center gap-2">
@@ -39,6 +41,12 @@ export const EventRoleAccess = ({ selectedRoles, onChange }: EventRoleAccessProp
             }
           </AlertDescription>
         </Alert>
+        
+        {/* Preview de usuários com acesso */}
+        <EventAccessPreview 
+          selectedRoles={selectedRoles}
+          eventId={eventId}
+        />
       </FormItem>
     </div>
   );

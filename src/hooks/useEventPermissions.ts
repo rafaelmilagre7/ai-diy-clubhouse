@@ -6,45 +6,87 @@ export const useEventPermissions = () => {
   const [loading, setLoading] = useState(false);
   const { profile, isAdmin } = useAuth();
 
-  // FASE 1: Estabilizar função com useCallback para evitar recriações desnecessárias
+  // Melhorado com logs detalhados e validação de integridade
   const checkEventAccess = useCallback(async (eventId: string): Promise<boolean> => {
+    const debugInfo = {
+      eventId,
+      userId: profile?.id,
+      userEmail: profile?.email,
+      userRoleId: profile?.role_id,
+      isAdmin,
+      timestamp: new Date().toISOString()
+    };
+
     if (!profile?.id) {
-      console.log('[DEBUG] EventPermissions: Usuário não logado');
+      console.log('[🔒 EventPermissions] ACESSO NEGADO - Usuário não logado', debugInfo);
       return false;
     }
     
-    console.log('[DEBUG] EventPermissions: Verificando acesso para evento', eventId);
-    console.log('[DEBUG] EventPermissions: Usuário:', profile.email);
-    console.log('[DEBUG] EventPermissions: Role ID do usuário:', profile.role_id);  
-    console.log('[DEBUG] EventPermissions: É admin?', isAdmin);
+    console.log('[🔍 EventPermissions] INICIANDO verificação de acesso', debugInfo);
+    
+    // Validação de integridade básica
+    if (!profile.role_id) {
+      console.warn('[⚠️ EventPermissions] INCONSISTÊNCIA - Usuário sem role_id definido', debugInfo);
+    }
     
     // Admin sempre tem acesso
     if (isAdmin) {
-      console.log('[DEBUG] EventPermissions: Admin tem acesso total');
+      console.log('[✅ EventPermissions] ACESSO LIBERADO - Admin tem acesso total', debugInfo);
       return true;
     }
 
     try {
-      // Verificar se o evento tem controle de acesso específico
-      const { data: accessControl, error: accessError } = await supabase
-        .from('event_access_control')
-        .select('role_id')
-        .eq('event_id', eventId);
+      // Buscar informações completas do evento e controle de acesso
+      const [eventResult, accessResult, userRoleResult] = await Promise.all([
+        supabase.from('events').select('title, created_by').eq('id', eventId).single(),
+        supabase.from('event_access_control').select(`
+          role_id,
+          user_roles:role_id (
+            name,
+            description
+          )
+        `).eq('event_id', eventId),
+        profile.role_id ? supabase.from('user_roles').select('name, description').eq('id', profile.role_id).single() : null
+      ]);
 
-      if (accessError) {
-        console.error('Erro ao verificar controle de acesso do evento:', accessError);
+      const eventInfo = eventResult.data;
+      const accessControl = accessResult.data;
+      const userRole = userRoleResult?.data;
+
+      const enhancedDebugInfo = {
+        ...debugInfo,
+        eventTitle: eventInfo?.title || 'Evento não encontrado',
+        eventCreatedBy: eventInfo?.created_by,
+        userRoleName: userRole?.name || 'Role não encontrado',
+        accessControlCount: accessControl?.length || 0,
+        allowedRoles: accessControl?.map(ac => (ac.user_roles as any)?.name) || []
+      };
+
+      if (eventResult.error || !eventInfo) {
+        console.error('[❌ EventPermissions] ERRO - Evento não encontrado', enhancedDebugInfo);
         return false;
       }
 
-      console.log('[DEBUG] EventPermissions: Controle de acesso encontrado:', accessControl);
+      if (accessResult.error) {
+        console.error('[❌ EventPermissions] ERRO - Falha ao verificar controle de acesso', {
+          ...enhancedDebugInfo,
+          error: accessResult.error
+        });
+        return false;
+      }
 
-      // HIERARQUIA DE PERMISSÕES:
-      // 1. Se o evento tem controle específico de acesso (event_access_control), isso sobrepõe qualquer permissão geral
-      // 2. A permissão geral "events: true" permite navegar na seção, mas não acessar eventos restritos
+      console.log('[📊 EventPermissions] DADOS COLETADOS', enhancedDebugInfo);
+
+      // Validação de integridade do usuário
+      if (profile.role_id && !userRole) {
+        console.error('[🚨 EventPermissions] INCONSISTÊNCIA CRÍTICA - Role do usuário não existe no banco', {
+          ...enhancedDebugInfo,
+          issue: 'user_role_not_found'
+        });
+      }
       
       if (!accessControl || accessControl.length === 0) {
-        // Evento SEM controle específico = evento público
-        console.log('[DEBUG] EventPermissions: Evento público (sem controle de acesso)');
+        console.log('[🌍 EventPermissions] ACESSO LIBERADO - Evento público (sem controle de acesso)', enhancedDebugInfo);
         return true;
       }
 
@@ -52,22 +94,37 @@ export const useEventPermissions = () => {
       const allowedRoleIds = accessControl.map(ac => ac.role_id);
       const userRoleId = profile.role_id;
       
-      console.log('[DEBUG] EventPermissions: Roles permitidos:', allowedRoleIds);
-      console.log('[DEBUG] EventPermissions: Role do usuário:', userRoleId);
-      
       const hasAccess = userRoleId ? allowedRoleIds.includes(userRoleId) : false;
       
-      console.log('[DEBUG] EventPermissions: Usuário tem acesso?', hasAccess);
+      const finalDebugInfo = {
+        ...enhancedDebugInfo,
+        allowedRoleIds,
+        userHasAccess: hasAccess,
+        reason: hasAccess ? 'user_role_in_allowed_list' : 'user_role_not_in_allowed_list'
+      };
       
-      // IMPORTANTE: Aqui NÃO consideramos permissões gerais como "events: true"
-      // O controle específico do evento tem precedência absoluta
+      if (hasAccess) {
+        console.log('[✅ EventPermissions] ACESSO LIBERADO - Usuário tem role permitido', finalDebugInfo);
+      } else {
+        console.log('[🔒 EventPermissions] ACESSO NEGADO - Role do usuário não está na lista permitida', finalDebugInfo);
+        
+        // Log adicional de auditoria para acesso negado
+        console.warn('[📋 EventPermissions] AUDITORIA - Tentativa de acesso bloqueada', {
+          ...finalDebugInfo,
+          suggestedAction: 'Verificar se o usuário deveria ter acesso a este evento'
+        });
+      }
+      
       return hasAccess;
       
     } catch (error) {
-      console.error('Erro ao verificar permissões do evento:', error);
+      console.error('[💥 EventPermissions] ERRO CRÍTICO - Falha na verificação de permissões', {
+        ...debugInfo,
+        error: error instanceof Error ? error.message : error
+      });
       return false;
     }
-  }, [profile?.id, profile?.email, profile?.role_id, isAdmin]); // Dependências estáveis
+  }, [profile?.id, profile?.email, profile?.role_id, isAdmin]);
 
   // FASE 1: Estabilizar função com useCallback 
   const getEventRoleInfo = useCallback(async (eventId: string) => {

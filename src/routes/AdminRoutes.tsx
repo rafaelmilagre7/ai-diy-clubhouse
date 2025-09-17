@@ -14,6 +14,7 @@ import SolutionEditor from '@/pages/admin/SolutionEditor';
 import AdminAnalytics from '@/pages/admin/AdminAnalytics';
 import AdminSuggestions from '@/pages/admin/AdminSuggestions';
 import AdminEvents from '@/pages/admin/AdminEvents';
+import EventsDebugPage from '@/pages/admin/EventsDebugPage';
 import AdminRoles from '@/pages/admin/AdminRoles';
 import InvitesManagement from '@/pages/admin/invites/InvitesManagement';
 import InviteDebug from '@/pages/admin/InviteDebug';
@@ -55,6 +56,7 @@ export const adminRoutes: RouteObject[] = [
   createAdminRoute("/admin/solutions/:id", SolutionEditor),
   createAdminRoute("/admin/analytics", AdminAnalytics),
   createAdminRoute("/admin/suggestions", AdminSuggestions),
+  createAdminRoute("/admin/events/debug", EventsDebugPage),
   createAdminRoute("/admin/events", AdminEvents),
   createAdminRoute("/admin/roles", AdminRoles),
   createAdminRoute("/admin/invites", InvitesManagement),
