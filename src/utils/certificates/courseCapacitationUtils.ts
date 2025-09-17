@@ -154,3 +154,28 @@ export const getDetailedCapacitationDescription = (options: CourseCapacitationOp
     return `${baseDescription} - Implementação Prática${workloadInfo}`;
   }
 };
+
+/**
+ * Busca descrição personalizada do template de certificado configurado no admin
+ */
+export const getCourseCapacitationDescriptionFromTemplate = async (courseId: string, fallbackOptions: CourseCapacitationOptions): Promise<string> => {
+  try {
+    const { supabase } = await import('@/lib/supabase');
+    const { data, error } = await supabase
+      .from('learning_certificate_templates')
+      .select('metadata')
+      .eq('course_id', courseId)
+      .eq('is_default', true)
+      .single();
+    
+    if (!error && data?.metadata?.course_description) {
+      console.log('✅ [DESCRIPTION] Usando descrição personalizada do template:', data.metadata.course_description);
+      return data.metadata.course_description;
+    }
+  } catch (error) {
+    console.warn('⚠️ Erro ao buscar descrição personalizada, usando fallback:', error);
+  }
+  
+  // Fallback para descrição automática
+  return getCourseCapacitationDescription(fallbackOptions);
+};

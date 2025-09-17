@@ -293,6 +293,26 @@ export const useUnifiedCertificates = (courseId?: string) => {
     }
   });
   
+  // Função auxiliar para buscar descrição personalizada do certificado
+  const getCustomCertificateDescription = async (certificate: UnifiedCertificate): Promise<string> => {
+    // PRIORIDADE 1: Buscar descrição personalizada do template configurado no LMS
+    if (certificate.course_id) {
+      const { getCourseCapacitationDescriptionFromTemplate } = await import('@/utils/certificates/courseCapacitationUtils');
+      return await getCourseCapacitationDescriptionFromTemplate(certificate.course_id, {
+        title: certificate.title,
+        type: certificate.type,
+        metadata: certificate.metadata
+      });
+    }
+    
+    // PRIORIDADE 2: Fallback para descrição automática
+    return getCourseCapacitationDescription({
+      title: certificate.title,
+      type: certificate.type,
+      metadata: certificate.metadata
+    });
+  };
+
   // Download simplificado usando React component
   const downloadCertificate = async (certificateId: string) => {
     try {
@@ -331,18 +351,14 @@ export const useUnifiedCertificates = (courseId?: string) => {
       const certificateData = {
         userName: user?.user_metadata?.full_name || user?.email || "Usuário",
         solutionTitle: certificate.title,
-        solutionCategory: getCourseCapacitationDescription({
-          title: certificate.title,
-          type: certificate.type,
-          metadata: certificate.metadata
-        }),
+        solutionCategory: await getCustomCertificateDescription(certificate),
         implementationDate: formatDateForCertificate(
           certificate.completion_date || certificate.implementation_date || certificate.issued_at
         ),
         certificateId: certificate.id,
         validationCode: certificate.validation_code,
         // Usar duração configurada no template LMS ou fallback para cálculo real
-        workloadHours: generateWorkload(certificate, durationMap),
+        workloadHours: await generateWorkload(certificate, durationMap),
         durationSeconds: certificate.metadata?.realVideoDuration || 0
       };
 
@@ -437,18 +453,30 @@ export const useUnifiedCertificates = (courseId?: string) => {
   };
 
   // Função auxiliar para buscar carga horária do template configurado no LMS
-  const getTemplateWorkload = (courseId: string): string | null => {
-    // Esta função seria implementada para buscar do banco de dados
-    // Por enquanto retorna null para usar outros métodos
-    return null;
+  const getTemplateWorkload = async (courseId: string): Promise<string | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('learning_certificate_templates')
+        .select('metadata')
+        .eq('course_id', courseId)
+        .eq('is_default', true)
+        .single();
+      
+      if (error || !data) return null;
+      
+      return data.metadata?.workload_hours || null;
+    } catch (error) {
+      console.error('❌ Erro ao buscar workload do template:', error);
+      return null;
+    }
   };
 
   // Função auxiliar para calcular carga horária baseada no template do certificado
-  const generateWorkload = (certificate: UnifiedCertificate, durationMap: Map<string, any>): string => {
+  const generateWorkload = async (certificate: UnifiedCertificate, durationMap: Map<string, any>): Promise<string> => {
     // PRIORIDADE 1: Buscar dados do template de certificado configurado no LMS
     if (certificate.course_id) {
       // Buscar template específico do curso configurado pelos admins
-      const templateWorkload = getTemplateWorkload(certificate.course_id);
+      const templateWorkload = await getTemplateWorkload(certificate.course_id);
       if (templateWorkload) {
         console.log('✅ [WORKLOAD] Usando duração do template LMS:', templateWorkload);
         return templateWorkload;
