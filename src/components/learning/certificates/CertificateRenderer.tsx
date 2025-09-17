@@ -17,6 +17,7 @@ interface CertificateRendererProps {
     solutionCategory: string;
     implementationDate: string;
     validationCode: string;
+    workloadHours?: string;
     benefits?: string[];
   };
   onReady?: (element: HTMLElement) => void;
@@ -33,7 +34,8 @@ export const CertificateRenderer = ({ template, data, onReady }: CertificateRend
     solutionCategory: data.solutionCategory || "IA",
     implementationDate: data.implementationDate || new Date().toLocaleDateString('pt-BR'),
     certificateId: data.validationCode,
-    validationCode: data.validationCode
+    validationCode: data.validationCode,
+    workloadHours: data.workloadHours || "Duração não disponível"
   };
 
   return (

@@ -58,6 +58,7 @@ export const CertificateModal = ({ certificate, isOpen, onClose }: CertificateMo
     ),
     implementationDate,
     validationCode: certificate.validation_code,
+    workloadHours: certificate.workloadHours, // Incluir a carga horária do hook
     benefits: [] // Pode ser expandido futuramente
   };
 
