@@ -256,14 +256,14 @@ export const CertificateTemplateForm = ({
                 <div className="space-y-2">
                   <Label htmlFor="course">Curso Específico</Label>
                   <Select
-                    value={formData.course_id || ""}
-                    onValueChange={(value) => handleInputChange("course_id", value || null)}
+                    value={formData.course_id || "global"}
+                    onValueChange={(value) => handleInputChange("course_id", value === "global" ? null : value)}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione um curso ou deixe vazio para global" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Template Global</SelectItem>
+                      <SelectItem value="global">Template Global</SelectItem>
                       {courses.map((course) => (
                         <SelectItem key={course.id} value={course.id}>
                           {course.title}
