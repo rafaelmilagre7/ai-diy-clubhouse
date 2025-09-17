@@ -230,7 +230,7 @@ export const useUnifiedCertificates = (courseId?: string) => {
           solutions: (solutionCerts || []).length
         });
         
-        return allCertificates;
+    return allCertificates;
         
       } catch (error) {
         console.error("❌ [UNIFIED_CERTIFICATES] Erro ao buscar certificados:", error);
@@ -341,19 +341,8 @@ export const useUnifiedCertificates = (courseId?: string) => {
         ),
         certificateId: certificate.id,
         validationCode: certificate.validation_code,
-        // Duração REAL calculada baseada na sincronização da API Panda Video
-        workloadHours: (() => {
-          const calculatedWorkload = generateWorkloadFromRealDuration(certificate, durationMap);
-          console.log('🏆 [CERTIFICATE_DATA] WorkloadHours REAL calculado:', {
-            certificateId: certificate.id,
-            title: certificate.title,
-            workloadHours: calculatedWorkload,
-            realDuration: certificate.metadata?.realVideoDuration,
-            videoCount: certificate.metadata?.totalVideoCount,
-            isRealData: (certificate.metadata?.realVideoDuration || 0) > 0
-          });
-          return calculatedWorkload;
-        })(),
+        // Usar duração configurada no template LMS ou fallback para cálculo real
+        workloadHours: generateWorkload(certificate, durationMap),
         durationSeconds: certificate.metadata?.realVideoDuration || 0
       };
 
@@ -447,9 +436,26 @@ export const useUnifiedCertificates = (courseId?: string) => {
     }
   };
 
-  // Função auxiliar para calcular carga horária baseada no tipo e conteúdo real
+  // Função auxiliar para buscar carga horária do template configurado no LMS
+  const getTemplateWorkload = (courseId: string): string | null => {
+    // Esta função seria implementada para buscar do banco de dados
+    // Por enquanto retorna null para usar outros métodos
+    return null;
+  };
+
+  // Função auxiliar para calcular carga horária baseada no template do certificado
   const generateWorkload = (certificate: UnifiedCertificate, durationMap: Map<string, any>): string => {
-    // Se tem dados específicos de duração total real dos vídeos
+    // PRIORIDADE 1: Buscar dados do template de certificado configurado no LMS
+    if (certificate.course_id) {
+      // Buscar template específico do curso configurado pelos admins
+      const templateWorkload = getTemplateWorkload(certificate.course_id);
+      if (templateWorkload) {
+        console.log('✅ [WORKLOAD] Usando duração do template LMS:', templateWorkload);
+        return templateWorkload;
+      }
+    }
+    
+    // PRIORIDADE 2: Se tem dados específicos de duração total real dos vídeos
     const realVideoDuration = certificate.metadata?.realVideoDuration;
     const videoCount = certificate.metadata?.videoCount || 0;
     

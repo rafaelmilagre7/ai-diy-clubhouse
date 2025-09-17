@@ -8,7 +8,8 @@ import {
   ArrowLeft,
   GraduationCap,
   Tags,
-  MessageSquare
+  MessageSquare,
+  Award
 } from "lucide-react";
 import { AdminNavItem } from "../admin/AdminNavItem";
 import { cn } from "@/lib/utils";
@@ -63,6 +64,12 @@ export const FormacaoSidebarNav = ({ sidebarOpen }: FormacaoSidebarNavProps) => 
       icon: FileText,
       href: "/formacao/materiais",
       isActive: location.pathname.startsWith("/formacao/materiais")
+    },
+    {
+      label: "Certificados",
+      icon: Award,
+      href: "/formacao/certificados",
+      isActive: location.pathname.startsWith("/formacao/certificados")
     },
   ];
 
