@@ -455,16 +455,34 @@ export const useUnifiedCertificates = (courseId?: string) => {
   // Função auxiliar para buscar carga horária do template configurado no LMS
   const getTemplateWorkload = async (courseId: string): Promise<string | null> => {
     try {
-      const { data, error } = await supabase
+      // Primeiro, buscar template específico do curso (sem filtro is_default)
+      const { data: courseTemplate, error: courseError } = await supabase
         .from('learning_certificate_templates')
         .select('metadata')
         .eq('course_id', courseId)
+        .eq('is_active', true)
+        .limit(1);
+      
+      if (!courseError && courseTemplate && courseTemplate.length > 0 && courseTemplate[0].metadata?.workload_hours) {
+        console.log('✅ [WORKLOAD] Usando carga horária do template específico:', courseTemplate[0].metadata.workload_hours);
+        return courseTemplate[0].metadata.workload_hours;
+      }
+
+      // Se não encontrou template específico, buscar template global padrão
+      const { data: defaultTemplate, error: defaultError } = await supabase
+        .from('learning_certificate_templates')
+        .select('metadata')
+        .eq('is_active', true)
         .eq('is_default', true)
-        .single();
-      
-      if (error || !data) return null;
-      
-      return data.metadata?.workload_hours || null;
+        .is('course_id', null)
+        .limit(1);
+
+      if (!defaultError && defaultTemplate && defaultTemplate.length > 0 && defaultTemplate[0].metadata?.workload_hours) {
+        console.log('✅ [WORKLOAD] Usando carga horária do template global padrão:', defaultTemplate[0].metadata.workload_hours);
+        return defaultTemplate[0].metadata.workload_hours;
+      }
+
+      return null;
     } catch (error) {
       console.error('❌ Erro ao buscar workload do template:', error);
       return null;

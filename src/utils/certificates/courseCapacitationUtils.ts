@@ -161,16 +161,32 @@ export const getDetailedCapacitationDescription = (options: CourseCapacitationOp
 export const getCourseCapacitationDescriptionFromTemplate = async (courseId: string, fallbackOptions: CourseCapacitationOptions): Promise<string> => {
   try {
     const { supabase } = await import('@/lib/supabase');
-    const { data, error } = await supabase
+    
+    // Primeiro, buscar template específico do curso (sem filtro is_default)
+    const { data: courseTemplate, error: courseError } = await supabase
       .from('learning_certificate_templates')
       .select('metadata')
       .eq('course_id', courseId)
-      .eq('is_default', true)
-      .single();
+      .eq('is_active', true)
+      .limit(1);
     
-    if (!error && data?.metadata?.course_description) {
-      console.log('✅ [DESCRIPTION] Usando descrição personalizada do template:', data.metadata.course_description);
-      return data.metadata.course_description;
+    if (!courseError && courseTemplate && courseTemplate.length > 0 && courseTemplate[0].metadata?.course_description) {
+      console.log('✅ [DESCRIPTION] Usando descrição personalizada do template específico:', courseTemplate[0].metadata.course_description);
+      return courseTemplate[0].metadata.course_description;
+    }
+
+    // Se não encontrou template específico, buscar template global padrão
+    const { data: defaultTemplate, error: defaultError } = await supabase
+      .from('learning_certificate_templates')
+      .select('metadata')
+      .eq('is_active', true)
+      .eq('is_default', true)
+      .is('course_id', null)
+      .limit(1);
+
+    if (!defaultError && defaultTemplate && defaultTemplate.length > 0 && defaultTemplate[0].metadata?.course_description) {
+      console.log('✅ [DESCRIPTION] Usando descrição do template global padrão:', defaultTemplate[0].metadata.course_description);
+      return defaultTemplate[0].metadata.course_description;
     }
   } catch (error) {
     console.warn('⚠️ Erro ao buscar descrição personalizada, usando fallback:', error);
