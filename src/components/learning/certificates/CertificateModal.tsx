@@ -49,6 +49,13 @@ export const CertificateModal = ({ certificate, isOpen, onClose }: CertificateMo
   const solution = certificate.solutions;
   const implementationDate = format(new Date(certificate.implementation_date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
   
+  // LOG DETALHADO dos dados do certificado
+  console.log('🎯 [MODAL] CertificateModal - Dados do certificado:', {
+    certificateId: certificate.id,
+    workloadHours: certificate.workloadHours,
+    certificate: certificate
+  });
+  
   const certificateData = {
     userName: user?.user_metadata?.name || user?.email || 'Usuário',
     solutionTitle: solution?.title || 'Solução',
@@ -61,6 +68,9 @@ export const CertificateModal = ({ certificate, isOpen, onClose }: CertificateMo
     workloadHours: certificate.workloadHours, // Incluir a carga horária do hook
     benefits: [] // Pode ser expandido futuramente
   };
+
+  // LOG dos dados finais
+  console.log('🎯 [MODAL] Dados finais passados para CertificateRenderer:', certificateData);
 
   // Debug: Log do template quando carregado
   useEffect(() => {

@@ -27,6 +27,14 @@ export const CertificateRenderer = ({ template, data, onReady }: CertificateRend
   // TEMPLATE PIXEL-PERFECT BASE - Apenas layout fundamental
   console.log('🎨 CertificateRenderer: Usando template pixel-perfect VIVER DE IA v6.0 - Layout Base');
 
+  // LOG DETALHADO dos dados recebidos
+  console.log('🔍 [RENDERER] CertificateRenderer recebeu dados:', {
+    userName: data.userName,
+    solutionTitle: data.solutionTitle,
+    workloadHours: data.workloadHours,
+    data: data
+  });
+
   // Preparar dados mínimos para o template base
   const baseData: CertificateData = {
     userName: data.userName || "Nome do Usuário", 
@@ -37,6 +45,9 @@ export const CertificateRenderer = ({ template, data, onReady }: CertificateRend
     validationCode: data.validationCode,
     workloadHours: data.workloadHours || "Duração não disponível"
   };
+
+  // LOG dos dados finais processados
+  console.log('🔍 [RENDERER] Dados finais (baseData) passados para template:', baseData);
 
   return (
     <div className="certificate-preview-container">
