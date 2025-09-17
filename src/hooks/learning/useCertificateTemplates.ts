@@ -26,7 +26,7 @@ export const useCertificateTemplates = (courseId?: string) => {
         if (courseId) {
           query = query.eq('course_id', courseId).order('is_default', { ascending: false });
         } else {
-          query = query.is('course_id', null).order('is_default', { ascending: false });
+          query = query.order('is_default', { ascending: false });
         }
         
         const { data, error } = await query;
