@@ -16,6 +16,7 @@ export interface UnifiedCertificate {
   type: 'course' | 'solution';
   title: string;
   description?: string;
+  customDescription?: string; // Descrição personalizada dos templates
   image_url?: string;
   course_id?: string;
   solution_id?: string;
@@ -131,93 +132,145 @@ export const useUnifiedCertificates = (courseId?: string) => {
           : learningCerts || [];
 
         // Unificar certificados com padronização de dados otimizada
-        const allCertificates: UnifiedCertificate[] = [
-          ...filteredLearningCerts.map(cert => {
-            const course = cert.learning_courses;
-            // Extrair lições de todos os módulos
-            const allLessons = course?.learning_modules?.flatMap(module => module.learning_lessons || []) || [];
-            
-            // Calcular duração real dos vídeos e contagem total
-            let totalVideoDuration = 0;
-            let totalVideoCount = 0;
-            let videosWithDuration = 0;
-            
-            allLessons.forEach(lesson => {
-              lesson.learning_lesson_videos?.forEach(video => {
-                totalVideoCount++; // Contar todos os vídeos
-                if (video.duration_seconds && video.duration_seconds > 0) {
-                  totalVideoDuration += video.duration_seconds;
-                  videosWithDuration++;
-                }
-              });
+        const allCertificates: UnifiedCertificate[] = [];
+        
+        // Processar certificados de cursos
+        for (const cert of filteredLearningCerts) {
+          const course = cert.learning_courses;
+          // Extrair lições de todos os módulos
+          const allLessons = course?.learning_modules?.flatMap(module => module.learning_lessons || []) || [];
+          
+          // Calcular duração real dos vídeos e contagem total
+          let totalVideoDuration = 0;
+          let totalVideoCount = 0;
+          let videosWithDuration = 0;
+          
+          allLessons.forEach(lesson => {
+            lesson.learning_lesson_videos?.forEach(video => {
+              totalVideoCount++; // Contar todos os vídeos
+              if (video.duration_seconds && video.duration_seconds > 0) {
+                totalVideoDuration += video.duration_seconds;
+                videosWithDuration++;
+              }
             });
-            
-            return {
+          });
+          
+          // Buscar descrição personalizada
+          let customDescription = '';
+          try {
+            customDescription = await getCustomCertificateDescription({
               ...cert,
               type: 'course' as const,
               title: course?.title || 'Curso',
-              description: course?.description,
-              image_url: course?.cover_image_url,
-              course_id: cert.course_id,
-              completion_date: cert.completion_date || cert.issued_at,
-              template_id: cert.template_id,
-              // Usar duração real da nova tabela course_durations
-              workloadHours: (() => {
-                const courseDuration = durationMap.get(cert.course_id);
-                if (courseDuration && courseDuration.syncStatus === 'completed') {
-                  console.log('✅ [WORKLOAD] Usando duração REAL sincronizada:', {
-                    courseId: cert.course_id,
-                    calculatedHours: courseDuration.calculatedHours
-                  });
-                  return courseDuration.calculatedHours;
-                }
-                
-                // Fallback para duração estimada se não sincronizado
-                if (totalVideoDuration > 0) {
-                  const hours = Math.floor(totalVideoDuration / 3600);
-                  const minutes = Math.floor((totalVideoDuration % 3600) / 60);
-                  let duration = '';
-                  if (hours > 0 && minutes > 0) {
-                    duration = `${hours}h ${minutes}min`;
-                  } else if (hours > 0) {
-                    duration = `${hours}h`;
-                  } else if (minutes > 0) {
-                    duration = `${minutes}min`;
-                  } else {
-                    duration = '0min';
-                  }
-                  console.log('⚠️ [WORKLOAD] Usando cálculo de fallback:', duration);
-                  return duration;
-                }
-                
-                // Estimativa padrão se não há dados
-                const estimatedHours = Math.max(1, Math.ceil(allLessons.length * 0.5));
-                return `~${estimatedHours}h`;
-              })(),
               metadata: {
                 ...cert.metadata,
                 totalModules: course?.learning_modules?.length || 0,
                 totalLessons: allLessons.length,
                 totalDuration: allLessons.reduce((acc: number, lesson: any) => acc + (lesson.estimated_time_minutes || 30), 0),
-                realVideoDuration: totalVideoDuration, // Nova propriedade com duração real
-                totalVideoCount: totalVideoCount, // Total de vídeos (incluindo sem duração)
-                videosWithDuration: videosWithDuration, // Vídeos que têm duração
-                videoCount: totalVideoCount // Alias para compatibilidade
+                realVideoDuration: totalVideoDuration,
+                totalVideoCount: totalVideoCount,
+                videosWithDuration: videosWithDuration,
+                videoCount: totalVideoCount
               }
-            };
-          }),
-          ...(solutionCerts || []).map(cert => ({
+            });
+          } catch (error) {
+            console.error('Erro ao buscar descrição personalizada:', error);
+            customDescription = getCourseCapacitationDescription({
+              title: course?.title || 'Curso',
+              type: 'course',
+              metadata: cert.metadata
+            });
+          }
+          
+          allCertificates.push({
+            ...cert,
+            type: 'course' as const,
+            title: course?.title || 'Curso',
+            description: course?.description,
+            customDescription,
+            image_url: course?.cover_image_url,
+            course_id: cert.course_id,
+            completion_date: cert.completion_date || cert.issued_at,
+            template_id: cert.template_id,
+            // Usar duração real da nova tabela course_durations
+            workloadHours: (() => {
+              const courseDuration = durationMap.get(cert.course_id);
+              if (courseDuration && courseDuration.syncStatus === 'completed') {
+                console.log('✅ [WORKLOAD] Usando duração REAL sincronizada:', {
+                  courseId: cert.course_id,
+                  calculatedHours: courseDuration.calculatedHours
+                });
+                return courseDuration.calculatedHours;
+              }
+              
+              // Fallback para duração estimada se não sincronizado
+              if (totalVideoDuration > 0) {
+                const hours = Math.floor(totalVideoDuration / 3600);
+                const minutes = Math.floor((totalVideoDuration % 3600) / 60);
+                let duration = '';
+                if (hours > 0 && minutes > 0) {
+                  duration = `${hours}h ${minutes}min`;
+                } else if (hours > 0) {
+                  duration = `${hours}h`;
+                } else if (minutes > 0) {
+                  duration = `${minutes}min`;
+                } else {
+                  duration = '0min';
+                }
+                console.log('⚠️ [WORKLOAD] Usando cálculo de fallback:', duration);
+                return duration;
+              }
+              
+              // Estimativa padrão se não há dados
+              const estimatedHours = Math.max(1, Math.ceil(allLessons.length * 0.5));
+              return `~${estimatedHours}h`;
+            })(),
+            metadata: {
+              ...cert.metadata,
+              totalModules: course?.learning_modules?.length || 0,
+              totalLessons: allLessons.length,
+              totalDuration: allLessons.reduce((acc: number, lesson: any) => acc + (lesson.estimated_time_minutes || 30), 0),
+              realVideoDuration: totalVideoDuration, // Nova propriedade com duração real
+              totalVideoCount: totalVideoCount, // Total de vídeos (incluindo sem duração)
+              videosWithDuration: videosWithDuration, // Vídeos que têm duração
+              videoCount: totalVideoCount // Alias para compatibilidade
+            }
+          });
+        }
+        
+        // Processar certificados de soluções
+        for (const cert of solutionCerts || []) {
+          // Buscar descrição personalizada para soluções
+          let customDescription = '';
+          try {
+            customDescription = await getCustomCertificateDescription({
+              ...cert,
+              type: 'solution' as const,
+              title: cert.solutions?.title || 'Solução',
+              metadata: cert.metadata || {}
+            });
+          } catch (error) {
+            console.error('Erro ao buscar descrição personalizada para solução:', error);
+            customDescription = getCourseCapacitationDescription({
+              title: cert.solutions?.title || 'Solução',
+              type: 'solution',
+              metadata: cert.metadata
+            });
+          }
+          
+          allCertificates.push({
             ...cert,
             type: 'solution' as const,
             title: cert.solutions?.title || 'Solução',
             description: cert.solutions?.description,
+            customDescription,
             image_url: cert.solutions?.thumbnail_url,
             solution_id: cert.solution_id,
             completion_date: cert.completion_date || cert.implementation_date || cert.issued_at,
             template_id: cert.template_id,
             metadata: cert.metadata || {}
-          }))
-        ];
+          });
+        }
         
         // Ordenar por data de emissão (mais recente primeiro)
         allCertificates.sort((a, b) => 
@@ -368,7 +421,7 @@ export const useUnifiedCertificates = (courseId?: string) => {
       const certificateData = {
         userName: user?.user_metadata?.full_name || user?.email || "Usuário",
         solutionTitle: certificate.title,
-        solutionCategory: await getCustomCertificateDescription(certificate),
+        solutionCategory: certificate.customDescription || await getCustomCertificateDescription(certificate),
         implementationDate: formatDateForCertificate(
           certificate.completion_date || certificate.implementation_date || certificate.issued_at
         ),

@@ -72,7 +72,7 @@ export const UnifiedCertificateCard = ({
       const certificateData = {
         userName: user?.user_metadata?.full_name || user?.email || "Usuário",
         solutionTitle: certificate.title,
-        solutionCategory: getCourseCapacitationDescription({
+        solutionCategory: certificate.customDescription || getCourseCapacitationDescription({
           title: certificate.title,
           type: certificate.type,
           metadata: certificate.metadata
@@ -357,7 +357,7 @@ Confira meu certificado: ${customDomainUrl}`;
                     data={{
                       userName: user?.user_metadata?.full_name || user?.email || "Usuário",
                       solutionTitle: certificate.title,
-                      solutionCategory: getCourseCapacitationDescription({
+                      solutionCategory: certificate.customDescription || getCourseCapacitationDescription({
                         title: certificate.title,
                         type: certificate.type,
                         metadata: certificate.metadata
