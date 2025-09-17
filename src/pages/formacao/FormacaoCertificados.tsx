@@ -1,117 +1,74 @@
 import React, { useState } from "react";
-import { useCertificateTemplates } from "@/hooks/learning/useCertificateTemplates";
 import { useLearningCourses } from "@/hooks/learning/useLearningCourses";
+import { useCertificateTemplates } from "@/hooks/learning/useCertificateTemplates";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertCircle, Edit, Plus, Trash, Award, BookOpen, Clock } from "lucide-react";
-import { CertificateTemplate } from "@/types/learningTypes";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AlertCircle, Settings, Check, X } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { CertificateTemplateForm } from "@/components/formacao/certificados/CertificateTemplateForm";
+import { SimplifiedCertificateForm } from "@/components/formacao/certificados/SimplifiedCertificateForm";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const FormacaoCertificados = () => {
+  const [selectedCourse, setSelectedCourse] = useState<any>(null);
   const [openDialog, setOpenDialog] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState<CertificateTemplate | null>(null);
   
+  const { courses = [], isLoading: coursesLoading, error: coursesError } = useLearningCourses();
   const {
     templates,
-    isLoading,
-    error,
+    isLoading: templatesLoading,
+    error: templatesError,
     saveTemplate,
-    deleteTemplate,
-    isSaving,
-    isDeleting
+    isSaving
   } = useCertificateTemplates();
 
-  const { courses = [], isLoading: coursesLoading } = useLearningCourses();
-  
-  // Separar templates globais dos específicos de cursos
-  const globalTemplates = templates.filter(t => !t.course_id);
-  const courseTemplates = templates.filter(t => t.course_id);
-  
-  // Agrupar templates por curso
-  const templatesByCourse = courseTemplates.reduce((acc, template) => {
-    const courseId = template.course_id!;
-    if (!acc[courseId]) {
-      acc[courseId] = [];
-    }
-    acc[courseId].push(template);
-    return acc;
-  }, {} as Record<string, CertificateTemplate[]>);
+  const getCertificateConfig = (courseId: string) => {
+    const template = templates.find(template => template.course_id === courseId);
+    if (!template) return null;
+    
+    return {
+      id: template.id,
+      course_id: template.course_id || courseId,
+      workload_hours: template.metadata?.workload_hours || "",
+      course_description: template.metadata?.course_description || "",
+      is_active: template.is_active
+    };
+  };
 
-  const handleEdit = (template: CertificateTemplate) => {
-    setSelectedTemplate(template);
+  const handleConfigureCourse = (course: any) => {
+    setSelectedCourse(course);
     setOpenDialog(true);
   };
 
-  const handleCreate = (courseId?: string) => {
-    setSelectedTemplate({
-      id: '',
-      name: '',
-      description: '',
-      html_template: '',
-      css_styles: null,
-      is_active: true,
-      is_default: false,
-      course_id: courseId || null,
-      metadata: {
-        workload_hours: '',
-        course_description: ''
-      },
-      created_at: '',
-      updated_at: ''
-    } as CertificateTemplate);
-    setOpenDialog(true);
+  const handleSave = (templateData: any) => {
+    saveTemplate(templateData, {
+      onSuccess: () => {
+        setOpenDialog(false);
+        setSelectedCourse(null);
+      }
+    });
   };
 
-  const handleSave = async (template: Partial<CertificateTemplate>) => {
-    try {
-      await saveTemplate(template);
-      setOpenDialog(false);
-      setSelectedTemplate(null);
-    } catch (error) {
-      console.error("Erro ao salvar template:", error);
-    }
-  };
-
-  const handleDelete = async (templateId: string) => {
-    if (confirm("Tem certeza que deseja excluir este template?")) {
-      await deleteTemplate(templateId);
-    }
-  };
-
-  const getCourseTitle = (courseId: string) => {
-    const course = courses.find(c => c.id === courseId);
-    return course?.title || 'Curso não encontrado';
-  };
-
-  const getWorkloadHours = (template: CertificateTemplate) => {
-    return template.metadata?.workload_hours || 'Não definido';
-  };
-
-  if (isLoading) {
+  if (coursesLoading || templatesLoading) {
     return (
-      <div className="container mx-auto py-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-8 w-48" />
-          <Skeleton className="h-10 w-32" />
+      <div className="container mx-auto py-8">
+        <div className="mb-6">
+          <Skeleton className="h-8 w-64 mb-2" />
+          <Skeleton className="h-4 w-96" />
         </div>
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => (
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
             <Card key={i}>
-              <CardHeader>
-                <Skeleton className="h-6 w-full" />
-                <Skeleton className="h-4 w-3/4" />
+              <CardHeader className="pb-3">
+                <Skeleton className="h-6 w-4/5" />
+                <Skeleton className="h-4 w-full" />
               </CardHeader>
               <CardContent>
-                <Skeleton className="h-20 w-full" />
-              </CardContent>
-              <CardFooter>
+                <Skeleton className="h-20 w-full mb-4" />
                 <Skeleton className="h-10 w-full" />
-              </CardFooter>
+              </CardContent>
             </Card>
           ))}
         </div>
@@ -119,14 +76,14 @@ const FormacaoCertificados = () => {
     );
   }
 
-  if (error) {
+  if (coursesError || templatesError) {
     return (
-      <div className="container mx-auto py-6">
+      <div className="container mx-auto py-8">
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Erro</AlertTitle>
           <AlertDescription>
-            Erro ao carregar templates de certificados: {error.message}
+            Ocorreu um erro ao carregar os dados. Por favor, tente novamente mais tarde.
           </AlertDescription>
         </Alert>
       </div>
@@ -134,224 +91,117 @@ const FormacaoCertificados = () => {
   }
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Award className="h-8 w-8 text-primary" />
-            Gestão de Certificados
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            Configure templates de certificados para seus cursos
-          </p>
-        </div>
-        <Button onClick={() => handleCreate()} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Novo Template Global
-        </Button>
+    <div className="container mx-auto py-8">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold mb-2">Configuração de Certificados</h1>
+        <p className="text-muted-foreground">
+          Configure os dados específicos que aparecerão nos certificados de cada curso.
+          O template visual permanece sempre o mesmo - você só precisa definir a carga horária e descrição.
+        </p>
       </div>
 
-      <Tabs defaultValue="courses" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="courses">Templates por Curso</TabsTrigger>
-          <TabsTrigger value="global">Templates Globais</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="courses" className="space-y-6">
-          {courses.length === 0 ? (
-            <Alert>
-              <BookOpen className="h-4 w-4" />
-              <AlertTitle>Nenhum curso encontrado</AlertTitle>
-              <AlertDescription>
-                Crie cursos primeiro para poder configurar certificados específicos.
-              </AlertDescription>
-            </Alert>
-          ) : (
-            <div className="space-y-6">
-              {courses.map((course) => {
-                const courseTemplates = templatesByCourse[course.id] || [];
-                return (
-                  <Card key={course.id} className="w-full">
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <CardTitle className="flex items-center gap-2">
-                            <BookOpen className="h-5 w-5" />
-                            {course.title}
-                          </CardTitle>
-                          <p className="text-sm text-muted-foreground">
-                            {courseTemplates.length} template(s) configurado(s)
-                          </p>
+      {courses.length === 0 ? (
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Nenhum curso encontrado</AlertTitle>
+          <AlertDescription>
+            Não há cursos cadastrados ainda. Crie alguns cursos primeiro para poder configurar seus certificados.
+          </AlertDescription>
+        </Alert>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {courses.map((course) => {
+            const config = getCertificateConfig(course.id);
+            const hasConfig = !!config;
+            const isActive = hasConfig && config.is_active;
+
+            return (
+              <Card key={course.id} className="relative">
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between">
+                    <CardTitle className="text-lg leading-tight flex-1 mr-2">
+                      {course.title}
+                    </CardTitle>
+                    <div className="flex flex-col gap-1">
+                      {hasConfig ? (
+                        <Badge variant={isActive ? "default" : "secondary"} className="text-xs">
+                          {isActive ? <Check className="w-3 h-3 mr-1" /> : <X className="w-3 h-3 mr-1" />}
+                          {isActive ? "Ativo" : "Inativo"}
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-xs">
+                          Não configurado
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  {course.description && (
+                    <p className="text-sm text-muted-foreground line-clamp-2">
+                      {course.description}
+                    </p>
+                  )}
+                </CardHeader>
+                
+                <CardContent className="space-y-4">
+                  {hasConfig ? (
+                    <div className="space-y-3">
+                      <div className="bg-muted/50 p-3 rounded-lg text-sm">
+                        <div className="space-y-1">
+                          <div className="flex justify-between">
+                            <span className="font-medium">Carga horária:</span>
+                            <span>{config.workload_hours || "Não definida"}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="font-medium">Descrição:</span>
+                            <span className="text-right text-xs max-w-32 truncate">
+                              {config.course_description || course.title}
+                            </span>
+                          </div>
                         </div>
-                        <Button 
-                          onClick={() => handleCreate(course.id)}
-                          variant="outline" 
-                          size="sm"
-                          className="gap-2"
-                        >
-                          <Plus className="h-4 w-4" />
-                          Adicionar Template
-                        </Button>
-                      </div>
-                    </CardHeader>
-                    
-                    {courseTemplates.length > 0 && (
-                      <CardContent>
-                        <div className="grid gap-4 md:grid-cols-2">
-                          {courseTemplates.map((template) => (
-                            <Card key={template.id} className="border-border/50">
-                              <CardHeader className="pb-3">
-                                <div className="flex items-start justify-between">
-                                  <div>
-                                    <h4 className="font-medium">{template.name}</h4>
-                                    {template.description && (
-                                      <p className="text-sm text-muted-foreground mt-1">
-                                        {template.description}
-                                      </p>
-                                    )}
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    {template.is_default && (
-                                      <Badge variant="secondary">Padrão</Badge>
-                                    )}
-                                    {template.is_active ? (
-                                      <Badge variant="default">Ativo</Badge>
-                                    ) : (
-                                      <Badge variant="outline">Inativo</Badge>
-                                    )}
-                                  </div>
-                                </div>
-                              </CardHeader>
-                              <CardContent className="pt-0">
-                                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                  <div className="flex items-center gap-1">
-                                    <Clock className="h-4 w-4" />
-                                    {getWorkloadHours(template)}
-                                  </div>
-                                </div>
-                                {template.metadata?.course_description && (
-                                  <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
-                                    {template.metadata.course_description}
-                                  </p>
-                                )}
-                              </CardContent>
-                              <CardFooter className="pt-0 gap-2">
-                                <Button
-                                  onClick={() => handleEdit(template)}
-                                  variant="outline"
-                                  size="sm"
-                                  className="flex-1"
-                                >
-                                  <Edit className="h-4 w-4 mr-1" />
-                                  Editar
-                                </Button>
-                                <Button
-                                  onClick={() => handleDelete(template.id)}
-                                  variant="outline"
-                                  size="sm"
-                                  disabled={isDeleting}
-                                >
-                                  <Trash className="h-4 w-4" />
-                                </Button>
-                              </CardFooter>
-                            </Card>
-                          ))}
-                        </div>
-                      </CardContent>
-                    )}
-                  </Card>
-                );
-              })}
-            </div>
-          )}
-        </TabsContent>
-        
-        <TabsContent value="global" className="space-y-6">
-          {globalTemplates.length === 0 ? (
-            <Alert>
-              <Award className="h-4 w-4" />
-              <AlertTitle>Nenhum template global encontrado</AlertTitle>
-              <AlertDescription>
-                Crie templates globais que podem ser usados para qualquer curso.
-              </AlertDescription>
-            </Alert>
-          ) : (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {globalTemplates.map((template) => (
-                <Card key={template.id}>
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <CardTitle className="text-lg">{template.name}</CardTitle>
-                        {template.description && (
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {template.description}
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {template.is_default && (
-                          <Badge variant="secondary">Padrão</Badge>
-                        )}
-                        {template.is_active ? (
-                          <Badge variant="default">Ativo</Badge>
-                        ) : (
-                          <Badge variant="outline">Inativo</Badge>
-                        )}
                       </div>
                     </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-4 w-4" />
-                        {getWorkloadHours(template)}
-                      </div>
-                    </div>
-                    {template.metadata?.course_description && (
-                      <p className="text-sm text-muted-foreground mt-2 line-clamp-3">
-                        {template.metadata.course_description}
+                  ) : (
+                    <div className="bg-muted/30 p-4 rounded-lg text-center">
+                      <p className="text-sm text-muted-foreground mb-2">
+                        Este curso ainda não tem certificado configurado
                       </p>
-                    )}
-                  </CardContent>
-                  <CardFooter className="gap-2">
-                    <Button
-                      onClick={() => handleEdit(template)}
-                      variant="outline"
-                      className="flex-1"
-                    >
-                      <Edit className="h-4 w-4 mr-2" />
-                      Editar
-                    </Button>
-                    <Button
-                      onClick={() => handleDelete(template.id)}
-                      variant="outline"
-                      size="icon"
-                      disabled={isDeleting}
-                    >
-                      <Trash className="h-4 w-4" />
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
-      
+                      <p className="text-xs text-muted-foreground">
+                        Configure para permitir emissão de certificados
+                      </p>
+                    </div>
+                  )}
+
+                  <Button
+                    onClick={() => handleConfigureCourse(course)}
+                    className="w-full"
+                    variant={hasConfig ? "outline" : "default"}
+                  >
+                    <Settings className="w-4 h-4 mr-2" />
+                    {hasConfig ? "Editar Configuração" : "Configurar Certificado"}
+                  </Button>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-        <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>
-              {selectedTemplate?.id ? "Editar Template" : "Novo Template"}
-            </DialogTitle>
+            <DialogTitle>Configurar Certificado</DialogTitle>
           </DialogHeader>
           
-          <CertificateTemplateForm
-            template={selectedTemplate}
-            onSave={handleSave}
-            isSaving={isSaving}
-          />
+          {selectedCourse && (
+            <SimplifiedCertificateForm
+              courseId={selectedCourse.id}
+              courseTitle={selectedCourse.title}
+              config={getCertificateConfig(selectedCourse.id)}
+              onSave={handleSave}
+              isSaving={isSaving}
+              onCancel={() => setOpenDialog(false)}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </div>
