@@ -366,7 +366,8 @@ Confira meu certificado: ${customDomainUrl}`;
                       implementationDate: formattedDate,
                       completedDate: formattedDate,
                       certificateId: certificate.id,
-                      validationCode: certificate.validation_code
+                      validationCode: certificate.validation_code,
+                      workloadHours: certificate.workloadHours
                     } as CertificateData}
                     showHeader={false}
                     scale={0.5}
