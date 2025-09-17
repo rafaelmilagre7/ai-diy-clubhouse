@@ -339,8 +339,7 @@ export const CertificateTemplateForm = ({
             <CardHeader>
               <CardTitle>Template HTML</CardTitle>
               <p className="text-sm text-muted-foreground">
-                Use as variáveis: {{userName}}, {{solutionTitle}}, {{solutionCategory}}, 
-                {{workloadHours}}, {{implementationDate}}, {{certificateId}}, {{validationCode}}
+                Use as variáveis: {"{{userName}}, {{solutionTitle}}, {{solutionCategory}}, {{workloadHours}}, {{implementationDate}}, {{certificateId}}, {{validationCode}}"}
               </p>
             </CardHeader>
             <CardContent>
