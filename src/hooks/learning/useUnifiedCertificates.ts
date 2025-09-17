@@ -295,22 +295,39 @@ export const useUnifiedCertificates = (courseId?: string) => {
   
   // Função auxiliar para buscar descrição personalizada do certificado
   const getCustomCertificateDescription = async (certificate: UnifiedCertificate): Promise<string> => {
+    console.log('🔍 [DEBUG] getCustomCertificateDescription iniciada para:', {
+      course_id: certificate.course_id,
+      title: certificate.title,
+      type: certificate.type,
+      hasMetadata: !!certificate.metadata
+    });
+
     // PRIORIDADE 1: Buscar descrição personalizada do template configurado no LMS
     if (certificate.course_id) {
+      console.log('✅ [DEBUG] Buscando template personalizado para course_id:', certificate.course_id);
       const { getCourseCapacitationDescriptionFromTemplate } = await import('@/utils/certificates/courseCapacitationUtils');
-      return await getCourseCapacitationDescriptionFromTemplate(certificate.course_id, {
+      const result = await getCourseCapacitationDescriptionFromTemplate(certificate.course_id, {
         title: certificate.title,
         type: certificate.type,
         metadata: certificate.metadata
       });
+      console.log('🎯 [DEBUG] Resultado da descrição personalizada:', result);
+      return result;
     }
     
+    console.log('⚠️ [DEBUG] Sem course_id, usando descrição genérica para:', {
+      title: certificate.title,
+      type: certificate.type
+    });
+    
     // PRIORIDADE 2: Fallback para descrição automática
-    return getCourseCapacitationDescription({
+    const fallbackResult = getCourseCapacitationDescription({
       title: certificate.title,
       type: certificate.type,
       metadata: certificate.metadata
     });
+    console.log('📝 [DEBUG] Resultado da descrição genérica:', fallbackResult);
+    return fallbackResult;
   };
 
   // Download simplificado usando React component

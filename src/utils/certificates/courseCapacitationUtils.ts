@@ -159,16 +159,33 @@ export const getDetailedCapacitationDescription = (options: CourseCapacitationOp
  * Busca descrição personalizada do template de certificado configurado no admin
  */
 export const getCourseCapacitationDescriptionFromTemplate = async (courseId: string, fallbackOptions: CourseCapacitationOptions): Promise<string> => {
+  console.log('🔍 [DEBUG-TEMPLATE] getCourseCapacitationDescriptionFromTemplate iniciada');
+  console.log('📊 [DEBUG-TEMPLATE] Parâmetros recebidos:', {
+    courseId,
+    fallbackOptions
+  });
+
   try {
     const { supabase } = await import('@/lib/supabase');
     
     // Primeiro, buscar template específico do curso (sem filtro is_default)
+    console.log('🔍 [DEBUG-TEMPLATE] Buscando template específico para courseId:', courseId);
     const { data: courseTemplate, error: courseError } = await supabase
       .from('learning_certificate_templates')
-      .select('metadata')
+      .select('metadata, is_default, course_id, is_active')
       .eq('course_id', courseId)
       .eq('is_active', true)
       .limit(1);
+    
+    console.log('📋 [DEBUG-TEMPLATE] Resultado da busca específica:', {
+      courseTemplate,
+      courseError,
+      hasData: !!courseTemplate,
+      dataLength: courseTemplate?.length || 0,
+      firstTemplateMetadata: courseTemplate?.[0]?.metadata,
+      hasDescription: !!courseTemplate?.[0]?.metadata?.course_description,
+      description: courseTemplate?.[0]?.metadata?.course_description
+    });
     
     if (!courseError && courseTemplate && courseTemplate.length > 0 && courseTemplate[0].metadata?.course_description) {
       console.log('✅ [DESCRIPTION] Usando descrição personalizada do template específico:', courseTemplate[0].metadata.course_description);
@@ -176,22 +193,39 @@ export const getCourseCapacitationDescriptionFromTemplate = async (courseId: str
     }
 
     // Se não encontrou template específico, buscar template global padrão
+    console.log('🔍 [DEBUG-TEMPLATE] Template específico não encontrado, buscando template global padrão...');
     const { data: defaultTemplate, error: defaultError } = await supabase
       .from('learning_certificate_templates')
-      .select('metadata')
+      .select('metadata, is_default, course_id, is_active')
       .eq('is_active', true)
       .eq('is_default', true)
       .is('course_id', null)
       .limit(1);
 
+    console.log('📋 [DEBUG-TEMPLATE] Resultado da busca global:', {
+      defaultTemplate,
+      defaultError,
+      hasData: !!defaultTemplate,
+      dataLength: defaultTemplate?.length || 0,
+      firstTemplateMetadata: defaultTemplate?.[0]?.metadata,
+      hasDescription: !!defaultTemplate?.[0]?.metadata?.course_description,
+      description: defaultTemplate?.[0]?.metadata?.course_description
+    });
+
     if (!defaultError && defaultTemplate && defaultTemplate.length > 0 && defaultTemplate[0].metadata?.course_description) {
       console.log('✅ [DESCRIPTION] Usando descrição do template global padrão:', defaultTemplate[0].metadata.course_description);
       return defaultTemplate[0].metadata.course_description;
     }
+
+    console.log('⚠️ [DEBUG-TEMPLATE] Nenhum template encontrado, usando fallback automático');
   } catch (error) {
+    console.error('❌ [DEBUG-TEMPLATE] Erro ao buscar descrição personalizada:', error);
     console.warn('⚠️ Erro ao buscar descrição personalizada, usando fallback:', error);
   }
   
   // Fallback para descrição automática
-  return getCourseCapacitationDescription(fallbackOptions);
+  console.log('📋 [DEBUG-TEMPLATE] Gerando fallback com opções:', fallbackOptions);
+  const fallbackResult = getCourseCapacitationDescription(fallbackOptions);
+  console.log('📝 [DEBUG-TEMPLATE] Resultado do fallback gerado:', fallbackResult);
+  return fallbackResult;
 };
