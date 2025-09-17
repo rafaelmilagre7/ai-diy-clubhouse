@@ -187,32 +187,17 @@ const CreateInviteContent = memo<CreateInviteContentProps>(({ roles, onInviteCre
             {(['email', 'whatsapp', 'both'] as const).map((channel) => (
               <div 
                 key={channel} 
-                className="flex items-center space-x-2 border border-gray-700 rounded-md p-2 hover:bg-gray-800/50 cursor-pointer transition-colors focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 focus-within:ring-offset-gray-900"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setChannelPreference(channel);
-                }}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    setChannelPreference(channel);
-                  }
-                }}
-                aria-label={`Selecionar ${channel === 'both' ? 'Email e WhatsApp' : channel === 'whatsapp' ? 'WhatsApp' : 'Email'}`}
+                className="flex items-center space-x-2 border border-gray-700 rounded-md p-2 hover:bg-gray-800/50 transition-colors focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 focus-within:ring-offset-gray-900"
                 data-testid={`channel-option-${channel}`}
               >
                 <RadioGroupItem 
                   value={channel} 
                   id={`channel-${channel}`} 
                   className="border-gray-700 text-white"
-                  tabIndex={-1}
                 />
                 <Label 
                   htmlFor={`channel-${channel}`} 
-                  className="flex items-center gap-2 cursor-pointer flex-1 text-sm text-white pointer-events-none"
+                  className="flex items-center gap-2 cursor-pointer flex-1 text-sm text-white"
                 >
                   {getChannelIcon(channel)}
                   <div>
