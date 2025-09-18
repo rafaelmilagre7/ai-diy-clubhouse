@@ -164,7 +164,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Timeout de segurança mais agressivo
     timeoutId = window.setTimeout(() => {
       if (mounted) {
-        console.warn('⚠️ [AUTH] Timeout de 3s - finalizando loading');
+        console.warn('⚠️ [AUTH] Timeout de 3s - finalizando loading forçadamente');
         setIsLoading(false);
       }
     }, 3000);

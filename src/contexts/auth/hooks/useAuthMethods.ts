@@ -99,7 +99,7 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
       return { error };
     } finally {
       setIsSigningIn(false);
-      setIsLoading(false);
+      // Removido setIsLoading(false) - deixar AuthContext controlar
     }
   }, [setIsLoading]);
 
@@ -123,7 +123,7 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
       const error = err instanceof Error ? err : new Error('Erro inesperado');
       throw error;
     } finally {
-      setIsLoading(false);
+      // Removido setIsLoading(false) - deixar AuthContext controlar
     }
   }, [setIsLoading]);
 

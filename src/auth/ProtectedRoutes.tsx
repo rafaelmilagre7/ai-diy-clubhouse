@@ -15,11 +15,11 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
 
   // Log removido para evitar loops de renderização
 
-  // Timeout de segurança para evitar loading infinito
+  // Timeout de segurança sincronizado com AuthContext
   useEffect(() => {
     const timeout = setTimeout(() => {
       setShowTimeout(true);
-    }, 10000); // 10 segundos máximo
+    }, 5000); // 5 segundos máximo - sincronizado
 
     return () => clearTimeout(timeout);
   }, []);
