@@ -1,53 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { Bot, Brain, Target, AlertCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import React from 'react';
+import { Bot, Brain, Target } from 'lucide-react';
 
 interface TrailGenerationLoaderProps {
   message?: string;
-  onTimeout?: () => void;
 }
 
 export const TrailGenerationLoader: React.FC<TrailGenerationLoaderProps> = ({ 
-  message = "Criando sua trilha personalizada com IA...",
-  onTimeout 
+  message = "Criando sua trilha personalizada com IA..." 
 }) => {
-  const [progress, setProgress] = useState(0);
-  const [showTimeout, setShowTimeout] = useState(false);
-  const [timeoutCounter, setTimeoutCounter] = useState(15);
-
-  // Simulador de progresso real
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 95) return prev; // Parar em 95% para não chegar em 100%
-        return prev + Math.random() * 8 + 2; // Incremento variável entre 2-10%
-      });
-    }, 800);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  // Timeout de 15 segundos
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      setShowTimeout(true);
-    }, 15000);
-
-    const countdown = setInterval(() => {
-      setTimeoutCounter(prev => {
-        if (prev <= 1) {
-          clearInterval(countdown);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => {
-      clearTimeout(timeout);
-      clearInterval(countdown);
-    };
-  }, []);
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
       {/* Background Aurora Effect */}
@@ -109,54 +69,18 @@ export const TrailGenerationLoader: React.FC<TrailGenerationLoaderProps> = ({
             </div>
           </div>
 
-        {/* Progress Bar com progresso real */}
-        <div className="w-full bg-muted rounded-full h-3 overflow-hidden">
-          <div 
-            className="h-full bg-gradient-to-r from-viverblue via-operational to-revenue rounded-full transition-all duration-300 ease-out"
-            style={{ width: `${Math.min(progress, 95)}%` }}
-          />
-        </div>
-        
-        {/* Indicador de progresso */}
-        <div className="text-center">
-          <span className="text-sm text-muted-foreground">
-            {Math.round(Math.min(progress, 95))}% concluído...
-          </span>
-        </div>
+          {/* Progress Bar */}
+          <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-viverblue via-operational to-revenue rounded-full animate-pulse aurora-shimmer" />
+          </div>
         </div>
 
-        {/* Timeout Warning */}
-        {showTimeout ? (
-          <div className="mt-6 p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl">
-            <div className="flex items-center gap-3 text-amber-600 mb-3">
-              <AlertCircle className="w-5 h-5" />
-              <span className="font-medium">Processo está demorando mais que o esperado</span>
-            </div>
-            <p className="text-sm text-amber-600/80 mb-4">
-              A geração da trilha está demorando. Você pode aguardar mais alguns segundos ou tentar novamente.
-            </p>
-            {onTimeout && (
-              <Button 
-                onClick={onTimeout}
-                variant="outline" 
-                size="sm"
-                className="w-full"
-              >
-                Tentar Novamente
-              </Button>
-            )}
-          </div>
-        ) : (
-          /* Additional Info */
-          <div className="mt-8 p-4 aurora-glass rounded-2xl border border-viverblue/20">
-            <p className="text-xs text-muted-foreground">
-              ✨ Usando IA para criar uma trilha 100% personalizada baseada no seu perfil e objetivos
-            </p>
-            <p className="text-xs text-muted-foreground mt-2">
-              Aguarde mais {timeoutCounter} segundos...
-            </p>
-          </div>
-        )}
+        {/* Additional Info */}
+        <div className="mt-8 p-4 aurora-glass rounded-2xl border border-viverblue/20">
+          <p className="text-xs text-muted-foreground">
+            ✨ Usando IA para criar uma trilha 100% personalizada baseada no seu perfil e objetivos
+          </p>
+        </div>
       </div>
     </div>
   );

@@ -12,16 +12,7 @@ interface AuthProtectedRoutesProps {
  * AuthProtectedRoutes protege rotas que requerem autenticação básica
  */
 const AuthProtectedRoutes = ({ children }: AuthProtectedRoutesProps) => {
-  // Usar useAuth de forma defensiva
-  let user, isLoading;
-  try {
-    const authContext = useAuth();
-    user = authContext?.user;
-    isLoading = authContext?.isLoading;
-  } catch (error) {
-    console.log('🛡️ [AUTH-PROTECTED] AuthProvider não disponível ainda, mostrando loading');
-    return <LoadingScreen message="Inicializando autenticação..." />;
-  }
+  const { user, isLoading } = useAuth();
   const location = useLocation();
 
   if (isLoading) {

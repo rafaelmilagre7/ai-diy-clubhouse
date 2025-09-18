@@ -32,30 +32,21 @@ export const useEventPermissions = () => {
       return false;
     }
 
-    // VALIDAÇÃO RIGOROSA do UUID do role_id
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    
-    if (!profile.role_id || !uuidRegex.test(profile.role_id)) {
-      console.error('🚨 [EventPermissions] CRÍTICO: profile.role_id inválido!', {
+    if (!profile.role_id) {
+      console.error('❌ [EventPermissions] CRÍTICO: profile.role_id está NULL/undefined!', {
         profile_id: profile.id,
         profile_email: profile.email,
         profile_role_id: profile.role_id,
-        is_valid_uuid: profile.role_id ? uuidRegex.test(profile.role_id) : false,
         profile_legacy_role: profile.role,
         profile_keys: Object.keys(profile)
       });
       
-      // RETRY INTELIGENTE - Re-buscar profile atualizado do AuthContext
-      console.log('🔄 [EventPermissions] Tentando retry com re-fetch do profile...');
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Verificar novamente após o retry
-      if (!profile.role_id || !uuidRegex.test(profile.role_id)) {
-        console.error('❌ [EventPermissions] role_id ainda inválido após retry - BLOQUEANDO ACESSO');
+      // Fallback: aguardar um pouco e tentar novamente
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (!profile.role_id) {
+        console.error('❌ [EventPermissions] role_id ainda NULL após retry');
         return false;
       }
-      
-      console.log('✅ [EventPermissions] role_id válido após retry:', profile.role_id);
     }
 
     // Admin tem acesso total
@@ -67,9 +58,7 @@ export const useEventPermissions = () => {
     try {
       console.log('🔍 [EventPermissions] Consultando event_access_control:', {
         event_id: eventId,
-        role_id: profile.role_id,
-        role_id_type: typeof profile.role_id,
-        role_id_valid: uuidRegex.test(profile.role_id)
+        role_id: profile.role_id
       });
 
       const { data: accessControl, error } = await supabase
@@ -85,14 +74,10 @@ export const useEventPermissions = () => {
       }
 
       const hasAccess = accessControl && accessControl.length > 0;
-      console.log('✅ [EventPermissions] Resultado da consulta:', {
+      console.log('🔍 [EventPermissions] Resultado da consulta:', {
         accessControl,
         hasAccess,
-        found_records: accessControl?.length || 0,
-        query_params: {
-          event_id: eventId,
-          role_id: profile.role_id
-        }
+        found_records: accessControl?.length || 0
       });
 
       return hasAccess;

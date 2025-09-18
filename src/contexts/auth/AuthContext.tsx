@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback, useMemo, useRef } from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback, useMemo } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { UserProfile } from '@/lib/supabase';
@@ -18,7 +18,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const initialLoadComplete = useRef(false); // CRÍTICO: useRef para evitar dependência circular
 
   // Hook para métodos de autenticação
   const { signIn, signOut } = useAuthMethods({ setIsLoading });
@@ -49,16 +48,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
            permissions.all === true || false;
   }, [profile?.user_roles?.name, profile?.user_roles?.permissions]);
 
-  // CORREÇÃO DE EMERGÊNCIA: Buscar perfil por ID ou email como fallback
-  const fetchUserProfile = useCallback(async (userId: string, retryCount: number = 0) => {
-    const maxRetries = 1; // Reduzido para 1 tentativa apenas
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    
+  // Função para buscar perfil do usuário
+  const fetchUserProfile = useCallback(async (userId: string) => {
     try {
-      console.log('🔍 [AUTH] Buscando perfil por ID:', userId.substring(0, 8) + '***');
+      console.log('🔍 [AUTH] Iniciando busca do perfil para:', userId.substring(0, 8) + '***');
       
-      // PRIMEIRA TENTATIVA: Buscar por ID do usuário autenticado
-      let { data: profileData, error } = await supabase
+      const { data: profileData, error } = await supabase
         .from('profiles')
         .select(`
           *,
@@ -72,122 +67,62 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         .eq('id', userId)
         .single();
 
-      // CORREÇÃO DE EMERGÊNCIA: Se não encontrou por ID, buscar por email
-      if (error && user?.email) {
-        console.warn('⚠️ [AUTH] Perfil não encontrado por ID, buscando por email:', user.email);
-        
-        const { data: profileByEmail, error: emailError } = await supabase
-          .from('profiles')
-          .select(`
-            *,
-            user_roles:role_id (
-              id,
-              name,
-              description,
-              permissions
-            )
-          `)
-          .eq('email', user.email)
-          .single();
-
-        if (!emailError && profileByEmail) {
-          console.log('✅ [AUTH] Perfil encontrado por email! Sincronizando...');
-          profileData = profileByEmail;
-          error = null;
-
-          // SINCRONIZAR: Atualizar o ID do perfil para corresponder ao usuário autenticado
-          try {
-            await supabase
-              .from('profiles')
-              .update({ id: userId })
-              .eq('email', user.email);
-            
-            console.log('✅ [AUTH] ID do perfil sincronizado com sucesso');
-          } catch (syncError) {
-            console.warn('⚠️ [AUTH] Erro ao sincronizar ID, mas continuando com perfil por email');
-          }
-        }
-      }
-
-      if (error || !profileData) {
-        console.error('❌ [AUTH] Perfil não encontrado nem por ID nem por email:', error);
-        if (retryCount < maxRetries) {
-          console.log(`🔄 [AUTH] Retry ${retryCount + 1}/${maxRetries}...`);
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          return fetchUserProfile(userId, retryCount + 1);
-        }
-        
-        // FALLBACK DE EMERGÊNCIA: Criar perfil básico se não existir
-        console.warn('🆘 [AUTH] FALLBACK: Permitindo acesso com perfil nulo temporariamente');
+      if (error) {
+        console.error('❌ [AUTH] Erro ao buscar perfil:', error);
         setProfile(null);
         return;
       }
 
+      // Validação crítica do role_id
+      if (!profileData.role_id) {
+        console.error('❌ [AUTH] CRÍTICO: profile.role_id está NULL/undefined!', {
+          profileId: profileData.id,
+          email: profileData.email,
+          role_id: profileData.role_id,
+          legacy_role: profileData.role
+        });
+      } else {
+        console.log('✅ [AUTH] profile.role_id carregado:', profileData.role_id);
+      }
+
       console.log('✅ [AUTH] Perfil carregado:', {
         id: profileData.id.substring(0, 8) + '***',
-        email: profileData.email,
-        role_name: profileData.user_roles?.name || 'sem role',
-        method: error ? 'by_email' : 'by_id'
+        email: profileData.email?.substring(0, 3) + '***@***.' + profileData.email?.split('.').pop(),
+        role_id: profileData.role_id,
+        role_name: profileData.user_roles?.name || profileData.role,
+        has_user_roles: !!profileData.user_roles
       });
 
       setProfile(profileData);
     } catch (error) {
-      console.error('❌ [AUTH] Erro crítico na busca do perfil:', error);
+      console.error('❌ [AUTH] Erro na busca do perfil:', error);
       setProfile(null);
     }
-  }, [user?.email]);
+  }, []);
 
   // Setup inicial e listener de mudanças de autenticação
   useEffect(() => {
-    let mounted = true;
-    let timeoutId: number;
-    
-    console.log('🔧 [AUTH] Configurando autenticação...', { initialLoadComplete: initialLoadComplete.current });
-    
-    // Se já completou o load inicial, não executar novamente
-    if (initialLoadComplete.current) {
-      console.log('🔧 [AUTH] Load inicial já completo, ignorando...');
-      return;
-    }
+    console.log('🔧 [AUTH] Configurando autenticação...');
     
     // Função para processar mudanças de estado de auth
-    const handleAuthStateChange = async (event: string, session: Session | null) => {
-      if (!mounted || initialLoadComplete.current) return;
-      
-      console.log('🔔 [AUTH] Evento de auth:', event, 'initialLoadComplete:', initialLoadComplete.current);
+    const handleAuthStateChange = (event: string, session: Session | null) => {
+      console.log('🔔 [AUTH] Evento de auth:', event);
       
       // Sempre atualizar session e user
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        console.log('👤 [AUTH] Usuário encontrado, buscando perfil...');
-        
-        await fetchUserProfile(session.user.id);
-        
-        if (mounted && !initialLoadComplete.current) {
-          console.log('✅ [AUTH] Perfil processado, finalizando loading');
-          initialLoadComplete.current = true;
-          setIsLoading(false);
-        }
+        // Buscar perfil apenas se temos um usuário
+        fetchUserProfile(session.user.id);
       } else {
-        console.log('🚫 [AUTH] Sem usuário, limpando perfil');
+        // Limpar perfil se não há usuário
         setProfile(null);
-        if (mounted && !initialLoadComplete.current) {
-          initialLoadComplete.current = true;
-          setIsLoading(false);
-        }
       }
+      
+      // Terminar loading
+      setIsLoading(false);
     };
-
-    // Timeout de segurança - 3 segundos
-    timeoutId = window.setTimeout(() => {
-      if (mounted && !initialLoadComplete.current) {
-        console.warn('⚠️ [AUTH] Timeout de 3s - finalizando loading forçadamente');
-        initialLoadComplete.current = true;
-        setIsLoading(false);
-      }
-    }, 3000);
 
     // Configurar listener primeiro
     const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange);
@@ -199,12 +134,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     });
 
     return () => {
-      mounted = false;
-      clearTimeout(timeoutId);
       console.log('🧹 [AUTH] Limpando listener de auth');
       subscription.unsubscribe();
     };
-  }, []); // CORREÇÃO DEFINITIVA: Sem dependências para evitar loops infinitos
+  }, []); // Array vazio - executar apenas uma vez
 
   const contextValue: AuthContextType = useMemo(() => ({
     session,

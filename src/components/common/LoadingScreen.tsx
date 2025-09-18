@@ -13,17 +13,6 @@ const LoadingScreen = ({
 }: LoadingScreenProps) => {
   const [progress, setProgress] = useState(0);
   const [dots, setDots] = useState('');
-  const [showEmergencyAccess, setShowEmergencyAccess] = useState(false);
-
-  // CORREÇÃO DE EMERGÊNCIA: Timeout de 5 segundos para acesso de emergência
-  useEffect(() => {
-    const emergencyTimeout = setTimeout(() => {
-      console.warn('🆘 [LOADING] TIMEOUT DE EMERGÊNCIA: Permitindo acesso após 5 segundos');
-      setShowEmergencyAccess(true);
-    }, 5000);
-    
-    return () => clearTimeout(emergencyTimeout);
-  }, []);
 
   // Animação de progresso simulado
   useEffect(() => {
@@ -88,26 +77,9 @@ const LoadingScreen = ({
         )}
         
         {/* Mensagem de contexto */}
-        {!showEmergencyAccess ? (
-          <p className="text-sm text-muted-foreground">
-            Preparando sua experiência personalizada...
-          </p>
-        ) : (
-          <div className="space-y-3 text-center">
-            <p className="text-sm text-amber-600 font-medium">
-              ⚠️ Carregamento demorou mais que o esperado
-            </p>
-            <button 
-              onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors text-sm font-medium"
-            >
-              Tentar Novamente
-            </button>
-            <p className="text-xs text-muted-foreground">
-              Se o problema persistir, recarregue a página
-            </p>
-          </div>
-        )}
+        <p className="text-sm text-muted-foreground">
+          Preparando sua experiência personalizada...
+        </p>
       </div>
     </div>
   );
