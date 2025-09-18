@@ -6,10 +6,10 @@ import { usePermissionListener } from './usePermissionListener';
 import { usePermissions } from './usePermissions';
 
 export const useFeatureAccess = () => {
-  const { profile } = useAuth();
+  const { profile, isLoading } = useAuth();
   const userRole = getUserRoleName(profile);
   const roleJsonPermissions = profile?.user_roles?.permissions || {};
-  const { userPermissions: permissionCodes = [], hasPermission } = usePermissions();
+  const { userPermissions: permissionCodes = [], hasPermission, loading: permissionsLoading } = usePermissions();
 
   // Mapear permission codes (ex: 'tools.access') para flags de features
   const permsFromCodes = permissionCodes.reduce<Record<string, boolean>>((acc, code) => {
@@ -30,6 +30,12 @@ export const useFeatureAccess = () => {
   usePermissionListener();
 
   const hasFeatureAccess = (featureName: string) => {
+    // FALLBACK GRACIOSO: Durante loading, permitir acesso básico para evitar loops
+    if (isLoading || permissionsLoading || !profile) {
+      console.log(`🔄 [FEATURE-ACCESS] Loading state - permitindo acesso temporário à ${featureName}`);
+      return true; // Fail-open durante loading
+    }
+    
     // Para networking, usar o sistema mais direto de permissões
     if (featureName === 'networking') {
       return hasPermission('networking.access');

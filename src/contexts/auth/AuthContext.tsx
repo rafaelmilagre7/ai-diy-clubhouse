@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback, useMemo, useRef } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { UserProfile } from '@/lib/supabase';
@@ -18,7 +18,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [initialLoadComplete, setInitialLoadComplete] = useState(false); // CRÍTICO: Estado React para persistir entre re-renders
+  const initialLoadComplete = useRef(false); // CRÍTICO: useRef para evitar dependência circular
 
   // Hook para métodos de autenticação
   const { signIn, signOut } = useAuthMethods({ setIsLoading });
@@ -105,19 +105,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     let mounted = true;
     let timeoutId: number;
     
-    console.log('🔧 [AUTH] Configurando autenticação...', { initialLoadComplete });
+    console.log('🔧 [AUTH] Configurando autenticação...', { initialLoadComplete: initialLoadComplete.current });
     
     // Se já completou o load inicial, não executar novamente
-    if (initialLoadComplete) {
+    if (initialLoadComplete.current) {
       console.log('🔧 [AUTH] Load inicial já completo, ignorando...');
       return;
     }
     
     // Função para processar mudanças de estado de auth
     const handleAuthStateChange = async (event: string, session: Session | null) => {
-      if (!mounted || initialLoadComplete) return;
+      if (!mounted || initialLoadComplete.current) return;
       
-      console.log('🔔 [AUTH] Evento de auth:', event, 'initialLoadComplete:', initialLoadComplete);
+      console.log('🔔 [AUTH] Evento de auth:', event, 'initialLoadComplete:', initialLoadComplete.current);
       
       // Sempre atualizar session e user
       setSession(session);
@@ -128,16 +128,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         
         await fetchUserProfile(session.user.id);
         
-        if (mounted && !initialLoadComplete) {
+        if (mounted && !initialLoadComplete.current) {
           console.log('✅ [AUTH] Perfil processado, finalizando loading');
-          setInitialLoadComplete(true);
+          initialLoadComplete.current = true;
           setIsLoading(false);
         }
       } else {
         console.log('🚫 [AUTH] Sem usuário, limpando perfil');
         setProfile(null);
-        if (mounted && !initialLoadComplete) {
-          setInitialLoadComplete(true);
+        if (mounted && !initialLoadComplete.current) {
+          initialLoadComplete.current = true;
           setIsLoading(false);
         }
       }
@@ -145,9 +145,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     // Timeout de segurança - 3 segundos
     timeoutId = window.setTimeout(() => {
-      if (mounted && !initialLoadComplete) {
+      if (mounted && !initialLoadComplete.current) {
         console.warn('⚠️ [AUTH] Timeout de 3s - finalizando loading forçadamente');
-        setInitialLoadComplete(true);
+        initialLoadComplete.current = true;
         setIsLoading(false);
       }
     }, 3000);
@@ -167,7 +167,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.log('🧹 [AUTH] Limpando listener de auth');
       subscription.unsubscribe();
     };
-  }, [fetchUserProfile, initialLoadComplete]); // Incluir initialLoadComplete como dependência
+  }, [fetchUserProfile]); // CRÍTICO: Removido initialLoadComplete das dependências para evitar loop infinito
 
   const contextValue: AuthContextType = useMemo(() => ({
     session,
