@@ -58,10 +58,10 @@ const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
       // Marcar layout como pronto imediatamente
       setLayoutReady(true);
     } else {
-      // Timeout sincronizado com outros componentes
+      // Timeout sincronizado com AuthContext
       timeoutRef.current = window.setTimeout(() => {
         setLayoutReady(true);
-      }, 1500); // Sincronizado com AdminLayout e RootRedirect
+      }, 2000); // Sincronizado com AuthContext
     }
     
     return () => {
