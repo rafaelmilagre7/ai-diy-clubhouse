@@ -65,10 +65,18 @@ export function useImplementationTrail() {
       setIsRegenerating(true);
       setError(null);
 
-      // Chamar a edge function de geração inteligente
-      const { data, error } = await supabase.functions.invoke('generate-smart-trail', {
+      console.log('🚀 [TRAIL] Iniciando geração de trilha...');
+
+      // Timeout de 10 segundos para geração de trilha
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Timeout na geração de trilha')), 10000);
+      });
+
+      const generatePromise = supabase.functions.invoke('generate-smart-trail', {
         body: { userId: user.id }
       });
+
+      const { data, error } = await Promise.race([generatePromise, timeoutPromise]) as any;
 
       if (error) {
         throw new Error(error.message || 'Erro ao gerar trilha');
@@ -78,6 +86,7 @@ export function useImplementationTrail() {
         throw new Error(data.error || 'Erro desconhecido ao gerar trilha');
       }
 
+      console.log('✅ [TRAIL] Trilha gerada com sucesso');
       setTrail(data.trail);
       
       // Limpar cache de soluções para forçar reload dos dados reais
@@ -92,6 +101,7 @@ export function useImplementationTrail() {
         description: `Personalização: ${Math.round(data.personalization_insights.avg_score)}% de compatibilidade`,
       });
     } catch (err: any) {
+      console.warn('⚠️ [TRAIL] Erro na geração - usando fallback:', err.message);
       setError('Não foi possível gerar sua trilha personalizada. Gerando trilha padrão...');
       
       // Fallback para trilha básica em caso de erro
@@ -168,9 +178,16 @@ export function useImplementationTrail() {
 
   // Evitar chamadas duplicadas usando useEffect com dependências específicas
   useEffect(() => {
-    if (user?.id) {
+    let mounted = true;
+    
+    if (user?.id && mounted) {
+      console.log('🔄 [TRAIL] Carregando trilha para usuário:', user.id.substring(0, 8) + '***');
       loadTrail();
     }
+
+    return () => {
+      mounted = false;
+    };
   }, [user?.id]);
 
   return {
