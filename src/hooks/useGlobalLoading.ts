@@ -15,9 +15,9 @@ interface LoadingConfig {
 }
 
 const DEFAULT_CONFIG: LoadingConfig = {
-  timeout: 4000, // 4 segundos unificado
+  timeout: 3000, // 3 segundos para evitar loops longos
   enableCircuitBreaker: true,
-  retryAttempts: 2
+  retryAttempts: 1 // Reduzido para evitar loops
 };
 
 export const useGlobalLoading = (config: LoadingConfig = DEFAULT_CONFIG) => {
