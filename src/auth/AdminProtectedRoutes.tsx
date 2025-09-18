@@ -10,7 +10,19 @@ interface AdminProtectedRoutesProps {
 }
 
 export const AdminProtectedRoutes = ({ children }: AdminProtectedRoutesProps) => {
-  const { user, profile, isAdmin, isLoading } = useAuth();
+  // Usar useAuth de forma defensiva
+  let user, profile, isAdmin, isLoading;
+  try {
+    const authContext = useAuth();
+    user = authContext?.user;
+    profile = authContext?.profile;
+    isAdmin = authContext?.isAdmin;
+    isLoading = authContext?.isLoading;
+  } catch (error) {
+    console.log('🛡️ [ADMIN-PROTECTED] AuthProvider não disponível ainda, mostrando loading');
+    return <LoadingScreen message="Inicializando autenticação..." />;
+  }
+  
   const location = useLocation();
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   const timeoutRef = useRef<number | null>(null);

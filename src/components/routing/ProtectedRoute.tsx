@@ -16,7 +16,19 @@ const ProtectedRoute = ({
   requireAdmin = false,
   requiredRole
 }: ProtectedRouteProps) => {
-  const { user, profile, isAdmin, isLoading } = useAuth();
+  // Usar useAuth de forma defensiva
+  let user, profile, isAdmin, isLoading;
+  try {
+    const authContext = useAuth();
+    user = authContext?.user;
+    profile = authContext?.profile;
+    isAdmin = authContext?.isAdmin;
+    isLoading = authContext?.isLoading;
+  } catch (error) {
+    console.log('🛡️ [PROTECTED-ROUTE] AuthProvider não disponível ainda, mostrando loading');
+    return <LoadingScreen message="Inicializando autenticação..." />;
+  }
+  
   const location = useLocation();
   
   // Se estiver carregando, mostra tela de loading

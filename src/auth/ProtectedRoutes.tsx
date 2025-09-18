@@ -10,7 +10,20 @@ interface ProtectedRoutesProps {
 
 export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
   const location = useLocation();
-  const { user, profile, isLoading } = useAuth();
+  
+  // Usar useAuth de forma defensiva para evitar erro durante inicialização
+  let user, profile, isLoading;
+  try {
+    const authContext = useAuth();
+    user = authContext?.user;
+    profile = authContext?.profile;
+    isLoading = authContext?.isLoading;
+  } catch (error) {
+    // AuthProvider ainda não está disponível - mostrar loading
+    console.log('🛡️ [PROTECTED] AuthProvider não disponível ainda, mostrando loading');
+    return <LoadingScreen message="Inicializando autenticação..." />;
+  }
+  
   const [showTimeout, setShowTimeout] = useState(false);
 
   // Log removido para evitar loops de renderização
