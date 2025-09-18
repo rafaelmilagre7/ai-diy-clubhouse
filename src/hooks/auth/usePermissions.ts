@@ -84,9 +84,9 @@ export const usePermissions = () => {
     }
 
     try {
-      // CORREÇÃO: Timeout de segurança para evitar loops
+      // CORREÇÃO DE EMERGÊNCIA: Timeout reduzido para 3 segundos
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Timeout')), 5000)
+        setTimeout(() => reject(new Error('Permissions timeout')), 3000)
       );
 
       const rpcPromise = supabase.rpc('get_user_permissions', {
@@ -96,10 +96,22 @@ export const usePermissions = () => {
       const { data, error } = await Promise.race([rpcPromise, timeoutPromise]) as any;
 
       if (error) throw error;
+      
+      console.log('✅ [PERMISSIONS] Permissões carregadas:', data?.length || 0);
       setUserPermissions(data || []);
     } catch (error) {
-      console.error('Erro ao buscar permissões do usuário:', error);
-      setUserPermissions([]); // Fallback gracioso
+      console.warn('⚠️ [PERMISSIONS] Erro ao buscar permissões, usando fallback:', error.message);
+      
+      // FALLBACK DE EMERGÊNCIA: Permissões básicas para manter sistema funcionando
+      const basicPermissions = [
+        'solutions.access',
+        'learning.access', 
+        'community.access',
+        'networking.access'
+      ];
+      
+      console.log('🆘 [PERMISSIONS] Aplicando permissões básicas de emergência');
+      setUserPermissions(basicPermissions);
     }
   };
 

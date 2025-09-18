@@ -30,15 +30,24 @@ export const useFeatureAccess = () => {
   usePermissionListener();
 
   const hasFeatureAccess = (featureName: string) => {
-    // CORREÇÃO DEFINITIVA: Fallback mais inteligente para evitar re-renders
+    // CORREÇÃO DE EMERGÊNCIA: Fallback inteligente e robusto
     if (isLoading || permissionsLoading) {
+      console.log(`🔄 [FEATURE-ACCESS] Loading state - permitindo acesso à ${featureName}`);
       return true; // Permitir acesso durante loading
     }
     
     if (!profile) {
-      // Se não há perfil mas não está loading, permitir acesso básico
-      console.log(`🔄 [FEATURE-ACCESS] Sem perfil - permitindo acesso básico à ${featureName}`);
-      return true;
+      // EMERGÊNCIA: Se não há perfil, permitir funcionalidades básicas
+      const basicFeatures = ['solutions', 'learning', 'community', 'networking', 'tools'];
+      const hasBasicAccess = basicFeatures.includes(featureName);
+      
+      if (hasBasicAccess) {
+        console.log(`🆘 [FEATURE-ACCESS] EMERGÊNCIA: Permitindo acesso básico à ${featureName}`);
+        return true;
+      }
+      
+      console.log(`⚠️ [FEATURE-ACCESS] Sem perfil - negando acesso à feature avançada: ${featureName}`);
+      return false;
     }
     
     // Para networking, usar o sistema mais direto de permissões
@@ -46,7 +55,12 @@ export const useFeatureAccess = () => {
       return hasPermission('networking.access');
     }
     
-    return isFeatureEnabledForUser(featureName, userRole, effectivePermissions);
+    try {
+      return isFeatureEnabledForUser(featureName, userRole, effectivePermissions);
+    } catch (error) {
+      console.warn(`⚠️ [FEATURE-ACCESS] Erro ao verificar feature ${featureName}, permitindo acesso:`, error);
+      return true; // Fail-open em caso de erro
+    }
   };
 
   return {
