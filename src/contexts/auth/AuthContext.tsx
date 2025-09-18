@@ -127,15 +127,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Setup inicial e listener de mudanças de autenticação
   useEffect(() => {
-    let mounted = true;
-    let timeoutId: number;
-    
     console.log('🔧 [AUTH] Configurando autenticação...');
     
     // Função para processar mudanças de estado de auth
     const handleAuthStateChange = async (event: string, session: Session | null) => {
-      if (!mounted) return;
-      
       console.log('🔔 [AUTH] Evento de auth:', event);
       
       // Sempre atualizar session e user
@@ -143,31 +138,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(session?.user ?? null);
       
       if (session?.user) {
+        // IMPORTANTE: Não terminar loading até profile.role_id estar carregado
         console.log('👤 [AUTH] Usuário encontrado, buscando perfil...');
-        setIsLoading(true);
+        setIsLoading(true); // Garantir que loading continua durante busca do profile
         
         await fetchUserProfile(session.user.id);
         
-        if (mounted) {
-          console.log('✅ [AUTH] Perfil processado, terminando loading');
+        // TIMEOUT de segurança para evitar loading infinito
+        setTimeout(() => {
+          console.log('⏰ [AUTH] Timeout de segurança - terminando loading');
           setIsLoading(false);
-        }
+        }, 10000); // 10 segundos máximo
+        
+        console.log('✅ [AUTH] Perfil processado, terminando loading');
+        setIsLoading(false);
       } else {
+        // Limpar perfil se não há usuário
         console.log('🚫 [AUTH] Sem usuário, limpando perfil');
         setProfile(null);
-        if (mounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    // Timeout de segurança mais agressivo
-    timeoutId = window.setTimeout(() => {
-      if (mounted) {
-        console.warn('⚠️ [AUTH] Timeout de 3s - finalizando loading');
         setIsLoading(false);
       }
-    }, 3000);
+    };
 
     // Configurar listener primeiro
     const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange);
@@ -179,12 +170,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     });
 
     return () => {
-      mounted = false;
-      clearTimeout(timeoutId);
       console.log('🧹 [AUTH] Limpando listener de auth');
       subscription.unsubscribe();
     };
-  }, [fetchUserProfile]);
+  }, []); // Array vazio - executar apenas uma vez
 
   const contextValue: AuthContextType = useMemo(() => ({
     session,
