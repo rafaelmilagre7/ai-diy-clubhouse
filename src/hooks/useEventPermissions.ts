@@ -241,10 +241,10 @@ export const useEventPermissions = () => {
         return false; // MUDANÇA: Antes continuava, agora NEGA acesso
       }
       
-      // 4. VERIFICAÇÃO DO CONTROLE DE ACESSO
+      // 4. VERIFICAÇÃO DO CONTROLE DE ACESSO - CORRIGIDO
       if (!accessControl || accessControl.length === 0) {
-        console.log('🔓 [EventPermissions] LIBERADO - Evento público (sem controle de acesso)', enhancedDebugInfo);
-        return true; // CORREÇÃO: Eventos sem controle são públicos
+        console.log('🔒 [EventPermissions] NEGADO - Evento privado (sem permissões configuradas)', enhancedDebugInfo);
+        return false; // CORREÇÃO: Eventos sem controle de acesso são PRIVADOS (apenas admins têm acesso)
       }
 
       // 5. VERIFICAÇÃO DE ROLES PERMITIDOS - CORREÇÃO DA COMPARAÇÃO

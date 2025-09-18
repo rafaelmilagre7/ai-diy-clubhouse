@@ -72,30 +72,17 @@ export const EventModal = ({ event, onClose }: EventModalProps) => {
       setIsVerifying(true);
       
       try {
-        // CORREÇÃO: Aguardar profile estar completamente carregado
-        let retryCount = 0;
-        const maxRetries = 5;
+        // Verificar acesso uma única vez (sem retry para refletir mudanças imediatamente)
+        const access = await checkEventAccess(event.id);
         
-        while (retryCount < maxRetries && isMounted) {
-          const access = await checkEventAccess(event.id);
+        if (isMounted) {
+          console.log('✅ [EventModal] Verificação concluída:', { access, eventId: event.id });
+          setHasAccess(access);
           
-          if (access || retryCount === maxRetries - 1) {
-            if (isMounted) {
-              console.log('✅ [EventModal] Verificação concluída:', { access, retryCount });
-              setHasAccess(access);
-              
-              if (!access) {
-                const roles = await getEventRoleInfo(event.id);
-                setAllowedRoles(roles);
-              }
-            }
-            break;
+          if (!access) {
+            const roles = await getEventRoleInfo(event.id);
+            setAllowedRoles(roles);
           }
-          
-          // Se foi negado, aguardar um pouco e tentar novamente
-          console.log(`⏳ [EventModal] Tentativa ${retryCount + 1} negada, tentando novamente...`);
-          await new Promise(resolve => setTimeout(resolve, 500));
-          retryCount++;
         }
       } catch (error) {
         console.error('❌ [EventModal] Erro na verificação:', error);
