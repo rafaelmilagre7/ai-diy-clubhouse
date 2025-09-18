@@ -20,12 +20,12 @@ const AuthLayout = () => {
   const [redirectHandled, setRedirectHandled] = useState(false);
   const [forceTimeout, setForceTimeout] = useState(false);
 
-  // Timeout de segurança para AuthLayout - 5 segundos
+  // Timeout de segurança sincronizado com AuthContext - 3 segundos  
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      console.warn('⚠️ [AUTH-LAYOUT] Timeout de 5s - forçando finalização do loading');
+      console.warn('⚠️ [AUTH-LAYOUT] Timeout de 3s - sincronizado com AuthContext');
       setForceTimeout(true);
-    }, 5000);
+    }, 3000);
 
     return () => clearTimeout(timeoutId);
   }, []);

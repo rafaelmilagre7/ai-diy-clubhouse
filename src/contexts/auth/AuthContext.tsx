@@ -18,6 +18,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false); // CRÍTICO: Estado React para persistir entre re-renders
 
   // Hook para métodos de autenticação
   const { signIn, signOut } = useAuthMethods({ setIsLoading });
@@ -103,9 +104,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     let mounted = true;
     let timeoutId: number;
-    let initialLoadComplete = false;
     
-    console.log('🔧 [AUTH] Configurando autenticação...');
+    console.log('🔧 [AUTH] Configurando autenticação...', { initialLoadComplete });
+    
+    // Se já completou o load inicial, não executar novamente
+    if (initialLoadComplete) {
+      console.log('🔧 [AUTH] Load inicial já completo, ignorando...');
+      return;
+    }
     
     // Função para processar mudanças de estado de auth
     const handleAuthStateChange = async (event: string, session: Session | null) => {
@@ -124,24 +130,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         
         if (mounted && !initialLoadComplete) {
           console.log('✅ [AUTH] Perfil processado, finalizando loading');
-          initialLoadComplete = true;
+          setInitialLoadComplete(true);
           setIsLoading(false);
         }
       } else {
         console.log('🚫 [AUTH] Sem usuário, limpando perfil');
         setProfile(null);
         if (mounted && !initialLoadComplete) {
-          initialLoadComplete = true;
+          setInitialLoadComplete(true);
           setIsLoading(false);
         }
       }
     };
 
-    // Timeout de segurança MAIS AGRESSIVO - 3 segundos
+    // Timeout de segurança - 3 segundos
     timeoutId = window.setTimeout(() => {
       if (mounted && !initialLoadComplete) {
         console.warn('⚠️ [AUTH] Timeout de 3s - finalizando loading forçadamente');
-        initialLoadComplete = true;
+        setInitialLoadComplete(true);
         setIsLoading(false);
       }
     }, 3000);
@@ -161,7 +167,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.log('🧹 [AUTH] Limpando listener de auth');
       subscription.unsubscribe();
     };
-  }, [fetchUserProfile]);
+  }, [fetchUserProfile, initialLoadComplete]); // Incluir initialLoadComplete como dependência
 
   const contextValue: AuthContextType = useMemo(() => ({
     session,
