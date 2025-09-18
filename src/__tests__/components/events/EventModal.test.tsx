@@ -32,10 +32,7 @@ const createMockEventPermissions = (overrides = {}) => ({
   checkEventAccess: jest.fn(),
   checkEventAccessWithRetry: jest.fn(),
   getEventRoleInfo: jest.fn(),
-  debugEventAccess: jest.fn(),
-  forceRefreshPermissions: jest.fn(),
   loading: false,
-  retryCount: 0,
   ...overrides
 });
 

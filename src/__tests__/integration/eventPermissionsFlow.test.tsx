@@ -31,10 +31,7 @@ describe('Event Permissions Flow Integration', () => {
     mockUseEventPermissions.mockReturnValue({
       checkEventAccess: mockCheckEventAccess,
       getEventRoleInfo: jest.fn().mockResolvedValue([]),
-      debugEventAccess: jest.fn(),
-      forceRefreshPermissions: jest.fn(),
-      loading: false,
-      retryCount: 0
+      loading: false
     });
   });
 

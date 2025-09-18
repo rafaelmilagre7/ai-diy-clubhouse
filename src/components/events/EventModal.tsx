@@ -20,7 +20,7 @@ interface EventModalProps {
 }
 
 export const EventModal = ({ event, onClose }: EventModalProps) => {
-  const { checkEventAccess, getEventRoleInfo, debugEventAccess, forceRefreshPermissions } = useEventPermissions();
+  const { checkEventAccess, getEventRoleInfo } = useEventPermissions();
   const { profile, isLoading: authLoading } = useAuth();
   
   // Estados para controle de acesso
@@ -36,8 +36,7 @@ export const EventModal = ({ event, onClose }: EventModalProps) => {
     setIsVerifying(true);
     setHasAccess(null);
     setAllowedRoles([]);
-    forceRefreshPermissions();
-  }, [forceRefreshPermissions]);
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -134,16 +133,21 @@ export const EventModal = ({ event, onClose }: EventModalProps) => {
     });
     
     try {
-      // Executar debug completo
-      const debugResult = await debugEventAccess(event.id);
+      // Executar verificação de acesso
+      const hasAccessResult = await checkEventAccess(event.id);
+      const rolesInfo = await getEventRoleInfo(event.id);
       
       // Mostrar resultado no console E alert para usuário ver
-      console.log('🎯 [EventModal] Resultado do debug:', debugResult);
+      console.log('🎯 [EventModal] Resultado da verificação:', {
+        hasAccess: hasAccessResult,
+        rolesInfo,
+        userProfile: profile
+      });
       
       // Alert para feedback visual imediato
-      const message = debugResult.hasAccess 
+      const message = hasAccessResult 
         ? '✅ DEBUG: Usuário TEM acesso ao evento!' 
-        : `❌ DEBUG: Usuário NÃO tem acesso. Motivo: ${debugResult.reason || 'Verificar console'}`;
+        : `❌ DEBUG: Usuário NÃO tem acesso. Roles permitidos: ${rolesInfo.map(r => r.name).join(', ')}`;
       
       alert(message + '\n\nDetalhes completos no console do navegador (F12)');
       
