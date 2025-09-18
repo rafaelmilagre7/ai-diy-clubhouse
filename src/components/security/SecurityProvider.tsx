@@ -19,7 +19,15 @@ interface SecurityProviderProps {
 }
 
 export const SecurityProvider: React.FC<SecurityProviderProps> = ({ children }) => {
-  const { user } = useAuth();
+  // Usar useAuth de forma segura - pode não estar disponível durante inicialização
+  let user = null;
+  try {
+    const authContext = useAuth();
+    user = authContext?.user || null;
+  } catch (error) {
+    // AuthProvider ainda não está disponível - continuar sem usuário
+    console.log('🛡️ [SECURITY] AuthProvider não disponível ainda, continuando sem usuário');
+  }
   
   // Verificar ambiente seguro
   const isSecureEnvironment = React.useMemo(() => {
