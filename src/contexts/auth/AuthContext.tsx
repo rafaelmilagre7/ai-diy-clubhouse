@@ -49,9 +49,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, [profile?.user_roles?.name, profile?.user_roles?.permissions]);
 
   // Função para buscar perfil do usuário
-  const fetchUserProfile = useCallback(async (userId: string) => {
+  const fetchUserProfile = useCallback(async (userId: string, retryCount: number = 0) => {
+    const maxRetries = 3;
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    
     try {
-      console.log('🔍 [AUTH] Iniciando busca do perfil para:', userId.substring(0, 8) + '***');
+      console.log('🔍 [AUTH] Iniciando busca do perfil para:', userId.substring(0, 8) + '***', `(tentativa ${retryCount + 1})`);
       
       const { data: profileData, error } = await supabase
         .from('profiles')
@@ -73,29 +76,51 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return;
       }
 
-      // Validação crítica do role_id
-      if (!profileData.role_id) {
-        console.error('❌ [AUTH] CRÍTICO: profile.role_id está NULL/undefined!', {
+      // VALIDAÇÃO CRÍTICA e RETRY para role_id
+      if (!profileData.role_id || !uuidRegex.test(profileData.role_id)) {
+        console.error('🚨 [AUTH] CRÍTICO: profile.role_id inválido!', {
           profileId: profileData.id,
           email: profileData.email,
           role_id: profileData.role_id,
-          legacy_role: profileData.role
+          is_valid_uuid: profileData.role_id ? uuidRegex.test(profileData.role_id) : false,
+          legacy_role: profileData.role,
+          retry_count: retryCount
         });
-      } else {
-        console.log('✅ [AUTH] profile.role_id carregado:', profileData.role_id);
+
+        // RETRY se role_id for null/inválido e ainda temos tentativas
+        if (retryCount < maxRetries) {
+          console.log(`🔄 [AUTH] Retry ${retryCount + 1}/${maxRetries} para buscar role_id válido...`);
+          await new Promise(resolve => setTimeout(resolve, 1500 * (retryCount + 1))); // Backoff exponencial
+          return fetchUserProfile(userId, retryCount + 1);
+        } else {
+          console.error('❌ [AUTH] Máximo de retries atingido - profile sem role_id válido');
+          setProfile(profileData); // Setar mesmo assim para não bloquear completamente
+          return;
+        }
       }
 
-      console.log('✅ [AUTH] Perfil carregado:', {
+      console.log('✅ [AUTH] profile.role_id válido carregado:', profileData.role_id);
+
+      console.log('✅ [AUTH] Perfil completo carregado:', {
         id: profileData.id.substring(0, 8) + '***',
         email: profileData.email?.substring(0, 3) + '***@***.' + profileData.email?.split('.').pop(),
         role_id: profileData.role_id,
         role_name: profileData.user_roles?.name || profileData.role,
-        has_user_roles: !!profileData.user_roles
+        has_user_roles: !!profileData.user_roles,
+        retry_count: retryCount
       });
 
       setProfile(profileData);
     } catch (error) {
       console.error('❌ [AUTH] Erro na busca do perfil:', error);
+      
+      // Retry em caso de erro de rede se ainda temos tentativas
+      if (retryCount < maxRetries) {
+        console.log(`🔄 [AUTH] Retry ${retryCount + 1}/${maxRetries} após erro...`);
+        await new Promise(resolve => setTimeout(resolve, 2000 * (retryCount + 1)));
+        return fetchUserProfile(userId, retryCount + 1);
+      }
+      
       setProfile(null);
     }
   }, []);
@@ -105,7 +130,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     console.log('🔧 [AUTH] Configurando autenticação...');
     
     // Função para processar mudanças de estado de auth
-    const handleAuthStateChange = (event: string, session: Session | null) => {
+    const handleAuthStateChange = async (event: string, session: Session | null) => {
       console.log('🔔 [AUTH] Evento de auth:', event);
       
       // Sempre atualizar session e user
@@ -113,15 +138,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        // Buscar perfil apenas se temos um usuário
-        fetchUserProfile(session.user.id);
+        // IMPORTANTE: Não terminar loading até profile.role_id estar carregado
+        console.log('👤 [AUTH] Usuário encontrado, buscando perfil...');
+        setIsLoading(true); // Garantir que loading continua durante busca do profile
+        
+        await fetchUserProfile(session.user.id);
+        
+        // TIMEOUT de segurança para evitar loading infinito
+        setTimeout(() => {
+          console.log('⏰ [AUTH] Timeout de segurança - terminando loading');
+          setIsLoading(false);
+        }, 10000); // 10 segundos máximo
+        
+        console.log('✅ [AUTH] Perfil processado, terminando loading');
+        setIsLoading(false);
       } else {
         // Limpar perfil se não há usuário
+        console.log('🚫 [AUTH] Sem usuário, limpando perfil');
         setProfile(null);
+        setIsLoading(false);
       }
-      
-      // Terminar loading
-      setIsLoading(false);
     };
 
     // Configurar listener primeiro

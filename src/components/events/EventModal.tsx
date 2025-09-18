@@ -42,12 +42,36 @@ export const EventModal = ({ event, onClose }: EventModalProps) => {
         console.log('🟡 [EVENT MODAL] Profile not available, waiting...');
         return;
       }
+
+      // VALIDAÇÃO CRÍTICA - Verificar se role_id existe antes de prosseguir
+      if (!profile.role_id) {
+        console.error('🚨 [EVENT MODAL] CRÍTICO: profile.role_id é NULL/undefined!', {
+          profile_id: profile.id,
+          profile_email: profile.email,
+          profile_role_id: profile.role_id,
+          profile_keys: Object.keys(profile)
+        });
+        
+        // Aguardar um pouco para role_id ser carregado
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        if (!profile.role_id) {
+          console.error('❌ [EVENT MODAL] role_id ainda NULL após retry, bloqueando acesso');
+          if (isMounted) {
+            setHasAccess(false);
+            setIsVerifying(false);
+          }
+          return;
+        }
+        console.log('✅ [EVENT MODAL] role_id carregado após retry:', profile.role_id);
+      }
       
       const timestamp = Date.now();
-      console.log('🚀 [EVENT MODAL] Starting permission check with loaded profile:', { 
+      console.log('🚀 [EVENT MODAL] Starting permission check with valid profile:', { 
         eventId: event.id, 
         timestamp,
-        profile: profile?.email
+        profile_email: profile?.email,
+        profile_role_id: profile?.role_id
       });
       
       setIsVerifying(true);
@@ -81,21 +105,22 @@ export const EventModal = ({ event, onClose }: EventModalProps) => {
       }
     };
 
-    // AGUARDAR PROFILE CARREGADO COMPLETAMENTE
-    if (event?.id && !authLoading && profile) {
+    // AGUARDAR PROFILE E ROLE_ID CARREGADOS COMPLETAMENTE
+    if (event?.id && !authLoading && profile && profile.role_id) {
       verifyAccess();
     } else {
       console.log('🟡 [EVENT MODAL] Waiting for dependencies:', {
         hasEventId: !!event?.id,
         authLoading,
-        hasProfile: !!profile
+        hasProfile: !!profile,
+        hasRoleId: !!profile?.role_id
       });
     }
 
     return () => {
       isMounted = false;
     };
-  }, [event.id, checkEventAccess, getEventRoleInfo, authLoading, profile]);
+  }, [event.id, checkEventAccess, getEventRoleInfo, authLoading, profile, profile?.role_id]);
 
 
   const formatDateTime = (dateTime: string) => {
