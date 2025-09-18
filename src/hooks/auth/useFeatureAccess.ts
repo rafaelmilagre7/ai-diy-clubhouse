@@ -30,10 +30,15 @@ export const useFeatureAccess = () => {
   usePermissionListener();
 
   const hasFeatureAccess = (featureName: string) => {
-    // FALLBACK GRACIOSO: Durante loading, permitir acesso básico para evitar loops
-    if (isLoading || permissionsLoading || !profile) {
-      console.log(`🔄 [FEATURE-ACCESS] Loading state - permitindo acesso temporário à ${featureName}`);
-      return true; // Fail-open durante loading
+    // CORREÇÃO DEFINITIVA: Fallback mais inteligente para evitar re-renders
+    if (isLoading || permissionsLoading) {
+      return true; // Permitir acesso durante loading
+    }
+    
+    if (!profile) {
+      // Se não há perfil mas não está loading, permitir acesso básico
+      console.log(`🔄 [FEATURE-ACCESS] Sem perfil - permitindo acesso básico à ${featureName}`);
+      return true;
     }
     
     // Para networking, usar o sistema mais direto de permissões

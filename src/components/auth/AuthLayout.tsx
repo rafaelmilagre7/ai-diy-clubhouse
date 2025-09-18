@@ -12,7 +12,25 @@ import { getUserRoleName } from '@/lib/supabase/types';
 import { Loader2, Mail, Lock } from 'lucide-react';
 
 const AuthLayout = () => {
-  const { signIn, user, profile, isLoading } = useAuth();
+  // CORREÇÃO: Usar useAuth de forma defensiva para evitar loops
+  let signIn, user, profile, isLoading;
+  try {
+    const authContext = useAuth();
+    signIn = authContext?.signIn;
+    user = authContext?.user;
+    profile = authContext?.profile;
+    isLoading = authContext?.isLoading;
+  } catch (error) {
+    console.log('⚠️ [AUTH-LAYOUT] AuthContext não disponível ainda');
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
+        <div className="flex flex-col items-center space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin text-white" />
+          <p className="text-white/80">Inicializando...</p>
+        </div>
+      </div>
+    );
+  }
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -175,7 +193,7 @@ const AuthLayout = () => {
                   <Button
                     type="submit"
                     className="w-full h-12 bg-gradient-to-r from-viverblue to-blue-600 hover:from-viverblue-dark hover:to-blue-700 text-white font-semibold text-base rounded-lg shadow-lg hover:shadow-viverblue/25 transition-all duration-300 hover:scale-[1.02]"
-                    disabled={isSigningIn || isLoading}
+                    disabled={isSigningIn}
                   >
                     {isSigningIn ? (
                       <>

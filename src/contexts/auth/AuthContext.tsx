@@ -167,7 +167,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.log('🧹 [AUTH] Limpando listener de auth');
       subscription.unsubscribe();
     };
-  }, [fetchUserProfile]); // CRÍTICO: Removido initialLoadComplete das dependências para evitar loop infinito
+  }, []); // CORREÇÃO DEFINITIVA: Sem dependências para evitar loops infinitos
 
   const contextValue: AuthContextType = useMemo(() => ({
     session,

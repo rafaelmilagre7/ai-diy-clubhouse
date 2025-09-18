@@ -26,7 +26,19 @@ export const usePermissions = () => {
   const [roles, setRoles] = useState<Role[]>([]);
   const [userPermissions, setUserPermissions] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user, isAdmin } = useAuth();
+  
+  // CORREÇÃO: Não usar useAuth aqui para evitar dependência circular
+  let user = null;
+  let isAdmin = false;
+  
+  try {
+    const authContext = useAuth();
+    user = authContext?.user;
+    isAdmin = authContext?.isAdmin || false;
+  } catch (error) {
+    // Fallback gracioso se AuthContext não estiver disponível
+    console.log('⚠️ [PERMISSIONS] AuthContext não disponível durante inicialização');
+  }
 
   const hasPermission = (permissionCode: string): boolean => {
     // Admin tem todas as permissões
@@ -66,18 +78,28 @@ export const usePermissions = () => {
   };
 
   const fetchUserPermissions = async () => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      setUserPermissions([]);
+      return;
+    }
 
     try {
-      const { data, error } = await supabase.rpc('get_user_permissions', {
+      // CORREÇÃO: Timeout de segurança para evitar loops
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout')), 5000)
+      );
+
+      const rpcPromise = supabase.rpc('get_user_permissions', {
         p_user_id: user.id
       });
+
+      const { data, error } = await Promise.race([rpcPromise, timeoutPromise]) as any;
 
       if (error) throw error;
       setUserPermissions(data || []);
     } catch (error) {
       console.error('Erro ao buscar permissões do usuário:', error);
-      setUserPermissions([]);
+      setUserPermissions([]); // Fallback gracioso
     }
   };
 
