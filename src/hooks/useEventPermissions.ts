@@ -107,43 +107,77 @@ export const useEventPermissions = () => {
     setRetryCount(prev => prev + 1);
   }, []);
 
-  // FASE 1: Verificação Principal com Cache Busting
+  // FASE 1: Verificação Principal com Cache Busting e Validação ROBUSTA
   const checkEventAccess = useCallback(async (eventId: string): Promise<boolean> => {
     const timestamp = Date.now();
     
-    // DIAGNÓSTICO ULTRA-DETALHADO
-    console.log('🔍 [EVENT ACCESS DEBUG] Starting check with:', {
-      eventId,
+    // DIAGNÓSTICO ULTRA-DETALHADO - LOGS COMPLETOS
+    console.group('🔍 [EVENT ACCESS] INÍCIO DA VERIFICAÇÃO');
+    console.log('📋 Parâmetros de entrada:', { eventId, timestamp: new Date().toISOString() });
+    
+    console.log('👤 Estado do PROFILE completo:', {
       profile: profile,
-      'profile?.role_id': profile?.role_id,
-      'typeof profile?.role_id': typeof profile?.role_id,
-      'profile?.role_id raw': JSON.stringify(profile?.role_id),
-      isLoading,
       profileExists: !!profile,
-      isAdmin,
-      timestamp: new Date().toISOString()
+      profileId: profile?.id,
+      profileEmail: profile?.email,
+      profileRoleId: profile?.role_id,
+      profileRoleIdType: typeof profile?.role_id,
+      profileRoleIdRaw: JSON.stringify(profile?.role_id),
+      profileKeys: profile ? Object.keys(profile) : 'no-profile',
+      isLoading,
+      isAdmin
     });
+    
+    // VERIFICAÇÃO DE CONSISTÊNCIA do profile
+    if (profile) {
+      console.log('🔬 ANÁLISE DETALHADA do profile.role_id:', {
+        value: profile.role_id,
+        type: typeof profile.role_id,
+        stringified: JSON.stringify(profile.role_id),
+        toString: String(profile.role_id),
+        isNull: profile.role_id === null,
+        isUndefined: profile.role_id === undefined,
+        isEmpty: profile.role_id === '',
+        length: profile.role_id ? String(profile.role_id).length : 0
+      });
+    }
 
-    // VERIFICAÇÃO ROBUSTA - Aguardar profile estar completamente carregado
+    // VERIFICAÇÃO ROBUSTA E RETRY AUTOMÁTICO
     if (isLoading) {
-      console.log('🟡 [EVENT ACCESS] Auth still loading, denying access temporarily');
+      console.log('🟡 [EVENT ACCESS] Auth ainda carregando, negando temporariamente');
+      console.groupEnd();
       return false;
     }
 
     if (!eventId) {
-      console.log('🚫 [EVENT ACCESS] Missing eventId');
+      console.log('🚫 [EVENT ACCESS] eventId ausente:', eventId);
+      console.groupEnd();
       return false;
     }
 
     if (!profile) {
-      console.log('🚫 [EVENT ACCESS] Profile not loaded');
-      return false;
+      console.log('🚫 [EVENT ACCESS] Profile não carregado - tentando aguardar...');
+      
+      // RETRY AUTOMÁTICO: Aguardar um pouco e tentar novamente
+      if (retryCount < 3) {
+        console.log('⏳ Tentando aguardar profile carregar... (tentativa ' + (retryCount + 1) + '/3)');
+        setTimeout(() => setRetryCount(prev => prev + 1), 1000);
+        console.groupEnd();
+        return false;
+      } else {
+        console.log('❌ Profile definitivamente não disponível após 3 tentativas');
+        console.groupEnd();
+        return false;
+      }
     }
 
     if (!profile.role_id) {
-      console.log('🚫 [EVENT ACCESS] Profile missing role_id:', {
-        profile: JSON.stringify(profile, null, 2)
+      console.log('🚫 [EVENT ACCESS] Profile existe mas role_id ausente!', {
+        profileCompleto: JSON.stringify(profile, null, 2),
+        roleIdValue: profile.role_id,
+        roleIdType: typeof profile.role_id
       });
+      console.groupEnd();
       return false;
     }
 
@@ -202,23 +236,28 @@ export const useEventPermissions = () => {
 
       const hasAccess = accessControl && accessControl.length > 0;
       
-      console.log('✅ [EVENT ACCESS] Final result:', {
+      console.log('✅ [EVENT ACCESS] RESULTADO FINAL:', {
         hasAccess,
         accessControlCount: accessControl?.length || 0,
         accessControlData: accessControl,
         eventId,
         userRole: roleIdStr,
+        userEmail: profile?.email,
         detailedCheck: {
           queryFound: !!accessControl,
           arrayLength: Array.isArray(accessControl) ? accessControl.length : 'not array',
-          firstItem: accessControl?.[0] || 'none'
+          firstItem: accessControl?.[0] || 'none',
+          isAccessControlTruthy: !!accessControl,
+          isLengthGreaterThanZero: accessControl ? accessControl.length > 0 : false
         }
       });
-
+      
+      console.groupEnd();
       return hasAccess;
 
     } catch (error) {
-      console.error('❌ [EVENT ACCESS] Exception:', error);
+      console.error('❌ [EVENT ACCESS] EXCEÇÃO CAPTURADA:', error);
+      console.groupEnd();
       return false;
     }
   }, [profile, isLoading, isAdmin, retryCount]); // Adicionado isLoading para aguardar profile

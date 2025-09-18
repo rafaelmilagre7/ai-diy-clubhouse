@@ -9,6 +9,7 @@ import { LoggingProvider } from "@/hooks/useLogging";
 import { AppRoutes } from "@/routes";
 import { PerformanceDashboard } from "@/components/dev/PerformanceDashboard";
 import { SecurityProvider } from "@/components/security/SecurityProvider";
+import { ProfileDebugPanel } from "@/components/debug/ProfileDebugPanel";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -35,6 +36,8 @@ function App() {
                   <Sonner />
                   {/* Dashboard de performance apenas em desenvolvimento */}
                   <PerformanceDashboard />
+                  {/* Debug panel para diagnóstico de profile */}
+                  <ProfileDebugPanel />
                 </div>
               </BrowserRouter>
             </LoggingProvider>

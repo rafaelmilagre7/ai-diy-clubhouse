@@ -115,11 +115,44 @@ export const EventModal = ({ event, onClose }: EventModalProps) => {
     };
   }, [event.id, checkEventAccess, getEventRoleInfo, refreshKey, authLoading, profile]);
 
-  // Função para debug avançado
+  // Função para debug avançado - CORRIGIDA
   const handleDebugAccess = async () => {
-    console.log('🔍 [EventModal] Executando debug avançado...');
-    const debugResult = await debugEventAccess(event.id);
-    console.log('🎯 [EventModal] Resultado do debug:', debugResult);
+    console.group('🔍 [EventModal] INICIANDO DEBUG MANUAL');
+    
+    // Estado atual completo
+    console.log('📊 Estado Atual:', {
+      eventId: event.id,
+      eventTitle: event.title,
+      profile: profile,
+      profileRoleId: profile?.role_id,
+      profileEmail: profile?.email,
+      authLoading,
+      isVerifying,
+      hasAccess,
+      allowedRoles,
+      refreshKey
+    });
+    
+    try {
+      // Executar debug completo
+      const debugResult = await debugEventAccess(event.id);
+      
+      // Mostrar resultado no console E alert para usuário ver
+      console.log('🎯 [EventModal] Resultado do debug:', debugResult);
+      
+      // Alert para feedback visual imediato
+      const message = debugResult.hasAccess 
+        ? '✅ DEBUG: Usuário TEM acesso ao evento!' 
+        : `❌ DEBUG: Usuário NÃO tem acesso. Motivo: ${debugResult.reason || 'Verificar console'}`;
+      
+      alert(message + '\n\nDetalhes completos no console do navegador (F12)');
+      
+    } catch (error) {
+      console.error('💥 ERRO NO DEBUG:', error);
+      alert('❌ ERRO no debug. Veja o console para detalhes.');
+    }
+    
+    console.groupEnd();
   };
 
   const formatDateTime = (dateTime: string) => {
