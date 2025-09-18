@@ -9,7 +9,7 @@ import {
 import { Event } from '@/types/events';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Calendar as CalendarIcon, Clock, MapPin, ExternalLink, RefreshCw, Loader2 } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, MapPin, ExternalLink, Loader2 } from 'lucide-react';
 import { useEventPermissions } from '@/hooks/useEventPermissions';
 import { EventAccessBlocked } from './EventAccessBlocked';
 import { useAuth } from '@/contexts/auth';
@@ -27,16 +27,7 @@ export const EventModal = ({ event, onClose }: EventModalProps) => {
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
   const [allowedRoles, setAllowedRoles] = useState<Array<{ id: string; name: string; description?: string }>>([]);
   const [isVerifying, setIsVerifying] = useState<boolean>(true);
-  const [refreshKey, setRefreshKey] = useState(0);
 
-  // Função para forçar refresh das permissões  
-  const forceRefresh = useCallback(() => {
-    console.log('🔄 [EventModal] Forçando refresh das permissões...');
-    setRefreshKey(prev => prev + 1);
-    setIsVerifying(true);
-    setHasAccess(null);
-    setAllowedRoles([]);
-  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -55,7 +46,6 @@ export const EventModal = ({ event, onClose }: EventModalProps) => {
       const timestamp = Date.now();
       console.log('🚀 [EVENT MODAL] Starting permission check with loaded profile:', { 
         eventId: event.id, 
-        refreshKey, 
         timestamp,
         profile: profile?.email
       });
@@ -63,20 +53,13 @@ export const EventModal = ({ event, onClose }: EventModalProps) => {
       setIsVerifying(true);
       
       try {
-        // CACHE BUSTING: Aguardar um pouco para garantir propagação no banco
-        if (refreshKey > 0) {
-          console.log('⏳ [EventModal] Aguardando propagação das mudanças...');
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        }
-        
-        // Verificar acesso com timestamp para garantir consulta fresca
+        // Verificar acesso
         const access = await checkEventAccess(event.id);
         
         if (isMounted) {
-          console.log('✅ [EventModal] Verificação FRESCA concluída:', { 
+          console.log('✅ [EventModal] Verificação concluída:', { 
             access, 
-            eventId: event.id, 
-            refreshKey,
+            eventId: event.id,
             timestamp: Date.now()
           });
           setHasAccess(access);
@@ -112,52 +95,8 @@ export const EventModal = ({ event, onClose }: EventModalProps) => {
     return () => {
       isMounted = false;
     };
-  }, [event.id, checkEventAccess, getEventRoleInfo, refreshKey, authLoading, profile]);
+  }, [event.id, checkEventAccess, getEventRoleInfo, authLoading, profile]);
 
-  // Função para debug avançado - CORRIGIDA
-  const handleDebugAccess = async () => {
-    console.group('🔍 [EventModal] INICIANDO DEBUG MANUAL');
-    
-    // Estado atual completo
-    console.log('📊 Estado Atual:', {
-      eventId: event.id,
-      eventTitle: event.title,
-      profile: profile,
-      profileRoleId: profile?.role_id,
-      profileEmail: profile?.email,
-      authLoading,
-      isVerifying,
-      hasAccess,
-      allowedRoles,
-      refreshKey
-    });
-    
-    try {
-      // Executar verificação de acesso
-      const hasAccessResult = await checkEventAccess(event.id);
-      const rolesInfo = await getEventRoleInfo(event.id);
-      
-      // Mostrar resultado no console E alert para usuário ver
-      console.log('🎯 [EventModal] Resultado da verificação:', {
-        hasAccess: hasAccessResult,
-        rolesInfo,
-        userProfile: profile
-      });
-      
-      // Alert para feedback visual imediato
-      const message = hasAccessResult 
-        ? '✅ DEBUG: Usuário TEM acesso ao evento!' 
-        : `❌ DEBUG: Usuário NÃO tem acesso. Roles permitidos: ${rolesInfo.map(r => r.name).join(', ')}`;
-      
-      alert(message + '\n\nDetalhes completos no console do navegador (F12)');
-      
-    } catch (error) {
-      console.error('💥 ERRO NO DEBUG:', error);
-      alert('❌ ERRO no debug. Veja o console para detalhes.');
-    }
-    
-    console.groupEnd();
-  };
 
   const formatDateTime = (dateTime: string) => {
     try {
@@ -179,26 +118,7 @@ export const EventModal = ({ event, onClose }: EventModalProps) => {
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            {event.title}
-            <div className="flex gap-2">
-              <button
-                onClick={forceRefresh}
-                className="flex items-center gap-1 px-2 py-1 text-xs bg-primary/10 hover:bg-primary/20 rounded border border-primary/20 text-primary transition-colors"
-                title="Forçar atualização das permissões"
-              >
-                <RefreshCw size={12} />
-                Refresh
-              </button>
-              <button
-                onClick={handleDebugAccess}
-                className="px-2 py-1 text-xs bg-orange-500/10 hover:bg-orange-500/20 rounded border border-orange-500/20 text-orange-600 transition-colors"
-                title="Debug avançado (ver console)"
-              >
-                🔍 Debug
-              </button>
-            </div>
-          </DialogTitle>
+          <DialogTitle>{event.title}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -212,7 +132,6 @@ export const EventModal = ({ event, onClose }: EventModalProps) => {
                    isVerifying ? 'Verificando permissões...' : 
                    'Verificando acesso...'}
                 </span>
-                {refreshKey > 0 && <span className="text-xs text-muted-foreground">(Refresh #{refreshKey})</span>}
               </div>
             </div>
           ) : hasAccess === false ? (
@@ -295,13 +214,6 @@ export const EventModal = ({ event, onClose }: EventModalProps) => {
                   </div>
                 </div>
               )}
-              
-              {/* Debug info */}
-              <div className="text-xs text-muted-foreground pt-2 border-t">
-                Status: {hasAccess ? '✅ Acesso liberado' : '❌ Acesso negado'} | 
-                Refresh: #{refreshKey} | 
-                Timestamp: {new Date().toLocaleTimeString()}
-              </div>
             </>
           )}
         </div>

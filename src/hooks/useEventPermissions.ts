@@ -7,15 +7,60 @@ export const useEventPermissions = () => {
   const { profile, isAdmin, isLoading } = useAuth();
 
   const checkEventAccess = useCallback(async (eventId: string): Promise<boolean> => {
+    console.log('🔍 [EventPermissions] Iniciando verificação de acesso:', {
+      eventId: eventId?.substring(0, 8) + '***',
+      isLoading,
+      profile_exists: !!profile,
+      profile_role_id: profile?.role_id,
+      isAdmin,
+      user_id: profile?.id?.substring(0, 8) + '***'
+    });
+
     // Verificações básicas
-    if (isLoading) return false;
-    if (!eventId) return false;
-    if (!profile?.role_id) return false;
+    if (isLoading) {
+      console.log('❌ [EventPermissions] Auth ainda carregando');
+      return false;
+    }
+    
+    if (!eventId) {
+      console.log('❌ [EventPermissions] EventId não fornecido');
+      return false;
+    }
+    
+    if (!profile) {
+      console.log('❌ [EventPermissions] Profile não existe');
+      return false;
+    }
+
+    if (!profile.role_id) {
+      console.error('❌ [EventPermissions] CRÍTICO: profile.role_id está NULL/undefined!', {
+        profile_id: profile.id,
+        profile_email: profile.email,
+        profile_role_id: profile.role_id,
+        profile_legacy_role: profile.role,
+        profile_keys: Object.keys(profile)
+      });
+      
+      // Fallback: aguardar um pouco e tentar novamente
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (!profile.role_id) {
+        console.error('❌ [EventPermissions] role_id ainda NULL após retry');
+        return false;
+      }
+    }
 
     // Admin tem acesso total
-    if (isAdmin) return true;
+    if (isAdmin) {
+      console.log('✅ [EventPermissions] Usuário é admin - acesso total');
+      return true;
+    }
 
     try {
+      console.log('🔍 [EventPermissions] Consultando event_access_control:', {
+        event_id: eventId,
+        role_id: profile.role_id
+      });
+
       const { data: accessControl, error } = await supabase
         .from('event_access_control')
         .select('role_id')
@@ -24,16 +69,23 @@ export const useEventPermissions = () => {
         .limit(1);
 
       if (error) {
-        console.error('[EventPermissions] Erro ao verificar acesso:', error);
+        console.error('❌ [EventPermissions] Erro ao verificar acesso:', error);
         return false;
       }
 
-      return accessControl && accessControl.length > 0;
+      const hasAccess = accessControl && accessControl.length > 0;
+      console.log('🔍 [EventPermissions] Resultado da consulta:', {
+        accessControl,
+        hasAccess,
+        found_records: accessControl?.length || 0
+      });
+
+      return hasAccess;
     } catch (error) {
-      console.error('[EventPermissions] Erro:', error);
+      console.error('❌ [EventPermissions] Erro na consulta:', error);
       return false;
     }
-  }, [profile?.role_id, isLoading, isAdmin]);
+  }, [profile, isLoading, isAdmin]);
 
   // Função auxiliar para obter informações dos roles permitidos
   const getEventRoleInfo = useCallback(async (eventId: string) => {

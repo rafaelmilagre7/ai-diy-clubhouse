@@ -109,34 +109,6 @@ describe('Event Permissions Flow Integration', () => {
     });
   });
 
-  describe('Refresh Functionality', () => {
-    it('should refresh permissions when refresh button is clicked', async () => {
-      const user = userEvent.setup();
-      
-      mockUseAuth.mockReturnValue({
-        profile: {
-          id: 'user-id',
-          email: 'test@example.com',
-          role_id: 'role-123'
-        },
-        isLoading: false,
-      } as any);
-
-      mockCheckEventAccess.mockResolvedValue(true);
-
-      render(<EventModal event={mockEvent} onClose={mockOnClose} />);
-
-      await waitFor(() => {
-        expect(screen.getByText('Mentoria de AI - Alexandre Silva')).toBeInTheDocument();
-      });
-
-      const refreshButton = screen.getByText('🔄 Refresh');
-      await user.click(refreshButton);
-
-      expect(mockCheckEventAccess).toHaveBeenCalledTimes(2); // Initial + refresh
-    });
-  });
-
   describe('Profile State Validation', () => {
     it('should wait for complete profile before checking permissions', async () => {
       const { rerender } = render(<EventModal event={mockEvent} onClose={mockOnClose} />);

@@ -30,7 +30,6 @@ const mockUseEventPermissions = useEventPermissions as jest.MockedFunction<typeo
 // Helper para criar mock completo
 const createMockEventPermissions = (overrides = {}) => ({
   checkEventAccess: jest.fn(),
-  checkEventAccessWithRetry: jest.fn(),
   getEventRoleInfo: jest.fn(),
   loading: false,
   ...overrides

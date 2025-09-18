@@ -51,13 +51,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Função para buscar perfil do usuário
   const fetchUserProfile = useCallback(async (userId: string) => {
     try {
-      console.log('🔍 [AUTH] Buscando perfil para usuário:', userId);
+      console.log('🔍 [AUTH] Iniciando busca do perfil para:', userId.substring(0, 8) + '***');
       
       const { data: profileData, error } = await supabase
         .from('profiles')
         .select(`
           *,
-          user_roles (
+          user_roles:role_id (
             id,
             name,
             description,
@@ -65,20 +65,37 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           )
         `)
         .eq('id', userId)
-        .maybeSingle();
+        .single();
 
-      if (!error && profileData) {
-        console.log('✅ [AUTH] Perfil carregado:', {
-          email: profileData.email,
-          role: profileData.user_roles?.name
-        });
-        setProfile(profileData);
-      } else {
-        console.warn('⚠️ [AUTH] Erro ao buscar perfil:', error?.message);
+      if (error) {
+        console.error('❌ [AUTH] Erro ao buscar perfil:', error);
         setProfile(null);
+        return;
       }
+
+      // Validação crítica do role_id
+      if (!profileData.role_id) {
+        console.error('❌ [AUTH] CRÍTICO: profile.role_id está NULL/undefined!', {
+          profileId: profileData.id,
+          email: profileData.email,
+          role_id: profileData.role_id,
+          legacy_role: profileData.role
+        });
+      } else {
+        console.log('✅ [AUTH] profile.role_id carregado:', profileData.role_id);
+      }
+
+      console.log('✅ [AUTH] Perfil carregado:', {
+        id: profileData.id.substring(0, 8) + '***',
+        email: profileData.email?.substring(0, 3) + '***@***.' + profileData.email?.split('.').pop(),
+        role_id: profileData.role_id,
+        role_name: profileData.user_roles?.name || profileData.role,
+        has_user_roles: !!profileData.user_roles
+      });
+
+      setProfile(profileData);
     } catch (error) {
-      console.error('❌ [AUTH] Erro ao buscar perfil:', error);
+      console.error('❌ [AUTH] Erro na busca do perfil:', error);
       setProfile(null);
     }
   }, []);
