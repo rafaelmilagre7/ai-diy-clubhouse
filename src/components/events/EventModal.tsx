@@ -1,4 +1,4 @@
-
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -9,10 +9,9 @@ import {
 import { Event } from '@/types/events';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Calendar as CalendarIcon, Clock, MapPin, ExternalLink } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, MapPin, ExternalLink, RefreshCw } from 'lucide-react';
 import { useEventPermissions } from '@/hooks/useEventPermissions';
 import { EventAccessBlocked } from './EventAccessBlocked';
-import { useState, useEffect } from 'react';
 
 interface EventModalProps {
   event: Event;
@@ -22,61 +21,52 @@ interface EventModalProps {
 export const EventModal = ({ event, onClose }: EventModalProps) => {
   const { checkEventAccess, getEventRoleInfo, debugEventAccess, forceRefreshPermissions } = useEventPermissions();
   
-  // FASE 2: Estado inicial como false (BLOQUEADO) até verificação ser concluída
-  const [hasAccess, setHasAccess] = useState<boolean>(false);
+  // Estados para controle de acesso
+  const [hasAccess, setHasAccess] = useState<boolean | null>(null);
   const [allowedRoles, setAllowedRoles] = useState<Array<{ id: string; name: string; description?: string }>>([]);
   const [isVerifying, setIsVerifying] = useState<boolean>(true);
-  const [verificationCount, setVerificationCount] = useState(0);
-  const [showDebugMode, setShowDebugMode] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  // FASE 3: Função para debug manual
-  const handleDebugAccess = async () => {
-    console.log('🔍 [DEBUG] Iniciando diagnóstico manual...');
-    const result = await debugEventAccess(event.id);
-    console.log('🔍 [DEBUG] Resultado:', result);
-    
-    // Mostrar no console de forma destacada
-    console.group('📋 RELATÓRIO DE DIAGNÓSTICO');
-    console.log('✅ Diagnóstico concluído - verifique os logs acima');
-    console.log('📊 Resultado:', result.hasAccess ? 'ACESSO LIBERADO' : 'ACESSO NEGADO');
-    console.log('📝 Motivo:', result.reason);
-    if (result.details) {
-      console.log('🔍 Detalhes:', result.details);
-    }
-    console.groupEnd();
-  };
-
-  // FASE 4: Função para forçar nova verificação
-  const handleForceRefresh = async () => {
-    console.log('🔄 [DEBUG] Forçando nova verificação...');
+  // Função para forçar refresh das permissões  
+  const forceRefresh = useCallback(() => {
+    console.log('🔄 [EventModal] Forçando refresh das permissões...');
+    setRefreshKey(prev => prev + 1);
     setIsVerifying(true);
-    
-    try {
-      const result = await forceRefreshPermissions(event.id);
-      setHasAccess(result);
-      console.log('✅ [DEBUG] Nova verificação concluída:', result);
-    } catch (error) {
-      console.error('❌ [DEBUG] Erro na nova verificação:', error);
-      setHasAccess(false);
-    } finally {
-      setIsVerifying(false);
-    }
-  };
+    setHasAccess(null);
+    setAllowedRoles([]);
+    forceRefreshPermissions();
+  }, [forceRefreshPermissions]);
 
   useEffect(() => {
     let isMounted = true;
     
     const verifyAccess = async () => {
-      console.log('🔍 [EventModal] Iniciando verificação para evento:', event.id);
+      const timestamp = Date.now();
+      console.log('🔍 [EventModal] Iniciando verificação FRESCA para evento:', { 
+        eventId: event.id, 
+        refreshKey, 
+        timestamp 
+      });
       
       setIsVerifying(true);
       
       try {
-        // Verificar acesso uma única vez (sem retry para refletir mudanças imediatamente)
+        // CACHE BUSTING: Aguardar um pouco para garantir propagação no banco
+        if (refreshKey > 0) {
+          console.log('⏳ [EventModal] Aguardando propagação das mudanças...');
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+        
+        // Verificar acesso com timestamp para garantir consulta fresca
         const access = await checkEventAccess(event.id);
         
         if (isMounted) {
-          console.log('✅ [EventModal] Verificação concluída:', { access, eventId: event.id });
+          console.log('✅ [EventModal] Verificação FRESCA concluída:', { 
+            access, 
+            eventId: event.id, 
+            refreshKey,
+            timestamp: Date.now()
+          });
           setHasAccess(access);
           
           if (!access) {
@@ -97,232 +87,159 @@ export const EventModal = ({ event, onClose }: EventModalProps) => {
     };
 
     verifyAccess();
-    
+
     return () => {
       isMounted = false;
     };
-  }, [event.id, checkEventAccess, getEventRoleInfo]);
+  }, [event.id, checkEventAccess, getEventRoleInfo, refreshKey]);
 
-  const generateGoogleCalendarLink = () => {
-    const start = new Date(event.start_time).toISOString().replace(/-|:|\.\d\d\d/g, '');
-    const end = new Date(event.end_time).toISOString().replace(/-|:|\.\d\d\d/g, '');
-    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${start}/${end}&details=${encodeURIComponent(event.description || '')}&location=${encodeURIComponent(event.location_link || '')}`;
+  // Função para debug avançado
+  const handleDebugAccess = async () => {
+    console.log('🔍 [EventModal] Executando debug avançado...');
+    const debugResult = await debugEventAccess(event.id);
+    console.log('🎯 [EventModal] Resultado do debug:', debugResult);
   };
 
-  const formattedDate = format(new Date(event.start_time), "EEEE, d 'de' MMMM", { locale: ptBR });
-  const startTime = format(new Date(event.start_time), "HH:mm", { locale: ptBR });
-  const endTime = format(new Date(event.end_time), "HH:mm", { locale: ptBR });
+  const formatDateTime = (dateTime: string) => {
+    try {
+      return format(new Date(dateTime), "d 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR });
+    } catch {
+      return dateTime;
+    }
+  };
 
-  // FASE 3: Verificação Síncrona - Se ainda está verificando OU não tem acesso, bloquear
-  console.log('[DEBUG] EventModal: Renderizando - isVerifying:', isVerifying, 'hasAccess:', hasAccess);
-  
-  if (isVerifying || !hasAccess) {
-    console.log('[DEBUG] EventModal: Bloqueando acesso - verificando:', isVerifying, 'tem acesso:', hasAccess);
-    
-    return (
-      <Dialog open onOpenChange={() => onClose()}>
-        <DialogContent className="max-w-2xl surface-modal border-border/50 shadow-aurora-strong p-0 overflow-hidden">
-          {isVerifying ? (
-            <div className="p-8 text-center space-y-4">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-viverblue mx-auto mb-4"></div>
-              <p className="text-body text-text-muted">Verificando permissões...</p>
-              
-              {/* FASE 3: Botões de Debug durante verificação */}
-              <div className="flex justify-center gap-2 pt-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleDebugAccess}
-                  className="text-xs"
-                >
-                  🔍 Debug Console
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleForceRefresh}
-                  className="text-xs"
-                >
-                  🔄 Tentar Novamente
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div>
-              <EventAccessBlocked
-                eventTitle={event.title}
-                allowedRoles={allowedRoles}
-                onClose={onClose}
-              />
-              
-              {/* FASE 3: Botões de Debug quando bloqueado */}
-              <div className="p-4 border-t border-border/50 bg-surface-elevated/50">
-                <div className="flex justify-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleDebugAccess}
-                    className="text-xs"
-                  >
-                    🔍 Diagnóstico Completo
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleForceRefresh}
-                    className="text-xs"
-                  >
-                    🔄 Atualizar Permissões
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowDebugMode(!showDebugMode)}
-                    className="text-xs"
-                  >
-                    {showDebugMode ? '👁️ Ocultar Info' : '👁️ Mostrar Info'}
-                  </Button>
-                </div>
-                
-                {/* FASE 3: Informações de Debug */}
-                {showDebugMode && (
-                  <div className="mt-4 p-3 bg-surface-elevated rounded-lg text-xs">
-                    <div className="space-y-2">
-                      <div><strong>Event ID:</strong> {event.id}</div>
-                      <div><strong>Verificações:</strong> {verificationCount}</div>
-                      <div><strong>Timestamp:</strong> {new Date().toISOString()}</div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
-  // Se chegou aqui, usuário tem acesso confirmado
-  console.log('[DEBUG] EventModal: Usuário autenticado com acesso, renderizando evento completo');
+  const formatTime = (dateTime: string) => {
+    try {
+      return format(new Date(dateTime), 'HH:mm', { locale: ptBR });
+    } catch {
+      return dateTime;
+    }
+  };
 
   return (
-    <Dialog open onOpenChange={() => onClose()}>
-      <DialogContent className="max-w-2xl surface-modal border-border/50 shadow-aurora-strong p-0 overflow-hidden">
-        {event.cover_image_url && (
-          <div className="relative h-48 w-full">
-            <img
-              src={event.cover_image_url}
-              alt={event.title}
-              className="w-full h-full object-cover"
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[600px]">
+        <DialogHeader>
+          <DialogTitle className="flex items-center justify-between">
+            {event.title}
+            <div className="flex gap-2">
+              <button
+                onClick={forceRefresh}
+                className="flex items-center gap-1 px-2 py-1 text-xs bg-primary/10 hover:bg-primary/20 rounded border border-primary/20 text-primary transition-colors"
+                title="Forçar atualização das permissões"
+              >
+                <RefreshCw size={12} />
+                Refresh
+              </button>
+              <button
+                onClick={handleDebugAccess}
+                className="px-2 py-1 text-xs bg-orange-500/10 hover:bg-orange-500/20 rounded border border-orange-500/20 text-orange-600 transition-colors"
+                title="Debug avançado (ver console)"
+              >
+                🔍 Debug
+              </button>
+            </div>
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-6">
+          {isVerifying ? (
+            <div className="flex items-center justify-center p-8">
+              <div className="flex items-center gap-2">
+                <RefreshCw className="h-4 w-4 animate-spin" />
+                <span>Verificando permissões...</span>
+                {refreshKey > 0 && <span className="text-xs text-muted-foreground">(Refresh #{refreshKey})</span>}
+              </div>
+            </div>
+          ) : hasAccess === false ? (
+            <EventAccessBlocked 
+              allowedRoles={allowedRoles} 
+              eventTitle={event.title}
+              onClose={onClose}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-            <div className="absolute bottom-4 left-6 right-6">
-              <h1 className="text-heading-1 text-white font-bold">{event.title}</h1>
-            </div>
-          </div>
-        )}
-
-        <div className="p-6">
-          {!event.cover_image_url && (
-            <DialogHeader className="pb-4 border-b border-border/50">
-              <DialogTitle className="text-heading-2 text-text-primary">{event.title}</DialogTitle>
-            </DialogHeader>
-          )}
-
-          <div className="space-y-6 mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-center gap-3 p-3 surface-elevated rounded-lg">
-                <div className="p-2 rounded-lg bg-viverblue/10 border border-viverblue/20">
-                  <CalendarIcon className="h-4 w-4 text-viverblue" />
-                </div>
-                <div>
-                  <div className="text-caption text-text-muted">Data</div>
-                  <div className="text-body font-medium capitalize">{formattedDate}</div>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-3 p-3 surface-elevated rounded-lg">
-                <div className="p-2 rounded-lg bg-operational/10 border border-operational/20">
-                  <Clock className="h-4 w-4 text-operational" />
-                </div>
-                <div>
-                  <div className="text-caption text-text-muted">Horário</div>
-                  <div className="text-body font-medium">{startTime} - {endTime}</div>
-                </div>
-              </div>
-            </div>
-            
-            {(event.location_link || event.physical_location) && (
-              <div className="space-y-3">
-                {event.physical_location && (
-                  <div className="flex items-start gap-3 p-3 surface-elevated rounded-lg">
-                    <div className="p-2 rounded-lg bg-strategy/10 border border-strategy/20">
-                      <MapPin className="h-4 w-4 text-strategy" />
-                    </div>
-                    <div>
-                      <div className="text-caption text-text-muted">Local Presencial</div>
-                      <div className="text-body">{event.physical_location}</div>
-                    </div>
-                  </div>
-                )}
-                
-                {event.location_link && (
-                  <div className="flex items-start gap-3 p-3 surface-elevated rounded-lg">
-                    <div className="p-2 rounded-lg bg-revenue/10 border border-revenue/20">
-                      <ExternalLink className="h-4 w-4 text-revenue" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="text-caption text-text-muted">Reunião Online</div>
-                      <a
-                        href={event.location_link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-body text-viverblue hover:text-viverblue/80 hover:underline flex items-center gap-1 transition-colors"
-                      >
-                        Acessar reunião
-                        <ExternalLink className="h-3 w-3" />
-                      </a>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {event.description && (
-              <div className="space-y-3">
-                <h3 className="text-label">Descrição do Evento</h3>
-                <div className="p-4 surface-elevated rounded-lg">
-                  <p className="text-body text-text-secondary whitespace-pre-line leading-relaxed">
+          ) : (
+            <>
+              {/* Descrição do evento */}
+              {event.description && (
+                <div className="space-y-2">
+                  <h3 className="font-semibold">Descrição</h3>
+                  <p className="text-muted-foreground leading-relaxed">
                     {event.description}
                   </p>
                 </div>
-              </div>
-            )}
+              )}
 
-            <div className="flex justify-end gap-3 pt-4 border-t border-border/50">
-              <Button 
-                variant="outline"
-                onClick={onClose}
-                className="border-border/50"
-              >
-                Fechar
-              </Button>
-              <Button 
-                asChild 
-                className="bg-viverblue hover:bg-viverblue/90 text-white shadow-aurora"
-              >
-                <a
-                  href={generateGoogleCalendarLink()}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2"
-                >
-                  <CalendarIcon className="h-4 w-4" />
-                  Adicionar ao Calendário
-                </a>
-              </Button>
-            </div>
-          </div>
+              {/* Informações do evento */}
+              <div className="grid gap-4">
+                <div className="flex items-center gap-3">
+                  <CalendarIcon className="h-5 w-5 text-primary" />
+                  <div>
+                    <p className="font-medium">Data e Hora de Início</p>
+                    <p className="text-sm text-muted-foreground">
+                      {formatDateTime(event.start_time)}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <Clock className="h-5 w-5 text-primary" />
+                  <div>
+                    <p className="font-medium">Horário de Término</p>
+                    <p className="text-sm text-muted-foreground">
+                      {formatTime(event.end_time)}
+                    </p>
+                  </div>
+                </div>
+
+                {event.physical_location && (
+                  <div className="flex items-center gap-3">
+                    <MapPin className="h-5 w-5 text-primary" />
+                    <div>
+                      <p className="font-medium">Local Físico</p>
+                      <p className="text-sm text-muted-foreground">
+                        {event.physical_location}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {event.location_link && (
+                  <div className="flex items-center gap-3">
+                    <ExternalLink className="h-5 w-5 text-primary" />
+                    <div>
+                      <p className="font-medium">Link do Evento</p>
+                      <Button
+                        variant="link"
+                        className="h-auto p-0 text-sm text-primary hover:text-primary/80"
+                        onClick={() => window.open(event.location_link, '_blank')}
+                      >
+                        Acessar evento online
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Badges de recorrência */}
+              {event.is_recurring && (
+                <div className="pt-4 border-t">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">Tipo de evento:</span>
+                    <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                      Evento Recorrente
+                    </span>
+                  </div>
+                </div>
+              )}
+              
+              {/* Debug info */}
+              <div className="text-xs text-muted-foreground pt-2 border-t">
+                Status: {hasAccess ? '✅ Acesso liberado' : '❌ Acesso negado'} | 
+                Refresh: #{refreshKey} | 
+                Timestamp: {new Date().toLocaleTimeString()}
+              </div>
+            </>
+          )}
         </div>
       </DialogContent>
     </Dialog>

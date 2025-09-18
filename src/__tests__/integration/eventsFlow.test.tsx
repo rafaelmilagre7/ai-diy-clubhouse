@@ -72,7 +72,6 @@ describe('Events Flow Integration Tests', () => {
     // Mock padrão do useEventPermissions
     mockUseEventPermissions.mockReturnValue({
       checkEventAccess: jest.fn(),
-      checkEventAccessWithRetry: jest.fn(), 
       getEventRoleInfo: jest.fn(),
       debugEventAccess: jest.fn(),
       forceRefreshPermissions: jest.fn(),
@@ -106,7 +105,6 @@ describe('Events Flow Integration Tests', () => {
     
     mockUseEventPermissions.mockReturnValue({
       checkEventAccess: mockCheckEventAccess,
-      checkEventAccessWithRetry: jest.fn(),
       getEventRoleInfo: jest.fn(),
       debugEventAccess: jest.fn(),
       forceRefreshPermissions: jest.fn(),
@@ -144,7 +142,6 @@ describe('Events Flow Integration Tests', () => {
     
     mockUseEventPermissions.mockReturnValue({
       checkEventAccess: mockCheckEventAccess,
-      checkEventAccessWithRetry: jest.fn(),
       getEventRoleInfo: mockGetEventRoleInfo,
       debugEventAccess: jest.fn(),
       forceRefreshPermissions: jest.fn(),

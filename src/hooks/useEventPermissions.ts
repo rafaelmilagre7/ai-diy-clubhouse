@@ -54,17 +54,19 @@ export const useEventPermissions = () => {
 
       console.log('📅 DADOS DO EVENTO:', {
         eventId,
-        eventExists: !!eventData,
-        eventTitle: eventData?.title,
-        eventError: eventError
+        eventData,
+        eventError
       });
 
       // 4. Verificar controle de acesso
       const { data: accessControl, error: accessError } = await supabase
         .from('event_access_control')
         .select(`
+          id,
+          event_id,
           role_id,
           user_roles:role_id (
+            id,
             name,
             description
           )
@@ -72,195 +74,127 @@ export const useEventPermissions = () => {
         .eq('event_id', eventId);
 
       console.log('🔐 CONTROLE DE ACESSO:', {
-        accessControlExists: !!accessControl,
-        accessControlCount: accessControl?.length || 0,
-        allowedRoleIds: accessControl?.map(ac => ac.role_id) || [],
-        allowedRoleNames: accessControl?.map(ac => (ac.user_roles as any)?.name) || [],
+        eventId,
+        accessControl,
+        accessError,
+        accessControlCount: accessControl?.length || 0
+      });
+
+      // 5. Resultado da verificação
+      const access = await checkEventAccess(eventId);
+      
+      console.log('🎯 RESULTADO FINAL:', {
+        hasAccess: access,
         userRoleId: profile.role_id,
-        userRoleInList: accessControl?.some(ac => ac.role_id === profile.role_id),
-        accessError: accessError
-      });
-
-      // 5. Simular verificação real
-      const hasAccess = isAdmin || (accessControl && accessControl.length > 0 && accessControl.some(ac => ac.role_id === profile.role_id));
-      
-      console.log('✅ RESULTADO FINAL:', {
-        hasAccess,
-        reason: hasAccess ? 
-          (isAdmin ? 'admin_access' : 'role_in_allowed_list') : 
-          (!accessControl || accessControl.length === 0 ? 'no_access_control' : 'role_not_in_allowed_list'),
-        recommendation: hasAccess ? 'Acesso liberado' : 'Verificar se o usuário deveria ter acesso'
+        userRoleName: userRole?.name,
+        allowedRoles: accessControl?.map(ac => (ac.user_roles as any)?.name) || [],
+        isAdmin
       });
 
       console.groupEnd();
-      
-      return { 
-        hasAccess, 
-        reason: hasAccess ? 'access_granted' : 'access_denied',
-        details: {
-          userRole: userRole?.name,
-          allowedRoles: accessControl?.map(ac => (ac.user_roles as any)?.name) || [],
-          eventTitle: eventData?.title
-        }
-      };
+      return { hasAccess: access, debugData: { userRole, eventData, accessControl } };
 
-    } catch (debugError) {
-      console.error('💥 ERRO NO DEBUG:', debugError);
+    } catch (error) {
+      console.error('💥 ERRO NO DEBUG:', error);
       console.groupEnd();
-      return { hasAccess: false, reason: 'debug_error', error: debugError };
+      return { hasAccess: false, error };
     }
   }, [profile, isAdmin]);
 
-  // FASE 2: Retry automático com backoff
-  const checkEventAccessWithRetry = useCallback(async (eventId: string, attempt = 1): Promise<boolean> => {
-    const maxRetries = 3;
-    const backoffDelay = attempt * 1000; // 1s, 2s, 3s
-
-    try {
-      return await checkEventAccess(eventId);
-    } catch (error) {
-      warn(`Tentativa ${attempt} falhou:`, error);
-      
-      if (attempt < maxRetries) {
-        warn(`Tentando novamente em ${backoffDelay}ms...`);
-        await new Promise(resolve => setTimeout(resolve, backoffDelay));
-        return checkEventAccessWithRetry(eventId, attempt + 1);
-      }
-      
-      error('Todas as tentativas falharam:', error);
-      return false;
-    }
+  // FASE 2: Função de Refresh Manual
+  const forceRefreshPermissions = useCallback(() => {
+    console.log('🔄 [EventPermissions] Forçando refresh manual das permissões');
+    setRetryCount(prev => prev + 1);
   }, []);
 
-  // FASE 4: Função para forçar re-verificação
-  const forceRefreshPermissions = useCallback(async (eventId: string) => {
-    log('🔄 Forçando re-verificação de permissões');
-    setRetryCount(prev => prev + 1);
-    setLoading(true);
+  // FASE 1: Verificação Principal com Cache Busting
+  const checkEventAccess = useCallback(async (eventId: string): Promise<boolean> => {
+    const timestamp = Date.now();
+    console.log('🔍 [EventPermissions] INICIANDO VERIFICAÇÃO FRESCA:', { eventId, timestamp });
     
     try {
-      // Limpar possível cache do Supabase
-      const result = await checkEventAccessWithRetry(eventId);
-      log('✅ Re-verificação concluída:', result);
-      return result;
-    } finally {
-      setLoading(false);
-    }
-  }, [checkEventAccessWithRetry, log]);
+      // 1. VERIFICAÇÃO DE ADMIN - ACESSO TOTAL
+      if (isAdmin) {
+        console.log('🔓 [EventPermissions] LIBERADO - Usuário é ADMIN');
+        return true;
+      }
 
-  // VERSÃO CORRIGIDA - Focada na causa raiz do problema
-  const checkEventAccess = useCallback(async (eventId: string): Promise<boolean> => {
-    const debugInfo = {
-      eventId,
-      userId: profile?.id,
-      userEmail: profile?.email,
-      userRoleId: profile?.role_id,
-      isAdmin,
-      timestamp: new Date().toISOString()
-    };
-
-    console.log('🔍 [EventPermissions] INÍCIO DA VERIFICAÇÃO', debugInfo);
-
-    // 1. VALIDAÇÕES BÁSICAS
-    if (!profile?.id) {
-      console.log('🔒 [EventPermissions] NEGADO - Usuário não logado', debugInfo);
-      return false;
-    }
-
-    if (!eventId?.trim()) {
-      console.log('🔒 [EventPermissions] NEGADO - EventId inválido', debugInfo);
-      return false;
-    }
-    
-    // 2. AGUARDAR PROFILE COMPLETO - CORREÇÃO PRINCIPAL DO TIMING
-    if (!profile.role_id) {
-      console.warn('⏳ [EventPermissions] AGUARDANDO - Profile sem role_id, aguardando carregamento completo', debugInfo);
-      // Dar uma chance para o profile carregar completamente
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      if (!profile.role_id) {
-        console.error('🔒 [EventPermissions] NEGADO - Profile incompleto após aguardar', debugInfo);
+      // 2. VERIFICAÇÃO DO PROFILE COMPLETO
+      if (!profile?.id || !profile?.role_id) {
+        console.log('❌ [EventPermissions] NEGADO - Profile incompleto', {
+          hasProfile: !!profile,
+          hasId: !!profile?.id,
+          hasRoleId: !!profile?.role_id,
+          profile: profile ? {
+            id: profile.id.substring(0, 8) + '***',
+            email: profile.email,
+            roleId: profile.role_id
+          } : null
+        });
         return false;
       }
-    }
-    
-    // 3. ADMIN TEM ACESSO TOTAL
-    if (isAdmin) {
-      console.log('✅ [EventPermissions] LIBERADO - Admin tem acesso total', debugInfo);
-      return true;
-    }
-
-    try {
-      // Buscar informações completas do evento e controle de acesso
-      const [eventResult, accessResult, userRoleResult] = await Promise.all([
-        supabase.from('events').select('title, created_by').eq('id', eventId).single(),
-        supabase.from('event_access_control').select(`
+      
+      // 3. CONSULTA FRESCA DO CONTROLE DE ACESSO (CACHE BUSTING)
+      const { data: accessControl, error: accessError } = await supabase
+        .from('event_access_control')
+        .select(`
+          id,
+          event_id,
           role_id,
+          created_at,
           user_roles:role_id (
+            id,
             name,
             description
           )
-        `).eq('event_id', eventId),
-        profile.role_id ? supabase.from('user_roles').select('name, description').eq('id', profile.role_id).single() : null
-      ]);
+        `)
+        .eq('event_id', eventId)
+        .order('created_at', { ascending: false });
 
-      const eventInfo = eventResult.data;
-      const accessControl = accessResult.data;
-      const userRole = userRoleResult?.data;
+      if (accessError) {
+        console.error('❌ [EventPermissions] Erro ao consultar controle de acesso:', accessError);
+        return false;
+      }
 
       const enhancedDebugInfo = {
-        ...debugInfo,
-        eventTitle: eventInfo?.title || 'Evento não encontrado',
-        eventCreatedBy: eventInfo?.created_by,
-        userRoleName: userRole?.name || 'Role não encontrado',
+        eventId,
+        userId: profile.id.substring(0, 8) + '***',
+        userEmail: profile.email,
+        userRoleId: profile.role_id,
+        isAdmin,
         accessControlCount: accessControl?.length || 0,
-        allowedRoles: accessControl?.map(ac => (ac.user_roles as any)?.name) || []
+        accessControl: accessControl?.map(ac => ({
+          id: ac.id,
+          roleId: ac.role_id,
+          roleName: (ac.user_roles as any)?.name
+        })),
+        timestamp,
+        cacheStatus: 'FRESH_QUERY'
       };
 
-      if (eventResult.error || !eventInfo) {
-        console.error('[❌ EventPermissions] ERRO - Evento não encontrado', enhancedDebugInfo);
-        return false;
-      }
-
-      if (accessResult.error) {
-        console.error('[❌ EventPermissions] ERRO - Falha ao verificar controle de acesso', {
-          ...enhancedDebugInfo,
-          error: accessResult.error
-        });
-        return false;
-      }
-
-      console.log('[📊 EventPermissions] DADOS COLETADOS', enhancedDebugInfo);
-
-      // 4. VALIDAÇÃO CRÍTICA DE INTEGRIDADE
-      if (profile.role_id && !userRole) {
-        console.error('[🚨 EventPermissions] ACESSO NEGADO - Role do usuário não existe no banco', {
-          ...enhancedDebugInfo,
-          issue: 'user_role_not_found'
-        });
-        return false; // MUDANÇA: Antes continuava, agora NEGA acesso
-      }
+      console.log('🔍 [EventPermissions] DADOS FRESCOS OBTIDOS:', enhancedDebugInfo);
       
-      // 4. VERIFICAÇÃO DO CONTROLE DE ACESSO - CORRIGIDO
+      // 4. VERIFICAÇÃO DO CONTROLE DE ACESSO
       if (!accessControl || accessControl.length === 0) {
         console.log('🔒 [EventPermissions] NEGADO - Evento privado (sem permissões configuradas)', enhancedDebugInfo);
-        return false; // CORREÇÃO: Eventos sem controle de acesso são PRIVADOS (apenas admins têm acesso)
+        return false;
       }
 
-      // 5. VERIFICAÇÃO DE ROLES PERMITIDOS - CORREÇÃO DA COMPARAÇÃO
+      // 5. VERIFICAÇÃO DE ROLES PERMITIDOS
       const allowedRoleIds = accessControl
         .map(ac => ac.role_id)
         .filter(id => id !== null && id !== undefined)
-        .map(id => String(id)); // Garantir que sejam strings
+        .map(id => String(id));
       
-      const userRoleId = String(profile.role_id); // Garantir que seja string
+      const userRoleId = String(profile.role_id);
       
-      console.log('🔍 [EventPermissions] COMPARAÇÃO DE ROLES:', {
+      console.log('🔍 [EventPermissions] COMPARAÇÃO DE ROLES FRESCA:', {
         userRoleId,
         allowedRoleIds,
         userRoleType: typeof userRoleId,
         allowedRoleTypes: allowedRoleIds.map(id => typeof id),
-        includes: allowedRoleIds.includes(userRoleId)
+        includes: allowedRoleIds.includes(userRoleId),
+        timestamp
       });
       
       const hasAccess = allowedRoleIds.includes(userRoleId);
@@ -278,42 +212,17 @@ export const useEventPermissions = () => {
           includes: allowedRoleIds.includes(String(userRoleId))
         }
       };
-      
-      if (hasAccess) {
-        console.log('[✅ EventPermissions] ACESSO LIBERADO - Usuário tem role permitido', finalDebugInfo);
-        
-        // Log de auditoria para acessos liberados
-        console.info('[📋 EventPermissions] AUDITORIA - Acesso autorizado', {
-          ...finalDebugInfo,
-          auditNote: 'Acesso liberado com base em role válido'
-        });
-      } else {
-        console.log('[🔒 EventPermissions] ACESSO NEGADO - Role do usuário não está na lista permitida', finalDebugInfo);
-        
-        // Log adicional de auditoria para acesso negado
-        console.warn('[📋 EventPermissions] AUDITORIA - Tentativa de acesso bloqueada', {
-          ...finalDebugInfo,
-          suggestedAction: 'Verificar se o usuário deveria ter acesso a este evento',
-          userRoleFound: userRole?.name || 'Não encontrado',
-          expectedRoles: accessControl.map(ac => (ac.user_roles as any)?.name).join(', ')
-        });
-      }
-      
+
+      console.log(hasAccess ? '✅ [EventPermissions] ACESSO LIBERADO' : '❌ [EventPermissions] ACESSO NEGADO', finalDebugInfo);
       return hasAccess;
-      
+
     } catch (error) {
-      console.error('[💥 EventPermissions] ERRO CRÍTICO - Falha na verificação de permissões', {
-        ...debugInfo,
-        error: error instanceof Error ? error.message : error,
-        securityNote: 'Erro crítico resulta em ACESSO NEGADO por segurança'
-      });
-      
-      // Em caso de erro, SEMPRE negar acesso por segurança
+      console.error('💥 [EventPermissions] ERRO CRÍTICO na verificação:', error);
       return false;
     }
-  }, [profile?.id, profile?.email, profile?.role_id, isAdmin]);
+  }, [profile, isAdmin, retryCount]); // Adicionado retryCount para forçar re-execução
 
-  // FASE 1: Estabilizar função com useCallback 
+  // Função auxiliar para obter informações dos roles permitidos
   const getEventRoleInfo = useCallback(async (eventId: string) => {
     try {
       const { data: accessControl, error } = await supabase
@@ -321,28 +230,31 @@ export const useEventPermissions = () => {
         .select(`
           role_id,
           user_roles:role_id (
+            id,
             name,
             description
           )
         `)
         .eq('event_id', eventId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ [EventPermissions] Erro ao buscar roles do evento:', error);
+        return [];
+      }
 
       return accessControl?.map(ac => ({
-        id: ac.role_id,
-        name: (ac.user_roles as any)?.name || 'Role desconhecido',
+        id: (ac.user_roles as any)?.id || '',
+        name: (ac.user_roles as any)?.name || 'Role não encontrado',
         description: (ac.user_roles as any)?.description
       })) || [];
     } catch (error) {
-      console.error('Erro ao buscar informações dos roles do evento:', error);
+      console.error('❌ [EventPermissions] Erro ao buscar roles:', error);
       return [];
     }
-  }, []); // Sem dependências pois usa apenas Supabase
+  }, []);
 
   return {
     checkEventAccess,
-    checkEventAccessWithRetry,
     getEventRoleInfo,
     debugEventAccess,
     forceRefreshPermissions,
