@@ -18,13 +18,25 @@ const AuthLayout = () => {
   const [password, setPassword] = useState('');
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [redirectHandled, setRedirectHandled] = useState(false);
+  const [forceTimeout, setForceTimeout] = useState(false);
+
+  // Timeout de segurança para AuthLayout - 5 segundos
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      console.warn('⚠️ [AUTH-LAYOUT] Timeout de 5s - forçando finalização do loading');
+      setForceTimeout(true);
+    }, 5000);
+
+    return () => clearTimeout(timeoutId);
+  }, []);
 
   // Redirecionamento controlado após login bem-sucedido
   useEffect(() => {
-    if (user && profile && !isLoading && !redirectHandled) {
+    if (user && profile && (!isLoading || forceTimeout) && !redirectHandled) {
       console.log("✅ [AUTH-LAYOUT] Usuário logado, redirecionando...", {
         user: user.email,
-        role: getUserRoleName(profile)
+        role: getUserRoleName(profile),
+        forceTimeout
       });
       
       setRedirectHandled(true);
@@ -44,7 +56,7 @@ const AuthLayout = () => {
         navigate(targetRoute, { replace: true });
       }, 100);
     }
-  }, [user, profile, isLoading, navigate, redirectHandled]);
+  }, [user, profile, isLoading, navigate, redirectHandled, forceTimeout]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();

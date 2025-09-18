@@ -12,23 +12,9 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
 
   const signIn = useCallback(async (email: string, password: string) => {
     try {
-      setIsLoading(true);
       setIsSigningIn(true);
       
       console.log('🔄 [AUTH] Iniciando login:', email);
-      console.log('🔍 [AUTH] Estado localStorage antes do login:', {
-        supabaseAuthKeys: Object.keys(localStorage).filter(key => 
-          key.startsWith('supabase.auth.') || key.includes('sb-')
-        ).length,
-        allKeys: Object.keys(localStorage).length
-      });
-      
-      // Verificar se há sessão ativa antes do login
-      const { data: currentSession } = await supabase.auth.getSession();
-      console.log('🔍 [AUTH] Sessão atual antes do login:', {
-        hasSession: !!currentSession.session,
-        hasUser: !!currentSession.session?.user
-      });
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -99,9 +85,8 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
       return { error };
     } finally {
       setIsSigningIn(false);
-      // Removido setIsLoading(false) - deixar AuthContext controlar
     }
-  }, [setIsLoading]);
+  }, []);
 
   const signOut = useCallback(async () => {
     try {

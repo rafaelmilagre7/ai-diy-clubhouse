@@ -109,9 +109,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     
     // Função para processar mudanças de estado de auth
     const handleAuthStateChange = async (event: string, session: Session | null) => {
-      if (!mounted) return;
+      if (!mounted || initialLoadComplete) return;
       
-      console.log('🔔 [AUTH] Evento de auth:', event);
+      console.log('🔔 [AUTH] Evento de auth:', event, 'initialLoadComplete:', initialLoadComplete);
       
       // Sempre atualizar session e user
       setSession(session);
@@ -119,13 +119,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       if (session?.user) {
         console.log('👤 [AUTH] Usuário encontrado, buscando perfil...');
-        if (!initialLoadComplete) {
-          setIsLoading(true);
-        }
         
         await fetchUserProfile(session.user.id);
         
-        if (mounted) {
+        if (mounted && !initialLoadComplete) {
           console.log('✅ [AUTH] Perfil processado, finalizando loading');
           initialLoadComplete = true;
           setIsLoading(false);
@@ -133,21 +130,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       } else {
         console.log('🚫 [AUTH] Sem usuário, limpando perfil');
         setProfile(null);
-        if (mounted) {
+        if (mounted && !initialLoadComplete) {
           initialLoadComplete = true;
           setIsLoading(false);
         }
       }
     };
 
-    // Timeout de segurança aumentado para 8 segundos
+    // Timeout de segurança MAIS AGRESSIVO - 3 segundos
     timeoutId = window.setTimeout(() => {
       if (mounted && !initialLoadComplete) {
-        console.warn('⚠️ [AUTH] Timeout de 8s - finalizando loading forçadamente');
+        console.warn('⚠️ [AUTH] Timeout de 3s - finalizando loading forçadamente');
         initialLoadComplete = true;
         setIsLoading(false);
       }
-    }, 8000);
+    }, 3000);
 
     // Configurar listener primeiro
     const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange);
