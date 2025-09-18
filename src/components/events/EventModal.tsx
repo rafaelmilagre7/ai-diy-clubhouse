@@ -20,13 +20,48 @@ interface EventModalProps {
 }
 
 export const EventModal = ({ event, onClose }: EventModalProps) => {
-  const { checkEventAccess, getEventRoleInfo } = useEventPermissions();
+  const { checkEventAccess, getEventRoleInfo, debugEventAccess, forceRefreshPermissions } = useEventPermissions();
   
   // FASE 2: Estado inicial como false (BLOQUEADO) até verificação ser concluída
   const [hasAccess, setHasAccess] = useState<boolean>(false);
   const [allowedRoles, setAllowedRoles] = useState<Array<{ id: string; name: string; description?: string }>>([]);
   const [isVerifying, setIsVerifying] = useState<boolean>(true);
   const [verificationCount, setVerificationCount] = useState(0);
+  const [showDebugMode, setShowDebugMode] = useState(false);
+
+  // FASE 3: Função para debug manual
+  const handleDebugAccess = async () => {
+    console.log('🔍 [DEBUG] Iniciando diagnóstico manual...');
+    const result = await debugEventAccess(event.id);
+    console.log('🔍 [DEBUG] Resultado:', result);
+    
+    // Mostrar no console de forma destacada
+    console.group('📋 RELATÓRIO DE DIAGNÓSTICO');
+    console.log('✅ Diagnóstico concluído - verifique os logs acima');
+    console.log('📊 Resultado:', result.hasAccess ? 'ACESSO LIBERADO' : 'ACESSO NEGADO');
+    console.log('📝 Motivo:', result.reason);
+    if (result.details) {
+      console.log('🔍 Detalhes:', result.details);
+    }
+    console.groupEnd();
+  };
+
+  // FASE 4: Função para forçar nova verificação
+  const handleForceRefresh = async () => {
+    console.log('🔄 [DEBUG] Forçando nova verificação...');
+    setIsVerifying(true);
+    
+    try {
+      const result = await forceRefreshPermissions(event.id);
+      setHasAccess(result);
+      console.log('✅ [DEBUG] Nova verificação concluída:', result);
+    } catch (error) {
+      console.error('❌ [DEBUG] Erro na nova verificação:', error);
+      setHasAccess(false);
+    } finally {
+      setIsVerifying(false);
+    }
+  };
 
   useEffect(() => {
     // FASE 4: Contador para detectar loops infinitos
@@ -104,16 +139,79 @@ export const EventModal = ({ event, onClose }: EventModalProps) => {
       <Dialog open onOpenChange={() => onClose()}>
         <DialogContent className="max-w-2xl surface-modal border-border/50 shadow-aurora-strong p-0 overflow-hidden">
           {isVerifying ? (
-            <div className="p-8 text-center">
+            <div className="p-8 text-center space-y-4">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-viverblue mx-auto mb-4"></div>
               <p className="text-body text-text-muted">Verificando permissões...</p>
+              
+              {/* FASE 3: Botões de Debug durante verificação */}
+              <div className="flex justify-center gap-2 pt-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDebugAccess}
+                  className="text-xs"
+                >
+                  🔍 Debug Console
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleForceRefresh}
+                  className="text-xs"
+                >
+                  🔄 Tentar Novamente
+                </Button>
+              </div>
             </div>
           ) : (
-            <EventAccessBlocked
-              eventTitle={event.title}
-              allowedRoles={allowedRoles}
-              onClose={onClose}
-            />
+            <div>
+              <EventAccessBlocked
+                eventTitle={event.title}
+                allowedRoles={allowedRoles}
+                onClose={onClose}
+              />
+              
+              {/* FASE 3: Botões de Debug quando bloqueado */}
+              <div className="p-4 border-t border-border/50 bg-surface-elevated/50">
+                <div className="flex justify-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleDebugAccess}
+                    className="text-xs"
+                  >
+                    🔍 Diagnóstico Completo
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleForceRefresh}
+                    className="text-xs"
+                  >
+                    🔄 Atualizar Permissões
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowDebugMode(!showDebugMode)}
+                    className="text-xs"
+                  >
+                    {showDebugMode ? '👁️ Ocultar Info' : '👁️ Mostrar Info'}
+                  </Button>
+                </div>
+                
+                {/* FASE 3: Informações de Debug */}
+                {showDebugMode && (
+                  <div className="mt-4 p-3 bg-surface-elevated rounded-lg text-xs">
+                    <div className="space-y-2">
+                      <div><strong>Event ID:</strong> {event.id}</div>
+                      <div><strong>Verificações:</strong> {verificationCount}</div>
+                      <div><strong>Timestamp:</strong> {new Date().toISOString()}</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           )}
         </DialogContent>
       </Dialog>

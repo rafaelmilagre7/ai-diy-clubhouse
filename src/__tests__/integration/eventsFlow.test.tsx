@@ -72,8 +72,12 @@ describe('Events Flow Integration Tests', () => {
     // Mock padrão do useEventPermissions
     mockUseEventPermissions.mockReturnValue({
       checkEventAccess: jest.fn(),
+      checkEventAccessWithRetry: jest.fn(), 
       getEventRoleInfo: jest.fn(),
-      loading: false
+      debugEventAccess: jest.fn(),
+      forceRefreshPermissions: jest.fn(),
+      loading: false,
+      retryCount: 0
     });
   });
 
@@ -102,8 +106,12 @@ describe('Events Flow Integration Tests', () => {
     
     mockUseEventPermissions.mockReturnValue({
       checkEventAccess: mockCheckEventAccess,
+      checkEventAccessWithRetry: jest.fn(),
       getEventRoleInfo: jest.fn(),
-      loading: false
+      debugEventAccess: jest.fn(),
+      forceRefreshPermissions: jest.fn(),
+      loading: false,
+      retryCount: 0
     });
 
     // Mock para simular clique no evento público (dia 15)
@@ -136,8 +144,12 @@ describe('Events Flow Integration Tests', () => {
     
     mockUseEventPermissions.mockReturnValue({
       checkEventAccess: mockCheckEventAccess,
+      checkEventAccessWithRetry: jest.fn(),
       getEventRoleInfo: mockGetEventRoleInfo,
-      loading: false
+      debugEventAccess: jest.fn(),
+      forceRefreshPermissions: jest.fn(),
+      loading: false,
+      retryCount: 0
     });
 
     // Mock para simular clique no evento restrito (dia 20)

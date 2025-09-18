@@ -27,6 +27,18 @@ jest.mock('@/components/ui/dialog', () => ({
 
 const mockUseEventPermissions = useEventPermissions as jest.MockedFunction<typeof useEventPermissions>;
 
+// Helper para criar mock completo
+const createMockEventPermissions = (overrides = {}) => ({
+  checkEventAccess: jest.fn(),
+  checkEventAccessWithRetry: jest.fn(),
+  getEventRoleInfo: jest.fn(),
+  debugEventAccess: jest.fn(),
+  forceRefreshPermissions: jest.fn(),
+  loading: false,
+  retryCount: 0,
+  ...overrides
+});
+
 describe('EventModal', () => {
   const mockEvent = {
     id: 'event-1',
@@ -48,26 +60,22 @@ describe('EventModal', () => {
   });
 
   it('deve mostrar loading enquanto verifica permissões', () => {
-    mockUseEventPermissions.mockReturnValue({
-      checkEventAccess: jest.fn(),
-      getEventRoleInfo: jest.fn(),
+    mockUseEventPermissions.mockReturnValue(createMockEventPermissions({
       loading: true
-    });
+    }));
 
     render(<EventModal event={mockEvent} onClose={mockOnClose} />);
     
     expect(screen.getByTestId('dialog')).toBeInTheDocument();
-    expect(screen.getByText('Carregando...')).toBeInTheDocument();
+    expect(screen.getByText('Verificando permissões...')).toBeInTheDocument();
   });
 
   it('deve mostrar detalhes do evento para usuários com permissão', async () => {
     const mockCheckEventAccess = jest.fn().mockResolvedValue(true);
     
-    mockUseEventPermissions.mockReturnValue({
-      checkEventAccess: mockCheckEventAccess,
-      getEventRoleInfo: jest.fn(),
-      loading: false
-    });
+    mockUseEventPermissions.mockReturnValue(createMockEventPermissions({
+      checkEventAccess: mockCheckEventAccess
+    }));
 
     render(<EventModal event={mockEvent} onClose={mockOnClose} />);
 
@@ -88,11 +96,10 @@ describe('EventModal', () => {
       { id: 'role-2', name: 'Moderator', description: 'Moderador' }
     ]);
 
-    mockUseEventPermissions.mockReturnValue({
+    mockUseEventPermissions.mockReturnValue(createMockEventPermissions({
       checkEventAccess: mockCheckEventAccess,
-      getEventRoleInfo: mockGetEventRoleInfo,
-      loading: false
-    });
+      getEventRoleInfo: mockGetEventRoleInfo
+    }));
 
     render(<EventModal event={mockEvent} onClose={mockOnClose} />);
 
@@ -111,11 +118,9 @@ describe('EventModal', () => {
       () => new Promise(resolve => setTimeout(() => resolve(true), 6000))
     );
 
-    mockUseEventPermissions.mockReturnValue({
-      checkEventAccess: mockCheckEventAccess,
-      getEventRoleInfo: jest.fn(),
-      loading: false
-    });
+    mockUseEventPermissions.mockReturnValue(createMockEventPermissions({
+      checkEventAccess: mockCheckEventAccess
+    }));
 
     render(<EventModal event={mockEvent} onClose={mockOnClose} />);
 
@@ -132,11 +137,9 @@ describe('EventModal', () => {
   it('deve gerar link correto do Google Calendar', async () => {
     const mockCheckEventAccess = jest.fn().mockResolvedValue(true);
     
-    mockUseEventPermissions.mockReturnValue({
-      checkEventAccess: mockCheckEventAccess,
-      getEventRoleInfo: jest.fn(),
-      loading: false
-    });
+    mockUseEventPermissions.mockReturnValue(createMockEventPermissions({
+      checkEventAccess: mockCheckEventAccess
+    }));
 
     render(<EventModal event={mockEvent} onClose={mockOnClose} />);
 
@@ -152,11 +155,9 @@ describe('EventModal', () => {
   it('deve mostrar imagem de capa quando disponível', async () => {
     const mockCheckEventAccess = jest.fn().mockResolvedValue(true);
     
-    mockUseEventPermissions.mockReturnValue({
-      checkEventAccess: mockCheckEventAccess,
-      getEventRoleInfo: jest.fn(),
-      loading: false
-    });
+    mockUseEventPermissions.mockReturnValue(createMockEventPermissions({
+      checkEventAccess: mockCheckEventAccess
+    }));
 
     render(<EventModal event={mockEvent} onClose={mockOnClose} />);
 
@@ -170,11 +171,9 @@ describe('EventModal', () => {
   it('deve mostrar links de localização quando disponíveis', async () => {
     const mockCheckEventAccess = jest.fn().mockResolvedValue(true);
     
-    mockUseEventPermissions.mockReturnValue({
-      checkEventAccess: mockCheckEventAccess,
-      getEventRoleInfo: jest.fn(),
-      loading: false
-    });
+    mockUseEventPermissions.mockReturnValue(createMockEventPermissions({
+      checkEventAccess: mockCheckEventAccess
+    }));
 
     render(<EventModal event={mockEvent} onClose={mockOnClose} />);
 
@@ -188,11 +187,9 @@ describe('EventModal', () => {
   it('deve lidar com erro na verificação de permissões', async () => {
     const mockCheckEventAccess = jest.fn().mockRejectedValue(new Error('Erro de rede'));
     
-    mockUseEventPermissions.mockReturnValue({
-      checkEventAccess: mockCheckEventAccess,
-      getEventRoleInfo: jest.fn(),
-      loading: false
-    });
+    mockUseEventPermissions.mockReturnValue(createMockEventPermissions({
+      checkEventAccess: mockCheckEventAccess
+    }));
 
     render(<EventModal event={mockEvent} onClose={mockOnClose} />);
 
@@ -213,11 +210,9 @@ describe('EventModal', () => {
 
     const mockCheckEventAccess = jest.fn().mockResolvedValue(true);
     
-    mockUseEventPermissions.mockReturnValue({
-      checkEventAccess: mockCheckEventAccess,
-      getEventRoleInfo: jest.fn(),
-      loading: false
-    });
+    mockUseEventPermissions.mockReturnValue(createMockEventPermissions({
+      checkEventAccess: mockCheckEventAccess
+    }));
 
     render(<EventModal event={minimalEvent} onClose={mockOnClose} />);
 

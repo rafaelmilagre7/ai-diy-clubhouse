@@ -1,10 +1,152 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
+import { useOptimizedLogging } from '@/hooks/useOptimizedLogging';
 
 export const useEventPermissions = () => {
   const [loading, setLoading] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   const { profile, isAdmin } = useAuth();
+  const { log, warn, error } = useOptimizedLogging();
+
+  // FASE 3: Função de Debug em Tempo Real
+  const debugEventAccess = useCallback(async (eventId: string) => {
+    const timestamp = new Date().toISOString();
+    
+    console.group(`🔍 [DEBUG EventPermissions] Diagnóstico Completo - ${timestamp}`);
+    
+    // 1. Estado do usuário atual
+    console.log('👤 ESTADO DO USUÁRIO:', {
+      profileExists: !!profile,
+      userId: profile?.id,
+      userEmail: profile?.email,
+      roleId: profile?.role_id,
+      isAdmin,
+      profileComplete: profile && profile.id && profile.email && profile.role_id
+    });
+
+    if (!profile?.id) {
+      console.warn('❌ PROBLEMA: Usuário não está logado');
+      console.groupEnd();
+      return { hasAccess: false, reason: 'user_not_logged_in' };
+    }
+
+    // 2. Verificar role do usuário no banco
+    try {
+      const { data: userRole, error: userRoleError } = await supabase
+        .from('user_roles')
+        .select('*')
+        .eq('id', profile.role_id)
+        .single();
+
+      console.log('👥 ROLE DO USUÁRIO:', {
+        roleId: profile.role_id,
+        roleData: userRole,
+        roleError: userRoleError
+      });
+
+      // 3. Verificar evento
+      const { data: eventData, error: eventError } = await supabase
+        .from('events')
+        .select('*')
+        .eq('id', eventId)
+        .single();
+
+      console.log('📅 DADOS DO EVENTO:', {
+        eventId,
+        eventExists: !!eventData,
+        eventTitle: eventData?.title,
+        eventError: eventError
+      });
+
+      // 4. Verificar controle de acesso
+      const { data: accessControl, error: accessError } = await supabase
+        .from('event_access_control')
+        .select(`
+          role_id,
+          user_roles:role_id (
+            name,
+            description
+          )
+        `)
+        .eq('event_id', eventId);
+
+      console.log('🔐 CONTROLE DE ACESSO:', {
+        accessControlExists: !!accessControl,
+        accessControlCount: accessControl?.length || 0,
+        allowedRoleIds: accessControl?.map(ac => ac.role_id) || [],
+        allowedRoleNames: accessControl?.map(ac => (ac.user_roles as any)?.name) || [],
+        userRoleId: profile.role_id,
+        userRoleInList: accessControl?.some(ac => ac.role_id === profile.role_id),
+        accessError: accessError
+      });
+
+      // 5. Simular verificação real
+      const hasAccess = isAdmin || (accessControl && accessControl.length > 0 && accessControl.some(ac => ac.role_id === profile.role_id));
+      
+      console.log('✅ RESULTADO FINAL:', {
+        hasAccess,
+        reason: hasAccess ? 
+          (isAdmin ? 'admin_access' : 'role_in_allowed_list') : 
+          (!accessControl || accessControl.length === 0 ? 'no_access_control' : 'role_not_in_allowed_list'),
+        recommendation: hasAccess ? 'Acesso liberado' : 'Verificar se o usuário deveria ter acesso'
+      });
+
+      console.groupEnd();
+      
+      return { 
+        hasAccess, 
+        reason: hasAccess ? 'access_granted' : 'access_denied',
+        details: {
+          userRole: userRole?.name,
+          allowedRoles: accessControl?.map(ac => (ac.user_roles as any)?.name) || [],
+          eventTitle: eventData?.title
+        }
+      };
+
+    } catch (debugError) {
+      console.error('💥 ERRO NO DEBUG:', debugError);
+      console.groupEnd();
+      return { hasAccess: false, reason: 'debug_error', error: debugError };
+    }
+  }, [profile, isAdmin]);
+
+  // FASE 2: Retry automático com backoff
+  const checkEventAccessWithRetry = useCallback(async (eventId: string, attempt = 1): Promise<boolean> => {
+    const maxRetries = 3;
+    const backoffDelay = attempt * 1000; // 1s, 2s, 3s
+
+    try {
+      return await checkEventAccess(eventId);
+    } catch (error) {
+      warn(`Tentativa ${attempt} falhou:`, error);
+      
+      if (attempt < maxRetries) {
+        warn(`Tentando novamente em ${backoffDelay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, backoffDelay));
+        return checkEventAccessWithRetry(eventId, attempt + 1);
+      }
+      
+      error('Todas as tentativas falharam:', error);
+      return false;
+    }
+  }, []);
+
+  // FASE 4: Função para forçar re-verificação
+  const forceRefreshPermissions = useCallback(async (eventId: string) => {
+    log('🔄 Forçando re-verificação de permissões');
+    setRetryCount(prev => prev + 1);
+    setLoading(true);
+    
+    try {
+      // Limpar possível cache do Supabase
+      const result = await checkEventAccessWithRetry(eventId);
+      log('✅ Re-verificação concluída:', result);
+      return result;
+    } finally {
+      setLoading(false);
+    }
+  }, [checkEventAccessWithRetry, log]);
 
   // VERSÃO CORRIGIDA - Mais restritiva e segura
   const checkEventAccess = useCallback(async (eventId: string): Promise<boolean> => {
@@ -189,7 +331,11 @@ export const useEventPermissions = () => {
 
   return {
     checkEventAccess,
+    checkEventAccessWithRetry,
     getEventRoleInfo,
-    loading
+    debugEventAccess,
+    forceRefreshPermissions,
+    loading,
+    retryCount
   };
 };
