@@ -9,9 +9,10 @@ import {
 import { Event } from '@/types/events';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Calendar as CalendarIcon, Clock, MapPin, ExternalLink, RefreshCw } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, MapPin, ExternalLink, RefreshCw, Loader2 } from 'lucide-react';
 import { useEventPermissions } from '@/hooks/useEventPermissions';
 import { EventAccessBlocked } from './EventAccessBlocked';
+import { useAuth } from '@/contexts/auth';
 
 interface EventModalProps {
   event: Event;
@@ -20,6 +21,7 @@ interface EventModalProps {
 
 export const EventModal = ({ event, onClose }: EventModalProps) => {
   const { checkEventAccess, getEventRoleInfo, debugEventAccess, forceRefreshPermissions } = useEventPermissions();
+  const { profile, isLoading: authLoading } = useAuth();
   
   // Estados para controle de acesso
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
@@ -41,11 +43,22 @@ export const EventModal = ({ event, onClose }: EventModalProps) => {
     let isMounted = true;
     
     const verifyAccess = async () => {
+      // CORREÇÃO DE TIMING - Aguardar profile estar completamente carregado
+      if (authLoading) {
+        console.log('🟡 [EVENT MODAL] Auth still loading, waiting...');
+        return;
+      }
+      if (!profile) {
+        console.log('🟡 [EVENT MODAL] Profile not available, waiting...');
+        return;
+      }
+      
       const timestamp = Date.now();
-      console.log('🔍 [EventModal] Iniciando verificação FRESCA para evento:', { 
+      console.log('🚀 [EVENT MODAL] Starting permission check with loaded profile:', { 
         eventId: event.id, 
         refreshKey, 
-        timestamp 
+        timestamp,
+        profile: profile?.email
       });
       
       setIsVerifying(true);
@@ -86,12 +99,21 @@ export const EventModal = ({ event, onClose }: EventModalProps) => {
       }
     };
 
-    verifyAccess();
+    // AGUARDAR PROFILE CARREGADO COMPLETAMENTE
+    if (event?.id && !authLoading && profile) {
+      verifyAccess();
+    } else {
+      console.log('🟡 [EVENT MODAL] Waiting for dependencies:', {
+        hasEventId: !!event?.id,
+        authLoading,
+        hasProfile: !!profile
+      });
+    }
 
     return () => {
       isMounted = false;
     };
-  }, [event.id, checkEventAccess, getEventRoleInfo, refreshKey]);
+  }, [event.id, checkEventAccess, getEventRoleInfo, refreshKey, authLoading, profile]);
 
   // Função para debug avançado
   const handleDebugAccess = async () => {
@@ -143,11 +165,16 @@ export const EventModal = ({ event, onClose }: EventModalProps) => {
         </DialogHeader>
 
         <div className="space-y-6">
-          {isVerifying ? (
+          {/* Mostrar loading enquanto auth/profile carrega ou verifica permissões */}
+          {(authLoading || isVerifying || hasAccess === null) ? (
             <div className="flex items-center justify-center p-8">
               <div className="flex items-center gap-2">
-                <RefreshCw className="h-4 w-4 animate-spin" />
-                <span>Verificando permissões...</span>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>
+                  {authLoading ? 'Carregando perfil...' : 
+                   isVerifying ? 'Verificando permissões...' : 
+                   'Verificando acesso...'}
+                </span>
                 {refreshKey > 0 && <span className="text-xs text-muted-foreground">(Refresh #{refreshKey})</span>}
               </div>
             </div>
