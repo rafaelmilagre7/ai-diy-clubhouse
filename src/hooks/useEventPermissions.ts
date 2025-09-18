@@ -148,11 +148,8 @@ export const useEventPermissions = () => {
     }
   }, [checkEventAccessWithRetry, log]);
 
-  // VERSÃO CORRIGIDA - Mais restritiva e segura
+  // VERSÃO CORRIGIDA - Focada na causa raiz do problema
   const checkEventAccess = useCallback(async (eventId: string): Promise<boolean> => {
-    // PRINCÍPIO: NEGADO POR PADRÃO, LIBERADO APENAS EXPLICITAMENTE
-    let hasAccess = false;
-    
     const debugInfo = {
       eventId,
       userId: profile?.id,
@@ -162,28 +159,34 @@ export const useEventPermissions = () => {
       timestamp: new Date().toISOString()
     };
 
-    // 1. VALIDAÇÕES BÁSICAS - ACESSO NEGADO SE FALHAR
+    console.log('🔍 [EventPermissions] INÍCIO DA VERIFICAÇÃO', debugInfo);
+
+    // 1. VALIDAÇÕES BÁSICAS
     if (!profile?.id) {
-      console.log('[🔒 EventPermissions] ACESSO NEGADO - Usuário não logado', debugInfo);
+      console.log('🔒 [EventPermissions] NEGADO - Usuário não logado', debugInfo);
       return false;
     }
 
-    if (!eventId || eventId.trim() === '') {
-      console.log('[🔒 EventPermissions] ACESSO NEGADO - EventId inválido', debugInfo);
+    if (!eventId?.trim()) {
+      console.log('🔒 [EventPermissions] NEGADO - EventId inválido', debugInfo);
       return false;
     }
     
-    console.log('[🔍 EventPermissions] INICIANDO verificação de acesso', debugInfo);
-    
-    // 2. VALIDAÇÃO DE INTEGRIDADE DO USUÁRIO
+    // 2. AGUARDAR PROFILE COMPLETO - CORREÇÃO PRINCIPAL DO TIMING
     if (!profile.role_id) {
-      console.error('[🔒 EventPermissions] ACESSO NEGADO - Usuário sem role_id definido', debugInfo);
-      return false; // MUDANÇA: Antes era warning, agora é NEGAÇÃO
+      console.warn('⏳ [EventPermissions] AGUARDANDO - Profile sem role_id, aguardando carregamento completo', debugInfo);
+      // Dar uma chance para o profile carregar completamente
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      if (!profile.role_id) {
+        console.error('🔒 [EventPermissions] NEGADO - Profile incompleto após aguardar', debugInfo);
+        return false;
+      }
     }
     
-    // 3. ADMIN TEM ACESSO (ÚNICO CASO DE BYPASS)
+    // 3. ADMIN TEM ACESSO TOTAL
     if (isAdmin) {
-      console.log('[✅ EventPermissions] ACESSO LIBERADO - Admin tem acesso total', debugInfo);
+      console.log('✅ [EventPermissions] LIBERADO - Admin tem acesso total', debugInfo);
       return true;
     }
 
@@ -238,26 +241,29 @@ export const useEventPermissions = () => {
         return false; // MUDANÇA: Antes continuava, agora NEGA acesso
       }
       
-      // 5. LÓGICA PRINCIPAL DE CONTROLE DE ACESSO
-      // MUDANÇA CRÍTICA: EVENTO SEM CONTROLE = ACESSO NEGADO (não público)
+      // 4. VERIFICAÇÃO DO CONTROLE DE ACESSO
       if (!accessControl || accessControl.length === 0) {
-        console.log('[🔒 EventPermissions] ACESSO NEGADO - Evento sem controle de acesso configurado', {
-          ...enhancedDebugInfo,
-          securityNote: 'Por segurança, eventos sem controle explícito são privados'
-        });
-        return false; // MUDANÇA: Antes retornava true, agora false
+        console.log('🔓 [EventPermissions] LIBERADO - Evento público (sem controle de acesso)', enhancedDebugInfo);
+        return true; // CORREÇÃO: Eventos sem controle são públicos
       }
 
-      // 6. VERIFICAÇÃO ESTRITA DE ROLES PERMITIDOS
-      const allowedRoleIds = accessControl.map(ac => ac.role_id).filter(id => id); // Remove nulls
-      const userRoleId = profile.role_id;
+      // 5. VERIFICAÇÃO DE ROLES PERMITIDOS - CORREÇÃO DA COMPARAÇÃO
+      const allowedRoleIds = accessControl
+        .map(ac => ac.role_id)
+        .filter(id => id !== null && id !== undefined)
+        .map(id => String(id)); // Garantir que sejam strings
       
-      if (!userRoleId) {
-        console.log('[🔒 EventPermissions] ACESSO NEGADO - Usuário sem role válido', enhancedDebugInfo);
-        return false;
-      }
+      const userRoleId = String(profile.role_id); // Garantir que seja string
       
-      hasAccess = allowedRoleIds.includes(userRoleId);
+      console.log('🔍 [EventPermissions] COMPARAÇÃO DE ROLES:', {
+        userRoleId,
+        allowedRoleIds,
+        userRoleType: typeof userRoleId,
+        allowedRoleTypes: allowedRoleIds.map(id => typeof id),
+        includes: allowedRoleIds.includes(userRoleId)
+      });
+      
+      const hasAccess = allowedRoleIds.includes(userRoleId);
       
       const finalDebugInfo = {
         ...enhancedDebugInfo,
@@ -265,7 +271,12 @@ export const useEventPermissions = () => {
         userRoleId,
         userHasAccess: hasAccess,
         reason: hasAccess ? 'user_role_in_allowed_list' : 'user_role_not_in_allowed_list',
-        securityCheck: 'STRICT_MODE_ENABLED'
+        comparisonDetails: {
+          userRoleIdString: String(userRoleId),
+          allowedRoleIdsStrings: allowedRoleIds,
+          exactMatch: allowedRoleIds.find(id => id === String(userRoleId)),
+          includes: allowedRoleIds.includes(String(userRoleId))
+        }
       };
       
       if (hasAccess) {

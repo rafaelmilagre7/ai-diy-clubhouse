@@ -64,60 +64,57 @@ export const EventModal = ({ event, onClose }: EventModalProps) => {
   };
 
   useEffect(() => {
-    // FASE 4: Contador para detectar loops infinitos
-    const currentCount = verificationCount + 1;
-    setVerificationCount(currentCount);
-    
-    if (currentCount > 3) {
-      console.error('[DEBUG] EventModal: LOOP INFINITO DETECTADO - Abortando verificação');
-      setHasAccess(false);
-      setIsVerifying(false);
-      return;
-    }
+    let isMounted = true;
     
     const verifyAccess = async () => {
-      console.log('[DEBUG] EventModal: Verificação #', currentCount);
-      console.log('[DEBUG] EventModal: Event ID:', event.id);
-      
-      // FASE 3: Timeout de segurança para evitar loading infinito
-      const timeoutId = setTimeout(() => {
-        console.warn('[DEBUG] EventModal: Timeout na verificação - Bloqueando acesso');
-        setHasAccess(false);
-        setIsVerifying(false);
-      }, 10000); // 10 segundos máximo
+      console.log('🔍 [EventModal] Iniciando verificação para evento:', event.id);
       
       setIsVerifying(true);
       
       try {
-        const access = await checkEventAccess(event.id);
+        // CORREÇÃO: Aguardar profile estar completamente carregado
+        let retryCount = 0;
+        const maxRetries = 5;
         
-        console.log('[DEBUG] EventModal: Resultado da verificação:', access);
-        clearTimeout(timeoutId);
-        setHasAccess(access);
-        
-        if (!access) {
-          console.log('[DEBUG] EventModal: Usuário bloqueado, buscando roles permitidos');
-          const roles = await getEventRoleInfo(event.id);
-          console.log('[DEBUG] EventModal: Roles permitidos:', roles);
-          setAllowedRoles(roles);
-        } else {
-          console.log('[DEBUG] EventModal: Usuário tem acesso ao evento');
+        while (retryCount < maxRetries && isMounted) {
+          const access = await checkEventAccess(event.id);
+          
+          if (access || retryCount === maxRetries - 1) {
+            if (isMounted) {
+              console.log('✅ [EventModal] Verificação concluída:', { access, retryCount });
+              setHasAccess(access);
+              
+              if (!access) {
+                const roles = await getEventRoleInfo(event.id);
+                setAllowedRoles(roles);
+              }
+            }
+            break;
+          }
+          
+          // Se foi negado, aguardar um pouco e tentar novamente
+          console.log(`⏳ [EventModal] Tentativa ${retryCount + 1} negada, tentando novamente...`);
+          await new Promise(resolve => setTimeout(resolve, 500));
+          retryCount++;
         }
       } catch (error) {
-        console.error('[DEBUG] EventModal: Erro na verificação:', error);
-        clearTimeout(timeoutId);
-        setHasAccess(false); // Em caso de erro, bloquear acesso
+        console.error('❌ [EventModal] Erro na verificação:', error);
+        if (isMounted) {
+          setHasAccess(false);
+        }
       } finally {
-        setIsVerifying(false);
-        console.log('[DEBUG] EventModal: Verificação concluída');
+        if (isMounted) {
+          setIsVerifying(false);
+        }
       }
     };
 
-    console.log('[DEBUG] EventModal: useEffect disparado para evento:', event.id);
     verifyAccess();
     
-    // FASE 2: APENAS event.id como dependência - funções estabilizadas não causam re-renders
-  }, [event.id]); // Removendo checkEventAccess e getEventRoleInfo - agora são estáveis
+    return () => {
+      isMounted = false;
+    };
+  }, [event.id, checkEventAccess, getEventRoleInfo]);
 
   const generateGoogleCalendarLink = () => {
     const start = new Date(event.start_time).toISOString().replace(/-|:|\.\d\d\d/g, '');
