@@ -64,7 +64,7 @@ export const EventModal = ({ event, onClose }: EventModalProps) => {
           {event.description && (
             <div className="space-y-2">
               <h3 className="font-semibold">Descrição</h3>
-              <p className="text-muted-foreground leading-relaxed">
+              <p className="text-muted-foreground leading-relaxed whitespace-pre-line">
                 {event.description}
               </p>
             </div>
