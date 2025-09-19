@@ -256,6 +256,50 @@ export type Database = {
         }
         Relationships: []
       }
+      automation_logs: {
+        Row: {
+          created_at: string | null
+          error_message: string | null
+          executed_actions: Json
+          execution_time_ms: number | null
+          id: string
+          rule_id: string | null
+          status: string
+          trigger_data: Json
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          error_message?: string | null
+          executed_actions?: Json
+          execution_time_ms?: number | null
+          id?: string
+          rule_id?: string | null
+          status?: string
+          trigger_data?: Json
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          error_message?: string | null
+          executed_actions?: Json
+          execution_time_ms?: number | null
+          id?: string
+          rule_id?: string | null
+          status?: string
+          trigger_data?: Json
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automation_logs_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "automation_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       automation_rules: {
         Row: {
           actions: Json

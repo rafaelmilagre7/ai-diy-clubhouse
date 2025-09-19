@@ -26,6 +26,9 @@ import AdminSecurity from '@/pages/admin/AdminSecurity';
 import IntegrationsDebugPage from '@/pages/admin/IntegrationsDebugPage';
 import DataAuditPage from '@/pages/admin/DataAudit';
 import HublaWebhooks from '@/pages/admin/HublaWebhooks';
+import AdminAutomations from '@/pages/admin/AdminAutomations';
+import AutomationForm from '@/pages/admin/AutomationForm';
+import AutomationLogs from '@/pages/admin/AutomationLogs';
 
 import NPSAnalytics from '@/pages/admin/NPSAnalytics';
 import CertificateTemplates from '@/pages/admin/CertificateTemplates';
@@ -73,4 +76,8 @@ export const adminRoutes: RouteObject[] = [
   
   createAdminRoute("/admin/data-audit", DataAuditPage),
   createAdminRoute("/admin/hubla-webhooks", HublaWebhooks),
+  createAdminRoute("/admin/automations", AdminAutomations),
+  createAdminRoute("/admin/automations/new", AutomationForm),
+  createAdminRoute("/admin/automations/logs", AutomationLogs),
+  createAdminRoute("/admin/automations/:id", AutomationForm),
 ];

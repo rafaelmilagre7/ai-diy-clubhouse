@@ -99,12 +99,17 @@ const navigationItems = [
   {
     title: "Pipedrive + Discord",
     href: "/admin/integrations-debug",
-    icon: Zap,
+    icon: ArrowLeftRight,
   },
   {
     title: "Webhooks Hubla",
     href: "/admin/hubla-webhooks",
     icon: Webhook,
+  },
+  {
+    title: "Automações",
+    href: "/admin/automations",
+    icon: Zap,
   },
   {
     title: "Diagnósticos",
