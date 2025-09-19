@@ -36,6 +36,8 @@
   /* Cores de estado */
   --destructive: 0 62.8% 30.6%;
   --destructive-foreground: 0 0% 98%;
+  --warning: 43 96% 56%;
+  --warning-foreground: 0 0% 0%;
   
   /* Bordas e inputs com melhor visibilidade */
   --border: 217 32% 18%;
@@ -123,6 +125,8 @@
   --accent-foreground: 240 5.9% 10%;
   --destructive: 0 84.2% 60.2%;
   --destructive-foreground: 0 0% 98%;
+  --warning: 43 96% 56%;
+  --warning-foreground: 0 0% 0%;
   --border: 240 5.9% 88%;
   --input: 240 5.9% 95%;
   --ring: 173 100% 46%;
