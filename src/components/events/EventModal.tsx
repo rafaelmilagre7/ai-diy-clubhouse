@@ -9,10 +9,11 @@ import {
 import { Event } from '@/types/events';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Calendar as CalendarIcon, Clock, MapPin, ExternalLink, Loader2 } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, MapPin, ExternalLink, Loader2, Plus } from 'lucide-react';
 import { useEventPermissions } from '@/hooks/useEventPermissions';
 import { EventAccessBlocked } from './EventAccessBlocked';
 import { useAuth } from '@/contexts/auth';
+import { ensureProtocol, generateGoogleCalendarUrl } from '@/utils/urlUtils';
 
 interface EventModalProps {
   event: Event;
@@ -114,6 +115,24 @@ export const EventModal = ({ event, onClose }: EventModalProps) => {
     }
   };
 
+  const handleOpenLink = () => {
+    if (event.location_link) {
+      const urlWithProtocol = ensureProtocol(event.location_link);
+      window.open(urlWithProtocol, '_blank');
+    }
+  };
+
+  const handleAddToGoogleCalendar = () => {
+    const googleCalendarUrl = generateGoogleCalendarUrl(
+      event.title,
+      event.start_time,
+      event.end_time,
+      event.description || undefined,
+      event.physical_location || event.location_link || undefined
+    );
+    window.open(googleCalendarUrl, '_blank');
+  };
+
   return (
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px]">
@@ -194,13 +213,25 @@ export const EventModal = ({ event, onClose }: EventModalProps) => {
                       <Button
                         variant="link"
                         className="h-auto p-0 text-sm text-primary hover:text-primary/80"
-                        onClick={() => window.open(event.location_link, '_blank')}
+                        onClick={handleOpenLink}
                       >
                         Acessar evento online
                       </Button>
                     </div>
                   </div>
                 )}
+              </div>
+
+              {/* Ações do evento */}
+              <div className="flex gap-3 pt-4 border-t">
+                <Button
+                  onClick={handleAddToGoogleCalendar}
+                  className="flex items-center gap-2"
+                  variant="outline"
+                >
+                  <Plus className="h-4 w-4" />
+                  Adicionar ao Google Calendar
+                </Button>
               </div>
 
               {/* Badges de recorrência */}
