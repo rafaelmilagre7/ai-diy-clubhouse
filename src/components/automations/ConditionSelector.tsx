@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, X } from "lucide-react";
+import { Plus, X, ChevronDown, ChevronRight } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -7,6 +7,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
+
+interface Condition {
+  id: string;
+  field: string;
+  operator: string;
+  value: any;
+  type: string;
+}
+
+interface ConditionGroup {
+  id: string;
+  operator: 'AND' | 'OR';
+  conditions: (Condition | ConditionGroup)[];
+}
 
 interface ConditionSelectorProps {
   ruleType: string;

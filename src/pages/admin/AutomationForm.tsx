@@ -13,7 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { ConditionSelector } from "@/components/automations/ConditionSelector";
+import { ConditionBuilder } from "@/components/automations/ConditionBuilder";
 import { ActionSelector } from "@/components/automations/ActionSelector";
 
 interface AutomationFormData {
@@ -267,11 +267,31 @@ const AutomationForm = () => {
         )}
 
         {step === 2 && (
-          <ConditionSelector
-            ruleType={watchedValues.rule_type}
-            conditions={watchedValues.conditions}
-            onChange={(conditions) => setValue('conditions', conditions)}
-          />
+          <Card>
+            <CardHeader>
+              <CardTitle>Condições</CardTitle>
+              <CardDescription>
+                Configure quando esta regra deve ser executada
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ConditionBuilder
+                conditions={watchedValues.conditions.conditions ? watchedValues.conditions : {
+                  id: 'root',
+                  operator: 'AND',
+                  conditions: []
+                }}
+                onChange={(conditions) => setValue('conditions', conditions)}
+                availableFields={[
+                  { value: 'event_type', label: 'Tipo de Evento', type: 'string' },
+                  { value: 'payload.product_id', label: 'ID do Produto', type: 'string' },
+                  { value: 'payload.customer.email', label: 'Email do Cliente', type: 'string' },
+                  { value: 'payload.amount', label: 'Valor', type: 'number' },
+                  { value: 'payload.status', label: 'Status', type: 'string' }
+                ]}
+              />
+            </CardContent>
+          </Card>
         )}
 
         {step === 3 && (

@@ -63,41 +63,28 @@ serve(async (req: Request) => {
 
     console.log('[Hubla Webhook] Webhook saved successfully:', savedWebhook.id)
 
-    // Process different webhook types
-    let processingResult = { success: true, message: 'Webhook received and stored' }
-
-    switch (payload.type) {
-      case 'NewSale':
-      case 'NewUser':
-        processingResult = await handleLovableCourseInvite(payload, supabase)
-        break
+    // Process webhook through automation engine
+    console.log('[Hubla Webhook] Processing through automation engine...');
+    
+    let processingResult;
+    try {
+      // Processar através do novo sistema de automações
+      const automationResult = await processAutomationRules(payload.type || payload.event?.type || 'unknown', payload, supabase);
       
-      case 'CanceledSale':
-      case 'CanceledSubscription':
-        processingResult = await handleCourseCancellation(payload, supabase)
-        break
-      
-      case 'payment.approved':
-      case 'payment.completed':
-        processingResult = await handlePaymentSuccess(payload, supabase)
-        break
-      
-      case 'payment.failed':
-      case 'payment.declined':
-        processingResult = await handlePaymentFailed(payload, supabase)
-        break
-      
-      case 'subscription.created':
-        processingResult = await handleSubscriptionCreated(payload, supabase)
-        break
-      
-      case 'subscription.cancelled':
-        processingResult = await handleSubscriptionCancelled(payload, supabase)
-        break
-      
-      default:
-        console.log(`[Hubla Webhook] Unknown event type: ${payload.type}`)
-        processingResult = { success: true, message: `Unknown event type stored for review: [object Object]` }
+      if (automationResult && automationResult.processedRules > 0) {
+        processingResult = {
+          success: automationResult.success,
+          message: `Processed ${automationResult.processedRules}/${automationResult.totalRules} automation rules`,
+          automationResults: automationResult.results
+        };
+      } else {
+        // Fallback para lógica legada se nenhuma regra for processada
+        processingResult = await handleLegacyWebhookTypes(payload, supabase);
+      }
+    } catch (automationError) {
+      console.error('[Hubla Webhook] Automation engine error:', automationError);
+      // Fallback para lógica legada em caso de erro
+      processingResult = await handleLegacyWebhookTypes(payload, supabase);
     }
 
     // Update webhook record with processing result
@@ -134,6 +121,453 @@ serve(async (req: Request) => {
     cleanupConnections();
   }
 })
+
+// Nova função para processar regras de automação
+async function processAutomationRules(eventType: string, payload: any, supabase: any) {
+  console.log('[Hubla Webhook] Processing automation rules for:', eventType);
+  
+  try {
+    // Buscar regras ativas que correspondem ao evento
+    const { data: rules, error } = await supabase
+      .from('automation_rules')
+      .select('*')
+      .eq('is_active', true)
+      .eq('rule_type', 'webhook')
+      .order('priority', { ascending: false });
+
+    if (error) {
+      console.error('[Hubla Webhook] Error fetching automation rules:', error);
+      return { success: false, error: error.message };
+    }
+
+    if (!rules || rules.length === 0) {
+      console.log('[Hubla Webhook] No active automation rules found');
+      return { success: true, processedRules: 0, totalRules: 0, message: 'No active rules' };
+    }
+
+    let processedRules = 0;
+    const results = [];
+    const context = {
+      webhookPayload: payload,
+      eventType,
+      triggeredAt: new Date()
+    };
+
+    // Processar cada regra
+    for (const rule of rules) {
+      try {
+        console.log(`[Hubla Webhook] Processing rule: ${rule.name} (${rule.id})`);
+        
+        const startTime = Date.now();
+        
+        // Avaliar condições da regra
+        const conditionsMet = await evaluateRuleConditions(rule.conditions, context);
+        
+        if (conditionsMet) {
+          console.log(`[Hubla Webhook] Conditions met for rule: ${rule.name}`);
+          
+          // Executar ações da regra
+          const actionResults = await executeRuleActions(rule.actions, context, rule, supabase);
+          
+          const executionTime = Date.now() - startTime;
+          
+          // Log da execução
+          await logRuleExecution(rule.id, context, actionResults, executionTime, supabase);
+          
+          results.push({
+            ruleId: rule.id,
+            ruleName: rule.name,
+            success: actionResults.success,
+            actions: actionResults.results,
+            executionTime
+          });
+          
+          processedRules++;
+        } else {
+          console.log(`[Hubla Webhook] Conditions not met for rule: ${rule.name}`);
+        }
+        
+      } catch (ruleError) {
+        console.error(`[Hubla Webhook] Error processing rule ${rule.name}:`, ruleError);
+        
+        // Log do erro
+        await logRuleExecution(rule.id, context, {
+          success: false,
+          error: ruleError.message,
+          results: []
+        }, 0, supabase);
+        
+        results.push({
+          ruleId: rule.id,
+          ruleName: rule.name,
+          success: false,
+          error: ruleError.message
+        });
+      }
+    }
+
+    console.log(`[Hubla Webhook] Processed ${processedRules} automation rules successfully`);
+    
+    return {
+      success: true,
+      processedRules,
+      totalRules: rules.length,
+      results
+    };
+    
+  } catch (error) {
+    console.error('[Hubla Webhook] Fatal error processing automation rules:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+// Função para avaliar condições de uma regra
+async function evaluateRuleConditions(conditions: any, context: any): Promise<boolean> {
+  if (!conditions || typeof conditions !== 'object') {
+    return true; // Sem condições = sempre executar
+  }
+
+  // Se é um grupo de condições com novo formato
+  if ('conditions' in conditions && Array.isArray(conditions.conditions)) {
+    return evaluateConditionGroup(conditions, context);
+  }
+
+  // Formato legado - compatibilidade
+  if (conditions.event_types && Array.isArray(conditions.event_types)) {
+    return conditions.event_types.includes(context.eventType);
+  }
+
+  if (conditions.products && Array.isArray(conditions.products)) {
+    const productId = extractFieldValue('payload.product_id', context) || 
+                     extractFieldValue('payload.event.groupId', context) ||
+                     extractFieldValue('product_id', context);
+    
+    return conditions.products.includes('all') || conditions.products.includes(productId);
+  }
+
+  return true;
+}
+
+// Função para avaliar grupo de condições
+function evaluateConditionGroup(group: any, context: any): boolean {
+  if (!group.conditions || group.conditions.length === 0) {
+    return true;
+  }
+
+  const results = group.conditions.map((condition: any) => {
+    if ('conditions' in condition) {
+      // É um subgrupo
+      return evaluateConditionGroup(condition, context);
+    } else {
+      // É uma condição individual
+      return evaluateCondition(condition, context);
+    }
+  });
+
+  // Aplicar operador lógico
+  return group.operator === 'AND' 
+    ? results.every(result => result)
+    : results.some(result => result);
+}
+
+// Função para avaliar condição individual
+function evaluateCondition(condition: any, context: any): boolean {
+  const value = extractFieldValue(condition.field, context);
+  
+  switch (condition.operator) {
+    case 'equals':
+      return value === condition.value;
+    case 'not_equals':
+      return value !== condition.value;
+    case 'contains':
+      return String(value).includes(String(condition.value));
+    case 'not_contains':
+      return !String(value).includes(String(condition.value));
+    case 'starts_with':
+      return String(value).startsWith(String(condition.value));
+    case 'ends_with':
+      return String(value).endsWith(String(condition.value));
+    case 'empty':
+      return !value || value === '' || value === null || value === undefined;
+    case 'not_empty':
+      return value && value !== '' && value !== null && value !== undefined;
+    case 'greater_than':
+      return Number(value) > Number(condition.value);
+    case 'less_than':
+      return Number(value) < Number(condition.value);
+    case 'greater_equal':
+      return Number(value) >= Number(condition.value);
+    case 'less_equal':
+      return Number(value) <= Number(condition.value);
+    default:
+      console.warn(`[Hubla Webhook] Unknown operator: ${condition.operator}`);
+      return false;
+  }
+}
+
+// Função para extrair valor de campo
+function extractFieldValue(fieldPath: string, context: any): any {
+  if (fieldPath === 'event_type') {
+    return context.eventType;
+  }
+
+  // Navegar pelo payload usando notação de ponto
+  const parts = fieldPath.split('.');
+  let value = context.webhookPayload;
+
+  for (const part of parts) {
+    if (value && typeof value === 'object' && part in value) {
+      value = value[part];
+    } else {
+      return undefined;
+    }
+  }
+
+  return value;
+}
+
+// Função para executar ações de uma regra
+async function executeRuleActions(actions: any[], context: any, rule: any, supabase: any) {
+  if (!actions || actions.length === 0) {
+    return { success: true, results: [], message: 'No actions to execute' };
+  }
+
+  const results = [];
+  let allSuccessful = true;
+
+  // Ordenar ações por ordem
+  const sortedActions = [...actions].sort((a, b) => (a.order || 0) - (b.order || 0));
+
+  for (const action of sortedActions) {
+    if (action.enabled === false) {
+      continue;
+    }
+
+    try {
+      console.log(`[Hubla Webhook] Executing action: ${action.type}`);
+      
+      let actionResult;
+      switch (action.type) {
+        case 'send_invite':
+          actionResult = await executeSendInviteAction(action, context, rule, supabase);
+          break;
+        default:
+          actionResult = { success: false, message: `Unknown action type: ${action.type}` };
+      }
+      
+      results.push({
+        type: action.type,
+        success: actionResult.success,
+        message: actionResult.message,
+        data: actionResult.data
+      });
+
+      if (!actionResult.success) {
+        allSuccessful = false;
+      }
+      
+    } catch (actionError) {
+      console.error(`[Hubla Webhook] Error executing action ${action.type}:`, actionError);
+      results.push({
+        type: action.type,
+        success: false,
+        error: actionError.message
+      });
+      allSuccessful = false;
+    }
+  }
+
+  return {
+    success: allSuccessful,
+    results,
+    message: `Executed ${results.length} actions`
+  };
+}
+
+// Função para executar ação de envio de convite
+async function executeSendInviteAction(action: any, context: any, rule: any, supabase: any) {
+  try {
+    const payload = context.webhookPayload;
+    
+    // Extrair dados do usuário do payload
+    const userEmail = payload.customer?.email || payload.event?.userEmail || payload.email;
+    const userName = payload.customer?.name || payload.event?.userName || payload.name;
+    const userPhone = payload.customer?.phone || payload.event?.userPhone || payload.phone;
+    const productId = payload.product_id || payload.event?.groupId || payload.product?.id;
+
+    if (!userEmail) {
+      return { success: false, message: 'No user email found in payload' };
+    }
+
+    // Determinar role baseado no mapeamento
+    let roleId = action.parameters.role_id || 'default';
+    
+    if (action.parameters.role_mapping && productId) {
+      roleId = action.parameters.role_mapping[productId] || action.parameters.role_mapping.default || roleId;
+    }
+
+    // Buscar role ID real
+    const { data: roleData } = await supabase
+      .from('user_roles')
+      .select('id')
+      .eq('name', roleId)
+      .single();
+
+    if (!roleData) {
+      return { success: false, message: `Role not found: ${roleId}` };
+    }
+
+    // Verificar se já existe convite
+    const { data: existingInvite } = await supabase
+      .from('invites')
+      .select('id')
+      .eq('email', userEmail)
+      .eq('role_id', roleData.id)
+      .is('used_at', null)
+      .limit(1);
+
+    if (existingInvite && existingInvite.length > 0) {
+      return { success: true, message: 'Invite already exists for this user' };
+    }
+
+    // Gerar token
+    const { data: token } = await supabase.rpc('generate_invite_token');
+    if (!token) {
+      return { success: false, message: 'Failed to generate invite token' };
+    }
+
+    // Encontrar criador admin
+    const { data: adminRole } = await supabase
+      .from('user_roles')
+      .select('id')
+      .eq('name', 'admin')
+      .single();
+
+    let creatorId = null;
+    if (adminRole) {
+      const { data: adminProfiles } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('role_id', adminRole.id)
+        .limit(1);
+      creatorId = adminProfiles?.[0]?.id;
+    }
+
+    if (!creatorId) {
+      return { success: false, message: 'No admin found to create invite' };
+    }
+
+    // Formatar telefone se necessário
+    const formattedPhone = userPhone ? formatBrazilianPhone(userPhone) : null;
+
+    // Criar convite
+    const inviteData = {
+      email: userEmail,
+      role_id: roleData.id,
+      token,
+      expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      created_by: creatorId,
+      notes: `Convite automático - Regra: ${rule.name} | Produto: ${productId}`,
+      whatsapp_number: formattedPhone,
+      preferred_channel: formattedPhone ? 'both' : 'email'
+    };
+
+    const { data: newInvite, error } = await supabase
+      .from('invites')
+      .insert([inviteData])
+      .select()
+      .single();
+
+    if (error) {
+      return { success: false, message: `Failed to create invite: ${error.message}` };
+    }
+
+    // Processar envio se configurado
+    if (action.parameters.auto_send !== false) {
+      try {
+        const { error: processError } = await supabase.functions.invoke('process-invite', {
+          body: { inviteId: newInvite.id }
+        });
+
+        if (processError) {
+          return {
+            success: true,
+            message: `Invite created but failed to send: ${processError.message}`,
+            data: { inviteId: newInvite.id }
+          };
+        }
+      } catch (sendError) {
+        return {
+          success: true,
+          message: `Invite created but failed to send: ${sendError.message}`,
+          data: { inviteId: newInvite.id }
+        };
+      }
+    }
+
+    return {
+      success: true,
+      message: `Invite created and sent to ${userEmail}`,
+      data: { inviteId: newInvite.id, email: userEmail, role: roleId }
+    };
+
+  } catch (error) {
+    return { success: false, message: `Send invite error: ${error.message}` };
+  }
+}
+
+// Função para registrar execução da regra
+async function logRuleExecution(ruleId: string, context: any, result: any, executionTime: number, supabase: any) {
+  try {
+    await supabase
+      .from('automation_logs')
+      .insert([{
+        rule_id: ruleId,
+        trigger_data: {
+          event_type: context.eventType,
+          payload: context.webhookPayload,
+          triggered_at: context.triggeredAt
+        },
+        executed_actions: result.results || [],
+        status: result.success ? 'success' : 'failed',
+        error_message: result.error || null,
+        execution_time_ms: executionTime
+      }]);
+  } catch (logError) {
+    console.error('[Hubla Webhook] Error logging rule execution:', logError);
+  }
+}
+
+// Função para lógica legada (fallback)
+async function handleLegacyWebhookTypes(payload: any, supabase: any) {
+  switch (payload.type) {
+    case 'NewSale':
+    case 'NewUser':
+      return await handleLovableCourseInvite(payload, supabase);
+    
+    case 'CanceledSale':
+    case 'CanceledSubscription':
+      return await handleCourseCancellation(payload, supabase);
+    
+    case 'payment.approved':
+    case 'payment.completed':
+      return await handlePaymentSuccess(payload, supabase);
+    
+    case 'payment.failed':
+    case 'payment.declined':
+      return await handlePaymentFailed(payload, supabase);
+    
+    case 'subscription.created':
+      return await handleSubscriptionCreated(payload, supabase);
+    
+    case 'subscription.cancelled':
+      return await handleSubscriptionCancelled(payload, supabase);
+    
+    default:
+      console.log(`[Hubla Webhook] Unknown event type: ${payload.type}`);
+      return { success: true, message: `Unknown event type stored for review` };
+  }
+}
 
 // Função auxiliar para formatar telefone brasileiro
 function formatBrazilianPhone(rawPhone: string): string {
