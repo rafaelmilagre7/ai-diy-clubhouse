@@ -13,8 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { ConditionBuilder } from "@/components/automations/ConditionBuilder";
-import { ActionSelector } from "@/components/automations/ActionSelector";
+import { EnhancedAutomationWizard } from "@/components/automations/EnhancedAutomationWizard";
 
 interface AutomationFormData {
   name: string;
@@ -137,7 +136,10 @@ const AutomationForm = () => {
     // TODO: Implementar lógica de teste
   };
 
-  return (
+  return <EnhancedAutomationWizard />;
+
+  // Legacy form for reference
+  const legacyForm = (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
