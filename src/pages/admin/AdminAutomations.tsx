@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Plus, Play, Pause, Edit, Trash2, Activity } from "lucide-react";
-import { AutomationDashboard } from "@/components/automations/AutomationDashboard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -153,15 +152,6 @@ const AdminAutomations = () => {
   };
 
   return (
-    <AutomationDashboard
-      onCreateRule={() => navigate('/admin/automations/new')}
-      onViewLogs={() => navigate('/admin/automations/logs')}
-      onViewRules={() => {/* Current page */}}
-    />
-  );
-
-  // Legacy view for reference
-  const legacyView = (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">

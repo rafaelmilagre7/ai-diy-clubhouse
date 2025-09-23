@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { EnhancedWizardProgress } from "./EnhancedWizardProgress";
-import { AutomationTemplates } from "./AutomationTemplates";
+
 import { AutomationBasicInfo } from "./wizard/AutomationBasicInfo";
 import { AutomationConditions } from "./wizard/AutomationConditions";
 import { AutomationActions } from "./wizard/AutomationActions";
@@ -31,7 +31,6 @@ export const EnhancedAutomationWizard = () => {
   const isEditing = !!id;
 
   const [currentStep, setCurrentStep] = useState(1);
-  const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
   const {
@@ -57,50 +56,41 @@ export const EnhancedAutomationWizard = () => {
   const steps = [
     {
       id: 1,
-      title: "Método",
-      description: "Template ou criar do zero",
+      title: "Informações",
+      description: "Nome e configurações básicas",
       isCompleted: currentStep > 1,
       isActive: currentStep === 1,
       canNavigate: true
     },
     {
       id: 2,
-      title: "Informações",
-      description: "Nome e configurações básicas",
+      title: "Condições",
+      description: "Quando executar a automação",
       isCompleted: currentStep > 2,
       isActive: currentStep === 2,
       canNavigate: currentStep >= 2
     },
     {
       id: 3,
-      title: "Condições",
-      description: "Quando executar a automação",
+      title: "Ações",
+      description: "O que fazer quando ativada",
       isCompleted: currentStep > 3,
       isActive: currentStep === 3,
       canNavigate: currentStep >= 3
     },
     {
       id: 4,
-      title: "Ações",
-      description: "O que fazer quando ativada",
-      isCompleted: currentStep > 4,
-      isActive: currentStep === 4,
-      canNavigate: currentStep >= 4
-    },
-    {
-      id: 5,
       title: "Revisão",
       description: "Verificar e salvar",
       isCompleted: false,
-      isActive: currentStep === 5,
-      canNavigate: currentStep >= 5
+      isActive: currentStep === 4,
+      canNavigate: currentStep >= 4
     }
   ];
 
   useEffect(() => {
     if (isEditing) {
       loadRule();
-      setCurrentStep(2); // Skip template selection for editing
     }
   }, [id]);
 
@@ -133,22 +123,6 @@ export const EnhancedAutomationWizard = () => {
     }
   };
 
-  const handleTemplateSelect = (template: any) => {
-    setSelectedTemplate(template);
-    
-    // Apply template data
-    setValue('name', template.name);
-    setValue('description', template.description);
-    setValue('conditions', template.conditions);
-    setValue('actions', template.actions);
-    
-    setCurrentStep(2);
-  };
-
-  const handleCreateFromScratch = () => {
-    setSelectedTemplate(null);
-    setCurrentStep(2);
-  };
 
   const onSubmit = async (data: AutomationFormData) => {
     setLoading(true);
@@ -200,14 +174,12 @@ export const EnhancedAutomationWizard = () => {
   const canProceedToNext = () => {
     switch (currentStep) {
       case 1:
-        return true; // Template selection or create from scratch
-      case 2:
         return watchedValues.name.trim() !== '';
-      case 3:
+      case 2:
         return watchedValues.conditions && 
                watchedValues.conditions.conditions && 
                watchedValues.conditions.conditions.length > 0;
-      case 4:
+      case 3:
         return watchedValues.actions && watchedValues.actions.length > 0;
       default:
         return true;
@@ -216,7 +188,7 @@ export const EnhancedAutomationWizard = () => {
 
   const nextStep = () => {
     if (canProceedToNext()) {
-      setCurrentStep(Math.min(5, currentStep + 1));
+      setCurrentStep(Math.min(4, currentStep + 1));
     }
   };
 
@@ -252,7 +224,7 @@ export const EnhancedAutomationWizard = () => {
             </p>
           </div>
         </div>
-        {currentStep > 2 && (
+        {currentStep > 1 && (
           <div className="flex items-center gap-3">
             <Button variant="outline" onClick={testRule}>
               <TestTube className="mr-2 h-4 w-4" />
@@ -271,47 +243,38 @@ export const EnhancedAutomationWizard = () => {
 
       {/* Form Content */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        {currentStep === 1 && !isEditing && (
-          <AutomationTemplates
-            onSelectTemplate={handleTemplateSelect}
-            onCreateFromScratch={handleCreateFromScratch}
-          />
-        )}
-
-        {currentStep === 2 && (
+        {currentStep === 1 && (
           <AutomationBasicInfo
             register={register}
             errors={errors}
             watchedValues={watchedValues}
             setValue={setValue}
-            selectedTemplate={selectedTemplate}
           />
         )}
 
-        {currentStep === 3 && (
+        {currentStep === 2 && (
           <AutomationConditions
             conditions={watchedValues.conditions}
             onChange={(conditions) => setValue('conditions', conditions)}
           />
         )}
 
-        {currentStep === 4 && (
+        {currentStep === 3 && (
           <AutomationActions
             actions={watchedValues.actions}
             onChange={(actions) => setValue('actions', actions)}
           />
         )}
 
-        {currentStep === 5 && (
+        {currentStep === 4 && (
           <AutomationReview
             formData={watchedValues}
-            selectedTemplate={selectedTemplate}
           />
         )}
 
         {/* Navigation */}
-        {currentStep > 1 && (
-          <div className="flex items-center justify-between pt-6 border-t">
+        <div className="flex items-center justify-between pt-6 border-t">
+          {currentStep > 1 ? (
             <Button
               type="button"
               variant="outline"
@@ -319,30 +282,32 @@ export const EnhancedAutomationWizard = () => {
             >
               Anterior
             </Button>
+          ) : (
+            <div></div>
+          )}
 
-            <div className="flex items-center gap-3">
-              {currentStep < 5 ? (
-                <Button
-                  type="button"
-                  onClick={nextStep}
-                  disabled={!canProceedToNext()}
-                  className="bg-gradient-to-r from-primary to-primary/80"
-                >
-                  Próximo
-                </Button>
-              ) : (
-                <Button 
-                  type="submit" 
-                  disabled={loading}
-                  className="bg-gradient-to-r from-green-600 to-green-500"
-                >
-                  <Save className="mr-2 h-4 w-4" />
-                  {loading ? 'Salvando...' : (isEditing ? 'Atualizar' : 'Criar Automação')}
-                </Button>
-              )}
-            </div>
+          <div className="flex items-center gap-3">
+            {currentStep < 4 ? (
+              <Button
+                type="button"
+                onClick={nextStep}
+                disabled={!canProceedToNext()}
+                className="bg-gradient-to-r from-primary to-primary/80"
+              >
+                Próximo
+              </Button>
+            ) : (
+              <Button 
+                type="submit" 
+                disabled={loading}
+                className="bg-gradient-to-r from-green-600 to-green-500"
+              >
+                <Save className="mr-2 h-4 w-4" />
+                {loading ? 'Salvando...' : (isEditing ? 'Atualizar' : 'Criar Automação')}
+              </Button>
+            )}
           </div>
-        )}
+        </div>
       </form>
     </div>
   );

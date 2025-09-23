@@ -12,41 +12,16 @@ interface AutomationBasicInfoProps {
   errors: any;
   watchedValues: any;
   setValue: any;
-  selectedTemplate?: any;
 }
 
 export const AutomationBasicInfo = ({ 
   register, 
   errors, 
   watchedValues, 
-  setValue, 
-  selectedTemplate 
+  setValue
 }: AutomationBasicInfoProps) => {
   return (
     <div className="space-y-6">
-      {selectedTemplate && (
-        <Card className="border-l-4 border-l-primary bg-primary/5">
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-primary" />
-              <CardTitle className="text-lg">Template Selecionado</CardTitle>
-            </div>
-            <CardDescription>
-              {selectedTemplate.name} - {selectedTemplate.description}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              {selectedTemplate.tags.map((tag: string) => (
-                <Badge key={tag} variant="secondary" className="text-xs">
-                  {tag}
-                </Badge>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

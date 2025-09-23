@@ -6,10 +6,9 @@ import { Separator } from "@/components/ui/separator";
 
 interface AutomationReviewProps {
   formData: any;
-  selectedTemplate?: any;
 }
 
-export const AutomationReview = ({ formData, selectedTemplate }: AutomationReviewProps) => {
+export const AutomationReview = ({ formData }: AutomationReviewProps) => {
   const getActionTypeLabel = (type: string) => {
     const labels: { [key: string]: string } = {
       'send_invite': 'Enviar Convite',
@@ -92,38 +91,6 @@ export const AutomationReview = ({ formData, selectedTemplate }: AutomationRevie
           </div>
         </CardContent>
       </Card>
-
-      {/* Template Info */}
-      {selectedTemplate && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Info className="h-5 w-5 text-blue-600" />
-              Template Utilizado
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-start justify-between">
-              <div>
-                <h4 className="font-medium">{selectedTemplate.name}</h4>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {selectedTemplate.description}
-                </p>
-                <div className="flex gap-2 mt-2">
-                  {selectedTemplate.tags.map((tag: string) => (
-                    <Badge key={tag} variant="secondary" className="text-xs">
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-              <Badge variant="outline" className="text-xs">
-                #{selectedTemplate.usageCount} usos
-              </Badge>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Basic Information */}
       <Card>
