@@ -5308,7 +5308,7 @@ export type Database = {
         Returns: number
       }
       can_access_benefit: {
-        Args: { tool_id: string; user_id: string }
+        Args: { p_tool_id: string; p_user_id: string }
         Returns: boolean
       }
       can_access_course: {
