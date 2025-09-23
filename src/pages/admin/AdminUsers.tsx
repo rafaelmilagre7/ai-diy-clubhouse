@@ -11,9 +11,11 @@ import {
   UserPlus,
   Shield,
   Crown,
-  AlertCircle
+  AlertCircle,
+  Download
 } from 'lucide-react';
 import { useUsers } from '@/hooks/admin/useUsers';
+import { useUserExport } from '@/hooks/admin/useUserExport';
 import { useUserRoles } from '@/hooks/admin/useUserRoles';
 import { useRoles, Role } from '@/hooks/admin/useRoles';
 import { useDeleteUser } from '@/hooks/admin/useDeleteUser';
@@ -41,6 +43,7 @@ export default function AdminUsers() {
     canResetPasswords
   } = useUsers();
 
+  const { exportUsers, isExporting } = useUserExport();
   const { assignRoleToUser, isUpdating: isAssigningRole } = useUserRoles();
   const { roles } = useRoles();
   const { deleteUser } = useDeleteUser();
@@ -143,15 +146,26 @@ export default function AdminUsers() {
             Gerencie usuários e suas permissões
           </p>
         </div>
-        <Button
-          onClick={fetchUsers}
-          disabled={isRefreshing}
-          size="sm"
-          variant="outline"
-        >
-          <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-          {isRefreshing ? 'Atualizando...' : 'Atualizar'}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={() => exportUsers(users, searchQuery)}
+            disabled={isExporting || users.length === 0}
+            size="sm"
+            variant="outline"
+          >
+            <Download className={`mr-2 h-4 w-4 ${isExporting ? 'animate-pulse' : ''}`} />
+            {isExporting ? 'Exportando...' : 'Download'}
+          </Button>
+          <Button
+            onClick={fetchUsers}
+            disabled={isRefreshing}
+            size="sm"
+            variant="outline"
+          >
+            <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            {isRefreshing ? 'Atualizando...' : 'Atualizar'}
+          </Button>
+        </div>
       </div>
 
       {/* Search */}
