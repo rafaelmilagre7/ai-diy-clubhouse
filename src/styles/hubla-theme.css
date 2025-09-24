@@ -1,0 +1,42 @@
+/* Hubla Theme Colors */
+:root {
+  --hubla-primary: 220 38% 58%;
+  --hubla-primary-dark: 220 38% 48%;
+  --hubla-accent: 142 69% 58%;
+  --hubla-accent-dark: 142 69% 48%;
+  --hubla-success: 145 63% 42%;
+  --hubla-warning: 38 92% 50%;
+  --hubla-error: 348 83% 47%;
+}
+
+.border-hubla {
+  border-color: hsl(var(--hubla-primary) / 0.2);
+}
+
+.text-hubla-primary {
+  color: hsl(var(--hubla-primary));
+}
+
+.bg-hubla-primary {
+  background-color: hsl(var(--hubla-primary));
+}
+
+.bg-hubla-primary\/10 {
+  background-color: hsl(var(--hubla-primary) / 0.1);
+}
+
+.text-hubla-accent {
+  color: hsl(var(--hubla-accent));
+}
+
+.bg-hubla-accent {
+  background-color: hsl(var(--hubla-accent));
+}
+
+.bg-hubla-accent\/10 {
+  background-color: hsl(var(--hubla-accent) / 0.1);
+}
+
+.border-hubla-accent\/20 {
+  border-color: hsl(var(--hubla-accent) / 0.2);
+}

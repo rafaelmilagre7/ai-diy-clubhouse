@@ -5,6 +5,8 @@ import { Target, HelpCircle, Lightbulb } from "lucide-react";
 import { ConditionBuilder } from "../ConditionBuilder";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useState } from "react";
+import { HublaEventSelector } from "../hubla/HublaEventSelector";
+import { HUBLA_FIELDS } from "@/hooks/useHublaEvents";
 
 interface AutomationConditionsProps {
   conditions: any;
@@ -13,79 +15,40 @@ interface AutomationConditionsProps {
 
 export const AutomationConditions = ({ conditions, onChange }: AutomationConditionsProps) => {
   const [showHelp, setShowHelp] = useState(false);
+  const [isHublaMode, setIsHublaMode] = useState(true);
 
-  const availableFields = [
+  // Usar campos da Hubla se estiver no modo Hubla, senão usar campos genéricos
+  const availableFields = isHublaMode ? HUBLA_FIELDS : [
     { 
       value: 'event_type', 
       label: 'Tipo de Evento', 
       type: 'string',
-      description: 'Tipo do evento recebido (ex: purchase_completed)',
-      examples: ['purchase_completed', 'user_registered', 'payment_failed']
-    },
-    { 
-      value: 'payload.event.product.name', 
-      label: 'Nome do Produto', 
-      type: 'string',
-      description: 'Nome do produto comprado na Hubla',
-      examples: ['Lovable na Prática | Viver de IA', 'Plataforma Viver de IA']
-    },
-    { 
-      value: 'payload.event.groupName', 
-      label: 'Nome do Grupo', 
-      type: 'string',
-      description: 'Nome do grupo/categoria do produto',
-      examples: ['Formação Viver de IA', 'Formação Copy com IA']
-    },
-    { 
-      value: 'payload.event.customer.email', 
-      label: 'Email do Cliente', 
-      type: 'string',
-      description: 'Email do cliente que fez a compra',
-      examples: ['cliente@example.com']
-    },
-    { 
-      value: 'payload.event.customer.name', 
-      label: 'Nome do Cliente', 
-      type: 'string',
-      description: 'Nome completo do cliente',
-      examples: ['João Silva', 'Maria Santos']
-    },
-    { 
-      value: 'payload.event.customer.phone', 
-      label: 'Telefone do Cliente', 
-      type: 'string',
-      description: 'Número de telefone do cliente',
-      examples: ['+5511999999999', '11999999999']
-    },
-    { 
-      value: 'payload.event.value', 
-      label: 'Valor da Compra', 
-      type: 'number',
-      description: 'Valor total da compra em centavos',
-      examples: ['29700', '49900', '99900']
-    },
-    { 
-      value: 'payload.event.status', 
-      label: 'Status da Compra', 
-      type: 'string',
-      description: 'Status atual da transação',
-      examples: ['approved', 'pending', 'canceled']
-    },
-    { 
-      value: 'payload.event.payment_method', 
-      label: 'Método de Pagamento', 
-      type: 'string',
-      description: 'Forma de pagamento utilizada',
-      examples: ['pix', 'credit_card', 'boleto']
-    },
-    { 
-      value: 'payload.event.utm_source', 
-      label: 'Origem UTM', 
-      type: 'string',
-      description: 'Origem do tráfego (parâmetro utm_source)',
-      examples: ['facebook', 'google', 'instagram']
+      description: 'Tipo do evento recebido',
+      category: 'evento',
+      examples: ['purchase_completed', 'user_registered']
     }
   ];
+
+  const handleEventTypeChange = (eventType: string) => {
+    // Automaticamente adicionar condição para o tipo de evento selecionado
+    const eventCondition = {
+      id: Math.random().toString(36).substr(2, 9),
+      field: 'payload.type',
+      operator: 'equals',
+      value: eventType,
+      type: 'string'
+    };
+
+    const updatedConditions = {
+      ...conditions,
+      conditions: [
+        ...conditions.conditions.filter((c: any) => c.field !== 'payload.type'),
+        eventCondition
+      ]
+    };
+
+    onChange(updatedConditions);
+  };
 
   const commonPatterns = [
     {
@@ -134,27 +97,55 @@ export const AutomationConditions = ({ conditions, onChange }: AutomationConditi
     onChange(updatedConditions);
   };
 
+  const currentEventType = conditions?.conditions?.find((c: any) => c.field === 'payload.type')?.value || '';
+
   return (
     <div className="space-y-6">
+      {/* Hubla Event Selector */}
+      {isHublaMode && (
+        <HublaEventSelector
+          selectedEvent={currentEventType}
+          onEventChange={handleEventTypeChange}
+        />
+      )}
+
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Target className="h-5 w-5 text-primary" />
-              <CardTitle>Condições de Execução</CardTitle>
+              <CardTitle>Condições Avançadas</CardTitle>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowHelp(!showHelp)}
-            >
-              <HelpCircle className="h-4 w-4 mr-2" />
-              Ajuda
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant={isHublaMode ? "default" : "outline"}
+                size="sm"
+                onClick={() => setIsHublaMode(true)}
+              >
+                🚀 Hubla
+              </Button>
+              <Button
+                variant={!isHublaMode ? "default" : "outline"}
+                size="sm"
+                onClick={() => setIsHublaMode(false)}
+              >
+                ⚙️ Genérico
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowHelp(!showHelp)}
+              >
+                <HelpCircle className="h-4 w-4 mr-2" />
+                Ajuda
+              </Button>
+            </div>
           </div>
           <CardDescription>
-            Configure quando esta automação deve ser executada. As condições determinam 
-            quais eventos irão acionar suas ações.
+            {isHublaMode 
+              ? "Configure condições específicas para eventos da Hubla. O evento principal já foi selecionado acima."
+              : "Configure condições genéricas para qualquer tipo de evento."
+            }
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -215,7 +206,7 @@ export const AutomationConditions = ({ conditions, onChange }: AutomationConditi
           <div className="p-4 bg-muted/50 rounded-lg">
             <h4 className="font-medium mb-3 flex items-center gap-2">
               <HelpCircle className="h-4 w-4" />
-              Campos Disponíveis
+              Campos Disponíveis {isHublaMode && "(Hubla)"}
             </h4>
             <div className="grid gap-2 text-sm">
               {availableFields.slice(0, 5).map(field => (
@@ -225,6 +216,11 @@ export const AutomationConditions = ({ conditions, onChange }: AutomationConditi
                       {field.type}
                     </Badge>
                     <span className="font-mono text-xs">{field.value}</span>
+                    {isHublaMode && field.category && (
+                      <Badge variant="secondary" className="text-xs ml-2">
+                        {field.category}
+                      </Badge>
+                    )}
                   </div>
                   <span className="text-muted-foreground text-xs">
                     {field.label}
@@ -233,6 +229,7 @@ export const AutomationConditions = ({ conditions, onChange }: AutomationConditi
               ))}
               <div className="text-xs text-muted-foreground pt-2 border-t">
                 + {availableFields.length - 5} campos adicionais disponíveis
+                {isHublaMode && " da Hubla"}
               </div>
             </div>
           </div>

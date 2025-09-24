@@ -18,6 +18,7 @@ export const ActionSelector = ({ actions, onChange }: ActionSelectorProps) => {
   const [newActionType, setNewActionType] = useState<string>('');
 
   const actionTypes = [
+    { value: 'hubla_invite', label: '🚀 Convite Hubla', description: 'Convite otimizado para eventos da Hubla' },
     { value: 'send_invite', label: 'Enviar Convite', description: 'Criar e enviar convite para usuário' },
     { value: 'create_user', label: 'Criar Usuário', description: 'Criar perfil de usuário automaticamente' },
     { value: 'send_email', label: 'Enviar Email', description: 'Enviar email personalizado' },
@@ -28,6 +29,17 @@ export const ActionSelector = ({ actions, onChange }: ActionSelectorProps) => {
 
   const getDefaultParameters = (actionType: string) => {
     switch (actionType) {
+      case 'hubla_invite':
+        return {
+          role_id: 'membro_club',
+          template: 'lovable_course_welcome',
+          channels: ['email'],
+          expires_in: '7 days',
+          email_source: 'payload.event.userEmail',
+          name_source: 'payload.event.userName',
+          phone_source: 'payload.event.userPhone',
+          priority: 'high'
+        };
       case 'send_invite':
         return {
           role_id: 'default_member_role',
