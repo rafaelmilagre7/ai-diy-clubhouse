@@ -41,6 +41,14 @@ const INVITE_TEMPLATES = [
     subject: 'Bem-vindo ao clube VIP! ⭐',
     preview: 'Parabéns! Você agora faz parte do nosso clube VIP...',
     channels: ['email', 'whatsapp']
+  },
+  {
+    id: 'combo_viver_de_ia',
+    name: 'Combo Viver de IA',
+    description: 'Template para o Combo Viver de IA',
+    subject: 'Parabéns! Seu Combo Viver de IA foi ativado! 🤖',
+    preview: 'Agora você tem acesso completo ao Learning, Community e Certificates...',
+    channels: ['email', 'whatsapp']
   }
 ];
 
@@ -48,7 +56,8 @@ const USER_ROLES = [
   { id: 'membro_club', name: 'Membro Club', description: 'Acesso padrão à plataforma' },
   { id: 'lovable_course', name: 'Curso Lovable', description: 'Acesso específico ao curso Lovable' },
   { id: 'vip_member', name: 'Membro VIP', description: 'Acesso VIP com benefícios extras' },
-  { id: 'formacao_ia', name: 'Formação IA', description: 'Acesso à formação completa de IA' }
+  { id: 'formacao_ia', name: 'Formação IA', description: 'Acesso à formação completa de IA' },
+  { id: 'combo_viver_de_ia', name: 'Combo Viver de IA', description: 'Acesso ao Learning, Community e Certificates' }
 ];
 
 export const HublaInviteAction = ({ action, onUpdate, onRemove, compact = false }: HublaInviteActionProps) => {
