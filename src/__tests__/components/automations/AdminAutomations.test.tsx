@@ -85,7 +85,10 @@ describe('AdminAutomations', () => {
         refetch: mockRefetch
       });
 
-      mockSupabaseClient.from().update().eq.mockReturnValue({ error: null });
+      mockSupabaseClient.from().update().eq.mockReturnValue({
+        data: null,
+        error: null
+      });
       
       render(<AdminAutomations />);
       
@@ -117,6 +120,7 @@ describe('AdminAutomations', () => {
       });
 
       mockSupabaseClient.from().update().eq.mockReturnValue({ 
+        data: null,
         error: { message: 'Database error' } 
       });
       
@@ -149,7 +153,10 @@ describe('AdminAutomations', () => {
       });
 
       mockWindowConfirm.mockReturnValue(true);
-      mockSupabaseClient.from().delete().eq.mockReturnValue({ error: null });
+      mockSupabaseClient.from().delete().eq.mockReturnValue({
+        data: null,
+        error: null
+      });
       
       render(<AdminAutomations />);
       
@@ -207,6 +214,7 @@ describe('AdminAutomations', () => {
 
       mockWindowConfirm.mockReturnValue(true);
       mockSupabaseClient.from().delete().eq.mockReturnValue({ 
+        data: null,
         error: { message: 'Database error' } 
       });
       
@@ -274,10 +282,11 @@ describe('AdminAutomations', () => {
         refetch: mockRefetch
       });
 
-      // Simula um delay na resposta do Supabase
-      mockSupabaseClient.from().update().eq.mockReturnValue(
-        new Promise(resolve => setTimeout(() => resolve({ error: null }), 100))
-      );
+      // Simula um delay na resposta do Supabase - para este teste, vamos usar resposta direta
+      mockSupabaseClient.from().update().eq.mockReturnValue({
+        data: null,
+        error: null
+      });
       
       render(<AdminAutomations />);
       

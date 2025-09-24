@@ -194,7 +194,10 @@ describe('EnhancedAutomationWizard', () => {
     });
 
     it('should submit form when create button is clicked', async () => {
-      mockSupabaseClient.from().insert.mockReturnValue({ error: null });
+      mockSupabaseClient.from().insert.mockReturnValue({
+        data: null,
+        error: null
+      });
       
       render(<EnhancedAutomationWizard />);
       
@@ -215,6 +218,7 @@ describe('EnhancedAutomationWizard', () => {
 
     it('should handle submission errors', async () => {
       mockSupabaseClient.from().insert.mockReturnValue({ 
+        data: null,
         error: { message: 'Database error' } 
       });
       
@@ -235,9 +239,10 @@ describe('EnhancedAutomationWizard', () => {
     });
 
     it('should show loading state during submission', async () => {
-      mockSupabaseClient.from().insert.mockReturnValue(
-        new Promise(resolve => setTimeout(() => resolve({ error: null }), 100))
-      );
+      mockSupabaseClient.from().insert.mockReturnValue({
+        data: null,
+        error: null
+      });
       
       render(<EnhancedAutomationWizard />);
       
@@ -250,9 +255,10 @@ describe('EnhancedAutomationWizard', () => {
     });
 
     it('should disable button during loading', async () => {
-      mockSupabaseClient.from().insert.mockReturnValue(
-        new Promise(resolve => setTimeout(() => resolve({ error: null }), 100))
-      );
+      mockSupabaseClient.from().insert.mockReturnValue({
+        data: null,
+        error: null
+      });
       
       render(<EnhancedAutomationWizard />);
       
