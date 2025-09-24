@@ -13,6 +13,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 interface HublaInviteActionProps {
   action: any;
   onUpdate: (updates: any) => void;
+  onRemove?: () => void;
+  compact?: boolean;
 }
 
 const INVITE_TEMPLATES = [
@@ -49,7 +51,7 @@ const USER_ROLES = [
   { id: 'formacao_ia', name: 'Formação IA', description: 'Acesso à formação completa de IA' }
 ];
 
-export const HublaInviteAction = ({ action, onUpdate }: HublaInviteActionProps) => {
+export const HublaInviteAction = ({ action, onUpdate, onRemove, compact = false }: HublaInviteActionProps) => {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
 
@@ -79,21 +81,43 @@ export const HublaInviteAction = ({ action, onUpdate }: HublaInviteActionProps) 
   };
 
   return (
-    <Card className="border-l-4 border-l-hubla-primary">
-      <CardHeader>
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-hubla-primary/10 rounded-lg">
-            <UserPlus className="h-5 w-5 text-hubla-primary" />
+    <Card className={`border-l-4 border-l-hubla-primary ${compact ? 'shadow-sm' : ''}`}>
+      <CardHeader className={compact ? "pb-3" : ""}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className={`p-2 bg-hubla-primary/10 rounded-lg ${compact ? 'p-1.5' : ''}`}>
+              <UserPlus className={`text-hubla-primary ${compact ? 'h-4 w-4' : 'h-5 w-5'}`} />
+            </div>
+            <div>
+              <CardTitle className={`text-hubla-primary ${compact ? 'text-base' : ''}`}>
+                Enviar Convite Hubla
+              </CardTitle>
+              {!compact && (
+                <CardDescription>
+                  Criar e enviar convite personalizado baseado nos dados da Hubla
+                </CardDescription>
+              )}
+            </div>
           </div>
-          <div>
-            <CardTitle className="text-hubla-primary">Enviar Convite Hubla</CardTitle>
-            <CardDescription>
-              Criar e enviar convite personalizado baseado nos dados da Hubla
-            </CardDescription>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-hubla-primary border-hubla-primary">
+              Ativo
+            </Badge>
+            {onRemove && (
+              <Button
+                type="button"
+                variant="ghost" 
+                size="sm"
+                onClick={onRemove}
+                className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
+              >
+                ×
+              </Button>
+            )}
           </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className={`space-y-6 ${compact ? 'space-y-4' : ''}`}>
         {/* Template Selection */}
         <div className="space-y-3">
           <Label className="text-sm font-medium flex items-center gap-2">

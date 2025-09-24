@@ -13,7 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { EnhancedAutomationWizard } from "@/components/automations/EnhancedAutomationWizard";
+import { UnifiedAutomationForm } from "@/components/automations/UnifiedAutomationForm";
 
 interface AutomationFormData {
   name: string;
@@ -136,7 +136,7 @@ const AutomationForm = () => {
     // TODO: Implementar lógica de teste
   };
 
-  return <EnhancedAutomationWizard />;
+  return <UnifiedAutomationForm />;
 };
 
 export default AutomationForm;
