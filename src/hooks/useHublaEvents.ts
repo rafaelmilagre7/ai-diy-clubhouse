@@ -91,6 +91,54 @@ export const HUBLA_EVENT_TYPES = [
   }
 ];
 
+// Mapeamento de campos antigos para novos (migração)
+export const FIELD_MIGRATION_MAP: Record<string, string> = {
+  'type': 'payload.type',
+  'event.type': 'payload.type',
+  'event_type': 'payload.type',
+  'userEmail': 'payload.event.userEmail',
+  'userName': 'payload.event.userName',
+  'userPhone': 'payload.event.userPhone',
+  'groupName': 'payload.event.groupName',
+  'totalAmount': 'payload.event.totalAmount',
+  'paymentMethod': 'payload.event.paymentMethod',
+  'recurring': 'payload.event.recurring',
+  'paidAt': 'payload.event.paidAt',
+  'user.email': 'payload.event.user.email',
+  'subscription.status': 'payload.event.subscription.status'
+};
+
+// Função para migrar campo antigo para novo
+export const migrateFieldName = (oldField: string): string => {
+  return FIELD_MIGRATION_MAP[oldField] || oldField;
+};
+
+// Função para encontrar campo com fallback
+export const findHublaField = (fieldValue: string) => {
+  // Primeiro, tentar encontrar o campo diretamente
+  let field = HUBLA_FIELDS.find(f => f.value === fieldValue);
+  
+  // Se não encontrou, tentar com migração
+  if (!field) {
+    const migratedField = migrateFieldName(fieldValue);
+    field = HUBLA_FIELDS.find(f => f.value === migratedField);
+  }
+  
+  // Se ainda não encontrou, criar um campo temporário para manter compatibilidade
+  if (!field) {
+    field = {
+      value: fieldValue,
+      label: `Campo: ${fieldValue}`,
+      type: 'string',
+      description: 'Campo não reconhecido (migração necessária)',
+      category: 'desconhecido',
+      examples: []
+    };
+  }
+  
+  return field;
+};
+
 export const HUBLA_FIELDS = [
   {
     value: 'payload.type',
@@ -98,7 +146,8 @@ export const HUBLA_FIELDS = [
     type: 'string',
     description: 'Tipo do evento Hubla',
     category: 'evento',
-    examples: ['NewSale', 'customer.member_added']
+    examples: ['NewSale', 'customer.member_added'],
+    aliases: ['type', 'event.type', 'event_type'] // Campos antigos compatíveis
   },
   {
     value: 'payload.event.userEmail',
@@ -106,7 +155,8 @@ export const HUBLA_FIELDS = [
     type: 'string',
     description: 'Email do cliente na transação',
     category: 'cliente',
-    examples: ['cliente@example.com']
+    examples: ['cliente@example.com'],
+    aliases: ['userEmail', 'user_email', 'email']
   },
   {
     value: 'payload.event.userName',
@@ -114,7 +164,8 @@ export const HUBLA_FIELDS = [
     type: 'string',
     description: 'Nome completo do cliente',
     category: 'cliente',
-    examples: ['João Silva', 'Maria Santos']
+    examples: ['João Silva', 'Maria Santos'],
+    aliases: ['userName', 'user_name', 'name']
   },
   {
     value: 'payload.event.userPhone',

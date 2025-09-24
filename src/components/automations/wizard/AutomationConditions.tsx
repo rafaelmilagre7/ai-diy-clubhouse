@@ -6,7 +6,8 @@ import { ConditionBuilder } from "../ConditionBuilder";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useState } from "react";
 import { HublaEventSelector } from "../hubla/HublaEventSelector";
-import { HUBLA_FIELDS } from "@/hooks/useHublaEvents";
+import { HUBLA_FIELDS, FIELD_MIGRATION_MAP } from "@/hooks/useHublaEvents";
+import { MigrationHelper } from "../MigrationHelper";
 
 interface AutomationConditionsProps {
   conditions: any;
@@ -99,8 +100,24 @@ export const AutomationConditions = ({ conditions, onChange }: AutomationConditi
 
   const currentEventType = conditions?.conditions?.find((c: any) => c.field === 'payload.type')?.value || '';
 
+  // Verificar se há condições que precisam de migração
+  const needsMigration = conditions?.conditions?.some((c: any) => 
+    FIELD_MIGRATION_MAP[c.field]
+  ) || false;
+
+  const handleMigrateConditions = (migratedConditions: any) => {
+    onChange(migratedConditions);
+  };
+
   return (
     <div className="space-y-6">
+      {/* Migration Helper */}
+      {isHublaMode && needsMigration && (
+        <MigrationHelper 
+          conditions={conditions}
+          onMigrate={handleMigrateConditions}
+        />
+      )}
       {/* Hubla Event Selector */}
       {isHublaMode && (
         <HublaEventSelector

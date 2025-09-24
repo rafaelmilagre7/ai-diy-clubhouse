@@ -23,10 +23,20 @@ interface ConditionGroup {
   expanded?: boolean;
 }
 
+interface FieldDefinition {
+  value: string;
+  label: string;
+  type: string;
+  aliases?: string[];
+  category?: string;
+  description?: string;
+  examples?: any[];
+}
+
 interface ConditionBuilderProps {
   conditions: ConditionGroup;
   onChange: (conditions: ConditionGroup) => void;
-  availableFields: Array<{ value: string; label: string; type: string }>;
+  availableFields: FieldDefinition[];
 }
 
 export const ConditionBuilder = ({ conditions, onChange, availableFields }: ConditionBuilderProps) => {
@@ -185,13 +195,50 @@ export const ConditionBuilder = ({ conditions, onChange, availableFields }: Cond
   };
 
   const renderCondition = (condition: Condition) => {
-    const field = availableFields.find(f => f.value === condition.field);
+    // Primeiro tentar encontrar campo diretamente
+    let field = availableFields.find(f => f.value === condition.field);
+    
+    // Se não encontrou, tentar com aliases (para compatibilidade)
+    if (!field) {
+      field = availableFields.find(f => 
+        f.aliases && f.aliases.includes(condition.field)
+      );
+    }
+    
+    // Criar campo temporário se não encontrar (para não quebrar a UI)
+    if (!field) {
+      field = {
+        value: condition.field,
+        label: `Campo: ${condition.field}`,
+        type: 'string'
+      };
+    }
+    
     const fieldType = field?.type || 'string';
     const availableOperators = operators[fieldType as keyof typeof operators] || operators.string;
+    
+    // Verificar se o campo precisa de migração
+    const isLegacyField = !availableFields.find(f => f.value === condition.field);
+    const needsMigration = isLegacyField && availableFields.find(f => 
+      f.aliases && f.aliases.includes(condition.field)
+    );
 
     return (
-      <Card key={condition.id} className="border-l-4 border-l-blue-500">
+      <Card key={condition.id} className={`border-l-4 ${needsMigration ? 'border-l-yellow-500' : 'border-l-blue-500'}`}>
         <CardContent className="p-4">
+          {/* Warning para campos que precisam de migração */}
+          {needsMigration && (
+            <div className="mb-3 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
+              <div className="flex items-center gap-2 text-yellow-700">
+                <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                <span>Campo incompatível detectado. Recomendamos atualizar para: 
+                  <strong className="ml-1">
+                    {availableFields.find(f => f.aliases && f.aliases.includes(condition.field))?.value}
+                  </strong>
+                </span>
+              </div>
+            </div>
+          )}
           <div className="grid grid-cols-12 gap-3 items-end">
             <div className="col-span-3">
               <Label className="text-xs text-muted-foreground">Campo</Label>
@@ -211,11 +258,28 @@ export const ConditionBuilder = ({ conditions, onChange, availableFields }: Cond
                   <SelectValue placeholder="Selecione..." />
                 </SelectTrigger>
                 <SelectContent>
+                  {/* Campo atual (mesmo que incompatível) */}
+                  {isLegacyField && (
+                    <SelectItem value={condition.field}>
+                      <div>
+                        <div className="font-medium text-yellow-600">
+                          {field.label} ⚠️
+                        </div>
+                        <div className="text-xs text-yellow-500">
+                          Campo incompatível - considere migrar
+                        </div>
+                      </div>
+                    </SelectItem>
+                  )}
+                  
+                  {/* Campos atualizados agrupados por categoria */}
                   {availableFields.map(field => (
                     <SelectItem key={field.value} value={field.value}>
                       <div>
                         <div className="font-medium">{field.label}</div>
-                        <div className="text-xs text-muted-foreground">{field.type}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {field.type} {field.category && `• ${field.category}`}
+                        </div>
                       </div>
                     </SelectItem>
                   ))}
