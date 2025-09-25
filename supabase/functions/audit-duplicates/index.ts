@@ -261,11 +261,13 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('❌ Erro na auditoria:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    const errorDetails = error instanceof Error ? error.message : String(error);
     
     return new Response(
       JSON.stringify({
         error: 'Erro interno na auditoria',
-        details: error.message,
+        details: errorDetails,
         summary: {
           totalTables: 0,
           tablesWithDuplicates: 0,

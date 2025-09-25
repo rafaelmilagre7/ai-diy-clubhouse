@@ -24,21 +24,13 @@ serve(async (req) => {
     // 1. Detectar múltiplos logins falhados
     const { data: failedLogins } = await supabaseClient
       .from('security_logs')
-      .select('user_id, ip_address, COUNT(*)')
+      .select('user_id, ip_address')
       .eq('event_type', 'auth')
       .eq('action', 'login_failure')
       .gte('timestamp', analyzeTimeframe)
-      .group('user_id, ip_address')
-      .having('COUNT(*) > 5')
 
-    // 2. Detectar acessos de IPs incomuns
-    const { data: unusualIps } = await supabaseClient
-      .from('security_logs')
-      .select('user_id, ip_address, COUNT(*)')
-      .eq('event_type', 'auth')
-      .eq('action', 'login_success')
-      .gte('timestamp', analyzeTimeframe)
-      .group('user_id, ip_address')
+    // 2. Detectar acessos de IPs incomuns (não implementado nesta versão)
+    const unusualIps: any[] = []
 
     // 3. Detectar atividade fora do horário usual
     const { data: offHoursActivity } = await supabaseClient
@@ -47,23 +39,43 @@ serve(async (req) => {
       .gte('timestamp', analyzeTimeframe)
       .order('timestamp', { ascending: false })
 
-    const anomalies = []
+    interface SecurityAnomaly {
+      anomaly_type: string;
+      confidence_score: number;
+      description: string;
+      affected_user_id: string;
+      detection_data: any;
+    }
 
-    // Processar logins falhados
+    const anomalies: SecurityAnomaly[] = []
+
+    // Processar logins falhados - contar por usuário e IP
     if (failedLogins) {
-      for (const failed of failedLogins) {
-        anomalies.push({
-          anomaly_type: 'excessive_failed_logins',
-          confidence_score: Math.min(0.9, failed.count / 10),
-          description: `${failed.count} tentativas de login falhadas em 24h`,
-          affected_user_id: failed.user_id,
-          detection_data: {
-            ip_address: failed.ip_address,
-            failed_attempts: failed.count,
-            timeframe: '24h'
-          }
-        })
-      }
+      const failureCount: Record<string, { count: number, ip_address: string, user_id: string }> = {}
+      
+      failedLogins.forEach(log => {
+        const key = `${log.user_id}_${log.ip_address}`
+        if (!failureCount[key]) {
+          failureCount[key] = { count: 0, ip_address: log.ip_address, user_id: log.user_id }
+        }
+        failureCount[key].count++
+      })
+
+      Object.values(failureCount).forEach(failed => {
+        if (failed.count > 5) {
+          anomalies.push({
+            anomaly_type: 'excessive_failed_logins',
+            confidence_score: Math.min(0.9, failed.count / 10),
+            description: `${failed.count} tentativas de login falhadas em 24h`,
+            affected_user_id: failed.user_id,
+            detection_data: {
+              ip_address: failed.ip_address,
+              failed_attempts: failed.count,
+              timeframe: '24h'
+            }
+          })
+        }
+      })
     }
 
     // Processar atividade fora de horário (assumindo horário comercial 8-18h)
@@ -73,7 +85,7 @@ serve(async (req) => {
         return hour < 8 || hour > 18
       })
 
-      const userOffHoursCounts = {}
+      const userOffHoursCounts: Record<string, number> = {}
       offHoursUsers.forEach(activity => {
         userOffHoursCounts[activity.user_id] = (userOffHoursCounts[activity.user_id] || 0) + 1
       })
@@ -122,8 +134,9 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Anomaly detector error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500 

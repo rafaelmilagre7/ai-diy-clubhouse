@@ -76,11 +76,12 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     const totalTime = Math.round(performance.now() - startTime);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     console.error('❌ Erro crítico na limpeza de convites:', error);
 
     const result: CleanupResult = {
       success: false,
-      error: error.message,
+      error: errorMessage,
       duration_ms: totalTime,
       message: 'Falha na limpeza automática'
     };

@@ -355,7 +355,7 @@ Deno.serve(async (req) => {
     })
     
     // Registrar resultado da tentativa
-    const loginSuccess = !error && data.user
+    const loginSuccess = Boolean(!error && data.user)
     await recordAttempt(serviceSupabase, identifier, loginSuccess)
     
     // Log da tentativa de autenticação

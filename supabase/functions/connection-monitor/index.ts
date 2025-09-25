@@ -38,11 +38,17 @@ serve(async (req) => {
       throw new Error(`Erro ao obter estatísticas de conexão: ${error.message}`);
     }
 
+    interface Connection {
+      state: string;
+      backend_start: string;
+      application_name: string;
+    }
+
     // Calcular métricas
     const totalConnections = connections?.length || 0;
-    const activeConnections = connections?.filter(c => c.state === 'active')?.length || 0;
-    const idleConnections = connections?.filter(c => c.state === 'idle')?.length || 0;
-    const idleInTransaction = connections?.filter(c => c.state === 'idle in transaction')?.length || 0;
+    const activeConnections = connections?.filter((c: Connection) => c.state === 'active')?.length || 0;
+    const idleConnections = connections?.filter((c: Connection) => c.state === 'idle')?.length || 0;
+    const idleInTransaction = connections?.filter((c: Connection) => c.state === 'idle in transaction')?.length || 0;
     
     // Assumindo limite máximo de 90 conexões (SMALL instance)
     const maxConnections = 90;
@@ -50,16 +56,16 @@ serve(async (req) => {
 
     // Calcular idade média das conexões
     const now = new Date();
-    const connectionAges = connections?.map(c => {
+    const connectionAges = connections?.map((c: Connection) => {
       const backendStart = new Date(c.backend_start);
       return (now.getTime() - backendStart.getTime()) / (1000 * 60); // em minutos
     }) || [];
     const avgConnectionAge = connectionAges.length > 0 
-      ? connectionAges.reduce((a, b) => a + b, 0) / connectionAges.length 
+      ? connectionAges.reduce((a: number, b: number) => a + b, 0) / connectionAges.length 
       : 0;
 
     // Top aplicações por número de conexões
-    const appStats = connections?.reduce((acc, conn) => {
+    const appStats = connections?.reduce((acc: any, conn: Connection) => {
       const app = conn.application_name || 'unknown';
       if (!acc[app]) {
         acc[app] = { count: 0, states: {} };
@@ -115,7 +121,7 @@ serve(async (req) => {
       alerts.push(`ATENÇÃO: Idade média das conexões é ${avgConnectionAge.toFixed(1)} minutos (>60min)`);
     }
 
-    const longRunningConnections = connections?.filter(c => {
+    const longRunningConnections = connections?.filter((c: Connection) => {
       const age = (now.getTime() - new Date(c.backend_start).getTime()) / (1000 * 60);
       return age > 30; // conexões com mais de 30 minutos
     }).length || 0;
@@ -198,11 +204,12 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('[CONNECTION_MONITOR] Erro:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: error.message,
+        error: errorMessage,
         timestamp: new Date().toISOString()
       }),
       { 

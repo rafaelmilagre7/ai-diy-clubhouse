@@ -230,8 +230,9 @@ Analise a compatibilidade entre este usuário específico e cada solução, cons
 
   } catch (error) {
     console.error('❌ [AI-COMPATIBILITY] Erro geral:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return new Response(JSON.stringify({ 
-      error: error.message,
+      error: errorMessage,
       compatibilityScores: []
     }), {
       status: 500,
