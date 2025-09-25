@@ -26,7 +26,8 @@ export const useSecureHeaders = () => {
         const { data, error } = await supabase.functions.invoke('security-headers', {
           body: { 
             environment: import.meta.env.DEV ? 'development' : 'production',
-            url: window.location.href 
+            url: window.location.href,
+            isAdmin: window.location.pathname.startsWith('/admin')
           }
         });
 

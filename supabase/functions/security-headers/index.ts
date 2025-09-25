@@ -19,36 +19,61 @@ serve(async (req) => {
     crypto.getRandomValues(nonceBuffer);
     const nonce = btoa(String.fromCharCode(...nonceBuffer));
 
-    // Headers de segurança robustos
+    // Obter URL da requisição para verificar se é rota admin
+    const requestBody = await req.text();
+    let isAdminRoute = false;
+    
+    try {
+      const body = JSON.parse(requestBody);
+      isAdminRoute = body.url && body.url.includes('/admin');
+    } catch (e) {
+      // Fallback: verificar header ou assumir não-admin
+      isAdminRoute = req.headers.get('X-Admin-Route') === 'true';
+    }
+
+    // Headers de segurança robustos com CSP adaptativa
     const securityHeaders = {
-      // CSP Segura - SEM unsafe-inline
+      // CSP Adaptativa - Relaxada para admin, segura para público
       'Content-Security-Policy': isDevelopment
         ? [
             "default-src 'self'",
-            "script-src 'self' 'unsafe-eval' http://localhost:* https://cdn.gpteng.co https://*.supabase.co",
-            "style-src 'self' 'unsafe-inline' http://localhost:* https://fonts.googleapis.com", // unsafe-inline apenas em dev
-            "img-src 'self' data: blob: https:",
+            "script-src 'self' 'unsafe-eval' http://localhost:* https://cdn.gpteng.co https://*.supabase.co chrome-extension:",
+            "style-src 'self' 'unsafe-inline' http://localhost:* https://fonts.googleapis.com",
+            "img-src 'self' data: blob: https: chrome-extension:",
             "font-src 'self' https://fonts.gstatic.com",
-            "connect-src 'self' http://localhost:* ws://localhost:* https://*.supabase.co wss://*.supabase.co",
+            "connect-src 'self' http://localhost:* ws://localhost:* https://*.supabase.co wss://*.supabase.co chrome-extension:",
             "frame-src 'self' https://*.pandavideo.com.br https://player-vz-*.tv.pandavideo.com.br",
             "object-src 'none'",
             "base-uri 'self'",
             "form-action 'self'"
           ].join('; ')
-        : [
-            "default-src 'self'",
-            `script-src 'self' 'nonce-${nonce}' https://cdn.gpteng.co https://*.supabase.co`,
-            "style-src 'self' https://fonts.googleapis.com", // SEM unsafe-inline em produção
-            "img-src 'self' data: blob: https:",
-            "font-src 'self' https://fonts.gstatic.com",
-            "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
-            "frame-src 'self' https://*.pandavideo.com.br https://player-vz-*.tv.pandavideo.com.br",
-            "object-src 'none'",
-            "base-uri 'self'",
-            "form-action 'self'",
-            "upgrade-insecure-requests",
-            "block-all-mixed-content"
-          ].join('; '),
+        : isAdminRoute
+          ? [
+              "default-src 'self'",
+              `script-src 'self' 'nonce-${nonce}' 'unsafe-eval' https://cdn.gpteng.co https://*.supabase.co`, // unsafe-eval para admin
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com", // unsafe-inline para admin
+              "img-src 'self' data: blob: https:",
+              "font-src 'self' https://fonts.gstatic.com",
+              "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+              "frame-src 'self' https://*.pandavideo.com.br https://player-vz-*.tv.pandavideo.com.br",
+              "object-src 'none'",
+              "base-uri 'self'",
+              "form-action 'self'"
+            ].join('; ')
+          : [
+              "default-src 'self'",
+              `script-src 'self' 'nonce-${nonce}' https://cdn.gpteng.co https://*.supabase.co`,
+              "style-src 'self' https://fonts.googleapis.com",
+              "img-src 'self' data: blob: https:",
+              "font-src 'self' https://fonts.gstatic.com",
+              "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+              "frame-src 'self' https://*.pandavideo.com.br https://player-vz-*.tv.pandavideo.com.br",
+              "object-src 'none'",
+              "base-uri 'self'",
+              "form-action 'self'",
+              "upgrade-insecure-requests",
+              "block-all-mixed-content"
+            ].join('; '),
 
       // Outros headers de segurança críticos
       'X-Content-Type-Options': 'nosniff',
@@ -86,9 +111,14 @@ serve(async (req) => {
       environment: isDevelopment ? 'development' : 'production',
       timestamp: new Date().toISOString(),
       recommendations: [
-        isDevelopment ? 'CSP em modo desenvolvimento - algumas restrições relaxadas' : 'CSP em modo produção - máxima segurança',
+        isDevelopment 
+          ? 'CSP em modo desenvolvimento - restrições relaxadas + extensões permitidas' 
+          : isAdminRoute 
+            ? 'CSP relaxada para rota admin - permite imports dinâmicos'
+            : 'CSP em modo produção - máxima segurança',
         'Nonce gerado para scripts dinâmicos',
         'Headers de segurança aplicados',
+        isAdminRoute ? 'CSP adaptativa: Admin route detectada' : 'CSP adaptativa: Rota pública',
         'Monitoramento CSP ativo'
       ]
     };
