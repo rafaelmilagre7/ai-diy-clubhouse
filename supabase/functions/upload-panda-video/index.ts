@@ -24,7 +24,7 @@ async function uploadWithRetry(url: string, options: RequestInit, maxRetries = 3
     }
   }
   
-  throw new Error(`Falha após ${maxRetries} tentativas: ${lastError?.message || 'Erro desconhecido'}`);
+  throw new Error(`Falha após ${maxRetries} tentativas: ${lastError instanceof Error ? lastError.message : 'Erro desconhecido'}`);
 }
 
 // Função auxiliar para codificar em Base64
@@ -112,7 +112,7 @@ serve(async (req) => {
         JSON.stringify({ 
           success: false,
           error: "Erro ao processar os dados do formulário",
-          details: formError.message 
+          details: formError instanceof Error ? formError.message : 'Unknown error' 
         }),
         { 
           status: 400, 
@@ -194,7 +194,7 @@ serve(async (req) => {
         JSON.stringify({ 
           success: false,
           error: "Falha na conexão com o serviço de vídeo",
-          details: uploadError.message 
+          details: uploadError instanceof Error ? uploadError.message : 'Unknown error' 
         }),
         { 
           status: 500, 
@@ -272,7 +272,7 @@ serve(async (req) => {
       JSON.stringify({ 
         success: false,
         error: "Erro no processamento do upload", 
-        message: error.message 
+        message: error instanceof Error ? error.message : 'Unknown error' 
       }),
       { 
         status: 500, 

@@ -71,7 +71,7 @@ Deno.serve(async (req) => {
       JSON.stringify({
         success: false,
         message: 'Erro ao atualizar estatísticas',
-        error: error.message
+        error: error instanceof Error ? error.message : 'Unknown error'
       }),
       { 
         status: 500,

@@ -73,7 +73,7 @@ serve(async (req) => {
       result.status === 'fulfilled' ? result.value : { error: result.reason }
     );
 
-    const successCount = warmupResults.filter(r => r.warmed).length;
+    const successCount = warmupResults.filter(r => 'warmed' in r && r.warmed).length;
 
     console.log(`🔥 [WARMUP] Concluído: ${successCount}/${functionsToWarmup.length} functions aquecidas`);
 

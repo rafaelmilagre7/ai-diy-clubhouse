@@ -168,7 +168,7 @@ async function updateVideoDuration(supabase: any, videoId: string, durationSecon
 }
 
 // Função para buscar vídeos sem duração
-async function fetchVideosWithoutDuration(supabase, lessonId?: string, courseId?: string, limit: number = 50) {
+async function fetchVideosWithoutDuration(supabase: any, lessonId?: string, courseId?: string, limit: number = 50) {
   try {
     let query = supabase
       .from('learning_lesson_videos')
@@ -201,7 +201,7 @@ async function fetchVideosWithoutDuration(supabase, lessonId?: string, courseId?
       }
       
       if (lessons && lessons.length > 0) {
-        const lessonIds = lessons.map(lesson => lesson.id);
+        const lessonIds = lessons.map((lesson: any) => lesson.id);
         query = query.in('lesson_id', lessonIds);
       } else {
         // Se não encontramos aulas, retornar array vazio
@@ -340,11 +340,11 @@ serve(async (req) => {
         results.push(result);
         
       } catch (error) {
-        console.error(`💥 Vídeo ${video.id}: Erro no processamento:`, error.message);
+        console.error(`💥 Vídeo ${video.id}: Erro no processamento:`, error instanceof Error ? error.message : 'Unknown error');
         results.push({ 
           success: false, 
           videoId: video.id, 
-          error: error.message 
+          error: error instanceof Error ? error.message : 'Unknown error'
         });
       }
     }
@@ -370,7 +370,7 @@ serve(async (req) => {
     console.error('Erro na edge function:', error);
     
     return new Response(JSON.stringify({
-      error: error.message || 'Erro interno do servidor'
+      error: error instanceof Error ? error.message : 'Erro interno do servidor'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

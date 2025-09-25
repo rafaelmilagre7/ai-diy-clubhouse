@@ -80,7 +80,7 @@ serve(async (req) => {
     console.error('❌ [WHATSAPP-CHECK] Erro:', error)
     return new Response(JSON.stringify({
       success: false,
-      error: error.message,
+      error: error instanceof Error ? error.message : 'Unknown error',
       timestamp: new Date().toISOString()
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -93,7 +93,20 @@ serve(async (req) => {
 async function runCompleteDiagnostics() {
   console.log('🔍 Iniciando diagnósticos completos...')
   
-  const diagnostics = {
+  const diagnostics: {
+    timestamp: string;
+    overall_status: string;
+    credentials: any;
+    whatsapp_api: any;
+    template_status: any;
+    phone_number: any;
+    summary: {
+      total_checks: number;
+      passed: number;
+      failed: number;
+      warnings: number;
+    };
+  } = {
     timestamp: new Date().toISOString(),
     overall_status: 'unknown',
     credentials: await checkSupabaseCredentials(),
@@ -123,9 +136,9 @@ async function runCompleteDiagnostics() {
     diagnostics.phone_number
   ].filter(Boolean)
 
-  diagnostics.summary.passed = checks.filter(c => c.success).length
-  diagnostics.summary.failed = checks.filter(c => !c.success).length
-  diagnostics.summary.warnings = checks.filter(c => c.warnings?.length > 0).length
+  diagnostics.summary.passed = checks.filter(c => c?.success).length
+  diagnostics.summary.failed = checks.filter(c => c && !c.success).length
+  diagnostics.summary.warnings = checks.filter(c => c?.warnings?.length > 0).length
 
   diagnostics.overall_status = diagnostics.summary.failed === 0 ? 'success' : 'error'
 
@@ -137,15 +150,27 @@ async function runCompleteDiagnostics() {
 async function checkSupabaseCredentials() {
   console.log('🔑 Verificando credenciais do Supabase...')
   
-  const result = {
+  const result: {
+    test: string;
+    success: boolean;
+    details: string[];
+    warnings: string[];
+    errors: string[];
+    credentials: {
+      access_token: boolean;
+      phone_number_id: boolean;
+      account_id?: boolean;
+    };
+  } = {
     test: 'Credenciais Supabase',
     success: false,
-    details: [],
-    warnings: [],
-    errors: [],
+    details: [] as string[],
+    warnings: [] as string[],
+    errors: [] as string[],
     credentials: {
       access_token: false,
-      phone_number_id: false
+      phone_number_id: false,
+      account_id: false
     }
   }
 
@@ -179,7 +204,7 @@ async function checkSupabaseCredentials() {
       result.errors.push('❌ WHATSAPP_BUSINESS_ACCOUNT_ID não encontrado ou inválido')
     }
 
-    result.success = result.credentials.access_token && result.credentials.phone_number_id && result.credentials.account_id
+    result.success = result.credentials.access_token && result.credentials.phone_number_id && (result.credentials.account_id || false)
 
     if (result.success) {
       result.details.push('🎉 Todas as credenciais estão configuradas!')
@@ -188,7 +213,7 @@ async function checkSupabaseCredentials() {
     }
 
   } catch (error) {
-    result.errors.push(`Erro ao verificar credenciais: ${error.message}`)
+    result.errors.push(`Erro ao verificar credenciais: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
 
   return result
