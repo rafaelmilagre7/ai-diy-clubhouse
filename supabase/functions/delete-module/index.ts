@@ -67,7 +67,7 @@ Deno.serve(async (req) => {
       throw new Error('User profile not found');
     }
 
-    const isAdmin = profile.role === 'admin' || profile.user_roles?.name === 'admin';
+    const isAdmin = profile.role === 'admin';
     
     if (!isAdmin) {
       return new Response(
@@ -261,11 +261,12 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('❌ [DELETE-MODULE] Erro:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Erro interno do servidor';
     
     return new Response(
       JSON.stringify({ 
-        error: error.message || 'Erro interno do servidor' 
-      }), 
+        error: errorMessage 
+      }),
       { 
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 

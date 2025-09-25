@@ -92,13 +92,13 @@ serve(async (req) => {
       .select('event_type, created_at')
       .gte('created_at', sevenDaysAgo);
 
-    const eventTypeDistribution = {};
+    const eventTypeDistribution: Record<string, number> = {};
     eventsByType?.forEach(event => {
       eventTypeDistribution[event.event_type] = (eventTypeDistribution[event.event_type] || 0) + 1;
     });
 
     // Atividade diária dos últimos 7 dias
-    const dailyActivity = {};
+    const dailyActivity: Record<string, number> = {};
     eventsByType?.forEach(event => {
       const day = event.created_at.split('T')[0]; // YYYY-MM-DD
       dailyActivity[day] = (dailyActivity[day] || 0) + 1;
@@ -116,15 +116,15 @@ serve(async (req) => {
       activity: {
         daily: dailyActivity,
         byEventType: eventTypeDistribution,
-        trend: weeklyActivityResult.count > (totalActivityResult.count / 4) ? 'increasing' : 'stable'
+        trend: (weeklyActivityResult.count || 0) > ((totalActivityResult.count || 0) / 4) ? 'increasing' : 'stable'
       },
       engagement: {
-        avgProgressPerUser: learningProgressResult.count > 0 && uniqueActiveUsers > 0
-          ? Math.round(learningProgressResult.count / uniqueActiveUsers * 100) / 100
+        avgProgressPerUser: (learningProgressResult.count || 0) > 0 && uniqueActiveUsers > 0
+          ? Math.round((learningProgressResult.count || 0) / uniqueActiveUsers * 100) / 100
           : 0,
         communityEngagement: {
           totalTopics: communityActivityResult.count || 0,
-          avgRepliesPerTopic: communityActivityResult.data?.length > 0
+          avgRepliesPerTopic: (communityActivityResult.data && communityActivityResult.data.length > 0)
             ? Math.round((communityActivityResult.data.reduce((sum, topic) => sum + (topic.reply_count || 0), 0) / communityActivityResult.data.length) * 100) / 100
             : 0
         }

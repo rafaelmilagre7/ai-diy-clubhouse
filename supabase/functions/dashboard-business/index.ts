@@ -93,20 +93,20 @@ serve(async (req) => {
     const conversionRate = totalInvites > 0 ? Math.round((usedInvites / totalInvites) * 100) : 0;
 
     // Distribuição por categorias de soluções
-    const categoryDistribution = {};
+    const categoryDistribution: Record<string, number> = {};
     solutionsResult.data?.forEach(solution => {
       const category = solution.category || 'Sem categoria';
       categoryDistribution[category] = (categoryDistribution[category] || 0) + 1;
     });
 
     // Status das implementation requests
-    const requestStatusDistribution = {};
+    const requestStatusDistribution: Record<string, number> = {};
     implementationRequestsResult.data?.forEach(request => {
       requestStatusDistribution[request.status] = (requestStatusDistribution[request.status] || 0) + 1;
     });
 
     // Cliques por dia nos últimos 30 dias
-    const dailyClicks = {};
+    const dailyClicks: Record<string, number> = {};
     benefitClicksResult.data?.forEach(click => {
       const day = click.clicked_at.split('T')[0];
       dailyClicks[day] = (dailyClicks[day] || 0) + 1;

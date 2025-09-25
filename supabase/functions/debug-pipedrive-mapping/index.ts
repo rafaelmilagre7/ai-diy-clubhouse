@@ -337,7 +337,7 @@ serve(async (req) => {
         },
         
         // Issues encontrados
-        missing_config: []
+        missing_config: [] as string[]
       }
     };
 
@@ -366,12 +366,14 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('❌ Erro inesperado no mapeamento:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    const errorStack = error instanceof Error ? error.stack : String(error);
     return new Response(
       JSON.stringify({
         success: false,
         error: 'Erro inesperado ao mapear conta do Pipedrive',
-        details: error.message,
-        stack: error.stack,
+        details: errorMessage,
+        stack: errorStack,
         timestamp: new Date().toISOString()
       }),
       {

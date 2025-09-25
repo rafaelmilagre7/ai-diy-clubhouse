@@ -82,7 +82,7 @@ serve(async (req) => {
       .order('created_at');
 
     // Processar dados de crescimento por mês
-    const monthlyGrowth = {};
+    const monthlyGrowth: Record<string, number> = {};
     growthData?.forEach(user => {
       const month = new Date(user.created_at).toISOString().slice(0, 7); // YYYY-MM
       monthlyGrowth[month] = (monthlyGrowth[month] || 0) + 1;
@@ -94,8 +94,8 @@ serve(async (req) => {
         activeUsers: activeUsersResult.count || 0,
         newUsers: newUsersResult.count || 0,
         onboardingCompleted: onboardingResult.count || 0,
-        onboardingRate: totalUsersResult.count > 0 
-          ? Math.round((onboardingResult.count / totalUsersResult.count) * 100) 
+        onboardingRate: (totalUsersResult.count || 0) > 0 
+          ? Math.round(((onboardingResult.count || 0) / (totalUsersResult.count || 1)) * 100) 
           : 0
       },
       growth: {

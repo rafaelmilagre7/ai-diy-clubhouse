@@ -66,7 +66,7 @@ Deno.serve(async (req) => {
 
     // Personalizar baseado no status de implementação
     if (experience.implementation_status) {
-      const statusMessages = {
+      const statusMessages: Record<string, string> = {
         'not_started': 'O momento perfeito chegou! Vamos descobrir juntos por onde começar essa aventura.',
         'exploring': 'Que legal que você já está fuçando as possibilidades! Vamos organizar essas ideias e transformar em ação.',
         'testing': 'Adorei saber que você já está testando! Vou te ajudar a extrair o máximo desses testes.',
@@ -74,21 +74,21 @@ Deno.serve(async (req) => {
         'advanced': 'Impressionante como você já está avançado! Hora de inovar e surpreender todo mundo.'
       };
       
-      if (statusMessages[experience.implementation_status]) {
-        message += statusMessages[experience.implementation_status] + '\n\n';
+      if (statusMessages[experience.implementation_status as keyof typeof statusMessages]) {
+        message += statusMessages[experience.implementation_status as keyof typeof statusMessages] + '\n\n';
       }
     }
 
     // Personalizar baseado na abordagem de implementação
     if (experience.implementation_approach) {
-      const approachMessages = {
+      const approachMessages: Record<string, string> = {
         'myself': 'Amo essa independência sua! Vou te equipar com tudo que precisa para arrasar implementando sozinho.',
         'team': 'Trabalho em equipe é tudo! Vou preparar materiais especiais para você engajar e inspirar sua galera.',
         'hire': 'Que estratégico pensar em especialistas! Te vou dar o mapa completo do que procurar e como avaliar.'
       };
       
-      if (approachMessages[experience.implementation_approach]) {
-        message += approachMessages[experience.implementation_approach] + '\n\n';
+      if (approachMessages[experience.implementation_approach as keyof typeof approachMessages]) {
+        message += approachMessages[experience.implementation_approach as keyof typeof approachMessages] + '\n\n';
       }
     }
 
@@ -100,15 +100,15 @@ Deno.serve(async (req) => {
 
     // Personalizar baseado nas preferências de aprendizado
     if (preferences.learning_style) {
-      const styleMessages = {
+      const styleMessages: Record<string, string> = {
         'Prático': 'Você é do tipo mão na massa, né? Preparei um monte de exercícios práticos e projetos reais para você colocar em ação.',
         'Teórico': 'Adoro quem gosta de entender o "porquê"! Separei fundamentos sólidos e análises profundas para você.',
         'Visual': 'Para você que é mais visual, caprichei nos diagramas, infográficos e demonstrações que vão facilitar tudo.',
         'Auditivo': 'Como você aprende melhor ouvindo, vou te indicar nossos melhores podcasts e webinars exclusivos.',
       };
       
-      if (styleMessages[preferences.learning_style]) {
-        message += styleMessages[preferences.learning_style] + '\n\n';
+      if (styleMessages[preferences.learning_style as keyof typeof styleMessages]) {
+        message += styleMessages[preferences.learning_style as keyof typeof styleMessages] + '\n\n';
       }
     }
 
@@ -152,11 +152,12 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('❌ [NINA] Erro na function:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: error.message,
+        error: errorMessage,
         timestamp: new Date().toISOString()
       }),
       { 

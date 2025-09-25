@@ -99,26 +99,26 @@ serve(async (req) => {
     ]).size;
 
     // Atividade por dia nos últimos 7 dias
-    const dailyActivity = {};
+    const dailyActivity: Record<string, number> = {};
     [...(recentTopicsResult.data || []), ...(recentPostsResult.data || [])].forEach(item => {
       const day = item.created_at.split('T')[0];
       dailyActivity[day] = (dailyActivity[day] || 0) + 1;
     });
 
     // Distribuição de reações por tipo
-    const reactionDistribution = {};
+    const reactionDistribution: Record<string, number> = {};
     reactionsResult.data?.forEach(reaction => {
       reactionDistribution[reaction.reaction_type] = (reactionDistribution[reaction.reaction_type] || 0) + 1;
     });
 
     // Status dos reports
-    const reportStatusDistribution = {};
+    const reportStatusDistribution: Record<string, number> = {};
     reportsResult.data?.forEach(report => {
       reportStatusDistribution[report.status] = (reportStatusDistribution[report.status] || 0) + 1;
     });
 
     // Métricas de engajamento por categoria
-    const categoryEngagement = {};
+    const categoryEngagement: Record<string, any> = {};
     categoriesResult.data?.forEach(category => {
       categoryEngagement[category.name] = {
         topicCount: category.topic_count || 0,
@@ -136,10 +136,10 @@ serve(async (req) => {
         weeklyNewPosts: recentPostsResult.count || 0
       },
       engagement: {
-        avgRepliesPerTopic: topicsResult.data?.length > 0
+        avgRepliesPerTopic: (topicsResult.data && topicsResult.data.length > 0)
           ? Math.round((topicsResult.data.reduce((sum, topic) => sum + (topic.reply_count || 0), 0) / topicsResult.data.length) * 100) / 100
           : 0,
-        avgViewsPerTopic: topicsResult.data?.length > 0
+        avgViewsPerTopic: (topicsResult.data && topicsResult.data.length > 0)
           ? Math.round((topicsResult.data.reduce((sum, topic) => sum + (topic.view_count || 0), 0) / topicsResult.data.length) * 100) / 100
           : 0,
         reactionsByType: reactionDistribution,
@@ -157,7 +157,7 @@ serve(async (req) => {
         totalReports: reportsResult.count || 0,
         reportsByStatus: reportStatusDistribution,
         weeklyReports: reportsResult.count || 0,
-        moderationRate: reportsResult.count > 0 
+        moderationRate: (reportsResult.count && reportsResult.count > 0)
           ? Math.round(((reportsResult.data?.filter(r => r.status === 'resolved').length || 0) / reportsResult.count) * 100)
           : 100
       },
@@ -167,11 +167,11 @@ serve(async (req) => {
         mostActive: categoriesResult.data?.sort((a, b) => (b.topic_count || 0) - (a.topic_count || 0)).slice(0, 5) || []
       },
       health: {
-        growthRate: recentTopicsResult.count > 0 ? 'growing' : 'stable',
-        engagementTrend: reactionsResult.count > (postsResult.count * 0.1) ? 'high' : 'moderate',
+        growthRate: (recentTopicsResult.count && recentTopicsResult.count > 0) ? 'growing' : 'stable',
+        engagementTrend: ((reactionsResult.count || 0) > ((postsResult.count || 0) * 0.1)) ? 'high' : 'moderate',
         communityScore: Math.min(100, Math.round(
           (totalActiveCommunityUsers * 20) + 
-          (reactionsResult.count * 5) + 
+          ((reactionsResult.count || 0) * 5) + 
           ((reportsResult.data?.filter(r => r.status === 'resolved').length || 0) * 10)
         ))
       },

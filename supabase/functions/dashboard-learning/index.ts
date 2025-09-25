@@ -93,7 +93,7 @@ serve(async (req) => {
     const totalDuration = lessonsResult.data?.reduce((sum, lesson) => sum + (lesson.duration_minutes || 0), 0) || 0;
 
     // Progresso por dia nos últimos 30 dias
-    const dailyProgress = {};
+    const dailyProgress: Record<string, number> = {};
     recentProgressResult.data?.forEach(progress => {
       const day = progress.created_at.split('T')[0];
       dailyProgress[day] = (dailyProgress[day] || 0) + 1;
@@ -109,13 +109,13 @@ serve(async (req) => {
       else npsDistribution.detractors++;
     });
 
-    const avgNps = npsResult.count > 0 ? Math.round((totalNpsScore / npsResult.count) * 100) / 100 : 0;
-    const npsScore = npsResult.count > 0 
-      ? Math.round(((npsDistribution.promoters - npsDistribution.detractors) / npsResult.count) * 100)
+    const avgNps = (npsResult.count || 0) > 0 ? Math.round((totalNpsScore / (npsResult.count || 1)) * 100) / 100 : 0;
+    const npsScore = (npsResult.count || 0) > 0 
+      ? Math.round(((npsDistribution.promoters - npsDistribution.detractors) / (npsResult.count || 1)) * 100)
       : 0;
 
     // Calcular taxa de progresso média
-    const avgProgressPercentage = progressResult.data?.length > 0
+    const avgProgressPercentage = (progressResult.data && progressResult.data.length > 0)
       ? Math.round((progressResult.data.reduce((sum, p) => sum + (p.progress_percentage || 0), 0) / progressResult.data.length) * 100) / 100
       : 0;
 
@@ -132,15 +132,15 @@ serve(async (req) => {
         totalProgress: progressResult.count || 0,
         completedLessons: completedLessons,
         avgProgressPercentage: avgProgressPercentage,
-        completionRate: progressResult.count > 0 ? Math.round((completedLessons / progressResult.count) * 100) : 0,
+        completionRate: (progressResult.count || 0) > 0 ? Math.round((completedLessons / (progressResult.count || 1)) * 100) : 0,
         monthlyProgress: recentProgressResult.count || 0,
         dailyProgress: dailyProgress
       },
       engagement: {
         totalComments: commentsResult.count || 0,
         monthlyComments: commentsResult.count || 0,
-        commentsPerLesson: lessonsResult.count > 0 ? Math.round((commentsResult.count / lessonsResult.count) * 100) / 100 : 0,
-        learnerEngagement: uniqueLearners > 0 ? Math.round((commentsResult.count / uniqueLearners) * 100) / 100 : 0
+        commentsPerLesson: (lessonsResult.count || 0) > 0 ? Math.round(((commentsResult.count || 0) / (lessonsResult.count || 1)) * 100) / 100 : 0,
+        learnerEngagement: uniqueLearners > 0 ? Math.round(((commentsResult.count || 0) / uniqueLearners) * 100) / 100 : 0
       },
       satisfaction: {
         npsScore: npsScore,
@@ -150,15 +150,15 @@ serve(async (req) => {
         monthlyRatings: npsResult.count || 0
       },
       performance: {
-        avgLessonDuration: lessonsResult.count > 0 ? Math.round(totalDuration / lessonsResult.count) : 0,
-        contentUtilization: lessonsResult.count > 0 ? Math.round((completedLessons / lessonsResult.count) * 100) : 0,
-        learnerRetention: uniqueLearners > 0 && progressResult.count > 0 
-          ? Math.round((uniqueLearners / (progressResult.count / uniqueLearners)) * 100) 
+        avgLessonDuration: (lessonsResult.count || 0) > 0 ? Math.round(totalDuration / (lessonsResult.count || 1)) : 0,
+        contentUtilization: (lessonsResult.count || 0) > 0 ? Math.round((completedLessons / (lessonsResult.count || 1)) * 100) : 0,
+        learnerRetention: uniqueLearners > 0 && (progressResult.count || 0) > 0 
+          ? Math.round((uniqueLearners / ((progressResult.count || 1) / uniqueLearners)) * 100) 
           : 0
       },
       trends: {
-        learningTrend: recentProgressResult.count > (progressResult.count * 0.3) ? 'increasing' : 'stable',
-        engagementTrend: commentsResult.count > (lessonsResult.count * 0.1) ? 'high' : 'moderate',
+        learningTrend: (recentProgressResult.count || 0) > ((progressResult.count || 0) * 0.3) ? 'increasing' : 'stable',
+        engagementTrend: (commentsResult.count || 0) > ((lessonsResult.count || 0) * 0.1) ? 'high' : 'moderate',
         satisfactionTrend: npsScore > 50 ? 'positive' : npsScore > 0 ? 'neutral' : 'negative'
       },
       metadata: {
