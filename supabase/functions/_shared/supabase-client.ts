@@ -27,10 +27,37 @@ class SupabaseClientManager {
         },
         global: {
           headers: {
-            'Connection': 'keep-alive'
+            'Connection': 'keep-alive',
+            'X-Client-Info': 'edge-function-optimized'
+          },
+          fetch: (input: RequestInfo | URL, init?: RequestInit) => {
+            // TIMEOUT INTELIGENTE - ANTI-COLAPSO
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => {
+              console.warn('⏰ [DB-TIMEOUT] Conexão cancelada após 10s');
+              controller.abort();
+            }, 10000); // 10s timeout
+
+            const modifiedInit = {
+              ...init,
+              signal: controller.signal
+            };
+
+            const fetchPromise = fetch(input, modifiedInit);
+            
+            fetchPromise.finally(() => {
+              clearTimeout(timeoutId);
+            });
+
+            return fetchPromise;
           }
+        },
+        db: {
+          schema: 'public'
         }
       });
+      
+      console.log('🔌 [DB-CLIENT] Cliente otimizado inicializado com timeout 10s');
     }
     return this.serviceClient;
   }

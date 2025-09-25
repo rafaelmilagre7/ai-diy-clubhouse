@@ -9,16 +9,100 @@ const corsHeaders = {
 
 const hublaToken = Deno.env.get('HUBLA_API_TOKEN')!
 
+// CIRCUIT BREAKER HUBLA - PROTEÇÃO ANTI-COLAPSO
+class HublaCircuitBreaker {
+  private static instance: HublaCircuitBreaker;
+  private activeWebhooks = 0;
+  private readonly MAX_CONCURRENT = 5;
+  private readonly QUEUE_TIMEOUT = 30000; // 30s
+  private readonly RECOVERY_TIME = 120000; // 2min
+  private isCircuitOpen = false;
+  private lastFailure = 0;
+  private failureCount = 0;
+  private readonly FAILURE_THRESHOLD = 3;
+
+  static getInstance(): HublaCircuitBreaker {
+    if (!HublaCircuitBreaker.instance) {
+      HublaCircuitBreaker.instance = new HublaCircuitBreaker();
+    }
+    return HublaCircuitBreaker.instance;
+  }
+
+  async executeWebhook<T>(operation: () => Promise<T>): Promise<T> {
+    // Verificar se circuit está aberto
+    if (this.isCircuitOpen) {
+      if (Date.now() - this.lastFailure > this.RECOVERY_TIME) {
+        console.log('🔄 [CIRCUIT-BREAKER] Tentando recuperação...');
+        this.isCircuitOpen = false;
+        this.failureCount = 0;
+      } else {
+        throw new Error('🚫 CIRCUIT BREAKER ATIVO - Sistema em proteção');
+      }
+    }
+
+    // Verificar limite de webhooks simultâneos
+    if (this.activeWebhooks >= this.MAX_CONCURRENT) {
+      console.warn(`⚠️ [CIRCUIT-BREAKER] Limite atingido: ${this.activeWebhooks}/${this.MAX_CONCURRENT}`);
+      throw new Error(`🔥 SOBRECARGA - Máximo ${this.MAX_CONCURRENT} webhooks simultâneos permitidos`);
+    }
+
+    this.activeWebhooks++;
+    console.log(`📊 [CIRCUIT-BREAKER] Webhooks ativos: ${this.activeWebhooks}/${this.MAX_CONCURRENT}`);
+
+    try {
+      // Timeout para evitar webhooks presos
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('⏰ TIMEOUT - Webhook excedeu 30s')), this.QUEUE_TIMEOUT);
+      });
+
+      const result = await Promise.race([operation(), timeoutPromise]) as T;
+      
+      // Reset failure count em sucesso
+      this.failureCount = 0;
+      return result;
+    } catch (error) {
+      this.failureCount++;
+      console.error(`❌ [CIRCUIT-BREAKER] Falha ${this.failureCount}/${this.FAILURE_THRESHOLD}:`, error);
+      
+      if (this.failureCount >= this.FAILURE_THRESHOLD) {
+        this.isCircuitOpen = true;
+        this.lastFailure = Date.now();
+        console.error('🚨 [CIRCUIT-BREAKER] CIRCUIT ABERTO - Sistema em proteção por 2min');
+      }
+      
+      throw error;
+    } finally {
+      this.activeWebhooks--;
+      console.log(`📉 [CIRCUIT-BREAKER] Webhooks ativos: ${this.activeWebhooks}/${this.MAX_CONCURRENT}`);
+    }
+  }
+
+  getStatus() {
+    return {
+      activeWebhooks: this.activeWebhooks,
+      maxConcurrent: this.MAX_CONCURRENT,
+      isCircuitOpen: this.isCircuitOpen,
+      failureCount: this.failureCount,
+      utilizationPercent: (this.activeWebhooks / this.MAX_CONCURRENT) * 100
+    };
+  }
+}
+
 serve(async (req: Request) => {
-  console.log(`[Hubla Webhook] ${req.method} request received`);
+  const circuitBreaker = HublaCircuitBreaker.getInstance();
+  
+  console.log(`🚀 [HUBLA-WEBHOOK] ${req.method} request received`);
+  console.log(`📊 [CIRCUIT-STATUS]`, circuitBreaker.getStatus());
 
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Executar webhook através do circuit breaker
   try {
-    const supabase = getSupabaseServiceClient()
+    return await circuitBreaker.executeWebhook(async () => {
+      const supabase = getSupabaseServiceClient()
     
     // Get webhook payload
     const payload = await req.json()
@@ -110,13 +194,25 @@ serve(async (req: Request) => {
   } catch (error) {
     console.error('[Hubla Webhook] Unexpected error:', error)
     
-    return new Response(JSON.stringify({ 
-      error: 'Internal server error',
-      message: error.message 
+      return new Response(JSON.stringify({ 
+        error: 'Internal server error',
+        message: error.message 
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    });
+  } catch (circuitError) {
+    console.error('🔥 [CIRCUIT-BREAKER] Webhook rejeitado:', circuitError.message);
+    
+    return new Response(JSON.stringify({
+      error: 'Service Temporarily Unavailable',
+      message: circuitError.message,
+      circuitStatus: circuitBreaker.getStatus()
     }), {
-      status: 500,
+      status: 503,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    })
+    });
   } finally {
     cleanupConnections();
   }

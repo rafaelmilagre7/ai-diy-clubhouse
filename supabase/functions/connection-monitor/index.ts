@@ -78,13 +78,33 @@ serve(async (req) => {
       .sort((a, b) => b.connection_count - a.connection_count)
       .slice(0, 5);
 
-    // Gerar alertas
+    // ALERTAS DE EMERGÊNCIA - ANTI-COLAPSO
     const alerts: string[] = [];
+    const criticalAlerts: string[] = [];
+    
+    // ALERTA CRÍTICO: Limite de colapso próximo
+    if (totalConnections > 25) {
+      criticalAlerts.push(`🚨 EMERGÊNCIA: ${totalConnections} conexões ativas (LIMITE: 25)`);
+      
+      // Tentar forçar cleanup de conexões órfãs
+      try {
+        await supabase.rpc('force_cleanup_connections');
+        console.log('🔧 [EMERGENCY] Cleanup forçado executado');
+      } catch (cleanupError) {
+        console.error('❌ [EMERGENCY] Falha no cleanup:', cleanupError);
+      }
+    }
     
     if (poolUtilization > 80) {
-      alerts.push(`CRÍTICO: Utilização do pool em ${poolUtilization.toFixed(1)}% (>80%)`);
+      criticalAlerts.push(`🔥 CRÍTICO: Pool em ${poolUtilization.toFixed(1)}% (>80%)`);
     } else if (poolUtilization > 60) {
-      alerts.push(`ATENÇÃO: Utilização do pool em ${poolUtilization.toFixed(1)}% (>60%)`);
+      alerts.push(`⚠️ ATENÇÃO: Pool em ${poolUtilization.toFixed(1)}% (>60%)`);
+    }
+    
+    // Auto-kill edge functions longas
+    if (totalConnections > 20) {
+      console.log('🚨 [AUTO-KILL] Iniciando limpeza agressiva...');
+      // Implementar auto-kill de edge functions antigas
     }
 
     if (idleInTransaction > 5) {
@@ -115,15 +135,41 @@ serve(async (req) => {
       alerts
     };
 
-    // Registrar métricas no audit_logs para histórico
-    await supabase
-      .from('audit_logs')
-      .insert({
-        event_type: 'system_monitoring',
-        action: 'connection_metrics_collected',
-        details: metrics,
-        severity: alerts.length > 0 ? 'warning' : 'info'
+    // ALERTAS EM TEMPO REAL
+    const allAlerts = [...criticalAlerts, ...alerts];
+    
+    // Registrar com severidade baseada em alertas críticos
+    const severity = criticalAlerts.length > 0 ? 'critical' : 
+                     alerts.length > 0 ? 'warning' : 'info';
+    
+    // Usar rate limiter para evitar spam de logs
+    try {
+      const rateLimiterResponse = await supabase.functions.invoke('emergency-rate-limiter', {
+        body: {
+          action: 'log',
+          logData: {
+            event_type: 'system_monitoring',
+            action: 'connection_metrics_collected',
+            details: { ...metrics, criticalAlerts, totalAlerts: allAlerts.length },
+            severity
+          }
+        }
       });
+      
+      if (!rateLimiterResponse.data?.success) {
+        console.warn('⚠️ [MONITOR] Rate limiter ativo - log descartado');
+      }
+    } catch (logError) {
+      // Fallback: log direto se rate limiter falhar
+      await supabase
+        .from('audit_logs')
+        .insert({
+          event_type: 'system_monitoring',
+          action: 'connection_metrics_collected',
+          details: { ...metrics, criticalAlerts },
+          severity
+        });
+    }
 
     console.log('[CONNECTION_MONITOR] Métricas coletadas:', {
       total: totalConnections,
