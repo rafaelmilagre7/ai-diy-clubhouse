@@ -169,7 +169,7 @@ serve(async (req: Request) => {
           processingResult = {
             success: automationResult.success,
             message: `Processed ${automationResult.processedRules}/${automationResult.totalRules} automation rules`,
-            automationResults: automationResult.results
+            automationResults: automationResult
           };
         } else {
           // Fallback para lógica legada se nenhuma regra for processada
@@ -203,11 +203,11 @@ serve(async (req: Request) => {
 
     });
   } catch (circuitError) {
-    console.error('🔥 [CIRCUIT-BREAKER] Webhook rejeitado:', circuitError.message);
+    console.error('🔥 [CIRCUIT-BREAKER] Webhook rejeitado:', circuitError instanceof Error ? circuitError.message : 'Unknown error');
     
     return new Response(JSON.stringify({
       error: 'Service Temporarily Unavailable',
-      message: circuitError.message,
+      message: circuitError instanceof Error ? circuitError.message : 'Unknown circuit error',
       circuitStatus: circuitBreaker.getStatus()
     }), {
       status: 503,

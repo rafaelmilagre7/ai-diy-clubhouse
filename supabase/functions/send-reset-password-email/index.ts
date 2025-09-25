@@ -133,11 +133,28 @@ const handler = async (req: Request): Promise<Response> => {
     // Renderizar template do email
     let emailHtml;
     try {
-      emailHtml = await renderAsync(React.createElement(ResetPasswordEmail, templateData));
+      // Simplificar o template para evitar problemas com React/renderAsync
+      emailHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Recuperar Senha - Viver de IA</title>
+        </head>
+        <body>
+          <h1>Redefinir sua senha</h1>
+          <p>Olá ${templateData.recipientEmail || 'Usuário'},</p>
+          <p>Recebemos uma solicitação para redefinir sua senha na plataforma Viver de IA.</p>
+          <p><a href="${templateData.resetUrl}" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Redefinir Senha</a></p>
+          <p>Se você não solicitou esta alteração, ignore este email.</p>
+          <p>Atenciosamente,<br>Equipe Viver de IA</p>
+        </body>
+        </html>
+      `;
       console.log(`📝 [RESET-${requestId}] Template renderizado com sucesso`);
     } catch (templateError) {
       console.error(`❌ [RESET-${requestId}] Erro ao renderizar template:`, templateError);
-      throw new Error(`Erro no template: ${templateError.message}`);
+      throw new Error(`Erro no template: ${templateError instanceof Error ? templateError.message : 'Template error'}`);
     }
 
     // Tentar envio com domínio personalizado e fallback
@@ -166,7 +183,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Se falhar com domínio personalizado, tentar com domínio padrão
-    if (emailError && emailError.message?.includes('domain')) {
+    if (emailError && (emailError as any)?.message?.includes('domain')) {
       console.warn(`⚠️ [RESET-${requestId}] Domínio personalizado falhou, tentando com domínio padrão...`);
       fromAddress = 'Viver de IA <onboarding@resend.dev>';
       
@@ -192,7 +209,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (emailError) {
       console.error(`❌ [RESET-${requestId}] Erro final no Resend:`, emailError);
-      throw new Error(`Erro no envio de email: ${emailError.message}`);
+      throw new Error(`Erro no envio de email: ${(emailError as any)?.message || 'Unknown email error'}`);
     }
 
     if (!emailResult) {

@@ -42,7 +42,7 @@ serve(async (req) => {
       .eq('id', authData.user.id)
       .single();
 
-    if (!profile || profile.user_roles.name !== 'admin') {
+    if (!profile || (profile.user_roles as any)?.name !== 'admin') {
       throw new Error('Acesso negado - apenas administradores podem alterar configurações');
     }
 
@@ -130,7 +130,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date().toISOString()
       }),
       {

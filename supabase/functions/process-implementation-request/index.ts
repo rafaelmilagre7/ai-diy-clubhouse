@@ -354,7 +354,7 @@ serve(async (req) => {
         } catch (parseError) {
           console.error('❌ Erro ao parsear resposta do Pipedrive:', parseError);
           console.error('❌ Resposta raw:', responseText);
-          throw new Error(`Erro ao parsear resposta do Pipedrive: ${parseError.message}`);
+          throw new Error(`Erro ao parsear resposta do Pipedrive: ${parseError instanceof Error ? parseError.message : 'Parse error'}`);
         }
 
         if (pipedriveData?.success && pipedriveData.data) {
@@ -386,7 +386,7 @@ serve(async (req) => {
         }
       } catch (pipedriveError) {
         console.error('❌ [2/5] ERRO: Falha no Pipedrive:', pipedriveError);
-        console.error('❌ Stack trace:', pipedriveError.stack);
+        console.error('❌ Stack trace:', pipedriveError instanceof Error ? pipedriveError.stack : 'No stack trace');
         console.log('⚠️ [2/5] CONTINUANDO: Processo continuará sem Pipedrive');
         // Não falhar a requisição por erro no Pipedrive
       }
@@ -491,7 +491,7 @@ serve(async (req) => {
         }
       } catch (discordError) {
         console.error('❌ [3/5] ERRO: Falha no Discord:', discordError);
-        console.error('❌ Stack trace:', discordError.stack);
+        console.error('❌ Stack trace:', discordError instanceof Error ? discordError.stack : 'No stack trace');
         console.log('⚠️ [3/5] CONTINUANDO: Processo continuará sem Discord');
         // Não falhar a requisição por erro no Discord
       }
@@ -560,7 +560,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         error: 'Erro interno do servidor',
-        details: error.message
+        details: error instanceof Error ? error.message : 'Unknown error'
       }),
       {
         status: 500,

@@ -152,7 +152,7 @@ serve(async (req: Request) => {
   } catch (error) {
     console.error('[Storage Proxy] Unexpected error:', error);
     
-    return new Response(`Proxy error: ${error.message}`, {
+    return new Response(`Proxy error: ${error instanceof Error ? error.message : 'Unknown proxy error'}`, {
       status: 500,
       headers: corsHeaders
     });
@@ -163,7 +163,7 @@ serve(async (req: Request) => {
  * Get cache headers based on content type
  */
 function getCacheHeaders(type: string) {
-  const configs = {
+  const configs: Record<string, { cacheControl: string; cdnCacheControl: string }> = {
     certificate: {
       cacheControl: 'public, max-age=86400, stale-while-revalidate=172800', // 1 dia + 2 dias SWR
       cdnCacheControl: 'public, max-age=31536000' // 1 ano para CDN

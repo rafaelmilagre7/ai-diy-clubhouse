@@ -141,7 +141,7 @@ serve(async (req) => {
         const attemptDuration = Date.now() - attemptStartTime;
         
         // LOGS DETALHADOS DA RESPOSTA DA API META
-        const responseHeaders = {};
+        const responseHeaders: Record<string, string> = {};
         whatsappResponse.headers.forEach((value, key) => {
           responseHeaders[key] = value;
         });
@@ -210,6 +210,10 @@ serve(async (req) => {
     });
 
     const parseStartTime = Date.now();
+    if (!whatsappResponse) {
+      throw new Error('WhatsApp response is undefined');
+    }
+    
     const whatsappResult = await whatsappResponse.json();
     const parseDuration = Date.now() - parseStartTime;
     
@@ -299,7 +303,7 @@ serve(async (req) => {
     return new Response(JSON.stringify({
       success: false,
       message: 'Erro ao enviar convite via WhatsApp',
-      error: error.message,
+      error: error instanceof Error ? error.message : 'Unknown error',
       suggestion: 'Verifique o número de telefone e tente novamente'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

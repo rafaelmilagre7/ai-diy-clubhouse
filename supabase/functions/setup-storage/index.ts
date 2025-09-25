@@ -92,8 +92,8 @@ Deno.serve(async (req) => {
             bucketConfig.id,
             {
               public: bucketConfig.public,
-              file_size_limit: bucketConfig.file_size_limit,
-              allowed_mime_types: bucketConfig.allowed_mime_types
+              fileSizeLimit: bucketConfig.file_size_limit,
+              allowedMimeTypes: bucketConfig.allowed_mime_types
             }
           );
 
@@ -164,7 +164,7 @@ Deno.serve(async (req) => {
         results.push({
           bucket: bucketConfig.id,
           status: 'error',
-          message: error.message
+          message: error instanceof Error ? error.message : 'Unknown error'
         });
       }
     }
@@ -191,7 +191,7 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message
+        error: error instanceof Error ? error.message : 'Unknown error'
       }),
       {
         status: 500,

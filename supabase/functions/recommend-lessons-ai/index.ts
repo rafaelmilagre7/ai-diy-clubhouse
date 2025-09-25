@@ -471,13 +471,13 @@ RESPONDA APENAS EM JSON:
     const enrichedTrail = {
       ...personalizedTrail,
       solutions_guide: {
-        quick_wins: await enrichSolutions(personalizedTrail.solutions_guide?.quick_wins || [], availableSolutions),
-        growth_solutions: await enrichSolutions(personalizedTrail.solutions_guide?.growth_solutions || [], availableSolutions),
-        optimization_solutions: await enrichSolutions(personalizedTrail.solutions_guide?.optimization_solutions || [], availableSolutions)
+        quick_wins: await enrichSolutions(personalizedTrail.solutions_guide?.quick_wins || [], availableSolutions || []),
+        growth_solutions: await enrichSolutions(personalizedTrail.solutions_guide?.growth_solutions || [], availableSolutions || []),
+        optimization_solutions: await enrichSolutions(personalizedTrail.solutions_guide?.optimization_solutions || [], availableSolutions || [])
       },
       lessons_guide: {
         ...personalizedTrail.lessons_guide,
-        learning_path: await enrichLessons(personalizedTrail.lessons_guide?.learning_path || [], availableLessons)
+        learning_path: await enrichLessons(personalizedTrail.lessons_guide?.learning_path || [], availableLessons || [])
       },
       user_profile: userProfile,
       generation_timestamp: new Date().toISOString(),
@@ -494,7 +494,7 @@ RESPONDA APENAS EM JSON:
     console.error('❌ [TRAIL-AI] Erro:', error);
     return new Response(JSON.stringify({ 
       error: 'Erro interno do servidor',
-      details: error.message 
+      details: error instanceof Error ? error.message : 'Unknown error'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -529,17 +529,6 @@ function formatLocation(personalInfo: any): string {
   }
   
   return 'Localização não informada';
-}
-
-// Função auxiliar para enriquecer soluções com dados reais
-async function enrichSolutions(aiSolutions: any[], availableSolutions: any[]) {
-  return aiSolutions.map(aiSol => {
-    const realSolution = availableSolutions.find(sol => sol.id === aiSol.solution_id);
-    return {
-      ...aiSol,
-      solution_data: realSolution || null
-    };
-  }).filter(sol => sol.solution_data); // Remove soluções não encontradas
 }
 
 // Função auxiliar para enriquecer aulas com dados reais

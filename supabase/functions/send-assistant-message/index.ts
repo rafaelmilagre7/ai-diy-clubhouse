@@ -135,7 +135,7 @@ serve(async (req) => {
     const messagesData = await messagesResponse.json();
     
     // A primeira mensagem é a mais recente
-    const assistantMessage = messagesData.data.find(msg => msg.role === "assistant");
+    const assistantMessage = messagesData.data.find((msg: any) => msg.role === "assistant");
     
     if (!assistantMessage) {
       throw new Error("Não foi encontrada uma resposta do assistente");
@@ -158,7 +158,7 @@ serve(async (req) => {
     console.error("Erro:", error);
     
     return new Response(
-      JSON.stringify({ success: false, error: error.message }),
+      JSON.stringify({ success: false, error: error instanceof Error ? error.message : 'Unknown error' }),
       { 
         status: 400, 
         headers: { ...corsHeaders, "Content-Type": "application/json" } 

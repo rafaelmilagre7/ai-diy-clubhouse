@@ -58,7 +58,7 @@ serve(async (req) => {
     console.error("Erro:", error);
     
     return new Response(
-      JSON.stringify({ success: false, error: error.message }),
+      JSON.stringify({ success: false, error: error instanceof Error ? error.message : 'Unknown error' }),
       { 
         status: 400, 
         headers: { ...corsHeaders, "Content-Type": "application/json" } 

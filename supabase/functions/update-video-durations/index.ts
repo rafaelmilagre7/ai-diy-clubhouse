@@ -128,7 +128,7 @@ async function fetchPandaVideoMetadata(videoId: string): Promise<{ duration_seco
       return result;
       
     } catch (error) {
-      console.error(`❌ [Tentativa ${attempt}] Erro ao buscar metadados:`, error.message);
+      console.error(`❌ [Tentativa ${attempt}] Erro ao buscar metadados:`, error instanceof Error ? error.message : 'Unknown error');
       
       // Se não for o último attempt, tentar novamente
       if (attempt < MAX_RETRIES) {
@@ -138,7 +138,7 @@ async function fetchPandaVideoMetadata(videoId: string): Promise<{ duration_seco
       }
       
       // Último attempt falhou
-      throw new Error(`Falha após ${MAX_RETRIES} tentativas: ${error.message}`);
+      throw new Error(`Falha após ${MAX_RETRIES} tentativas: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
   
@@ -146,7 +146,7 @@ async function fetchPandaVideoMetadata(videoId: string): Promise<{ duration_seco
 }
 
 // Função para atualizar a duração de um vídeo no banco de dados
-async function updateVideoDuration(supabase, videoId: string, durationSeconds: number, thumbnailUrl: string | null) {
+async function updateVideoDuration(supabase: any, videoId: string, durationSeconds: number, thumbnailUrl: string | null) {
   try {
     const { error } = await supabase
       .from('learning_lesson_videos')
@@ -163,7 +163,7 @@ async function updateVideoDuration(supabase, videoId: string, durationSeconds: n
     return { success: true, videoId };
   } catch (error) {
     console.error(`Erro ao atualizar duração do vídeo ${videoId}:`, error);
-    return { success: false, videoId, error: error.message };
+    return { success: false, videoId, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }
 

@@ -98,7 +98,7 @@ serve(async (req) => {
           bucket: bucketName, 
           success: false, 
           action: 'process', 
-          error: err.message 
+          error: err instanceof Error ? err.message : 'Unknown error'
         });
       }
     }
@@ -125,8 +125,8 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: false, 
-        message: `Erro ao configurar buckets: ${err.message}`,
-        error: err.message
+        message: `Erro ao configurar buckets: ${err instanceof Error ? err.message : 'Unknown error'}`,
+        error: err instanceof Error ? err.message : 'Unknown error'
       }),
       { 
         status: 500, 
@@ -140,7 +140,7 @@ serve(async (req) => {
 });
 
 // Função auxiliar para configurar políticas de acesso aos buckets
-async function configureStoragePolicies(supabase, bucketName) {
+async function configureStoragePolicies(supabase: any, bucketName: string) {
   try {
     // Chamar função RPC para configurar políticas públicas
     const { error } = await supabase.rpc('create_storage_public_policy', {
@@ -154,7 +154,7 @@ async function configureStoragePolicies(supabase, bucketName) {
     
     return true;
   } catch (err) {
-    console.error(`Erro ao configurar políticas para ${bucketName}: ${err.message}`);
+    console.error(`Erro ao configurar políticas para ${bucketName}: ${err instanceof Error ? err.message : 'Unknown error'}`);
     return false;
   }
 }
