@@ -5836,6 +5836,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      force_cleanup_connections: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       format_currency: {
         Args: { amount: number }
         Returns: string
@@ -6054,10 +6058,9 @@ export type Database = {
           backend_start: string
           client_addr: unknown
           pid: number
-          query_start: string
+          query: string
           state: string
-          state_change: string
-          usename: string
+          usename: unknown
         }[]
       }
       get_courses_with_stats: {

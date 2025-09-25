@@ -51,6 +51,9 @@ enabled = true
 [functions.audit-logs-cleaner]
 verify_jwt = false
 
+[functions.emergency-rate-limiter]
+verify_jwt = false
+
 [functions.connection-monitor]
 verify_jwt = false
 
