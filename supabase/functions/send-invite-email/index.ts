@@ -1,9 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
-import { Resend } from 'npm:resend@4.0.0';
-import { renderAsync } from 'npm:@react-email/components@0.0.22';
-import React from 'npm:react@18.3.1';
-import { InviteEmail } from './_templates/invite-email.tsx';
+import { Resend } from 'https://esm.sh/resend@4.0.0';
 
 declare const EdgeRuntime: { waitUntil: (promise: Promise<any>) => void };
 
@@ -76,15 +73,49 @@ const handler = async (req: Request): Promise<Response> => {
     const timeoutId = setTimeout(() => controller.abort(), 8000);
 
     try {
-      const emailHtml = await renderAsync(
-        React.createElement(InviteEmail, templateData)
-      );
+      // Template HTML simples para convite
+      const templateHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <title>Convite Viver de IA</title>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+            .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
+            .button { display: inline-block; background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+            .footer { text-align: center; margin-top: 30px; color: #666; font-size: 14px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>🚀 Bem-vindo à Viver de IA!</h1>
+            <p>Você foi convidado para nossa plataforma</p>
+          </div>
+          <div class="content">
+            <p>Olá!</p>
+            <p>Você foi convidado para fazer parte da <strong>Viver de IA</strong> como <strong>${templateData.roleName}</strong>.</p>
+            <p>Clique no botão abaixo para ativar sua conta:</p>
+            <p><a href="${templateData.inviteUrl}" class="button">Ativar Conta</a></p>
+            <p>Ou copie e cole este link no seu navegador:</p>
+            <p style="word-break: break-all; background: #eee; padding: 10px; border-radius: 4px;">${templateData.inviteUrl}</p>
+            <p><small>Este convite expira em: ${new Date(templateData.expiresAt).toLocaleDateString('pt-BR')}</small></p>
+            ${templateData.notes ? `<p><em>Observações: ${templateData.notes}</em></p>` : ''}
+          </div>
+          <div class="footer">
+            <p>© 2024 Viver de IA - Todos os direitos reservados</p>
+          </div>
+        </body>
+        </html>
+      `;
 
       const { data: emailResult, error: emailError } = await resend.emails.send({
         from: 'Viver de IA <convites@viverdeia.ai>',
         to: [body.email],
         subject: `🚀 Você foi convidado para a plataforma Viver de IA!`,
-        html: emailHtml,
+        html: templateHtml,
         replyTo: 'suporte@viverdeia.ai',
       });
 
