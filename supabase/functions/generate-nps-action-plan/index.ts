@@ -87,7 +87,7 @@ serve(async (req) => {
       lessons: lessonsData.data?.map(l => ({
         title: l.title,
         description: l.description,
-        course: l.learning_modules?.learning_courses?.title
+        course: l.learning_modules?.[0]?.learning_courses?.[0]?.title
       })) || []
     };
 
@@ -221,7 +221,7 @@ Seja direto, específico e focado em resultados mensuráveis.`;
     
     return new Response(JSON.stringify({ 
       success: false, 
-      error: error.message,
+      error: error instanceof Error ? error.message : 'Unknown error',
       details: 'Erro interno ao gerar plano de ação'
     }), {
       status: 500,

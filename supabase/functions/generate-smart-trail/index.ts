@@ -122,26 +122,29 @@ function calculateSolutionScore(solution: Solution, profile: UserProfile): numbe
   let score = 50; // Score base
   
   // Bonus por categoria preferida baseada na indústria
-  const industryPrefs = SCORING_MATRIX.industry[profile.industry?.toLowerCase() || ''];
+  const industryKey = profile.industry?.toLowerCase() || '';
+  const industryPrefs = (SCORING_MATRIX.industry as Record<string, any>)[industryKey];
   if (industryPrefs && solution.category === industryPrefs.category) {
     score += industryPrefs.bonus;
   }
   
   // Bonus por dificuldade adequada ao tamanho da empresa
-  const sizePrefs = SCORING_MATRIX.companySize[profile.company_size || 'solo'];
+  const sizeKey = profile.company_size || 'solo';
+  const sizePrefs = (SCORING_MATRIX.companySize as Record<string, any>)[sizeKey];
   if (sizePrefs && solution.difficulty === sizePrefs.difficulty) {
     score += sizePrefs.bonus;
   }
   
   // Bonus por experiência em IA
   const aiLevel = profile.ai_knowledge_level || 'basic';
-  const aiPrefs = SCORING_MATRIX.aiExperience[aiLevel];
+  const aiPrefs = (SCORING_MATRIX.aiExperience as Record<string, any>)[aiLevel];
   if (aiPrefs && solution.difficulty === aiPrefs.difficulty) {
     score += aiPrefs.bonus;
   }
   
   // Bonus por objetivo principal
-  const goalPrefs = SCORING_MATRIX.mainGoal[profile.main_goal || ''];
+  const goalKey = profile.main_goal || '';
+  const goalPrefs = (SCORING_MATRIX.mainGoal as Record<string, any>)[goalKey];
   if (goalPrefs && solution.category === goalPrefs.category) {
     score += goalPrefs.bonus;
   }
@@ -149,7 +152,7 @@ function calculateSolutionScore(solution: Solution, profile: UserProfile): numbe
   // NOVO: Bonus por áreas prioritárias do onboarding
   const priorityAreas = profile.business_goals?.priority_areas || [];
   priorityAreas.forEach((area: string) => {
-    const areaPrefs = SCORING_MATRIX.priorityAreas[area];
+    const areaPrefs = (SCORING_MATRIX.priorityAreas as Record<string, any>)[area];
     if (areaPrefs && solution.category === areaPrefs.category) {
       score += areaPrefs.bonus;
     }
@@ -157,17 +160,17 @@ function calculateSolutionScore(solution: Solution, profile: UserProfile): numbe
 
   // NOVO: Bonus por capacidade de investimento
   const investmentCapacity = profile.business_goals?.investment_capacity || 'medium';
-  const investmentPrefs = SCORING_MATRIX.investmentCapacity[investmentCapacity];
+  const investmentPrefs = (SCORING_MATRIX.investmentCapacity as Record<string, any>)[investmentCapacity];
   if (investmentPrefs && solution.difficulty === investmentPrefs.difficulty) {
     score += investmentPrefs.bonus;
   }
 
   // NOVO: Bonus por estilo de aprendizado
   const learningStyle = profile.personalization?.learning_style || 'mixed';
-  const stylePrefs = SCORING_MATRIX.learningStyle[learningStyle];
+  const stylePrefs = (SCORING_MATRIX.learningStyle as Record<string, any>)[learningStyle];
   if (stylePrefs) {
     const matchingStyleTags = solution.tags?.filter(tag => 
-      stylePrefs.tags.some(styleTag => tag.toLowerCase().includes(styleTag))
+      stylePrefs.tags.some((styleTag: string) => tag.toLowerCase().includes(styleTag))
     ).length || 0;
     score += matchingStyleTags * stylePrefs.bonus;
   }
@@ -199,13 +202,15 @@ function generatePersonalizedJustification(solution: Solution, profile: UserProf
   const reasons = [];
   
   // Razão baseada na indústria
-  const industryPrefs = SCORING_MATRIX.industry[profile.industry?.toLowerCase() || ''];
+  const industryKey = profile.industry?.toLowerCase() || '';
+  const industryPrefs = (SCORING_MATRIX.industry as Record<string, any>)[industryKey];
   if (industryPrefs && solution.category === industryPrefs.category) {
     reasons.push(`Ideal para empresas do setor ${profile.industry}`);
   }
   
   // Razão baseada no objetivo principal
-  const goalPrefs = SCORING_MATRIX.mainGoal[profile.main_goal || ''];
+  const goalKey = profile.main_goal || '';
+  const goalPrefs = (SCORING_MATRIX.mainGoal as Record<string, any>)[goalKey];
   if (goalPrefs && solution.category === goalPrefs.category) {
     reasons.push(`Alinhado com seu objetivo de ${profile.main_goal?.replace('_', ' ')}`);
   }
@@ -213,7 +218,7 @@ function generatePersonalizedJustification(solution: Solution, profile: UserProf
   // NOVO: Razão baseada nas áreas prioritárias
   const priorityAreas = profile.business_goals?.priority_areas || [];
   const matchingAreas = priorityAreas.filter((area: string) => {
-    const areaPrefs = SCORING_MATRIX.priorityAreas[area];
+    const areaPrefs = (SCORING_MATRIX.priorityAreas as Record<string, any>)[area];
     return areaPrefs && solution.category === areaPrefs.category;
   });
   if (matchingAreas.length > 0) {
@@ -231,6 +236,7 @@ function generatePersonalizedJustification(solution: Solution, profile: UserProf
   
   // Razão baseada na experiência
   const aiLevel = profile.ai_knowledge_level || 'basic';
+  const aiPrefs = (SCORING_MATRIX.aiExperience as Record<string, any>)[aiLevel];
   if ((aiLevel === 'basic' || aiLevel === 'iniciante') && solution.difficulty === 'easy') {
     reasons.push('Perfeito para quem está começando com IA');
   } else if ((aiLevel === 'intermediate' || aiLevel === 'intermediario') && solution.difficulty === 'medium') {
@@ -603,7 +609,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Erro na função generate-smart-trail:', error);
     return new Response(JSON.stringify({ 
-      error: error.message,
+      error: error instanceof Error ? error.message : 'Unknown error',
       success: false 
     }), {
       status: 500,

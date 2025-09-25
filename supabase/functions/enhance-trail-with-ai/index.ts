@@ -76,12 +76,12 @@ serve(async (req) => {
         } else {
           // Fallback: usar lógica simples se não tiver OpenAI
           const selectedLessons = allLessons
-            .filter(lesson => lesson.learning_modules?.learning_courses?.id)
+            .filter(lesson => lesson.learning_modules?.[0]?.learning_courses?.[0]?.id)
             .slice(0, 6)
             .map((lesson, index) => ({
               lessonId: lesson.id,
-              moduleId: lesson.learning_modules?.id,
-              courseId: lesson.learning_modules?.learning_courses?.id,
+              moduleId: lesson.learning_modules?.[0]?.id,
+              courseId: lesson.learning_modules?.[0]?.learning_courses?.[0]?.id,
               title: lesson.title,
               justification: 'Aula selecionada com base no seu perfil e objetivos',
               priority: Math.floor(index / 2) + 1
@@ -325,8 +325,8 @@ async function selectLessonsWithAI(lessons: any[], userProfile: any, openaiApiKe
       description: lesson.description || 'Sem descrição',
       difficulty: lesson.difficulty_level || 'beginner',
       duration: lesson.estimated_time_minutes || 0,
-      course: lesson.learning_modules?.learning_courses?.title || 'Curso não especificado',
-      module: lesson.learning_modules?.title || 'Módulo não especificado'
+      course: lesson.learning_modules?.[0]?.learning_courses?.[0]?.title || 'Curso não especificado',
+      module: lesson.learning_modules?.[0]?.title || 'Módulo não especificado'
     }));
 
     const prompt = `
@@ -400,8 +400,8 @@ Responda APENAS com o JSON, sem explicações adicionais.`;
             if (lesson) {
               return {
                 lessonId: lesson.id,
-                moduleId: lesson.learning_modules?.id,
-                courseId: lesson.learning_modules?.learning_courses?.id,
+                moduleId: lesson.learning_modules?.[0]?.id,
+                courseId: lesson.learning_modules?.[0]?.learning_courses?.[0]?.id,
                 title: lesson.title,
                 justification: selection.justification || 'Aula selecionada pela IA para seu perfil',
                 priority: selection.priority || 1

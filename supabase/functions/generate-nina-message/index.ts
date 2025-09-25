@@ -47,7 +47,7 @@ Deno.serve(async (req) => {
         'Financeiro': 'Finanças + IA = combinação perfeita! Vou te mostrar como usar dados para decisões ainda mais inteligentes e estratégicas.',
       };
       
-      message += sectorMessages[business.company_sector] || 'Não importa qual seja seu setor, tenho certeza que juntos vamos encontrar formas incríveis de usar IA para transformar sua realidade.';
+      message += (sectorMessages as Record<string, string>)[business.company_sector] || 'Não importa qual seja seu setor, tenho certeza que juntos vamos encontrar formas incríveis de usar IA para transformar sua realidade.';
       message += '\n\n';
     }
 

@@ -170,13 +170,14 @@ NÃO MENCIONE: Consultoria externa, agendamentos, serviços fora da plataforma`;
   } catch (error) {
     console.error('Erro na generate-onboarding-message:', error);
     
-    // Fallback message otimizado para o contexto da plataforma
-    const fallbackMessage = getFallbackMessage(onboardingData, currentStep);
+    // Definir variáveis no escopo para o fallback
+    const { onboardingData: fallbackOnboardingData = {}, currentStep: fallbackCurrentStep } = await req.json().catch(() => ({}));
+    const fallbackMessage = getFallbackMessage(fallbackOnboardingData, fallbackCurrentStep);
 
     return new Response(JSON.stringify({ 
       message: fallbackMessage,
       success: false,
-      error: error.message 
+      error: error instanceof Error ? error.message : 'Unknown error'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
