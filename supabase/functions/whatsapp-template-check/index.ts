@@ -46,13 +46,13 @@ serve(async (req) => {
     }
 
     const templates = templateData.data || []
-    const conviteTemplate = templates.find(t => t.name === 'convitevia')
+    const conviteTemplate = templates.find((t: any) => t.name === 'convitevia')
 
     const result = {
       templateExists: !!conviteTemplate,
       templateStatus: conviteTemplate?.status || 'NOT_FOUND',
       templateData: conviteTemplate,
-      allTemplates: templates.map(t => ({
+      allTemplates: templates.map((t: any) => ({
         name: t.name,
         status: t.status,
         language: t.language
@@ -85,7 +85,7 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({
       success: false,
-      error: error.message,
+      error: error instanceof Error ? error.message : 'Unknown error',
       templateExists: false,
       templateStatus: 'ERROR'
     }), {

@@ -223,7 +223,13 @@ async function checkSupabaseCredentials() {
 async function testWhatsAppAPI() {
   console.log('📱 Testando API do WhatsApp...')
   
-  const result = {
+  const result: {
+    test: string;
+    success: boolean;
+    details: string[];
+    warnings: string[];
+    errors: string[];
+  } = {
     test: 'API WhatsApp',
     success: false,
     details: [],
@@ -281,7 +287,7 @@ async function testWhatsAppAPI() {
     }
 
   } catch (error) {
-    result.errors.push(`Erro na verificação da API: ${error.message}`)
+    result.errors.push(`Erro na verificação da API: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
 
   return result
@@ -291,7 +297,14 @@ async function testWhatsAppAPI() {
 async function checkConviteTemplate() {
   console.log('📋 Verificando template "convitevia"...')
   
-  const result = {
+  const result: {
+    test: string;
+    success: boolean;
+    details: string[];
+    warnings: string[];
+    errors: string[];
+    template: any;
+  } = {
     test: 'Template "convitevia"',
     success: false,
     details: [],
@@ -358,7 +371,7 @@ async function checkConviteTemplate() {
     }
 
   } catch (error) {
-    result.errors.push(`Erro ao verificar template: ${error.message}`)
+    result.errors.push(`Erro ao verificar template: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
 
   return result
@@ -368,7 +381,13 @@ async function checkConviteTemplate() {
 async function checkPhoneNumberStatus() {
   console.log('📞 Verificando status do Phone Number...')
   
-  const result = {
+  const result: {
+    test: string;
+    success: boolean;
+    details: string[];
+    warnings: string[];
+    errors: string[];
+  } = {
     test: 'Status Phone Number',
     success: false,
     details: [],
@@ -420,7 +439,7 @@ async function checkPhoneNumberStatus() {
     }
 
   } catch (error) {
-    result.errors.push(`Erro ao verificar phone number: ${error.message}`)
+    result.errors.push(`Erro ao verificar phone number: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
 
   return result
@@ -430,7 +449,14 @@ async function checkPhoneNumberStatus() {
 async function testWhatsAppSending(testPhone?: string) {
   console.log('🧪 Testando envio real do WhatsApp...')
   
-  const result = {
+  const result: {
+    test: string;
+    success: boolean;
+    details: string[];
+    warnings: string[];
+    errors: string[];
+    messageId: any;
+  } = {
     test: 'Teste de Envio',
     success: false,
     details: [],
@@ -475,7 +501,7 @@ async function testWhatsAppSending(testPhone?: string) {
     }
 
   } catch (error) {
-    result.errors.push(`Erro no teste de envio: ${error.message}`)
+    result.errors.push(`Erro no teste de envio: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
 
   return result
@@ -504,7 +530,7 @@ async function getRecentWhatsAppLogs() {
     return {
       logs: [],
       total: 0,
-      error: error.message
+      error: error instanceof Error ? error.message : 'Unknown error'
     }
   }
 }
@@ -513,7 +539,21 @@ async function getRecentWhatsAppLogs() {
 async function getAllTemplates() {
   console.log('📋 Buscando todos os templates...')
   
-  const result = {
+  const result: {
+    test: string;
+    success: boolean;
+    details: string[];
+    warnings: string[];
+    errors: string[];
+    templates: any[];
+    summary: {
+      total: number;
+      approved: number;
+      pending: number;
+      rejected: number;
+      paused: number;
+    };
+  } = {
     test: 'Todos os Templates',
     success: false,
     details: [],
@@ -595,7 +635,7 @@ async function getAllTemplates() {
 
   } catch (error) {
     console.error('❌ Erro ao buscar templates:', error)
-    result.errors.push(`Erro ao buscar templates: ${error.message}`)
+    result.errors.push(`Erro ao buscar templates: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
 
   return result
@@ -656,7 +696,15 @@ const TEMPLATE_TEST_MAPPING = {
 async function testSpecificTemplate(templateName: string, testPhone: string) {
   console.log(`🧪 Testando template "${templateName}" para ${testPhone}...`)
   
-  const result = {
+  const result: {
+    test: string;
+    success: boolean;
+    details: string[];
+    warnings: string[];
+    errors: string[];
+    messageId: any;
+    template: any;
+  } = {
     test: `Teste Template "${templateName}"`,
     success: false,
     details: [],
@@ -711,7 +759,7 @@ async function testSpecificTemplate(templateName: string, testPhone: string) {
     // Buscar mapeamento do template ou usar fallback
     const templateConfig = TEMPLATE_TEST_MAPPING[templateName as keyof typeof TEMPLATE_TEST_MAPPING];
     
-    let templateComponents = [];
+    let templateComponents: any[] = [];
     
     if (templateConfig) {
       // Usar configuração conhecida
@@ -798,7 +846,7 @@ async function testSpecificTemplate(templateName: string, testPhone: string) {
 
   } catch (error) {
     console.error('❌ Erro no teste do template:', error)
-    result.errors.push(`Erro no teste: ${error.message}`)
+    result.errors.push(`Erro no teste: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
 
   return result
