@@ -268,7 +268,7 @@ const BenefitCard = ({ tool }: { tool: Tool }) => {
   
   // Adicionar indicador visual de acesso restrito
   const isRestricted = tool.is_access_restricted === true;
-  const hasAccess = hasFeatureAccess('benefits') !== false; // Default true se não definido
+  const hasAccess = hasFeatureAccess('benefits'); // Verificação correta sem default
   
   const handleClick = (e: React.MouseEvent) => {
     if (!hasAccess) {

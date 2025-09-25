@@ -12,7 +12,7 @@ const Events = () => {
   const { modalState, showUpgradeModal, hideUpgradeModal } = usePremiumUpgradeModal();
   
   // Por enquanto, assumindo que events não tem restrições (pode ajustar depois)
-  const hasAccess = hasFeatureAccess('events') !== false; // Default true se não definido
+  const hasAccess = hasFeatureAccess('events'); // Verificação correta sem default
   
   const handleClick = () => {
     if (!hasAccess) {

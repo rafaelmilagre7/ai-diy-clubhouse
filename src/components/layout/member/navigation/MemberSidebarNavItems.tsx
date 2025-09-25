@@ -100,34 +100,42 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
 
         {/* Grupo: Ferramentas */}
         <SidebarNavigationGroup title="Ferramentas" sidebarOpen={sidebarOpen}>
-          <TooltipNavItem
-            to="/tools"
-            label="Ferramentas"
-            icon={Wrench}
-            sidebarOpen={sidebarOpen}
-            badge={isLoading ? "..." : stats?.tools?.toString()}
-          />
-          <TooltipNavItem
-            to="/benefits"
-            label="Benefícios"
-            icon={Trophy}
-            sidebarOpen={sidebarOpen}
-            badge={isLoading ? "..." : stats?.benefits?.toString()}
-          />
-          <TooltipNavItem
-            to="/networking"
-            label="Networking"
-            icon={Network}
-            sidebarOpen={sidebarOpen}
-            isNew={true}
-          />
-          <TooltipNavItem
-            to="/comunidade"
-            label="Comunidade"
-            icon={MessageSquare}
-            sidebarOpen={sidebarOpen}
-            badge={isLoading ? "..." : stats?.communityTopics?.toString()}
-          />
+          {canViewTools && (
+            <TooltipNavItem
+              to="/tools"
+              label="Ferramentas"
+              icon={Wrench}
+              sidebarOpen={sidebarOpen}
+              badge={isLoading ? "..." : stats?.tools?.toString()}
+            />
+          )}
+          {canViewBenefits && (
+            <TooltipNavItem
+              to="/benefits"
+              label="Benefícios"
+              icon={Trophy}
+              sidebarOpen={sidebarOpen}
+              badge={isLoading ? "..." : stats?.benefits?.toString()}
+            />
+          )}
+          {canViewNetworking && (
+            <TooltipNavItem
+              to="/networking"
+              label="Networking"
+              icon={Network}
+              sidebarOpen={sidebarOpen}
+              isNew={true}
+            />
+          )}
+          {canViewCommunity && (
+            <TooltipNavItem
+              to="/comunidade"
+              label="Comunidade"
+              icon={MessageSquare}
+              sidebarOpen={sidebarOpen}
+              badge={isLoading ? "..." : stats?.communityTopics?.toString()}
+            />
+          )}
         </SidebarNavigationGroup>
 
         {/* Separador visual */}
