@@ -29,6 +29,7 @@ import HublaWebhooks from '@/pages/admin/HublaWebhooks';
 import AdminAutomations from '@/pages/admin/AdminAutomations';
 import AutomationForm from '@/pages/admin/AutomationForm';
 import AutomationLogs from '@/pages/admin/AutomationLogs';
+import SolutionAccessOverrides from '@/pages/admin/SolutionAccessOverrides';
 
 import NPSAnalytics from '@/pages/admin/NPSAnalytics';
 import CertificateTemplates from '@/pages/admin/CertificateTemplates';
@@ -57,6 +58,7 @@ export const adminRoutes: RouteObject[] = [
   createAdminRoute("/admin/solutions", AdminSolutions),
   createAdminRoute("/admin/solutions/new", AdminSolutionCreate),
   createAdminRoute("/admin/solutions/:id", SolutionEditor),
+  createAdminRoute("/admin/solution-overrides", SolutionAccessOverrides),
   createAdminRoute("/admin/analytics", AdminAnalytics),
   createAdminRoute("/admin/suggestions", AdminSuggestions),
   createAdminRoute("/admin/events/debug", EventsDebugPage),

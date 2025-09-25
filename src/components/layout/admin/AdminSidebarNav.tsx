@@ -52,6 +52,11 @@ const navigationItems = [
     icon: FileText,
   },
   {
+    title: "Acesso Soluções",
+    href: "/admin/solution-overrides",
+    icon: Shield,
+  },
+  {
     title: "NPS Analytics",
     href: "/admin/nps",
     icon: Star,

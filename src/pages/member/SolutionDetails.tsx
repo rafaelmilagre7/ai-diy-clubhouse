@@ -1,4 +1,3 @@
-
 /**
  * 🔒 MÓDULO APROVADO - Página de Detalhes da Solução
  * Status: Produção Estável ✅
@@ -29,6 +28,7 @@ import { SuccessCard } from "@/components/celebration/SuccessCard";
 import { SmartFeatureGuard } from "@/components/auth/SmartFeatureGuard";
 import { usePremiumUpgradeModal } from "@/hooks/usePremiumUpgradeModal";
 import { AuroraUpgradeModal } from "@/components/ui/aurora-upgrade-modal";
+import { useSolutionSpecificAccess } from "@/hooks/auth/useSolutionSpecificAccess";
 
 const SolutionDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -39,6 +39,9 @@ const SolutionDetails = () => {
   const { modalState, hideUpgradeModal } = usePremiumUpgradeModal();
   // Garantir que os dados das ferramentas estejam corretos, mas ignorar erros
   const { isLoading: toolsDataLoading } = useToolsData();
+  
+  // Verificar acesso específico à solução
+  const { hasAccess: hasSolutionAccess, accessType, loading: accessLoading } = useSolutionSpecificAccess(id || '');
   
   // Fetch solution data with the updated hook that includes progress
   const { solution, loading, error, progress } = useSolutionData(id);
@@ -73,7 +76,7 @@ const SolutionDetails = () => {
     }
   }, [solution, location.pathname, log]);
   
-  if (loading) {
+  if (loading || accessLoading) {
     return <LoadingScreen message="Carregando detalhes da solução..." />;
   }
   
@@ -89,69 +92,86 @@ const SolutionDetails = () => {
     progress
   });
   
+  // Se não tem acesso, mostrar o SmartFeatureGuard para exibir modal de upgrade
+  if (!hasSolutionAccess) {
+    return (
+      <>
+        <SmartFeatureGuard feature="solutions">
+          {/* Conteúdo nunca será mostrado por causa da verificação de acesso */}
+          <div />
+        </SmartFeatureGuard>
+        
+        <AuroraUpgradeModal 
+          open={modalState.open}
+          onOpenChange={hideUpgradeModal}
+          feature="solutions"
+          itemTitle={modalState.itemTitle || 'Desbloquear Soluções'}
+        />
+      </>
+    );
+  }
+
   return (
     <>
-      <SmartFeatureGuard feature="solutions">
-        <PageTransition>
-          {/* Aurora Background */}
-          <div className="fixed inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute inset-0 bg-gradient-to-br from-viverblue/8 via-transparent to-viverblue-dark/12" />
-            <div className="absolute top-0 left-1/4 w-96 h-96 bg-viverblue/10 rounded-full blur-3xl animate-pulse" />
-            <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-viverblue-dark/12 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}} />
-          </div>
+      <PageTransition>
+        {/* Aurora Background */}
+        <div className="fixed inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute inset-0 bg-gradient-to-br from-viverblue/8 via-transparent to-viverblue-dark/12" />
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-viverblue/10 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-viverblue-dark/12 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}} />
+        </div>
 
-          <div className="relative max-w-5xl mx-auto pb-12">
-            {showStartSuccess && (
-              <div className="fixed top-20 right-4 z-50 w-80">
-                <SuccessCard
-                  title="Implementação Iniciada"
-                  message="Você começou a implementação dessa solução. Boa jornada!"
-                  type="step"
-                  onAnimationComplete={() => setShowStartSuccess(false)}
-                />
-              </div>
-            )}
-            
-            <SolutionBackButton />
-            
-            <FadeTransition>
-              <SolutionHeaderSection solution={solution} />
-            </FadeTransition>
-            
-            <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="md:col-span-2">
-                <FadeTransition delay={0.2}>
-                  <SolutionTabsContent solution={solution} />
-                </FadeTransition>
-                
-                <FadeTransition delay={0.3}>
-                  <SolutionMobileActions 
-                    solutionId={solution.id}
-                    solutionTitle={solution.title}
-                    solutionCategory={solution.category}
-                    progress={progress}
-                    startImplementation={startImplementation}
-                    continueImplementation={continueImplementation}
-                    initializing={initializing}
-                  />
-                </FadeTransition>
-              </div>
+        <div className="relative max-w-5xl mx-auto pb-12">
+          {showStartSuccess && (
+            <div className="fixed top-20 right-4 z-50 w-80">
+              <SuccessCard
+                title="Implementação Iniciada"
+                message="Você começou a implementação dessa solução. Boa jornada!"
+                type="step"
+                onAnimationComplete={() => setShowStartSuccess(false)}
+              />
+            </div>
+          )}
+          
+          <SolutionBackButton />
+          
+          <FadeTransition>
+            <SolutionHeaderSection solution={solution} />
+          </FadeTransition>
+          
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="md:col-span-2">
+              <FadeTransition delay={0.2}>
+                <SolutionTabsContent solution={solution} />
+              </FadeTransition>
               
-              <div className="md:col-span-1">
-                <FadeTransition delay={0.4} direction="right">
-                  <SolutionSidebar 
-                    solution={solution}
-                    progress={progress}
-                    startImplementation={startImplementation}
-                    continueImplementation={continueImplementation}
-                    initializing={initializing}
-                  />
-                </FadeTransition>
-              </div>
+              <FadeTransition delay={0.3}>
+                <SolutionMobileActions 
+                  solutionId={solution.id}
+                  solutionTitle={solution.title}
+                  solutionCategory={solution.category}
+                  progress={progress}
+                  startImplementation={startImplementation}
+                  continueImplementation={continueImplementation}
+                  initializing={initializing}
+                />
+              </FadeTransition>
+            </div>
+            
+            <div className="md:col-span-1">
+              <FadeTransition delay={0.4} direction="right">
+                <SolutionSidebar 
+                  solution={solution}
+                  progress={progress}
+                  startImplementation={startImplementation}
+                  continueImplementation={continueImplementation}
+                  initializing={initializing}
+                />
+              </FadeTransition>
             </div>
           </div>
-        </PageTransition>
-      </SmartFeatureGuard>
+        </div>
+      </PageTransition>
 
       <AuroraUpgradeModal 
         open={modalState.open}
