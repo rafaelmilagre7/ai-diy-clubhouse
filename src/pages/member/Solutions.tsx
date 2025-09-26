@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useSolutionsData } from '@/hooks/useSolutionsData';
-import { SolutionCard } from '@/components/solution/SolutionCard';
+import { SolutionCardAccessWrapper } from '@/components/solution/SolutionCardAccessWrapper';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Search, Filter } from 'lucide-react';
@@ -159,9 +159,9 @@ const Solutions = () => {
                       className="animate-scale-in"
                       style={{ animationDelay: `${index * 0.1}s` }}
                     >
-                      <SolutionCard 
-                        solution={solution} 
-                        hasAccess={hasSolutionsAccess}
+                      <SolutionCardAccessWrapper
+                        solution={solution}
+                        generalHasAccess={hasSolutionsAccess}
                         onUpgradeRequired={() => {
                           setSelectedItemTitle(solution.title);
                           setUpgradeModalOpen(true);
