@@ -255,7 +255,7 @@ export class AutomationEngine {
           type: action.type,
           success: actionResult.success,
           message: actionResult.message,
-          data: actionResult.data
+          ...('data' in actionResult && actionResult.data ? { data: actionResult.data } : {})
         });
 
         if (!actionResult.success) {

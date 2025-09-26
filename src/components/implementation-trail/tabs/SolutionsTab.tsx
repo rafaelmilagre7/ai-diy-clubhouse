@@ -15,8 +15,6 @@ import {
 import { supabase } from '@/lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/auth';
-import { useFeatureAccess } from '@/hooks/auth/useFeatureAccess';
-import { usePremiumUpgradeModal } from '@/hooks/usePremiumUpgradeModal';
 
 interface Solution {
   id: string;
@@ -38,8 +36,6 @@ export const SolutionsTab: React.FC<SolutionsTabProps> = ({ trail }) => {
   const [loading, setLoading] = useState(true);
   const [aiCompatibility, setAiCompatibility] = useState<Record<string, number>>({});
   const navigate = useNavigate();
-  const { hasFeatureAccess } = useFeatureAccess();
-  const { showUpgradeModal } = usePremiumUpgradeModal();
 
   // Função para calcular compatibilidade com IA real
   const calculateAICompatibility = async (solutionIds: string[]) => {
@@ -252,10 +248,7 @@ export const SolutionsTab: React.FC<SolutionsTabProps> = ({ trail }) => {
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-out" />
         
         <div className="flex h-[200px] relative z-10" onClick={() => {
-          if (!hasFeatureAccess('solutions')) {
-            showUpgradeModal('solutions', solution.title);
-            return;
-          }
+          console.log('🔗 [SOLUTION-CARD] Navegando para solução:', solution.id);
           navigate(`/solution/${solution.id}`);
         }}>
           {/* Solution Cover Image - Formato Horizontal Otimizado */}
@@ -401,14 +394,11 @@ export const SolutionsTab: React.FC<SolutionsTabProps> = ({ trail }) => {
               <Button 
                 size="sm"
                 className="w-full bg-viverblue/10 hover:bg-viverblue text-viverblue hover:text-white border border-viverblue/20 hover:border-viverblue transition-all duration-300 group-hover:scale-105 relative overflow-hidden text-xs py-2"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (!hasFeatureAccess('solutions')) {
-                    showUpgradeModal('solutions', solution.title);
-                    return;
-                  }
-                  navigate(`/solution/${solution.id}`);
-                }}
+                 onClick={(e) => {
+                   e.stopPropagation();
+                   console.log('🔗 [SOLUTION-BTN] Navegando para solução:', solution.id);
+                   navigate(`/solution/${solution.id}`);
+                 }}
               >
                 {/* Button shine effect */}
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />

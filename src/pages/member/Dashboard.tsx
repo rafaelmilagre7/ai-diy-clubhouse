@@ -34,12 +34,9 @@ const Dashboard = () => {
 
   // Otimização: Memoizar callbacks para evitar re-renderizações - ANTES dos early returns
   const handleSolutionClick = useCallback((solution: Solution) => {
-  if (!canViewSolutions) {
-      showUpgradeModal('solutions', 'Desbloquear Soluções');
-      return;
-    }
+    console.log('🔗 [DASHBOARD] Navegando para solução:', solution.id);
     navigate(`/solution/${solution.id}`);
-  }, [navigate, canViewSolutions, showUpgradeModal]);
+  }, [navigate]);
 
   const handleCategoryChange = useCallback((category: string) => {
     setSelectedCategory(category);

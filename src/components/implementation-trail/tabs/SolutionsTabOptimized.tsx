@@ -15,9 +15,6 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { ImplementationTrailData, SolutionItem } from '@/types/implementationTrail';
 import { useSolutionDataContext } from '@/components/implementation-trail/contexts/SolutionDataContext';
-import { useAuth } from '@/contexts/auth';
-import { useFeatureAccess } from '@/hooks/auth/useFeatureAccess';
-import { usePremiumUpgradeModal } from '@/hooks/usePremiumUpgradeModal';
 
 interface SolutionsTabOptimizedProps {
   trail: ImplementationTrailData;
@@ -26,8 +23,6 @@ interface SolutionsTabOptimizedProps {
 export const SolutionsTabOptimized: React.FC<SolutionsTabOptimizedProps> = ({ trail }) => {
   const navigate = useNavigate();
   const { getSolution, loadSolutions, loading } = useSolutionDataContext();
-  const { hasFeatureAccess } = useFeatureAccess();
-  const { showUpgradeModal } = usePremiumUpgradeModal();
 
   // Carregar dados das soluções quando a trilha mudar
   useEffect(() => {
@@ -83,10 +78,7 @@ export const SolutionsTabOptimized: React.FC<SolutionsTabOptimizedProps> = ({ tr
         <div className="absolute inset-0 bg-gradient-to-r from-viverblue/5 via-transparent to-operational/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
         
         <div className="flex h-[200px] relative z-10" onClick={() => {
-          if (!hasFeatureAccess('solutions')) {
-            showUpgradeModal('solutions', solutionData.title);
-            return;
-          }
+          console.log('🔗 [SOLUTION-CARD-OPT] Navegando para solução:', item.solutionId);
           navigate(`/solution/${item.solutionId}`);
         }}>
           {/* Solution Cover */}
@@ -204,10 +196,7 @@ export const SolutionsTabOptimized: React.FC<SolutionsTabOptimizedProps> = ({ tr
                 className="w-full group-hover:bg-viverblue group-hover:text-white group-hover:border-viverblue transition-all duration-300 text-xs"
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (!hasFeatureAccess('solutions')) {
-                    showUpgradeModal('solutions', solutionData.title);
-                    return;
-                  }
+                  console.log('🔗 [SOLUTION-BTN] Navegando para solução:', item.solutionId);
                   navigate(`/solution/${item.solutionId}`);
                 }}
               >

@@ -1,6 +1,4 @@
 import { useNavigate } from 'react-router-dom';
-import { useFeatureAccess } from '@/hooks/auth/useFeatureAccess';
-import { usePremiumUpgradeModal } from '@/hooks/usePremiumUpgradeModal';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -123,15 +121,10 @@ export const SmartSolutionCard = ({
   isImplemented = false
 }: SmartSolutionCardProps) => {
   const navigate = useNavigate();
-  const { hasFeatureAccess } = useFeatureAccess();
-  const { showUpgradeModal } = usePremiumUpgradeModal();
 
   const handleImplement = () => {
-    if (!hasFeatureAccess('solutions')) {
-      showUpgradeModal('solutions', solution.title);
-      return;
-    }
-    navigate(`/implementacao/${solution.id}`);
+    console.log('🔗 [SMART-CARD] Navegando para solução:', solution.id);
+    navigate(`/solution/${solution.id}`);
   };
 
   const getAiScoreLevel = (score: number) => {
