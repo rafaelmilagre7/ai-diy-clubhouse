@@ -4,6 +4,9 @@ import { useForm } from "react-hook-form";
 import { ArrowLeft, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -32,13 +35,15 @@ export const UnifiedAutomationForm = () => {
   const [selectedHublaEvent, setSelectedHublaEvent] = useState<string>("");
 
   const {
+    register,
     handleSubmit,
     watch,
     setValue,
+    formState: { errors }
   } = useForm<AutomationFormData>({
     defaultValues: {
-      name: `Automação ${new Date().toLocaleDateString()}`,
-      description: "Automação criada via interface",
+      name: "",
+      description: "",
       rule_type: "webhook",
       is_active: true,
       priority: 1,
@@ -170,6 +175,43 @@ export const UnifiedAutomationForm = () => {
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+        {/* Informações Básicas */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Informações da Automação</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Defina o nome e descrição desta automação
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Nome da Automação *</Label>
+              <Input
+                id="name"
+                placeholder="Ex: Convite para curso Viver de IA"
+                {...register("name", { 
+                  required: "Nome da automação é obrigatório",
+                  minLength: { value: 3, message: "Nome deve ter pelo menos 3 caracteres" }
+                })}
+                className={errors.name ? "border-destructive" : ""}
+                autoFocus
+              />
+              {errors.name && (
+                <p className="text-sm text-destructive">{errors.name.message}</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="description">Descrição (opcional)</Label>
+              <Textarea
+                id="description"
+                placeholder="Descrição opcional para esta automação"
+                {...register("description")}
+                rows={2}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Condições */}
         <Card>
           <CardHeader>
