@@ -442,17 +442,27 @@ export const ConditionBuilder = ({ conditions, onChange, availableFields }: Cond
 
   return (
     <div className="space-y-4">
-      <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+      <div className="p-4 bg-gradient-to-r from-blue-50 to-blue-100/50 border border-blue-200 rounded-lg">
         <div className="text-sm text-blue-800">
-          <div className="font-semibold mb-2">💡 Como definir condições:</div>
-          <div className="space-y-1 text-xs">
-            <div>• <strong>payload.event.groupName</strong> - Nome do produto/grupo vendido</div>
-            <div>• <strong>payload.event.userEmail</strong> - Email do comprador</div>
-            <div>• <strong>payload.event.paidAt</strong> - Data/hora do pagamento</div>
-            <div>• <strong>payload.event.saleValue</strong> - Valor da venda</div>
+          <div className="font-semibold mb-3 flex items-center gap-2">
+            💡 Campos mais usados da Hubla:
           </div>
-          <div className="mt-2 text-xs italic">
-            Exemplo: Para automatizar apenas vendas do "Curso Lovable", use <code>payload.event.groupName</code> igual a "Curso Lovable"
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+            <div className="space-y-2">
+              <div><strong>payload.event.groupName</strong> - Nome do produto</div>
+              <div><strong>payload.event.userEmail</strong> - Email do comprador</div>
+              <div><strong>payload.event.userName</strong> - Nome do comprador</div>
+              <div><strong>payload.event.totalAmount</strong> - Valor da venda</div>
+            </div>
+            <div className="space-y-2">
+              <div><strong>payload.event.paymentMethod</strong> - Forma de pagamento</div>
+              <div><strong>payload.event.paidAt</strong> - Data do pagamento</div>
+              <div><strong>payload.event.recurring</strong> - Tipo de recorrência</div>
+              <div><strong>payload.event.couponCode</strong> - Cupom usado</div>
+            </div>
+          </div>
+          <div className="mt-3 text-xs italic bg-blue-600/10 p-2 rounded">
+            <strong>Exemplo:</strong> Para automatizar vendas do "Combo Viver de IA", use <code>payload.event.groupName</code> igual a "Combo Viver de IA"
           </div>
         </div>
       </div>
@@ -484,24 +494,11 @@ export const ConditionBuilder = ({ conditions, onChange, availableFields }: Cond
       {renderGroup(conditions)}
 
       {conditions.conditions.length === 0 && (
-        <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
+        <div className="text-center py-12 text-muted-foreground border-2 border-dashed border-blue-200 bg-blue-50/30 rounded-lg">
           <div className="space-y-3">
-            <p className="text-lg">✨ Condições Personalizadas</p>
-            <p className="text-sm">Adicione condições específicas para filtrar quando a automação deve executar</p>
-            <div className="text-xs space-y-1 text-muted-foreground/80">
-              <p><strong>Exemplo:</strong> Apenas vendas do produto "Combo Viver de IA"</p>
-              <p><strong>Campo:</strong> payload.event.groupName</p>
-              <p><strong>Operador:</strong> Igual a</p>
-              <p><strong>Valor:</strong> Combo Viver de IA</p>
-            </div>
-            <Button
-              variant="outline"
-              onClick={() => addCondition(conditions.id)}
-              className="flex items-center gap-1 mt-4"
-            >
-              <Plus className="h-4 w-4" />
-              Adicionar Condição Personalizada
-            </Button>
+            <div className="text-4xl">🎯</div>
+            <p className="font-medium">Nenhuma condição definida ainda</p>
+            <p className="text-sm">Adicione condições para definir exatamente quando esta automação deve executar</p>
           </div>
         </div>
       )}

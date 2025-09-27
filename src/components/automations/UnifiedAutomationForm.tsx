@@ -17,6 +17,7 @@ import { HublaEventSelector } from "./hubla/HublaEventSelector";
 import { ConditionBuilder } from "./ConditionBuilder";
 import { MigrationHelper } from "./MigrationHelper";
 import { HublaInviteAction } from "./hubla/HublaInviteAction";
+import { HUBLA_FIELDS } from "@/hooks/useHublaEvents";
 
 interface AutomationFormData {
   name: string;
@@ -181,159 +182,183 @@ export const UnifiedAutomationForm = () => {
   const isValid = watchedValues.name.trim() !== '' && conditionsCount > 0 && actionsCount > 0;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate('/admin/automations')}
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Voltar
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold">
-              {isEditing ? 'Editar Automação da Hubla' : 'Nova Automação da Hubla'}
-            </h1>
-            <p className="text-muted-foreground text-sm">
-              Configure regras para responder automaticamente a eventos da Hubla com convites personalizados
-            </p>
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
+      <div className="container mx-auto py-8 space-y-8">
+        {/* Header */}
+        <div className="flex items-center justify-between bg-card rounded-lg p-6 shadow-sm border">
+          <div className="flex items-center gap-6">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/admin/automations')}
+              className="shrink-0"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Voltar
+            </Button>
+            <div className="space-y-1">
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-hubla-primary to-blue-600 bg-clip-text text-transparent">
+                {isEditing ? 'Editar Automação' : 'Nova Automação Hubla'}
+              </h1>
+              <p className="text-muted-foreground max-w-2xl">
+                Configure regras inteligentes que respondem automaticamente a eventos da Hubla, enviando convites personalizados por email e WhatsApp
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <Button variant="outline" onClick={testRule} size="sm" className="gap-2">
+              <TestTube className="h-4 w-4" />
+              Testar Regra
+            </Button>
+            <Badge 
+              variant={isValid ? "default" : "secondary"} 
+              className={`px-3 py-1 ${isValid ? 'bg-green-100 text-green-800 border-green-200' : ''}`}
+            >
+              {isValid ? "✅ Pronta" : "⚠️ Incompleta"}
+            </Badge>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <Button variant="outline" onClick={testRule} size="sm">
-            <TestTube className="mr-2 h-4 w-4" />
-            Testar
-          </Button>
-          <Badge variant={isValid ? "default" : "secondary"}>
-            {isValid ? "Pronta" : "Incompleta"}
-          </Badge>
-        </div>
-      </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        {/* Basic Info */}
-        <Card>
-          <CardHeader className="pb-4">
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Settings className="h-5 w-5" />
-                Configuração Básica
-              </CardTitle>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">
-                  {watchedValues.is_active ? 'Ativa' : 'Inativa'}
-                </span>
-                <Switch
-                  checked={watchedValues.is_active}
-                  onCheckedChange={(checked) => setValue('is_active', checked)}
-                />
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Nome da Automação</Label>
-                <Input
-                  id="name"
-                  placeholder="Ex: Boas-vindas Hubla"
-                  {...register('name', { required: 'Nome é obrigatório' })}
-                  className={errors.name ? 'border-destructive' : ''}
-                />
-                {errors.name && (
-                  <p className="text-sm text-destructive">{errors.name.message}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="description">Descrição</Label>
-                <Input
-                  id="description"
-                  placeholder="Descrição opcional"
-                  {...register('description')}
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Migration Helper */}
-        <MigrationHelper 
-          conditions={watchedValues.conditions} 
-          onMigrate={handleMigration}
-        />
-
-        {/* Main Content: Conditions + Actions */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Conditions Column */}
-          <div className="space-y-4">
-            <Card>
-              <CardHeader className="pb-4">
-                <CardTitle className="text-lg">🎯 Quando Executar</CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  Defina quando esta automação deve ser ativada. Selecione o evento da Hubla e adicione condições específicas como nome do produto, valor da venda, etc.
-                </p>
-                <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <div className="text-sm text-blue-800">
-                    <strong>💡 Dica:</strong> Comece selecionando um evento da Hubla (ex: Nova Venda) e depois adicione condições específicas para filtrar apenas as vendas que você quer automatizar.
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+          {/* Basic Info */}
+          <Card className="shadow-sm border-2">
+            <CardHeader className="pb-6 bg-gradient-to-r from-muted/30 to-muted/10">
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-3 text-xl">
+                  <div className="p-2 bg-primary/10 rounded-lg">
+                    <Settings className="h-5 w-5 text-primary" />
                   </div>
+                  Informações Básicas
+                </CardTitle>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-muted-foreground font-medium">
+                    {watchedValues.is_active ? '🟢 Ativa' : '🔴 Inativa'}
+                  </span>
+                  <Switch
+                    checked={watchedValues.is_active}
+                    onCheckedChange={(checked) => setValue('is_active', checked)}
+                    className="data-[state=checked]:bg-green-500"
+                  />
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Hubla Event Selector */}
-                <HublaEventSelector
-                  selectedEvent={selectedHublaEvent}
-                  onEventChange={(eventType) => {
-                    setSelectedHublaEvent(eventType);
-                    // Auto-add condition for the selected event
-                    const newCondition = {
-                      field: 'payload.type',
-                      operator: 'equals',
-                      value: eventType
-                    };
-                    const currentConditions = watchedValues.conditions?.conditions || [];
-                    const hasEventCondition = currentConditions.some((c: any) => c.field === 'payload.type');
-                    
-                    if (!hasEventCondition && eventType) {
-                      setValue('conditions', {
-                        id: 'root',
-                        operator: 'AND',
-                        conditions: [...currentConditions, newCondition]
-                      });
-                    }
-                  }}
-                />
-
-                {/* Condition Builder */}
-                <div className="space-y-2">
-                  <Label>Condições Adicionais</Label>
-                <ConditionBuilder
-                  conditions={watchedValues.conditions}
-                  onChange={(conditions) => setValue('conditions', conditions)}
-                  availableFields={[]}
-                />
+              </div>
+            </CardHeader>
+            <CardContent className="p-6 space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <Label htmlFor="name" className="text-sm font-semibold">Nome da Automação</Label>
+                  <Input
+                    id="name"
+                    placeholder="Ex: Boas-vindas Combo Viver de IA"
+                    {...register('name', { required: 'Nome é obrigatório' })}
+                    className={`h-11 ${errors.name ? 'border-destructive' : 'border-muted-foreground/20'}`}
+                  />
+                  {errors.name && (
+                    <p className="text-sm text-destructive flex items-center gap-1">
+                      <span>⚠️</span> {errors.name.message}
+                    </p>
+                  )}
                 </div>
+                <div className="space-y-3">
+                  <Label htmlFor="description" className="text-sm font-semibold">Descrição</Label>
+                  <Input
+                    id="description"
+                    placeholder="Descreva o objetivo desta automação..."
+                    {...register('description')}
+                    className="h-11 border-muted-foreground/20"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-                {/* Conditions Summary */}
-                {conditionsCount > 0 && (
-                  <div className="p-3 bg-muted/50 rounded-lg">
-                    <div className="text-sm font-medium mb-2">
-                      {conditionsCount} condição(ões) configurada(s)
+          {/* Migration Helper */}
+          <MigrationHelper 
+            conditions={watchedValues.conditions} 
+            onMigrate={handleMigration}
+          />
+
+          {/* Main Content: Conditions + Actions */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Conditions Column */}
+            <div className="space-y-6">
+              <Card className="shadow-sm border-2 border-blue-200/50">
+                <CardHeader className="pb-6 bg-gradient-to-br from-blue-50/80 to-blue-100/40">
+                  <CardTitle className="flex items-center gap-3 text-xl text-blue-800">
+                    <div className="p-2 bg-blue-500/10 rounded-lg">
+                      🎯
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                      Operador: {watchedValues.conditions.operator} 
-                      {watchedValues.conditions.operator === 'AND' 
-                        ? ' (todas devem ser verdadeiras)'
-                        : ' (pelo menos uma deve ser verdadeira)'
-                      }
+                    Quando Executar
+                  </CardTitle>
+                  <p className="text-sm text-blue-700 leading-relaxed">
+                    Defina <strong>exatamente quando</strong> esta automação deve ser ativada. Selecione o evento da Hubla e configure condições específicas para filtrar apenas as situações desejadas.
+                  </p>
+                  <div className="mt-4 p-4 bg-blue-600/5 border border-blue-200 rounded-lg">
+                    <div className="text-sm text-blue-800">
+                      <div className="font-semibold mb-2">💡 Como funciona:</div>
+                      <div className="space-y-1 text-xs">
+                        <div>1. Escolha o evento (ex: "Nova Venda")</div>
+                        <div>2. Adicione filtros específicos (produto, valor, etc.)</div>
+                        <div>3. A automação só executará quando TODAS as condições forem verdadeiras</div>
+                      </div>
                     </div>
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+                </CardHeader>
+                <CardContent className="p-6 space-y-6">
+                  {/* Hubla Event Selector */}
+                  <div className="space-y-3">
+                    <Label className="text-sm font-semibold">Evento da Hubla</Label>
+                    <HublaEventSelector
+                      selectedEvent={selectedHublaEvent}
+                      onEventChange={(eventType) => {
+                        setSelectedHublaEvent(eventType);
+                        // Auto-add condition for the selected event
+                        const newCondition = {
+                          field: 'payload.type',
+                          operator: 'equals',
+                          value: eventType
+                        };
+                        const currentConditions = watchedValues.conditions?.conditions || [];
+                        const hasEventCondition = currentConditions.some((c: any) => c.field === 'payload.type');
+                        
+                        if (!hasEventCondition && eventType) {
+                          setValue('conditions', {
+                            id: 'root',
+                            operator: 'AND',
+                            conditions: [...currentConditions, newCondition]
+                          });
+                        }
+                      }}
+                    />
+                  </div>
+
+                  {/* Condition Builder */}
+                  <div className="space-y-3">
+                    <Label className="text-sm font-semibold">Filtros Adicionais</Label>
+                    <ConditionBuilder
+                      conditions={watchedValues.conditions}
+                      onChange={(conditions) => setValue('conditions', conditions)}
+                      availableFields={HUBLA_FIELDS}
+                    />
+                  </div>
+
+                  {/* Conditions Summary */}
+                  {conditionsCount > 0 && (
+                    <div className="p-4 bg-blue-50/50 rounded-lg border border-blue-200/50">
+                      <div className="text-sm font-semibold mb-2 text-blue-800">
+                        📋 {conditionsCount} condição(ões) configurada(s)
+                      </div>
+                      <div className="text-xs text-blue-600">
+                        Operador: <strong>{watchedValues.conditions.operator}</strong>
+                        {watchedValues.conditions.operator === 'AND' 
+                          ? ' (todas devem ser verdadeiras)'
+                          : ' (pelo menos uma deve ser verdadeira)'
+                        }
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
 
           {/* Actions Column */}
           <div className="space-y-4">
@@ -415,35 +440,49 @@ export const UnifiedAutomationForm = () => {
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="flex items-center justify-between pt-6 border-t">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              {watchedValues.is_active ? (
-                <Play className="h-4 w-4 text-green-600" />
-              ) : (
-                <Pause className="h-4 w-4 text-yellow-600" />
-              )}
-              <span className="text-sm text-muted-foreground">
-                Status: {watchedValues.is_active ? 'Ativa' : 'Inativa'}
-              </span>
-            </div>
-            <Separator orientation="vertical" className="h-4" />
-            <span className="text-sm text-muted-foreground">
-              {conditionsCount} condições, {actionsCount} ações
-            </span>
-          </div>
+          {/* Footer */}
+          <Card className="shadow-sm bg-gradient-to-r from-muted/20 to-muted/10 border-2">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-6">
+                  <div className="flex items-center gap-3">
+                    {watchedValues.is_active ? (
+                      <div className="flex items-center gap-2 text-green-700">
+                        <Play className="h-5 w-5" />
+                        <span className="font-medium">Status: Ativa</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 text-yellow-700">
+                        <Pause className="h-5 w-5" />
+                        <span className="font-medium">Status: Inativa</span>
+                      </div>
+                    )}
+                  </div>
+                  <Separator orientation="vertical" className="h-6" />
+                  <div className="text-sm text-muted-foreground space-x-4">
+                    <span className="font-medium">📋 {conditionsCount} condições</span>
+                    <span className="font-medium">⚡ {actionsCount} ações</span>
+                  </div>
+                </div>
 
-          <Button 
-            type="submit" 
-            disabled={loading || !isValid}
-            className="min-w-[120px]"
-          >
-            <Save className="mr-2 h-4 w-4" />
-            {loading ? 'Salvando...' : (isEditing ? 'Atualizar' : 'Criar')}
-          </Button>
-        </div>
-      </form>
+                <Button 
+                  type="submit" 
+                  disabled={loading || !isValid}
+                  size="lg"
+                  className={`min-w-[140px] h-12 text-base font-semibold ${
+                    isValid 
+                      ? 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800' 
+                      : 'bg-muted'
+                  }`}
+                >
+                  <Save className="mr-2 h-5 w-5" />
+                  {loading ? 'Salvando...' : (isEditing ? 'Atualizar Regra' : 'Criar Automação')}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </form>
+      </div>
     </div>
   );
 };
