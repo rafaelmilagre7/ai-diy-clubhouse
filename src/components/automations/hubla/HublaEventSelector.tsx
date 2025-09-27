@@ -25,11 +25,16 @@ export const HublaEventSelector = ({ selectedEvent, onEventChange }: HublaEventS
       <CardHeader>
         <div className="flex items-center gap-2">
           <Zap className="h-5 w-5 text-hubla-primary" />
-          <CardTitle className="text-hubla-primary">Evento Hubla</CardTitle>
+          <CardTitle className="text-hubla-primary">Evento da Hubla</CardTitle>
         </div>
         <CardDescription>
-          Selecione o evento da Hubla que deve acionar esta automação
+          Escolha qual evento da Hubla deve ativar esta automação. Normalmente você vai querer "Nova Venda" para enviar convites automáticos quando alguém comprar um produto.
         </CardDescription>
+        <div className="mt-3 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+          <div className="text-sm text-orange-800">
+            <strong>⚡ Recomendado:</strong> Use "Nova Venda" para automações de convite pós-compra. Depois adicione condições para filtrar produtos específicos.
+          </div>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
@@ -80,7 +85,7 @@ export const HublaEventSelector = ({ selectedEvent, onEventChange }: HublaEventS
                 </p>
                 <div className="flex items-center gap-2 text-xs text-hubla-primary">
                   <Info className="h-3 w-3" />
-                  <span>Evento técnico: {selectedEventData.value}</span>
+                  <span>Dados disponíveis: email, nome, telefone, valor da venda, produto</span>
                 </div>
               </div>
             </div>

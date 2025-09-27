@@ -156,9 +156,9 @@ const AdminAutomations = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Automações</h1>
+          <h1 className="text-3xl font-bold">Automações da Hubla</h1>
           <p className="text-muted-foreground">
-            Gerencie regras de automação baseadas em eventos e condições
+            Crie regras automatizadas para eventos da Hubla - envie convites personalizados quando houver novas vendas
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -207,9 +207,9 @@ const AdminAutomations = () => {
       {/* Rules Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Regras de Automação</CardTitle>
+          <CardTitle>Regras de Automação da Hubla</CardTitle>
           <CardDescription>
-            Lista de todas as regras configuradas no sistema
+            Configure automações para responder automaticamente a eventos da Hubla como novas vendas
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -218,8 +218,35 @@ const AdminAutomations = () => {
             columns={columns}
             loading={isLoading}
             emptyState={
-              <div className="text-center">
-                <p className="text-muted-foreground">Nenhuma regra configurada ainda</p>
+              <div className="text-center py-12 px-4">
+                <div className="mx-auto w-16 h-16 bg-hubla-primary/10 rounded-full flex items-center justify-center mb-4">
+                  <Activity className="h-8 w-8 text-hubla-primary" />
+                </div>
+                <h3 className="text-lg font-semibold mb-2">Comece criando sua primeira automação</h3>
+                <p className="text-muted-foreground mb-6 max-w-md">
+                  Configure regras que respondem automaticamente a eventos da Hubla, como enviar convites personalizados quando há uma nova venda.
+                </p>
+                <div className="space-y-3 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-2 justify-center">
+                    <div className="w-1.5 h-1.5 bg-hubla-primary rounded-full"></div>
+                    <span>Eventos da Hubla detectados automaticamente</span>
+                  </div>
+                  <div className="flex items-center gap-2 justify-center">
+                    <div className="w-1.5 h-1.5 bg-hubla-primary rounded-full"></div>
+                    <span>Convites enviados por email e WhatsApp</span>
+                  </div>
+                  <div className="flex items-center gap-2 justify-center">
+                    <div className="w-1.5 h-1.5 bg-hubla-primary rounded-full"></div>
+                    <span>Templates personalizáveis por produto</span>
+                  </div>
+                </div>
+                <Button 
+                  onClick={() => navigate('/admin/automations/new')} 
+                  className="mt-6"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Criar Nova Regra
+                </Button>
               </div>
             }
           />

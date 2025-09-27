@@ -195,10 +195,10 @@ export const UnifiedAutomationForm = () => {
           </Button>
           <div>
             <h1 className="text-2xl font-bold">
-              {isEditing ? 'Editar Automação' : 'Nova Automação'}
+              {isEditing ? 'Editar Automação da Hubla' : 'Nova Automação da Hubla'}
             </h1>
             <p className="text-muted-foreground text-sm">
-              Configure condições e ações em uma interface unificada
+              Configure regras para responder automaticamente a eventos da Hubla com convites personalizados
             </p>
           </div>
         </div>
@@ -271,10 +271,15 @@ export const UnifiedAutomationForm = () => {
           <div className="space-y-4">
             <Card>
               <CardHeader className="pb-4">
-                <CardTitle className="text-lg">Quando Executar</CardTitle>
+                <CardTitle className="text-lg">🎯 Quando Executar</CardTitle>
                 <p className="text-sm text-muted-foreground">
-                  Configure as condições que devem ser atendidas
+                  Defina quando esta automação deve ser ativada. Selecione o evento da Hubla e adicione condições específicas como nome do produto, valor da venda, etc.
                 </p>
+                <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="text-sm text-blue-800">
+                    <strong>💡 Dica:</strong> Comece selecionando um evento da Hubla (ex: Nova Venda) e depois adicione condições específicas para filtrar apenas as vendas que você quer automatizar.
+                  </div>
+                </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Hubla Event Selector */}
@@ -336,10 +341,15 @@ export const UnifiedAutomationForm = () => {
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="text-lg">O Que Fazer</CardTitle>
+                    <CardTitle className="text-lg">🚀 O Que Fazer</CardTitle>
                     <p className="text-sm text-muted-foreground">
-                      Configure as ações que serão executadas
+                      Configure as ações que serão executadas automaticamente quando as condições forem atendidas.
                     </p>
+                    <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <div className="text-sm text-green-800">
+                        <strong>💡 Dica:</strong> Use "Convite Hubla" para criar e enviar convites automaticamente com os dados da venda (email, nome, telefone) mapeados automaticamente.
+                      </div>
+                    </div>
                   </div>
                   <Button
                     type="button"

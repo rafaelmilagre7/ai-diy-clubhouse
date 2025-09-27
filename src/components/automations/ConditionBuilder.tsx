@@ -442,6 +442,21 @@ export const ConditionBuilder = ({ conditions, onChange, availableFields }: Cond
 
   return (
     <div className="space-y-4">
+      <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <div className="text-sm text-blue-800">
+          <div className="font-semibold mb-2">💡 Como definir condições:</div>
+          <div className="space-y-1 text-xs">
+            <div>• <strong>payload.event.groupName</strong> - Nome do produto/grupo vendido</div>
+            <div>• <strong>payload.event.userEmail</strong> - Email do comprador</div>
+            <div>• <strong>payload.event.paidAt</strong> - Data/hora do pagamento</div>
+            <div>• <strong>payload.event.saleValue</strong> - Valor da venda</div>
+          </div>
+          <div className="mt-2 text-xs italic">
+            Exemplo: Para automatizar apenas vendas do "Curso Lovable", use <code>payload.event.groupName</code> igual a "Curso Lovable"
+          </div>
+        </div>
+      </div>
+      
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Badge variant="outline">Condições Principais</Badge>
@@ -470,15 +485,24 @@ export const ConditionBuilder = ({ conditions, onChange, availableFields }: Cond
 
       {conditions.conditions.length === 0 && (
         <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
-          <p className="mb-2">Nenhuma condição configurada</p>
-          <Button
-            variant="outline"
-            onClick={() => addCondition(conditions.id)}
-            className="flex items-center gap-1"
-          >
-            <Plus className="h-4 w-4" />
-            Adicionar primeira condição
-          </Button>
+          <div className="space-y-3">
+            <p className="text-lg">✨ Condições Personalizadas</p>
+            <p className="text-sm">Adicione condições específicas para filtrar quando a automação deve executar</p>
+            <div className="text-xs space-y-1 text-muted-foreground/80">
+              <p><strong>Exemplo:</strong> Apenas vendas do produto "Combo Viver de IA"</p>
+              <p><strong>Campo:</strong> payload.event.groupName</p>
+              <p><strong>Operador:</strong> Igual a</p>
+              <p><strong>Valor:</strong> Combo Viver de IA</p>
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => addCondition(conditions.id)}
+              className="flex items-center gap-1 mt-4"
+            >
+              <Plus className="h-4 w-4" />
+              Adicionar Condição Personalizada
+            </Button>
+          </div>
         </div>
       )}
     </div>

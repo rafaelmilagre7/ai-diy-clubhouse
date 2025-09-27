@@ -103,8 +103,15 @@ export const HublaInviteAction = ({ action, onUpdate, onRemove, compact = false 
               </CardTitle>
               {!compact && (
                 <CardDescription>
-                  Criar e enviar convite personalizado baseado nos dados da Hubla
+                  Configurar automação para criar e enviar convites personalizados com base nos dados da Hubla. O sistema mapeará automaticamente email, nome e telefone do comprador.
                 </CardDescription>
+              )}
+              {!compact && (
+                <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="text-sm text-green-800">
+                    <strong>🎯 Fluxo Automático:</strong> Quando as condições forem atendidas → Criar convite → Enviar por email/WhatsApp → Usuário recebe acesso automaticamente
+                  </div>
+                </div>
               )}
             </div>
           </div>
@@ -133,6 +140,9 @@ export const HublaInviteAction = ({ action, onUpdate, onRemove, compact = false 
             <Mail className="h-4 w-4" />
             Template do Convite
           </Label>
+          <div className="text-xs text-muted-foreground mb-2">
+            Escolha o template que será usado para criar o convite. Cada template é otimizado para diferentes produtos e canais.
+          </div>
           <Select
             value={parameters.template || ''}
             onValueChange={(value) => updateParameter('template', value)}
@@ -197,6 +207,9 @@ export const HublaInviteAction = ({ action, onUpdate, onRemove, compact = false 
         {/* Role Selection */}
         <div className="space-y-3">
           <Label className="text-sm font-medium">Role do Usuário</Label>
+          <div className="text-xs text-muted-foreground mb-2">
+            Selecione qual nível de acesso o usuário terá na plataforma após aceitar o convite.
+          </div>
           <Select
             value={parameters.role_id || ''}
             onValueChange={(value) => updateParameter('role_id', value)}
