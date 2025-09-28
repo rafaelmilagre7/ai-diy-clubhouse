@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { SidebarNavigationGroup } from './SidebarNavigationGroup';
 import { TooltipNavItem } from './TooltipNavItem';
+import { MasterNavItem } from '@/components/navigation/MasterNavItem';
 
 interface MemberSidebarNavItemsProps {
   sidebarOpen: boolean;
@@ -159,6 +160,9 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
             sidebarOpen={sidebarOpen}
           />
         </SidebarNavigationGroup>
+
+        {/* Master Dashboard - Apenas para usuários master */}
+        <MasterNavItem sidebarOpen={sidebarOpen} />
 
         {/* Separador visual */}
         {sidebarOpen && (

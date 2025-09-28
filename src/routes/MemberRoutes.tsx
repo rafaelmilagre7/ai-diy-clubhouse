@@ -39,6 +39,7 @@ import CategoryListPage from '@/pages/member/community/CategoryListPage';
 
 // Profile pages
 import NotificationSettingsPage from '@/pages/profile/NotificationSettingsPage';
+import MasterDashboard from '@/pages/master-dashboard';
 
 // Função helper para criar rotas protegidas com MemberLayout
 const createProtectedRoute = (path: string, Component: React.ComponentType<any>) => ({
@@ -88,6 +89,9 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/suggestions", Suggestions),
   createProtectedRoute("/suggestions/:id", SuggestionDetails),
   createProtectedRoute("/suggestions/new", NewSuggestion),
+  
+  // Master Dashboard Route
+  createProtectedRoute("/master-dashboard", MasterDashboard),
   
   // Comunidade Routes - CORRIGIDAS E AMPLIADAS
   createProtectedRoute("/comunidade", CommunityHome),

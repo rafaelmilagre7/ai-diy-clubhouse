@@ -3212,6 +3212,7 @@ export type Database = {
       }
       organizations: {
         Row: {
+          billing_email: string | null
           created_at: string | null
           id: string
           is_active: boolean | null
@@ -3220,9 +3221,12 @@ export type Database = {
           name: string
           plan_type: string
           settings: Json | null
+          subscription_status: string | null
+          team_limit: number | null
           updated_at: string | null
         }
         Insert: {
+          billing_email?: string | null
           created_at?: string | null
           id?: string
           is_active?: boolean | null
@@ -3231,9 +3235,12 @@ export type Database = {
           name: string
           plan_type?: string
           settings?: Json | null
+          subscription_status?: string | null
+          team_limit?: number | null
           updated_at?: string | null
         }
         Update: {
+          billing_email?: string | null
           created_at?: string | null
           id?: string
           is_active?: boolean | null
@@ -3242,6 +3249,8 @@ export type Database = {
           name?: string
           plan_type?: string
           settings?: Json | null
+          subscription_status?: string | null
+          team_limit?: number | null
           updated_at?: string | null
         }
         Relationships: []
@@ -3360,6 +3369,7 @@ export type Database = {
           onboarding_completed: boolean | null
           onboarding_completed_at: string | null
           organization_id: string | null
+          plan_type: string | null
           professional_bio: string | null
           referrals_count: number
           role: string
@@ -3367,6 +3377,7 @@ export type Database = {
           skills: string[] | null
           status: string | null
           successful_referrals_count: number
+          team_size: number | null
           updated_at: string | null
           whatsapp_number: string | null
         }
@@ -3387,6 +3398,7 @@ export type Database = {
           onboarding_completed?: boolean | null
           onboarding_completed_at?: string | null
           organization_id?: string | null
+          plan_type?: string | null
           professional_bio?: string | null
           referrals_count?: number
           role?: string
@@ -3394,6 +3406,7 @@ export type Database = {
           skills?: string[] | null
           status?: string | null
           successful_referrals_count?: number
+          team_size?: number | null
           updated_at?: string | null
           whatsapp_number?: string | null
         }
@@ -3414,6 +3427,7 @@ export type Database = {
           onboarding_completed?: boolean | null
           onboarding_completed_at?: string | null
           organization_id?: string | null
+          plan_type?: string | null
           professional_bio?: string | null
           referrals_count?: number
           role?: string
@@ -3421,6 +3435,7 @@ export type Database = {
           skills?: string[] | null
           status?: string | null
           successful_referrals_count?: number
+          team_size?: number | null
           updated_at?: string | null
           whatsapp_number?: string | null
         }
@@ -4760,6 +4775,57 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_invites: {
+        Row: {
+          accepted_at: string | null
+          created_at: string | null
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string
+          organization_id: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string | null
+          email: string
+          expires_at?: string
+          id?: string
+          invited_by: string
+          organization_id: string
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string | null
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string
+          organization_id?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_invites_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_invites_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -6329,6 +6395,7 @@ export type Database = {
           onboarding_completed: boolean | null
           onboarding_completed_at: string | null
           organization_id: string | null
+          plan_type: string | null
           professional_bio: string | null
           referrals_count: number
           role: string
@@ -6336,6 +6403,7 @@ export type Database = {
           skills: string[] | null
           status: string | null
           successful_referrals_count: number
+          team_size: number | null
           updated_at: string | null
           whatsapp_number: string | null
         }[]
@@ -6948,6 +7016,10 @@ export type Database = {
       normalize_bucket_name: {
         Args: { bucket_name: string }
         Returns: string
+      }
+      process_excel_data_and_create_masters: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
       }
       process_referral: {
         Args: { p_token: string; p_user_id: string }

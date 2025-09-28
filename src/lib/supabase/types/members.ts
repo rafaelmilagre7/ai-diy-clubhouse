@@ -39,16 +39,35 @@ export type MemberConnection = Database['public']['Tables'] extends { member_con
       updated_at: string;
     };
 
-export type NetworkingPreferences = Database['public']['Tables'] extends { networking_preferences: any }
-  ? Database['public']['Tables']['networking_preferences']['Row']
-  : {
-      id: string;
-      user_id: string;
-      is_active: boolean;
-      min_compatibility: number;
-      preferred_industries: string[] | null;
-      preferred_company_sizes: string[] | null;
-      created_at: string;
-      updated_at: string;
-    };
+export function getUserRoleName(profile: UserProfile | null): string {
+  if (!profile) return 'guest';
+  
+  // Prioridade 1: Se tem user_roles relacionado, usar o name de lá
+  if (profile.user_roles?.name) {
+    return profile.user_roles.name;
+  }
+  
+  // Prioridade 2: Se tem role_id mas não user_roles, tentar mapear
+  if (profile.role_id && !profile.user_roles) {
+    // Aqui poderia fazer uma consulta adicional, mas por simplicidade:
+    return 'member'; // valor padrão seguro
+  }
+  
+  // Prioridade 3: Fallback para o campo role legacy (se existir)
+  if (profile.role) {
+    return profile.role;
+  }
+  
+  // Prioridade 4: Fallback final
+  return 'member';
+}
+
+export function isSuperAdmin(profile: UserProfile | null): boolean {
+  const roleName = getUserRoleName(profile);
+  return roleName === 'admin';
+}
+
+export function isMasterUser(profile: UserProfile | null): boolean {
+  return profile?.is_master_user === true;
+}
 
