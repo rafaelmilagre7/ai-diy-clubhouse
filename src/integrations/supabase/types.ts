@@ -3210,6 +3210,42 @@ export type Database = {
         }
         Relationships: []
       }
+      organizations: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          master_user_id: string
+          max_users: number
+          name: string
+          plan_type: string
+          settings: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          master_user_id: string
+          max_users?: number
+          name: string
+          plan_type?: string
+          settings?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          master_user_id?: string
+          max_users?: number
+          name?: string
+          plan_type?: string
+          settings?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       permission_audit_logs: {
         Row: {
           action_type: string
@@ -3317,11 +3353,13 @@ export type Database = {
           id: string
           industry: string | null
           is_active: boolean | null
+          is_master_user: boolean | null
           last_active: string | null
           linkedin_url: string | null
           name: string | null
           onboarding_completed: boolean | null
           onboarding_completed_at: string | null
+          organization_id: string | null
           professional_bio: string | null
           referrals_count: number
           role: string
@@ -3342,11 +3380,13 @@ export type Database = {
           id: string
           industry?: string | null
           is_active?: boolean | null
+          is_master_user?: boolean | null
           last_active?: string | null
           linkedin_url?: string | null
           name?: string | null
           onboarding_completed?: boolean | null
           onboarding_completed_at?: string | null
+          organization_id?: string | null
           professional_bio?: string | null
           referrals_count?: number
           role?: string
@@ -3367,11 +3407,13 @@ export type Database = {
           id?: string
           industry?: string | null
           is_active?: boolean | null
+          is_master_user?: boolean | null
           last_active?: string | null
           linkedin_url?: string | null
           name?: string | null
           onboarding_completed?: boolean | null
           onboarding_completed_at?: string | null
+          organization_id?: string | null
           professional_bio?: string | null
           referrals_count?: number
           role?: string
@@ -3383,6 +3425,13 @@ export type Database = {
           whatsapp_number?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "profiles_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "profiles_role_id_fkey"
             columns: ["role_id"]
@@ -6273,11 +6322,13 @@ export type Database = {
           id: string
           industry: string | null
           is_active: boolean | null
+          is_master_user: boolean | null
           last_active: string | null
           linkedin_url: string | null
           name: string | null
           onboarding_completed: boolean | null
           onboarding_completed_at: string | null
+          organization_id: string | null
           professional_bio: string | null
           referrals_count: number
           role: string
@@ -6430,6 +6481,10 @@ export type Database = {
       get_user_learning_stats: {
         Args: { target_user_id: string }
         Returns: Json
+      }
+      get_user_organization: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
       get_user_permissions: {
         Args: { p_user_id: string }
@@ -6649,6 +6704,10 @@ export type Database = {
       }
       is_new_user: {
         Args: { check_user_id?: string }
+        Returns: boolean
+      }
+      is_organization_master: {
+        Args: { org_id: string }
         Returns: boolean
       }
       is_owner: {

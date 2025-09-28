@@ -16,6 +16,8 @@ export type UserProfile = Database['public']['Tables'] extends { profiles: any }
       industry?: string | null;
       role_id?: string | null;
       role?: string | null;
+      organization_id?: string | null;
+      is_master_user?: boolean;
       created_at: string;
       updated_at: string;
       user_roles?: {

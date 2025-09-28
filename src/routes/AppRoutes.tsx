@@ -1,11 +1,12 @@
 
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { authRoutes } from './AuthRoutes';
 import { adminRoutes } from './AdminRoutes';
 import { memberRoutes } from './MemberRoutes';
+import { authRoutes } from './AuthRoutes';
 import { formacaoRoutes } from './FormacaoRoutes';
 import { certificateRoutes } from './CertificateRoutes';
+import { masterRoutes } from './MasterRoutes';
 import { CommunityRedirects } from '@/components/routing/CommunityRedirects';
 import { TokenRedirectHandler } from '@/components/auth/TokenRedirectHandler';
 import NotFound from '@/pages/NotFound';
@@ -96,6 +97,9 @@ const AppRoutes = () => {
         {adminRoutes.map((route) => (
           <Route key={route.path} path={route.path} element={route.element} />
         ))}
+        
+        {/* Master Routes */}
+        {masterRoutes}
         
         {/* Formação Routes */}
         {formacaoRoutes.map((route) => (
