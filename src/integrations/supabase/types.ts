@@ -6486,6 +6486,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_user_organization_safe: {
+        Args: { user_id: string }
+        Returns: string
+      }
       get_user_permissions: {
         Args: { p_user_id: string }
         Returns: string[]
@@ -6699,6 +6703,10 @@ export type Database = {
         Returns: boolean
       }
       is_legacy_user: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
+      is_master_user_safe: {
         Args: { user_id: string }
         Returns: boolean
       }
