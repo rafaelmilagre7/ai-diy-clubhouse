@@ -10,6 +10,35 @@ import InviteSuccessState from '@/components/invite/InviteSuccessState';
 import InviteWelcomeSection from '@/components/invite/InviteWelcomeSection';
 import ModernRegisterForm from '@/components/invite/ModernRegisterForm';
 
+// Função para verificar se é um token do Supabase Auth (JWT)
+const isSupabaseAuthToken = (token: string): boolean => {
+  // Tokens JWT têm formato: header.payload.signature (contêm pontos)
+  // Tokens de convite são alfanuméricos simples (30-32 chars)
+  if (!token) return false;
+  
+  // Se contém pontos, provavelmente é JWT
+  if (token.includes('.')) {
+    console.log('🔍 [INVITE] Token contém pontos - provável JWT');
+    return true;
+  }
+  
+  // Se é muito longo (JWT são bem longos), também é provável que seja JWT
+  if (token.length > 50) {
+    console.log('🔍 [INVITE] Token muito longo - provável JWT');
+    return true;
+  }
+  
+  // Tokens de convite são alfanuméricos simples
+  const inviteTokenPattern = /^[A-Za-z0-9]{20,40}$/;
+  if (!inviteTokenPattern.test(token)) {
+    console.log('🔍 [INVITE] Token não match padrão de convite - provável JWT');
+    return true;
+  }
+  
+  console.log('🔍 [INVITE] Token parece ser de convite válido');
+  return false;
+};
+
 const InvitePage = () => {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
@@ -22,9 +51,17 @@ const InvitePage = () => {
 
   useEffect(() => {
     if (token) {
+      // Verificar se é um token de auth do Supabase (JWT) ou token de convite
+      if (isSupabaseAuthToken(token)) {
+        console.log('🔄 [INVITE] Token de auth detectado, redirecionando para reset de senha');
+        navigate(`/set-new-password#access_token=${token}&type=recovery`, { replace: true });
+        return;
+      }
+      
+      console.log('📨 [INVITE] Token de convite detectado, validando...');
       handleValidateToken();
     }
-  }, [token]);
+  }, [token, navigate]);
 
   const handleValidateToken = async () => {
     if (!token) return;
