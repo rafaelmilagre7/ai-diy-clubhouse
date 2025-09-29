@@ -122,17 +122,12 @@ export function useUsers() {
     try {
       const offset = (page - 1) * pageSize;
       
-      // Chamar função SQL otimizada
-      const { data, error: queryError } = await supabase.rpc('get_users_with_advanced_filters_public', {
+      // Chamar nova função SQL otimizada para masters e membros
+      const { data, error: queryError } = await supabase.rpc('get_users_with_master_members_public', {
         p_limit: pageSize,
         p_offset: offset,
         p_search: searchQuery.trim() || null,
-        p_user_type: filterType || null,
-        p_organization_id: null,
-        p_role_id: null,
-        p_status: null,
-        p_onboarding: null,
-        p_date_filter: null
+        p_user_type: filterType || null
       });
 
       if (queryError) {

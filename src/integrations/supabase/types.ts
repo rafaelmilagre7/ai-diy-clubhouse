@@ -6709,6 +6709,31 @@ export type Database = {
           user_roles: Json
         }[]
       }
+      get_users_with_master_members_public: {
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_search?: string
+          p_user_type?: string
+        }
+        Returns: {
+          avatar_url: string
+          company_name: string
+          created_at: string
+          email: string
+          id: string
+          industry: string
+          is_master_user: boolean
+          name: string
+          onboarding_completed: boolean
+          organization: Json
+          organization_id: string
+          role: string
+          role_id: string
+          total_count: number
+          user_roles: Json
+        }[]
+      }
       get_users_with_roles: {
         Args: {
           limit_count?: number
