@@ -189,11 +189,27 @@ export const useMasterMemberSync = () => {
       });
 
       // Call edge function
+      console.log('[FRONTEND] Chamando edge function com', csvData.length, 'registros');
+      
       const { data, error } = await supabase.functions.invoke('sync-master-members-csv', {
         body: { csvData, dryRun }
       });
 
-      if (error) throw error;
+      console.log('[FRONTEND] Resposta da edge function:', { data, error });
+
+      // ✅ Validação de erro melhorada
+      if (error) {
+        console.error('[FRONTEND] Erro da edge function:', error);
+        throw new Error(error.message || 'Erro ao chamar edge function');
+      }
+
+      if (!data) {
+        throw new Error('Edge function não retornou dados');
+      }
+
+      if (!data.success) {
+        throw new Error(data.error || 'Sincronização falhou sem mensagem de erro');
+      }
 
       setProgress(100);
       setSyncResult(data);
@@ -206,18 +222,23 @@ export const useMasterMemberSync = () => {
       } else {
         toast({
           title: "✅ Sincronização concluída!",
-          description: `${data.stats.masters_processed} masters e ${data.stats.members_processed} membros processados.`,
+          description: `${data.stats.masters_processed} masters e ${data.stats.members_processed} membros processados com sucesso.`,
         });
       }
 
       return data;
     } catch (error: any) {
-      console.error('Erro na sincronização:', error);
+      console.error('[FRONTEND] Erro na sincronização:', error);
+      
+      // ✅ Mensagem de erro mais informativa
+      const errorMessage = error.message || error.toString() || 'Erro desconhecido';
+      
       toast({
         title: "❌ Erro na sincronização",
-        description: error.message || 'Erro desconhecido',
+        description: errorMessage,
         variant: "destructive"
       });
+      
       throw error;
     } finally {
       setSyncing(false);

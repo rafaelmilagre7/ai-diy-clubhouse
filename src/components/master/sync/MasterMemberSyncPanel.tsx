@@ -8,8 +8,11 @@ import { Upload, FileText, PlayCircle, CheckCircle, XCircle, AlertCircle, Downlo
 import { useMasterMemberSync } from '@/hooks/useMasterMemberSync';
 import { CSVPreview } from './CSVPreview';
 import { DryRunResults } from './DryRunResults';
+import { supabase } from '@/lib/supabase';
+import { useToast } from '@/hooks/use-toast';
 
 export const MasterMemberSyncPanel: React.FC = () => {
+  const { toast } = useToast();
   const { 
     syncing, 
     progress, 
@@ -50,7 +53,38 @@ export const MasterMemberSyncPanel: React.FC = () => {
     
     if (!confirm) return;
     
-    await syncFromCSV(selectedFile, false);
+    // ============================================
+    // FASE 3: Validação após sincronização
+    // ============================================
+    const result = await syncFromCSV(selectedFile, false);
+    
+    // ✅ Verificar se logs foram criados no banco
+    if (result?.success) {
+      try {
+        const { data: recentLogs, error: logsError } = await supabase
+          .from('master_member_sync_log')
+          .select('*')
+          .order('synced_at', { ascending: false })
+          .limit(10);
+        
+        if (logsError) {
+          console.error('[FRONTEND] Erro ao verificar logs:', logsError);
+        } else if (!recentLogs || recentLogs.length === 0) {
+          toast({
+            title: '⚠️ Aviso: Sincronização pode ter falho',
+            description: 'Nenhum log foi criado no banco. A edge function pode não ter sido executada corretamente.',
+            variant: 'destructive'
+          });
+        } else {
+          toast({
+            title: '✅ Sincronização verificada!',
+            description: `${recentLogs.length} operações confirmadas no banco de dados.`
+          });
+        }
+      } catch (error) {
+        console.error('[FRONTEND] Erro na validação:', error);
+      }
+    }
   };
 
   const downloadSampleCSV = () => {

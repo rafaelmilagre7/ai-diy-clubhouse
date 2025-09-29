@@ -32,18 +32,71 @@ Deno.serve(async (req) => {
   }
 
   try {
-    console.log('[SYNC] 🚀 Iniciando sincronização Master/Membros');
+    // ============================================
+    // FASE 2: Logs detalhados e validação de CSV
+    // ============================================
+    console.log('[SYNC] ========================================');
+    console.log('[SYNC] 🚀 INICIANDO SINCRONIZAÇÃO MASTER/MEMBROS');
+    console.log('[SYNC] Timestamp:', new Date().toISOString());
+    console.log('[SYNC] ========================================');
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey, {
       auth: { persistSession: false }
     });
 
-    const { csvData, dryRun = false } = await req.json();
-
-    if (!csvData || !Array.isArray(csvData)) {
-      throw new Error('CSV data inválido');
+    // Validar body recebido
+    let requestBody;
+    try {
+      requestBody = await req.json();
+    } catch (parseError) {
+      console.error('[SYNC] ❌ ERRO: Não foi possível fazer parse do JSON');
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Body da requisição inválido' 
+        }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
+    const { csvData, dryRun = false } = requestBody;
+
+    // ✅ VALIDAÇÃO CRÍTICA: Verificar se CSV foi recebido
+    if (!csvData || !Array.isArray(csvData)) {
+      console.error('[SYNC] ❌ ERRO CRÍTICO: CSV vazio ou não recebido');
+      console.error('[SYNC] csvData type:', typeof csvData);
+      console.error('[SYNC] csvData:', csvData);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'CSV não recebido ou está vazio',
+          details: 'O campo csvData deve ser um array válido'
+        }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    if (csvData.length === 0) {
+      console.error('[SYNC] ❌ ERRO: CSV sem dados');
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'CSV não contém nenhum dado válido'
+        }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    console.log(`[SYNC] ✅ CSV recebido com sucesso`);
     console.log(`[SYNC] 📊 Total de registros CSV: ${csvData.length}`);
     console.log(`[SYNC] 🔍 Modo: ${dryRun ? 'DRY-RUN (simulação)' : 'REAL'}`);
 
@@ -69,8 +122,19 @@ Deno.serve(async (req) => {
     const totalMembers = Array.from(masterGroups.values())
       .reduce((sum, members) => sum + members.length, 0);
 
-    console.log(`[SYNC] 👥 Masters únicos: ${totalMasters}`);
-    console.log(`[SYNC] 👤 Membros únicos: ${totalMembers}`);
+    console.log(`[SYNC] 👥 Masters únicos identificados: ${totalMasters}`);
+    console.log(`[SYNC] 👤 Membros únicos identificados: ${totalMembers}`);
+    console.log('[SYNC] ========================================');
+    console.log('[SYNC] 📋 LISTA DE MASTERS E MEMBROS:');
+    
+    // Log detalhado de cada master
+    let logIndex = 0;
+    for (const [masterEmail, members] of masterGroups) {
+      logIndex++;
+      console.log(`[SYNC] ${logIndex}. Master: ${masterEmail}`);
+      console.log(`[SYNC]    └─ Membros (${members.length}): ${members.join(', ')}`);
+    }
+    console.log('[SYNC] ========================================');
 
     const stats: SyncStats = {
       masters_processed: 0,
@@ -275,8 +339,14 @@ Deno.serve(async (req) => {
       console.log(`[SYNC] 💾 ${logs.length} logs salvos no banco`);
     }
 
-    console.log('[SYNC] ✅ Sincronização concluída!');
-    console.log(`[SYNC] 📊 Stats: ${JSON.stringify(stats)}`);
+    console.log('[SYNC] ========================================');
+    console.log('[SYNC] ✅ SINCRONIZAÇÃO CONCLUÍDA COM SUCESSO!');
+    console.log(`[SYNC] 📊 Masters processados: ${stats.masters_processed}`);
+    console.log(`[SYNC] 👥 Membros processados: ${stats.members_processed}`);
+    console.log(`[SYNC] 🏢 Organizations criadas: ${stats.organizations_created}`);
+    console.log(`[SYNC] ❌ Erros encontrados: ${stats.errors}`);
+    console.log(`[SYNC] 📝 Total de logs: ${logs.length}`);
+    console.log('[SYNC] ========================================');
 
     return new Response(
       JSON.stringify({
@@ -286,7 +356,10 @@ Deno.serve(async (req) => {
         logs: logs.slice(0, 100),
         totalLogs: logs.length
       }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { 
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
     );
 
   } catch (error) {
