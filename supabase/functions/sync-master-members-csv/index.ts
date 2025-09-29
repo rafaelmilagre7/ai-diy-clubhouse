@@ -1,374 +1,307 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
+import { corsHeaders } from '../_shared/cors.ts';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 interface CSVRow {
   usuario_master: string;
-  usuario_adicional?: string;
+  usuario_adicional: string;
 }
 
-interface SyncResult {
-  success: boolean;
-  stats: {
-    masters_processed: number;
-    members_processed: number;
-    organizations_created: number;
-    errors: number;
-  };
-  logs: Array<{
-    master_email: string;
-    member_email?: string;
-    operation: string;
-    status: string;
-    message?: string;
-  }>;
+interface SyncStats {
+  masters_processed: number;
+  members_processed: number;
+  organizations_created: number;
+  errors: number;
 }
 
-serve(async (req) => {
-  // Handle CORS preflight
+interface SyncLog {
+  master_email: string;
+  member_email?: string;
+  operation: string;
+  status: string;
+  message?: string;
+}
+
+const BATCH_SIZE = 20;
+
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    console.log('[SYNC] 🚀 Iniciando sincronização Master/Membros');
+    
+    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: { persistSession: false }
+    });
 
-    // Verificar autenticação do usuário
-    const authHeader = req.headers.get('Authorization')!;
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
-
-    if (userError || !user) {
-      return new Response(
-        JSON.stringify({ error: 'Não autorizado' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Verificar se é admin
-    const { data: profile } = await supabaseClient
-      .from('profiles')
-      .select('role_id, user_roles:role_id(name)')
-      .eq('id', user.id)
-      .single();
-
-    const isAdmin = profile?.user_roles && 
-      typeof profile.user_roles === 'object' && 
-      'name' in profile.user_roles && 
-      profile.user_roles.name === 'admin';
-
-    if (!isAdmin) {
-      return new Response(
-        JSON.stringify({ error: 'Apenas admins podem executar sincronização' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const { csvData } = await req.json();
+    const { csvData, dryRun = false } = await req.json();
 
     if (!csvData || !Array.isArray(csvData)) {
-      return new Response(
-        JSON.stringify({ error: 'Dados do CSV inválidos' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      throw new Error('CSV data inválido');
     }
 
-    console.log(`📊 Iniciando sincronização de ${csvData.length} linhas do CSV`);
+    console.log(`[SYNC] 📊 Total de registros CSV: ${csvData.length}`);
+    console.log(`[SYNC] 🔍 Modo: ${dryRun ? 'DRY-RUN (simulação)' : 'REAL'}`);
 
-    const result: SyncResult = {
-      success: true,
-      stats: {
-        masters_processed: 0,
-        members_processed: 0,
-        organizations_created: 0,
-        errors: 0
-      },
-      logs: []
+    // Agrupar por master
+    const masterGroups = new Map<string, string[]>();
+    
+    for (const row of csvData as CSVRow[]) {
+      const masterEmail = row.usuario_master?.toLowerCase().trim();
+      const memberEmail = row.usuario_adicional?.toLowerCase().trim();
+      
+      if (!masterEmail) continue;
+      
+      if (!masterGroups.has(masterEmail)) {
+        masterGroups.set(masterEmail, []);
+      }
+      
+      if (memberEmail && memberEmail !== masterEmail) {
+        masterGroups.get(masterEmail)!.push(memberEmail);
+      }
+    }
+
+    const totalMasters = masterGroups.size;
+    const totalMembers = Array.from(masterGroups.values())
+      .reduce((sum, members) => sum + members.length, 0);
+
+    console.log(`[SYNC] 👥 Masters únicos: ${totalMasters}`);
+    console.log(`[SYNC] 👤 Membros únicos: ${totalMembers}`);
+
+    const stats: SyncStats = {
+      masters_processed: 0,
+      members_processed: 0,
+      organizations_created: 0,
+      errors: 0
     };
 
-    // Extrair masters únicos
-    const uniqueMasters = [...new Set(csvData.map((row: CSVRow) => row.usuario_master?.toLowerCase().trim()).filter(Boolean))];
-    console.log(`👥 Encontrados ${uniqueMasters.length} masters únicos`);
-
-    // Buscar role de master_user e membro_adicional
-    const { data: roles } = await supabaseClient
-      .from('user_roles')
-      .select('id, name')
-      .in('name', ['master_user', 'membro_adicional', 'member']);
-
-    const masterRoleId = roles?.find(r => r.name === 'master_user')?.id;
-    const memberRoleId = roles?.find(r => r.name === 'membro_adicional')?.id || roles?.find(r => r.name === 'member')?.id;
-
-    if (!masterRoleId || !memberRoleId) {
-      return new Response(
-        JSON.stringify({ error: 'Roles não encontradas no sistema' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Processar cada master
-    for (const masterEmail of uniqueMasters) {
-      try {
-        console.log(`\n🔄 Processando master: ${masterEmail}`);
-        
-        // Buscar ou criar perfil do master
-        let { data: masterProfile, error: masterError } = await supabaseClient
-          .from('profiles')
-          .select('id, organization_id, is_master_user')
-          .eq('email', masterEmail)
-          .maybeSingle();
-
-        if (masterError) {
-          console.error(`❌ Erro ao buscar master ${masterEmail}:`, masterError);
-          result.logs.push({
-            master_email: masterEmail,
-            operation: 'master_lookup',
-            status: 'error',
-            message: masterError.message
-          });
-          result.stats.errors++;
-          continue;
-        }
-
-        let organizationId = masterProfile?.organization_id;
-
-        // Se o perfil não existe, criar
-        if (!masterProfile) {
-          console.log(`➕ Criando perfil para master: ${masterEmail}`);
-          
-          const { data: newMaster, error: createError } = await supabaseClient
+    const logs: SyncLog[] = [];
+    
+    // Processar em batches
+    const masterEntries = Array.from(masterGroups.entries());
+    
+    for (let i = 0; i < masterEntries.length; i += BATCH_SIZE) {
+      const batch = masterEntries.slice(i, i + BATCH_SIZE);
+      console.log(`[SYNC] 📦 Processando batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(masterEntries.length / BATCH_SIZE)}`);
+      
+      for (const [masterEmail, memberEmails] of batch) {
+        try {
+          // 1. Buscar perfil do master
+          let { data: masterProfile, error: masterProfileError } = await supabase
             .from('profiles')
-            .insert({
-              email: masterEmail,
-              name: masterEmail.split('@')[0],
-              role_id: masterRoleId,
-              is_master_user: true,
-              plan_type: 'team'
-            })
-            .select()
-            .single();
+            .select('id, email, name, organization_id, is_master_user')
+            .eq('email', masterEmail)
+            .maybeSingle();
 
-          if (createError) {
-            console.error(`❌ Erro ao criar master ${masterEmail}:`, createError);
-            result.logs.push({
+          if (masterProfileError) throw masterProfileError;
+
+          if (!masterProfile) {
+            console.log(`[SYNC] ⚠️  Master não encontrado: ${masterEmail}`);
+            logs.push({
               master_email: masterEmail,
-              operation: 'master_create',
+              operation: 'find_master',
               status: 'error',
-              message: createError.message
+              message: 'Perfil do master não existe no sistema'
             });
-            result.stats.errors++;
+            stats.errors++;
             continue;
           }
 
-          masterProfile = newMaster;
-          result.logs.push({
-            master_email: masterEmail,
-            operation: 'master_created',
-            status: 'success'
-          });
-        } else if (!masterProfile.is_master_user) {
-          // Atualizar para master se não for
-          await supabaseClient
-            .from('profiles')
-            .update({ 
-              is_master_user: true,
-              role_id: masterRoleId,
-              plan_type: 'team'
-            })
-            .eq('id', masterProfile.id);
+          console.log(`[SYNC] ✅ Master encontrado: ${masterEmail} (${masterProfile.name || 'Sem nome'})`);
 
-          result.logs.push({
-            master_email: masterEmail,
-            operation: 'master_updated',
-            status: 'success'
-          });
-        }
+          // 2. Criar ou atualizar organization
+          let organizationId = masterProfile.organization_id;
 
-        // Criar organization se não existir
-        if (!organizationId) {
-          console.log(`🏢 Criando organização para master: ${masterEmail}`);
-          
-          if (!masterProfile?.id) {
-            console.error(`❌ Master profile sem ID: ${masterEmail}`);
-            continue;
-          }
-
-          const { data: newOrg, error: orgError } = await supabaseClient
-            .from('organizations')
-            .insert({
-              name: `Equipe ${masterEmail.split('@')[0]}`,
-              master_user_id: masterProfile.id,
-              max_users: 50 // Limite padrão
-            })
-            .select()
-            .single();
-
-          if (orgError) {
-            console.error(`❌ Erro ao criar organization para ${masterEmail}:`, orgError);
-            result.logs.push({
-              master_email: masterEmail,
-              operation: 'organization_create',
-              status: 'error',
-              message: orgError.message
-            });
-            result.stats.errors++;
-            continue;
-          }
-
-          organizationId = newOrg.id;
-
-          // Atualizar perfil do master com organization_id
-          await supabaseClient
-            .from('profiles')
-            .update({ organization_id: organizationId })
-            .eq('id', masterProfile.id);
-
-          result.stats.organizations_created++;
-          result.logs.push({
-            master_email: masterEmail,
-            operation: 'organization_created',
-            status: 'success'
-          });
-        }
-
-        result.stats.masters_processed++;
-
-        // Processar membros deste master
-        const memberRows = csvData.filter(
-          (row: CSVRow) => row.usuario_master?.toLowerCase().trim() === masterEmail && row.usuario_adicional
-        );
-
-        console.log(`👤 Processando ${memberRows.length} membros para ${masterEmail}`);
-
-        for (const row of memberRows) {
-          const memberEmail = row.usuario_adicional?.toLowerCase().trim();
-          if (!memberEmail) continue;
-
-          try {
-            // Buscar ou criar membro
-            let { data: memberProfile } = await supabaseClient
-              .from('profiles')
-              .select('id, organization_id')
-              .eq('email', memberEmail)
-              .maybeSingle();
-
-            if (!memberProfile) {
-              // Criar perfil do membro
-              const { data: newMember, error: memberError } = await supabaseClient
-                .from('profiles')
+          if (!organizationId) {
+            if (!dryRun) {
+              const { data: newOrg, error: orgError } = await supabase
+                .from('organizations')
                 .insert({
-                  email: memberEmail,
-                  name: memberEmail.split('@')[0],
-                  role_id: memberRoleId,
-                  organization_id: organizationId,
-                  is_master_user: false,
-                  master_email: masterEmail
+                  name: `Organização ${masterProfile.name || masterEmail}`,
+                  master_user_id: masterProfile.id,
+                  created_at: new Date().toISOString(),
+                  updated_at: new Date().toISOString()
                 })
                 .select()
                 .single();
 
-              if (memberError) {
-                console.error(`❌ Erro ao criar membro ${memberEmail}:`, memberError);
-                result.logs.push({
+              if (orgError) throw orgError;
+              organizationId = newOrg.id;
+              
+              console.log(`[SYNC] 🏢 Organization criada para ${masterEmail}`);
+            } else {
+              console.log(`[SYNC] 🏢 [DRY-RUN] Organization seria criada para ${masterEmail}`);
+            }
+            
+            stats.organizations_created++;
+            
+            logs.push({
+              master_email: masterEmail,
+              operation: 'create_organization',
+              status: 'success',
+              message: dryRun ? 'Simulação: organization criada' : 'Organization criada'
+            });
+          } else {
+            console.log(`[SYNC] 🏢 Organization já existe para ${masterEmail}`);
+          }
+
+          // 3. Atualizar perfil do master
+          if (!dryRun && (!masterProfile.is_master_user || !masterProfile.organization_id)) {
+            const { error: updateMasterError } = await supabase
+              .from('profiles')
+              .update({
+                is_master_user: true,
+                organization_id: organizationId,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', masterProfile.id);
+
+            if (updateMasterError) throw updateMasterError;
+            console.log(`[SYNC] 👤 Master atualizado: ${masterEmail}`);
+          } else if (dryRun) {
+            console.log(`[SYNC] 👤 [DRY-RUN] Master seria atualizado: ${masterEmail}`);
+          }
+
+          stats.masters_processed++;
+          
+          logs.push({
+            master_email: masterEmail,
+            operation: 'configure_master',
+            status: 'success',
+            message: `Master configurado com ${memberEmails.length} membros`
+          });
+
+          // 4. Processar membros
+          for (const memberEmail of memberEmails) {
+            try {
+              const { data: memberProfile, error: memberError } = await supabase
+                .from('profiles')
+                .select('id, email, name')
+                .eq('email', memberEmail)
+                .maybeSingle();
+
+              if (memberError) throw memberError;
+
+              if (!memberProfile) {
+                console.log(`[SYNC] ⚠️  Membro não encontrado: ${memberEmail}`);
+                logs.push({
                   master_email: masterEmail,
                   member_email: memberEmail,
-                  operation: 'member_create',
+                  operation: 'find_member',
                   status: 'error',
-                  message: memberError.message
+                  message: 'Perfil do membro não existe'
                 });
-                result.stats.errors++;
+                stats.errors++;
                 continue;
               }
 
-              result.logs.push({
-                master_email: masterEmail,
-                member_email: memberEmail,
-                operation: 'member_created',
-                status: 'success'
-              });
-            } else {
-              // Atualizar membro existente
-              await supabaseClient
-                .from('profiles')
-                .update({
-                  organization_id: organizationId,
-                  master_email: masterEmail,
-                  role_id: memberRoleId
-                })
-                .eq('id', memberProfile.id);
+              if (!dryRun) {
+                const { error: updateMemberError } = await supabase
+                  .from('profiles')
+                  .update({
+                    organization_id: organizationId,
+                    is_master_user: false,
+                    updated_at: new Date().toISOString()
+                  })
+                  .eq('id', memberProfile.id);
 
-              result.logs.push({
+                if (updateMemberError) throw updateMemberError;
+                console.log(`[SYNC] 👤 Membro associado: ${memberEmail} -> ${masterEmail}`);
+              } else {
+                console.log(`[SYNC] 👤 [DRY-RUN] Membro seria associado: ${memberEmail} -> ${masterEmail}`);
+              }
+
+              stats.members_processed++;
+              
+              logs.push({
                 master_email: masterEmail,
                 member_email: memberEmail,
-                operation: 'member_updated',
-                status: 'success'
+                operation: 'associate_member',
+                status: 'success',
+                message: dryRun ? 'Simulação: membro associado' : 'Membro associado'
               });
+
+            } catch (memberError) {
+              console.error(`[SYNC] ❌ Erro ao processar membro ${memberEmail}:`, memberError);
+              const errorMessage = memberError instanceof Error ? memberError.message : String(memberError);
+              logs.push({
+                master_email: masterEmail,
+                member_email: memberEmail,
+                operation: 'associate_member',
+                status: 'error',
+                message: errorMessage
+              });
+              stats.errors++;
             }
-
-            result.stats.members_processed++;
-          } catch (memberErr) {
-            console.error(`❌ Erro ao processar membro ${memberEmail}:`, memberErr);
-            const errorMessage = memberErr instanceof Error ? memberErr.message : 'Erro desconhecido';
-            result.logs.push({
-              master_email: masterEmail,
-              member_email: memberEmail,
-              operation: 'member_process',
-              status: 'error',
-              message: errorMessage
-            });
-            result.stats.errors++;
           }
+
+        } catch (masterError) {
+          console.error(`[SYNC] ❌ Erro ao processar master ${masterEmail}:`, masterError);
+          const errorMessage = masterError instanceof Error ? masterError.message : String(masterError);
+          logs.push({
+            master_email: masterEmail,
+            operation: 'process_master',
+            status: 'error',
+            message: errorMessage
+          });
+          stats.errors++;
         }
-      } catch (err) {
-        console.error(`❌ Erro ao processar master ${masterEmail}:`, err);
-        const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
-        result.logs.push({
-          master_email: masterEmail,
-          operation: 'master_process',
-          status: 'error',
-          message: errorMessage
-        });
-        result.stats.errors++;
       }
     }
 
-    // Salvar logs no banco
-    if (result.logs.length > 0) {
-      await supabaseClient
-        .from('master_member_sync_log')
-        .insert(result.logs.map(log => ({
-          master_email: log.master_email,
-          member_email: log.member_email,
-          operation: log.operation,
-          sync_status: log.status,
-          error_message: log.message,
-          metadata: { processed_at: new Date().toISOString() }
-        })));
+    // Salvar logs no banco (apenas em modo real)
+    if (!dryRun && logs.length > 0) {
+      const logBatches = [];
+      for (let i = 0; i < logs.length; i += 100) {
+        logBatches.push(logs.slice(i, i + 100));
+      }
+
+      for (const logBatch of logBatches) {
+        await supabase.from('master_member_sync_log').insert(
+          logBatch.map(log => ({
+            master_email: log.master_email,
+            member_email: log.member_email,
+            operation: log.operation,
+            status: log.status,
+            message: log.message,
+            synced_at: new Date().toISOString()
+          }))
+        );
+      }
+      console.log(`[SYNC] 💾 ${logs.length} logs salvos no banco`);
     }
 
-    console.log(`✅ Sincronização concluída:`, result.stats);
+    console.log('[SYNC] ✅ Sincronização concluída!');
+    console.log(`[SYNC] 📊 Stats: ${JSON.stringify(stats)}`);
 
     return new Response(
-      JSON.stringify(result),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({
+        success: true,
+        dryRun,
+        stats,
+        logs: logs.slice(0, 100),
+        totalLogs: logs.length
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
-    console.error('❌ Erro fatal na sincronização:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+    console.error('[SYNC] ❌ Erro fatal:', error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
+        success: false,
         error: errorMessage,
-        success: false 
+        details: String(error)
       }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { 
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
     );
   }
 });

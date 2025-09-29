@@ -19,8 +19,22 @@ interface SyncLog {
 
 interface SyncResult {
   success: boolean;
+  dryRun?: boolean;
   stats: SyncStats;
   logs: SyncLog[];
+  totalLogs: number;
+}
+
+interface CSVValidation {
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+  stats: {
+    totalRows: number;
+    uniqueMasters: number;
+    uniqueMembers: number;
+    emptyRows: number;
+  };
 }
 
 export const useMasterMemberSync = () => {
@@ -28,6 +42,7 @@ export const useMasterMemberSync = () => {
   const [syncing, setSyncing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [syncResult, setSyncResult] = useState<SyncResult | null>(null);
+  const [validationResult, setValidationResult] = useState<CSVValidation | null>(null);
 
   const parseCSVFile = (file: File): Promise<any[]> => {
     return new Promise((resolve, reject) => {
@@ -73,15 +88,90 @@ export const useMasterMemberSync = () => {
     });
   };
 
-  const syncFromCSV = async (file: File) => {
+  const validateCSV = async (file: File): Promise<CSVValidation> => {
+    try {
+      const csvData = await parseCSVFile(file);
+      
+      const errors: string[] = [];
+      const warnings: string[] = [];
+      
+      if (csvData.length === 0) {
+        errors.push('CSV não contém dados válidos');
+      }
+
+      const masters = new Set<string>();
+      const members = new Set<string>();
+      let emptyRows = 0;
+
+      csvData.forEach((row, index) => {
+        const masterEmail = row.usuario_master?.toLowerCase().trim();
+        const memberEmail = row.usuario_adicional?.toLowerCase().trim();
+
+        if (!masterEmail) {
+          emptyRows++;
+          return;
+        }
+
+        // Validar formato de email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(masterEmail)) {
+          errors.push(`Linha ${index + 2}: Email master inválido: ${masterEmail}`);
+        }
+
+        masters.add(masterEmail);
+
+        if (memberEmail) {
+          if (!emailRegex.test(memberEmail)) {
+            warnings.push(`Linha ${index + 2}: Email membro inválido: ${memberEmail}`);
+          }
+          members.add(memberEmail);
+        }
+      });
+
+      if (masters.size === 0) {
+        errors.push('Nenhum master válido encontrado');
+      }
+
+      if (masters.size < 10) {
+        warnings.push(`Apenas ${masters.size} masters encontrados. Isso parece correto?`);
+      }
+
+      const validation: CSVValidation = {
+        isValid: errors.length === 0,
+        errors,
+        warnings,
+        stats: {
+          totalRows: csvData.length,
+          uniqueMasters: masters.size,
+          uniqueMembers: members.size,
+          emptyRows
+        }
+      };
+
+      setValidationResult(validation);
+      return validation;
+
+    } catch (error: any) {
+      const validation: CSVValidation = {
+        isValid: false,
+        errors: [error.message || 'Erro ao validar CSV'],
+        warnings: [],
+        stats: { totalRows: 0, uniqueMasters: 0, uniqueMembers: 0, emptyRows: 0 }
+      };
+      setValidationResult(validation);
+      return validation;
+    }
+  };
+
+  const syncFromCSV = async (file: File, dryRun: boolean = false) => {
     try {
       setSyncing(true);
       setProgress(0);
       setSyncResult(null);
 
       toast({
-        title: "📊 Iniciando sincronização",
-        description: "Processando arquivo CSV..."
+        title: dryRun ? "🧪 Simulação iniciada" : "📊 Iniciando sincronização",
+        description: dryRun ? "Validando dados sem aplicar mudanças..." : "Processando arquivo CSV..."
       });
 
       // Parse CSV
@@ -94,13 +184,13 @@ export const useMasterMemberSync = () => {
       setProgress(25);
 
       toast({
-        title: "🔄 Sincronizando...",
-        description: `Processando ${csvData.length} registros...`
+        title: "🔄 Processando...",
+        description: `${csvData.length} registros encontrados. ${dryRun ? 'Simulando...' : 'Sincronizando...'}`
       });
 
       // Call edge function
       const { data, error } = await supabase.functions.invoke('sync-master-members-csv', {
-        body: { csvData }
+        body: { csvData, dryRun }
       });
 
       if (error) throw error;
@@ -108,10 +198,17 @@ export const useMasterMemberSync = () => {
       setProgress(100);
       setSyncResult(data);
 
-      toast({
-        title: "✅ Sincronização concluída!",
-        description: `${data.stats.masters_processed} masters e ${data.stats.members_processed} membros processados.`,
-      });
+      if (dryRun) {
+        toast({
+          title: "✅ Simulação concluída!",
+          description: `${data.stats.masters_processed} masters e ${data.stats.members_processed} membros seriam processados.`,
+        });
+      } else {
+        toast({
+          title: "✅ Sincronização concluída!",
+          description: `${data.stats.masters_processed} masters e ${data.stats.members_processed} membros processados.`,
+        });
+      }
 
       return data;
     } catch (error: any) {
@@ -147,6 +244,8 @@ export const useMasterMemberSync = () => {
     syncing,
     progress,
     syncResult,
+    validationResult,
+    validateCSV,
     syncFromCSV,
     getSyncHistory
   };

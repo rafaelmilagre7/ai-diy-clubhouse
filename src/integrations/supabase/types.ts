@@ -2408,6 +2408,33 @@ export type Database = {
         }
         Relationships: []
       }
+      master_member_backup: {
+        Row: {
+          backup_date: string
+          backup_reason: string
+          id: string
+          organizations_backup: Json
+          profiles_backup: Json
+          sync_log_backup: Json
+        }
+        Insert: {
+          backup_date?: string
+          backup_reason?: string
+          id?: string
+          organizations_backup: Json
+          profiles_backup: Json
+          sync_log_backup: Json
+        }
+        Update: {
+          backup_date?: string
+          backup_reason?: string
+          id?: string
+          organizations_backup?: Json
+          profiles_backup?: Json
+          sync_log_backup?: Json
+        }
+        Relationships: []
+      }
       master_member_sync_log: {
         Row: {
           created_at: string | null

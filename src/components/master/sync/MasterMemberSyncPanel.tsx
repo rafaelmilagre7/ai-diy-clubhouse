@@ -1,101 +1,120 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { 
-  Upload, 
-  FileSpreadsheet, 
-  CheckCircle2, 
-  XCircle, 
-  AlertCircle,
-  Users,
-  Building2,
-  UserPlus,
-  Download,
-  Info
-} from 'lucide-react';
+import { Upload, FileText, PlayCircle, CheckCircle, XCircle, AlertCircle, Download } from 'lucide-react';
 import { useMasterMemberSync } from '@/hooks/useMasterMemberSync';
-import { cn } from '@/lib/utils';
+import { CSVPreview } from './CSVPreview';
+import { DryRunResults } from './DryRunResults';
 
 export const MasterMemberSyncPanel: React.FC = () => {
-  const { syncing, progress, syncResult, syncFromCSV } = useMasterMemberSync();
+  const { 
+    syncing, 
+    progress, 
+    syncResult, 
+    validationResult,
+    validateCSV,
+    syncFromCSV 
+  } = useMasterMemberSync();
+
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showPreview, setShowPreview] = useState(false);
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file && file.name.endsWith('.csv')) {
-      setSelectedFile(file);
-    } else {
-      alert('Por favor, selecione um arquivo CSV válido');
-    }
+    if (!file) return;
+
+    setSelectedFile(file);
+    setShowPreview(false);
+    
+    await validateCSV(file);
   };
 
-  const handleSync = async () => {
+  const handlePreview = () => {
+    setShowPreview(true);
+  };
+
+  const handleDryRun = async () => {
     if (!selectedFile) return;
-    await syncFromCSV(selectedFile);
+    await syncFromCSV(selectedFile, true);
   };
 
-  const handleClearFile = () => {
-    setSelectedFile(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
+  const handleRealSync = async () => {
+    if (!selectedFile) return;
+    
+    const confirm = window.confirm(
+      `Você está prestes a sincronizar ${validationResult?.stats.uniqueMasters || 0} masters e ${validationResult?.stats.uniqueMembers || 0} membros.\n\nEsta ação irá modificar o banco de dados.\n\nDeseja continuar?`
+    );
+    
+    if (!confirm) return;
+    
+    await syncFromCSV(selectedFile, false);
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'success': return <CheckCircle2 className="w-4 h-4 text-green-600" />;
-      case 'error': return <XCircle className="w-4 h-4 text-red-600" />;
-      case 'warning': return <AlertCircle className="w-4 h-4 text-yellow-600" />;
-      default: return null;
-    }
-  };
-
-  const getOperationLabel = (operation: string) => {
-    const labels: Record<string, string> = {
-      'master_created': 'Master Criado',
-      'master_updated': 'Master Atualizado',
-      'member_created': 'Membro Criado',
-      'member_updated': 'Membro Atualizado',
-      'organization_created': 'Organização Criada',
-      'skipped': 'Ignorado',
-      'error': 'Erro'
-    };
-    return labels[operation] || operation;
+  const downloadSampleCSV = () => {
+    const csvContent = 'usuario_master,usuario_adicional\n' +
+      'master1@example.com,membro1@example.com\n' +
+      'master1@example.com,membro2@example.com\n' +
+      'master2@example.com,membro3@example.com\n';
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'exemplo_master_membros.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
   };
 
   return (
     <div className="space-y-6">
-      {/* Header Info */}
-      <Alert>
-        <Info className="h-4 w-4" />
-        <AlertTitle>Sistema de Sincronização Master/Membros</AlertTitle>
-        <AlertDescription>
-          Faça upload do arquivo CSV com as colunas <code>usuario_master</code> e <code>usuario_adicional</code> 
-          para sincronizar a estrutura de masters e seus membros de equipe.
-        </AlertDescription>
-      </Alert>
-
-      {/* Upload Card */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Upload className="w-5 h-5" />
-            Upload do CSV
+            <FileText className="w-5 h-5" />
+            Instruções
           </CardTitle>
           <CardDescription>
-            Selecione o arquivo CSV exportado da planilha
+            Como preparar o arquivo CSV para sincronização
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">
+              O CSV deve conter duas colunas:
+            </p>
+            <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1 ml-4">
+              <li><strong>usuario_master</strong>: Email do usuário master (obrigatório)</li>
+              <li><strong>usuario_adicional</strong>: Email do membro da equipe (opcional)</li>
+            </ul>
+          </div>
+          
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription className="text-sm">
+              Cada linha pode ter o mesmo master com diferentes membros. O sistema irá agrupar automaticamente.
+            </AlertDescription>
+          </Alert>
+
+          <Button onClick={downloadSampleCSV} variant="outline" size="sm">
+            <Download className="w-4 h-4 mr-2" />
+            Baixar CSV de Exemplo
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>1. Selecionar Arquivo CSV</CardTitle>
+          <CardDescription>
+            Faça upload do arquivo com a estrutura de masters e membros
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center gap-4">
             <input
-              ref={fileInputRef}
               type="file"
               accept=".csv"
               onChange={handleFileSelect}
@@ -104,165 +123,139 @@ export const MasterMemberSyncPanel: React.FC = () => {
               disabled={syncing}
             />
             <label htmlFor="csv-upload">
-              <Button
-                variant="outline"
-                disabled={syncing}
-                className="cursor-pointer"
-                asChild
-              >
-                <span>
-                  <FileSpreadsheet className="w-4 h-4 mr-2" />
+              <Button asChild variant="outline" disabled={syncing}>
+                <span className="cursor-pointer">
+                  <Upload className="w-4 h-4 mr-2" />
                   Selecionar CSV
                 </span>
               </Button>
             </label>
             
             {selectedFile && (
-              <div className="flex items-center gap-2 flex-1">
-                <Badge variant="secondary" className="gap-1">
-                  <FileSpreadsheet className="w-3 h-3" />
-                  {selectedFile.name}
+              <div className="flex items-center gap-2">
+                <FileText className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm font-medium">{selectedFile.name}</span>
+                <Badge variant="secondary">
+                  {(selectedFile.size / 1024).toFixed(1)} KB
                 </Badge>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleClearFile}
-                  disabled={syncing}
-                >
-                  <XCircle className="w-4 h-4" />
-                </Button>
               </div>
             )}
           </div>
 
-          {selectedFile && !syncing && !syncResult && (
-            <Button 
-              onClick={handleSync} 
-              className="w-full gap-2"
-              size="lg"
-            >
-              <Upload className="w-4 h-4" />
-              Iniciar Sincronização
-            </Button>
+          {validationResult && (
+            <div className="space-y-3">
+              {validationResult.errors.length > 0 && (
+                <Alert variant="destructive">
+                  <XCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    <div className="space-y-1">
+                      {validationResult.errors.map((error, i) => (
+                        <div key={i} className="text-sm">{error}</div>
+                      ))}
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {validationResult.warnings.length > 0 && (
+                <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    <div className="space-y-1">
+                      {validationResult.warnings.map((warning, i) => (
+                        <div key={i} className="text-sm">{warning}</div>
+                      ))}
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {validationResult.isValid && (
+                <Alert>
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <AlertDescription>
+                    <div className="space-y-1 text-sm">
+                      <div>✅ CSV válido e pronto para sincronização</div>
+                      <div className="grid grid-cols-2 gap-2 mt-2 text-muted-foreground">
+                        <div>Masters: <strong>{validationResult.stats.uniqueMasters}</strong></div>
+                        <div>Membros: <strong>{validationResult.stats.uniqueMembers}</strong></div>
+                        <div>Total de linhas: <strong>{validationResult.stats.totalRows}</strong></div>
+                        <div>Linhas vazias: <strong>{validationResult.stats.emptyRows}</strong></div>
+                      </div>
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
           )}
 
-          {syncing && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Sincronizando...</span>
-                <span className="font-medium">{progress}%</span>
-              </div>
-              <Progress value={progress} className="h-2" />
+          {selectedFile && validationResult?.isValid && (
+            <div className="flex gap-2">
+              <Button onClick={handlePreview} variant="outline" size="sm">
+                <FileText className="w-4 h-4 mr-2" />
+                Ver Preview
+              </Button>
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Results Card */}
-      {syncResult && (
+      {showPreview && selectedFile && validationResult && (
+        <CSVPreview file={selectedFile} validation={validationResult} />
+      )}
+
+      {selectedFile && validationResult?.isValid && (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              {syncResult.success ? (
-                <>
-                  <CheckCircle2 className="w-5 h-5 text-green-600" />
-                  Sincronização Concluída
-                </>
-              ) : (
-                <>
-                  <XCircle className="w-5 h-5 text-red-600" />
-                  Sincronização com Erros
-                </>
-              )}
-            </CardTitle>
+            <CardTitle>2. Executar Sincronização</CardTitle>
+            <CardDescription>
+              Escolha entre simulação (dry-run) ou sincronização real
+            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Estatísticas */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="flex flex-col items-center p-4 bg-primary/5 rounded-lg">
-                <Users className="w-8 h-8 text-primary mb-2" />
-                <div className="text-2xl font-bold">{syncResult.stats.masters_processed}</div>
-                <div className="text-xs text-muted-foreground">Masters</div>
-              </div>
-              
-              <div className="flex flex-col items-center p-4 bg-blue-500/5 rounded-lg">
-                <UserPlus className="w-8 h-8 text-blue-600 mb-2" />
-                <div className="text-2xl font-bold">{syncResult.stats.members_processed}</div>
-                <div className="text-xs text-muted-foreground">Membros</div>
-              </div>
-              
-              <div className="flex flex-col items-center p-4 bg-green-500/5 rounded-lg">
-                <Building2 className="w-8 h-8 text-green-600 mb-2" />
-                <div className="text-2xl font-bold">{syncResult.stats.organizations_created}</div>
-                <div className="text-xs text-muted-foreground">Organizations</div>
-              </div>
-              
-              <div className="flex flex-col items-center p-4 bg-red-500/5 rounded-lg">
-                <XCircle className="w-8 h-8 text-red-600 mb-2" />
-                <div className="text-2xl font-bold">{syncResult.stats.errors}</div>
-                <div className="text-xs text-muted-foreground">Erros</div>
-              </div>
+          <CardContent className="space-y-4">
+            <div className="flex gap-3">
+              <Button 
+                onClick={handleDryRun}
+                disabled={syncing}
+                variant="secondary"
+              >
+                <PlayCircle className="w-4 h-4 mr-2" />
+                Simular (Dry-Run)
+              </Button>
+
+              <Button 
+                onClick={handleRealSync}
+                disabled={syncing || syncResult?.dryRun !== true}
+                variant="default"
+              >
+                <CheckCircle className="w-4 h-4 mr-2" />
+                Sincronizar (Real)
+              </Button>
             </div>
 
-            <Separator />
+            {!syncResult?.dryRun && (
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="text-sm">
+                  ⚠️ Recomendado: Execute primeiro a <strong>Simulação (Dry-Run)</strong> para validar os dados antes da sincronização real.
+                </AlertDescription>
+              </Alert>
+            )}
 
-            {/* Logs */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <h4 className="font-semibold">Log de Operações</h4>
-                <Badge variant="outline">
-                  {syncResult.logs.length} operações
-                </Badge>
+            {syncing && (
+              <div className="space-y-2">
+                <Progress value={progress} className="h-2" />
+                <p className="text-sm text-muted-foreground text-center">
+                  Processando... {progress}%
+                </p>
               </div>
-
-              <ScrollArea className="h-[300px] w-full rounded-md border p-4">
-                <div className="space-y-2">
-                  {syncResult.logs.map((log, index) => (
-                    <div
-                      key={index}
-                      className={cn(
-                        "flex items-start gap-3 p-3 rounded-lg text-sm",
-                        log.status === 'success' && "bg-green-50 dark:bg-green-950/20",
-                        log.status === 'error' && "bg-red-50 dark:bg-red-950/20",
-                        log.status === 'warning' && "bg-yellow-50 dark:bg-yellow-950/20"
-                      )}
-                    >
-                      {getStatusIcon(log.status)}
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium truncate">{log.master_email}</div>
-                        {log.member_email && (
-                          <div className="text-xs text-muted-foreground truncate">
-                            → {log.member_email}
-                          </div>
-                        )}
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge variant="secondary" className="text-xs">
-                            {getOperationLabel(log.operation)}
-                          </Badge>
-                          {log.message && (
-                            <span className="text-xs text-muted-foreground">{log.message}</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </ScrollArea>
-            </div>
-
-            <Button 
-              variant="outline" 
-              className="w-full gap-2"
-              onClick={() => {
-                handleClearFile();
-                window.location.reload();
-              }}
-            >
-              <Download className="w-4 h-4" />
-              Nova Sincronização
-            </Button>
+            )}
           </CardContent>
         </Card>
+      )}
+
+      {syncResult && (
+        <DryRunResults result={syncResult} />
       )}
     </div>
   );
