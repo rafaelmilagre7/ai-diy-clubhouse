@@ -81,9 +81,38 @@ export function useInviteDelete() {
     }
   }, []);
 
+  // 🗑️ DELETAR FISICAMENTE CONVITE POR EMAIL - Para casos específicos
+  const forceDeleteInviteByEmail = useCallback(async (email: string) => {
+    try {
+      console.log(`🗑️ Deletando fisicamente convites para: ${email}`);
+      
+      const { data, error } = await supabase.functions.invoke('admin-delete-invite', {
+        body: { email }
+      });
+      
+      if (error) throw error;
+      
+      console.log('✅ Deleção física concluída:', data);
+      toast.success('🗑️ Convite deletado fisicamente', {
+        description: `${data.message}`,
+        duration: 4000
+      });
+      
+      return true;
+    } catch (err: any) {
+      console.error('❌ Erro na deleção física:', err);
+      toast.error('⚠️ Falha na deleção física', {
+        description: err.message || 'Não foi possível deletar o convite fisicamente',
+        duration: 4000
+      });
+      return false;
+    }
+  }, []);
+
   return {
     isDeleting,
     deleteInvite,
-    cleanupDeletedInvites
+    cleanupDeletedInvites,
+    forceDeleteInviteByEmail
   };
 }
