@@ -81,17 +81,41 @@ export default function AdminUsers() {
     }));
   }, [roles]);
 
-  // Separar masters dos outros usuários para visualização hierárquica baseada em master_email
+  // ✅ FASE 3: Separar masters usando organization_id ao invés de master_email
   const { masterUsers, regularUsers, masterGroupsWithMembers } = useMemo(() => {
-    // Masters são usuários que têm outros apontando para seu email
-    const masterEmails = new Set(users.filter(u => (u as any).master_email).map(u => (u as any).master_email));
-    const masters = users.filter(u => masterEmails.has(u.email));
-    const regulars = users.filter(u => !masterEmails.has(u.email) && !(u as any).master_email);
+    // Masters são identificados por:
+    // 1. is_master_user = true, OU
+    // 2. Ter um organization_id e ser o único com esse organization_id (sem membros), OU
+    // 3. Ter membros associados à sua organização
     
-    // Para o filtro master, agrupamos masters com seus membros por master_email
+    const masters = users.filter(u => {
+      // Se tem flag de master, é master
+      if (u.is_master_user) return true;
+      
+      // Se tem organization_id, verificar se há membros dessa org
+      if (u.organization_id) {
+        const orgMembers = users.filter(member => 
+          member.organization_id === u.organization_id && member.id !== u.id
+        );
+        return orgMembers.length > 0;
+      }
+      
+      return false;
+    });
+    
+    // Usuários regulares não são masters e não pertencem a organizações
+    const regulars = users.filter(u => 
+      !u.is_master_user && 
+      !u.organization_id
+    );
+    
+    // Agrupar masters com seus membros via organization_id
     const masterGroups = masters.map(master => {
       const teamMembers = users.filter(u => 
-        (u as any).master_email === master.email && u.id !== master.id
+        u.organization_id && 
+        u.organization_id === master.organization_id && 
+        u.id !== master.id &&
+        !u.is_master_user
       );
       return { master, teamMembers };
     });

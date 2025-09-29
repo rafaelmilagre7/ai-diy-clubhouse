@@ -109,12 +109,12 @@ export function useUsers() {
     try {
       const offset = (page - 1) * pageSize;
       
-      // Chamar função SQL corrigida
-      const { data, error: queryError } = await supabase.rpc('get_users_with_filters_corrected', {
-        p_limit: pageSize,
-        p_offset: offset,
+      // ✅ FASE 2: Chamar função SQL v2 com parâmetro correto
+      const { data, error: queryError } = await supabase.rpc('get_users_with_filters_v2', {
         p_search_query: searchQuery.trim() || null,
-        p_user_type: filterType || 'all'
+        p_filter_type: filterType || 'all',
+        p_limit: pageSize,
+        p_offset: offset
       });
 
       if (queryError) {

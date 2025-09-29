@@ -6855,6 +6855,31 @@ export type Database = {
           user_roles: Json
         }[]
       }
+      get_users_with_filters_v2: {
+        Args: {
+          p_filter_type?: string
+          p_limit?: number
+          p_offset?: number
+          p_search_query?: string
+        }
+        Returns: {
+          avatar_url: string
+          company_name: string
+          created_at: string
+          email: string
+          id: string
+          industry: string
+          is_master_user: boolean
+          master_email: string
+          name: string
+          onboarding_completed: boolean
+          organization: Json
+          organization_id: string
+          role_id: string
+          total_count: number
+          user_roles: Json
+        }[]
+      }
       get_users_with_master_members_public: {
         Args: {
           p_limit?: number
