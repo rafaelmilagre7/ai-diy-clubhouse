@@ -6869,12 +6869,17 @@ export type Database = {
           email: string
           id: string
           industry: string
+          is_master_user: boolean
+          master_email: string
           master_user_id: string
           member_count: number
           name: string
+          onboarding_completed: boolean
+          organization: Json
           organization_id: string
           role: string
           role_id: string
+          total_count: number
           user_roles: Json
         }[]
       }
