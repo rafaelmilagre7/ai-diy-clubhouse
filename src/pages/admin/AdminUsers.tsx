@@ -284,8 +284,19 @@ export default function AdminUsers() {
                 })}
               </div>
               {masterUsers.length > 0 && (
-                <div className="text-sm text-muted-foreground text-center mt-4">
-                  💡 Para ver os membros da equipe associados aos masters, você pode clicar em "Ver todos os usuários" acima
+                <div className="text-sm text-muted-foreground bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
+                  <div className="flex items-start gap-2">
+                    <div className="text-blue-600 mt-0.5">💡</div>
+                    <div>
+                      <p className="font-medium text-blue-800 mb-1">
+                        Como ver membros da equipe dos masters:
+                      </p>
+                      <p className="text-blue-700">
+                        Ao filtrar por "Masters", você está vendo todos os masters e seus membros de equipe associados. 
+                        Para ver apenas os masters sem os membros, use uma busca específica.
+                      </p>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
