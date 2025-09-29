@@ -7,18 +7,45 @@ import { toast } from 'sonner';
 import { usePermissions, Role } from '@/hooks/auth/usePermissions';
 import { useGlobalLoading } from '@/hooks/useGlobalLoading';
 
+interface UserStats {
+  total_users: number;
+  masters: number;
+  team_members: number;
+  organizations: number;
+  individual_users: number;
+}
+
+interface PaginatedUsersResponse {
+  users: UserProfile[];
+  totalUsers: number;
+}
+
 export function useUsers() {
   const { user, isAdmin } = useAuth();
   const { hasPermission } = usePermissions();
   const { setLoading } = useGlobalLoading();
   
   const [users, setUsers] = useState<UserProfile[]>([]);
+  const [stats, setStats] = useState<UserStats>({
+    total_users: 0,
+    masters: 0,
+    team_members: 0,
+    organizations: 0,
+    individual_users: 0
+  });
   const [availableRoles, setAvailableRoles] = useState<Role[]>([]);
   const [loading, setLocalLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [filterType, setFilterType] = useState<string>('');
+  const [organizationFilter, setOrganizationFilter] = useState<string>('');
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [error, setError] = useState<Error | null>(null);
+  
+  // Paginação
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [pageSize] = useState(50);
   
   // Cache e refs para evitar loops
   const lastSearchQuery = useRef<string>('');
@@ -31,8 +58,29 @@ export function useUsers() {
   const canDeleteUsers = isAdmin || hasPermission('users.delete');
   const canResetPasswords = isAdmin || hasPermission('users.reset_password');
 
-  // Função de busca otimizada com debounce interno
-  const fetchUsers = useCallback(async (forceRefresh = false) => {
+  // Buscar estatísticas otimizadas
+  const fetchStats = useCallback(async () => {
+    if (!canManageUsers) return;
+    
+    try {
+      const { data, error } = await supabase.rpc('get_admin_user_stats');
+      
+      if (error) {
+        console.error('[USERS] Erro ao buscar estatísticas:', error);
+        return;
+      }
+      
+      if (data && typeof data === 'object' && !data.error) {
+        setStats(data as UserStats);
+        console.log('[STATS] ✅ Estatísticas carregadas:', data);
+      }
+    } catch (err: any) {
+      console.error('[USERS] Erro ao buscar estatísticas:', err);
+    }
+  }, [canManageUsers]);
+
+  // Função de busca paginada otimizada
+  const fetchUsers = useCallback(async (forceRefresh = false, page = currentPage) => {
     if (!canManageUsers || (fetchInProgress.current && !forceRefresh)) {
       console.warn('[USERS] Busca cancelada - sem permissão ou em progresso');
       return;
@@ -46,76 +94,66 @@ export function useUsers() {
       
       fetchTimeoutRef.current = setTimeout(() => {
         lastSearchQuery.current = searchQuery;
-        fetchUsers(true);
+        fetchUsers(true, 1); // Reset para primeira página na busca
       }, 300);
       return;
     }
 
-    console.log(`[USERS] Iniciando busca: "${searchQuery}"`);
+    console.log(`[USERS] Iniciando busca paginada: "${searchQuery}", página ${page}`);
     fetchInProgress.current = true;
     setLocalLoading(true);
     setLoading('data', true);
     setError(null);
     
     try {
-      let query = supabase
-        .from('profiles')
-        .select(`
-          id,
-          email,
-          name,
-          avatar_url,
-          company_name,
-          industry,
-          created_at,
-          role_id,
-          onboarding_completed,
-          is_master_user,
-          organization_id,
-          user_roles:role_id (
-            id,
-            name,
-            description,
-            permissions,
-            is_system
-          ),
-          organization:organization_id (
-            id,
-            name,
-            master_user_id
-          )
-        `)
-        .order('is_master_user', { ascending: false })
-        .order('created_at', { ascending: false });
-
-      if (searchQuery.trim()) {
-        query = query.or(`name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%,company_name.ilike.%${searchQuery}%`);
-      }
-
-      const { data, error: queryError } = await query;
+      const offset = (page - 1) * pageSize;
+      
+      // Chamar função SQL otimizada
+      const { data, error: queryError } = await supabase.rpc('get_users_paginated', {
+        p_limit: pageSize,
+        p_offset: offset,
+        p_search: searchQuery.trim() || null,
+        p_user_type: filterType || null,
+        p_organization_id: organizationFilter || null
+      });
 
       if (queryError) {
         throw new Error(`Erro ao buscar usuários: ${queryError.message}`);
       }
 
-      const mappedUsers: UserProfile[] = (data || []).map(user => ({
-        id: user.id,
-        email: user.email || '',
-        name: user.name,
-        avatar_url: user.avatar_url,
-        company_name: user.company_name,
-        industry: user.industry,
-        created_at: user.created_at,
-        role_id: user.role_id,
-        onboarding_completed: user.onboarding_completed,
-        is_master_user: user.is_master_user,
-        organization_id: user.organization_id,
-        user_roles: user.user_roles as any,
-        organization: user.organization as any
-      }));
+      if (data && data.length > 0) {
+        const totalCount = data[0]?.total_count || 0;
+        setTotalUsers(totalCount);
+        
+        const mappedUsers: UserProfile[] = data.map((user: any) => ({
+          id: user.id,
+          email: user.email || '',
+          name: user.name,
+          avatar_url: user.avatar_url,
+          company_name: user.company_name,
+          industry: user.industry,
+          created_at: user.created_at,
+          role_id: user.role_id,
+          onboarding_completed: user.onboarding_completed,
+          is_master_user: user.is_master_user,
+          organization_id: user.organization_id,
+          user_roles: user.user_roles,
+          organization: user.organization
+        }));
 
-      setUsers(mappedUsers);
-      console.log(`[USERS] ✅ ${mappedUsers.length} usuários carregados`);
+        setUsers(mappedUsers);
+        setCurrentPage(page);
+        console.log(`[USERS] ✅ ${mappedUsers.length} usuários carregados (página ${page}/${Math.ceil(totalCount / pageSize)})`);
+      } else {
+        setUsers([]);
+        setTotalUsers(0);
+        setCurrentPage(1);
+      }
+      
+      // Buscar estatísticas se for refresh completo
+      if (forceRefresh || page === 1) {
+        await fetchStats();
+      }
       
     } catch (err: any) {
       console.error('[USERS] Erro ao buscar usuários:', err);
@@ -130,7 +168,7 @@ export function useUsers() {
       setLoading('data', false);
       setIsRefreshing(false);
     }
-  }, [canManageUsers, searchQuery, setLoading]);
+  }, [canManageUsers, searchQuery, filterType, organizationFilter, currentPage, pageSize, setLoading, fetchStats]);
 
   const fetchAvailableRoles = useCallback(async () => {
     if (!canAssignRoles) return;
@@ -160,9 +198,9 @@ export function useUsers() {
   useEffect(() => {
     if (canManageUsers) {
       console.log('[USERS] Carregamento inicial');
-      fetchUsers(true);
+      fetchUsers(true, 1);
     }
-  }, [canManageUsers]); // Apenas esta dependência
+  }, [canManageUsers]);
 
   // Carregar roles disponíveis
   useEffect(() => {
@@ -184,26 +222,70 @@ export function useUsers() {
   const handleRefresh = useCallback(() => {
     console.log('[USERS] Refresh manual');
     setIsRefreshing(true);
-    fetchUsers(true);
-  }, [fetchUsers]);
+    fetchUsers(true, currentPage);
+  }, [fetchUsers, currentPage]);
 
   // Update search query sem trigger automático
   const updateSearchQuery = useCallback((query: string) => {
     setSearchQuery(query);
-    // O debounce acontece dentro do fetchUsers
-    fetchUsers(false);
+    setCurrentPage(1); // Reset para primeira página
+    fetchUsers(false, 1);
   }, [fetchUsers]);
+
+  // Handlers para filtros
+  const updateFilterType = useCallback((type: string) => {
+    setFilterType(type);
+    setCurrentPage(1);
+    fetchUsers(true, 1);
+  }, [fetchUsers]);
+
+  const updateOrganizationFilter = useCallback((orgId: string) => {
+    setOrganizationFilter(orgId);
+    setCurrentPage(1);
+    fetchUsers(true, 1);
+  }, [fetchUsers]);
+
+  // Navegação de páginas
+  const goToPage = useCallback((page: number) => {
+    if (page >= 1 && page <= Math.ceil(totalUsers / pageSize)) {
+      fetchUsers(false, page);
+    }
+  }, [fetchUsers, totalUsers, pageSize]);
+
+  const nextPage = useCallback(() => {
+    goToPage(currentPage + 1);
+  }, [goToPage, currentPage]);
+
+  const prevPage = useCallback(() => {
+    goToPage(currentPage - 1);
+  }, [goToPage, currentPage]);
 
   return {
     users,
+    stats,
     availableRoles,
     loading,
     isRefreshing,
     searchQuery,
     setSearchQuery: updateSearchQuery,
+    filterType,
+    setFilterType: updateFilterType,
+    organizationFilter,
+    setOrganizationFilter: updateOrganizationFilter,
     selectedUser,
     setSelectedUser,
     fetchUsers: handleRefresh,
+    // Paginação
+    currentPage,
+    totalUsers,
+    pageSize,
+    totalPages: Math.ceil(totalUsers / pageSize),
+    goToPage,
+    nextPage,
+    prevPage,
+    canGoNext: currentPage < Math.ceil(totalUsers / pageSize),
+    canGoPrev: currentPage > 1,
+    // Permissões
     canManageUsers,
     canAssignRoles,
     canDeleteUsers,

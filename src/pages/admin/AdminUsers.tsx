@@ -37,11 +37,27 @@ import { toast } from 'sonner';
 export default function AdminUsers() {
   const { 
     users, 
+    stats,
     loading, 
     isRefreshing, 
     searchQuery, 
     setSearchQuery,
+    filterType,
+    setFilterType,
+    organizationFilter,
+    setOrganizationFilter,
     fetchUsers,
+    // Paginação
+    currentPage,
+    totalUsers,
+    pageSize,
+    totalPages,
+    goToPage,
+    nextPage,
+    prevPage,
+    canGoNext,
+    canGoPrev,
+    // Permissões
     canManageUsers,
     canAssignRoles,
     canDeleteUsers,
@@ -60,8 +76,6 @@ export default function AdminUsers() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showPasswordResetDialog, setShowPasswordResetDialog] = useState(false);
   const [showCourseManagerDialog, setShowCourseManagerDialog] = useState(false);
-  const [filterType, setFilterType] = useState<string>('all');
-  const [selectedOrganization, setSelectedOrganization] = useState<string>('all');
 
   // Converter roles do useRoles para o formato esperado
   const availableRoles: Role[] = useMemo(() => {
@@ -70,47 +84,6 @@ export default function AdminUsers() {
       permissions: role.permissions || {}
     }));
   }, [roles]);
-
-  // Calcular estatísticas hierárquicas
-  const hierarchicalStats = useMemo(() => {
-    const masters = users.filter(u => u.is_master_user);
-    const teamMembers = users.filter(u => !u.is_master_user && u.organization_id);
-    const individuals = users.filter(u => !u.organization_id);
-    const organizations = [...new Set(users.filter(u => u.organization_id).map(u => u.organization_id))];
-    
-    return {
-      masters: masters.length,
-      teamMembers: teamMembers.length,
-      individuals: individuals.length,
-      organizations: organizations.length,
-      totalUsers: users.length
-    };
-  }, [users]);
-
-  // Filtrar usuários baseado nos filtros selecionados
-  const filteredUsers = useMemo(() => {
-    let filtered = users;
-
-    if (filterType !== 'all') {
-      switch (filterType) {
-        case 'masters':
-          filtered = filtered.filter(u => u.is_master_user);
-          break;
-        case 'team_members':
-          filtered = filtered.filter(u => !u.is_master_user && u.organization_id);
-          break;
-        case 'individuals':
-          filtered = filtered.filter(u => !u.organization_id);
-          break;
-      }
-    }
-
-    if (selectedOrganization !== 'all') {
-      filtered = filtered.filter(u => u.organization_id === selectedOrganization);
-    }
-
-    return filtered;
-  }, [users, filterType, selectedOrganization]);
 
   // Obter organizações únicas para o filtro
   const organizations = useMemo(() => {
@@ -244,21 +217,21 @@ export default function AdminUsers() {
               <SelectValue placeholder="Filtrar por tipo" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todos os usuários</SelectItem>
-              <SelectItem value="masters">Masters</SelectItem>
-              <SelectItem value="team_members">Membros de equipe</SelectItem>
-              <SelectItem value="individuals">Usuários individuais</SelectItem>
+              <SelectItem value="">Todos os usuários</SelectItem>
+              <SelectItem value="master">Masters</SelectItem>
+              <SelectItem value="team_member">Membros de equipe</SelectItem>
+              <SelectItem value="individual">Usuários individuais</SelectItem>
             </SelectContent>
           </Select>
 
           {organizations.length > 0 && (
-            <Select value={selectedOrganization} onValueChange={setSelectedOrganization}>
+            <Select value={organizationFilter} onValueChange={setOrganizationFilter}>
               <SelectTrigger className="w-[200px]">
                 <Building2 className="h-4 w-4 mr-2" />
                 <SelectValue placeholder="Filtrar por organização" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todas organizações</SelectItem>
+                <SelectItem value="">Todas organizações</SelectItem>
                 {organizations.map(org => (
                   <SelectItem key={org.id} value={org.id}>
                     {org.name}
@@ -278,7 +251,7 @@ export default function AdminUsers() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{hierarchicalStats.totalUsers}</div>
+            <div className="text-2xl font-bold">{stats.total_users}</div>
             <p className="text-xs text-muted-foreground">
               usuários cadastrados
             </p>
@@ -291,7 +264,7 @@ export default function AdminUsers() {
             <Crown className="h-4 w-4 text-yellow-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{hierarchicalStats.masters}</div>
+            <div className="text-2xl font-bold text-yellow-600">{stats.masters}</div>
             <p className="text-xs text-muted-foreground">
               líderes de equipe
             </p>
@@ -304,7 +277,7 @@ export default function AdminUsers() {
             <UserCog className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{hierarchicalStats.teamMembers}</div>
+            <div className="text-2xl font-bold text-blue-600">{stats.team_members}</div>
             <p className="text-xs text-muted-foreground">
               em organizações
             </p>
@@ -317,7 +290,7 @@ export default function AdminUsers() {
             <Building2 className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{hierarchicalStats.organizations}</div>
+            <div className="text-2xl font-bold text-green-600">{stats.organizations}</div>
             <p className="text-xs text-muted-foreground">
               equipes ativas
             </p>
@@ -330,7 +303,7 @@ export default function AdminUsers() {
             <UserCheck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{hierarchicalStats.individuals}</div>
+            <div className="text-2xl font-bold">{stats.individual_users}</div>
             <p className="text-xs text-muted-foreground">
               sem organização
             </p>
@@ -338,30 +311,55 @@ export default function AdminUsers() {
         </Card>
       </div>
 
-      {/* Results count and status */}
+      {/* Results count and pagination info */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <p className="text-sm text-muted-foreground">
-            Mostrando {filteredUsers.length} de {users.length} usuários
+            Mostrando {((currentPage - 1) * pageSize) + 1}-{Math.min(currentPage * pageSize, totalUsers)} de {totalUsers} usuários
           </p>
-          {filterType !== 'all' && (
+          {filterType && (
             <Badge variant="secondary" className="text-xs">
-              {filterType === 'masters' && 'Masters'}
-              {filterType === 'team_members' && 'Membros de equipe'}
-              {filterType === 'individuals' && 'Usuários individuais'}
+              {filterType === 'master' && 'Masters'}
+              {filterType === 'team_member' && 'Membros de equipe'}
+              {filterType === 'individual' && 'Usuários individuais'}
             </Badge>
           )}
-          {selectedOrganization !== 'all' && (
+          {organizationFilter && (
             <Badge variant="outline" className="text-xs">
-              {organizations.find(o => o.id === selectedOrganization)?.name}
+              {organizations.find(o => o.id === organizationFilter)?.name}
             </Badge>
           )}
         </div>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={prevPage}
+              disabled={!canGoPrev || loading}
+              size="sm"
+              variant="outline"
+            >
+              Anterior
+            </Button>
+            <span className="text-sm text-muted-foreground">
+              Página {currentPage} de {totalPages}
+            </span>
+            <Button
+              onClick={nextPage}
+              disabled={!canGoNext || loading}
+              size="sm"
+              variant="outline"
+            >
+              Próxima
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Users Table with Cards Layout */}
       <UsersTable
-        users={filteredUsers}
+        users={users}
         loading={loading}
         onEditRole={handleEditRole}
         onDeleteUser={handleDeleteUser}

@@ -6165,6 +6165,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      get_admin_user_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       get_age_from_date: {
         Args: { birth_date: string }
         Returns: number
@@ -6616,6 +6620,31 @@ export type Database = {
       get_user_share_stats: {
         Args: { user_uuid: string }
         Returns: Json
+      }
+      get_users_paginated: {
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_organization_id?: string
+          p_search?: string
+          p_user_type?: string
+        }
+        Returns: {
+          avatar_url: string
+          company_name: string
+          created_at: string
+          email: string
+          id: string
+          industry: string
+          is_master_user: boolean
+          name: string
+          organization: Json
+          organization_id: string
+          role: string
+          role_id: string
+          total_count: number
+          user_roles: Json
+        }[]
       }
       get_users_with_roles: {
         Args: {
