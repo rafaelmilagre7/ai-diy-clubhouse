@@ -82,10 +82,26 @@ export default function AdminUsers() {
   }, [roles]);
 
   // Separar masters dos outros usuários para visualização hierárquica
-  const { masterUsers, regularUsers } = useMemo(() => {
+  const { masterUsers, regularUsers, masterGroupsWithMembers } = useMemo(() => {
     const masters = users.filter(u => u.is_master_user === true || u.user_roles?.name === 'master');
     const regulars = users.filter(u => u.is_master_user !== true && u.user_roles?.name !== 'master');
-    return { masterUsers: masters, regularUsers: regulars };
+    
+    // Para o filtro master, agrupamos masters com seus membros de equipe
+    const masterGroups = masters.map(master => {
+      const teamMembers = users.filter(u => 
+        u.organization_id === master.organization_id && 
+        u.id !== master.id &&
+        !u.is_master_user &&
+        u.user_roles?.name !== 'master'
+      );
+      return { master, teamMembers };
+    });
+    
+    return { 
+      masterUsers: masters, 
+      regularUsers: regulars,
+      masterGroupsWithMembers: masterGroups
+    };
   }, [users]);
 
   // Handlers para todas as ações
@@ -253,48 +269,37 @@ export default function AdminUsers() {
           </div>
 
           {/* Visualização específica para Masters */}
-          {currentFilter === 'master' && masterUsers.length > 0 ? (
+          {currentFilter === 'master' && masterGroupsWithMembers.length > 0 ? (
             <div className="space-y-4">
               <h3 className="text-lg font-semibold flex items-center gap-2">
                 <Crown className="h-5 w-5 text-yellow-600" />
-                Masters e suas Equipes ({masterUsers.length} masters)
+                Masters e suas Equipes ({masterGroupsWithMembers.length} masters, {users.length - masterGroupsWithMembers.length} membros)
               </h3>
               <div className="grid gap-4">
-                {masterUsers.map((master) => {
-                  // Buscar membros da equipe deste master na lista completa de usuários
-                  // Para masters, devemos buscar pelo organization_id E que não sejam masters
-                  const teamMembers = users.filter(u => 
-                    u.organization_id === master.organization_id && 
-                    u.id !== master.id &&
-                    !u.is_master_user &&
-                    u.user_roles?.name !== 'master'
-                  );
-                  
-                  return (
-                    <MasterHierarchyCard
-                      key={master.id}
-                      master={master}
-                      teamMembers={teamMembers}
-                      onEditUser={handleEditRole}
-                      onManageTeam={(master) => {
-                        console.log('Gerenciar equipe do master:', master.name);
-                        // Implementar ação específica para gerenciar equipe
-                      }}
-                    />
-                  );
-                })}
+                {masterGroupsWithMembers.map(({ master, teamMembers }) => (
+                  <MasterHierarchyCard
+                    key={master.id}
+                    master={master}
+                    teamMembers={teamMembers}
+                    onEditUser={handleEditRole}
+                    onManageTeam={(master) => {
+                      console.log('Gerenciar equipe do master:', master.name);
+                      // Implementar ação específica para gerenciar equipe
+                    }}
+                  />
+                ))}
               </div>
-              {masterUsers.length > 0 && (
+              {masterGroupsWithMembers.length > 0 && (
                 <div className="text-sm text-muted-foreground bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
                   <div className="flex items-start gap-2">
                     <div className="text-blue-600 mt-0.5">💡</div>
                     <div>
                       <p className="font-medium text-blue-800 mb-1">
-                        Como ver membros da equipe dos masters:
+                        Visualização Hierárquica:
                       </p>
                       <p className="text-blue-700">
-                        Ao filtrar por "Masters", você está vendo todos os masters e seus membros de equipe associados. 
-                        Para ver apenas os masters sem os membros, use uma busca específica.
+                        Este filtro exibe todos os masters com seus respectivos membros de equipe organizados hierarquicamente. 
+                        Expanda cada card do master para ver os detalhes de sua equipe.
                       </p>
                     </div>
                   </div>
