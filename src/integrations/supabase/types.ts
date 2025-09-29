@@ -2408,6 +2408,42 @@ export type Database = {
         }
         Relationships: []
       }
+      master_member_sync_log: {
+        Row: {
+          created_at: string | null
+          error_message: string | null
+          id: string
+          master_email: string
+          member_email: string | null
+          metadata: Json | null
+          operation: string
+          sync_status: string
+          synced_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          master_email: string
+          member_email?: string | null
+          metadata?: Json | null
+          operation: string
+          sync_status?: string
+          synced_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          master_email?: string
+          member_email?: string | null
+          metadata?: Json | null
+          operation?: string
+          sync_status?: string
+          synced_at?: string | null
+        }
+        Relationships: []
+      }
       member_connections: {
         Row: {
           created_at: string | null

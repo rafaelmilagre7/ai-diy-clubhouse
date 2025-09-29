@@ -174,3 +174,6 @@ verify_jwt = false
 
 [functions.import-csv-data]
 verify_jwt = false
+
+[functions.sync-master-members-csv]
+verify_jwt = false

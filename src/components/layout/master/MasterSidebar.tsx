@@ -1,7 +1,7 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { X, Users, UserPlus, BarChart3, Settings, Home } from 'lucide-react';
+import { X, Users, UserPlus, BarChart3, Settings, Home, RefreshCw } from 'lucide-react';
 import { MasterSidebarNavItem } from './navigation/MasterSidebarNavItem';
 import { useAuth } from '@/contexts/auth';
 
@@ -65,6 +65,12 @@ export const MasterSidebar: React.FC<MasterSidebarProps> = ({
             to="/master-dashboard/invites"
             icon={UserPlus}
             label="Convites"
+            sidebarOpen={sidebarOpen}
+          />
+          <MasterSidebarNavItem
+            to="/master-dashboard/sync"
+            icon={RefreshCw}
+            label="Sincronização"
             sidebarOpen={sidebarOpen}
           />
           <MasterSidebarNavItem
