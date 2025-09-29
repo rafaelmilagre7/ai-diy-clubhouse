@@ -6272,6 +6272,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      get_enhanced_user_stats_public: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       get_implementation_stats_secure: {
         Args: Record<PropertyKey, never>
         Returns: Json
@@ -6671,6 +6675,36 @@ export type Database = {
           organization_id: string
           role: string
           role_id: string
+          total_count: number
+          user_roles: Json
+        }[]
+      }
+      get_users_with_advanced_filters_public: {
+        Args: {
+          p_date_filter?: string
+          p_limit?: number
+          p_offset?: number
+          p_onboarding?: string
+          p_organization_id?: string
+          p_role_id?: string
+          p_search?: string
+          p_status?: string
+          p_user_type?: string
+        }
+        Returns: {
+          avatar_url: string
+          company_name: string
+          created_at: string
+          email: string
+          id: string
+          industry: string
+          is_master_user: boolean
+          name: string
+          onboarding_completed: boolean
+          organization: Json
+          organization_id: string
+          role_id: string
+          status: string
           total_count: number
           user_roles: Json
         }[]

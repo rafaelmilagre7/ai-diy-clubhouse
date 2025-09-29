@@ -13,6 +13,17 @@ interface UserStats {
   team_members: number;
   organizations: number;
   individual_users: number;
+  active_users?: number;
+  inactive_users?: number;
+  onboarding_completed?: number;
+  onboarding_pending?: number;
+  new_users_7d?: number;
+  new_users_30d?: number;
+  top_roles?: Array<{
+    name: string;
+    count: number;
+    percentage: number;
+  }>;
 }
 
 interface PaginatedUsersResponse {
@@ -39,6 +50,11 @@ export function useUsers() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<string>('all');
   const [organizationFilter, setOrganizationFilter] = useState<string>('all');
+  // Novos filtros avançados
+  const [roleFilter, setRoleFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [onboardingFilter, setOnboardingFilter] = useState<string>('all');
+  const [dateFilter, setDateFilter] = useState<string>('all');
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [error, setError] = useState<Error | null>(null);
   
@@ -58,12 +74,12 @@ export function useUsers() {
   const canDeleteUsers = isAdmin || hasPermission('users.delete');
   const canResetPasswords = isAdmin || hasPermission('users.reset_password');
 
-  // Buscar estatísticas otimizadas
+  // Buscar estatísticas otimizadas com dados avançados
   const fetchStats = useCallback(async () => {
     if (!canManageUsers) return;
     
     try {
-      const { data, error } = await supabase.rpc('get_admin_user_stats_public');
+      const { data, error } = await supabase.rpc('get_enhanced_user_stats_public');
       
       if (error) {
         console.error('[USERS] Erro ao buscar estatísticas:', error);
@@ -72,7 +88,7 @@ export function useUsers() {
       
       if (data && typeof data === 'object' && !data.error) {
         setStats(data as UserStats);
-        console.log('[STATS] ✅ Estatísticas carregadas:', data);
+        console.log('[STATS] ✅ Estatísticas avançadas carregadas:', data);
       }
     } catch (err: any) {
       console.error('[USERS] Erro ao buscar estatísticas:', err);
@@ -108,13 +124,17 @@ export function useUsers() {
     try {
       const offset = (page - 1) * pageSize;
       
-      // Chamar função SQL otimizada
-      const { data, error: queryError } = await supabase.rpc('get_users_paginated_public', {
+      // Chamar função SQL otimizada com filtros avançados
+      const { data, error: queryError } = await supabase.rpc('get_users_with_advanced_filters_public', {
         p_limit: pageSize,
         p_offset: offset,
         p_search: searchQuery.trim() || null,
         p_user_type: filterType === 'all' ? null : filterType,
-        p_organization_id: organizationFilter === 'all' ? null : organizationFilter
+        p_organization_id: organizationFilter === 'all' ? null : organizationFilter,
+        p_role_id: roleFilter === 'all' ? null : roleFilter,
+        p_status: statusFilter === 'all' ? null : statusFilter,
+        p_onboarding: onboardingFilter === 'all' ? null : onboardingFilter,
+        p_date_filter: dateFilter === 'all' ? null : dateFilter
       });
 
       if (queryError) {
@@ -168,7 +188,7 @@ export function useUsers() {
       setLoading('data', false);
       setIsRefreshing(false);
     }
-  }, [canManageUsers, searchQuery, filterType, organizationFilter, currentPage, pageSize, setLoading, fetchStats]);
+  }, [canManageUsers, searchQuery, filterType, organizationFilter, roleFilter, statusFilter, onboardingFilter, dateFilter, currentPage, pageSize, setLoading, fetchStats]);
 
   const fetchAvailableRoles = useCallback(async () => {
     if (!canAssignRoles) return;
@@ -245,6 +265,31 @@ export function useUsers() {
     fetchUsers(true, 1);
   }, [fetchUsers]);
 
+  // Novos handlers para filtros avançados
+  const updateRoleFilter = useCallback((roleId: string) => {
+    setRoleFilter(roleId);
+    setCurrentPage(1);
+    fetchUsers(true, 1);
+  }, [fetchUsers]);
+
+  const updateStatusFilter = useCallback((status: string) => {
+    setStatusFilter(status);
+    setCurrentPage(1);
+    fetchUsers(true, 1);
+  }, [fetchUsers]);
+
+  const updateOnboardingFilter = useCallback((onboarding: string) => {
+    setOnboardingFilter(onboarding);
+    setCurrentPage(1);
+    fetchUsers(true, 1);
+  }, [fetchUsers]);
+
+  const updateDateFilter = useCallback((dateRange: string) => {
+    setDateFilter(dateRange);
+    setCurrentPage(1);
+    fetchUsers(true, 1);
+  }, [fetchUsers]);
+
   // Navegação de páginas
   const goToPage = useCallback((page: number) => {
     if (page >= 1 && page <= Math.ceil(totalUsers / pageSize)) {
@@ -272,6 +317,15 @@ export function useUsers() {
     setFilterType: updateFilterType,
     organizationFilter,
     setOrganizationFilter: updateOrganizationFilter,
+    // Novos filtros avançados
+    roleFilter,
+    setRoleFilter: updateRoleFilter,
+    statusFilter,
+    setStatusFilter: updateStatusFilter,
+    onboardingFilter,
+    setOnboardingFilter: updateOnboardingFilter,
+    dateFilter,
+    setDateFilter: updateDateFilter,
     selectedUser,
     setSelectedUser,
     fetchUsers: handleRefresh,
