@@ -6313,6 +6313,10 @@ export type Database = {
         Args: { p_course_id?: string }
         Returns: Json
       }
+      get_master_members_count: {
+        Args: { master_id: string }
+        Returns: number
+      }
       get_networking_analytics: {
         Args: Record<PropertyKey, never>
         Returns: Json
@@ -6633,6 +6637,10 @@ export type Database = {
         Args: { user_uuid: string }
         Returns: Json
       }
+      get_user_stats_corrected: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       get_users_paginated: {
         Args: {
           p_limit?: number
@@ -6709,6 +6717,30 @@ export type Database = {
           organization_id: string
           role_id: string
           status: string
+          total_count: number
+          user_roles: Json
+        }[]
+      }
+      get_users_with_filters_corrected: {
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_search?: string
+          p_user_type?: string
+        }
+        Returns: {
+          avatar_url: string
+          company_name: string
+          created_at: string
+          email: string
+          id: string
+          industry: string
+          is_master_user: boolean
+          name: string
+          onboarding_completed: boolean
+          organization: Json
+          organization_id: string
+          role_id: string
           total_count: number
           user_roles: Json
         }[]

@@ -60,12 +60,12 @@ export function useUsers() {
   const canDeleteUsers = isAdmin || hasPermission('users.delete');
   const canResetPasswords = isAdmin || hasPermission('users.reset_password');
 
-  // Buscar estatísticas simplificadas
+  // Buscar estatísticas corrigidas
   const fetchStats = useCallback(async () => {
     if (!canManageUsers) return;
     
     try {
-      const { data, error } = await supabase.rpc('get_simplified_user_stats_public');
+      const { data, error } = await supabase.rpc('get_user_stats_corrected');
       
       if (error) {
         console.error('[USERS] Erro ao buscar estatísticas:', error);
@@ -74,7 +74,7 @@ export function useUsers() {
       
       if (data && typeof data === 'object' && !data.error) {
         setStats(data as UserStats);
-        console.log('[STATS] ✅ Estatísticas simplificadas carregadas:', data);
+        console.log('[STATS] ✅ Estatísticas corrigidas carregadas:', data);
       }
     } catch (err: any) {
       console.error('[USERS] Erro ao buscar estatísticas:', err);
@@ -111,8 +111,8 @@ export function useUsers() {
     try {
       const offset = (page - 1) * pageSize;
       
-      // Chamar função SQL simplificada
-      const { data, error: queryError } = await supabase.rpc('get_users_with_filters_public', {
+      // Chamar função SQL corrigida
+      const { data, error: queryError } = await supabase.rpc('get_users_with_filters_corrected', {
         p_limit: pageSize,
         p_offset: offset,
         p_search: searchQuery.trim() || null,
