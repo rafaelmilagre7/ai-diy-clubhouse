@@ -119,7 +119,9 @@ export default function AdminUsers() {
       );
       
       // Usar member_count do SQL quando disponível (paginação), senão contar localmente
-      const memberCount = master.member_count !== undefined ? master.member_count : teamMembers.length;
+      const memberCount = (master as any).member_count !== undefined 
+        ? (master as any).member_count 
+        : teamMembers.length;
       
       return { master, teamMembers, memberCount };
     });
