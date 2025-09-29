@@ -63,7 +63,7 @@ export function useUsers() {
     if (!canManageUsers) return;
     
     try {
-      const { data, error } = await supabase.rpc('get_admin_user_stats');
+      const { data, error } = await supabase.rpc('get_admin_user_stats_public');
       
       if (error) {
         console.error('[USERS] Erro ao buscar estatísticas:', error);
@@ -109,7 +109,7 @@ export function useUsers() {
       const offset = (page - 1) * pageSize;
       
       // Chamar função SQL otimizada
-      const { data, error: queryError } = await supabase.rpc('get_users_paginated', {
+      const { data, error: queryError } = await supabase.rpc('get_users_paginated_public', {
         p_limit: pageSize,
         p_offset: offset,
         p_search: searchQuery.trim() || null,
