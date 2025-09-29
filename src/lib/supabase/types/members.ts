@@ -18,6 +18,7 @@ export type UserProfile = Database['public']['Tables'] extends { profiles: any }
       role?: string | null;
       organization_id?: string | null;
       is_master_user?: boolean;
+      master_email?: string | null;
       onboarding_completed?: boolean;
       status?: string;
       created_at: string;

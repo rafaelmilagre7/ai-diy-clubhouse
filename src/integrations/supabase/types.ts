@@ -3365,6 +3365,7 @@ export type Database = {
           is_master_user: boolean | null
           last_active: string | null
           linkedin_url: string | null
+          master_email: string | null
           name: string | null
           onboarding_completed: boolean | null
           onboarding_completed_at: string | null
@@ -3394,6 +3395,7 @@ export type Database = {
           is_master_user?: boolean | null
           last_active?: string | null
           linkedin_url?: string | null
+          master_email?: string | null
           name?: string | null
           onboarding_completed?: boolean | null
           onboarding_completed_at?: string | null
@@ -3423,6 +3425,7 @@ export type Database = {
           is_master_user?: boolean | null
           last_active?: string | null
           linkedin_url?: string | null
+          master_email?: string | null
           name?: string | null
           onboarding_completed?: boolean | null
           onboarding_completed_at?: string | null
@@ -6407,6 +6410,7 @@ export type Database = {
           is_master_user: boolean | null
           last_active: string | null
           linkedin_url: string | null
+          master_email: string | null
           name: string | null
           onboarding_completed: boolean | null
           onboarding_completed_at: string | null
@@ -6746,12 +6750,14 @@ export type Database = {
           id: string
           industry: string
           is_master_user: boolean
+          master_email: string
           name: string
           onboarding_completed: boolean
-          organization: Json
-          organization_id: string
+          role: string
           role_id: string
+          status: string
           total_count: number
+          updated_at: string
           user_roles: Json
         }[]
       }

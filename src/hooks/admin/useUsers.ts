@@ -10,7 +10,6 @@ import { useGlobalLoading } from '@/hooks/useGlobalLoading';
 interface UserStats {
   total_users: number;
   masters: number;
-  individual_users: number;
   onboarding_completed?: number;
   onboarding_pending?: number;
 }
@@ -28,8 +27,7 @@ export function useUsers() {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [stats, setStats] = useState<UserStats>({
     total_users: 0,
-    masters: 0,
-    individual_users: 0
+    masters: 0
   });
   const [availableRoles, setAvailableRoles] = useState<Role[]>([]);
   const [loading, setLocalLoading] = useState(false);
@@ -115,8 +113,8 @@ export function useUsers() {
       const { data, error: queryError } = await supabase.rpc('get_users_with_filters_corrected', {
         p_limit: pageSize,
         p_offset: offset,
-        p_search: searchQuery.trim() || null,
-        p_user_type: filterType || null
+        p_search_query: searchQuery.trim() || null,
+        p_user_type: filterType || 'all'
       });
 
       if (queryError) {
@@ -139,6 +137,7 @@ export function useUsers() {
           onboarding_completed: user.onboarding_completed,
           is_master_user: user.is_master_user,
           organization_id: user.organization_id,
+          master_email: user.master_email,
           user_roles: user.user_roles,
           organization: user.organization
         }));

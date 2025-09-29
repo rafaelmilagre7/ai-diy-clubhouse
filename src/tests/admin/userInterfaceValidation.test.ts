@@ -47,7 +47,6 @@ describe('Validação da Interface de Usuários', () => {
       const mockStats = {
         total_users: 951,
         masters: 69,
-        individual_users: 869,
         onboarding_completed: 825,
         onboarding_pending: 126
       };
@@ -62,7 +61,6 @@ describe('Validação da Interface de Usuários', () => {
       await waitFor(() => {
         expect(result.current.stats.total_users).toBe(951);
         expect(result.current.stats.masters).toBe(69);
-        expect(result.current.stats.individual_users).toBe(869);
         expect(result.current.stats.onboarding_completed).toBe(825);
         expect(result.current.stats.onboarding_pending).toBe(126);
       });
@@ -145,7 +143,6 @@ describe('Validação da Interface de Usuários', () => {
       const stats = {
         total_users: 951,
         masters: 69,
-        individual_users: 869,
         onboarding_completed: 825,
         onboarding_pending: 126
       };
@@ -153,14 +150,10 @@ describe('Validação da Interface de Usuários', () => {
       // Validar que todos os valores são maiores que zero
       expect(stats.total_users).toBeGreaterThan(0);
       expect(stats.masters).toBeGreaterThan(0);
-      expect(stats.individual_users).toBeGreaterThan(0);
       expect(stats.onboarding_completed).toBeGreaterThan(0);
       expect(stats.onboarding_pending).toBeGreaterThan(0);
 
       // Validar somas
-      const totalIndividualsAndMasters = stats.masters + stats.individual_users;
-      expect(totalIndividualsAndMasters).toBeLessThanOrEqual(stats.total_users);
-
       const totalOnboarding = stats.onboarding_completed + stats.onboarding_pending;
       expect(totalOnboarding).toBe(stats.total_users);
 

@@ -49,12 +49,10 @@ describe('useUsers Hook Integration', () => {
     
     // Verificar big numbers específicos
     expect(typeof result.current.stats.masters).toBe('number');
-    expect(typeof result.current.stats.individual_users).toBe('number');
     
     console.log('🏠 Hook useUsers - Estatísticas carregadas:', {
       total_users: result.current.stats.total_users,
-      masters: result.current.stats.masters,
-      individual_users: result.current.stats.individual_users
+      masters: result.current.stats.masters
     });
   });
 

@@ -81,18 +81,17 @@ export default function AdminUsers() {
     }));
   }, [roles]);
 
-  // Separar masters dos outros usuários para visualização hierárquica
+  // Separar masters dos outros usuários para visualização hierárquica baseada em master_email
   const { masterUsers, regularUsers, masterGroupsWithMembers } = useMemo(() => {
-    const masters = users.filter(u => u.is_master_user === true || u.user_roles?.name === 'master');
-    const regulars = users.filter(u => u.is_master_user !== true && u.user_roles?.name !== 'master');
+    // Masters são usuários que têm outros apontando para seu email
+    const masterEmails = new Set(users.filter(u => (u as any).master_email).map(u => (u as any).master_email));
+    const masters = users.filter(u => masterEmails.has(u.email));
+    const regulars = users.filter(u => !masterEmails.has(u.email) && !(u as any).master_email);
     
-    // Para o filtro master, agrupamos masters com seus membros de equipe
+    // Para o filtro master, agrupamos masters com seus membros por master_email
     const masterGroups = masters.map(master => {
       const teamMembers = users.filter(u => 
-        u.organization_id === master.organization_id && 
-        u.id !== master.id &&
-        !u.is_master_user &&
-        u.user_roles?.name !== 'master'
+        (u as any).master_email === master.email && u.id !== master.id
       );
       return { master, teamMembers };
     });
@@ -233,13 +232,13 @@ export default function AdminUsers() {
               <p className="text-sm text-muted-foreground">
                 Mostrando {((currentPage - 1) * pageSize) + 1}-{Math.min(currentPage * pageSize, totalUsers)} de {totalUsers} usuários
               </p>
-              <Badge variant="secondary" className="text-xs">
-                Filtro: {currentFilter === 'master' ? 'Masters' : 
-                         currentFilter === 'individual' ? 'Individuais' : 
-                         currentFilter === 'onboarding_completed' ? 'Onboarding Completo' :
-                         currentFilter === 'onboarding_pending' ? 'Onboarding Pendente' :
-                         currentFilter === 'all' ? 'Todos' : currentFilter}
-              </Badge>
+                <Badge variant="secondary" className="text-xs">
+                 Filtro: {currentFilter === 'master' ? 'Masters' : 
+                          currentFilter === 'team_member' ? 'Membros de Equipe' : 
+                          currentFilter === 'onboarding_completed' ? 'Onboarding Completo' :
+                          currentFilter === 'onboarding_pending' ? 'Onboarding Pendente' :
+                          currentFilter === 'all' ? 'Todos' : currentFilter}
+                </Badge>
             </div>
 
             {/* Pagination Controls */}
@@ -349,7 +348,7 @@ export default function AdminUsers() {
                   size="sm"
                   onClick={() => handleFilterByType('master')}
                 >
-                  Ver apenas masters
+                  Ver masters e equipes
                 </Button>
               </div>
             </div>

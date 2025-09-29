@@ -17,7 +17,6 @@ import {
 interface UserStats {
   total_users: number;
   masters: number;
-  individual_users: number;
   onboarding_completed?: number;
   onboarding_pending?: number;
 }
@@ -56,7 +55,7 @@ export const EnhancedUserStats = ({ stats, loading, onFilterClick }: EnhancedUse
   return (
     <div className="space-y-6">
       {/* Estatísticas principais - CLICÁVEIS */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card 
           className="surface-elevated border-0 shadow-aurora cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
           onClick={() => onFilterClick?.('all')}
@@ -76,26 +75,12 @@ export const EnhancedUserStats = ({ stats, loading, onFilterClick }: EnhancedUse
           onClick={() => onFilterClick?.('master')}
         >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Masters</CardTitle>
+            <CardTitle className="text-sm font-medium">Masters e Equipes</CardTitle>
             <Crown className="h-4 w-4 text-yellow-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-yellow-600">{stats.masters}</div>
-            <p className="text-xs text-muted-foreground">clique para filtrar</p>
-          </CardContent>
-        </Card>
-
-        <Card 
-          className="surface-elevated border-0 shadow-aurora cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
-          onClick={() => onFilterClick?.('individual')}
-        >
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Usuários Individuais</CardTitle>
-            <User className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.individual_users}</div>
-            <p className="text-xs text-muted-foreground">clique para filtrar</p>
+            <p className="text-xs text-muted-foreground">masters com suas equipes</p>
           </CardContent>
         </Card>
 
