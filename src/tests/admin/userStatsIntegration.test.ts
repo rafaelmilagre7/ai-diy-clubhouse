@@ -91,17 +91,19 @@ describe('useUsers Hook Integration', () => {
       expect(result.current.loading).toBe(false);
     });
     
-    // Testar filtro por tipo de usuário
-    if (result.current.setFilterType) {
-      result.current.setFilterType('master');
-      
-      await waitFor(() => {
-        expect(result.current.filterType).toBe('master');
-      });
-    }
+    // Testar aplicação de filtro pelos Big Numbers
+    act(() => {
+      result.current.handleFilterByType('master');
+    });
+    
+    await waitFor(() => {
+      expect(result.current.currentFilter).toBe('master');
+      expect(result.current.showUsers).toBe(true);
+    });
     
     console.log('🔧 Filtros funcionando:', {
-      filterType: result.current.filterType,
+      currentFilter: result.current.currentFilter,
+      showUsers: result.current.showUsers,
       usersCount: result.current.users.length
     });
   });

@@ -36,9 +36,10 @@ interface UserStats {
 interface EnhancedUserStatsProps {
   stats: UserStats;
   loading?: boolean;
+  onFilterClick?: (filterType: string) => void;
 }
 
-export const EnhancedUserStats = ({ stats, loading }: EnhancedUserStatsProps) => {
+export const EnhancedUserStats = ({ stats, loading, onFilterClick }: EnhancedUserStatsProps) => {
   const calculateOnboardingRate = () => {
     if (!stats.onboarding_completed || !stats.total_users) return 0;
     return Math.round((stats.onboarding_completed / stats.total_users) * 100);
@@ -70,65 +71,80 @@ export const EnhancedUserStats = ({ stats, loading }: EnhancedUserStatsProps) =>
 
   return (
     <div className="space-y-6">
-      {/* Estatísticas principais */}
+      {/* Estatísticas principais - CLICÁVEIS */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        <Card className="surface-elevated border-0 shadow-aurora">
+        <Card 
+          className="surface-elevated border-0 shadow-aurora cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
+          onClick={() => onFilterClick?.('all')}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total de Usuários</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.total_users}</div>
-            <p className="text-xs text-muted-foreground">usuários cadastrados</p>
+            <p className="text-xs text-muted-foreground">clique para ver todos</p>
           </CardContent>
         </Card>
         
-        <Card className="surface-elevated border-0 shadow-aurora">
+        <Card 
+          className="surface-elevated border-0 shadow-aurora cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
+          onClick={() => onFilterClick?.('master')}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Masters</CardTitle>
             <Crown className="h-4 w-4 text-yellow-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-yellow-600">{stats.masters}</div>
-            <p className="text-xs text-muted-foreground">líderes de equipe</p>
+            <p className="text-xs text-muted-foreground">clique para filtrar</p>
           </CardContent>
         </Card>
 
-        <Card className="surface-elevated border-0 shadow-aurora">
+        <Card 
+          className="surface-elevated border-0 shadow-aurora cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
+          onClick={() => onFilterClick?.('team_member')}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Membros de Equipe</CardTitle>
             <UserCog className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">{stats.team_members}</div>
-            <p className="text-xs text-muted-foreground">em organizações</p>
+            <p className="text-xs text-muted-foreground">clique para filtrar</p>
           </CardContent>
         </Card>
 
-        <Card className="surface-elevated border-0 shadow-aurora">
+        <Card className="surface-elevated border-0 shadow-aurora opacity-60">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Organizações</CardTitle>
             <Building2 className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">{stats.organizations}</div>
-            <p className="text-xs text-muted-foreground">equipes ativas</p>
+            <p className="text-xs text-muted-foreground">apenas visualização</p>
           </CardContent>
         </Card>
 
-        <Card className="surface-elevated border-0 shadow-aurora">
+        <Card 
+          className="surface-elevated border-0 shadow-aurora cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
+          onClick={() => onFilterClick?.('individual')}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Usuários Individuais</CardTitle>
             <UserCheck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.individual_users}</div>
-            <p className="text-xs text-muted-foreground">sem organização</p>
+            <p className="text-xs text-muted-foreground">clique para filtrar</p>
           </CardContent>
         </Card>
 
         {stats.active_users !== undefined && (
-          <Card className="surface-elevated border-0 shadow-aurora">
+          <Card 
+            className="surface-elevated border-0 shadow-aurora cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
+            onClick={() => onFilterClick?.('active')}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Usuários Ativos</CardTitle>
               <CheckCircle className="h-4 w-4 text-operational" />
@@ -136,17 +152,20 @@ export const EnhancedUserStats = ({ stats, loading }: EnhancedUserStatsProps) =>
             <CardContent>
               <div className="text-2xl font-bold text-operational">{stats.active_users}</div>
               <p className="text-xs text-muted-foreground">
-                {calculateActiveRate()}% do total
+                clique para filtrar
               </p>
             </CardContent>
           </Card>
         )}
       </div>
 
-      {/* Estatísticas secundárias */}
+      {/* Estatísticas secundárias - CLICÁVEIS */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {stats.onboarding_completed !== undefined && (
-          <Card className="surface-elevated border-0 shadow-aurora">
+          <Card 
+            className="surface-elevated border-0 shadow-aurora cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
+            onClick={() => onFilterClick?.('onboarding_completed')}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Onboarding Completo</CardTitle>
               <CheckCircle className="h-4 w-4 text-operational" />
@@ -154,14 +173,17 @@ export const EnhancedUserStats = ({ stats, loading }: EnhancedUserStatsProps) =>
             <CardContent>
               <div className="text-2xl font-bold text-operational">{stats.onboarding_completed}</div>
               <p className="text-xs text-muted-foreground">
-                {calculateOnboardingRate()}% completaram
+                clique para filtrar
               </p>
             </CardContent>
           </Card>
         )}
 
         {stats.onboarding_pending !== undefined && (
-          <Card className="surface-elevated border-0 shadow-aurora">
+          <Card 
+            className="surface-elevated border-0 shadow-aurora cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
+            onClick={() => onFilterClick?.('onboarding_pending')}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Onboarding Pendente</CardTitle>
               <Clock className="h-4 w-4 text-orange-600" />
@@ -169,34 +191,40 @@ export const EnhancedUserStats = ({ stats, loading }: EnhancedUserStatsProps) =>
             <CardContent>
               <div className="text-2xl font-bold text-orange-600">{stats.onboarding_pending}</div>
               <p className="text-xs text-muted-foreground">
-                {Math.round(((stats.onboarding_pending || 0) / stats.total_users) * 100)}% pendente
+                clique para filtrar
               </p>
             </CardContent>
           </Card>
         )}
 
         {stats.new_users_7d !== undefined && (
-          <Card className="surface-elevated border-0 shadow-aurora">
+          <Card 
+            className="surface-elevated border-0 shadow-aurora cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
+            onClick={() => onFilterClick?.('new_7d')}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Novos (7 dias)</CardTitle>
               <TrendingUp className="h-4 w-4 text-viverblue" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-viverblue">{stats.new_users_7d}</div>
-              <p className="text-xs text-muted-foreground">última semana</p>
+              <p className="text-xs text-muted-foreground">clique para filtrar</p>
             </CardContent>
           </Card>
         )}
 
         {stats.new_users_30d !== undefined && (
-          <Card className="surface-elevated border-0 shadow-aurora">
+          <Card 
+            className="surface-elevated border-0 shadow-aurora cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
+            onClick={() => onFilterClick?.('new_30d')}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Novos (30 dias)</CardTitle>
               <TrendingUp className="h-4 w-4 text-revenue" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-revenue">{stats.new_users_30d}</div>
-              <p className="text-xs text-muted-foreground">último mês</p>
+              <p className="text-xs text-muted-foreground">clique para filtrar</p>
             </CardContent>
           </Card>
         )}

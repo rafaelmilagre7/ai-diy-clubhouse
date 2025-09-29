@@ -48,13 +48,12 @@ export function useUsers() {
   const [loading, setLocalLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterType, setFilterType] = useState<string>('all');
-  const [organizationFilter, setOrganizationFilter] = useState<string>('all');
-  // Novos filtros avançados
-  const [roleFilter, setRoleFilter] = useState<string>('all');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [onboardingFilter, setOnboardingFilter] = useState<string>('all');
-  const [dateFilter, setDateFilter] = useState<string>('all');
+  
+  // Estado para controlar visualização lazy
+  const [showUsers, setShowUsers] = useState(false);
+  const [currentFilter, setCurrentFilter] = useState<string>('none');
+  
+  // Filtros simplificados (removidos obsoletos)
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [error, setError] = useState<Error | null>(null);
   
@@ -95,10 +94,11 @@ export function useUsers() {
     }
   }, [canManageUsers]);
 
-  // Função de busca paginada otimizada
-  const fetchUsers = useCallback(async (forceRefresh = false, page = currentPage) => {
-    if (!canManageUsers || (fetchInProgress.current && !forceRefresh)) {
-      console.warn('[USERS] Busca cancelada - sem permissão ou em progresso');
+  // Função de busca paginada otimizada com lazy loading
+  const fetchUsers = useCallback(async (forceRefresh = false, page = currentPage, filterType?: string) => {
+    // Só busca usuários se showUsers for true OU se forceRefresh for true
+    if (!canManageUsers || (!showUsers && !forceRefresh) || (fetchInProgress.current && !forceRefresh)) {
+      console.warn('[USERS] Busca cancelada - lazy loading ou sem permissão');
       return;
     }
 
@@ -110,12 +110,12 @@ export function useUsers() {
       
       fetchTimeoutRef.current = setTimeout(() => {
         lastSearchQuery.current = searchQuery;
-        fetchUsers(true, 1); // Reset para primeira página na busca
+        fetchUsers(true, 1, filterType); // Reset para primeira página na busca
       }, 300);
       return;
     }
 
-    console.log(`[USERS] Iniciando busca paginada: "${searchQuery}", página ${page}`);
+    console.log(`[USERS] Iniciando busca paginada: "${searchQuery}", filtro: "${filterType || 'none'}", página ${page}`);
     fetchInProgress.current = true;
     setLocalLoading(true);
     setLoading('data', true);
@@ -124,17 +124,17 @@ export function useUsers() {
     try {
       const offset = (page - 1) * pageSize;
       
-      // Chamar função SQL otimizada com filtros avançados
+      // Chamar função SQL otimizada
       const { data, error: queryError } = await supabase.rpc('get_users_with_advanced_filters_public', {
         p_limit: pageSize,
         p_offset: offset,
         p_search: searchQuery.trim() || null,
-        p_user_type: filterType === 'all' ? null : filterType,
-        p_organization_id: organizationFilter === 'all' ? null : organizationFilter,
-        p_role_id: roleFilter === 'all' ? null : roleFilter,
-        p_status: statusFilter === 'all' ? null : statusFilter,
-        p_onboarding: onboardingFilter === 'all' ? null : onboardingFilter,
-        p_date_filter: dateFilter === 'all' ? null : dateFilter
+        p_user_type: filterType || null,
+        p_organization_id: null,
+        p_role_id: null,
+        p_status: null,
+        p_onboarding: null,
+        p_date_filter: null
       });
 
       if (queryError) {
@@ -170,6 +170,9 @@ export function useUsers() {
         setCurrentPage(1);
       }
       
+      // Marcar que usuários estão sendo exibidos
+      setShowUsers(true);
+      
       // Buscar estatísticas se for refresh completo
       if (forceRefresh || page === 1) {
         await fetchStats();
@@ -188,7 +191,7 @@ export function useUsers() {
       setLoading('data', false);
       setIsRefreshing(false);
     }
-  }, [canManageUsers, searchQuery, filterType, organizationFilter, roleFilter, statusFilter, onboardingFilter, dateFilter, currentPage, pageSize, setLoading, fetchStats]);
+  }, [canManageUsers, searchQuery, showUsers, currentPage, pageSize, setLoading, fetchStats]);
 
   const fetchAvailableRoles = useCallback(async () => {
     if (!canAssignRoles) return;
@@ -214,13 +217,13 @@ export function useUsers() {
     }
   }, [canAssignRoles]);
 
-  // Carregar dados iniciais apenas uma vez
+  // Carregar apenas estatísticas inicialmente (SEM usuários)
   useEffect(() => {
     if (canManageUsers) {
-      console.log('[USERS] Carregamento inicial');
-      fetchUsers(true, 1);
+      console.log('[USERS] Carregamento inicial - apenas estatísticas');
+      fetchStats(); // Só carrega stats, não usuários
     }
-  }, [canManageUsers]);
+  }, [canManageUsers, fetchStats]);
 
   // Carregar roles disponíveis
   useEffect(() => {
@@ -245,50 +248,33 @@ export function useUsers() {
     fetchUsers(true, currentPage);
   }, [fetchUsers, currentPage]);
 
-  // Update search query sem trigger automático
+  // Handlers para Big Numbers clicáveis
+  const handleFilterByType = useCallback((filterType: string) => {
+    console.log(`[USERS] Filtro clicado: ${filterType}`);
+    setCurrentFilter(filterType);
+    setCurrentPage(1);
+    setShowUsers(true); // Ativar exibição de usuários
+    fetchUsers(true, 1, filterType);
+  }, [fetchUsers]);
+
+  // Update search query
   const updateSearchQuery = useCallback((query: string) => {
     setSearchQuery(query);
-    setCurrentPage(1); // Reset para primeira página
-    fetchUsers(false, 1);
-  }, [fetchUsers]);
-
-  // Handlers para filtros
-  const updateFilterType = useCallback((type: string) => {
-    setFilterType(type);
     setCurrentPage(1);
-    fetchUsers(true, 1);
-  }, [fetchUsers]);
+    if (showUsers) {
+      fetchUsers(false, 1, currentFilter);
+    }
+  }, [fetchUsers, showUsers, currentFilter]);
 
-  const updateOrganizationFilter = useCallback((orgId: string) => {
-    setOrganizationFilter(orgId);
+  // Limpar filtros e ocultar usuários
+  const clearFilters = useCallback(() => {
+    setShowUsers(false);
+    setCurrentFilter('none');
+    setUsers([]);
+    setSearchQuery('');
     setCurrentPage(1);
-    fetchUsers(true, 1);
-  }, [fetchUsers]);
-
-  // Novos handlers para filtros avançados
-  const updateRoleFilter = useCallback((roleId: string) => {
-    setRoleFilter(roleId);
-    setCurrentPage(1);
-    fetchUsers(true, 1);
-  }, [fetchUsers]);
-
-  const updateStatusFilter = useCallback((status: string) => {
-    setStatusFilter(status);
-    setCurrentPage(1);
-    fetchUsers(true, 1);
-  }, [fetchUsers]);
-
-  const updateOnboardingFilter = useCallback((onboarding: string) => {
-    setOnboardingFilter(onboarding);
-    setCurrentPage(1);
-    fetchUsers(true, 1);
-  }, [fetchUsers]);
-
-  const updateDateFilter = useCallback((dateRange: string) => {
-    setDateFilter(dateRange);
-    setCurrentPage(1);
-    fetchUsers(true, 1);
-  }, [fetchUsers]);
+    console.log('[USERS] Filtros limpos - usuários ocultos');
+  }, []);
 
   // Navegação de páginas
   const goToPage = useCallback((page: number) => {
@@ -313,22 +299,14 @@ export function useUsers() {
     isRefreshing,
     searchQuery,
     setSearchQuery: updateSearchQuery,
-    filterType,
-    setFilterType: updateFilterType,
-    organizationFilter,
-    setOrganizationFilter: updateOrganizationFilter,
-    // Novos filtros avançados
-    roleFilter,
-    setRoleFilter: updateRoleFilter,
-    statusFilter,
-    setStatusFilter: updateStatusFilter,
-    onboardingFilter,
-    setOnboardingFilter: updateOnboardingFilter,
-    dateFilter,
-    setDateFilter: updateDateFilter,
     selectedUser,
     setSelectedUser,
     fetchUsers: handleRefresh,
+    // Estados de lazy loading
+    showUsers,
+    currentFilter,
+    handleFilterByType,
+    clearFilters,
     // Paginação
     currentPage,
     totalUsers,

@@ -5,7 +5,9 @@ import { Badge } from '@/components/ui/badge';
 import { 
   AlertCircle,
   RefreshCw, 
-  Download
+  Download,
+  Users,
+  Crown
 } from 'lucide-react';
 import { useUsers } from '@/hooks/admin/useUsers';
 import { useUserExport } from '@/hooks/admin/useUserExport';
@@ -21,8 +23,10 @@ import { ResetPasswordDialog } from '@/components/admin/users/ResetPasswordDialo
 import { UserCourseAccessManager } from '@/components/admin/users/UserCourseAccessManager';
 import { AdvancedUserFilters } from '@/components/admin/users/AdvancedUserFilters';
 import { EnhancedUserStats } from '@/components/admin/users/EnhancedUserStats';
+import { MasterHierarchyCard } from '@/components/admin/users/MasterHierarchyCard';
 import { getUserRoleName } from '@/lib/supabase/types';
 import { toast } from 'sonner';
+import { Card, CardContent } from '@/components/ui/card';
 
 export default function AdminUsers() {
   const { 
@@ -32,20 +36,14 @@ export default function AdminUsers() {
     isRefreshing, 
     searchQuery, 
     setSearchQuery,
-    filterType,
-    setFilterType,
-    organizationFilter,
-    setOrganizationFilter,
-    // Novos filtros avançados
-    roleFilter,
-    setRoleFilter,
-    statusFilter,
-    setStatusFilter,
-    onboardingFilter,
-    setOnboardingFilter,
-    dateFilter,
-    setDateFilter,
+    selectedUser,
+    setSelectedUser,
     fetchUsers,
+    // Estados de lazy loading
+    showUsers,
+    currentFilter,
+    handleFilterByType,
+    clearFilters,
     // Paginação
     currentPage,
     totalUsers,
@@ -69,13 +67,11 @@ export default function AdminUsers() {
   const { deleteUser } = useDeleteUser();
   const { toggleUserStatus } = useToggleUserStatus();
   
-  const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [newRoleId, setNewRoleId] = useState<string>('');
   const [showRoleDialog, setShowRoleDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showPasswordResetDialog, setShowPasswordResetDialog] = useState(false);
   const [showCourseManagerDialog, setShowCourseManagerDialog] = useState(false);
-  const [filtersCollapsed, setFiltersCollapsed] = useState(false);
 
   // Converter roles do useRoles para o formato esperado
   const availableRoles: Role[] = useMemo(() => {
@@ -85,13 +81,11 @@ export default function AdminUsers() {
     }));
   }, [roles]);
 
-  // Obter organizações únicas para o filtro
-  const organizations = useMemo(() => {
-    const orgs = users
-      .filter(u => u.organization?.id)
-      .map(u => ({ id: u.organization!.id, name: u.organization!.name }))
-      .filter((org, index, arr) => arr.findIndex(o => o.id === org.id) === index);
-    return orgs;
+  // Separar masters dos outros usuários para visualização hierárquica
+  const { masterUsers, regularUsers } = useMemo(() => {
+    const masters = users.filter(u => u.is_master_user === true || u.user_roles?.name === 'master');
+    const regulars = users.filter(u => u.is_master_user !== true && u.user_roles?.name !== 'master');
+    return { masterUsers: masters, regularUsers: regulars };
   }, [users]);
 
   // Handlers para todas as ações
@@ -198,118 +192,146 @@ export default function AdminUsers() {
         </div>
       </div>
 
-      {/* Filtros Avançados */}
+      {/* Estatísticas Clicáveis */}
+      <EnhancedUserStats 
+        stats={stats} 
+        loading={loading} 
+        onFilterClick={handleFilterByType}
+      />
+
+      {/* Filtros Simplificados */}
       <AdvancedUserFilters
-        userType={filterType}
-        onUserTypeChange={setFilterType}
-        organizationFilter={organizationFilter}
-        onOrganizationFilterChange={setOrganizationFilter}
         searchQuery={searchQuery}
         onSearchQueryChange={setSearchQuery}
-        roleFilter={roleFilter}
-        onRoleFilterChange={setRoleFilter}
-        statusFilter={statusFilter}
-        onStatusFilterChange={setStatusFilter}
-        onboardingFilter={onboardingFilter}
-        onOnboardingFilterChange={setOnboardingFilter}
-        dateFilter={dateFilter}
-        onDateFilterChange={setDateFilter}
-        availableRoles={availableRoles}
-        organizations={organizations}
-        isCollapsed={filtersCollapsed}
-        onToggleCollapse={() => setFiltersCollapsed(!filtersCollapsed)}
+        showUsers={showUsers}
+        currentFilter={currentFilter}
+        onClearFilters={clearFilters}
       />
 
-      {/* Estatísticas Aprimoradas */}
-      <EnhancedUserStats stats={stats} loading={loading} />
-
-      {/* Results count and pagination info */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <p className="text-sm text-muted-foreground">
-            Mostrando {((currentPage - 1) * pageSize) + 1}-{Math.min(currentPage * pageSize, totalUsers)} de {totalUsers} usuários
-          </p>
-          {(filterType !== 'all' || roleFilter !== 'all' || statusFilter !== 'all' || onboardingFilter !== 'all' || dateFilter !== 'all') && (
-            <div className="flex flex-wrap gap-1">
-              {filterType !== 'all' && (
-                <Badge variant="secondary" className="text-xs">
-                  {filterType === 'master' && 'Masters'}
-                  {filterType === 'team_member' && 'Membros de equipe'}
-                  {filterType === 'individual' && 'Usuários individuais'}
-                </Badge>
-              )}
-              {organizationFilter !== 'all' && (
-                <Badge variant="outline" className="text-xs">
-                  {organizations.find(o => o.id === organizationFilter)?.name}
-                </Badge>
-              )}
-              {roleFilter !== 'all' && (
-                <Badge variant="outline" className="text-xs">
-                  {availableRoles.find(r => r.id === roleFilter)?.name}
-                </Badge>
-              )}
-              {statusFilter !== 'all' && (
-                <Badge variant="outline" className="text-xs">
-                  Status: {statusFilter === 'active' ? 'Ativo' : 'Inativo'}
-                </Badge>
-              )}
-              {onboardingFilter !== 'all' && (
-                <Badge variant="outline" className="text-xs">
-                  Onboarding: {onboardingFilter === 'completed' ? 'Completo' : 'Pendente'}
-                </Badge>
-              )}
-              {dateFilter !== 'all' && (
-                <Badge variant="outline" className="text-xs">
-                  Período: {dateFilter}
-                </Badge>
-              )}
+      {/* Área de exibição de usuários */}
+      {showUsers ? (
+        <div className="space-y-6">
+          {/* Results count and pagination info */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <p className="text-sm text-muted-foreground">
+                Mostrando {((currentPage - 1) * pageSize) + 1}-{Math.min(currentPage * pageSize, totalUsers)} de {totalUsers} usuários
+              </p>
+              <Badge variant="secondary" className="text-xs">
+                Filtro: {currentFilter === 'master' ? 'Masters' : 
+                         currentFilter === 'team_member' ? 'Membros' : 
+                         currentFilter === 'individual' ? 'Individuais' : 
+                         currentFilter === 'all' ? 'Todos' : currentFilter}
+              </Badge>
             </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={prevPage}
+                  disabled={!canGoPrev || loading}
+                  size="sm"
+                  variant="outline"
+                >
+                  Anterior
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  Página {currentPage} de {totalPages}
+                </span>
+                <Button
+                  onClick={nextPage}
+                  disabled={!canGoNext || loading}
+                  size="sm"
+                  variant="outline"
+                >
+                  Próxima
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {/* Visualização específica para Masters */}
+          {currentFilter === 'master' && masterUsers.length > 0 ? (
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <Crown className="h-5 w-5 text-yellow-600" />
+                Masters e suas Equipes
+              </h3>
+              <div className="grid gap-4">
+                {masterUsers.map((master) => {
+                  // Buscar membros da equipe deste master
+                  const teamMembers = users.filter(u => 
+                    u.organization_id === master.organization_id && 
+                    u.id !== master.id &&
+                    u.user_roles?.name !== 'master'
+                  );
+                  
+                  return (
+                    <MasterHierarchyCard
+                      key={master.id}
+                      master={master}
+                      teamMembers={teamMembers}
+                      onEditUser={handleEditRole}
+                      onManageTeam={(master) => {
+                        console.log('Gerenciar equipe do master:', master.name);
+                        // Implementar ação específica para gerenciar equipe
+                      }}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            /* Tabela padrão para outros filtros */
+            <UsersTable
+              users={users}
+              loading={loading}
+              onEditRole={handleEditRole}
+              onDeleteUser={handleDeleteUser}
+              onResetPassword={handleResetPassword}
+              onResetUser={handleResetUser}
+              onToggleStatus={handleToggleStatus}
+              onManageCourses={handleManageCourses}
+              onRefresh={fetchUsers}
+              canEditRoles={canAssignRoles}
+              canDeleteUsers={canDeleteUsers}
+              canResetPasswords={canResetPasswords}
+              canResetUsers={canManageUsers}
+              canToggleStatus={canManageUsers}
+            />
           )}
         </div>
-
-        {/* Pagination Controls */}
-        {totalPages > 1 && (
-          <div className="flex items-center gap-2">
-            <Button
-              onClick={prevPage}
-              disabled={!canGoPrev || loading}
-              size="sm"
-              variant="outline"
-            >
-              Anterior
-            </Button>
-            <span className="text-sm text-muted-foreground">
-              Página {currentPage} de {totalPages}
-            </span>
-            <Button
-              onClick={nextPage}
-              disabled={!canGoNext || loading}
-              size="sm"
-              variant="outline"
-            >
-              Próxima
-            </Button>
-          </div>
-        )}
-      </div>
-
-      {/* Users Table with Cards Layout */}
-      <UsersTable
-        users={users}
-        loading={loading}
-        onEditRole={handleEditRole}
-        onDeleteUser={handleDeleteUser}
-        onResetPassword={handleResetPassword}
-        onResetUser={handleResetUser}
-        onToggleStatus={handleToggleStatus}
-        onManageCourses={handleManageCourses}
-        onRefresh={fetchUsers}
-        canEditRoles={canAssignRoles}
-        canDeleteUsers={canDeleteUsers}
-        canResetPasswords={canResetPasswords}
-        canResetUsers={canManageUsers}
-        canToggleStatus={canManageUsers}
-      />
+      ) : (
+        /* Estado inicial - sem usuários carregados */
+        <Card className="surface-elevated border-0 shadow-aurora">
+          <CardContent className="py-12">
+            <div className="text-center">
+              <Users className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
+              <h3 className="text-xl font-semibold mb-2">Nenhum filtro ativo</h3>
+              <p className="text-muted-foreground mb-4">
+                Clique nos números das estatísticas acima para filtrar e visualizar usuários
+              </p>
+              <div className="flex justify-center gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleFilterByType('all')}
+                >
+                  Ver todos os usuários
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleFilterByType('master')}
+                >
+                  Ver apenas masters
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Dialogs */}
       <UserRoleDialog
