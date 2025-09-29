@@ -6737,6 +6737,12 @@ export type Database = {
               p_user_type?: string
             }
           | {
+              p_filter_type?: string
+              p_limit?: number
+              p_offset?: number
+              p_search_query?: string
+            }
+          | {
               p_limit?: number
               p_offset?: number
               p_search?: string
