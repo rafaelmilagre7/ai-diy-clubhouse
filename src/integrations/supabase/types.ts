@@ -6722,12 +6722,22 @@ export type Database = {
         }[]
       }
       get_users_with_filters_corrected: {
-        Args: {
-          p_limit?: number
-          p_offset?: number
-          p_search?: string
-          p_user_type?: string
-        }
+        Args:
+          | {
+              p_date_range?: string
+              p_limit?: number
+              p_offset?: number
+              p_onboarding?: string
+              p_search_query?: string
+              p_status?: string
+              p_user_type?: string
+            }
+          | {
+              p_limit?: number
+              p_offset?: number
+              p_search?: string
+              p_user_type?: string
+            }
         Returns: {
           avatar_url: string
           company_name: string
