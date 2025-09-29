@@ -2,7 +2,7 @@
  * Testes de integração para o hook useUsers e componentes relacionados
  */
 
-import { renderHook, waitFor } from '@testing-library/react';
+import { renderHook, waitFor, act } from '@testing-library/react';
 import { useUsers } from '@/hooks/admin/useUsers';
 import { supabase } from '@/lib/supabase';
 
