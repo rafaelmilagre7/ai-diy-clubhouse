@@ -5,7 +5,8 @@ import { Database } from './database.types';
 // TIPOS RELACIONADOS A MEMBROS E PERFIS
 // =============================================================================
 
-export type UserProfile = Database['public']['Tables'] extends { profiles: any } 
+// Tipo base do perfil
+type BaseProfile = Database['public']['Tables'] extends { profiles: any } 
   ? Database['public']['Tables']['profiles']['Row']
   : {
       id: string;
@@ -23,18 +24,23 @@ export type UserProfile = Database['public']['Tables'] extends { profiles: any }
       status?: string;
       created_at: string;
       updated_at: string;
-      user_roles?: {
-        id: string;
-        name: string;
-        description?: string | null;
-        permissions?: any;
-      } | null;
-      organization?: {
-        id: string;
-        name: string;
-        master_user_id?: string;
-      } | null;
     };
+
+// Extensão com campos adicionais
+export interface UserProfile extends BaseProfile {
+  member_count?: number;
+  user_roles?: {
+    id: string;
+    name: string;
+    description?: string | null;
+    permissions?: any;
+  } | null;
+  organization?: {
+    id: string;
+    name: string;
+    master_user_id?: string;
+  } | null;
+}
 
 export type MemberConnection = Database['public']['Tables'] extends { member_connections: any } 
   ? Database['public']['Tables']['member_connections']['Row']

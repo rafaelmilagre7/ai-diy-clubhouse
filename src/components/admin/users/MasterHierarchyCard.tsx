@@ -20,13 +20,15 @@ import { ptBR } from 'date-fns/locale';
 interface MasterHierarchyCardProps {
   master: UserProfile;
   teamMembers?: UserProfile[];
+  memberCount?: number;
   onEditUser?: (user: UserProfile) => void;
   onManageTeam?: (master: UserProfile) => void;
 }
 
 export const MasterHierarchyCard = ({ 
   master, 
-  teamMembers = [], 
+  teamMembers = [],
+  memberCount,
   onEditUser,
   onManageTeam 
 }: MasterHierarchyCardProps) => {
@@ -78,7 +80,7 @@ export const MasterHierarchyCard = ({
           
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="text-xs">
-              {teamMembers.length} membro{teamMembers.length !== 1 ? 's' : ''}
+              {memberCount !== undefined ? memberCount : teamMembers.length} membro{(memberCount !== undefined ? memberCount : teamMembers.length) !== 1 ? 's' : ''}
             </Badge>
             {teamMembers.length > 0 && (
               <Button

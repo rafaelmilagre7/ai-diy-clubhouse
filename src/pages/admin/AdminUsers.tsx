@@ -117,7 +117,11 @@ export default function AdminUsers() {
         u.id !== master.id &&
         !u.is_master_user
       );
-      return { master, teamMembers };
+      
+      // Usar member_count do SQL quando disponível (paginação), senão contar localmente
+      const memberCount = master.member_count !== undefined ? master.member_count : teamMembers.length;
+      
+      return { master, teamMembers, memberCount };
     });
     
     return { 
@@ -296,14 +300,15 @@ export default function AdminUsers() {
             <div className="space-y-4">
               <h3 className="text-lg font-semibold flex items-center gap-2">
                 <Crown className="h-5 w-5 text-yellow-600" />
-                Masters e suas Equipes ({masterGroupsWithMembers.length} masters, {users.length - masterGroupsWithMembers.length} membros)
+                Masters e suas Equipes ({masterGroupsWithMembers.length} masters)
               </h3>
               <div className="grid gap-4">
-                {masterGroupsWithMembers.map(({ master, teamMembers }) => (
+                {masterGroupsWithMembers.map(({ master, teamMembers, memberCount }) => (
                   <MasterHierarchyCard
                     key={master.id}
                     master={master}
                     teamMembers={teamMembers}
+                    memberCount={memberCount}
                     onEditUser={handleEditRole}
                     onManageTeam={(master) => {
                       console.log('Gerenciar equipe do master:', master.name);

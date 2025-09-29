@@ -139,7 +139,8 @@ export function useUsers() {
           organization_id: user.organization_id,
           master_email: user.master_email,
           user_roles: user.user_roles,
-          organization: user.organization
+          organization: user.organization,
+          member_count: user.member_count || 0
         }));
 
         setUsers(mappedUsers);
@@ -260,9 +261,9 @@ export function useUsers() {
   // Navegação de páginas
   const goToPage = useCallback((page: number) => {
     if (page >= 1 && page <= Math.ceil(totalUsers / pageSize)) {
-      fetchUsers(false, page);
+      fetchUsers(false, page, currentFilter);
     }
-  }, [fetchUsers, totalUsers, pageSize]);
+  }, [fetchUsers, totalUsers, pageSize, currentFilter]);
 
   const nextPage = useCallback(() => {
     goToPage(currentPage + 1);
