@@ -218,6 +218,13 @@ export interface UserProfile {
   onboarding_completed?: boolean | null; // Status do onboarding
   onboarding_completed_at?: string | null; // Data de conclusão
   status?: string | null; // Status do usuário: 'active' | 'inactive'
+  is_master_user?: boolean; // Se é usuário master
+  organization_id?: string | null; // ID da organização
+  organization?: {
+    id: string;
+    name: string;
+    master_user_id?: string;
+  } | null; // Dados da organização via join
   created_at: string;
 }
 

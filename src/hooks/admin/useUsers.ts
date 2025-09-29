@@ -70,14 +70,22 @@ export function useUsers() {
           created_at,
           role_id,
           onboarding_completed,
+          is_master_user,
+          organization_id,
           user_roles:role_id (
             id,
             name,
             description,
             permissions,
             is_system
+          ),
+          organization:organization_id (
+            id,
+            name,
+            master_user_id
           )
         `)
+        .order('is_master_user', { ascending: false })
         .order('created_at', { ascending: false });
 
       if (searchQuery.trim()) {
@@ -100,7 +108,10 @@ export function useUsers() {
         created_at: user.created_at,
         role_id: user.role_id,
         onboarding_completed: user.onboarding_completed,
+        is_master_user: user.is_master_user,
+        organization_id: user.organization_id,
         user_roles: user.user_roles as any,
+        organization: user.organization as any
       }));
 
       setUsers(mappedUsers);

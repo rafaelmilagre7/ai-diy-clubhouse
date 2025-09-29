@@ -18,6 +18,8 @@ export type UserProfile = Database['public']['Tables'] extends { profiles: any }
       role?: string | null;
       organization_id?: string | null;
       is_master_user?: boolean;
+      onboarding_completed?: boolean;
+      status?: string;
       created_at: string;
       updated_at: string;
       user_roles?: {
@@ -25,6 +27,11 @@ export type UserProfile = Database['public']['Tables'] extends { profiles: any }
         name: string;
         description?: string | null;
         permissions?: any;
+      } | null;
+      organization?: {
+        id: string;
+        name: string;
+        master_user_id?: string;
       } | null;
     };
 

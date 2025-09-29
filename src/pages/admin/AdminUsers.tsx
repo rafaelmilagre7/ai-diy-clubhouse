@@ -3,6 +3,8 @@ import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Users, 
   Search, 
@@ -12,7 +14,10 @@ import {
   Shield,
   Crown,
   AlertCircle,
-  Download
+  Download,
+  Building2,
+  UserCog,
+  Filter
 } from 'lucide-react';
 import { useUsers } from '@/hooks/admin/useUsers';
 import { useUserExport } from '@/hooks/admin/useUserExport';
@@ -55,6 +60,8 @@ export default function AdminUsers() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showPasswordResetDialog, setShowPasswordResetDialog] = useState(false);
   const [showCourseManagerDialog, setShowCourseManagerDialog] = useState(false);
+  const [filterType, setFilterType] = useState<string>('all');
+  const [selectedOrganization, setSelectedOrganization] = useState<string>('all');
 
   // Converter roles do useRoles para o formato esperado
   const availableRoles: Role[] = useMemo(() => {
@@ -63,6 +70,56 @@ export default function AdminUsers() {
       permissions: role.permissions || {}
     }));
   }, [roles]);
+
+  // Calcular estatísticas hierárquicas
+  const hierarchicalStats = useMemo(() => {
+    const masters = users.filter(u => u.is_master_user);
+    const teamMembers = users.filter(u => !u.is_master_user && u.organization_id);
+    const individuals = users.filter(u => !u.organization_id);
+    const organizations = [...new Set(users.filter(u => u.organization_id).map(u => u.organization_id))];
+    
+    return {
+      masters: masters.length,
+      teamMembers: teamMembers.length,
+      individuals: individuals.length,
+      organizations: organizations.length,
+      totalUsers: users.length
+    };
+  }, [users]);
+
+  // Filtrar usuários baseado nos filtros selecionados
+  const filteredUsers = useMemo(() => {
+    let filtered = users;
+
+    if (filterType !== 'all') {
+      switch (filterType) {
+        case 'masters':
+          filtered = filtered.filter(u => u.is_master_user);
+          break;
+        case 'team_members':
+          filtered = filtered.filter(u => !u.is_master_user && u.organization_id);
+          break;
+        case 'individuals':
+          filtered = filtered.filter(u => !u.organization_id);
+          break;
+      }
+    }
+
+    if (selectedOrganization !== 'all') {
+      filtered = filtered.filter(u => u.organization_id === selectedOrganization);
+    }
+
+    return filtered;
+  }, [users, filterType, selectedOrganization]);
+
+  // Obter organizações únicas para o filtro
+  const organizations = useMemo(() => {
+    const orgs = users
+      .filter(u => u.organization?.id)
+      .map(u => ({ id: u.organization!.id, name: u.organization!.name }))
+      .filter((org, index, arr) => arr.findIndex(o => o.id === org.id) === index);
+    return orgs;
+  }, [users]);
 
   // Handlers para todas as ações
   const handleEditRole = (user: UserProfile) => {
@@ -168,8 +225,8 @@ export default function AdminUsers() {
         </div>
       </div>
 
-      {/* Search */}
-      <div className="flex items-center space-x-2">
+      {/* Search and Filters */}
+      <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -179,60 +236,132 @@ export default function AdminUsers() {
             className="pl-8"
           />
         </div>
+        
+        <div className="flex gap-2">
+          <Select value={filterType} onValueChange={setFilterType}>
+            <SelectTrigger className="w-[180px]">
+              <Filter className="h-4 w-4 mr-2" />
+              <SelectValue placeholder="Filtrar por tipo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os usuários</SelectItem>
+              <SelectItem value="masters">Masters</SelectItem>
+              <SelectItem value="team_members">Membros de equipe</SelectItem>
+              <SelectItem value="individuals">Usuários individuais</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {organizations.length > 0 && (
+            <Select value={selectedOrganization} onValueChange={setSelectedOrganization}>
+              <SelectTrigger className="w-[200px]">
+                <Building2 className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="Filtrar por organização" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas organizações</SelectItem>
+                {organizations.map(org => (
+                  <SelectItem key={org.id} value={org.id}>
+                    {org.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
+      {/* Hierarchical Stats */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+        <Card className="surface-elevated border-0 shadow-aurora">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total de Usuários</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{users.length}</div>
+            <div className="text-2xl font-bold">{hierarchicalStats.totalUsers}</div>
+            <p className="text-xs text-muted-foreground">
+              usuários cadastrados
+            </p>
           </CardContent>
         </Card>
-        <Card>
+        
+        <Card className="surface-elevated border-0 shadow-aurora">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Administradores</CardTitle>
-            <Crown className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Masters</CardTitle>
+            <Crown className="h-4 w-4 text-yellow-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {users.filter(u => getUserRoleName(u) === 'admin').length}
-            </div>
+            <div className="text-2xl font-bold text-yellow-600">{hierarchicalStats.masters}</div>
+            <p className="text-xs text-muted-foreground">
+              líderes de equipe
+            </p>
           </CardContent>
         </Card>
-        <Card>
+
+        <Card className="surface-elevated border-0 shadow-aurora">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Formação</CardTitle>
-            <Shield className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Membros de Equipe</CardTitle>
+            <UserCog className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {users.filter(u => getUserRoleName(u) === 'formacao').length}
-            </div>
+            <div className="text-2xl font-bold text-blue-600">{hierarchicalStats.teamMembers}</div>
+            <p className="text-xs text-muted-foreground">
+              em organizações
+            </p>
           </CardContent>
         </Card>
-        <Card>
+
+        <Card className="surface-elevated border-0 shadow-aurora">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Membros</CardTitle>
+            <CardTitle className="text-sm font-medium">Organizações</CardTitle>
+            <Building2 className="h-4 w-4 text-green-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">{hierarchicalStats.organizations}</div>
+            <p className="text-xs text-muted-foreground">
+              equipes ativas
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="surface-elevated border-0 shadow-aurora">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Usuários Individuais</CardTitle>
             <UserCheck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {users.filter(u => {
-                const role = getUserRoleName(u);
-                return role === 'membro_club' || role === 'user' || !role;
-              }).length}
-            </div>
+            <div className="text-2xl font-bold">{hierarchicalStats.individuals}</div>
+            <p className="text-xs text-muted-foreground">
+              sem organização
+            </p>
           </CardContent>
         </Card>
       </div>
 
+      {/* Results count and status */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <p className="text-sm text-muted-foreground">
+            Mostrando {filteredUsers.length} de {users.length} usuários
+          </p>
+          {filterType !== 'all' && (
+            <Badge variant="secondary" className="text-xs">
+              {filterType === 'masters' && 'Masters'}
+              {filterType === 'team_members' && 'Membros de equipe'}
+              {filterType === 'individuals' && 'Usuários individuais'}
+            </Badge>
+          )}
+          {selectedOrganization !== 'all' && (
+            <Badge variant="outline" className="text-xs">
+              {organizations.find(o => o.id === selectedOrganization)?.name}
+            </Badge>
+          )}
+        </div>
+      </div>
+
       {/* Users Table with Cards Layout */}
       <UsersTable
-        users={users}
+        users={filteredUsers}
         loading={loading}
         onEditRole={handleEditRole}
         onDeleteUser={handleDeleteUser}
