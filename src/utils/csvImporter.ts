@@ -13,55 +13,24 @@ interface CSVUser {
 
 export async function importUsersFromCSV() {
   try {
-    // Ler o arquivo CSV
-    const response = await fetch('/src/data/usuarios_adicionais.csv');
-    const csvText = await response.text();
+    toast.info('🚀 Iniciando importação completa dos dados CSV...');
     
-    const lines = csvText.split('\n');
-    const headers = lines[0].split(',').map(h => h.trim());
+    // Chamar a edge function para fazer a importação
+    const { data, error } = await supabase.functions.invoke('import-csv-data', {
+      method: 'POST'
+    });
     
-    // Encontrar índices das colunas importantes
-    const nameIndex = headers.findIndex(h => h.toLowerCase().includes('nome'));
-    const emailIndex = headers.findIndex(h => h.toLowerCase().includes('email'));
-    const masterIndex = headers.findIndex(h => h.toLowerCase().includes('acesso vinculado a'));
-    
-    const usersToUpdate: Array<{email: string, master_email: string | null}> = [];
-    
-    for (let i = 1; i < lines.length; i++) {
-      const line = lines[i].trim();
-      if (!line) continue;
-      
-      const values = line.split(',').map(v => v.trim());
-      const email = values[emailIndex]?.trim();
-      const masterEmail = values[masterIndex]?.trim();
-      
-      if (email && masterEmail && masterEmail !== email) {
-        usersToUpdate.push({
-          email: email,
-          master_email: masterEmail
-        });
-      }
+    if (error) {
+      throw new Error(error.message);
     }
     
-    console.log(`📤 Preparando para atualizar ${usersToUpdate.length} usuários com master_email`);
-    
-    // Atualizar usuários em lotes
-    let updated = 0;
-    for (const user of usersToUpdate) {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ master_email: user.master_email })
-        .eq('email', user.email);
-      
-      if (!error) {
-        updated++;
-      } else {
-        console.warn(`Erro ao atualizar ${user.email}:`, error.message);
-      }
+    if (data?.success) {
+      toast.success(`✅ ${data.message}`);
+      console.log('📊 Detalhes da importação:', data.details);
+      return { success: true, updated: data.details.usersUpdated };
+    } else {
+      throw new Error(data?.error || 'Erro desconhecido na importação');
     }
-    
-    toast.success(`✅ Importação concluída! ${updated} usuários atualizados com master_email.`);
-    return { success: true, updated };
     
   } catch (error: any) {
     console.error('Erro na importação:', error);

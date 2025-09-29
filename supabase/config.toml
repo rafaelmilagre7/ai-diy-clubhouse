@@ -171,3 +171,6 @@ verify_jwt = false
 
 [functions.list-panda-videos]
 verify_jwt = false
+
+[functions.import-csv-data]
+verify_jwt = false
