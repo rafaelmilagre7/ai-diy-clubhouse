@@ -50,14 +50,12 @@ describe('useUsers Hook Integration', () => {
     // Verificar big numbers específicos
     expect(typeof result.current.stats.masters).toBe('number');
     expect(typeof result.current.stats.team_members).toBe('number');
-    expect(typeof result.current.stats.organizations).toBe('number');
     expect(typeof result.current.stats.individual_users).toBe('number');
     
     console.log('🏠 Hook useUsers - Estatísticas carregadas:', {
       total_users: result.current.stats.total_users,
       masters: result.current.stats.masters,
       team_members: result.current.stats.team_members,
-      organizations: result.current.stats.organizations,
       individual_users: result.current.stats.individual_users
     });
   });
@@ -164,20 +162,13 @@ describe('Direct Database Validation', () => {
       .from('profiles')
       .select('*', { count: 'exact', head: true });
     
-    const { count: totalOrganizations } = await supabase
-      .from('organizations')
-      .select('*', { count: 'exact', head: true });
-    
     // Verificar consistência
     expect(stats.total_users).toBe(totalProfiles);
-    expect(stats.organizations).toBe(totalOrganizations);
     
     console.log('📊 Consistência verificada:', {
       'Stats total_users': stats.total_users,
       'Profiles count': totalProfiles,
-      'Stats organizations': stats.organizations,
-      'Organizations count': totalOrganizations,
-      'Consistent': stats.total_users === totalProfiles && stats.organizations === totalOrganizations
+      'Consistent': stats.total_users === totalProfiles
     });
   });
 });

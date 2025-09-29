@@ -11,7 +11,6 @@ interface UserStats {
   total_users: number;
   masters: number;
   team_members: number;
-  organizations: number;
   individual_users: number;
   active_users?: number;
   inactive_users?: number;
@@ -41,7 +40,6 @@ export function useUsers() {
     total_users: 0,
     masters: 0,
     team_members: 0,
-    organizations: 0,
     individual_users: 0
   });
   const [availableRoles, setAvailableRoles] = useState<Role[]>([]);

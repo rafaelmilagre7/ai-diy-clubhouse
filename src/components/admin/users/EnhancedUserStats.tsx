@@ -18,7 +18,6 @@ interface UserStats {
   total_users: number;
   masters: number;
   team_members: number;
-  organizations: number;
   individual_users: number;
   active_users?: number;
   inactive_users?: number;
@@ -72,7 +71,7 @@ export const EnhancedUserStats = ({ stats, loading, onFilterClick }: EnhancedUse
   return (
     <div className="space-y-6">
       {/* Estatísticas principais - CLICÁVEIS */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <Card 
           className="surface-elevated border-0 shadow-aurora cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
           onClick={() => onFilterClick?.('all')}
@@ -115,16 +114,6 @@ export const EnhancedUserStats = ({ stats, loading, onFilterClick }: EnhancedUse
           </CardContent>
         </Card>
 
-        <Card className="surface-elevated border-0 shadow-aurora opacity-60">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Organizações</CardTitle>
-            <Building2 className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats.organizations}</div>
-            <p className="text-xs text-muted-foreground">apenas visualização</p>
-          </CardContent>
-        </Card>
 
         <Card 
           className="surface-elevated border-0 shadow-aurora cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"

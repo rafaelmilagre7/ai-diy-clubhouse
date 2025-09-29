@@ -256,14 +256,16 @@ export default function AdminUsers() {
             <div className="space-y-4">
               <h3 className="text-lg font-semibold flex items-center gap-2">
                 <Crown className="h-5 w-5 text-yellow-600" />
-                Masters e suas Equipes
+                Masters e suas Equipes ({masterUsers.length} masters)
               </h3>
               <div className="grid gap-4">
                 {masterUsers.map((master) => {
-                  // Buscar membros da equipe deste master
+                  // Buscar membros da equipe deste master na lista completa de usuários
+                  // Para masters, devemos buscar pelo organization_id E que não sejam masters
                   const teamMembers = users.filter(u => 
                     u.organization_id === master.organization_id && 
                     u.id !== master.id &&
+                    !u.is_master_user &&
                     u.user_roles?.name !== 'master'
                   );
                   
@@ -281,6 +283,11 @@ export default function AdminUsers() {
                   );
                 })}
               </div>
+              {masterUsers.length > 0 && (
+                <div className="text-sm text-muted-foreground text-center mt-4">
+                  💡 Para ver os membros da equipe associados aos masters, você pode clicar em "Ver todos os usuários" acima
+                </div>
+              )}
             </div>
           ) : (
             /* Tabela padrão para outros filtros */
