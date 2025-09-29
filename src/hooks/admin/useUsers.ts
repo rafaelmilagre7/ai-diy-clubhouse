@@ -37,8 +37,8 @@ export function useUsers() {
   const [loading, setLocalLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterType, setFilterType] = useState<string>('');
-  const [organizationFilter, setOrganizationFilter] = useState<string>('');
+  const [filterType, setFilterType] = useState<string>('all');
+  const [organizationFilter, setOrganizationFilter] = useState<string>('all');
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [error, setError] = useState<Error | null>(null);
   
@@ -113,8 +113,8 @@ export function useUsers() {
         p_limit: pageSize,
         p_offset: offset,
         p_search: searchQuery.trim() || null,
-        p_user_type: filterType || null,
-        p_organization_id: organizationFilter || null
+        p_user_type: filterType === 'all' ? null : filterType,
+        p_organization_id: organizationFilter === 'all' ? null : organizationFilter
       });
 
       if (queryError) {

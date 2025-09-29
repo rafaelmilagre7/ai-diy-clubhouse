@@ -217,7 +217,7 @@ export default function AdminUsers() {
               <SelectValue placeholder="Filtrar por tipo" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todos os usuários</SelectItem>
+              <SelectItem value="all">Todos os usuários</SelectItem>
               <SelectItem value="master">Masters</SelectItem>
               <SelectItem value="team_member">Membros de equipe</SelectItem>
               <SelectItem value="individual">Usuários individuais</SelectItem>
@@ -231,7 +231,7 @@ export default function AdminUsers() {
                 <SelectValue placeholder="Filtrar por organização" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todas organizações</SelectItem>
+                <SelectItem value="all">Todas organizações</SelectItem>
                 {organizations.map(org => (
                   <SelectItem key={org.id} value={org.id}>
                     {org.name}
@@ -317,14 +317,14 @@ export default function AdminUsers() {
           <p className="text-sm text-muted-foreground">
             Mostrando {((currentPage - 1) * pageSize) + 1}-{Math.min(currentPage * pageSize, totalUsers)} de {totalUsers} usuários
           </p>
-          {filterType && (
+          {filterType !== 'all' && (
             <Badge variant="secondary" className="text-xs">
               {filterType === 'master' && 'Masters'}
               {filterType === 'team_member' && 'Membros de equipe'}
               {filterType === 'individual' && 'Usuários individuais'}
             </Badge>
           )}
-          {organizationFilter && (
+          {organizationFilter !== 'all' && (
             <Badge variant="outline" className="text-xs">
               {organizations.find(o => o.id === organizationFilter)?.name}
             </Badge>
