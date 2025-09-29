@@ -6444,6 +6444,10 @@ export type Database = {
         Args: { p_days?: number; p_user_id?: string }
         Returns: Json
       }
+      get_simplified_user_stats_public: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       get_solution_performance_metrics: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -6705,6 +6709,31 @@ export type Database = {
           organization_id: string
           role_id: string
           status: string
+          total_count: number
+          user_roles: Json
+        }[]
+      }
+      get_users_with_filters_public: {
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_search?: string
+          p_user_type?: string
+        }
+        Returns: {
+          avatar_url: string
+          company_name: string
+          created_at: string
+          email: string
+          id: string
+          industry: string
+          is_master_user: boolean
+          name: string
+          onboarding_completed: boolean
+          organization: Json
+          organization_id: string
+          role: string
+          role_id: string
           total_count: number
           user_roles: Json
         }[]

@@ -10,19 +10,9 @@ import { useGlobalLoading } from '@/hooks/useGlobalLoading';
 interface UserStats {
   total_users: number;
   masters: number;
-  team_members: number;
   individual_users: number;
-  active_users?: number;
-  inactive_users?: number;
   onboarding_completed?: number;
   onboarding_pending?: number;
-  new_users_7d?: number;
-  new_users_30d?: number;
-  top_roles?: Array<{
-    name: string;
-    count: number;
-    percentage: number;
-  }>;
 }
 
 interface PaginatedUsersResponse {
@@ -39,7 +29,6 @@ export function useUsers() {
   const [stats, setStats] = useState<UserStats>({
     total_users: 0,
     masters: 0,
-    team_members: 0,
     individual_users: 0
   });
   const [availableRoles, setAvailableRoles] = useState<Role[]>([]);
@@ -71,12 +60,12 @@ export function useUsers() {
   const canDeleteUsers = isAdmin || hasPermission('users.delete');
   const canResetPasswords = isAdmin || hasPermission('users.reset_password');
 
-  // Buscar estatísticas otimizadas com dados avançados
+  // Buscar estatísticas simplificadas
   const fetchStats = useCallback(async () => {
     if (!canManageUsers) return;
     
     try {
-      const { data, error } = await supabase.rpc('get_enhanced_user_stats_public');
+      const { data, error } = await supabase.rpc('get_simplified_user_stats_public');
       
       if (error) {
         console.error('[USERS] Erro ao buscar estatísticas:', error);
@@ -85,7 +74,7 @@ export function useUsers() {
       
       if (data && typeof data === 'object' && !data.error) {
         setStats(data as UserStats);
-        console.log('[STATS] ✅ Estatísticas avançadas carregadas:', data);
+        console.log('[STATS] ✅ Estatísticas simplificadas carregadas:', data);
       }
     } catch (err: any) {
       console.error('[USERS] Erro ao buscar estatísticas:', err);
@@ -122,8 +111,8 @@ export function useUsers() {
     try {
       const offset = (page - 1) * pageSize;
       
-      // Chamar nova função SQL otimizada para masters e membros
-      const { data, error: queryError } = await supabase.rpc('get_users_with_master_members_public', {
+      // Chamar função SQL simplificada
+      const { data, error: queryError } = await supabase.rpc('get_users_with_filters_public', {
         p_limit: pageSize,
         p_offset: offset,
         p_search: searchQuery.trim() || null,

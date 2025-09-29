@@ -49,13 +49,11 @@ describe('useUsers Hook Integration', () => {
     
     // Verificar big numbers específicos
     expect(typeof result.current.stats.masters).toBe('number');
-    expect(typeof result.current.stats.team_members).toBe('number');
     expect(typeof result.current.stats.individual_users).toBe('number');
     
     console.log('🏠 Hook useUsers - Estatísticas carregadas:', {
       total_users: result.current.stats.total_users,
       masters: result.current.stats.masters,
-      team_members: result.current.stats.team_members,
       individual_users: result.current.stats.individual_users
     });
   });
@@ -133,12 +131,12 @@ describe('Direct Database Validation', () => {
     console.log('🔍 Iniciando validação direta do banco...');
     
     // Testar função de estatísticas diretamente
-    const { data: stats, error: statsError } = await supabase.rpc('get_enhanced_user_stats_public');
+    const { data: stats, error: statsError } = await supabase.rpc('get_simplified_user_stats_public');
     expect(statsError).toBeNull();
     expect(stats).toBeDefined();
     
     // Testar função de filtros diretamente
-    const { data: users, error: usersError } = await supabase.rpc('get_users_with_advanced_filters_public', {
+    const { data: users, error: usersError } = await supabase.rpc('get_users_with_filters_public', {
       p_limit: 5
     });
     expect(usersError).toBeNull();
@@ -155,7 +153,7 @@ describe('Direct Database Validation', () => {
   
   it('deve verificar consistência dos dados', async () => {
     // Buscar estatísticas
-    const { data: stats } = await supabase.rpc('get_enhanced_user_stats_public');
+    const { data: stats } = await supabase.rpc('get_simplified_user_stats_public');
     
     // Buscar contagens manuais para comparação
     const { count: totalProfiles } = await supabase
