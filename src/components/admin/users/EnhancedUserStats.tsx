@@ -72,7 +72,7 @@ export const EnhancedUserStats = ({ stats, loading, onFilterClick }: EnhancedUse
         
         <Card 
           className="surface-elevated border-0 shadow-aurora cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
-          onClick={() => onFilterClick?.('master')}
+          onClick={() => onFilterClick?.('masters')}
         >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Masters e Equipes</CardTitle>

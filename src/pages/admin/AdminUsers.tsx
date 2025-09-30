@@ -263,7 +263,7 @@ export default function AdminUsers() {
                 Mostrando {((currentPage - 1) * pageSize) + 1}-{Math.min(currentPage * pageSize, totalUsers)} de {totalUsers} usuários
               </p>
                 <Badge variant="secondary" className="text-xs">
-                 Filtro: {currentFilter === 'master' ? 'Masters' : 
+                 Filtro: {currentFilter === 'masters' ? 'Masters' : 
                           currentFilter === 'team_member' ? 'Membros de Equipe' : 
                           currentFilter === 'onboarding_completed' ? 'Onboarding Completo' :
                           currentFilter === 'onboarding_pending' ? 'Onboarding Pendente' :
@@ -298,7 +298,7 @@ export default function AdminUsers() {
           </div>
 
           {/* Visualização específica para Masters */}
-          {currentFilter === 'master' && masterGroupsWithMembers.length > 0 ? (
+          {currentFilter === 'masters' && masterGroupsWithMembers.length > 0 ? (
             <div className="space-y-4">
               <h3 className="text-lg font-semibold flex items-center gap-2">
                 <Crown className="h-5 w-5 text-yellow-600" />
@@ -377,7 +377,7 @@ export default function AdminUsers() {
                 <Button 
                   variant="outline" 
                   size="sm"
-                  onClick={() => handleFilterByType('master')}
+                  onClick={() => handleFilterByType('masters')}
                 >
                   Ver masters e equipes
                 </Button>
