@@ -100,9 +100,13 @@ Deno.serve(async (req) => {
     console.log(`[SYNC] 📊 Total de registros CSV: ${csvData.length}`);
     console.log(`[SYNC] 🔍 Modo: ${dryRun ? 'DRY-RUN (simulação)' : 'REAL'}`);
 
-    // Agrupar por master
+    // ============================================
+    // ETAPA 1: Coletar todos os masters únicos
+    // ============================================
+    const masterEmails = new Set<string>();
     const masterGroups = new Map<string, string[]>();
     
+    // Primeira passagem: identificar todos os masters
     for (const row of csvData as CSVRow[]) {
       let masterEmail = row.usuario_master?.toLowerCase().trim();
       let memberEmail = row.usuario_adicional?.toLowerCase().trim();
@@ -115,10 +119,15 @@ Deno.serve(async (req) => {
       
       if (!masterEmail) continue;
       
+      // Adicionar ao conjunto de masters
+      masterEmails.add(masterEmail);
+      
+      // Inicializar grupo se não existir
       if (!masterGroups.has(masterEmail)) {
         masterGroups.set(masterEmail, []);
       }
       
+      // Adicionar membro se existir e for diferente do master
       if (memberEmail && memberEmail !== masterEmail) {
         masterGroups.get(masterEmail)!.push(memberEmail);
       }
