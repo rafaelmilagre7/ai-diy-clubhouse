@@ -104,8 +104,14 @@ Deno.serve(async (req) => {
     const masterGroups = new Map<string, string[]>();
     
     for (const row of csvData as CSVRow[]) {
-      const masterEmail = row.usuario_master?.toLowerCase().trim();
-      const memberEmail = row.usuario_adicional?.toLowerCase().trim();
+      let masterEmail = row.usuario_master?.toLowerCase().trim();
+      let memberEmail = row.usuario_adicional?.toLowerCase().trim();
+      
+      // Se usuario_master vazio, usuario_adicional é o master
+      if (!masterEmail && memberEmail) {
+        masterEmail = memberEmail;
+        memberEmail = '';
+      }
       
       if (!masterEmail) continue;
       

@@ -71,11 +71,22 @@ export const useMasterMemberSync = () => {
           // Parse rows
           const data = lines.slice(1).map(line => {
             const values = line.split(',').map(v => v.trim());
+            const masterEmail = values[masterIndex] || '';
+            const memberEmail = memberIndex !== -1 ? values[memberIndex] : '';
+            
+            // Se usuario_master vazio, usuario_adicional é o master
+            if (!masterEmail && memberEmail) {
+              return {
+                usuario_master: memberEmail,
+                usuario_adicional: ''
+              };
+            }
+            
             return {
-              usuario_master: values[masterIndex] || '',
-              usuario_adicional: memberIndex !== -1 ? values[memberIndex] : ''
+              usuario_master: masterEmail,
+              usuario_adicional: memberEmail
             };
-          }).filter(row => row.usuario_master);
+          }).filter(row => row.usuario_master); // Só filtra linhas completamente vazias
 
           resolve(data);
         } catch (error) {

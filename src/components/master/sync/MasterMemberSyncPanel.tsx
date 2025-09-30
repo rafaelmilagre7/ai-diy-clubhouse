@@ -89,8 +89,10 @@ export const MasterMemberSyncPanel: React.FC = () => {
 
   const downloadSampleCSV = () => {
     const csvContent = 'usuario_master,usuario_adicional\n' +
+      ',master1@example.com\n' +
       'master1@example.com,membro1@example.com\n' +
       'master1@example.com,membro2@example.com\n' +
+      ',master2@example.com\n' +
       'master2@example.com,membro3@example.com\n';
     
     const blob = new Blob([csvContent], { type: 'text/csv' });
@@ -120,15 +122,18 @@ export const MasterMemberSyncPanel: React.FC = () => {
               O CSV deve conter duas colunas:
             </p>
             <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1 ml-4">
-              <li><strong>usuario_master</strong>: Email do usuário master (obrigatório)</li>
-              <li><strong>usuario_adicional</strong>: Email do membro da equipe (opcional)</li>
+              <li><strong>usuario_master</strong>: Email do master (deixe vazio se o adicional for master)</li>
+              <li><strong>usuario_adicional</strong>: Email do membro OU do master (se usuario_master vazio)</li>
             </ul>
           </div>
           
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription className="text-sm">
-              Cada linha pode ter o mesmo master com diferentes membros. O sistema irá agrupar automaticamente.
+              <strong>Formato aceito:</strong><br/>
+              • Se <strong>usuario_master vazio</strong>: usuario_adicional é tratado como MASTER<br/>
+              • Se <strong>usuario_master preenchido</strong>: usuario_adicional é MEMBRO desse master<br/>
+              • Masters com múltiplos membros: repita o master em várias linhas
             </AlertDescription>
           </Alert>
 
