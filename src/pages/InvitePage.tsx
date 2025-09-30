@@ -29,7 +29,7 @@ const isSupabaseAuthToken = (token: string): boolean => {
   }
   
   // Tokens de convite são alfanuméricos simples
-  const inviteTokenPattern = /^[A-Za-z0-9]{20,40}$/;
+  const inviteTokenPattern = /^[A-Za-z0-9]{6,40}$/;
   if (!inviteTokenPattern.test(token)) {
     console.log('🔍 [INVITE] Token não match padrão de convite - provável JWT');
     return true;
