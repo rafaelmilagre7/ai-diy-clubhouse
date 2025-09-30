@@ -6856,19 +6856,12 @@ export type Database = {
         }[]
       }
       get_users_with_filters_v2: {
-        Args:
-          | {
-              p_filter_type?: string
-              p_limit?: number
-              p_offset?: number
-              p_search_query?: string
-            }
-          | {
-              p_filter_type?: string
-              p_limit?: number
-              p_offset?: number
-              p_search_query?: string
-            }
+        Args: {
+          p_filter_type?: string
+          p_limit?: number
+          p_offset?: number
+          p_search_query?: string
+        }
         Returns: {
           avatar_url: string
           company_name: string
@@ -6878,7 +6871,6 @@ export type Database = {
           industry: string
           is_master_user: boolean
           master_email: string
-          master_user_id: string
           member_count: number
           name: string
           onboarding_completed: boolean
