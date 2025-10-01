@@ -263,9 +263,8 @@ export default function AdminUsers() {
                 Mostrando {((currentPage - 1) * pageSize) + 1}-{Math.min(currentPage * pageSize, totalUsers)} de {totalUsers} usuários
               </p>
                 <Badge variant="secondary" className="text-xs">
-                 Filtro: {currentFilter === 'masters' ? 'Masters' : 
+                 Filtro: {currentFilter === 'masters' ? 'Masters & Equipes' : 
                           currentFilter === 'team_members' ? 'Membros de Equipe' : 
-                          currentFilter === 'team_member' ? 'Membros de Equipe' : 
                           currentFilter === 'individual' ? 'Usuários Individuais' :
                           currentFilter === 'onboarding_completed' ? 'Onboarding Completo' :
                           currentFilter === 'onboarding_pending' ? 'Onboarding Pendente' :
