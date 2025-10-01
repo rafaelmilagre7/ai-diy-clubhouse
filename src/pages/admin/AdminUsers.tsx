@@ -264,7 +264,9 @@ export default function AdminUsers() {
               </p>
                 <Badge variant="secondary" className="text-xs">
                  Filtro: {currentFilter === 'masters' ? 'Masters' : 
+                          currentFilter === 'team_members' ? 'Membros de Equipe' : 
                           currentFilter === 'team_member' ? 'Membros de Equipe' : 
+                          currentFilter === 'individual' ? 'Usuários Individuais' :
                           currentFilter === 'onboarding_completed' ? 'Onboarding Completo' :
                           currentFilter === 'onboarding_pending' ? 'Onboarding Pendente' :
                           currentFilter === 'all' ? 'Todos' : currentFilter}

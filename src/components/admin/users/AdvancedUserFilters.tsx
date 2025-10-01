@@ -62,14 +62,12 @@ export const AdvancedUserFilters = ({
   const getFilterDisplayName = (filter: string) => {
     const filterMap = {
       'all': 'Todos os usuários',
-      'master': 'Masters',
+      'masters': 'Masters',
+      'team_members': 'Membros de equipe',
       'team_member': 'Membros de equipe',
       'individual': 'Usuários individuais',
-      'active': 'Usuários ativos',
       'onboarding_completed': 'Onboarding completo',
       'onboarding_pending': 'Onboarding pendente',
-      'new_7d': 'Novos (7 dias)',
-      'new_30d': 'Novos (30 dias)',
       'none': 'Nenhum filtro'
     };
     return filterMap[filter as keyof typeof filterMap] || filter;
