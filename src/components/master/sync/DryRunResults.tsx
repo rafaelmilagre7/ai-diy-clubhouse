@@ -10,6 +10,9 @@ interface SyncStats {
   members_processed: number;
   organizations_created: number;
   errors: number;
+  warnings: number;
+  masters_not_found: number;
+  members_not_found: number;
 }
 
 interface SyncLog {
@@ -34,6 +37,7 @@ interface DryRunResultsProps {
 
 export const DryRunResults: React.FC<DryRunResultsProps> = ({ result }) => {
   const errorLogs = result.logs.filter(log => log.status === 'error');
+  const warningLogs = result.logs.filter(log => log.status === 'warning');
   const successLogs = result.logs.filter(log => log.status === 'success');
 
   return (
@@ -60,7 +64,7 @@ export const DryRunResults: React.FC<DryRunResultsProps> = ({ result }) => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Estatísticas */}
+        {/* Estatísticas - Linha 1 */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="flex items-center gap-3 p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
             <Users className="w-8 h-8 text-blue-600" />
@@ -90,10 +94,39 @@ export const DryRunResults: React.FC<DryRunResultsProps> = ({ result }) => {
             <XCircle className="w-8 h-8 text-red-600" />
             <div>
               <div className="text-2xl font-bold">{result.stats.errors}</div>
-              <div className="text-sm text-muted-foreground">Erros</div>
+              <div className="text-sm text-muted-foreground">Erros Críticos</div>
             </div>
           </div>
         </div>
+
+        {/* Estatísticas - Linha 2: Warnings e Não Encontrados */}
+        {(result.stats.warnings > 0 || result.stats.masters_not_found > 0 || result.stats.members_not_found > 0) && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="flex items-center gap-3 p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+              <AlertCircle className="w-8 h-8 text-yellow-600" />
+              <div>
+                <div className="text-2xl font-bold">{result.stats.warnings}</div>
+                <div className="text-sm text-muted-foreground">Avisos</div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 p-4 rounded-lg bg-orange-500/10 border border-orange-500/20">
+              <Users className="w-8 h-8 text-orange-600" />
+              <div>
+                <div className="text-2xl font-bold">{result.stats.masters_not_found}</div>
+                <div className="text-sm text-muted-foreground">Masters Ausentes</div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 p-4 rounded-lg bg-amber-500/10 border border-amber-500/20">
+              <UserPlus className="w-8 h-8 text-amber-600" />
+              <div>
+                <div className="text-2xl font-bold">{result.stats.members_not_found}</div>
+                <div className="text-sm text-muted-foreground">Membros Ausentes</div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Alertas */}
         {result.dryRun && (
@@ -106,7 +139,7 @@ export const DryRunResults: React.FC<DryRunResultsProps> = ({ result }) => {
           </Alert>
         )}
 
-        {!result.dryRun && result.stats.errors === 0 && (
+        {!result.dryRun && result.stats.errors === 0 && result.stats.warnings === 0 && (
           <Alert>
             <CheckCircle className="h-4 w-4 text-green-600" />
             <AlertDescription>
@@ -115,11 +148,22 @@ export const DryRunResults: React.FC<DryRunResultsProps> = ({ result }) => {
           </Alert>
         )}
 
+        {!result.dryRun && result.stats.errors === 0 && result.stats.warnings > 0 && (
+          <Alert>
+            <AlertCircle className="h-4 w-4 text-yellow-600" />
+            <AlertDescription>
+              ✅ Sincronização concluída com {result.stats.warnings} aviso(s).
+              {result.stats.masters_not_found > 0 && ` ${result.stats.masters_not_found} master(s) não foram encontrados no sistema e foram ignorados.`}
+              {result.stats.members_not_found > 0 && ` ${result.stats.members_not_found} membro(s) não foram encontrados.`}
+            </AlertDescription>
+          </Alert>
+        )}
+
         {result.stats.errors > 0 && (
           <Alert variant="destructive">
             <XCircle className="h-4 w-4" />
             <AlertDescription>
-              ⚠️ {result.stats.errors} erro(s) encontrado(s) durante o processamento.
+              ⚠️ {result.stats.errors} erro(s) crítico(s) encontrado(s) durante o processamento.
               Verifique os logs abaixo para mais detalhes.
             </AlertDescription>
           </Alert>
@@ -139,7 +183,7 @@ export const DryRunResults: React.FC<DryRunResultsProps> = ({ result }) => {
               {errorLogs.length > 0 && (
                 <>
                   <div className="text-sm font-semibold text-red-600 mb-2">
-                    ❌ Erros ({errorLogs.length})
+                    ❌ Erros Críticos ({errorLogs.length})
                   </div>
                   {errorLogs.map((log, index) => (
                     <div key={`error-${index}`} className="p-3 rounded-lg bg-red-500/10 border border-red-500/20">
@@ -158,6 +202,37 @@ export const DryRunResults: React.FC<DryRunResultsProps> = ({ result }) => {
                       </div>
                     </div>
                   ))}
+                  <div className="border-b my-4" />
+                </>
+              )}
+
+              {warningLogs.length > 0 && (
+                <>
+                  <div className="text-sm font-semibold text-yellow-600 mb-2">
+                    ⚠️ Avisos ({warningLogs.length})
+                  </div>
+                  {warningLogs.slice(0, 20).map((log, index) => (
+                    <div key={`warning-${index}`} className="p-2 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+                      <div className="flex items-start gap-2">
+                        <AlertCircle className="w-4 h-4 text-yellow-600 mt-0.5 flex-shrink-0" />
+                        <div className="space-y-0.5 flex-1">
+                          <div className="text-xs font-medium">{log.operation}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {log.master_email}
+                            {log.member_email && ` → ${log.member_email}`}
+                          </div>
+                          {log.message && (
+                            <div className="text-xs text-yellow-700">{log.message}</div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {warningLogs.length > 20 && (
+                    <div className="text-center text-sm text-muted-foreground py-2">
+                      ... e mais {warningLogs.length - 20} avisos
+                    </div>
+                  )}
                   <div className="border-b my-4" />
                 </>
               )}

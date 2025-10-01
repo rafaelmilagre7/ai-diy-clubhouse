@@ -14,6 +14,9 @@ interface SyncStats {
   members_processed: number;
   organizations_created: number;
   errors: number;
+  warnings: number;
+  masters_not_found: number;
+  members_not_found: number;
 }
 
 interface SyncLog {
@@ -155,7 +158,10 @@ Deno.serve(async (req) => {
       masters_processed: 0,
       members_processed: 0,
       organizations_created: 0,
-      errors: 0
+      errors: 0,
+      warnings: 0,
+      masters_not_found: 0,
+      members_not_found: 0
     };
 
     const logs: SyncLog[] = [];
@@ -183,10 +189,11 @@ Deno.serve(async (req) => {
             logs.push({
               master_email: masterEmail,
               operation: 'find_master',
-              status: 'error',
-              message: 'Perfil do master não existe no sistema'
+              status: 'warning',
+              message: 'Perfil do master não existe no sistema - ignorando'
             });
-            stats.errors++;
+            stats.warnings++;
+            stats.masters_not_found++;
             continue;
           }
 
@@ -271,10 +278,11 @@ Deno.serve(async (req) => {
                   master_email: masterEmail,
                   member_email: memberEmail,
                   operation: 'find_member',
-                  status: 'error',
-                  message: 'Perfil do membro não existe'
+                  status: 'warning',
+                  message: 'Perfil do membro não existe - ignorando'
                 });
-                stats.errors++;
+                stats.warnings++;
+                stats.members_not_found++;
                 continue;
               }
 
@@ -283,6 +291,7 @@ Deno.serve(async (req) => {
                   .from('profiles')
                   .update({
                     organization_id: organizationId,
+                    master_email: masterEmail,
                     is_master_user: false,
                     updated_at: new Date().toISOString()
                   })
@@ -359,7 +368,11 @@ Deno.serve(async (req) => {
     console.log(`[SYNC] 📊 Masters processados: ${stats.masters_processed}`);
     console.log(`[SYNC] 👥 Membros processados: ${stats.members_processed}`);
     console.log(`[SYNC] 🏢 Organizations criadas: ${stats.organizations_created}`);
-    console.log(`[SYNC] ❌ Erros encontrados: ${stats.errors}`);
+    console.log('[SYNC] ========================================');
+    console.log(`[SYNC] ⚠️  Masters não encontrados: ${stats.masters_not_found}`);
+    console.log(`[SYNC] ⚠️  Membros não encontrados: ${stats.members_not_found}`);
+    console.log(`[SYNC] ⚠️  Total de warnings: ${stats.warnings}`);
+    console.log(`[SYNC] ❌ Erros críticos: ${stats.errors}`);
     console.log(`[SYNC] 📝 Total de logs: ${logs.length}`);
     console.log('[SYNC] ========================================');
 

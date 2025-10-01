@@ -7,6 +7,9 @@ interface SyncStats {
   members_processed: number;
   organizations_created: number;
   errors: number;
+  warnings: number;
+  masters_not_found: number;
+  members_not_found: number;
 }
 
 interface SyncLog {
