@@ -2,12 +2,15 @@
 import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   AlertCircle,
   RefreshCw, 
   Download,
   Users,
-  Crown
+  Crown,
+  RefreshCcw,
+  History
 } from 'lucide-react';
 import { useUsers } from '@/hooks/admin/useUsers';
 import { useUserExport } from '@/hooks/admin/useUserExport';
@@ -24,6 +27,7 @@ import { UserCourseAccessManager } from '@/components/admin/users/UserCourseAcce
 import { AdvancedUserFilters } from '@/components/admin/users/AdvancedUserFilters';
 import { EnhancedUserStats } from '@/components/admin/users/EnhancedUserStats';
 import { MasterHierarchyCard } from '@/components/admin/users/MasterHierarchyCard';
+import { MasterMemberSyncPanel } from '@/components/master/sync/MasterMemberSyncPanel';
 import { getUserRoleName } from '@/lib/supabase/types';
 import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
@@ -212,7 +216,7 @@ export default function AdminUsers() {
         <div>
           <h1 className="text-3xl font-bold">Gestão de Usuários</h1>
           <p className="text-muted-foreground">
-            Gerencie usuários e suas permissões
+            Gerencie usuários, permissões e sincronização master/membros
           </p>
         </div>
         <div className="flex gap-2">
@@ -236,6 +240,26 @@ export default function AdminUsers() {
           </Button>
         </div>
       </div>
+
+      {/* Tabs System */}
+      <Tabs defaultValue="usuarios" className="w-full">
+        <TabsList className="grid w-full grid-cols-3 lg:w-auto">
+          <TabsTrigger value="usuarios" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            <span className="hidden sm:inline">Usuários</span>
+          </TabsTrigger>
+          <TabsTrigger value="sincronizacao" className="flex items-center gap-2">
+            <RefreshCcw className="h-4 w-4" />
+            <span className="hidden sm:inline">Sincronização</span>
+          </TabsTrigger>
+          <TabsTrigger value="historico" className="flex items-center gap-2">
+            <History className="h-4 w-4" />
+            <span className="hidden sm:inline">Histórico</span>
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Tab: Usuários */}
+        <TabsContent value="usuarios" className="space-y-6 mt-6">
 
       {/* Estatísticas Clicáveis */}
       <EnhancedUserStats 
@@ -387,6 +411,32 @@ export default function AdminUsers() {
           </CardContent>
         </Card>
       )}
+
+        </TabsContent>
+
+        {/* Tab: Sincronização Master/Membros */}
+        <TabsContent value="sincronizacao" className="space-y-6 mt-6">
+          <MasterMemberSyncPanel />
+        </TabsContent>
+
+        {/* Tab: Histórico de Sincronizações */}
+        <TabsContent value="historico" className="space-y-6 mt-6">
+          <Card>
+            <CardContent className="py-12">
+              <div className="text-center">
+                <History className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
+                <h3 className="text-xl font-semibold mb-2">Histórico de Sincronizações</h3>
+                <p className="text-muted-foreground">
+                  Visualize logs e relatórios de sincronizações anteriores
+                </p>
+                <p className="text-sm text-muted-foreground mt-4">
+                  Em breve: relatórios detalhados de todas as sincronizações executadas
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       {/* Dialogs */}
       <UserRoleDialog

@@ -345,7 +345,7 @@ Deno.serve(async (req) => {
             master_email: log.master_email,
             member_email: log.member_email,
             operation: log.operation,
-            status: log.status,
+            sync_status: log.status,
             message: log.message,
             synced_at: new Date().toISOString()
           }))
