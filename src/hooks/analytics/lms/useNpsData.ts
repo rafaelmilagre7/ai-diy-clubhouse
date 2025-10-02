@@ -12,14 +12,35 @@ const extractLessonTitle = (item: any): string => {
 
 // Função auxiliar para extrair título do módulo com segurança
 const extractModuleTitle = (item: any): string => {
-  if (!item.learning_lessons?.learning_modules) return 'Módulo não informado';
-  return item.learning_lessons.learning_modules.title || 'Módulo não informado';
+  const lesson = item.learning_lessons;
+  if (!lesson?.learning_modules) return 'Módulo não informado';
+  
+  // Pode vir como array ou objeto único
+  const module = Array.isArray(lesson.learning_modules) 
+    ? lesson.learning_modules[0] 
+    : lesson.learning_modules;
+    
+  return module?.title || 'Módulo não informado';
 };
 
 // Função auxiliar para extrair título do curso com segurança
 const extractCourseTitle = (item: any): string => {
-  if (!item.learning_lessons?.learning_modules?.learning_courses) return 'Curso não informado';
-  return item.learning_lessons.learning_modules.learning_courses.title || 'Curso não informado';
+  const lesson = item.learning_lessons;
+  if (!lesson?.learning_modules) return 'Curso não informado';
+  
+  // Pode vir como array ou objeto único
+  const module = Array.isArray(lesson.learning_modules) 
+    ? lesson.learning_modules[0] 
+    : lesson.learning_modules;
+    
+  if (!module?.learning_courses) return 'Curso não informado';
+  
+  // Pode vir como array ou objeto único
+  const course = Array.isArray(module.learning_courses)
+    ? module.learning_courses[0]
+    : module.learning_courses;
+    
+  return course?.title || 'Curso não informado';
 };
 
 // Função auxiliar para extrair nome do usuário com segurança
@@ -47,7 +68,7 @@ export const useNpsData = (startDate: string | null) => {
       log('Buscando dados de NPS', { startDate });
       
       try {
-        // Buscar dados de NPS do Supabase com LEFT JOINs
+        // Buscar dados de NPS do Supabase com LEFT JOINs usando foreign keys explícitas
         let query = supabase
           .from('learning_lesson_nps')
           .select(`
@@ -58,16 +79,21 @@ export const useNpsData = (startDate: string | null) => {
             feedback,
             created_at,
             user_id,
-            learning_lessons:lesson_id (
+            learning_lessons!learning_lesson_nps_lesson_id_fkey (
               title,
               module_id,
-              learning_modules (
+              learning_modules!learning_lessons_module_id_fkey (
                 title,
                 course_id,
-                learning_courses (title)
+                learning_courses!learning_modules_course_id_fkey (
+                  title
+                )
               )
             ),
-            profiles:user_id (name, email)
+            profiles!learning_lesson_nps_user_id_fkey (
+              name,
+              email
+            )
           `)
           .order('created_at', { ascending: false });
           
