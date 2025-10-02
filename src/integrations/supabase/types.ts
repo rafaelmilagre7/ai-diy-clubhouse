@@ -5489,6 +5489,10 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: Json
       }
+      admin_remove_team_member: {
+        Args: { p_member_id: string; p_organization_id: string }
+        Returns: Json
+      }
       admin_reset_user: {
         Args: { target_user_id: string }
         Returns: Json

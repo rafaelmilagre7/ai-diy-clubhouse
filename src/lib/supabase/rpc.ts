@@ -145,3 +145,17 @@ export const adminResetUser = async (userEmail: string) => {
   
   return data;
 };
+
+export const adminRemoveTeamMember = async (memberId: string, organizationId: string) => {
+  const { data, error } = await supabase.rpc('admin_remove_team_member', {
+    p_member_id: memberId,
+    p_organization_id: organizationId
+  });
+  
+  if (error) {
+    console.error('Erro ao remover membro:', error);
+    throw error;
+  }
+  
+  return data;
+};

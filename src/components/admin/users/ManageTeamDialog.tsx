@@ -12,6 +12,17 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { getUserRoleName } from "@/lib/supabase/types/members";
 import { AddMemberDialog } from "./AddMemberDialog";
+import { adminRemoveTeamMember } from "@/lib/supabase/rpc";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface ManageTeamDialogProps {
   open: boolean;
@@ -22,6 +33,8 @@ interface ManageTeamDialogProps {
 export function ManageTeamDialog({ open, onOpenChange, master }: ManageTeamDialogProps) {
   const { toast } = useToast();
   const [showAddMember, setShowAddMember] = useState(false);
+  const [memberToRemove, setMemberToRemove] = useState<UserProfile | null>(null);
+  const [isRemoving, setIsRemoving] = useState(false);
   
   const { data: members, isLoading, refetch } = useMasterTeamMembers({
     masterUserId: master.id,
@@ -29,11 +42,37 @@ export function ManageTeamDialog({ open, onOpenChange, master }: ManageTeamDialo
     enabled: open && !!master.organization_id
   });
 
-  const handleRemoveMember = (memberId: string) => {
-    toast({
-      title: "Funcionalidade em desenvolvimento",
-      description: "A remoção de membros será implementada em breve.",
-    });
+  const handleRemoveMember = async () => {
+    if (!memberToRemove || !master.organization_id) return;
+    
+    setIsRemoving(true);
+    try {
+      const result = await adminRemoveTeamMember(memberToRemove.id, master.organization_id);
+      
+      if (result.success) {
+        toast({
+          title: "Membro removido",
+          description: `${memberToRemove.name} foi removido da equipe com sucesso.`,
+        });
+        refetch();
+      } else {
+        toast({
+          title: "Erro ao remover membro",
+          description: result.error || "Ocorreu um erro ao remover o membro.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('[REMOVE_MEMBER] Erro:', error);
+      toast({
+        title: "Erro ao remover membro",
+        description: "Ocorreu um erro inesperado. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRemoving(false);
+      setMemberToRemove(null);
+    }
   };
 
   return (
@@ -148,7 +187,7 @@ export function ManageTeamDialog({ open, onOpenChange, master }: ManageTeamDialo
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handleRemoveMember(member.id)}
+                    onClick={() => setMemberToRemove(member)}
                     className="text-destructive hover:text-destructive hover:bg-destructive/10"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -172,6 +211,28 @@ export function ManageTeamDialog({ open, onOpenChange, master }: ManageTeamDialo
         organizationId={master.organization_id || ''}
         onSuccess={() => refetch()}
       />
+
+      <AlertDialog open={!!memberToRemove} onOpenChange={(open) => !open && setMemberToRemove(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover membro da equipe?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja remover <strong>{memberToRemove?.name}</strong> desta equipe? 
+              Esta ação removerá o membro da organização e todas as conexões relacionadas.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isRemoving}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleRemoveMember}
+              disabled={isRemoving}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isRemoving ? "Removendo..." : "Remover"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }
