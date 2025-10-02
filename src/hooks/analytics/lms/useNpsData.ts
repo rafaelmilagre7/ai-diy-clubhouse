@@ -5,15 +5,33 @@ import { LessonNpsResponse, LmsNpsData, LmsFeedbackData } from './types';
 import { useLogging } from '@/hooks/useLogging';
 
 // Função auxiliar para extrair título da aula com segurança
-const extractLessonTitle = (item: LessonNpsResponse): string => {
+const extractLessonTitle = (item: any): string => {
   if (!item.learning_lessons) return 'Aula sem título';
   return item.learning_lessons.title || 'Aula sem título';
 };
 
+// Função auxiliar para extrair título do módulo com segurança
+const extractModuleTitle = (item: any): string => {
+  if (!item.learning_lessons?.learning_modules) return 'Módulo não informado';
+  return item.learning_lessons.learning_modules.title || 'Módulo não informado';
+};
+
+// Função auxiliar para extrair título do curso com segurança
+const extractCourseTitle = (item: any): string => {
+  if (!item.learning_lessons?.learning_modules?.learning_courses) return 'Curso não informado';
+  return item.learning_lessons.learning_modules.learning_courses.title || 'Curso não informado';
+};
+
 // Função auxiliar para extrair nome do usuário com segurança
-const extractUserName = (item: LessonNpsResponse): string => {
+const extractUserName = (item: any): string => {
   if (!item.profiles) return 'Aluno anônimo';
   return item.profiles.name || 'Aluno anônimo';
+};
+
+// Função auxiliar para extrair email do usuário com segurança
+const extractUserEmail = (item: any): string => {
+  if (!item.profiles) return '';
+  return item.profiles.email || '';
 };
 
 // Hook para buscar e processar dados de NPS
@@ -40,8 +58,16 @@ export const useNpsData = (startDate: string | null) => {
             feedback,
             created_at,
             user_id,
-            learning_lessons:lesson_id (title),
-            profiles:user_id (name)
+            learning_lessons:lesson_id (
+              title,
+              module_id,
+              learning_modules (
+                title,
+                course_id,
+                learning_courses (title)
+              )
+            ),
+            profiles:user_id (name, email)
           `)
           .order('created_at', { ascending: false });
           
@@ -130,11 +156,14 @@ export const useNpsData = (startDate: string | null) => {
             responseCode: item.response_code,
             lessonId: item.lesson_id,
             lessonTitle: extractLessonTitle(item),
+            moduleTitle: extractModuleTitle(item),
+            courseTitle: extractCourseTitle(item),
             score: item.score,
             feedback: item.feedback,
             createdAt: item.created_at,
             userId: item.user_id,
-            userName: extractUserName(item)
+            userName: extractUserName(item),
+            userEmail: extractUserEmail(item)
           };
         });
         
@@ -166,9 +195,9 @@ export const useNpsData = (startDate: string | null) => {
             feedback: response.feedback,
             createdAt: response.createdAt,
             userName: response.userName,
-            userEmail: '', // Placeholder - será preenchido pela view
-            moduleTitle: 'Módulo', // Placeholder - será preenchido pela view
-            courseTitle: 'Curso' // Placeholder - será preenchido pela view
+            userEmail: response.userEmail,
+            moduleTitle: response.moduleTitle,
+            courseTitle: response.courseTitle
           }))
           .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         

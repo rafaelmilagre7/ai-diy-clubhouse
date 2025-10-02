@@ -120,18 +120,23 @@ const NPSAnalytics: React.FC = () => {
   const exportData = () => {
     if (!allResponses) return;
     
-    const csvData = allResponses.map(response => ({
-      'ID': response.id,
-      'Data': format(new Date(response.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
-      'Nota': response.score,
-      'Tipo': getScoreLabel(response.score),
-      'Usuário': response.user?.name || 'N/A',
-      'Email': response.user?.email || 'N/A',
-      'Curso': 'N/A',
-      'Módulo': 'N/A',
-      'Aula': response.lesson?.title || 'N/A',
-      'Feedback': response.feedback || 'Sem feedback'
-    }));
+    const csvData = allResponses.map(response => {
+      // Buscar dados completos do feedbackData
+      const feedbackItem = analyticsData?.feedbackData.find(f => f.id === response.id);
+      
+      return {
+        'ID': response.id,
+        'Data': format(new Date(response.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
+        'Nota': response.score,
+        'Tipo': getScoreLabel(response.score),
+        'Usuário': response.user?.name || 'N/A',
+        'Email': response.user?.email || 'N/A',
+        'Curso': feedbackItem?.courseTitle || 'N/A',
+        'Módulo': feedbackItem?.moduleTitle || 'N/A',
+        'Aula': response.lesson?.title || 'N/A',
+        'Feedback': response.feedback || 'Sem feedback'
+      };
+    });
 
     const csv = [
       Object.keys(csvData[0]).join(','),
@@ -147,11 +152,15 @@ const NPSAnalytics: React.FC = () => {
   };
 
   const filteredResponses = allResponses?.filter(response => {
+    const feedbackItem = analyticsData?.feedbackData.find(f => f.id === response.id);
+    
     const matchesSearch = !searchTerm || 
       response.lesson?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       response.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       response.user?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      false; // Removido para compatibilidade
+      feedbackItem?.courseTitle?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      feedbackItem?.moduleTitle?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      false;
     
     return matchesSearch;
   });
@@ -327,40 +336,46 @@ const NPSAnalytics: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {filteredResponses?.slice(0, 20).map((response) => (
-                  <div key={response.id} className="border rounded-lg p-4 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Badge className={getScoreColor(response.score)}>
-                          {response.score}/10 - {getScoreLabel(response.score)}
-                        </Badge>
-                        <span className="text-sm text-muted-foreground">
-                          {format(new Date(response.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
-                        </span>
+                {filteredResponses?.slice(0, 20).map((response) => {
+                  const feedbackItem = analyticsData?.feedbackData.find(f => f.id === response.id);
+                  
+                  return (
+                    <div key={response.id} className="border rounded-lg p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <Badge className={getScoreColor(response.score)}>
+                            {response.score}/10 - {getScoreLabel(response.score)}
+                          </Badge>
+                          <span className="text-sm text-muted-foreground">
+                            {format(new Date(response.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <strong>Usuário:</strong> {response.user?.name || 'N/A'}
-                        <br />
-                        <span className="text-muted-foreground">{response.user?.email}</span>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <strong>Usuário:</strong> {response.user?.name || 'N/A'}
+                          <br />
+                          <span className="text-muted-foreground">{response.user?.email}</span>
+                        </div>
+                        <div>
+                          <strong>Curso:</strong> {feedbackItem?.courseTitle || 'N/A'}
+                          <br />
+                          <strong>Módulo:</strong> {feedbackItem?.moduleTitle || 'N/A'}
+                          <br />
+                          <strong>Aula:</strong> {response.lesson?.title || 'N/A'}
+                        </div>
                       </div>
-                      <div>
-                        <strong>Curso:</strong> N/A
-                        <br />
-                        <strong>Aula:</strong> {response.lesson?.title || 'N/A'}
-                      </div>
-                    </div>
 
-                    {response.feedback && (
-                      <div className="bg-muted p-3 rounded-md">
-                        <strong className="text-sm">Feedback:</strong>
-                        <p className="text-sm mt-1">{response.feedback}</p>
-                      </div>
-                    )}
-                  </div>
-                ))}
+                      {response.feedback && (
+                        <div className="bg-muted p-3 rounded-md">
+                          <strong className="text-sm">Feedback:</strong>
+                          <p className="text-sm mt-1">{response.feedback}</p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
 
                 {(!filteredResponses || filteredResponses.length === 0) && (
                   <div className="text-center py-8 text-muted-foreground">
@@ -382,28 +397,36 @@ const NPSAnalytics: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {filteredResponses?.filter(r => r.feedback?.trim()).map((response) => (
-                  <div key={response.id} className="border rounded-lg p-4 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <Badge className={getScoreColor(response.score)}>
-                        {response.score}/10
-                      </Badge>
-                      <span className="text-sm text-muted-foreground">
-                        {format(new Date(response.created_at), 'dd/MM/yyyy', { locale: ptBR })}
-                      </span>
-                    </div>
-                    
-                    <div className="text-sm">
-                      <strong>Aula:</strong> {response.lesson?.title || 'N/A'}
-                      <br />
-                      <strong>Usuário:</strong> {response.user?.name || 'N/A'}
-                    </div>
+                {filteredResponses?.filter(r => r.feedback?.trim()).map((response) => {
+                  const feedbackItem = analyticsData?.feedbackData.find(f => f.id === response.id);
+                  
+                  return (
+                    <div key={response.id} className="border rounded-lg p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <Badge className={getScoreColor(response.score)}>
+                          {response.score}/10
+                        </Badge>
+                        <span className="text-sm text-muted-foreground">
+                          {format(new Date(response.created_at), 'dd/MM/yyyy', { locale: ptBR })}
+                        </span>
+                      </div>
+                      
+                      <div className="text-sm">
+                        <strong>Curso:</strong> {feedbackItem?.courseTitle || 'N/A'}
+                        <br />
+                        <strong>Módulo:</strong> {feedbackItem?.moduleTitle || 'N/A'}
+                        <br />
+                        <strong>Aula:</strong> {response.lesson?.title || 'N/A'}
+                        <br />
+                        <strong>Usuário:</strong> {response.user?.name || 'N/A'}
+                      </div>
 
-                    <div className="bg-muted p-3 rounded-md">
-                      <p className="text-sm">{response.feedback}</p>
+                      <div className="bg-muted p-3 rounded-md">
+                        <p className="text-sm">{response.feedback}</p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
 
                 {!filteredResponses?.some(r => r.feedback?.trim()) && (
                   <div className="text-center py-8 text-muted-foreground">
