@@ -5465,6 +5465,14 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_add_team_member: {
+        Args: {
+          p_master_user_id: string
+          p_member_email: string
+          p_organization_id: string
+        }
+        Returns: Json
+      }
       admin_complete_user_cleanup: {
         Args: { target_user_id: string } | { user_email: string }
         Returns: Json

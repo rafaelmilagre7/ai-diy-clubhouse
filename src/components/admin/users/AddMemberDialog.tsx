@@ -38,54 +38,34 @@ export function AddMemberDialog({
 
     setIsLoading(true);
     try {
-      // Buscar usuário pelo email
-      const { data: userData, error: userError } = await supabase
-        .from('profiles')
-        .select('id, email, name')
-        .eq('email', email.trim().toLowerCase())
-        .single();
+      const { data, error } = await supabase.rpc('admin_add_team_member', {
+        p_master_user_id: masterUserId,
+        p_member_email: email.trim(),
+        p_organization_id: organizationId
+      });
 
-      if (userError || !userData) {
+      if (error) {
+        console.error('Erro RPC:', error);
         toast({
-          title: "Usuário não encontrado",
-          description: "Não foi possível encontrar um usuário com este email.",
+          title: "Erro ao adicionar membro",
+          description: "Ocorreu um erro ao processar a solicitação.",
           variant: "destructive"
         });
         return;
       }
 
-      // Criar conexão do membro com o master
-      const { error: connectionError } = await supabase
-        .from('member_connections')
-        .insert({
-          requester_id: masterUserId,
-          recipient_id: userData.id,
-          status: 'accepted',
-          connection_type: 'team_member'
+      if (!data.success) {
+        toast({
+          title: "Não foi possível adicionar",
+          description: data.message,
+          variant: "destructive"
         });
-
-      if (connectionError) {
-        if (connectionError.code === '23505') {
-          toast({
-            title: "Membro já adicionado",
-            description: "Este usuário já faz parte da equipe.",
-            variant: "destructive"
-          });
-        } else {
-          throw connectionError;
-        }
         return;
       }
 
-      // Atualizar organização do membro
-      await supabase
-        .from('profiles')
-        .update({ organization_id: organizationId })
-        .eq('id', userData.id);
-
       toast({
         title: "Membro adicionado!",
-        description: `${userData.name || userData.email} foi adicionado à equipe com sucesso.`,
+        description: `${data.member_name || email} foi adicionado à equipe com sucesso.`,
       });
 
       setEmail('');
