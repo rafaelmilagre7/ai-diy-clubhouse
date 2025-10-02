@@ -74,58 +74,42 @@ export const AdvancedUserFilters = ({
   };
 
   return (
-    <Card className="surface-elevated border-0 shadow-aurora">
+    <Card className="surface-elevated shadow-sm border-0">
       <CardContent className="p-4">
-        <div className="space-y-4">
-          {/* Header simplificado */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <Search className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium text-foreground">Busca de Usuários</span>
-              {showUsers && (
-                <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
-                  Filtro: {getFilterDisplayName(currentFilter)}
-                </Badge>
-              )}
-            </div>
-            
-            {showUsers && onClearFilters && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={onClearFilters}
-                className="text-xs h-7 px-2 text-muted-foreground hover:text-foreground"
-              >
-                <X className="h-3 w-3 mr-1" />
-                Limpar Filtros
-              </Button>
-            )}
-          </div>
-
-          {/* Busca simplificada */}
+        <div className="space-y-3">
+          {/* Busca sempre ativa */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar por nome, email, empresa..."
+              placeholder="Buscar por nome, email ou empresa..."
               value={searchQuery}
               onChange={(e) => onSearchQueryChange(e.target.value)}
-              className="pl-10 aurora-focus"
+              className="pl-10 h-9"
               disabled={!showUsers}
             />
-            {!showUsers && (
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
-                Clique nos números acima para ativar
-              </div>
-            )}
           </div>
 
-          {/* Estado de filtro ativo */}
+          {/* Pills de filtros ativos */}
           {showUsers && (
-            <div className="flex items-center gap-2 p-3 bg-primary/5 rounded-lg border border-primary/20">
-              <Filter className="h-4 w-4 text-primary" />
-              <span className="text-sm text-primary font-medium">
-                Exibindo: {getFilterDisplayName(currentFilter)}
-              </span>
+            <div className="flex flex-wrap items-center gap-2">
+              {currentFilter && currentFilter !== 'all' ? (
+                <>
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 text-primary rounded-full text-xs font-medium">
+                    <Filter className="h-3 w-3" />
+                    {getFilterDisplayName(currentFilter)}
+                    <button
+                      onClick={onClearFilters}
+                      className="ml-1 hover:bg-primary/20 rounded-full p-0.5 transition-colors"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <span className="text-xs text-muted-foreground px-2">
+                  Mostrando todos os usuários
+                </span>
+              )}
               {searchQuery && (
                 <Badge variant="outline" className="text-xs">
                   Busca: "{searchQuery}"
@@ -134,12 +118,13 @@ export const AdvancedUserFilters = ({
             </div>
           )}
 
-          {/* Instruções quando não há filtro */}
+          {/* Estado inicial mais compacto */}
           {!showUsers && (
             <div className="text-center py-4 text-muted-foreground">
-              <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">Clique nos números das estatísticas acima para filtrar usuários</p>
-              <p className="text-xs mt-1">A busca de texto será ativada automaticamente</p>
+              <Filter className="h-8 w-8 mx-auto mb-2 opacity-40" />
+              <p className="text-xs">
+                Clique nas estatísticas acima para filtrar
+              </p>
             </div>
           )}
         </div>

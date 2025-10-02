@@ -203,13 +203,13 @@ export default function AdminUsers() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div className="space-y-4">
+      {/* Header Compacto */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Gestão de Usuários</h1>
-          <p className="text-muted-foreground">
-            Gerencie usuários, permissões e sincronização master/membros
+          <h1 className="text-2xl font-bold">Gestão de Usuários</h1>
+          <p className="text-sm text-muted-foreground">
+            Gerencie usuários, permissões e equipes
           </p>
         </div>
         <div className="flex gap-2">
@@ -219,8 +219,7 @@ export default function AdminUsers() {
             size="sm"
             variant="outline"
           >
-            <Download className={`mr-2 h-4 w-4 ${isExporting ? 'animate-pulse' : ''}`} />
-            {isExporting ? 'Exportando...' : 'Download'}
+            <Download className={`h-4 w-4 ${isExporting ? 'animate-pulse' : ''}`} />
           </Button>
           <Button
             onClick={fetchUsers}
@@ -228,8 +227,7 @@ export default function AdminUsers() {
             size="sm"
             variant="outline"
           >
-            <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            {isRefreshing ? 'Atualizando...' : 'Atualizar'}
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
           </Button>
         </div>
       </div>
@@ -252,7 +250,7 @@ export default function AdminUsers() {
         </TabsList>
 
         {/* Tab: Usuários */}
-        <TabsContent value="usuarios" className="space-y-6 mt-6">
+        <TabsContent value="usuarios" className="space-y-4 mt-4">
 
       {/* Estatísticas Clicáveis */}
       <EnhancedUserStats 
@@ -272,20 +270,20 @@ export default function AdminUsers() {
 
       {/* Área de exibição de usuários */}
       {showUsers ? (
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Results count and pagination info */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <p className="text-sm text-muted-foreground">
-                Mostrando {((currentPage - 1) * pageSize) + 1}-{Math.min(currentPage * pageSize, totalUsers)} de {totalUsers} usuários
+                {((currentPage - 1) * pageSize) + 1}-{Math.min(currentPage * pageSize, totalUsers)} de {totalUsers}
               </p>
                 <Badge variant="secondary" className="text-xs">
-                 Filtro: {currentFilter === 'masters' ? 'Masters & Equipes' : 
-                          currentFilter === 'team_members' ? 'Membros de Equipe' : 
-                          currentFilter === 'individual' ? 'Usuários Individuais' :
-                          currentFilter === 'onboarding_completed' ? 'Onboarding Completo' :
-                          currentFilter === 'onboarding_pending' ? 'Onboarding Pendente' :
-                          currentFilter === 'all' ? 'Todos' : currentFilter}
+                 {currentFilter === 'masters' ? 'Masters & Equipes' : 
+                  currentFilter === 'team_members' ? 'Membros' : 
+                  currentFilter === 'individual' ? 'Individuais' :
+                  currentFilter === 'onboarding_completed' ? 'Completo' :
+                  currentFilter === 'onboarding_pending' ? 'Pendente' :
+                  currentFilter === 'all' ? 'Todos' : currentFilter}
                 </Badge>
             </div>
 
@@ -301,7 +299,7 @@ export default function AdminUsers() {
                   Anterior
                 </Button>
                 <span className="text-sm text-muted-foreground">
-                  Página {currentPage} de {totalPages}
+                  {currentPage}/{totalPages}
                 </span>
                 <Button
                   onClick={nextPage}

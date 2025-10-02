@@ -53,75 +53,97 @@ export const EnhancedUserStats = ({ stats, loading, onFilterClick }: EnhancedUse
   }
 
   return (
-    <div className="space-y-6">
-      {/* Estatísticas principais - CLICÁVEIS */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <Card 
-          className="surface-elevated border-0 shadow-aurora cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
-          onClick={() => onFilterClick?.('all')}
-        >
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total de Usuários</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.total_users}</div>
-            <p className="text-xs text-muted-foreground">clique para ver todos</p>
-          </CardContent>
-        </Card>
-        
-        <Card 
-          className="surface-elevated border-0 shadow-aurora cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
-          onClick={() => onFilterClick?.('masters')}
-        >
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Masters e Equipes</CardTitle>
-            <Crown className="h-4 w-4 text-yellow-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{stats.masters}</div>
-            <p className="text-xs text-muted-foreground">masters com suas equipes</p>
-          </CardContent>
-        </Card>
+    <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+      {/* Total de Usuários */}
+      <Card 
+        className="surface-elevated border-0 shadow-sm hover:shadow-md cursor-pointer transition-all duration-200 group"
+        onClick={() => onFilterClick?.('all')}
+      >
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 pt-4 px-4">
+          <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+            Total de Usuários
+          </CardTitle>
+          <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+            <Users className="h-4 w-4 text-primary" />
+          </div>
+        </CardHeader>
+        <CardContent className="px-4 pb-4">
+          <div className="text-3xl font-bold mb-1">{stats.total_users}</div>
+          <p className="text-xs text-muted-foreground flex items-center gap-1">
+            <TrendingUp className="h-3 w-3" />
+            Todos os usuários
+          </p>
+        </CardContent>
+      </Card>
+      
+      {/* Masters e Equipes */}
+      <Card 
+        className="surface-elevated border-0 shadow-sm hover:shadow-md cursor-pointer transition-all duration-200 group"
+        onClick={() => onFilterClick?.('masters')}
+      >
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 pt-4 px-4">
+          <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+            Masters + Equipes
+          </CardTitle>
+          <div className="h-8 w-8 rounded-full bg-amber-500/10 flex items-center justify-center group-hover:bg-amber-500/20 transition-colors">
+            <Crown className="h-4 w-4 text-amber-600" />
+          </div>
+        </CardHeader>
+        <CardContent className="px-4 pb-4">
+          <div className="text-3xl font-bold mb-1 text-amber-600">{stats.masters}</div>
+          <p className="text-xs text-muted-foreground flex items-center gap-1">
+            <Shield className="h-3 w-3" />
+            Com suas equipes
+          </p>
+        </CardContent>
+      </Card>
 
-        {stats.onboarding_completed !== undefined && (
-          <Card 
-            className="surface-elevated border-0 shadow-aurora cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
-            onClick={() => onFilterClick?.('onboarding_completed')}
-          >
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Onboarding Completo</CardTitle>
+      {/* Onboarding Completo */}
+      {stats.onboarding_completed !== undefined && (
+        <Card 
+          className="surface-elevated border-0 shadow-sm hover:shadow-md cursor-pointer transition-all duration-200 group"
+          onClick={() => onFilterClick?.('onboarding_completed')}
+        >
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 pt-4 px-4">
+            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              Onboarding OK
+            </CardTitle>
+            <div className="h-8 w-8 rounded-full bg-operational/10 flex items-center justify-center group-hover:bg-operational/20 transition-colors">
               <CheckCircle className="h-4 w-4 text-operational" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-operational">{stats.onboarding_completed}</div>
-              <p className="text-xs text-muted-foreground">
-                clique para filtrar ({calculateOnboardingRate()}%)
-              </p>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+            </div>
+          </CardHeader>
+          <CardContent className="px-4 pb-4">
+            <div className="text-3xl font-bold mb-1 text-operational">{stats.onboarding_completed}</div>
+            <p className="text-xs text-muted-foreground flex items-center gap-1">
+              <UserCheck className="h-3 w-3" />
+              {calculateOnboardingRate()}% completo
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
-      {/* Estatísticas secundárias - CLICÁVEIS */}
+      {/* Onboarding Pendente */}
       {stats.onboarding_pending !== undefined && (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card 
-            className="surface-elevated border-0 shadow-aurora cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
-            onClick={() => onFilterClick?.('onboarding_pending')}
-          >
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Onboarding Pendente</CardTitle>
+        <Card 
+          className="surface-elevated border-0 shadow-sm hover:shadow-md cursor-pointer transition-all duration-200 group"
+          onClick={() => onFilterClick?.('onboarding_pending')}
+        >
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 pt-4 px-4">
+            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              Pendente
+            </CardTitle>
+            <div className="h-8 w-8 rounded-full bg-orange-500/10 flex items-center justify-center group-hover:bg-orange-500/20 transition-colors">
               <Clock className="h-4 w-4 text-orange-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-orange-600">{stats.onboarding_pending}</div>
-              <p className="text-xs text-muted-foreground">
-                clique para filtrar
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </CardHeader>
+          <CardContent className="px-4 pb-4">
+            <div className="text-3xl font-bold mb-1 text-orange-600">{stats.onboarding_pending}</div>
+            <p className="text-xs text-muted-foreground flex items-center gap-1">
+              <User className="h-3 w-3" />
+              Aguardando
+            </p>
+          </CardContent>
+        </Card>
       )}
     </div>
   );
