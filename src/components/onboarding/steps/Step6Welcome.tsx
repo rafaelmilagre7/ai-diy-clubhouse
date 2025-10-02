@@ -4,6 +4,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Sparkles, Rocket, Users, BookOpen, Calendar, CheckCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { OnboardingSuccess } from '@/components/celebration/OnboardingSuccess';
+import { TeamInviteSection } from '@/components/onboarding/TeamInviteSection';
+
 interface Step6WelcomeProps {
   ninaMessage?: string;
   onFinish: () => Promise<boolean>;
@@ -18,7 +20,23 @@ export const Step6Welcome: React.FC<Step6WelcomeProps> = ({
 }) => {
   const [isCompleting, setIsCompleting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showTeamInvites, setShowTeamInvites] = useState(false);
   
+  const handleContinueToTeamInvites = () => {
+    console.log('[STEP6] 👥 Mostrando seção de convites de equipe');
+    setShowTeamInvites(true);
+  };
+
+  const handleTeamInvitesComplete = async () => {
+    console.log('[STEP6] 🎉 Convites enviados, finalizando onboarding...');
+    await handleFinish();
+  };
+
+  const handleSkipTeamInvites = async () => {
+    console.log('[STEP6] ⏭️ Pulando convites de equipe, finalizando onboarding...');
+    await handleFinish();
+  };
+
   const handleFinish = async () => {
     console.log('[STEP6] 🎉 Iniciando finalização do onboarding...');
     console.log('[STEP6] 🎉 Estado atual - isCompleted:', isCompleting, 'showSuccess:', showSuccess);
@@ -52,8 +70,23 @@ export const Step6Welcome: React.FC<Step6WelcomeProps> = ({
           onComplete={handleSuccessComplete}
         />
       )}
+
+      {showTeamInvites && !showSuccess && (
+        <div className="space-y-6 max-w-3xl mx-auto">
+          <div className="text-center space-y-2 mb-8">
+            <h2 className="text-2xl font-bold">👥 Monte Sua Equipe</h2>
+            <p className="text-muted-foreground">
+              Convide membros para sua equipe agora ou faça isso depois
+            </p>
+          </div>
+          <TeamInviteSection
+            onComplete={handleTeamInvitesComplete}
+            onSkip={handleSkipTeamInvites}
+          />
+        </div>
+      )}
       
-      {!showSuccess && (
+      {!showSuccess && !showTeamInvites && (
         <div className="space-y-8 max-w-3xl mx-auto text-center">
       <div className="space-y-4">
         
@@ -195,12 +228,12 @@ export const Step6Welcome: React.FC<Step6WelcomeProps> = ({
       }} whileTap={{
         scale: 0.98
       }}>
-          <Button onClick={handleFinish} disabled={isCompleting} size="lg" className="w-full md:w-auto px-8 py-3 text-lg font-semibold group bg-gradient-to-r from-primary to-accent hover:shadow-lg hover:shadow-primary/25 disabled:opacity-50">
+          <Button onClick={handleContinueToTeamInvites} disabled={isCompleting} size="lg" className="w-full md:w-auto px-8 py-3 text-lg font-semibold group bg-gradient-to-r from-primary to-accent hover:shadow-lg hover:shadow-primary/25 disabled:opacity-50">
             {isCompleting ? <>
                 <CheckCircle className="w-5 h-5 mr-2 animate-spin" />
-                Finalizando...
+                Processando...
               </> : <>
-                ✨ Concluir Onboarding
+                ✨ Continuar
               </>}
           </Button>
         </motion.div>
