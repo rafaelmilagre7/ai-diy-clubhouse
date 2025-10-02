@@ -1,23 +1,23 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
-  Crown, 
   Users, 
   ChevronDown, 
-  ChevronRight, 
   Mail, 
   Building2,
   Calendar,
   User,
-  Loader2
+  Loader2,
+  Settings
 } from 'lucide-react';
 import { UserProfile } from '@/lib/supabase';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useMasterTeamMembers } from '@/hooks/admin/useMasterTeamMembers';
+import { cn } from '@/lib/utils';
 
 interface MasterHierarchyCardProps {
   master: UserProfile;
@@ -59,53 +59,82 @@ export const MasterHierarchyCard = ({
     }
   };
 
+  const handleManageTeam = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onManageTeam?.(master);
+  };
+
   return (
-    <Card className="surface-elevated border-0 shadow-aurora">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <Avatar className="h-12 w-12">
-              <AvatarImage src={master.avatar_url || ''} alt={master.name || master.email} />
-              <AvatarFallback className="bg-gradient-to-br from-yellow-100 to-orange-100 text-yellow-800">
-                <Crown className="h-5 w-5" />
+    <Card className="border-2 border-border hover:border-viverblue/30 transition-all duration-200 shadow-sm hover:shadow-md">
+      <CardHeader className="pb-4">
+        {/* Cabeçalho com informações do master e badge de membros */}
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4 flex-1 min-w-0">
+            <Avatar className="h-12 w-12 shrink-0">
+              <AvatarImage src={master.avatar_url || undefined} />
+              <AvatarFallback className="bg-viverblue/10 text-viverblue">
+                {master.name?.substring(0, 2).toUpperCase() || 'M'}
               </AvatarFallback>
             </Avatar>
-            <div>
-              <CardTitle className="text-lg flex items-center gap-2">
-                {master.name || 'Sem nome'}
-                <Crown className="h-4 w-4 text-yellow-600" />
-                <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+            
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="font-semibold text-foreground truncate">
+                  {master.name}
+                </h3>
+                <Badge variant="secondary" className="text-xs shrink-0 bg-viverblue/10 text-viverblue border-viverblue/20">
                   Master
                 </Badge>
-              </CardTitle>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Mail className="h-3 w-3" />
-                {master.email}
+              </div>
+              <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                <span className="flex items-center gap-1 truncate">
+                  <Mail className="h-3 w-3 shrink-0" />
+                  {master.email}
+                </span>
+                {master.company_name && (
+                  <span className="flex items-center gap-1 truncate">
+                    <Building2 className="h-3 w-3 shrink-0" />
+                    {master.company_name}
+                  </span>
+                )}
               </div>
             </div>
           </div>
-          
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-xs">
-              {memberCount || 0} membro{memberCount !== 1 ? 's' : ''}
-            </Badge>
-            {(memberCount && memberCount > 0) && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsExpanded(!isExpanded)}
-                className="h-8 w-8 p-0"
-                disabled={isLoadingMembers}
-              >
-                {isLoadingMembers ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : isExpanded ? (
-                  <ChevronDown className="h-4 w-4" />
-                ) : (
-                  <ChevronRight className="h-4 w-4" />
+
+          {/* Badge com contador de membros e botão de expansão - UI melhorada */}
+          <div className="flex items-center gap-3 shrink-0">
+            <div 
+              className="flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-border bg-surface-elevated hover:bg-viverblue/5 hover:border-viverblue/50 cursor-pointer transition-all duration-200 group"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsExpanded(!isExpanded);
+              }}
+            >
+              <Users className="h-4 w-4 text-viverblue group-hover:scale-110 transition-transform" />
+              <span className="font-semibold text-foreground">
+                {memberCount}
+              </span>
+              <span className="text-sm text-muted-foreground">
+                {memberCount === 1 ? 'membro' : 'membros'}
+              </span>
+              <ChevronDown 
+                className={cn(
+                  "h-5 w-5 text-viverblue transition-all duration-300 ml-1",
+                  isExpanded && "rotate-180",
+                  "group-hover:scale-110"
                 )}
-              </Button>
-            )}
+              />
+            </div>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleManageTeam}
+              className="gap-2 hover:bg-viverblue/10 hover:text-viverblue hover:border-viverblue/50 transition-all"
+            >
+              <Settings className="h-4 w-4" />
+              Gerenciar Equipe
+            </Button>
           </div>
         </div>
       </CardHeader>

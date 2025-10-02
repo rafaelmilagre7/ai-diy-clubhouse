@@ -28,6 +28,7 @@ import { AdvancedUserFilters } from '@/components/admin/users/AdvancedUserFilter
 import { EnhancedUserStats } from '@/components/admin/users/EnhancedUserStats';
 import { MasterHierarchyCard } from '@/components/admin/users/MasterHierarchyCard';
 import { MasterMemberSyncPanel } from '@/components/master/sync/MasterMemberSyncPanel';
+import { ManageTeamDialog } from '@/components/admin/users/ManageTeamDialog';
 import { getUserRoleName } from '@/lib/supabase/types';
 import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
@@ -76,6 +77,7 @@ export default function AdminUsers() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showPasswordResetDialog, setShowPasswordResetDialog] = useState(false);
   const [showCourseManagerDialog, setShowCourseManagerDialog] = useState(false);
+  const [managingMaster, setManagingMaster] = useState<UserProfile | null>(null);
 
   // Converter roles do useRoles para o formato esperado
   const availableRoles: Role[] = useMemo(() => {
@@ -327,10 +329,7 @@ export default function AdminUsers() {
                     master={master}
                     memberCount={memberCount}
                     onEditUser={handleEditRole}
-                    onManageTeam={(master) => {
-                      console.log('Gerenciar equipe do master:', master.name);
-                      // Implementar ação específica para gerenciar equipe
-                    }}
+                    onManageTeam={setManagingMaster}
                   />
                 ))}
               </div>
@@ -458,6 +457,14 @@ export default function AdminUsers() {
           isOpen={showCourseManagerDialog}
           onClose={() => setShowCourseManagerDialog(false)}
           user={selectedUser}
+        />
+      )}
+
+      {managingMaster && (
+        <ManageTeamDialog
+          open={!!managingMaster}
+          onOpenChange={(open) => !open && setManagingMaster(null)}
+          master={managingMaster}
         />
       )}
     </div>
