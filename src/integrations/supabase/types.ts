@@ -1961,6 +1961,7 @@ export type Database = {
           feedback: string | null
           id: string
           lesson_id: string
+          response_code: string
           score: number
           updated_at: string
           user_id: string
@@ -1970,6 +1971,7 @@ export type Database = {
           feedback?: string | null
           id?: string
           lesson_id: string
+          response_code: string
           score: number
           updated_at?: string
           user_id: string
@@ -1979,6 +1981,7 @@ export type Database = {
           feedback?: string | null
           id?: string
           lesson_id?: string
+          response_code?: string
           score?: number
           updated_at?: string
           user_id?: string
@@ -6126,6 +6129,10 @@ export type Database = {
       generate_networking_matches_for_user: {
         Args: { target_user_id: string }
         Returns: Json
+      }
+      generate_nps_response_code: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
       generate_pending_certificates: {
         Args: { p_user_id?: string }

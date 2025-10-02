@@ -34,6 +34,7 @@ export const useNpsData = (startDate: string | null) => {
           .from('learning_lesson_nps')
           .select(`
             id,
+            response_code,
             lesson_id,
             score,
             feedback,
@@ -126,6 +127,7 @@ export const useNpsData = (startDate: string | null) => {
         const npsResponses = rawData.map((item: any) => {
           return {
             id: item.id,
+            responseCode: item.response_code,
             lessonId: item.lesson_id,
             lessonTitle: extractLessonTitle(item),
             score: item.score,
@@ -157,7 +159,7 @@ export const useNpsData = (startDate: string | null) => {
         const feedbackData = npsResponses
           .filter(response => response.feedback)
           .map(response => ({
-            id: response.id,
+            id: response.responseCode || response.id,
             lessonId: response.lessonId,
             lessonTitle: response.lessonTitle,
             score: response.score,

@@ -121,6 +121,7 @@ const NPSAnalytics: React.FC = () => {
     if (!allResponses) return;
     
     const csvData = allResponses.map(response => ({
+      'ID': response.id,
       'Data': format(new Date(response.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
       'Nota': response.score,
       'Tipo': getScoreLabel(response.score),
