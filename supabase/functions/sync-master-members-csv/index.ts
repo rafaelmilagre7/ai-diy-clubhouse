@@ -342,25 +342,43 @@ Deno.serve(async (req) => {
     }
 
     // Salvar logs no banco (apenas em modo real)
+    let logsSaved = 0;
     if (!dryRun && logs.length > 0) {
-      const logBatches = [];
-      for (let i = 0; i < logs.length; i += 100) {
-        logBatches.push(logs.slice(i, i + 100));
-      }
+      try {
+        const logBatches = [];
+        for (let i = 0; i < logs.length; i += 100) {
+          logBatches.push(logs.slice(i, i + 100));
+        }
 
-      for (const logBatch of logBatches) {
-        await supabase.from('master_member_sync_log').insert(
-          logBatch.map(log => ({
-            master_email: log.master_email,
-            member_email: log.member_email,
-            operation: log.operation,
-            sync_status: log.status,
-            message: log.message,
-            synced_at: new Date().toISOString()
-          }))
-        );
+        for (const logBatch of logBatches) {
+          const { error: logError, count } = await supabase
+            .from('master_member_sync_log')
+            .insert(
+              logBatch.map(log => ({
+                master_email: log.master_email,
+                member_email: log.member_email,
+                operation: log.operation,
+                sync_status: log.status,
+                message: log.message,
+                synced_at: new Date().toISOString()
+              }))
+            )
+            .select('*', { count: 'exact', head: true });
+
+          if (logError) {
+            console.error(`[SYNC] ❌ ERRO ao salvar logs:`, logError);
+            throw new Error(`Falha ao salvar logs: ${logError.message}`);
+          }
+          
+          logsSaved += logBatch.length;
+        }
+        
+        console.log(`[SYNC] 💾 ${logsSaved} logs salvos com sucesso no banco`);
+      } catch (logError) {
+        console.error('[SYNC] ❌ ERRO CRÍTICO ao salvar logs:', logError);
+        // Não falhar a sincronização, mas avisar
+        stats.errors++;
       }
-      console.log(`[SYNC] 💾 ${logs.length} logs salvos no banco`);
     }
 
     console.log('[SYNC] ========================================');
@@ -382,7 +400,8 @@ Deno.serve(async (req) => {
         dryRun,
         stats,
         logs: logs.slice(0, 100),
-        totalLogs: logs.length
+        totalLogs: logs.length,
+        logsSavedToDb: dryRun ? 0 : logsSaved
       }),
       { 
         status: 200,

@@ -54,36 +54,46 @@ export const MasterMemberSyncPanel: React.FC = () => {
     if (!confirm) return;
     
     // ============================================
-    // FASE 3: Validação após sincronização
+    // FASE 3: Validação robusta após sincronização
     // ============================================
     const result = await syncFromCSV(selectedFile, false);
     
-    // ✅ Verificar se logs foram criados no banco
+    // ✅ Verificar se a sincronização foi bem-sucedida
     if (result?.success) {
-      try {
-        const { data: recentLogs, error: logsError } = await supabase
-          .from('master_member_sync_log')
-          .select('*')
-          .order('synced_at', { ascending: false })
-          .limit(10);
-        
-        if (logsError) {
-          console.error('[FRONTEND] Erro ao verificar logs:', logsError);
-        } else if (!recentLogs || recentLogs.length === 0) {
-          toast({
-            title: '⚠️ Aviso: Sincronização pode ter falho',
-            description: 'Nenhum log foi criado no banco. A edge function pode não ter sido executada corretamente.',
-            variant: 'destructive'
-          });
-        } else {
-          toast({
-            title: '✅ Sincronização verificada!',
-            description: `${recentLogs.length} operações confirmadas no banco de dados.`
-          });
-        }
-      } catch (error) {
-        console.error('[FRONTEND] Erro na validação:', error);
+      const logsSavedToDb = result.logsSavedToDb || 0;
+      const mastersProcessed = result.stats?.masters_processed || 0;
+      const membersProcessed = result.stats?.members_processed || 0;
+      
+      // Validação principal: verificar se logs foram salvos
+      if (logsSavedToDb > 0) {
+        toast({
+          title: '✅ Sincronização concluída com sucesso!',
+          description: `${mastersProcessed} masters e ${membersProcessed} membros processados. ${logsSavedToDb} operações registradas.`,
+          duration: 5000
+        });
+      } else if (mastersProcessed > 0 || membersProcessed > 0) {
+        // Dados processados mas logs não salvos
+        toast({
+          title: '⚠️ Sincronização realizada com aviso',
+          description: `Dados processados (${mastersProcessed} masters, ${membersProcessed} membros), mas logs podem não ter sido salvos completamente.`,
+          variant: 'default',
+          duration: 7000
+        });
+      } else {
+        toast({
+          title: '❌ Sincronização sem alterações',
+          description: 'Nenhum dado foi processado. Verifique se os emails do CSV existem no sistema.',
+          variant: 'destructive',
+          duration: 5000
+        });
       }
+    } else {
+      toast({
+        title: '❌ Erro na sincronização',
+        description: result?.error || 'Ocorreu um erro desconhecido',
+        variant: 'destructive',
+        duration: 5000
+      });
     }
   };
 
