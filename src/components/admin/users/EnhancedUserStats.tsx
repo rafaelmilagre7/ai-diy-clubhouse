@@ -106,7 +106,7 @@ export const EnhancedUserStats = ({ stats, loading, onFilterClick }: EnhancedUse
         >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 pt-4 px-4">
             <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Onboarding OK
+              Onboarding Concluído
             </CardTitle>
             <div className="h-8 w-8 rounded-full bg-operational/10 flex items-center justify-center group-hover:bg-operational/20 transition-colors">
               <CheckCircle className="h-4 w-4 text-operational" />
