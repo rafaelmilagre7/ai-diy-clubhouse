@@ -113,21 +113,12 @@ export default function AdminUsers() {
       !u.organization_id
     );
     
-    // Agrupar masters com seus membros via organization_id
+    // Agrupar masters com member_count do SQL
     const masterGroups = masters.map(master => {
-      const teamMembers = users.filter(u => 
-        u.organization_id && 
-        u.organization_id === master.organization_id && 
-        u.id !== master.id &&
-        !u.is_master_user
-      );
+      // Usar member_count do SQL (vindo da paginação)
+      const memberCount = (master as any).member_count || 0;
       
-      // Usar member_count do SQL quando disponível (paginação), senão contar localmente
-      const memberCount = (master as any).member_count !== undefined 
-        ? (master as any).member_count 
-        : teamMembers.length;
-      
-      return { master, teamMembers, memberCount };
+      return { master, memberCount };
     });
     
     return { 
@@ -330,11 +321,10 @@ export default function AdminUsers() {
                 Masters e suas Equipes ({masterGroupsWithMembers.length} masters)
               </h3>
               <div className="grid gap-4">
-                {masterGroupsWithMembers.map(({ master, teamMembers, memberCount }) => (
+                {masterGroupsWithMembers.map(({ master, memberCount }) => (
                   <MasterHierarchyCard
                     key={master.id}
                     master={master}
-                    teamMembers={teamMembers}
                     memberCount={memberCount}
                     onEditUser={handleEditRole}
                     onManageTeam={(master) => {

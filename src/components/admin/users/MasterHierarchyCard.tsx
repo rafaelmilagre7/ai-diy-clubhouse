@@ -11,15 +11,16 @@ import {
   Mail, 
   Building2,
   Calendar,
-  User
+  User,
+  Loader2
 } from 'lucide-react';
 import { UserProfile } from '@/lib/supabase';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useMasterTeamMembers } from '@/hooks/admin/useMasterTeamMembers';
 
 interface MasterHierarchyCardProps {
   master: UserProfile;
-  teamMembers?: UserProfile[];
   memberCount?: number;
   onEditUser?: (user: UserProfile) => void;
   onManageTeam?: (master: UserProfile) => void;
@@ -27,12 +28,18 @@ interface MasterHierarchyCardProps {
 
 export const MasterHierarchyCard = ({ 
   master, 
-  teamMembers = [],
   memberCount,
   onEditUser,
   onManageTeam 
 }: MasterHierarchyCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
+
+  // Buscar membros sob demanda quando expandir
+  const { data: teamMembers = [], isLoading: isLoadingMembers } = useMasterTeamMembers({
+    masterUserId: master.id,
+    organizationId: master.organization_id || '',
+    enabled: isExpanded && !!master.organization_id
+  });
 
   const getInitials = (name: string, email: string) => {
     if (name) {
@@ -80,16 +87,19 @@ export const MasterHierarchyCard = ({
           
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="text-xs">
-              {memberCount !== undefined ? memberCount : teamMembers.length} membro{(memberCount !== undefined ? memberCount : teamMembers.length) !== 1 ? 's' : ''}
+              {memberCount || 0} membro{memberCount !== 1 ? 's' : ''}
             </Badge>
-            {teamMembers.length > 0 && (
+            {(memberCount && memberCount > 0) && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsExpanded(!isExpanded)}
                 className="h-8 w-8 p-0"
+                disabled={isLoadingMembers}
               >
-                {isExpanded ? (
+                {isLoadingMembers ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : isExpanded ? (
                   <ChevronDown className="h-4 w-4" />
                 ) : (
                   <ChevronRight className="h-4 w-4" />
@@ -132,7 +142,7 @@ export const MasterHierarchyCard = ({
             <User className="h-3 w-3 mr-1" />
             Editar Master
           </Button>
-          {teamMembers.length > 0 && (
+          {(memberCount && memberCount > 0) && (
             <Button
               size="sm"
               variant="outline"
@@ -146,14 +156,20 @@ export const MasterHierarchyCard = ({
         </div>
 
         {/* Lista de Membros da Equipe (Expansível) */}
-        {isExpanded && teamMembers.length > 0 && (
+        {isExpanded && (
           <div className="border-t pt-4">
             <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
               <Users className="h-4 w-4" />
-              Membros da Equipe ({teamMembers.length})
+              Membros da Equipe ({isLoadingMembers ? '...' : teamMembers.length})
             </h4>
-            <div className="space-y-2 max-h-64 overflow-y-auto">
-              {teamMembers.map((member) => (
+            {isLoadingMembers ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                <span className="ml-2 text-sm text-muted-foreground">Carregando membros...</span>
+              </div>
+            ) : teamMembers.length > 0 ? (
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {teamMembers.map((member) => (
                 <div 
                   key={member.id} 
                   className="flex items-center justify-between p-3 rounded-lg bg-surface-accent/10 hover:bg-surface-accent/20 transition-colors"
@@ -191,14 +207,12 @@ export const MasterHierarchyCard = ({
                 </div>
               ))}
             </div>
-          </div>
-        )}
-
-        {/* Estado vazio para Masters sem equipe */}
-        {teamMembers.length === 0 && (
-          <div className="text-center py-4 text-muted-foreground">
-            <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
-            <p className="text-sm">Este master não possui membros de equipe</p>
+            ) : (
+              <div className="text-center py-4 text-muted-foreground">
+                <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">Este master não possui membros de equipe</p>
+              </div>
+            )}
           </div>
         )}
       </CardContent>

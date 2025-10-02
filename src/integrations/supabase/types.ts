@@ -6383,6 +6383,21 @@ export type Database = {
         Args: { master_id: string }
         Returns: number
       }
+      get_master_team_members: {
+        Args: { p_master_user_id: string; p_organization_id: string }
+        Returns: {
+          avatar_url: string
+          company_name: string
+          created_at: string
+          email: string
+          id: string
+          industry: string
+          name: string
+          onboarding_completed: boolean
+          role_id: string
+          user_roles: Json
+        }[]
+      }
       get_networking_analytics: {
         Args: Record<PropertyKey, never>
         Returns: Json
