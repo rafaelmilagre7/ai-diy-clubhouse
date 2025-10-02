@@ -171,17 +171,6 @@ export const MasterHierarchyCard = ({
             <User className="h-3 w-3 mr-1" />
             Editar Master
           </Button>
-          {(memberCount && memberCount > 0) && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => onManageTeam?.(master)}
-              className="flex-1"
-            >
-              <Users className="h-3 w-3 mr-1" />
-              Gerenciar Equipe
-            </Button>
-          )}
         </div>
 
         {/* Lista de Membros da Equipe (Expansível) */}

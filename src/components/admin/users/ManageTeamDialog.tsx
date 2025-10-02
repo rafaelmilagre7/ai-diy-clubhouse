@@ -1,15 +1,17 @@
+import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { UserProfile } from "@/lib/supabase";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Users, Mail, Building2, Briefcase, Calendar, Trash2 } from "lucide-react";
+import { Users, Mail, Building2, Briefcase, Calendar, Trash2, UserPlus } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useMasterTeamMembers } from "@/hooks/admin/useMasterTeamMembers";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { getUserRoleName } from "@/lib/supabase/types/members";
+import { AddMemberDialog } from "./AddMemberDialog";
 
 interface ManageTeamDialogProps {
   open: boolean;
@@ -19,7 +21,9 @@ interface ManageTeamDialogProps {
 
 export function ManageTeamDialog({ open, onOpenChange, master }: ManageTeamDialogProps) {
   const { toast } = useToast();
-  const { data: members, isLoading } = useMasterTeamMembers({
+  const [showAddMember, setShowAddMember] = useState(false);
+  
+  const { data: members, isLoading, refetch } = useMasterTeamMembers({
     masterUserId: master.id,
     organizationId: master.organization_id || '',
     enabled: open && !!master.organization_id
@@ -84,7 +88,12 @@ export function ManageTeamDialog({ open, onOpenChange, master }: ManageTeamDialo
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold text-foreground">Membros da Equipe</h3>
-            <Button variant="outline" size="sm" disabled>
+            <Button 
+              variant="default" 
+              size="sm"
+              onClick={() => setShowAddMember(true)}
+            >
+              <UserPlus className="h-4 w-4 mr-2" />
               Adicionar Membro
             </Button>
           </div>
@@ -155,6 +164,14 @@ export function ManageTeamDialog({ open, onOpenChange, master }: ManageTeamDialo
           )}
         </div>
       </DialogContent>
+
+      <AddMemberDialog
+        open={showAddMember}
+        onOpenChange={setShowAddMember}
+        masterUserId={master.id}
+        organizationId={master.organization_id || ''}
+        onSuccess={() => refetch()}
+      />
     </Dialog>
   );
 }
