@@ -6469,6 +6469,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      get_nps_evolution_data: {
+        Args: { p_end_date?: string; p_start_date?: string }
+        Returns: Json
+      }
       get_onboarding_analytics: {
         Args: Record<PropertyKey, never>
         Returns: Json

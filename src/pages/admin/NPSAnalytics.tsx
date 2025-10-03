@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useLMSAnalytics } from '@/hooks/analytics/lms/useLMSAnalytics';
+import { useNPSEvolution } from '@/hooks/analytics/lms/useNPSEvolution';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -11,6 +12,10 @@ import { Calendar, TrendingUp, Users, Star, MessageSquare, Filter, Download, Sea
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ActionPlanAssistant } from '@/components/admin/nps/ActionPlanAssistant';
+import { NPSEvolutionOverview } from '@/components/admin/analytics/lms/NPSEvolutionOverview';
+import { NPSEvolutionChart } from '@/components/admin/analytics/lms/NPSEvolutionChart';
+import { NPSByCourseChart } from '@/components/admin/analytics/lms/NPSByCourseChart';
+import { NPSEvolutionByCourseChart } from '@/components/admin/analytics/lms/NPSEvolutionByCourseChart';
 
 interface NPSResponse {
   id: string;
@@ -63,6 +68,9 @@ const NPSAnalytics: React.FC = () => {
 
   // Usar o hook otimizado
   const { data: analyticsData, isLoading: analyticsLoading, error, isError } = useLMSAnalytics(dateRange);
+  
+  // Hook para dados de evolução
+  const { data: evolutionData, isLoading: evolutionLoading } = useNPSEvolution({ dateRange });
 
   // Log de depuração
   console.log('NPSAnalytics - Estado:', { analyticsLoading, isError, error, analyticsData });
@@ -322,6 +330,7 @@ const NPSAnalytics: React.FC = () => {
         <TabsList>
           <TabsTrigger value="recent">Avaliações Recentes</TabsTrigger>
           <TabsTrigger value="feedback">Feedbacks</TabsTrigger>
+          <TabsTrigger value="evolution">Evolução</TabsTrigger>
           <TabsTrigger value="trends">Tendências</TabsTrigger>
           <TabsTrigger value="action-plan">Plano de Ação</TabsTrigger>
         </TabsList>
@@ -436,6 +445,36 @@ const NPSAnalytics: React.FC = () => {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="evolution" className="space-y-6">
+          {/* Cards de Overview */}
+          <NPSEvolutionOverview 
+            currentData={evolutionData?.monthlyEvolution?.[evolutionData.monthlyEvolution.length - 1] || null}
+            previousData={evolutionData?.monthlyEvolution?.[evolutionData.monthlyEvolution.length - 2] || null}
+            isLoading={evolutionLoading}
+          />
+
+          {/* Gráfico de Evolução Mensal Geral */}
+          <NPSEvolutionChart 
+            data={evolutionData?.monthlyEvolution || []}
+            isLoading={evolutionLoading}
+          />
+
+          {/* Grid com 2 gráficos */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* NPS por Curso */}
+            <NPSByCourseChart 
+              data={evolutionData?.coursesNPS || []}
+              isLoading={evolutionLoading}
+            />
+
+            {/* Evolução por Curso */}
+            <NPSEvolutionByCourseChart 
+              data={evolutionData?.courseEvolution || []}
+              isLoading={evolutionLoading}
+            />
+          </div>
         </TabsContent>
 
         <TabsContent value="action-plan" className="space-y-4">

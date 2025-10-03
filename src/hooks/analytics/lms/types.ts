@@ -44,6 +44,42 @@ export interface LmsAnalyticsData {
   feedbackData: LmsFeedbackData[];
 }
 
+// Interfaces para dados de evolução de NPS
+export interface NPSMonthlyEvolution {
+  month: string;
+  nps_score: number;
+  total_responses: number;
+  promoters: number;
+  neutrals: number;
+  detractors: number;
+  avg_score: number;
+}
+
+export interface NPSByCourse {
+  course_id: string;
+  course_title: string;
+  nps_score: number;
+  total_responses: number;
+  promoters: number;
+  neutrals: number;
+  detractors: number;
+  avg_score: number;
+}
+
+export interface NPSCourseEvolution {
+  course_id: string;
+  course_title: string;
+  month: string;
+  nps_score: number;
+  total_responses: number;
+}
+
+export interface NPSEvolutionData {
+  monthlyEvolution: NPSMonthlyEvolution[];
+  coursesNPS: NPSByCourse[];
+  courseEvolution: NPSCourseEvolution[];
+}
+
 // Interfaces atualizadas para as respostas do Supabase
 export interface LessonNpsResponse {
   id: string;
