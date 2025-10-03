@@ -461,8 +461,8 @@ const NPSAnalytics: React.FC = () => {
             isLoading={evolutionLoading}
           />
 
-          {/* Grid com 2 gráficos */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Gráficos empilhados verticalmente */}
+          <div className="space-y-6">
             {/* NPS por Curso */}
             <NPSByCourseChart 
               data={evolutionData?.coursesNPS || []}
