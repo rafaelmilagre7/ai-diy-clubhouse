@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { format, parseISO } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { formatMonthUTC } from '@/utils/dateUtils';
+
 import type { NPSCourseEvolution } from '@/hooks/analytics/lms/types';
 import { Activity } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -73,7 +73,7 @@ export const NPSEvolutionByCourseChart: React.FC<NPSEvolutionByCourseChartProps>
 
   // Agrupar dados por mês
   const groupedByMonth = filteredData.reduce((acc, item) => {
-    const monthKey = format(parseISO(item.month), 'MMM/yy', { locale: ptBR });
+    const monthKey = formatMonthUTC(item.month);
     if (!acc[monthKey]) {
       acc[monthKey] = { month: monthKey };
     }
