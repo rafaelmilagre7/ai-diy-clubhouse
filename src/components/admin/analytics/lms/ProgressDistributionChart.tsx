@@ -43,7 +43,6 @@ export const ProgressDistributionChart = ({ data, isLoading }: ProgressDistribut
               categories={["value"]}
               colors={["#0ABAB5"]}
               valueFormatter={(value) => `${value} alunos`}
-              showLegend={false}
             />
           ) : (
             <div className="flex items-center justify-center h-full text-muted-foreground">
