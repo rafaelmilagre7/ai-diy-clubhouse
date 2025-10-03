@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import type { NPSMonthlyEvolution } from '@/hooks/analytics/lms/types';
 import { TrendingUp } from 'lucide-react';
@@ -51,7 +51,7 @@ export const NPSEvolutionChart: React.FC<NPSEvolutionChartProps> = ({ data, isLo
   }
 
   const chartData = data.map(item => ({
-    month: format(new Date(item.month), 'MMM/yy', { locale: ptBR }),
+    month: format(parseISO(item.month), 'MMM/yy', { locale: ptBR }),
     nps: item.nps_score,
     responses: item.total_responses
   }));
