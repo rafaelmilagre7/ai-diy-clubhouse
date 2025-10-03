@@ -6449,7 +6449,9 @@ export type Database = {
         }[]
       }
       get_nps_analytics_data: {
-        Args: Record<PropertyKey, never>
+        Args:
+          | Record<PropertyKey, never>
+          | { p_end_date?: string; p_start_date?: string }
         Returns: {
           created_at: string
           difficulty_level: string
