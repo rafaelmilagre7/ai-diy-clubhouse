@@ -9,8 +9,16 @@ export const useLMSAnalytics = (dateRange?: { from: Date; to: Date }) => {
     queryKey: ['lms-analytics', dateKey],
     queryFn: async (): Promise<LmsAnalyticsData> => {
       try {
-        // Usar função segura em vez da view
-        const { data: npsViewData, error: viewError } = await supabase.rpc('get_nps_analytics_data');
+        // Chamar função com parâmetros de data
+        const params = dateRange ? {
+          p_start_date: dateRange.from.toISOString(),
+          p_end_date: dateRange.to.toISOString()
+        } : {
+          p_start_date: undefined,
+          p_end_date: undefined
+        };
+
+        const { data: npsViewData, error: viewError } = await supabase.rpc('get_nps_analytics_data', params);
 
         if (viewError) {
           console.error('Erro ao buscar dados da view NPS:', viewError);
