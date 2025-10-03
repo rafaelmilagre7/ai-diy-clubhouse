@@ -109,3 +109,22 @@ export interface LessonNpsResponse {
 export interface ProgressResponse {
   progress_percentage: number;
 }
+
+// Interfaces para analytics de cursos reais
+export interface CourseAnalytics {
+  courseId: string;
+  courseName: string;
+  totalLessons: number;
+  totalModules: number;
+  usersStarted: number;
+  usersCompleted: number;
+  averageProgress: number;
+  completionRate: number;
+  activeEnrollments: number;
+}
+
+export interface ProgressDistributionData {
+  range: string;
+  count: number;
+  percentage: number;
+}
