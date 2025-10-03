@@ -117,7 +117,13 @@ export const useRealLmsAnalytics = (timeRange: string = '30d') => {
         courseName: string;
         totalLessons: number;
         totalModules: Set<string>;
-        usersProgress: Map<string, { completed: number; total: number; hasActivity: boolean }>;
+        usersProgress: Map<string, { 
+          completed: number; 
+          total: number; 
+          hasActivity: boolean;
+          firstCompletionDate: string | null;
+          lastCompletionDate: string | null;
+        }>;
         usersCompleted: Set<string>;
       }>();
 
@@ -162,13 +168,27 @@ export const useRealLmsAnalytics = (timeRange: string = '30d') => {
           courseStats.usersProgress.set(userId, {
             completed: 0,
             total: courseStats.totalLessons,
-            hasActivity: hasActivityInPeriod || false
+            hasActivity: hasActivityInPeriod || false,
+            firstCompletionDate: null,
+            lastCompletionDate: null
           });
         }
 
         const userProgress = courseStats.usersProgress.get(userId)!;
         if (progress.completed_at !== null) {
           userProgress.completed++;
+          
+          // Rastrear primeira data de conclusão
+          if (!userProgress.firstCompletionDate || 
+              progress.completed_at < userProgress.firstCompletionDate) {
+            userProgress.firstCompletionDate = progress.completed_at;
+          }
+          
+          // Rastrear última data de conclusão
+          if (!userProgress.lastCompletionDate || 
+              progress.completed_at > userProgress.lastCompletionDate) {
+            userProgress.lastCompletionDate = progress.completed_at;
+          }
         }
         if (hasActivityInPeriod) {
           userProgress.hasActivity = true;
@@ -182,9 +202,23 @@ export const useRealLmsAnalytics = (timeRange: string = '30d') => {
 
       // 4. Calcular estatísticas agregadas
       const courseStats: CourseStats[] = Array.from(courseStatsMap.entries()).map(([courseId, stats]) => {
-        const usersWithProgress = Array.from(stats.usersProgress.values());
-        const usersStarted = usersWithProgress.filter(u => u.completed > 0).length;
-        const usersCompleted = stats.usersCompleted.size;
+      const usersWithProgress = Array.from(stats.usersProgress.values());
+      
+      // Usuários que INICIARAM no período (primeira aula concluída no período)
+      const usersStarted = usersWithProgress.filter(u => 
+        u.completed > 0 && 
+        u.firstCompletionDate &&
+        u.firstCompletionDate >= dateRange.start &&
+        u.firstCompletionDate <= dateRange.end
+      ).length;
+      
+      // Usuários que COMPLETARAM no período (última aula concluída no período)
+      const usersCompleted = usersWithProgress.filter(u => 
+        u.completed >= stats.totalLessons &&
+        u.lastCompletionDate &&
+        u.lastCompletionDate >= dateRange.start &&
+        u.lastCompletionDate <= dateRange.end
+      ).length;
         const activeEnrollments = usersWithProgress.filter(u => u.hasActivity).length;
         
         const averageProgress = usersWithProgress.length > 0
