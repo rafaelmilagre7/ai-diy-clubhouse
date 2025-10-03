@@ -96,7 +96,6 @@ export const useRealLmsAnalytics = (timeRange: string = '30d') => {
         .select(`
           user_id,
           lesson_id,
-          completed,
           completed_at,
           progress_percentage,
           learning_lessons (
@@ -109,7 +108,7 @@ export const useRealLmsAnalytics = (timeRange: string = '30d') => {
             )
           )
         `)
-        .order('completed_at', { ascending: false });
+        .order('completed_at', { ascending: false, nullsFirst: false });
 
       if (progressError) throw progressError;
 
@@ -168,7 +167,7 @@ export const useRealLmsAnalytics = (timeRange: string = '30d') => {
         }
 
         const userProgress = courseStats.usersProgress.get(userId)!;
-        if (progress.completed) {
+        if (progress.completed_at !== null) {
           userProgress.completed++;
         }
         if (hasActivityInPeriod) {
