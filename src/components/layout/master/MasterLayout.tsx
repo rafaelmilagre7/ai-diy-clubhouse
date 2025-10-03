@@ -1,4 +1,6 @@
 import { Outlet } from "react-router-dom";
+import { Suspense } from "react";
+import { Loader2 } from "lucide-react";
 import { MasterSidebar } from "./MasterSidebar";
 import { MasterContent } from "./MasterContent";
 import { useSidebarControl } from "@/hooks/useSidebarControl";
@@ -29,7 +31,13 @@ const MasterLayout = ({ children }: MasterLayoutProps) => {
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
       >
-        {children || <Outlet />}
+        <Suspense fallback={
+          <div className="flex items-center justify-center min-h-[400px]">
+            <Loader2 className="h-8 w-8 animate-spin text-viverblue" />
+          </div>
+        }>
+          {children || <Outlet />}
+        </Suspense>
       </MasterContent>
     </div>
   );
