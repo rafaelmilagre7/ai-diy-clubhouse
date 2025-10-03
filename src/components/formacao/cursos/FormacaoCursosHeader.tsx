@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
+import { ExportLMSButton } from "./ExportLMSButton";
 
 interface FormacaoCursosHeaderProps {
   onNovoCurso: () => void;
@@ -15,10 +16,13 @@ export const FormacaoCursosHeader = ({ onNovoCurso }: FormacaoCursosHeaderProps)
           Gerencie todos os cursos disponíveis na plataforma
         </p>
       </div>
-      <Button onClick={onNovoCurso}>
-        <PlusCircle className="h-4 w-4 mr-2" />
-        Novo Curso
-      </Button>
+      <div className="flex gap-2">
+        <ExportLMSButton />
+        <Button onClick={onNovoCurso}>
+          <PlusCircle className="h-4 w-4 mr-2" />
+          Novo Curso
+        </Button>
+      </div>
     </div>
   );
 };
