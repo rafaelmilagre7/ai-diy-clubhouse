@@ -6449,21 +6449,17 @@ export type Database = {
         }[]
       }
       get_nps_analytics_data: {
-        Args:
-          | Record<PropertyKey, never>
-          | { p_end_date?: string; p_start_date?: string }
+        Args: { p_end_date?: string; p_start_date?: string }
         Returns: {
+          course_title: string
           created_at: string
-          difficulty_level: string
-          estimated_time_minutes: number
           feedback: string
           id: string
-          lesson_description: string
           lesson_id: string
           lesson_title: string
-          nps_category: string
+          module_title: string
+          response_code: string
           score: number
-          updated_at: string
           user_email: string
           user_id: string
           user_name: string
