@@ -82,6 +82,14 @@ export function isSuperAdmin(profile: UserProfile | null): boolean {
 }
 
 export function isMasterUser(profile: UserProfile | null): boolean {
-  return profile?.is_master_user === true;
+  if (!profile) return false;
+  
+  // Verificar múltiplas condições de master: flag, papel master_user ou papel membro_club
+  const roleName = getUserRoleName(profile);
+  return (
+    profile.is_master_user === true || 
+    roleName === 'master_user' ||
+    roleName === 'membro_club'
+  );
 }
 

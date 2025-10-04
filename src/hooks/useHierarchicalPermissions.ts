@@ -39,7 +39,13 @@ export const useHierarchicalPermissions = () => {
     try {
       const userRole = getUserRoleName(profile);
       const isSuperAdmin = userRole === 'admin';
-      const isMasterUser = (profile as any).is_master_user || false;
+      
+      // Considerar tanto is_master_user quanto papéis membro_club e master_user como masters
+      const isMasterUser = 
+        (profile as any).is_master_user === true || 
+        userRole === 'master_user' ||
+        userRole === 'membro_club';
+      
       const organizationId = (profile as any).organization_id || null;
 
       // Buscar organização se for master user
