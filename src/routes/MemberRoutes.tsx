@@ -22,6 +22,7 @@ import NewSuggestion from '@/pages/member/NewSuggestion';
 import Events from '@/pages/member/Events';
 import SolutionCertificate from '@/pages/member/SolutionCertificate';
 import Networking from '@/pages/member/Networking';
+import TeamManagementPage from '@/pages/member/TeamManagementPage';
 
 // Member Learning pages
 import LearningPage from '@/pages/member/learning/LearningPage';
@@ -39,7 +40,6 @@ import CategoryListPage from '@/pages/member/community/CategoryListPage';
 
 // Profile pages
 import NotificationSettingsPage from '@/pages/profile/NotificationSettingsPage';
-import MasterDashboard from '@/pages/master-dashboard';
 
 // Função helper para criar rotas protegidas com MemberLayout
 const createProtectedRoute = (path: string, Component: React.ComponentType<any>) => ({
@@ -68,6 +68,7 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/profile", ProfilePage),
   createProtectedRoute("/profile/edit", EditProfile),
   createProtectedRoute("/profile/notifications", NotificationSettingsPage),
+  createProtectedRoute("/team-management", TeamManagementPage),
   createProtectedRoute("/solution/:id", SolutionDetails),
   createProtectedRoute("/solution/:id/confirmation", ImplementationConfirmation),
   createProtectedRoute("/solution/:id/certificate", SolutionCertificate),
@@ -89,9 +90,6 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/suggestions", Suggestions),
   createProtectedRoute("/suggestions/:id", SuggestionDetails),
   createProtectedRoute("/suggestions/new", NewSuggestion),
-  
-  // Master Dashboard Route
-  createProtectedRoute("/master-dashboard", MasterDashboard),
   
   // Comunidade Routes - CORRIGIDAS E AMPLIADAS
   createProtectedRoute("/comunidade", CommunityHome),

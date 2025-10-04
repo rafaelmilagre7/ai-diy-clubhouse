@@ -3,6 +3,7 @@ import React from 'react';
 import { useAuth } from '@/contexts/auth';
 import { useSidebarStats } from '@/hooks/useSidebarStats';
 import { useNavPermissions } from '@/hooks/auth/useNavPermissions';
+import { isUserMaster } from '@/utils/roleHelpers';
 import { 
   Home, 
   Settings, 
@@ -29,6 +30,7 @@ interface MemberSidebarNavItemsProps {
 export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ sidebarOpen }) => {
   const { user, profile, isAdmin } = useAuth();
   const { data: stats, isLoading } = useSidebarStats();
+  const isMaster = isUserMaster(profile);
   const {
     canViewSolutions,
     canViewTools,
@@ -173,6 +175,14 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
             icon={Settings}
             sidebarOpen={sidebarOpen}
           />
+          {isMaster && (
+            <TooltipNavItem
+              to="/team-management"
+              label="Gestão de Equipe"
+              icon={Users}
+              sidebarOpen={sidebarOpen}
+            />
+          )}
         </SidebarNavigationGroup>
 
         {/* Grupo Admin - Apenas para administradores */}
