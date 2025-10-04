@@ -47,7 +47,8 @@ export const useTeamManagement = () => {
           organization_id,
           plan_type,
           team_size,
-          is_master_user
+          is_master_user,
+          user_roles!inner(name)
         `)
         .eq('id', user.id)
         .single();
@@ -63,8 +64,29 @@ export const useTeamManagement = () => {
         organizationData = org;
       }
 
-      if (!profile?.organization_id || !profile.is_master_user) {
+      // Verificar se é master user (via flag ou via papel)
+      const roleName = (profile as any)?.user_roles?.name;
+      const isMasterUser = 
+        profile?.is_master_user === true || 
+        roleName === 'master_user' ||
+        roleName === 'membro_club';
+
+      if (!isMasterUser) {
+        // Usuário não é master, não pode acessar gestão de equipe
         setLoading(false);
+        setTeamStats(null);
+        return;
+      }
+
+      // Se for master mas não tem organização, retornar stats básicos para mostrar UI de criação
+      if (!profile?.organization_id) {
+        setLoading(false);
+        setTeamStats({
+          current_members: 0,
+          max_members: 5, // Limite padrão para novos planos
+          pending_invites: 0,
+          plan_type: 'team'
+        });
         return;
       }
 

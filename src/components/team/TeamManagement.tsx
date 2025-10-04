@@ -74,7 +74,7 @@ export const TeamManagement: React.FC = () => {
             <Users className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium">Gestão de Equipe Indisponível</h3>
             <p className="text-muted-foreground">
-              Esta funcionalidade está disponível apenas para usuários com plano de equipe.
+              Esta funcionalidade está disponível apenas para usuários com papel master_user ou membro_club.
             </p>
           </div>
         </CardContent>
@@ -82,10 +82,29 @@ export const TeamManagement: React.FC = () => {
     );
   }
 
+  // Se não tem membros e nem convites, mostrar mensagem de boas-vindas
+  const isFirstTimeSetup = teamStats.current_members === 0 && teamStats.pending_invites === 0;
+
   const usagePercentage = (teamStats.current_members / teamStats.max_members) * 100;
 
   return (
     <div className="space-y-6">
+      {/* Mensagem de boas-vindas para primeira configuração */}
+      {isFirstTimeSetup && (
+        <Card className="border-primary/20 bg-primary/5">
+          <CardContent className="pt-6">
+            <div className="text-center py-4">
+              <Crown className="mx-auto h-12 w-12 text-primary mb-4" />
+              <h3 className="text-xl font-semibold mb-2">Bem-vindo à Gestão de Equipe!</h3>
+              <p className="text-muted-foreground mb-4">
+                Como usuário master, você pode convidar membros para sua equipe e gerenciar o acesso deles.
+                Comece enviando o primeiro convite abaixo.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Estatísticas da Equipe */}
       <Card>
         <CardHeader>

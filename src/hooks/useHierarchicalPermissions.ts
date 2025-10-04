@@ -48,23 +48,28 @@ export const useHierarchicalPermissions = () => {
       
       const organizationId = (profile as any).organization_id || null;
 
-      // Buscar organização se for master user
-      let masterPermissions = {};
-      if (isMasterUser && organizationId) {
-        const { data: org } = await supabase
-          .from('organizations')
-          .select('*')
-          .eq('id', organizationId)
-          .eq('master_user_id', user.id)
-          .single();
+      // Conceder permissões básicas para qualquer master user
+      let masterPermissions: Partial<HierarchicalPermissions> = {};
+      if (isMasterUser) {
+        masterPermissions = {
+          canManageTeam: true,
+          canInviteMembers: true,
+          canViewTeamAnalytics: true,
+          canManageOrganization: false, // Requer organização válida
+        };
 
-        if (org) {
-          masterPermissions = {
-            canManageTeam: true,
-            canInviteMembers: true,
-            canViewTeamAnalytics: true,
-            canManageOrganization: true,
-          };
+        // Se tiver organização, verificar se é o master dela
+        if (organizationId) {
+          const { data: org } = await supabase
+            .from('organizations')
+            .select('*')
+            .eq('id', organizationId)
+            .eq('master_user_id', user.id)
+            .single();
+
+          if (org) {
+            masterPermissions.canManageOrganization = true;
+          }
         }
       }
 

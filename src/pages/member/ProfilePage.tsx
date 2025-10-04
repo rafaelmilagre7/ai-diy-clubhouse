@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
 import { 
   User, 
+  Users,
   Settings, 
   Trophy, 
   BarChart3, 
@@ -38,6 +39,7 @@ import { formatDate } from '@/utils/dateUtils';
 import LoadingScreen from '@/components/common/LoadingScreen';
 import { ActivityWidget } from '@/components/profile/ActivityWidget';
 import { ProfileImageUpload } from '@/components/profile/ProfileImageUpload';
+import { TeamManagement } from '@/components/team/TeamManagement';
 
 const ProfilePage = () => {
   const { profile, setProfile } = useAuth();
@@ -45,6 +47,12 @@ const ProfilePage = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [showImageUpload, setShowImageUpload] = useState(false);
   const { toast } = useToast();
+  
+  // Verificar se usuário é master
+  const isMasterUser = 
+    (profile as any)?.is_master_user === true || 
+    profile?.user_roles?.name === 'master_user' ||
+    profile?.user_roles?.name === 'membro_club';
 
   const getInitials = (name: string | null) => {
     if (!name) return "U";
@@ -193,7 +201,7 @@ const ProfilePage = () => {
       {/* Content Section */}
       <div className="max-w-6xl mx-auto px-6 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 lg:w-1/2">
+          <TabsList className={`grid w-full ${isMasterUser ? 'grid-cols-5' : 'grid-cols-4'} lg:w-${isMasterUser ? '3/5' : '1/2'}`}>
             <TabsTrigger value="overview" className="text-xs">
               <User className="w-4 h-4 mr-2" />
               Visão Geral
@@ -210,6 +218,12 @@ const ProfilePage = () => {
               <Trophy className="w-4 h-4 mr-2" />
               Conquistas
             </TabsTrigger>
+            {isMasterUser && (
+              <TabsTrigger value="team" className="text-xs">
+                <Users className="w-4 h-4 mr-2" />
+                Gestão de Equipe
+              </TabsTrigger>
+            )}
           </TabsList>
 
           {/* Overview Tab */}
@@ -422,6 +436,13 @@ const ProfilePage = () => {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Team Management Tab - Only for master users */}
+          {isMasterUser && (
+            <TabsContent value="team">
+              <TeamManagement />
+            </TabsContent>
+          )}
         </Tabs>
       </div>
 
