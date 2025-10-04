@@ -1,4 +1,4 @@
-import { RouteObject } from "react-router-dom";
+import { RouteObject, Navigate } from "react-router-dom";
 import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
 import MemberLayout from '@/components/layout/MemberLayout';
 import RootRedirect from '@/components/routing/RootRedirect';
@@ -69,6 +69,17 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/profile/edit", EditProfile),
   createProtectedRoute("/profile/notifications", NotificationSettingsPage),
   createProtectedRoute("/team-management", TeamManagementPage),
+  
+  // Redirect old master-dashboard to team-management
+  {
+    path: "/master-dashboard",
+    element: <Navigate to="/team-management" replace />
+  },
+  {
+    path: "/master-dashboard/*",
+    element: <Navigate to="/team-management" replace />
+  },
+  
   createProtectedRoute("/solution/:id", SolutionDetails),
   createProtectedRoute("/solution/:id/confirmation", ImplementationConfirmation),
   createProtectedRoute("/solution/:id/certificate", SolutionCertificate),
