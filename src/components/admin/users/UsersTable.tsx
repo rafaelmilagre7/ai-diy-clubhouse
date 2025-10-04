@@ -26,6 +26,7 @@ import {
 import { UserProfile, getUserRoleName } from "@/lib/supabase";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { UserResetDialog } from "./UserResetDialog";
+import { DeleteUserDialog } from "./DeleteUserDialog";
 import { ToggleUserStatusDialog } from "./ToggleUserStatusDialog";
 import { motion } from "framer-motion";
 
@@ -65,6 +66,8 @@ export const UsersTable: React.FC<UsersTableProps> = ({
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [toggleStatusDialogOpen, setToggleStatusDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<UserProfile | null>(null);
 
   const handleResetUser = (user: UserProfile) => {
     setSelectedUser(user);
@@ -76,7 +79,16 @@ export const UsersTable: React.FC<UsersTableProps> = ({
     setToggleStatusDialogOpen(true);
   };
 
+  const handleDeleteUser = (user: UserProfile) => {
+    setUserToDelete(user);
+    setDeleteDialogOpen(true);
+  };
+
   const handleResetSuccess = () => {
+    onRefresh();
+  };
+
+  const handleDeleteSuccess = () => {
     onRefresh();
   };
 
@@ -309,6 +321,18 @@ export const UsersTable: React.FC<UsersTableProps> = ({
                         Reset
                       </Button>
                     )}
+                    
+                    {canDeleteUsers && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => handleDeleteUser(user)}
+                        className="flex-1 h-8 text-xs aurora-focus hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30"
+                      >
+                        <Trash2 className="h-3 w-3 mr-1" />
+                        Deletar
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -329,6 +353,13 @@ export const UsersTable: React.FC<UsersTableProps> = ({
         onOpenChange={setToggleStatusDialogOpen}
         user={selectedUser}
         onSuccess={handleResetSuccess}
+      />
+
+      <DeleteUserDialog 
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        user={userToDelete}
+        onSuccess={handleDeleteSuccess}
       />
     </>
   );
