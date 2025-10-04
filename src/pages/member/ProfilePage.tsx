@@ -40,6 +40,7 @@ import LoadingScreen from '@/components/common/LoadingScreen';
 import { ActivityWidget } from '@/components/profile/ActivityWidget';
 import { ProfileImageUpload } from '@/components/profile/ProfileImageUpload';
 import { TeamManagement } from '@/components/team/TeamManagement';
+import { isUserMaster } from '@/utils/roleHelpers';
 
 const ProfilePage = () => {
   const { profile, setProfile } = useAuth();
@@ -48,11 +49,8 @@ const ProfilePage = () => {
   const [showImageUpload, setShowImageUpload] = useState(false);
   const { toast } = useToast();
   
-  // Verificar se usuário é master
-  const isMasterUser = 
-    (profile as any)?.is_master_user === true || 
-    profile?.user_roles?.name === 'master_user' ||
-    profile?.user_roles?.name === 'membro_club';
+  // Verificar se usuário é master usando helper centralizado
+  const isMasterUser = isUserMaster(profile);
 
   const getInitials = (name: string | null) => {
     if (!name) return "U";
