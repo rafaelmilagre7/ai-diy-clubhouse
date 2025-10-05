@@ -6146,30 +6146,14 @@ export type Database = {
         Returns: Json
       }
       create_invite_hybrid: {
-        Args:
-          | {
-              p_channel?: string
-              p_email: string
-              p_notes?: string
-              p_role_id: string
-              p_whatsapp?: string
-            }
-          | {
-              p_channel_preference?: string
-              p_email: string
-              p_expires_in?: string
-              p_notes?: string
-              p_phone?: string
-              p_role_id: string
-            }
-          | {
-              p_channel_preference?: string
-              p_email: string
-              p_expires_in?: unknown
-              p_notes?: string
-              p_phone?: string
-              p_role_id: string
-            }
+        Args: {
+          p_channel_preference?: string
+          p_email: string
+          p_expires_in?: unknown
+          p_notes?: string
+          p_phone?: string
+          p_role_id: string
+        }
         Returns: Json
       }
       create_learning_certificate_if_eligible: {
