@@ -41,3 +41,17 @@ export {
   deleteCommunityPost,
   toggleTopicSolved
 } from './rpc';
+
+// 🆕 Exportação das funções de acesso seguro a perfis
+export {
+  getCurrentUserProfile,
+  getSafeProfile,
+  getSafeProfiles,
+  getOrganizationMembers,
+  canViewFullProfile,
+  validateProfileAccess,
+  maskEmail,
+  maskPhone,
+  maskName,
+  type SafeProfile
+} from './secureProfiles';
