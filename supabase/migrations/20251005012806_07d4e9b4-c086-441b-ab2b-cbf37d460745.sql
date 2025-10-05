@@ -1,3 +1,5 @@
+-- Atualizar função create_invite_hybrid para permitir master_user e membro_club
+-- Fix: Permitir que usuários com roles master_user e membro_club criem convites
 
 CREATE OR REPLACE FUNCTION public.create_invite_hybrid(
   p_email text, 
@@ -58,13 +60,13 @@ BEGIN
   -- Criar novo convite (usando nomes corretos das colunas)
   INSERT INTO public.invites (
     email,
-    whatsapp_number,  -- Nome correto da coluna
+    whatsapp_number,
     role_id,
     token,
     expires_at,
     created_by,
     notes,
-    preferred_channel  -- Nome correto da coluna
+    preferred_channel
   )
   VALUES (
     p_email,
