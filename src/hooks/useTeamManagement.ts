@@ -96,18 +96,39 @@ export const useTeamManagement = () => {
         .select('id, email, name, avatar_url, created_at')
         .eq('organization_id', profile.organization_id);
 
-      // Buscar convites pendentes
+      // 🆕 Buscar convites pendentes da tabela 'invites' (sistema unificado)
       const { data: invites } = await supabase
-        .from('team_invites')
-        .select('id, email, status, expires_at, created_at')
-        .eq('organization_id', profile.organization_id);
+        .from('invites')
+        .select(`
+          id, 
+          email, 
+          expires_at, 
+          created_at,
+          used_at,
+          deleted_at,
+          role_id,
+          user_roles(name)
+        `)
+        .eq('created_by', user.id)
+        .is('used_at', null)
+        .is('deleted_at', null)
+        .gt('expires_at', new Date().toISOString());
+
+      // Mapear para formato TeamInvite
+      const mappedInvites: TeamInvite[] = (invites || []).map(invite => ({
+        id: invite.id,
+        email: invite.email,
+        status: 'pending',
+        expires_at: invite.expires_at,
+        created_at: invite.created_at
+      }));
 
       setTeamMembers(members || []);
-      setTeamInvites(invites || []);
+      setTeamInvites(mappedInvites);
       setTeamStats({
         current_members: members?.length || 0,
         max_members: organizationData?.max_users || profile.team_size || 1,
-        pending_invites: invites?.filter(i => i.status === 'pending').length || 0,
+        pending_invites: mappedInvites.length,
         plan_type: profile.plan_type || 'individual'
       });
 
@@ -164,22 +185,77 @@ export const useTeamManagement = () => {
         return false;
       }
 
-      // Criar convite
-      const { error } = await supabase
-        .from('team_invites')
-        .insert({
-          organization_id: profile.organization_id,
-          invited_by: user.id,
-          email: email.toLowerCase(),
-          status: 'pending'
+      // 🆕 Buscar role "hands_on"
+      const { data: handsOnRole } = await supabase
+        .from('user_roles')
+        .select('id')
+        .eq('name', 'hands_on')
+        .single();
+
+      if (!handsOnRole) {
+        toast({
+          title: "Erro de configuração",
+          description: "Role 'hands_on' não encontrado no sistema",
+          variant: "destructive"
         });
+        return false;
+      }
+
+      // 🆕 Usar sistema de convites do admin (create_invite_hybrid)
+      const { data, error } = await supabase.rpc('create_invite_hybrid', {
+        p_email: email.toLowerCase(),
+        p_role_id: handsOnRole.id,
+        p_phone: null,
+        p_expires_in: '7 days',
+        p_notes: `Convite para equipe da organização`,
+        p_channel_preference: 'email'
+      });
 
       if (error) throw error;
 
+      if (data.status === 'error') {
+        throw new Error(data.message);
+      }
+
+      // 🆕 Processar envio de email em background
+      setTimeout(async () => {
+        try {
+          const inviteUrl = `${window.location.origin}/convite/${data.token}`;
+          
+          const { error: sendError } = await supabase.functions.invoke('send-invite-email', {
+            body: {
+              email: email.toLowerCase(),
+              inviteUrl,
+              roleName: 'hands_on',
+              expiresAt: data.expires_at,
+              senderName: user.email || 'Equipe',
+              inviteId: data.invite_id,
+              forceResend: true
+            }
+          });
+
+          if (sendError) {
+            console.error('❌ Erro no envio do email:', sendError);
+            toast({
+              title: "Convite criado, mas email não foi enviado",
+              description: "Você pode reenviar o convite manualmente",
+              variant: "destructive"
+            });
+          } else {
+            toast({
+              title: "✅ Convite enviado",
+              description: `Email enviado para ${email}`,
+            });
+          }
+        } catch (bgError) {
+          console.error('❌ Erro no processamento:', bgError);
+        }
+      }, 100);
+
+      // Feedback imediato
       toast({
-        title: "Convite enviado",
-        description: `Convite enviado para ${email}`,
-        variant: "default"
+        title: "Convite criado",
+        description: `Processando envio para ${email}...`,
       });
 
       await fetchTeamData();
@@ -188,7 +264,7 @@ export const useTeamManagement = () => {
     } catch (error: any) {
       console.error('Erro ao enviar convite:', error);
       toast({
-        title: "Erro",
+        title: "Erro ao enviar convite",
         description: error.message || "Não foi possível enviar o convite",
         variant: "destructive"
       });
@@ -266,16 +342,19 @@ export const useTeamManagement = () => {
 
   const cancelInvite = async (inviteId: string) => {
     try {
+      // 🆕 Soft delete na tabela 'invites'
       const { error } = await supabase
-        .from('team_invites')
-        .delete()
+        .from('invites')
+        .update({ 
+          deleted_at: new Date().toISOString() 
+        })
         .eq('id', inviteId);
 
       if (error) throw error;
 
       toast({
         title: "Convite cancelado",
-        description: "Convite cancelado com sucesso",
+        description: "O convite foi cancelado com sucesso",
         variant: "default"
       });
 
@@ -285,7 +364,7 @@ export const useTeamManagement = () => {
     } catch (error: any) {
       console.error('Erro ao cancelar convite:', error);
       toast({
-        title: "Erro",
+        title: "Erro ao cancelar convite",
         description: error.message || "Não foi possível cancelar o convite",
         variant: "destructive"
       });
