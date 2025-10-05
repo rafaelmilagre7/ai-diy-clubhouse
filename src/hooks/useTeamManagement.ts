@@ -140,11 +140,22 @@ export const useTeamManagement = () => {
       // Buscar organização
       const { data: profile } = await supabase
         .from('profiles')
-        .select('organization_id, is_master_user')
+        .select(`
+          organization_id, 
+          is_master_user,
+          user_roles!inner(name)
+        `)
         .eq('id', user.id)
         .single();
 
-      if (!profile?.organization_id || !profile.is_master_user) {
+      // Verificar se é master user (via flag ou via papel)
+      const roleName = (profile as any)?.user_roles?.name;
+      const isMasterUser = 
+        profile?.is_master_user === true || 
+        roleName === 'master_user' ||
+        roleName === 'membro_club';
+
+      if (!profile?.organization_id || !isMasterUser) {
         toast({
           title: "Erro",
           description: "Apenas usuários master podem convidar membros",
@@ -192,11 +203,21 @@ export const useTeamManagement = () => {
       // Verificar se é master user
       const { data: profile } = await supabase
         .from('profiles')
-        .select('is_master_user')
+        .select(`
+          is_master_user,
+          user_roles!inner(name)
+        `)
         .eq('id', user.id)
         .single();
 
-      if (!profile?.is_master_user) {
+      // Verificar se é master user (via flag ou via papel)
+      const roleName = (profile as any)?.user_roles?.name;
+      const isMasterUser = 
+        profile?.is_master_user === true || 
+        roleName === 'master_user' ||
+        roleName === 'membro_club';
+
+      if (!isMasterUser) {
         toast({
           title: "Erro",
           description: "Apenas usuários master podem remover membros",
