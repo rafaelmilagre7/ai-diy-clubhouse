@@ -129,7 +129,7 @@ export const useHierarchicalPermissions = () => {
   // Obter dashboard apropriado baseado no tipo de usuário
   const getDefaultDashboard = (): string => {
     if (permissions.isSuperAdmin) return '/admin';
-    if (permissions.isMasterUser) return '/master-dashboard';
+    if (permissions.isMasterUser) return '/team-management';
     return '/dashboard';
   };
 

@@ -45,6 +45,9 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
     loading: permissionsLoading
   } = useNavPermissions();
 
+  // Log de debug para confirmar versão do código
+  console.log('🔍 [SIDEBAR] Versão corrigida carregada - Gestão de Equipe em Configurações');
+
   try {
 
     return (
