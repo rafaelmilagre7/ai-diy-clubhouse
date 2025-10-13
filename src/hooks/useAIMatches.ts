@@ -28,8 +28,14 @@ export const useAIMatches = () => {
       console.log('Resposta da função:', data);
 
       if (data.success) {
-        // Invalidar cache dos matches para forçar recarregamento
-        queryClient.invalidateQueries({ queryKey: ['network-matches'] });
+        // Invalidar cache dos matches para forçar recarregamento IMEDIATO
+        await queryClient.invalidateQueries({ 
+          queryKey: ['network-matches'],
+          refetchType: 'active' // Força refetch imediato de queries ativas
+        });
+        
+        // Pequeno delay para garantir propagação
+        await new Promise(resolve => setTimeout(resolve, 500));
         
         // Log evento de sucesso
         logEvent.mutate({
@@ -42,7 +48,7 @@ export const useAIMatches = () => {
 
         toast({
           title: "Matches IA Gerados!",
-          description: data.message,
+          description: `${data.matches_generated || 10} matches foram gerados. Os perfis estão sendo carregados...`,
           variant: "default"
         });
         return data;
