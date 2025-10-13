@@ -34,7 +34,7 @@ export class RealCryptography {
     return crypto.subtle.deriveKey(
       {
         name: 'PBKDF2',
-        salt: salt as BufferSource,
+        salt: salt,
         iterations: 100000, // 100k iterações para segurança
         hash: 'SHA-256'
       },

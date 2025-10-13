@@ -79,50 +79,33 @@ export const useNetworkMatches = () => {
 
       // Buscar perfis dos usuários matched com dados completos
       const matchedUserIds = matchesData.map(match => match.matched_user_id);
-      
-      // Fase 1: Buscar perfis com tratamento robusto de erros
-      let profilesData: any[] = [];
-      try {
-        const { data, error: profilesError } = await supabase
-          .from('profiles')
-          .select(`
-            id,
-            name,
-            email,
-            company_name,
-            current_position,
-            industry,
-            avatar_url,
-            linkedin_url,
-            whatsapp_number,
-            professional_bio
-          `)
-          .in('id', matchedUserIds);
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select(`
+          id,
+          name,
+          email,
+          company_name,
+          current_position,
+          industry,
+          avatar_url,
+          linkedin_url,
+          whatsapp_number,
+          professional_bio
+        `)
+        .in('id', matchedUserIds);
 
-        if (profilesError) {
-          console.error('⚠️ [NETWORK-MATCHES] Erro ao buscar perfis (continuando):', profilesError);
-        } else {
-          profilesData = data || [];
-          console.log(`👥 [NETWORK-MATCHES] ${profilesData.length} perfis encontrados de ${matchedUserIds.length} esperados`);
-        }
-      } catch (error) {
-        console.error('🚨 [NETWORK-MATCHES] Exceção ao buscar perfis:', error);
+      // Buscar dados de contato via função segura (bypassa RLS com dados mínimos)
+      const { data: onboardingData, error: onboardingError } = await supabase
+        .rpc('get_networking_contacts', { p_user_ids: matchedUserIds });
+
+      if (onboardingError) {
+        console.warn('⚠️ [NETWORK-MATCHES] Falha ao buscar contatos públicos (onboarding):', onboardingError.message);
       }
 
-      // Fase 2: Buscar dados de contato via função segura (OPCIONAL - não bloqueia)
-      let onboardingData: any[] = [];
-      try {
-        const { data, error: onboardingError } = await supabase
-          .rpc('get_networking_contacts', { p_user_ids: matchedUserIds });
-
-        if (onboardingError) {
-          console.warn('⚠️ [NETWORK-MATCHES] RPC onboarding falhou (esperado para usuários sem onboarding):', onboardingError.message);
-        } else {
-          onboardingData = data || [];
-          console.log(`📋 [NETWORK-MATCHES] ${onboardingData.length} dados de onboarding encontrados`);
-        }
-      } catch (error) {
-        console.warn('⚠️ [NETWORK-MATCHES] Exceção no RPC onboarding (ignorado):', error);
+      if (profilesError) {
+        console.error('🚨 [NETWORK-MATCHES] Erro ao buscar perfis:', profilesError);
+        throw profilesError;
       }
 
       console.log('🔍 [NETWORK-MATCHES] Dados encontrados:', {
@@ -137,61 +120,36 @@ export const useNetworkMatches = () => {
         }))
       });
 
-      // Fase 3: Combinar matches com perfis e dados de onboarding
-      const transformedData = matchesData.map(match => {
-        const matchedProfile = profilesData.find(profile => profile.id === match.matched_user_id);
-        const onboardingInfo = onboardingData.find(onb => onb.user_id === match.matched_user_id);
-        
-        // Se não achou perfil, criar dados mínimos do match
-        if (!matchedProfile) {
-          console.warn(`⚠️ [NETWORK-MATCHES] Perfil não encontrado para match ${match.matched_user_id} - usando fallback`);
+        // Combinar matches com perfis e dados de onboarding
+        const transformedData = matchesData.map(match => {
+          const matchedProfile = profilesData?.find(profile => profile.id === match.matched_user_id);
+          const onboardingInfo = onboardingData?.find(onb => onb.user_id === match.matched_user_id);
+          
+          if (!matchedProfile) return { ...match, matched_user: null };
+
           return {
             ...match,
             matched_user: {
-              id: match.matched_user_id,
-              name: onboardingInfo?.full_name || 'Membro Viver de IA',
-              email: onboardingInfo?.email || undefined,
-              company_name: onboardingInfo?.company_name,
-              current_position: onboardingInfo?.current_position,
-              avatar_url: onboardingInfo?.profile_picture,
-              industry: onboardingInfo?.industry,
-              linkedin_url: undefined,
-              whatsapp_number: undefined,
-              professional_bio: undefined,
-              phone: onboardingInfo?.phone,
+              id: matchedProfile.id,
+              name: matchedProfile.name || 'Usuário',
+              email: matchedProfile.email,
+              company_name: matchedProfile.company_name || onboardingInfo?.company_name,
+              current_position: matchedProfile.current_position || onboardingInfo?.current_position,
+              industry: matchedProfile.industry,
+              avatar_url: matchedProfile.avatar_url || onboardingInfo?.profile_picture,
+              linkedin_url: matchedProfile.linkedin_url || onboardingInfo?.linkedin_url,
+              whatsapp_number: matchedProfile.whatsapp_number,
+              professional_bio: matchedProfile.professional_bio,
+              // Dados extras vindos do RPC
+              phone: onboardingInfo?.phone || matchedProfile.whatsapp_number,
               full_company_name: onboardingInfo?.company_name,
               full_position: onboardingInfo?.current_position,
-              full_industry: onboardingInfo?.industry,
+              full_industry: matchedProfile.industry,
               company_size: undefined,
               annual_revenue: undefined,
             }
           };
-        }
-
-        // Perfil encontrado - combinar com dados de onboarding
-        return {
-          ...match,
-          matched_user: {
-            id: matchedProfile.id,
-            name: matchedProfile.name || 'Usuário',
-            email: matchedProfile.email,
-            company_name: matchedProfile.company_name || onboardingInfo?.company_name,
-            current_position: matchedProfile.current_position || onboardingInfo?.current_position,
-            industry: matchedProfile.industry,
-            avatar_url: matchedProfile.avatar_url || onboardingInfo?.profile_picture,
-            linkedin_url: matchedProfile.linkedin_url || onboardingInfo?.linkedin_url,
-            whatsapp_number: matchedProfile.whatsapp_number,
-            professional_bio: matchedProfile.professional_bio,
-            // Dados extras vindos do RPC
-            phone: onboardingInfo?.phone || matchedProfile.whatsapp_number,
-            full_company_name: onboardingInfo?.company_name,
-            full_position: onboardingInfo?.current_position,
-            full_industry: matchedProfile.industry,
-            company_size: undefined,
-            annual_revenue: undefined,
-          }
-        };
-      });
+        });
 
       const validMatches = transformedData.filter(match => match.matched_user);
 

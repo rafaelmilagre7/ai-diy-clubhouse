@@ -5860,7 +5860,7 @@ export type Database = {
         Args:
           | { invite_token: string; user_email: string }
           | { p_token: string; p_user_id: string }
-        Returns: boolean
+        Returns: Json
       }
       can_view_connection_secure: {
         Args: { target_connection_id: string }
@@ -6696,14 +6696,12 @@ export type Database = {
       get_networking_contacts: {
         Args: { p_user_id: string } | { p_user_ids: string[] }
         Returns: {
-          avatar_url: string
           company_name: string
-          compatibility_score: number
           current_position: string
-          email: string
-          id: string
-          match_type: string
-          name: string
+          linkedin_url: string
+          phone: string
+          profile_picture: string
+          user_id: string
         }[]
       }
       get_networking_stats_secure: {
@@ -7520,7 +7518,7 @@ export type Database = {
               p_user_agent?: string
               p_user_id?: string
             }
-        Returns: string
+        Returns: undefined
       }
       log_security_violation: {
         Args:
@@ -7541,7 +7539,7 @@ export type Database = {
               p_user_id?: string
               p_violation_type?: string
             }
-        Returns: string
+        Returns: undefined
       }
       log_unauthorized_access: {
         Args: { attempted_action: string; resource_details?: Json }

@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Brain, MessageCircle, Sparkles, TrendingUp, Users, Building2, Loader2, UserCheck, Mail, Phone, Linkedin, RefreshCw } from 'lucide-react';
+import { Brain, MessageCircle, Sparkles, TrendingUp, Users, Building2, Loader2, UserCheck, Mail, Phone, Linkedin } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNetworkMatches } from '@/hooks/useNetworkMatches';
 import { useAIMatches } from '@/hooks/useAIMatches';
@@ -29,7 +29,6 @@ const translateMatchType = (type: string) => {
 export const MatchesGrid = () => {
   const [activeChatMatch, setActiveChatMatch] = useState<string | null>(null);
   const [contactModalUser, setContactModalUser] = useState<{id: string, name: string, email?: string, phone?: string, linkedin_url?: string, avatar_url?: string, company_name?: string, current_position?: string} | null>(null);
-  const [isManualRefreshing, setIsManualRefreshing] = useState(false);
   const [filters, setFilters] = useState({
     search: '',
     matchType: 'all',
@@ -40,12 +39,6 @@ export const MatchesGrid = () => {
   const { matches, isLoading, error, refetch } = useNetworkMatches();
   const { generateMatches, isGenerating } = useAIMatches();
   const { user } = useAuth();
-
-  const handleManualRefresh = async () => {
-    setIsManualRefreshing(true);
-    await refetch();
-    setIsManualRefreshing(false);
-  };
 
   // Filtrar e ordenar matches
   const filteredMatches = useMemo(() => {
@@ -106,8 +99,8 @@ export const MatchesGrid = () => {
     }
   };
 
-  if (isLoading || isManualRefreshing) {
-    return <LoadingScreen message={isManualRefreshing ? "Recarregando matches..." : "Carregando matches..."} />;
+  if (isLoading) {
+    return <LoadingScreen message="Carregando matches..." />;
   }
 
   if (error) {
@@ -215,15 +208,6 @@ export const MatchesGrid = () => {
             <p className="text-lg">Nenhum match encontrado com os filtros aplicados</p>
             <p className="text-sm">Tente ajustar os filtros para ver mais resultados</p>
           </div>
-          <Button 
-            onClick={handleManualRefresh}
-            variant="outline"
-            size="sm"
-            disabled={isManualRefreshing}
-          >
-            <RefreshCw className={`mr-2 h-4 w-4 ${isManualRefreshing ? 'animate-spin' : ''}`} />
-            Recarregar Matches
-          </Button>
         </div>
       )}
 
