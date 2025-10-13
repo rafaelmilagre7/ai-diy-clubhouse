@@ -5768,6 +5768,39 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: Json
       }
+      admin_get_all_profiles: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          available_for_networking: boolean | null
+          avatar_url: string | null
+          company_name: string | null
+          created_at: string
+          current_position: string | null
+          email: string
+          id: string
+          industry: string | null
+          is_active: boolean | null
+          is_master_user: boolean | null
+          last_active: string | null
+          linkedin_url: string | null
+          master_email: string | null
+          name: string | null
+          onboarding_completed: boolean | null
+          onboarding_completed_at: string | null
+          organization_id: string | null
+          plan_type: string | null
+          professional_bio: string | null
+          referrals_count: number
+          role: string
+          role_id: string | null
+          skills: string[] | null
+          status: string | null
+          successful_referrals_count: number
+          team_size: number | null
+          updated_at: string | null
+          whatsapp_number: string | null
+        }[]
+      }
       admin_remove_team_member: {
         Args: { p_member_id: string; p_organization_id: string }
         Returns: Json
