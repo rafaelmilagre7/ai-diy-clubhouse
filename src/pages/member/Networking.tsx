@@ -89,10 +89,10 @@ const Networking = () => {
     initializeNetworkingIfNeeded();
   }, [user, hasNetworkingAccess]);
 
-  // Detectar se perfil existe mas matches não (inicialização em progresso)
+  // Detectar se perfil existe mas matches não e iniciar geração
   useEffect(() => {
-    const checkMatchGeneration = async () => {
-      if (!user?.id || !hasNetworkingAccess) return;
+    const generateMatches = async () => {
+      if (!user?.id || !hasNetworkingAccess || isGenerating) return;
       
       try {
         // Verificar se tem perfil v2 completo
@@ -112,7 +112,26 @@ const Networking = () => {
           .limit(1);
         
         if (!matchesData || matchesData.length === 0) {
+          console.log('🔄 [NETWORKING] Iniciando geração de matches...');
           setIsGenerating(true);
+          setGenerationProgress(10);
+          
+          // Chamar função de geração
+          const { data: generateData, error: generateError } = await supabase.functions.invoke(
+            'generate-strategic-matches-v2',
+            { body: { user_id: user.id } }
+          );
+          
+          if (generateError) {
+            console.error('❌ [NETWORKING] Erro ao gerar matches:', generateError);
+            setIsGenerating(false);
+            setInitError('Erro ao gerar conexões estratégicas');
+            toast.error('Não foi possível gerar suas conexões. Tente novamente.');
+            return;
+          }
+          
+          console.log('✅ [NETWORKING] Geração iniciada com sucesso');
+          setGenerationProgress(30);
           
           // Polling para verificar se matches foram criados
           const pollInterval = setInterval(async () => {
@@ -127,42 +146,50 @@ const Networking = () => {
               setGenerationProgress(100);
               clearInterval(pollInterval);
               refetchMatches();
-              toast.success('Conexões estratégicas geradas com sucesso!');
+              toast.success('Conexões estratégicas geradas com sucesso!', {
+                description: `${data.length} conexões encontradas para você`
+              });
             }
-          }, 5000); // Verificar a cada 5 segundos
+          }, 3000);
           
-          // Simular progresso para UX
-          let progress = 0;
+          // Simular progresso gradual
+          let progress = 30;
           const progressInterval = setInterval(() => {
-            progress += 5;
-            setGenerationProgress(Math.min(progress, 90));
+            progress += 8;
+            setGenerationProgress(Math.min(progress, 95));
             
-            if (progress >= 90) {
+            if (progress >= 95) {
               clearInterval(progressInterval);
             }
           }, 2000);
           
-          // Timeout de 2 minutos
+          // Timeout de 90 segundos
           setTimeout(() => {
             clearInterval(pollInterval);
             clearInterval(progressInterval);
             if (isGenerating) {
               setIsGenerating(false);
-              toast.error('Geração de matches está demorando. Tente recarregar a página.');
+              setInitError('Timeout ao gerar matches');
+              toast.error('A geração está demorando mais que o esperado.', {
+                description: 'Por favor, recarregue a página ou tente novamente.'
+              });
             }
-          }, 120000);
+          }, 90000);
           
           return () => {
             clearInterval(pollInterval);
             clearInterval(progressInterval);
           };
         }
-      } catch (error) {
-        console.error('❌ [NETWORKING] Erro ao verificar matches:', error);
+      } catch (error: any) {
+        console.error('❌ [NETWORKING] Erro crítico:', error);
+        setIsGenerating(false);
+        setInitError(error.message || 'Erro desconhecido');
+        toast.error('Erro ao processar networking');
       }
     };
     
-    checkMatchGeneration();
+    generateMatches();
   }, [user, hasNetworkingAccess, matchesLoading]);
 
   // Loading state enquanto verifica permissões
@@ -348,13 +375,18 @@ const Networking = () => {
                   <div className="flex items-center gap-4">
                     <AlertCircle className="w-6 h-6 text-destructive" />
                     <div className="flex-1">
-                      <h3 className="font-semibold text-destructive">Erro na Inicialização</h3>
+                      <h3 className="font-semibold text-destructive">Erro ao Gerar Conexões</h3>
                       <p className="text-sm text-muted-foreground">{initError}</p>
                       <Button 
                         variant="outline" 
                         size="sm" 
                         className="mt-2"
-                        onClick={() => window.location.reload()}
+                        onClick={() => {
+                          setInitError(null);
+                          setIsGenerating(false);
+                          setGenerationProgress(0);
+                          window.location.reload();
+                        }}
                       >
                         Tentar Novamente
                       </Button>
