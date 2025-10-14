@@ -290,7 +290,9 @@ Identifique os 10 melhores matches e retorne o JSON.`;
       }, {} as Record<string, number>),
       sample: validMatches.slice(0, 2).map(m => ({
         type: m.match_type,
-        reason: m.why_connect[0]?.substring(0, 50) + '...'
+        reason: typeof m.why_connect === 'string' 
+          ? m.why_connect.substring(0, 50) + '...'
+          : 'N/A'
       }))
     });
 
