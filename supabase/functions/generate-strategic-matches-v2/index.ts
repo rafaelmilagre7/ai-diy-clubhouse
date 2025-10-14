@@ -121,10 +121,24 @@ serve(async (req) => {
     const { data: activeProfiles } = await supabase
       .from('profiles')
       .select('id')
-      .eq('status', 'active')
+      .eq('is_active', true)
       .eq('available_for_networking', true);
     
     const activeUserIds = new Set((activeProfiles || []).map((p: any) => p.id));
+
+    // Validar se há perfis disponíveis
+    if (activeUserIds.size === 0) {
+      console.log('⚠️ [WARNING] Nenhum perfil ativo disponível para networking');
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Nenhum perfil ativo disponível para networking no momento'
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log(`👥 Encontrados ${activeUserIds.size} perfis ativos para análise`);
 
     // 4. Buscar perfis de networking que estão ativos
     const { data: allProfiles, error: profilesError } = await supabase
