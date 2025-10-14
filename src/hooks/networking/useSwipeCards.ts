@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/auth';
 import { useToast } from '@/hooks/use-toast';
@@ -26,6 +26,10 @@ export const useSwipeCards = () => {
   const [isLoadingCards, setIsLoadingCards] = useState(true);
   const [copyCache, setCopyCache] = useState<Record<string, string>>({});
   const [generatingCopy, setGeneratingCopy] = useState<Set<string>>(new Set());
+  const [loadedUserIds, setLoadedUserIds] = useState<Set<string>>(new Set());
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMoreProfiles, setHasMoreProfiles] = useState(true);
+  const isLoadingMoreRef = useRef(false);
 
   // Buscar matches iniciais
   const loadMatches = useCallback(async () => {
@@ -53,7 +57,7 @@ export const useSwipeCards = () => {
         `)
         .eq('user_id', user.id)
         .order('compatibility_score', { ascending: false })
-        .limit(20);
+        .limit(50);
 
       if (error) throw error;
 
@@ -73,6 +77,10 @@ export const useSwipeCards = () => {
       }));
 
       setCards(formattedCards);
+
+      // Rastrear IDs já carregados
+      const loadedIds = new Set(formattedCards.map(card => card.userId));
+      setLoadedUserIds(loadedIds);
 
       // Cache das copies já existentes
       const cache: Record<string, string> = {};
@@ -94,6 +102,75 @@ export const useSwipeCards = () => {
       setIsLoadingCards(false);
     }
   }, [user?.id, toast]);
+
+  // Carregar mais perfis (não-matches)
+  const loadMoreProfiles = useCallback(async () => {
+    if (!user?.id || isLoadingMoreRef.current || !hasMoreProfiles) return;
+
+    isLoadingMoreRef.current = true;
+    setIsLoadingMore(true);
+
+    try {
+      const { data: profiles, error } = await supabase
+        .from('networking_profiles_v2')
+        .select(`
+          user_id,
+          name,
+          company_name,
+          current_position,
+          avatar_url,
+          linkedin_url,
+          whatsapp_number,
+          email
+        `)
+        .neq('user_id', user.id)
+        .not('user_id', 'in', `(${Array.from(loadedUserIds).join(',')})`)
+        .not('profile_completed_at', 'is', null)
+        .order('profile_completed_at', { ascending: false })
+        .limit(20);
+
+      if (error) throw error;
+
+      if (!profiles || profiles.length === 0) {
+        setHasMoreProfiles(false);
+        isLoadingMoreRef.current = false;
+        setIsLoadingMore(false);
+        return;
+      }
+
+      const newCards: SwipeCard[] = profiles.map((profile: any) => ({
+        userId: profile.user_id,
+        name: profile.name || 'Usuário',
+        company: profile.company_name || 'Empresa não informada',
+        position: profile.current_position || 'Cargo não informado',
+        avatarUrl: profile.avatar_url || '',
+        linkedinUrl: profile.linkedin_url,
+        whatsappNumber: profile.whatsapp_number,
+        email: profile.email || '',
+        connectionCopy: undefined,
+        score: 0.3, // Score padrão para perfis não-match
+        isLoading: false,
+        matchId: undefined,
+      }));
+
+      setCards(prev => [...prev, ...newCards]);
+      setLoadedUserIds(prev => {
+        const updated = new Set(prev);
+        newCards.forEach(card => updated.add(card.userId));
+        return updated;
+      });
+
+      if (profiles.length < 20) {
+        setHasMoreProfiles(false);
+      }
+
+    } catch (error) {
+      console.error('Erro ao carregar mais perfis:', error);
+    } finally {
+      isLoadingMoreRef.current = false;
+      setIsLoadingMore(false);
+    }
+  }, [user?.id, loadedUserIds, hasMoreProfiles]);
 
   // Gerar copy para um card específico
   const generateCopy = useCallback(async (targetUserId: string) => {
@@ -188,8 +265,13 @@ export const useSwipeCards = () => {
       if (!nextCard.connectionCopy) {
         generateCopy(nextCard.userId);
       }
+
+      // Carregar mais perfis quando estiver perto do fim
+      if (nextIndex >= cards.length - 5 && hasMoreProfiles && !isLoadingMore) {
+        loadMoreProfiles();
+      }
     }
-  }, [currentIndex, cards, generateCopy]);
+  }, [currentIndex, cards, generateCopy, hasMoreProfiles, isLoadingMore, loadMoreProfiles]);
 
   const previousCard = useCallback(() => {
     if (currentIndex > 0) {

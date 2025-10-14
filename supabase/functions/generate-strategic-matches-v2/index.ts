@@ -128,7 +128,7 @@ serve(async (req) => {
       .not('profile_completed_at', 'is', null)
       .eq('profiles.is_active', true)
       .eq('profiles.available_for_networking', true)
-      .limit(1000);
+      .limit(2000); // Aumentado para suportar 50 matches
 
     if (profilesError) throw profilesError;
 
@@ -146,7 +146,7 @@ serve(async (req) => {
     }
 
     // 3. Usar IA para gerar matches estratégicos
-    const systemPrompt = `Você é um especialista em networking B2B. Analise o perfil do usuário e os perfis disponíveis para identificar os 10 melhores matches estratégicos.
+    const systemPrompt = `Você é um especialista em networking B2B. Analise o perfil do usuário e os perfis disponíveis para identificar os 50 melhores matches estratégicos.
 
 Para cada match, considere:
 - Complementaridade de propostas de valor
@@ -182,7 +182,7 @@ ${i+1}. ID: ${p.user_id}
    Keywords: ${p.keywords.join(', ')}
 `).join('\n')}
 
-Identifique os 10 melhores matches e retorne o JSON.`;
+Identifique os 50 melhores matches e retorne o JSON.`;
 
     const aiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
