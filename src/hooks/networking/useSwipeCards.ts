@@ -25,6 +25,7 @@ export const useSwipeCards = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLoadingCards, setIsLoadingCards] = useState(true);
   const [copyCache, setCopyCache] = useState<Record<string, string>>({});
+  const [generatingCopy, setGeneratingCopy] = useState<Set<string>>(new Set());
 
   // Buscar matches iniciais
   const loadMatches = useCallback(async () => {
@@ -96,10 +97,13 @@ export const useSwipeCards = () => {
 
   // Gerar copy para um card específico
   const generateCopy = useCallback(async (targetUserId: string) => {
-    if (!user?.id || copyCache[targetUserId]) return;
+    if (!user?.id || copyCache[targetUserId] || generatingCopy.has(targetUserId)) return;
 
     const cardIndex = cards.findIndex(c => c.userId === targetUserId);
     if (cardIndex === -1) return;
+
+    // Marcar como gerando
+    setGeneratingCopy(prev => new Set(prev).add(targetUserId));
 
     // Marcar como loading
     setCards(prev => {
@@ -137,6 +141,13 @@ export const useSwipeCards = () => {
         [targetUserId]: generatedCopy,
       }));
 
+      // Limpar estado de geração
+      setGeneratingCopy(prev => {
+        const updated = new Set(prev);
+        updated.delete(targetUserId);
+        return updated;
+      });
+
     } catch (error) {
       console.error('Erro ao gerar copy:', error);
       
@@ -151,13 +162,20 @@ export const useSwipeCards = () => {
         return updated;
       });
 
+      // Limpar estado de geração
+      setGeneratingCopy(prev => {
+        const updated = new Set(prev);
+        updated.delete(targetUserId);
+        return updated;
+      });
+
       toast({
         title: 'Não foi possível gerar a descrição personalizada',
         description: 'Mas você ainda pode se conectar!',
         variant: 'default',
       });
     }
-  }, [user?.id, cards, copyCache, toast]);
+  }, [user?.id, cards, copyCache, generatingCopy, toast]);
 
   // Navegação
   const nextCard = useCallback(() => {
@@ -184,15 +202,19 @@ export const useSwipeCards = () => {
     loadMatches();
   }, [loadMatches]);
 
-  // Gerar copy para o card atual se não existir
+  // Gerar copy para cards que precisam, com delay entre chamadas
   useEffect(() => {
-    if (cards.length > 0 && currentIndex < cards.length) {
-      const currentCard = cards[currentIndex];
-      if (!currentCard.connectionCopy) {
-        generateCopy(currentCard.userId);
-      }
+    const cardsNeedingCopy = cards.filter(c => !c.connectionCopy && !c.isLoading && !generatingCopy.has(c.userId));
+    
+    if (cardsNeedingCopy.length > 0) {
+      // Processar um por vez com delay de 500ms
+      cardsNeedingCopy.forEach((card, index) => {
+        setTimeout(() => {
+          generateCopy(card.userId);
+        }, index * 500);
+      });
     }
-  }, [cards, currentIndex, generateCopy]);
+  }, [cards, generateCopy, generatingCopy]);
 
   const currentCard = cards[currentIndex] || null;
   const hasNext = currentIndex < cards.length - 1;

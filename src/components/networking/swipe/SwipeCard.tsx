@@ -5,6 +5,7 @@ import { Linkedin, Phone, Loader2 } from 'lucide-react';
 import { SwipeCard as SwipeCardType } from '@/hooks/networking/useSwipeCards';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion } from 'framer-motion';
+import { MarkdownRenderer } from '@/components/community/MarkdownRenderer';
 
 interface SwipeCardProps {
   card: SwipeCardType;
@@ -75,9 +76,10 @@ export const SwipeCard = ({ card, onOpenContact }: SwipeCardProps) => {
                 <Skeleton className="h-3 w-3/5 mx-auto" />
               </div>
             ) : (
-              <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-line">
-                {card.connectionCopy}
-              </p>
+              <MarkdownRenderer 
+                content={card.connectionCopy || ''}
+                className="text-sm text-foreground/90 leading-relaxed"
+              />
             )}
           </div>
 
