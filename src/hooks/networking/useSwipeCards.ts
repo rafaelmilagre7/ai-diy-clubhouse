@@ -67,7 +67,7 @@ export const useSwipeCards = () => {
         email: match.matched_user.email || '',
         connectionCopy: match.connection_copy,
         score: match.compatibility_score || 0.5,
-        isLoading: !match.connection_copy,
+        isLoading: false,
         matchId: match.id,
       }));
 
@@ -100,6 +100,9 @@ export const useSwipeCards = () => {
 
     const cardIndex = cards.findIndex(c => c.userId === targetUserId);
     if (cardIndex === -1) return;
+
+    // Verificar se já está gerando
+    if (cards[cardIndex].isLoading) return;
 
     // Marcar como loading
     setCards(prev => {
@@ -167,7 +170,7 @@ export const useSwipeCards = () => {
       
       // Gerar copy para o próximo card se não existir
       const nextCard = cards[nextIndex];
-      if (!nextCard.connectionCopy && !nextCard.isLoading) {
+      if (!nextCard.connectionCopy) {
         generateCopy(nextCard.userId);
       }
     }
@@ -188,7 +191,7 @@ export const useSwipeCards = () => {
   useEffect(() => {
     if (cards.length > 0 && currentIndex < cards.length) {
       const currentCard = cards[currentIndex];
-      if (!currentCard.connectionCopy && !currentCard.isLoading) {
+      if (!currentCard.connectionCopy) {
         generateCopy(currentCard.userId);
       }
     }
