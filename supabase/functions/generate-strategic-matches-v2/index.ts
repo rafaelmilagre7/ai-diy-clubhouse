@@ -235,21 +235,7 @@ Identifique os 10 melhores matches e retorne o JSON.`;
 
     console.log(`✅ IA gerou ${aiMatches.matches.length} matches`);
 
-    // 4. Limpeza preventiva de matches órfãos (com perfis deletados)
-    const { data: activeProfileIds } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('status', 'active');
-    
-    const activeIds = new Set((activeProfileIds || []).map((p: any) => p.id));
-    
-    // Deletar matches com perfis inativos
-    await supabase
-      .from('strategic_matches_v2')
-      .delete()
-      .not('matched_user_id', 'in', `(${Array.from(activeIds).map(id => `'${id}'`).join(',')})`);
-
-    // Limpar matches antigos do usuário
+    // 4. Limpar matches antigos do usuário antes de inserir novos
     await supabase
       .from('strategic_matches_v2')
       .delete()
@@ -284,9 +270,9 @@ Identifique os 10 melhores matches e retorne o JSON.`;
     // Validar existência dos perfis antes de inserir
     const validMatchUserIds = new Set(allProfiles.map((p: any) => p.user_id));
     const validMatches = matchesToInsert.filter(match => {
-      const isValid = validMatchUserIds.has(match.matched_user_id) && activeIds.has(match.matched_user_id);
+      const isValid = validMatchUserIds.has(match.matched_user_id);
       if (!isValid) {
-        console.warn('⚠️ [SKIP] Match com perfil inexistente/inativo:', match.matched_user_id);
+        console.warn('⚠️ [SKIP] Match com perfil inexistente:', match.matched_user_id);
       }
       return isValid;
     });
