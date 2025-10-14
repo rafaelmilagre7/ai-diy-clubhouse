@@ -6,6 +6,8 @@ const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
+// ✅ CORREÇÃO FINAL: Validação de perfis ativos + Limpeza de órfãos + Filtros de segurança
+
 // Função para determinar o tipo de match baseado em análise semântica
 function determineMatchType(reasons: string[], opportunity: string, userGoal?: string): string {
   const text = `${reasons.join(' ')} ${opportunity} ${userGoal || ''}`.toLowerCase();
@@ -55,12 +57,22 @@ serve(async (req) => {
       throw new Error("Perfil de networking não encontrado");
     }
 
-    // 2. Buscar todos os outros perfis completos
+    // 2. Buscar perfis ativos da tabela profiles
+    const { data: activeProfiles } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('status', 'active')
+      .eq('available_for_networking', true);
+    
+    const activeUserIds = new Set((activeProfiles || []).map((p: any) => p.id));
+
+    // 3. Buscar perfis de networking que estão ativos
     const { data: allProfiles, error: profilesError } = await supabase
       .from('networking_profiles_v2')
       .select('*')
       .neq('user_id', user_id)
-      .not('profile_completed_at', 'is', null);
+      .not('profile_completed_at', 'is', null)
+      .in('user_id', Array.from(activeUserIds));
 
     if (profilesError) throw profilesError;
 
@@ -149,7 +161,21 @@ Identifique os 10 melhores matches e retorne o JSON.`;
 
     console.log(`✅ IA gerou ${aiMatches.matches.length} matches`);
 
-    // 4. Limpar matches antigos e inserir novos
+    // 4. Limpeza preventiva de matches órfãos (com perfis deletados)
+    const { data: activeProfileIds } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('status', 'active');
+    
+    const activeIds = new Set((activeProfileIds || []).map((p: any) => p.id));
+    
+    // Deletar matches com perfis inativos
+    await supabase
+      .from('strategic_matches_v2')
+      .delete()
+      .not('matched_user_id', 'in', `(${Array.from(activeIds).map(id => `'${id}'`).join(',')})`);
+
+    // Limpar matches antigos do usuário
     await supabase
       .from('strategic_matches_v2')
       .delete()
@@ -181,14 +207,26 @@ Identifique os 10 melhores matches e retorne o JSON.`;
       };
     });
 
+    // Validar existência dos perfis antes de inserir
+    const validMatchUserIds = new Set(allProfiles.map((p: any) => p.user_id));
+    const validMatches = matchesToInsert.filter(match => {
+      const isValid = validMatchUserIds.has(match.matched_user_id) && activeIds.has(match.matched_user_id);
+      if (!isValid) {
+        console.warn('⚠️ [SKIP] Match com perfil inexistente/inativo:', match.matched_user_id);
+      }
+      return isValid;
+    });
+
     // Log de diagnóstico da distribuição de tipos
     console.log('📊 [MATCH TYPES DISTRIBUTION]', {
-      total: matchesToInsert.length,
-      distribution: matchesToInsert.reduce((acc, m) => {
+      total_generated: matchesToInsert.length,
+      valid_matches: validMatches.length,
+      filtered_out: matchesToInsert.length - validMatches.length,
+      distribution: validMatches.reduce((acc, m) => {
         acc[m.match_type] = (acc[m.match_type] || 0) + 1;
         return acc;
       }, {} as Record<string, number>),
-      sample: matchesToInsert.slice(0, 2).map(m => ({
+      sample: validMatches.slice(0, 2).map(m => ({
         type: m.match_type,
         reason: m.why_connect[0]?.substring(0, 50) + '...'
       }))
@@ -196,7 +234,7 @@ Identifique os 10 melhores matches e retorne o JSON.`;
 
     const { data: insertedMatches, error: insertError } = await supabase
       .from('strategic_matches_v2')
-      .insert(matchesToInsert)
+      .insert(validMatches)
       .select();
 
     if (insertError) throw insertError;
