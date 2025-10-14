@@ -1,9 +1,6 @@
 import { NetworkingHeader } from '@/components/networking/NetworkingHeader';
-import { MatchesGrid } from '@/components/networking/MatchesGrid';
+import { NetworkingTabs } from '@/components/networking/NetworkingTabs';
 import { useDynamicSEO } from '@/hooks/seo/useDynamicSEO';
-import { Button } from '@/components/ui/button';
-import { Sparkles, ArrowRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { NetworkingErrorBoundary } from '@/components/networking/NetworkingErrorBoundary';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
 import { usePermissions } from '@/hooks/auth/usePermissions';
@@ -177,33 +174,11 @@ const Networking = () => {
                 </div>
               </div>
               
-              {/* Call-to-Action para Discover */}
-              <div className="relative overflow-hidden rounded-2xl bg-aurora/5 border border-aurora/20 p-8">
-                <div className="absolute inset-0 aurora-gradient opacity-10"></div>
-                <div className="relative flex items-center justify-between">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Sparkles className="w-6 h-6 text-aurora" />
-                      <h3 className="text-xl font-bold aurora-text-gradient">Descubra Conexões Estratégicas</h3>
-                    </div>
-                    <p className="text-text-muted max-w-xl">
-                      Nossa IA analisou seu perfil e encontrou matches personalizados para impulsionar seu negócio
-                    </p>
-                  </div>
-                  <Link to="/networking/discover">
-                    <Button size="lg" className="aurora-gradient text-white hover:opacity-90">
-                      Ver Matches
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-              
-              {/* Conteúdo real do networking para usuários com acesso */}
+              {/* Sistema de Tabs com Conexões */}
               <div className="relative overflow-hidden rounded-2xl bg-card/80 backdrop-blur-sm border border-border/50 min-h-[500px]">
                 <div className="absolute inset-0 bg-dot-pattern opacity-5"></div>
                 <div className="relative p-6">
-                  <MatchesGrid />
+                  <NetworkingTabs />
                 </div>
               </div>
             </div>
