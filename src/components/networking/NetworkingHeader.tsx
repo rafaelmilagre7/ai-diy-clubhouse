@@ -1,13 +1,14 @@
-import { Brain } from 'lucide-react';
+import { Brain, MessageSquare } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { useNetworkingStats } from '@/hooks/useNetworkingStats';
 
 interface NetworkingHeaderProps {
-  // Removidas props de tab já que agora só temos uma seção
+  onOpenChat?: () => void;
 }
 
-export const NetworkingHeader = ({}: NetworkingHeaderProps) => {
+export const NetworkingHeader = ({ onOpenChat }: NetworkingHeaderProps) => {
   const { data: stats } = useNetworkingStats();
 
   return (
@@ -26,12 +27,26 @@ export const NetworkingHeader = ({}: NetworkingHeaderProps) => {
           </p>
         </div>
         
-        <div className="relative group">
-          <div className="absolute -inset-0.5 bg-gradient-to-r from-primary to-primary/60 rounded-xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
-          <div className="relative bg-primary/10 backdrop-blur border border-primary/30 rounded-xl px-4 py-2">
-            <div className="flex items-center gap-2 text-primary font-medium">
-              <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
-              ✨ Powered by AI
+        <div className="flex items-center gap-3">
+          {onOpenChat && (
+            <Button
+              onClick={onOpenChat}
+              variant="outline"
+              className="relative overflow-hidden border-primary/30 hover:border-primary/50 group"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <MessageSquare className="h-4 w-4 mr-2 relative z-10" />
+              <span className="relative z-10">Mensagens</span>
+            </Button>
+          )}
+          
+          <div className="relative group">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-primary to-primary/60 rounded-xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
+            <div className="relative bg-primary/10 backdrop-blur border border-primary/30 rounded-xl px-4 py-2">
+              <div className="flex items-center gap-2 text-primary font-medium">
+                <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+                ✨ Powered by AI
+              </div>
             </div>
           </div>
         </div>

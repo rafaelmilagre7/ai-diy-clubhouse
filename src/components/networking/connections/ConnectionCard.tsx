@@ -21,6 +21,7 @@ interface ConnectionCardProps {
   variant: 'active' | 'pending';
   onAccept?: (id: string) => void;
   onReject?: (id: string) => void;
+  onMessage?: () => void;
   isAccepting?: boolean;
   isRejecting?: boolean;
 }
@@ -30,6 +31,7 @@ export const ConnectionCard = ({
   variant,
   onAccept,
   onReject,
+  onMessage,
   isAccepting,
   isRejecting
 }: ConnectionCardProps) => {
@@ -130,10 +132,11 @@ export const ConnectionCard = ({
           </div>
         )}
 
-        {variant === 'active' && (
+        {variant === 'active' && onMessage && (
           <Button 
             variant="outline"
             className="w-full border-aurora/30 hover:bg-aurora/5"
+            onClick={onMessage}
           >
             <MessageSquare className="w-4 h-4 mr-2" />
             Enviar Mensagem

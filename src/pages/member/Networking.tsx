@@ -1,5 +1,6 @@
 import { NetworkingHeader } from '@/components/networking/NetworkingHeader';
 import { NetworkingTabs } from '@/components/networking/NetworkingTabs';
+import { ChatInterface } from '@/components/networking/chat/ChatInterface';
 import { useDynamicSEO } from '@/hooks/seo/useDynamicSEO';
 import { NetworkingErrorBoundary } from '@/components/networking/NetworkingErrorBoundary';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
@@ -16,6 +17,7 @@ const Networking = () => {
   const { modalState, showUpgradeModal, hideUpgradeModal } = usePremiumUpgradeModal();
   const { hasCompletedOnboarding, isLoading: onboardingLoading, prefilledData, markAsCompleted } = useNetworkingOnboarding();
   const [showOnboardingModal, setShowOnboardingModal] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
   
   useDynamicSEO({
     title: 'Networking AI - Networking Inteligente',
@@ -170,7 +172,7 @@ const Networking = () => {
               <div className="relative overflow-hidden rounded-2xl bg-card/95 backdrop-blur-xl border border-border/30 p-8 shadow-2xl shadow-primary/5">
                 <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent"></div>
                 <div className="relative">
-                  <NetworkingHeader />
+                  <NetworkingHeader onOpenChat={() => setChatOpen(true)} />
                 </div>
               </div>
               
@@ -194,6 +196,12 @@ const Networking = () => {
           setShowOnboardingModal(true);
         }}
         prefilledData={prefilledData}
+      />
+      
+      {/* Chat Interface */}
+      <ChatInterface
+        open={chatOpen}
+        onOpenChange={setChatOpen}
       />
       
       <AuroraUpgradeModal 

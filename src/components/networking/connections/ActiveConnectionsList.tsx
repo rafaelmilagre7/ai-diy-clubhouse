@@ -1,11 +1,33 @@
+import { useState } from 'react';
 import { useConnections } from '@/hooks/networking/useConnections';
 import { ConnectionCard } from './ConnectionCard';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ChatInterface } from '../chat/ChatInterface';
 import { Users, Sparkles } from 'lucide-react';
 
 export const ActiveConnectionsList = () => {
   const { activeConnections, isLoading, error } = useConnections();
+  const [chatOpen, setChatOpen] = useState(false);
+  const [selectedRecipient, setSelectedRecipient] = useState<{
+    id: string;
+    name: string;
+    avatar?: string;
+  } | null>(null);
+
+  const handleOpenChat = (connection: any) => {
+    const isRequester = connection.requester_id === connection.requester?.id;
+    const otherUser = isRequester ? connection.recipient : connection.requester;
+    
+    if (otherUser) {
+      setSelectedRecipient({
+        id: otherUser.id,
+        name: otherUser.name,
+        avatar: otherUser.avatar_url
+      });
+      setChatOpen(true);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -62,9 +84,19 @@ export const ActiveConnectionsList = () => {
             key={connection.id} 
             connection={connection}
             variant="active"
+            onMessage={() => handleOpenChat(connection)}
           />
         ))}
       </div>
+
+      {/* Chat Interface */}
+      <ChatInterface
+        open={chatOpen}
+        onOpenChange={setChatOpen}
+        initialRecipientId={selectedRecipient?.id}
+        initialRecipientName={selectedRecipient?.name}
+        initialRecipientAvatar={selectedRecipient?.avatar}
+      />
     </div>
   );
 };
