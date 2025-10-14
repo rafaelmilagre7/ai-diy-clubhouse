@@ -117,36 +117,18 @@ serve(async (req) => {
       throw new Error("Perfil de networking não encontrado");
     }
 
-    // 3. Buscar perfis ativos da tabela profiles
-    const { data: activeProfiles } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('is_active', true)
-      .eq('available_for_networking', true);
-    
-    const activeUserIds = new Set((activeProfiles || []).map((p: any) => p.id));
-
-    // Validar se há perfis disponíveis
-    if (activeUserIds.size === 0) {
-      console.log('⚠️ [WARNING] Nenhum perfil ativo disponível para networking');
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: 'Nenhum perfil ativo disponível para networking no momento'
-        }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    console.log(`👥 Encontrados ${activeUserIds.size} perfis ativos para análise`);
-
-    // 4. Buscar perfis de networking que estão ativos
+    // 3. Buscar perfis de networking ativos (com JOIN para evitar limite do IN)
     const { data: allProfiles, error: profilesError } = await supabase
       .from('networking_profiles_v2')
-      .select('*')
+      .select(`
+        *,
+        profiles!inner(is_active, available_for_networking)
+      `)
       .neq('user_id', user_id)
       .not('profile_completed_at', 'is', null)
-      .in('user_id', Array.from(activeUserIds));
+      .eq('profiles.is_active', true)
+      .eq('profiles.available_for_networking', true)
+      .limit(1000);
 
     if (profilesError) throw profilesError;
 
