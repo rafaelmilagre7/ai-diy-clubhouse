@@ -29,7 +29,7 @@ interface ContactModalProps {
   userName: string;
   initialData?: {
     email?: string;
-    phone?: string;
+    whatsapp_number?: string;
     linkedin_url?: string;
     avatar_url?: string;
     company_name?: string;
@@ -103,7 +103,7 @@ export const ContactModal = ({ isOpen, onClose, userId, userName, initialData }:
           name: userName,
           email: initialData.email || 'e***@*****.com',
           avatar_url: initialData.avatar_url,
-          whatsapp_number: initialData.phone || '****',
+          whatsapp_number: initialData.whatsapp_number || '****',
           company_name: initialData.company_name,
           current_position: initialData.current_position,
           linkedin_url: initialData.linkedin_url,
@@ -156,7 +156,7 @@ export const ContactModal = ({ isOpen, onClose, userId, userName, initialData }:
       name: contactData?.name || userName,
       email: contactData?.email || initialData?.email || '',
       avatar: contactData?.avatar_url || initialData?.avatar_url,
-      phone: contactData?.whatsapp_number || initialData?.phone || onboarding?.personal_info?.phone || onboarding?.business_info?.phone,
+      phone: contactData?.whatsapp_number || initialData?.whatsapp_number || onboarding?.personal_info?.phone || onboarding?.business_info?.phone,
       company: contactData?.company_name || initialData?.company_name || onboarding?.business_info?.company_name || onboarding?.professional_info?.company_name,
       position: contactData?.current_position || initialData?.current_position || onboarding?.business_info?.current_position || onboarding?.professional_info?.current_position,
       industry: contactData?.industry || onboarding?.business_info?.company_sector || onboarding?.professional_info?.industry,

@@ -28,7 +28,7 @@ const translateMatchType = (type: string) => {
 
 export const MatchesGrid = () => {
   const [activeChatMatch, setActiveChatMatch] = useState<string | null>(null);
-  const [contactModalUser, setContactModalUser] = useState<{id: string, name: string, email?: string, phone?: string, linkedin_url?: string, avatar_url?: string, company_name?: string, current_position?: string} | null>(null);
+  const [contactModalUser, setContactModalUser] = useState<{id: string, name: string, email?: string, whatsapp_number?: string, linkedin_url?: string, avatar_url?: string, company_name?: string, current_position?: string} | null>(null);
   const [filters, setFilters] = useState({
     search: '',
     matchType: 'all',
@@ -228,7 +228,7 @@ export const MatchesGrid = () => {
                 id: match.matched_user_id,
                 name: match.matched_user?.name || 'Usuário',
                 email: match.matched_user?.email,
-                phone: match.matched_user?.phone || match.matched_user?.whatsapp_number,
+                whatsapp_number: match.matched_user?.whatsapp_number,
                 linkedin_url: match.matched_user?.linkedin_url,
                 avatar_url: match.matched_user?.avatar_url,
                 company_name: match.matched_user?.company_name,
@@ -266,7 +266,7 @@ export const MatchesGrid = () => {
         userName={contactModalUser?.name || ''}
         initialData={{
           email: contactModalUser?.email,
-          phone: contactModalUser?.phone,
+          whatsapp_number: contactModalUser?.whatsapp_number,
           linkedin_url: contactModalUser?.linkedin_url,
           avatar_url: contactModalUser?.avatar_url,
           company_name: contactModalUser?.company_name,

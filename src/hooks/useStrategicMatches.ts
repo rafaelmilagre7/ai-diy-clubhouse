@@ -29,7 +29,6 @@ export interface StrategicMatch {
     avatar_url?: string;
     linkedin_url?: string;
     whatsapp_number?: string;
-    phone?: string;
     professional_bio?: string;
     company_size?: string;
     annual_revenue?: string;
@@ -69,7 +68,6 @@ export const useStrategicMatches = () => {
             avatar_url,
             linkedin_url,
             whatsapp_number,
-            phone,
             professional_bio,
             company_size,
             annual_revenue
@@ -114,7 +112,6 @@ export const useStrategicMatches = () => {
             avatar_url,
             linkedin_url,
             whatsapp_number,
-            phone,
             professional_bio,
             company_size,
             annual_revenue
