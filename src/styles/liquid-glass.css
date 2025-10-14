@@ -1,0 +1,484 @@
+/* ================================================================
+   LIQUID GLASS DESIGN SYSTEM - Networking AI 2.0
+   Sistema de design avançado com glassmorfismo e liquid animations
+   ================================================================ */
+
+/* ============================================
+   GLASSMORPHISM BASE
+   ============================================ */
+
+.liquid-glass-card {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 24px;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.liquid-glass-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 16px 48px 0 rgba(31, 38, 135, 0.5);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.liquid-glass-card-premium {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  backdrop-filter: blur(24px) saturate(200%);
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 28px;
+  box-shadow: 
+    0 8px 32px 0 rgba(31, 38, 135, 0.37),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.liquid-glass-card-premium::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s;
+}
+
+.liquid-glass-card-premium:hover::before {
+  left: 100%;
+}
+
+/* ============================================
+   GLOW BORDERS
+   ============================================ */
+
+.glow-border {
+  position: relative;
+  border-radius: 24px;
+}
+
+.glow-border::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 24px;
+  padding: 2px;
+  background: linear-gradient(135deg, 
+    rgba(102, 126, 234, 0.6) 0%, 
+    rgba(118, 75, 162, 0.6) 50%,
+    rgba(102, 126, 234, 0.6) 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.glow-border:hover::before {
+  opacity: 1;
+  animation: glow-pulse 2s infinite;
+}
+
+@keyframes glow-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.glow-border-blue {
+  position: relative;
+}
+
+.glow-border-blue::before {
+  background: linear-gradient(135deg, 
+    rgba(79, 172, 254, 0.8) 0%, 
+    rgba(0, 242, 254, 0.8) 100%);
+}
+
+.glow-border-green {
+  position: relative;
+}
+
+.glow-border-green::before {
+  background: linear-gradient(135deg, 
+    rgba(67, 233, 123, 0.8) 0%, 
+    rgba(56, 249, 215, 0.8) 100%);
+}
+
+.glow-border-pink {
+  position: relative;
+}
+
+.glow-border-pink::before {
+  background: linear-gradient(135deg, 
+    rgba(240, 147, 251, 0.8) 0%, 
+    rgba(245, 87, 108, 0.8) 100%);
+}
+
+/* ============================================
+   LIQUID BLOBS (Animated Background)
+   ============================================ */
+
+.liquid-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.3;
+  mix-blend-mode: screen;
+  animation: blob-float 20s infinite ease-in-out;
+  pointer-events: none;
+}
+
+.liquid-blob-1 {
+  width: 400px;
+  height: 400px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  top: -10%;
+  left: -10%;
+  animation-delay: 0s;
+}
+
+.liquid-blob-2 {
+  width: 350px;
+  height: 350px;
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  top: 50%;
+  right: -10%;
+  animation-delay: 4s;
+}
+
+.liquid-blob-3 {
+  width: 300px;
+  height: 300px;
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  bottom: -10%;
+  left: 30%;
+  animation-delay: 8s;
+}
+
+@keyframes blob-float {
+  0%, 100% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  25% {
+    transform: translate(30px, -50px) scale(1.1) rotate(90deg);
+  }
+  50% {
+    transform: translate(-20px, 20px) scale(0.9) rotate(180deg);
+  }
+  75% {
+    transform: translate(20px, 30px) scale(1.05) rotate(270deg);
+  }
+}
+
+/* ============================================
+   GRADIENTS
+   ============================================ */
+
+.gradient-networking {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.gradient-commercial {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.gradient-partnership {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.gradient-knowledge {
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+.gradient-aurora {
+  background: linear-gradient(135deg, 
+    #667eea 0%, 
+    #764ba2 25%,
+    #f093fb 50%,
+    #4facfe 75%,
+    #43e97b 100%);
+  background-size: 200% 200%;
+  animation: aurora-shift 15s ease infinite;
+}
+
+@keyframes aurora-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ============================================
+   SHIMMER EFFECT
+   ============================================ */
+
+.shimmer-text {
+  background: linear-gradient(90deg,
+    rgba(255, 255, 255, 0.6) 0%,
+    rgba(255, 255, 255, 0.9) 50%,
+    rgba(255, 255, 255, 0.6) 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.shimmer-bg {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer-bg::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    transparent 100%);
+  animation: shimmer-slide 2s infinite;
+}
+
+@keyframes shimmer-slide {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+/* ============================================
+   GLOW EFFECTS
+   ============================================ */
+
+.glow-effect {
+  position: relative;
+}
+
+.glow-effect::after {
+  content: '';
+  position: absolute;
+  inset: -20px;
+  background: radial-gradient(circle at center, 
+    rgba(102, 126, 234, 0.4) 0%, 
+    transparent 70%);
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  filter: blur(20px);
+}
+
+.glow-effect:hover::after {
+  opacity: 1;
+  animation: glow-breathe 2s infinite;
+}
+
+@keyframes glow-breathe {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.1); opacity: 0.7; }
+}
+
+/* ============================================
+   RIPPLE EFFECT
+   ============================================ */
+
+.ripple-container {
+  position: relative;
+  overflow: hidden;
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* ============================================
+   SMOOTH TRANSITIONS
+   ============================================ */
+
+.smooth-transition {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.smooth-transition-fast {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.smooth-transition-slow {
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================================
+   FLOATING ANIMATIONS
+   ============================================ */
+
+.float-gentle {
+  animation: float-gentle 6s ease-in-out infinite;
+}
+
+@keyframes float-gentle {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.float-moderate {
+  animation: float-moderate 4s ease-in-out infinite;
+}
+
+@keyframes float-moderate {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+/* ============================================
+   PULSE ANIMATIONS
+   ============================================ */
+
+.pulse-subtle {
+  animation: pulse-subtle 3s ease-in-out infinite;
+}
+
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(0.98); }
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { 
+    box-shadow: 0 0 20px rgba(102, 126, 234, 0.4); 
+  }
+  50% { 
+    box-shadow: 0 0 40px rgba(102, 126, 234, 0.8); 
+  }
+}
+
+/* ============================================
+   SKELETON LOADERS
+   ============================================ */
+
+.skeleton-loader {
+  background: linear-gradient(90deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.05) 100%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+  border-radius: 16px;
+}
+
+@keyframes skeleton-loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-circle {
+  border-radius: 50%;
+}
+
+.skeleton-organic {
+  border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
+  animation: skeleton-loading 1.5s infinite, skeleton-morph 8s infinite;
+}
+
+@keyframes skeleton-morph {
+  0%, 100% { border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; }
+  25% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+  50% { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; }
+  75% { border-radius: 70% 30% 40% 60% / 40% 70% 50% 30%; }
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+.backdrop-blur-premium {
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+}
+
+.text-shadow-glow {
+  text-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
+}
+
+.border-gradient {
+  border: 2px solid transparent;
+  background-image: 
+    linear-gradient(to right, rgba(255,255,255,0.08), rgba(255,255,255,0.08)),
+    linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+}
+
+/* ============================================
+   RESPONSIVE UTILITIES
+   ============================================ */
+
+@media (max-width: 768px) {
+  .liquid-glass-card {
+    border-radius: 20px;
+  }
+  
+  .liquid-blob {
+    filter: blur(40px);
+    opacity: 0.2;
+  }
+}
+
+/* ============================================
+   DARK MODE ENHANCEMENTS
+   ============================================ */
+
+@media (prefers-color-scheme: dark) {
+  .liquid-glass-card {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+  
+  .liquid-glass-card-premium {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.08) 100%);
+  }
+}
+
+/* ============================================
+   ACCESSIBILITY
+   ============================================ */
+
+.focus-glow:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.5);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

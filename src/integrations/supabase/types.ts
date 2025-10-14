@@ -940,6 +940,75 @@ export type Database = {
           },
         ]
       }
+      connection_interactions: {
+        Row: {
+          connection_id: string | null
+          created_at: string | null
+          created_by: string | null
+          estimated_value: number | null
+          id: string
+          interaction_type: string
+          interaction_value: Json | null
+          match_id: string | null
+        }
+        Insert: {
+          connection_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          estimated_value?: number | null
+          id?: string
+          interaction_type: string
+          interaction_value?: Json | null
+          match_id?: string | null
+        }
+        Update: {
+          connection_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          estimated_value?: number | null
+          id?: string
+          interaction_type?: string
+          interaction_value?: Json | null
+          match_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "connection_interactions_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "member_connections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "connection_interactions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "connection_interactions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles_networking_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "connection_interactions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "connection_interactions_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "strategic_matches_v2"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       connection_notifications: {
         Row: {
           created_at: string
@@ -3204,6 +3273,73 @@ export type Database = {
         }
         Relationships: []
       }
+      networking_profiles_v2: {
+        Row: {
+          ai_persona: Json
+          created_at: string | null
+          id: string
+          keywords: string[]
+          last_updated_at: string | null
+          looking_for: string[]
+          main_challenge: string | null
+          match_compatibility_vector: Json | null
+          networking_score: number | null
+          profile_completed_at: string | null
+          user_id: string
+          value_proposition: string
+        }
+        Insert: {
+          ai_persona?: Json
+          created_at?: string | null
+          id?: string
+          keywords?: string[]
+          last_updated_at?: string | null
+          looking_for?: string[]
+          main_challenge?: string | null
+          match_compatibility_vector?: Json | null
+          networking_score?: number | null
+          profile_completed_at?: string | null
+          user_id: string
+          value_proposition: string
+        }
+        Update: {
+          ai_persona?: Json
+          created_at?: string | null
+          id?: string
+          keywords?: string[]
+          last_updated_at?: string | null
+          looking_for?: string[]
+          main_challenge?: string | null
+          match_compatibility_vector?: Json | null
+          networking_score?: number | null
+          profile_completed_at?: string | null
+          user_id?: string
+          value_proposition?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "networking_profiles_v2_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "networking_profiles_v2_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles_networking_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "networking_profiles_v2_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notification_preferences: {
         Row: {
           admin_communications_email: boolean | null
@@ -4921,6 +5057,106 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      strategic_matches_v2: {
+        Row: {
+          ai_analysis: Json | null
+          compatibility_score: number
+          created_at: string | null
+          expires_at: string | null
+          ice_breaker: string
+          id: string
+          match_type: string
+          matched_user_id: string
+          message_sent: string | null
+          opportunities: string[] | null
+          responded_at: string | null
+          status: string
+          updated_at: string | null
+          user_id: string
+          viewed_at: string | null
+          why_connect: string
+        }
+        Insert: {
+          ai_analysis?: Json | null
+          compatibility_score: number
+          created_at?: string | null
+          expires_at?: string | null
+          ice_breaker: string
+          id?: string
+          match_type: string
+          matched_user_id: string
+          message_sent?: string | null
+          opportunities?: string[] | null
+          responded_at?: string | null
+          status?: string
+          updated_at?: string | null
+          user_id: string
+          viewed_at?: string | null
+          why_connect: string
+        }
+        Update: {
+          ai_analysis?: Json | null
+          compatibility_score?: number
+          created_at?: string | null
+          expires_at?: string | null
+          ice_breaker?: string
+          id?: string
+          match_type?: string
+          matched_user_id?: string
+          message_sent?: string | null
+          opportunities?: string[] | null
+          responded_at?: string | null
+          status?: string
+          updated_at?: string | null
+          user_id?: string
+          viewed_at?: string | null
+          why_connect?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "strategic_matches_v2_matched_user_id_fkey"
+            columns: ["matched_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "strategic_matches_v2_matched_user_id_fkey"
+            columns: ["matched_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_networking_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "strategic_matches_v2_matched_user_id_fkey"
+            columns: ["matched_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "strategic_matches_v2_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "strategic_matches_v2_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_networking_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "strategic_matches_v2_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_safe"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       suggestion_categories: {
         Row: {
