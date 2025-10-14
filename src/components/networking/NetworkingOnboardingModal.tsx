@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { GlowButton } from '@/components/ui/GlowButton';
-import { FloatingBlobContainer } from '@/components/ui/FloatingBlob';
-import { LiquidGlassCard } from '@/components/ui/LiquidGlassCard';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Lightbulb, Target, TrendingUp, Sparkles, CheckCircle } from 'lucide-react';
@@ -194,29 +193,28 @@ export const NetworkingOnboardingModal: React.FC<NetworkingOnboardingModalProps>
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl p-0 overflow-hidden bg-transparent border-none">
-        <FloatingBlobContainer>
-          <LiquidGlassCard variant="premium" className="p-8">
+      <DialogContent className="max-w-2xl p-0 overflow-hidden bg-surface-modal border border-border/50 shadow-aurora">
+        <Card className="aurora-glass p-8 border-none">
             {/* Step 1: Boas-vindas */}
             {currentStep === 1 && (
               <div className="space-y-6 text-center animate-fade-in">
-                <div className="inline-block p-4 rounded-full bg-gradient-networking/20">
-                  <Sparkles className="w-12 h-12 text-white" />
+                <div className="inline-block p-4 rounded-xl bg-viverblue/10 border border-viverblue/20 aurora-glow">
+                  <Sparkles className="w-12 h-12 text-viverblue" />
                 </div>
                 
                 <div className="space-y-2">
-                  <h2 className="text-3xl font-bold shimmer-text">
+                  <h2 className="text-3xl font-bold text-text-primary aurora-text-gradient">
                     Networking Inteligente 🤝
                   </h2>
-                  <p className="text-lg text-white/70">
+                  <p className="text-lg text-text-muted">
                     Vamos criar conexões estratégicas para sua empresa
                   </p>
                 </div>
 
                 <div className="flex justify-center pt-4">
-                  <GlowButton onClick={handleNext} size="lg">
+                  <Button onClick={handleNext} size="lg" variant="aurora">
                     Começar
-                  </GlowButton>
+                  </Button>
                 </div>
               </div>
             )}
@@ -225,17 +223,17 @@ export const NetworkingOnboardingModal: React.FC<NetworkingOnboardingModalProps>
             {currentStep === 2 && (
               <div className="space-y-6 animate-fade-in">
                 <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-xl bg-gradient-networking/20 float-gentle">
-                    <Lightbulb className="w-6 h-6 text-white" />
+                  <div className="p-3 rounded-xl bg-viverblue/10 border border-viverblue/20 aurora-float">
+                    <Lightbulb className="w-6 h-6 text-viverblue" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-white">Proposta de Valor</h3>
-                    <p className="text-sm text-white/60">Passo 1 de 4</p>
+                    <h3 className="text-xl font-bold text-text-primary">Proposta de Valor</h3>
+                    <p className="text-sm text-text-muted">Passo 1 de 4</p>
                   </div>
                 </div>
 
                 <div className="space-y-3">
-                  <label className="block text-white/90">
+                  <label className="block text-text-primary">
                     Em uma frase, o que sua empresa faz de único?
                   </label>
                   <Textarea
@@ -244,20 +242,20 @@ export const NetworkingOnboardingModal: React.FC<NetworkingOnboardingModalProps>
                     placeholder="Ex: Conectamos empreendedores através de IA para gerar negócios reais"
                     maxLength={200}
                     rows={4}
-                    className="liquid-glass-card border-white/20 text-white placeholder:text-white/40"
+                    className="bg-surface-elevated border-border text-text-primary placeholder:text-text-disabled"
                   />
-                  <p className="text-xs text-white/50 text-right">
+                  <p className="text-xs text-text-muted text-right">
                     {formData.valueProposition.length}/200 caracteres
                   </p>
                 </div>
 
                 <div className="flex gap-3 justify-between">
-                  <GlowButton variant="secondary" onClick={handleBack}>
+                  <Button variant="outline" onClick={handleBack}>
                     Voltar
-                  </GlowButton>
-                  <GlowButton onClick={handleNext} disabled={!canProceed()}>
+                  </Button>
+                  <Button variant="aurora" onClick={handleNext} disabled={!canProceed()}>
                     Próximo
-                  </GlowButton>
+                  </Button>
                 </div>
               </div>
             )}
@@ -266,48 +264,47 @@ export const NetworkingOnboardingModal: React.FC<NetworkingOnboardingModalProps>
             {currentStep === 3 && (
               <div className="space-y-6 animate-fade-in">
                 <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-xl bg-gradient-partnership/20 float-gentle">
-                    <Target className="w-6 h-6 text-white" />
+                  <div className="p-3 rounded-xl bg-operational/10 border border-operational/20 aurora-float">
+                    <Target className="w-6 h-6 text-operational" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-white">Tipo de Conexão</h3>
-                    <p className="text-sm text-white/60">Passo 2 de 4 • Múltipla escolha</p>
+                    <h3 className="text-xl font-bold text-text-primary">Tipo de Conexão</h3>
+                    <p className="text-sm text-text-muted">Passo 2 de 4 • Múltipla escolha</p>
                   </div>
                 </div>
 
-                <p className="text-white/90">
+                <p className="text-text-primary">
                   Que tipo de conexão você busca?
                 </p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {connectionTypes.map((type) => (
-                    <LiquidGlassCard
+                    <Card
                       key={type.id}
-                      hoverable
                       className={cn(
-                        "p-4 cursor-pointer transition-all",
-                        formData.lookingFor.includes(type.id) && `glow-border-${type.color}`
+                        "p-4 cursor-pointer transition-all aurora-glass-hover",
+                        formData.lookingFor.includes(type.id) && "border-viverblue/60 bg-viverblue/5"
                       )}
                       onClick={() => toggleLookingFor(type.id)}
                     >
                       <div className="flex items-center gap-3">
                         <span className="text-2xl">{type.icon}</span>
-                        <span className="font-medium text-white">{type.label}</span>
+                        <span className="font-medium text-text-primary">{type.label}</span>
                         {formData.lookingFor.includes(type.id) && (
-                          <CheckCircle className="w-5 h-5 ml-auto text-white" />
+                          <CheckCircle className="w-5 h-5 ml-auto text-viverblue" />
                         )}
                       </div>
-                    </LiquidGlassCard>
+                    </Card>
                   ))}
                 </div>
 
                 <div className="flex gap-3 justify-between">
-                  <GlowButton variant="secondary" onClick={handleBack}>
+                  <Button variant="outline" onClick={handleBack}>
                     Voltar
-                  </GlowButton>
-                  <GlowButton onClick={handleNext} disabled={!canProceed()}>
+                  </Button>
+                  <Button variant="aurora" onClick={handleNext} disabled={!canProceed()}>
                     Próximo
-                  </GlowButton>
+                  </Button>
                 </div>
               </div>
             )}
@@ -316,48 +313,47 @@ export const NetworkingOnboardingModal: React.FC<NetworkingOnboardingModalProps>
             {currentStep === 4 && (
               <div className="space-y-6 animate-fade-in">
                 <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-xl bg-gradient-commercial/20 float-gentle">
-                    <TrendingUp className="w-6 h-6 text-white" />
+                  <div className="p-3 rounded-xl bg-revenue/10 border border-revenue/20 aurora-float">
+                    <TrendingUp className="w-6 h-6 text-revenue" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-white">Desafio Atual</h3>
-                    <p className="text-sm text-white/60">Passo 3 de 4</p>
+                    <h3 className="text-xl font-bold text-text-primary">Desafio Atual</h3>
+                    <p className="text-sm text-text-muted">Passo 3 de 4</p>
                   </div>
                 </div>
 
-                <p className="text-white/90">
+                <p className="text-text-primary">
                   Qual seu principal desafio hoje?
                 </p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {challenges.map((challenge) => (
-                    <LiquidGlassCard
+                    <Card
                       key={challenge.id}
-                      hoverable
                       className={cn(
-                        "p-4 cursor-pointer transition-all",
-                        formData.mainChallenge === challenge.id && "glow-border"
+                        "p-4 cursor-pointer transition-all aurora-glass-hover",
+                        formData.mainChallenge === challenge.id && "border-viverblue/60 bg-viverblue/5"
                       )}
                       onClick={() => setFormData(prev => ({ ...prev, mainChallenge: challenge.id }))}
                     >
                       <div className="flex items-center gap-3">
                         <span className="text-2xl">{challenge.icon}</span>
-                        <span className="font-medium text-white">{challenge.label}</span>
+                        <span className="font-medium text-text-primary">{challenge.label}</span>
                         {formData.mainChallenge === challenge.id && (
-                          <CheckCircle className="w-5 h-5 ml-auto text-white" />
+                          <CheckCircle className="w-5 h-5 ml-auto text-viverblue" />
                         )}
                       </div>
-                    </LiquidGlassCard>
+                    </Card>
                   ))}
                 </div>
 
                 <div className="flex gap-3 justify-between">
-                  <GlowButton variant="secondary" onClick={handleBack}>
+                  <Button variant="outline" onClick={handleBack}>
                     Voltar
-                  </GlowButton>
-                  <GlowButton onClick={handleNext} disabled={!canProceed()}>
+                  </Button>
+                  <Button variant="aurora" onClick={handleNext} disabled={!canProceed()}>
                     Próximo
-                  </GlowButton>
+                  </Button>
                 </div>
               </div>
             )}
@@ -366,16 +362,16 @@ export const NetworkingOnboardingModal: React.FC<NetworkingOnboardingModalProps>
             {currentStep === 5 && (
               <div className="space-y-6 animate-fade-in">
                 <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-xl bg-gradient-knowledge/20 float-gentle">
-                    <Sparkles className="w-6 h-6 text-white" />
+                  <div className="p-3 rounded-xl bg-strategy/10 border border-strategy/20 aurora-float">
+                    <Sparkles className="w-6 h-6 text-strategy" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-white">Palavras-chave</h3>
-                    <p className="text-sm text-white/60">Passo 4 de 4</p>
+                    <h3 className="text-xl font-bold text-text-primary">Palavras-chave</h3>
+                    <p className="text-sm text-text-muted">Passo 4 de 4</p>
                   </div>
                 </div>
 
-                <p className="text-white/90">
+                <p className="text-text-primary">
                   3 palavras que descrevem você profissionalmente
                 </p>
 
@@ -388,22 +384,23 @@ export const NetworkingOnboardingModal: React.FC<NetworkingOnboardingModalProps>
                       onKeyDown={(e) => e.key === 'Enter' && addKeyword()}
                       placeholder="Digite uma palavra-chave"
                       disabled={formData.keywords.length >= 3}
-                      className="flex-1 px-4 py-2 rounded-xl liquid-glass-card border border-white/20 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-white/30"
+                      className="flex-1 px-4 py-2 rounded-xl bg-surface-elevated border border-border text-text-primary placeholder:text-text-disabled focus:outline-none focus:ring-2 focus:ring-viverblue/30"
                     />
-                    <GlowButton 
+                    <Button 
                       onClick={addKeyword} 
                       disabled={!keywordInput.trim() || formData.keywords.length >= 3}
+                      variant="aurora"
                     >
                       Adicionar
-                    </GlowButton>
+                    </Button>
                   </div>
 
                   <div className="flex flex-wrap gap-2">
                     {formData.keywords.map((keyword, index) => (
                       <Badge
                         key={index}
-                        variant="secondary"
-                        className="px-4 py-2 text-sm bg-gradient-networking text-white animate-scale-in cursor-pointer hover:opacity-80"
+                        variant="outline"
+                        className="px-4 py-2 text-sm border-viverblue/40 bg-viverblue/10 text-viverblue animate-scale-in cursor-pointer hover:bg-viverblue/20"
                         onClick={() => removeKeyword(keyword)}
                       >
                         {keyword} ✕
@@ -411,21 +408,22 @@ export const NetworkingOnboardingModal: React.FC<NetworkingOnboardingModalProps>
                     ))}
                   </div>
 
-                  <p className="text-xs text-white/50">
+                  <p className="text-xs text-text-muted">
                     {formData.keywords.length}/3 palavras-chave adicionadas
                   </p>
                 </div>
 
                 <div className="flex gap-3 justify-between">
-                  <GlowButton variant="secondary" onClick={handleBack}>
+                  <Button variant="outline" onClick={handleBack}>
                     Voltar
-                  </GlowButton>
-                  <GlowButton 
+                  </Button>
+                  <Button 
                     onClick={processWithAI} 
                     disabled={!canProceed()}
+                    variant="aurora"
                   >
                     Analisar com IA
-                  </GlowButton>
+                  </Button>
                 </div>
               </div>
             )}
@@ -433,21 +431,21 @@ export const NetworkingOnboardingModal: React.FC<NetworkingOnboardingModalProps>
             {/* Step 6: Processando */}
             {currentStep === 6 && (
               <div className="space-y-6 text-center animate-fade-in py-8">
-                <div className="inline-block p-6 rounded-full bg-gradient-aurora/30 pulse-glow">
-                  <Sparkles className="w-16 h-16 text-white animate-spin" />
+                <div className="inline-block p-6 rounded-xl bg-viverblue/10 border border-viverblue/20 aurora-pulse">
+                  <Sparkles className="w-16 h-16 text-viverblue animate-spin" />
                 </div>
                 
                 <div className="space-y-2">
-                  <h3 className="text-2xl font-bold shimmer-text">
+                  <h3 className="text-2xl font-bold text-text-primary aurora-text-gradient">
                     Analisando seu perfil com IA...
                   </h3>
-                  <p className="text-white/70">
+                  <p className="text-text-muted">
                     Isso pode levar alguns segundos
                   </p>
                 </div>
 
-                <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
-                  <div className="h-full bg-gradient-networking shimmer-bg animate-pulse"></div>
+                <div className="w-full h-2 bg-border/30 rounded-full overflow-hidden">
+                  <div className="h-full aurora-progress animate-shimmer"></div>
                 </div>
               </div>
             )}
@@ -455,44 +453,44 @@ export const NetworkingOnboardingModal: React.FC<NetworkingOnboardingModalProps>
             {/* Step 7: Resultado */}
             {currentStep === 7 && (
               <div className="space-y-6 text-center animate-fade-in">
-                <LiquidGlassCard variant="premium" className="p-6">
+                <Card className="aurora-glass p-6 border-viverblue/30">
                   <div className="space-y-4">
-                    <div className="inline-block p-4 rounded-full bg-gradient-knowledge/30">
-                      <CheckCircle className="w-12 h-12 text-white" />
+                    <div className="inline-block p-4 rounded-xl bg-viverblue/10 border border-viverblue/20 aurora-pulse">
+                      <CheckCircle className="w-12 h-12 text-viverblue" />
                     </div>
                     
                     <div>
-                      <p className="text-white/70 mb-2">Seu Índice de Networking</p>
-                      <h2 className="text-5xl font-bold gradient-text mb-2">
+                      <p className="text-text-muted mb-2">Seu Índice de Networking</p>
+                      <h2 className="text-5xl font-bold aurora-text-gradient mb-2">
                         {networkingScore}/100
                       </h2>
-                      <Badge className="bg-gradient-networking text-white">
+                      <Badge className="border-viverblue/40 bg-viverblue/20 text-viverblue">
                         Perfil Estrategista 🎉
                       </Badge>
                     </div>
 
-                    <div className="pt-4 border-t border-white/20">
-                      <p className="text-lg text-white/90">
-                        Encontramos <span className="font-bold text-white">{matchesFound} conexões estratégicas</span> para você
+                    <div className="pt-4 border-t border-border/50">
+                      <p className="text-lg text-text-primary">
+                        Encontramos <span className="font-bold text-viverblue">{matchesFound} conexões estratégicas</span> para você
                       </p>
                     </div>
                   </div>
-                </LiquidGlassCard>
+                </Card>
 
-                <GlowButton 
+                <Button 
                   onClick={() => {
                     onComplete();
-                    onClose();
+                    onClose?.();
                   }}
                   size="lg"
                   className="w-full"
+                  variant="aurora"
                 >
                   Ver Minhas Conexões 🚀
-                </GlowButton>
+                </Button>
               </div>
             )}
-          </LiquidGlassCard>
-        </FloatingBlobContainer>
+          </Card>
       </DialogContent>
     </Dialog>
   );
