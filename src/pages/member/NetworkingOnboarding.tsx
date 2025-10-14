@@ -38,6 +38,38 @@ const challenges = [
   { id: 'expand_market', label: 'Expandir mercado', icon: '🌍' }
 ];
 
+const professionalKeywords = [
+  // Perfil de Liderança
+  { id: 'strategic', label: 'Estratégico', category: 'leadership', icon: '🎯' },
+  { id: 'visionary', label: 'Visionário', category: 'leadership', icon: '🔭' },
+  { id: 'resilient', label: 'Resiliente', category: 'leadership', icon: '💪' },
+  
+  // Perfil Técnico
+  { id: 'innovative', label: 'Inovador', category: 'technical', icon: '💡' },
+  { id: 'analytical', label: 'Analítico', category: 'technical', icon: '📊' },
+  { id: 'data_driven', label: 'Data-Driven', category: 'technical', icon: '📈' },
+  
+  // Perfil Comercial
+  { id: 'results_driven', label: 'Orientado a Resultados', category: 'commercial', icon: '🎯' },
+  { id: 'negotiator', label: 'Negociador', category: 'commercial', icon: '🤝' },
+  { id: 'persuasive', label: 'Persuasivo', category: 'commercial', icon: '💬' },
+  
+  // Perfil Criativo
+  { id: 'creative', label: 'Criativo', category: 'creative', icon: '🎨' },
+  { id: 'disruptive', label: 'Disruptivo', category: 'creative', icon: '⚡' },
+  { id: 'adaptable', label: 'Adaptável', category: 'creative', icon: '🔄' },
+  
+  // Perfil Operacional
+  { id: 'organized', label: 'Organizado', category: 'operational', icon: '📋' },
+  { id: 'efficient', label: 'Eficiente', category: 'operational', icon: '⚙️' },
+  { id: 'detail_oriented', label: 'Detalhista', category: 'operational', icon: '🔍' },
+  
+  // Perfil Relacional
+  { id: 'collaborative', label: 'Colaborativo', category: 'relational', icon: '👥' },
+  { id: 'empathetic', label: 'Empático', category: 'relational', icon: '❤️' },
+  { id: 'networker', label: 'Networker', category: 'relational', icon: '🌐' }
+];
+
 const NetworkingOnboarding = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -53,8 +85,6 @@ const NetworkingOnboarding = () => {
     mainChallenge: '',
     keywords: []
   });
-
-  const [keywordInput, setKeywordInput] = useState('');
 
   const progressPercentage = ((currentStep - 1) / 6) * 100;
 
@@ -79,21 +109,24 @@ const NetworkingOnboarding = () => {
     }));
   };
 
-  const addKeyword = () => {
-    if (keywordInput.trim() && formData.keywords.length < 3) {
-      setFormData(prev => ({
-        ...prev,
-        keywords: [...prev.keywords, keywordInput.trim()]
-      }));
-      setKeywordInput('');
-    }
-  };
-
-  const removeKeyword = (keyword: string) => {
-    setFormData(prev => ({
-      ...prev,
-      keywords: prev.keywords.filter(k => k !== keyword)
-    }));
+  const toggleKeyword = (keywordId: string) => {
+    setFormData(prev => {
+      const isSelected = prev.keywords.includes(keywordId);
+      
+      if (isSelected) {
+        return {
+          ...prev,
+          keywords: prev.keywords.filter(k => k !== keywordId)
+        };
+      } else if (prev.keywords.length < 3) {
+        return {
+          ...prev,
+          keywords: [...prev.keywords, keywordId]
+        };
+      }
+      
+      return prev;
+    });
   };
 
   const processWithAI = async () => {
@@ -371,49 +404,52 @@ const NetworkingOnboarding = () => {
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold">Palavras-chave</h2>
-                  <p className="text-sm text-muted-foreground">Passo 4 de 4</p>
+                  <p className="text-sm text-muted-foreground">Passo 4 de 4 • Selecione 3</p>
                 </div>
               </div>
 
               <p className="text-base">
-                3 palavras que descrevem você profissionalmente
+                Selecione 3 palavras que melhor te descrevem profissionalmente
               </p>
 
-              <div className="space-y-4">
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={keywordInput}
-                    onChange={(e) => setKeywordInput(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && addKeyword()}
-                    placeholder="Ex: Inovador, Estratégico, Resiliente"
-                    disabled={formData.keywords.length >= 3}
-                    className="flex-1 px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
-                  />
-                  <Button 
-                    onClick={addKeyword} 
-                    disabled={!keywordInput.trim() || formData.keywords.length >= 3}
+              {/* Grid de Tags Selecionáveis */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {professionalKeywords.map((keyword) => (
+                  <Card
+                    key={keyword.id}
+                    className={cn(
+                      "p-3 cursor-pointer transition-all hover:border-primary/50",
+                      formData.keywords.includes(keyword.id) && "border-primary bg-primary/5",
+                      formData.keywords.length >= 3 && !formData.keywords.includes(keyword.id) && "opacity-50 cursor-not-allowed"
+                    )}
+                    onClick={() => toggleKeyword(keyword.id)}
                   >
-                    Adicionar
-                  </Button>
-                </div>
+                    <div className="flex flex-col items-center gap-2 text-center">
+                      <span className="text-2xl">{keyword.icon}</span>
+                      <span className="font-medium text-sm">{keyword.label}</span>
+                      {formData.keywords.includes(keyword.id) && (
+                        <CheckCircle className="w-4 h-4 text-primary" />
+                      )}
+                    </div>
+                  </Card>
+                ))}
+              </div>
 
-                <div className="flex flex-wrap gap-2">
-                  {formData.keywords.map((keyword, index) => (
-                    <Badge
-                      key={index}
-                      variant="secondary"
-                      className="px-4 py-2 text-sm cursor-pointer hover:bg-destructive/20"
-                      onClick={() => removeKeyword(keyword)}
-                    >
-                      {keyword} ✕
-                    </Badge>
-                  ))}
-                </div>
-
-                <p className="text-xs text-muted-foreground">
-                  {formData.keywords.length}/3 palavras-chave adicionadas
-                </p>
+              {/* Contador Visual */}
+              <div className="flex items-center justify-center gap-2">
+                {[1, 2, 3].map((num) => (
+                  <div
+                    key={num}
+                    className={cn(
+                      "w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all",
+                      formData.keywords.length >= num 
+                        ? "bg-primary text-primary-foreground" 
+                        : "bg-muted text-muted-foreground"
+                    )}
+                  >
+                    {num}
+                  </div>
+                ))}
               </div>
 
               <div className="flex gap-3 justify-between pt-4">
