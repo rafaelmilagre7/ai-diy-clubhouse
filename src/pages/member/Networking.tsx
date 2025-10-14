@@ -8,16 +8,21 @@ import { usePermissions } from '@/hooks/auth/usePermissions';
 import { usePremiumUpgradeModal } from '@/hooks/usePremiumUpgradeModal';
 import { AuroraUpgradeModal } from '@/components/ui/aurora-upgrade-modal';
 import { UnifiedContentBlock } from '@/components/ui/UnifiedContentBlock';
-import { useNetworkingOnboarding } from '@/hooks/useNetworkingOnboarding';
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/auth';
+import { toast } from 'sonner';
+import { Loader2, AlertCircle } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 const Networking = () => {
-  const navigate = useNavigate();
+  const { user } = useAuth();
   const { hasPermission, loading: permissionsLoading } = usePermissions();
   const { modalState, showUpgradeModal, hideUpgradeModal } = usePremiumUpgradeModal();
-  const { hasCompletedOnboarding, isLoading: onboardingLoading } = useNetworkingOnboarding();
   const [chatOpen, setChatOpen] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(false);
+  const [initError, setInitError] = useState<string | null>(null);
   
   useDynamicSEO({
     title: 'Networking AI - Networking Inteligente',
@@ -31,12 +36,53 @@ const Networking = () => {
     showUpgradeModal('networking');
   };
 
-  // Redirecionar para setup se não completou onboarding
+  // Inicializar perfil de networking automaticamente se necessário
   useEffect(() => {
-    if (!onboardingLoading && hasCompletedOnboarding === false && hasNetworkingAccess) {
-      navigate('/networking/setup');
-    }
-  }, [hasCompletedOnboarding, onboardingLoading, hasNetworkingAccess, navigate]);
+    const initializeNetworkingIfNeeded = async () => {
+      if (!user?.id || !hasNetworkingAccess) return;
+      
+      try {
+        // Verificar se já tem perfil v2
+        const { data: profile } = await supabase
+          .from('networking_profiles_v2')
+          .select('id, profile_completed_at')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        
+        if (!profile?.profile_completed_at) {
+          console.log('🚀 [NETWORKING] Inicializando perfil automaticamente...');
+          setIsInitializing(true);
+          setInitError(null);
+          
+          // Chamar edge function de inicialização
+          const { data, error } = await supabase.functions.invoke(
+            'initialize-networking-profile',
+            { body: {} }
+          );
+          
+          if (error) throw error;
+          
+          if (data?.success) {
+            console.log('✅ [NETWORKING] Perfil inicializado com sucesso');
+            toast.success('Seu perfil de networking foi configurado!');
+            
+            // Recarregar dados
+            setTimeout(() => {
+              window.location.reload();
+            }, 1500);
+          }
+        }
+      } catch (error: any) {
+        console.error('❌ [NETWORKING] Erro na inicialização:', error);
+        setInitError(error.message || 'Erro ao inicializar networking');
+        toast.error('Não foi possível inicializar seu perfil de networking');
+      } finally {
+        setIsInitializing(false);
+      }
+    };
+    
+    initializeNetworkingIfNeeded();
+  }, [user, hasNetworkingAccess]);
 
   // Loading state enquanto verifica permissões
   if (permissionsLoading) {
@@ -174,6 +220,42 @@ const Networking = () => {
         <ErrorBoundary>
           <div className="min-h-screen bg-gradient-to-br from-background via-background to-background/95">
             <div className="container mx-auto py-8 space-y-8">
+              {/* Banner de inicialização */}
+              {isInitializing && (
+                <Card className="p-6 bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
+                  <div className="flex items-center gap-4">
+                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                    <div>
+                      <h3 className="font-semibold">Preparando seu networking...</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Estamos analisando seu perfil e buscando as melhores conexões para você
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+              )}
+
+              {/* Banner de erro */}
+              {initError && (
+                <Card className="p-6 bg-destructive/10 border-destructive/20">
+                  <div className="flex items-center gap-4">
+                    <AlertCircle className="w-6 h-6 text-destructive" />
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-destructive">Erro na Inicialização</h3>
+                      <p className="text-sm text-muted-foreground">{initError}</p>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="mt-2"
+                        onClick={() => window.location.reload()}
+                      >
+                        Tentar Novamente
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              )}
+              
               {/* Header com glassmorphism */}
               <div className="relative overflow-hidden rounded-2xl bg-card/95 backdrop-blur-xl border border-border/30 p-8 shadow-2xl shadow-primary/5">
                 <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent"></div>

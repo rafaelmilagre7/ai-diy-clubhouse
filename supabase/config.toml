@@ -183,3 +183,6 @@ verify_jwt = false
 
 [functions.generate-strategic-matches-v2]
 verify_jwt = false
+
+[functions.initialize-networking-profile]
+verify_jwt = true
