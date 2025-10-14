@@ -131,12 +131,17 @@ Identifique os 10 melhores matches e retorne o JSON.`;
 
     const matchesToInsert = aiMatches.matches.map((match: any) => ({
       user_id: user_id,
-      match_user_id: match.match_user_id,
+      matched_user_id: match.match_user_id,
       compatibility_score: match.compatibility_score,
-      match_reasons: match.match_reasons,
-      connection_opportunity: match.connection_opportunity,
+      match_type: 'ai_strategic',
+      why_connect: match.match_reasons,
       ice_breaker: match.ice_breaker,
-      estimated_value: match.estimated_value,
+      opportunities: [match.connection_opportunity],
+      ai_analysis: {
+        estimated_value: match.estimated_value,
+        generated_at: new Date().toISOString(),
+        model: 'gpt-4o-mini'
+      },
       status: 'pending'
     }));
 
