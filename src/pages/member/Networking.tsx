@@ -84,52 +84,38 @@ const Networking = () => {
           </p>
         </div>
 
-        {/* Main Swipe Card */}
-        <div className="relative">
+        {/* Main Swipe Card com controles integrados */}
+        <div className="relative max-w-md mx-auto pb-24">
           <SwipeCard 
             card={currentCard} 
             onOpenContact={() => setIsContactModalOpen(true)}
           />
 
-          {/* Botões de Navegação */}
-          <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 flex justify-between pointer-events-none px-4 md:px-0 md:-mx-20">
+          {/* Controles de Navegação - Abaixo do card */}
+          <div className="absolute -bottom-4 left-0 right-0 flex items-center justify-center gap-6">
             <Button
               onClick={previousCard}
               disabled={!hasPrevious}
-              variant="ghost"
-              size="icon"
-              className="pointer-events-auto h-14 w-14 rounded-full shadow-xl bg-background/80 backdrop-blur-md hover:bg-background/90 disabled:opacity-30 transition-all"
+              size="lg"
+              className="h-16 w-16 rounded-full shadow-2xl bg-background hover:bg-accent border-2 border-border disabled:opacity-20 transition-all"
             >
-              <ChevronLeft className="h-7 w-7" />
+              <ChevronLeft className="h-8 w-8" />
             </Button>
-
+            
+            {/* Contador numérico */}
+            <div className="text-sm font-medium text-muted-foreground px-4 py-2 rounded-full bg-background/50 backdrop-blur-sm border border-border/50">
+              {currentIndex + 1} / {totalCards}
+            </div>
+            
             <Button
               onClick={nextCard}
               disabled={!hasNext}
-              variant="ghost"
-              size="icon"
-              className="pointer-events-auto h-14 w-14 rounded-full shadow-xl bg-background/80 backdrop-blur-md hover:bg-background/90 disabled:opacity-30 transition-all"
+              size="lg"
+              className="h-16 w-16 rounded-full shadow-2xl bg-gradient-to-r from-aurora to-viverblue hover:opacity-90 text-white disabled:opacity-20 transition-all"
             >
-              <ChevronRight className="h-7 w-7" />
+              <ChevronRight className="h-8 w-8" />
             </Button>
           </div>
-        </div>
-
-        {/* Indicador de Progresso - Bolinhas discretas */}
-        <div className="flex gap-2 justify-center">
-          {Array.from({ length: Math.min(totalCards, 5) }).map((_, idx) => {
-            const globalIndex = Math.floor(currentIndex / 5) * 5 + idx;
-            return (
-              <div
-                key={idx}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  globalIndex === currentIndex 
-                    ? 'bg-aurora w-8' 
-                    : 'bg-muted w-2'
-                }`}
-              />
-            );
-          })}
         </div>
       </div>
 
