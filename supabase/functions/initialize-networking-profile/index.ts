@@ -161,7 +161,33 @@ Keywords: ${keywords.join(', ')}`;
         }
       } catch (aiError) {
         console.warn('⚠️ [INIT] Erro na IA, usando valores padrão:', aiError);
+        
+        // Fallback estruturado
+        aiPersona = {
+          business_type: "Não analisado",
+          target_audience: "Geral",
+          value_keywords: keywords.slice(0, 3),
+          networking_style: "Profissional",
+          ideal_matches: ["Empreendedores", "Gestores"],
+          networking_score: 75,
+          profile_quality: "medium",
+          recommendations: ["Complete seu perfil para análise mais detalhada"]
+        };
       }
+    }
+
+    // Garantia de objeto válido mesmo sem API key
+    if (!aiPersona) {
+      aiPersona = {
+        business_type: "Análise pendente",
+        target_audience: "Geral",
+        value_keywords: keywords.slice(0, 3),
+        networking_style: "Profissional",
+        ideal_matches: ["Networking geral"],
+        networking_score: 75,
+        profile_quality: "medium",
+        recommendations: ["Análise de IA será processada em breve"]
+      };
     }
 
     // 5. Criar networking_profiles_v2 (apenas campos que existem na tabela)

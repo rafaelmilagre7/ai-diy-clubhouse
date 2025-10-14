@@ -3275,7 +3275,7 @@ export type Database = {
       }
       networking_profiles_v2: {
         Row: {
-          ai_persona: Json
+          ai_persona: Json | null
           created_at: string | null
           id: string
           keywords: string[]
@@ -3289,7 +3289,7 @@ export type Database = {
           value_proposition: string
         }
         Insert: {
-          ai_persona?: Json
+          ai_persona?: Json | null
           created_at?: string | null
           id?: string
           keywords?: string[]
@@ -3303,7 +3303,7 @@ export type Database = {
           value_proposition: string
         }
         Update: {
-          ai_persona?: Json
+          ai_persona?: Json | null
           created_at?: string | null
           id?: string
           keywords?: string[]
