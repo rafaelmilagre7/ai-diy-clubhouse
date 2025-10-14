@@ -254,7 +254,9 @@ Identifique os 10 melhores matches e retorne o JSON.`;
         matched_user_id: match.match_user_id,
         compatibility_score: Math.round(parseFloat(match.compatibility_score) * 100),
         match_type: matchType,
-        why_connect: match.match_reasons,
+        why_connect: Array.isArray(match.match_reasons) 
+          ? match.match_reasons.join(' • ') 
+          : match.match_reasons,
         ice_breaker: match.ice_breaker,
         opportunities: [match.connection_opportunity],
         ai_analysis: {
