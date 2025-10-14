@@ -52,15 +52,29 @@ const Networking = () => {
         <div className="container py-12">
           <Card className="max-w-2xl mx-auto p-12 text-center space-y-6">
             <div className="flex justify-center">
-              <Sparkles className="h-16 w-16 text-primary" />
+              <Sparkles className="h-16 w-16 text-viverblue" />
             </div>
-            <h2 className="text-2xl font-bold">Nenhuma conexão disponível no momento</h2>
+            <h2 className="text-2xl font-bold">Vamos gerar suas conexões estratégicas!</h2>
             <p className="text-muted-foreground">
-              Estamos preparando conexões estratégicas para você. Volte em breve!
+              Clique no botão abaixo para a IA analisar e gerar seus {isGenerating ? 'melhores matches personalizados...' : '50 melhores matches personalizados.'}
             </p>
-            <Button onClick={refetch} variant="outline" className="gap-2">
-              <RefreshCw className="h-4 w-4" />
-              Tentar novamente
+            <Button 
+              onClick={() => generateMatches()}
+              disabled={isGenerating}
+              size="lg"
+              className="gap-2 bg-viverblue hover:bg-viverblue/90"
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  Gerando suas conexões... (pode levar até 30s)
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-5 w-5" />
+                  Gerar Minhas Conexões
+                </>
+              )}
             </Button>
           </Card>
         </div>
