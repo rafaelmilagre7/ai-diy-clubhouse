@@ -67,7 +67,7 @@ export const useSwipeCards = () => {
         email: match.matched_user.email || '',
         connectionCopy: match.connection_copy,
         score: match.compatibility_score || 0.5,
-        isLoading: false,
+        isLoading: !match.connection_copy,
         matchId: match.id,
       }));
 

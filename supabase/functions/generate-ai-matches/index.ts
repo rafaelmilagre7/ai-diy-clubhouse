@@ -81,7 +81,7 @@ serve(async (req) => {
     // RESET: Deletar todos os matches existentes para este usuário antes de gerar novos
     console.log('Resetando matches existentes para maximizar fit de networking...');
     const { error: deleteError } = await supabase
-      .from('network_matches')
+      .from('strategic_matches_v2')
       .delete()
       .eq('user_id', user_id);
 
@@ -224,6 +224,7 @@ serve(async (req) => {
         }
       } else {
         // Fallback: usar compatibilidade baseada em perfil básico
+        // Fallback: usar compatibilidade baseada em perfil básico
         const candidateUserId = candidate.id;
         
         const { data: basicCompatibility, error: basicError } = await supabase
@@ -342,7 +343,7 @@ serve(async (req) => {
 
       // Verificar se já existe match entre estes usuários
       const { data: existingMatch } = await supabase
-        .from('network_matches')
+        .from('strategic_matches_v2')
         .select('id')
         .eq('user_id', user_id)
         .eq('matched_user_id', candidate.id)
@@ -353,18 +354,31 @@ serve(async (req) => {
         continue;
       }
 
-      // Inserir o match na tabela
+      // Gerar ice breaker personalizado
+      const generateIceBreaker = (type: string, targetName: string) => {
+        const iceBreakers = {
+          customer: `Olá ${targetName}! Vi que você trabalha com ${candidate.industry || 'seu setor'}. Tenho soluções que podem interessar sua empresa.`,
+          supplier: `Oi ${targetName}! Estamos buscando fornecedores especializados na sua área. Podemos conversar?`,
+          partner: `Olá ${targetName}! Percebi que temos objetivos complementares. Que tal explorarmos uma parceria estratégica?`,
+          mentor: `Olá ${targetName}! Admiro muito sua trajetória profissional. Seria uma honra aprender com sua experiência.`
+        };
+        return iceBreakers[type as keyof typeof iceBreakers] || `Olá ${targetName}! Que tal conectarmos e explorarmos sinergias?`;
+      };
+
+      // Inserir o match na tabela strategic_matches_v2
       const { error: insertError } = await supabase
-        .from('network_matches')
+        .from('strategic_matches_v2')
         .insert({
           user_id: user_id,
           matched_user_id: candidate.id,
           match_type: matchType,
-          compatibility_score: Math.round(score * 100),
-          match_reason: matchReason,
+          compatibility_score: score,
+          why_connect: matchReason,
+          ice_breaker: generateIceBreaker(matchType, candidate.name),
+          opportunities: aiAnalysis.opportunities,
           ai_analysis: aiAnalysis,
-          month_year: monthYear,
-          status: 'pending'
+          status: 'pending',
+          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
         });
 
       if (insertError) {

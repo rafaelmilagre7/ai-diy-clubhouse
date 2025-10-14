@@ -6461,7 +6461,18 @@ export type Database = {
         Returns: number
       }
       calculate_business_compatibility: {
-        Args: { user1_id: string; user2_id: string }
+        Args:
+          | {
+              user1_ai_level: string
+              user1_company_size: string
+              user1_objectives: string[]
+              user1_segment: string
+              user2_ai_level: string
+              user2_company_size: string
+              user2_objectives: string[]
+              user2_segment: string
+            }
+          | { user1_id: string; user2_id: string }
         Returns: number
       }
       can_access_benefit: {
