@@ -23,6 +23,7 @@ import Events from '@/pages/member/Events';
 import SolutionCertificate from '@/pages/member/SolutionCertificate';
 import Networking from '@/pages/member/Networking';
 import NetworkingDiscover from '@/pages/member/NetworkingDiscover';
+import NetworkingAnalytics from '@/pages/member/NetworkingAnalytics';
 import TeamManagementPage from '@/pages/member/TeamManagementPage';
 
 // Member Learning pages
@@ -67,6 +68,7 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/tools/:id", ToolDetails),
   createProtectedRoute("/networking", Networking),
   createProtectedRoute("/networking/discover", NetworkingDiscover),
+  createProtectedRoute("/networking/analytics", NetworkingAnalytics),
   createProtectedRoute("/profile", ProfilePage),
   createProtectedRoute("/profile/edit", EditProfile),
   createProtectedRoute("/profile/notifications", NotificationSettingsPage),

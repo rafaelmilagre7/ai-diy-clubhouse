@@ -1,7 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { usePendingRequests } from '@/hooks/networking/usePendingRequests';
-import { Sparkles, Users, Clock, Link as LinkIcon } from 'lucide-react';
+import { Sparkles, Users, Clock, Link as LinkIcon, BarChart3 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { MatchesGrid } from './MatchesGrid';
@@ -26,12 +26,21 @@ export const NetworkingTabs = () => {
               Nossa IA analisou seu perfil e encontrou matches personalizados para impulsionar seu negócio
             </p>
           </div>
-          <Link to="/networking/discover">
-            <Button size="lg" className="aurora-gradient text-white hover:opacity-90">
-              <Sparkles className="w-4 h-4 mr-2" />
-              Ver Matches
-            </Button>
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link to="/networking/analytics">
+              <Button variant="outline" className="border-primary/30 hover:bg-primary/10">
+                <BarChart3 className="w-4 h-4 mr-2" />
+                Analytics
+              </Button>
+            </Link>
+            
+            <Link to="/networking/discover">
+              <Button size="lg" className="aurora-gradient text-white hover:opacity-90">
+                <Sparkles className="w-4 h-4 mr-2" />
+                Ver Matches
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
 
