@@ -6,6 +6,32 @@ const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
+// Função para determinar o tipo de match baseado em análise semântica
+function determineMatchType(reasons: string[], opportunity: string, userGoal?: string): string {
+  const text = `${reasons.join(' ')} ${opportunity} ${userGoal || ''}`.toLowerCase();
+  
+  // Análise de palavras-chave para cada categoria
+  const patterns = {
+    commercial_opportunity: ['cliente', 'venda', 'comprador', 'comercial', 'revenue', 'sales', 'cliente potencial', 'oportunidade comercial'],
+    supplier: ['fornecedor', 'supply', 'produto', 'matéria-prima', 'insumo', 'vendor', 'fornecimento'],
+    knowledge_exchange: ['conhecimento', 'mentor', 'aprendizado', 'expertise', 'consultoria', 'learning', 'experiência', 'troca de conhecimento'],
+    investor: ['investimento', 'capital', 'funding', 'investor', 'aporte', 'financiamento', 'investidor'],
+    strategic_partnership: ['parceria', 'colaboração', 'joint', 'aliança', 'cooperação', 'partnership', 'sinergia', 'complementar']
+  };
+  
+  // Contar matches por categoria
+  const scores: Record<string, number> = {};
+  for (const [type, keywords] of Object.entries(patterns)) {
+    scores[type] = keywords.filter(keyword => text.includes(keyword)).length;
+  }
+  
+  // Retornar tipo com maior score, ou strategic_partnership como fallback
+  const maxScore = Math.max(...Object.values(scores));
+  if (maxScore === 0) return 'strategic_partnership';
+  
+  return Object.entries(scores).find(([_, score]) => score === maxScore)?.[0] || 'strategic_partnership';
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -129,21 +155,44 @@ Identifique os 10 melhores matches e retorne o JSON.`;
       .delete()
       .eq('user_id', user_id);
 
-    const matchesToInsert = aiMatches.matches.map((match: any) => ({
-      user_id: user_id,
-      matched_user_id: match.match_user_id,
-      compatibility_score: Math.round(parseFloat(match.compatibility_score) * 100),
-      match_type: 'ai_strategic',
-      why_connect: match.match_reasons,
-      ice_breaker: match.ice_breaker,
-      opportunities: [match.connection_opportunity],
-      ai_analysis: {
-        estimated_value: match.estimated_value,
-        generated_at: new Date().toISOString(),
-        model: 'gpt-4o-mini'
-      },
-      status: 'pending'
-    }));
+    const matchesToInsert = aiMatches.matches.map((match: any) => {
+      // Determinar tipo baseado em análise semântica
+      const matchType = determineMatchType(
+        match.match_reasons,
+        match.connection_opportunity,
+        userProfile?.primary_goal
+      );
+      
+      return {
+        user_id: user_id,
+        matched_user_id: match.match_user_id,
+        compatibility_score: Math.round(parseFloat(match.compatibility_score) * 100),
+        match_type: matchType,
+        why_connect: match.match_reasons,
+        ice_breaker: match.ice_breaker,
+        opportunities: [match.connection_opportunity],
+        ai_analysis: {
+          estimated_value: match.estimated_value,
+          generated_at: new Date().toISOString(),
+          model: 'gpt-4o-mini',
+          detected_type: matchType
+        },
+        status: 'pending'
+      };
+    });
+
+    // Log de diagnóstico da distribuição de tipos
+    console.log('📊 [MATCH TYPES DISTRIBUTION]', {
+      total: matchesToInsert.length,
+      distribution: matchesToInsert.reduce((acc, m) => {
+        acc[m.match_type] = (acc[m.match_type] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>),
+      sample: matchesToInsert.slice(0, 2).map(m => ({
+        type: m.match_type,
+        reason: m.why_connect[0]?.substring(0, 50) + '...'
+      }))
+    });
 
     const { data: insertedMatches, error: insertError } = await supabase
       .from('strategic_matches_v2')
