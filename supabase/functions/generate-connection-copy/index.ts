@@ -51,14 +51,56 @@ serve(async (req) => {
     const currentUser = profiles.find(p => p.id === currentUserId);
     const targetUser = profiles.find(p => p.id === targetUserId);
 
-    // Prompt otimizado para respostas rápidas e diretas
-    const prompt = `Analise os perfis e escreva 2-3 linhas curtas (máximo 100 palavras) explicando por que essa conexão pode gerar negócios.
+    // Extrair dados estruturados dos perfis
+    const u1ValueProp = currentUser?.value_proposition || currentUser?.current_position || 'Profissional';
+    const u1LookingFor = Array.isArray(currentUser?.looking_for) 
+      ? currentUser.looking_for.join(', ') 
+      : currentUser?.looking_for || 'Oportunidades de negócio';
+    const u1Challenge = currentUser?.main_challenge || 'Expandir negócios';
+    const u1Keywords = Array.isArray(currentUser?.keywords)
+      ? currentUser.keywords.join(', ')
+      : currentUser?.keywords || '';
 
-**Perfil 1:** ${currentUser?.name} - ${currentUser?.company_name} - ${currentUser?.current_position}
-**Perfil 2:** ${targetUser?.name} - ${targetUser?.company_name} - ${targetUser?.current_position}
+    const u2ValueProp = targetUser?.value_proposition || targetUser?.current_position || 'Profissional';
+    const u2LookingFor = Array.isArray(targetUser?.looking_for)
+      ? targetUser.looking_for.join(', ')
+      : targetUser?.looking_for || 'Oportunidades de negócio';
+    const u2Challenge = targetUser?.main_challenge || 'Expandir negócios';
+    const u2Keywords = Array.isArray(targetUser?.keywords)
+      ? targetUser.keywords.join(', ')
+      : targetUser?.keywords || '';
 
-Destaque APENAS: 1) sinergia de negócio, 2) oportunidade clara.
-Seja direto e objetivo. NÃO use introduções ou conclusões.`;
+    console.log('📊 Dados enviados para IA:', {
+      user1: {
+        name: currentUser?.name,
+        valueProp: u1ValueProp,
+        lookingFor: u1LookingFor,
+      },
+      user2: {
+        name: targetUser?.name,
+        valueProp: u2ValueProp,
+        lookingFor: u2LookingFor,
+      }
+    });
+
+    // Prompt enriquecido com dados completos dos perfis
+    const prompt = `Analise os perfis profissionais e escreva 2-3 linhas (máximo 80 palavras) explicando POR QUE conectar essas duas pessoas pode gerar NEGÓCIOS concretos.
+
+**${currentUser?.name}** (${currentUser?.company_name})
+- Proposta de valor: ${u1ValueProp}
+- Busca: ${u1LookingFor}
+- Desafio: ${u1Challenge}
+- Perfil: ${u1Keywords}
+
+**${targetUser?.name}** (${targetUser?.company_name})
+- Proposta de valor: ${u2ValueProp}
+- Busca: ${u2LookingFor}
+- Desafio: ${u2Challenge}
+- Perfil: ${u2Keywords}
+
+Escreva em primeira pessoa (como se ${currentUser?.name} estivesse falando). Use negrito em **palavras-chave importantes**.
+Foque em: 1) Oportunidade de negócio concreta, 2) Como um pode ajudar o outro.
+NÃO use frases genéricas. Seja específico e prático.`;
 
     console.log('🤖 Gerando copy com IA...');
 
@@ -70,13 +112,15 @@ Seja direto e objetivo. NÃO use introduções ou conclusões.`;
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash-lite',
+        model: 'google/gemini-2.5-flash',
         messages: [
-          { role: 'system', content: 'Você é um especialista em networking empresarial.' },
+          { 
+            role: 'system', 
+            content: 'Você é um especialista em identificar oportunidades de negócio entre profissionais. Seja direto, específico e use markdown para destacar palavras-chave.' 
+          },
           { role: 'user', content: prompt }
         ],
-        temperature: 0.5,
-        max_tokens: 150,
+        max_tokens: 200,
       }),
     });
 
