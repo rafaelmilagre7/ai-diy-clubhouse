@@ -5132,6 +5132,7 @@ export type Database = {
         Row: {
           ai_analysis: Json | null
           compatibility_score: number
+          connection_copy: string | null
           created_at: string | null
           expires_at: string | null
           ice_breaker: string
@@ -5150,6 +5151,7 @@ export type Database = {
         Insert: {
           ai_analysis?: Json | null
           compatibility_score: number
+          connection_copy?: string | null
           created_at?: string | null
           expires_at?: string | null
           ice_breaker: string
@@ -5168,6 +5170,7 @@ export type Database = {
         Update: {
           ai_analysis?: Json | null
           compatibility_score?: number
+          connection_copy?: string | null
           created_at?: string | null
           expires_at?: string | null
           ice_breaker?: string

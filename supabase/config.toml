@@ -192,3 +192,6 @@ verify_jwt = false
 
 [functions.cron-regenerate-matches]
 verify_jwt = false
+
+[functions.generate-connection-copy]
+verify_jwt = false
