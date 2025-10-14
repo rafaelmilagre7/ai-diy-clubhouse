@@ -5852,7 +5852,6 @@ export type Database = {
     Views: {
       profiles_networking_safe: {
         Row: {
-          available_for_networking: boolean | null
           avatar_url: string | null
           company_name: string | null
           created_at: string | null
@@ -5867,40 +5866,6 @@ export type Database = {
           role: string | null
           skills: string[] | null
           whatsapp_number: string | null
-        }
-        Insert: {
-          available_for_networking?: boolean | null
-          avatar_url?: string | null
-          company_name?: string | null
-          created_at?: string | null
-          current_position?: string | null
-          email?: never
-          id?: string | null
-          industry?: string | null
-          is_masked?: never
-          linkedin_url?: string | null
-          name?: string | null
-          professional_bio?: string | null
-          role?: string | null
-          skills?: string[] | null
-          whatsapp_number?: never
-        }
-        Update: {
-          available_for_networking?: boolean | null
-          avatar_url?: string | null
-          company_name?: string | null
-          created_at?: string | null
-          current_position?: string | null
-          email?: never
-          id?: string | null
-          industry?: string | null
-          is_masked?: never
-          linkedin_url?: string | null
-          name?: string | null
-          professional_bio?: string | null
-          role?: string | null
-          skills?: string[] | null
-          whatsapp_number?: never
         }
         Relationships: []
       }
@@ -7709,6 +7674,10 @@ export type Database = {
       }
       is_user_admin_secure: {
         Args: { target_user_id?: string }
+        Returns: boolean
+      }
+      is_user_admin_via_jwt: {
+        Args: Record<PropertyKey, never>
         Returns: boolean
       }
       is_valid_url: {
