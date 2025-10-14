@@ -19,6 +19,8 @@ const Networking = () => {
     totalCards,
     currentIndex,
     refetch,
+    generateMatches,
+    isGenerating,
   } = useSwipeCards();
 
   if (isLoadingCards) {
@@ -82,6 +84,28 @@ const Networking = () => {
           <p className="text-muted-foreground text-sm">
             Matches personalizados por IA para o seu negócio
           </p>
+          
+          {/* Botão para forçar regeneração */}
+          <div className="pt-4">
+            <Button 
+              onClick={() => generateMatches()}
+              disabled={isGenerating}
+              variant="outline"
+              className="gap-2"
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Gerando conexões...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4" />
+                  Gerar novas conexões
+                </>
+              )}
+            </Button>
+          </div>
         </div>
 
         {/* Container com card centralizado e botões nas laterais */}

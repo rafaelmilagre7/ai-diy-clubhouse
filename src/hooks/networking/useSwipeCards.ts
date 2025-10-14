@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/auth';
 import { useToast } from '@/hooks/use-toast';
+import { useAIMatches } from '@/hooks/useAIMatches';
 
 export interface SwipeCard {
   userId: string;
@@ -21,6 +22,7 @@ export interface SwipeCard {
 export const useSwipeCards = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { generateMatches, isGenerating } = useAIMatches();
   const [cards, setCards] = useState<SwipeCard[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLoadingCards, setIsLoadingCards] = useState(true);
@@ -266,8 +268,8 @@ export const useSwipeCards = () => {
         generateCopy(nextCard.userId);
       }
 
-      // Carregar mais perfis quando estiver perto do fim
-      if (nextIndex >= cards.length - 5 && hasMoreProfiles && !isLoadingMore) {
+      // Carregar mais se: (1) não tem 50 matches ainda OU (2) está perto do fim
+      if ((cards.length < 50 || nextIndex >= cards.length - 5) && hasMoreProfiles && !isLoadingMore) {
         loadMoreProfiles();
       }
     }
@@ -312,5 +314,7 @@ export const useSwipeCards = () => {
     totalCards: cards.length,
     currentIndex,
     refetch: loadMatches,
+    generateMatches: () => generateMatches(user?.id || ''),
+    isGenerating,
   };
 };
