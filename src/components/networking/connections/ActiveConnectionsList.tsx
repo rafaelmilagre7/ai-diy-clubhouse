@@ -3,7 +3,7 @@ import { useConnections } from '@/hooks/networking/useConnections';
 import { ConnectionCard } from './ConnectionCard';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ChatInterface } from '../chat/ChatInterface';
+import { InboxDrawer } from '../chat/InboxDrawer';
 import { Users, Sparkles } from 'lucide-react';
 
 export const ActiveConnectionsList = () => {
@@ -89,13 +89,10 @@ export const ActiveConnectionsList = () => {
         ))}
       </div>
 
-      {/* Chat Interface */}
-      <ChatInterface
+      {/* Inbox Drawer */}
+      <InboxDrawer
         open={chatOpen}
         onOpenChange={setChatOpen}
-        initialRecipientId={selectedRecipient?.id}
-        initialRecipientName={selectedRecipient?.name}
-        initialRecipientAvatar={selectedRecipient?.avatar}
       />
     </div>
   );
