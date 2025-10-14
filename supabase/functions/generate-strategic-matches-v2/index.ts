@@ -132,7 +132,7 @@ Identifique os 10 melhores matches e retorne o JSON.`;
     const matchesToInsert = aiMatches.matches.map((match: any) => ({
       user_id: user_id,
       matched_user_id: match.match_user_id,
-      compatibility_score: match.compatibility_score,
+      compatibility_score: Math.round(parseFloat(match.compatibility_score) * 100),
       match_type: 'ai_strategic',
       why_connect: match.match_reasons,
       ice_breaker: match.ice_breaker,
