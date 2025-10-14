@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 import { corsHeaders } from "../_shared/cors.ts";
 
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -18,194 +18,143 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Buscar perfil enriquecido do usuário
-    const { data: userProfile, error: userError } = await supabase
+    // 1. Buscar perfil do usuário
+    const { data: userProfile, error: profileError } = await supabase
       .from('networking_profiles_v2')
       .select('*')
       .eq('user_id', user_id)
       .single();
 
-    if (userError || !userProfile) {
-      throw new Error('Perfil de networking não encontrado. Complete o onboarding primeiro.');
+    if (profileError || !userProfile) {
+      throw new Error("Perfil de networking não encontrado");
     }
 
-    // Buscar dados básicos do usuário
-    const { data: userBasicData } = await supabase
-      .from('profiles')
-      .select('name, company_name, industry, current_position')
-      .eq('id', user_id)
-      .single();
-
-    // Buscar candidatos potenciais (excluindo próprio usuário)
-    const { data: candidates, error: candidatesError } = await supabase
+    // 2. Buscar todos os outros perfis completos
+    const { data: allProfiles, error: profilesError } = await supabase
       .from('networking_profiles_v2')
-      .select(`
-        *,
-        profiles!inner(
-          id,
-          name,
-          company_name,
-          industry,
-          current_position,
-          avatar_url
-        )
-      `)
+      .select('*')
       .neq('user_id', user_id)
-      .limit(50);
+      .not('profile_completed_at', 'is', null);
 
-    if (candidatesError) throw candidatesError;
+    if (profilesError) throw profilesError;
 
-    console.log(`🔍 [CANDIDATES] Encontrados ${candidates?.length || 0} candidatos`);
+    console.log(`📊 Encontrados ${allProfiles?.length || 0} perfis para análise`);
 
-    if (!candidates || candidates.length === 0) {
+    if (!allProfiles || allProfiles.length === 0) {
       return new Response(
-        JSON.stringify({ 
-          success: true, 
+        JSON.stringify({
+          success: true,
           matches_generated: 0,
-          message: 'Nenhum candidato disponível no momento'
+          message: "Nenhum perfil disponível para match ainda"
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Calcular scores e gerar insights com IA
-    const matchesWithScores = await Promise.all(
-      candidates.slice(0, 20).map(async (candidate) => {
-        // Calcular score básico (algoritmo multi-dimensional)
-        let score = 50;
+    // 3. Usar IA para gerar matches estratégicos
+    const systemPrompt = `Você é um especialista em networking B2B. Analise o perfil do usuário e os perfis disponíveis para identificar os 10 melhores matches estratégicos.
 
-        // 1. Objetivos Complementares (35 pontos)
-        const lookingForMatch = userProfile.looking_for.some((type: string) => 
-          candidate.looking_for.includes(type)
-        );
-        if (lookingForMatch) score += 35;
+Para cada match, considere:
+- Complementaridade de propostas de valor
+- Alinhamento de interesses (looking_for)
+- Potencial de sinergia (keywords)
+- Relevância dos desafios
 
-        // 2. Sinergia de Indústria (25 pontos)
-        const candidateProfile = candidate.profiles;
-        if (candidateProfile.industry === userBasicData?.industry) {
-          score += 15;
-        }
-
-        // 3. Keywords Match (20 pontos)
-        const keywordMatches = userProfile.keywords.filter((k: string) => 
-          candidate.keywords.includes(k)
-        ).length;
-        score += Math.min(keywordMatches * 7, 20);
-
-        // 4. Desafios Alinhados (20 pontos)
-        if (userProfile.main_challenge === candidate.main_challenge) {
-          score += 20;
-        }
-
-        // Limitar score a 100
-        score = Math.min(score, 100);
-
-        // Gerar insights com IA apenas para matches com score > 75
-        if (score > 75 && LOVABLE_API_KEY) {
-          try {
-            const aiPrompt = `Analise esta oportunidade de networking B2B:
-
-USUÁRIO 1:
-- Nome: ${userBasicData?.name}
-- Empresa: ${userBasicData?.company_name}
-- Proposta: ${userProfile.value_proposition}
-- Busca: ${userProfile.looking_for.join(', ')}
-- Desafio: ${userProfile.main_challenge}
-
-USUÁRIO 2:
-- Nome: ${candidateProfile.name}
-- Empresa: ${candidateProfile.company_name}
-- Proposta: ${candidate.value_proposition}
-- Busca: ${candidate.looking_for.join(', ')}
-- Desafio: ${candidate.main_challenge}
-
-Gere insights em JSON (sem markdown):
+Retorne APENAS um JSON válido (sem markdown) neste formato:
 {
-  "match_type": "commercial_opportunity" | "strategic_partnership" | "knowledge_exchange" | "supplier" | "investor",
-  "why_connect": "razão estratégica em 1 frase",
-  "ice_breaker": "mensagem inicial personalizada (máx 150 chars)",
-  "opportunities": ["oportunidade1", "oportunidade2"],
-  "estimated_value": "R$50k-200k/ano" ou null
+  "matches": [
+    {
+      "match_user_id": "uuid",
+      "compatibility_score": 0.85,
+      "match_reasons": ["Complementaridade de ofertas", "Mesmo segmento-alvo"],
+      "connection_opportunity": "Possível parceria estratégica em tecnologia",
+      "ice_breaker": "Vocês dois trabalham com inovação digital para PMEs",
+      "estimated_value": "R$ 50.000/mês"
+    }
+  ]
 }`;
 
-            const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-              method: "POST",
-              headers: {
-                "Authorization": `Bearer ${LOVABLE_API_KEY}`,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                model: "google/gemini-2.5-flash",
-                messages: [{ role: "user", content: aiPrompt }],
-                temperature: 0.8,
-              }),
-            });
+    const userPrompt = `Perfil do Usuário:
+- Proposta de Valor: ${userProfile.value_proposition}
+- Busca por: ${userProfile.looking_for.join(', ')}
+- Desafio: ${userProfile.main_challenge}
+- Keywords: ${userProfile.keywords.join(', ')}
 
-            if (aiResponse.ok) {
-              const aiData = await aiResponse.json();
-              const aiContent = aiData.choices?.[0]?.message?.content;
-              const cleanContent = aiContent?.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-              const aiInsights = JSON.parse(cleanContent);
+Perfis Disponíveis (${allProfiles.length} perfis):
+${allProfiles.map((p: any, i: number) => `
+${i+1}. ID: ${p.user_id}
+   Proposta: ${p.value_proposition}
+   Busca: ${p.looking_for.join(', ')}
+   Keywords: ${p.keywords.join(', ')}
+`).join('\n')}
 
-              return {
-                user_id,
-                matched_user_id: candidate.user_id,
-                compatibility_score: score,
-                ...aiInsights,
-                ai_analysis: aiInsights,
-                status: 'pending',
-                expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-              };
-            }
-          } catch (aiError) {
-            console.error('⚠️ [AI INSIGHT ERROR]', aiError);
-          }
-        }
+Identifique os 10 melhores matches e retorne o JSON.`;
 
-        // Fallback sem IA
-        return {
-          user_id,
-          matched_user_id: candidate.user_id,
-          compatibility_score: score,
-          match_type: 'strategic_partnership',
-          why_connect: `Potencial sinergia entre ${userBasicData?.company_name} e ${candidateProfile.company_name}`,
-          ice_breaker: `Olá ${candidateProfile.name}, vi que você trabalha com ${candidateProfile.industry}. Podemos conversar sobre oportunidades?`,
-          opportunities: ['Troca de experiências', 'Potencial parceria'],
-          ai_analysis: {},
-          status: 'pending',
-          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-        };
-      })
-    );
+    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt }
+        ],
+        temperature: 0.7,
+      }),
+    });
 
-    // Filtrar apenas matches com score > 75 e ordenar
-    const qualityMatches = matchesWithScores
-      .filter(m => m.compatibility_score > 75)
-      .sort((a, b) => b.compatibility_score - a.compatibility_score)
-      .slice(0, 15); // Top 15 matches
-
-    console.log(`✅ [QUALITY MATCHES] ${qualityMatches.length} matches com score > 75`);
-
-    // Salvar matches no banco
-    if (qualityMatches.length > 0) {
-      const { error: insertError } = await supabase
-        .from('strategic_matches_v2')
-        .upsert(qualityMatches, { 
-          onConflict: 'user_id,matched_user_id',
-          ignoreDuplicates: false 
-        });
-
-      if (insertError) {
-        console.error('❌ [INSERT ERROR]', insertError);
-        throw insertError;
-      }
+    if (!aiResponse.ok) {
+      const errorText = await aiResponse.text();
+      console.error('❌ [AI ERROR]', aiResponse.status, errorText);
+      throw new Error(`Erro na IA: ${errorText}`);
     }
+
+    const aiData = await aiResponse.json();
+    const aiContent = aiData.choices?.[0]?.message?.content;
+
+    if (!aiContent) {
+      throw new Error("Resposta da IA vazia");
+    }
+
+    const cleanContent = aiContent.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    const aiMatches = JSON.parse(cleanContent);
+
+    console.log(`✅ IA gerou ${aiMatches.matches.length} matches`);
+
+    // 4. Limpar matches antigos e inserir novos
+    await supabase
+      .from('strategic_matches_v2')
+      .delete()
+      .eq('user_id', user_id);
+
+    const matchesToInsert = aiMatches.matches.map((match: any) => ({
+      user_id: user_id,
+      match_user_id: match.match_user_id,
+      compatibility_score: match.compatibility_score,
+      match_reasons: match.match_reasons,
+      connection_opportunity: match.connection_opportunity,
+      ice_breaker: match.ice_breaker,
+      estimated_value: match.estimated_value,
+      status: 'pending'
+    }));
+
+    const { data: insertedMatches, error: insertError } = await supabase
+      .from('strategic_matches_v2')
+      .insert(matchesToInsert)
+      .select();
+
+    if (insertError) throw insertError;
+
+    console.log(`🎉 ${insertedMatches?.length || 0} matches inseridos com sucesso`);
 
     return new Response(
       JSON.stringify({
         success: true,
-        matches_count: qualityMatches.length,
-        message: `${qualityMatches.length} conexões estratégicas encontradas!`
+        matches_generated: insertedMatches?.length || 0,
+        message: `${insertedMatches?.length} conexões estratégicas encontradas`
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
@@ -213,13 +162,13 @@ Gere insights em JSON (sem markdown):
   } catch (error) {
     console.error('❌ [GENERATE MATCHES V2 ERROR]', error);
     return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: error.message || "Erro ao gerar matches"
+      JSON.stringify({
+        success: false,
+        error: error.message || "Erro ao gerar matches estratégicos"
       }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, "Content-Type": "application/json" } 
+      {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
       }
     );
   }
