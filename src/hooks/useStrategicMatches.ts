@@ -74,7 +74,6 @@ export const useStrategicMatches = () => {
           )
         `)
         .eq('user_id', user.id)
-        .in('status', ['pending', 'accepted'])
         .order('compatibility_score', { ascending: false });
 
       // Se encontrou matches na nova tabela, retornar
