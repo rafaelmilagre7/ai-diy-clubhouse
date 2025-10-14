@@ -164,25 +164,11 @@ Keywords: ${keywords.join(', ')}`;
       }
     }
 
-    // 5. Buscar dados do perfil
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('name, email, company_name, current_position, industry, company_size, professional_bio')
-      .eq('id', user.id)
-      .single();
-
-    // 6. Criar networking_profiles_v2
+    // 5. Criar networking_profiles_v2 (apenas campos que existem na tabela)
     const { data: newProfile, error: profileError } = await supabase
       .from('networking_profiles_v2')
       .insert({
         user_id: user.id,
-        name: profile?.name || 'Usuário',
-        email: profile?.email || user.email,
-        company_name: profile?.company_name,
-        current_position: profile?.current_position,
-        industry: profile?.industry,
-        company_size: profile?.company_size,
-        professional_bio: profile?.professional_bio,
         value_proposition,
         looking_for,
         main_challenge,
