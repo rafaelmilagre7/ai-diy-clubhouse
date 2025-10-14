@@ -7,10 +7,15 @@ import { usePermissions } from '@/hooks/auth/usePermissions';
 import { usePremiumUpgradeModal } from '@/hooks/usePremiumUpgradeModal';
 import { AuroraUpgradeModal } from '@/components/ui/aurora-upgrade-modal';
 import { UnifiedContentBlock } from '@/components/ui/UnifiedContentBlock';
+import { NetworkingOnboardingModal } from '@/components/networking/NetworkingOnboardingModal';
+import { useNetworkingOnboarding } from '@/hooks/useNetworkingOnboarding';
+import { useState } from 'react';
 
 const Networking = () => {
   const { hasPermission, loading: permissionsLoading } = usePermissions();
   const { modalState, showUpgradeModal, hideUpgradeModal } = usePremiumUpgradeModal();
+  const { hasCompletedOnboarding, isLoading: onboardingLoading, prefilledData, markAsCompleted } = useNetworkingOnboarding();
+  const [showOnboardingModal, setShowOnboardingModal] = useState(false);
   
   useDynamicSEO({
     title: 'Networking AI - Networking Inteligente',
@@ -180,6 +185,16 @@ const Networking = () => {
           </div>
         </ErrorBoundary>
       </NetworkingErrorBoundary>
+      
+      {/* Modal de Onboarding Liquid Glass */}
+      <NetworkingOnboardingModal
+        open={!onboardingLoading && hasCompletedOnboarding === false && !showOnboardingModal}
+        onComplete={() => {
+          markAsCompleted();
+          setShowOnboardingModal(true);
+        }}
+        prefilledData={prefilledData}
+      />
       
       <AuroraUpgradeModal 
         open={modalState.open}

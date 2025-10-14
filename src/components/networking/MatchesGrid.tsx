@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Brain, MessageCircle, Sparkles, TrendingUp, Users, Building2, Loader2, UserCheck, Mail, Phone, Linkedin } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNetworkMatches } from '@/hooks/useNetworkMatches';
+import { useStrategicMatches } from '@/hooks/useStrategicMatches';
 import { useAIMatches } from '@/hooks/useAIMatches';
 import { useAuth } from '@/contexts/auth';
 import LoadingScreen from '@/components/common/LoadingScreen';
@@ -36,7 +36,7 @@ export const MatchesGrid = () => {
     sortBy: 'compatibility'
   });
   
-  const { matches, isLoading, error, refetch } = useNetworkMatches();
+  const { matches, isLoading, error, refetch } = useStrategicMatches();
   const { generateMatches, isGenerating } = useAIMatches();
   const { user } = useAuth();
 
@@ -243,11 +243,15 @@ export const MatchesGrid = () => {
       <AnimatePresence>
         {activeChatMatch && (
           <ChatWindow
-            connection={{
+              connection={{
               id: activeChatMatch,
               requester_id: user?.id || '',
               recipient_id: matches.find(m => m.id === activeChatMatch)?.matched_user_id || '',
-              recipient: matches.find(m => m.id === activeChatMatch)?.matched_user
+              recipient: {
+                ...matches.find(m => m.id === activeChatMatch)?.matched_user,
+                id: matches.find(m => m.id === activeChatMatch)?.matched_user_id || '',
+                name: matches.find(m => m.id === activeChatMatch)?.matched_user?.name || 'Usuário'
+              }
             }}
             onClose={() => setActiveChatMatch(null)}
           />
@@ -280,11 +284,18 @@ interface MatchCardProps {
     matched_user_id: string;
     match_type: string;
     compatibility_score: number;
-    match_reason: string;
+    match_reason?: string;
+    why_connect?: string;
+    opportunities?: string[];
+    ice_breaker?: string;
     ai_analysis?: {
       strengths?: string[];
       opportunities?: string[];
       recommended_approach?: string;
+      match_type?: string;
+      persona_alignment?: number;
+      strategic_fit?: number;
+      networking_score_delta?: number;
     };
     matched_user?: {
       id: string;
@@ -407,24 +418,28 @@ const MatchCard = ({ match, onOpenChat, onShowContact }: MatchCardProps) => {
           <div className="relative overflow-hidden bg-muted/50 backdrop-blur rounded-xl p-4 border border-border/30">
             <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent"></div>
             <p className="relative text-xs text-muted-foreground leading-relaxed">
-              <span className="text-primary font-medium">IA diz:</span> {match.match_reason || match.ai_analysis?.recommended_approach || `${userName} tem alta compatibilidade com seu perfil profissional. Recomendo iniciar uma conversa sobre ${match.match_type === 'customer' ? 'oportunidades de negócio' : match.match_type === 'partner' ? 'possíveis parcerias estratégicas' : 'colaboração mútua'}.`}
+              <span className="text-primary font-medium">IA diz:</span> {match.why_connect || match.match_reason || match.ai_analysis?.recommended_approach || `${userName} tem alta compatibilidade com seu perfil profissional. Recomendo iniciar uma conversa sobre ${match.match_type === 'customer' ? 'oportunidades de negócio' : match.match_type === 'partner' ? 'possíveis parcerias estratégicas' : 'colaboração mútua'}.`}
             </p>
           </div>
 
-          {/* Strengths */}
+          {/* Opportunities or Strengths */}
+          {((match.opportunities && match.opportunities.length > 0) || (match.ai_analysis?.strengths && match.ai_analysis.strengths.length > 0)) && (
           <div>
-            <p className="text-xs text-muted-foreground mb-2">Pontos fortes:</p>
+            <p className="text-xs text-muted-foreground mb-2">
+              {match.opportunities ? 'Oportunidades:' : 'Pontos fortes:'}
+            </p>
             <div className="flex flex-wrap gap-1">
-              {(match.ai_analysis?.strengths || []).map((strength, i) => (
+              {(match.opportunities || match.ai_analysis?.strengths || []).slice(0, 3).map((item, i) => (
                 <div 
                   key={i} 
                   className="text-xs bg-muted/80 text-muted-foreground border border-border/50 px-2 py-1 rounded-lg"
                 >
-                  {strength}
+                  {item}
                 </div>
               ))}
             </div>
           </div>
+          )}
 
           {/* Industry */}
           <p className="text-xs text-muted-foreground/80">{match.matched_user.industry || 'Tecnologia'}</p>

@@ -13,8 +13,25 @@ import { useAuth } from '@/contexts/auth';
 
 interface NetworkingOnboardingModalProps {
   open: boolean;
-  onClose: () => void;
+  onClose?: () => void;
   onComplete: () => void;
+  prefilledData?: {
+    name?: string;
+    email?: string;
+    company_name?: string;
+    current_position?: string;
+    industry?: string;
+    company_size?: string;
+    annual_revenue?: string;
+    linkedin_url?: string;
+    whatsapp_number?: string;
+    professional_bio?: string;
+    lookingFor?: {
+      types?: string[];
+      industries?: string[];
+      companySizes?: string[];
+    };
+  };
 }
 
 type OnboardingStep = 1 | 2 | 3 | 4 | 5 | 6 | 7;
@@ -46,7 +63,8 @@ const challenges = [
 export const NetworkingOnboardingModal: React.FC<NetworkingOnboardingModalProps> = ({
   open,
   onClose,
-  onComplete
+  onComplete,
+  prefilledData
 }) => {
   const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState<OnboardingStep>(1);
