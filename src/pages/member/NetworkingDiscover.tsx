@@ -1,18 +1,51 @@
 import { useState } from 'react';
 import { useStrategicMatches } from '@/hooks/useStrategicMatches';
 import { useDynamicSEO } from '@/hooks/seo/useDynamicSEO';
-import { NetworkingHeader } from '@/components/networking/NetworkingHeader';
+import { useAuth } from '@/contexts/auth';
+import { supabase } from '@/integrations/supabase/client';
 import { DiscoverMatchCard } from '@/components/networking/discover/DiscoverMatchCard';
 import { DiscoverFilters } from '@/components/networking/discover/DiscoverFilters';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Sparkles, ArrowLeft } from 'lucide-react';
+import { Sparkles, ArrowLeft, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
 
 const NetworkingDiscover = () => {
-  const { matches, isLoading, error } = useStrategicMatches();
+  const { user } = useAuth();
+  const { matches, isLoading, error, refetch } = useStrategicMatches();
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'opportunities' | 'partnerships' | 'knowledge'>('all');
+  const [isRegenerating, setIsRegenerating] = useState(false);
+
+  const handleRegenerateMatches = async () => {
+    if (!user?.id || isRegenerating) return;
+    
+    setIsRegenerating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke(
+        'generate-strategic-matches-v2',
+        { body: { user_id: user.id, force_regenerate: true } }
+      );
+      
+      if (error) throw error;
+      
+      toast.success('Matches regenerados!', {
+        description: 'Novas conexões estratégicas foram criadas'
+      });
+      
+      setTimeout(() => {
+        refetch();
+      }, 2000);
+    } catch (error: any) {
+      console.error('Erro ao regenerar:', error);
+      toast.error('Erro ao regenerar matches', {
+        description: error.message
+      });
+    } finally {
+      setIsRegenerating(false);
+    }
+  };
 
   useDynamicSEO({
     title: 'Descobrir Matches - Networking AI',
@@ -56,24 +89,42 @@ const NetworkingDiscover = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-background/95">
       <div className="container mx-auto py-8 space-y-8">
-        {/* Back Button */}
-        <Link to="/networking">
-          <Button variant="ghost" className="aurora-text-gradient hover:bg-aurora/10">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Voltar para Networking
+        {/* Header com Back e Actions */}
+        <div className="flex items-center justify-between">
+          <Link to="/networking">
+            <Button variant="ghost" className="text-text-muted hover:text-aurora hover:bg-aurora/10">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Voltar
+            </Button>
+          </Link>
+          
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={handleRegenerateMatches}
+            disabled={isRegenerating}
+            className="border-border/50 hover:border-aurora/40 hover:bg-aurora/5"
+          >
+            <RefreshCw className={`w-4 h-4 mr-2 ${isRegenerating ? 'animate-spin' : ''}`} />
+            Regenerar Matches
           </Button>
-        </Link>
+        </div>
 
-        {/* Header Aurora */}
-        <div className="relative overflow-hidden rounded-2xl bg-surface-elevated border border-aurora/20 p-8 shadow-aurora">
-          <div className="absolute inset-0 aurora-gradient opacity-5"></div>
-          <div className="absolute top-0 right-0 w-64 h-64 bg-aurora/10 rounded-full blur-3xl"></div>
+        {/* Header Principal */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-surface-elevated to-surface border border-border/30 p-8">
+          <div className="absolute inset-0 bg-gradient-to-r from-aurora/5 via-transparent to-viverblue/5"></div>
+          <div className="absolute top-0 right-0 w-96 h-96 bg-aurora/5 rounded-full blur-3xl"></div>
+          
           <div className="relative">
-            <div className="flex items-center gap-3 mb-2">
-              <Sparkles className="w-8 h-8 text-aurora" />
-              <h1 className="text-3xl font-bold aurora-text-gradient">Descobrir Matches</h1>
+            <div className="flex items-center gap-3 mb-3">
+              <div className="p-3 rounded-xl bg-aurora/10 border border-aurora/20">
+                <Sparkles className="w-6 h-6 text-aurora" />
+              </div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-aurora via-primary to-viverblue bg-clip-text text-transparent">
+                Descobrir Matches
+              </h1>
             </div>
-            <p className="text-text-muted">
+            <p className="text-text-muted text-lg">
               Conexões estratégicas selecionadas pela IA especialmente para você
             </p>
           </div>

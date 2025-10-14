@@ -16,67 +16,66 @@ export const NetworkingTabs = () => {
 
   return (
     <div className="space-y-6">
-      {/* Discover CTA */}
-      <div className="relative overflow-hidden rounded-2xl bg-aurora/5 border border-aurora/20 p-6">
-        <div className="absolute inset-0 aurora-gradient opacity-10"></div>
-        <div className="relative flex items-center justify-between">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-aurora" />
-              <h3 className="text-lg font-bold aurora-text-gradient">Descubra Conexões Estratégicas</h3>
+      {/* Banner CTA - Design Limpo */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-surface-elevated to-surface border border-border/30 p-8">
+        <div className="absolute inset-0 bg-gradient-to-r from-aurora/5 via-transparent to-viverblue/5"></div>
+        <div className="absolute top-0 right-0 w-96 h-96 bg-aurora/5 rounded-full blur-3xl"></div>
+        
+        <div className="relative flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-aurora/10 border border-aurora/20">
+                <Sparkles className="w-5 h-5 text-aurora" />
+              </div>
+              <h3 className="text-xl font-bold bg-gradient-to-r from-aurora via-primary to-viverblue bg-clip-text text-transparent">
+                Descubra Conexões Estratégicas
+              </h3>
             </div>
-            <p className="text-text-muted max-w-xl text-sm">
+            <p className="text-text-muted max-w-2xl">
               Nossa IA analisou seu perfil e encontrou matches personalizados para impulsionar seu negócio
             </p>
           </div>
+          
           <div className="flex items-center gap-3">
             <Link to="/networking/analytics">
-              <Button variant="outline" className="border-primary/30 hover:bg-primary/10">
+              <Button variant="outline" size="lg" className="border-border/50 hover:border-primary/40 hover:bg-primary/5">
                 <BarChart3 className="w-4 h-4 mr-2" />
                 Analytics
               </Button>
             </Link>
             
             <Link to="/networking/discover">
-              <Button size="lg" className="aurora-gradient text-white hover:opacity-90">
+              <Button size="lg" className="bg-gradient-to-r from-aurora to-viverblue text-white hover:opacity-90 shadow-lg shadow-aurora/20">
                 <Sparkles className="w-4 h-4 mr-2" />
-                Ver Matches
+                Descobrir Matches
               </Button>
             </Link>
           </div>
         </div>
       </div>
 
-      {/* Tabs */}
+      {/* Tabs - Apenas Conexões e Solicitações */}
       <Tabs defaultValue="connections" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3 bg-surface-elevated border border-border/30 p-1">
+        <TabsList className="grid w-full grid-cols-2 bg-surface-elevated border border-border/30 p-1.5 rounded-xl">
           <TabsTrigger 
             value="connections"
-            className="data-[state=active]:bg-aurora/20 data-[state=active]:text-aurora data-[state=active]:border-aurora/40"
+            className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-aurora/20 data-[state=active]:to-aurora/10 data-[state=active]:text-aurora data-[state=active]:shadow-sm"
           >
             <Users className="w-4 h-4 mr-2" />
-            Conexões
+            <span className="font-medium">Minhas Conexões</span>
           </TabsTrigger>
           
           <TabsTrigger 
             value="pending"
-            className="relative data-[state=active]:bg-operational/20 data-[state=active]:text-operational data-[state=active]:border-operational/40"
+            className="relative rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-operational/20 data-[state=active]:to-operational/10 data-[state=active]:text-operational data-[state=active]:shadow-sm"
           >
             <Clock className="w-4 h-4 mr-2" />
-            Solicitações
+            <span className="font-medium">Solicitações</span>
             {pendingRequests.length > 0 && (
-              <Badge className="ml-2 bg-operational/30 text-operational border-operational/50 animate-pulse">
+              <Badge className="ml-2 bg-operational text-white border-0 animate-pulse">
                 {pendingRequests.length}
               </Badge>
             )}
-          </TabsTrigger>
-          
-          <TabsTrigger 
-            value="all"
-            className="data-[state=active]:bg-viverblue/20 data-[state=active]:text-viverblue data-[state=active]:border-viverblue/40"
-          >
-            <LinkIcon className="w-4 h-4 mr-2" />
-            Todos
           </TabsTrigger>
         </TabsList>
 
@@ -86,31 +85,6 @@ export const NetworkingTabs = () => {
 
         <TabsContent value="pending" className="space-y-6">
           <PendingRequestsList />
-        </TabsContent>
-
-        <TabsContent value="all" className="space-y-6">
-          {matchesLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="space-y-4 p-6 rounded-xl border border-border/50 bg-surface">
-                  <div className="flex items-center gap-4">
-                    <Skeleton className="w-16 h-16 rounded-full" />
-                    <div className="space-y-2 flex-1">
-                      <Skeleton className="h-4 w-3/4" />
-                      <Skeleton className="h-3 w-1/2" />
-                    </div>
-                  </div>
-                  <Skeleton className="h-20 w-full" />
-                  <div className="flex gap-2">
-                    <Skeleton className="h-8 w-20" />
-                    <Skeleton className="h-8 w-20" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <MatchesGrid />
-          )}
         </TabsContent>
       </Tabs>
     </div>
