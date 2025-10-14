@@ -8,15 +8,15 @@ import { usePermissions } from '@/hooks/auth/usePermissions';
 import { usePremiumUpgradeModal } from '@/hooks/usePremiumUpgradeModal';
 import { AuroraUpgradeModal } from '@/components/ui/aurora-upgrade-modal';
 import { UnifiedContentBlock } from '@/components/ui/UnifiedContentBlock';
-import { NetworkingOnboardingModal } from '@/components/networking/NetworkingOnboardingModal';
 import { useNetworkingOnboarding } from '@/hooks/useNetworkingOnboarding';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const Networking = () => {
+  const navigate = useNavigate();
   const { hasPermission, loading: permissionsLoading } = usePermissions();
   const { modalState, showUpgradeModal, hideUpgradeModal } = usePremiumUpgradeModal();
-  const { hasCompletedOnboarding, isLoading: onboardingLoading, prefilledData, markAsCompleted } = useNetworkingOnboarding();
-  const [showOnboardingModal, setShowOnboardingModal] = useState(false);
+  const { hasCompletedOnboarding, isLoading: onboardingLoading } = useNetworkingOnboarding();
   const [chatOpen, setChatOpen] = useState(false);
   
   useDynamicSEO({
@@ -25,12 +25,18 @@ const Networking = () => {
     keywords: 'networking AI, parcerias, IA, conexões empresariais, business matching'
   });
 
-  // Usar sistema de permissões baseado no /admin/roles
   const hasNetworkingAccess = hasPermission('networking.access');
   
   const handleUpgradeClick = () => {
     showUpgradeModal('networking');
   };
+
+  // Redirecionar para setup se não completou onboarding
+  useEffect(() => {
+    if (!onboardingLoading && hasCompletedOnboarding === false && hasNetworkingAccess) {
+      navigate('/networking/setup');
+    }
+  }, [hasCompletedOnboarding, onboardingLoading, hasNetworkingAccess, navigate]);
 
   // Loading state enquanto verifica permissões
   if (permissionsLoading) {
@@ -187,16 +193,6 @@ const Networking = () => {
           </div>
         </ErrorBoundary>
       </NetworkingErrorBoundary>
-      
-      {/* Modal de Onboarding Liquid Glass */}
-      <NetworkingOnboardingModal
-        open={!onboardingLoading && hasCompletedOnboarding === false && !showOnboardingModal}
-        onComplete={() => {
-          markAsCompleted();
-          setShowOnboardingModal(true);
-        }}
-        prefilledData={prefilledData}
-      />
       
       {/* Chat Interface */}
       <ChatInterface

@@ -22,6 +22,7 @@ import NewSuggestion from '@/pages/member/NewSuggestion';
 import Events from '@/pages/member/Events';
 import SolutionCertificate from '@/pages/member/SolutionCertificate';
 import Networking from '@/pages/member/Networking';
+import NetworkingOnboarding from '@/pages/member/NetworkingOnboarding';
 import NetworkingDiscover from '@/pages/member/NetworkingDiscover';
 import NetworkingAnalytics from '@/pages/member/NetworkingAnalytics';
 import TeamManagementPage from '@/pages/member/TeamManagementPage';
@@ -66,9 +67,10 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/trilha-implementacao", ImplementationTrail),
   createProtectedRoute("/tools", Tools),
   createProtectedRoute("/tools/:id", ToolDetails),
-  createProtectedRoute("/networking", Networking),
-  createProtectedRoute("/networking/discover", NetworkingDiscover),
-  createProtectedRoute("/networking/analytics", NetworkingAnalytics),
+    createProtectedRoute("/networking", Networking),
+    createProtectedRoute("/networking/setup", NetworkingOnboarding),
+    createProtectedRoute("/networking/discover", NetworkingDiscover),
+    createProtectedRoute("/networking/analytics", NetworkingAnalytics),
   createProtectedRoute("/profile", ProfilePage),
   createProtectedRoute("/profile/edit", EditProfile),
   createProtectedRoute("/profile/notifications", NotificationSettingsPage),
