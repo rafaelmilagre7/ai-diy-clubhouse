@@ -84,23 +84,24 @@ serve(async (req) => {
     });
 
     // Prompt enriquecido com dados completos dos perfis
-    const prompt = `Analise os perfis profissionais e escreva 2-3 linhas (máximo 80 palavras) explicando POR QUE conectar essas duas pessoas pode gerar NEGÓCIOS concretos.
+    const prompt = `Você é um assistente de networking analisando dois perfis profissionais. Escreva 2-3 linhas (máximo 80 palavras) explicando POR QUE essas duas pessoas deveriam se conectar para gerar NEGÓCIOS.
 
-**${currentUser?.name}** (${currentUser?.company_name})
+**Perfil 1: ${currentUser?.name}** (${currentUser?.company_name})
 - Proposta de valor: ${u1ValueProp}
 - Busca: ${u1LookingFor}
 - Desafio: ${u1Challenge}
-- Perfil: ${u1Keywords}
+- Áreas de atuação: ${u1Keywords}
 
-**${targetUser?.name}** (${targetUser?.company_name})
+**Perfil 2: ${targetUser?.name}** (${targetUser?.company_name})
 - Proposta de valor: ${u2ValueProp}
 - Busca: ${u2LookingFor}
 - Desafio: ${u2Challenge}
-- Perfil: ${u2Keywords}
+- Áreas de atuação: ${u2Keywords}
 
-Escreva em primeira pessoa (como se ${currentUser?.name} estivesse falando). Use negrito em **palavras-chave importantes**.
-Foque em: 1) Oportunidade de negócio concreta, 2) Como um pode ajudar o outro.
-NÃO use frases genéricas. Seja específico e prático.`;
+Escreva em TERCEIRA PESSOA, como um consultor recomendando a conexão. Use negrito em **palavras-chave importantes**.
+Foque em: 1) Sinergia de negócio concreta, 2) Oportunidade para ambos.
+Exemplo: "${currentUser?.name} pode oferecer **X** que ${targetUser?.name} precisa para **Y**, enquanto ${targetUser?.name} traz **Z** que potencializa **W** de ${currentUser?.name}."
+NÃO use frases genéricas. Seja específico e objetivo.`;
 
     console.log('🤖 Gerando copy com IA...');
 

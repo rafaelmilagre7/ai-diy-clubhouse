@@ -84,37 +84,44 @@ const Networking = () => {
           </p>
         </div>
 
-        {/* Main Swipe Card com controles integrados */}
-        <div className="relative max-w-md mx-auto pb-24">
-          <SwipeCard 
-            card={currentCard} 
-            onOpenContact={() => setIsContactModalOpen(true)}
-          />
+        {/* Container com card centralizado e botões nas laterais */}
+        <div className="relative max-w-4xl mx-auto flex items-center justify-center gap-6">
+          
+          {/* Botão ANTERIOR - Lateral ESQUERDA */}
+          <Button
+            onClick={previousCard}
+            disabled={!hasPrevious}
+            size="lg"
+            className="h-20 w-20 rounded-full shadow-2xl bg-background hover:bg-accent border-2 border-border disabled:opacity-20 transition-all shrink-0"
+          >
+            <ChevronLeft className="h-10 w-10" />
+          </Button>
 
-          {/* Controles de Navegação - Abaixo do card */}
-          <div className="absolute -bottom-4 left-0 right-0 flex items-center justify-center gap-6">
-            <Button
-              onClick={previousCard}
-              disabled={!hasPrevious}
-              size="lg"
-              className="h-16 w-16 rounded-full shadow-2xl bg-background hover:bg-accent border-2 border-border disabled:opacity-20 transition-all"
-            >
-              <ChevronLeft className="h-8 w-8" />
-            </Button>
-            
-            {/* Contador numérico */}
-            <div className="text-sm font-medium text-muted-foreground px-4 py-2 rounded-full bg-background/50 backdrop-blur-sm border border-border/50">
+          {/* Card no centro */}
+          <div className="flex-1 max-w-md">
+            <SwipeCard 
+              card={currentCard} 
+              onOpenContact={() => setIsContactModalOpen(true)}
+            />
+          </div>
+
+          {/* Botão PRÓXIMO - Lateral DIREITA */}
+          <Button
+            onClick={nextCard}
+            disabled={!hasNext}
+            size="lg"
+            className="h-20 w-20 rounded-full shadow-2xl bg-gradient-to-r from-aurora to-viverblue hover:opacity-90 text-white disabled:opacity-20 transition-all shrink-0"
+          >
+            <ChevronRight className="h-10 w-10" />
+          </Button>
+        </div>
+
+        {/* Contador abaixo do card */}
+        <div className="text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-background/50 backdrop-blur-sm border border-border/50">
+            <span className="text-sm font-medium text-muted-foreground">
               {currentIndex + 1} / {totalCards}
-            </div>
-            
-            <Button
-              onClick={nextCard}
-              disabled={!hasNext}
-              size="lg"
-              className="h-16 w-16 rounded-full shadow-2xl bg-gradient-to-r from-aurora to-viverblue hover:opacity-90 text-white disabled:opacity-20 transition-all"
-            >
-              <ChevronRight className="h-8 w-8" />
-            </Button>
+            </span>
           </div>
         </div>
       </div>
