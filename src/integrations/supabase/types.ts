@@ -1289,6 +1289,7 @@ export type Database = {
           external_id: string | null
           failed_at: string | null
           html_content: string
+          html_content_encrypted: string | null
           id: string
           invite_id: string | null
           last_attempt_at: string | null
@@ -1298,6 +1299,7 @@ export type Database = {
           sent_at: string | null
           status: string | null
           subject: string
+          subject_encrypted: string | null
         }
         Insert: {
           attempts?: number | null
@@ -1306,6 +1308,7 @@ export type Database = {
           external_id?: string | null
           failed_at?: string | null
           html_content: string
+          html_content_encrypted?: string | null
           id?: string
           invite_id?: string | null
           last_attempt_at?: string | null
@@ -1315,6 +1318,7 @@ export type Database = {
           sent_at?: string | null
           status?: string | null
           subject: string
+          subject_encrypted?: string | null
         }
         Update: {
           attempts?: number | null
@@ -1323,6 +1327,7 @@ export type Database = {
           external_id?: string | null
           failed_at?: string | null
           html_content?: string
+          html_content_encrypted?: string | null
           id?: string
           invite_id?: string | null
           last_attempt_at?: string | null
@@ -1332,6 +1337,7 @@ export type Database = {
           sent_at?: string | null
           status?: string | null
           subject?: string
+          subject_encrypted?: string | null
         }
         Relationships: [
           {
@@ -6014,6 +6020,10 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_decrypt_email: {
+        Args: { email_id: string }
+        Returns: Json
+      }
       admin_force_delete_auth_user: {
         Args: { target_user_id: string }
         Returns: Json
@@ -6338,6 +6348,10 @@ export type Database = {
         Args: { retention_period?: unknown }
         Returns: number
       }
+      cleanup_old_emails: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       cleanup_old_logs_lgpd: {
         Args: Record<PropertyKey, never>
         Returns: Json
@@ -6522,6 +6536,10 @@ export type Database = {
         Args: { suggestion_id: string }
         Returns: undefined
       }
+      decrypt_email_content: {
+        Args: { encrypted: string }
+        Returns: string
+      }
       delete_community_post: {
         Args: { post_id: string }
         Returns: Json
@@ -6584,6 +6602,10 @@ export type Database = {
           suggested_action: string
           user_id: string
         }[]
+      }
+      encrypt_email_content: {
+        Args: { content: string }
+        Returns: string
       }
       enhanced_rate_limit_check: {
         Args: {
