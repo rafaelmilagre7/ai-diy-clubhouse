@@ -40,9 +40,43 @@ serve(async (req) => {
   }
 
   try {
-    const { user_id, force_regenerate = false } = await req.json();
+    // 1. Parse do body com tratamento de erro
+    let body;
+    try {
+      body = await req.json();
+    } catch (jsonError) {
+      console.error('❌ [JSON PARSE ERROR]', jsonError);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Body inválido - esperado JSON com user_id' 
+        }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    const { user_id, force_regenerate = false } = body;
+
+    // 2. Validar user_id obrigatório
+    if (!user_id) {
+      console.error('❌ [VALIDATION ERROR] user_id não fornecido');
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'user_id é obrigatório' 
+        }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
 
     console.log('🎯 [GENERATE MATCHES V2] Iniciando para usuário:', user_id);
+    console.log('🔄 [CONFIG] force_regenerate:', force_regenerate);
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
