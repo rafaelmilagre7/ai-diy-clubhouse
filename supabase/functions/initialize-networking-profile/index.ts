@@ -6,12 +6,16 @@ const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
+const FUNCTION_VERSION = "v2.1-fallback-garantido";
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    console.log(`🔧 [INIT] Versão da função: ${FUNCTION_VERSION}`);
+    
     // Autenticação
     const authHeader = req.headers.get("authorization");
     const token = authHeader?.replace("Bearer ", "");
@@ -187,6 +191,27 @@ Keywords: ${keywords.join(', ')}`;
         networking_score: 75,
         profile_quality: "medium",
         recommendations: ["Análise de IA será processada em breve"]
+      };
+    }
+
+    // Validação final obrigatória antes do insert
+    console.log('🔍 [INIT] ai_persona antes do insert:', {
+      isNull: aiPersona === null,
+      tipo: typeof aiPersona,
+      conteudo: aiPersona
+    });
+
+    if (!aiPersona || typeof aiPersona !== 'object') {
+      console.error('🚨 [INIT] FORÇANDO fallback emergencial!');
+      aiPersona = {
+        business_type: "Análise indisponível",
+        target_audience: "Geral",
+        value_keywords: keywords.slice(0, 3),
+        networking_style: "Profissional",
+        ideal_matches: ["Networking geral"],
+        networking_score: networking_score,
+        profile_quality: "medium",
+        recommendations: ["Perfil em análise"]
       };
     }
 
