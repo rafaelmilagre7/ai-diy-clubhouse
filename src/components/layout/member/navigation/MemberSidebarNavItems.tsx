@@ -124,13 +124,22 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
             />
           )}
           {canViewNetworking && (
-            <TooltipNavItem
-              to="/networking"
-              label="Networking"
-              icon={Network}
-              sidebarOpen={sidebarOpen}
-              isNew={true}
-            />
+            <>
+              <TooltipNavItem
+                to="/networking"
+                label="Networking"
+                icon={Network}
+                sidebarOpen={sidebarOpen}
+                isNew={true}
+              />
+              <TooltipNavItem
+                to="/networking/mural"
+                label="Mural de Oportunidades"
+                icon={Lightbulb}
+                sidebarOpen={sidebarOpen}
+                isNew={true}
+              />
+            </>
           )}
           {canViewCommunity && (
             <TooltipNavItem
