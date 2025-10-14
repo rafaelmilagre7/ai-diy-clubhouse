@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   User, 
   Building2, 
@@ -12,11 +13,14 @@ import {
   Calendar,
   Copy,
   ExternalLink,
-  Loader2
+  Loader2,
+  Shield,
+  Eye,
+  Lock
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useRequestNetworkingContact } from '@/hooks/useRequestNetworkingContact';
 
 interface ContactModalProps {
   isOpen: boolean;
@@ -87,42 +91,51 @@ interface ContactData {
 export const ContactModal = ({ isOpen, onClose, userId, userName, initialData }: ContactModalProps) => {
   const [contactData, setContactData] = useState<ContactData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isDataRevealed, setIsDataRevealed] = useState(false);
   const { toast } = useToast();
+  const requestContact = useRequestNetworkingContact();
 
   useEffect(() => {
     if (isOpen && userId) {
-      fetchContactData();
+      // Inicializar com dados mascarados do initialData
+      if (initialData) {
+        setContactData({
+          name: userName,
+          email: initialData.email || 'e***@*****.com',
+          avatar_url: initialData.avatar_url,
+          whatsapp_number: initialData.phone || '****',
+          company_name: initialData.company_name,
+          current_position: initialData.current_position,
+          linkedin_url: initialData.linkedin_url,
+        });
+      }
+      setIsDataRevealed(false);
     }
-  }, [isOpen, userId]);
+  }, [isOpen, userId, userName, initialData]);
 
-  const fetchContactData = async () => {
+  const handleRequestContact = async () => {
     setIsLoading(true);
     try {
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('name, email, company_name, current_position, industry, linkedin_url, professional_bio, skills, whatsapp_number, avatar_url')
-        .eq('id', userId)
-        .maybeSingle();
-
-      if (profileError) console.warn('Perfil não carregado (RLS?):', profileError);
-
-      const { data: onboarding } = await supabase
-        .from('onboarding_final')
-        .select('personal_info, location_info, business_info, professional_info, business_context')
-        .eq('user_id', userId)
-        .maybeSingle();
-
-      setContactData({
-        ...profile,
-        onboarding_data: onboarding || undefined
+      const result = await requestContact.mutateAsync({
+        targetUserId: userId,
+        message: `Olá! Gostaria de me conectar com você via ${userName}.`
       });
+
+      if (result.success && result.contact_data) {
+        // Atualizar com dados reais
+        setContactData({
+          name: result.contact_data.name,
+          email: result.contact_data.email,
+          avatar_url: initialData?.avatar_url,
+          whatsapp_number: result.contact_data.whatsapp_number,
+          company_name: result.contact_data.company_name,
+          current_position: result.contact_data.current_position,
+          linkedin_url: result.contact_data.linkedin_url,
+        });
+        setIsDataRevealed(true);
+      }
     } catch (error) {
-      console.error('Erro ao buscar dados de contato:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar os dados de contato.",
-        variant: "destructive"
-      });
+      console.error('Erro ao solicitar contato:', error);
     } finally {
       setIsLoading(false);
     }
@@ -233,8 +246,48 @@ export const ContactModal = ({ isOpen, onClose, userId, userName, initialData }:
                   </motion.div>
                 </div>
 
-                <div className="p-8 pt-4 space-y-8">
-                  {/* Cards de informações */}
+                 <div className="p-8 pt-4 space-y-8">
+                   {/* Alerta de privacidade se dados não foram revelados */}
+                   {!isDataRevealed && (
+                     <Alert className="bg-primary/5 border-primary/20">
+                       <Shield className="h-4 w-4 text-primary" />
+                       <AlertDescription className="text-sm">
+                         <div className="space-y-2">
+                           <p className="font-medium">Dados protegidos por privacidade</p>
+                           <p className="text-muted-foreground">
+                             Por segurança e LGPD, os dados de contato estão mascarados. 
+                             Clique em "Solicitar Contato" para revelar as informações reais. 
+                             Esta ação será registrada para auditoria.
+                           </p>
+                         </div>
+                       </AlertDescription>
+                     </Alert>
+                   )}
+
+                   {/* Botão de solicitação de contato */}
+                   {!isDataRevealed && (
+                     <div className="flex justify-center">
+                       <Button
+                         onClick={handleRequestContact}
+                         disabled={isLoading}
+                         className="relative group bg-gradient-to-r from-primary to-primary/90 text-primary-foreground hover:shadow-lg hover:shadow-primary/25"
+                       >
+                         {isLoading ? (
+                           <>
+                             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                             Solicitando...
+                           </>
+                         ) : (
+                           <>
+                             <Eye className="h-4 w-4 mr-2" />
+                             Solicitar Dados de Contato
+                           </>
+                         )}
+                       </Button>
+                     </div>
+                   )}
+
+                   {/* Cards de informações */}
                   <div className="grid gap-6">
                     {/* Contato */}
                     <motion.div
@@ -252,40 +305,54 @@ export const ContactModal = ({ isOpen, onClose, userId, userName, initialData }:
                           Contato
                         </h3>
                         
-                        <div className="space-y-3">
-                          {/* Email */}
-                          <div className="flex items-center justify-between bg-background/50 rounded-lg p-4 border border-border/30 hover:border-primary/30 transition-colors group">
-                            <div className="flex items-center gap-3">
-                              <Mail className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                              <span className="text-sm font-medium">{displayData.email}</span>
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => copyToClipboard(displayData.email, 'Email')}
-                              className="hover:bg-primary/10 hover:text-primary"
-                            >
-                              <Copy className="h-4 w-4" />
-                            </Button>
-                          </div>
+                         <div className="space-y-3">
+                           {/* Email */}
+                           <div className="flex items-center justify-between bg-background/50 rounded-lg p-4 border border-border/30 hover:border-primary/30 transition-colors group">
+                             <div className="flex items-center gap-3 flex-1">
+                               <Mail className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                               <div className="flex items-center gap-2 flex-1">
+                                 <span className="text-sm font-medium">{displayData.email}</span>
+                                 {!isDataRevealed && (
+                                   <Lock className="h-3 w-3 text-muted-foreground" />
+                                 )}
+                               </div>
+                             </div>
+                             {isDataRevealed && (
+                               <Button
+                                 variant="ghost"
+                                 size="sm"
+                                 onClick={() => copyToClipboard(displayData.email, 'Email')}
+                                 className="hover:bg-primary/10 hover:text-primary"
+                               >
+                                 <Copy className="h-4 w-4" />
+                               </Button>
+                             )}
+                           </div>
 
-                          {/* Telefone */}
-                          {displayData.phone && (
-                            <div className="flex items-center justify-between bg-background/50 rounded-lg p-4 border border-border/30 hover:border-primary/30 transition-colors group">
-                              <div className="flex items-center gap-3">
-                                <Phone className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                                <span className="text-sm font-medium">{displayData.phone}</span>
-                              </div>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => copyToClipboard(displayData.phone!, 'Telefone')}
-                                className="hover:bg-primary/10 hover:text-primary"
-                              >
-                                <Copy className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          )}
+                           {/* Telefone */}
+                           {displayData.phone && (
+                             <div className="flex items-center justify-between bg-background/50 rounded-lg p-4 border border-border/30 hover:border-primary/30 transition-colors group">
+                               <div className="flex items-center gap-3 flex-1">
+                                 <Phone className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                                 <div className="flex items-center gap-2 flex-1">
+                                   <span className="text-sm font-medium">{displayData.phone}</span>
+                                   {!isDataRevealed && (
+                                     <Lock className="h-3 w-3 text-muted-foreground" />
+                                   )}
+                                 </div>
+                               </div>
+                               {isDataRevealed && (
+                                 <Button
+                                   variant="ghost"
+                                   size="sm"
+                                   onClick={() => copyToClipboard(displayData.phone!, 'Telefone')}
+                                   className="hover:bg-primary/10 hover:text-primary"
+                                 >
+                                   <Copy className="h-4 w-4" />
+                                 </Button>
+                               )}
+                             </div>
+                           )}
 
                           {/* Localização */}
                           {displayData.location && (
