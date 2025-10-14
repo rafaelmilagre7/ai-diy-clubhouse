@@ -10,10 +10,10 @@ import { useAuth } from '@/contexts/auth';
 import LoadingScreen from '@/components/common/LoadingScreen';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ChatWindow } from './ChatWindow';
+import { InboxDrawer } from './chat/InboxDrawer';
 
 export const MessagesGrid = () => {
-  const [activeChat, setActiveChat] = useState<string | null>(null);
+  const [isInboxOpen, setIsInboxOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const { connections, isLoading } = useConnections();
   const { user } = useAuth();
@@ -104,7 +104,7 @@ export const MessagesGrid = () => {
           >
             <ConversationCard 
               connection={connection}
-              onOpenChat={() => setActiveChat(connection.id)}
+              onOpenChat={() => setIsInboxOpen(true)}
             />
           </motion.div>
         ))}
@@ -118,14 +118,10 @@ export const MessagesGrid = () => {
         </div>
       )}
 
-      <AnimatePresence>
-        {activeChat && (
-          <ChatWindow
-            connection={acceptedConnections.find(c => c.id === activeChat)!}
-            onClose={() => setActiveChat(null)}
-          />
-        )}
-      </AnimatePresence>
+      <InboxDrawer
+        open={isInboxOpen}
+        onOpenChange={setIsInboxOpen}
+      />
     </div>
   );
 };

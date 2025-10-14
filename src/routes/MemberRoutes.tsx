@@ -22,7 +22,6 @@ import NewSuggestion from '@/pages/member/NewSuggestion';
 import Events from '@/pages/member/Events';
 import SolutionCertificate from '@/pages/member/SolutionCertificate';
 import Networking from '@/pages/member/Networking';
-import NetworkingDiscover from '@/pages/member/NetworkingDiscover';
 import NetworkingAnalytics from '@/pages/member/NetworkingAnalytics';
 import NetworkingMural from '@/pages/member/NetworkingMural';
 import TeamManagementPage from '@/pages/member/TeamManagementPage';
@@ -69,7 +68,6 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/tools/:id", ToolDetails),
   createProtectedRoute("/networking", Networking),
     createProtectedRoute("/networking/mural", NetworkingMural),
-    createProtectedRoute("/networking/discover", NetworkingDiscover),
     createProtectedRoute("/networking/analytics", NetworkingAnalytics),
   createProtectedRoute("/profile", ProfilePage),
   createProtectedRoute("/profile/edit", EditProfile),
