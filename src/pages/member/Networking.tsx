@@ -12,7 +12,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/auth';
 import { toast } from 'sonner';
-import { Loader2, AlertCircle, Sparkles } from 'lucide-react';
+import { Loader2, AlertCircle, Sparkles, RefreshCw } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -39,6 +39,85 @@ const Networking = () => {
   
   const handleUpgradeClick = () => {
     showUpgradeModal('networking');
+  };
+
+  // Função manual para gerar/regenerar matches
+  const handleGenerateMatches = async (forceRegenerate = false) => {
+    if (!user?.id || isGenerating) return;
+    
+    setIsGenerating(true);
+    setGenerationProgress(10);
+    setInitError(null);
+    
+    try {
+      console.log(`🔄 [NETWORKING] ${forceRegenerate ? 'Regenerando' : 'Gerando'} matches...`);
+      
+      const { data, error } = await supabase.functions.invoke(
+        'generate-strategic-matches-v2',
+        { body: { user_id: user.id, force_regenerate: forceRegenerate } }
+      );
+      
+      if (error) throw error;
+      
+      if (data?.success) {
+        if (data.cached && !forceRegenerate) {
+          toast.info('Conexões em Cache', {
+            description: `${data.matches_count} conexões atualizadas há ${data.age_hours}h. Use "Regenerar" para atualizar.`
+          });
+          setIsGenerating(false);
+          return;
+        }
+        
+        setGenerationProgress(30);
+        
+        // Polling para verificar se matches foram criados
+        const pollInterval = setInterval(async () => {
+          const { data: matchesData } = await supabase
+            .from('strategic_matches_v2')
+            .select('id')
+            .eq('user_id', user.id)
+            .limit(1);
+          
+          if (matchesData && matchesData.length > 0) {
+            setIsGenerating(false);
+            setGenerationProgress(100);
+            clearInterval(pollInterval);
+            refetchMatches();
+            toast.success('Conexões geradas!', {
+              description: `${data.matches_count} conexões estratégicas ${forceRegenerate ? 'regeneradas' : 'criadas'} com IA`
+            });
+          }
+        }, 3000);
+        
+        // Simular progresso
+        let progress = 30;
+        const progressInterval = setInterval(() => {
+          progress += 8;
+          setGenerationProgress(Math.min(progress, 95));
+          if (progress >= 95) clearInterval(progressInterval);
+        }, 2000);
+        
+        // Timeout 90s
+        setTimeout(() => {
+          clearInterval(pollInterval);
+          clearInterval(progressInterval);
+          if (isGenerating) {
+            setIsGenerating(false);
+            toast.error('Timeout na geração', {
+              description: 'Por favor, recarregue ou tente novamente.'
+            });
+          }
+        }, 90000);
+      }
+    } catch (error: any) {
+      console.error('❌ [NETWORKING] Erro ao gerar matches:', error);
+      setIsGenerating(false);
+      setGenerationProgress(0);
+      setInitError(error.message || 'Erro ao gerar conexões');
+      toast.error('Erro ao gerar conexões', {
+        description: error.message || 'Tente novamente em alguns instantes'
+      });
+    }
   };
 
   // Inicializar perfil de networking automaticamente se necessário
@@ -89,9 +168,9 @@ const Networking = () => {
     initializeNetworkingIfNeeded();
   }, [user, hasNetworkingAccess]);
 
-  // Detectar se perfil existe mas matches não e iniciar geração
+  // Auto-gerar matches na primeira vez
   useEffect(() => {
-    const generateMatches = async () => {
+    const autoGenerateFirstTime = async () => {
       if (!user?.id || !hasNetworkingAccess || isGenerating) return;
       
       try {
@@ -111,86 +190,18 @@ const Networking = () => {
           .eq('user_id', user.id)
           .limit(1);
         
+        // Se não tem matches, gerar automaticamente
         if (!matchesData || matchesData.length === 0) {
-          console.log('🔄 [NETWORKING] Iniciando geração de matches...');
-          setIsGenerating(true);
-          setGenerationProgress(10);
-          
-          // Chamar função de geração
-          const { data: generateData, error: generateError } = await supabase.functions.invoke(
-            'generate-strategic-matches-v2',
-            { body: { user_id: user.id } }
-          );
-          
-          if (generateError) {
-            console.error('❌ [NETWORKING] Erro ao gerar matches:', generateError);
-            setIsGenerating(false);
-            setInitError('Erro ao gerar conexões estratégicas');
-            toast.error('Não foi possível gerar suas conexões. Tente novamente.');
-            return;
-          }
-          
-          console.log('✅ [NETWORKING] Geração iniciada com sucesso');
-          setGenerationProgress(30);
-          
-          // Polling para verificar se matches foram criados
-          const pollInterval = setInterval(async () => {
-            const { data } = await supabase
-              .from('strategic_matches_v2')
-              .select('id')
-              .eq('user_id', user.id)
-              .limit(1);
-            
-            if (data && data.length > 0) {
-              setIsGenerating(false);
-              setGenerationProgress(100);
-              clearInterval(pollInterval);
-              refetchMatches();
-              toast.success('Conexões estratégicas geradas com sucesso!', {
-                description: `${data.length} conexões encontradas para você`
-              });
-            }
-          }, 3000);
-          
-          // Simular progresso gradual
-          let progress = 30;
-          const progressInterval = setInterval(() => {
-            progress += 8;
-            setGenerationProgress(Math.min(progress, 95));
-            
-            if (progress >= 95) {
-              clearInterval(progressInterval);
-            }
-          }, 2000);
-          
-          // Timeout de 90 segundos
-          setTimeout(() => {
-            clearInterval(pollInterval);
-            clearInterval(progressInterval);
-            if (isGenerating) {
-              setIsGenerating(false);
-              setInitError('Timeout ao gerar matches');
-              toast.error('A geração está demorando mais que o esperado.', {
-                description: 'Por favor, recarregue a página ou tente novamente.'
-              });
-            }
-          }, 90000);
-          
-          return () => {
-            clearInterval(pollInterval);
-            clearInterval(progressInterval);
-          };
+          console.log('🔄 [NETWORKING] Auto-geração: primeira vez');
+          await handleGenerateMatches(false);
         }
       } catch (error: any) {
-        console.error('❌ [NETWORKING] Erro crítico:', error);
-        setIsGenerating(false);
-        setInitError(error.message || 'Erro desconhecido');
-        toast.error('Erro ao processar networking');
+        console.error('❌ [NETWORKING] Erro na auto-geração:', error);
       }
     };
     
-    generateMatches();
-  }, [user, hasNetworkingAccess, matchesLoading]);
+    autoGenerateFirstTime();
+  }, [user, hasNetworkingAccess]);
 
   // Loading state enquanto verifica permissões
   if (permissionsLoading) {
@@ -402,6 +413,20 @@ const Networking = () => {
                   <NetworkingHeader onOpenChat={() => setChatOpen(true)} />
                 </div>
               </div>
+
+              {/* Botão Regenerar Conexões */}
+              {matches.length > 0 && !isGenerating && !isInitializing && (
+                <div className="flex justify-center">
+                  <Button 
+                    onClick={() => handleGenerateMatches(true)}
+                    variant="outline"
+                    className="gap-2 hover:border-primary/50 transition-all"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                    Regenerar Conexões Estratégicas
+                  </Button>
+                </div>
+              )}
               
               {/* Sistema de Tabs com Conexões */}
               <div className="relative overflow-hidden rounded-2xl bg-card/80 backdrop-blur-sm border border-border/50 min-h-[500px]">

@@ -40,13 +40,39 @@ serve(async (req) => {
   }
 
   try {
-    const { user_id } = await req.json();
+    const { user_id, force_regenerate = false } = await req.json();
 
     console.log('🎯 [GENERATE MATCHES V2] Iniciando para usuário:', user_id);
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // 1. Buscar perfil do usuário
+    // 1. Verificar cache (últimos 7 dias) - skip se force_regenerate
+    if (!force_regenerate) {
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const { data: existingMatches, error: cacheError } = await supabase
+        .from('strategic_matches_v2')
+        .select('id, created_at')
+        .eq('user_id', user_id)
+        .gte('created_at', sevenDaysAgo);
+
+      if (!cacheError && existingMatches && existingMatches.length > 0) {
+        const matchAge = Math.floor((Date.now() - new Date(existingMatches[0].created_at).getTime()) / (1000 * 60 * 60));
+        console.log(`✅ [CACHE] Usuário já possui ${existingMatches.length} matches recentes (${matchAge}h atrás)`);
+        
+        return new Response(
+          JSON.stringify({
+            success: true,
+            matches_count: existingMatches.length,
+            cached: true,
+            age_hours: matchAge,
+            message: `Você já possui ${existingMatches.length} conexões atualizadas há ${matchAge}h`
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
+    // 2. Buscar perfil do usuário
     const { data: userProfile, error: profileError } = await supabase
       .from('networking_profiles_v2')
       .select('*')
@@ -57,7 +83,7 @@ serve(async (req) => {
       throw new Error("Perfil de networking não encontrado");
     }
 
-    // 2. Buscar perfis ativos da tabela profiles
+    // 3. Buscar perfis ativos da tabela profiles
     const { data: activeProfiles } = await supabase
       .from('profiles')
       .select('id')
@@ -66,7 +92,7 @@ serve(async (req) => {
     
     const activeUserIds = new Set((activeProfiles || []).map((p: any) => p.id));
 
-    // 3. Buscar perfis de networking que estão ativos
+    // 4. Buscar perfis de networking que estão ativos
     const { data: allProfiles, error: profilesError } = await supabase
       .from('networking_profiles_v2')
       .select('*')
@@ -232,9 +258,13 @@ Identifique os 10 melhores matches e retorne o JSON.`;
       }))
     });
 
+    // 5. Usar UPSERT para evitar duplicação
     const { data: insertedMatches, error: insertError } = await supabase
       .from('strategic_matches_v2')
-      .insert(validMatches)
+      .upsert(validMatches, {
+        onConflict: 'user_id,matched_user_id',
+        ignoreDuplicates: false
+      })
       .select();
 
     if (insertError) throw insertError;
