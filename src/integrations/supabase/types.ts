@@ -3855,9 +3855,11 @@ export type Database = {
       }
       profiles: {
         Row: {
+          annual_revenue: string | null
           available_for_networking: boolean | null
           avatar_url: string | null
           company_name: string | null
+          company_size: string | null
           created_at: string
           current_position: string | null
           email: string
@@ -3867,12 +3869,15 @@ export type Database = {
           is_master_user: boolean | null
           last_active: string | null
           linkedin_url: string | null
+          main_challenge: string | null
           master_email: string | null
           name: string | null
           onboarding_completed: boolean | null
           onboarding_completed_at: string | null
           organization_id: string | null
           plan_type: string | null
+          primary_goal: string | null
+          priority_areas: string[] | null
           professional_bio: string | null
           referrals_count: number
           role: string
@@ -3885,9 +3890,11 @@ export type Database = {
           whatsapp_number: string | null
         }
         Insert: {
+          annual_revenue?: string | null
           available_for_networking?: boolean | null
           avatar_url?: string | null
           company_name?: string | null
+          company_size?: string | null
           created_at?: string
           current_position?: string | null
           email: string
@@ -3897,12 +3904,15 @@ export type Database = {
           is_master_user?: boolean | null
           last_active?: string | null
           linkedin_url?: string | null
+          main_challenge?: string | null
           master_email?: string | null
           name?: string | null
           onboarding_completed?: boolean | null
           onboarding_completed_at?: string | null
           organization_id?: string | null
           plan_type?: string | null
+          primary_goal?: string | null
+          priority_areas?: string[] | null
           professional_bio?: string | null
           referrals_count?: number
           role?: string
@@ -3915,9 +3925,11 @@ export type Database = {
           whatsapp_number?: string | null
         }
         Update: {
+          annual_revenue?: string | null
           available_for_networking?: boolean | null
           avatar_url?: string | null
           company_name?: string | null
+          company_size?: string | null
           created_at?: string
           current_position?: string | null
           email?: string
@@ -3927,12 +3939,15 @@ export type Database = {
           is_master_user?: boolean | null
           last_active?: string | null
           linkedin_url?: string | null
+          main_challenge?: string | null
           master_email?: string | null
           name?: string | null
           onboarding_completed?: boolean | null
           onboarding_completed_at?: string | null
           organization_id?: string | null
           plan_type?: string | null
+          primary_goal?: string | null
+          priority_areas?: string[] | null
           professional_bio?: string | null
           referrals_count?: number
           role?: string
@@ -6232,9 +6247,11 @@ export type Database = {
       admin_get_all_profiles: {
         Args: Record<PropertyKey, never>
         Returns: {
+          annual_revenue: string | null
           available_for_networking: boolean | null
           avatar_url: string | null
           company_name: string | null
+          company_size: string | null
           created_at: string
           current_position: string | null
           email: string
@@ -6244,12 +6261,15 @@ export type Database = {
           is_master_user: boolean | null
           last_active: string | null
           linkedin_url: string | null
+          main_challenge: string | null
           master_email: string | null
           name: string | null
           onboarding_completed: boolean | null
           onboarding_completed_at: string | null
           organization_id: string | null
           plan_type: string | null
+          primary_goal: string | null
+          priority_areas: string[] | null
           professional_bio: string | null
           referrals_count: number
           role: string
@@ -7277,9 +7297,11 @@ export type Database = {
       get_profile_safe: {
         Args: { target_user_id?: string }
         Returns: {
+          annual_revenue: string | null
           available_for_networking: boolean | null
           avatar_url: string | null
           company_name: string | null
+          company_size: string | null
           created_at: string
           current_position: string | null
           email: string
@@ -7289,12 +7311,15 @@ export type Database = {
           is_master_user: boolean | null
           last_active: string | null
           linkedin_url: string | null
+          main_challenge: string | null
           master_email: string | null
           name: string | null
           onboarding_completed: boolean | null
           onboarding_completed_at: string | null
           organization_id: string | null
           plan_type: string | null
+          primary_goal: string | null
+          priority_areas: string[] | null
           professional_bio: string | null
           referrals_count: number
           role: string
