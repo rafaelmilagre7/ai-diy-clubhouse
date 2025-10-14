@@ -1,9 +1,10 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Linkedin, Phone, Mail, Loader2 } from 'lucide-react';
+import { LiquidGlassCard } from '@/components/ui/LiquidGlassCard';
+import { Linkedin, Phone, Loader2 } from 'lucide-react';
 import { SwipeCard as SwipeCardType } from '@/hooks/networking/useSwipeCards';
 import { Skeleton } from '@/components/ui/skeleton';
+import { motion } from 'framer-motion';
 
 interface SwipeCardProps {
   card: SwipeCardType;
@@ -27,91 +28,84 @@ export const SwipeCard = ({ card, onOpenContact }: SwipeCardProps) => {
   };
 
   return (
-    <Card className="w-full max-w-2xl mx-auto p-8 space-y-6 bg-gradient-to-br from-background via-background to-primary/5 border-primary/20 shadow-2xl">
-      {/* Header - Avatar + Info */}
-      <div className="flex items-start gap-6">
-        <Avatar className="h-24 w-24 border-4 border-primary/20">
-          <AvatarImage src={card.avatarUrl} alt={card.name} />
-          <AvatarFallback className="text-2xl bg-primary/10 text-primary">
-            {getInitials(card.name)}
-          </AvatarFallback>
-        </Avatar>
-        
-        <div className="flex-1 space-y-2">
-          <h2 className="text-3xl font-bold text-foreground">{card.name}</h2>
-          <p className="text-lg text-muted-foreground">{card.position}</p>
-          <p className="text-md text-muted-foreground font-medium">{card.company}</p>
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.3 }}
+    >
+      <LiquidGlassCard 
+        className="w-full max-w-md mx-auto overflow-hidden"
+        variant="premium"
+        hoverable={false}
+      >
+        {/* Foto grande no topo com gradiente */}
+        <div className="relative h-56 bg-gradient-to-br from-aurora/20 via-viverblue/15 to-operational/10">
+          <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent" />
+          <Avatar className="h-32 w-32 absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 border-4 border-background shadow-xl">
+            <AvatarImage src={card.avatarUrl} alt={card.name} />
+            <AvatarFallback className="text-3xl bg-gradient-to-br from-aurora/20 to-viverblue/20 text-aurora font-bold">
+              {getInitials(card.name)}
+            </AvatarFallback>
+          </Avatar>
         </div>
-      </div>
 
-      {/* Score Badge */}
-      <div className="flex items-center gap-2">
-        <div className="px-3 py-1 rounded-full bg-primary/10 border border-primary/30">
-          <span className="text-sm font-semibold text-primary">
-            {Math.round(card.score * 100)}% de compatibilidade
-          </span>
+        {/* Info centralizada */}
+        <div className="pt-20 px-6 pb-6 text-center space-y-4">
+          <h2 className="text-2xl font-bold text-foreground">{card.name}</h2>
+          <p className="text-base text-muted-foreground">{card.position}</p>
+          <p className="text-sm text-muted-foreground font-medium">{card.company}</p>
+
+          {/* Badge de compatibilidade com gradiente */}
+          <div className="inline-flex px-4 py-2 rounded-full bg-gradient-to-r from-aurora/10 to-viverblue/10 border border-aurora/30">
+            <span className="text-sm font-semibold bg-gradient-to-r from-aurora to-viverblue bg-clip-text text-transparent">
+              {Math.round(Math.min(card.score, 1.0) * 100)}% match
+            </span>
+          </div>
+
+          {/* Copy da IA - mais compacta */}
+          <div className="bg-card/30 backdrop-blur-sm rounded-xl p-4 min-h-[100px] flex items-center justify-center">
+            {card.isLoading ? (
+              <div className="space-y-3 w-full">
+                <div className="flex items-center justify-center gap-2 text-aurora">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span className="text-xs font-medium">Analisando conexão...</span>
+                </div>
+                <Skeleton className="h-3 w-full" />
+                <Skeleton className="h-3 w-4/5 mx-auto" />
+                <Skeleton className="h-3 w-3/5 mx-auto" />
+              </div>
+            ) : (
+              <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-line">
+                {card.connectionCopy}
+              </p>
+            )}
+          </div>
+
+          {/* Botões maiores e mais visíveis */}
+          <div className="flex gap-3 pt-4">
+            {card.linkedinUrl && (
+              <Button
+                onClick={handleLinkedInClick}
+                variant="outline"
+                size="lg"
+                className="flex-1 gap-2 border-[#0A66C2]/30 text-[#0A66C2] hover:bg-[#0A66C2] hover:text-white hover:border-[#0A66C2]"
+              >
+                <Linkedin className="h-5 w-5" />
+                LinkedIn
+              </Button>
+            )}
+            
+            <Button
+              onClick={onOpenContact}
+              size="lg"
+              className="flex-1 gap-2 bg-gradient-to-r from-aurora to-viverblue hover:opacity-90 transition-opacity"
+            >
+              <Phone className="h-5 w-5" />
+              Conectar
+            </Button>
+          </div>
         </div>
-      </div>
-
-      {/* AI Copy - Centro do Card */}
-      <div className="min-h-[200px] py-6 px-4 rounded-lg bg-card/50 border border-border/50">
-        {card.isLoading ? (
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 text-primary">
-              <Loader2 className="h-5 w-5 animate-spin" />
-              <span className="text-sm font-medium">A IA está analisando essa conexão...</span>
-            </div>
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-5/6" />
-            <Skeleton className="h-4 w-4/6" />
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-3/6" />
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 text-primary mb-3">
-              <span className="text-xs font-semibold uppercase tracking-wide">Por que se conectar</span>
-            </div>
-            <p className="text-foreground leading-relaxed whitespace-pre-line">
-              {card.connectionCopy}
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* Botões de Ação */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-4">
-        {card.linkedinUrl && (
-          <Button
-            onClick={handleLinkedInClick}
-            variant="outline"
-            className="gap-2 border-[#0A66C2] text-[#0A66C2] hover:bg-[#0A66C2] hover:text-white"
-          >
-            <Linkedin className="h-4 w-4" />
-            LinkedIn
-          </Button>
-        )}
-        
-        <Button
-          onClick={onOpenContact}
-          variant="default"
-          className="gap-2"
-        >
-          <Phone className="h-4 w-4" />
-          Ver Contato
-        </Button>
-
-        {!card.linkedinUrl && (
-          <Button
-            onClick={onOpenContact}
-            variant="outline"
-            className="gap-2"
-          >
-            <Mail className="h-4 w-4" />
-            Email
-          </Button>
-        )}
-      </div>
-    </Card>
+      </LiquidGlassCard>
+    </motion.div>
   );
 };

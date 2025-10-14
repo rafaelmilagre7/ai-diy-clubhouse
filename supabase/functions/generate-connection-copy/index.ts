@@ -51,30 +51,14 @@ serve(async (req) => {
     const currentUser = profiles.find(p => p.id === currentUserId);
     const targetUser = profiles.find(p => p.id === targetUserId);
 
-    // Prompt para a IA gerar a copy personalizada
-    const prompt = `Você é um especialista em networking empresarial. Analise os perfis abaixo e crie uma copy persuasiva (2-3 parágrafos curtos) explicando por que essa conexão faz sentido para negócios.
+    // Prompt otimizado para respostas rápidas e diretas
+    const prompt = `Analise os perfis e escreva 2-3 linhas curtas (máximo 100 palavras) explicando por que essa conexão pode gerar negócios.
 
-**Perfil do Usuário Atual:**
-- Nome: ${currentUser?.name || 'Não informado'}
-- Empresa: ${currentUser?.company_name || 'Não informado'}
-- Cargo: ${currentUser?.current_position || 'Não informado'}
-- Indústria: ${currentUser?.industry || 'Não informado'}
-- Skills: ${currentUser?.skills?.join(', ') || 'Não informado'}
+**Perfil 1:** ${currentUser?.name} - ${currentUser?.company_name} - ${currentUser?.current_position}
+**Perfil 2:** ${targetUser?.name} - ${targetUser?.company_name} - ${targetUser?.current_position}
 
-**Perfil da Conexão Potencial:**
-- Nome: ${targetUser?.name || 'Não informado'}
-- Empresa: ${targetUser?.company_name || 'Não informado'}
-- Cargo: ${targetUser?.current_position || 'Não informado'}
-- Indústria: ${targetUser?.industry || 'Não informado'}
-- Skills: ${targetUser?.skills?.join(', ') || 'Não informado'}
-
-Gere uma copy que:
-1. Destaque sinergias entre os perfis
-2. Identifique oportunidades de negócio em comum
-3. Seja direta e profissional
-4. Use uma linguagem próxima mas não informal demais
-
-Escreva APENAS a copy, sem introduções ou explicações adicionais. Máximo 200 palavras.`;
+Destaque APENAS: 1) sinergia de negócio, 2) oportunidade clara.
+Seja direto e objetivo. NÃO use introduções ou conclusões.`;
 
     console.log('🤖 Gerando copy com IA...');
 
@@ -86,13 +70,13 @@ Escreva APENAS a copy, sem introduções ou explicações adicionais. Máximo 20
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'google/gemini-2.5-flash-lite',
         messages: [
           { role: 'system', content: 'Você é um especialista em networking empresarial.' },
           { role: 'user', content: prompt }
         ],
-        temperature: 0.7,
-        max_tokens: 500,
+        temperature: 0.5,
+        max_tokens: 150,
       }),
     });
 

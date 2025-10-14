@@ -76,11 +76,11 @@ const Networking = () => {
       <div className="container py-8 space-y-8">
         {/* Header */}
         <div className="text-center space-y-2">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary via-primary to-accent bg-clip-text text-transparent">
-            Networking AI
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-aurora via-aurora to-viverblue bg-clip-text text-transparent">
+            Descubra Conexões Estratégicas
           </h1>
-          <p className="text-muted-foreground">
-            Conexão {currentIndex + 1} de {totalCards}
+          <p className="text-muted-foreground text-sm">
+            Matches personalizados por IA para o seu negócio
           </p>
         </div>
 
@@ -92,39 +92,44 @@ const Networking = () => {
           />
 
           {/* Botões de Navegação */}
-          <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 flex justify-between pointer-events-none px-4">
+          <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 flex justify-between pointer-events-none px-4 md:px-0 md:-mx-20">
             <Button
               onClick={previousCard}
               disabled={!hasPrevious}
-              variant="outline"
+              variant="ghost"
               size="icon"
-              className="pointer-events-auto h-12 w-12 rounded-full shadow-lg bg-background/95 backdrop-blur"
+              className="pointer-events-auto h-14 w-14 rounded-full shadow-xl bg-background/80 backdrop-blur-md hover:bg-background/90 disabled:opacity-30 transition-all"
             >
-              <ChevronLeft className="h-6 w-6" />
+              <ChevronLeft className="h-7 w-7" />
             </Button>
 
             <Button
               onClick={nextCard}
               disabled={!hasNext}
-              variant="outline"
+              variant="ghost"
               size="icon"
-              className="pointer-events-auto h-12 w-12 rounded-full shadow-lg bg-background/95 backdrop-blur"
+              className="pointer-events-auto h-14 w-14 rounded-full shadow-xl bg-background/80 backdrop-blur-md hover:bg-background/90 disabled:opacity-30 transition-all"
             >
-              <ChevronRight className="h-6 w-6" />
+              <ChevronRight className="h-7 w-7" />
             </Button>
           </div>
         </div>
 
-        {/* Indicador de Progresso */}
-        <div className="flex gap-1 justify-center max-w-2xl mx-auto">
-          {Array.from({ length: Math.min(totalCards, 10) }).map((_, idx) => (
-            <div
-              key={idx}
-              className={`h-1 flex-1 rounded-full transition-colors ${
-                idx === currentIndex ? 'bg-primary' : 'bg-muted'
-              }`}
-            />
-          ))}
+        {/* Indicador de Progresso - Bolinhas discretas */}
+        <div className="flex gap-2 justify-center">
+          {Array.from({ length: Math.min(totalCards, 5) }).map((_, idx) => {
+            const globalIndex = Math.floor(currentIndex / 5) * 5 + idx;
+            return (
+              <div
+                key={idx}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  globalIndex === currentIndex 
+                    ? 'bg-aurora w-8' 
+                    : 'bg-muted w-2'
+                }`}
+              />
+            );
+          })}
         </div>
       </div>
 
