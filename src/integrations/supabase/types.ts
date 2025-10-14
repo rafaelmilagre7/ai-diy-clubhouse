@@ -3139,6 +3139,58 @@ export type Database = {
         }
         Relationships: []
       }
+      networking_match_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          id: string
+          matches_count: number | null
+          metadata: Json | null
+          processing_time_ms: number | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          id?: string
+          matches_count?: number | null
+          metadata?: Json | null
+          processing_time_ms?: number | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          id?: string
+          matches_count?: number | null
+          metadata?: Json | null
+          processing_time_ms?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "networking_match_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "networking_match_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_networking_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "networking_match_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       networking_meetings: {
         Row: {
           connection_id: string | null
@@ -3279,6 +3331,7 @@ export type Database = {
           created_at: string | null
           id: string
           keywords: string[]
+          last_match_generation: string | null
           last_updated_at: string | null
           looking_for: string[]
           main_challenge: string | null
@@ -3293,6 +3346,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           keywords?: string[]
+          last_match_generation?: string | null
           last_updated_at?: string | null
           looking_for?: string[]
           main_challenge?: string | null
@@ -3307,6 +3361,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           keywords?: string[]
+          last_match_generation?: string | null
           last_updated_at?: string | null
           looking_for?: string[]
           main_challenge?: string | null

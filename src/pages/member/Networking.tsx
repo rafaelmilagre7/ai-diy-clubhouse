@@ -12,9 +12,11 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/auth';
 import { toast } from 'sonner';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle, Sparkles } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { useStrategicMatches } from '@/hooks/useStrategicMatches';
 
 const Networking = () => {
   const { user } = useAuth();
@@ -23,6 +25,9 @@ const Networking = () => {
   const [chatOpen, setChatOpen] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
   const [initError, setInitError] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generationProgress, setGenerationProgress] = useState(0);
+  const { matches, isLoading: matchesLoading, refetch: refetchMatches } = useStrategicMatches();
   
   useDynamicSEO({
     title: 'Networking AI - Networking Inteligente',
@@ -83,6 +88,82 @@ const Networking = () => {
     
     initializeNetworkingIfNeeded();
   }, [user, hasNetworkingAccess]);
+
+  // Detectar se perfil existe mas matches não (inicialização em progresso)
+  useEffect(() => {
+    const checkMatchGeneration = async () => {
+      if (!user?.id || !hasNetworkingAccess) return;
+      
+      try {
+        // Verificar se tem perfil v2 completo
+        const { data: profile } = await supabase
+          .from('networking_profiles_v2')
+          .select('id, profile_completed_at')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        
+        if (!profile?.profile_completed_at) return;
+        
+        // Verificar se tem matches
+        const { data: matchesData } = await supabase
+          .from('strategic_matches_v2')
+          .select('id')
+          .eq('user_id', user.id)
+          .limit(1);
+        
+        if (!matchesData || matchesData.length === 0) {
+          setIsGenerating(true);
+          
+          // Polling para verificar se matches foram criados
+          const pollInterval = setInterval(async () => {
+            const { data } = await supabase
+              .from('strategic_matches_v2')
+              .select('id')
+              .eq('user_id', user.id)
+              .limit(1);
+            
+            if (data && data.length > 0) {
+              setIsGenerating(false);
+              setGenerationProgress(100);
+              clearInterval(pollInterval);
+              refetchMatches();
+              toast.success('Conexões estratégicas geradas com sucesso!');
+            }
+          }, 5000); // Verificar a cada 5 segundos
+          
+          // Simular progresso para UX
+          let progress = 0;
+          const progressInterval = setInterval(() => {
+            progress += 5;
+            setGenerationProgress(Math.min(progress, 90));
+            
+            if (progress >= 90) {
+              clearInterval(progressInterval);
+            }
+          }, 2000);
+          
+          // Timeout de 2 minutos
+          setTimeout(() => {
+            clearInterval(pollInterval);
+            clearInterval(progressInterval);
+            if (isGenerating) {
+              setIsGenerating(false);
+              toast.error('Geração de matches está demorando. Tente recarregar a página.');
+            }
+          }, 120000);
+          
+          return () => {
+            clearInterval(pollInterval);
+            clearInterval(progressInterval);
+          };
+        }
+      } catch (error) {
+        console.error('❌ [NETWORKING] Erro ao verificar matches:', error);
+      }
+    };
+    
+    checkMatchGeneration();
+  }, [user, hasNetworkingAccess, matchesLoading]);
 
   // Loading state enquanto verifica permissões
   if (permissionsLoading) {
@@ -229,6 +310,32 @@ const Networking = () => {
                       <h3 className="font-semibold">Preparando seu networking...</h3>
                       <p className="text-sm text-muted-foreground">
                         Estamos analisando seu perfil e buscando as melhores conexões para você
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+              )}
+
+              {/* Banner de Geração de Matches */}
+              {isGenerating && (
+                <Card className="relative overflow-hidden p-6 bg-gradient-to-r from-aurora/10 via-primary/5 to-aurora/5 border-aurora/20">
+                  <div className="absolute inset-0 aurora-gradient opacity-10 animate-pulse"></div>
+                  <div className="relative space-y-4">
+                    <div className="flex items-center gap-3">
+                      <Sparkles className="w-6 h-6 text-aurora animate-pulse" />
+                      <div>
+                        <h3 className="font-semibold aurora-text-gradient">
+                          Gerando suas conexões estratégicas...
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          Nossa IA está analisando perfis e criando matches personalizados para você
+                        </p>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Progress value={generationProgress} className="h-2" />
+                      <p className="text-xs text-muted-foreground text-center">
+                        {generationProgress}% concluído
                       </p>
                     </div>
                   </div>

@@ -238,15 +238,31 @@ Keywords: ${keywords.join(', ')}`;
 
     console.log('✅ [INIT] Perfil criado com sucesso');
 
-    // 7. Disparar geração de matches (em background)
-    supabase.functions.invoke('generate-strategic-matches-v2', {
-      body: { user_id: user.id }
-    }).catch(err => console.error('⚠️ [INIT] Erro ao gerar matches:', err));
+    // 6. Gerar matches (aguardar conclusão para melhor UX)
+    console.log('🔄 [INIT] Gerando matches estratégicos...');
+    let matchesGenerated = 0;
+    
+    try {
+      const { data: matchData, error: matchError } = await supabase.functions.invoke(
+        'generate-strategic-matches-v2', 
+        { body: { user_id: user.id } }
+      );
+      
+      if (matchError) {
+        console.error('⚠️ [INIT] Erro ao gerar matches:', matchError);
+      } else {
+        matchesGenerated = matchData?.matches_generated || 0;
+        console.log(`✅ [INIT] ${matchesGenerated} matches gerados`);
+      }
+    } catch (matchError) {
+      console.error('⚠️ [INIT] Erro crítico ao gerar matches:', matchError);
+    }
 
     return new Response(JSON.stringify({
       success: true,
       profile_id: newProfile.id,
       networking_score,
+      matches_generated: matchesGenerated,
       message: 'Perfil de networking inicializado com sucesso'
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" }

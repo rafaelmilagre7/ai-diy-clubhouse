@@ -186,3 +186,9 @@ verify_jwt = false
 
 [functions.initialize-networking-profile]
 verify_jwt = true
+
+[functions.batch-generate-matches]
+verify_jwt = false
+
+[functions.cron-regenerate-matches]
+verify_jwt = false
