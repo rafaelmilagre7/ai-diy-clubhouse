@@ -31,10 +31,10 @@ export const LoadMoreCard = ({ onGenerateMore, isGenerating }: LoadMoreCardProps
             ease: "easeInOut"
           }}
         >
-          <Sparkles className="h-16 w-16 text-strategy mb-6" />
+          <Sparkles className="h-16 w-16 text-aurora mb-6" />
         </motion.div>
         
-        <h3 className="text-2xl font-bold mb-3 bg-gradient-to-r from-strategy via-revenue to-operational bg-clip-text text-transparent">
+        <h3 className="text-2xl font-bold mb-3 bg-gradient-to-r from-aurora to-viverblue bg-clip-text text-transparent">
           Chegou ao fim das conexões
         </h3>
         
@@ -46,7 +46,7 @@ export const LoadMoreCard = ({ onGenerateMore, isGenerating }: LoadMoreCardProps
           onClick={onGenerateMore}
           disabled={isGenerating}
           size="lg"
-          className="gap-2 bg-gradient-to-r from-strategy via-revenue to-operational hover:from-strategy/90 hover:via-revenue/90 hover:to-operational/90 text-white shadow-lg hover:shadow-xl transition-all px-8"
+          className="gap-2 bg-gradient-to-r from-aurora to-viverblue hover:from-aurora/90 hover:to-viverblue/90 text-white shadow-lg hover:shadow-xl transition-all px-8"
         >
           {isGenerating ? (
             <>

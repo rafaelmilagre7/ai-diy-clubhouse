@@ -284,16 +284,16 @@ export const SwipeCardCarousel = ({ card }: SwipeCardCarouselProps) => {
             <div className="h-full flex flex-col gap-4 p-1">
               
             {/* Setor de Atuação - Card Destacado */}
-            <div className="bg-gradient-to-br from-strategy/5 to-viverblue/5 border-2 border-strategy/20 rounded-2xl p-4 shadow-lg">
+            <div className="bg-gradient-to-br from-aurora/5 to-viverblue/5 border-2 border-aurora/30 rounded-2xl p-4 shadow-lg">
               <div className="flex items-center gap-3">
-                <div className="bg-gradient-to-br from-strategy to-viverblue p-3 rounded-xl shadow-md">
+                <div className="bg-gradient-to-br from-aurora to-viverblue p-3 rounded-xl shadow-md">
                   <Briefcase className="h-6 w-6 text-white" />
                 </div>
                 <div>
                   <div className="text-xs text-muted-foreground uppercase tracking-wider font-medium">
                     Setor de Atuação
                   </div>
-                  <div className="text-xl font-black text-strategy">
+                  <div className="text-xl font-black text-aurora">
                     {translate(industry)}
                   </div>
                 </div>
@@ -328,8 +328,8 @@ export const SwipeCardCarousel = ({ card }: SwipeCardCarouselProps) => {
                   {keywords.length === 0 && (
                     <>
                       <Badge variant="outline" className="border-aurora/30 text-aurora bg-aurora/5">Estratégico</Badge>
-                      <Badge variant="outline" className="border-operational/30 text-operational bg-operational/5">Proativo</Badge>
-                      <Badge variant="outline" className="border-viverblue/30 text-viverblue bg-viverblue/5">Inovador</Badge>
+                      <Badge variant="outline" className="border-viverblue/30 text-viverblue bg-viverblue/5">Proativo</Badge>
+                      <Badge variant="outline" className="border-aurora/30 text-aurora bg-aurora/5">Inovador</Badge>
                     </>
                   )}
                 </div>
@@ -339,10 +339,10 @@ export const SwipeCardCarousel = ({ card }: SwipeCardCarouselProps) => {
               {companyInfo.size && (
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <Building2 className="h-4 w-4 text-strategy" />
+                    <Building2 className="h-4 w-4 text-viverblue" />
                     <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Porte da Empresa</p>
                   </div>
-                  <Badge variant="outline" className="border-strategy/30 text-strategy bg-strategy/5 text-sm">
+                  <Badge variant="outline" className="border-viverblue/30 text-viverblue bg-viverblue/5 text-sm">
                     {translate(companyInfo.size)}
                   </Badge>
                 </div>
@@ -403,10 +403,10 @@ export const SwipeCardCarousel = ({ card }: SwipeCardCarouselProps) => {
               {/* Desafio Principal - CARD DESTACADO */}
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4 text-operational" />
+                  <TrendingUp className="h-4 w-4 text-viverblue" />
                   <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Desafio Atual</p>
                 </div>
-                <div className="bg-operational/5 border border-operational/20 rounded-xl p-3">
+                <div className="bg-viverblue/5 border border-viverblue/20 rounded-xl p-3">
                   <p className="text-sm text-foreground font-medium">
                     {translate(mainChallenge)}
                   </p>
@@ -416,11 +416,11 @@ export const SwipeCardCarousel = ({ card }: SwipeCardCarouselProps) => {
               {/* Prazo para Resultados */}
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-operational" />
+                  <Clock className="h-4 w-4 text-aurora" />
                   <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Prazo para Resultados</p>
                 </div>
-                <div className="flex items-center gap-2 bg-operational/5 border border-operational/20 rounded-lg px-3 py-2">
-                  <span className="text-sm font-bold text-operational">{translate(timeline)}</span>
+                <div className="flex items-center gap-2 bg-aurora/5 border border-aurora/20 rounded-lg px-3 py-2">
+                  <span className="text-sm font-bold text-aurora">{translate(timeline)}</span>
                   <span className="text-xs text-muted-foreground">para atingir objetivos</span>
                 </div>
               </div>
@@ -432,16 +432,16 @@ export const SwipeCardCarousel = ({ card }: SwipeCardCarouselProps) => {
             <div className="h-full flex flex-col gap-4 p-1">
               
               {/* Nível de Experiência - GRANDE BADGE */}
-              <div className="bg-gradient-to-br from-operational/10 to-orange-500/10 border-2 border-operational/20 rounded-2xl p-4 shadow-lg">
+              <div className="bg-gradient-to-br from-aurora/10 to-viverblue/10 border-2 border-aurora/30 rounded-2xl p-4 shadow-lg">
                 <div className="flex items-center gap-2 mb-2">
-                  <Brain className="h-5 w-5 text-operational" />
+                  <Brain className="h-5 w-5 text-aurora" />
                   <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Experiência com IA</p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="bg-gradient-to-br from-operational to-orange-600 p-3 rounded-xl shadow-md">
+                  <div className="bg-gradient-to-br from-aurora to-viverblue p-3 rounded-xl shadow-md">
                     <Sparkles className="h-6 w-6 text-white" />
                   </div>
-                  <div className="text-2xl font-black text-operational">
+                  <div className="text-2xl font-black text-aurora">
                     {translate(experienceLevel)}
                   </div>
                 </div>
@@ -478,8 +478,8 @@ export const SwipeCardCarousel = ({ card }: SwipeCardCarouselProps) => {
                     <div className="text-lg font-bold text-viverblue">{score}%</div>
                     <div className="text-xs text-muted-foreground">Match</div>
                   </div>
-                  <div className="bg-operational/5 border border-operational/20 rounded-lg p-2 text-center">
-                    <div className="text-lg font-bold text-operational">⚡⚡⚡</div>
+                  <div className="bg-aurora/5 border border-aurora/20 rounded-lg p-2 text-center">
+                    <div className="text-lg font-bold text-aurora">⚡⚡⚡</div>
                     <div className="text-xs text-muted-foreground">Ativo</div>
                   </div>
                 </div>
@@ -517,7 +517,7 @@ export const SwipeCardCarousel = ({ card }: SwipeCardCarouselProps) => {
               className={cn(
                 "h-2 rounded-full transition-all duration-300 shadow-md",
                 current === idx 
-                  ? "w-8 bg-gradient-to-r from-aurora to-operational" 
+                  ? "w-8 bg-gradient-to-r from-aurora to-viverblue" 
                   : "w-2 bg-muted/40 hover:bg-muted/60"
               )}
             aria-label={`Ir para página ${idx + 1}`}
