@@ -1,13 +1,12 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { LiquidGlassCard } from '@/components/ui/LiquidGlassCard';
-import { Linkedin, Phone, Loader2, UserPlus, Check, Clock, Brain, Sparkles, Zap } from 'lucide-react';
+import { Linkedin, Phone, Loader2, UserPlus, Check, Clock } from 'lucide-react';
 import { SwipeCard as SwipeCardType } from '@/hooks/networking/useSwipeCards';
-import { Skeleton } from '@/components/ui/skeleton';
-import { motion, AnimatePresence } from 'framer-motion';
-import { MarkdownRenderer } from '@/components/community/MarkdownRenderer';
+import { motion } from 'framer-motion';
 import { useConnections } from '@/hooks/networking/useConnections';
 import { useState, useEffect } from 'react';
+import { SwipeCardCarousel } from './SwipeCardCarousel';
 
 interface SwipeCardProps {
   card: SwipeCardType;
@@ -74,7 +73,7 @@ export const SwipeCard = ({ card, onOpenContact }: SwipeCardProps) => {
         variant="premium"
         hoverable={false}
       >
-        <div className="h-[620px] flex flex-col p-8">
+        <div className="h-[580px] flex flex-col p-8">
           {/* Avatar no topo - sem cortar */}
           <div className="flex justify-center mb-6">
             <div className="relative">
@@ -98,103 +97,13 @@ export const SwipeCard = ({ card, onOpenContact }: SwipeCardProps) => {
             <p className="text-sm text-foreground font-bold">{card.company}</p>
           </div>
 
-          {/* Copy da IA - altura fixa com scroll */}
-          <div className="flex-1 relative liquid-glass-card rounded-2xl p-5 border border-aurora/10 shadow-inner overflow-hidden mb-6">
+          {/* Card Carrossel com dados parametrizados */}
+          <div className="flex-1 relative liquid-glass-card rounded-2xl p-5 border border-aurora/10 shadow-inner mb-6">
             {/* Decorative corner accents */}
             <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-aurora/20 rounded-tl-2xl" />
             <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-aurora/20 rounded-br-2xl" />
             
-            <div className="h-full overflow-y-auto scrollbar-thin">
-              <AnimatePresence mode="wait">
-                {card.isLoading ? (
-                  <motion.div
-                    key="loading"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="space-y-6 w-full flex flex-col items-center justify-center h-full"
-                  >
-                    {/* Animated Brain Icon */}
-                    <div className="relative">
-                      <div className="absolute inset-0 bg-aurora/20 rounded-full blur-xl animate-pulse" />
-                      <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                        className="relative"
-                      >
-                        <Brain className="h-10 w-10 text-aurora" />
-                      </motion.div>
-                    </div>
-
-                    {/* Animated Text Stages */}
-                    <div className="space-y-2 text-center">
-                      <motion.div
-                        initial={{ opacity: 0, y: 5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0, duration: 0.5 }}
-                        className="flex items-center justify-center gap-2"
-                      >
-                        <Sparkles className="h-3.5 w-3.5 text-aurora" />
-                        <span className="text-xs font-medium text-foreground">Analisando perfis</span>
-                      </motion.div>
-                      
-                      <motion.div
-                        initial={{ opacity: 0, y: 5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.3, duration: 0.5 }}
-                        className="flex items-center justify-center gap-2"
-                      >
-                        <Zap className="h-3.5 w-3.5 text-viverblue" />
-                        <span className="text-xs font-medium text-muted-foreground">Cruzando objetivos</span>
-                      </motion.div>
-                      
-                      <motion.div
-                        initial={{ opacity: 0, y: 5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.6, duration: 0.5 }}
-                        className="flex items-center justify-center gap-2"
-                      >
-                        <Loader2 className="h-3.5 w-3.5 animate-spin text-operational" />
-                        <span className="text-xs font-medium text-muted-foreground">Gerando insights</span>
-                      </motion.div>
-                    </div>
-
-                    {/* Animated Progress Bar */}
-                    <div className="w-full h-1 bg-muted/30 rounded-full overflow-hidden">
-                      <motion.div 
-                        className="h-full bg-gradient-to-r from-aurora via-viverblue to-operational"
-                        initial={{ width: "0%" }}
-                        animate={{ width: "100%" }}
-                        transition={{ 
-                          duration: 2,
-                          repeat: Infinity,
-                          ease: "easeInOut"
-                        }}
-                      />
-                    </div>
-
-                    {/* Skeleton placeholders */}
-                    <div className="space-y-2 w-full pt-2">
-                      <Skeleton className="h-2.5 w-full bg-muted/30" />
-                      <Skeleton className="h-2.5 w-4/5 mx-auto bg-muted/30" />
-                      <Skeleton className="h-2.5 w-3/5 mx-auto bg-muted/30" />
-                    </div>
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="content"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    <MarkdownRenderer 
-                      content={card.connectionCopy || ''}
-                      className="text-sm text-foreground leading-relaxed"
-                    />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+            <SwipeCardCarousel card={card} />
           </div>
 
           {/* Action Buttons reorganizados em 2 linhas */}

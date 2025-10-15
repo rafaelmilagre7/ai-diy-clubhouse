@@ -14,10 +14,9 @@ export interface SwipeCard {
   linkedinUrl?: string;
   whatsappNumber?: string;
   email: string;
-  connectionCopy?: string;
   score: number;
-  isLoading: boolean;
   matchId?: string;
+  matchData?: any; // Dados completos do match (JSON)
 }
 
 export const useSwipeCards = () => {
@@ -28,13 +27,9 @@ export const useSwipeCards = () => {
   const [cards, setCards] = useState<SwipeCard[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLoadingCards, setIsLoadingCards] = useState(true);
-  const [copyCache, setCopyCache] = useState<Record<string, string>>({});
-  const [generatingCopy, setGeneratingCopy] = useState<Set<string>>(new Set());
   const [loadedUserIds, setLoadedUserIds] = useState<Set<string>>(new Set());
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMoreProfiles, setHasMoreProfiles] = useState(true);
-  const [generatedCount, setGeneratedCount] = useState(0);
-  const [totalToGenerate, setTotalToGenerate] = useState(0);
   const isLoadingMoreRef = useRef(false);
 
   // Usar useQuery para buscar matches automaticamente
@@ -49,7 +44,7 @@ export const useSwipeCards = () => {
           id,
           matched_user_id,
           compatibility_score,
-          connection_copy,
+          match_data,
           matched_user:profiles!strategic_matches_v2_matched_user_id_fkey(
             id,
             name,
@@ -89,27 +84,17 @@ export const useSwipeCards = () => {
         linkedinUrl: match.matched_user.linkedin_url,
         whatsappNumber: match.matched_user.whatsapp_number,
         email: match.matched_user.email || '',
-        connectionCopy: match.connection_copy,
         score: match.compatibility_score || 0.5,
-        isLoading: false,
         matchId: match.id,
+        matchData: match.match_data || {}, // Incluir dados JSON do match
       }));
 
     setCards(formattedCards);
-    setCurrentIndex(0); // Resetar para o primeiro card
+    setCurrentIndex(0);
 
     // Rastrear IDs já carregados
     const loadedIds = new Set(formattedCards.map(card => card.userId));
     setLoadedUserIds(loadedIds);
-
-    // Cache das copies já existentes
-    const cache: Record<string, string> = {};
-    formattedCards.forEach(card => {
-      if (card.connectionCopy) {
-        cache[card.userId] = card.connectionCopy;
-      }
-    });
-    setCopyCache(cache);
     setIsLoadingCards(false);
   }, [matchesData]);
 
@@ -162,10 +147,9 @@ export const useSwipeCards = () => {
         linkedinUrl: profile.linkedin_url,
         whatsappNumber: profile.whatsapp_number,
         email: profile.email || '',
-        connectionCopy: undefined,
-        score: 0.3, // Score padrão para perfis não-match
-        isLoading: false,
+        score: 0.3,
         matchId: undefined,
+        matchData: {},
       }));
 
       setCards(prev => [...prev, ...newCards]);
@@ -187,158 +171,24 @@ export const useSwipeCards = () => {
     }
   }, [user?.id, loadedUserIds, hasMoreProfiles]);
 
-  // Gerar copy para um card específico com fallback gracioso
-  const generateCopy = useCallback(async (targetUserId: string) => {
-    if (!user?.id || copyCache[targetUserId] || generatingCopy.has(targetUserId)) return;
-
-    const cardIndex = cards.findIndex(c => c && c.userId === targetUserId);
-    if (cardIndex === -1) return;
-
-    const card = cards[cardIndex];
-    if (!card || !card.userId) return;
-
-    const cardName = cards[cardIndex]?.name || 'este profissional';
-    const fallbackCopy = `Conecte-se com ${cardName} para explorar oportunidades estratégicas de parceria e crescimento.`;
-
-    // Marcar como gerando
-    setGeneratingCopy(prev => new Set(prev).add(targetUserId));
-
-    // Marcar como loading
-    setCards(prev => {
-      const updated = [...prev];
-      updated[cardIndex] = { ...updated[cardIndex], isLoading: true };
-      return updated;
-    });
-
-    try {
-      const { data, error } = await supabase.functions.invoke('generate-connection-copy', {
-        body: {
-          currentUserId: user.id,
-          targetUserId: targetUserId,
-        },
-      });
-
-      if (error) throw error;
-
-      const generatedCopy = data?.copy || fallbackCopy;
-
-      // Atualizar card com a copy gerada
-      setCards(prev => {
-        const updated = [...prev];
-        updated[cardIndex] = {
-          ...updated[cardIndex],
-          connectionCopy: generatedCopy,
-          isLoading: false,
-        };
-        return updated;
-      });
-
-      // Atualizar cache
-      setCopyCache(prev => ({
-        ...prev,
-        [targetUserId]: generatedCopy,
-      }));
-
-      // Limpar estado de geração
-      setGeneratingCopy(prev => {
-        const updated = new Set(prev);
-        updated.delete(targetUserId);
-        return updated;
-      });
-
-    } catch (error) {
-      console.warn('⚠️ Falha ao gerar copy com IA, usando fallback:', error);
-      
-      // Usar copy genérica e NÃO mostrar toast (silencioso)
-      setCards(prev => {
-        const updated = [...prev];
-        updated[cardIndex] = {
-          ...updated[cardIndex],
-          connectionCopy: fallbackCopy,
-          isLoading: false,
-        };
-        return updated;
-      });
-
-      // Atualizar cache com fallback
-      setCopyCache(prev => ({
-        ...prev,
-        [targetUserId]: fallbackCopy,
-      }));
-
-      // Limpar estado de geração
-      setGeneratingCopy(prev => {
-        const updated = new Set(prev);
-        updated.delete(targetUserId);
-        return updated;
-      });
-    }
-  }, [user?.id, cards, copyCache, generatingCopy, toast]);
-
   // Navegação
   const nextCard = useCallback(() => {
     if (currentIndex < cards.length - 1) {
       const nextIndex = currentIndex + 1;
       setCurrentIndex(nextIndex);
-      
-      // Gerar copy para o próximo card se não existir
-      const nextCard = cards[nextIndex];
-      if (!nextCard.connectionCopy) {
-        generateCopy(nextCard.userId);
-      }
 
       // Carregar mais se: (1) não tem 50 matches ainda OU (2) está perto do fim
       if ((cards.length < 50 || nextIndex >= cards.length - 5) && hasMoreProfiles && !isLoadingMore) {
         loadMoreProfiles();
       }
     }
-  }, [currentIndex, cards, generateCopy, hasMoreProfiles, isLoadingMore, loadMoreProfiles]);
+  }, [currentIndex, cards, hasMoreProfiles, isLoadingMore, loadMoreProfiles]);
 
   const previousCard = useCallback(() => {
     if (currentIndex > 0) {
       setCurrentIndex(currentIndex - 1);
     }
   }, [currentIndex]);
-
-  // Progressive Loading com Rate Limiter: Gerar copy em lotes com delay
-  useEffect(() => {
-    const cardsNeedingCopy = cards.filter(c => 
-      c && 
-      c.userId && 
-      !c.connectionCopy && 
-      !c.isLoading && 
-      !generatingCopy.has(c.userId)
-    );
-    
-    if (cardsNeedingCopy.length > 0) {
-      setTotalToGenerate(cardsNeedingCopy.length);
-      
-      // 🚦 RATE LIMITER: Processar 3 cards por vez com delay de 2s entre lotes
-      const batchSize = 3;
-      const batchDelay = 2000;
-      
-      const processBatches = async () => {
-        for (let i = 0; i < cardsNeedingCopy.length; i += batchSize) {
-          const batch = cardsNeedingCopy.slice(i, i + batchSize);
-          setGeneratedCount(Math.min(i + batchSize, cardsNeedingCopy.length));
-          
-          // Processar lote em paralelo
-          await Promise.all(batch.map(card => generateCopy(card.userId)));
-          
-          // Delay entre lotes (exceto no último)
-          if (i + batchSize < cardsNeedingCopy.length) {
-            await new Promise(resolve => setTimeout(resolve, batchDelay));
-          }
-        }
-        
-        // Reset após finalizar
-        setGeneratedCount(0);
-        setTotalToGenerate(0);
-      };
-      
-      processBatches();
-    }
-  }, [cards, generateCopy, generatingCopy]);
 
   const currentCard = cards[currentIndex] || null;
   const hasNext = currentIndex < cards.length - 1;
@@ -356,7 +206,5 @@ export const useSwipeCards = () => {
     refetch: loadMatches,
     generateMatches: () => generateMatches(user?.id || ''),
     isGenerating,
-    generatedCount,
-    totalToGenerate,
   };
 };
