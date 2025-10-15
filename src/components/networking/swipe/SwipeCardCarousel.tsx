@@ -489,26 +489,20 @@ export const SwipeCardCarousel = ({ card }: SwipeCardCarouselProps) => {
 
         </CarouselContent>
         
-        {/* Navegação com setas clean (sem círculo) */}
+        {/* Navegação com setas clean - Mais nas bordas e mais visíveis */}
         <button 
-          onClick={() => {
-            const carousel = document.querySelector('[role="region"]');
-            const prevButton = carousel?.querySelector('button[aria-label="Previous slide"]') as HTMLButtonElement;
-            prevButton?.click();
-          }}
-          className="absolute -left-8 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground hover:scale-110 transition-all z-10 p-2"
+          onClick={() => api?.scrollPrev()}
+          className="absolute -left-14 top-1/2 -translate-y-1/2 text-white/90 hover:text-white hover:scale-125 transition-all z-20 p-2 drop-shadow-lg"
+          aria-label="Foto anterior"
         >
-          <ChevronLeft className="h-7 w-7" />
+          <ChevronLeft className="h-8 w-8" strokeWidth={3} />
         </button>
         <button 
-          onClick={() => {
-            const carousel = document.querySelector('[role="region"]');
-            const nextButton = carousel?.querySelector('button[aria-label="Next slide"]') as HTMLButtonElement;
-            nextButton?.click();
-          }}
-          className="absolute -right-8 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground hover:scale-110 transition-all z-10 p-2"
+          onClick={() => api?.scrollNext()}
+          className="absolute -right-14 top-1/2 -translate-y-1/2 text-white/90 hover:text-white hover:scale-125 transition-all z-20 p-2 drop-shadow-lg"
+          aria-label="Próxima foto"
         >
-          <ChevronRight className="h-7 w-7" />
+          <ChevronRight className="h-8 w-8" strokeWidth={3} />
         </button>
         <CarouselPrevious className="hidden" />
         <CarouselNext className="hidden" />
