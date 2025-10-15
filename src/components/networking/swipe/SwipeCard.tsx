@@ -73,7 +73,7 @@ export const SwipeCard = ({ card, onOpenContact }: SwipeCardProps) => {
         variant="premium"
         hoverable={false}
       >
-        <div className="h-[580px] flex flex-col p-8">
+        <div className="h-[620px] flex flex-col p-8">
           {/* Avatar no topo - sem cortar */}
           <div className="flex justify-center mb-6">
             <div className="relative">
