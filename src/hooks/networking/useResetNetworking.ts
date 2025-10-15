@@ -31,11 +31,14 @@ export const useResetNetworking = () => {
       );
 
       if (error) {
-        throw error;
+        console.error('Erro na invocação:', error);
+        throw new Error(`Falha ao chamar função: ${error.message || 'Erro desconhecido'}`);
       }
 
       if (!data?.success) {
-        throw new Error(data?.error || 'Erro ao resetar networking');
+        const errorMsg = data?.error || 'Erro desconhecido ao processar reset';
+        console.error('Reset falhou:', errorMsg);
+        throw new Error(errorMsg);
       }
 
       console.log('✅ Reset concluído:', data);
@@ -60,9 +63,23 @@ export const useResetNetworking = () => {
       return data;
     } catch (error) {
       console.error('❌ Erro no reset:', error);
+      
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      const isNetworkError = errorMessage.includes('Failed to fetch') || errorMessage.includes('NetworkError');
+      
       toast.error('Erro ao resetar networking', {
-        description: error instanceof Error ? error.message : 'Erro desconhecido'
+        description: isNetworkError 
+          ? 'Falha na conexão. Verifique sua internet e tente novamente.'
+          : errorMessage,
+        duration: 5000
       });
+      
+      // Invalidar cache mesmo com erro, caso tenha sido parcialmente bem-sucedido
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['strategic-matches'] }),
+        queryClient.invalidateQueries({ queryKey: ['connection-notifications'] })
+      ]);
+      
       throw error;
     } finally {
       setIsResetting(false);

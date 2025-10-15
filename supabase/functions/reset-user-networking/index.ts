@@ -68,21 +68,20 @@ Deno.serve(async (req) => {
 
     console.log(`✅ ${deletedNotifications || 0} notificações deletadas`);
 
-    // 3. Resetar preferências de networking
+    // 3. Atualizar timestamp das preferências (opcional)
     const { error: prefsError } = await supabase
       .from('networking_preferences')
       .update({ 
-        last_match_generated: null,
         updated_at: new Date().toISOString()
       })
       .eq('user_id', user.id);
 
     if (prefsError) {
-      console.error('❌ Erro ao resetar preferências:', prefsError);
-      throw prefsError;
+      console.warn('⚠️ Aviso ao atualizar preferências:', prefsError);
+      // Não lançar erro, continuar mesmo assim
+    } else {
+      console.log('✅ Preferências de networking atualizadas');
     }
-
-    console.log('✅ Preferências de networking resetadas');
 
     // 4. Registrar no audit log
     await supabase.from('audit_logs').insert({
