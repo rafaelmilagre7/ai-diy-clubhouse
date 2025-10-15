@@ -486,7 +486,7 @@ serve(async (req) => {
           compatibility_score: finalCompatibilityScore, // Sempre um inteiro entre 0-100
           why_connect: matchReason,
           ice_breaker: generateIceBreaker(matchType, candidate.name),
-          connection_copy: matchReason,
+          // connection_copy removido - será gerado pela IA personalizada ao exibir o card
           opportunities: aiAnalysis.opportunities,
           ai_analysis: aiAnalysis,
           status: 'pending',
