@@ -36,18 +36,19 @@ export const useAIMatches = () => {
           event_type: 'match_generated',
           event_data: { 
             matches_count: data.matches_generated || 0,
+            candidates_analyzed: data.candidates_analyzed || 0,
             user_id: userId 
           }
         });
 
         toast({
-          title: "Matches IA Gerados!",
-          description: data.message,
+          title: "Conexões Geradas!",
+          description: `${data.matches_generated} novas conexões estratégicas foram criadas para você!`,
           variant: "default"
         });
         return data;
       } else {
-        throw new Error(data.error || 'Erro desconhecido ao gerar matches');
+        throw new Error(data.error || 'Erro ao gerar matches');
       }
     } catch (error) {
       console.error('Erro ao gerar matches IA:', error);

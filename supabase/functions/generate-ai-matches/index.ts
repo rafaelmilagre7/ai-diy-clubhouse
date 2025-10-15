@@ -153,7 +153,7 @@ serve(async (req) => {
       .eq('onboarding_completed', true)
       .neq('id', user_id)
       .not('name', 'is', null)
-      .limit(100);
+      .limit(200);
 
     if (candidatesError) {
       console.error('Erro ao buscar candidatos com onboarding:', candidatesError);
@@ -253,9 +253,9 @@ serve(async (req) => {
       });
     }
 
-    // Ordenar por compatibilidade e limitar aos TOP 10
+    // Ordenar por compatibilidade e limitar aos TOP 50
     matchesWithScore.sort((a, b) => b.score - a.score);
-    const topMatches = matchesWithScore.slice(0, 10);
+    const topMatches = matchesWithScore.slice(0, 50);
 
     console.log(`${topMatches.length} matches qualificados encontrados`);
 
@@ -263,11 +263,29 @@ serve(async (req) => {
     for (const { candidate, score } of topMatches) {
       
       // Selecionar tipo de match baseado nas preferências
-      const matchType = preferredTypes[Math.floor(Math.random() * preferredTypes.length)];
+      const preferredType = preferredTypes[Math.floor(Math.random() * preferredTypes.length)];
+      
+      // Mapear tipos do código para valores aceitos pelo banco
+      // Banco aceita: commercial_opportunity, strategic_partnership, knowledge_exchange, supplier, investor
+      let matchType: string;
+      if (preferredType === 'customer' || preferredType === 'cliente') {
+        matchType = 'commercial_opportunity';
+      } else if (preferredType === 'supplier' || preferredType === 'fornecedor') {
+        matchType = 'supplier';
+      } else if (preferredType === 'partner' || preferredType === 'parceiro') {
+        matchType = 'strategic_partnership';
+      } else if (preferredType === 'mentor' || preferredType === 'investor' || preferredType === 'investidor') {
+        matchType = 'investor';
+      } else {
+        matchType = 'strategic_partnership'; // default
+      }
+      
+      console.log(`Preparando match tipo ${preferredType} → ${matchType} com ${candidate.name}`);
       
       // Personalizar análise baseada no tipo de match
       const getAnalysisByType = (type: string) => {
         switch (type) {
+          case 'commercial_opportunity':
           case 'customer':
             return {
               strengths: [
@@ -296,6 +314,7 @@ serve(async (req) => {
               ],
               recommended_approach: "Explorar sinergias operacionais e apresentar demandas específicas da sua empresa."
             };
+          case 'strategic_partnership':
           case 'partner':
             return {
               strengths: [
@@ -310,6 +329,7 @@ serve(async (req) => {
               ],
               recommended_approach: "Iniciar com reunião informal para explorar sinergias e identificar oportunidades de colaboração mútua."
             };
+          case 'investor':
           case 'mentor':
             return {
               strengths: [
@@ -343,9 +363,12 @@ serve(async (req) => {
         const positionInfo = candidate.current_position ? `, ${candidate.current_position}` : '';
         
         const reasons = {
+          commercial_opportunity: `Olá! Selecionei ${targetName}${companyInfo} especialmente para você. Vi que o perfil dele${positionInfo} tem tudo a ver com o que você oferece. Analisando os dados, identifiquei ${scorePercent}% de compatibilidade entre vocês - isso significa grandes chances de negócio! Vale muito a pena iniciar essa conversa.`,
           customer: `Olá! Selecionei ${targetName}${companyInfo} especialmente para você. Vi que o perfil dele${positionInfo} tem tudo a ver com o que você oferece. Analisando os dados, identifiquei ${scorePercent}% de compatibilidade entre vocês - isso significa grandes chances de negócio! Vale muito a pena iniciar essa conversa.`,
           supplier: `Oi! Encontrei ${targetName}${companyInfo} e achei que vocês precisam se conhecer. Pela experiência dele${positionInfo}, ele pode ser exatamente o parceiro que você está buscando. A compatibilidade de ${scorePercent}% entre vocês me deixou animada com as possibilidades de parceria!`,
+          strategic_partnership: `Olha só quem eu encontrei para você: ${targetName}${companyInfo}! Analisando o perfil dele${positionInfo}, vi várias sinergias com seus objetivos. Com ${scorePercent}% de compatibilidade, acredito que vocês podem criar algo incrível juntos. Que tal começar uma conversa?`,
           partner: `Olha só quem eu encontrei para você: ${targetName}${companyInfo}! Analisando o perfil dele${positionInfo}, vi várias sinergias com seus objetivos. Com ${scorePercent}% de compatibilidade, acredito que vocês podem criar algo incrível juntos. Que tal começar uma conversa?`,
+          investor: `Tenho uma indicação especial: ${targetName}${companyInfo}. A trajetória dele${positionInfo} é impressionante e pode agregar muito ao seu desenvolvimento. Com ${scorePercent}% de alinhamento entre seus objetivos, essa pode ser uma conexão transformadora para você!`,
           mentor: `Tenho uma indicação especial: ${targetName}${companyInfo}. A trajetória dele${positionInfo} é impressionante e pode agregar muito ao seu desenvolvimento. Com ${scorePercent}% de alinhamento entre seus objetivos, essa pode ser uma conexão transformadora para você!`
         };
         
@@ -374,9 +397,12 @@ serve(async (req) => {
         const industryMention = candidate.industry ? ` no segmento de ${candidate.industry}` : '';
         
         const iceBreakers = {
+          commercial_opportunity: `Oi ${targetName}! A Nina me apresentou você e fiquei interessado no trabalho que você faz${companyMention}. Tenho algumas soluções que podem fazer sentido para vocês${industryMention}. Que tal conversarmos?`,
           customer: `Oi ${targetName}! A Nina me apresentou você e fiquei interessado no trabalho que você faz${companyMention}. Tenho algumas soluções que podem fazer sentido para vocês${industryMention}. Que tal conversarmos?`,
           supplier: `Olá ${targetName}! A Nina sugeriu que a gente se conhecesse. Estou procurando parceiros especializados${industryMention} e seu perfil${companyMention} chamou minha atenção. Podemos trocar uma ideia?`,
+          strategic_partnership: `E aí ${targetName}! A Nina conectou a gente porque viu que nossos objetivos se complementam. Trabalho${userProfile.company_name ? ` na ${userProfile.company_name}` : ''} e achei seu perfil${companyMention} bem interessante. Vamos explorar possíveis parcerias?`,
           partner: `E aí ${targetName}! A Nina conectou a gente porque viu que nossos objetivos se complementam. Trabalho${userProfile.company_name ? ` na ${userProfile.company_name}` : ''} e achei seu perfil${companyMention} bem interessante. Vamos explorar possíveis parcerias?`,
+          investor: `Olá ${targetName}! A Nina me indicou você e fiquei admirado com sua trajetória${companyMention}. Estou em um momento de crescimento profissional e seria incrível poder aprender com sua experiência. Você teria disponibilidade para trocarmos algumas ideias?`,
           mentor: `Olá ${targetName}! A Nina me indicou você e fiquei admirado com sua trajetória${companyMention}. Estou em um momento de crescimento profissional e seria incrível poder aprender com sua experiência. Você teria disponibilidade para trocarmos algumas ideias?`
         };
         
@@ -401,8 +427,9 @@ serve(async (req) => {
         });
 
       if (insertError) {
-        console.error('Erro ao inserir match:', insertError);
-        console.error('Dados do match:', {
+        console.error(`❌ Erro ao inserir match ${matchType} com ${candidate.name}:`, insertError.message);
+        console.error('Detalhes completos do erro:', JSON.stringify(insertError, null, 2));
+        console.error('Dados do match que causou erro:', {
           user_id,
           matched_user_id: candidate.id,
           match_type: matchType,
@@ -411,18 +438,19 @@ serve(async (req) => {
         });
       } else {
         matchesGenerated++;
-        console.log(`Match ${matchType} criado com ${candidate.name} (${Math.round(score * 100)}% compatibilidade)`);
+        console.log(`✅ Match ${matchType} criado com ${candidate.name} (${Math.round(score * 100)}% compatibilidade)`);
       }
     }
 
-    console.log(`Total de matches gerados: ${matchesGenerated}`);
+    console.log(`✅ Total de matches gerados: ${matchesGenerated}/${topMatches.length} candidatos processados`);
 
     return new Response(JSON.stringify({
-      success: true,
+      success: matchesGenerated > 0,
       matches_generated: matchesGenerated,
+      candidates_analyzed: topMatches.length,
       message: matchesGenerated > 0 
-        ? `${matchesGenerated} novos matches foram gerados para você!` 
-        : 'Nenhum novo match foi gerado. Tente novamente mais tarde.'
+        ? `${matchesGenerated} conexões estratégicas foram geradas com sucesso!` 
+        : 'Não foi possível gerar novos matches no momento. Tente novamente mais tarde.'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
