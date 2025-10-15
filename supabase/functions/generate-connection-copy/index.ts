@@ -34,7 +34,7 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Buscar perfis completos de ambos os usuários COM DADOS DE ONBOARDING
+    // QUERY 1: Buscar perfis de networking (sem JOIN)
     const { data: profiles, error: profilesError } = await supabase
       .from('networking_profiles_v2')
       .select(`
@@ -54,17 +54,7 @@ serve(async (req) => {
         professional_bio,
         avatar_url,
         linkedin_url,
-        whatsapp_number,
-        onboarding_final!inner (
-          personal_info,
-          business_info,
-          business_context,
-          goals_info,
-          ai_experience,
-          personalization,
-          professional_info,
-          business_goals
-        )
+        whatsapp_number
       `)
       .in('user_id', [currentUserId, targetUserId]);
 
@@ -75,6 +65,35 @@ serve(async (req) => {
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    // QUERY 2: Buscar dados de onboarding separadamente
+    const { data: onboardingData, error: onboardingError } = await supabase
+      .from('onboarding_final')
+      .select('user_id, personal_info, business_info, business_context, goals_info, ai_experience, personalization, professional_info, business_goals')
+      .in('user_id', [currentUserId, targetUserId]);
+
+    if (onboardingError) {
+      console.warn('⚠️ Aviso ao buscar onboarding (continuando com dados básicos):', onboardingError);
+      // NÃO FALHAR AQUI - onboarding pode estar incompleto
+    }
+
+    // MERGE MANUAL: Adicionar dados de onboarding aos perfis
+    const onboardingMap = new Map();
+    if (onboardingData && onboardingData.length > 0) {
+      onboardingData.forEach(ob => {
+        onboardingMap.set(ob.user_id, ob);
+      });
+    }
+
+    profiles.forEach(profile => {
+      const onboarding = onboardingMap.get(profile.user_id);
+      if (onboarding) {
+        profile.onboarding_final = onboarding;
+      } else {
+        console.warn(`⚠️ Usuário ${profile.name} (${profile.user_id}) sem dados de onboarding - usando fallback`);
+        profile.onboarding_final = null;
+      }
+    });
 
     const currentUser = profiles.find(p => p.user_id === currentUserId);
     const targetUser = profiles.find(p => p.user_id === targetUserId);
@@ -98,8 +117,10 @@ serve(async (req) => {
       ? currentUser.skills.join(', ')
       : currentUser?.skills || '';
 
-    // Dados do ONBOARDING - Usuário 1
-    const u1Onboarding = currentUser?.onboarding_final?.[0] || currentUser?.onboarding_final;
+    // Dados do ONBOARDING - Usuário 1 (com fallback robusto)
+    const u1Onboarding = currentUser?.onboarding_final;
+    const u1HasOnboarding = !!u1Onboarding;
+    
     const u1BusinessInfo = u1Onboarding?.business_info || {};
     const u1BusinessContext = u1Onboarding?.business_context || {};
     const u1AiExp = u1Onboarding?.ai_experience || {};
@@ -112,27 +133,35 @@ serve(async (req) => {
     const u1Position = u1ProfessionalInfo.position || u1BusinessInfo.position || currentUser?.current_position;
     const u1Revenue = u1BusinessInfo.annual_revenue || u1BusinessContext?.annual_revenue || currentUser?.annual_revenue;
     
-    // Experiência com IA (PRIORIZAR campos corretos do onboarding_final)
-    const u1AiLevel = u1AiExp.experience_level || u1AiExp.ai_knowledge_level || 'básico';
+    // Experiência com IA (PRIORIZAR campos corretos + FALLBACKS)
+    const u1AiLevel = u1AiExp.experience_level || u1AiExp.ai_knowledge_level || 
+                      (u1HasOnboarding ? 'básico' : 'iniciante');
     const u1HasAi = u1AiExp.has_implemented_ai || u1AiExp.implementation_status === 'implementing' || false;
     const u1AiTools = u1AiExp.tools_used || u1AiExp.ai_tools_used || [];
-    const u1AiObjective = u1AiExp.main_objective || u1AiExp.ai_implementation_objective || '';
+    const u1AiObjective = u1AiExp.main_objective || u1AiExp.ai_implementation_objective || 
+                          (u1HasOnboarding ? '' : 'otimização de processos');
     const u1AiChallenge = u1AiExp.main_challenge || u1AiExp.ai_main_challenge || u1Challenge;
     const u1AiUrgency = u1AiExp.urgency_level || u1AiExp.ai_implementation_urgency || 'média';
     
-    // Objetivos e metas (PRIORIZAR campos corretos: primary_goal, priority_areas, success_metrics)
-    const u1MainGoal = u1Goals.primary_goal || u1BusinessGoals.primary_goal || u1Goals.main_objective || '';
-    const u1PriorityAreas = u1Goals.priority_areas || u1BusinessGoals.priority_areas || [];
+    // Objetivos e metas (PRIORIZAR campos corretos + FALLBACKS do perfil)
+    const u1MainGoal = u1Goals.primary_goal || u1BusinessGoals.primary_goal || u1Goals.main_objective || 
+                       (u1HasOnboarding ? '' : u1LookingFor);
+    const u1PriorityAreas = u1Goals.priority_areas || u1BusinessGoals.priority_areas || 
+                            (u1HasOnboarding ? [] : [u1Industry]);
     const u1ImpactArea = Array.isArray(u1PriorityAreas) && u1PriorityAreas.length > 0 
       ? u1PriorityAreas[0] 
-      : (u1Goals.area_to_impact || '');
-    const u1SuccessMetrics = u1Goals.success_metrics || u1BusinessGoals.success_metrics || [];
+      : (u1Goals.area_to_impact || u1Industry);
+    const u1SuccessMetrics = u1Goals.success_metrics || u1BusinessGoals.success_metrics || 
+                             (u1HasOnboarding ? [] : ['crescimento de rede']);
     const u1SuccessMetric = Array.isArray(u1SuccessMetrics) && u1SuccessMetrics.length > 0
       ? u1SuccessMetrics[0]
-      : (u1Goals.success_metric || '');
-    const u1ExpectedResult = u1Goals.expected_outcomes?.[0] || u1BusinessGoals.expected_outcomes?.[0] || u1Goals.expected_result_90_days || '';
+      : (u1Goals.success_metric || 'crescimento');
+    const u1ExpectedResult = u1Goals.expected_outcomes?.[0] || u1BusinessGoals.expected_outcomes?.[0] || 
+                             u1Goals.expected_result_90_days || 
+                             (u1HasOnboarding ? '' : 'expandir conexões estratégicas');
     const u1Timeline = u1Goals.timeline || u1BusinessGoals.timeline || u1Goals.urgency_level || 'média';
-    const u1MainObstacle = u1Goals.main_challenge || u1BusinessGoals.main_challenge || u1Goals.main_obstacle || u1Challenge;
+    const u1MainObstacle = u1Goals.main_challenge || u1BusinessGoals.main_challenge || 
+                           u1Goals.main_obstacle || u1Challenge;
     const u1Budget = u1BusinessContext?.investment_capacity || u1Goals.ai_implementation_budget || '';
 
     // Dados básicos do perfil - Usuário 2
@@ -150,8 +179,10 @@ serve(async (req) => {
       ? targetUser.skills.join(', ')
       : targetUser?.skills || '';
 
-    // Dados do ONBOARDING - Usuário 2
-    const u2Onboarding = targetUser?.onboarding_final?.[0] || targetUser?.onboarding_final;
+    // Dados do ONBOARDING - Usuário 2 (com fallback robusto)
+    const u2Onboarding = targetUser?.onboarding_final;
+    const u2HasOnboarding = !!u2Onboarding;
+    
     const u2BusinessInfo = u2Onboarding?.business_info || {};
     const u2BusinessContext = u2Onboarding?.business_context || {};
     const u2AiExp = u2Onboarding?.ai_experience || {};
@@ -164,32 +195,41 @@ serve(async (req) => {
     const u2Position = u2ProfessionalInfo.position || u2BusinessInfo.position || targetUser?.current_position;
     const u2Revenue = u2BusinessInfo.annual_revenue || u2BusinessContext?.annual_revenue || targetUser?.annual_revenue;
     
-    // Experiência com IA (PRIORIZAR campos corretos do onboarding_final)
-    const u2AiLevel = u2AiExp.experience_level || u2AiExp.ai_knowledge_level || 'básico';
+    // Experiência com IA (PRIORIZAR campos corretos + FALLBACKS)
+    const u2AiLevel = u2AiExp.experience_level || u2AiExp.ai_knowledge_level || 
+                      (u2HasOnboarding ? 'básico' : 'iniciante');
     const u2HasAi = u2AiExp.has_implemented_ai || u2AiExp.implementation_status === 'implementing' || false;
     const u2AiTools = u2AiExp.tools_used || u2AiExp.ai_tools_used || [];
-    const u2AiObjective = u2AiExp.main_objective || u2AiExp.ai_implementation_objective || '';
+    const u2AiObjective = u2AiExp.main_objective || u2AiExp.ai_implementation_objective || 
+                          (u2HasOnboarding ? '' : 'otimização de processos');
     const u2AiChallenge = u2AiExp.main_challenge || u2AiExp.ai_main_challenge || u2Challenge;
     const u2AiUrgency = u2AiExp.urgency_level || u2AiExp.ai_implementation_urgency || 'média';
     
-    // Objetivos e metas (PRIORIZAR campos corretos: primary_goal, priority_areas, success_metrics)
-    const u2MainGoal = u2Goals.primary_goal || u2BusinessGoals.primary_goal || u2Goals.main_objective || '';
-    const u2PriorityAreas = u2Goals.priority_areas || u2BusinessGoals.priority_areas || [];
+    // Objetivos e metas (PRIORIZAR campos corretos + FALLBACKS do perfil)
+    const u2MainGoal = u2Goals.primary_goal || u2BusinessGoals.primary_goal || u2Goals.main_objective || 
+                       (u2HasOnboarding ? '' : u2LookingFor);
+    const u2PriorityAreas = u2Goals.priority_areas || u2BusinessGoals.priority_areas || 
+                            (u2HasOnboarding ? [] : [u2Industry]);
     const u2ImpactArea = Array.isArray(u2PriorityAreas) && u2PriorityAreas.length > 0 
       ? u2PriorityAreas[0] 
-      : (u2Goals.area_to_impact || '');
-    const u2SuccessMetrics = u2Goals.success_metrics || u2BusinessGoals.success_metrics || [];
+      : (u2Goals.area_to_impact || u2Industry);
+    const u2SuccessMetrics = u2Goals.success_metrics || u2BusinessGoals.success_metrics || 
+                             (u2HasOnboarding ? [] : ['crescimento de rede']);
     const u2SuccessMetric = Array.isArray(u2SuccessMetrics) && u2SuccessMetrics.length > 0
       ? u2SuccessMetrics[0]
-      : (u2Goals.success_metric || '');
-    const u2ExpectedResult = u2Goals.expected_outcomes?.[0] || u2BusinessGoals.expected_outcomes?.[0] || u2Goals.expected_result_90_days || '';
+      : (u2Goals.success_metric || 'crescimento');
+    const u2ExpectedResult = u2Goals.expected_outcomes?.[0] || u2BusinessGoals.expected_outcomes?.[0] || 
+                             u2Goals.expected_result_90_days || 
+                             (u2HasOnboarding ? '' : 'expandir conexões estratégicas');
     const u2Timeline = u2Goals.timeline || u2BusinessGoals.timeline || u2Goals.urgency_level || 'média';
-    const u2MainObstacle = u2Goals.main_challenge || u2BusinessGoals.main_challenge || u2Goals.main_obstacle || u2Challenge;
+    const u2MainObstacle = u2Goals.main_challenge || u2BusinessGoals.main_challenge || 
+                           u2Goals.main_obstacle || u2Challenge;
     const u2Budget = u2BusinessContext?.investment_capacity || u2Goals.ai_implementation_budget || '';
 
-    console.log('📊 Dados ENRIQUECIDOS com ONBOARDING enviados para IA:', {
+    console.log('📊 Dados ENRIQUECIDOS enviados para IA:', {
       user1: {
         name: currentUser?.name,
+        hasOnboarding: u1HasOnboarding,
         company: currentUser?.company_name,
         industry: u1CompanySector,
         position: u1Position,
@@ -207,6 +247,7 @@ serve(async (req) => {
       },
       user2: {
         name: targetUser?.name,
+        hasOnboarding: u2HasOnboarding,
         company: targetUser?.company_name,
         industry: u2CompanySector,
         position: u2Position,
@@ -224,7 +265,7 @@ serve(async (req) => {
       }
     });
 
-    // PROMPT ULTRA-PERSONALIZADO COM DADOS DE ONBOARDING
+    // PROMPT COM FALLBACKS CONDICIONAIS
     const prompt = `Você é um consultor de negócios B2B especializado em identificar oportunidades estratégicas entre profissionais.
 
 PERFIL 1 - ${currentUser?.name || 'Usuário 1'}:
@@ -233,30 +274,28 @@ PERFIL 1 - ${currentUser?.name || 'Usuário 1'}:
 • Empresa: ${currentUser?.company_name || 'Não informado'} (${u1CompanySize})
 • Setor: ${u1CompanySector}
 • Cargo: ${u1Position}
-• Faturamento: ${u1Revenue}
+${u1Revenue ? `• Faturamento: ${u1Revenue}` : ''}
 
-🎯 OBJETIVOS ESTRATÉGICOS (próximos 12 meses):
+${u1HasOnboarding && u1MainGoal ? `🎯 OBJETIVOS ESTRATÉGICOS (próximos 12 meses):
 • Objetivo principal: ${u1MainGoal}
 ${Array.isArray(u1PriorityAreas) && u1PriorityAreas.length > 0 ? `• Áreas prioritárias: ${u1PriorityAreas.join(', ')}` : `• Área de impacto: ${u1ImpactArea}`}
-• Resultado esperado: ${u1ExpectedResult}
-${Array.isArray(u1SuccessMetrics) && u1SuccessMetrics.length > 0 ? `• Métricas de sucesso: ${u1SuccessMetrics.join(', ')}` : `• Métrica de sucesso: ${u1SuccessMetric}`}
+${u1ExpectedResult ? `• Resultado esperado: ${u1ExpectedResult}` : ''}
+${Array.isArray(u1SuccessMetrics) && u1SuccessMetrics.length > 0 ? `• Métricas de sucesso: ${u1SuccessMetrics.join(', ')}` : u1SuccessMetric ? `• Métrica de sucesso: ${u1SuccessMetric}` : ''}
 • Timeline: ${u1Timeline}
-• Principal obstáculo: ${u1MainObstacle}
+• Principal obstáculo: ${u1MainObstacle}` : `💼 BUSCA CONECTAR-SE COM:
+${u1LookingFor}`}
 
-🤖 EXPERIÊNCIA COM IA:
+${u1HasOnboarding ? `🤖 EXPERIÊNCIA COM IA:
 • Nível: ${u1AiLevel}
 • Já implementou IA? ${u1HasAi ? 'Sim' : 'Não'}
 ${Array.isArray(u1AiTools) && u1AiTools.length > 0 ? `• Ferramentas usadas: ${u1AiTools.join(', ')}` : ''}
-• Objetivo de IA: ${u1AiObjective}
+${u1AiObjective ? `• Objetivo de IA: ${u1AiObjective}` : ''}
 • Desafio com IA: ${u1AiChallenge}
 • Urgência de implementação: ${u1AiUrgency}
-${u1Budget ? `• Orçamento para IA: ${u1Budget}` : ''}
+${u1Budget ? `• Orçamento para IA: ${u1Budget}` : ''}` : ''}
 
-💼 BUSCA CONECTAR-SE COM:
-${u1LookingFor}
-
-🎯 COMPETÊNCIAS:
-${u1Skills || 'Não informado'}
+${u1Skills ? `🎯 COMPETÊNCIAS:
+${u1Skills}` : ''}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -266,30 +305,28 @@ PERFIL 2 - ${targetUser?.name || 'Usuário 2'}:
 • Empresa: ${targetUser?.company_name || 'Não informado'} (${u2CompanySize})
 • Setor: ${u2CompanySector}
 • Cargo: ${u2Position}
-• Faturamento: ${u2Revenue}
+${u2Revenue ? `• Faturamento: ${u2Revenue}` : ''}
 
-🎯 OBJETIVOS ESTRATÉGICOS (próximos 12 meses):
+${u2HasOnboarding && u2MainGoal ? `🎯 OBJETIVOS ESTRATÉGICOS (próximos 12 meses):
 • Objetivo principal: ${u2MainGoal}
 ${Array.isArray(u2PriorityAreas) && u2PriorityAreas.length > 0 ? `• Áreas prioritárias: ${u2PriorityAreas.join(', ')}` : `• Área de impacto: ${u2ImpactArea}`}
-• Resultado esperado: ${u2ExpectedResult}
-${Array.isArray(u2SuccessMetrics) && u2SuccessMetrics.length > 0 ? `• Métricas de sucesso: ${u2SuccessMetrics.join(', ')}` : `• Métrica de sucesso: ${u2SuccessMetric}`}
+${u2ExpectedResult ? `• Resultado esperado: ${u2ExpectedResult}` : ''}
+${Array.isArray(u2SuccessMetrics) && u2SuccessMetrics.length > 0 ? `• Métricas de sucesso: ${u2SuccessMetrics.join(', ')}` : u2SuccessMetric ? `• Métrica de sucesso: ${u2SuccessMetric}` : ''}
 • Timeline: ${u2Timeline}
-• Principal obstáculo: ${u2MainObstacle}
+• Principal obstáculo: ${u2MainObstacle}` : `💼 BUSCA CONECTAR-SE COM:
+${u2LookingFor}`}
 
-🤖 EXPERIÊNCIA COM IA:
+${u2HasOnboarding ? `🤖 EXPERIÊNCIA COM IA:
 • Nível: ${u2AiLevel}
 • Já implementou IA? ${u2HasAi ? 'Sim' : 'Não'}
 ${Array.isArray(u2AiTools) && u2AiTools.length > 0 ? `• Ferramentas usadas: ${u2AiTools.join(', ')}` : ''}
-• Objetivo de IA: ${u2AiObjective}
+${u2AiObjective ? `• Objetivo de IA: ${u2AiObjective}` : ''}
 • Desafio com IA: ${u2AiChallenge}
 • Urgência de implementação: ${u2AiUrgency}
-${u2Budget ? `• Orçamento para IA: ${u2Budget}` : ''}
+${u2Budget ? `• Orçamento para IA: ${u2Budget}` : ''}` : ''}
 
-💼 BUSCA CONECTAR-SE COM:
-${u2LookingFor}
-
-🎯 COMPETÊNCIAS:
-${u2Skills || 'Não informado'}
+${u2Skills ? `🎯 COMPETÊNCIAS:
+${u2Skills}` : ''}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
