@@ -215,7 +215,7 @@ export const PostOpportunityModal = ({ open, onOpenChange }: PostOpportunityModa
             >
               Cancelar
             </Button>
-            <Button type="submit" disabled={createMutation.isPending}>
+            <Button type="submit" variant="aurora" disabled={createMutation.isPending}>
               {createMutation.isPending ? 'Publicando...' : 'Publicar Oportunidade'}
             </Button>
           </div>

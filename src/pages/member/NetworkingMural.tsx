@@ -30,12 +30,14 @@ export default function NetworkingMural() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Mural de Oportunidades</h1>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-aurora via-viverblue to-operational bg-clip-text text-transparent">
+            Mural de Oportunidades
+          </h1>
           <p className="text-muted-foreground mt-2">
             Descubra e compartilhe oportunidades de negócio com a comunidade
           </p>
         </div>
-        <Button onClick={() => setIsPostModalOpen(true)} size="lg">
+        <Button onClick={() => setIsPostModalOpen(true)} size="lg" variant="aurora">
           <Plus className="w-4 h-4 mr-2" />
           Postar Oportunidade
         </Button>

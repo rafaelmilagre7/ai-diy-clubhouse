@@ -21,11 +21,11 @@ interface OpportunityDetailsModalProps {
 }
 
 const typeConfig = {
-  parceria: { label: 'Parceria', icon: Users, colors: 'bg-blue-500/10 text-blue-600' },
-  fornecedor: { label: 'Fornecedor', icon: Package, colors: 'bg-green-500/10 text-green-600' },
-  cliente: { label: 'Cliente', icon: Briefcase, colors: 'bg-purple-500/10 text-purple-600' },
-  investimento: { label: 'Investimento', icon: TrendingUp, colors: 'bg-yellow-500/10 text-yellow-600' },
-  outro: { label: 'Outro', icon: Target, colors: 'bg-muted text-muted-foreground' },
+  parceria: { label: 'Parceria', icon: Users, colors: 'bg-viverblue/10 text-viverblue border-viverblue/30' },
+  fornecedor: { label: 'Fornecedor', icon: Package, colors: 'bg-operational/10 text-operational border-operational/30' },
+  cliente: { label: 'Cliente', icon: Briefcase, colors: 'bg-aurora/10 text-aurora border-aurora/30' },
+  investimento: { label: 'Investimento', icon: TrendingUp, colors: 'bg-revenue/10 text-revenue border-revenue/30' },
+  outro: { label: 'Outro', icon: Target, colors: 'bg-strategy/10 text-strategy border-strategy/30' },
 };
 
 export const OpportunityDetailsModal = ({
@@ -98,7 +98,7 @@ export const OpportunityDetailsModal = ({
         <div className="space-y-6 pt-4">
           {/* Tipo e Data */}
           <div className="flex items-center gap-3">
-            <Badge variant="outline" className={`${config.colors} border flex items-center gap-1.5 px-3 py-1.5`}>
+            <Badge variant="outline" className={`${config.colors} border-2 flex items-center gap-1.5 px-3 py-1.5`}>
               <Icon className="w-4 h-4" />
               {config.label}
             </Badge>
@@ -151,7 +151,7 @@ export const OpportunityDetailsModal = ({
             <div className="grid grid-cols-2 gap-3">
               {opportunity.contact_preference === 'platform' && (
                 <Button
-                  variant="default"
+                  variant="aurora"
                   className="w-full"
                   onClick={() => handleContact('platform')}
                 >
@@ -162,7 +162,7 @@ export const OpportunityDetailsModal = ({
 
               {opportunity.contact_preference === 'email' && author?.email && (
                 <Button
-                  variant="default"
+                  variant="aurora"
                   className="w-full"
                   onClick={() => handleContact('email')}
                 >
@@ -173,7 +173,7 @@ export const OpportunityDetailsModal = ({
 
               {opportunity.contact_preference === 'linkedin' && author?.linkedin_url && (
                 <Button
-                  variant="default"
+                  variant="aurora"
                   className="w-full"
                   onClick={() => handleContact('linkedin')}
                 >
@@ -184,7 +184,7 @@ export const OpportunityDetailsModal = ({
 
               {opportunity.contact_preference === 'whatsapp' && author?.whatsapp_number && (
                 <Button
-                  variant="default"
+                  variant="aurora"
                   className="w-full"
                   onClick={() => handleContact('whatsapp')}
                 >

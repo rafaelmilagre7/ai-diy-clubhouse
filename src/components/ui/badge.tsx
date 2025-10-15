@@ -4,25 +4,25 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const badgeVariants = cva(
-  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-aurora focus:ring-offset-2 backdrop-blur-sm",
   {
     variants: {
       variant: {
         default:
-          "border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
+          "border-aurora/30 bg-aurora/10 text-aurora hover:bg-aurora/20",
         secondary:
-          "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
+          "border-viverblue/30 bg-viverblue/10 text-viverblue hover:bg-viverblue/20",
         destructive:
-          "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
-        outline: "text-foreground",
+          "border-destructive/30 bg-destructive/10 text-destructive hover:bg-destructive/20",
+        outline: "border-aurora/20 text-foreground hover:bg-aurora/5",
         success:
-          "border-transparent bg-green-500 text-white hover:bg-green-600",
+          "border-operational/30 bg-operational/10 text-operational hover:bg-operational/20",
         warning:
-          "border-transparent bg-yellow-500 text-white hover:bg-yellow-600",
+          "border-revenue/30 bg-revenue/10 text-revenue hover:bg-revenue/20",
         info:
-          "border-transparent bg-blue-500 text-white hover:bg-blue-600",
+          "border-viverblue/30 bg-viverblue/10 text-viverblue hover:bg-viverblue/20",
         neutral:
-          "border-transparent bg-gray-500 text-white hover:bg-gray-600",
+          "border-border bg-muted text-muted-foreground hover:bg-muted/80",
       },
     },
     defaultVariants: {

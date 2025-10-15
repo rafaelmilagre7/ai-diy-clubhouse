@@ -1,4 +1,4 @@
-import { Card } from '@/components/ui/card';
+import { LiquidGlassCard } from '@/components/ui/LiquidGlassCard';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,27 +16,27 @@ const typeConfig = {
   parceria: {
     label: 'Parceria',
     icon: Users,
-    colors: 'bg-blue-500/10 text-blue-600 border-blue-500/20',
+    colors: 'bg-viverblue/10 text-viverblue border-viverblue/30',
   },
   fornecedor: {
     label: 'Fornecedor',
     icon: Package,
-    colors: 'bg-green-500/10 text-green-600 border-green-500/20',
+    colors: 'bg-operational/10 text-operational border-operational/30',
   },
   cliente: {
     label: 'Cliente',
     icon: Briefcase,
-    colors: 'bg-purple-500/10 text-purple-600 border-purple-500/20',
+    colors: 'bg-aurora/10 text-aurora border-aurora/30',
   },
   investimento: {
     label: 'Investimento',
     icon: TrendingUp,
-    colors: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20',
+    colors: 'bg-revenue/10 text-revenue border-revenue/30',
   },
   outro: {
     label: 'Outro',
     icon: Target,
-    colors: 'bg-muted text-muted-foreground border-border',
+    colors: 'bg-strategy/10 text-strategy border-strategy/30',
   },
 };
 
@@ -46,7 +46,17 @@ export const OpportunityCard = ({ opportunity, onViewDetails }: OpportunityCardP
   const author = opportunity.profiles;
 
   return (
-    <Card className="p-6 hover:shadow-md transition-all duration-200 cursor-pointer group" onClick={() => onViewDetails(opportunity)}>
+    <LiquidGlassCard 
+      variant="default" 
+      hoverable={true}
+      className="p-6 cursor-pointer group relative overflow-hidden"
+      onClick={() => onViewDetails(opportunity)}
+    >
+      {/* Blob decorativo */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">
+        <div className="absolute w-32 h-32 bg-aurora/3 rounded-full blur-2xl -top-10 -right-10 group-hover:bg-aurora/5 transition-all duration-500" />
+      </div>
+      
       <div className="space-y-4">
         {/* Header com tipo */}
         <div className="flex items-start justify-between gap-3">
@@ -64,7 +74,7 @@ export const OpportunityCard = ({ opportunity, onViewDetails }: OpportunityCardP
 
         {/* Título e descrição */}
         <div className="space-y-2">
-          <h3 className="font-semibold text-lg leading-tight group-hover:text-primary transition-colors">
+          <h3 className="font-semibold text-lg leading-tight group-hover:text-aurora transition-colors">
             {opportunity.title}
           </h3>
           <p className="text-sm text-muted-foreground line-clamp-2">
@@ -89,7 +99,7 @@ export const OpportunityCard = ({ opportunity, onViewDetails }: OpportunityCardP
         )}
 
         {/* Footer com autor e botão */}
-        <div className="flex items-center justify-between pt-4 border-t border-border">
+        <div className="flex items-center justify-between pt-4 border-t border-aurora/10">
           <div className="flex items-center gap-3">
             <Avatar className="w-8 h-8">
               <AvatarImage src={author?.avatar_url || ''} alt={author?.name || 'Usuário'} />
@@ -106,7 +116,7 @@ export const OpportunityCard = ({ opportunity, onViewDetails }: OpportunityCardP
           </div>
 
           <Button
-            variant="ghost"
+            variant="aurora"
             size="sm"
             className="shrink-0"
             onClick={(e) => {
@@ -118,6 +128,6 @@ export const OpportunityCard = ({ opportunity, onViewDetails }: OpportunityCardP
           </Button>
         </div>
       </div>
-    </Card>
+    </LiquidGlassCard>
   );
 };
