@@ -188,19 +188,42 @@ serve(async (req) => {
                       (u1HasOnboarding ? 'básico' : 'iniciante');
     const u1HasAi = u1AiExp.has_implemented_ai || u1AiExp.implementation_status === 'implementing' || false;
     const u1AiTools = u1AiExp.tools_used || u1AiExp.ai_tools_used || [];
-    const u1AiObjective = u1AiExp.main_objective || u1AiExp.ai_implementation_objective || 
-                          (u1HasOnboarding ? '' : 'otimização de processos');
+    // 🌐 Função para traduzir termos técnicos do banco para português natural
+    const translateObjective = (obj: string) => {
+      const translations: Record<string, string> = {
+        'personal_automation': 'automação pessoal',
+        'productivity': 'aumento de produtividade',
+        'cost_reduction': 'redução de custos',
+        'sales_growth': 'crescimento de vendas',
+        'customer_service': 'atendimento ao cliente',
+        'business_intelligence': 'inteligência de negócios',
+        'process_optimization': 'otimização de processos',
+        'data_analysis': 'análise de dados',
+        'marketing_automation': 'automação de marketing',
+        'workflow_automation': 'automação de fluxos de trabalho',
+      };
+      return translations[obj] || obj;
+    };
+
+    const u1AiObjective = translateObjective(
+      u1AiExp.main_objective || u1AiExp.ai_implementation_objective || 
+      (u1HasOnboarding ? '' : 'otimização de processos')
+    );
     const u1AiChallenge = u1AiExp.main_challenge || u1AiExp.ai_main_challenge || u1Challenge;
     const u1AiUrgency = u1AiExp.urgency_level || u1AiExp.ai_implementation_urgency || 'média';
     
     // Objetivos e metas (PRIORIZAR campos corretos + FALLBACKS do perfil)
-    const u1MainGoal = u1Goals.primary_goal || u1BusinessGoals.primary_goal || u1Goals.main_objective || 
-                       (u1HasOnboarding ? '' : u1LookingFor);
+    const u1MainGoal = translateObjective(
+      u1Goals.primary_goal || u1BusinessGoals.primary_goal || u1Goals.main_objective || 
+      (u1HasOnboarding ? '' : u1LookingFor)
+    );
     const u1PriorityAreas = u1Goals.priority_areas || u1BusinessGoals.priority_areas || 
                             (u1HasOnboarding ? [] : [u1Industry]);
-    const u1ImpactArea = Array.isArray(u1PriorityAreas) && u1PriorityAreas.length > 0 
-      ? u1PriorityAreas[0] 
-      : (u1Goals.area_to_impact || u1Industry);
+    const u1ImpactArea = translateObjective(
+      Array.isArray(u1PriorityAreas) && u1PriorityAreas.length > 0 
+        ? u1PriorityAreas[0] 
+        : (u1Goals.area_to_impact || u1Industry)
+    );
     const u1SuccessMetrics = u1Goals.success_metrics || u1BusinessGoals.success_metrics || 
                              (u1HasOnboarding ? [] : ['crescimento de rede']);
     const u1SuccessMetric = Array.isArray(u1SuccessMetrics) && u1SuccessMetrics.length > 0
@@ -250,19 +273,25 @@ serve(async (req) => {
                       (u2HasOnboarding ? 'básico' : 'iniciante');
     const u2HasAi = u2AiExp.has_implemented_ai || u2AiExp.implementation_status === 'implementing' || false;
     const u2AiTools = u2AiExp.tools_used || u2AiExp.ai_tools_used || [];
-    const u2AiObjective = u2AiExp.main_objective || u2AiExp.ai_implementation_objective || 
-                          (u2HasOnboarding ? '' : 'otimização de processos');
+    const u2AiObjective = translateObjective(
+      u2AiExp.main_objective || u2AiExp.ai_implementation_objective || 
+      (u2HasOnboarding ? '' : 'otimização de processos')
+    );
     const u2AiChallenge = u2AiExp.main_challenge || u2AiExp.ai_main_challenge || u2Challenge;
     const u2AiUrgency = u2AiExp.urgency_level || u2AiExp.ai_implementation_urgency || 'média';
     
     // Objetivos e metas (PRIORIZAR campos corretos + FALLBACKS do perfil)
-    const u2MainGoal = u2Goals.primary_goal || u2BusinessGoals.primary_goal || u2Goals.main_objective || 
-                       (u2HasOnboarding ? '' : u2LookingFor);
+    const u2MainGoal = translateObjective(
+      u2Goals.primary_goal || u2BusinessGoals.primary_goal || u2Goals.main_objective || 
+      (u2HasOnboarding ? '' : u2LookingFor)
+    );
     const u2PriorityAreas = u2Goals.priority_areas || u2BusinessGoals.priority_areas || 
                             (u2HasOnboarding ? [] : [u2Industry]);
-    const u2ImpactArea = Array.isArray(u2PriorityAreas) && u2PriorityAreas.length > 0 
-      ? u2PriorityAreas[0] 
-      : (u2Goals.area_to_impact || u2Industry);
+    const u2ImpactArea = translateObjective(
+      Array.isArray(u2PriorityAreas) && u2PriorityAreas.length > 0 
+        ? u2PriorityAreas[0] 
+        : (u2Goals.area_to_impact || u2Industry)
+    );
     const u2SuccessMetrics = u2Goals.success_metrics || u2BusinessGoals.success_metrics || 
                              (u2HasOnboarding ? [] : ['crescimento de rede']);
     const u2SuccessMetric = Array.isArray(u2SuccessMetrics) && u2SuccessMetrics.length > 0
@@ -427,8 +456,9 @@ ${u2Skills}` : ''}
    - Evite frases genéricas como "troca de experiências"
    - Seja ORIENTADO A RESULTADOS
 
-5. **FORMATO**:
-   - Máximo 70 palavras (2-3 linhas)
+5. **FORMATO CRÍTICO**:
+   - ⚠️ MÁXIMO ABSOLUTO: 50 palavras (2 linhas)
+   - ⚠️ Se ultrapassar 50 palavras, REESCREVA mais curto
    - Terceira pessoa
    - Use **negrito** em palavras-chave (objetivo, métrica, área de impacto)
    - Tom profissional e consultivo
@@ -465,11 +495,11 @@ Gere a copy AGORA:`;
         messages: [
           { 
             role: 'system', 
-            content: 'Você é um especialista em identificar oportunidades de negócio entre profissionais. Seja direto, específico e use markdown para destacar palavras-chave.' 
+            content: 'Você é um especialista em identificar oportunidades de negócio entre profissionais. Seja direto, específico e use markdown para destacar palavras-chave. CRITICAL: Máximo de 50 palavras.' 
           },
           { role: 'user', content: prompt }
         ],
-        max_tokens: 200,
+        max_tokens: 120, // Força copy mais curta
       }),
     });
 
@@ -486,6 +516,14 @@ Gere a copy AGORA:`;
     let generatedCopy = aiData.choices?.[0]?.message?.content || '';
 
     console.log('✅ Copy gerada com sucesso');
+
+    // 🛡️ VALIDAÇÃO DE TAMANHO: Truncar se ultrapassar 50 palavras
+    const wordCount = generatedCopy.split(/\s+/).length;
+    if (wordCount > 50) {
+      console.warn(`⚠️ Copy muito longa (${wordCount} palavras), truncando...`);
+      const words = generatedCopy.split(/\s+/);
+      generatedCopy = words.slice(0, 50).join(' ') + '...';
+    }
 
     // 🛡️ VALIDAÇÃO: Garantir que copy NÃO contém termos proibidos
     const forbiddenTerms = [
