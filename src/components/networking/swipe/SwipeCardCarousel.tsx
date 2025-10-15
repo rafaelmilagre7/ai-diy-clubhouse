@@ -489,12 +489,12 @@ export const SwipeCardCarousel = ({ card }: SwipeCardCarouselProps) => {
 
         </CarouselContent>
         
-        {/* Navegação com setas GRANDES - Gradiente Verde→Roxo→Laranja */}
-        <CarouselPrevious className="absolute -left-6 top-1/2 -translate-y-1/2 h-12 w-12 rounded-full bg-gradient-to-br from-strategy via-revenue to-operational border-2 border-white/20 hover:scale-110 transition-all shadow-2xl z-10">
-          <ChevronLeft className="h-6 w-6 text-white" />
+        {/* Navegação com setas discretas em branco */}
+        <CarouselPrevious className="absolute -left-12 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-white/90 hover:bg-white border border-border/30 hover:scale-105 transition-all shadow-lg hover:shadow-xl z-10">
+          <ChevronLeft className="h-5 w-5 text-foreground" />
         </CarouselPrevious>
-        <CarouselNext className="absolute -right-6 top-1/2 -translate-y-1/2 h-12 w-12 rounded-full bg-gradient-to-br from-strategy via-revenue to-operational border-2 border-white/20 hover:scale-110 transition-all shadow-2xl z-10">
-          <ChevronRight className="h-6 w-6 text-white" />
+        <CarouselNext className="absolute -right-12 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-white/90 hover:bg-white border border-border/30 hover:scale-105 transition-all shadow-lg hover:shadow-xl z-10">
+          <ChevronRight className="h-5 w-5 text-foreground" />
         </CarouselNext>
       </Carousel>
 
