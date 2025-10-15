@@ -154,7 +154,7 @@ const Networking = () => {
         <div className="relative text-center space-y-4">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-aurora/10 border border-aurora/20 backdrop-blur-sm">
             <Network className="h-4 w-4 text-aurora" />
-            <span className="text-xs font-medium text-aurora">Powered by AI</span>
+            <span className="text-xs font-medium text-aurora">Powered by Viver de IA</span>
           </div>
           
           <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-aurora via-viverblue to-operational bg-clip-text text-transparent">
