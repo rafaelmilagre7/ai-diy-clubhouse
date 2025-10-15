@@ -87,13 +87,13 @@ export const SwipeCard = ({
         <div className="min-h-[720px] flex flex-col p-5">
           {/* Header Compacto: Avatar + Info + Score */}
           <div className="flex items-start gap-3 mb-4 flex-shrink-0">
-            <Avatar className="h-16 w-16 border-2 border-aurora/30 shadow-lg">
+            <Avatar className="h-24 w-24 border-2 border-aurora/30 shadow-lg">
               <AvatarImage 
                 src={card.avatarUrl} 
                 alt={card.name}
                 className="object-cover"
               />
-              <AvatarFallback className="text-xl font-bold bg-gradient-to-br from-viverblue to-aurora text-white">
+              <AvatarFallback className="text-2xl font-bold bg-gradient-to-br from-viverblue to-aurora text-white">
                 {getInitials(card.name)}
               </AvatarFallback>
             </Avatar>
@@ -105,7 +105,7 @@ export const SwipeCard = ({
               <p className="text-sm text-muted-foreground truncate">
                 {card.position}
               </p>
-              <p className="text-sm text-aurora truncate">
+              <p className="text-base font-bold text-aurora truncate">
                 @ {card.company}
               </p>
             </div>
