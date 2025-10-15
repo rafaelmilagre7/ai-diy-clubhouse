@@ -46,6 +46,9 @@ const translations: Record<string, string> = {
   customer_support: "Atendimento ao Cliente",
   team_management: "Gestão de Equipes",
   product_development: "Desenvolvimento de Produtos",
+  pratical_learning: "Aprendizado Prático",
+  "pratical learning": "Aprendizado Prático",
+  "practical learning": "Aprendizado Prático",
   
   // Níveis de experiência
   beginner: "Iniciante",
@@ -60,6 +63,9 @@ const translations: Record<string, string> = {
   "3_months": "3 meses",
   "6_months": "6 meses",
   "1_year": "1 ano",
+  long_term: "Longo prazo",
+  short_term: "Curto prazo",
+  medium_term: "Médio prazo",
   slow: "Ritmo Gradual",
   moderate: "Ritmo Moderado",
   fast: "Ritmo Acelerado",
@@ -82,11 +88,24 @@ const translations: Record<string, string> = {
   healthcare: "Saúde",
   retail: "Varejo",
   services: "Serviços",
+  "Consultoria": "Consultoria",
+  "Seguros": "Seguros",
+  "Outro": "Outro",
 };
 
 const translate = (value: string | undefined): string => {
   if (!value) return 'Não informado';
-  return translations[value] || value;
+  
+  // Se já está em português (sem underscores e com acentos/maiúsculas), retornar direto
+  const hasPortugueseChars = /[áàâãéêíóôõúçÁÀÂÃÉÊÍÓÔÕÚÇ]/.test(value);
+  const isLikelyEnglish = /^[a-z_]+$/.test(value);
+  
+  if (hasPortugueseChars || (!isLikelyEnglish && !value.includes('_'))) {
+    return value;
+  }
+  
+  // Traduzir do dicionário
+  return translations[value] || translations[value.toLowerCase()] || value;
 };
 
 // Função para gerar motivos de conexão baseados em compatibilidade
@@ -371,26 +390,26 @@ export const SwipeCardCarousel = ({ card }: SwipeCardCarouselProps) => {
 
         </CarouselContent>
         
-        {/* Navegação com setas */}
-        <CarouselPrevious className="absolute left-1 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-gradient-to-r from-aurora to-aurora-light border-0 hover:scale-110 transition-transform shadow-lg">
-          <ChevronLeft className="h-4 w-4 text-white" />
+        {/* Navegação com setas GRANDES e DESTACADAS */}
+        <CarouselPrevious className="absolute -left-3 top-1/2 -translate-y-1/2 h-11 w-11 rounded-full bg-gradient-to-br from-aurora to-viverblue border-2 border-white/30 dark:border-white/20 hover:scale-110 transition-all shadow-2xl z-10">
+          <ChevronLeft className="h-6 w-6 text-white" />
         </CarouselPrevious>
-        <CarouselNext className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-gradient-to-r from-aurora to-aurora-light border-0 hover:scale-110 transition-transform shadow-lg">
-          <ChevronRight className="h-4 w-4 text-white" />
+        <CarouselNext className="absolute -right-3 top-1/2 -translate-y-1/2 h-11 w-11 rounded-full bg-gradient-to-br from-aurora to-viverblue border-2 border-white/30 dark:border-white/20 hover:scale-110 transition-all shadow-2xl z-10">
+          <ChevronRight className="h-6 w-6 text-white" />
         </CarouselNext>
       </Carousel>
 
-      {/* Indicadores de página (dots) */}
-      <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+      {/* Indicadores de página (dots) - MAIORES E MAIS ESPAÇADOS */}
+      <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
         {[0, 1, 2].map((idx) => (
           <button
             key={idx}
             onClick={() => api?.scrollTo(idx)}
             className={cn(
-              "h-1.5 rounded-full transition-all duration-300",
+              "h-2 rounded-full transition-all duration-300 shadow-md",
               current === idx 
-                ? "w-6 bg-gradient-to-r from-aurora via-viverblue to-operational" 
-                : "w-1.5 bg-muted/40 hover:bg-muted/60"
+                ? "w-8 bg-gradient-to-r from-aurora via-viverblue to-operational" 
+                : "w-2 bg-muted/50 hover:bg-muted/70"
             )}
             aria-label={`Ir para página ${idx + 1}`}
           />

@@ -73,32 +73,40 @@ export const SwipeCard = ({ card, onOpenContact }: SwipeCardProps) => {
         variant="premium"
         hoverable={false}
       >
-        <div className="h-[620px] flex flex-col p-8">
-          {/* Avatar no topo - sem cortar */}
-          <div className="flex justify-center mb-6">
-            <div className="relative">
-              <div className="absolute inset-0 bg-aurora/20 blur-2xl rounded-full" />
-              <Avatar className="relative h-32 w-32 border-4 border-background shadow-2xl ring-2 ring-aurora/20">
-                <AvatarImage 
-                  src={card.avatarUrl} 
-                  alt={card.name}
-                  className="object-cover"
-                />
-                <AvatarFallback className="text-3xl bg-gradient-to-br from-aurora/30 to-viverblue/30 text-aurora font-bold">
-                  {getInitials(card.name)}
-                </AvatarFallback>
-              </Avatar>
+        <div className="h-[580px] flex flex-col p-6">
+          {/* Header Compacto: Avatar + Info + Score */}
+          <div className="flex items-center gap-4 mb-4 flex-shrink-0">
+            <Avatar className="h-20 w-20 border-2 border-aurora/30 shadow-lg">
+              <AvatarImage 
+                src={card.avatarUrl} 
+                alt={card.name}
+                className="object-cover"
+              />
+              <AvatarFallback className="text-xl font-bold bg-gradient-to-br from-viverblue to-aurora text-white">
+                {getInitials(card.name)}
+              </AvatarFallback>
+            </Avatar>
+            
+            <div className="flex-1 min-w-0">
+              <h2 className="text-xl font-bold text-foreground truncate">
+                {card.name}
+              </h2>
+              <p className="text-sm font-medium text-muted-foreground truncate">
+                {card.position}
+              </p>
+              <p className="text-sm font-medium text-aurora truncate">
+                @ {card.company}
+              </p>
+            </div>
+
+            {/* Badge de Score */}
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-br from-operational/20 to-aurora/20 border border-operational/30 flex-shrink-0">
+              <span className="text-lg font-black text-operational">{Math.round(card.score || 50)}%</span>
             </div>
           </div>
 
-          <div className="text-center space-y-2 mb-6">
-            <h2 className="text-2xl font-bold text-foreground">{card.name}</h2>
-            <p className="text-base text-muted-foreground">{card.position}</p>
-            <p className="text-sm text-foreground font-bold">{card.company}</p>
-          </div>
-
           {/* Card Carrossel com dados parametrizados */}
-          <div className="flex-1 relative liquid-glass-card rounded-2xl p-5 border border-aurora/10 shadow-inner mb-6">
+          <div className="flex-1 min-h-0 relative liquid-glass-card rounded-2xl p-5 border border-aurora/10 shadow-inner mb-6">
             {/* Decorative corner accents */}
             <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-aurora/20 rounded-tl-2xl" />
             <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-aurora/20 rounded-br-2xl" />
@@ -106,8 +114,8 @@ export const SwipeCard = ({ card, onOpenContact }: SwipeCardProps) => {
             <SwipeCardCarousel card={card} />
           </div>
 
-          {/* Action Buttons reorganizados em 2 linhas */}
-          <div className="space-y-2">
+          {/* Action Buttons reorganizados em 2 linhas - SEMPRE VISÍVEIS */}
+          <div className="space-y-2 flex-shrink-0">
             {/* Linha 1: Ações secundárias (menores) */}
             <div className="flex gap-2">
               {/* Botão Adicionar Conexão - COMPACTO */}
