@@ -49,7 +49,7 @@ export const OpportunityCard = ({ opportunity, onViewDetails }: OpportunityCardP
     <LiquidGlassCard 
       variant="default" 
       hoverable={true}
-      className="p-6 cursor-pointer group"
+      className="p-6 cursor-pointer group hover:border-primary/30"
       onClick={() => onViewDetails(opportunity)}
     >
       <div className="space-y-4">
@@ -69,7 +69,7 @@ export const OpportunityCard = ({ opportunity, onViewDetails }: OpportunityCardP
 
         {/* Título e descrição */}
         <div className="space-y-2">
-          <h3 className="font-semibold text-lg leading-tight group-hover:text-aurora transition-colors">
+          <h3 className="font-semibold text-lg leading-tight group-hover:text-primary transition-colors">
             {opportunity.title}
           </h3>
           <p className="text-sm text-muted-foreground line-clamp-2">
@@ -94,7 +94,7 @@ export const OpportunityCard = ({ opportunity, onViewDetails }: OpportunityCardP
         )}
 
         {/* Footer com autor e botão */}
-        <div className="flex items-center justify-between pt-4 border-t border-aurora/10">
+        <div className="flex items-center justify-between pt-4 border-t border-border">
           <div className="flex items-center gap-3">
             <Avatar className="w-8 h-8">
               <AvatarImage src={author?.avatar_url || ''} alt={author?.name || 'Usuário'} />
@@ -111,7 +111,7 @@ export const OpportunityCard = ({ opportunity, onViewDetails }: OpportunityCardP
           </div>
 
           <Button
-            variant="aurora"
+            variant="default"
             size="sm"
             className="shrink-0"
             onClick={(e) => {

@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
 import {
   Dialog,
   DialogContent,
@@ -18,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Sparkles, MessageSquare, Linkedin, Send, Mail } from 'lucide-react';
+import { MessageSquare, Linkedin, Send, Mail } from 'lucide-react';
 import { useCreateOpportunity } from '@/hooks/networking/useOpportunities';
 import { TagSelector } from './TagSelector';
 import { cn } from '@/lib/utils';
@@ -93,16 +92,11 @@ export const PostOpportunityModal = ({ open, onOpenChange }: PostOpportunityModa
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-aurora via-viverblue to-operational">
-              <Sparkles className="w-5 h-5 text-white" />
-            </div>
-            <DialogTitle className="text-2xl bg-gradient-to-r from-aurora via-viverblue to-operational bg-clip-text text-transparent">
-              Postar Nova Oportunidade
-            </DialogTitle>
-          </div>
+          <DialogTitle className="text-2xl font-bold">
+            Postar Nova Oportunidade
+          </DialogTitle>
           <DialogDescription className="text-base">
-            Compartilhe uma oportunidade de negócio com a comunidade e amplie sua rede
+            Compartilhe uma oportunidade de negócio com a comunidade
           </DialogDescription>
         </DialogHeader>
 
@@ -117,7 +111,7 @@ export const PostOpportunityModal = ({ open, onOpenChange }: PostOpportunityModa
               onChange={(e) => setTitle(e.target.value)}
               maxLength={100}
               required
-              className="liquid-glass-card border-aurora/20 focus:border-aurora h-12 text-base"
+              className="h-11 text-base"
             />
             <p className="text-xs text-muted-foreground">{title.length}/100 caracteres</p>
           </div>
@@ -133,7 +127,7 @@ export const PostOpportunityModal = ({ open, onOpenChange }: PostOpportunityModa
               maxLength={1000}
               rows={6}
               required
-              className="liquid-glass-card border-aurora/20 focus:border-aurora resize-none"
+              className="resize-none"
             />
             <p className="text-xs text-muted-foreground">{description.length}/1000 caracteres</p>
           </div>
@@ -142,7 +136,7 @@ export const PostOpportunityModal = ({ open, onOpenChange }: PostOpportunityModa
           <div className="space-y-2">
             <Label htmlFor="type" className="text-base">Tipo de Oportunidade *</Label>
             <Select value={opportunityType} onValueChange={setOpportunityType} required>
-              <SelectTrigger id="type" className="liquid-glass-card border-aurora/20 h-12">
+              <SelectTrigger id="type" className="h-11">
                 <SelectValue placeholder="Selecione o tipo" />
               </SelectTrigger>
               <SelectContent>
@@ -167,18 +161,15 @@ export const PostOpportunityModal = ({ open, onOpenChange }: PostOpportunityModa
                 const isSelected = contactPreference === option.value;
 
                 return (
-                  <motion.button
+                  <button
                     key={option.value}
                     type="button"
                     onClick={() => setContactPreference(option.value)}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
                     className={cn(
                       'relative p-4 rounded-xl border transition-all duration-200 text-left',
-                      'hover:shadow-lg hover:shadow-aurora/20',
                       isSelected
-                        ? 'border-aurora/40 bg-gradient-to-br from-aurora/10 to-viverblue/10'
-                        : 'border-white/10 bg-white/5 hover:border-white/20'
+                        ? 'border-primary bg-primary/5'
+                        : 'border-border hover:border-primary/50 hover:bg-accent/50'
                     )}
                   >
                     <div className="flex items-start gap-3">
@@ -186,8 +177,8 @@ export const PostOpportunityModal = ({ open, onOpenChange }: PostOpportunityModa
                         className={cn(
                           'flex items-center justify-center w-10 h-10 rounded-full transition-all',
                           isSelected
-                            ? 'bg-gradient-to-br from-aurora to-viverblue text-white'
-                            : 'bg-white/10 text-muted-foreground'
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-muted text-muted-foreground'
                         )}
                       >
                         <Icon className="w-5 h-5" />
@@ -198,21 +189,17 @@ export const PostOpportunityModal = ({ open, onOpenChange }: PostOpportunityModa
                       </div>
                     </div>
                     {isSelected && (
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        className="absolute top-2 right-2 w-5 h-5 rounded-full bg-gradient-to-br from-aurora to-viverblue flex items-center justify-center"
-                      >
-                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                        <svg className="w-3 h-3 text-primary-foreground" fill="currentColor" viewBox="0 0 20 20">
                           <path
                             fillRule="evenodd"
                             d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
                             clipRule="evenodd"
                           />
                         </svg>
-                      </motion.div>
+                      </div>
                     )}
-                  </motion.button>
+                  </button>
                 );
               })}
             </div>

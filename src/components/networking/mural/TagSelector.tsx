@@ -58,7 +58,7 @@ export const TagSelector = ({ selectedTags, onChange }: TagSelectorProps) => {
                 >
                   <Badge
                     variant="default"
-                    className="gap-1.5 pl-2 pr-1.5 py-1.5 text-sm bg-gradient-to-r from-aurora to-viverblue"
+                    className="gap-1.5 pl-2 pr-1.5 py-1.5 text-sm bg-primary text-primary-foreground"
                   >
                     <Icon className="w-3.5 h-3.5" />
                     {tag.label}
@@ -84,7 +84,7 @@ export const TagSelector = ({ selectedTags, onChange }: TagSelectorProps) => {
           const isExpanded = expandedCategory === categoryKey;
 
           return (
-            <div key={categoryKey} className="liquid-glass-card p-4 rounded-xl border border-white/10">
+            <div key={categoryKey} className="bg-card/50 backdrop-blur-sm p-4 rounded-xl border border-border">
               <button
                 type="button"
                 onClick={() => setExpandedCategory(isExpanded ? null : categoryKey)}
@@ -130,10 +130,9 @@ export const TagSelector = ({ selectedTags, onChange }: TagSelectorProps) => {
                           whileTap={!isDisabled ? { scale: 0.98 } : {}}
                           className={cn(
                             'relative flex items-center gap-2 p-3 rounded-lg border transition-all duration-200',
-                            'hover:shadow-md',
                             isSelected
-                              ? 'border-aurora/40 bg-gradient-to-br from-aurora/10 to-viverblue/10'
-                              : 'border-white/10 bg-white/5 hover:border-white/20',
+                              ? 'border-primary bg-primary/10'
+                              : 'border-border hover:border-primary/50 hover:bg-accent/50',
                             isDisabled && 'opacity-40 cursor-not-allowed'
                           )}
                         >
@@ -141,21 +140,17 @@ export const TagSelector = ({ selectedTags, onChange }: TagSelectorProps) => {
                             className={cn(
                               'flex items-center justify-center w-8 h-8 rounded-full transition-all',
                               isSelected
-                                ? 'bg-gradient-to-br from-aurora to-viverblue text-white'
-                                : 'bg-white/10 text-muted-foreground'
+                                ? 'bg-primary text-primary-foreground'
+                                : 'bg-muted text-muted-foreground'
                             )}
                           >
                             <Icon className="w-4 h-4" />
                           </div>
                           <span className="text-sm font-medium flex-1 text-left">{tag.label}</span>
                           {isSelected && (
-                            <motion.div
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              className="absolute -top-1 -right-1 bg-gradient-to-br from-aurora to-viverblue rounded-full p-1"
-                            >
-                              <Check className="w-3 h-3 text-white" />
-                            </motion.div>
+                            <div className="absolute -top-1 -right-1 bg-primary rounded-full p-1">
+                              <Check className="w-3 h-3 text-primary-foreground" />
+                            </div>
                           )}
                         </motion.button>
                       );

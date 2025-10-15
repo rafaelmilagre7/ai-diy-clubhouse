@@ -48,7 +48,7 @@ export default function NetworkingMural() {
       </div>
 
       {/* Filtros */}
-      <div className="liquid-glass-card p-4 rounded-2xl border border-white/10 mb-6">
+      <div className="bg-card/50 backdrop-blur-sm p-4 rounded-2xl border border-border mb-6">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
@@ -56,11 +56,11 @@ export default function NetworkingMural() {
               placeholder="Buscar oportunidades..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-12 h-12 text-base liquid-glass-card border-aurora/20 focus:border-aurora"
+              className="pl-12 h-11 text-base"
             />
           </div>
           <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="w-full sm:w-[240px] h-12 text-base liquid-glass-card border-aurora/20">
+            <SelectTrigger className="w-full sm:w-[240px] h-11 text-base">
               <SelectValue placeholder="Filtrar por tipo" />
             </SelectTrigger>
             <SelectContent>

@@ -30,9 +30,8 @@ export const LiquidGlassCard: React.FC<LiquidGlassCardProps> = ({
     <div
       className={cn(
         variantClasses[variant],
-        hoverable && 'cursor-pointer',
+        hoverable && 'cursor-pointer transition-all duration-200 hover:shadow-lg',
         glowBorder && 'glow-border',
-        'smooth-transition',
         className
       )}
       onClick={onClick}
