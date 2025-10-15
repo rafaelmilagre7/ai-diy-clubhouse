@@ -115,52 +115,52 @@ export const SwipeCard = ({ card, onOpenContact }: SwipeCardProps) => {
             <SwipeCardCarousel card={card} />
           </div>
 
-          {/* Action Buttons reorganizados em 2 linhas - SEMPRE VISÍVEIS */}
-          <div className="space-y-2 flex-shrink-0">
-            {/* Linha 1: Ações secundárias (menores) */}
+          {/* Action Buttons - Nova Hierarquia Visual */}
+          <div className="space-y-3 flex-shrink-0">
+            {/* Ações Secundárias - Lado a Lado, Outline Suave */}
             <div className="flex gap-2">
-              {/* Botão Adicionar Conexão - COMPACTO */}
               <Button
                 onClick={handleAddConnection}
                 disabled={localStatus !== 'none' || isSendingRequest}
+                variant="outline"
                 size="sm"
-                className={`flex-1 gap-1.5 transition-all duration-300 shadow-sm hover:shadow-md border-0 ${
+                className={`flex-1 transition-all duration-300 ${
                   localStatus === 'accepted'
-                    ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white'
+                    ? 'bg-green-500/10 border-green-500/30 text-green-700 hover:bg-green-500/20'
                     : localStatus === 'pending'
-                    ? 'bg-gradient-to-r from-yellow-500 to-amber-500 text-white cursor-not-allowed opacity-80'
-                    : 'bg-gradient-to-r from-viverblue-dark to-operational hover:from-viverblue-darker hover:to-operational-dark text-white hover:scale-[1.02] shadow-lg'
+                    ? 'bg-yellow-500/10 border-yellow-500/30 text-yellow-700 cursor-not-allowed'
+                    : 'border-muted/30 text-muted-foreground hover:bg-muted/10 hover:text-foreground hover:border-muted/50'
                 }`}
               >
                 {localStatus === 'accepted' ? (
                   <>
                     <Check className="h-4 w-4" />
-                    <span className="text-xs font-medium">Conectado</span>
+                    Conectado
                   </>
                 ) : localStatus === 'pending' ? (
                   <>
                     <Clock className="h-4 w-4 animate-pulse" />
-                    <span className="text-xs font-medium">Enviada</span>
+                    Enviada
                   </>
                 ) : isSendingRequest ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    <span className="text-xs font-medium">Enviando...</span>
+                    Enviando...
                   </>
                 ) : (
                   <>
                     <UserPlus className="h-4 w-4" />
-                    <span className="text-xs font-medium">Adicionar</span>
+                    Adicionar
                   </>
                 )}
               </Button>
 
-              {/* Botão LinkedIn - SÓ ÍCONE */}
               {card.linkedinUrl && (
                 <Button
                   onClick={handleLinkedInClick}
+                  variant="outline"
                   size="sm"
-                  className="px-3 bg-[#0A66C2] hover:bg-[#004182] text-white shadow-sm hover:shadow-md transition-all border-0"
+                  className="border-muted/30 text-muted-foreground hover:bg-muted/10 hover:text-foreground hover:border-muted/50 transition-all px-3"
                   title="Ver perfil no LinkedIn"
                 >
                   <Linkedin className="h-4 w-4" />
@@ -168,14 +168,15 @@ export const SwipeCard = ({ card, onOpenContact }: SwipeCardProps) => {
               )}
             </div>
 
-            {/* Linha 2: Ação principal (CONECTAR - DESTAQUE) */}
+            {/* Ação Primária - Destaque com Gradiente Suave */}
             <Button
               onClick={onOpenContact}
               size="lg"
-              className="w-full gap-2 bg-gradient-to-r from-[#0ABAB5] via-[#088A87] to-[#065F5D] hover:from-[#088A87] hover:via-[#065F5D] hover:to-[#044D4B] hover:shadow-xl hover:shadow-aurora/40 hover:scale-[1.02] transition-all text-white font-bold border-0 shadow-lg"
+              className="w-full bg-gradient-to-r from-strategy/90 via-revenue/90 to-operational/90 hover:from-strategy hover:via-revenue hover:to-operational text-white shadow-lg shadow-strategy/20 transition-all duration-300 font-bold"
             >
-              <Phone className="h-5 w-5" />
-              <span>CONECTAR</span>
+              <Phone className="h-5 w-5 animate-pulse" />
+              CONECTAR AGORA
+              <span className="ml-auto text-xs font-medium opacity-80">{Math.round(card.score)}%</span>
             </Button>
           </div>
         </div>

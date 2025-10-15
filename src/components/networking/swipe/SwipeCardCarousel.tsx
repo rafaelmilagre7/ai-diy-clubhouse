@@ -21,7 +21,8 @@ import {
   Cpu,
   Sparkles,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Building2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -224,19 +225,40 @@ export const SwipeCardCarousel = ({ card }: SwipeCardCarouselProps) => {
   const score = Math.round(card.score || 50);
   const keywords = enrichedData.keywords || [];
   const valueProp = enrichedData.value_proposition?.split('•')[0]?.trim() || '';
-  const mainObjective = valueProp || enrichedData.goals_info?.primary_goal || 'Não informado';
+  
+  // Fallback em cascata para objetivo principal
+  const mainObjective = valueProp || 
+                       enrichedData.goals_info?.primary_goal ||
+                       enrichedData.professional_info?.value_proposition ||
+                       card.position ||
+                       'Conectar e crescer profissionalmente';
   
   // Dados da página 2: Objetivos & Desafios
   const lookingForArray = enrichedData.looking_for || [];
-  const lookingForList = Array.isArray(lookingForArray) ? lookingForArray : [];
+  const lookingForList = Array.isArray(lookingForArray) && lookingForArray.length > 0 
+    ? lookingForArray 
+    : (enrichedData.goals_info?.priority_areas || []);
+    
   const mainChallenge = enrichedData.main_challenge || 
-                       enrichedData.professional_info?.main_challenge || 
-                       'Não informado';
-  const timeline = enrichedData.goals_info?.timeline || 'Não informado';
+                       enrichedData.professional_info?.main_challenge ||
+                       enrichedData.goals_info?.main_challenge ||
+                       'Busca otimizar processos e resultados';
+                       
+  const timeline = enrichedData.goals_info?.timeline || '3 meses';
   const priorityAreas = enrichedData.goals_info?.priority_areas || [];
   
   // Dados da página 3: Experiência & Networking
-  const experienceLevel = enrichedData.ai_experience?.experience_level || 'Não informado';
+  const experienceLevel = enrichedData.ai_experience?.experience_level || 
+                         enrichedData.professional_info?.ai_experience ||
+                         'intermediate';
+                         
+  // Novo: dados da empresa
+  const companyInfo = {
+    name: card.company || 'Empresa não informada',
+    size: enrichedData.professional_info?.company_size || null,
+    industry: enrichedData.professional_info?.industry || null
+  };
+  
   const connectionReasons = generateConnectionReasons(card);
 
   // Monitorar mudanças no carrossel
@@ -312,6 +334,30 @@ export const SwipeCardCarousel = ({ card }: SwipeCardCarouselProps) => {
                   )}
                 </div>
               </div>
+
+              {/* Informações da Empresa - Novo */}
+              {companyInfo.size && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="h-4 w-4 text-strategy" />
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Porte da Empresa</p>
+                  </div>
+                  <Badge variant="outline" className="border-strategy/30 text-strategy bg-strategy/5 text-sm">
+                    {translate(companyInfo.size)}
+                  </Badge>
+                </div>
+              )}
+
+              {/* Experiência com IA - Novo */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Brain className="h-4 w-4 text-viverblue" />
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Experiência com IA</p>
+                </div>
+                <Badge variant="outline" className="border-viverblue/30 text-viverblue bg-viverblue/5 text-sm">
+                  {translate(experienceLevel)}
+                </Badge>
+              </div>
             </div>
           </CarouselItem>
 
@@ -344,9 +390,12 @@ export const SwipeCardCarousel = ({ card }: SwipeCardCarouselProps) => {
                     </div>
                   ))}
                   {lookingForList.length === 0 && (
-                    <Badge variant="outline" className="text-xs text-muted-foreground border-muted">
-                      Em definição
-                    </Badge>
+                    <div className="flex items-center gap-2 bg-muted/5 border border-dashed border-muted/30 rounded-lg px-3 py-3 justify-center">
+                      <Sparkles className="h-4 w-4 text-muted-foreground/50" />
+                      <span className="text-xs text-muted-foreground italic">
+                        Ainda explorando possibilidades
+                      </span>
+                    </div>
                   )}
                 </div>
               </div>
@@ -364,15 +413,16 @@ export const SwipeCardCarousel = ({ card }: SwipeCardCarouselProps) => {
                 </div>
               </div>
 
-              {/* Timeline */}
+              {/* Prazo para Resultados */}
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-aurora" />
-                  <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Timeline</p>
+                  <Clock className="h-4 w-4 text-revenue" />
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Prazo para Resultados</p>
                 </div>
-                <Badge variant="secondary" className="bg-aurora/10 text-aurora border-aurora/20 text-sm font-semibold px-4 py-1.5">
-                  {translate(timeline)}
-                </Badge>
+                <div className="flex items-center gap-2 bg-revenue/5 border border-revenue/20 rounded-lg px-3 py-2">
+                  <span className="text-sm font-bold text-revenue">{translate(timeline)}</span>
+                  <span className="text-xs text-muted-foreground">para atingir objetivos</span>
+                </div>
               </div>
             </div>
           </CarouselItem>
