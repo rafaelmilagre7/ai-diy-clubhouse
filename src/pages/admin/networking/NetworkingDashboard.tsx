@@ -1,11 +1,25 @@
-import { Network, TrendingUp } from 'lucide-react';
+import { Network, TrendingUp, RefreshCcw } from 'lucide-react';
 import { useAdminOpportunitiesMetrics } from '@/hooks/admin/useAdminOpportunities';
 import { NetworkingMetricsCards } from '@/components/admin/networking/NetworkingMetricsCards';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { useResetNetworking } from '@/hooks/networking/useResetNetworking';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 
 const NetworkingDashboard = () => {
   const { data: metrics, isLoading } = useAdminOpportunitiesMetrics();
+  const { resetNetworking, isResetting } = useResetNetworking();
 
   // Preparar dados para o gráfico de barras (por tipo)
   const typeChartData = metrics?.byType
@@ -31,16 +45,69 @@ const NetworkingDashboard = () => {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold flex items-center gap-3 mb-2">
-          <div className="p-2 rounded-xl bg-gradient-to-br from-aurora to-viverblue">
-            <Network className="w-6 h-6 text-white" />
-          </div>
-          Networking & Oportunidades
-        </h1>
-        <p className="text-muted-foreground">
-          Visão geral das oportunidades de negócio compartilhadas na plataforma
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold flex items-center gap-3 mb-2">
+            <div className="p-2 rounded-xl bg-gradient-to-br from-aurora to-viverblue">
+              <Network className="w-6 h-6 text-white" />
+            </div>
+            Networking & Oportunidades
+          </h1>
+          <p className="text-muted-foreground">
+            Visão geral das oportunidades de negócio compartilhadas na plataforma
+          </p>
+        </div>
+
+        {/* Reset Button */}
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button 
+              variant="destructive" 
+              size="sm"
+              disabled={isResetting}
+              className="gap-2"
+            >
+              <RefreshCcw className={`w-4 h-4 ${isResetting ? 'animate-spin' : ''}`} />
+              Resetar Meus Dados
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                ⚠️ Resetar Dados de Networking
+              </AlertDialogTitle>
+              <AlertDialogDescription className="space-y-3">
+                <p>Esta ação irá limpar completamente seus dados de networking:</p>
+                <ul className="space-y-2 text-sm">
+                  <li className="flex items-start gap-2">
+                    <span className="text-destructive">❌</span>
+                    <span>Deletar todos os seus matches estratégicos</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-destructive">❌</span>
+                    <span>Remover todas as notificações de conexão</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-aurora">🔄</span>
+                    <span>Resetar timestamp de última geração de matches</span>
+                  </li>
+                </ul>
+                <p className="text-xs text-muted-foreground mt-4">
+                  Após o reset, você poderá gerar novos matches com a versão mais recente do algoritmo de IA.
+                </p>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={resetNetworking}
+                className="bg-destructive hover:bg-destructive/90"
+              >
+                Confirmar Reset
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
 
       {/* Metrics Cards */}
