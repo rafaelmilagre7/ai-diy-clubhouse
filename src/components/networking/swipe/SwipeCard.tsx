@@ -19,9 +19,18 @@ export const SwipeCard = ({ card, onOpenContact }: SwipeCardProps) => {
   const { data: connectionStatus } = useCheckConnectionStatus(card.userId);
   const [localStatus, setLocalStatus] = useState<'none' | 'pending' | 'accepted'>('none');
 
+  // Resetar status local quando trocar de card
+  useEffect(() => {
+    setLocalStatus('none');
+  }, [card.userId]);
+
+  // Atualizar status com base na conexão existente
   useEffect(() => {
     if (connectionStatus) {
       setLocalStatus(connectionStatus.status as 'none' | 'pending' | 'accepted');
+    } else {
+      // Sem connectionStatus = sem conexão existente
+      setLocalStatus('none');
     }
   }, [connectionStatus]);
 

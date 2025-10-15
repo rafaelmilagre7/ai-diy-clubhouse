@@ -171,6 +171,7 @@ export const useConnections = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['connections'] });
       queryClient.invalidateQueries({ queryKey: ['pending-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['connection-status'] });
       toast.success('Solicitação de conexão enviada!');
     },
     onError: (error) => {
