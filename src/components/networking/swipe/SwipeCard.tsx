@@ -61,11 +61,10 @@ export const SwipeCard = ({ card, onOpenContact }: SwipeCardProps) => {
             </div>
           </div>
 
-          {/* Info centralizada */}
           <div className="text-center space-y-2 mb-6">
             <h2 className="text-2xl font-bold text-foreground">{card.name}</h2>
             <p className="text-base text-muted-foreground">{card.position}</p>
-            <p className="text-sm text-muted-foreground font-medium">{card.company}</p>
+            <p className="text-sm text-foreground font-bold">{card.company}</p>
           </div>
 
           {/* Copy da IA - altura fixa com scroll */}
@@ -114,7 +113,7 @@ export const SwipeCard = ({ card, onOpenContact }: SwipeCardProps) => {
             <Button
               onClick={onOpenContact}
               size="lg"
-              className="flex-1 gap-2 bg-gradient-to-r from-aurora via-viverblue to-operational hover:shadow-lg hover:shadow-aurora/30 transition-all hover:scale-105 text-white font-semibold border-0"
+              className="flex-1 gap-2 bg-gradient-to-r from-[#0ABAB5] via-[#088A87] to-[#065F5D] hover:from-[#088A87] hover:via-[#065F5D] hover:to-[#044D4B] hover:shadow-lg hover:shadow-aurora/30 transition-all hover:scale-105 text-white font-semibold border-0"
             >
               <Phone className="h-5 w-5" />
               Conectar

@@ -64,23 +64,13 @@ export const ContactModal = ({ isOpen, onClose, card }: ContactModalProps) => {
 
               {/* Header com gradiente */}
               <div className="relative p-6 border-b border-aurora/10">
-                <div className="flex items-start justify-between">
-                  <div className="space-y-1">
-                    <h2 className="text-xl font-bold bg-gradient-to-r from-aurora via-viverblue to-operational bg-clip-text text-transparent">
-                      Informações de Contato
-                    </h2>
-                    <p className="text-sm text-muted-foreground">
-                      Dados para você entrar em contato com {card.name}
-                    </p>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={onClose}
-                    className="rounded-full h-8 w-8 p-0 hover:bg-aurora/10"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
+                <div className="space-y-1">
+                  <h2 className="text-xl font-bold bg-gradient-to-r from-aurora via-viverblue to-operational bg-clip-text text-transparent">
+                    Informações de Contato
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    Dados para você entrar em contato com {card.name}
+                  </p>
                 </div>
               </div>
 
@@ -186,7 +176,7 @@ export const ContactModal = ({ isOpen, onClose, card }: ContactModalProps) => {
               <div className="relative p-6 border-t border-aurora/10">
                 <Button 
                   onClick={onClose}
-                  className="w-full h-12 bg-gradient-to-r from-aurora via-viverblue to-operational hover:shadow-lg hover:shadow-aurora/30 transition-all text-white font-semibold border-0"
+                  className="w-full h-12 bg-gradient-to-r from-[#0ABAB5] via-[#088A87] to-[#065F5D] hover:from-[#088A87] hover:via-[#065F5D] hover:to-[#044D4B] hover:shadow-lg hover:shadow-aurora/30 transition-all text-white font-semibold border-0"
                 >
                   Concluído
                 </Button>

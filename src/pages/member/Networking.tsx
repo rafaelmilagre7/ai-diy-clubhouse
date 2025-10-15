@@ -158,11 +158,11 @@ const Networking = () => {
           </div>
           
           <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-aurora via-viverblue to-operational bg-clip-text text-transparent">
-            Conexões Estratégicas
+            Networking com IA
           </h1>
           
           <p className="text-muted-foreground text-base max-w-2xl mx-auto">
-            Matches personalizados com base no seu perfil e objetivos de negócio
+            Descubra conexões estratégicas com inteligência artificial
           </p>
           
           {/* Botão para forçar regeneração - mais sofisticado */}
@@ -191,14 +191,14 @@ const Networking = () => {
         {/* Container com card centralizado e botões nas laterais */}
         <div className="relative max-w-5xl mx-auto flex items-center justify-center gap-8">
           
-          {/* Botão ANTERIOR - Lateral ESQUERDA com efeito glass */}
+          {/* Botão ANTERIOR - Lateral ESQUERDA com cores mais escuras */}
           <Button
             onClick={previousCard}
             disabled={!hasPrevious}
             size="lg"
-            className="h-20 w-20 rounded-full shadow-2xl liquid-glass-card border-2 border-aurora/20 hover:border-aurora/40 disabled:opacity-20 transition-all shrink-0 hover:scale-110 disabled:hover:scale-100"
+            className="h-20 w-20 rounded-full shadow-2xl bg-gradient-to-br from-[#0ABAB5] to-[#065F5D] hover:from-[#088A87] hover:to-[#044D4B] text-white border-0 disabled:opacity-20 transition-all shrink-0 hover:scale-110 disabled:hover:scale-100"
           >
-            <ChevronLeft className="h-10 w-10 text-foreground" />
+            <ChevronLeft className="h-10 w-10" />
           </Button>
 
           {/* Card no centro */}
@@ -209,12 +209,12 @@ const Networking = () => {
             />
           </div>
 
-          {/* Botão PRÓXIMO - Lateral DIREITA com gradiente aprimorado */}
+          {/* Botão PRÓXIMO - Lateral DIREITA com cores mais escuras */}
           <Button
             onClick={nextCard}
             disabled={!hasNext}
             size="lg"
-            className="h-20 w-20 rounded-full shadow-2xl bg-gradient-to-br from-aurora via-viverblue to-operational hover:shadow-aurora/30 text-white disabled:opacity-20 transition-all shrink-0 hover:scale-110 disabled:hover:scale-100"
+            className="h-20 w-20 rounded-full shadow-2xl bg-gradient-to-br from-[#0ABAB5] via-[#088A87] to-[#065F5D] hover:from-[#088A87] hover:via-[#065F5D] hover:to-[#044D4B] hover:shadow-aurora/30 text-white border-0 disabled:opacity-20 transition-all shrink-0 hover:scale-110 disabled:hover:scale-100"
           >
             <ChevronRight className="h-10 w-10" />
           </Button>
