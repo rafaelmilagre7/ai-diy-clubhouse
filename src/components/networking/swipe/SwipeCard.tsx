@@ -148,38 +148,39 @@ export const SwipeCard = ({
             </Button>
 
             {/* AÇÕES SECUNDÁRIAS - Aurora Style */}
-            <div className="flex gap-2">
+            <div className="flex gap-3">
               <Button
                 onClick={handleAddConnection}
                 disabled={localStatus !== 'none' || isSendingRequest}
-                variant="outline"
-                className={`flex-1 transition-all duration-300 font-semibold ${
+                size="lg"
+                className={`flex-1 relative overflow-hidden group transition-all duration-300 font-bold text-base ${
                   localStatus === 'accepted'
-                    ? 'bg-aurora/10 border-2 border-aurora/60 text-aurora shadow-md shadow-aurora/20 hover:bg-aurora/15'
+                    ? 'bg-gradient-to-r from-aurora/20 to-viverblue/20 border-2 border-aurora/60 text-aurora shadow-lg shadow-aurora/30 hover:shadow-xl hover:shadow-aurora/40 hover:scale-[1.02]'
                     : localStatus === 'pending'
-                    ? 'bg-warning/10 border-2 border-warning/60 text-warning shadow-md shadow-warning/20 cursor-not-allowed'
-                    : 'border-2 border-border bg-card/50 text-foreground hover:bg-card hover:border-aurora/30 shadow-sm hover:shadow-md'
+                    ? 'bg-gradient-to-r from-warning/20 to-warning/30 border-2 border-warning/60 text-warning shadow-lg shadow-warning/20 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-aurora/10 to-viverblue/10 border-2 border-aurora/40 text-aurora hover:from-aurora/20 hover:to-viverblue/20 shadow-lg shadow-aurora/20 hover:shadow-xl hover:shadow-aurora/30 hover:scale-[1.02]'
                 }`}
               >
+                <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                 {localStatus === 'accepted' ? (
                   <>
-                    <Check className="h-4 w-4 mr-2" />
-                    Conectado
+                    <Check className="h-5 w-5 mr-2 relative z-10" />
+                    <span className="relative z-10">Conectado</span>
                   </>
                 ) : localStatus === 'pending' ? (
                   <>
-                    <Clock className="h-4 w-4 mr-2" />
-                    Solicitação Enviada
+                    <Clock className="h-5 w-5 mr-2 relative z-10" />
+                    <span className="relative z-10">Solicitação Enviada</span>
                   </>
                 ) : isSendingRequest ? (
                   <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Enviando...
+                    <Loader2 className="h-5 w-5 mr-2 animate-spin relative z-10" />
+                    <span className="relative z-10">Enviando...</span>
                   </>
                 ) : (
                   <>
-                    <UserPlus className="h-4 w-4 mr-2" />
-                    Adicionar à Rede
+                    <UserPlus className="h-5 w-5 mr-2 relative z-10" />
+                    <span className="relative z-10">Adicionar à Rede</span>
                   </>
                 )}
               </Button>
@@ -187,41 +188,16 @@ export const SwipeCard = ({
               {card.linkedinUrl && (
                 <Button
                   onClick={handleLinkedInClick}
-                  variant="outline"
-                  size="icon"
-                  className="border-2 border-[#0A66C2]/40 text-[#0A66C2] hover:bg-[#0A66C2]/10 hover:border-[#0A66C2]/60 transition-all duration-300 shadow-sm hover:shadow-md"
+                  size="lg"
+                  className="relative overflow-hidden group bg-[#0A66C2] hover:bg-[#004182] text-white border-0 shadow-lg shadow-[#0A66C2]/30 hover:shadow-xl hover:shadow-[#0A66C2]/40 transition-all duration-300 font-bold hover:scale-[1.02] px-6"
                   title="Ver perfil no LinkedIn"
                 >
-                  <Linkedin className="h-4 w-4" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <Linkedin className="h-5 w-5 relative z-10" />
                 </Button>
               )}
             </div>
           </div>
-
-          {/* Botões de navegação entre usuários - embaixo do card */}
-          {(onNext || onPrevious) && (
-            <div className="flex justify-between items-center gap-3 pt-4 border-t border-border/30 flex-shrink-0">
-              <Button
-                onClick={onPrevious}
-                disabled={!hasPrevious}
-                variant="outline"
-                className="flex-1 bg-surface-elevated/50 border-2 border-border text-foreground hover:bg-surface-elevated hover:border-aurora/40 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-300 font-semibold shadow-sm hover:shadow-md hover:scale-[1.02] disabled:hover:scale-100"
-              >
-                <ChevronLeft className="h-5 w-5 mr-1" />
-                Voltar
-              </Button>
-              
-              <Button
-                onClick={onNext}
-                disabled={!hasNext}
-                variant="outline"
-                className="flex-1 bg-surface-elevated/50 border-2 border-border text-foreground hover:bg-surface-elevated hover:border-aurora/40 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-300 font-semibold shadow-sm hover:shadow-md hover:scale-[1.02] disabled:hover:scale-100"
-              >
-                Próximo
-                <ChevronRight className="h-5 w-5 ml-1" />
-              </Button>
-            </div>
-          )}
         </div>
       </LiquidGlassCard>
     </motion.div>
