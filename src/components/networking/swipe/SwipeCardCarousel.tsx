@@ -508,8 +508,8 @@ export const SwipeCardCarousel = ({ card }: SwipeCardCarouselProps) => {
         <CarouselNext className="hidden" />
       </Carousel>
 
-      {/* Indicadores de página (dots) - Verde→Roxo gradiente */}
-      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+      {/* Indicadores de página (dots) - Fora do card, bem embaixo */}
+      <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 flex gap-2 z-20">
         {[0, 1, 2].map((idx) => (
           <button
             key={idx}

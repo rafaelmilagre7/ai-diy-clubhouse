@@ -118,7 +118,7 @@ export const SwipeCard = ({
           </div>
 
           {/* Card Carrossel com dados parametrizados */}
-          <div className="flex-1 min-h-0 relative liquid-glass-card rounded-2xl p-5 border border-aurora/10 shadow-inner mb-8">
+          <div className="flex-1 min-h-0 relative liquid-glass-card rounded-2xl p-5 border border-aurora/10 shadow-inner mb-12">
             {/* Decorative corner accents */}
             <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-aurora/20 rounded-tl-2xl" />
             <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-aurora/20 rounded-br-2xl" />
@@ -205,7 +205,7 @@ export const SwipeCard = ({
                 onClick={onPrevious}
                 disabled={!hasPrevious}
                 variant="outline"
-                className="flex-1 bg-card/50 border-2 border-aurora/30 text-aurora hover:bg-aurora/10 hover:border-aurora/50 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-300 font-semibold shadow-sm hover:shadow-md hover:scale-[1.02] disabled:hover:scale-100"
+                className="flex-1 bg-surface-elevated/50 border-2 border-border text-foreground hover:bg-surface-elevated hover:border-aurora/40 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-300 font-semibold shadow-sm hover:shadow-md hover:scale-[1.02] disabled:hover:scale-100"
               >
                 <ChevronLeft className="h-5 w-5 mr-1" />
                 Voltar
@@ -215,7 +215,7 @@ export const SwipeCard = ({
                 onClick={onNext}
                 disabled={!hasNext}
                 variant="outline"
-                className="flex-1 bg-card/50 border-2 border-aurora/30 text-aurora hover:bg-aurora/10 hover:border-aurora/50 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-300 font-semibold shadow-sm hover:shadow-md hover:scale-[1.02] disabled:hover:scale-100"
+                className="flex-1 bg-surface-elevated/50 border-2 border-border text-foreground hover:bg-surface-elevated hover:border-aurora/40 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-300 font-semibold shadow-sm hover:shadow-md hover:scale-[1.02] disabled:hover:scale-100"
               >
                 Próximo
                 <ChevronRight className="h-5 w-5 ml-1" />
