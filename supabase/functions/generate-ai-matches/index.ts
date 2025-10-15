@@ -286,7 +286,6 @@ serve(async (req) => {
       const getAnalysisByType = (type: string) => {
         switch (type) {
           case 'commercial_opportunity':
-          case 'customer':
             return {
               strengths: [
                 "Perfil de empresa com potencial de demanda",
@@ -315,7 +314,6 @@ serve(async (req) => {
               recommended_approach: "Explorar sinergias operacionais e apresentar demandas específicas da sua empresa."
             };
           case 'strategic_partnership':
-          case 'partner':
             return {
               strengths: [
                 "Experiência complementar em setores estratégicos",
@@ -330,7 +328,6 @@ serve(async (req) => {
               recommended_approach: "Iniciar com reunião informal para explorar sinergias e identificar oportunidades de colaboração mútua."
             };
           case 'investor':
-          case 'mentor':
             return {
               strengths: [
                 "Experiência senior na área",
@@ -343,6 +340,20 @@ serve(async (req) => {
                 "Orientação estratégica"
               ],
               recommended_approach: "Apresentar desafios específicos e solicitar orientação baseada na experiência do profissional."
+            };
+          case 'knowledge_exchange':
+            return {
+              strengths: [
+                "Conhecimento complementar e experiências valiosas",
+                "Oportunidade de aprendizado mútuo",
+                "Potencial para troca de melhores práticas"
+              ],
+              opportunities: [
+                "Compartilhamento de conhecimentos especializados",
+                "Aceleração de aprendizado em áreas estratégicas",
+                "Networking baseado em desenvolvimento profissional"
+              ],
+              recommended_approach: "Propor sessões de troca de experiências e discussão de cases práticos."
             };
           default:
             return {
@@ -364,12 +375,10 @@ serve(async (req) => {
         
         const reasons = {
           commercial_opportunity: `Olá! Selecionei ${targetName}${companyInfo} especialmente para você. Vi que o perfil dele${positionInfo} tem tudo a ver com o que você oferece. Analisando os dados, identifiquei ${scorePercent}% de compatibilidade entre vocês - isso significa grandes chances de negócio! Vale muito a pena iniciar essa conversa.`,
-          customer: `Olá! Selecionei ${targetName}${companyInfo} especialmente para você. Vi que o perfil dele${positionInfo} tem tudo a ver com o que você oferece. Analisando os dados, identifiquei ${scorePercent}% de compatibilidade entre vocês - isso significa grandes chances de negócio! Vale muito a pena iniciar essa conversa.`,
           supplier: `Oi! Encontrei ${targetName}${companyInfo} e achei que vocês precisam se conhecer. Pela experiência dele${positionInfo}, ele pode ser exatamente o parceiro que você está buscando. A compatibilidade de ${scorePercent}% entre vocês me deixou animada com as possibilidades de parceria!`,
           strategic_partnership: `Olha só quem eu encontrei para você: ${targetName}${companyInfo}! Analisando o perfil dele${positionInfo}, vi várias sinergias com seus objetivos. Com ${scorePercent}% de compatibilidade, acredito que vocês podem criar algo incrível juntos. Que tal começar uma conversa?`,
-          partner: `Olha só quem eu encontrei para você: ${targetName}${companyInfo}! Analisando o perfil dele${positionInfo}, vi várias sinergias com seus objetivos. Com ${scorePercent}% de compatibilidade, acredito que vocês podem criar algo incrível juntos. Que tal começar uma conversa?`,
           investor: `Tenho uma indicação especial: ${targetName}${companyInfo}. A trajetória dele${positionInfo} é impressionante e pode agregar muito ao seu desenvolvimento. Com ${scorePercent}% de alinhamento entre seus objetivos, essa pode ser uma conexão transformadora para você!`,
-          mentor: `Tenho uma indicação especial: ${targetName}${companyInfo}. A trajetória dele${positionInfo} é impressionante e pode agregar muito ao seu desenvolvimento. Com ${scorePercent}% de alinhamento entre seus objetivos, essa pode ser uma conexão transformadora para você!`
+          knowledge_exchange: `Que legal encontrar ${targetName}${companyInfo}! Vi que vocês têm muito a trocar em termos de conhecimento e experiências${positionInfo}. Com ${scorePercent}% de compatibilidade, tenho certeza que uma conversa entre vocês vai render insights valiosos para ambos!`
         };
         
         return reasons[type as keyof typeof reasons] || 
@@ -398,12 +407,10 @@ serve(async (req) => {
         
         const iceBreakers = {
           commercial_opportunity: `Oi ${targetName}! A Nina me apresentou você e fiquei interessado no trabalho que você faz${companyMention}. Tenho algumas soluções que podem fazer sentido para vocês${industryMention}. Que tal conversarmos?`,
-          customer: `Oi ${targetName}! A Nina me apresentou você e fiquei interessado no trabalho que você faz${companyMention}. Tenho algumas soluções que podem fazer sentido para vocês${industryMention}. Que tal conversarmos?`,
           supplier: `Olá ${targetName}! A Nina sugeriu que a gente se conhecesse. Estou procurando parceiros especializados${industryMention} e seu perfil${companyMention} chamou minha atenção. Podemos trocar uma ideia?`,
           strategic_partnership: `E aí ${targetName}! A Nina conectou a gente porque viu que nossos objetivos se complementam. Trabalho${userProfile.company_name ? ` na ${userProfile.company_name}` : ''} e achei seu perfil${companyMention} bem interessante. Vamos explorar possíveis parcerias?`,
-          partner: `E aí ${targetName}! A Nina conectou a gente porque viu que nossos objetivos se complementam. Trabalho${userProfile.company_name ? ` na ${userProfile.company_name}` : ''} e achei seu perfil${companyMention} bem interessante. Vamos explorar possíveis parcerias?`,
           investor: `Olá ${targetName}! A Nina me indicou você e fiquei admirado com sua trajetória${companyMention}. Estou em um momento de crescimento profissional e seria incrível poder aprender com sua experiência. Você teria disponibilidade para trocarmos algumas ideias?`,
-          mentor: `Olá ${targetName}! A Nina me indicou você e fiquei admirado com sua trajetória${companyMention}. Estou em um momento de crescimento profissional e seria incrível poder aprender com sua experiência. Você teria disponibilidade para trocarmos algumas ideias?`
+          knowledge_exchange: `Oi ${targetName}! A Nina viu que temos muito a aprender um com o outro. Seu trabalho${companyMention}${industryMention} é fascinante e acho que podemos trocar experiências valiosas. Que tal marcarmos um bate-papo?`
         };
         
         return iceBreakers[type as keyof typeof iceBreakers] || 
@@ -420,6 +427,7 @@ serve(async (req) => {
           compatibility_score: Math.round(score * 100), // Converter para percentual inteiro
           why_connect: matchReason,
           ice_breaker: generateIceBreaker(matchType, candidate.name),
+          connection_copy: matchReason, // Adicionar para o frontend
           opportunities: aiAnalysis.opportunities,
           ai_analysis: aiAnalysis,
           status: 'pending',
