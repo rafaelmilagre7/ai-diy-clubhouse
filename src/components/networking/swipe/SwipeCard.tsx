@@ -69,7 +69,7 @@ export const SwipeCard = ({ card, onOpenContact }: SwipeCardProps) => {
       }}
     >
       <LiquidGlassCard 
-        className="w-full max-w-xl mx-auto overflow-hidden shadow-2xl shadow-aurora/10 hover:shadow-3xl hover:shadow-aurora/20 transition-shadow duration-500"
+        className="w-full max-w-sm sm:max-w-md lg:max-w-xl mx-auto overflow-hidden shadow-2xl shadow-aurora/10 hover:shadow-3xl hover:shadow-aurora/20 transition-shadow duration-500"
         variant="premium"
         hoverable={false}
       >
