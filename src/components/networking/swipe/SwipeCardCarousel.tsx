@@ -46,9 +46,23 @@ const translations: Record<string, string> = {
   customer_support: "Atendimento ao Cliente",
   team_management: "Gestão de Equipes",
   product_development: "Desenvolvimento de Produtos",
+  market_research: "Pesquisa de Mercado",
+  competitive_analysis: "Análise Competitiva",
+  quality_improvement: "Melhoria de Qualidade",
+  digital_transformation: "Transformação Digital",
   pratical_learning: "Aprendizado Prático",
   "pratical learning": "Aprendizado Prático",
   "practical learning": "Aprendizado Prático",
+  "work efficiency": "Eficiência no Trabalho",
+  "personal automation": "Automação Pessoal",
+  "business growth": "Crescimento de Negócio",
+  "sales growth": "Crescimento de Vendas",
+  "process automation": "Automação de Processos",
+  "data analysis": "Análise de Dados",
+  "content creation": "Criação de Conteúdo",
+  "customer support": "Atendimento ao Cliente",
+  "team management": "Gestão de Equipes",
+  "product development": "Desenvolvimento de Produtos",
   
   // Níveis de experiência
   beginner: "Iniciante",
@@ -57,12 +71,21 @@ const translations: Record<string, string> = {
   advanced: "Avançado",
   professional: "Profissional",
   expert: "Especialista",
+  "no experience": "Sem experiência",
+  "some experience": "Alguma experiência",
+  experienced: "Experiente",
+  "very experienced": "Muito experiente",
   
   // Timeline
   "1_month": "1 mês",
   "3_months": "3 meses",
   "6_months": "6 meses",
   "1_year": "1 ano",
+  "1 month": "1 mês",
+  "3 months": "3 meses",
+  "6 months": "6 meses",
+  "1 year": "1 ano",
+  "2 years": "2 anos",
   long_term: "Longo prazo",
   short_term: "Curto prazo",
   medium_term: "Médio prazo",
@@ -84,28 +107,69 @@ const translations: Record<string, string> = {
   marketing: "Marketing",
   sales: "Vendas",
   finance: "Financeiro",
-  education: "Educação",
   healthcare: "Saúde",
+  education: "Educação",
   retail: "Varejo",
   services: "Serviços",
+  manufacturing: "Manufatura",
+  consulting: "Consultoria",
+  "real estate": "Imóveis",
+  entertainment: "Entretenimento",
+  agriculture: "Agricultura",
+  logistics: "Logística",
+  hospitality: "Hospitalidade",
+  construction: "Construção",
+  telecommunications: "Telecomunicações",
+  automotive: "Automotivo",
+  energy: "Energia",
+  legal: "Jurídico",
+  media: "Mídia",
+  insurance: "Seguros",
+  transportation: "Transporte",
+  "food services": "Serviços Alimentícios",
+  other: "Outro",
   "Consultoria": "Consultoria",
   "Seguros": "Seguros",
   "Outro": "Outro",
+  
+  // Aprendizado
+  "hands on": "Mão na Massa",
+  "step by step": "Passo a Passo",
+  "quick wins": "Vitórias Rápidas",
+  "deep dive": "Aprofundamento",
+  "theoretical learning": "Aprendizado Teórico",
 };
 
 const translate = (value: string | undefined): string => {
   if (!value) return 'Não informado';
   
-  // Se já está em português (sem underscores e com acentos/maiúsculas), retornar direto
-  const hasPortugueseChars = /[áàâãéêíóôõúçÁÀÂÃÉÊÍÓÔÕÚÇ]/.test(value);
-  const isLikelyEnglish = /^[a-z_]+$/.test(value);
+  // Normalizar: remover espaços extras, converter para lowercase
+  const normalized = value.trim().toLowerCase();
   
-  if (hasPortugueseChars || (!isLikelyEnglish && !value.includes('_'))) {
-    return value;
+  // Tentar tradução exata (case-insensitive)
+  const exactMatch = Object.keys(translations).find(
+    key => key.toLowerCase() === normalized
+  );
+  if (exactMatch) return translations[exactMatch];
+  
+  // Tentar tradução por valor original (case-sensitive)
+  if (translations[value]) return translations[value];
+  
+  // Se tem caracteres portugueses, assumir que já está traduzido
+  const hasPortugueseChars = /[áàâãéêíóôõúçÁÀÂÃÉÊÍÓÔÕÚÇ]/.test(value);
+  if (hasPortugueseChars) return value;
+  
+  // Se tem underscores ou é tudo minúsculo em inglês, tentar substituir underscores
+  if (value.includes('_')) {
+    const withoutUnderscore = value.replace(/_/g, ' ');
+    const matchWithSpace = Object.keys(translations).find(
+      key => key.toLowerCase() === withoutUnderscore.toLowerCase()
+    );
+    if (matchWithSpace) return translations[matchWithSpace];
   }
   
-  // Traduzir do dicionário
-  return translations[value] || translations[value.toLowerCase()] || value;
+  // Fallback: retornar valor original capitalizado
+  return value.charAt(0).toUpperCase() + value.slice(1).replace(/_/g, ' ');
 };
 
 // Função para gerar motivos de conexão baseados em compatibilidade
@@ -197,37 +261,22 @@ export const SwipeCardCarousel = ({ card }: SwipeCardCarouselProps) => {
           <CarouselItem className="h-full">
             <div className="h-full flex flex-col gap-4 p-1">
               
-              {/* Compatibilidade em Destaque - Tipo Troféu */}
-              <div className="bg-gradient-to-br from-viverblue/10 via-aurora/10 to-operational/10 border-2 border-aurora/20 rounded-2xl p-4 shadow-lg">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-gradient-to-br from-operational to-aurora p-3 rounded-xl shadow-md">
-                      <Trophy className="h-6 w-6 text-white" />
-                    </div>
-                    <div>
-                      <div className="text-3xl font-black bg-gradient-to-r from-operational via-aurora to-viverblue bg-clip-text text-transparent">
-                        {score}%
-                      </div>
-                      <div className="text-xs text-muted-foreground uppercase tracking-wider font-medium">
-                        Match
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-viverblue/10 border border-viverblue/20">
-                    <Briefcase className="h-4 w-4 text-viverblue shrink-0" />
-                    <span className="text-xs font-medium">{translate(industry)}</span>
-                  </div>
+            {/* Setor de Atuação - Card Destacado */}
+            <div className="bg-gradient-to-br from-strategy/5 to-viverblue/5 border-2 border-strategy/20 rounded-2xl p-4 shadow-lg">
+              <div className="flex items-center gap-3">
+                <div className="bg-gradient-to-br from-strategy to-viverblue p-3 rounded-xl shadow-md">
+                  <Briefcase className="h-6 w-6 text-white" />
                 </div>
-                
-                {/* Barra de Progresso */}
-                <div className="w-full h-2 bg-muted/20 rounded-full overflow-hidden mt-3">
-                  <div 
-                    className="h-full bg-gradient-to-r from-aurora via-viverblue to-operational rounded-full transition-all duration-500"
-                    style={{ width: `${score}%` }}
-                  />
+                <div>
+                  <div className="text-xs text-muted-foreground uppercase tracking-wider font-medium">
+                    Setor de Atuação
+                  </div>
+                  <div className="text-xl font-black text-strategy">
+                    {translate(industry)}
+                  </div>
                 </div>
               </div>
+            </div>
 
               {/* Proposta de Valor - DESTAQUE */}
               <div className="space-y-2">
@@ -391,10 +440,10 @@ export const SwipeCardCarousel = ({ card }: SwipeCardCarouselProps) => {
         </CarouselContent>
         
         {/* Navegação com setas GRANDES - Gradiente Verde→Roxo→Laranja */}
-        <CarouselPrevious className="absolute -left-4 top-1/2 -translate-y-1/2 h-12 w-12 rounded-full bg-gradient-to-br from-strategy via-revenue to-operational border-2 border-white/20 hover:scale-110 transition-all shadow-2xl z-10">
+        <CarouselPrevious className="absolute -left-6 top-1/2 -translate-y-1/2 h-12 w-12 rounded-full bg-gradient-to-br from-strategy via-revenue to-operational border-2 border-white/20 hover:scale-110 transition-all shadow-2xl z-10">
           <ChevronLeft className="h-6 w-6 text-white" />
         </CarouselPrevious>
-        <CarouselNext className="absolute -right-4 top-1/2 -translate-y-1/2 h-12 w-12 rounded-full bg-gradient-to-br from-strategy via-revenue to-operational border-2 border-white/20 hover:scale-110 transition-all shadow-2xl z-10">
+        <CarouselNext className="absolute -right-6 top-1/2 -translate-y-1/2 h-12 w-12 rounded-full bg-gradient-to-br from-strategy via-revenue to-operational border-2 border-white/20 hover:scale-110 transition-all shadow-2xl z-10">
           <ChevronRight className="h-6 w-6 text-white" />
         </CarouselNext>
       </Carousel>
