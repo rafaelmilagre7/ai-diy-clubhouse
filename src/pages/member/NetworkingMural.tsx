@@ -12,20 +12,42 @@ import { Plus, Search } from 'lucide-react';
 import { OpportunityFeed } from '@/components/networking/mural/OpportunityFeed';
 import { PostOpportunityModal } from '@/components/networking/mural/PostOpportunityModal';
 import { OpportunityDetailsModal } from '@/components/networking/mural/OpportunityDetailsModal';
+import { EditOpportunityModal } from '@/components/networking/mural/EditOpportunityModal';
+import { DeleteConfirmDialog } from '@/components/networking/mural/DeleteConfirmDialog';
 import { NewOpportunitiesBanner } from '@/components/networking/mural/NewOpportunitiesBanner';
 import { TagsFilter } from '@/components/networking/mural/TagsFilter';
-import { useOpportunities, Opportunity } from '@/hooks/networking/useOpportunities';
+import { useOpportunities, useDeleteOpportunity, Opportunity } from '@/hooks/networking/useOpportunities';
+
+const SEEN_OPPORTUNITIES_KEY = 'networking_seen_opportunities';
 
 export default function NetworkingMural() {
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
+  const [editingOpportunity, setEditingOpportunity] = useState<Opportunity | null>(null);
+  const [deletingOpportunity, setDeletingOpportunity] = useState<Opportunity | null>(null);
   const [typeFilter, setTypeFilter] = useState('todos');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [seenOpportunityIds, setSeenOpportunityIds] = useState<Set<string>>(new Set());
   const [newOpportunityIds, setNewOpportunityIds] = useState<string[]>([]);
   const [showBanner, setShowBanner] = useState(false);
   const feedRef = useRef<HTMLDivElement>(null);
+
+  const deleteMutation = useDeleteOpportunity();
+
+  // Carregar IDs vistos do localStorage
+  const [seenOpportunityIds, setSeenOpportunityIds] = useState<Set<string>>(() => {
+    try {
+      const stored = localStorage.getItem(SEEN_OPPORTUNITIES_KEY);
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    } catch {
+      return new Set();
+    }
+  });
+
+  // Persistir IDs vistos no localStorage
+  useEffect(() => {
+    localStorage.setItem(SEEN_OPPORTUNITIES_KEY, JSON.stringify([...seenOpportunityIds]));
+  }, [seenOpportunityIds]);
 
   const { data: opportunities = [], isLoading } = useOpportunities({
     type: typeFilter,
@@ -64,6 +86,19 @@ export default function NetworkingMural() {
   const handleDismissBanner = () => {
     setShowBanner(false);
     setNewOpportunityIds([]);
+  };
+
+  const handleViewDetails = (opportunity: Opportunity) => {
+    setSelectedOpportunity(opportunity);
+    // Marcar como vista
+    setSeenOpportunityIds(prev => new Set([...prev, opportunity.id]));
+  };
+
+  const handleDelete = async () => {
+    if (!deletingOpportunity) return;
+    
+    await deleteMutation.mutateAsync(deletingOpportunity.id);
+    setDeletingOpportunity(null);
   };
 
   return (
@@ -132,7 +167,9 @@ export default function NetworkingMural() {
         <OpportunityFeed
           opportunities={opportunities}
           isLoading={isLoading}
-          onViewDetails={setSelectedOpportunity}
+          onViewDetails={handleViewDetails}
+          onEdit={setEditingOpportunity}
+          onDelete={setDeletingOpportunity}
           newOpportunityIds={newOpportunityIds}
           onPostClick={() => setIsPostModalOpen(true)}
         />
@@ -144,6 +181,19 @@ export default function NetworkingMural() {
         opportunity={selectedOpportunity}
         open={!!selectedOpportunity}
         onOpenChange={(open) => !open && setSelectedOpportunity(null)}
+        onEdit={setEditingOpportunity}
+        onDelete={setDeletingOpportunity}
+      />
+      <EditOpportunityModal
+        opportunity={editingOpportunity}
+        open={!!editingOpportunity}
+        onOpenChange={(open) => !open && setEditingOpportunity(null)}
+      />
+      <DeleteConfirmDialog
+        open={!!deletingOpportunity}
+        onOpenChange={(open) => !open && setDeletingOpportunity(null)}
+        onConfirm={handleDelete}
+        loading={deleteMutation.isPending}
       />
     </div>
   );

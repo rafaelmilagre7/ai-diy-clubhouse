@@ -11,13 +11,17 @@ import { Separator } from '@/components/ui/separator';
 import { Opportunity } from '@/hooks/networking/useOpportunities';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Briefcase, Package, Users, TrendingUp, Target, Mail, Phone, Linkedin, MessageCircle } from 'lucide-react';
+import { Briefcase, Package, Users, TrendingUp, Target, Mail, Phone, Linkedin, MessageCircle, Edit, Trash2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/auth';
+import { LiquidGlassCard } from '@/components/ui/LiquidGlassCard';
 
 interface OpportunityDetailsModalProps {
   opportunity: Opportunity | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onEdit?: (opportunity: Opportunity) => void;
+  onDelete?: (opportunity: Opportunity) => void;
 }
 
 const typeConfig = {
@@ -32,12 +36,17 @@ export const OpportunityDetailsModal = ({
   opportunity,
   open,
   onOpenChange,
+  onEdit,
+  onDelete,
 }: OpportunityDetailsModalProps) => {
+  const { user } = useAuth();
+  
   if (!opportunity) return null;
 
   const config = typeConfig[opportunity.opportunity_type];
   const Icon = config.icon;
   const author = opportunity.profiles;
+  const isOwner = user?.id === opportunity.user_id;
 
   const handleContact = (type: string) => {
     switch (type) {
@@ -94,6 +103,46 @@ export const OpportunityDetailsModal = ({
             </div>
           </div>
         </DialogHeader>
+
+        {/* Seção de ações do dono */}
+        {isOwner && onEdit && onDelete && (
+          <LiquidGlassCard variant="default" className="p-4 border-aurora/30 bg-aurora/5">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h3 className="font-semibold text-sm mb-1">Suas Ações</h3>
+                <p className="text-xs text-muted-foreground">
+                  Gerencie sua oportunidade
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    onEdit(opportunity);
+                    onOpenChange(false);
+                  }}
+                  className="gap-2"
+                >
+                  <Edit className="w-4 h-4" />
+                  Editar
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    onDelete(opportunity);
+                    onOpenChange(false);
+                  }}
+                  className="gap-2 text-destructive hover:text-destructive"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Excluir
+                </Button>
+              </div>
+            </div>
+          </LiquidGlassCard>
+        )}
 
         <div className="space-y-6 pt-4">
           {/* Tipo e Data */}

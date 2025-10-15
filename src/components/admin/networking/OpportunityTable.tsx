@@ -126,6 +126,35 @@ export const OpportunityTable = ({
       ),
     },
     {
+      accessorKey: 'updated_at',
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          className="hover:bg-white/5"
+        >
+          Atualizado
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+      cell: ({ row }) => {
+        const updated = new Date(row.original.updated_at);
+        const created = new Date(row.original.created_at);
+        const wasEdited = updated.getTime() - created.getTime() > 1000; // Diferença > 1 segundo
+        
+        return (
+          <div className="flex items-center gap-1">
+            <span className="text-sm">{formatRelativeDate(row.original.updated_at)}</span>
+            {wasEdited && (
+              <Badge variant="secondary" className="text-xs">
+                Editado
+              </Badge>
+            )}
+          </div>
+        );
+      },
+    },
+    {
       accessorKey: 'views_count',
       header: ({ column }) => (
         <Button

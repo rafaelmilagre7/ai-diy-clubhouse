@@ -10,6 +10,8 @@ interface OpportunityFeedProps {
   opportunities: Opportunity[];
   isLoading: boolean;
   onViewDetails: (opportunity: Opportunity) => void;
+  onEdit?: (opportunity: Opportunity) => void;
+  onDelete?: (opportunity: Opportunity) => void;
   newOpportunityIds?: string[];
   onPostClick?: () => void;
 }
@@ -18,6 +20,8 @@ export const OpportunityFeed: React.FC<OpportunityFeedProps> = ({
   opportunities,
   isLoading,
   onViewDetails,
+  onEdit,
+  onDelete,
   newOpportunityIds = [],
   onPostClick,
 }) => {
@@ -104,6 +108,8 @@ export const OpportunityFeed: React.FC<OpportunityFeedProps> = ({
           <OpportunityCard
             opportunity={opportunity}
             onViewDetails={onViewDetails}
+            onEdit={onEdit}
+            onDelete={onDelete}
             isNew={newOpportunityIds.includes(opportunity.id)}
           />
         </motion.div>

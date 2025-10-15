@@ -50,6 +50,8 @@ const NetworkingDashboard = () => {
           active: metrics?.active || 0,
           thisWeek: metrics?.thisWeek || 0,
           totalViews: metrics?.totalViews || 0,
+          edited: metrics?.edited || 0,
+          deleted: metrics?.deleted || 0,
         }}
         loading={isLoading}
       />

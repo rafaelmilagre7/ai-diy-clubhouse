@@ -25,7 +25,7 @@ export const useAdminOpportunities = (filters?: AdminOpportunitiesFilters) => {
             company_name,
             avatar_url,
             email,
-            position
+            current_position
           )
         `)
         .order('created_at', { ascending: false });
@@ -70,7 +70,7 @@ export const useAdminOpportunitiesMetrics = () => {
     queryFn: async () => {
       const { data: allOpportunities, error: allError } = await supabase
         .from('networking_opportunities')
-        .select('id, opportunity_type, created_at, views_count, is_active');
+        .select('id, opportunity_type, created_at, updated_at, views_count, is_active');
 
       if (allError) throw allError;
 
@@ -83,6 +83,16 @@ export const useAdminOpportunitiesMetrics = () => {
         (o) => new Date(o.created_at) >= weekAgo
       ).length || 0;
       const totalViews = allOpportunities?.reduce((sum, o) => sum + (o.views_count || 0), 0) || 0;
+      
+      // Contar editadas (diferença entre updated_at e created_at > 1 segundo)
+      const edited = allOpportunities?.filter((o) => {
+        const updated = new Date(o.updated_at || o.created_at);
+        const created = new Date(o.created_at);
+        return updated.getTime() - created.getTime() > 1000;
+      }).length || 0;
+
+      // Deletadas viriam de audit logs (não implementado agora)
+      const deleted = 0;
 
       // Contagem por tipo
       const byType = allOpportunities?.reduce((acc, o) => {
@@ -107,6 +117,8 @@ export const useAdminOpportunitiesMetrics = () => {
         thisWeek,
         totalViews,
         averageViews: total > 0 ? Math.round(totalViews / total) : 0,
+        edited,
+        deleted,
         byType: byType || {},
         timeline: timeline || {},
       };

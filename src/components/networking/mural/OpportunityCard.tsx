@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { LiquidGlassCard } from '@/components/ui/LiquidGlassCard';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -6,11 +7,20 @@ import { formatDistanceToNow, isAfter, subHours } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { motion } from 'framer-motion';
 import { Opportunity } from '@/hooks/networking/useOpportunities';
-import { Briefcase, Package, Users, TrendingUp, Target } from 'lucide-react';
+import { Briefcase, Package, Users, TrendingUp, Target, MoreVertical, Edit, Trash2 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { useAuth } from '@/contexts/auth';
 
 interface OpportunityCardProps {
   opportunity: Opportunity;
   onViewDetails: (opportunity: Opportunity) => void;
+  onEdit?: (opportunity: Opportunity) => void;
+  onDelete?: (opportunity: Opportunity) => void;
   isNew?: boolean;
 }
 
@@ -42,11 +52,26 @@ const typeConfig = {
   },
 };
 
-export const OpportunityCard = ({ opportunity, onViewDetails, isNew }: OpportunityCardProps) => {
+export const OpportunityCard = ({ opportunity, onViewDetails, onEdit, onDelete, isNew }: OpportunityCardProps) => {
+  const { user } = useAuth();
   const config = typeConfig[opportunity.opportunity_type];
   const Icon = config.icon;
   const author = opportunity.profiles;
   const isRecentlyCreated = isAfter(new Date(opportunity.created_at), subHours(new Date(), 24));
+  const isOwner = user?.id === opportunity.user_id;
+  
+  // Badge "NOVA" com timeout de 30 segundos
+  const [showNewBadge, setShowNewBadge] = useState(isNew || isRecentlyCreated);
+
+  useEffect(() => {
+    if (showNewBadge) {
+      const timer = setTimeout(() => {
+        setShowNewBadge(false);
+      }, 30000); // 30 segundos
+
+      return () => clearTimeout(timer);
+    }
+  }, [showNewBadge]);
 
   return (
     <motion.div
@@ -60,16 +85,56 @@ export const OpportunityCard = ({ opportunity, onViewDetails, isNew }: Opportuni
         className="p-6 cursor-pointer group hover:border-primary/30 relative"
         onClick={() => onViewDetails(opportunity)}
       >
-        {(isNew || isRecentlyCreated) && (
+        {showNewBadge && (
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ duration: 0.3 }}
             className="absolute top-3 right-3 z-10"
           >
-            <Badge className="bg-gradient-to-r from-emerald-500 to-green-600 text-white border-none shadow-lg shadow-emerald-500/30 animate-pulse">
+            <Badge className="bg-gradient-to-r from-emerald-500 to-green-600 text-white border-none shadow-lg shadow-emerald-500/30">
               NOVA
             </Badge>
           </motion.div>
+        )}
+        
+        {/* Dropdown de ações (apenas para o dono) */}
+        {isOwner && onEdit && onDelete && (
+          <div className="absolute top-3 right-3 z-10">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background"
+                >
+                  <MoreVertical className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEdit(opportunity);
+                  }}
+                >
+                  <Edit className="w-4 h-4 mr-2" />
+                  Editar
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(opportunity);
+                  }}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Excluir
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         )}
         <div className="space-y-4">
           {/* Header com tipo */}
