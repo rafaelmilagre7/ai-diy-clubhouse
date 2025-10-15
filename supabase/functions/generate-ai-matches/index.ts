@@ -336,10 +336,24 @@ serve(async (req) => {
       // Criar análise inteligente baseada nos dados de onboarding
       const aiAnalysis = getAnalysisByType(matchType);
       
-      // Criar match reason baseado nos dados reais de compatibilidade
-      const matchReason = userOnboarding && candidate.business_segment
-        ? `Match IA baseado em compatibilidade de ${Math.round(score * 100)}% entre perfis de negócio. Segmentos: ${userOnboarding.business_segment} ↔ ${candidate.business_segment}. Objetivos alinhados e potencial de sinergia identificado.`
-        : `Match IA baseado em compatibilidade de ${Math.round(score * 100)}% entre perfis profissionais. Análise de perfis e experiências complementares identificada.`;
+      // Criar match reason personalizado com tom da Nina
+      const generateMatchReason = (type: string, targetName: string, compatScore: number) => {
+        const scorePercent = Math.round(compatScore * 100);
+        const companyInfo = candidate.company_name ? ` de ${candidate.company_name}` : '';
+        const positionInfo = candidate.current_position ? `, ${candidate.current_position}` : '';
+        
+        const reasons = {
+          customer: `Olá! Selecionei ${targetName}${companyInfo} especialmente para você. Vi que o perfil dele${positionInfo} tem tudo a ver com o que você oferece. Analisando os dados, identifiquei ${scorePercent}% de compatibilidade entre vocês - isso significa grandes chances de negócio! Vale muito a pena iniciar essa conversa.`,
+          supplier: `Oi! Encontrei ${targetName}${companyInfo} e achei que vocês precisam se conhecer. Pela experiência dele${positionInfo}, ele pode ser exatamente o parceiro que você está buscando. A compatibilidade de ${scorePercent}% entre vocês me deixou animada com as possibilidades de parceria!`,
+          partner: `Olha só quem eu encontrei para você: ${targetName}${companyInfo}! Analisando o perfil dele${positionInfo}, vi várias sinergias com seus objetivos. Com ${scorePercent}% de compatibilidade, acredito que vocês podem criar algo incrível juntos. Que tal começar uma conversa?`,
+          mentor: `Tenho uma indicação especial: ${targetName}${companyInfo}. A trajetória dele${positionInfo} é impressionante e pode agregar muito ao seu desenvolvimento. Com ${scorePercent}% de alinhamento entre seus objetivos, essa pode ser uma conexão transformadora para você!`
+        };
+        
+        return reasons[type as keyof typeof reasons] || 
+          `Ei! ${targetName}${companyInfo} tem um perfil muito interessante${positionInfo}. Com ${scorePercent}% de compatibilidade entre vocês, vi potencial real de vocês se ajudarem mutuamente. Vale a pena conhecer!`;
+      };
+      
+      const matchReason = generateMatchReason(matchType, candidate.name, score);
 
       // Verificar se já existe match entre estes usuários
       const { data: existingMatch } = await supabase
@@ -354,15 +368,20 @@ serve(async (req) => {
         continue;
       }
 
-      // Gerar ice breaker personalizado
+      // Gerar ice breaker personalizado com tom natural
       const generateIceBreaker = (type: string, targetName: string) => {
+        const companyMention = candidate.company_name ? ` na ${candidate.company_name}` : '';
+        const industryMention = candidate.industry ? ` no segmento de ${candidate.industry}` : '';
+        
         const iceBreakers = {
-          customer: `Olá ${targetName}! Vi que você trabalha com ${candidate.industry || 'seu setor'}. Tenho soluções que podem interessar sua empresa.`,
-          supplier: `Oi ${targetName}! Estamos buscando fornecedores especializados na sua área. Podemos conversar?`,
-          partner: `Olá ${targetName}! Percebi que temos objetivos complementares. Que tal explorarmos uma parceria estratégica?`,
-          mentor: `Olá ${targetName}! Admiro muito sua trajetória profissional. Seria uma honra aprender com sua experiência.`
+          customer: `Oi ${targetName}! A Nina me apresentou você e fiquei interessado no trabalho que você faz${companyMention}. Tenho algumas soluções que podem fazer sentido para vocês${industryMention}. Que tal conversarmos?`,
+          supplier: `Olá ${targetName}! A Nina sugeriu que a gente se conhecesse. Estou procurando parceiros especializados${industryMention} e seu perfil${companyMention} chamou minha atenção. Podemos trocar uma ideia?`,
+          partner: `E aí ${targetName}! A Nina conectou a gente porque viu que nossos objetivos se complementam. Trabalho${userProfile.company_name ? ` na ${userProfile.company_name}` : ''} e achei seu perfil${companyMention} bem interessante. Vamos explorar possíveis parcerias?`,
+          mentor: `Olá ${targetName}! A Nina me indicou você e fiquei admirado com sua trajetória${companyMention}. Estou em um momento de crescimento profissional e seria incrível poder aprender com sua experiência. Você teria disponibilidade para trocarmos algumas ideias?`
         };
-        return iceBreakers[type as keyof typeof iceBreakers] || `Olá ${targetName}! Que tal conectarmos e explorarmos sinergias?`;
+        
+        return iceBreakers[type as keyof typeof iceBreakers] || 
+          `Oi ${targetName}! A Nina nos apresentou e achei seu perfil${companyMention} muito interessante. Vamos conectar para explorarmos sinergias?`;
       };
 
       // Inserir o match na tabela strategic_matches_v2
