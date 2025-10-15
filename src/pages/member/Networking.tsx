@@ -22,6 +22,8 @@ const Networking = () => {
     refetch,
     generateMatches,
     isGenerating,
+    generatedCount,
+    totalToGenerate,
   } = useSwipeCards();
 
   if (isLoadingCards) {
@@ -270,7 +272,7 @@ const Networking = () => {
         </div>
 
         {/* Contador abaixo do card - mais sofisticado */}
-        <div className="relative text-center">
+        <div className="relative text-center space-y-3">
           <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full liquid-glass-card border border-aurora/20 shadow-lg">
             <div className="flex items-center gap-2">
               <div className="h-2 w-2 rounded-full bg-aurora animate-pulse" />
@@ -283,6 +285,21 @@ const Networking = () => {
               de {totalCards}
             </span>
           </div>
+
+          {/* Progress indicator for generating copies */}
+          {totalToGenerate > 0 && generatedCount <= totalToGenerate && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-aurora/10 border border-aurora/20"
+            >
+              <Loader2 className="h-3.5 w-3.5 animate-spin text-aurora" />
+              <span className="text-xs font-medium text-aurora">
+                Gerando {generatedCount} de {totalToGenerate} conexões...
+              </span>
+            </motion.div>
+          )}
         </div>
       </div>
 

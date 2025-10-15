@@ -33,6 +33,8 @@ export const useSwipeCards = () => {
   const [loadedUserIds, setLoadedUserIds] = useState<Set<string>>(new Set());
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMoreProfiles, setHasMoreProfiles] = useState(true);
+  const [generatedCount, setGeneratedCount] = useState(0);
+  const [totalToGenerate, setTotalToGenerate] = useState(0);
   const isLoadingMoreRef = useRef(false);
 
   // Usar useQuery para buscar matches automaticamente
@@ -290,17 +292,31 @@ export const useSwipeCards = () => {
     }
   }, [currentIndex]);
 
-  // Gerar copy para cards que precisam, com delay entre chamadas
+  // Progressive Loading: Gerar copy um por vez com feedback visual
   useEffect(() => {
     const cardsNeedingCopy = cards.filter(c => !c.connectionCopy && !c.isLoading && !generatingCopy.has(c.userId));
     
     if (cardsNeedingCopy.length > 0) {
-      // Processar um por vez com delay de 500ms
-      cardsNeedingCopy.forEach((card, index) => {
-        setTimeout(() => {
-          generateCopy(card.userId);
-        }, index * 500);
-      });
+      setTotalToGenerate(cardsNeedingCopy.length);
+      
+      // Processar progressivamente
+      const processNext = async (index: number) => {
+        if (index >= cardsNeedingCopy.length) {
+          setGeneratedCount(0); // Reset após finalizar
+          setTotalToGenerate(0);
+          return;
+        }
+        
+        const card = cardsNeedingCopy[index];
+        setGeneratedCount(index + 1);
+        
+        await generateCopy(card.userId);
+        
+        // Delay de 800ms entre gerações para UX suave
+        setTimeout(() => processNext(index + 1), 800);
+      };
+      
+      processNext(0);
     }
   }, [cards, generateCopy, generatingCopy]);
 
@@ -320,5 +336,7 @@ export const useSwipeCards = () => {
     refetch: loadMatches,
     generateMatches: () => generateMatches(user?.id || ''),
     isGenerating,
+    generatedCount,
+    totalToGenerate,
   };
 };
