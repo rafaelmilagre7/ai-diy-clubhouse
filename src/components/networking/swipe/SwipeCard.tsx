@@ -116,40 +116,40 @@ export const SwipeCard = ({ card, onOpenContact }: SwipeCardProps) => {
           </div>
 
           {/* Action Buttons - Nova Hierarquia Visual */}
-          <div className="space-y-3 flex-shrink-0">
+          <div className="space-y-4 flex-shrink-0 pt-2">
             {/* Ações Secundárias - Lado a Lado, Outline Suave */}
-            <div className="flex gap-2">
+            <div className="flex gap-3">
               <Button
                 onClick={handleAddConnection}
                 disabled={localStatus !== 'none' || isSendingRequest}
                 variant="outline"
-                size="sm"
-                className={`flex-1 transition-all duration-300 ${
+                size="default"
+                className={`flex-1 transition-all duration-300 font-medium ${
                   localStatus === 'accepted'
-                    ? 'bg-green-500/10 border-green-500/30 text-green-700 hover:bg-green-500/20'
+                    ? 'bg-green-500/10 border-green-500/40 text-green-600 hover:bg-green-500/20'
                     : localStatus === 'pending'
-                    ? 'bg-yellow-500/10 border-yellow-500/30 text-yellow-700 cursor-not-allowed'
-                    : 'border-muted/30 text-muted-foreground hover:bg-muted/10 hover:text-foreground hover:border-muted/50'
+                    ? 'bg-yellow-500/10 border-yellow-500/40 text-yellow-600 cursor-not-allowed'
+                    : 'border-neutral-300/60 text-foreground hover:bg-neutral-100/10 hover:border-neutral-300 hover:shadow-md'
                 }`}
               >
                 {localStatus === 'accepted' ? (
                   <>
-                    <Check className="h-4 w-4" />
+                    <Check className="h-4 w-4 mr-2" />
                     Conectado
                   </>
                 ) : localStatus === 'pending' ? (
                   <>
-                    <Clock className="h-4 w-4 animate-pulse" />
+                    <Clock className="h-4 w-4 mr-2 animate-pulse" />
                     Enviada
                   </>
                 ) : isSendingRequest ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     Enviando...
                   </>
                 ) : (
                   <>
-                    <UserPlus className="h-4 w-4" />
+                    <UserPlus className="h-4 w-4 mr-2" />
                     Adicionar
                   </>
                 )}
@@ -159,11 +159,12 @@ export const SwipeCard = ({ card, onOpenContact }: SwipeCardProps) => {
                 <Button
                   onClick={handleLinkedInClick}
                   variant="outline"
-                  size="sm"
-                  className="border-muted/30 text-muted-foreground hover:bg-muted/10 hover:text-foreground hover:border-muted/50 transition-all px-3"
+                  size="default"
+                  className="border-[#0A66C2]/40 text-[#0A66C2] hover:bg-[#0A66C2]/10 hover:border-[#0A66C2]/60 transition-all hover:shadow-md font-medium px-4"
                   title="Ver perfil no LinkedIn"
                 >
-                  <Linkedin className="h-4 w-4" />
+                  <Linkedin className="h-4 w-4 mr-2" />
+                  LinkedIn
                 </Button>
               )}
             </div>
@@ -172,11 +173,11 @@ export const SwipeCard = ({ card, onOpenContact }: SwipeCardProps) => {
             <Button
               onClick={onOpenContact}
               size="lg"
-              className="w-full bg-gradient-to-r from-strategy/90 via-revenue/90 to-operational/90 hover:from-strategy hover:via-revenue hover:to-operational text-white shadow-lg shadow-strategy/20 transition-all duration-300 font-bold"
+              className="w-full bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-600 hover:via-teal-600 hover:to-cyan-600 text-white shadow-xl shadow-emerald-500/30 hover:shadow-2xl hover:shadow-emerald-500/40 transition-all duration-300 font-bold transform hover:scale-[1.02]"
             >
-              <Phone className="h-5 w-5 animate-pulse" />
+              <Phone className="h-5 w-5 mr-2 animate-pulse" />
               CONECTAR AGORA
-              <span className="ml-auto text-xs font-medium opacity-80">{Math.round(card.score)}%</span>
+              <span className="ml-auto px-2 py-0.5 bg-white/20 rounded-full text-xs font-bold">{Math.round(card.score)}%</span>
             </Button>
           </div>
         </div>
