@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useSwipeCards } from "@/hooks/networking/useSwipeCards";
+import { useResetNetworking } from "@/hooks/networking/useResetNetworking";
 import { SwipeCard } from "@/components/networking/swipe/SwipeCard";
 import { ContactModal } from "@/components/networking/modals/ContactModal";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Loader2, Network, Brain } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Network, Brain, RotateCcw } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { motion } from "framer-motion";
 
@@ -25,6 +26,8 @@ const Networking = () => {
     generatedCount,
     totalToGenerate,
   } = useSwipeCards();
+  
+  const { resetNetworking, isResetting } = useResetNetworking();
 
   if (isLoadingCards) {
     return (
@@ -125,7 +128,7 @@ const Networking = () => {
               </div>
 
               {/* Botão Via Aurora Style */}
-              <div className="flex justify-center mb-8">
+              <div className="flex flex-col items-center gap-3 mb-8">
                 <motion.div
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
@@ -150,6 +153,27 @@ const Networking = () => {
                     )}
                   </Button>
                 </motion.div>
+                
+                {/* Botão temporário de reset */}
+                <Button
+                  onClick={() => resetNetworking()}
+                  disabled={isResetting || isGenerating}
+                  size="sm"
+                  variant="ghost"
+                  className="text-xs text-muted-foreground hover:text-foreground gap-2"
+                >
+                  {isResetting ? (
+                    <>
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      Resetando...
+                    </>
+                  ) : (
+                    <>
+                      <RotateCcw className="h-3 w-3" />
+                      Reset Completo (Dev)
+                    </>
+                  )}
+                </Button>
               </div>
 
               {/* Features list com estilo Via Aurora */}
