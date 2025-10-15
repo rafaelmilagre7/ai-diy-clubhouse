@@ -19,7 +19,7 @@ export interface Opportunity {
     name: string | null;
     company_name: string | null;
     avatar_url: string | null;
-    position: string | null;
+    current_position: string | null;
     linkedin_url: string | null;
     whatsapp_number: string | null;
     email: string | null;
@@ -45,7 +45,7 @@ export const useOpportunities = (filters?: UseOpportunitiesFilters) => {
             name,
             company_name,
             avatar_url,
-            position,
+            current_position,
             linkedin_url,
             whatsapp_number,
             email
@@ -90,6 +90,17 @@ export const useCreateOpportunity = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuário não autenticado');
 
+      // Validação de campos obrigatórios
+      if (!newOpportunity.title?.trim()) {
+        throw new Error('Título é obrigatório');
+      }
+      if (!newOpportunity.description?.trim()) {
+        throw new Error('Descrição é obrigatória');
+      }
+      if (!newOpportunity.opportunity_type) {
+        throw new Error('Tipo de oportunidade é obrigatório');
+      }
+
       const { data, error } = await supabase
         .from('networking_opportunities')
         .insert([
@@ -105,7 +116,7 @@ export const useCreateOpportunity = () => {
             name,
             company_name,
             avatar_url,
-            position,
+            current_position,
             linkedin_url,
             whatsapp_number,
             email
@@ -141,7 +152,7 @@ export const useCreateOpportunity = () => {
               email: user.email || '',
               avatar_url: null,
               company_name: null,
-              position: null,
+              current_position: null,
               linkedin_url: null,
               whatsapp_number: null,
             },
@@ -164,7 +175,16 @@ export const useCreateOpportunity = () => {
       if (context?.previousOpportunities) {
         queryClient.setQueryData(['networking-opportunities'], context.previousOpportunities);
       }
-      showErrorToast('Erro ao criar oportunidade', error.message);
+      
+      // Mensagens de erro mais descritivas
+      const errorMessage = error.message || 'Erro desconhecido';
+      const userFriendlyMessage = errorMessage.includes('current_position')
+        ? 'Erro ao carregar dados do perfil. Verifique se seu perfil está completo.'
+        : errorMessage.includes('user_id')
+        ? 'Você precisa estar autenticado para criar uma oportunidade'
+        : errorMessage;
+      
+      showErrorToast('Erro ao criar oportunidade', userFriendlyMessage);
     },
   });
 };

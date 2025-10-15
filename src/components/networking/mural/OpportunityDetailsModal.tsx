@@ -88,8 +88,8 @@ export const OpportunityDetailsModal = ({
                   </>
                 )}
               </div>
-              {author?.position && (
-                <p className="text-sm text-muted-foreground">{author.position}</p>
+              {author?.current_position && (
+                <p className="text-sm text-muted-foreground">{author.current_position}</p>
               )}
             </div>
           </div>
