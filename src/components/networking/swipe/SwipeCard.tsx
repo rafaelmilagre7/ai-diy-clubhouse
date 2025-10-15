@@ -142,7 +142,7 @@ export const SwipeCard = ({ card, onOpenContact }: SwipeCardProps) => {
                     ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white'
                     : localStatus === 'pending'
                     ? 'bg-gradient-to-r from-yellow-500 to-amber-500 text-white cursor-not-allowed opacity-80'
-                    : 'bg-gradient-to-r from-aurora to-viverblue hover:from-aurora/90 hover:to-viverblue/90 text-white hover:scale-[1.02]'
+                    : 'bg-gradient-to-r from-viverblue-dark to-operational hover:from-viverblue-darker hover:to-operational-dark text-white hover:scale-[1.02] shadow-lg'
                 }`}
               >
                 {localStatus === 'accepted' ? (
