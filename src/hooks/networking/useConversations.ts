@@ -13,7 +13,7 @@ export interface Conversation {
     name: string | null;
     avatar_url: string | null;
     company_name: string | null;
-    position: string | null;
+    current_position: string | null;
   };
   last_message?: {
     content: string;
@@ -37,10 +37,10 @@ export const useConversations = () => {
         .select(`
           *,
           participant_1:profiles!conversations_participant_1_id_fkey(
-            id, name, avatar_url, company_name, position
+            id, name, avatar_url, company_name, current_position
           ),
           participant_2:profiles!conversations_participant_2_id_fkey(
-            id, name, avatar_url, company_name, position
+            id, name, avatar_url, company_name, current_position
           )
         `)
         .or(`participant_1_id.eq.${user.id},participant_2_id.eq.${user.id}`)

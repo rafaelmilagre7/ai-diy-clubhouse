@@ -125,8 +125,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
             {messages.map((message) => (
               <MessageBubble
                 key={message.id}
-                content={message.content}
-                timestamp={message.created_at}
+                message={message}
                 isOwnMessage={message.sender_id === currentUserId}
                 senderName={message.sender?.name}
                 senderAvatar={message.sender?.avatar_url}

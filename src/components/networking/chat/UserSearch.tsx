@@ -21,22 +21,42 @@ export const UserSearch = ({ onSelectUser, onClose }: UserSearchProps) => {
   const [searchQuery, setSearchQuery] = useState('');
 
   const { data: users = [], isLoading } = useQuery({
-    queryKey: ['user-search', searchQuery],
+    queryKey: ['user-search-connections', searchQuery],
     queryFn: async () => {
       if (!searchQuery.trim()) return [];
 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return [];
 
+      // Buscar apenas usuários que são conexões aceitas
       const { data, error } = await supabase
-        .from('profiles')
-        .select('id, name, avatar_url, company_name, position')
-        .neq('id', user.id)
-        .or(`name.ilike.%${searchQuery}%,company_name.ilike.%${searchQuery}%`)
-        .limit(10);
+        .from('member_connections')
+        .select(`
+          requester:profiles!member_connections_requester_id_fkey(
+            id, name, avatar_url, company_name, current_position
+          ),
+          recipient:profiles!member_connections_recipient_id_fkey(
+            id, name, avatar_url, company_name, current_position
+          )
+        `)
+        .eq('status', 'accepted')
+        .or(`requester_id.eq.${user.id},recipient_id.eq.${user.id}`);
 
       if (error) throw error;
-      return data || [];
+
+      // Mapear para pegar o outro usuário da conexão
+      const connections = (data || []).map((conn: any) => {
+        const isRequester = conn.requester?.id === user.id;
+        return isRequester ? conn.recipient : conn.requester;
+      }).filter(Boolean);
+
+      // Filtrar por busca
+      const filtered = connections.filter((u: any) =>
+        u.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        u.company_name?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+
+      return filtered.slice(0, 10);
     },
     enabled: searchQuery.length >= 2,
   });
@@ -55,11 +75,15 @@ export const UserSearch = ({ onSelectUser, onClose }: UserSearchProps) => {
         <Input
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Buscar membros..."
+          placeholder="Buscar conexões..."
           className="pl-10"
           autoFocus
         />
       </div>
+
+      <p className="text-xs text-muted-foreground">
+        Você só pode conversar com suas conexões aceitas
+      </p>
 
       {searchQuery.length >= 2 && (
         <ScrollArea className="max-h-64">

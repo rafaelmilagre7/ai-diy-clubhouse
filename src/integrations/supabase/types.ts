@@ -1279,29 +1279,47 @@ export type Database = {
       }
       direct_messages: {
         Row: {
+          attachments: Json | null
           content: string
           created_at: string
+          deleted_at: string | null
+          delivered_at: string | null
+          edited_at: string | null
           id: string
           is_read: boolean | null
+          read_at: string | null
           recipient_id: string
+          reply_to_id: string | null
           sender_id: string
           updated_at: string
         }
         Insert: {
+          attachments?: Json | null
           content: string
           created_at?: string
+          deleted_at?: string | null
+          delivered_at?: string | null
+          edited_at?: string | null
           id?: string
           is_read?: boolean | null
+          read_at?: string | null
           recipient_id: string
+          reply_to_id?: string | null
           sender_id: string
           updated_at?: string
         }
         Update: {
+          attachments?: Json | null
           content?: string
           created_at?: string
+          deleted_at?: string | null
+          delivered_at?: string | null
+          edited_at?: string | null
           id?: string
           is_read?: boolean | null
+          read_at?: string | null
           recipient_id?: string
+          reply_to_id?: string | null
           sender_id?: string
           updated_at?: string
         }
@@ -1325,6 +1343,13 @@ export type Database = {
             columns: ["recipient_id"]
             isOneToOne: false
             referencedRelation: "profiles_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "direct_messages_reply_to_id_fkey"
+            columns: ["reply_to_id"]
+            isOneToOne: false
+            referencedRelation: "direct_messages"
             referencedColumns: ["id"]
           },
           {
@@ -2809,6 +2834,151 @@ export type Database = {
           {
             foreignKeyName: "member_connections_requester_id_fkey"
             columns: ["requester_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      message_reactions: {
+        Row: {
+          created_at: string | null
+          id: string
+          message_id: string
+          reaction: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message_id: string
+          reaction: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message_id?: string
+          reaction?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_reactions_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "direct_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_reactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_reactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_networking_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_reactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      message_reports: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          message_id: string
+          reason: string
+          reporter_id: string
+          resolution_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          message_id: string
+          reason: string
+          reporter_id: string
+          resolution_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          message_id?: string
+          reason?: string
+          reporter_id?: string
+          resolution_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_reports_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "direct_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_networking_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_reports_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_reports_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles_networking_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_reports_reviewed_by_fkey"
+            columns: ["reviewed_by"]
             isOneToOne: false
             referencedRelation: "profiles_safe"
             referencedColumns: ["id"]

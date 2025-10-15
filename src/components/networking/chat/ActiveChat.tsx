@@ -6,6 +6,13 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Send, MessageCircle } from 'lucide-react';
 import { useMessages, useSendMessage, useMarkAsRead } from '@/hooks/networking/useMessages';
+import { useTypingIndicator } from '@/hooks/networking/useTypingIndicator';
+import { useBroadcastPresence } from '@/hooks/networking/useUserPresence';
+import { OnlineIndicator } from './OnlineIndicator';
+import { FileUploadButton } from './FileUploadButton';
+import { EmojiPickerComponent } from './EmojiPickerComponent';
+import { ReplyPreview } from './ReplyPreview';
+import { MessageBubble } from './MessageBubble';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -28,11 +35,17 @@ export const ActiveChat = ({
 }: ActiveChatProps) => {
   const { user } = useAuth();
   const [message, setMessage] = useState('');
+  const [replyTo, setReplyTo] = useState<any>(null);
+  const [attachments, setAttachments] = useState<any[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   
   const { data: messages = [], isLoading } = useMessages(conversationId, otherUserId);
   const sendMutation = useSendMessage();
   const markAsReadMutation = useMarkAsRead();
+  const { isTyping, sendTypingSignal } = useTypingIndicator(otherUserId);
+
+  // Broadcast presence
+  useBroadcastPresence();
 
   // Auto-scroll ao receber novas mensagens
   useEffect(() => {
@@ -50,14 +63,26 @@ export const ActiveChat = ({
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!message.trim() || sendMutation.isPending) return;
+    if ((!message.trim() && attachments.length === 0) || sendMutation.isPending) return;
 
     await sendMutation.mutateAsync({
       recipientId: otherUserId,
-      content: message.trim(),
+      content: message.trim() || '[Anexo]',
+      attachments,
+      replyToId: replyTo?.id,
     });
 
     setMessage('');
+    setReplyTo(null);
+    setAttachments([]);
+  };
+
+  const handleFileUploaded = (fileUrl: string, fileName: string, fileType: string) => {
+    setAttachments([...attachments, { url: fileUrl, name: fileName, type: fileType }]);
+  };
+
+  const handleEmojiSelect = (emoji: string) => {
+    setMessage(message + emoji);
   };
 
   if (isLoading) {
@@ -83,19 +108,24 @@ export const ActiveChat = ({
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="flex items-center gap-3 p-4 border-b border-border">
-        <Avatar className="w-10 h-10">
-          <AvatarImage src={otherUserAvatar || ''} alt={otherUserName} />
-          <AvatarFallback>
-            {otherUserName.substring(0, 2).toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
+        <div className="relative">
+          <Avatar className="w-10 h-10">
+            <AvatarImage src={otherUserAvatar || ''} alt={otherUserName} />
+            <AvatarFallback>
+              {otherUserName.substring(0, 2).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          <OnlineIndicator userId={otherUserId} />
+        </div>
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold truncate">{otherUserName}</h3>
-          {otherUserCompany && (
+          {isTyping ? (
+            <p className="text-sm text-primary animate-pulse">Digitando...</p>
+          ) : otherUserCompany ? (
             <p className="text-sm text-muted-foreground truncate">
               {otherUserCompany}
             </p>
-          )}
+          ) : null}
         </div>
       </div>
 
@@ -113,60 +143,59 @@ export const ActiveChat = ({
           </div>
         ) : (
           <div className="space-y-4">
-            {messages.map((msg) => {
-              const isMine = msg.sender_id === user?.id;
-              return (
-                <div
-                  key={msg.id}
-                  className={cn(
-                    'flex gap-2',
-                    isMine ? 'justify-end' : 'justify-start'
-                  )}
-                >
-                  {!isMine && (
-                    <Avatar className="w-8 h-8 shrink-0">
-                      <AvatarImage src={otherUserAvatar || ''} alt={otherUserName} />
-                      <AvatarFallback className="text-xs">
-                        {otherUserName.substring(0, 2).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                  )}
-                  <div
-                    className={cn(
-                      'max-w-[70%] rounded-lg px-4 py-2',
-                      isMine
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted'
-                    )}
-                  >
-                    <p className="text-sm whitespace-pre-wrap break-words">
-                      {msg.content}
-                    </p>
-                    <span
-                      className={cn(
-                        'text-xs mt-1 block',
-                        isMine ? 'text-primary-foreground/70' : 'text-muted-foreground'
-                      )}
-                    >
-                      {formatDistanceToNow(new Date(msg.created_at), {
-                        addSuffix: true,
-                        locale: ptBR,
-                      })}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
+            {messages.map((msg) => (
+              <MessageBubble
+                key={msg.id}
+                message={msg}
+                isOwnMessage={msg.sender_id === user?.id}
+                senderName={msg.sender_id === user?.id ? 'Você' : otherUserName}
+                senderAvatar={msg.sender_id === user?.id ? user?.user_metadata?.avatar_url : otherUserAvatar}
+                onReply={() => setReplyTo(msg)}
+              />
+            ))}
           </div>
         )}
       </ScrollArea>
 
       {/* Input */}
-      <form onSubmit={handleSend} className="p-4 border-t border-border">
-        <div className="flex gap-2">
+      <form onSubmit={handleSend} className="border-t border-border">
+        {replyTo && (
+          <ReplyPreview
+            repliedMessage={{
+              id: replyTo.id,
+              content: replyTo.content,
+              senderName: replyTo.sender_id === user?.id ? 'Você' : otherUserName,
+            }}
+            onCancel={() => setReplyTo(null)}
+          />
+        )}
+        
+        {attachments.length > 0 && (
+          <div className="px-4 py-2 flex gap-2 flex-wrap">
+            {attachments.map((att, i) => (
+              <div key={i} className="flex items-center gap-2 bg-muted px-2 py-1 rounded text-sm">
+                <span className="truncate max-w-[150px]">{att.name}</span>
+                <button
+                  type="button"
+                  onClick={() => setAttachments(attachments.filter((_, idx) => idx !== i))}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="flex gap-2 p-4">
+          <FileUploadButton onFileUploaded={handleFileUploaded} />
+          <EmojiPickerComponent onEmojiSelect={handleEmojiSelect} />
           <Input
             value={message}
-            onChange={(e) => setMessage(e.target.value)}
+            onChange={(e) => {
+              setMessage(e.target.value);
+              sendTypingSignal();
+            }}
             placeholder="Digite sua mensagem..."
             disabled={sendMutation.isPending}
             maxLength={1000}
@@ -174,7 +203,7 @@ export const ActiveChat = ({
           <Button
             type="submit"
             size="icon"
-            disabled={!message.trim() || sendMutation.isPending}
+            disabled={(!message.trim() && attachments.length === 0) || sendMutation.isPending}
           >
             <Send className="w-4 h-4" />
           </Button>
