@@ -9,6 +9,7 @@
 @import './styles/certificate.css';
 @import './styles/hubla-theme.css';
 @import './styles/liquid-glass.css';
+@import './styles/toast-aurora.css';
 
 @tailwind base;
 @tailwind components;

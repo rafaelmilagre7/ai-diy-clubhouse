@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
+import { showSuccessToast, showErrorToast } from '@/lib/toast-helpers';
 
 export interface Opportunity {
   id: string;
@@ -29,6 +29,7 @@ export interface Opportunity {
 interface UseOpportunitiesFilters {
   type?: string;
   searchQuery?: string;
+  tags?: string[];
 }
 
 export const useOpportunities = (filters?: UseOpportunitiesFilters) => {
@@ -63,6 +64,10 @@ export const useOpportunities = (filters?: UseOpportunitiesFilters) => {
         );
       }
 
+      if (filters?.tags && filters.tags.length > 0) {
+        query = query.contains('tags', filters.tags);
+      }
+
       const { data, error } = await query;
 
       if (error) throw error;
@@ -93,25 +98,73 @@ export const useCreateOpportunity = () => {
             user_id: user.id,
           },
         ])
-        .select()
+        .select(`
+          *,
+          profiles:user_id (
+            id,
+            name,
+            company_name,
+            avatar_url,
+            position,
+            linkedin_url,
+            whatsapp_number,
+            email
+          )
+        `)
         .single();
 
       if (error) throw error;
-      return data;
+      return data as Opportunity;
+    },
+    onMutate: async (newOpportunity) => {
+      await queryClient.cancelQueries({ queryKey: ['networking-opportunities'] });
+      const previousOpportunities = queryClient.getQueryData<Opportunity[]>(['networking-opportunities']);
+
+      if (previousOpportunities) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const tempOpportunity: Opportunity = {
+            id: `temp-${Date.now()}`,
+            user_id: user.id,
+            title: newOpportunity.title,
+            description: newOpportunity.description,
+            opportunity_type: newOpportunity.opportunity_type as Opportunity['opportunity_type'],
+            tags: newOpportunity.tags,
+            contact_preference: newOpportunity.contact_preference as Opportunity['contact_preference'],
+            is_active: true,
+            views_count: 0,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            profiles: {
+              id: user.id,
+              name: user.email || 'Você',
+              email: user.email || '',
+              avatar_url: null,
+              company_name: null,
+              position: null,
+              linkedin_url: null,
+              whatsapp_number: null,
+            },
+          };
+
+          queryClient.setQueryData<Opportunity[]>(
+            ['networking-opportunities'],
+            [tempOpportunity, ...previousOpportunities]
+          );
+        }
+      }
+
+      return { previousOpportunities };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['networking-opportunities'] });
-      toast({
-        title: 'Oportunidade criada! 🎉',
-        description: 'Sua oportunidade foi publicada com sucesso.',
-      });
+      showSuccessToast('🎉 Oportunidade criada!', 'Sua oportunidade está visível no mural');
     },
-    onError: (error) => {
-      toast({
-        title: 'Erro ao criar oportunidade',
-        description: error.message,
-        variant: 'destructive',
-      });
+    onError: (error: any, _newOpportunity, context) => {
+      if (context?.previousOpportunities) {
+        queryClient.setQueryData(['networking-opportunities'], context.previousOpportunities);
+      }
+      showErrorToast('Erro ao criar oportunidade', error.message);
     },
   });
 };
@@ -139,17 +192,10 @@ export const useUpdateOpportunity = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['networking-opportunities'] });
-      toast({
-        title: 'Oportunidade atualizada',
-        description: 'As alterações foram salvas.',
-      });
+      showSuccessToast('Oportunidade atualizada', 'As informações foram atualizadas com sucesso');
     },
-    onError: (error) => {
-      toast({
-        title: 'Erro ao atualizar',
-        description: error.message,
-        variant: 'destructive',
-      });
+    onError: (error: any) => {
+      showErrorToast('Erro ao atualizar oportunidade', error.message);
     },
   });
 };
@@ -168,17 +214,10 @@ export const useDeleteOpportunity = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['networking-opportunities'] });
-      toast({
-        title: 'Oportunidade removida',
-        description: 'A oportunidade foi deletada com sucesso.',
-      });
+      showSuccessToast('Oportunidade removida', 'A oportunidade foi excluída do mural');
     },
-    onError: (error) => {
-      toast({
-        title: 'Erro ao deletar',
-        description: error.message,
-        variant: 'destructive',
-      });
+    onError: (error: any) => {
+      showErrorToast('Erro ao remover oportunidade', error.message);
     },
   });
 };

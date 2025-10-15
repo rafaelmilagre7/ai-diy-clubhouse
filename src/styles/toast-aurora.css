@@ -1,0 +1,102 @@
+/* Aurora Toast Styles */
+
+/* Success Toast */
+.toast-aurora-success {
+  @apply bg-gradient-to-br from-emerald-500/90 to-green-600/90 backdrop-blur-xl;
+  @apply border border-emerald-400/30 shadow-2xl shadow-emerald-500/20;
+  @apply text-white font-medium;
+}
+
+.toast-aurora-success [data-icon] {
+  @apply text-emerald-100;
+}
+
+.toast-aurora-success [data-close-button] {
+  @apply text-emerald-100 hover:text-white hover:bg-emerald-600/50;
+}
+
+/* Error Toast */
+.toast-aurora-error {
+  @apply bg-gradient-to-br from-red-500/90 to-rose-600/90 backdrop-blur-xl;
+  @apply border border-red-400/30 shadow-2xl shadow-red-500/20;
+  @apply text-white font-medium;
+}
+
+.toast-aurora-error [data-icon] {
+  @apply text-red-100;
+}
+
+.toast-aurora-error [data-close-button] {
+  @apply text-red-100 hover:text-white hover:bg-red-600/50;
+}
+
+/* Info Toast */
+.toast-aurora-info {
+  @apply bg-gradient-to-br from-blue-500/90 to-cyan-600/90 backdrop-blur-xl;
+  @apply border border-blue-400/30 shadow-2xl shadow-blue-500/20;
+  @apply text-white font-medium;
+}
+
+.toast-aurora-info [data-icon] {
+  @apply text-blue-100;
+}
+
+.toast-aurora-info [data-close-button] {
+  @apply text-blue-100 hover:text-white hover:bg-blue-600/50;
+}
+
+/* Warning Toast */
+.toast-aurora-warning {
+  @apply bg-gradient-to-br from-amber-500/90 to-orange-600/90 backdrop-blur-xl;
+  @apply border border-amber-400/30 shadow-2xl shadow-amber-500/20;
+  @apply text-white font-medium;
+}
+
+.toast-aurora-warning [data-icon] {
+  @apply text-amber-100;
+}
+
+.toast-aurora-warning [data-close-button] {
+  @apply text-amber-100 hover:text-white hover:bg-amber-600/50;
+}
+
+/* Toast Animation */
+@keyframes toast-slide-in {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes toast-slide-out {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+}
+
+[data-sonner-toast] {
+  animation: toast-slide-in 0.3s ease-out;
+}
+
+[data-sonner-toast][data-removed="true"] {
+  animation: toast-slide-out 0.2s ease-in;
+}
+
+/* Toast Description */
+[data-sonner-toast] [data-description] {
+  @apply text-sm opacity-90 mt-1;
+}
+
+/* Toast Title */
+[data-sonner-toast] [data-title] {
+  @apply font-semibold text-base;
+}

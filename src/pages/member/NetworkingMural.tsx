@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -12,6 +12,8 @@ import { Plus, Search } from 'lucide-react';
 import { OpportunityFeed } from '@/components/networking/mural/OpportunityFeed';
 import { PostOpportunityModal } from '@/components/networking/mural/PostOpportunityModal';
 import { OpportunityDetailsModal } from '@/components/networking/mural/OpportunityDetailsModal';
+import { NewOpportunitiesBanner } from '@/components/networking/mural/NewOpportunitiesBanner';
+import { TagsFilter } from '@/components/networking/mural/TagsFilter';
 import { useOpportunities, Opportunity } from '@/hooks/networking/useOpportunities';
 
 export default function NetworkingMural() {
@@ -19,14 +21,62 @@ export default function NetworkingMural() {
   const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
   const [typeFilter, setTypeFilter] = useState('todos');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [seenOpportunityIds, setSeenOpportunityIds] = useState<Set<string>>(new Set());
+  const [newOpportunityIds, setNewOpportunityIds] = useState<string[]>([]);
+  const [showBanner, setShowBanner] = useState(false);
+  const feedRef = useRef<HTMLDivElement>(null);
 
   const { data: opportunities = [], isLoading } = useOpportunities({
     type: typeFilter,
     searchQuery,
+    tags: selectedTags.length > 0 ? selectedTags : undefined,
   });
+
+  // Detectar novas oportunidades
+  useEffect(() => {
+    if (!opportunities || isLoading) return;
+
+    const newIds: string[] = [];
+
+    opportunities.forEach(opp => {
+      if (!seenOpportunityIds.has(opp.id) && !opp.id.startsWith('temp-')) {
+        newIds.push(opp.id);
+      }
+    });
+
+    if (newIds.length > 0) {
+      setNewOpportunityIds(newIds);
+      setShowBanner(true);
+      
+      // Atualizar IDs vistos após 2 segundos
+      setTimeout(() => {
+        setSeenOpportunityIds(prev => new Set([...prev, ...newIds]));
+      }, 2000);
+    }
+  }, [opportunities, isLoading, seenOpportunityIds]);
+
+  const handleViewNewOpportunities = () => {
+    setShowBanner(false);
+    feedRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const handleDismissBanner = () => {
+    setShowBanner(false);
+    setNewOpportunityIds([]);
+  };
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-8">
+      {/* Banner de novas oportunidades */}
+      {showBanner && newOpportunityIds.length > 0 && (
+        <NewOpportunitiesBanner
+          count={newOpportunityIds.length}
+          onViewClick={handleViewNewOpportunities}
+          onDismiss={handleDismissBanner}
+        />
+      )}
+
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-8">
         <div className="space-y-2">
@@ -40,7 +90,7 @@ export default function NetworkingMural() {
         <Button 
           onClick={() => setIsPostModalOpen(true)} 
           size="lg" 
-          className="bg-gradient-to-r from-aurora to-viverblue hover:from-aurora/90 hover:to-viverblue/90 text-white shadow-lg shadow-aurora/20 hover:shadow-aurora/40 transition-all duration-200 gap-2 px-6 py-6 text-base font-semibold"
+          className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all duration-200 gap-2 px-6 py-6 text-base font-semibold"
         >
           <Plus className="w-5 h-5" />
           Postar Oportunidade
@@ -48,7 +98,7 @@ export default function NetworkingMural() {
       </div>
 
       {/* Filtros */}
-      <div className="bg-card/50 backdrop-blur-sm p-4 rounded-2xl border border-border mb-6">
+      <div className="bg-card/50 backdrop-blur-sm p-4 rounded-2xl border border-border mb-6 space-y-4">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
@@ -56,11 +106,11 @@ export default function NetworkingMural() {
               placeholder="Buscar oportunidades..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-12 h-11 text-base"
+              className="pl-12 h-11 text-base bg-card/50 backdrop-blur-sm border-border/50 transition-all duration-300 focus:border-primary/30"
             />
           </div>
           <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="w-full sm:w-[240px] h-11 text-base">
+            <SelectTrigger className="w-full sm:w-[240px] h-11 text-base bg-card/50 backdrop-blur-sm border-border/50 hover:border-primary/30 transition-all">
               <SelectValue placeholder="Filtrar por tipo" />
             </SelectTrigger>
             <SelectContent>
@@ -73,14 +123,20 @@ export default function NetworkingMural() {
             </SelectContent>
           </Select>
         </div>
+
+        <TagsFilter selectedTags={selectedTags} onTagsChange={setSelectedTags} />
       </div>
 
       {/* Feed */}
-      <OpportunityFeed
-        opportunities={opportunities}
-        isLoading={isLoading}
-        onViewDetails={setSelectedOpportunity}
-      />
+      <div ref={feedRef}>
+        <OpportunityFeed
+          opportunities={opportunities}
+          isLoading={isLoading}
+          onViewDetails={setSelectedOpportunity}
+          newOpportunityIds={newOpportunityIds}
+          onPostClick={() => setIsPostModalOpen(true)}
+        />
+      </div>
 
       {/* Modais */}
       <PostOpportunityModal open={isPostModalOpen} onOpenChange={setIsPostModalOpen} />
