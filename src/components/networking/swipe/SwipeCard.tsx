@@ -69,11 +69,11 @@ export const SwipeCard = ({ card, onOpenContact }: SwipeCardProps) => {
       }}
     >
       <LiquidGlassCard 
-        className="w-full max-w-lg mx-auto overflow-hidden shadow-2xl shadow-aurora/10 hover:shadow-3xl hover:shadow-aurora/20 transition-shadow duration-500"
+        className="w-full max-w-2xl mx-auto overflow-hidden shadow-2xl shadow-aurora/10 hover:shadow-3xl hover:shadow-aurora/20 transition-shadow duration-500"
         variant="premium"
         hoverable={false}
       >
-        <div className="h-[700px] flex flex-col p-6">
+        <div className="h-[750px] flex flex-col p-6">
           {/* Header Compacto: Avatar + Info + Score */}
           <div className="flex items-center gap-4 mb-4 flex-shrink-0">
             <Avatar className="h-20 w-20 border-2 border-aurora/30 shadow-lg">
@@ -124,12 +124,12 @@ export const SwipeCard = ({ card, onOpenContact }: SwipeCardProps) => {
                 disabled={localStatus !== 'none' || isSendingRequest}
                 variant="outline"
                 size="default"
-                className={`flex-1 transition-all duration-300 font-medium ${
+                className={`flex-1 transition-all duration-300 font-semibold ${
                   localStatus === 'accepted'
-                    ? 'bg-green-500/10 border-green-500/40 text-green-600 hover:bg-green-500/20'
+                    ? 'bg-emerald-50 border-emerald-500 text-emerald-700 hover:bg-emerald-100'
                     : localStatus === 'pending'
-                    ? 'bg-yellow-500/10 border-yellow-500/40 text-yellow-600 cursor-not-allowed'
-                    : 'border-neutral-300/60 text-foreground hover:bg-neutral-100/10 hover:border-neutral-300 hover:shadow-md'
+                    ? 'bg-amber-50 border-amber-500 text-amber-700 cursor-not-allowed'
+                    : 'border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-slate-400'
                 }`}
               >
                 {localStatus === 'accepted' ? (
@@ -160,24 +160,23 @@ export const SwipeCard = ({ card, onOpenContact }: SwipeCardProps) => {
                   onClick={handleLinkedInClick}
                   variant="outline"
                   size="default"
-                  className="border-[#0A66C2]/40 text-[#0A66C2] hover:bg-[#0A66C2]/10 hover:border-[#0A66C2]/60 transition-all hover:shadow-md font-medium px-4"
+                  className="border-[#0A66C2] text-[#0A66C2] hover:bg-[#0A66C2] hover:text-white transition-all duration-300 font-semibold px-5"
                   title="Ver perfil no LinkedIn"
                 >
-                  <Linkedin className="h-4 w-4 mr-2" />
+                  <Linkedin className="h-4 w-4 mr-2 fill-current" />
                   LinkedIn
                 </Button>
               )}
             </div>
 
-            {/* Ação Primária - Destaque com Gradiente Suave */}
+            {/* Ação Primária - Design Sóbrio Profissional */}
             <Button
               onClick={onOpenContact}
               size="lg"
-              className="w-full bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-600 hover:via-teal-600 hover:to-cyan-600 text-white shadow-xl shadow-emerald-500/30 hover:shadow-2xl hover:shadow-emerald-500/40 transition-all duration-300 font-bold transform hover:scale-[1.02]"
+              className="w-full bg-slate-700 hover:bg-slate-800 text-white shadow-lg hover:shadow-xl transition-all duration-300 font-semibold border border-slate-600/50"
             >
-              <Phone className="h-5 w-5 mr-2 animate-pulse" />
+              <Phone className="h-5 w-5 mr-2" />
               CONECTAR AGORA
-              <span className="ml-auto px-2 py-0.5 bg-white/20 rounded-full text-xs font-bold">{Math.round(card.score)}%</span>
             </Button>
           </div>
         </div>
