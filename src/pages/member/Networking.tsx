@@ -4,8 +4,9 @@ import { useSwipeCards } from "@/hooks/networking/useSwipeCards";
 import { SwipeCard } from "@/components/networking/swipe/SwipeCard";
 import { ContactModal } from "@/components/networking/modals/ContactModal";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Loader2, Network, Zap } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Network, Brain } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { motion } from "framer-motion";
 
 const Networking = () => {
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
@@ -106,7 +107,7 @@ const Networking = () => {
                 </>
               ) : (
                 <>
-                  <Zap className="h-5 w-5" />
+                  <Brain className="h-5 w-5" />
                   Gerar Conexões com IA
                 </>
               )}
@@ -165,26 +166,31 @@ const Networking = () => {
             Descubra conexões estratégicas com inteligência artificial
           </p>
           
-          {/* Botão para forçar regeneração - mais sofisticado */}
+          {/* Botão para regenerar conexões - Via Aurora Style */}
           <div className="pt-2">
-            <Button 
-              onClick={() => generateMatches()}
-              disabled={isGenerating}
-              variant="outline"
-              className="gap-2 border-aurora/30 hover:bg-aurora/5 hover:border-aurora/50 transition-all"
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
-              {isGenerating ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin text-aurora" />
-                  <span>Gerando conexões...</span>
-                </>
-              ) : (
-                <>
-                  <Zap className="h-4 w-4 text-aurora" />
-                  <span>Gerar novas conexões</span>
-                </>
-              )}
-            </Button>
+              <Button 
+                onClick={() => generateMatches()}
+                disabled={isGenerating}
+                className="relative overflow-hidden gap-2 bg-gradient-to-r from-aurora via-viverblue to-operational hover:from-aurora/90 hover:via-viverblue/90 hover:to-operational/90 text-white border-0 shadow-lg hover:shadow-xl transition-all px-6"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 hover:opacity-100 transition-opacity" />
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin relative z-10" />
+                    <span className="relative z-10">Gerando conexões...</span>
+                  </>
+                ) : (
+                  <>
+                    <Brain className="h-4 w-4 relative z-10" />
+                    <span className="relative z-10">Gerar novas conexões</span>
+                  </>
+                )}
+              </Button>
+            </motion.div>
           </div>
         </div>
 

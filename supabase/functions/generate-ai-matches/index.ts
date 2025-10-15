@@ -478,7 +478,7 @@ serve(async (req) => {
           user_id: user_id,
           matched_user_id: candidate.id,
           match_type: matchType,
-          compatibility_score: score, // Manter como decimal (0-1) para ordenação precisa
+          compatibility_score: Math.round(score * 100), // Converter de decimal (0-1) para integer (0-100)
           why_connect: matchReason,
           ice_breaker: generateIceBreaker(matchType, candidate.name),
           connection_copy: matchReason, // Adicionar para o frontend
