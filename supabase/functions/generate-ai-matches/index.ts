@@ -472,16 +472,21 @@ serve(async (req) => {
       };
 
       // Inserir o match na tabela strategic_matches_v2
+      // CRÍTICO: Converter score final para inteiro 0-100
+      const finalCompatibilityScore = Math.round(score * 100);
+      
+      console.log(`Score para ${candidate.name}: decimal=${score.toFixed(3)}, integer=${finalCompatibilityScore}`);
+      
       const { error: insertError } = await supabase
         .from('strategic_matches_v2')
         .insert({
           user_id: user_id,
           matched_user_id: candidate.id,
           match_type: matchType,
-          compatibility_score: Math.round(score * 100), // Converter de decimal (0-1) para integer (0-100)
+          compatibility_score: finalCompatibilityScore, // Sempre um inteiro entre 0-100
           why_connect: matchReason,
           ice_breaker: generateIceBreaker(matchType, candidate.name),
-          connection_copy: matchReason, // Adicionar para o frontend
+          connection_copy: matchReason,
           opportunities: aiAnalysis.opportunities,
           ai_analysis: aiAnalysis,
           status: 'pending',

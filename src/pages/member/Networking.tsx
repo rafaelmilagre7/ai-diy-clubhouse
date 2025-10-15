@@ -72,65 +72,108 @@ const Networking = () => {
             <div className="absolute bottom-1/4 left-1/3 w-96 h-96 bg-operational/10 rounded-full blur-3xl animate-blob animation-delay-4000" />
           </div>
 
-          <Card className="relative max-w-2xl mx-auto p-12 text-center space-y-8 liquid-glass-card border-aurora/20 shadow-2xl shadow-aurora/5">
-            {/* Icon com gradiente e glow */}
-            <div className="flex justify-center">
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-aurora to-viverblue opacity-20 blur-2xl rounded-full" />
-                <div className="relative inline-flex p-6 rounded-2xl bg-gradient-to-br from-aurora/20 to-viverblue/20 backdrop-blur-sm border border-aurora/30">
-                  <Network className="h-16 w-16 text-aurora" />
-                </div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="relative max-w-2xl mx-auto"
+          >
+            <div className="liquid-glass-card rounded-3xl p-12 border border-aurora/20 backdrop-blur-xl shadow-2xl">
+              {/* Ícone decorativo melhorado */}
+              <div className="flex justify-center mb-8">
+                <motion.div
+                  animate={{ 
+                    scale: [1, 1.05, 1],
+                    rotate: [0, 5, -5, 0]
+                  }}
+                  transition={{ 
+                    duration: 4,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                  className="relative"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br from-aurora via-viverblue to-operational opacity-20 blur-2xl rounded-full"></div>
+                  <div className="relative inline-flex p-8 rounded-3xl bg-gradient-to-br from-card/90 to-card/70 backdrop-blur-sm border border-aurora/30 shadow-lg">
+                    <svg className="h-20 w-20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <defs>
+                        <linearGradient id="iconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="hsl(var(--aurora))" />
+                          <stop offset="50%" stopColor="hsl(var(--viverblue))" />
+                          <stop offset="100%" stopColor="hsl(var(--operational))" />
+                        </linearGradient>
+                      </defs>
+                      <path d="M17 20h5v-2a3 3 0 0 0-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 0 1 5.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 0 1 9.288 0M15 7a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2 2 0 1 1-4 0 2 2 0 0 1 4 0ZM7 10a2 2 0 1 1-4 0 2 2 0 0 1 4 0Z" stroke="url(#iconGradient)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                </motion.div>
               </div>
-            </div>
 
-            {/* Título com gradiente */}
-            <div className="space-y-3">
-              <h2 className="text-3xl font-bold bg-gradient-to-r from-aurora via-viverblue to-operational bg-clip-text text-transparent">
-                Descubra Conexões Estratégicas
-              </h2>
-              <p className="text-muted-foreground text-lg max-w-lg mx-auto">
-                Nossa IA irá analisar seu perfil e gerar {isGenerating ? 'suas conexões mais relevantes...' : '50 matches personalizados para impulsionar seu negócio.'}
-              </p>
-            </div>
+              {/* Título com gradiente suave */}
+              <div className="space-y-4 text-center mb-8">
+                <h2 className="text-4xl font-heading font-bold bg-gradient-to-r from-foreground via-foreground/90 to-foreground/80 bg-clip-text text-transparent">
+                  Descubra Conexões Estratégicas
+                </h2>
+                <p className="text-muted-foreground text-lg max-w-lg mx-auto leading-relaxed">
+                  {isGenerating 
+                    ? 'Nossa IA está analisando perfis e criando suas conexões mais relevantes...' 
+                    : 'Nossa IA analisará seu perfil e gerará matches personalizados para impulsionar seu negócio.'
+                  }
+                </p>
+              </div>
 
-            {/* Botão melhorado */}
-            <Button 
-              onClick={() => generateMatches()}
-              disabled={isGenerating}
-              size="lg"
-              className="gap-3 px-8 py-6 text-base font-semibold bg-gradient-to-r from-aurora to-viverblue hover:from-aurora/90 hover:to-viverblue/90 shadow-lg shadow-aurora/20 transition-all hover:shadow-xl hover:shadow-aurora/30 hover:scale-105"
-            >
-              {isGenerating ? (
-                <>
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  Analisando perfis... (até 30s)
-                </>
-              ) : (
-                <>
-                  <Brain className="h-5 w-5" />
-                  Gerar Conexões com IA
-                </>
+              {/* Botão Via Aurora Style */}
+              <div className="flex justify-center mb-8">
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Button 
+                    onClick={() => generateMatches()}
+                    disabled={isGenerating}
+                    size="lg"
+                    className="relative overflow-hidden gap-3 px-10 py-7 text-lg font-semibold bg-gradient-to-r from-aurora via-viverblue to-operational hover:from-aurora/90 hover:via-viverblue/90 hover:to-operational/90 text-white border-0 shadow-xl hover:shadow-2xl transition-all"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 hover:opacity-100 transition-opacity" />
+                    {isGenerating ? (
+                      <>
+                        <Loader2 className="h-5 w-5 animate-spin relative z-10" />
+                        <span className="relative z-10">Analisando perfis... (até 30s)</span>
+                      </>
+                    ) : (
+                      <>
+                        <Brain className="h-5 w-5 relative z-10" />
+                        <span className="relative z-10">Gerar Conexões com IA</span>
+                      </>
+                    )}
+                  </Button>
+                </motion.div>
+              </div>
+
+              {/* Features list com estilo Via Aurora */}
+              {!isGenerating && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                  className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-8 border-t border-border/30"
+                >
+                  <div className="text-center space-y-2">
+                    <div className="text-3xl font-bold bg-gradient-to-r from-aurora to-aurora/80 bg-clip-text text-transparent">50+</div>
+                    <div className="text-sm text-muted-foreground">Conexões Inteligentes</div>
+                  </div>
+                  <div className="text-center space-y-2">
+                    <div className="text-3xl font-bold bg-gradient-to-r from-viverblue to-viverblue/80 bg-clip-text text-transparent">100%</div>
+                    <div className="text-sm text-muted-foreground">Personalizado</div>
+                  </div>
+                  <div className="text-center space-y-2">
+                    <div className="text-3xl font-bold bg-gradient-to-r from-operational to-operational/80 bg-clip-text text-transparent">IA</div>
+                    <div className="text-sm text-muted-foreground">Match Score</div>
+                  </div>
+                </motion.div>
               )}
-            </Button>
-
-            {/* Features list */}
-            {!isGenerating && (
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-6 border-t border-border/50">
-                <div className="space-y-1">
-                  <div className="text-2xl font-bold text-aurora">50+</div>
-                  <div className="text-xs text-muted-foreground">Conexões IA</div>
-                </div>
-                <div className="space-y-1">
-                  <div className="text-2xl font-bold text-viverblue">100%</div>
-                  <div className="text-xs text-muted-foreground">Personalizado</div>
-                </div>
-                <div className="space-y-1">
-                  <div className="text-2xl font-bold text-operational">Smart</div>
-                  <div className="text-xs text-muted-foreground">Match Score</div>
-                </div>
-              </div>
-            )}
-          </Card>
+            </div>
+          </motion.div>
         </div>
       </>
     );
