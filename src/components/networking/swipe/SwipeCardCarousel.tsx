@@ -221,7 +221,7 @@ export const SwipeCardCarousel = ({ card }: SwipeCardCarouselProps) => {
   const enrichedData = card.enrichedData || {};
   
   // Dados da página 1: Perfil Profissional
-  const industry = card.company || 'Não informado';
+  const industry = enrichedData.professional_info?.industry || 'Setor não informado';
   const score = Math.round(card.score || 50);
   const keywords = enrichedData.keywords || [];
   const valueProp = enrichedData.value_proposition?.split('•')[0]?.trim() || '';
