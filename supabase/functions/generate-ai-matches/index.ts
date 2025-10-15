@@ -372,7 +372,7 @@ serve(async (req) => {
           user_id: user_id,
           matched_user_id: candidate.id,
           match_type: matchType,
-          compatibility_score: score,
+          compatibility_score: Math.round(score * 100), // Converter para percentual inteiro
           why_connect: matchReason,
           ice_breaker: generateIceBreaker(matchType, candidate.name),
           opportunities: aiAnalysis.opportunities,
