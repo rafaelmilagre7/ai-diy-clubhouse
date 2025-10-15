@@ -235,6 +235,10 @@ const Networking = () => {
               <SwipeCard 
                 card={currentCard} 
                 onOpenContact={() => setIsContactModalOpen(true)}
+                onNext={nextCard}
+                onPrevious={previousCard}
+                hasNext={hasNext}
+                hasPrevious={hasPrevious}
               />
             )}
           </div>

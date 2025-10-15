@@ -1,7 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { LiquidGlassCard } from '@/components/ui/LiquidGlassCard';
-import { Linkedin, Phone, Loader2, UserPlus, Check, Clock, Trophy } from 'lucide-react';
+import { Linkedin, Phone, Loader2, UserPlus, Check, Clock, Trophy, ChevronLeft, ChevronRight } from 'lucide-react';
 import { SwipeCard as SwipeCardType } from '@/hooks/networking/useSwipeCards';
 import { motion } from 'framer-motion';
 import { useConnections } from '@/hooks/networking/useConnections';
@@ -11,9 +11,20 @@ import { SwipeCardCarousel } from './SwipeCardCarousel';
 interface SwipeCardProps {
   card: SwipeCardType;
   onOpenContact: () => void;
+  onNext?: () => void;
+  onPrevious?: () => void;
+  hasNext?: boolean;
+  hasPrevious?: boolean;
 }
 
-export const SwipeCard = ({ card, onOpenContact }: SwipeCardProps) => {
+export const SwipeCard = ({ 
+  card, 
+  onOpenContact,
+  onNext,
+  onPrevious,
+  hasNext = true,
+  hasPrevious = true
+}: SwipeCardProps) => {
   const { sendConnectionRequest, isSendingRequest, useCheckConnectionStatus } = useConnections();
   const { data: connectionStatus } = useCheckConnectionStatus(card.userId);
   const [localStatus, setLocalStatus] = useState<'none' | 'pending' | 'accepted'>('none');
@@ -99,10 +110,10 @@ export const SwipeCard = ({ card, onOpenContact }: SwipeCardProps) => {
               </p>
             </div>
 
-            {/* Badge de Score - Compacto */}
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border-2 border-emerald-500 shadow-sm flex-shrink-0">
-              <Trophy className="h-4 w-4 text-emerald-600" />
-              <span className="text-sm font-bold text-emerald-800 font-extrabold">{Math.round(card.score || 50)}%</span>
+            {/* Badge de Score Aurora Style */}
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-br from-aurora/10 to-viverblue/10 border-2 border-aurora/40 shadow-lg shadow-aurora/20 flex-shrink-0">
+              <Trophy className="h-4 w-4 text-aurora" />
+              <span className="text-sm font-bold text-aurora">{Math.round(card.score || 50)}%</span>
             </div>
           </div>
 
@@ -115,38 +126,39 @@ export const SwipeCard = ({ card, onOpenContact }: SwipeCardProps) => {
             <SwipeCardCarousel card={card} />
           </div>
 
-          {/* Status Banner - Se conectado */}
+          {/* Status Banner Aurora Style - Se conectado */}
           {localStatus === 'accepted' && (
-            <div className="bg-white border-2 border-emerald-500 shadow-md rounded-lg p-2.5 mb-3 text-center text-sm flex-shrink-0">
-              <Check className="inline h-4 w-4 mr-1.5 text-emerald-600" />
-              <span className="text-emerald-800 font-semibold">Vocês já estão conectados</span>
+            <div className="bg-gradient-to-r from-aurora/10 to-viverblue/10 border-2 border-aurora/40 shadow-md rounded-lg p-2.5 mb-3 text-center text-sm flex-shrink-0">
+              <Check className="inline h-4 w-4 mr-1.5 text-aurora" />
+              <span className="text-aurora font-semibold">Vocês já estão conectados</span>
             </div>
           )}
 
-          {/* Action Buttons - Hierarquia Clara */}
+          {/* Action Buttons - VIA AURORA STYLE */}
           <div className="space-y-3 flex-shrink-0">
-            {/* CTA PRINCIPAL - Verde Vibrante, Destaque Máximo */}
+            {/* CTA PRINCIPAL - Aurora Gradient */}
             <Button
               onClick={onOpenContact}
               size="lg"
-              className="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/40 transition-all duration-300 font-bold text-base hover:scale-[1.01]"
+              className="relative w-full bg-gradient-to-r from-aurora via-viverblue to-revenue hover:from-aurora/90 hover:via-viverblue/90 hover:to-revenue/90 text-white shadow-xl shadow-aurora/30 hover:shadow-2xl hover:shadow-aurora/40 transition-all duration-300 font-bold text-base hover:scale-[1.02] border-0 overflow-hidden group"
             >
-              <Phone className="h-5 w-5 mr-2" />
-              CONECTAR AGORA
+              <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <Phone className="h-5 w-5 mr-2 relative z-10" />
+              <span className="relative z-10">CONECTAR AGORA</span>
             </Button>
 
-            {/* AÇÕES SECUNDÁRIAS - Hierarquia Clara */}
+            {/* AÇÕES SECUNDÁRIAS - Aurora Style */}
             <div className="flex gap-2">
               <Button
                 onClick={handleAddConnection}
                 disabled={localStatus !== 'none' || isSendingRequest}
                 variant="outline"
-                className={`flex-1 transition-all duration-300 ${
+                className={`flex-1 transition-all duration-300 font-semibold ${
                   localStatus === 'accepted'
-                    ? 'bg-white border-2 border-emerald-600 text-emerald-900 font-semibold shadow-sm hover:bg-emerald-50'
+                    ? 'bg-aurora/10 border-2 border-aurora/60 text-aurora shadow-md shadow-aurora/20 hover:bg-aurora/15'
                     : localStatus === 'pending'
-                    ? 'bg-white border-2 border-amber-500 text-amber-900 font-semibold shadow-sm cursor-not-allowed'
-                    : 'border-2 border-slate-400 bg-white text-slate-900 hover:bg-slate-100 hover:border-slate-500 font-semibold shadow-sm'
+                    ? 'bg-warning/10 border-2 border-warning/60 text-warning shadow-md shadow-warning/20 cursor-not-allowed'
+                    : 'border-2 border-border bg-card/50 text-foreground hover:bg-card hover:border-aurora/30 shadow-sm hover:shadow-md'
                 }`}
               >
                 {localStatus === 'accepted' ? (
@@ -177,7 +189,7 @@ export const SwipeCard = ({ card, onOpenContact }: SwipeCardProps) => {
                   onClick={handleLinkedInClick}
                   variant="outline"
                   size="icon"
-                  className="border-[#0A66C2]/30 text-[#0A66C2] hover:bg-[#0A66C2]/10 transition-all duration-300"
+                  className="border-2 border-[#0A66C2]/40 text-[#0A66C2] hover:bg-[#0A66C2]/10 hover:border-[#0A66C2]/60 transition-all duration-300 shadow-sm hover:shadow-md"
                   title="Ver perfil no LinkedIn"
                 >
                   <Linkedin className="h-4 w-4" />
@@ -185,6 +197,31 @@ export const SwipeCard = ({ card, onOpenContact }: SwipeCardProps) => {
               )}
             </div>
           </div>
+
+          {/* Botões de navegação entre usuários - embaixo do card */}
+          {(onNext || onPrevious) && (
+            <div className="flex justify-between items-center gap-3 pt-4 border-t border-border/30 flex-shrink-0">
+              <Button
+                onClick={onPrevious}
+                disabled={!hasPrevious}
+                variant="outline"
+                className="flex-1 bg-card/50 border-2 border-aurora/30 text-aurora hover:bg-aurora/10 hover:border-aurora/50 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-300 font-semibold shadow-sm hover:shadow-md hover:scale-[1.02] disabled:hover:scale-100"
+              >
+                <ChevronLeft className="h-5 w-5 mr-1" />
+                Voltar
+              </Button>
+              
+              <Button
+                onClick={onNext}
+                disabled={!hasNext}
+                variant="outline"
+                className="flex-1 bg-card/50 border-2 border-aurora/30 text-aurora hover:bg-aurora/10 hover:border-aurora/50 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-300 font-semibold shadow-sm hover:shadow-md hover:scale-[1.02] disabled:hover:scale-100"
+              >
+                Próximo
+                <ChevronRight className="h-5 w-5 ml-1" />
+              </Button>
+            </div>
+          )}
         </div>
       </LiquidGlassCard>
     </motion.div>
