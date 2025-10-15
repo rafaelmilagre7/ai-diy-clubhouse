@@ -195,10 +195,11 @@ export default function PublicProfile() {
                 {isOwnProfile ? (
                   <Button
                     onClick={() => navigate('/profile/edit')}
-                    className="w-full gap-2 bg-gradient-to-r from-aurora via-viverblue to-operational hover:from-aurora/80 hover:via-viverblue/80 hover:to-operational/80 text-white shadow-lg shadow-aurora/30"
+                    size="default"
+                    className="w-full gap-2 bg-gradient-to-r from-aurora via-viverblue to-operational hover:from-aurora/80 hover:via-viverblue/80 hover:to-operational/80 text-white shadow-md hover:shadow-lg border-0"
                   >
-                    <Edit className="h-5 w-5" />
-                    Editar Perfil
+                    <Edit className="h-4 w-4" />
+                    <span className="text-sm">Editar Perfil</span>
                   </Button>
                 ) : (
                   <>
@@ -206,33 +207,34 @@ export default function PublicProfile() {
                     <Button
                       onClick={handleAddConnection}
                       disabled={localStatus !== 'none' || isSendingRequest}
-                      className={`w-full gap-2 transition-all duration-300 ${
+                      size="default"
+                      className={`w-full gap-2 transition-all duration-300 shadow-md hover:shadow-lg border-0 ${
                         localStatus === 'accepted'
-                          ? 'bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 hover:from-green-600 hover:via-emerald-600 hover:to-teal-600 text-white shadow-lg shadow-green-500/30'
+                          ? 'bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 hover:from-green-600 hover:via-emerald-600 hover:to-teal-600 text-white'
                           : localStatus === 'pending'
-                          ? 'bg-gradient-to-r from-yellow-500 via-amber-500 to-orange-500 text-white shadow-lg shadow-yellow-500/20 cursor-not-allowed'
-                          : 'bg-gradient-to-r from-aurora via-viverblue to-operational hover:from-aurora/80 hover:via-viverblue/80 hover:to-operational/80 text-white shadow-lg shadow-aurora/30'
+                          ? 'bg-gradient-to-r from-yellow-500 via-amber-500 to-orange-500 text-white cursor-not-allowed opacity-80'
+                          : 'bg-gradient-to-r from-aurora via-viverblue to-operational hover:from-aurora/80 hover:via-viverblue/80 hover:to-operational/80 text-white'
                       }`}
                     >
                       {localStatus === 'accepted' ? (
                         <>
-                          <Check className="h-5 w-5" />
-                          Conectado ✓
+                          <Check className="h-4 w-4" />
+                          <span className="text-sm">Conectado</span>
                         </>
                       ) : localStatus === 'pending' ? (
                         <>
-                          <Clock className="h-5 w-5 animate-pulse" />
-                          Solicitação Enviada
+                          <Clock className="h-4 w-4 animate-pulse" />
+                          <span className="text-sm">Enviada</span>
                         </>
                       ) : isSendingRequest ? (
                         <>
-                          <Loader2 className="h-5 w-5 animate-spin" />
-                          Enviando...
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span className="text-sm">Enviando...</span>
                         </>
                       ) : (
                         <>
-                          <UserPlus className="h-5 w-5" />
-                          Adicionar Conexão
+                          <UserPlus className="h-4 w-4" />
+                          <span className="text-sm">Adicionar</span>
                         </>
                       )}
                     </Button>
@@ -242,10 +244,11 @@ export default function PublicProfile() {
                       <Button
                         onClick={handleOpenChat}
                         variant="outline"
+                        size="default"
                         className="w-full gap-2 border-aurora/30 hover:bg-aurora/5"
                       >
-                        <MessageSquare className="h-5 w-5" />
-                        Enviar Mensagem
+                        <MessageSquare className="h-4 w-4" />
+                        <span className="text-sm">Enviar Mensagem</span>
                       </Button>
                     )}
                   </>
@@ -256,10 +259,11 @@ export default function PublicProfile() {
                   <Button
                     onClick={() => window.open(profile.linkedin_url, '_blank')}
                     variant="outline"
+                    size="default"
                     className="w-full gap-2 border-[#0A66C2]/30 hover:bg-[#0A66C2]/5"
                   >
-                    <Linkedin className="h-5 w-5 text-[#0A66C2]" />
-                    LinkedIn
+                    <Linkedin className="h-4 w-4 text-[#0A66C2]" />
+                    <span className="text-sm">LinkedIn</span>
                   </Button>
                 )}
 
@@ -267,10 +271,11 @@ export default function PublicProfile() {
                   <Button
                     onClick={() => window.location.href = `mailto:${profile.email}`}
                     variant="outline"
+                    size="default"
                     className="w-full gap-2"
                   >
-                    <Mail className="h-5 w-5" />
-                    Email
+                    <Mail className="h-4 w-4" />
+                    <span className="text-sm">Email</span>
                   </Button>
                 )}
               </LiquidGlassCard>

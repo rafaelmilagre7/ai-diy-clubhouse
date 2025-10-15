@@ -135,23 +135,24 @@ export const ConnectionCard = ({
         )}
 
         {variant === 'active' && onMessage && (
-          <div className="flex gap-3 pt-2">
+          <div className="flex gap-2 pt-2">
             <Link to={`/perfil/${otherUser.id}`} className="flex-1">
               <Button 
                 variant="outline"
-                className="w-full border-aurora/30 hover:bg-aurora/5"
+                size="sm"
+                className="w-full gap-1.5 hover:bg-aurora/10 hover:border-aurora/30 hover:text-aurora transition-all"
               >
-                <Eye className="w-4 h-4 mr-2" />
-                Ver Perfil
+                <Eye className="h-4 w-4" />
+                <span className="text-xs">Ver Perfil</span>
               </Button>
             </Link>
             <Button 
-              variant="outline"
-              className="flex-1 border-viverblue/30 hover:bg-viverblue/5"
+              size="sm"
+              className="flex-1 gap-1.5 bg-gradient-to-r from-aurora to-viverblue hover:from-aurora/90 hover:to-viverblue/90 text-white shadow-sm hover:shadow-md hover:scale-[1.02] transition-all border-0"
               onClick={onMessage}
             >
-              <MessageSquare className="w-4 h-4 mr-2" />
-              Mensagem
+              <MessageSquare className="h-4 w-4" />
+              <span className="text-xs">Mensagem</span>
             </Button>
           </div>
         )}

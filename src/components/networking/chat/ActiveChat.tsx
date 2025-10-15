@@ -187,9 +187,11 @@ export const ActiveChat = ({
           </div>
         )}
 
-        <div className="flex gap-2 p-4">
-          <FileUploadButton onFileUploaded={handleFileUploaded} />
-          <EmojiPickerComponent onEmojiSelect={handleEmojiSelect} />
+        <div className="flex gap-2 p-4 items-end">
+          <div className="flex gap-1">
+            <FileUploadButton onFileUploaded={handleFileUploaded} />
+            <EmojiPickerComponent onEmojiSelect={handleEmojiSelect} />
+          </div>
           <Input
             value={message}
             onChange={(e) => {
@@ -199,11 +201,13 @@ export const ActiveChat = ({
             placeholder="Digite sua mensagem..."
             disabled={sendMutation.isPending}
             maxLength={1000}
+            className="flex-1"
           />
           <Button
             type="submit"
             size="icon"
             disabled={(!message.trim() && attachments.length === 0) || sendMutation.isPending}
+            className="shrink-0"
           >
             <Send className="w-4 h-4" />
           </Button>

@@ -119,68 +119,67 @@ export const SwipeCard = ({ card, onOpenContact }: SwipeCardProps) => {
             </div>
           </div>
 
-          {/* Botões com cores corretas */}
-          <div className="flex gap-3">
-            {/* Botão Adicionar Conexão */}
-            <Button
-              onClick={handleAddConnection}
-              disabled={localStatus !== 'none' || isSendingRequest}
-              size="lg"
-              className={`flex-1 gap-2 transition-all duration-300 hover:scale-105 border-0 ${
-                localStatus === 'accepted'
-                  ? 'bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 hover:from-green-600 hover:via-emerald-600 hover:to-teal-600 text-white shadow-lg shadow-green-500/30'
-                  : localStatus === 'pending'
-                  ? 'bg-gradient-to-r from-yellow-500 via-amber-500 to-orange-500 text-white shadow-lg shadow-yellow-500/20 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-aurora via-viverblue to-operational hover:from-aurora/80 hover:via-viverblue/80 hover:to-operational/80 text-white shadow-lg shadow-aurora/30'
-              }`}
-            >
-              {localStatus === 'accepted' ? (
-                <>
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", stiffness: 200, damping: 10 }}
-                  >
-                    <Check className="h-5 w-5" />
-                  </motion.div>
-                  Conectado ✓
-                </>
-              ) : localStatus === 'pending' ? (
-                <>
-                  <Clock className="h-5 w-5 animate-pulse" />
-                  Solicitação Enviada
-                </>
-              ) : isSendingRequest ? (
-                <>
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  Enviando...
-                </>
-              ) : (
-                <>
-                  <UserPlus className="h-5 w-5" />
-                  Adicionar Conexão
-                </>
-              )}
-            </Button>
-
-            {card.linkedinUrl && (
+          {/* Action Buttons reorganizados em 2 linhas */}
+          <div className="space-y-2">
+            {/* Linha 1: Ações secundárias (menores) */}
+            <div className="flex gap-2">
+              {/* Botão Adicionar Conexão - COMPACTO */}
               <Button
-                onClick={handleLinkedInClick}
-                size="lg"
-                className="flex-1 gap-2 bg-[#0A66C2] hover:bg-[#004182] text-white border-0 transition-all hover:scale-105 hover:shadow-lg hover:shadow-[#0A66C2]/30"
+                onClick={handleAddConnection}
+                disabled={localStatus !== 'none' || isSendingRequest}
+                size="sm"
+                className={`flex-1 gap-1.5 transition-all duration-300 shadow-sm hover:shadow-md border-0 ${
+                  localStatus === 'accepted'
+                    ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white'
+                    : localStatus === 'pending'
+                    ? 'bg-gradient-to-r from-yellow-500 to-amber-500 text-white cursor-not-allowed opacity-80'
+                    : 'bg-gradient-to-r from-aurora to-viverblue hover:from-aurora/90 hover:to-viverblue/90 text-white hover:scale-[1.02]'
+                }`}
               >
-                <Linkedin className="h-5 w-5" />
-                LinkedIn
+                {localStatus === 'accepted' ? (
+                  <>
+                    <Check className="h-4 w-4" />
+                    <span className="text-xs font-medium">Conectado</span>
+                  </>
+                ) : localStatus === 'pending' ? (
+                  <>
+                    <Clock className="h-4 w-4 animate-pulse" />
+                    <span className="text-xs font-medium">Enviada</span>
+                  </>
+                ) : isSendingRequest ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span className="text-xs font-medium">Enviando...</span>
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="h-4 w-4" />
+                    <span className="text-xs font-medium">Adicionar</span>
+                  </>
+                )}
               </Button>
-            )}
-            
+
+              {/* Botão LinkedIn - SÓ ÍCONE */}
+              {card.linkedinUrl && (
+                <Button
+                  onClick={handleLinkedInClick}
+                  size="sm"
+                  className="px-3 bg-[#0A66C2] hover:bg-[#004182] text-white shadow-sm hover:shadow-md transition-all border-0"
+                  title="Ver perfil no LinkedIn"
+                >
+                  <Linkedin className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+
+            {/* Linha 2: Ação principal (CONECTAR - DESTAQUE) */}
             <Button
               onClick={onOpenContact}
               size="lg"
-              className="flex-1 gap-2 bg-gradient-to-r from-[#0ABAB5] via-[#088A87] to-[#065F5D] hover:from-[#088A87] hover:via-[#065F5D] hover:to-[#044D4B] hover:shadow-lg hover:shadow-aurora/30 transition-all hover:scale-105 text-white font-semibold border-0"
+              className="w-full gap-2 bg-gradient-to-r from-[#0ABAB5] via-[#088A87] to-[#065F5D] hover:from-[#088A87] hover:via-[#065F5D] hover:to-[#044D4B] hover:shadow-xl hover:shadow-aurora/40 hover:scale-[1.02] transition-all text-white font-bold border-0 shadow-lg"
             >
               <Phone className="h-5 w-5" />
-              Conectar
+              <span>CONECTAR</span>
             </Button>
           </div>
         </div>
