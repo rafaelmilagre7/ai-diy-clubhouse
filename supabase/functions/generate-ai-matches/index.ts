@@ -204,6 +204,7 @@ serve(async (req) => {
     
     for (const candidate of potentialMatches) {
       let compatibilityScore = 0.5; // Score padrão
+      let matchTypeWeight = 0; // Peso adicional baseado no tipo
       
       // Se ambos têm onboarding, usar função de compatibilidade avançada
       if (userOnboarding && candidate.business_segment) {
@@ -222,8 +223,25 @@ serve(async (req) => {
         if (!compatibilityError && compatibilityResult) {
           compatibilityScore = compatibilityResult;
         }
+        
+        // Adicionar bônus de compatibilidade baseado em dados de onboarding
+        // Indústrias complementares
+        if (userOnboarding.business_segment && candidate.business_segment) {
+          if (userOnboarding.business_segment === candidate.business_segment) {
+            compatibilityScore = Math.min(1.0, compatibilityScore + 0.1); // +10% para mesma indústria
+          }
+        }
+        
+        // Objetivos alinhados
+        if (userOnboarding.main_objectives && candidate.main_objectives) {
+          const userObjectives = Array.isArray(userOnboarding.main_objectives) ? userOnboarding.main_objectives : [];
+          const candidateObjectives = Array.isArray(candidate.main_objectives) ? candidate.main_objectives : [];
+          const commonObjectives = userObjectives.filter((obj: string) => candidateObjectives.includes(obj));
+          if (commonObjectives.length > 0) {
+            compatibilityScore = Math.min(1.0, compatibilityScore + (0.05 * commonObjectives.length)); // +5% por objetivo comum
+          }
+        }
       } else {
-        // Fallback: usar compatibilidade baseada em perfil básico
         // Fallback: usar compatibilidade baseada em perfil básico
         const candidateUserId = candidate.id;
         
@@ -236,34 +254,70 @@ serve(async (req) => {
         if (!basicError && basicCompatibility) {
           compatibilityScore = basicCompatibility;
         } else {
-          // Último fallback: score aleatório melhorado
-          compatibilityScore = Math.min(1.0, (Math.random() * 0.4) + 0.6); // 60-100%
+          // Último fallback: score variado baseado em dados disponíveis
+          let baseScore = 0.5;
+          
+          // Variar score baseado em indústria
+          if (userProfile.industry && candidate.industry) {
+            if (userProfile.industry === candidate.industry) {
+              baseScore += 0.15; // +15% para mesma indústria
+            }
+          }
+          
+          // Variar score baseado em tamanho de empresa
+          if (userProfile.company_size && candidate.company_size) {
+            if (userProfile.company_size === candidate.company_size) {
+              baseScore += 0.1; // +10% para mesmo porte
+            }
+          }
+          
+          // Adicionar variação aleatória menor
+          compatibilityScore = Math.min(1.0, baseScore + (Math.random() * 0.25)); // 50-100%
         }
       }
       
+      // Determinar tipo de match e peso de prioridade
+      const preferredType = preferredTypes[Math.floor(Math.random() * preferredTypes.length)];
+      
+      // Pesos de prioridade por tipo (quanto maior, mais prioritário)
+      const typeWeights: Record<string, number> = {
+        'customer': 1.0,        // Maior prioridade: oportunidades comerciais
+        'cliente': 1.0,
+        'partner': 0.8,         // Alta prioridade: parcerias estratégicas
+        'parceiro': 0.8,
+        'investor': 0.7,        // Média-alta: investidores/mentores
+        'mentor': 0.7,
+        'supplier': 0.6,        // Média: fornecedores
+        'fornecedor': 0.6,
+        'knowledge_exchange': 0.5 // Base: troca de conhecimento
+      };
+      
+      matchTypeWeight = typeWeights[preferredType] || 0.5;
+      
+      // Calcular score final combinando compatibilidade + peso do tipo
+      const finalScore = (compatibilityScore * 0.7) + (matchTypeWeight * 0.3);
+      
       // Verificar se atende ao mínimo de compatibilidade
-      if (compatibilityScore < minCompatibility) {
-        console.log(`Match rejeitado por baixa compatibilidade: ${Math.round(compatibilityScore * 100)}%`);
+      if (finalScore < minCompatibility) {
+        console.log(`Match rejeitado por baixa compatibilidade final: ${Math.round(finalScore * 100)}%`);
         continue;
       }
 
       matchesWithScore.push({
         candidate,
-        score: compatibilityScore
+        score: finalScore,
+        matchType: preferredType
       });
     }
 
-    // Ordenar por compatibilidade e limitar aos TOP 50
+    // Ordenar por score final (compatibilidade + prioridade de tipo) e limitar aos TOP 50
     matchesWithScore.sort((a, b) => b.score - a.score);
     const topMatches = matchesWithScore.slice(0, 50);
 
-    console.log(`${topMatches.length} matches qualificados encontrados`);
+    console.log(`${topMatches.length} matches qualificados encontrados, ordenados por relevância`);
 
     // Gerar matches para os usuários com melhor compatibilidade
-    for (const { candidate, score } of topMatches) {
-      
-      // Selecionar tipo de match baseado nas preferências
-      const preferredType = preferredTypes[Math.floor(Math.random() * preferredTypes.length)];
+    for (const { candidate, score, matchType: preferredType } of topMatches) {
       
       // Mapear tipos do código para valores aceitos pelo banco
       // Banco aceita: commercial_opportunity, strategic_partnership, knowledge_exchange, supplier, investor
@@ -424,7 +478,7 @@ serve(async (req) => {
           user_id: user_id,
           matched_user_id: candidate.id,
           match_type: matchType,
-          compatibility_score: Math.round(score * 100), // Converter para percentual inteiro
+          compatibility_score: score, // Manter como decimal (0-1) para ordenação precisa
           why_connect: matchReason,
           ice_breaker: generateIceBreaker(matchType, candidate.name),
           connection_copy: matchReason, // Adicionar para o frontend
@@ -446,7 +500,7 @@ serve(async (req) => {
         });
       } else {
         matchesGenerated++;
-        console.log(`✅ Match ${matchType} criado com ${candidate.name} (${Math.round(score * 100)}% compatibilidade)`);
+        console.log(`✅ Match ${matchType} criado com ${candidate.name} (Score: ${score.toFixed(2)} - ${Math.round(score * 100)}% compatibilidade)`);
       }
     }
 
