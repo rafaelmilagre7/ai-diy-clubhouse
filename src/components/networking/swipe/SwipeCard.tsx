@@ -1,7 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { LiquidGlassCard } from '@/components/ui/LiquidGlassCard';
-import { Linkedin, Phone, Loader2, UserPlus, Check, Clock } from 'lucide-react';
+import { Linkedin, Phone, Loader2, UserPlus, Check, Clock, Trophy } from 'lucide-react';
 import { SwipeCard as SwipeCardType } from '@/hooks/networking/useSwipeCards';
 import { motion } from 'framer-motion';
 import { useConnections } from '@/hooks/networking/useConnections';
@@ -73,7 +73,7 @@ export const SwipeCard = ({ card, onOpenContact }: SwipeCardProps) => {
         variant="premium"
         hoverable={false}
       >
-        <div className="h-[580px] flex flex-col p-6">
+        <div className="h-[700px] flex flex-col p-6">
           {/* Header Compacto: Avatar + Info + Score */}
           <div className="flex items-center gap-4 mb-4 flex-shrink-0">
             <Avatar className="h-20 w-20 border-2 border-aurora/30 shadow-lg">
@@ -99,9 +99,10 @@ export const SwipeCard = ({ card, onOpenContact }: SwipeCardProps) => {
               </p>
             </div>
 
-            {/* Badge de Score */}
-            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-br from-operational/20 to-aurora/20 border border-operational/30 flex-shrink-0">
-              <span className="text-lg font-black text-operational">{Math.round(card.score || 50)}%</span>
+            {/* Badge de Score - Verde neutro */}
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-br from-strategy/15 to-viverblue/10 border border-strategy/30 flex-shrink-0">
+              <Trophy className="h-4 w-4 text-strategy" />
+              <span className="text-lg font-black text-strategy">{Math.round(card.score || 50)}%</span>
             </div>
           </div>
 

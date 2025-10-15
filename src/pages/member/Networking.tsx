@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useSwipeCards } from "@/hooks/networking/useSwipeCards";
 import { SwipeCard } from "@/components/networking/swipe/SwipeCard";
+import { LoadMoreCard } from "@/components/networking/swipe/LoadMoreCard";
 import { ContactModal } from "@/components/networking/modals/ContactModal";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Loader2, Network, Brain } from "lucide-react";
@@ -186,7 +187,7 @@ const Networking = () => {
         <meta name="description" content="Descubra conexões estratégicas com IA na comunidade Viver de IA" />
       </Helmet>
 
-      <div className="relative container py-8 space-y-8 overflow-hidden">
+      <div className="relative container py-4 space-y-4 overflow-hidden">
         {/* Aurora Background Blobs */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute -top-1/2 left-1/4 w-96 h-96 bg-aurora/5 rounded-full blur-3xl animate-blob" />
@@ -194,47 +195,20 @@ const Networking = () => {
           <div className="absolute -bottom-1/2 left-1/2 w-96 h-96 bg-operational/5 rounded-full blur-3xl animate-blob animation-delay-4000" />
         </div>
 
-        {/* Header */}
-        <div className="relative text-center space-y-4">
+        {/* Header Compacto */}
+        <div className="relative text-center space-y-2">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-aurora/10 border border-aurora/20 backdrop-blur-sm">
             <Network className="h-4 w-4 text-aurora" />
             <span className="text-xs font-medium text-aurora">Powered by Viver de IA</span>
           </div>
           
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-aurora via-viverblue to-operational bg-clip-text text-transparent">
+          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-aurora via-viverblue to-operational bg-clip-text text-transparent">
             Networking com IA
           </h1>
           
-          <p className="text-muted-foreground text-base max-w-2xl mx-auto">
+          <p className="text-muted-foreground text-sm max-w-2xl mx-auto">
             Descubra conexões estratégicas com inteligência artificial
           </p>
-          
-          {/* Botão para regenerar conexões - Via Aurora Style */}
-          <div className="pt-2 flex flex-col items-center gap-3">
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <Button 
-                onClick={() => generateMatches()}
-                disabled={isGenerating}
-                className="relative overflow-hidden gap-2 bg-gradient-to-r from-aurora via-viverblue to-operational hover:from-aurora/90 hover:via-viverblue/90 hover:to-operational/90 text-white border-0 shadow-lg hover:shadow-xl transition-all px-6"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 hover:opacity-100 transition-opacity" />
-                {isGenerating ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin relative z-10" />
-                    <span className="relative z-10">Gerando conexões...</span>
-                  </>
-                ) : (
-                  <>
-                    <Brain className="h-4 w-4 relative z-10" />
-                    <span className="relative z-10">Gerar novas conexões</span>
-                  </>
-                )}
-              </Button>
-            </motion.div>
-          </div>
         </div>
 
         {/* Container com card centralizado e botões nas laterais */}
@@ -250,12 +224,19 @@ const Networking = () => {
             <ChevronLeft className="h-10 w-10" />
           </Button>
 
-          {/* Card no centro */}
+          {/* Card no centro ou LoadMore no último */}
           <div className="flex-1 max-w-md">
-            <SwipeCard 
-              card={currentCard} 
-              onOpenContact={() => setIsContactModalOpen(true)}
-            />
+            {currentIndex === totalCards - 1 ? (
+              <LoadMoreCard 
+                onGenerateMore={() => generateMatches()}
+                isGenerating={isGenerating}
+              />
+            ) : (
+              <SwipeCard 
+                card={currentCard} 
+                onOpenContact={() => setIsContactModalOpen(true)}
+              />
+            )}
           </div>
 
           {/* Botão PRÓXIMO - Lateral DIREITA com cores mais escuras */}

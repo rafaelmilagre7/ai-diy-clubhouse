@@ -390,17 +390,17 @@ export const SwipeCardCarousel = ({ card }: SwipeCardCarouselProps) => {
 
         </CarouselContent>
         
-        {/* Navegação com setas GRANDES e DESTACADAS */}
-        <CarouselPrevious className="absolute -left-3 top-1/2 -translate-y-1/2 h-11 w-11 rounded-full bg-gradient-to-br from-aurora to-viverblue border-2 border-white/30 dark:border-white/20 hover:scale-110 transition-all shadow-2xl z-10">
+        {/* Navegação com setas GRANDES - Gradiente Verde→Roxo→Laranja */}
+        <CarouselPrevious className="absolute -left-4 top-1/2 -translate-y-1/2 h-12 w-12 rounded-full bg-gradient-to-br from-strategy via-revenue to-operational border-2 border-white/20 hover:scale-110 transition-all shadow-2xl z-10">
           <ChevronLeft className="h-6 w-6 text-white" />
         </CarouselPrevious>
-        <CarouselNext className="absolute -right-3 top-1/2 -translate-y-1/2 h-11 w-11 rounded-full bg-gradient-to-br from-aurora to-viverblue border-2 border-white/30 dark:border-white/20 hover:scale-110 transition-all shadow-2xl z-10">
+        <CarouselNext className="absolute -right-4 top-1/2 -translate-y-1/2 h-12 w-12 rounded-full bg-gradient-to-br from-strategy via-revenue to-operational border-2 border-white/20 hover:scale-110 transition-all shadow-2xl z-10">
           <ChevronRight className="h-6 w-6 text-white" />
         </CarouselNext>
       </Carousel>
 
-      {/* Indicadores de página (dots) - MAIORES E MAIS ESPAÇADOS */}
-      <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
+      {/* Indicadores de página (dots) - Verde→Roxo gradiente */}
+      <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 flex gap-2">
         {[0, 1, 2].map((idx) => (
           <button
             key={idx}
@@ -408,8 +408,8 @@ export const SwipeCardCarousel = ({ card }: SwipeCardCarouselProps) => {
             className={cn(
               "h-2 rounded-full transition-all duration-300 shadow-md",
               current === idx 
-                ? "w-8 bg-gradient-to-r from-aurora via-viverblue to-operational" 
-                : "w-2 bg-muted/50 hover:bg-muted/70"
+                ? "w-8 bg-gradient-to-r from-strategy to-revenue" 
+                : "w-2 bg-muted/40 hover:bg-muted/60"
             )}
             aria-label={`Ir para página ${idx + 1}`}
           />
