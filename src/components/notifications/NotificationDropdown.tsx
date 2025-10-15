@@ -12,6 +12,7 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { useNavigate } from 'react-router-dom';
 
 export const NotificationDropdown = () => {
   const {
@@ -22,6 +23,20 @@ export const NotificationDropdown = () => {
     deleteNotification,
     isLoading,
   } = useNotifications();
+
+  const navigate = useNavigate();
+
+  const handleNotificationClick = (notification: any) => {
+    // Marcar como lida
+    if (!notification.is_read) {
+      markAsRead(notification.id);
+    }
+
+    // Navegar se tiver action_url
+    if (notification.data?.action_url) {
+      navigate(notification.data.action_url);
+    }
+  };
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -126,11 +141,7 @@ export const NotificationDropdown = () => {
                       : "bg-background hover:bg-muted/20",
                     getPriorityStyles(notification.data?.priority)
                   )}
-                  onClick={() => {
-                    if (!notification.is_read) {
-                      markAsRead(notification.id);
-                    }
-                  }}
+                  onClick={() => handleNotificationClick(notification)}
                 >
                   <div className="flex gap-3">
                     {/* Icon */}

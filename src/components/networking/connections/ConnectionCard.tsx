@@ -10,11 +10,13 @@ import {
   MessageSquare,
   Calendar,
   CheckCircle2,
-  XCircle
+  XCircle,
+  Eye
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useAuth } from '@/contexts/auth';
+import { Link } from 'react-router-dom';
 
 interface ConnectionCardProps {
   connection: Connection;
@@ -133,14 +135,25 @@ export const ConnectionCard = ({
         )}
 
         {variant === 'active' && onMessage && (
-          <Button 
-            variant="outline"
-            className="w-full border-aurora/30 hover:bg-aurora/5"
-            onClick={onMessage}
-          >
-            <MessageSquare className="w-4 h-4 mr-2" />
-            Enviar Mensagem
-          </Button>
+          <div className="flex gap-3 pt-2">
+            <Link to={`/perfil/${otherUser.id}`} className="flex-1">
+              <Button 
+                variant="outline"
+                className="w-full border-aurora/30 hover:bg-aurora/5"
+              >
+                <Eye className="w-4 h-4 mr-2" />
+                Ver Perfil
+              </Button>
+            </Link>
+            <Button 
+              variant="outline"
+              className="flex-1 border-viverblue/30 hover:bg-viverblue/5"
+              onClick={onMessage}
+            >
+              <MessageSquare className="w-4 h-4 mr-2" />
+              Mensagem
+            </Button>
+          </div>
         )}
       </div>
     </Card>

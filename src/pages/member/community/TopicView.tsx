@@ -144,7 +144,15 @@ const TopicView = () => {
                 </div>
                 
                 <div className="flex items-center text-sm text-muted-foreground gap-4 flex-wrap">
-                  <span>Por {topic.profiles?.name || 'Usuário'}</span>
+                  <span>
+                    Por{' '}
+                    <Link
+                      to={`/perfil/${topic.user_id}`}
+                      className="font-medium text-foreground hover:text-aurora hover:underline transition-all duration-200"
+                    >
+                      {topic.profiles?.name || 'Usuário'}
+                    </Link>
+                  </span>
                   <span>{formatDate(topic.created_at)}</span>
                   {topic.category && (
                     <Badge variant="outline" className="text-xs">

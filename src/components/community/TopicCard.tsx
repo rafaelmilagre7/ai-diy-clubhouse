@@ -36,9 +36,13 @@ export const TopicCard = ({ topic, className = "", compact = false }: TopicCardP
           
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1 flex-wrap">
-              <span className="font-medium truncate">
+              <Link
+                to={`/perfil/${topic.profiles?.id}`}
+                className="font-medium truncate hover:text-aurora transition-colors"
+                onClick={(e) => e.stopPropagation()}
+              >
                 {topic.profiles?.name || "Usuário"}
-              </span>
+              </Link>
               
               <div className="flex items-center">
                 <Clock className="h-3 w-3 mr-1" />

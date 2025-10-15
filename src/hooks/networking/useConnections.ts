@@ -77,12 +77,37 @@ export const useConnections = () => {
   // Aceitar solicitação
   const acceptRequest = useMutation({
     mutationFn: async (connectionId: string) => {
+      // Buscar informações da conexão antes de aceitar
+      const { data: connection, error: fetchError } = await supabase
+        .from('member_connections')
+        .select('requester_id, recipient_id, requester:profiles!member_connections_requester_id_fkey(id, name)')
+        .eq('id', connectionId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
       const { error } = await supabase
         .from('member_connections')
         .update({ status: 'accepted', updated_at: new Date().toISOString() })
         .eq('id', connectionId);
 
       if (error) throw error;
+
+      // Criar notificação de conexão aceita para o solicitante
+      await supabase
+        .from('notifications')
+        .insert({
+          user_id: connection.requester_id,
+          type: 'connection_accepted',
+          title: 'Conexão aceita! 🎉',
+          message: 'Sua solicitação de conexão foi aceita. Vocês agora podem conversar!',
+          data: {
+            action_url: `/perfil/${connection.recipient_id}`,
+            priority: 'normal'
+          }
+        });
+
+      return connection;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['active-connections'] });
@@ -115,6 +140,66 @@ export const useConnections = () => {
     },
   });
 
+  // Mutation para enviar solicitação de conexão
+  const sendConnectionRequest = useMutation({
+    mutationFn: async (recipientId: string) => {
+      const { data: connection, error } = await supabase
+        .from('member_connections')
+        .insert({
+          requester_id: user?.id,
+          recipient_id: recipientId,
+          status: 'pending'
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Criar notificação para o destinatário
+      const { error: notifError } = await supabase
+        .from('connection_notifications')
+        .insert({
+          user_id: recipientId,
+          sender_id: user?.id,
+          type: 'request'
+        });
+
+      if (notifError) console.error('Erro ao criar notificação:', notifError);
+
+      return connection;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['connections'] });
+      queryClient.invalidateQueries({ queryKey: ['pending-requests'] });
+      toast.success('Solicitação de conexão enviada!');
+    },
+    onError: (error) => {
+      console.error('Erro ao enviar solicitação:', error);
+      toast.error('Erro ao enviar solicitação de conexão');
+    }
+  });
+
+  // Query para verificar status de conexão com um usuário específico
+  const useCheckConnectionStatus = (otherUserId: string | undefined) => {
+    return useQuery({
+      queryKey: ['connection-status', user?.id, otherUserId],
+      queryFn: async () => {
+        if (!user?.id || !otherUserId) return null;
+
+        const { data, error } = await supabase
+          .from('member_connections')
+          .select('id, status, requester_id, recipient_id')
+          .or(`and(requester_id.eq.${user.id},recipient_id.eq.${otherUserId}),and(requester_id.eq.${otherUserId},recipient_id.eq.${user.id})`)
+          .maybeSingle();
+
+        if (error) throw error;
+        return data;
+      },
+      enabled: !!user?.id && !!otherUserId,
+      staleTime: 30000 // Cache por 30 segundos
+    });
+  };
+
   return {
     activeConnections: activeConnections || [],
     isLoading,
@@ -123,5 +208,9 @@ export const useConnections = () => {
     rejectRequest: rejectRequest.mutate,
     isAccepting: acceptRequest.isPending,
     isRejecting: rejectRequest.isPending,
+    sendConnectionRequest: sendConnectionRequest.mutate,
+    sendConnectionRequestAsync: sendConnectionRequest.mutateAsync,
+    isSendingRequest: sendConnectionRequest.isPending,
+    useCheckConnectionStatus,
   };
 };

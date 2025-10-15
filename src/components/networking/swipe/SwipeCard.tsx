@@ -1,11 +1,13 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { LiquidGlassCard } from '@/components/ui/LiquidGlassCard';
-import { Linkedin, Phone, Loader2 } from 'lucide-react';
+import { Linkedin, Phone, Loader2, UserPlus, Check, Clock } from 'lucide-react';
 import { SwipeCard as SwipeCardType } from '@/hooks/networking/useSwipeCards';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion } from 'framer-motion';
 import { MarkdownRenderer } from '@/components/community/MarkdownRenderer';
+import { useConnections } from '@/hooks/networking/useConnections';
+import { useState, useEffect } from 'react';
 
 interface SwipeCardProps {
   card: SwipeCardType;
@@ -13,6 +15,16 @@ interface SwipeCardProps {
 }
 
 export const SwipeCard = ({ card, onOpenContact }: SwipeCardProps) => {
+  const { sendConnectionRequest, isSendingRequest, useCheckConnectionStatus } = useConnections();
+  const { data: connectionStatus } = useCheckConnectionStatus(card.userId);
+  const [localStatus, setLocalStatus] = useState<'none' | 'pending' | 'accepted'>('none');
+
+  useEffect(() => {
+    if (connectionStatus) {
+      setLocalStatus(connectionStatus.status as 'none' | 'pending' | 'accepted');
+    }
+  }, [connectionStatus]);
+
   const getInitials = (name: string) => {
     return name
       .split(' ')
@@ -25,6 +37,16 @@ export const SwipeCard = ({ card, onOpenContact }: SwipeCardProps) => {
   const handleLinkedInClick = () => {
     if (card.linkedinUrl) {
       window.open(card.linkedinUrl, '_blank', 'noopener,noreferrer');
+    }
+  };
+
+  const handleAddConnection = async () => {
+    if (!card.userId) return;
+    try {
+      await sendConnectionRequest(card.userId);
+      setLocalStatus('pending');
+    } catch (error) {
+      console.error('Erro ao enviar solicitação:', error);
     }
   };
 
@@ -99,6 +121,48 @@ export const SwipeCard = ({ card, onOpenContact }: SwipeCardProps) => {
 
           {/* Botões com cores corretas */}
           <div className="flex gap-3">
+            {/* Botão Adicionar Conexão */}
+            <Button
+              onClick={handleAddConnection}
+              disabled={localStatus !== 'none' || isSendingRequest}
+              size="lg"
+              className={`flex-1 gap-2 transition-all duration-300 hover:scale-105 border-0 ${
+                localStatus === 'accepted'
+                  ? 'bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 hover:from-green-600 hover:via-emerald-600 hover:to-teal-600 text-white shadow-lg shadow-green-500/30'
+                  : localStatus === 'pending'
+                  ? 'bg-gradient-to-r from-yellow-500 via-amber-500 to-orange-500 text-white shadow-lg shadow-yellow-500/20 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-aurora via-viverblue to-operational hover:from-aurora/80 hover:via-viverblue/80 hover:to-operational/80 text-white shadow-lg shadow-aurora/30'
+              }`}
+            >
+              {localStatus === 'accepted' ? (
+                <>
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", stiffness: 200, damping: 10 }}
+                  >
+                    <Check className="h-5 w-5" />
+                  </motion.div>
+                  Conectado ✓
+                </>
+              ) : localStatus === 'pending' ? (
+                <>
+                  <Clock className="h-5 w-5 animate-pulse" />
+                  Solicitação Enviada
+                </>
+              ) : isSendingRequest ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  Enviando...
+                </>
+              ) : (
+                <>
+                  <UserPlus className="h-5 w-5" />
+                  Adicionar Conexão
+                </>
+              )}
+            </Button>
+
             {card.linkedinUrl && (
               <Button
                 onClick={handleLinkedInClick}

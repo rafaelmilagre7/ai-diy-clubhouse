@@ -39,6 +39,7 @@ import TopicView from '@/pages/member/community/TopicView';
 import CategoryView from '@/pages/member/community/CategoryView';
 import NewTopic from '@/pages/member/community/NewTopic';
 import CategoryListPage from '@/pages/member/community/CategoryListPage';
+import PublicProfile from '@/pages/PublicProfile';
 
 // Profile pages
 import NotificationSettingsPage from '@/pages/profile/NotificationSettingsPage';
@@ -113,5 +114,8 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/comunidade/categoria/:slug", CategoryView),
   createProtectedRoute("/comunidade/novo-topico/:categorySlug", NewTopic),
   createProtectedRoute("/comunidade/novo-topico", NewTopic),
+  
+  // Perfil Público
+  createProtectedRoute("/perfil/:userId", PublicProfile),
   
 ];

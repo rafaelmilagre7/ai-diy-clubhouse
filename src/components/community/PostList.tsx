@@ -4,6 +4,8 @@ import { supabase } from "@/lib/supabase";
 import { formatDate } from "@/utils/dateUtils";
 import { MessageSquare, ThumbsUp, User } from "lucide-react";
 import { MarkdownRenderer } from "./MarkdownRenderer";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Link } from "react-router-dom";
 
 interface CommunityPost {
   id: string;
@@ -22,6 +24,10 @@ interface CommunityPost {
 interface PostListProps {
   topicId: string;
 }
+
+const getInitials = (name: string) => {
+  return name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'U';
+};
 
 export const PostList = ({ topicId }: PostListProps) => {
   const { data: posts, isLoading } = useQuery({
@@ -84,23 +90,21 @@ export const PostList = ({ topicId }: PostListProps) => {
       {posts.map((post) => (
         <div key={post.id} className="bg-card shadow-sm border-none p-6 rounded-lg">
           <div className="flex items-start gap-4">
-            <div className="flex-shrink-0">
-              {post.profiles?.avatar_url ? (
-                <img 
-                  src={post.profiles.avatar_url} 
-                  alt={post.profiles.name || 'Usuário'} 
-                  className="w-10 h-10 rounded-full"
-                />
-              ) : (
-                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                  <User className="h-5 w-5 text-muted-foreground" />
-                </div>
-              )}
-            </div>
+            <Avatar className="w-10 h-10">
+              <AvatarImage src={post.profiles?.avatar_url} alt={post.profiles?.name || 'Usuário'} />
+              <AvatarFallback className="bg-viverblue text-white">
+                {getInitials(post.profiles?.name || 'U')}
+              </AvatarFallback>
+            </Avatar>
             
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-2">
-                <span className="font-medium">{post.profiles?.name || 'Usuário'}</span>
+                <Link
+                  to={`/perfil/${post.profiles?.id}`}
+                  className="font-medium hover:text-aurora hover:underline transition-colors"
+                >
+                  {post.profiles?.name || 'Usuário'}
+                </Link>
                 <span className="text-sm text-muted-foreground">
                   {formatDate(post.created_at)}
                 </span>
