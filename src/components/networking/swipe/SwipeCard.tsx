@@ -39,7 +39,7 @@ export const SwipeCard = ({ card, onOpenContact }: SwipeCardProps) => {
       }}
     >
       <LiquidGlassCard 
-        className="w-full max-w-md mx-auto overflow-hidden shadow-2xl shadow-aurora/10 hover:shadow-3xl hover:shadow-aurora/20 transition-shadow duration-500"
+        className="w-full max-w-md mx-auto overflow-hidden shadow-2xl shadow-aurora/10 hover:shadow-3xl hover:shadow-aurora/20 transition-shadow duration-500 h-[620px] flex flex-col"
         variant="premium"
         hoverable={false}
       >
@@ -57,11 +57,15 @@ export const SwipeCard = ({ card, onOpenContact }: SwipeCardProps) => {
           {/* Gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
           
-          {/* Avatar com efeito glow */}
+          {/* Avatar com efeito glow - sem distorção */}
           <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2">
             <div className="absolute inset-0 bg-aurora/20 blur-2xl rounded-full" />
             <Avatar className="relative h-32 w-32 border-4 border-background shadow-2xl ring-2 ring-aurora/20">
-              <AvatarImage src={card.avatarUrl} alt={card.name} />
+              <AvatarImage 
+                src={card.avatarUrl} 
+                alt={card.name}
+                className="object-cover object-center"
+              />
               <AvatarFallback className="text-3xl bg-gradient-to-br from-aurora/30 to-viverblue/30 text-aurora font-bold">
                 {getInitials(card.name)}
               </AvatarFallback>
@@ -69,56 +73,51 @@ export const SwipeCard = ({ card, onOpenContact }: SwipeCardProps) => {
           </div>
         </div>
 
-        {/* Info centralizada */}
-        <div className="pt-20 px-6 pb-6 text-center space-y-4">
-          <h2 className="text-2xl font-bold text-foreground">{card.name}</h2>
-          <p className="text-base text-muted-foreground">{card.position}</p>
-          <p className="text-sm text-muted-foreground font-medium">{card.company}</p>
-
-          {/* Badge de compatibilidade com gradiente e glow */}
-          <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-aurora/10 via-viverblue/10 to-operational/10 border border-aurora/30 shadow-lg shadow-aurora/10 backdrop-blur-sm">
-            <div className="h-2 w-2 rounded-full bg-aurora animate-pulse" />
-            <span className="text-sm font-bold bg-gradient-to-r from-aurora via-viverblue to-operational bg-clip-text text-transparent">
-              {Math.round(Math.min(card.score, 1.0) * 100)}% compatibilidade
-            </span>
+        {/* Info centralizada - altura fixa com flex-1 */}
+        <div className="flex-1 flex flex-col pt-20 px-6 pb-6 text-center">
+          <div className="space-y-2 mb-4">
+            <h2 className="text-2xl font-bold text-foreground">{card.name}</h2>
+            <p className="text-base text-muted-foreground">{card.position}</p>
+            <p className="text-sm text-muted-foreground font-medium">{card.company}</p>
           </div>
 
-          {/* Copy da IA - mais sofisticada com glassmorphism */}
-          <div className="relative liquid-glass-card rounded-2xl p-5 min-h-[120px] flex items-center justify-center border border-aurora/10 shadow-inner">
+          {/* Copy da IA - altura fixa com scroll */}
+          <div className="relative liquid-glass-card rounded-2xl p-5 flex-1 border border-aurora/10 shadow-inner overflow-hidden flex flex-col">
             {/* Decorative corner accents */}
             <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-aurora/20 rounded-tl-2xl" />
             <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-aurora/20 rounded-br-2xl" />
             
-            {card.isLoading ? (
-              <div className="space-y-3 w-full">
-                <div className="flex items-center justify-center gap-2">
-                  <div className="inline-flex p-2 rounded-lg bg-aurora/10">
-                    <Loader2 className="h-4 w-4 animate-spin text-aurora" />
+            <div className="flex-1 overflow-y-auto scrollbar-thin">
+              {card.isLoading ? (
+                <div className="space-y-3 w-full flex flex-col items-center justify-center h-full">
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="inline-flex p-2 rounded-lg bg-aurora/10">
+                      <Loader2 className="h-4 w-4 animate-spin text-aurora" />
+                    </div>
+                    <span className="text-sm font-medium text-aurora">Analisando conexão...</span>
                   </div>
-                  <span className="text-sm font-medium text-aurora">Analisando conexão...</span>
+                  <div className="space-y-2 w-full">
+                    <Skeleton className="h-3 w-full bg-muted/50" />
+                    <Skeleton className="h-3 w-4/5 mx-auto bg-muted/50" />
+                    <Skeleton className="h-3 w-3/5 mx-auto bg-muted/50" />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Skeleton className="h-3 w-full bg-muted/50" />
-                  <Skeleton className="h-3 w-4/5 mx-auto bg-muted/50" />
-                  <Skeleton className="h-3 w-3/5 mx-auto bg-muted/50" />
-                </div>
-              </div>
-            ) : (
-              <MarkdownRenderer 
-                content={card.connectionCopy || ''}
-                className="text-sm text-foreground leading-relaxed"
-              />
-            )}
+              ) : (
+                <MarkdownRenderer 
+                  content={card.connectionCopy || ''}
+                  className="text-sm text-foreground leading-relaxed"
+                />
+              )}
+            </div>
           </div>
 
-          {/* Botões sofisticados com efeitos */}
-          <div className="flex gap-3 pt-4">
+          {/* Botões com cores corretas */}
+          <div className="flex gap-3 pt-4 mt-auto">
             {card.linkedinUrl && (
               <Button
                 onClick={handleLinkedInClick}
-                variant="outline"
                 size="lg"
-                className="flex-1 gap-2 border-[#0A66C2]/30 text-[#0A66C2] hover:bg-[#0A66C2] hover:text-white hover:border-[#0A66C2] transition-all hover:scale-105 hover:shadow-lg hover:shadow-[#0A66C2]/20"
+                className="flex-1 gap-2 bg-[#0A66C2] hover:bg-[#004182] text-white border-0 transition-all hover:scale-105 hover:shadow-lg hover:shadow-[#0A66C2]/30"
               >
                 <Linkedin className="h-5 w-5" />
                 LinkedIn
@@ -128,7 +127,7 @@ export const SwipeCard = ({ card, onOpenContact }: SwipeCardProps) => {
             <Button
               onClick={onOpenContact}
               size="lg"
-              className="flex-1 gap-2 bg-gradient-to-r from-aurora via-viverblue to-operational hover:shadow-lg hover:shadow-aurora/30 transition-all hover:scale-105 text-white font-semibold"
+              className="flex-1 gap-2 bg-gradient-to-r from-aurora via-viverblue to-operational hover:shadow-lg hover:shadow-aurora/30 transition-all hover:scale-105 text-white font-semibold border-0"
             >
               <Phone className="h-5 w-5" />
               Conectar
