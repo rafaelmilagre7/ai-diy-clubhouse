@@ -34,7 +34,7 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Buscar perfis completos de ambos os usuários com dados enriquecidos
+    // Buscar perfis completos de ambos os usuários COM DADOS DE ONBOARDING
     const { data: profiles, error: profilesError } = await supabase
       .from('networking_profiles_v2')
       .select(`
@@ -54,7 +54,17 @@ serve(async (req) => {
         professional_bio,
         avatar_url,
         linkedin_url,
-        whatsapp_number
+        whatsapp_number,
+        onboarding_final!inner (
+          personal_info,
+          business_info,
+          business_context,
+          goals_info,
+          ai_experience,
+          personalization,
+          professional_info,
+          business_goals
+        )
       `)
       .in('user_id', [currentUserId, targetUserId]);
 
@@ -69,7 +79,11 @@ serve(async (req) => {
     const currentUser = profiles.find(p => p.user_id === currentUserId);
     const targetUser = profiles.find(p => p.user_id === targetUserId);
 
-    // Extrair e estruturar dados completos dos perfis
+    // ==========================================
+    // EXTRAIR DADOS ENRIQUECIDOS DO ONBOARDING
+    // ==========================================
+
+    // Dados básicos do perfil - Usuário 1
     const u1Industry = currentUser?.industry || 'Setor não informado';
     const u1CompanySize = currentUser?.company_size || '';
     const u1ValueProp = currentUser?.value_proposition || currentUser?.current_position || 'Profissional';
@@ -84,6 +98,38 @@ serve(async (req) => {
       ? currentUser.skills.join(', ')
       : currentUser?.skills || '';
 
+    // Dados do ONBOARDING - Usuário 1
+    const u1Onboarding = currentUser?.onboarding_final?.[0] || currentUser?.onboarding_final;
+    const u1BusinessInfo = u1Onboarding?.business_info || {};
+    const u1BusinessContext = u1Onboarding?.business_context || {};
+    const u1AiExp = u1Onboarding?.ai_experience || {};
+    const u1Goals = u1Onboarding?.goals_info || {};
+    const u1ProfessionalInfo = u1Onboarding?.professional_info || {};
+    const u1BusinessGoals = u1Onboarding?.business_goals || {};
+
+    // Extrair campos específicos do onboarding - Usuário 1
+    const u1CompanySector = u1BusinessInfo.business_sector || u1BusinessContext?.industry || u1Industry;
+    const u1Position = u1ProfessionalInfo.position || u1BusinessInfo.position || currentUser?.current_position;
+    const u1Revenue = u1BusinessInfo.annual_revenue || u1BusinessContext?.annual_revenue || currentUser?.annual_revenue;
+    
+    // Experiência com IA
+    const u1AiLevel = u1AiExp.ai_knowledge_level || u1AiExp.experience_level || 'básico';
+    const u1HasAi = u1AiExp.has_implemented_ai || false;
+    const u1AiTools = u1AiExp.ai_tools_used || u1AiExp.tools_used || [];
+    const u1AiObjective = u1AiExp.ai_implementation_objective || u1AiExp.main_objective || '';
+    const u1AiChallenge = u1AiExp.ai_main_challenge || u1AiExp.main_challenge || u1Challenge;
+    const u1AiUrgency = u1AiExp.ai_implementation_urgency || u1AiExp.urgency_level || 'média';
+    
+    // Objetivos e metas
+    const u1MainGoal = u1Goals.main_objective || u1BusinessGoals.primary_goal || '';
+    const u1ImpactArea = u1Goals.area_to_impact || u1BusinessGoals.priority_areas?.[0] || '';
+    const u1ExpectedResult = u1Goals.expected_result_90_days || u1BusinessGoals.expected_outcomes?.[0] || '';
+    const u1UrgencyLevel = u1Goals.urgency_level || u1BusinessGoals.timeline || 'média';
+    const u1SuccessMetric = u1Goals.success_metric || u1BusinessGoals.success_metrics?.[0] || '';
+    const u1MainObstacle = u1Goals.main_obstacle || u1BusinessGoals.main_challenge || u1Challenge;
+    const u1Budget = u1Goals.ai_implementation_budget || u1BusinessContext?.investment_capacity || '';
+
+    // Dados básicos do perfil - Usuário 2
     const u2Industry = targetUser?.industry || 'Setor não informado';
     const u2CompanySize = targetUser?.company_size || '';
     const u2ValueProp = targetUser?.value_proposition || targetUser?.current_position || 'Profissional';
@@ -98,64 +144,186 @@ serve(async (req) => {
       ? targetUser.skills.join(', ')
       : targetUser?.skills || '';
 
-    console.log('📊 Dados enriquecidos enviados para IA:', {
+    // Dados do ONBOARDING - Usuário 2
+    const u2Onboarding = targetUser?.onboarding_final?.[0] || targetUser?.onboarding_final;
+    const u2BusinessInfo = u2Onboarding?.business_info || {};
+    const u2BusinessContext = u2Onboarding?.business_context || {};
+    const u2AiExp = u2Onboarding?.ai_experience || {};
+    const u2Goals = u2Onboarding?.goals_info || {};
+    const u2ProfessionalInfo = u2Onboarding?.professional_info || {};
+    const u2BusinessGoals = u2Onboarding?.business_goals || {};
+
+    // Extrair campos específicos do onboarding - Usuário 2
+    const u2CompanySector = u2BusinessInfo.business_sector || u2BusinessContext?.industry || u2Industry;
+    const u2Position = u2ProfessionalInfo.position || u2BusinessInfo.position || targetUser?.current_position;
+    const u2Revenue = u2BusinessInfo.annual_revenue || u2BusinessContext?.annual_revenue || targetUser?.annual_revenue;
+    
+    // Experiência com IA
+    const u2AiLevel = u2AiExp.ai_knowledge_level || u2AiExp.experience_level || 'básico';
+    const u2HasAi = u2AiExp.has_implemented_ai || false;
+    const u2AiTools = u2AiExp.ai_tools_used || u2AiExp.tools_used || [];
+    const u2AiObjective = u2AiExp.ai_implementation_objective || u2AiExp.main_objective || '';
+    const u2AiChallenge = u2AiExp.ai_main_challenge || u2AiExp.main_challenge || u2Challenge;
+    const u2AiUrgency = u2AiExp.ai_implementation_urgency || u2AiExp.urgency_level || 'média';
+    
+    // Objetivos e metas
+    const u2MainGoal = u2Goals.main_objective || u2BusinessGoals.primary_goal || '';
+    const u2ImpactArea = u2Goals.area_to_impact || u2BusinessGoals.priority_areas?.[0] || '';
+    const u2ExpectedResult = u2Goals.expected_result_90_days || u2BusinessGoals.expected_outcomes?.[0] || '';
+    const u2UrgencyLevel = u2Goals.urgency_level || u2BusinessGoals.timeline || 'média';
+    const u2SuccessMetric = u2Goals.success_metric || u2BusinessGoals.success_metrics?.[0] || '';
+    const u2MainObstacle = u2Goals.main_obstacle || u2BusinessGoals.main_challenge || u2Challenge;
+    const u2Budget = u2Goals.ai_implementation_budget || u2BusinessContext?.investment_capacity || '';
+
+    console.log('📊 Dados ENRIQUECIDOS com ONBOARDING enviados para IA:', {
       user1: {
         name: currentUser?.name,
         company: currentUser?.company_name,
-        industry: u1Industry,
-        companySize: u1CompanySize,
-        valueProp: u1ValueProp,
-        lookingFor: u1LookingFor,
-        challenge: u1Challenge,
+        industry: u1CompanySector,
+        position: u1Position,
+        revenue: u1Revenue,
+        aiLevel: u1AiLevel,
+        hasAi: u1HasAi,
+        aiObjective: u1AiObjective,
+        aiChallenge: u1AiChallenge,
+        mainGoal: u1MainGoal,
+        impactArea: u1ImpactArea,
+        expectedResult: u1ExpectedResult,
+        successMetric: u1SuccessMetric,
+        mainObstacle: u1MainObstacle,
         skills: u1Skills,
       },
       user2: {
         name: targetUser?.name,
         company: targetUser?.company_name,
-        industry: u2Industry,
-        companySize: u2CompanySize,
-        valueProp: u2ValueProp,
-        lookingFor: u2LookingFor,
-        challenge: u2Challenge,
+        industry: u2CompanySector,
+        position: u2Position,
+        revenue: u2Revenue,
+        aiLevel: u2AiLevel,
+        hasAi: u2HasAi,
+        aiObjective: u2AiObjective,
+        aiChallenge: u2AiChallenge,
+        mainGoal: u2MainGoal,
+        impactArea: u2ImpactArea,
+        expectedResult: u2ExpectedResult,
+        successMetric: u2SuccessMetric,
+        mainObstacle: u2MainObstacle,
         skills: u2Skills,
       }
     });
 
-    // Prompt ultra-personalizado com todos os dados estruturados
-    const prompt = `Você é um consultor de negócios B2B analisando dois perfis profissionais para recomendar uma conexão estratégica. 
+    // PROMPT ULTRA-PERSONALIZADO COM DADOS DE ONBOARDING
+    const prompt = `Você é um consultor de negócios B2B especializado em identificar oportunidades estratégicas entre profissionais.
 
 PERFIL 1 - ${currentUser?.name || 'Usuário 1'}:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 CONTEXTO EMPRESARIAL:
 • Empresa: ${currentUser?.company_name || 'Não informado'} (${u1CompanySize})
-• Setor: ${u1Industry}
-• Posição: ${currentUser?.current_position || 'Não informado'}
-• Proposta de valor: ${u1ValueProp}
-• Busca conectar-se com: ${u1LookingFor}
-• Principal desafio: ${u1Challenge}
-• Competências: ${u1Skills}
-• Áreas de interesse: ${u1Keywords}
+• Setor: ${u1CompanySector}
+• Cargo: ${u1Position}
+• Faturamento: ${u1Revenue}
+
+🎯 OBJETIVOS ESTRATÉGICOS (90 DIAS):
+• Objetivo principal: ${u1MainGoal}
+• Área de impacto: ${u1ImpactArea}
+• Resultado esperado: ${u1ExpectedResult}
+• Métrica de sucesso: ${u1SuccessMetric}
+• Nível de urgência: ${u1UrgencyLevel}
+• Principal obstáculo: ${u1MainObstacle}
+
+🤖 EXPERIÊNCIA COM IA:
+• Nível: ${u1AiLevel}
+• Já implementou IA? ${u1HasAi ? 'Sim' : 'Não'}
+${Array.isArray(u1AiTools) && u1AiTools.length > 0 ? `• Ferramentas usadas: ${u1AiTools.join(', ')}` : ''}
+• Objetivo de IA: ${u1AiObjective}
+• Desafio com IA: ${u1AiChallenge}
+• Urgência de implementação: ${u1AiUrgency}
+${u1Budget ? `• Orçamento para IA: ${u1Budget}` : ''}
+
+💼 BUSCA CONECTAR-SE COM:
+${u1LookingFor}
+
+🎯 COMPETÊNCIAS:
+${u1Skills || 'Não informado'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 PERFIL 2 - ${targetUser?.name || 'Usuário 2'}:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 CONTEXTO EMPRESARIAL:
 • Empresa: ${targetUser?.company_name || 'Não informado'} (${u2CompanySize})
-• Setor: ${u2Industry}
-• Posição: ${targetUser?.current_position || 'Não informado'}
-• Proposta de valor: ${u2ValueProp}
-• Busca conectar-se com: ${u2LookingFor}
-• Principal desafio: ${u2Challenge}
-• Competências: ${u2Skills}
-• Áreas de interesse: ${u2Keywords}
+• Setor: ${u2CompanySector}
+• Cargo: ${u2Position}
+• Faturamento: ${u2Revenue}
 
-INSTRUÇÕES:
-1. Escreva em TERCEIRA PESSOA como um consultor de negócios recomendando a conexão
-2. Máximo 70 palavras (2-3 linhas)
-3. Seja ESPECÍFICO: cite dados concretos (setor, desafio, competência)
-4. Identifique SINERGIA REAL: como um pode ajudar o outro a resolver desafios ou atingir objetivos
-5. Use negrito (**palavra**) em palavras-chave importantes
-6. Foque em OPORTUNIDADE DE NEGÓCIO concreta, não networking genérico
+🎯 OBJETIVOS ESTRATÉGICOS (90 DIAS):
+• Objetivo principal: ${u2MainGoal}
+• Área de impacto: ${u2ImpactArea}
+• Resultado esperado: ${u2ExpectedResult}
+• Métrica de sucesso: ${u2SuccessMetric}
+• Nível de urgência: ${u2UrgencyLevel}
+• Principal obstáculo: ${u2MainObstacle}
 
-EXEMPLOS DE COPY BOA:
-"**${currentUser?.name}** pode acelerar a **${u1Challenge}** de ${targetUser?.name} através de ${u1Skills}, enquanto **${targetUser?.name}** oferece expertise em **${u2Industry}** que potencializa ${u1LookingFor}."
+🤖 EXPERIÊNCIA COM IA:
+• Nível: ${u2AiLevel}
+• Já implementou IA? ${u2HasAi ? 'Sim' : 'Não'}
+${Array.isArray(u2AiTools) && u2AiTools.length > 0 ? `• Ferramentas usadas: ${u2AiTools.join(', ')}` : ''}
+• Objetivo de IA: ${u2AiObjective}
+• Desafio com IA: ${u2AiChallenge}
+• Urgência de implementação: ${u2AiUrgency}
+${u2Budget ? `• Orçamento para IA: ${u2Budget}` : ''}
 
-NÃO USE frases vazias como "troca de experiências", "grande oportunidade" sem contexto. Seja CONCRETO e ORIENTADO A NEGÓCIO.`;
+💼 BUSCA CONECTAR-SE COM:
+${u2LookingFor}
+
+🎯 COMPETÊNCIAS:
+${u2Skills || 'Não informado'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 INSTRUÇÕES PARA COPY:
+
+1. **FOCO EM OBJETIVOS ESPECÍFICOS**: Cite explicitamente os OBJETIVOS ESTRATÉGICOS e MÉTRICAS DE SUCESSO de cada perfil
+
+2. **SINERGIA REAL**: Identifique como ${targetUser?.name} pode ajudar ${currentUser?.name} a:
+   - Atingir o objetivo: "${u1MainGoal}"
+   - Superar o obstáculo: "${u1MainObstacle}"
+   - Impactar a área: "${u1ImpactArea}"
+   - Alcançar resultado: "${u1ExpectedResult}"
+
+3. **CONTEXTO DE IA**: Se ambos trabalham com IA, cite:
+   - Níveis de experiência (${u1AiLevel} vs ${u2AiLevel})
+   - Ferramentas específicas
+   - Desafios complementares
+
+4. **ESPECIFICIDADE MÁXIMA**: 
+   - Use dados REAIS (setor, objetivo, métrica, desafio)
+   - Evite frases genéricas como "troca de experiências"
+   - Seja ORIENTADO A RESULTADOS
+
+5. **FORMATO**:
+   - Máximo 70 palavras (2-3 linhas)
+   - Terceira pessoa
+   - Use **negrito** em palavras-chave (objetivo, métrica, área de impacto)
+   - Tom profissional e consultivo
+
+6. **EXEMPLO DE COPY BOA**:
+"**${targetUser?.name}** pode acelerar o objetivo de ${currentUser?.name} de **${u1MainGoal}** através de expertise em **${u2ImpactArea}**. Com nível **${u2AiLevel}** em IA e experiência em ${u2CompanySector}, pode ajudar a superar o desafio de **${u1MainObstacle}** e atingir **${u1ExpectedResult}** em 90 dias."
+
+NÃO USE:
+❌ "Grande oportunidade de networking"
+❌ "Troca de experiências valiosa"
+❌ "Perfis complementares"
+❌ Qualquer frase vazia sem dados concretos
+
+USE:
+✅ Objetivos específicos (${u1MainGoal}, ${u2MainGoal})
+✅ Métricas de sucesso (${u1SuccessMetric}, ${u2SuccessMetric})
+✅ Desafios reais (${u1MainObstacle}, ${u2MainObstacle})
+✅ Resultados esperados (${u1ExpectedResult}, ${u2ExpectedResult})
+✅ Áreas de impacto (${u1ImpactArea}, ${u2ImpactArea})
+
+Gere a copy AGORA:`;
 
     console.log('🤖 Gerando copy com IA...');
 
