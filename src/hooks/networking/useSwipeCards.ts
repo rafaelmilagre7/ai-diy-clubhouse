@@ -16,7 +16,15 @@ export interface SwipeCard {
   email: string;
   score: number;
   matchId?: string;
-  matchData?: any; // Dados completos do match (JSON)
+  enrichedData?: {
+    value_proposition?: string;
+    looking_for?: string[];
+    main_challenge?: string;
+    keywords?: string[];
+    ai_experience?: any;
+    goals_info?: any;
+    professional_info?: any;
+  };
 }
 
 export const useSwipeCards = () => {
@@ -44,7 +52,6 @@ export const useSwipeCards = () => {
           id,
           matched_user_id,
           compatibility_score,
-          match_data,
           matched_user:profiles!strategic_matches_v2_matched_user_id_fkey(
             id,
             name,
@@ -61,7 +68,40 @@ export const useSwipeCards = () => {
         .limit(50);
 
       if (error) throw error;
-      return matches || [];
+
+      // Buscar dados enriquecidos para cada match
+      const enrichedMatches = await Promise.all((matches || []).map(async (match) => {
+        const matchedUserId = match.matched_user_id;
+
+        // Buscar dados de networking_profiles_v2
+        const { data: networkingProfile } = await supabase
+          .from('networking_profiles_v2')
+          .select('value_proposition, looking_for, main_challenge, keywords')
+          .eq('user_id', matchedUserId)
+          .maybeSingle();
+
+        // Buscar dados de onboarding_final
+        const { data: onboardingData } = await supabase
+          .from('onboarding_final')
+          .select('ai_experience, goals_info, professional_info')
+          .eq('user_id', matchedUserId)
+          .maybeSingle();
+
+        return {
+          ...match,
+          enrichedData: {
+            value_proposition: networkingProfile?.value_proposition,
+            looking_for: networkingProfile?.looking_for,
+            main_challenge: networkingProfile?.main_challenge,
+            keywords: networkingProfile?.keywords,
+            ai_experience: onboardingData?.ai_experience,
+            goals_info: onboardingData?.goals_info,
+            professional_info: onboardingData?.professional_info
+          }
+        };
+      }));
+
+      return enrichedMatches;
     },
     enabled: !!user?.id,
   });
@@ -84,9 +124,9 @@ export const useSwipeCards = () => {
         linkedinUrl: match.matched_user.linkedin_url,
         whatsappNumber: match.matched_user.whatsapp_number,
         email: match.matched_user.email || '',
-        score: match.compatibility_score || 0.5,
+        score: match.compatibility_score || 50, // JÁ É INTEGER 0-100
         matchId: match.id,
-        matchData: match.match_data || {}, // Incluir dados JSON do match
+        enrichedData: match.enrichedData || {}, // Dados enriquecidos
       }));
 
     setCards(formattedCards);
@@ -147,9 +187,9 @@ export const useSwipeCards = () => {
         linkedinUrl: profile.linkedin_url,
         whatsappNumber: profile.whatsapp_number,
         email: profile.email || '',
-        score: 0.3,
+        score: 30, // INTEGER 0-100
         matchId: undefined,
-        matchData: {},
+        enrichedData: {},
       }));
 
       setCards(prev => [...prev, ...newCards]);

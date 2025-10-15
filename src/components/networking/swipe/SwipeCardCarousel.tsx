@@ -4,6 +4,8 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
+  CarouselPrevious,
+  CarouselNext,
   type CarouselApi,
 } from '@/components/ui/carousel';
 import { Badge } from '@/components/ui/badge';
@@ -17,7 +19,9 @@ import {
   Trophy,
   Brain,
   Cpu,
-  Sparkles
+  Sparkles,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -31,13 +35,17 @@ const translations: Record<string, string> = {
   work_efficiency: "Eficiência no Trabalho",
   personal_automation: "Automação Pessoal",
   business_growth: "Crescimento de Negócio",
+  sales_growth: "Crescimento de Vendas",
   productivity: "Produtividade",
+  cost_reduction: "Redução de Custos",
   innovation: "Inovação",
   customer_experience: "Experiência do Cliente",
   
   // Níveis de experiência
   beginner: "Iniciante",
+  basic: "Iniciante",
   intermediate: "Intermediário",
+  advanced: "Avançado",
   professional: "Profissional",
   expert: "Especialista",
   
@@ -60,25 +68,29 @@ export const SwipeCardCarousel = ({ card }: SwipeCardCarouselProps) => {
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
 
-  // Extrair dados do card (vêm de strategic_matches_v2.match_data)
-  const matchData = (card as any).matchData || {};
+  // Extrair dados enriquecidos do card
+  const enrichedData = card.enrichedData || {};
   
   // Dados da página 1: Visão Geral
-  const industry = matchData.industry || card.company || 'Não informado';
-  const score = Math.round((card.score || 0.5) * 100);
+  const industry = card.company || 'Não informado';
+  const score = Math.round(card.score || 50); // JÁ VEM COMO INTEGER 0-100
+  const keywords = enrichedData.keywords || [];
   
   // Dados da página 2: Objetivos
-  const mainObjective = matchData.ai_objective || matchData.main_goal || 'Não informado';
-  const lookingFor = matchData.looking_for || matchData.priority_areas || 'Não informado';
-  const mainChallenge = matchData.main_challenge || 'Não informado';
-  const timeline = matchData.timeline || matchData.implementation_timeline || 'Não informado';
+  const valueProp = enrichedData.value_proposition?.split('•')[0]?.trim() || '';
+  const mainObjective = valueProp || enrichedData.goals_info?.primary_goal || 'Não informado';
+  const lookingFor = enrichedData.looking_for?.[0] || 'Em definição';
+  const mainChallenge = enrichedData.main_challenge || 
+                       enrichedData.professional_info?.main_challenge || 
+                       'Não informado';
+  const timeline = enrichedData.goals_info?.timeline || 'Não informado';
   
   // Dados da página 3: IA Experience
-  const experienceLevel = matchData.experience_level || 'Não informado';
-  const currentTools = matchData.current_tools || [];
+  const experienceLevel = enrichedData.ai_experience?.experience_level || 'Não informado';
+  const currentTools = enrichedData.ai_experience?.current_tools || [];
   const toolsArray = Array.isArray(currentTools) ? currentTools : 
                      typeof currentTools === 'string' ? currentTools.split(',').map((s: string) => s.trim()) : [];
-  const learningGoals = matchData.learning_goals || [];
+  const learningGoals = enrichedData.goals_info?.learning_objectives || [];
   const goalsArray = Array.isArray(learningGoals) ? learningGoals :
                      typeof learningGoals === 'string' ? learningGoals.split(',').map((s: string) => s.trim()) : [];
 
@@ -140,15 +152,18 @@ export const SwipeCardCarousel = ({ card }: SwipeCardCarouselProps) => {
                   <p className="text-xs text-muted-foreground uppercase tracking-wide">Características</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <Badge variant="outline" className="border-aurora/30 text-aurora">
-                    Estratégico
-                  </Badge>
-                  <Badge variant="outline" className="border-operational/30 text-operational">
-                    Proativo
-                  </Badge>
-                  <Badge variant="outline" className="border-viverblue/30 text-viverblue">
-                    Inovador
-                  </Badge>
+                  {keywords.slice(0, 3).map((kw: string, idx: number) => (
+                    <Badge key={idx} variant="outline" className="border-aurora/30 text-aurora">
+                      {translate(kw)}
+                    </Badge>
+                  ))}
+                  {keywords.length === 0 && (
+                    <>
+                      <Badge variant="outline" className="border-aurora/30 text-aurora">Estratégico</Badge>
+                      <Badge variant="outline" className="border-operational/30 text-operational">Proativo</Badge>
+                      <Badge variant="outline" className="border-viverblue/30 text-viverblue">Inovador</Badge>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -250,9 +265,9 @@ export const SwipeCardCarousel = ({ card }: SwipeCardCarouselProps) => {
                     </Badge>
                   ))}
                   {toolsArray.length === 0 && (
-                    <span className="col-span-3 text-xs text-muted-foreground text-center py-2">
-                      Não informado
-                    </span>
+                    <Badge variant="outline" className="col-span-3 text-xs text-muted-foreground justify-center">
+                      Sem ferramentas cadastradas
+                    </Badge>
                   )}
                 </div>
               </div>
@@ -271,7 +286,9 @@ export const SwipeCardCarousel = ({ card }: SwipeCardCarouselProps) => {
                     </div>
                   ))}
                   {goalsArray.length === 0 && (
-                    <span className="text-xs text-muted-foreground">Não informado</span>
+                    <Badge variant="outline" className="text-xs text-muted-foreground">
+                      Em definição
+                    </Badge>
                   )}
                 </div>
               </div>
@@ -279,6 +296,14 @@ export const SwipeCardCarousel = ({ card }: SwipeCardCarouselProps) => {
           </CarouselItem>
 
         </CarouselContent>
+        
+        {/* Navegação com setas */}
+        <CarouselPrevious className="absolute left-1 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-gradient-to-r from-aurora to-aurora-light border-0 hover:scale-110 transition-transform shadow-lg">
+          <ChevronLeft className="h-4 w-4 text-white" />
+        </CarouselPrevious>
+        <CarouselNext className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-gradient-to-r from-aurora to-aurora-light border-0 hover:scale-110 transition-transform shadow-lg">
+          <ChevronRight className="h-4 w-4 text-white" />
+        </CarouselNext>
       </Carousel>
 
       {/* Indicadores de página (dots) */}
