@@ -78,20 +78,22 @@ export const useSwipeCards = () => {
       return;
     }
 
-    const formattedCards: SwipeCard[] = matchesData.map((match: any) => ({
-      userId: match.matched_user.id,
-      name: match.matched_user.name || 'Usuário',
-      company: match.matched_user.company_name || 'Empresa não informada',
-      position: match.matched_user.current_position || 'Cargo não informado',
-      avatarUrl: match.matched_user.avatar_url || '',
-      linkedinUrl: match.matched_user.linkedin_url,
-      whatsappNumber: match.matched_user.whatsapp_number,
-      email: match.matched_user.email || '',
-      connectionCopy: match.connection_copy,
-      score: match.compatibility_score || 0.5,
-      isLoading: false,
-      matchId: match.id,
-    }));
+    const formattedCards: SwipeCard[] = matchesData
+      .filter((match: any) => match.matched_user && match.matched_user.id)
+      .map((match: any) => ({
+        userId: match.matched_user.id,
+        name: match.matched_user.name || 'Usuário',
+        company: match.matched_user.company_name || 'Empresa não informada',
+        position: match.matched_user.current_position || 'Cargo não informado',
+        avatarUrl: match.matched_user.avatar_url || '',
+        linkedinUrl: match.matched_user.linkedin_url,
+        whatsappNumber: match.matched_user.whatsapp_number,
+        email: match.matched_user.email || '',
+        connectionCopy: match.connection_copy,
+        score: match.compatibility_score || 0.5,
+        isLoading: false,
+        matchId: match.id,
+      }));
 
     setCards(formattedCards);
     setCurrentIndex(0); // Resetar para o primeiro card
@@ -189,8 +191,11 @@ export const useSwipeCards = () => {
   const generateCopy = useCallback(async (targetUserId: string) => {
     if (!user?.id || copyCache[targetUserId] || generatingCopy.has(targetUserId)) return;
 
-    const cardIndex = cards.findIndex(c => c.userId === targetUserId);
+    const cardIndex = cards.findIndex(c => c && c.userId === targetUserId);
     if (cardIndex === -1) return;
+
+    const card = cards[cardIndex];
+    if (!card || !card.userId) return;
 
     const cardName = cards[cardIndex]?.name || 'este profissional';
     const fallbackCopy = `Conecte-se com ${cardName} para explorar oportunidades estratégicas de parceria e crescimento.`;
@@ -297,7 +302,13 @@ export const useSwipeCards = () => {
 
   // Progressive Loading com Rate Limiter: Gerar copy em lotes com delay
   useEffect(() => {
-    const cardsNeedingCopy = cards.filter(c => !c.connectionCopy && !c.isLoading && !generatingCopy.has(c.userId));
+    const cardsNeedingCopy = cards.filter(c => 
+      c && 
+      c.userId && 
+      !c.connectionCopy && 
+      !c.isLoading && 
+      !generatingCopy.has(c.userId)
+    );
     
     if (cardsNeedingCopy.length > 0) {
       setTotalToGenerate(cardsNeedingCopy.length);
