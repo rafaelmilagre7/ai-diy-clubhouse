@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/auth';
 import { useToast } from '@/hooks/use-toast';
 import { useAIMatches } from '@/hooks/useAIMatches';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 export interface SwipeCard {
   userId: string;
@@ -23,6 +24,7 @@ export const useSwipeCards = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { generateMatches, isGenerating } = useAIMatches();
+  const queryClient = useQueryClient();
   const [cards, setCards] = useState<SwipeCard[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLoadingCards, setIsLoadingCards] = useState(true);
@@ -33,12 +35,12 @@ export const useSwipeCards = () => {
   const [hasMoreProfiles, setHasMoreProfiles] = useState(true);
   const isLoadingMoreRef = useRef(false);
 
-  // Buscar matches iniciais
-  const loadMatches = useCallback(async () => {
-    if (!user?.id) return;
-
-    setIsLoadingCards(true);
-    try {
+  // Usar useQuery para buscar matches automaticamente
+  const { data: matchesData, refetch: refetchMatches } = useQuery({
+    queryKey: ['network-matches', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      
       const { data: matches, error } = await supabase
         .from('strategic_matches_v2')
         .select(`
@@ -62,48 +64,55 @@ export const useSwipeCards = () => {
         .limit(50);
 
       if (error) throw error;
+      return matches || [];
+    },
+    enabled: !!user?.id,
+  });
 
-      const formattedCards: SwipeCard[] = (matches || []).map((match: any) => ({
-        userId: match.matched_user.id,
-        name: match.matched_user.name || 'Usuário',
-        company: match.matched_user.company_name || 'Empresa não informada',
-        position: match.matched_user.current_position || 'Cargo não informado',
-        avatarUrl: match.matched_user.avatar_url || '',
-        linkedinUrl: match.matched_user.linkedin_url,
-        whatsappNumber: match.matched_user.whatsapp_number,
-        email: match.matched_user.email || '',
-        connectionCopy: match.connection_copy,
-        score: match.compatibility_score || 0.5,
-        isLoading: false,
-        matchId: match.id,
-      }));
-
-      setCards(formattedCards);
-
-      // Rastrear IDs já carregados
-      const loadedIds = new Set(formattedCards.map(card => card.userId));
-      setLoadedUserIds(loadedIds);
-
-      // Cache das copies já existentes
-      const cache: Record<string, string> = {};
-      formattedCards.forEach(card => {
-        if (card.connectionCopy) {
-          cache[card.userId] = card.connectionCopy;
-        }
-      });
-      setCopyCache(cache);
-
-    } catch (error) {
-      console.error('Erro ao carregar matches:', error);
-      toast({
-        title: 'Erro ao carregar conexões',
-        description: 'Não foi possível buscar suas conexões sugeridas.',
-        variant: 'destructive',
-      });
-    } finally {
+  // Atualizar cards quando matchesData mudar
+  useEffect(() => {
+    if (!matchesData) {
       setIsLoadingCards(false);
+      return;
     }
-  }, [user?.id, toast]);
+
+    const formattedCards: SwipeCard[] = matchesData.map((match: any) => ({
+      userId: match.matched_user.id,
+      name: match.matched_user.name || 'Usuário',
+      company: match.matched_user.company_name || 'Empresa não informada',
+      position: match.matched_user.current_position || 'Cargo não informado',
+      avatarUrl: match.matched_user.avatar_url || '',
+      linkedinUrl: match.matched_user.linkedin_url,
+      whatsappNumber: match.matched_user.whatsapp_number,
+      email: match.matched_user.email || '',
+      connectionCopy: match.connection_copy,
+      score: match.compatibility_score || 0.5,
+      isLoading: false,
+      matchId: match.id,
+    }));
+
+    setCards(formattedCards);
+    setCurrentIndex(0); // Resetar para o primeiro card
+
+    // Rastrear IDs já carregados
+    const loadedIds = new Set(formattedCards.map(card => card.userId));
+    setLoadedUserIds(loadedIds);
+
+    // Cache das copies já existentes
+    const cache: Record<string, string> = {};
+    formattedCards.forEach(card => {
+      if (card.connectionCopy) {
+        cache[card.userId] = card.connectionCopy;
+      }
+    });
+    setCopyCache(cache);
+    setIsLoadingCards(false);
+  }, [matchesData]);
+
+  // Buscar matches iniciais (removido, agora feito via useQuery)
+  const loadMatches = useCallback(async () => {
+    refetchMatches();
+  }, [refetchMatches]);
 
   // Carregar mais perfis (não-matches)
   const loadMoreProfiles = useCallback(async () => {
@@ -280,11 +289,6 @@ export const useSwipeCards = () => {
       setCurrentIndex(currentIndex - 1);
     }
   }, [currentIndex]);
-
-  // Carregar matches ao montar
-  useEffect(() => {
-    loadMatches();
-  }, [loadMatches]);
 
   // Gerar copy para cards que precisam, com delay entre chamadas
   useEffect(() => {
