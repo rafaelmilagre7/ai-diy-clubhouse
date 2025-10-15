@@ -34,11 +34,11 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // QUERY 1: Buscar perfis de networking (sem JOIN)
-    const { data: profiles, error: profilesError } = await supabase
-      .from('networking_profiles_v2')
+    // QUERY 1: Buscar dados básicos de profiles
+    const { data: basicProfiles, error: basicProfilesError } = await supabase
+      .from('profiles')
       .select(`
-        user_id,
+        id,
         name,
         email,
         company_name,
@@ -46,27 +46,61 @@ serve(async (req) => {
         industry,
         company_size,
         annual_revenue,
-        value_proposition,
-        looking_for,
-        main_challenge,
-        keywords,
-        skills,
-        professional_bio,
         avatar_url,
         linkedin_url,
         whatsapp_number
       `)
-      .in('user_id', [currentUserId, targetUserId]);
+      .in('id', [currentUserId, targetUserId]);
 
-    if (profilesError || !profiles || profiles.length !== 2) {
-      console.error('Erro ao buscar perfis:', profilesError);
+    if (basicProfilesError || !basicProfiles || basicProfiles.length !== 2) {
+      console.error('Erro ao buscar profiles básicos:', basicProfilesError);
       return new Response(
         JSON.stringify({ error: 'Erro ao buscar perfis dos usuários' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // QUERY 2: Buscar dados de onboarding separadamente
+    // QUERY 2: Buscar dados de networking_profiles_v2
+    const { data: networkingProfiles, error: networkingError } = await supabase
+      .from('networking_profiles_v2')
+      .select(`
+        user_id,
+        value_proposition,
+        looking_for,
+        main_challenge,
+        keywords,
+        ai_persona
+      `)
+      .in('user_id', [currentUserId, targetUserId]);
+
+    if (networkingError) {
+      console.warn('⚠️ Aviso ao buscar networking profiles (continuando com dados básicos):', networkingError);
+    }
+
+    // Merge dos dados: profiles básicos + networking profiles
+    const profiles = basicProfiles.map(profile => {
+      const networkingData = networkingProfiles?.find(np => np.user_id === profile.id);
+      return {
+        user_id: profile.id,
+        name: profile.name,
+        email: profile.email,
+        company_name: profile.company_name,
+        current_position: profile.current_position,
+        industry: profile.industry,
+        company_size: profile.company_size,
+        annual_revenue: profile.annual_revenue,
+        avatar_url: profile.avatar_url,
+        linkedin_url: profile.linkedin_url,
+        whatsapp_number: profile.whatsapp_number,
+        value_proposition: networkingData?.value_proposition || '',
+        looking_for: networkingData?.looking_for || [],
+        main_challenge: networkingData?.main_challenge || '',
+        keywords: networkingData?.keywords || [],
+        ai_persona: networkingData?.ai_persona || null
+      };
+    });
+
+    // QUERY 3: Buscar dados de onboarding separadamente
     const { data: onboardingData, error: onboardingError } = await supabase
       .from('onboarding_final')
       .select('user_id, personal_info, business_info, business_context, goals_info, ai_experience, personalization, professional_info, business_goals')

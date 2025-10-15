@@ -236,7 +236,7 @@ const Networking = () => {
           </p>
           
           {/* Botão para regenerar conexões - Via Aurora Style */}
-          <div className="pt-2">
+          <div className="pt-2 flex flex-col items-center gap-3">
             <motion.div
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -260,6 +260,27 @@ const Networking = () => {
                 )}
               </Button>
             </motion.div>
+            
+            {/* Botão temporário de reset */}
+            <Button
+              onClick={() => resetNetworking()}
+              disabled={isResetting || isGenerating}
+              size="sm"
+              variant="outline"
+              className="text-xs gap-2 border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-300 hover:border-red-500/50"
+            >
+              {isResetting ? (
+                <>
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  Resetando...
+                </>
+              ) : (
+                <>
+                  <RotateCcw className="h-3 w-3" />
+                  🔧 Reset Completo (Dev)
+                </>
+              )}
+            </Button>
           </div>
         </div>
 
