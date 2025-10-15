@@ -49,14 +49,9 @@ export const OpportunityCard = ({ opportunity, onViewDetails }: OpportunityCardP
     <LiquidGlassCard 
       variant="default" 
       hoverable={true}
-      className="p-6 cursor-pointer group relative overflow-hidden"
+      className="p-6 cursor-pointer group"
       onClick={() => onViewDetails(opportunity)}
     >
-      {/* Blob decorativo */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">
-        <div className="absolute w-32 h-32 bg-aurora/3 rounded-full blur-2xl -top-10 -right-10 group-hover:bg-aurora/5 transition-all duration-500" />
-      </div>
-      
       <div className="space-y-4">
         {/* Header com tipo */}
         <div className="flex items-start justify-between gap-3">
