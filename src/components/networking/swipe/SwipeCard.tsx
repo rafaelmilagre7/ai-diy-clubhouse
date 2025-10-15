@@ -140,7 +140,7 @@ export const SwipeCard = ({
             <Button
               onClick={onOpenContact}
               size="lg"
-              className="relative w-full bg-gradient-to-r from-aurora via-viverblue to-revenue hover:from-aurora/90 hover:via-viverblue/90 hover:to-revenue/90 text-white shadow-xl shadow-aurora/30 hover:shadow-2xl hover:shadow-aurora/40 transition-all duration-300 font-bold text-base hover:scale-[1.02] border-0 overflow-hidden group"
+              className="relative w-full bg-gradient-to-r from-aurora via-viverblue to-operational hover:from-aurora/90 hover:via-viverblue/90 hover:to-operational/90 text-white shadow-xl shadow-aurora/30 hover:shadow-2xl hover:shadow-aurora/40 transition-all duration-300 font-bold text-base hover:scale-[1.02] border-0 overflow-hidden group"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <Phone className="h-5 w-5 mr-2 relative z-10" />

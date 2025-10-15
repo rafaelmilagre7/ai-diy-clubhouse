@@ -416,11 +416,11 @@ export const SwipeCardCarousel = ({ card }: SwipeCardCarouselProps) => {
               {/* Prazo para Resultados */}
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-revenue" />
+                  <Clock className="h-4 w-4 text-operational" />
                   <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Prazo para Resultados</p>
                 </div>
-                <div className="flex items-center gap-2 bg-revenue/5 border border-revenue/20 rounded-lg px-3 py-2">
-                  <span className="text-sm font-bold text-revenue">{translate(timeline)}</span>
+                <div className="flex items-center gap-2 bg-operational/5 border border-operational/20 rounded-lg px-3 py-2">
+                  <span className="text-sm font-bold text-operational">{translate(timeline)}</span>
                   <span className="text-xs text-muted-foreground">para atingir objetivos</span>
                 </div>
               </div>
@@ -514,12 +514,12 @@ export const SwipeCardCarousel = ({ card }: SwipeCardCarouselProps) => {
           <button
             key={idx}
             onClick={() => api?.scrollTo(idx)}
-            className={cn(
-              "h-2 rounded-full transition-all duration-300 shadow-md",
-              current === idx 
-                ? "w-8 bg-gradient-to-r from-strategy to-revenue" 
-                : "w-2 bg-muted/40 hover:bg-muted/60"
-            )}
+              className={cn(
+                "h-2 rounded-full transition-all duration-300 shadow-md",
+                current === idx 
+                  ? "w-8 bg-gradient-to-r from-aurora to-operational" 
+                  : "w-2 bg-muted/40 hover:bg-muted/60"
+              )}
             aria-label={`Ir para página ${idx + 1}`}
           />
         ))}
