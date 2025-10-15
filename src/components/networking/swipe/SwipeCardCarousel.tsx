@@ -489,13 +489,29 @@ export const SwipeCardCarousel = ({ card }: SwipeCardCarouselProps) => {
 
         </CarouselContent>
         
-        {/* Navegação com setas discretas em branco */}
-        <CarouselPrevious className="absolute -left-12 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-white/90 hover:bg-white border border-border/30 hover:scale-105 transition-all shadow-lg hover:shadow-xl z-10">
-          <ChevronLeft className="h-5 w-5 text-foreground" />
-        </CarouselPrevious>
-        <CarouselNext className="absolute -right-12 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-white/90 hover:bg-white border border-border/30 hover:scale-105 transition-all shadow-lg hover:shadow-xl z-10">
-          <ChevronRight className="h-5 w-5 text-foreground" />
-        </CarouselNext>
+        {/* Navegação com setas clean (sem círculo) */}
+        <button 
+          onClick={() => {
+            const carousel = document.querySelector('[role="region"]');
+            const prevButton = carousel?.querySelector('button[aria-label="Previous slide"]') as HTMLButtonElement;
+            prevButton?.click();
+          }}
+          className="absolute -left-8 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground hover:scale-110 transition-all z-10 p-2"
+        >
+          <ChevronLeft className="h-7 w-7" />
+        </button>
+        <button 
+          onClick={() => {
+            const carousel = document.querySelector('[role="region"]');
+            const nextButton = carousel?.querySelector('button[aria-label="Next slide"]') as HTMLButtonElement;
+            nextButton?.click();
+          }}
+          className="absolute -right-8 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground hover:scale-110 transition-all z-10 p-2"
+        >
+          <ChevronRight className="h-7 w-7" />
+        </button>
+        <CarouselPrevious className="hidden" />
+        <CarouselNext className="hidden" />
       </Carousel>
 
       {/* Indicadores de página (dots) - Verde→Roxo gradiente */}
