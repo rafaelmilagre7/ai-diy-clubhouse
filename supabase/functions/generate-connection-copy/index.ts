@@ -112,22 +112,28 @@ serve(async (req) => {
     const u1Position = u1ProfessionalInfo.position || u1BusinessInfo.position || currentUser?.current_position;
     const u1Revenue = u1BusinessInfo.annual_revenue || u1BusinessContext?.annual_revenue || currentUser?.annual_revenue;
     
-    // Experiência com IA
-    const u1AiLevel = u1AiExp.ai_knowledge_level || u1AiExp.experience_level || 'básico';
-    const u1HasAi = u1AiExp.has_implemented_ai || false;
-    const u1AiTools = u1AiExp.ai_tools_used || u1AiExp.tools_used || [];
-    const u1AiObjective = u1AiExp.ai_implementation_objective || u1AiExp.main_objective || '';
-    const u1AiChallenge = u1AiExp.ai_main_challenge || u1AiExp.main_challenge || u1Challenge;
-    const u1AiUrgency = u1AiExp.ai_implementation_urgency || u1AiExp.urgency_level || 'média';
+    // Experiência com IA (PRIORIZAR campos corretos do onboarding_final)
+    const u1AiLevel = u1AiExp.experience_level || u1AiExp.ai_knowledge_level || 'básico';
+    const u1HasAi = u1AiExp.has_implemented_ai || u1AiExp.implementation_status === 'implementing' || false;
+    const u1AiTools = u1AiExp.tools_used || u1AiExp.ai_tools_used || [];
+    const u1AiObjective = u1AiExp.main_objective || u1AiExp.ai_implementation_objective || '';
+    const u1AiChallenge = u1AiExp.main_challenge || u1AiExp.ai_main_challenge || u1Challenge;
+    const u1AiUrgency = u1AiExp.urgency_level || u1AiExp.ai_implementation_urgency || 'média';
     
-    // Objetivos e metas
-    const u1MainGoal = u1Goals.main_objective || u1BusinessGoals.primary_goal || '';
-    const u1ImpactArea = u1Goals.area_to_impact || u1BusinessGoals.priority_areas?.[0] || '';
-    const u1ExpectedResult = u1Goals.expected_result_90_days || u1BusinessGoals.expected_outcomes?.[0] || '';
-    const u1UrgencyLevel = u1Goals.urgency_level || u1BusinessGoals.timeline || 'média';
-    const u1SuccessMetric = u1Goals.success_metric || u1BusinessGoals.success_metrics?.[0] || '';
-    const u1MainObstacle = u1Goals.main_obstacle || u1BusinessGoals.main_challenge || u1Challenge;
-    const u1Budget = u1Goals.ai_implementation_budget || u1BusinessContext?.investment_capacity || '';
+    // Objetivos e metas (PRIORIZAR campos corretos: primary_goal, priority_areas, success_metrics)
+    const u1MainGoal = u1Goals.primary_goal || u1BusinessGoals.primary_goal || u1Goals.main_objective || '';
+    const u1PriorityAreas = u1Goals.priority_areas || u1BusinessGoals.priority_areas || [];
+    const u1ImpactArea = Array.isArray(u1PriorityAreas) && u1PriorityAreas.length > 0 
+      ? u1PriorityAreas[0] 
+      : (u1Goals.area_to_impact || '');
+    const u1SuccessMetrics = u1Goals.success_metrics || u1BusinessGoals.success_metrics || [];
+    const u1SuccessMetric = Array.isArray(u1SuccessMetrics) && u1SuccessMetrics.length > 0
+      ? u1SuccessMetrics[0]
+      : (u1Goals.success_metric || '');
+    const u1ExpectedResult = u1Goals.expected_outcomes?.[0] || u1BusinessGoals.expected_outcomes?.[0] || u1Goals.expected_result_90_days || '';
+    const u1Timeline = u1Goals.timeline || u1BusinessGoals.timeline || u1Goals.urgency_level || 'média';
+    const u1MainObstacle = u1Goals.main_challenge || u1BusinessGoals.main_challenge || u1Goals.main_obstacle || u1Challenge;
+    const u1Budget = u1BusinessContext?.investment_capacity || u1Goals.ai_implementation_budget || '';
 
     // Dados básicos do perfil - Usuário 2
     const u2Industry = targetUser?.industry || 'Setor não informado';
@@ -158,22 +164,28 @@ serve(async (req) => {
     const u2Position = u2ProfessionalInfo.position || u2BusinessInfo.position || targetUser?.current_position;
     const u2Revenue = u2BusinessInfo.annual_revenue || u2BusinessContext?.annual_revenue || targetUser?.annual_revenue;
     
-    // Experiência com IA
-    const u2AiLevel = u2AiExp.ai_knowledge_level || u2AiExp.experience_level || 'básico';
-    const u2HasAi = u2AiExp.has_implemented_ai || false;
-    const u2AiTools = u2AiExp.ai_tools_used || u2AiExp.tools_used || [];
-    const u2AiObjective = u2AiExp.ai_implementation_objective || u2AiExp.main_objective || '';
-    const u2AiChallenge = u2AiExp.ai_main_challenge || u2AiExp.main_challenge || u2Challenge;
-    const u2AiUrgency = u2AiExp.ai_implementation_urgency || u2AiExp.urgency_level || 'média';
+    // Experiência com IA (PRIORIZAR campos corretos do onboarding_final)
+    const u2AiLevel = u2AiExp.experience_level || u2AiExp.ai_knowledge_level || 'básico';
+    const u2HasAi = u2AiExp.has_implemented_ai || u2AiExp.implementation_status === 'implementing' || false;
+    const u2AiTools = u2AiExp.tools_used || u2AiExp.ai_tools_used || [];
+    const u2AiObjective = u2AiExp.main_objective || u2AiExp.ai_implementation_objective || '';
+    const u2AiChallenge = u2AiExp.main_challenge || u2AiExp.ai_main_challenge || u2Challenge;
+    const u2AiUrgency = u2AiExp.urgency_level || u2AiExp.ai_implementation_urgency || 'média';
     
-    // Objetivos e metas
-    const u2MainGoal = u2Goals.main_objective || u2BusinessGoals.primary_goal || '';
-    const u2ImpactArea = u2Goals.area_to_impact || u2BusinessGoals.priority_areas?.[0] || '';
-    const u2ExpectedResult = u2Goals.expected_result_90_days || u2BusinessGoals.expected_outcomes?.[0] || '';
-    const u2UrgencyLevel = u2Goals.urgency_level || u2BusinessGoals.timeline || 'média';
-    const u2SuccessMetric = u2Goals.success_metric || u2BusinessGoals.success_metrics?.[0] || '';
-    const u2MainObstacle = u2Goals.main_obstacle || u2BusinessGoals.main_challenge || u2Challenge;
-    const u2Budget = u2Goals.ai_implementation_budget || u2BusinessContext?.investment_capacity || '';
+    // Objetivos e metas (PRIORIZAR campos corretos: primary_goal, priority_areas, success_metrics)
+    const u2MainGoal = u2Goals.primary_goal || u2BusinessGoals.primary_goal || u2Goals.main_objective || '';
+    const u2PriorityAreas = u2Goals.priority_areas || u2BusinessGoals.priority_areas || [];
+    const u2ImpactArea = Array.isArray(u2PriorityAreas) && u2PriorityAreas.length > 0 
+      ? u2PriorityAreas[0] 
+      : (u2Goals.area_to_impact || '');
+    const u2SuccessMetrics = u2Goals.success_metrics || u2BusinessGoals.success_metrics || [];
+    const u2SuccessMetric = Array.isArray(u2SuccessMetrics) && u2SuccessMetrics.length > 0
+      ? u2SuccessMetrics[0]
+      : (u2Goals.success_metric || '');
+    const u2ExpectedResult = u2Goals.expected_outcomes?.[0] || u2BusinessGoals.expected_outcomes?.[0] || u2Goals.expected_result_90_days || '';
+    const u2Timeline = u2Goals.timeline || u2BusinessGoals.timeline || u2Goals.urgency_level || 'média';
+    const u2MainObstacle = u2Goals.main_challenge || u2BusinessGoals.main_challenge || u2Goals.main_obstacle || u2Challenge;
+    const u2Budget = u2BusinessContext?.investment_capacity || u2Goals.ai_implementation_budget || '';
 
     console.log('📊 Dados ENRIQUECIDOS com ONBOARDING enviados para IA:', {
       user1: {
@@ -223,12 +235,12 @@ PERFIL 1 - ${currentUser?.name || 'Usuário 1'}:
 • Cargo: ${u1Position}
 • Faturamento: ${u1Revenue}
 
-🎯 OBJETIVOS ESTRATÉGICOS (90 DIAS):
+🎯 OBJETIVOS ESTRATÉGICOS (próximos 12 meses):
 • Objetivo principal: ${u1MainGoal}
-• Área de impacto: ${u1ImpactArea}
+${Array.isArray(u1PriorityAreas) && u1PriorityAreas.length > 0 ? `• Áreas prioritárias: ${u1PriorityAreas.join(', ')}` : `• Área de impacto: ${u1ImpactArea}`}
 • Resultado esperado: ${u1ExpectedResult}
-• Métrica de sucesso: ${u1SuccessMetric}
-• Nível de urgência: ${u1UrgencyLevel}
+${Array.isArray(u1SuccessMetrics) && u1SuccessMetrics.length > 0 ? `• Métricas de sucesso: ${u1SuccessMetrics.join(', ')}` : `• Métrica de sucesso: ${u1SuccessMetric}`}
+• Timeline: ${u1Timeline}
 • Principal obstáculo: ${u1MainObstacle}
 
 🤖 EXPERIÊNCIA COM IA:
@@ -256,12 +268,12 @@ PERFIL 2 - ${targetUser?.name || 'Usuário 2'}:
 • Cargo: ${u2Position}
 • Faturamento: ${u2Revenue}
 
-🎯 OBJETIVOS ESTRATÉGICOS (90 DIAS):
+🎯 OBJETIVOS ESTRATÉGICOS (próximos 12 meses):
 • Objetivo principal: ${u2MainGoal}
-• Área de impacto: ${u2ImpactArea}
+${Array.isArray(u2PriorityAreas) && u2PriorityAreas.length > 0 ? `• Áreas prioritárias: ${u2PriorityAreas.join(', ')}` : `• Área de impacto: ${u2ImpactArea}`}
 • Resultado esperado: ${u2ExpectedResult}
-• Métrica de sucesso: ${u2SuccessMetric}
-• Nível de urgência: ${u2UrgencyLevel}
+${Array.isArray(u2SuccessMetrics) && u2SuccessMetrics.length > 0 ? `• Métricas de sucesso: ${u2SuccessMetrics.join(', ')}` : `• Métrica de sucesso: ${u2SuccessMetric}`}
+• Timeline: ${u2Timeline}
 • Principal obstáculo: ${u2MainObstacle}
 
 🤖 EXPERIÊNCIA COM IA:
