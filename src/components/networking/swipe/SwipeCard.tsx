@@ -69,14 +69,14 @@ export const SwipeCard = ({ card, onOpenContact }: SwipeCardProps) => {
       }}
     >
       <LiquidGlassCard 
-        className="w-full max-w-2xl mx-auto overflow-hidden shadow-2xl shadow-aurora/10 hover:shadow-3xl hover:shadow-aurora/20 transition-shadow duration-500"
+        className="w-full max-w-xl mx-auto overflow-hidden shadow-2xl shadow-aurora/10 hover:shadow-3xl hover:shadow-aurora/20 transition-shadow duration-500"
         variant="premium"
         hoverable={false}
       >
-        <div className="h-[750px] flex flex-col p-6">
+        <div className="min-h-[680px] flex flex-col p-5">
           {/* Header Compacto: Avatar + Info + Score */}
-          <div className="flex items-center gap-4 mb-4 flex-shrink-0">
-            <Avatar className="h-20 w-20 border-2 border-aurora/30 shadow-lg">
+          <div className="flex items-start gap-3 mb-4 flex-shrink-0">
+            <Avatar className="h-16 w-16 border-2 border-aurora/30 shadow-lg">
               <AvatarImage 
                 src={card.avatarUrl} 
                 alt={card.name}
@@ -88,26 +88,26 @@ export const SwipeCard = ({ card, onOpenContact }: SwipeCardProps) => {
             </Avatar>
             
             <div className="flex-1 min-w-0">
-              <h2 className="text-xl font-bold text-foreground truncate">
+              <h2 className="text-lg font-bold text-foreground truncate">
                 {card.name}
               </h2>
-              <p className="text-sm font-medium text-muted-foreground truncate">
+              <p className="text-sm text-muted-foreground truncate">
                 {card.position}
               </p>
-              <p className="text-sm font-medium text-aurora truncate">
+              <p className="text-sm text-aurora truncate">
                 @ {card.company}
               </p>
             </div>
 
-            {/* Badge de Score - Verde neutro */}
-            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-br from-strategy/15 to-viverblue/10 border border-strategy/30 flex-shrink-0">
-              <Trophy className="h-4 w-4 text-strategy" />
-              <span className="text-lg font-black text-strategy">{Math.round(card.score || 50)}%</span>
+            {/* Badge de Score - Compacto */}
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 flex-shrink-0">
+              <Trophy className="h-4 w-4 text-emerald-600" />
+              <span className="text-sm font-bold text-emerald-700">{Math.round(card.score || 50)}%</span>
             </div>
           </div>
 
           {/* Card Carrossel com dados parametrizados */}
-          <div className="flex-1 min-h-0 relative liquid-glass-card rounded-2xl p-5 border border-aurora/10 shadow-inner mb-6">
+          <div className="flex-1 min-h-0 relative liquid-glass-card rounded-2xl p-5 border border-aurora/10 shadow-inner mb-5">
             {/* Decorative corner accents */}
             <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-aurora/20 rounded-tl-2xl" />
             <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-aurora/20 rounded-br-2xl" />
@@ -115,21 +115,38 @@ export const SwipeCard = ({ card, onOpenContact }: SwipeCardProps) => {
             <SwipeCardCarousel card={card} />
           </div>
 
-          {/* Action Buttons - Nova Hierarquia Visual */}
-          <div className="space-y-4 flex-shrink-0 pt-2">
-            {/* Ações Secundárias - Lado a Lado, Outline Suave */}
-            <div className="flex gap-3">
+          {/* Status Banner - Se conectado */}
+          {localStatus === 'accepted' && (
+            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-2.5 mb-3 text-center text-sm flex-shrink-0">
+              <Check className="inline h-4 w-4 mr-1.5 text-emerald-600" />
+              <span className="text-emerald-700 font-medium">Vocês já estão conectados</span>
+            </div>
+          )}
+
+          {/* Action Buttons - Hierarquia Clara */}
+          <div className="space-y-3 flex-shrink-0">
+            {/* CTA PRINCIPAL - Verde Vibrante, Destaque Máximo */}
+            <Button
+              onClick={onOpenContact}
+              size="lg"
+              className="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/40 transition-all duration-300 font-bold text-base hover:scale-[1.01]"
+            >
+              <Phone className="h-5 w-5 mr-2" />
+              CONECTAR AGORA
+            </Button>
+
+            {/* AÇÕES SECUNDÁRIAS - Hierarquia Clara */}
+            <div className="flex gap-2">
               <Button
                 onClick={handleAddConnection}
                 disabled={localStatus !== 'none' || isSendingRequest}
                 variant="outline"
-                size="default"
-                className={`flex-1 transition-all duration-300 font-semibold ${
+                className={`flex-1 transition-all duration-300 ${
                   localStatus === 'accepted'
                     ? 'bg-emerald-50 border-emerald-500 text-emerald-700 hover:bg-emerald-100'
                     : localStatus === 'pending'
                     ? 'bg-amber-50 border-amber-500 text-amber-700 cursor-not-allowed'
-                    : 'border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-slate-400'
+                    : 'border-slate-300 text-slate-700 hover:bg-slate-50'
                 }`}
               >
                 {localStatus === 'accepted' ? (
@@ -139,8 +156,8 @@ export const SwipeCard = ({ card, onOpenContact }: SwipeCardProps) => {
                   </>
                 ) : localStatus === 'pending' ? (
                   <>
-                    <Clock className="h-4 w-4 mr-2 animate-pulse" />
-                    Enviada
+                    <Clock className="h-4 w-4 mr-2" />
+                    Solicitação Enviada
                   </>
                 ) : isSendingRequest ? (
                   <>
@@ -150,7 +167,7 @@ export const SwipeCard = ({ card, onOpenContact }: SwipeCardProps) => {
                 ) : (
                   <>
                     <UserPlus className="h-4 w-4 mr-2" />
-                    Adicionar
+                    Adicionar à Rede
                   </>
                 )}
               </Button>
@@ -159,25 +176,14 @@ export const SwipeCard = ({ card, onOpenContact }: SwipeCardProps) => {
                 <Button
                   onClick={handleLinkedInClick}
                   variant="outline"
-                  size="default"
-                  className="border-[#0A66C2] text-[#0A66C2] hover:bg-[#0A66C2] hover:text-white transition-all duration-300 font-semibold px-5"
+                  size="icon"
+                  className="border-[#0A66C2]/30 text-[#0A66C2] hover:bg-[#0A66C2]/10 transition-all duration-300"
                   title="Ver perfil no LinkedIn"
                 >
-                  <Linkedin className="h-4 w-4 mr-2 fill-current" />
-                  LinkedIn
+                  <Linkedin className="h-4 w-4" />
                 </Button>
               )}
             </div>
-
-            {/* Ação Primária - Design Sóbrio Profissional */}
-            <Button
-              onClick={onOpenContact}
-              size="lg"
-              className="w-full bg-slate-700 hover:bg-slate-800 text-white shadow-lg hover:shadow-xl transition-all duration-300 font-semibold border border-slate-600/50"
-            >
-              <Phone className="h-5 w-5 mr-2" />
-              CONECTAR AGORA
-            </Button>
           </div>
         </div>
       </LiquidGlassCard>
