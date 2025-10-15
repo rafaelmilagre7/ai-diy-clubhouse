@@ -4,7 +4,7 @@ import { useSwipeCards } from "@/hooks/networking/useSwipeCards";
 import { SwipeCard } from "@/components/networking/swipe/SwipeCard";
 import { ContactModal } from "@/components/networking/modals/ContactModal";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Loader2, RefreshCw, Sparkles } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Network, Zap } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
 const Networking = () => {
@@ -31,10 +31,24 @@ const Networking = () => {
           <meta name="description" content="Descubra conexões estratégicas com IA na comunidade Viver de IA" />
         </Helmet>
 
-        <div className="container py-12 flex items-center justify-center min-h-[70vh]">
-          <div className="text-center space-y-4">
-            <Loader2 className="h-12 w-12 animate-spin mx-auto text-primary" />
-            <p className="text-muted-foreground">Carregando suas conexões estratégicas...</p>
+        <div className="relative container py-12 flex items-center justify-center min-h-[70vh] overflow-hidden">
+          {/* Aurora Background Blobs */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-aurora/10 rounded-full blur-3xl animate-blob" />
+            <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-viverblue/10 rounded-full blur-3xl animate-blob animation-delay-2000" />
+            <div className="absolute bottom-1/4 left-1/3 w-96 h-96 bg-operational/10 rounded-full blur-3xl animate-blob animation-delay-4000" />
+          </div>
+          
+          <div className="relative text-center space-y-6">
+            <div className="inline-flex p-4 rounded-full bg-gradient-to-br from-aurora/20 to-viverblue/20 backdrop-blur-sm border border-aurora/30">
+              <Loader2 className="h-12 w-12 animate-spin text-aurora" />
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-aurora via-viverblue to-operational bg-clip-text text-transparent">
+                Analisando sua rede
+              </h2>
+              <p className="text-muted-foreground">Carregando suas conexões estratégicas...</p>
+            </div>
           </div>
         </div>
       </>
@@ -49,33 +63,72 @@ const Networking = () => {
           <meta name="description" content="Descubra conexões estratégicas com IA na comunidade Viver de IA" />
         </Helmet>
 
-        <div className="container py-12">
-          <Card className="max-w-2xl mx-auto p-12 text-center space-y-6">
+        <div className="relative container py-12 overflow-hidden">
+          {/* Aurora Background Blobs */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-aurora/10 rounded-full blur-3xl animate-blob" />
+            <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-viverblue/10 rounded-full blur-3xl animate-blob animation-delay-2000" />
+            <div className="absolute bottom-1/4 left-1/3 w-96 h-96 bg-operational/10 rounded-full blur-3xl animate-blob animation-delay-4000" />
+          </div>
+
+          <Card className="relative max-w-2xl mx-auto p-12 text-center space-y-8 liquid-glass-card border-aurora/20 shadow-2xl shadow-aurora/5">
+            {/* Icon com gradiente e glow */}
             <div className="flex justify-center">
-              <Sparkles className="h-16 w-16 text-viverblue" />
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-aurora to-viverblue opacity-20 blur-2xl rounded-full" />
+                <div className="relative inline-flex p-6 rounded-2xl bg-gradient-to-br from-aurora/20 to-viverblue/20 backdrop-blur-sm border border-aurora/30">
+                  <Network className="h-16 w-16 text-aurora" />
+                </div>
+              </div>
             </div>
-            <h2 className="text-2xl font-bold">Vamos gerar suas conexões estratégicas!</h2>
-            <p className="text-muted-foreground">
-              Clique no botão abaixo para a IA analisar e gerar seus {isGenerating ? 'melhores matches personalizados...' : '50 melhores matches personalizados.'}
-            </p>
+
+            {/* Título com gradiente */}
+            <div className="space-y-3">
+              <h2 className="text-3xl font-bold bg-gradient-to-r from-aurora via-viverblue to-operational bg-clip-text text-transparent">
+                Descubra Conexões Estratégicas
+              </h2>
+              <p className="text-muted-foreground text-lg max-w-lg mx-auto">
+                Nossa IA irá analisar seu perfil e gerar {isGenerating ? 'suas conexões mais relevantes...' : '50 matches personalizados para impulsionar seu negócio.'}
+              </p>
+            </div>
+
+            {/* Botão melhorado */}
             <Button 
               onClick={() => generateMatches()}
               disabled={isGenerating}
               size="lg"
-              className="gap-2 bg-viverblue hover:bg-viverblue/90"
+              className="gap-3 px-8 py-6 text-base font-semibold bg-gradient-to-r from-aurora to-viverblue hover:from-aurora/90 hover:to-viverblue/90 shadow-lg shadow-aurora/20 transition-all hover:shadow-xl hover:shadow-aurora/30 hover:scale-105"
             >
               {isGenerating ? (
                 <>
                   <Loader2 className="h-5 w-5 animate-spin" />
-                  Gerando suas conexões... (pode levar até 30s)
+                  Analisando perfis... (até 30s)
                 </>
               ) : (
                 <>
-                  <Sparkles className="h-5 w-5" />
-                  Gerar Minhas Conexões
+                  <Zap className="h-5 w-5" />
+                  Gerar Conexões com IA
                 </>
               )}
             </Button>
+
+            {/* Features list */}
+            {!isGenerating && (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-6 border-t border-border/50">
+                <div className="space-y-1">
+                  <div className="text-2xl font-bold text-aurora">50+</div>
+                  <div className="text-xs text-muted-foreground">Conexões IA</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-2xl font-bold text-viverblue">100%</div>
+                  <div className="text-xs text-muted-foreground">Personalizado</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-2xl font-bold text-operational">Smart</div>
+                  <div className="text-xs text-muted-foreground">Match Score</div>
+                </div>
+              </div>
+            )}
           </Card>
         </div>
       </>
@@ -89,33 +142,46 @@ const Networking = () => {
         <meta name="description" content="Descubra conexões estratégicas com IA na comunidade Viver de IA" />
       </Helmet>
 
-      <div className="container py-8 space-y-8">
+      <div className="relative container py-8 space-y-8 overflow-hidden">
+        {/* Aurora Background Blobs */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-1/2 left-1/4 w-96 h-96 bg-aurora/5 rounded-full blur-3xl animate-blob" />
+          <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-viverblue/5 rounded-full blur-3xl animate-blob animation-delay-2000" />
+          <div className="absolute -bottom-1/2 left-1/2 w-96 h-96 bg-operational/5 rounded-full blur-3xl animate-blob animation-delay-4000" />
+        </div>
+
         {/* Header */}
-        <div className="text-center space-y-2">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-aurora via-aurora to-viverblue bg-clip-text text-transparent">
-            Descubra Conexões Estratégicas
+        <div className="relative text-center space-y-4">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-aurora/10 border border-aurora/20 backdrop-blur-sm">
+            <Network className="h-4 w-4 text-aurora" />
+            <span className="text-xs font-medium text-aurora">Powered by AI</span>
+          </div>
+          
+          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-aurora via-viverblue to-operational bg-clip-text text-transparent">
+            Conexões Estratégicas
           </h1>
-          <p className="text-muted-foreground text-sm">
-            Matches personalizados por IA para o seu negócio
+          
+          <p className="text-muted-foreground text-base max-w-2xl mx-auto">
+            Matches personalizados com base no seu perfil e objetivos de negócio
           </p>
           
-          {/* Botão para forçar regeneração */}
-          <div className="pt-4">
+          {/* Botão para forçar regeneração - mais sofisticado */}
+          <div className="pt-2">
             <Button 
               onClick={() => generateMatches()}
               disabled={isGenerating}
               variant="outline"
-              className="gap-2"
+              className="gap-2 border-aurora/30 hover:bg-aurora/5 hover:border-aurora/50 transition-all"
             >
               {isGenerating ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Gerando conexões...
+                  <Loader2 className="h-4 w-4 animate-spin text-aurora" />
+                  <span>Gerando conexões...</span>
                 </>
               ) : (
                 <>
-                  <Sparkles className="h-4 w-4" />
-                  Gerar novas conexões
+                  <Zap className="h-4 w-4 text-aurora" />
+                  <span>Gerar novas conexões</span>
                 </>
               )}
             </Button>
@@ -123,16 +189,16 @@ const Networking = () => {
         </div>
 
         {/* Container com card centralizado e botões nas laterais */}
-        <div className="relative max-w-4xl mx-auto flex items-center justify-center gap-6">
+        <div className="relative max-w-5xl mx-auto flex items-center justify-center gap-8">
           
-          {/* Botão ANTERIOR - Lateral ESQUERDA */}
+          {/* Botão ANTERIOR - Lateral ESQUERDA com efeito glass */}
           <Button
             onClick={previousCard}
             disabled={!hasPrevious}
             size="lg"
-            className="h-20 w-20 rounded-full shadow-2xl bg-background hover:bg-accent border-2 border-border disabled:opacity-20 transition-all shrink-0"
+            className="h-20 w-20 rounded-full shadow-2xl liquid-glass-card border-2 border-aurora/20 hover:border-aurora/40 disabled:opacity-20 transition-all shrink-0 hover:scale-110 disabled:hover:scale-100"
           >
-            <ChevronLeft className="h-10 w-10" />
+            <ChevronLeft className="h-10 w-10 text-foreground" />
           </Button>
 
           {/* Card no centro */}
@@ -143,22 +209,29 @@ const Networking = () => {
             />
           </div>
 
-          {/* Botão PRÓXIMO - Lateral DIREITA */}
+          {/* Botão PRÓXIMO - Lateral DIREITA com gradiente aprimorado */}
           <Button
             onClick={nextCard}
             disabled={!hasNext}
             size="lg"
-            className="h-20 w-20 rounded-full shadow-2xl bg-gradient-to-r from-aurora to-viverblue hover:opacity-90 text-white disabled:opacity-20 transition-all shrink-0"
+            className="h-20 w-20 rounded-full shadow-2xl bg-gradient-to-br from-aurora via-viverblue to-operational hover:shadow-aurora/30 text-white disabled:opacity-20 transition-all shrink-0 hover:scale-110 disabled:hover:scale-100"
           >
             <ChevronRight className="h-10 w-10" />
           </Button>
         </div>
 
-        {/* Contador abaixo do card */}
-        <div className="text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-background/50 backdrop-blur-sm border border-border/50">
-            <span className="text-sm font-medium text-muted-foreground">
-              {currentIndex + 1} / {totalCards}
+        {/* Contador abaixo do card - mais sofisticado */}
+        <div className="relative text-center">
+          <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full liquid-glass-card border border-aurora/20 shadow-lg">
+            <div className="flex items-center gap-2">
+              <div className="h-2 w-2 rounded-full bg-aurora animate-pulse" />
+              <span className="text-sm font-semibold text-foreground">
+                {currentIndex + 1}
+              </span>
+            </div>
+            <div className="h-4 w-px bg-border" />
+            <span className="text-sm text-muted-foreground">
+              de {totalCards}
             </span>
           </div>
         </div>
