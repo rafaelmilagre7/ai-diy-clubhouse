@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import {
   Dialog,
   DialogContent,
@@ -17,10 +18,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Badge } from '@/components/ui/badge';
-import { X } from 'lucide-react';
+import { Sparkles, MessageSquare, Linkedin, Send, Mail } from 'lucide-react';
 import { useCreateOpportunity } from '@/hooks/networking/useOpportunities';
+import { TagSelector } from './TagSelector';
+import { cn } from '@/lib/utils';
 
 interface PostOpportunityModalProps {
   open: boolean;
@@ -32,21 +33,10 @@ export const PostOpportunityModal = ({ open, onOpenChange }: PostOpportunityModa
   const [description, setDescription] = useState('');
   const [opportunityType, setOpportunityType] = useState<string>('');
   const [tags, setTags] = useState<string[]>([]);
-  const [tagInput, setTagInput] = useState('');
   const [contactPreference, setContactPreference] = useState('platform');
 
   const createMutation = useCreateOpportunity();
 
-  const handleAddTag = () => {
-    if (tagInput.trim() && !tags.includes(tagInput.trim()) && tags.length < 5) {
-      setTags([...tags, tagInput.trim()]);
-      setTagInput('');
-    }
-  };
-
-  const handleRemoveTag = (tagToRemove: string) => {
-    setTags(tags.filter((tag) => tag !== tagToRemove));
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,25 +58,58 @@ export const PostOpportunityModal = ({ open, onOpenChange }: PostOpportunityModa
     setDescription('');
     setOpportunityType('');
     setTags([]);
-    setTagInput('');
     setContactPreference('platform');
     onOpenChange(false);
   };
 
+  const contactOptions = [
+    {
+      value: 'platform',
+      label: 'Chat da Plataforma',
+      icon: MessageSquare,
+      description: 'Receba mensagens direto na plataforma',
+    },
+    {
+      value: 'linkedin',
+      label: 'LinkedIn',
+      icon: Linkedin,
+      description: 'Conecte-se pelo LinkedIn',
+    },
+    {
+      value: 'whatsapp',
+      label: 'WhatsApp',
+      icon: Send,
+      description: 'Contato direto via WhatsApp',
+    },
+    {
+      value: 'email',
+      label: 'Email',
+      icon: Mail,
+      description: 'Prefiro contato por email',
+    },
+  ];
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Postar Nova Oportunidade</DialogTitle>
-          <DialogDescription>
-            Compartilhe uma oportunidade de negócio com a comunidade
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 rounded-xl bg-gradient-to-br from-aurora via-viverblue to-operational">
+              <Sparkles className="w-5 h-5 text-white" />
+            </div>
+            <DialogTitle className="text-2xl bg-gradient-to-r from-aurora via-viverblue to-operational bg-clip-text text-transparent">
+              Postar Nova Oportunidade
+            </DialogTitle>
+          </div>
+          <DialogDescription className="text-base">
+            Compartilhe uma oportunidade de negócio com a comunidade e amplie sua rede
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Título */}
           <div className="space-y-2">
-            <Label htmlFor="title">Título *</Label>
+            <Label htmlFor="title" className="text-base">Título *</Label>
             <Input
               id="title"
               placeholder="Ex: Procuro parceiro para expansão nacional"
@@ -94,13 +117,14 @@ export const PostOpportunityModal = ({ open, onOpenChange }: PostOpportunityModa
               onChange={(e) => setTitle(e.target.value)}
               maxLength={100}
               required
+              className="liquid-glass-card border-aurora/20 focus:border-aurora h-12 text-base"
             />
             <p className="text-xs text-muted-foreground">{title.length}/100 caracteres</p>
           </div>
 
           {/* Descrição */}
           <div className="space-y-2">
-            <Label htmlFor="description">Descrição *</Label>
+            <Label htmlFor="description" className="text-base">Descrição *</Label>
             <Textarea
               id="description"
               placeholder="Descreva a oportunidade em detalhes..."
@@ -109,15 +133,16 @@ export const PostOpportunityModal = ({ open, onOpenChange }: PostOpportunityModa
               maxLength={1000}
               rows={6}
               required
+              className="liquid-glass-card border-aurora/20 focus:border-aurora resize-none"
             />
             <p className="text-xs text-muted-foreground">{description.length}/1000 caracteres</p>
           </div>
 
           {/* Tipo */}
           <div className="space-y-2">
-            <Label htmlFor="type">Tipo de Oportunidade *</Label>
+            <Label htmlFor="type" className="text-base">Tipo de Oportunidade *</Label>
             <Select value={opportunityType} onValueChange={setOpportunityType} required>
-              <SelectTrigger id="type">
+              <SelectTrigger id="type" className="liquid-glass-card border-aurora/20 h-12">
                 <SelectValue placeholder="Selecione o tipo" />
               </SelectTrigger>
               <SelectContent>
@@ -130,79 +155,67 @@ export const PostOpportunityModal = ({ open, onOpenChange }: PostOpportunityModa
             </Select>
           </div>
 
-          {/* Tags */}
-          <div className="space-y-2">
-            <Label htmlFor="tags">Tags (máximo 5)</Label>
-            <div className="flex gap-2">
-              <Input
-                id="tags"
-                placeholder="Ex: tecnologia, saúde, B2B"
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleAddTag();
-                  }
-                }}
-                disabled={tags.length >= 5}
-              />
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleAddTag}
-                disabled={tags.length >= 5 || !tagInput.trim()}
-              >
-                Adicionar
-              </Button>
-            </div>
-            {tags.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-2">
-                {tags.map((tag) => (
-                  <Badge key={tag} variant="secondary" className="gap-1">
-                    {tag}
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveTag(tag)}
-                      className="ml-1 hover:text-destructive"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </Badge>
-                ))}
-              </div>
-            )}
-          </div>
+          {/* Tags com Seletor */}
+          <TagSelector selectedTags={tags} onChange={setTags} />
 
-          {/* Preferência de Contato */}
+          {/* Preferência de Contato - Redesenhado */}
           <div className="space-y-3">
-            <Label>Como deseja ser contatado?</Label>
-            <RadioGroup value={contactPreference} onValueChange={setContactPreference}>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="platform" id="platform" />
-                <Label htmlFor="platform" className="font-normal cursor-pointer">
-                  Chat da plataforma
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="linkedin" id="linkedin" />
-                <Label htmlFor="linkedin" className="font-normal cursor-pointer">
-                  LinkedIn
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="whatsapp" id="whatsapp" />
-                <Label htmlFor="whatsapp" className="font-normal cursor-pointer">
-                  WhatsApp
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="email" id="email" />
-                <Label htmlFor="email" className="font-normal cursor-pointer">
-                  Email
-                </Label>
-              </div>
-            </RadioGroup>
+            <Label className="text-base">Como deseja ser contatado? *</Label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {contactOptions.map((option) => {
+                const Icon = option.icon;
+                const isSelected = contactPreference === option.value;
+
+                return (
+                  <motion.button
+                    key={option.value}
+                    type="button"
+                    onClick={() => setContactPreference(option.value)}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className={cn(
+                      'relative p-4 rounded-xl border transition-all duration-200 text-left',
+                      'hover:shadow-lg hover:shadow-aurora/20',
+                      isSelected
+                        ? 'border-aurora/40 bg-gradient-to-br from-aurora/10 to-viverblue/10'
+                        : 'border-white/10 bg-white/5 hover:border-white/20'
+                    )}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div
+                        className={cn(
+                          'flex items-center justify-center w-10 h-10 rounded-full transition-all',
+                          isSelected
+                            ? 'bg-gradient-to-br from-aurora to-viverblue text-white'
+                            : 'bg-white/10 text-muted-foreground'
+                        )}
+                      >
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-sm mb-1">{option.label}</p>
+                        <p className="text-xs text-muted-foreground">{option.description}</p>
+                      </div>
+                    </div>
+                    {isSelected && (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className="absolute top-2 right-2 w-5 h-5 rounded-full bg-gradient-to-br from-aurora to-viverblue flex items-center justify-center"
+                      >
+                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path
+                            fillRule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </motion.div>
+                    )}
+                  </motion.button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Botões */}

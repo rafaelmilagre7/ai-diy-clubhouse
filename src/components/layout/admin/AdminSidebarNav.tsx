@@ -20,7 +20,8 @@ import {
   ArrowLeftRight,
   Home,
   BookOpen,
-  Webhook
+  Webhook,
+  Network
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -70,6 +71,11 @@ const navigationItems = [
     title: "Sugestões",
     href: "/admin/suggestions",
     icon: MessageSquare,
+  },
+  {
+    title: "Networking",
+    href: "/admin/networking",
+    icon: Network,
   },
   {
     title: "Eventos",
