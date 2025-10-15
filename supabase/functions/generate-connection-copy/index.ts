@@ -335,14 +335,14 @@ ${Array.isArray(u1SuccessMetrics) && u1SuccessMetrics.length > 0 ? `• Métrica
 • Principal obstáculo: ${u1MainObstacle}` : `💼 BUSCA CONECTAR-SE COM:
 ${u1LookingFor}`}
 
-${u1HasOnboarding ? `🤖 EXPERIÊNCIA COM IA:
-• Nível: ${u1AiLevel}
-• Já implementou IA? ${u1HasAi ? 'Sim' : 'Não'}
-${Array.isArray(u1AiTools) && u1AiTools.length > 0 ? `• Ferramentas usadas: ${u1AiTools.join(', ')}` : ''}
+${u1HasOnboarding ? `🤖 CONTEXTO DE IA:
+${u1AiLevel === 'advanced' || u1AiLevel === 'avançado' ? '• Domina implementação de IA na empresa' : u1AiLevel === 'intermediate' || u1AiLevel === 'intermediário' ? '• Tem experiência intermediária com IA' : '• Está iniciando jornada com IA'}
+${u1HasAi ? '• Já possui soluções de IA implementadas' : '• Busca implementar primeira solução de IA'}
+${Array.isArray(u1AiTools) && u1AiTools.length > 0 ? `• Trabalha com: ${u1AiTools.join(', ')}` : ''}
 ${u1AiObjective ? `• Objetivo de IA: ${u1AiObjective}` : ''}
-• Desafio com IA: ${u1AiChallenge}
-• Urgência de implementação: ${u1AiUrgency}
-${u1Budget ? `• Orçamento para IA: ${u1Budget}` : ''}` : ''}
+• Desafio atual: ${u1AiChallenge}
+${u1AiUrgency === 'high' || u1AiUrgency === 'alta' ? '• Necessita implementação urgente' : u1AiUrgency === 'medium' || u1AiUrgency === 'média' ? '• Planeja implementar nos próximos meses' : '• Explorando oportunidades de longo prazo'}
+${u1Budget ? `• Investimento disponível: ${u1Budget}` : ''}` : ''}
 
 ${u1Skills ? `🎯 COMPETÊNCIAS:
 ${u1Skills}` : ''}
@@ -366,17 +366,44 @@ ${Array.isArray(u2SuccessMetrics) && u2SuccessMetrics.length > 0 ? `• Métrica
 • Principal obstáculo: ${u2MainObstacle}` : `💼 BUSCA CONECTAR-SE COM:
 ${u2LookingFor}`}
 
-${u2HasOnboarding ? `🤖 EXPERIÊNCIA COM IA:
-• Nível: ${u2AiLevel}
-• Já implementou IA? ${u2HasAi ? 'Sim' : 'Não'}
-${Array.isArray(u2AiTools) && u2AiTools.length > 0 ? `• Ferramentas usadas: ${u2AiTools.join(', ')}` : ''}
+${u2HasOnboarding ? `🤖 CONTEXTO DE IA:
+${u2AiLevel === 'advanced' || u2AiLevel === 'avançado' ? '• Domina implementação de IA na empresa' : u2AiLevel === 'intermediate' || u2AiLevel === 'intermediário' ? '• Tem experiência intermediária com IA' : '• Está iniciando jornada com IA'}
+${u2HasAi ? '• Já possui soluções de IA implementadas' : '• Busca implementar primeira solução de IA'}
+${Array.isArray(u2AiTools) && u2AiTools.length > 0 ? `• Trabalha com: ${u2AiTools.join(', ')}` : ''}
 ${u2AiObjective ? `• Objetivo de IA: ${u2AiObjective}` : ''}
-• Desafio com IA: ${u2AiChallenge}
-• Urgência de implementação: ${u2AiUrgency}
-${u2Budget ? `• Orçamento para IA: ${u2Budget}` : ''}` : ''}
+• Desafio atual: ${u2AiChallenge}
+${u2AiUrgency === 'high' || u2AiUrgency === 'alta' ? '• Necessita implementação urgente' : u2AiUrgency === 'medium' || u2AiUrgency === 'média' ? '• Planeja implementar nos próximos meses' : '• Explorando oportunidades de longo prazo'}
+${u2Budget ? `• Investimento disponível: ${u2Budget}` : ''}` : ''}
 
 ${u2Skills ? `🎯 COMPETÊNCIAS:
 ${u2Skills}` : ''}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️ REGRAS CRÍTICAS - LEIA COM ATENÇÃO:
+
+1. ❌ NÃO REPITA palavras técnicas do prompt:
+   - "nível advanced" → INTERPRETE como "domina IA"
+   - "nível intermediate" → INTERPRETE como "tem experiência com IA"  
+   - "urgência alta" → INTERPRETE como "precisa implementar rapidamente"
+   - "urgência média" → INTERPRETE como "planeja implementar em breve"
+
+2. ✅ TRANSFORME dados técnicos em INSIGHTS estratégicos:
+   - "Domina implementação de IA + ferramentas X,Y" → "Especialista em IA usando X e Y"
+   - "Desafio: integração" → "Busca superar desafios de integração de IA"
+   - "Objetivo: automação" → "Visa automatizar processos com IA"
+
+3. 🎯 FOQUE em BENEFÍCIOS MÚTUOS tangíveis baseados em:
+   - Objetivos estratégicos específicos
+   - Desafios reais mencionados
+   - Áreas de impacto compatíveis
+   - Resultados esperados concretos
+
+4. 🚫 NUNCA use:
+   - Frases do tipo "nível X em IA"
+   - Termos técnicos como "advanced", "intermediate", "basic", "avançado", "intermediário", "básico"
+   - Palavras como "urgência alta/média/baixa" ou "high/medium/low urgency"
+   - Qualquer dado cru do prompt sem interpretação
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -390,10 +417,10 @@ ${u2Skills}` : ''}
    - Impactar a área: "${u1ImpactArea}"
    - Alcançar resultado: "${u1ExpectedResult}"
 
-3. **CONTEXTO DE IA**: Se ambos trabalham com IA, cite:
-   - Níveis de experiência (${u1AiLevel} vs ${u2AiLevel})
-   - Ferramentas específicas
-   - Desafios complementares
+3. **CONTEXTO DE IA**: Se ambos trabalham com IA, INTERPRETE e cite:
+   - Expertise contextualizada (não use "nível X", diga "domina IA" ou "está explorando IA")
+   - Ferramentas específicas que usam
+   - Como podem se complementar nos desafios de IA
 
 4. **ESPECIFICIDADE MÁXIMA**: 
    - Use dados REAIS (setor, objetivo, métrica, desafio)
@@ -407,7 +434,7 @@ ${u2Skills}` : ''}
    - Tom profissional e consultivo
 
 6. **EXEMPLO DE COPY BOA**:
-"**${targetUser?.name}** pode acelerar o objetivo de ${currentUser?.name} de **${u1MainGoal}** através de expertise em **${u2ImpactArea}**. Com nível **${u2AiLevel}** em IA e experiência em ${u2CompanySector}, pode ajudar a superar o desafio de **${u1MainObstacle}** e atingir **${u1ExpectedResult}** em 90 dias."
+"**${targetUser?.name}** pode acelerar o objetivo de ${currentUser?.name} de **${u1MainGoal}** através de expertise em **${u2ImpactArea}**. ${u2AiLevel === 'advanced' || u2AiLevel === 'avançado' ? 'Com domínio em implementação de IA' : u2AiLevel === 'intermediate' || u2AiLevel === 'intermediário' ? 'Com experiência prática em IA' : 'Com interesse em explorar IA'} e atuação em ${u2CompanySector}, pode ajudar a superar **${u1MainObstacle}** e atingir **${u1ExpectedResult}** em 90 dias."
 
 NÃO USE:
 ❌ "Grande oportunidade de networking"
@@ -456,9 +483,30 @@ Gere a copy AGORA:`;
     }
 
     const aiData = await aiResponse.json();
-    const generatedCopy = aiData.choices?.[0]?.message?.content || '';
+    let generatedCopy = aiData.choices?.[0]?.message?.content || '';
 
     console.log('✅ Copy gerada com sucesso');
+
+    // 🛡️ VALIDAÇÃO: Garantir que copy NÃO contém termos proibidos
+    const forbiddenTerms = [
+      /nível\s+(advanced|intermediate|basic|avançado|intermediário|básico)/gi,
+      /urgência\s+(alta|média|baixa|high|medium|low)/gi,
+      /\b(advanced|intermediate|basic)\b/gi,
+    ];
+
+    let hasForbiddenTerms = false;
+    forbiddenTerms.forEach(regex => {
+      if (regex.test(generatedCopy)) {
+        console.warn(`⚠️ Copy contém termo proibido detectado por regex: ${regex}`);
+        hasForbiddenTerms = true;
+        // Remover o termo proibido como fallback
+        generatedCopy = generatedCopy.replace(regex, '');
+      }
+    });
+
+    if (hasForbiddenTerms) {
+      console.warn('⚠️ Copy foi limpa de termos técnicos não interpretados');
+    }
 
     // 💾 SALVAR A COPY NO BANCO PARA CACHE
     const { error: updateError } = await supabase
