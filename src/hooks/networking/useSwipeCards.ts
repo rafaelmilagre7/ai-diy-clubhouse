@@ -185,12 +185,15 @@ export const useSwipeCards = () => {
     }
   }, [user?.id, loadedUserIds, hasMoreProfiles]);
 
-  // Gerar copy para um card específico
+  // Gerar copy para um card específico com fallback gracioso
   const generateCopy = useCallback(async (targetUserId: string) => {
     if (!user?.id || copyCache[targetUserId] || generatingCopy.has(targetUserId)) return;
 
     const cardIndex = cards.findIndex(c => c.userId === targetUserId);
     if (cardIndex === -1) return;
+
+    const cardName = cards[cardIndex]?.name || 'este profissional';
+    const fallbackCopy = `Conecte-se com ${cardName} para explorar oportunidades estratégicas de parceria e crescimento.`;
 
     // Marcar como gerando
     setGeneratingCopy(prev => new Set(prev).add(targetUserId));
@@ -212,7 +215,7 @@ export const useSwipeCards = () => {
 
       if (error) throw error;
 
-      const generatedCopy = data.copy;
+      const generatedCopy = data?.copy || fallbackCopy;
 
       // Atualizar card com a copy gerada
       setCards(prev => {
@@ -239,30 +242,30 @@ export const useSwipeCards = () => {
       });
 
     } catch (error) {
-      console.error('Erro ao gerar copy:', error);
+      console.warn('⚠️ Falha ao gerar copy com IA, usando fallback:', error);
       
-      // Marcar como não-loading e usar copy padrão
+      // Usar copy genérica e NÃO mostrar toast (silencioso)
       setCards(prev => {
         const updated = [...prev];
         updated[cardIndex] = {
           ...updated[cardIndex],
-          connectionCopy: 'Vocês atuam em setores complementares e podem se beneficiar de uma troca estratégica. Vale a pena conhecer!',
+          connectionCopy: fallbackCopy,
           isLoading: false,
         };
         return updated;
       });
+
+      // Atualizar cache com fallback
+      setCopyCache(prev => ({
+        ...prev,
+        [targetUserId]: fallbackCopy,
+      }));
 
       // Limpar estado de geração
       setGeneratingCopy(prev => {
         const updated = new Set(prev);
         updated.delete(targetUserId);
         return updated;
-      });
-
-      toast({
-        title: 'Não foi possível gerar a descrição personalizada',
-        description: 'Mas você ainda pode se conectar!',
-        variant: 'default',
       });
     }
   }, [user?.id, cards, copyCache, generatingCopy, toast]);
@@ -292,31 +295,37 @@ export const useSwipeCards = () => {
     }
   }, [currentIndex]);
 
-  // Progressive Loading: Gerar copy um por vez com feedback visual
+  // Progressive Loading com Rate Limiter: Gerar copy em lotes com delay
   useEffect(() => {
     const cardsNeedingCopy = cards.filter(c => !c.connectionCopy && !c.isLoading && !generatingCopy.has(c.userId));
     
     if (cardsNeedingCopy.length > 0) {
       setTotalToGenerate(cardsNeedingCopy.length);
       
-      // Processar progressivamente
-      const processNext = async (index: number) => {
-        if (index >= cardsNeedingCopy.length) {
-          setGeneratedCount(0); // Reset após finalizar
-          setTotalToGenerate(0);
-          return;
+      // 🚦 RATE LIMITER: Processar 3 cards por vez com delay de 2s entre lotes
+      const batchSize = 3;
+      const batchDelay = 2000;
+      
+      const processBatches = async () => {
+        for (let i = 0; i < cardsNeedingCopy.length; i += batchSize) {
+          const batch = cardsNeedingCopy.slice(i, i + batchSize);
+          setGeneratedCount(Math.min(i + batchSize, cardsNeedingCopy.length));
+          
+          // Processar lote em paralelo
+          await Promise.all(batch.map(card => generateCopy(card.userId)));
+          
+          // Delay entre lotes (exceto no último)
+          if (i + batchSize < cardsNeedingCopy.length) {
+            await new Promise(resolve => setTimeout(resolve, batchDelay));
+          }
         }
         
-        const card = cardsNeedingCopy[index];
-        setGeneratedCount(index + 1);
-        
-        await generateCopy(card.userId);
-        
-        // Delay de 800ms entre gerações para UX suave
-        setTimeout(() => processNext(index + 1), 800);
+        // Reset após finalizar
+        setGeneratedCount(0);
+        setTotalToGenerate(0);
       };
       
-      processNext(0);
+      processBatches();
     }
   }, [cards, generateCopy, generatingCopy]);
 

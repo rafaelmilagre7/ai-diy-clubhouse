@@ -5,12 +5,19 @@ import { useResetNetworking } from "@/hooks/networking/useResetNetworking";
 import { SwipeCard } from "@/components/networking/swipe/SwipeCard";
 import { ContactModal } from "@/components/networking/modals/ContactModal";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Loader2, Network, Brain, RotateCcw } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Network, Brain, RotateCcw, AlertCircle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { motion } from "framer-motion";
+import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const Networking = () => {
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+  const [isEmergencyResetting, setIsEmergencyResetting] = useState(false);
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  
   const {
     currentCard,
     nextCard,
@@ -28,6 +35,46 @@ const Networking = () => {
   } = useSwipeCards();
   
   const { resetNetworking, isResetting } = useResetNetworking();
+
+  // 🆘 BOTÃO DE EMERGÊNCIA: Reset completo forçado
+  const handleEmergencyReset = async () => {
+    setIsEmergencyResetting(true);
+    
+    try {
+      // 1. Limpar cache local
+      localStorage.removeItem('networking-cards');
+      sessionStorage.clear();
+      
+      // 2. Invalidar todas as queries
+      queryClient.clear();
+      
+      // 3. Tentar reset no backend (não falhar se der erro)
+      try {
+        await supabase.functions.invoke('reset-user-networking');
+      } catch (e) {
+        console.warn('⚠️ Reset backend falhou, mas continuando com limpeza local...');
+      }
+      
+      toast({
+        title: "Reset de emergência concluído",
+        description: "Recarregando a página...",
+      });
+      
+      // 4. Forçar reload após 1s
+      setTimeout(() => {
+        window.location.href = '/networking';
+      }, 1000);
+      
+    } catch (error) {
+      console.error('Erro no reset de emergência:', error);
+      toast({
+        title: "Erro no reset",
+        description: "Tente recarregar a página manualmente",
+        variant: "destructive",
+      });
+      setIsEmergencyResetting(false);
+    }
+  };
 
   if (isLoadingCards) {
     return (
@@ -154,23 +201,23 @@ const Networking = () => {
                   </Button>
                 </motion.div>
                 
-                {/* Botão temporário de reset */}
+                {/* Botão de emergência robusto */}
                 <Button
-                  onClick={() => resetNetworking()}
-                  disabled={isResetting || isGenerating}
+                  onClick={handleEmergencyReset}
+                  disabled={isEmergencyResetting || isGenerating}
                   size="sm"
                   variant="ghost"
-                  className="text-xs text-muted-foreground hover:text-foreground gap-2"
+                  className="text-xs gap-2 border border-red-500/20 text-red-400 hover:bg-red-500/10 hover:text-red-300 hover:border-red-500/30"
                 >
-                  {isResetting ? (
+                  {isEmergencyResetting ? (
                     <>
                       <Loader2 className="h-3 w-3 animate-spin" />
-                      Resetando...
+                      Resetando tudo...
                     </>
                   ) : (
                     <>
-                      <RotateCcw className="h-3 w-3" />
-                      Reset Completo (Dev)
+                      <AlertCircle className="h-3 w-3" />
+                      🆘 Reset Emergência
                     </>
                   )}
                 </Button>
@@ -261,23 +308,23 @@ const Networking = () => {
               </Button>
             </motion.div>
             
-            {/* Botão temporário de reset */}
+            {/* Botão de emergência robusto */}
             <Button
-              onClick={() => resetNetworking()}
-              disabled={isResetting || isGenerating}
+              onClick={handleEmergencyReset}
+              disabled={isEmergencyResetting || isGenerating}
               size="sm"
               variant="outline"
               className="text-xs gap-2 border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-300 hover:border-red-500/50"
             >
-              {isResetting ? (
+              {isEmergencyResetting ? (
                 <>
                   <Loader2 className="h-3 w-3 animate-spin" />
-                  Resetando...
+                  Resetando tudo...
                 </>
               ) : (
                 <>
-                  <RotateCcw className="h-3 w-3" />
-                  🔧 Reset Completo (Dev)
+                  <AlertCircle className="h-3 w-3" />
+                  🆘 Reset Emergência
                 </>
               )}
             </Button>

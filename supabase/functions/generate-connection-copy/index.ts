@@ -34,6 +34,22 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    // ✅ VERIFICAR SE JÁ EXISTE COPY CACHEADA NO BANCO
+    const { data: existingMatch } = await supabase
+      .from('strategic_matches_v2')
+      .select('connection_copy')
+      .eq('user_id', currentUserId)
+      .eq('matched_user_id', targetUserId)
+      .maybeSingle();
+
+    if (existingMatch?.connection_copy) {
+      console.log('✅ Usando copy cacheada do banco');
+      return new Response(
+        JSON.stringify({ copy: existingMatch.connection_copy }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // QUERY 1: Buscar dados básicos de profiles
     const { data: basicProfiles, error: basicProfilesError } = await supabase
       .from('profiles')
@@ -444,7 +460,7 @@ Gere a copy AGORA:`;
 
     console.log('✅ Copy gerada com sucesso');
 
-    // Salvar a copy no match existente (tabela strategic_matches_v2 usa matched_user_id, não matched_user_id)
+    // 💾 SALVAR A COPY NO BANCO PARA CACHE
     const { error: updateError } = await supabase
       .from('strategic_matches_v2')
       .update({ connection_copy: generatedCopy })
@@ -452,8 +468,10 @@ Gere a copy AGORA:`;
       .eq('matched_user_id', targetUserId);
 
     if (updateError) {
-      console.error('Erro ao salvar copy:', updateError);
+      console.warn('⚠️ Erro ao salvar copy no cache:', updateError);
       // Não bloqueia a resposta, apenas loga o erro
+    } else {
+      console.log('✅ Copy salva no cache com sucesso');
     }
 
     // Calcular score básico (pode ser melhorado depois)
