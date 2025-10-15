@@ -78,19 +78,20 @@ serve(async (req) => {
       console.log('Preferências padrão criadas:', newPreferences);
     }
 
-    // RESET: Deletar todos os matches existentes para este usuário antes de gerar novos
-    console.log('Resetando matches existentes para maximizar fit de networking...');
-    const { error: deleteError } = await supabase
+    // Buscar IDs de usuários que já têm match (pendentes ou aceitos) para evitar duplicatas
+    console.log('Buscando matches existentes...');
+    const { data: existingMatches, error: matchesError } = await supabase
       .from('strategic_matches_v2')
-      .delete()
+      .select('matched_user_id')
       .eq('user_id', user_id);
 
-    if (deleteError) {
-      console.error('Erro ao deletar matches existentes:', deleteError);
-      // Não falhar aqui, apenas logar o erro
-    } else {
-      console.log('Matches existentes resetados com sucesso');
+    if (matchesError) {
+      console.error('Erro ao buscar matches existentes:', matchesError);
     }
+
+    const existingMatchIds = new Set<string>(existingMatches?.map(m => m.matched_user_id) || []);
+    console.log(`Usuário já tem ${existingMatchIds.size} matches existentes`);
+
 
     const currentDate = new Date();
     const monthYear = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
@@ -144,6 +145,8 @@ serve(async (req) => {
       }
     });
 
+    console.log(`Usuário já conectado com ${connectedUserIds.size} pessoas`);
+
     // Buscar usuários com onboarding completo usando profiles.onboarding_completed
     console.log('Buscando usuários com onboarding completo...');
     
@@ -180,11 +183,11 @@ serve(async (req) => {
       }
 
       potentialMatches = (allProfiles || [])
-        .filter(profile => !connectedUserIds.has(profile.id));
+        .filter(profile => !connectedUserIds.has(profile.id) && !existingMatchIds.has(profile.id));
     } else {
-      // Usar usuários com onboarding completo
+      // Usar usuários com onboarding completo, excluindo já conectados e já com match
       potentialMatches = candidatesWithOnboarding
-        .filter(candidate => !connectedUserIds.has(candidate.id));
+        .filter(candidate => !connectedUserIds.has(candidate.id) && !existingMatchIds.has(candidate.id));
     }
 
     if (!potentialMatches || potentialMatches.length === 0) {

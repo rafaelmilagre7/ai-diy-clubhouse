@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { LiquidGlassCard } from '@/components/ui/LiquidGlassCard';
-import { Brain, Loader2, Sparkles } from 'lucide-react';
+import { Brain, Loader2, Users } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface LoadMoreCardProps {
@@ -22,16 +22,15 @@ export const LoadMoreCard = ({ onGenerateMore, isGenerating }: LoadMoreCardProps
       >
         <motion.div
           animate={{ 
-            scale: [1, 1.1, 1],
-            rotate: [0, 5, -5, 0]
+            scale: [1, 1.05, 1]
           }}
           transition={{ 
-            duration: 3,
+            duration: 2,
             repeat: Infinity,
             ease: "easeInOut"
           }}
         >
-          <Sparkles className="h-16 w-16 text-aurora mb-6" />
+          <Users className="h-16 w-16 text-aurora mb-6" />
         </motion.div>
         
         <h3 className="text-2xl font-bold mb-3 bg-gradient-to-r from-aurora to-viverblue bg-clip-text text-transparent">
