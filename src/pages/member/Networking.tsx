@@ -211,71 +211,47 @@ const Networking = () => {
           </p>
         </div>
 
-        {/* Card ISOLADO no centro */}
-        <div className="relative max-w-xl mx-auto px-4">
-          {currentIndex === totalCards - 1 ? (
-            <LoadMoreCard 
-              onGenerateMore={() => generateMatches()}
-              isGenerating={isGenerating}
-            />
-          ) : (
-            <SwipeCard 
-              card={currentCard} 
-              onOpenContact={() => setIsContactModalOpen(true)}
-            />
-          )}
-        </div>
-
-        {/* Botões Laterais FIXOS (Desktop e Tablet) */}
-        <div className="hidden lg:block">
-          {/* Botão ANTERIOR - Esquerda */}
+        {/* Container com card centralizado e botões nas laterais */}
+        <div className="relative max-w-5xl mx-auto flex items-center justify-center gap-8">
+          
+          {/* Botão ANTERIOR - Lateral ESQUERDA com cores mais escuras */}
           <Button
             onClick={previousCard}
             disabled={!hasPrevious}
             size="lg"
-            className="fixed left-4 xl:left-8 top-1/2 -translate-y-1/2 z-40 h-16 w-16 xl:h-20 xl:w-20 rounded-full shadow-2xl bg-gradient-to-br from-slate-700 to-slate-800 hover:from-slate-600 hover:to-slate-700 text-white border border-slate-600/50 disabled:opacity-30 disabled:grayscale disabled:cursor-not-allowed transition-all hover:scale-110 disabled:hover:scale-100"
+            className="h-20 w-20 rounded-full shadow-2xl bg-gradient-to-br from-[#0ABAB5] to-[#065F5D] hover:from-[#088A87] hover:to-[#044D4B] text-white border-0 disabled:opacity-20 transition-all shrink-0 hover:scale-110 disabled:hover:scale-100"
           >
-            <ChevronLeft className="h-8 w-8 xl:h-10 xl:w-10" />
+            <ChevronLeft className="h-10 w-10" />
           </Button>
-          
-          {/* Botão PRÓXIMO - Direita */}
+
+          {/* Card no centro ou LoadMore no último */}
+          <div className="flex-1 max-w-md">
+            {currentIndex === totalCards - 1 ? (
+              <LoadMoreCard 
+                onGenerateMore={() => generateMatches()}
+                isGenerating={isGenerating}
+              />
+            ) : (
+              <SwipeCard 
+                card={currentCard} 
+                onOpenContact={() => setIsContactModalOpen(true)}
+              />
+            )}
+          </div>
+
+          {/* Botão PRÓXIMO - Lateral DIREITA com cores mais escuras */}
           <Button
             onClick={nextCard}
             disabled={!hasNext}
             size="lg"
-            className="fixed right-4 xl:right-8 top-1/2 -translate-y-1/2 z-40 h-16 w-16 xl:h-20 xl:w-20 rounded-full shadow-2xl bg-gradient-to-br from-slate-700 to-slate-900 hover:from-slate-600 hover:to-slate-800 text-white border border-slate-600/50 disabled:opacity-30 disabled:grayscale disabled:cursor-not-allowed transition-all hover:scale-110 disabled:hover:scale-100"
+            className="h-20 w-20 rounded-full shadow-2xl bg-gradient-to-br from-[#0ABAB5] via-[#088A87] to-[#065F5D] hover:from-[#088A87] hover:via-[#065F5D] hover:to-[#044D4B] hover:shadow-aurora/30 text-white border-0 disabled:opacity-20 transition-all shrink-0 hover:scale-110 disabled:hover:scale-100"
           >
-            <ChevronRight className="h-8 w-8 xl:h-10 xl:w-10" />
+            <ChevronRight className="h-10 w-10" />
           </Button>
         </div>
 
-        {/* Barra de Navegação Inferior (Mobile) */}
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 pb-safe">
-          <div className="flex gap-3 p-4 bg-gradient-to-t from-background via-background/98 to-transparent backdrop-blur-xl border-t border-border/50">
-            <Button
-              onClick={previousCard}
-              disabled={!hasPrevious}
-              size="lg"
-              className="flex-1 h-14 rounded-2xl bg-gradient-to-br from-slate-700 to-slate-800 hover:from-slate-600 hover:to-slate-700 text-white border border-slate-600/50 disabled:opacity-30 disabled:grayscale disabled:cursor-not-allowed transition-all shadow-lg"
-            >
-              <ChevronLeft className="h-6 w-6 mr-2" />
-              <span className="text-sm font-medium">Anterior</span>
-            </Button>
-            
-            <Button
-              onClick={nextCard}
-              disabled={!hasNext}
-              size="lg"
-              className="flex-1 h-14 rounded-2xl bg-gradient-to-br from-slate-700 to-slate-900 hover:from-slate-600 hover:to-slate-800 text-white border border-slate-600/50 disabled:opacity-30 disabled:grayscale disabled:cursor-not-allowed transition-all shadow-lg"
-            >
-              <span className="text-sm font-medium">Próximo</span>
-              <ChevronRight className="h-6 w-6 ml-2" />
-            </Button>
-          </div>
-        </div>
-
-        {/* Contador abaixo do card */}
-        <div className="relative text-center space-y-3 pb-24 lg:pb-0">
+        {/* Contador abaixo do card - mais sofisticado */}
+        <div className="relative text-center space-y-3">
           <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full liquid-glass-card border border-aurora/20 shadow-lg">
             <div className="flex items-center gap-2">
               <div className="h-2 w-2 rounded-full bg-aurora animate-pulse" />

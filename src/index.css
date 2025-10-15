@@ -342,15 +342,3 @@
   @apply flex items-center justify-center text-white text-sm font-bold shadow-lg;
   @apply transition-transform duration-300 hover:scale-110;
 }
-
-/* Safe area para dispositivos iOS (notch) */
-.pb-safe {
-  padding-bottom: env(safe-area-inset-bottom, 0);
-}
-
-/* Garantir que a barra inferior não seja coberta */
-@supports (padding-bottom: env(safe-area-inset-bottom)) {
-  .lg\:hidden.fixed.bottom-0 {
-    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
-  }
-}
