@@ -244,7 +244,7 @@ export const useSwipeCards = () => {
         const updated = [...prev];
         updated[cardIndex] = {
           ...updated[cardIndex],
-          connectionCopy: 'Essa pode ser uma ótima oportunidade de conexão para expandir sua rede profissional.',
+          connectionCopy: 'Vocês atuam em setores complementares e podem se beneficiar de uma troca estratégica. Vale a pena conhecer!',
           isLoading: false,
         };
         return updated;
