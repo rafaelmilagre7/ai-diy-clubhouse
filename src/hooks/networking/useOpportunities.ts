@@ -169,7 +169,7 @@ export const useCreateOpportunity = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['networking-opportunities'] });
-      showSuccessToast('🎉 Oportunidade criada!', 'Sua oportunidade está visível no mural');
+      showSuccessToast('🎉 Oportunidade criada!', 'Sua oportunidade está visível no marketplace');
     },
     onError: (error: any, _newOpportunity, context) => {
       if (context?.previousOpportunities) {
@@ -234,7 +234,7 @@ export const useDeleteOpportunity = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['networking-opportunities'] });
-      showSuccessToast('Oportunidade removida', 'A oportunidade foi excluída do mural');
+      showSuccessToast('Oportunidade removida', 'A oportunidade foi excluída do marketplace');
     },
     onError: (error: any) => {
       showErrorToast('Erro ao remover oportunidade', error.message);

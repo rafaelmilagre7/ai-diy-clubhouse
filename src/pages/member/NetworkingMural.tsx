@@ -116,7 +116,7 @@ export default function NetworkingMural() {
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-8">
         <div className="space-y-2">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-aurora via-viverblue to-operational bg-clip-text text-transparent">
-            Mural de Oportunidades
+            Marketplace
           </h1>
           <p className="text-base text-muted-foreground max-w-2xl">
             Descubra e compartilhe oportunidades de negócio com a comunidade

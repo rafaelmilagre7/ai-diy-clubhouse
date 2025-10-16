@@ -134,7 +134,7 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
               />
               <TooltipNavItem
                 to="/networking/mural"
-                label="Mural de Oportunidades"
+                label="Marketplace"
                 icon={Lightbulb}
                 sidebarOpen={sidebarOpen}
                 isNew={true}

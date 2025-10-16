@@ -53,7 +53,7 @@ export const NewOpportunitiesBanner: React.FC<NewOpportunitiesBannerProps> = ({
                   🎉 {count} {count === 1 ? 'Nova oportunidade' : 'Novas oportunidades'}!
                 </h3>
                 <p className="text-emerald-50 text-xs mt-0.5">
-                  {count === 1 ? 'Foi adicionada' : 'Foram adicionadas'} ao mural
+                  {count === 1 ? 'Foi adicionada' : 'Foram adicionadas'} ao marketplace
                 </p>
               </div>
 
