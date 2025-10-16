@@ -51,7 +51,7 @@ export const UnifiedCertificateViewer = ({
             
             <div className="flex items-center justify-center gap-2 mt-4">
               <div className="w-8 h-0.5 aurora-gradient rounded-full"></div>
-              <span className="text-sm font-medium text-viverblue">VIVER DE IA</span>
+              <span className="text-sm font-medium text-aurora-primary">VIVER DE IA</span>
               <div className="w-8 h-0.5 aurora-gradient rounded-full"></div>
             </div>
           </CardHeader>

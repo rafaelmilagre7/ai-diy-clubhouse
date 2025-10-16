@@ -50,9 +50,9 @@ export const CertificateEligibility = ({
   
   if (hasCertificate) {
     return (
-      <Alert className="bg-viverblue/10 border-viverblue/20">
-        <Award className="h-4 w-4 text-viverblue" />
-        <AlertTitle className="text-viverblue">Parabéns!</AlertTitle>
+      <Alert className="bg-aurora-primary/10 border-aurora-primary/20">
+        <Award className="h-4 w-4 text-aurora-primary" />
+        <AlertTitle className="text-aurora-primary">Parabéns!</AlertTitle>
         <AlertDescription className="text-gray-300">
           Você já possui o certificado de conclusão deste curso.
         </AlertDescription>
@@ -86,7 +86,8 @@ export const CertificateEligibility = ({
         <Button
           onClick={() => generatePendingCertificates()}
           disabled={isGeneratingPending}
-          className="w-full bg-gradient-to-r from-viverblue to-viverblue-light hover:from-viverblue/90 hover:to-viverblue-light/90 text-white"
+          variant="aurora-primary"
+          className="w-full"
         >
           {isGeneratingPending ? (
             <>

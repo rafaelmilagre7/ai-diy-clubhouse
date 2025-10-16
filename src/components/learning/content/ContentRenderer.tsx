@@ -27,8 +27,8 @@ export const ContentRenderer = ({ content }: ContentRendererProps) => {
       .replace(/<ul/g, '<ul class="list-disc pl-5 mb-4 text-neutral-200"')
       .replace(/<ol/g, '<ol class="list-decimal pl-5 mb-4 text-neutral-200"')
       .replace(/<li/g, '<li class="mb-1 text-neutral-200"')
-      .replace(/<a /g, '<a class="text-viverblue hover:text-viverblue-light underline" ')
-      .replace(/<blockquote/g, '<blockquote class="pl-4 border-l-2 border-viverblue/30 italic text-neutral-300 my-4"')
+      .replace(/<a /g, '<a class="text-aurora-primary hover:text-aurora-primary-light underline" ')
+      .replace(/<blockquote/g, '<blockquote class="pl-4 border-l-2 border-aurora-primary/30 italic text-neutral-300 my-4"')
       .replace(/<pre/g, '<pre class="bg-background p-4 rounded-md overflow-auto my-4"')
       .replace(/<code/g, '<code class="font-mono bg-surface-elevated px-1 rounded"');
     

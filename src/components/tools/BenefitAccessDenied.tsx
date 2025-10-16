@@ -44,7 +44,7 @@ export function BenefitAccessDenied({
         
         <Button 
           onClick={() => navigate("/dashboard")}
-          className="bg-[#10b981] hover:bg-[#10b981]/90"
+          className="bg-operational hover:bg-operational/90"
         >
           Ir para Dashboard
         </Button>

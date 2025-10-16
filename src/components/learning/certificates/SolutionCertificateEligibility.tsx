@@ -60,9 +60,9 @@ export const SolutionCertificateEligibility = ({
   
   if (hasCertificate) {
     return (
-      <Alert className="bg-viverblue/10 border-viverblue/20">
-        <Award className="h-4 w-4 text-viverblue" />
-        <AlertTitle className="text-viverblue">Parabéns!</AlertTitle>
+      <Alert className="bg-aurora-primary/10 border-aurora-primary/20">
+        <Award className="h-4 w-4 text-aurora-primary" />
+        <AlertTitle className="text-aurora-primary">Parabéns!</AlertTitle>
         <AlertDescription className="text-gray-300">
           Você já possui o certificado de implementação desta solução.
         </AlertDescription>
@@ -96,7 +96,8 @@ export const SolutionCertificateEligibility = ({
         <Button
           onClick={() => generateCertificate(solutionId)}
           disabled={isGenerating}
-          className="w-full bg-gradient-to-r from-viverblue to-viverblue-light hover:from-viverblue/90 hover:to-viverblue-light/90 text-white"
+          variant="aurora-primary"
+          className="w-full"
         >
           {isGenerating ? (
             <>

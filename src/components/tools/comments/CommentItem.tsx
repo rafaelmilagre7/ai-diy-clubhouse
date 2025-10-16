@@ -56,7 +56,7 @@ export const CommentItem = ({
       "rounded-lg p-4", 
       isReply 
         ? "bg-backgroundLight/70" 
-        : "bg-[#151823] border border-white/10 hover:border-white/20 transition-colors"
+        : "bg-card border border-border hover:border-border transition-colors"
     )}>
       <div className="flex gap-3">
         <Avatar className="h-10 w-10 border border-white/10">
@@ -65,7 +65,7 @@ export const CommentItem = ({
             alt={comment.profiles?.name || 'Usuário'}
             className="object-cover"
           />
-          <AvatarFallback className="bg-viverblue/10 text-viverblue font-medium">
+          <AvatarFallback className="bg-aurora-primary/10 text-aurora-primary font-medium">
             {getInitials(comment.profiles?.name || 'Usuário')}
           </AvatarFallback>
         </Avatar>
@@ -75,7 +75,7 @@ export const CommentItem = ({
             <span className="font-medium text-textPrimary">{comment.profiles?.name || 'Usuário'}</span>
             
             {isAdmin && (
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-viverblue/10 text-viverblue">
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-aurora-primary/10 text-aurora-primary">
                 <Shield className="h-3 w-3 mr-1" />
                 Admin
               </span>
@@ -96,8 +96,8 @@ export const CommentItem = ({
               size="sm" 
               className={cn(
                 "text-xs flex items-center gap-1 h-7 px-2 text-textSecondary hover:text-textPrimary",
-                hasLiked && "text-viverblue hover:text-viverblue/80"
-              )} 
+                hasLiked && "text-aurora-primary hover:text-aurora-primary/80"
+              )}
               onClick={onLike}
             >
               <ThumbsUp className="h-3.5 w-3.5" />

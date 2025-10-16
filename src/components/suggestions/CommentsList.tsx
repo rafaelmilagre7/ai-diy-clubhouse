@@ -33,8 +33,8 @@ const CommentsList = ({ comments, isLoading }: CommentsListProps) => {
 
   if (comments.length === 0) {
     return (
-      <Card className="p-8 text-center mt-4 border-dashed border-2 border-viverblue/20 bg-viverblue/5">
-        <MessageSquare className="h-12 w-12 mx-auto text-viverblue/40 mb-4" />
+      <Card className="p-8 text-center mt-4 border-dashed border-2 border-aurora-primary/20 bg-aurora-primary/5">
+        <MessageSquare className="h-12 w-12 mx-auto text-aurora-primary/40 mb-4" />
         <p className="text-textSecondary">
           Seja o primeiro a comentar.
         </p>
@@ -52,11 +52,11 @@ const CommentsList = ({ comments, isLoading }: CommentsListProps) => {
         );
 
         return (
-          <Card key={comment.id} className="p-4 border-white/10 bg-[#151823] hover:border-white/20 transition-colors">
+          <Card key={comment.id} className="p-4 border-border bg-card hover:border-border transition-colors">
             <div className="flex gap-3">
-              <Avatar className="ring-2 ring-viverblue/10">
+              <Avatar className="ring-2 ring-aurora-primary/10">
                 <AvatarImage src={comment.profiles?.avatar_url || ''} />
-                <AvatarFallback className="bg-viverblue/10 text-viverblue">
+                <AvatarFallback className="bg-aurora-primary/10 text-aurora-primary">
                   {comment.profiles?.name?.charAt(0) || '?'}
                 </AvatarFallback>
               </Avatar>
@@ -66,7 +66,7 @@ const CommentsList = ({ comments, isLoading }: CommentsListProps) => {
                     <p className="font-semibold text-textPrimary">
                       {comment.profiles?.name || 'Usuário'}
                       {comment.is_official && (
-                        <span className="ml-2 text-xs px-2 py-0.5 bg-viverblue/10 text-viverblue rounded-full">
+                        <span className="ml-2 text-xs px-2 py-0.5 bg-aurora-primary/10 text-aurora-primary rounded-full">
                           Oficial
                         </span>
                       )}

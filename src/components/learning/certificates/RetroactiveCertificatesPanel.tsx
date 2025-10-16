@@ -20,7 +20,7 @@ export const RetroactiveCertificatesPanel = () => {
     <Card className="bg-card border-border">
       <CardHeader>
         <CardTitle className="text-white flex items-center gap-2">
-          <Award className="h-5 w-5 text-viverblue" />
+          <Award className="h-5 w-5 text-aurora-primary" />
           Gerar Certificados Retroativos
         </CardTitle>
       </CardHeader>
@@ -44,7 +44,7 @@ export const RetroactiveCertificatesPanel = () => {
             <Button
               onClick={() => generateUserRetroactiveCertificates()}
               disabled={isGeneratingUser}
-              className="bg-viverblue hover:bg-viverblue/90 text-white"
+              variant="aurora-primary"
             >
               {isGeneratingUser ? (
                 <>

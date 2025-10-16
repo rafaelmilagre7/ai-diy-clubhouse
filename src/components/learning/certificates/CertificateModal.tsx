@@ -163,7 +163,7 @@ export const CertificateModal = ({ certificate, isOpen, onClose }: CertificateMo
             <Button
               onClick={handleOpenForPrint}
               disabled={isGenerating}
-              className="bg-viverblue hover:bg-viverblue/90 text-white"
+              variant="aurora-primary"
             >
               <Printer className="h-4 w-4 mr-2" />
               {isGenerating ? 'Preparando...' : 'Visualizar para Imprimir'}
@@ -173,7 +173,7 @@ export const CertificateModal = ({ certificate, isOpen, onClose }: CertificateMo
               onClick={handleDownload}
               disabled={isGenerating}
               variant="outline"
-              className="border-viverblue/50 text-viverblue hover:bg-viverblue/10"
+              className="border-aurora-primary/50 text-aurora-primary hover:bg-aurora-primary/10"
             >
               <Download className="h-4 w-4 mr-2" />
               {isGenerating ? 'Gerando PDF...' : 'Baixar PDF'}

@@ -35,7 +35,7 @@ const CommentForm = ({
                   value={comment}
                   onChange={(e) => onCommentChange(e.target.value)}
                   rows={3}
-                  className="bg-[#151823] border-white/10 text-textPrimary resize-y focus-visible:ring-viverblue"
+                  className="bg-card border-border text-textPrimary resize-y focus-visible:ring-aurora-primary"
                 />
               </FormControl>
             </FormItem>
@@ -45,7 +45,7 @@ const CommentForm = ({
           <Button 
             type="submit" 
             disabled={isSubmitting || !comment.trim()}
-            className="bg-viverblue hover:bg-viverblue/90 text-white"
+            variant="aurora-primary"
           >
             <Send className="mr-2 h-4 w-4" />
             {isSubmitting ? 'Enviando...' : 'Enviar comentário'}

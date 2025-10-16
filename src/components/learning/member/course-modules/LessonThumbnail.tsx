@@ -50,7 +50,7 @@ export const LessonThumbnail = ({
               className="w-full h-full object-cover transition-all duration-500 group-hover:scale-110"
             />
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-viverblue via-aurora to-primary flex items-center justify-center relative overflow-hidden">
+            <div className="w-full h-full bg-gradient-to-br from-aurora-primary via-aurora-primary-light to-primary flex items-center justify-center relative overflow-hidden">
               {/* Background Pattern */}
               <div className="absolute inset-0 opacity-20">
                 <div className="absolute top-4 left-4 w-8 h-8 bg-white/20 rounded-full"></div>
@@ -187,7 +187,7 @@ export const LessonThumbnail = ({
           {progress > 0 && !isCompleted && (
             <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-black/30">
               <div 
-                className="h-full bg-gradient-to-r from-viverblue to-aurora transition-all duration-500" 
+                className="h-full bg-gradient-to-r from-aurora-primary to-aurora-primary-light transition-all duration-500" 
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -215,7 +215,7 @@ export const LessonThumbnail = ({
           {inProgress && !isCompleted && (
             <Badge 
               variant="secondary" 
-              className="text-xs bg-viverblue/10 text-viverblue border-viverblue/20"
+              className="text-xs bg-aurora-primary/10 text-aurora-primary border-aurora-primary/20"
             >
               {progress}% concluído
             </Badge>

@@ -37,7 +37,7 @@ export const CourseHeader: React.FC<CourseHeaderProps> = ({
             className="w-full h-full object-cover"
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-viverblue via-aurora to-primary flex items-center justify-center">
+          <div className="w-full h-full bg-gradient-to-br from-aurora-primary via-aurora-primary-light to-primary flex items-center justify-center">
             <Book className="h-32 w-32 text-white/20" />
           </div>
         )}

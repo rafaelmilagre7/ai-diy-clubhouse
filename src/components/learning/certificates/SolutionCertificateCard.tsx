@@ -52,10 +52,10 @@ export const SolutionCertificateCard = ({
         };
       default:
         return {
-          color: 'from-viverblue/20 via-cyan-400/15 to-blue-400/10',
-          badgeColor: 'bg-viverblue/20 text-viverblue border-viverblue/30',
-          iconColor: 'text-viverblue',
-          buttonColor: 'from-viverblue to-cyan-500 hover:from-viverblue/90 hover:to-cyan-600',
+          color: 'from-aurora-primary/20 via-cyan-400/15 to-blue-400/10',
+          badgeColor: 'bg-aurora-primary/20 text-aurora-primary border-aurora-primary/30',
+          iconColor: 'text-aurora-primary',
+          buttonColor: 'from-aurora-primary to-cyan-500 hover:from-aurora-primary/90 hover:to-cyan-600',
           icon: Award
         };
     }
@@ -114,7 +114,7 @@ export const SolutionCertificateCard = ({
         </div>
         
         <CardHeader className="pb-3">
-          <CardTitle className="text-lg font-semibold text-white group-hover:text-viverblue transition-colors duration-300 line-clamp-2">
+          <CardTitle className="text-lg font-semibold text-white group-hover:text-aurora-primary transition-colors duration-300 line-clamp-2">
             {solution?.title || "Certificado de Implementação"}
           </CardTitle>
           <div className={`flex items-center gap-2 text-sm ${categoryConfig.iconColor}`}>
