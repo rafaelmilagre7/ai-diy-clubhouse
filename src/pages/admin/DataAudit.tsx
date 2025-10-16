@@ -65,9 +65,9 @@ const DataAuditPage = () => {
 
   const getPriorityColor = (field: string) => {
     if (['email', 'code', 'key', 'slug'].includes(field)) {
-      return 'bg-red-100 text-red-800 border-red-200';
+      return 'bg-destructive/10 text-destructive border-destructive/30';
     }
-    return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+    return 'bg-warning/10 text-warning border-warning/30';
   };
 
   const getPriorityLabel = (field: string) => {
@@ -143,7 +143,7 @@ const DataAuditPage = () => {
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">
+                  <div className="text-2xl font-bold text-operational">
                     {report.summary.totalTables}
                   </div>
                   <div className="text-sm text-muted-foreground">
@@ -151,7 +151,7 @@ const DataAuditPage = () => {
                   </div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-orange-600">
+                  <div className="text-2xl font-bold text-revenue">
                     {report.summary.tablesWithDuplicates}
                   </div>
                   <div className="text-sm text-muted-foreground">
@@ -159,7 +159,7 @@ const DataAuditPage = () => {
                   </div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-yellow-600">
+                  <div className="text-2xl font-bold text-warning">
                     {report.summary.totalDuplicates}
                   </div>
                   <div className="text-sm text-muted-foreground">
@@ -167,7 +167,7 @@ const DataAuditPage = () => {
                   </div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-red-600">
+                  <div className="text-2xl font-bold text-destructive">
                     {report.summary.highPriorityIssues}
                   </div>
                   <div className="text-sm text-muted-foreground">

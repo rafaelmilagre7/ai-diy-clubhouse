@@ -498,14 +498,14 @@ const AdminSettings = () => {
                 </div>
               </div>
               
-              <div className="rounded-lg border p-4 bg-green-50 border-green-200">
+              <div className="rounded-lg border p-4 bg-success/10 border-success/30">
                 <div className="flex items-start gap-4">
                   <div className="mt-0.5">
                     <CheckCircle className="h-5 w-5 text-success" />
                   </div>
                   <div>
-                    <h4 className="text-sm font-medium text-green-800">Backup Automático Ativado</h4>
-                    <p className="text-sm text-green-700 mt-1">
+                    <h4 className="text-sm font-medium text-success">Backup Automático Ativado</h4>
+                    <p className="text-sm text-success/80 mt-1">
                       Seus dados são automaticamente copiados diariamente.
                       Último backup: {new Date().toLocaleDateString()}.
                     </p>

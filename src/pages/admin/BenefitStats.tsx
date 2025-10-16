@@ -136,8 +136,8 @@ const BenefitStats = () => {
               <div className="w-2 h-16 bg-gradient-to-b from-green-500 via-emerald-500 to-aurora-primary rounded-full aurora-glow"></div>
               <div>
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-500/10 aurora-glass">
-                    <Gift className="h-6 w-6 text-green-500" />
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-success/20 to-success/10 aurora-glass">
+                    <Gift className="h-6 w-6 text-success" />
                   </div>
                   <h1 className="text-4xl font-bold aurora-text-gradient">
                     Estatísticas de Benefícios

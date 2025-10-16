@@ -99,9 +99,9 @@ const AdminSolutionEdit = () => {
       case "medium":
         return "bg-warning";
       case "advanced":
-        return "bg-orange-500";
+        return "bg-revenue";
       default:
-        return "bg-gray-500";
+        return "bg-muted";
     }
   };
   

@@ -334,9 +334,9 @@ export default function CertificateTemplates() {
                 <Badge 
                   variant="outline"
                   className={
-                    template.metadata.difficulty === 'Fácil' ? 'text-green-600' :
-                    template.metadata.difficulty === 'Médio' ? 'text-yellow-600' :
-                    'text-red-600'
+                    template.metadata.difficulty === 'Fácil' ? 'text-success' :
+                    template.metadata.difficulty === 'Médio' ? 'text-warning' :
+                    'text-destructive'
                   }
                 >
                   {template.metadata.difficulty}

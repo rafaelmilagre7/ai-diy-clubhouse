@@ -317,7 +317,7 @@ export default function AdminUsers() {
           {currentFilter === 'masters' && masterGroupsWithMembers.length > 0 ? (
             <div className="space-y-4">
               <h3 className="text-lg font-semibold flex items-center gap-2">
-                <Crown className="h-5 w-5 text-yellow-600" />
+                <Crown className="h-5 w-5 text-warning" />
                 Masters e suas Equipes ({masterGroupsWithMembers.length} masters)
               </h3>
               <div className="grid gap-4">
@@ -332,14 +332,14 @@ export default function AdminUsers() {
                 ))}
               </div>
               {masterGroupsWithMembers.length > 0 && (
-                <div className="text-sm text-muted-foreground bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
+                <div className="text-sm text-muted-foreground bg-info/10 border border-info/30 rounded-lg p-4 mt-4">
                   <div className="flex items-start gap-2">
-                    <div className="text-blue-600 mt-0.5">💡</div>
+                    <div className="text-info mt-0.5">💡</div>
                     <div>
-                      <p className="font-medium text-blue-800 mb-1">
+                      <p className="font-medium text-info mb-1">
                         Visualização Hierárquica:
                       </p>
-                      <p className="text-blue-700">
+                      <p className="text-info/80">
                         Este filtro exibe todos os masters com seus respectivos membros de equipe organizados hierarquicamente. 
                         Expanda cada card do master para ver os detalhes de sua equipe.
                       </p>

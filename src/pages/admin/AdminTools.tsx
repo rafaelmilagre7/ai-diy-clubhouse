@@ -218,18 +218,18 @@ const AdminTools = () => {
             label: "Com Benefícios",
             value: toolsWithBenefits,
             icon: Gift,
-            gradient: "from-purple-500/20 to-pink-500/10",
-            iconColor: "text-purple-500",
-            border: "border-purple-500/30",
+            gradient: "from-strategy/20 to-accent/10",
+            iconColor: "text-strategy",
+            border: "border-strategy/30",
             description: "Ofertas exclusivas"
           },
           {
             label: "Cliques Médios",
             value: averageClicks.toFixed(1),
             icon: TrendingUp,
-            gradient: "from-orange-500/20 to-amber-500/10",
-            iconColor: "text-orange-500",
-            border: "border-orange-500/30",
+            gradient: "from-revenue/20 to-warning/10",
+            iconColor: "text-revenue",
+            border: "border-revenue/30",
             description: "Por ferramenta"
           }
         ].map((stat, index) => (

@@ -38,15 +38,15 @@ const AutomationLogs = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'success':
-        return 'bg-green-100 text-green-800 border-green-200';
+        return 'bg-success/10 text-success border-success/30';
       case 'failed':
-        return 'bg-red-100 text-red-800 border-red-200';
+        return 'bg-destructive/10 text-destructive border-destructive/30';
       case 'partial':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+        return 'bg-warning/10 text-warning border-warning/30';
       case 'pending':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
+        return 'bg-operational/10 text-operational border-operational/30';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'bg-muted text-muted-foreground border-border';
     }
   };
 
@@ -144,7 +144,7 @@ const AutomationLogs = () => {
       render: (log: AutomationLog) => (
         <div className="max-w-xs">
           {log.error_message ? (
-            <span className="text-sm text-red-600 truncate block" title={log.error_message}>
+            <span className="text-sm text-destructive truncate block" title={log.error_message}>
               {log.error_message}
             </span>
           ) : (
@@ -209,7 +209,7 @@ const AutomationLogs = () => {
             <CardTitle className="text-sm font-medium">Sucessos</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats.success}</div>
+            <div className="text-2xl font-bold text-success">{stats.success}</div>
           </CardContent>
         </Card>
         <Card>
@@ -217,7 +217,7 @@ const AutomationLogs = () => {
             <CardTitle className="text-sm font-medium">Falhas</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{stats.failed}</div>
+            <div className="text-2xl font-bold text-destructive">{stats.failed}</div>
           </CardContent>
         </Card>
         <Card>
@@ -225,7 +225,7 @@ const AutomationLogs = () => {
             <CardTitle className="text-sm font-medium">Pendentes</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{stats.pending}</div>
+            <div className="text-2xl font-bold text-operational">{stats.pending}</div>
           </CardContent>
         </Card>
       </div>
