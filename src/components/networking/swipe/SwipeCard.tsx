@@ -153,34 +153,34 @@ export const SwipeCard = ({
                 onClick={handleAddConnection}
                 disabled={localStatus !== 'none' || isSendingRequest}
                 size="lg"
+                variant={localStatus === 'accepted' ? 'default' : 'outline'}
                 className={`flex-1 relative overflow-hidden group transition-all duration-300 font-bold text-base ${
                   localStatus === 'accepted'
-                    ? 'bg-gradient-to-r from-aurora/20 to-viverblue/20 border-2 border-aurora/60 text-aurora shadow-lg shadow-aurora/30 hover:shadow-xl hover:shadow-aurora/40 hover:scale-[1.02]'
+                    ? 'bg-aurora hover:bg-aurora/90 text-white border-0 shadow-lg shadow-aurora/40 hover:shadow-xl hover:shadow-aurora/50 hover:scale-[1.02]'
                     : localStatus === 'pending'
-                    ? 'bg-gradient-to-r from-warning/20 to-warning/30 border-2 border-warning/60 text-warning shadow-lg shadow-warning/20 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-aurora/10 to-viverblue/10 border-2 border-aurora/40 text-aurora hover:from-aurora/20 hover:to-viverblue/20 shadow-lg shadow-aurora/20 hover:shadow-xl hover:shadow-aurora/30 hover:scale-[1.02]'
+                    ? 'bg-card/80 border-2 border-warning/60 text-foreground shadow-md cursor-not-allowed hover:scale-100'
+                    : 'bg-card/80 hover:bg-card border-2 border-aurora/50 text-foreground hover:border-aurora shadow-md hover:shadow-lg hover:shadow-aurora/20 hover:scale-[1.02]'
                 }`}
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                 {localStatus === 'accepted' ? (
                   <>
-                    <Check className="h-5 w-5 mr-2 relative z-10" />
-                    <span className="relative z-10">Conectado</span>
+                    <Check className="h-5 w-5 mr-2" />
+                    <span>Conectado</span>
                   </>
                 ) : localStatus === 'pending' ? (
                   <>
-                    <Clock className="h-5 w-5 mr-2 relative z-10" />
-                    <span className="relative z-10">Solicitação Enviada</span>
+                    <Clock className="h-5 w-5 mr-2 text-warning" />
+                    <span>Solicitação Enviada</span>
                   </>
                 ) : isSendingRequest ? (
                   <>
-                    <Loader2 className="h-5 w-5 mr-2 animate-spin relative z-10" />
-                    <span className="relative z-10">Enviando...</span>
+                    <Loader2 className="h-5 w-5 mr-2 animate-spin text-aurora" />
+                    <span>Enviando...</span>
                   </>
                 ) : (
                   <>
-                    <UserPlus className="h-5 w-5 mr-2 relative z-10" />
-                    <span className="relative z-10">Adicionar à Rede</span>
+                    <UserPlus className="h-5 w-5 mr-2 text-aurora" />
+                    <span>Adicionar à Rede</span>
                   </>
                 )}
               </Button>
