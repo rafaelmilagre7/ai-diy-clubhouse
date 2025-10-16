@@ -210,9 +210,9 @@ export const SolutionsTab: React.FC<SolutionsTabProps> = ({ trail }) => {
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty?.toLowerCase()) {
-      case 'iniciante': return 'bg-green-500/10 text-green-500 border-green-500/20';
-      case 'intermediário': return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
-      case 'avançado': return 'bg-red-500/10 text-red-500 border-red-500/20';
+      case 'iniciante': return 'bg-viverblue/10 text-viverblue border-viverblue/20';
+      case 'intermediário': return 'bg-[hsl(var(--vivercyan))]/10 text-[hsl(var(--vivercyan))] border-[hsl(var(--vivercyan))]/20';
+      case 'avançado': return 'bg-[hsl(var(--viverpetrol))]/10 text-[hsl(var(--viverpetrol-light))] border-[hsl(var(--viverpetrol))]/20';
       default: return 'bg-muted/50 text-muted-foreground border-muted/20';
     }
   };

@@ -27,9 +27,9 @@ const LessonCard = ({ lesson }: { lesson: RecommendedLesson }) => {
 
   const getPriorityColor = () => {
     const colors = {
-      1: "bg-green-500/20 text-green-400 border-green-500/30",
-      2: "bg-blue-500/20 text-blue-400 border-blue-500/30", 
-      3: "bg-purple-500/20 text-purple-400 border-purple-500/30"
+      1: "bg-viverblue/20 text-viverblue border-viverblue/30",
+      2: "bg-[hsl(var(--vivercyan))]/20 text-[hsl(var(--vivercyan))] border-[hsl(var(--vivercyan))]/30", 
+      3: "bg-[hsl(var(--viverpetrol))]/20 text-[hsl(var(--viverpetrol-light))] border-[hsl(var(--viverpetrol))]/30"
     };
     return colors[lesson.priority as keyof typeof colors] || colors[3];
   };
@@ -41,7 +41,7 @@ const LessonCard = ({ lesson }: { lesson: RecommendedLesson }) => {
       <CardContent className="p-0 relative z-10">
         <div className="flex h-40">
           {/* Seção da imagem/ícone */}
-          <div className="w-64 relative overflow-hidden rounded-l-xl bg-gradient-to-br from-viverblue/20 to-green-500/20">
+          <div className="w-64 relative overflow-hidden rounded-l-xl bg-gradient-to-br from-viverblue/20 to-[hsl(var(--vivercyan))]/20">
             <div className="w-full h-full flex items-center justify-center">
               <div className="text-center">
                 <PlayCircle className="h-16 w-16 mx-auto mb-2 text-viverblue group-hover:scale-110 transition-transform duration-300" />
@@ -107,7 +107,7 @@ export const RecommendedLessons = ({ lessons }: RecommendedLessonsProps) => {
     <div className="space-y-6">
       {/* Header da seção */}
       <div className="relative">
-        <div className="absolute inset-0 bg-gradient-to-r from-viverblue/20 via-green-500/10 to-transparent rounded-2xl blur-xl opacity-50" />
+        <div className="absolute inset-0 bg-gradient-to-r from-viverblue/20 via-[hsl(var(--vivercyan))]/10 to-transparent rounded-2xl blur-xl opacity-50" />
         <Card className="glass-dark border-2 border-viverblue/40 bg-viverblue/5 relative overflow-hidden backdrop-blur-sm">
           <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-transparent" />
           <CardHeader className="relative z-10">

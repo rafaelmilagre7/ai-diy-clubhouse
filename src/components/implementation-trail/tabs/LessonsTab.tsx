@@ -156,19 +156,19 @@ export const LessonsTab = ({ trail }: LessonsTabProps) => {
 
   const getPriorityLabel = (priority: number) => {
     switch (priority) {
-      case 1: return { label: 'Fundamentos', color: 'bg-green-500', textColor: 'text-white' };
-      case 2: return { label: 'Intermediário', color: 'bg-blue-500', textColor: 'text-white' };
-      case 3: return { label: 'Avançado', color: 'bg-purple-500', textColor: 'text-white' };
+      case 1: return { label: 'Fundamentos', color: 'bg-viverblue', textColor: 'text-black' };
+      case 2: return { label: 'Intermediário', color: 'bg-[hsl(var(--vivercyan))]', textColor: 'text-black' };
+      case 3: return { label: 'Avançado', color: 'bg-[hsl(var(--viverpetrol))]', textColor: 'text-white' };
       default: return { label: 'Recomendada', color: 'bg-muted', textColor: 'text-muted-foreground' };
     }
   };
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty?.toLowerCase()) {
-      case 'iniciante': return 'bg-green-100 text-green-700 border-green-200';
-      case 'intermediário': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-      case 'avançado': return 'bg-red-100 text-red-700 border-red-200';
-      default: return 'bg-gray-100 text-gray-700 border-gray-200';
+      case 'iniciante': return 'bg-viverblue/10 text-viverblue border-viverblue/20';
+      case 'intermediário': return 'bg-[hsl(var(--vivercyan))]/10 text-[hsl(var(--vivercyan))] border-[hsl(var(--vivercyan))]/20';
+      case 'avançado': return 'bg-[hsl(var(--viverpetrol))]/10 text-[hsl(var(--viverpetrol-light))] border-[hsl(var(--viverpetrol))]/20';
+      default: return 'bg-muted/50 text-muted-foreground border-muted/20';
     }
   };
 
@@ -223,8 +223,8 @@ export const LessonsTab = ({ trail }: LessonsTabProps) => {
             {/* Priority indicator */}
             <div className="absolute top-1 right-1">
               <div className={`w-1.5 h-1.5 rounded-full ${
-                item.priority === 1 ? 'bg-green-500' :
-                item.priority === 2 ? 'bg-blue-500' : 'bg-purple-500'
+                item.priority === 1 ? 'bg-viverblue' :
+                item.priority === 2 ? 'bg-[hsl(var(--vivercyan))]' : 'bg-[hsl(var(--viverpetrol))]'
               }`}></div>
             </div>
             

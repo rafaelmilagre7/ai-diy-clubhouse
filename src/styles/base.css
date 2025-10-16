@@ -59,12 +59,27 @@
   --shadow-aurora: 0 0 20px hsl(var(--primary) / 0.1);
   --shadow-aurora-strong: 0 0 30px hsl(var(--primary) / 0.2);
 
-  /* --- Custom Design Tokens --- */
-  --viverblue: 173 100% 46%;
-  --viverblue-light: 175 81% 69%;
-  --viverblue-lighter: 177 82% 80%;
-  --viverblue-dark: 169 100% 36%;
-  --viverblue-darker: 166 100% 27%;
+  /* --- Custom Design Tokens - Viver de IA Brand Colors --- */
+  /* Ciano vibrante - cor principal (#00FFFF) */
+  --viverblue: 180 100% 50%;
+  --viverblue-light: 180 100% 65%;
+  --viverblue-lighter: 180 100% 80%;
+  --viverblue-dark: 180 100% 40%;
+  --viverblue-darker: 180 100% 30%;
+  
+  /* Azul turquesa (#0BC8D5) */
+  --vivercyan: 184 90% 44%;
+  --vivercyan-light: 184 90% 60%;
+  --vivercyan-lighter: 184 90% 75%;
+  --vivercyan-dark: 184 90% 34%;
+  --vivercyan-darker: 184 90% 24%;
+  
+  /* Azul petróleo (#076770) */
+  --viverpetrol: 185 88% 23%;
+  --viverpetrol-light: 185 88% 35%;
+  --viverpetrol-lighter: 185 88% 50%;
+  --viverpetrol-dark: 185 88% 18%;
+  --viverpetrol-darker: 185 88% 13%;
   
   /* --- Track Colors --- */
   --revenue: 231 44% 48%;

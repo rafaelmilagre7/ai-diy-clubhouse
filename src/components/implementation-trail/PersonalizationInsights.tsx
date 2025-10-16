@@ -82,40 +82,40 @@ export const PersonalizationInsights: React.FC<PersonalizationInsightsProps> = (
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Solutions */}
-        <Card className="aurora-glass border-operational/30 aurora-hover-scale">
+        <Card className="aurora-glass border-[hsl(var(--vivercyan))]/30 aurora-hover-scale">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Soluções Selecionadas</p>
                 <p className="text-2xl font-bold text-foreground">{totalSolutions}</p>
               </div>
-              <Target className="w-8 h-8 text-operational" />
+              <Target className="w-8 h-8 text-[hsl(var(--vivercyan))]" />
             </div>
           </CardContent>
         </Card>
 
         {/* Complexity Level */}
-        <Card className="aurora-glass border-revenue/30 aurora-hover-scale">
+        <Card className="aurora-glass border-[hsl(var(--viverpetrol))]/30 aurora-hover-scale">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Nível de Complexidade</p>
                 <p className="text-2xl font-bold text-foreground">{complexity.level}</p>
               </div>
-              <complexity.icon className="w-8 h-8 text-revenue" />
+              <complexity.icon className="w-8 h-8 text-[hsl(var(--viverpetrol-light))]" />
             </div>
           </CardContent>
         </Card>
 
         {/* Estimated Time */}
-        <Card className="aurora-glass border-strategy/30 aurora-hover-scale">
+        <Card className="aurora-glass border-viverblue/30 aurora-hover-scale">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Tempo Estimado</p>
                 <p className="text-2xl font-bold text-foreground">{totalHours}h</p>
               </div>
-              <Clock className="w-8 h-8 text-strategy" />
+              <Clock className="w-8 h-8 text-viverblue" />
             </div>
           </CardContent>
         </Card>

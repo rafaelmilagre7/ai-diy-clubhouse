@@ -47,9 +47,9 @@ export const SolutionsTabOptimized: React.FC<SolutionsTabOptimizedProps> = ({ tr
 
   const getPriorityLabel = (priority: number) => {
     switch (priority) {
-      case 1: return { label: 'Alta Prioridade', color: 'bg-viverblue', textColor: 'text-white' };
-      case 2: return { label: 'Média Prioridade', color: 'bg-operational', textColor: 'text-white' };
-      case 3: return { label: 'Baixa Prioridade', color: 'bg-revenue', textColor: 'text-white' };
+      case 1: return { label: 'Alta Prioridade', color: 'bg-viverblue', textColor: 'text-black' };
+      case 2: return { label: 'Média Prioridade', color: 'bg-[hsl(var(--vivercyan))]', textColor: 'text-black' };
+      case 3: return { label: 'Baixa Prioridade', color: 'bg-[hsl(var(--viverpetrol))]', textColor: 'text-white' };
       default: return { label: 'Prioridade', color: 'bg-muted', textColor: 'text-muted-foreground' };
     }
   };
@@ -75,14 +75,14 @@ export const SolutionsTabOptimized: React.FC<SolutionsTabOptimizedProps> = ({ tr
     return (
       <Card className="group relative overflow-hidden border border-border/50 hover:border-viverblue/50 bg-gradient-to-br from-card/95 to-muted/30 backdrop-blur-sm transition-all duration-500 hover:scale-[1.01] hover:shadow-xl hover:shadow-viverblue/5 cursor-pointer">
         {/* Animated glow effect */}
-        <div className="absolute inset-0 bg-gradient-to-r from-viverblue/5 via-transparent to-operational/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+        <div className="absolute inset-0 bg-gradient-to-r from-viverblue/5 via-transparent to-[hsl(var(--vivercyan))]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
         
         <div className="flex h-[200px] relative z-10" onClick={() => {
           console.log('🔗 [SOLUTION-CARD-OPT] Navegando para solução:', item.solutionId);
           navigate(`/solution/${item.solutionId}`);
         }}>
           {/* Solution Cover */}
-          <div className="w-[280px] relative overflow-hidden bg-gradient-to-br from-viverblue/20 to-operational/20 rounded-l-xl">
+          <div className="w-[280px] relative overflow-hidden bg-gradient-to-br from-viverblue/20 to-[hsl(var(--vivercyan))]/20 rounded-l-xl">
             {solutionData.thumbnail_url ? (
               <img 
                 src={solutionData.thumbnail_url} 
@@ -159,7 +159,7 @@ export const SolutionsTabOptimized: React.FC<SolutionsTabOptimizedProps> = ({ tr
 
             {/* AI Justification */}
             <div className="space-y-3">
-              <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-viverblue/5 to-operational/5 border border-viverblue/10 p-3">
+              <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-viverblue/5 to-[hsl(var(--vivercyan))]/5 border border-viverblue/10 p-3">
                 <div className="absolute inset-0 bg-gradient-to-r from-viverblue/5 to-transparent opacity-50" />
                 
                 <div className="flex items-start gap-2 relative z-10">
@@ -182,7 +182,7 @@ export const SolutionsTabOptimized: React.FC<SolutionsTabOptimizedProps> = ({ tr
                   </div>
                   <div className="relative h-1.5 bg-muted/30 rounded-full overflow-hidden">
                     <div 
-                      className="absolute left-0 top-0 h-full bg-gradient-to-r from-viverblue to-operational rounded-full transition-all duration-1000"
+                      className="absolute left-0 top-0 h-full bg-gradient-to-r from-viverblue to-[hsl(var(--vivercyan))] rounded-full transition-all duration-1000"
                       style={{width: `${item.aiScore}%`}}
                     />
                   </div>
@@ -247,17 +247,17 @@ export const SolutionsTabOptimized: React.FC<SolutionsTabOptimizedProps> = ({ tr
           </CardContent>
         </Card>
         
-        <Card className="aurora-glass border-operational/30">
+        <Card className="aurora-glass border-[hsl(var(--vivercyan))]/30">
           <CardContent className="p-4 text-center">
-            <Clock className="h-8 w-8 mx-auto mb-2 text-operational" />
+            <Clock className="h-8 w-8 mx-auto mb-2 text-[hsl(var(--vivercyan))]" />
             <div className="text-2xl font-bold text-foreground">{trail.priority2?.length || 0}</div>
             <div className="text-sm text-muted-foreground">Média Prioridade</div>
           </CardContent>
         </Card>
         
-        <Card className="aurora-glass border-revenue/30">
+        <Card className="aurora-glass border-[hsl(var(--viverpetrol))]/30">
           <CardContent className="p-4 text-center">
-            <Brain className="h-8 w-8 mx-auto mb-2 text-revenue" />
+            <Brain className="h-8 w-8 mx-auto mb-2 text-[hsl(var(--viverpetrol))]" />
             <div className="text-2xl font-bold text-foreground">{trail.priority3?.length || 0}</div>
             <div className="text-sm text-muted-foreground">Baixa Prioridade</div>
           </CardContent>

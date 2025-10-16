@@ -19,20 +19,20 @@ interface SmartSolutionCardProps {
 const PRIORITY_CONFIG = {
   priority1: { 
     label: 'Alta', 
-    color: 'text-red-300', 
-    bgColor: 'bg-red-900/40 border-red-700',
+    color: 'text-viverblue', 
+    bgColor: 'bg-viverblue/40 border-viverblue',
     emoji: '🔥'
   },
   priority2: { 
     label: 'Média', 
-    color: 'text-amber-300', 
-    bgColor: 'bg-amber-900/40 border-amber-700',
+    color: 'text-[hsl(var(--vivercyan))]', 
+    bgColor: 'bg-[hsl(var(--vivercyan))]/40 border-[hsl(var(--vivercyan))]',
     emoji: '⚡'
   },
   priority3: { 
     label: 'Baixa', 
-    color: 'text-blue-300', 
-    bgColor: 'bg-blue-900/40 border-blue-700',
+    color: 'text-[hsl(var(--viverpetrol-light))]', 
+    bgColor: 'bg-[hsl(var(--viverpetrol))]/40 border-[hsl(var(--viverpetrol))]',
     emoji: '📋'
   }
 } as const;
@@ -40,20 +40,20 @@ const PRIORITY_CONFIG = {
 const DIFFICULTY_CONFIG = {
   easy: { 
     label: 'Fácil', 
-    color: 'text-green-300', 
-    bgColor: 'bg-green-900/40 border-green-700',
+    color: 'text-viverblue', 
+    bgColor: 'bg-viverblue/40 border-viverblue',
     emoji: '🟢'
   },
   medium: { 
     label: 'Médio', 
-    color: 'text-amber-300', 
-    bgColor: 'bg-amber-900/40 border-amber-700',
+    color: 'text-[hsl(var(--vivercyan))]', 
+    bgColor: 'bg-[hsl(var(--vivercyan))]/40 border-[hsl(var(--vivercyan))]',
     emoji: '🟡'
   },
   advanced: { 
     label: 'Avançado', 
-    color: 'text-red-300', 
-    bgColor: 'bg-red-900/40 border-red-700',
+    color: 'text-[hsl(var(--viverpetrol-light))]', 
+    bgColor: 'bg-[hsl(var(--viverpetrol))]/40 border-[hsl(var(--viverpetrol))]',
     emoji: '🔴'
   }
 } as const;
@@ -93,20 +93,20 @@ const CATEGORY_CONFIG = {
 
 const AI_SCORE_CONFIG = {
   high: { 
-    color: 'text-green-300', 
-    bgColor: 'bg-green-900/40 border-green-700',
+    color: 'text-viverblue', 
+    bgColor: 'bg-viverblue/40 border-viverblue',
     emoji: '🎯',
     label: 'Alta Compatibilidade'
   },
   medium: { 
-    color: 'text-amber-300', 
-    bgColor: 'bg-amber-900/40 border-amber-700',
+    color: 'text-[hsl(var(--vivercyan))]', 
+    bgColor: 'bg-[hsl(var(--vivercyan))]/40 border-[hsl(var(--vivercyan))]',
     emoji: '🎪',
     label: 'Boa Compatibilidade'
   },
   low: { 
-    color: 'text-red-300', 
-    bgColor: 'bg-red-900/40 border-red-700',
+    color: 'text-[hsl(var(--viverpetrol-light))]', 
+    bgColor: 'bg-[hsl(var(--viverpetrol))]/40 border-[hsl(var(--viverpetrol))]',
     emoji: '⚠️',
     label: 'Baixa Compatibilidade'
   }
@@ -205,7 +205,7 @@ export const SmartSolutionCard = ({
         {/* Implemented Badge */}
         {isImplemented && (
           <div className="absolute bottom-2 right-2">
-            <Badge className="bg-green-900/40 text-green-300 border-green-700 text-xs">
+            <Badge className="bg-viverblue/40 text-viverblue border-viverblue text-xs">
               Implementado
             </Badge>
           </div>
