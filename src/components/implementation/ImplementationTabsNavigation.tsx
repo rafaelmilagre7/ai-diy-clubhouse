@@ -37,7 +37,7 @@ export const ImplementationTabsNavigation = ({
       </div>
       
       {/* Subtle inner glow */}
-      <div className="absolute inset-0 bg-gradient-to-r from-viverblue/5 via-transparent to-viverblue-dark/5 rounded-2xl"></div>
+      <div className="absolute inset-0 bg-gradient-to-r from-aurora-primary/5 via-transparent to-aurora-primary-dark/5 rounded-2xl"></div>
       
       <TabsList className="relative w-full grid grid-cols-3 md:grid-cols-6 p-3 bg-transparent border-0 h-auto gap-2">
         {tabs.map((tab) => (
@@ -46,10 +46,10 @@ export const ImplementationTabsNavigation = ({
             value={tab.id}
             className={cn(
               "relative flex flex-col items-center gap-2 py-4 px-3 transition-all duration-300 rounded-xl border-0 h-auto min-h-[70px]",
-              "data-[state=active]:bg-gradient-to-br data-[state=active]:from-viverblue/20 data-[state=active]:to-viverblue-dark/25",
-              "data-[state=active]:border data-[state=active]:border-viverblue/40",
+              "data-[state=active]:bg-gradient-to-br data-[state=active]:from-aurora-primary/20 data-[state=active]:to-aurora-primary-dark/25",
+              "data-[state=active]:border data-[state=active]:border-aurora-primary/40",
               "data-[state=active]:text-white data-[state=active]:font-semibold",
-              "data-[state=active]:shadow-lg data-[state=active]:shadow-viverblue/15",
+              "data-[state=active]:shadow-lg data-[state=active]:shadow-aurora-primary/15",
               "data-[state=inactive]:text-neutral-400 data-[state=inactive]:hover:text-neutral-200 data-[state=inactive]:hover:bg-white/8",
               "group backdrop-blur-sm"
             )}
@@ -58,12 +58,12 @@ export const ImplementationTabsNavigation = ({
             {/* Icon with enhanced glow effect when active */}
             <div className={cn(
               "transition-all duration-300 relative",
-              activeTab === tab.id ? "text-viverblue-light drop-shadow-[0_0_8px_rgba(0,188,212,0.3)]" : "text-neutral-400 group-hover:text-neutral-300"
+              activeTab === tab.id ? "text-aurora-primary-light drop-shadow-[0_0_8px_rgba(10,171,181,0.3)]" : "text-neutral-400 group-hover:text-neutral-300"
             )}>
               {tab.icon}
               {/* Icon glow effect */}
               {activeTab === tab.id && (
-                <div className="absolute inset-0 text-viverblue-light blur-sm opacity-50">
+                <div className="absolute inset-0 text-aurora-primary-light blur-sm opacity-50">
                   {tab.icon}
                 </div>
               )}
@@ -80,7 +80,7 @@ export const ImplementationTabsNavigation = ({
             {/* Enhanced active indicator */}
             {activeTab === tab.id && (
               <motion.div
-                className="absolute -bottom-1 left-3 right-3 h-1 bg-gradient-to-r from-viverblue via-viverblue-light to-viverblue-dark rounded-full shadow-lg shadow-viverblue/30"
+                className="absolute -bottom-1 left-3 right-3 h-1 bg-gradient-to-r from-aurora-primary via-aurora-primary-light to-aurora-primary-dark rounded-full shadow-lg shadow-aurora-primary/30"
                 layoutId="activeTabIndicator" 
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
               />
@@ -90,8 +90,8 @@ export const ImplementationTabsNavigation = ({
             <div className={cn(
               "absolute inset-0 bg-gradient-to-br rounded-xl opacity-0 transition-opacity duration-300",
               activeTab === tab.id 
-                ? "from-viverblue/10 to-viverblue-dark/10 opacity-100" 
-                : "from-viverblue/5 to-viverblue-dark/5 group-hover:opacity-100"
+                ? "from-aurora-primary/10 to-aurora-primary-dark/10 opacity-100" 
+                : "from-aurora-primary/5 to-aurora-primary-dark/5 group-hover:opacity-100"
             )}></div>
           </TabsTrigger>
         ))}

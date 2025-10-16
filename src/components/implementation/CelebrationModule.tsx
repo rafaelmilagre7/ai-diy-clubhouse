@@ -67,20 +67,20 @@ export const CelebrationModule = ({ module, onComplete }: CelebrationModuleProps
       
       <div className="bg-green-50 p-6 rounded-lg border border-green-100">
         <h2 className="text-xl font-semibold mb-4 flex items-center">
-          <Award className="mr-2 h-6 w-6 text-viverblue" />
+          <Award className="mr-2 h-6 w-6 text-aurora-primary" />
           Suas conquistas
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-white p-4 rounded-lg shadow-sm text-center">
-            <div className="text-3xl font-bold text-viverblue">1</div>
+            <div className="text-3xl font-bold text-aurora-primary">1</div>
             <div className="text-sm text-muted-foreground">Solução Implementada</div>
           </div>
           <div className="bg-white p-4 rounded-lg shadow-sm text-center">
-            <div className="text-3xl font-bold text-viverblue">8</div>
+            <div className="text-3xl font-bold text-aurora-primary">8</div>
             <div className="text-sm text-muted-foreground">Módulos Concluídos</div>
           </div>
           <div className="bg-white p-4 rounded-lg shadow-sm text-center">
-            <div className="text-3xl font-bold text-viverblue">+30%</div>
+            <div className="text-3xl font-bold text-aurora-primary">+30%</div>
             <div className="text-sm text-muted-foreground">Eficiência Esperada</div>
           </div>
         </div>

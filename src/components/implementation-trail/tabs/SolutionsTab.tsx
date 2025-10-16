@@ -276,9 +276,9 @@ export const SolutionsTab: React.FC<SolutionsTabProps> = ({ trail }) => {
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-black/20" />
                 
                 {/* Fallback content (hidden by default) */}
-                <div className="fallback-content absolute inset-0 hidden items-center justify-center bg-gradient-to-br from-viverblue/20 to-operational/20">
+                <div className="fallback-content absolute inset-0 hidden items-center justify-center bg-gradient-to-br from-aurora-primary/20 to-operational/20">
                   <div className="text-center">
-                    <Target className="h-10 w-10 mx-auto mb-2 text-viverblue" />
+                    <Target className="h-10 w-10 mx-auto mb-2 text-aurora-primary" />
                     <p className="text-xs text-muted-foreground font-medium">Solução IA</p>
                   </div>
                 </div>
@@ -308,7 +308,7 @@ export const SolutionsTab: React.FC<SolutionsTabProps> = ({ trail }) => {
             {/* AI Score badge - Usando compatibilidade real */}
             {realCompatibilityScore && (
               <div className="absolute bottom-3 right-3">
-                <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-black/70 backdrop-blur-md rounded-lg border border-white/20 group-hover:bg-viverblue/90 transition-colors duration-300">
+                <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-black/70 backdrop-blur-md rounded-lg border border-white/20 group-hover:bg-aurora-primary/90 transition-colors duration-300">
                   <Brain className="h-3 w-3 text-white" />
                   <span className="text-xs text-white font-semibold">{Math.round(realCompatibilityScore)}%</span>
                 </div>
@@ -322,7 +322,7 @@ export const SolutionsTab: React.FC<SolutionsTabProps> = ({ trail }) => {
             <div className="space-y-2">
               <div className="flex items-start justify-between">
                 <div className="flex-1 pr-2">
-                  <h3 className="text-base font-bold text-foreground group-hover:text-viverblue transition-colors duration-300 line-clamp-2 mb-2 leading-snug">
+                  <h3 className="text-base font-bold text-foreground group-hover:text-aurora-primary transition-colors duration-300 line-clamp-2 mb-2 leading-snug">
                     {solution.title}
                   </h3>
                   
@@ -348,7 +348,7 @@ export const SolutionsTab: React.FC<SolutionsTabProps> = ({ trail }) => {
                   </div>
                 </div>
                 
-                <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-viverblue group-hover:scale-110 transition-all duration-300 flex-shrink-0" />
+                <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-aurora-primary group-hover:scale-110 transition-all duration-300 flex-shrink-0" />
               </div>
               
               {/* Description */}

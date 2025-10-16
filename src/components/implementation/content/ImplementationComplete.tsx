@@ -44,9 +44,9 @@ export const ImplementationComplete = ({ module, onComplete, onPrevious }: Imple
     <div className="relative min-h-[400px] flex items-center justify-center">
       {/* Background Aurora Effect */}
       <div className="absolute inset-0 overflow-hidden rounded-xl">
-        <div className="absolute inset-0 bg-gradient-to-br from-viverblue/10 via-transparent to-viverblue-dark/15" />
-        <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-viverblue/20 rounded-full blur-2xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-32 h-32 bg-viverblue-dark/20 rounded-full blur-2xl animate-pulse" style={{animationDelay: '1s'}} />
+        <div className="absolute inset-0 bg-gradient-to-br from-aurora-primary/10 via-transparent to-aurora-primary-dark/15" />
+        <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-aurora-primary/20 rounded-full blur-2xl animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-32 h-32 bg-aurora-primary-dark/20 rounded-full blur-2xl animate-pulse" style={{animationDelay: '1s'}} />
       </div>
 
       {/* Content */}
@@ -61,9 +61,9 @@ export const ImplementationComplete = ({ module, onComplete, onPrevious }: Imple
             damping: 15,
             delay: 0.2 
           }}
-          className="mx-auto w-24 h-24 bg-gradient-to-br from-viverblue/20 to-viverblue-dark/25 rounded-full flex items-center justify-center border border-viverblue/30 shadow-2xl shadow-viverblue/20"
+          className="mx-auto w-24 h-24 bg-gradient-to-br from-aurora-primary/20 to-aurora-primary-dark/25 rounded-full flex items-center justify-center border border-aurora-primary/30 shadow-2xl shadow-aurora-primary/20"
         >
-          <CheckCircle2 className="h-12 w-12 text-viverblue-light drop-shadow-[0_0_8px_rgba(0,188,212,0.4)]" />
+          <CheckCircle2 className="h-12 w-12 text-aurora-primary-light drop-shadow-[0_0_8px_rgba(10,171,181,0.4)]" />
         </motion.div>
 
         {/* Success Message */}
@@ -73,7 +73,7 @@ export const ImplementationComplete = ({ module, onComplete, onPrevious }: Imple
           transition={{ delay: 0.4 }}
           className="space-y-4"
         >
-          <h2 className="text-3xl font-bold bg-gradient-to-r from-white via-viverblue-light to-viverblue bg-clip-text text-transparent">
+          <h2 className="text-3xl font-bold bg-gradient-to-r from-white via-aurora-primary-light to-aurora-primary bg-clip-text text-transparent">
             Módulo Concluído!
           </h2>
           <p className="text-lg text-neutral-300 max-w-md mx-auto leading-relaxed">
@@ -92,11 +92,11 @@ export const ImplementationComplete = ({ module, onComplete, onPrevious }: Imple
           >
             <div className="flex items-center justify-between text-sm">
               <span className="text-neutral-400">Progresso Total</span>
-              <span className="text-viverblue-light font-medium">{Math.round(currentProgress)}%</span>
+              <span className="text-aurora-primary-light font-medium">{Math.round(currentProgress)}%</span>
             </div>
             <div className="w-full bg-neutral-700/50 rounded-full h-2 overflow-hidden">
               <motion.div 
-                className="h-full bg-gradient-to-r from-viverblue to-viverblue-dark rounded-full shadow-lg shadow-viverblue/30"
+                className="h-full bg-gradient-to-r from-aurora-primary to-aurora-primary-dark rounded-full shadow-lg shadow-aurora-primary/30"
                 initial={{ width: 0 }}
                 animate={{ width: `${currentProgress}%` }}
                 transition={{ delay: 0.8, duration: 0.8, ease: "easeOut" }}
@@ -115,7 +115,7 @@ export const ImplementationComplete = ({ module, onComplete, onPrevious }: Imple
           <Button
             variant="outline"
             onClick={onPrevious}
-            className="text-neutral-300 border-neutral-600 hover:border-viverblue/50 hover:text-viverblue-light hover:bg-viverblue/10 transition-all duration-300"
+            className="text-neutral-300 border-neutral-600 hover:border-aurora-primary/50 hover:text-aurora-primary-light hover:bg-aurora-primary/10 transition-all duration-300"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Módulo Anterior
@@ -124,7 +124,7 @@ export const ImplementationComplete = ({ module, onComplete, onPrevious }: Imple
           <Button
             onClick={handleContinue}
             disabled={completing}
-            className="bg-gradient-to-r from-viverblue to-viverblue-dark hover:from-viverblue-light hover:to-viverblue text-white border-0 shadow-lg hover:shadow-viverblue/25 transition-all duration-300 px-8"
+            className="bg-gradient-to-r from-aurora-primary to-aurora-primary-dark hover:from-aurora-primary-light hover:to-aurora-primary text-white border-0 shadow-lg hover:shadow-aurora-primary/25 transition-all duration-300 px-8"
           >
             {completing ? (
               <>

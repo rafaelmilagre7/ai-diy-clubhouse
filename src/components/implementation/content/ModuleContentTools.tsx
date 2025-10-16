@@ -99,9 +99,9 @@ export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
     <div className="space-y-6 mt-8">
       {/* Enhanced Header */}
       <div className="relative">
-        <div className="absolute -inset-1 bg-gradient-to-r from-viverblue/20 to-viverblue-dark/20 rounded-lg blur opacity-25"></div>
+        <div className="absolute -inset-1 bg-gradient-to-r from-aurora-primary/20 to-aurora-primary-dark/20 rounded-lg blur opacity-25"></div>
         <div className="relative bg-white/5 backdrop-blur-sm border border-white/10 p-4 rounded-lg">
-          <h3 className="text-lg font-semibold bg-gradient-to-r from-white via-viverblue-light to-viverblue bg-clip-text text-transparent">
+          <h3 className="text-lg font-semibold bg-gradient-to-r from-white via-aurora-primary-light to-aurora-primary bg-clip-text text-transparent">
             Ferramentas Necessárias
           </h3>
           <p className="text-neutral-300 mt-1 text-sm">
@@ -115,7 +115,7 @@ export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
         {tools.map((tool) => (
           <div key={tool.id} className="relative group">
             {/* Tool card glow effect */}
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-viverblue/10 to-viverblue-dark/10 rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-300"></div>
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-aurora-primary/10 to-aurora-primary-dark/10 rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-300"></div>
             <div className="relative">
               <ToolItem 
                 toolName={tool.tool_name}

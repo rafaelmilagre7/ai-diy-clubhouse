@@ -9,7 +9,7 @@ interface PersonalizedMessageProps {
 
 export const PersonalizedMessage = ({ message }: PersonalizedMessageProps) => {
   return (
-    <Card className="glass-dark border-2 bg-viverblue/5 border-viverblue/20">
+    <Card className="glass-dark border-2 bg-aurora-primary/5 border-aurora-primary/20">
       <CardContent className="p-6">
         <div className="flex items-start gap-4">
           <div className="relative">
@@ -21,7 +21,7 @@ export const PersonalizedMessage = ({ message }: PersonalizedMessageProps) => {
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-4">
-              <MessageCircle className="h-5 w-5 text-viverblue" />
+              <MessageCircle className="h-5 w-5 text-aurora-primary" />
               <h3 className="text-high-contrast font-semibold text-lg">
                 Mensagem da Nina
               </h3>

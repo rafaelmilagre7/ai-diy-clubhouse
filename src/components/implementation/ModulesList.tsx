@@ -25,7 +25,7 @@ export const ModulesList = ({ activeModule }: ModulesListProps) => {
           <li key={module.id} className="flex items-center">
             <span 
               className={`${
-                module.id === activeModule ? "bg-viverblue" : "bg-secondary"
+                module.id === activeModule ? "bg-aurora-primary" : "bg-secondary"
               } text-${
                 module.id === activeModule ? "white" : "secondary-foreground"
               } rounded-full h-6 w-6 flex items-center justify-center mr-2`}

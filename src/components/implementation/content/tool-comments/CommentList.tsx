@@ -82,8 +82,8 @@ export const CommentList = ({
 
   if (safeComments.length === 0) {
     return (
-      <Card className="p-8 text-center border-dashed border-2 border-viverblue/20 bg-viverblue/5">
-        <MessageSquare className="h-12 w-12 mx-auto text-viverblue/40 mb-4" />
+      <Card className="p-8 text-center border-dashed border-2 border-aurora-primary/20 bg-aurora-primary/5">
+        <MessageSquare className="h-12 w-12 mx-auto text-aurora-primary/40 mb-4" />
         <p className="text-textSecondary">
           Nenhum comentário ainda. Seja o primeiro a compartilhar sua experiência!
         </p>

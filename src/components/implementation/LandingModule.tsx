@@ -62,7 +62,7 @@ export const LandingModule = ({ module, onComplete }: LandingModuleProps) => {
         <Button 
           onClick={onComplete} 
           size="lg"
-          className="bg-viverblue hover:bg-viverblue/90"
+          variant="aurora-primary"
         >
           Começar Implementação
           <ChevronRight className="ml-2 h-5 w-5" />

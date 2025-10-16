@@ -42,8 +42,8 @@ export const SolutionRecommendationCard = ({
   const getPriorityBadge = () => {
     const badges = {
       1: { text: "Alta Prioridade", color: "bg-aurora-primary/20 text-aurora-primary border-aurora-primary/30" },
-      2: { text: "Média Prioridade", color: "bg-[hsl(var(--vivercyan))]/20 text-[hsl(var(--vivercyan))] border-[hsl(var(--vivercyan))]/30" },
-      3: { text: "Baixa Prioridade", color: "bg-[hsl(var(--viverpetrol))]/20 text-[hsl(var(--viverpetrol-light))] border-[hsl(var(--viverpetrol))]/30" }
+      2: { text: "Média Prioridade", color: "bg-aurora-primary-light/20 text-aurora-primary-light border-aurora-primary-light/30" },
+      3: { text: "Baixa Prioridade", color: "bg-aurora-primary-dark/20 text-aurora-primary-dark border-aurora-primary-dark/30" }
     };
     return badges[priority as keyof typeof badges] || badges[3];
   };
@@ -88,8 +88,8 @@ export const SolutionRecommendationCard = ({
       {/* Particles effect background */}
       <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700">
         <div className="absolute top-1/4 left-1/4 w-1 h-1 bg-aurora-primary rounded-full animate-pulse" style={{animationDelay: '0.2s'}} />
-        <div className="absolute top-3/4 right-1/3 w-1 h-1 bg-[hsl(var(--vivercyan))] rounded-full animate-pulse" style={{animationDelay: '0.5s'}} />
-        <div className="absolute bottom-1/3 left-2/3 w-1 h-1 bg-[hsl(var(--viverpetrol))] rounded-full animate-pulse" style={{animationDelay: '0.8s'}} />
+        <div className="absolute top-3/4 right-1/3 w-1 h-1 bg-aurora-primary-light rounded-full animate-pulse" style={{animationDelay: '0.5s'}} />
+        <div className="absolute bottom-1/3 left-2/3 w-1 h-1 bg-aurora-primary-dark rounded-full animate-pulse" style={{animationDelay: '0.8s'}} />
       </div>
       
       <CardContent className="p-0 relative z-10">
@@ -111,11 +111,11 @@ export const SolutionRecommendationCard = ({
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent via-aurora-primary/20 to-transparent h-8 translate-y-[-100%] group-hover:translate-y-[300%] transition-transform duration-1500 ease-out" />
               </>
             ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-aurora-primary/20 to-[hsl(var(--vivercyan))]/20 relative">
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-aurora-primary/20 to-aurora-primary-light/20 relative">
                 {/* Animated orb background */}
                 <div className="absolute inset-0 overflow-hidden">
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-aurora-primary/10 rounded-full blur-xl animate-pulse" />
-                  <div className="absolute top-1/3 left-1/3 w-16 h-16 bg-[hsl(var(--vivercyan))]/10 rounded-full blur-lg animate-pulse animation-delay-1000" />
+                  <div className="absolute top-1/3 left-1/3 w-16 h-16 bg-aurora-primary-light/10 rounded-full blur-lg animate-pulse animation-delay-1000" />
                 </div>
                 
                 <div className="text-center relative z-10">

@@ -72,7 +72,7 @@ export const CommentsSection = ({ solutionId, moduleId }: CommentsSectionProps) 
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <MessageSquare className="h-5 w-5 text-viverblue" />
+          <MessageSquare className="h-5 w-5 text-aurora-primary" />
           <h2 className="text-xl font-semibold text-textPrimary">Comentários</h2>
         </div>
         

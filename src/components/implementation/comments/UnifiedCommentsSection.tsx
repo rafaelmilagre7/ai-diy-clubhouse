@@ -304,7 +304,7 @@ export const UnifiedCommentsSection: React.FC<UnifiedCommentsSectionProps> = ({
                       <div key={reply.id} className="p-3 bg-backgroundDark/50 rounded-md border border-white/5">
                         <div className="flex gap-3">
                           <Avatar className="h-8 w-8">
-                            <AvatarFallback className="bg-viverblue/10 text-viverblue text-xs">
+                            <AvatarFallback className="bg-aurora-primary/10 text-aurora-primary text-xs">
                               {reply.profiles?.name?.charAt(0)?.toUpperCase() || 'U'}
                             </AvatarFallback>
                           </Avatar>
