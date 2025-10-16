@@ -111,7 +111,7 @@ const AuthLayout = () => {
               <CardHeader className="space-y-1 text-center pb-8">
                 <div className="flex justify-center mb-8">
                   <div className="relative">
-                    <div className="absolute inset-0 bg-viverblue/20 rounded-full blur-xl" />
+                    <div className="absolute inset-0 bg-aurora-primary/20 rounded-full blur-xl" />
                     <img
                       src="/lovable-uploads/fe3733f5-092e-4a4e-bdd7-650b71aaa801.png"
                       alt="VIVER DE IA"
@@ -131,14 +131,14 @@ const AuthLayout = () => {
                   <div className="space-y-2">
                     <Label htmlFor="email" className="text-white/90 font-medium">Email</Label>
                     <div className="relative group">
-                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-viverblue transition-colors" />
+                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-aurora-primary transition-colors" />
                       <Input
                         id="email"
                         type="email"
                         placeholder="Digite seu email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="pl-10 h-12 bg-white/5 border-white/20 text-white placeholder:text-gray-400 focus:bg-white/10 focus:border-viverblue/50 transition-all duration-200 rounded-lg"
+                        className="pl-10 h-12 bg-white/5 border-white/20 text-white placeholder:text-gray-400 focus:bg-white/10 focus:border-aurora-primary/50 transition-all duration-200 rounded-lg"
                         disabled={isSigningIn}
                         required
                       />
@@ -147,14 +147,14 @@ const AuthLayout = () => {
                   <div className="space-y-2">
                     <Label htmlFor="password" className="text-white/90 font-medium">Senha</Label>
                     <div className="relative group">
-                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-viverblue transition-colors" />
+                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-aurora-primary transition-colors" />
                       <Input
                         id="password"
                         type="password"
                         placeholder="Digite sua senha"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="pl-10 h-12 bg-white/5 border-white/20 text-white placeholder:text-gray-400 focus:bg-white/10 focus:border-viverblue/50 transition-all duration-200 rounded-lg"
+                        className="pl-10 h-12 bg-white/5 border-white/20 text-white placeholder:text-gray-400 focus:bg-white/10 focus:border-aurora-primary/50 transition-all duration-200 rounded-lg"
                         disabled={isSigningIn}
                         required
                       />
@@ -162,7 +162,8 @@ const AuthLayout = () => {
                   </div>
                   <Button
                     type="submit"
-                    className="w-full h-12 bg-gradient-to-r from-viverblue to-blue-600 hover:from-viverblue-dark hover:to-blue-700 text-white font-semibold text-base rounded-lg shadow-lg hover:shadow-viverblue/25 transition-all duration-300 hover:scale-[1.02]"
+                    variant="aurora-primary"
+                    className="w-full h-12 font-semibold text-base shadow-lg hover:shadow-aurora-primary/25 transition-all duration-300 hover:scale-[1.02]"
                     disabled={isSigningIn || isLoading}
                   >
                     {isSigningIn ? (
@@ -180,7 +181,7 @@ const AuthLayout = () => {
                   <Button
                     type="button"
                     variant="ghost"
-                    className="text-white/70 hover:text-viverblue hover:bg-white/5 text-sm underline"
+                    className="text-white/70 hover:text-aurora-primary hover:bg-white/5 text-sm underline"
                     onClick={() => navigate('/reset-password')}
                     disabled={isSigningIn}
                   >

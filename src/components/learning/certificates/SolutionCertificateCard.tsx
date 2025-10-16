@@ -86,7 +86,7 @@ export const SolutionCertificateCard = ({
   
   return (
     <>
-      <Card className="group overflow-hidden bg-[#151823]/80 backdrop-blur-sm border-neutral-700/50 hover:border-viverblue/30 transition-all duration-300 hover:shadow-lg hover:shadow-viverblue/10 hover:-translate-y-1">
+      <Card className="group overflow-hidden bg-card/80 backdrop-blur-sm border-border hover:border-aurora-primary/30 transition-all duration-300 hover:shadow-lg hover:shadow-aurora-primary/10 hover:-translate-y-1">
         {/* Header com gradiente dinâmico */}
         <div className={`bg-gradient-to-br ${categoryConfig.color} pb-4 pt-8 relative overflow-hidden`}>
           <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent"></div>

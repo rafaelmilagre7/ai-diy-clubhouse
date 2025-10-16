@@ -17,7 +17,7 @@ export const RetroactiveCertificatesPanel = () => {
   } = useRetroactiveCertificates();
 
   return (
-    <Card className="bg-[#151823] border-neutral-700/50">
+    <Card className="bg-card border-border">
       <CardHeader>
         <CardTitle className="text-white flex items-center gap-2">
           <Award className="h-5 w-5 text-viverblue" />

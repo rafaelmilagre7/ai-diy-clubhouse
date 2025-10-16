@@ -90,7 +90,7 @@ export const ModernTabsNavigation = ({
                   className={`
                     relative flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium transition-all duration-200 rounded-sm
                     ${isActive 
-                      ? 'bg-[#0ABAB5] text-white shadow-lg transform scale-105' 
+                      ? 'bg-aurora-primary text-white shadow-lg transform scale-105' 
                       : 'text-muted-foreground hover:text-foreground hover:bg-accent'
                     }
                   `}

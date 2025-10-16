@@ -12,7 +12,7 @@ export const AdminSidebar = ({
   return (
     <aside
       className={cn(
-        "fixed inset-y-0 left-0 z-50 flex h-full flex-col bg-[#0F111A] border-r border-white/5 transition-all duration-300 ease-in-out",
+        "fixed inset-y-0 left-0 z-50 flex h-full flex-col bg-background border-r border-border transition-all duration-300 ease-in-out",
         // Largura responsiva
         sidebarOpen ? "w-64" : "w-16",
         // Visibilidade mobile vs desktop

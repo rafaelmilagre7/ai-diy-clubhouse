@@ -7,12 +7,12 @@ import { Rocket, Plus, Clock, CheckCircle } from 'lucide-react';
 
 export const ImplementationTrailCard: React.FC = () => {
   return (
-    <Card className="bg-[#151823]/80 border-neutral-700/50 hover:shadow-lg hover:border-viverblue/30 transition-all duration-300">
+    <Card className="bg-card/80 border-border hover:shadow-lg hover:border-aurora-primary/30 transition-all duration-300">
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center justify-between text-white">
+        <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="p-2 bg-viverblue/20 rounded-lg">
-              <Rocket className="h-5 w-5 text-viverblue" />
+            <div className="p-2 bg-aurora-primary/20 rounded-lg">
+              <Rocket className="h-5 w-5 text-aurora-primary" />
             </div>
             <span>Trilha de Implementação</span>
           </div>
@@ -21,14 +21,15 @@ export const ImplementationTrailCard: React.FC = () => {
       <CardContent className="pt-0">
         <div className="space-y-3">
           <div>
-            <h4 className="font-medium text-white">Trilha de Implementação IA</h4>
-            <p className="text-sm text-neutral-400 mt-1">
+            <h4 className="font-medium">Trilha de Implementação IA</h4>
+            <p className="text-sm text-muted-foreground mt-1">
               Sua trilha personalizada está disponível
             </p>
           </div>
           
           <Button 
-            className="w-full bg-viverblue hover:bg-viverblue-dark text-white"
+            variant="aurora-primary"
+            className="w-full"
             onClick={() => window.location.href = '/trilha-implementacao'}
           >
             <Rocket className="h-4 w-4 mr-2" />

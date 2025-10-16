@@ -119,12 +119,12 @@ const GoalCard = ({ goal }: GoalCardProps) => {
   const TypeIcon = getTypeIcon(goal.type);
 
   return (
-    <Card className="h-full overflow-hidden hover:shadow-md hover:translate-y-[-2px] transition-all duration-300 border-neutral-800/50 bg-[#151823]">
+    <Card className="h-full overflow-hidden hover:shadow-md hover:translate-y-[-2px] transition-all duration-300 border-border bg-card">
       <CardHeader className="pb-4 pt-6 px-6">
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-2">
-            <div className="p-2 bg-viverblue/10 rounded-lg">
-              <TypeIcon className="h-4 w-4 text-viverblue" />
+            <div className="p-2 bg-aurora-primary/10 rounded-lg">
+              <TypeIcon className="h-4 w-4 text-aurora-primary" />
             </div>
             <div className="flex-1">
               <h3 className="font-semibold text-white line-clamp-2 text-sm">{goal.title}</h3>
@@ -172,7 +172,7 @@ interface StatsCardProps {
 
 const StatsCard = ({ title, value, change, icon: Icon, positive }: StatsCardProps) => {
   return (
-    <Card className="border-neutral-800/50 bg-[#151823]">
+    <Card className="border-border bg-card">
       <CardContent className="p-4">
         <div className="flex items-center justify-between">
           <div>

@@ -29,8 +29,8 @@ export const ContentRenderer = ({ content }: ContentRendererProps) => {
       .replace(/<li/g, '<li class="mb-1 text-neutral-200"')
       .replace(/<a /g, '<a class="text-viverblue hover:text-viverblue-light underline" ')
       .replace(/<blockquote/g, '<blockquote class="pl-4 border-l-2 border-viverblue/30 italic text-neutral-300 my-4"')
-      .replace(/<pre/g, '<pre class="bg-[#0F111A] p-4 rounded-md overflow-auto text-neutral-200 my-4"')
-      .replace(/<code/g, '<code class="font-mono text-neutral-200 bg-[#1A1E2E] px-1 rounded"');
+      .replace(/<pre/g, '<pre class="bg-background p-4 rounded-md overflow-auto my-4"')
+      .replace(/<code/g, '<code class="font-mono bg-surface-elevated px-1 rounded"');
     
     return cleanHtml;
   };

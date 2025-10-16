@@ -109,15 +109,15 @@ const getFeatureColor = (permission: Permission, isActive: boolean = false) => {
   const code = permission.code.toLowerCase();
   
   const colorMap: Record<string, string> = {
-    'ai_trail.access': isActive ? 'bg-viverblue/20 text-viverblue border-viverblue/30' : 'bg-viverblue/5 text-viverblue/70',
+    'ai_trail.access': isActive ? 'bg-aurora-primary/20 text-aurora-primary border-aurora-primary/30' : 'bg-aurora-primary/5 text-aurora-primary/70',
     'solutions.access': isActive ? 'bg-operational/20 text-operational border-operational/30' : 'bg-operational/5 text-operational/70',
     'learning.access': isActive ? 'bg-strategy/20 text-strategy border-strategy/30' : 'bg-strategy/5 text-strategy/70',
-    'certificates.access': isActive ? 'bg-aurora/20 text-aurora border-aurora/30' : 'bg-aurora/5 text-aurora/70',
+    'certificates.access': isActive ? 'bg-aurora-primary/20 text-aurora-primary border-aurora-primary/30' : 'bg-aurora-primary/5 text-aurora-primary/70',
     'tools.access': isActive ? 'bg-revenue/20 text-revenue border-revenue/30' : 'bg-revenue/5 text-revenue/70',
-    'benefits.access': isActive ? 'bg-viverblue/20 text-viverblue border-viverblue/30' : 'bg-viverblue/5 text-viverblue/70',
+    'benefits.access': isActive ? 'bg-aurora-primary/20 text-aurora-primary border-aurora-primary/30' : 'bg-aurora-primary/5 text-aurora-primary/70',
     'networking.access': isActive ? 'bg-operational/20 text-operational border-operational/30' : 'bg-operational/5 text-operational/70',
     'community.access': isActive ? 'bg-strategy/20 text-strategy border-strategy/30' : 'bg-strategy/5 text-strategy/70',
-    'events.access': isActive ? 'bg-aurora/20 text-aurora border-aurora/30' : 'bg-aurora/5 text-aurora/70',
+    'events.access': isActive ? 'bg-aurora-primary/20 text-aurora-primary border-aurora-primary/30' : 'bg-aurora-primary/5 text-aurora-primary/70',
     'suggestions.access': isActive ? 'bg-revenue/20 text-revenue border-revenue/30' : 'bg-revenue/5 text-revenue/70',
   };
   

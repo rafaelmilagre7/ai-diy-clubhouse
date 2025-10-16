@@ -163,7 +163,7 @@ export const SmartSolutionCard = ({
   return (
     <Card 
       className={cn(
-        "h-full cursor-pointer group transition-all duration-300 overflow-hidden transform hover:-translate-y-1 bg-[#151823] border-neutral-700",
+        "h-full cursor-pointer group transition-all duration-300 overflow-hidden transform hover:-translate-y-1 bg-card border-border",
         getCategoryStyle(solution.category),
         isImplemented && "opacity-75"
       )}
@@ -178,13 +178,13 @@ export const SmartSolutionCard = ({
             className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-[#1A1E2E]">
-            <span className="text-4xl font-bold text-neutral-400">
+          <div className="w-full h-full flex items-center justify-center bg-surface-elevated">
+            <span className="text-4xl font-bold text-muted-foreground">
               {solution.title.charAt(0)}
             </span>
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0F111A] via-transparent to-transparent opacity-90"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-90"></div>
         
         {/* AI Score Overlay */}
         <div className="absolute top-2 right-2">
