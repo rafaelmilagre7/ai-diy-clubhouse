@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import { AdminUserMenu } from "./AdminUserMenu";
-import { NotificationDropdown } from "@/components/notifications/NotificationDropdown";
+import { NotificationCenter } from "@/components/notifications/NotificationCenter";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
@@ -45,7 +45,7 @@ export const AdminContent = ({ children, sidebarOpen, setSidebarOpen }: AdminCon
             console.log("🔍 [ADMIN-HEADER] Clique na área de ações do usuário", e);
           }}
         >
-          <NotificationDropdown />
+          <NotificationCenter />
           <AdminUserMenu />
         </div>
       </header>

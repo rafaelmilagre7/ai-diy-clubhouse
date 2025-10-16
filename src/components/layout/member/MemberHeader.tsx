@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Menu, MessageCircle } from "lucide-react";
 import { MemberUserMenu } from "./MemberUserMenu";
-import { NotificationDropdown } from "@/components/notifications/NotificationDropdown";
+import { NotificationCenter } from "@/components/notifications/NotificationCenter";
 import { InboxDrawer } from "@/components/networking/chat/InboxDrawer";
 import { useUnreadCount } from "@/hooks/networking/useUnreadCount";
 
@@ -67,7 +67,7 @@ export const MemberHeader: React.FC<MemberHeaderProps> = ({
           </Button>
 
           {/* Notificações */}
-          <NotificationDropdown />
+          <NotificationCenter />
           
           {/* Menu do usuário */}
           <MemberUserMenu />
