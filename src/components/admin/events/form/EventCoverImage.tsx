@@ -85,7 +85,7 @@ export const EventCoverImage = ({ form }: EventCoverImageProps) => {
                     className={`transition-all duration-200 ${
                       isUploading 
                         ? "opacity-70 cursor-not-allowed" 
-                        : "hover:bg-viverblue/10 hover:border-viverblue/30 hover:text-viverblue"
+                        : "hover:bg-aurora-primary/10 hover:border-aurora-primary/30 hover:text-aurora-primary"
                     }`}
                     disabled={isUploading}
                     onClick={() => fileInputRef.current?.click()}

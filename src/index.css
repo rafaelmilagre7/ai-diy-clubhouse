@@ -63,15 +63,15 @@
 /* Aurora Style Utilities */
 .aurora-border {
   border-image: linear-gradient(135deg, 
-    hsl(var(--viverblue)), 
-    hsl(var(--vivercyan)), 
-    hsl(var(--viverpetrol))
+    hsl(var(--aurora-primary)), 
+    hsl(var(--aurora-primary-light)), 
+    hsl(var(--aurora-primary-dark))
   ) 1;
 }
 
 /* Enhanced focus states for Aurora */
 .aurora-focus {
-  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-viverblue/40 focus-visible:ring-offset-2 focus-visible:ring-offset-card;
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aurora-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-card;
 }
 
 /* Scale animation for celebration overlay */
@@ -106,9 +106,9 @@
 .loading-skeleton {
   background: linear-gradient(90deg, 
     hsl(var(--muted)) 0%, 
-    hsl(var(--viverblue) / 0.1) 25%,
+    hsl(var(--aurora-primary) / 0.1) 25%,
     hsl(var(--muted) / 0.8) 50%, 
-    hsl(var(--viverblue) / 0.1) 75%,
+    hsl(var(--aurora-primary) / 0.1) 75%,
     hsl(var(--muted)) 100%
   );
   background-size: 200% 100%;
@@ -207,8 +207,8 @@
 }
 
 .aurora-card:hover {
-  border-color: hsl(var(--viverblue) / 0.3);
-  box-shadow: 0 25px 50px -12px hsl(var(--viverblue) / 0.1);
+  border-color: hsl(var(--aurora-primary) / 0.3);
+  box-shadow: 0 25px 50px -12px hsl(var(--aurora-primary) / 0.1);
   transform: translateY(-0.5rem);
 }
 
@@ -231,9 +231,9 @@
 .loading-skeleton {
   background: linear-gradient(90deg, 
     hsl(var(--muted)) 0%, 
-    hsl(var(--viverblue) / 0.1) 25%,
+    hsl(var(--aurora-primary) / 0.1) 25%,
     hsl(var(--muted) / 0.8) 50%, 
-    hsl(var(--viverblue) / 0.1) 75%,
+    hsl(var(--aurora-primary) / 0.1) 75%,
     hsl(var(--muted)) 100%
   );
   background-size: 200% 100%;
@@ -245,12 +245,12 @@
   position: relative;
   overflow: hidden;
   transition: all 0.3s;
-  background: linear-gradient(to right, hsl(var(--viverblue)), hsl(var(--vivercyan)));
+  background: linear-gradient(to right, hsl(var(--aurora-primary)), hsl(var(--aurora-primary-light)));
   box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
 }
 
 .aurora-button:hover {
-  background: linear-gradient(to right, hsl(var(--viverblue-dark)), hsl(var(--vivercyan-dark)));
+  background: linear-gradient(to right, hsl(var(--aurora-primary-dark)), hsl(var(--aurora-primary-dark)));
   box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
 }
 
@@ -290,19 +290,19 @@
 .glass-card-hover:hover {
   background-color: rgb(255 255 255 / 0.15);
   border-color: rgb(255 255 255 / 0.3);
-  box-shadow: 0 20px 25px -5px hsl(var(--viverblue) / 0.2), 0 8px 10px -6px hsl(var(--viverblue) / 0.2);
+  box-shadow: 0 20px 25px -5px hsl(var(--aurora-primary) / 0.2), 0 8px 10px -6px hsl(var(--aurora-primary) / 0.2);
 }
 
 /* Gradient Text Effects */
 .aurora-gradient-text {
-  background: linear-gradient(to right, hsl(var(--viverblue)), hsl(var(--vivercyan)), hsl(var(--viverpetrol)));
+  background: linear-gradient(to right, hsl(var(--aurora-primary)), hsl(var(--aurora-primary-light)), hsl(var(--aurora-primary-dark)));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
 .revenue-gradient-text {
-  background: linear-gradient(to right, hsl(var(--vivercyan)), hsl(var(--vivercyan-light)));
+  background: linear-gradient(to right, hsl(var(--aurora-primary)), hsl(var(--aurora-primary-light)));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -315,7 +315,7 @@
 }
 
 .aurora-focus-ring:focus-visible {
-  outline: 2px solid hsl(var(--viverblue) / 0.4);
+  outline: 2px solid hsl(var(--aurora-primary) / 0.4);
   outline-offset: 2px;
   box-shadow: 0 0 0 2px hsl(var(--background));
 }
@@ -330,7 +330,7 @@
 /* Enhanced Scrollbar */
 .aurora-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: hsl(var(--viverblue) / 0.3) transparent;
+  scrollbar-color: hsl(var(--aurora-primary) / 0.3) transparent;
 }
 
 .aurora-scrollbar::-webkit-scrollbar {
@@ -342,18 +342,18 @@
 }
 
 .aurora-scrollbar::-webkit-scrollbar-thumb {
-  background: linear-gradient(to bottom, hsl(var(--viverblue) / 0.3), hsl(var(--vivercyan) / 0.3));
+  background: linear-gradient(to bottom, hsl(var(--aurora-primary) / 0.3), hsl(var(--aurora-primary-light) / 0.3));
   border-radius: 4px;
 }
 
 .aurora-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(to bottom, hsl(var(--viverblue) / 0.5), hsl(var(--vivercyan) / 0.5));
+  background: linear-gradient(to bottom, hsl(var(--aurora-primary) / 0.5), hsl(var(--aurora-primary-light) / 0.5));
 }
 
 /* Progress Bar Aurora Style */
 .aurora-progress {
-  background: linear-gradient(to right, hsl(var(--viverblue)), hsl(var(--vivercyan)), hsl(var(--viverpetrol)));
-  box-shadow: 0 1px 2px 0 hsl(var(--viverblue) / 0.2);
+  background: linear-gradient(to right, hsl(var(--aurora-primary)), hsl(var(--aurora-primary-light)), hsl(var(--aurora-primary-dark)));
+  box-shadow: 0 1px 2px 0 hsl(var(--aurora-primary) / 0.2);
 }
 
 /* Status Indicators */
@@ -369,8 +369,8 @@
 }
 
 .status-completed {
-  background-color: hsl(var(--viverblue));
-  box-shadow: 0 10px 15px -3px hsl(var(--viverblue) / 0.3), 0 4px 6px -4px hsl(var(--viverblue) / 0.3);
+  background-color: hsl(var(--aurora-primary));
+  box-shadow: 0 10px 15px -3px hsl(var(--aurora-primary) / 0.3), 0 4px 6px -4px hsl(var(--aurora-primary) / 0.3);
 }
 
 /* Enhanced Backdrop */
@@ -383,7 +383,7 @@
 .module-badge {
   width: 2rem;
   height: 2rem;
-  background: linear-gradient(to bottom right, hsl(var(--viverblue)), hsl(var(--vivercyan)));
+  background: linear-gradient(to bottom right, hsl(var(--aurora-primary)), hsl(var(--aurora-primary-light)));
   border-radius: 9999px;
   display: flex;
   align-items: center;

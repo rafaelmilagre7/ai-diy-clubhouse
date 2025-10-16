@@ -267,11 +267,11 @@ export const ContactModal = ({ isOpen, onClose, userId, userName, initialData }:
                    {/* Botão de solicitação de contato */}
                    {!isDataRevealed && (
                      <div className="flex justify-center">
-                       <Button
-                         onClick={handleRequestContact}
-                         disabled={isLoading}
-                         className="relative group bg-gradient-to-r from-primary to-primary/90 text-primary-foreground hover:shadow-lg hover:shadow-primary/25"
-                       >
+                        <Button
+                          onClick={handleRequestContact}
+                          disabled={isLoading}
+                          className="relative group bg-gradient-to-r from-aurora-primary to-aurora-primary/90 text-white hover:shadow-lg hover:shadow-aurora-primary/25"
+                        >
                          {isLoading ? (
                            <>
                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />

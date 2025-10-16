@@ -86,21 +86,21 @@
   --aurora-primary-light: 178 90% 50%;
   --aurora-primary-dark: 178 90% 28%;
   
-  /* --- Aliases de Compatibilidade (apontam para cores da marca) --- */
-  --aurora: var(--viverblue);        /* → Ciano principal */
-  --revenue: var(--vivercyan);       /* → Turquesa */
-  --operational: var(--vivercyan);   /* → Turquesa */
-  --strategy: var(--viverpetrol);    /* → Petróleo */
+  /* --- Aliases de Compatibilidade (apontam para aurora-primary) --- */
+  --aurora: var(--aurora-primary);        /* → Turquesa principal #0ABAB5 */
+  --revenue: var(--aurora-primary);       /* → Turquesa */
+  --operational: var(--aurora-primary);   /* → Turquesa */
+  --strategy: var(--aurora-primary-dark); /* → Turquesa escuro */
   
   /* Variantes dos aliases */
-  --aurora-light: var(--viverblue-light);
-  --aurora-dark: var(--viverblue-dark);
-  --revenue-light: var(--vivercyan-light);
-  --revenue-dark: var(--vivercyan-dark);
-  --operational-light: var(--vivercyan-light);
-  --operational-dark: var(--vivercyan-dark);
-  --strategy-light: var(--viverpetrol-light);
-  --strategy-dark: var(--viverpetrol-dark);
+  --aurora-light: var(--aurora-primary-light);
+  --aurora-dark: var(--aurora-primary-dark);
+  --revenue-light: var(--aurora-primary-light);
+  --revenue-dark: var(--aurora-primary-dark);
+  --operational-light: var(--aurora-primary-light);
+  --operational-dark: var(--aurora-primary-dark);
+  --strategy-light: var(--aurora-primary-light);
+  --strategy-dark: var(--aurora-primary-dark);
 
   /* --- Onboarding Specific --- */
   --onboarding-bg: 216 28% 7%;

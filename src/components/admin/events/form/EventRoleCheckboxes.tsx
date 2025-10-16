@@ -69,7 +69,7 @@ export const EventRoleCheckboxes = ({ selectedRoles, onChange }: EventRoleCheckb
     <div>
       <div className="flex items-center gap-2 mb-2">
         {selectedCount > 0 ? (
-          <Badge className="bg-viverblue hover:bg-viverblue/90 text-white">
+          <Badge className="bg-aurora-primary hover:bg-aurora-primary-dark text-white">
             <Users className="w-3 h-3 mr-1" />
             {selectedCount} {selectedCount === 1 ? 'papel selecionado' : 'papéis selecionados'}
           </Badge>
@@ -89,7 +89,7 @@ export const EventRoleCheckboxes = ({ selectedRoles, onChange }: EventRoleCheckb
                 key={role.id}
                 className={`flex items-start space-x-2 rounded-md p-2 transition-colors ${
                   isChecked 
-                    ? "bg-viverblue/10 dark:bg-viverblue/20 border border-viverblue/30 dark:border-viverblue/40" 
+                    ? "bg-aurora-primary/10 dark:bg-aurora-primary/20 border border-aurora-primary/30 dark:border-aurora-primary/40"
                     : "hover:bg-muted/50 dark:hover:bg-muted/30 border border-transparent"
                 }`}
               >
@@ -97,13 +97,13 @@ export const EventRoleCheckboxes = ({ selectedRoles, onChange }: EventRoleCheckb
                   id={`role-${role.id}`}
                   checked={isChecked}
                   onCheckedChange={(checked) => handleCheckedChange(checked === true, role.id)}
-                  className={isChecked ? "data-[state=checked]:bg-viverblue data-[state=checked]:border-viverblue" : ""}
+                  className={isChecked ? "data-[state=checked]:bg-aurora-primary data-[state=checked]:border-aurora-primary" : ""}
                 />
                 <div className="grid gap-1.5 leading-none flex-1">
                   <label
                     htmlFor={`role-${role.id}`}
                     className={`text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer ${
-                      isChecked ? "text-viverblue dark:text-viverblue" : "text-foreground"
+                      isChecked ? "text-aurora-primary dark:text-aurora-primary" : "text-foreground"
                     }`}
                   >
                     {role.name}

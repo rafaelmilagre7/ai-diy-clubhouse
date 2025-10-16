@@ -20,8 +20,8 @@ export const EventFormSheet = ({ event, onClose }: EventFormSheetProps) => {
         <div className="flex justify-between items-center p-6 border-b border-border/50 sticky top-0 bg-surface-modal/95 backdrop-blur-sm z-10">
           <SheetHeader className="mb-0">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-viverblue/10 border border-viverblue/20">
-                <Edit className="w-5 h-5 text-viverblue" />
+              <div className="p-2 rounded-lg bg-aurora-primary/10 border border-aurora-primary/20">
+                <Edit className="w-5 h-5 text-aurora-primary" />
               </div>
               <SheetTitle className="text-heading-2">
                 {isEditing ? "Editar Evento" : "Novo Evento"}

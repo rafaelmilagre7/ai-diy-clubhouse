@@ -69,8 +69,8 @@ export const EventDateTime = ({ form }: EventDateTimeProps) => {
       ) : (
         // Campos para evento recorrente (apenas hora)
         <div>
-          <div className="p-4 surface-overlay rounded-lg border border-viverblue/20 bg-viverblue/5 mb-4">
-            <div className="flex items-center gap-2 text-viverblue mb-2">
+          <div className="p-4 surface-overlay rounded-lg border border-aurora-primary/20 bg-aurora-primary/5 mb-4">
+            <div className="flex items-center gap-2 text-aurora-primary mb-2">
               <Info size={16} />
               <span className="text-body-small font-medium">Configuração de Horário Recorrente</span>
             </div>

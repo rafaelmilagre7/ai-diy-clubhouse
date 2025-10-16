@@ -14,7 +14,7 @@ export const RecurrenceEditDialog = ({ isOpen, onClose, onChoice }: RecurrenceEd
       <AlertDialogContent className="max-w-md">
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2">
-            <CalendarDays className="h-5 w-5 text-viverblue" />
+            <CalendarDays className="h-5 w-5 text-aurora-primary" />
             Editar Evento Recorrente
           </AlertDialogTitle>
           <AlertDialogDescription className="text-left">
@@ -29,7 +29,7 @@ export const RecurrenceEditDialog = ({ isOpen, onClose, onChoice }: RecurrenceEd
             onClick={() => onChoice('this')}
           >
             <div className="flex items-start gap-3">
-              <Calendar className="h-5 w-5 text-viverblue mt-0.5" />
+              <Calendar className="h-5 w-5 text-aurora-primary mt-0.5" />
               <div className="text-left">
                 <div className="font-medium">Apenas este evento</div>
                 <div className="text-sm text-text-muted">

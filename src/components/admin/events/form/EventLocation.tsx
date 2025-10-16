@@ -27,7 +27,7 @@ export const EventLocation = ({ form }: EventLocationProps) => {
                 <Input 
                   placeholder="https://meet.google.com/..." 
                   {...field} 
-                  className="bg-surface-base border-border/50 focus:border-viverblue/50 transition-colors"
+                  className="bg-surface-base border-border/50 focus:border-aurora-primary/50 transition-colors"
                 />
               </FormControl>
               <FormMessage />
@@ -45,7 +45,7 @@ export const EventLocation = ({ form }: EventLocationProps) => {
                 <Input 
                   placeholder="Endereço ou local do evento presencial..." 
                   {...field} 
-                  className="bg-surface-base border-border/50 focus:border-viverblue/50 transition-colors"
+                  className="bg-surface-base border-border/50 focus:border-aurora-primary/50 transition-colors"
                 />
               </FormControl>
               <FormMessage />

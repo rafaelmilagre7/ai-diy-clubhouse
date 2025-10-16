@@ -221,7 +221,7 @@ export const EventsTable = ({ events: propEvents }: EventsTableProps) => {
                           ${startDate.isToday 
                             ? 'bg-gradient-to-br from-strategy/20 to-revenue/20 group-hover:from-strategy/30 group-hover:to-revenue/30' 
                             : startDate.isUpcoming
-                              ? 'bg-gradient-to-br from-operational/20 to-viverblue/20 group-hover:from-operational/30 group-hover:to-viverblue/30'
+                              ? 'bg-gradient-to-br from-operational/20 to-aurora-primary/20 group-hover:from-operational/30 group-hover:to-aurora-primary/30'
                               : 'bg-gradient-to-br from-muted/20 to-muted/10 group-hover:from-muted/30 group-hover:to-muted/20'
                           }
                         `}>
@@ -239,7 +239,7 @@ export const EventsTable = ({ events: propEvents }: EventsTableProps) => {
                     {/* Event Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
-                        <h3 className="text-body-large font-semibold text-foreground line-clamp-2 group-hover:text-viverblue transition-colors">
+                        <h3 className="text-body-large font-semibold text-foreground line-clamp-2 group-hover:text-aurora-primary transition-colors">
                           {event.title}
                         </h3>
                         
@@ -248,7 +248,7 @@ export const EventsTable = ({ events: propEvents }: EventsTableProps) => {
                             variant="ghost"
                             size="sm"
                             onClick={() => setEditingEvent(event)}
-                            className="h-8 w-8 p-0 opacity-60 hover:opacity-100 hover:bg-viverblue/10 hover:text-viverblue transition-all"
+                            className="h-8 w-8 p-0 opacity-60 hover:opacity-100 hover:bg-aurora-primary/10 hover:text-aurora-primary transition-all"
                           >
                             <Edit className="h-3 w-3" />
                           </Button>
@@ -276,7 +276,7 @@ export const EventsTable = ({ events: propEvents }: EventsTableProps) => {
                   {/* Date and Time */}
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-body-small">
-                      <Clock className="h-3 w-3 text-viverblue" />
+                      <Clock className="h-3 w-3 text-aurora-primary" />
                       <span className={`font-mono ${
                         startDate.isToday 
                           ? 'text-strategy font-semibold' 
@@ -302,7 +302,7 @@ export const EventsTable = ({ events: propEvents }: EventsTableProps) => {
                         {event.physical_location || "Online"}
                       </span>
                       {event.location_link && (
-                        <ExternalLink className="h-3 w-3 text-viverblue cursor-pointer" />
+                        <ExternalLink className="h-3 w-3 text-aurora-primary cursor-pointer" />
                       )}
                     </div>
                   )}
@@ -313,7 +313,7 @@ export const EventsTable = ({ events: propEvents }: EventsTableProps) => {
                       variant="outline" 
                       className={
                         event.is_recurring
-                          ? 'bg-viverblue/10 text-viverblue border-viverblue/30 flex items-center gap-1' 
+                          ? 'bg-aurora-primary/10 text-aurora-primary border-aurora-primary/30 flex items-center gap-1'
                           : 'bg-operational/10 text-operational border-operational/30'
                       }
                     >

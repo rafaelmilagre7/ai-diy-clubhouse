@@ -4,17 +4,17 @@
 /* Gradientes Aurora customizados */
 .aurora-gradient {
   background: linear-gradient(135deg, 
-    hsl(var(--viverblue)) 0%, 
-    hsl(var(--vivercyan)) 50%, 
-    hsl(var(--viverpetrol)) 100%
+    hsl(var(--aurora-primary)) 0%, 
+    hsl(var(--aurora-primary-light)) 50%, 
+    hsl(var(--aurora-primary-dark)) 100%
   );
 }
 
 .aurora-gradient-subtle {
   background: linear-gradient(135deg, 
-    hsl(var(--viverblue) / 0.1) 0%, 
-    hsl(var(--vivercyan) / 0.05) 50%, 
-    hsl(var(--viverpetrol) / 0.1) 100%
+    hsl(var(--aurora-primary) / 0.1) 0%, 
+    hsl(var(--aurora-primary-light) / 0.05) 50%, 
+    hsl(var(--aurora-primary-dark) / 0.1) 100%
   );
 }
 
@@ -32,10 +32,10 @@
 
 @keyframes aurora-glow {
   0%, 100% {
-    box-shadow: 0 0 20px hsl(var(--viverblue) / 0.2);
+    box-shadow: 0 0 20px hsl(var(--aurora-primary) / 0.2);
   }
   50% {
-    box-shadow: 0 0 40px hsl(var(--viverblue) / 0.4), 0 0 60px hsl(var(--vivercyan) / 0.2);
+    box-shadow: 0 0 40px hsl(var(--aurora-primary) / 0.4), 0 0 60px hsl(var(--aurora-primary-light) / 0.2);
   }
 }
 
@@ -77,7 +77,7 @@
   background: linear-gradient(
     90deg,
     transparent,
-    hsl(var(--viverblue) / 0.1),
+    hsl(var(--aurora-primary) / 0.1),
     transparent
   );
   background-size: 200% 100%;
@@ -91,7 +91,7 @@
     hsl(var(--card) / 0.6) 100%
   );
   backdrop-filter: blur(16px) saturate(1.2);
-  border: 1px solid hsl(var(--viverblue) / 0.2);
+  border: 1px solid hsl(var(--aurora-primary) / 0.2);
 }
 
 .aurora-glass-hover:hover {
@@ -99,21 +99,21 @@
     hsl(var(--card) / 0.95) 0%, 
     hsl(var(--card) / 0.8) 100%
   );
-  border-color: hsl(var(--viverblue) / 0.4);
-  box-shadow: 0 8px 32px hsl(var(--viverblue) / 0.15);
+  border-color: hsl(var(--aurora-primary) / 0.4);
+  box-shadow: 0 8px 32px hsl(var(--aurora-primary) / 0.15);
 }
 
 /* Progress ring Aurora styles */
 .aurora-progress-ring {
-  filter: drop-shadow(0 0 4px hsl(var(--viverblue) / 0.4));
+  filter: drop-shadow(0 0 4px hsl(var(--aurora-primary) / 0.4));
 }
 
 /* Text gradients Aurora */
 .aurora-text-gradient {
   background: linear-gradient(135deg, 
     hsl(var(--foreground)) 0%,
-    hsl(var(--viverblue)) 50%,
-    hsl(var(--vivercyan)) 100%
+    hsl(var(--aurora-primary)) 50%,
+    hsl(var(--aurora-primary-light)) 100%
   );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -129,8 +129,8 @@
 :not([data-admin-area]) .aurora-hover-scale:hover {
   transform: scale(1.02) translateZ(0);
   box-shadow: 
-    0 10px 40px hsl(var(--viverblue) / 0.15),
-    0 4px 20px hsl(var(--vivercyan) / 0.1);
+    0 10px 40px hsl(var(--aurora-primary) / 0.15),
+    0 4px 20px hsl(var(--aurora-primary-light) / 0.1);
 }
 
 /* Desabilitar efeitos hover na área admin */
@@ -144,7 +144,7 @@
   position: absolute;
   width: 2px;
   height: 2px;
-  background: hsl(var(--viverblue));
+  background: hsl(var(--aurora-primary));
   border-radius: 50%;
   opacity: 0.6;
   animation: aurora-float 8s infinite ease-in-out;
@@ -152,10 +152,10 @@
 
 .aurora-particle:nth-child(2) {
   animation-delay: -2s;
-  background: hsl(var(--vivercyan));
+  background: hsl(var(--aurora-primary-light));
 }
 
 .aurora-particle:nth-child(3) {
   animation-delay: -4s;
-  background: hsl(var(--viverpetrol));
+  background: hsl(var(--aurora-primary-dark));
 }

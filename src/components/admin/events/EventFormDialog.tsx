@@ -34,8 +34,8 @@ export const EventFormDialog = ({ event, onClose }: EventFormDialogProps) => {
       <DialogContent className="max-w-4xl surface-modal border-border/50 shadow-aurora-strong">
         <DialogHeader className="pb-6 border-b border-border/50">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-viverblue/10 border border-viverblue/20">
-              <Edit className="w-5 h-5 text-viverblue" />
+            <div className="p-2 rounded-lg bg-aurora-primary/10 border border-aurora-primary/20">
+              <Edit className="w-5 h-5 text-aurora-primary" />
             </div>
             <DialogTitle className="text-heading-2">
               {event ? "Editar Evento" : "Novo Evento"}

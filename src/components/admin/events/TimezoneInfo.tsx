@@ -22,9 +22,9 @@ export const TimezoneInfo = () => {
     <div className="p-4 surface-elevated rounded-lg border border-border/50">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-        <Clock className="h-4 w-4 text-viverblue" />
+        <Clock className="h-4 w-4 text-aurora-primary" />
           <span className="text-label">Horário da Plataforma</span>
-          <Badge variant={isInBrazil ? "default" : "outline"} className="bg-viverblue/10 text-viverblue border-viverblue/30">
+          <Badge variant={isInBrazil ? "default" : "outline"} className="bg-aurora-primary/10 text-aurora-primary border-aurora-primary/30">
             {isInBrazil ? "Brasília" : "Convertido"}
           </Badge>
         </div>
@@ -32,14 +32,14 @@ export const TimezoneInfo = () => {
           variant="ghost"
           size="sm"
           onClick={() => setIsExpanded(!isExpanded)}
-          className="text-text-muted hover:text-viverblue"
+          className="text-text-muted hover:text-aurora-primary"
         >
-          <Info className="h-4 w-4 text-viverblue" />
+          <Info className="h-4 w-4 text-aurora-primary" />
         </Button>
       </div>
 
       <div className="mt-2 flex items-center gap-2 text-body-small">
-        <MapPin className="h-3 w-3 text-viverblue" />
+        <MapPin className="h-3 w-3 text-aurora-primary" />
         <span className="text-text-secondary font-mono">
           {timezoneInfo.brazilTimeFormatted} (UTC{timezoneInfo.offset})
         </span>
@@ -56,7 +56,7 @@ export const TimezoneInfo = () => {
           <div className="text-text-muted">
             <strong>Horário da plataforma:</strong> {timezoneInfo.brazilTimeFormatted} (America/São_Paulo)
           </div>
-          <div className="text-caption text-viverblue bg-viverblue/5 p-2 rounded">
+          <div className="text-caption text-aurora-primary bg-aurora-primary/5 p-2 rounded">
             <strong>Info:</strong> Todos os eventos são exibidos no horário de Brasília, 
             independente da sua localização.
           </div>

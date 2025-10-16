@@ -13,7 +13,7 @@ export const EventBasicInfo = ({ form }: EventBasicInfoProps) => {
   return (
     <div className="space-y-6 p-6 surface-elevated rounded-xl border border-border/50">
       <div className="flex items-center gap-2">
-        <div className="w-2 h-6 bg-viverblue rounded-full" />
+        <div className="w-2 h-6 bg-aurora-primary rounded-full" />
         <h3 className="text-heading-3">Informações Básicas</h3>
       </div>
       
@@ -28,7 +28,7 @@ export const EventBasicInfo = ({ form }: EventBasicInfoProps) => {
                 <Input 
                   {...field} 
                   placeholder="Digite o nome do evento..." 
-                  className="bg-surface-base border-border/50 focus:border-viverblue/50 transition-colors"
+                  className="bg-surface-base border-border/50 focus:border-aurora-primary/50 transition-colors"
                 />
               </FormControl>
               <FormMessage />
@@ -46,7 +46,7 @@ export const EventBasicInfo = ({ form }: EventBasicInfoProps) => {
                 <Textarea 
                   {...field} 
                   placeholder="Descreva o evento, objetivos e público-alvo..." 
-                  className="resize-none bg-surface-base border-border/50 focus:border-viverblue/50 transition-colors min-h-[100px]" 
+                  className="resize-none bg-surface-base border-border/50 focus:border-aurora-primary/50 transition-colors min-h-[100px]"
                   rows={4}
                 />
               </FormControl>
