@@ -15,6 +15,11 @@ export interface Notification {
   created_at: string;
   expires_at?: string;
   data?: Record<string, any>;
+  priority?: number;
+  category?: string;
+  action_url?: string;
+  grouped_with?: string;
+  read_at?: string;
 }
 
 export const useNotifications = () => {
@@ -47,7 +52,7 @@ export const useNotifications = () => {
     mutationFn: async (notificationId: string) => {
       const { error } = await supabase
         .from('notifications')
-        .update({ is_read: true })
+        .update({ is_read: true, read_at: new Date().toISOString() })
         .eq('id', notificationId);
 
       if (error) throw error;
@@ -67,7 +72,7 @@ export const useNotifications = () => {
 
       const { error } = await supabase
         .from('notifications')
-        .update({ is_read: true })
+        .update({ is_read: true, read_at: new Date().toISOString() })
         .eq('user_id', user.id)
         .eq('is_read', false);
 

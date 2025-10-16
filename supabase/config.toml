@@ -198,3 +198,6 @@ verify_jwt = false
 
 [functions.reset-user-networking]
 verify_jwt = true
+
+[functions.process-notifications]
+verify_jwt = false
