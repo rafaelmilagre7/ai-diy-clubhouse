@@ -70,7 +70,7 @@ export const ConnectionCard = ({
             <div className="flex items-start justify-between gap-2">
               <h3 className="font-semibold text-text-primary">{otherUser.name}</h3>
               {variant === 'active' && (
-                <Badge className="bg-viverblue/20 text-viverblue border-viverblue/40">
+                <Badge className="bg-aurora-primary/20 text-aurora-primary border-aurora-primary/40">
                   Conectado
                 </Badge>
               )}
@@ -116,7 +116,7 @@ export const ConnectionCard = ({
             <Button
               onClick={() => onAccept(connection.id)}
               disabled={isAccepting || isRejecting}
-              className="flex-1 bg-viverblue/20 text-viverblue border border-viverblue/40 hover:bg-viverblue/30"
+              className="flex-1 bg-aurora-primary/20 text-aurora-primary border border-aurora-primary/40 hover:bg-aurora-primary/30"
             >
               <CheckCircle2 className="w-4 h-4 mr-2" />
               {isAccepting ? 'Aceitando...' : 'Aceitar'}
@@ -148,7 +148,7 @@ export const ConnectionCard = ({
             </Link>
             <Button 
               size="sm"
-              className="flex-1 gap-1.5 bg-gradient-to-r from-aurora to-viverblue hover:from-aurora/90 hover:to-viverblue/90 text-white shadow-sm hover:shadow-md hover:scale-[1.02] transition-all border-0"
+              className="flex-1 gap-1.5 bg-gradient-to-r from-aurora to-aurora-primary hover:from-aurora/90 hover:to-aurora-primary/90 text-white shadow-sm hover:shadow-md hover:scale-[1.02] transition-all border-0"
               onClick={onMessage}
             >
               <MessageSquare className="h-4 w-4" />

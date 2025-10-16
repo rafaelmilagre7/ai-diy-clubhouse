@@ -59,7 +59,7 @@ export const ConnectionNotifications = () => {
             <Bell className="h-5 w-5" />
             Notificações
             {unreadCount > 0 && (
-              <Badge className="bg-viverblue text-white">
+              <Badge className="bg-aurora-primary text-white">
                 {unreadCount}
               </Badge>
             )}
@@ -81,7 +81,7 @@ export const ConnectionNotifications = () => {
             key={notification.id}
             className={`p-4 rounded-lg border transition-colors ${
               !notification.is_read 
-                ? 'bg-viverblue/5 border-viverblue/20' 
+                ? 'bg-aurora-primary/5 border-aurora-primary/20' 
                 : 'bg-background border-neutral-200'
             }`}
           >
@@ -124,7 +124,7 @@ export const ConnectionNotifications = () => {
                   <>
                     <Button
                       size="sm"
-                      className="bg-viverblue hover:bg-viverblue/90"
+                      className="bg-aurora-primary hover:bg-aurora-primary/90"
                       onClick={() => handleAccept(notification.id, notification.sender_id)}
                       disabled={acceptConnection.isPending}
                     >

@@ -69,10 +69,10 @@ export const ActiveConnectionsList = () => {
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-surface-elevated border border-border/30">
         <div className="flex items-center gap-2">
-          <Users className="w-5 h-5 text-viverblue" />
+          <Users className="w-5 h-5 text-aurora-primary" />
           <span className="font-semibold text-text-primary">Suas Conexões</span>
         </div>
-        <div className="px-3 py-1 rounded-full bg-viverblue/20 text-viverblue text-sm font-medium border border-viverblue/40">
+        <div className="px-3 py-1 rounded-full bg-aurora-primary/20 text-aurora-primary text-sm font-medium border border-aurora-primary/40">
           {activeConnections.length}
         </div>
       </div>

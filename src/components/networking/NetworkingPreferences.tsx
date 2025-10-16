@@ -114,7 +114,7 @@ export const NetworkingPreferences = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-16">
-        <Loader2 className="h-8 w-8 animate-spin text-viverblue" />
+        <Loader2 className="h-8 w-8 animate-spin text-aurora-primary" />
       </div>
     );
   }
@@ -124,7 +124,7 @@ export const NetworkingPreferences = () => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold text-textPrimary flex items-center gap-2">
-            <Settings className="h-5 w-5 text-viverblue" />
+            <Settings className="h-5 w-5 text-aurora-primary" />
             Preferências de Networking
           </h2>
           <p className="text-sm text-textSecondary">
@@ -134,7 +134,7 @@ export const NetworkingPreferences = () => {
         <Button 
           onClick={handleSave}
           disabled={isUpdating}
-          className="bg-viverblue hover:bg-viverblue/90 text-white"
+          className="bg-aurora-primary hover:bg-aurora-primary/90 text-white"
         >
           {isUpdating ? (
             <>
@@ -155,7 +155,7 @@ export const NetworkingPreferences = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <Target className="h-4 w-4 text-viverblue" />
+              <Target className="h-4 w-4 text-aurora-primary" />
               Tipos de Conexão
             </CardTitle>
           </CardHeader>
@@ -173,7 +173,7 @@ export const NetworkingPreferences = () => {
                   <div
                     className={`p-3 rounded-lg border cursor-pointer transition-all ${
                       isSelected 
-                        ? 'border-viverblue bg-viverblue/10' 
+                        ? 'border-aurora-primary bg-aurora-primary/10' 
                         : 'border-neutral-700 hover:border-neutral-600'
                     }`}
                     onClick={() => setLocalPrefs(prev => ({
@@ -185,8 +185,8 @@ export const NetworkingPreferences = () => {
                     }))}
                   >
                     <div className="flex items-center gap-2">
-                      <Icon className={`h-4 w-4 ${isSelected ? 'text-viverblue' : 'text-neutral-400'}`} />
-                      <span className={`text-sm ${isSelected ? 'text-viverblue' : 'text-textPrimary'}`}>
+                      <Icon className={`h-4 w-4 ${isSelected ? 'text-aurora-primary' : 'text-neutral-400'}`} />
+                      <span className={`text-sm ${isSelected ? 'text-aurora-primary' : 'text-textPrimary'}`}>
                         {type.label}
                       </span>
                     </div>
@@ -201,7 +201,7 @@ export const NetworkingPreferences = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <Brain className="h-4 w-4 text-viverblue" />
+              <Brain className="h-4 w-4 text-aurora-primary" />
               Configurações IA
             </CardTitle>
           </CardHeader>
@@ -270,7 +270,7 @@ export const NetworkingPreferences = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <Building2 className="h-4 w-4 text-viverblue" />
+              <Building2 className="h-4 w-4 text-aurora-primary" />
               Setores de Interesse
             </CardTitle>
           </CardHeader>
@@ -284,7 +284,7 @@ export const NetworkingPreferences = () => {
                     variant={isSelected ? "default" : "outline"}
                     className={`cursor-pointer transition-colors ${
                       isSelected 
-                        ? 'bg-viverblue hover:bg-viverblue/90' 
+                        ? 'bg-aurora-primary hover:bg-aurora-primary/90' 
                         : 'hover:bg-neutral-800'
                     }`}
                     onClick={() => setLocalPrefs(prev => ({
@@ -307,7 +307,7 @@ export const NetworkingPreferences = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <MapPin className="h-4 w-4 text-viverblue" />
+              <MapPin className="h-4 w-4 text-aurora-primary" />
               Localização Preferida
             </CardTitle>
           </CardHeader>
@@ -321,7 +321,7 @@ export const NetworkingPreferences = () => {
                     variant={isSelected ? "default" : "outline"}
                     className={`cursor-pointer transition-colors ${
                       isSelected 
-                        ? 'bg-viverblue hover:bg-viverblue/90' 
+                        ? 'bg-aurora-primary hover:bg-aurora-primary/90' 
                         : 'hover:bg-neutral-800'
                     }`}
                     onClick={() => setLocalPrefs(prev => ({

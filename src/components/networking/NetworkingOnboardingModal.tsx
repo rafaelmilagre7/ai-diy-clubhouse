@@ -198,8 +198,8 @@ export const NetworkingOnboardingModal: React.FC<NetworkingOnboardingModalProps>
             {/* Step 1: Boas-vindas */}
             {currentStep === 1 && (
               <div className="space-y-6 text-center animate-fade-in">
-                <div className="inline-block p-4 rounded-xl bg-viverblue/10 border border-viverblue/20 aurora-glow">
-                  <Users className="w-12 h-12 text-viverblue" />
+                <div className="inline-block p-4 rounded-xl bg-aurora-primary/10 border border-aurora-primary/20 aurora-glow">
+                  <Users className="w-12 h-12 text-aurora-primary" />
                 </div>
                 
                 <div className="space-y-2">
@@ -223,8 +223,8 @@ export const NetworkingOnboardingModal: React.FC<NetworkingOnboardingModalProps>
             {currentStep === 2 && (
               <div className="space-y-6 animate-fade-in">
                 <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-xl bg-viverblue/10 border border-viverblue/20 aurora-float">
-                    <Lightbulb className="w-6 h-6 text-viverblue" />
+                  <div className="p-3 rounded-xl bg-aurora-primary/10 border border-aurora-primary/20 aurora-float">
+                    <Lightbulb className="w-6 h-6 text-aurora-primary" />
                   </div>
                   <div>
                     <h3 className="text-xl font-bold text-text-primary">Proposta de Valor</h3>
@@ -283,7 +283,7 @@ export const NetworkingOnboardingModal: React.FC<NetworkingOnboardingModalProps>
                       key={type.id}
                       className={cn(
                         "p-4 cursor-pointer transition-all aurora-glass-hover",
-                        formData.lookingFor.includes(type.id) && "border-viverblue/60 bg-viverblue/5"
+                        formData.lookingFor.includes(type.id) && "border-aurora-primary/60 bg-aurora-primary/5"
                       )}
                       onClick={() => toggleLookingFor(type.id)}
                     >
@@ -291,7 +291,7 @@ export const NetworkingOnboardingModal: React.FC<NetworkingOnboardingModalProps>
                         <span className="text-2xl">{type.icon}</span>
                         <span className="font-medium text-text-primary">{type.label}</span>
                         {formData.lookingFor.includes(type.id) && (
-                          <CheckCircle className="w-5 h-5 ml-auto text-viverblue" />
+                          <CheckCircle className="w-5 h-5 ml-auto text-aurora-primary" />
                         )}
                       </div>
                     </Card>
@@ -332,7 +332,7 @@ export const NetworkingOnboardingModal: React.FC<NetworkingOnboardingModalProps>
                       key={challenge.id}
                       className={cn(
                         "p-4 cursor-pointer transition-all aurora-glass-hover",
-                        formData.mainChallenge === challenge.id && "border-viverblue/60 bg-viverblue/5"
+                        formData.mainChallenge === challenge.id && "border-aurora-primary/60 bg-aurora-primary/5"
                       )}
                       onClick={() => setFormData(prev => ({ ...prev, mainChallenge: challenge.id }))}
                     >
@@ -340,7 +340,7 @@ export const NetworkingOnboardingModal: React.FC<NetworkingOnboardingModalProps>
                         <span className="text-2xl">{challenge.icon}</span>
                         <span className="font-medium text-text-primary">{challenge.label}</span>
                         {formData.mainChallenge === challenge.id && (
-                          <CheckCircle className="w-5 h-5 ml-auto text-viverblue" />
+                          <CheckCircle className="w-5 h-5 ml-auto text-aurora-primary" />
                         )}
                       </div>
                     </Card>
@@ -384,7 +384,7 @@ export const NetworkingOnboardingModal: React.FC<NetworkingOnboardingModalProps>
                       onKeyDown={(e) => e.key === 'Enter' && addKeyword()}
                       placeholder="Digite uma palavra-chave"
                       disabled={formData.keywords.length >= 3}
-                      className="flex-1 px-4 py-2 rounded-xl bg-surface-elevated border border-border text-text-primary placeholder:text-text-disabled focus:outline-none focus:ring-2 focus:ring-viverblue/30"
+                      className="flex-1 px-4 py-2 rounded-xl bg-surface-elevated border border-border text-text-primary placeholder:text-text-disabled focus:outline-none focus:ring-2 focus:ring-aurora-primary/30"
                     />
                     <Button 
                       onClick={addKeyword} 
@@ -400,7 +400,7 @@ export const NetworkingOnboardingModal: React.FC<NetworkingOnboardingModalProps>
                       <Badge
                         key={index}
                         variant="outline"
-                        className="px-4 py-2 text-sm border-viverblue/40 bg-viverblue/10 text-viverblue animate-scale-in cursor-pointer hover:bg-viverblue/20"
+                        className="px-4 py-2 text-sm border-aurora-primary/40 bg-aurora-primary/10 text-aurora-primary animate-scale-in cursor-pointer hover:bg-aurora-primary/20"
                         onClick={() => removeKeyword(keyword)}
                       >
                         {keyword} ✕
@@ -431,8 +431,8 @@ export const NetworkingOnboardingModal: React.FC<NetworkingOnboardingModalProps>
             {/* Step 6: Processando */}
             {currentStep === 6 && (
               <div className="space-y-6 text-center animate-fade-in py-8">
-                <div className="inline-block p-6 rounded-xl bg-viverblue/10 border border-viverblue/20 aurora-pulse">
-                  <Loader2 className="w-16 h-16 text-viverblue animate-spin" />
+                <div className="inline-block p-6 rounded-xl bg-aurora-primary/10 border border-aurora-primary/20 aurora-pulse">
+                  <Loader2 className="w-16 h-16 text-aurora-primary animate-spin" />
                 </div>
                 
                 <div className="space-y-2">
@@ -453,10 +453,10 @@ export const NetworkingOnboardingModal: React.FC<NetworkingOnboardingModalProps>
             {/* Step 7: Resultado */}
             {currentStep === 7 && (
               <div className="space-y-6 text-center animate-fade-in">
-                <Card className="aurora-glass p-6 border-viverblue/30">
+                <Card className="aurora-glass p-6 border-aurora-primary/30">
                   <div className="space-y-4">
-                    <div className="inline-block p-4 rounded-xl bg-viverblue/10 border border-viverblue/20 aurora-pulse">
-                      <CheckCircle className="w-12 h-12 text-viverblue" />
+                    <div className="inline-block p-4 rounded-xl bg-aurora-primary/10 border border-aurora-primary/20 aurora-pulse">
+                      <CheckCircle className="w-12 h-12 text-aurora-primary" />
                     </div>
                     
                     <div>
@@ -464,14 +464,14 @@ export const NetworkingOnboardingModal: React.FC<NetworkingOnboardingModalProps>
                       <h2 className="text-5xl font-bold aurora-text-gradient mb-2">
                         {networkingScore}/100
                       </h2>
-                      <Badge className="border-viverblue/40 bg-viverblue/20 text-viverblue">
+                      <Badge className="border-aurora-primary/40 bg-aurora-primary/20 text-aurora-primary">
                         Perfil Estrategista 🎉
                       </Badge>
                     </div>
 
                     <div className="pt-4 border-t border-border/50">
                       <p className="text-lg text-text-primary">
-                        Encontramos <span className="font-bold text-viverblue">{matchesFound} conexões estratégicas</span> para você
+                        Encontramos <span className="font-bold text-aurora-primary">{matchesFound} conexões estratégicas</span> para você
                       </p>
                     </div>
                   </div>

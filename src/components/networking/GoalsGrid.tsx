@@ -37,7 +37,7 @@ export const GoalsGrid = () => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold text-textPrimary flex items-center gap-2">
-            <Target className="h-5 w-5 text-viverblue" />
+            <Target className="h-5 w-5 text-aurora-primary" />
             Metas de Networking
           </h2>
           <p className="text-sm text-textSecondary">
@@ -46,7 +46,7 @@ export const GoalsGrid = () => {
         </div>
         <Button 
           size="sm" 
-          className="bg-viverblue hover:bg-viverblue/90 text-white"
+          className="bg-aurora-primary hover:bg-aurora-primary/90 text-white"
         >
           <Plus className="h-4 w-4 mr-1" />
           Nova Meta
@@ -142,7 +142,7 @@ const GoalCard = ({ goal }: GoalCardProps) => {
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
             <span className="text-neutral-400">Progresso</span>
-            <span className="text-viverblue font-medium">{goal.current}/{goal.target}</span>
+            <span className="text-aurora-primary font-medium">{goal.current}/{goal.target}</span>
           </div>
           <Progress value={goal.progress} className="h-2" />
           <div className="flex items-center justify-between text-xs">
@@ -153,7 +153,7 @@ const GoalCard = ({ goal }: GoalCardProps) => {
 
         <Button 
           size="sm" 
-          className="w-full bg-viverblue hover:bg-viverblue/90 text-white text-xs"
+          className="w-full bg-aurora-primary hover:bg-aurora-primary/90 text-white text-xs"
         >
           Ver detalhes
         </Button>
@@ -182,8 +182,8 @@ const StatsCard = ({ title, value, change, icon: Icon, positive }: StatsCardProp
               {change} vs mês anterior
             </p>
           </div>
-          <div className="p-2 bg-viverblue/10 rounded-lg">
-            <Icon className="h-5 w-5 text-viverblue" />
+          <div className="p-2 bg-aurora-primary/10 rounded-lg">
+            <Icon className="h-5 w-5 text-aurora-primary" />
           </div>
         </div>
       </CardContent>

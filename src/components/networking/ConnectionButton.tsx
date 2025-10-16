@@ -156,7 +156,7 @@ export const ConnectionButton = ({ userId, userName, userAvatar, className }: Co
         <Button
           variant="default"
           size="sm"
-          className="bg-viverblue hover:bg-viverblue/90"
+          className="bg-aurora-primary hover:bg-aurora-primary/90"
           onClick={handleAccept}
           disabled={isLoading}
         >

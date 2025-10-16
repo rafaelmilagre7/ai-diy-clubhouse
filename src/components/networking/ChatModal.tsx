@@ -95,7 +95,7 @@ export const ChatModal = ({ isOpen, onClose, recipientId, recipientName, recipie
                   <div
                     className={`max-w-[70%] rounded-lg p-3 ${
                       isOwnMessage
-                        ? 'bg-viverblue text-white'
+                        ? 'bg-aurora-primary text-white'
                         : 'bg-white border border-neutral-200'
                     }`}
                   >
@@ -128,7 +128,7 @@ export const ChatModal = ({ isOpen, onClose, recipientId, recipientName, recipie
             type="submit"
             size="sm"
             disabled={!newMessage.trim() || sendMessage.isPending}
-            className="bg-viverblue hover:bg-viverblue/90"
+            className="bg-aurora-primary hover:bg-aurora-primary/90"
           >
             <Send className="h-4 w-4" />
           </Button>
