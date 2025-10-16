@@ -112,7 +112,7 @@ const TopicView = () => {
             <div className="flex items-start gap-4 mb-4">
               <Avatar className="h-12 w-12">
                 <AvatarImage src={topic.profiles?.avatar_url || ''} />
-                <AvatarFallback className="bg-viverblue text-white">
+                <AvatarFallback className="bg-aurora-primary text-white">
                   {getInitials(topic.profiles?.name || 'Usuário')}
                 </AvatarFallback>
               </Avatar>

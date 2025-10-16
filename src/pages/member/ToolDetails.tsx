@@ -78,9 +78,9 @@ const ToolDetails = () => {
     <div className="relative">
       {/* Aurora Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-br from-viverblue/8 via-transparent to-viverblue-dark/12" />
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-viverblue/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-viverblue-dark/12 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}} />
+        <div className="absolute inset-0 bg-gradient-to-br from-aurora-primary/8 via-transparent to-aurora-primary/12" />
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-aurora-primary/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-aurora-primary/12 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}} />
       </div>
 
       <div className="relative container py-6 max-w-5xl">
@@ -99,22 +99,22 @@ const ToolDetails = () => {
               
               <div className="relative">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                  <TabsList className="w-full grid grid-cols-3 bg-viverblue/10 border border-viverblue/20 rounded-lg">
+                  <TabsList className="w-full grid grid-cols-3 bg-aurora-primary/10 border border-aurora-primary/20 rounded-lg">
                     <TabsTrigger 
                       value="about" 
-                      className="data-[state=active]:bg-viverblue/20 data-[state=active]:text-viverblue-light hover:bg-viverblue/15 transition-all duration-300"
+                      className="data-[state=active]:bg-aurora-primary/20 data-[state=active]:text-aurora-primary hover:bg-aurora-primary/15 transition-all duration-300"
                     >
                       Sobre
                     </TabsTrigger>
                     <TabsTrigger 
                       value="tutorials"
-                      className="data-[state=active]:bg-viverblue/20 data-[state=active]:text-viverblue-light hover:bg-viverblue/15 transition-all duration-300"
+                      className="data-[state=active]:bg-aurora-primary/20 data-[state=active]:text-aurora-primary hover:bg-aurora-primary/15 transition-all duration-300"
                     >
                       Tutoriais
                     </TabsTrigger>
                     <TabsTrigger 
                       value="comments"
-                      className="data-[state=active]:bg-viverblue/20 data-[state=active]:text-viverblue-light hover:bg-viverblue/15 transition-all duration-300"
+                      className="data-[state=active]:bg-aurora-primary/20 data-[state=active]:text-aurora-primary hover:bg-aurora-primary/15 transition-all duration-300"
                     >
                       Comentários
                     </TabsTrigger>
@@ -122,14 +122,14 @@ const ToolDetails = () => {
                   
                   <TabsContent value="about" className="mt-6">
                     <div className="relative bg-white/5 backdrop-blur-sm border border-white/10 p-6 rounded-lg">
-                      <h2 className="text-xl font-semibold mb-4 bg-gradient-to-r from-white to-viverblue-light bg-clip-text text-transparent">Sobre a ferramenta</h2>
+                      <h2 className="text-xl font-semibold mb-4 bg-gradient-to-r from-white to-aurora-primary bg-clip-text text-transparent">Sobre a ferramenta</h2>
                       <p className="text-neutral-300 whitespace-pre-line leading-relaxed">{tool.description}</p>
                     </div>
                   </TabsContent>
                   
                   <TabsContent value="tutorials" className="mt-6">
                     <div className="relative bg-white/5 backdrop-blur-sm border border-white/10 p-6 rounded-lg">
-                      <h2 className="text-xl font-semibold mb-4 bg-gradient-to-r from-white to-viverblue-light bg-clip-text text-transparent">Tutoriais em vídeo</h2>
+                      <h2 className="text-xl font-semibold mb-4 bg-gradient-to-r from-white to-aurora-primary bg-clip-text text-transparent">Tutoriais em vídeo</h2>
                       <ToolTutorials tutorials={tool.video_tutorials} />
                     </div>
                   </TabsContent>

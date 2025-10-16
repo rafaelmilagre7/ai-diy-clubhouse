@@ -16,11 +16,11 @@ const CertificatesPage = () => {
   return (
     <div className="space-y-8">
       {/* Banner Hero no estilo das outras páginas */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/5 via-viverblue/5 to-secondary/5 border border-border backdrop-blur-sm">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/5 via-aurora-primary/5 to-secondary/5 border border-border backdrop-blur-sm">
         {/* Background decoration */}
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/3 via-viverblue/3 to-secondary/3" />
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/3 via-aurora-primary/3 to-secondary/3" />
         <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-primary/10 to-transparent rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-viverblue/10 to-transparent rounded-full blur-2xl" />
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-aurora-primary/10 to-transparent rounded-full blur-2xl" />
         
         <div className="relative px-8 py-12">
           <div className="flex items-start justify-between">

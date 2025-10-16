@@ -25,8 +25,8 @@ const Events = () => {
       <div className="container py-8 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center gap-3 mb-8">
-            <div className="p-2 rounded-full bg-viverblue/10">
-              <CalendarIcon className="w-6 h-6 text-viverblue" />
+            <div className="p-2 rounded-full bg-aurora-primary/10">
+              <CalendarIcon className="w-6 h-6 text-aurora-primary" />
             </div>
             <div>
               <h1 className="text-2xl font-bold mb-1 text-zinc-100">Calendário de Eventos</h1>
@@ -45,10 +45,10 @@ const Events = () => {
                 {/* Overlay Premium */}
                 <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-black/40 to-black/60 z-30 flex items-center justify-center backdrop-blur-sm rounded-2xl">
                   <div className="text-center space-y-3">
-                    <div className="p-3 bg-gradient-to-r from-viverblue via-viverblue/90 to-viverblue/80 rounded-full w-fit mx-auto shadow-2xl">
+                    <div className="p-3 bg-gradient-to-r from-aurora-primary via-aurora-primary/90 to-aurora-primary/80 rounded-full w-fit mx-auto shadow-2xl">
                       <Crown className="h-8 w-8 text-white" />
                     </div>
-                    <Badge className="bg-gradient-to-r from-viverblue via-viverblue/90 to-viverblue/80 text-white border-0 px-4 py-2 text-sm font-semibold shadow-lg">
+                    <Badge className="bg-gradient-to-r from-aurora-primary via-aurora-primary/90 to-aurora-primary/80 text-white border-0 px-4 py-2 text-sm font-semibold shadow-lg">
                       <Lock className="h-3 w-3 mr-2" />
                       PREMIUM
                     </Badge>
@@ -58,7 +58,7 @@ const Events = () => {
                 
                 {/* Premium Badge no topo */}
                 <Badge 
-                  className="absolute top-4 right-4 bg-gradient-to-r from-viverblue via-viverblue/90 to-viverblue/80 text-white border-0 shadow-lg backdrop-blur-sm z-20"
+                  className="absolute top-4 right-4 bg-gradient-to-r from-aurora-primary via-aurora-primary/90 to-aurora-primary/80 text-white border-0 shadow-lg backdrop-blur-sm z-20"
                 >
                   <Crown className="h-3 w-3 mr-1" />
                   PREMIUM
@@ -80,7 +80,7 @@ const Events = () => {
             <>
               {isLoading ? (
                 <div className="flex justify-center items-center h-[700px]">
-                  <Loader2 className="h-8 w-8 animate-spin text-viverblue" />
+                  <Loader2 className="h-8 w-8 animate-spin text-aurora-primary" />
                 </div>
               ) : (
                 <EventCalendar />

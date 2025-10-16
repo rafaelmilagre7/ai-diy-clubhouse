@@ -446,7 +446,7 @@ const AdminSuggestions = () => {
                               
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-start gap-2 mb-2">
-                                  <h3 className="text-body-large font-semibold text-foreground line-clamp-2 group-hover:text-viverblue transition-colors">
+                                  <h3 className="text-body-large font-semibold text-foreground line-clamp-2 group-hover:text-aurora-primary transition-colors">
                                     {suggestion.title}
                                   </h3>
                                   {isRecentSuggestion && (

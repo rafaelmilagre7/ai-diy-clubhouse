@@ -113,14 +113,14 @@ const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTa
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="aurora-glass rounded-2xl border border-aurora/20 backdrop-blur-md overflow-hidden animate-pulse">
-              <div className="bg-gradient-to-r from-aurora/10 to-viverblue/5 p-4 border-b border-white/10">
+              <div className="bg-gradient-to-r from-aurora/10 to-aurora-primary/5 p-4 border-b border-white/10">
                 <div className="flex items-center justify-between">
-                  <div className="w-10 h-10 bg-gradient-to-br from-aurora/20 to-viverblue/10 rounded-xl"></div>
-                  <div className="w-12 h-8 bg-gradient-to-r from-aurora/20 to-viverblue/10 rounded-lg"></div>
+                  <div className="w-10 h-10 bg-gradient-to-br from-aurora/20 to-aurora-primary/10 rounded-xl"></div>
+                  <div className="w-12 h-8 bg-gradient-to-r from-aurora/20 to-aurora-primary/10 rounded-lg"></div>
                 </div>
               </div>
               <div className="p-4">
-                <div className="w-24 h-3 bg-gradient-to-r from-aurora/20 to-viverblue/10 rounded-full"></div>
+                <div className="w-24 h-3 bg-gradient-to-r from-aurora/20 to-aurora-primary/10 rounded-full"></div>
               </div>
             </div>
           ))}
@@ -129,12 +129,12 @@ const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTa
         {/* Loading Filters */}
         <div className="aurora-glass rounded-2xl p-6 border border-aurora/20 backdrop-blur-md">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-1.5 h-6 bg-gradient-to-b from-aurora/50 to-viverblue/30 rounded-full animate-pulse"></div>
-            <div className="w-32 h-5 bg-gradient-to-r from-aurora/20 to-viverblue/10 rounded-lg"></div>
+            <div className="w-1.5 h-6 bg-gradient-to-b from-aurora/50 to-aurora-primary/30 rounded-full animate-pulse"></div>
+            <div className="w-32 h-5 bg-gradient-to-r from-aurora/20 to-aurora-primary/10 rounded-lg"></div>
           </div>
           <div className="flex flex-wrap gap-3">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="w-20 h-9 bg-gradient-to-r from-aurora/20 to-viverblue/10 rounded-xl animate-pulse"></div>
+              <div key={i} className="w-20 h-9 bg-gradient-to-r from-aurora/20 to-aurora-primary/10 rounded-xl animate-pulse"></div>
             ))}
           </div>
         </div>
@@ -142,8 +142,8 @@ const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTa
         {/* Loading Search */}
         <div className="aurora-glass rounded-2xl p-6 border border-aurora/20 backdrop-blur-md">
           <div className="flex items-center gap-4">
-            <div className="flex-1 max-w-md h-12 bg-gradient-to-r from-aurora/20 to-viverblue/10 rounded-xl animate-pulse"></div>
-            <div className="w-24 h-12 bg-gradient-to-r from-aurora/20 to-viverblue/10 rounded-xl animate-pulse"></div>
+            <div className="flex-1 max-w-md h-12 bg-gradient-to-r from-aurora/20 to-aurora-primary/10 rounded-xl animate-pulse"></div>
+            <div className="w-24 h-12 bg-gradient-to-r from-aurora/20 to-aurora-primary/10 rounded-xl animate-pulse"></div>
           </div>
         </div>
         
@@ -152,7 +152,7 @@ const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTa
           <div className="p-8 flex flex-col items-center justify-center py-20">
             <div className="relative mb-6">
               <div className="w-16 h-16 aurora-glass rounded-full border-4 border-aurora/30 border-t-aurora animate-spin"></div>
-              <div className="absolute inset-2 bg-gradient-to-br from-aurora/20 to-viverblue/10 rounded-full aurora-pulse"></div>
+              <div className="absolute inset-2 bg-gradient-to-br from-aurora/20 to-aurora-primary/10 rounded-full aurora-pulse"></div>
             </div>
             <h3 className="text-lg font-semibold aurora-text-gradient mb-2">Carregando Convites</h3>
             <p className="text-muted-foreground text-center">
@@ -162,7 +162,7 @@ const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTa
               {Array.from({ length: 3 }).map((_, i) => (
                 <div 
                   key={i} 
-                  className="w-2 h-2 bg-gradient-to-r from-aurora to-viverblue rounded-full aurora-pulse"
+                  className="w-2 h-2 bg-gradient-to-r from-aurora to-aurora-primary rounded-full aurora-pulse"
                   style={{ animationDelay: `${i * 200}ms` }}
                 ></div>
               ))}
@@ -182,7 +182,7 @@ const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTa
         {/* Status Filter Pills */}
         <div className="aurora-glass rounded-2xl p-6 border border-aurora/20 backdrop-blur-md">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-1.5 h-6 bg-gradient-to-b from-aurora to-viverblue rounded-full"></div>
+            <div className="w-1.5 h-6 bg-gradient-to-b from-aurora to-aurora-primary rounded-full"></div>
             <h3 className="font-semibold text-foreground">Filtros Rápidos</h3>
           </div>
           
@@ -202,7 +202,7 @@ const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTa
                   ${statusFilter === filter.key 
                     ? filter.key === 'failed' 
                       ? 'aurora-glass bg-gradient-to-r from-red-500/20 to-orange-500/10 text-red-400 border border-red-400/30 shadow-lg animate-pulse' 
-                      : 'aurora-glass bg-gradient-to-r from-aurora/20 to-viverblue/10 text-aurora border border-aurora/30 shadow-lg'
+                      : 'aurora-glass bg-gradient-to-r from-aurora/20 to-aurora-primary/10 text-aurora border border-aurora/30 shadow-lg'
                     : filter.key === 'failed' && (filter as any).count > 0
                       ? 'bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-400/20 hover:border-red-400/40'
                       : 'bg-muted/30 hover:bg-muted/50 text-muted-foreground hover:text-foreground border border-muted/20'
@@ -237,7 +237,7 @@ const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTa
                 </div>
               )}
               <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                <div className="w-2 h-2 bg-gradient-to-r from-aurora to-viverblue rounded-full aurora-pulse"></div>
+                <div className="w-2 h-2 bg-gradient-to-r from-aurora to-aurora-primary rounded-full aurora-pulse"></div>
               </div>
             </div>
             

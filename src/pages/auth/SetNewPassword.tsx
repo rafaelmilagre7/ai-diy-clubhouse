@@ -39,7 +39,7 @@ const SetNewPassword = () => {
         </div>
         
         <div className="mt-4 text-center">
-          <Link to="/login" className="text-viverblue hover:text-viverblue/80 inline-flex items-center text-sm">
+          <Link to="/login" className="text-aurora-primary hover:text-aurora-primary/80 inline-flex items-center text-sm">
             <ArrowLeft className="mr-1 h-4 w-4" />
             Voltar para página de login
           </Link>

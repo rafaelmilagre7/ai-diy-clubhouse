@@ -47,7 +47,7 @@ const InvitesManagement = () => {
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-aurora/5 p-6 space-y-8 relative overflow-hidden">
       {/* Aurora Background Elements */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-20 left-10 w-64 h-64 bg-gradient-to-br from-aurora/10 to-viverblue/5 rounded-full blur-3xl animate-blob"></div>
+        <div className="absolute top-20 left-10 w-64 h-64 bg-gradient-to-br from-aurora/10 to-aurora-primary/5 rounded-full blur-3xl animate-blob"></div>
         <div className="absolute top-40 right-20 w-96 h-96 bg-gradient-to-br from-operational/8 to-revenue/5 rounded-full blur-3xl animate-blob animation-delay-2000"></div>
         <div className="absolute bottom-20 left-1/3 w-80 h-80 bg-gradient-to-br from-strategy/6 to-aurora/4 rounded-full blur-3xl animate-blob animation-delay-4000"></div>
       </div>
@@ -57,7 +57,7 @@ const InvitesManagement = () => {
         <div className="flex justify-between items-start">
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-2 h-16 bg-gradient-to-b from-aurora via-viverblue to-operational rounded-full aurora-glow"></div>
+              <div className="w-2 h-16 bg-gradient-to-b from-aurora via-aurora-primary to-operational rounded-full aurora-glow"></div>
               <div>
                 <h1 className="text-4xl font-bold aurora-text-gradient">
                   Gerenciar Convites
@@ -103,7 +103,7 @@ const InvitesManagement = () => {
         <TabsList className="grid w-full grid-cols-2 aurora-glass border-aurora/20 backdrop-blur-md h-14 rounded-2xl p-1.5">
           <TabsTrigger 
             value="invites"
-            className="data-[state=active]:aurora-glass data-[state=active]:bg-gradient-to-r data-[state=active]:from-aurora/20 data-[state=active]:to-viverblue/10 data-[state=active]:text-aurora data-[state=active]:shadow-lg transition-all duration-300 rounded-xl font-medium"
+            className="data-[state=active]:aurora-glass data-[state=active]:bg-gradient-to-r data-[state=active]:from-aurora/20 data-[state=active]:to-aurora-primary/10 data-[state=active]:text-aurora data-[state=active]:shadow-lg transition-all duration-300 rounded-xl font-medium"
           >
             Lista de Convites
           </TabsTrigger>
@@ -117,9 +117,9 @@ const InvitesManagement = () => {
         
         <TabsContent value="invites" className="mt-8 animate-fade-in">
           <div className="aurora-glass rounded-2xl border border-aurora/20 backdrop-blur-md overflow-hidden">
-            <div className="bg-gradient-to-r from-aurora/10 via-viverblue/5 to-transparent p-8 border-b border-aurora/20">
+            <div className="bg-gradient-to-r from-aurora/10 via-aurora-primary/5 to-transparent p-8 border-b border-aurora/20">
               <div className="flex items-center gap-4">
-                <div className="p-3 rounded-xl bg-gradient-to-br from-aurora/20 to-viverblue/10 aurora-glass">
+                <div className="p-3 rounded-xl bg-gradient-to-br from-aurora/20 to-aurora-primary/10 aurora-glass">
                   <Mail className="h-6 w-6 text-aurora" />
                 </div>
                 <div>

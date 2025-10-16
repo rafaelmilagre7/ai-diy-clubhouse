@@ -78,7 +78,7 @@ const ValidateCertificate = () => {
           <div className="bg-aurora-primary/10 p-4 border-b border-aurora-primary/20">
             <div className="flex items-center gap-2">
               <Award className="h-5 w-5 text-aurora-primary" />
-              <h3 className="font-semibold text-viverblue">Certificado de Implementação de Solução</h3>
+              <h3 className="font-semibold text-aurora-primary">Certificado de Implementação de Solução</h3>
             </div>
           </div>
           
@@ -128,7 +128,7 @@ const ValidateCertificate = () => {
           <div className="bg-aurora-primary/10 p-4 border-b border-aurora-primary/20">
             <div className="flex items-center gap-2">
               <Award className="h-5 w-5 text-aurora-primary" />
-              <h3 className="font-semibold text-viverblue">Certificado de Curso</h3>
+              <h3 className="font-semibold text-aurora-primary">Certificado de Curso</h3>
             </div>
           </div>
           

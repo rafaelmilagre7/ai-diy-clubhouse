@@ -37,16 +37,16 @@ const Networking = () => {
           {/* Aurora Background Blobs */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-aurora/10 rounded-full blur-3xl animate-blob" />
-            <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-viverblue/10 rounded-full blur-3xl animate-blob animation-delay-2000" />
+            <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-aurora-primary/10 rounded-full blur-3xl animate-blob animation-delay-2000" />
             <div className="absolute bottom-1/4 left-1/3 w-96 h-96 bg-operational/10 rounded-full blur-3xl animate-blob animation-delay-4000" />
           </div>
           
           <div className="relative text-center space-y-6">
-            <div className="inline-flex p-4 rounded-full bg-gradient-to-br from-aurora/20 to-viverblue/20 backdrop-blur-sm border border-aurora/30">
+            <div className="inline-flex p-4 rounded-full bg-gradient-to-br from-aurora/20 to-aurora-primary/20 backdrop-blur-sm border border-aurora/30">
               <Loader2 className="h-12 w-12 animate-spin text-aurora" />
             </div>
             <div className="space-y-2">
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-aurora via-viverblue to-operational bg-clip-text text-transparent">
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-aurora via-aurora-primary to-operational bg-clip-text text-transparent">
                 Analisando sua rede
               </h2>
               <p className="text-muted-foreground">Carregando suas conexões estratégicas...</p>
@@ -69,7 +69,7 @@ const Networking = () => {
           {/* Aurora Background Blobs */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-aurora/10 rounded-full blur-3xl animate-blob" />
-            <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-viverblue/10 rounded-full blur-3xl animate-blob animation-delay-2000" />
+            <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-aurora-primary/10 rounded-full blur-3xl animate-blob animation-delay-2000" />
             <div className="absolute bottom-1/4 left-1/3 w-96 h-96 bg-operational/10 rounded-full blur-3xl animate-blob animation-delay-4000" />
           </div>
 
@@ -94,13 +94,13 @@ const Networking = () => {
                   }}
                   className="relative"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-aurora via-viverblue to-operational opacity-20 blur-2xl rounded-full"></div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-aurora via-aurora-primary to-operational opacity-20 blur-2xl rounded-full"></div>
                   <div className="relative inline-flex p-8 rounded-3xl bg-gradient-to-br from-card/90 to-card/70 backdrop-blur-sm border border-aurora/30 shadow-lg">
                     <svg className="h-20 w-20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <defs>
                         <linearGradient id="iconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
                           <stop offset="0%" stopColor="hsl(var(--aurora))" />
-                          <stop offset="50%" stopColor="hsl(var(--viverblue))" />
+                          <stop offset="50%" stopColor="hsl(var(--aurora-primary))" />
                           <stop offset="100%" stopColor="hsl(var(--operational))" />
                         </linearGradient>
                       </defs>
@@ -133,7 +133,7 @@ const Networking = () => {
                     onClick={() => generateMatches()}
                     disabled={isGenerating}
                     size="lg"
-                    className="relative overflow-hidden gap-3 px-10 py-7 text-lg font-semibold bg-gradient-to-r from-aurora via-viverblue to-operational hover:from-aurora/90 hover:via-viverblue/90 hover:to-operational/90 text-white border-0 shadow-xl hover:shadow-2xl transition-all"
+                    className="relative overflow-hidden gap-3 px-10 py-7 text-lg font-semibold bg-gradient-to-r from-aurora via-aurora-primary to-operational hover:from-aurora/90 hover:via-aurora-primary/90 hover:to-operational/90 text-white border-0 shadow-xl hover:shadow-2xl transition-all"
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 hover:opacity-100 transition-opacity" />
                     {isGenerating ? (
@@ -164,7 +164,7 @@ const Networking = () => {
                     <div className="text-sm text-muted-foreground">Conexões Inteligentes</div>
                   </div>
                   <div className="text-center space-y-2">
-                    <div className="text-3xl font-bold bg-gradient-to-r from-viverblue to-viverblue/80 bg-clip-text text-transparent">100%</div>
+                    <div className="text-3xl font-bold bg-gradient-to-r from-aurora-primary to-aurora-primary/80 bg-clip-text text-transparent">100%</div>
                     <div className="text-sm text-muted-foreground">Personalizado</div>
                   </div>
                   <div className="text-center space-y-2">
@@ -191,7 +191,7 @@ const Networking = () => {
         {/* Aurora Background Blobs */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute -top-1/2 left-1/4 w-96 h-96 bg-aurora/5 rounded-full blur-3xl animate-blob" />
-          <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-viverblue/5 rounded-full blur-3xl animate-blob animation-delay-2000" />
+          <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-aurora-primary/5 rounded-full blur-3xl animate-blob animation-delay-2000" />
           <div className="absolute -bottom-1/2 left-1/2 w-96 h-96 bg-operational/5 rounded-full blur-3xl animate-blob animation-delay-4000" />
         </div>
 
@@ -202,7 +202,7 @@ const Networking = () => {
             <span className="text-xs font-medium text-aurora">Powered by Viver de IA</span>
           </div>
           
-          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-aurora via-viverblue to-operational bg-clip-text text-transparent">
+          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-aurora via-aurora-primary to-operational bg-clip-text text-transparent">
             Networking com IA
           </h1>
           

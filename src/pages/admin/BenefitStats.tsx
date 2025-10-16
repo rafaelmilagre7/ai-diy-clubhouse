@@ -133,7 +133,7 @@ const BenefitStats = () => {
         <div className="flex flex-col lg:flex-row justify-between items-start gap-6">
           <div className="flex items-start gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-2 h-16 bg-gradient-to-b from-green-500 via-emerald-500 to-blue-500 rounded-full aurora-glow"></div>
+              <div className="w-2 h-16 bg-gradient-to-b from-green-500 via-emerald-500 to-aurora-primary rounded-full aurora-glow"></div>
               <div>
                 <div className="flex items-center gap-3 mb-2">
                   <div className="p-3 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-500/10 aurora-glass">
@@ -167,7 +167,7 @@ const BenefitStats = () => {
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-gradient-to-r from-blue-400 to-cyan-500 rounded-full aurora-pulse"></div>
+            <div className="w-3 h-3 bg-gradient-to-r from-aurora-primary to-operational rounded-full aurora-pulse"></div>
             <span className="text-sm font-medium text-muted-foreground">
               {totalClicks} Cliques Totais
             </span>
@@ -234,9 +234,9 @@ const BenefitStats = () => {
             label: "Ferramentas com Benefícios",
             value: toolsWithBenefits,
             icon: Users,
-            gradient: "from-blue-500/20 to-cyan-500/10",
-            iconColor: "text-blue-500",
-            border: "border-blue-500/30",
+            gradient: "from-aurora-primary/20 to-operational/10",
+            iconColor: "text-aurora-primary",
+            border: "border-aurora-primary/30",
             description: "Total de ferramentas com ofertas"
           },
           {

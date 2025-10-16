@@ -160,7 +160,7 @@ export const IntegrationsDebugPage = () => {
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center gap-3 mb-6">
-        <Zap className="h-8 w-8 text-viverblue" />
+        <Zap className="h-8 w-8 text-aurora-primary" />
         <div>
           <h1 className="text-3xl font-bold">Debug: Pipedrive + Discord</h1>
           <p className="text-muted-foreground">

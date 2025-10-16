@@ -24,7 +24,7 @@ const InviteStats = ({ invites }: InviteStatsProps) => {
       label: "Total de Convites",
       value: totalInvites,
       icon: Mail,
-      gradient: "from-aurora/20 to-viverblue/10",
+      gradient: "from-aurora/20 to-aurora-primary/10",
       iconColor: "text-aurora",
       border: "border-aurora/30",
       glow: "aurora-glow"

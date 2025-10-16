@@ -61,8 +61,8 @@ const AdminSuggestionsPage = () => {
         return {
           label: 'Nova',
           icon: AlertCircle,
-          className: 'bg-blue-500/10 text-blue-700 border-blue-500/20 dark:text-blue-400',
-          dotColor: 'bg-blue-500'
+          className: 'bg-aurora-primary/10 text-aurora-primary border-aurora-primary/20',
+          dotColor: 'bg-aurora-primary'
         };
       case 'under_review':
         return {
