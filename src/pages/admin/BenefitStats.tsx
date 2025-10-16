@@ -64,22 +64,22 @@ const BenefitStats = () => {
   
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-green-500/5 p-6 space-y-8 relative overflow-hidden">
+      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-success/5 p-6 space-y-8 relative overflow-hidden">
         {/* Aurora Background Elements */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-br from-green-500/8 to-emerald-500/4 rounded-full blur-3xl animate-blob"></div>
+          <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-br from-success/8 to-success-light/4 rounded-full blur-3xl animate-blob"></div>
           <div className="absolute top-60 right-20 w-96 h-96 bg-gradient-to-br from-aurora-primary/6 to-operational/3 rounded-full blur-3xl animate-blob animation-delay-2000"></div>
           <div className="absolute bottom-20 left-1/3 w-80 h-80 bg-gradient-to-br from-purple-500/4 to-aurora/3 rounded-full blur-3xl animate-blob animation-delay-4000"></div>
         </div>
 
         {/* Loading Header */}
-        <div className="aurora-glass rounded-2xl border border-green-500/20 backdrop-blur-md animate-pulse">
-          <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/5 p-8 border-b border-green-500/20">
+        <div className="aurora-glass rounded-2xl border border-success/20 backdrop-blur-md animate-pulse">
+          <div className="bg-gradient-to-r from-success/10 to-success-light/5 p-8 border-b border-success/20">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-green-500/20 to-emerald-500/10 rounded-2xl"></div>
+              <div className="w-16 h-16 bg-gradient-to-br from-success/20 to-success-light/10 rounded-2xl"></div>
               <div className="space-y-3 flex-1">
-                <div className="w-80 h-8 bg-gradient-to-r from-green-500/20 to-emerald-500/10 rounded-lg"></div>
-                <div className="w-96 h-5 bg-gradient-to-r from-green-500/15 to-emerald-500/8 rounded-lg"></div>
+                <div className="w-80 h-8 bg-gradient-to-r from-success/20 to-success-light/10 rounded-lg"></div>
+                <div className="w-96 h-5 bg-gradient-to-r from-success/15 to-success-light/8 rounded-lg"></div>
               </div>
             </div>
           </div>
@@ -88,26 +88,26 @@ const BenefitStats = () => {
         {/* Loading Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="aurora-glass rounded-2xl border border-green-500/20 backdrop-blur-md animate-pulse">
-              <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/5 p-6 border-b border-white/10">
+            <div key={i} className="aurora-glass rounded-2xl border border-success/20 backdrop-blur-md animate-pulse">
+              <div className="bg-gradient-to-r from-success/10 to-success-light/5 p-6 border-b border-white/10">
                 <div className="flex items-center justify-between">
-                  <div className="w-12 h-12 bg-gradient-to-br from-green-500/20 to-emerald-500/10 rounded-xl"></div>
-                  <div className="w-16 h-8 bg-gradient-to-r from-green-500/20 to-emerald-500/10 rounded-lg"></div>
+                  <div className="w-12 h-12 bg-gradient-to-br from-success/20 to-success-light/10 rounded-xl"></div>
+                  <div className="w-16 h-8 bg-gradient-to-r from-success/20 to-success-light/10 rounded-lg"></div>
                 </div>
               </div>
               <div className="p-4">
-                <div className="w-32 h-3 bg-gradient-to-r from-green-500/15 to-emerald-500/8 rounded-full"></div>
+                <div className="w-32 h-3 bg-gradient-to-r from-success/15 to-success-light/8 rounded-full"></div>
               </div>
             </div>
           ))}
         </div>
 
         {/* Loading Content */}
-        <div className="aurora-glass rounded-2xl border border-green-500/20 backdrop-blur-md p-8">
+        <div className="aurora-glass rounded-2xl border border-success/20 backdrop-blur-md p-8">
           <div className="flex items-center justify-center py-20">
             <div className="relative">
-              <div className="w-20 h-20 aurora-glass rounded-full border-4 border-green-500/30 border-t-green-500 animate-spin"></div>
-              <div className="absolute inset-3 bg-gradient-to-br from-green-500/20 to-emerald-500/10 rounded-full aurora-pulse"></div>
+              <div className="w-20 h-20 aurora-glass rounded-full border-4 border-success/30 border-t-success animate-spin"></div>
+              <div className="absolute inset-3 bg-gradient-to-br from-success/20 to-success-light/10 rounded-full aurora-pulse"></div>
             </div>
             <div className="ml-6">
               <h3 className="text-2xl font-semibold aurora-text-gradient mb-2">Carregando Estatísticas de Benefícios</h3>
@@ -120,10 +120,10 @@ const BenefitStats = () => {
   }
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-green-500/5 p-6 space-y-8 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-success/5 p-6 space-y-8 relative overflow-hidden">
       {/* Aurora Background Elements */}
       <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-br from-green-500/8 to-emerald-500/4 rounded-full blur-3xl animate-blob"></div>
+          <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-br from-success/8 to-success-light/4 rounded-full blur-3xl animate-blob"></div>
         <div className="absolute top-60 right-20 w-96 h-96 bg-gradient-to-br from-aurora-primary/6 to-operational/3 rounded-full blur-3xl animate-blob animation-delay-2000"></div>
         <div className="absolute bottom-20 left-1/3 w-80 h-80 bg-gradient-to-br from-purple-500/4 to-aurora/3 rounded-full blur-3xl animate-blob animation-delay-4000"></div>
       </div>

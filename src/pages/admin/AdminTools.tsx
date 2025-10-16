@@ -83,13 +83,13 @@ const AdminTools = () => {
       <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-destructive/5 p-6 space-y-8 relative overflow-hidden">
         {/* Aurora Background Elements */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-20 right-10 w-72 h-72 bg-gradient-to-br from-destructive/8 to-red-500/4 rounded-full blur-3xl animate-blob"></div>
+          <div className="absolute top-20 right-10 w-72 h-72 bg-gradient-to-br from-destructive/8 to-destructive-dark/4 rounded-full blur-3xl animate-blob"></div>
         </div>
 
         <div className="aurora-glass rounded-2xl border border-destructive/20 backdrop-blur-md overflow-hidden">
-          <div className="bg-gradient-to-r from-destructive/15 via-red-500/10 to-transparent p-8 border-b border-destructive/20">
+          <div className="bg-gradient-to-r from-destructive/15 via-destructive-dark/10 to-transparent p-8 border-b border-destructive/20">
             <div className="flex items-center gap-4">
-              <div className="p-4 rounded-xl bg-gradient-to-br from-destructive/25 to-red-500/15 aurora-glass">
+              <div className="p-4 rounded-xl bg-gradient-to-br from-destructive/25 to-destructive-dark/15 aurora-glass">
                 <Wrench className="h-8 w-8 text-destructive" />
               </div>
               <div>
@@ -101,7 +101,7 @@ const AdminTools = () => {
           <div className="p-8 text-center">
             <Button 
               onClick={handleRefresh}
-              className="bg-gradient-to-r from-destructive to-red-500 hover:from-destructive-dark hover:to-red-600 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300"
+              className="bg-gradient-to-r from-destructive to-destructive-dark hover:from-destructive-dark hover:to-destructive text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300"
             >
               <RefreshCcw className="h-4 w-4 mr-2" />
               Tentar Novamente
@@ -158,13 +158,13 @@ const AdminTools = () => {
         {/* Enhanced Quick Stats */}
         <div className="flex gap-6 mt-6 flex-wrap">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-gradient-to-r from-blue-400 to-cyan-500 rounded-full aurora-pulse"></div>
+            <div className="w-3 h-3 bg-gradient-to-r from-operational to-operational-light rounded-full aurora-pulse"></div>
             <span className="text-sm font-medium text-muted-foreground">
               {totalTools} Ferramentas Total
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full aurora-pulse"></div>
+            <div className="w-3 h-3 bg-gradient-to-r from-success to-success-light rounded-full aurora-pulse"></div>
             <span className="text-sm font-medium text-muted-foreground">
               {activeTools} Ativas
             </span>
@@ -200,9 +200,9 @@ const AdminTools = () => {
             label: "Ferramentas Ativas",
             value: activeTools,
             icon: TrendingUp,
-            gradient: "from-green-500/20 to-emerald-500/10",
-            iconColor: "text-green-500",
-            border: "border-green-500/30",
+            gradient: "from-success/20 to-success-light/10",
+            iconColor: "text-success",
+            border: "border-success/30",
             description: "Disponíveis para membros"
           },
           {

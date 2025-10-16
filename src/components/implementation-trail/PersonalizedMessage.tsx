@@ -16,7 +16,7 @@ export const PersonalizedMessage = ({ message }: PersonalizedMessageProps) => {
             <img 
               src="/lovable-uploads/693dabd3-1072-42e6-b4d1-385f35dc5d5a.png" 
               alt="Nina" 
-              className="w-16 h-16 rounded-full object-cover border-2 border-viverblue/30"
+              className="w-16 h-16 rounded-full object-cover border-2 border-aurora-primary/30"
             />
           </div>
           <div className="flex-1">

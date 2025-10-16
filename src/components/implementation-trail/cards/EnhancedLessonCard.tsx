@@ -58,11 +58,11 @@ export const EnhancedLessonCard = ({ lesson, index }: EnhancedLessonCardProps) =
       case 1:
         return {
           label: 'Alta Prioridade',
-          color: 'bg-gradient-to-r from-viverblue to-viverblue-light text-white shadow-lg shadow-viverblue/25',
-          borderColor: 'border-viverblue/40',
-          bgGradient: 'from-viverblue/15 via-viverblue/10 to-viverblue/5',
-          glowColor: 'shadow-viverblue/20',
-          progressColor: 'bg-gradient-to-r from-viverblue to-viverblue-light'
+          color: 'bg-gradient-to-r from-aurora-primary to-aurora-primary-light text-white shadow-lg shadow-aurora-primary/25',
+          borderColor: 'border-aurora-primary/40',
+          bgGradient: 'from-aurora-primary/15 via-aurora-primary/10 to-aurora-primary/5',
+          glowColor: 'shadow-aurora-primary/20',
+          progressColor: 'bg-gradient-to-r from-aurora-primary to-aurora-primary-light'
         };
       case 2:
         return {
@@ -115,7 +115,7 @@ export const EnhancedLessonCard = ({ lesson, index }: EnhancedLessonCardProps) =
       onClick={handleLessonClick}
     >
       {/* Aurora effect overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-viverblue/5 via-transparent to-operational/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      <div className="absolute inset-0 bg-gradient-to-br from-aurora-primary/5 via-transparent to-operational/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
       
       {/* Vertical lesson cover image */}
       <div className="relative aspect-[2/3] overflow-hidden">
@@ -136,8 +136,8 @@ export const EnhancedLessonCard = ({ lesson, index }: EnhancedLessonCardProps) =
         {!imageLoaded && (
           <div className="absolute inset-0 bg-gradient-to-br from-muted/50 to-muted/20 flex items-center justify-center">
             <div className="flex items-center gap-2">
-              <BookOpen className="h-8 w-8 text-viverblue animate-pulse" />
-              <div className="w-2 h-2 bg-viverblue rounded-full animate-bounce" />
+              <BookOpen className="h-8 w-8 text-aurora-primary animate-pulse" />
+              <div className="w-2 h-2 bg-aurora-primary rounded-full animate-bounce" />
               <div className="w-2 h-2 bg-operational rounded-full animate-bounce animation-delay-200" />
               <div className="w-2 h-2 bg-revenue rounded-full animate-bounce animation-delay-400" />
             </div>
@@ -159,7 +159,7 @@ export const EnhancedLessonCard = ({ lesson, index }: EnhancedLessonCardProps) =
           {/* Rank indicator - Enhanced */}
           <div className="absolute top-4 right-4">
             <div className="bg-background/95 backdrop-blur-md rounded-full w-10 h-10 flex items-center justify-center border border-border/50 shadow-lg">
-              <span className="text-sm font-bold text-viverblue">#{index + 1}</span>
+              <span className="text-sm font-bold text-aurora-primary">#{index + 1}</span>
             </div>
           </div>
 
@@ -167,20 +167,20 @@ export const EnhancedLessonCard = ({ lesson, index }: EnhancedLessonCardProps) =
           <div className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${
             isHovered ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
           }`}>
-            <div className="p-4 bg-viverblue/90 backdrop-blur-sm rounded-full border-2 border-white/20 shadow-2xl">
+            <div className="p-4 bg-aurora-primary/90 backdrop-blur-sm rounded-full border-2 border-white/20 shadow-2xl">
               <Play className="h-8 w-8 text-white fill-current" />
             </div>
           </div>
 
           {/* Aurora particles */}
-          <div className="absolute top-1/3 left-1/4 w-1 h-1 bg-viverblue rounded-full animate-pulse opacity-60" />
+          <div className="absolute top-1/3 left-1/4 w-1 h-1 bg-aurora-primary rounded-full animate-pulse opacity-60" />
           <div className="absolute bottom-1/3 right-1/3 w-1.5 h-1.5 bg-operational rounded-full animate-pulse animation-delay-1000 opacity-40" />
           <div className="absolute top-2/3 right-1/4 w-1 h-1 bg-revenue rounded-full animate-pulse animation-delay-2000 opacity-50" />
         </div>
       </div>
 
       <CardHeader className="pb-3 relative z-10">
-        <CardTitle className="text-lg font-bold line-clamp-2 group-hover:text-viverblue transition-colors duration-300">
+        <CardTitle className="text-lg font-bold line-clamp-2 group-hover:text-aurora-primary transition-colors duration-300">
           {lesson.title}
         </CardTitle>
         
@@ -203,8 +203,8 @@ export const EnhancedLessonCard = ({ lesson, index }: EnhancedLessonCardProps) =
         {/* AI Justification - Enhanced */}
         <div className="bg-gradient-to-r from-muted/40 via-muted/30 to-muted/40 rounded-xl p-4 border border-border/50 backdrop-blur-sm">
           <div className="flex items-start gap-3">
-            <div className="p-1.5 bg-viverblue/20 rounded-full">
-              <Star className="w-4 h-4 text-viverblue" />
+            <div className="p-1.5 bg-aurora-primary/20 rounded-full">
+              <Star className="w-4 h-4 text-aurora-primary" />
             </div>
             <div className="flex-1">
               <h4 className="font-medium text-foreground text-sm mb-1">Por que é recomendada</h4>
@@ -220,7 +220,7 @@ export const EnhancedLessonCard = ({ lesson, index }: EnhancedLessonCardProps) =
           <div className="flex justify-between items-center">
             <span className="text-sm font-medium text-muted-foreground">Compatibilidade IA</span>
             <div className="flex items-center gap-2">
-              <Zap className="w-4 h-4 text-viverblue" />
+              <Zap className="w-4 h-4 text-aurora-primary" />
             <span className="text-sm font-bold text-foreground">
               {lesson.ai_score ? `${lesson.ai_score}%` : 
                lesson.priority === 1 ? '95%' : lesson.priority === 2 ? '80%' : '65%'}
@@ -243,7 +243,7 @@ export const EnhancedLessonCard = ({ lesson, index }: EnhancedLessonCardProps) =
         <Button 
           variant="outline" 
           size="sm" 
-          className="w-full group-hover:bg-viverblue group-hover:text-white group-hover:border-viverblue transition-all duration-300 hover:scale-[1.02] font-semibold"
+          className="w-full group-hover:bg-aurora-primary group-hover:text-white group-hover:border-aurora-primary transition-all duration-300 hover:scale-[1.02] font-semibold"
           onClick={(e) => {
             e.stopPropagation();
             handleLessonClick();

@@ -95,9 +95,9 @@ const AdminSolutionEdit = () => {
     const difficulty = currentValues.difficulty;
     switch (difficulty) {
       case "easy":
-        return "bg-green-500";
+        return "bg-success";
       case "medium":
-        return "bg-yellow-500";
+        return "bg-warning";
       case "advanced":
         return "bg-orange-500";
       default:

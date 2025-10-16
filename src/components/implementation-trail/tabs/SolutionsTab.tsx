@@ -393,7 +393,7 @@ export const SolutionsTab: React.FC<SolutionsTabProps> = ({ trail }) => {
               {/* Action button - Compacto */}
               <Button 
                 size="sm"
-                className="w-full bg-viverblue/10 hover:bg-viverblue text-viverblue hover:text-white border border-viverblue/20 hover:border-viverblue transition-all duration-300 group-hover:scale-105 relative overflow-hidden text-xs py-2"
+                className="w-full bg-aurora-primary/10 hover:bg-aurora-primary text-aurora-primary hover:text-white border border-aurora-primary/20 hover:border-aurora-primary transition-all duration-300 group-hover:scale-105 relative overflow-hidden text-xs py-2"
                  onClick={(e) => {
                    e.stopPropagation();
                    console.log('🔗 [SOLUTION-BTN] Navegando para solução:', solution.id);
@@ -439,18 +439,18 @@ export const SolutionsTab: React.FC<SolutionsTabProps> = ({ trail }) => {
   return (
     <div className="space-y-8">
       {/* Aurora Hero Header */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-viverblue/10 via-operational/5 to-revenue/10 border border-viverblue/20 p-8">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-aurora-primary/10 via-operational/5 to-revenue/10 border border-aurora-primary/20 p-8">
         {/* Animated background */}
-        <div className="absolute inset-0 bg-gradient-to-r from-viverblue/5 via-transparent to-operational/5 opacity-50" />
-        <div className="absolute top-0 right-0 w-64 h-64 bg-viverblue/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute inset-0 bg-gradient-to-r from-aurora-primary/5 via-transparent to-operational/5 opacity-50" />
+        <div className="absolute top-0 right-0 w-64 h-64 bg-aurora-primary/10 rounded-full blur-3xl animate-pulse" />
         <div className="absolute bottom-0 left-0 w-48 h-48 bg-operational/10 rounded-full blur-2xl animate-pulse animation-delay-2000" />
         
         <div className="relative z-10 text-center">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="p-3 bg-viverblue/20 rounded-xl">
-              <Target className="h-8 w-8 text-viverblue" />
+            <div className="p-3 bg-aurora-primary/20 rounded-xl">
+              <Target className="h-8 w-8 text-aurora-primary" />
             </div>
-            <h2 className="text-3xl font-bold bg-gradient-to-r from-viverblue via-operational to-revenue bg-clip-text text-transparent">
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-aurora-primary via-operational to-revenue bg-clip-text text-transparent">
               Soluções Recomendadas por IA
             </h2>
           </div>

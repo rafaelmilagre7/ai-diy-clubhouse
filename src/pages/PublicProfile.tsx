@@ -210,9 +210,9 @@ export default function PublicProfile() {
                       size="default"
                       className={`w-full gap-2 transition-all duration-300 shadow-md hover:shadow-lg border-0 ${
                         localStatus === 'accepted'
-                          ? 'bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 hover:from-green-600 hover:via-emerald-600 hover:to-teal-600 text-white'
+                          ? 'bg-gradient-to-r from-success via-success-light to-success-dark hover:from-success-dark hover:via-success hover:to-success-light text-white'
                           : localStatus === 'pending'
-                          ? 'bg-gradient-to-r from-yellow-500 via-amber-500 to-orange-500 text-white cursor-not-allowed opacity-80'
+                          ? 'bg-gradient-to-r from-warning via-warning-light to-warning-dark text-white cursor-not-allowed opacity-80'
                           : 'bg-gradient-to-r from-aurora via-aurora-primary to-operational hover:from-aurora/80 hover:via-aurora-primary/80 hover:to-operational/80 text-white'
                       }`}
                     >

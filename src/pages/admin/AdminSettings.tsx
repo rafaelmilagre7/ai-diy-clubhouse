@@ -196,7 +196,7 @@ const AdminSettings = () => {
               <div className="rounded-lg border p-4 bg-muted/40">
                 <div className="flex items-start gap-4">
                   <div className="mt-0.5">
-                    <CheckCircle className="h-5 w-5 text-green-500" />
+                    <CheckCircle className="h-5 w-5 text-success" />
                   </div>
                   <div>
                     <h4 className="text-sm font-medium">Sistema operando normalmente</h4>
@@ -501,7 +501,7 @@ const AdminSettings = () => {
               <div className="rounded-lg border p-4 bg-green-50 border-green-200">
                 <div className="flex items-start gap-4">
                   <div className="mt-0.5">
-                    <CheckCircle className="h-5 w-5 text-green-500" />
+                    <CheckCircle className="h-5 w-5 text-success" />
                   </div>
                   <div>
                     <h4 className="text-sm font-medium text-green-800">Backup Automático Ativado</h4>
