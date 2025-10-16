@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Sparkles, Rocket, Users, BookOpen, Calendar, CheckCircle } from 'lucide-react';
+import { Rocket, Users, BookOpen, Calendar, CheckCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { OnboardingSuccess } from '@/components/celebration/OnboardingSuccess';
 import { TeamInviteSection } from '@/components/onboarding/TeamInviteSection';
@@ -101,7 +101,7 @@ export const Step6Welcome: React.FC<Step6WelcomeProps> = ({
           <CardContent className="p-6">
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-                <Sparkles className="w-6 h-6 text-primary" />
+                <Rocket className="w-6 h-6 text-primary" />
               </div>
               <div className="text-left">
                 <h3 className="font-semibold text-lg mb-2">Mensagem da NINA:</h3>

@@ -19,7 +19,8 @@ import {
   Trophy,
   Brain,
   Cpu,
-  Sparkles,
+  Tag,
+  Search,
   ChevronLeft,
   ChevronRight,
   Building2
@@ -316,7 +317,7 @@ export const SwipeCardCarousel = ({ card }: SwipeCardCarouselProps) => {
               {/* Características */}
               <div className="space-y-2 flex-1">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-aurora" />
+                  <Tag className="h-4 w-4 text-aurora" />
                   <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Características</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -391,7 +392,7 @@ export const SwipeCardCarousel = ({ card }: SwipeCardCarouselProps) => {
                   ))}
                   {lookingForList.length === 0 && (
                     <div className="flex items-center gap-2 bg-muted/5 border border-dashed border-muted/30 rounded-lg px-3 py-3 justify-center">
-                      <Sparkles className="h-4 w-4 text-muted-foreground/50" />
+                      <Search className="h-4 w-4 text-muted-foreground/50" />
                       <span className="text-xs text-muted-foreground italic">
                         Ainda explorando possibilidades
                       </span>
@@ -439,7 +440,7 @@ export const SwipeCardCarousel = ({ card }: SwipeCardCarouselProps) => {
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="bg-gradient-to-br from-aurora to-viverblue p-3 rounded-xl shadow-md">
-                    <Sparkles className="h-6 w-6 text-white" />
+                    <Brain className="h-6 w-6 text-white" />
                   </div>
                   <div className="text-2xl font-black text-aurora">
                     {translate(experienceLevel)}

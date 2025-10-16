@@ -3,7 +3,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Award, RefreshCw, Sparkles, ShieldCheck } from "lucide-react";
+import { Award, RefreshCw, ShieldCheck } from "lucide-react";
 import { useRetroactiveCertificates } from "@/hooks/learning/useRetroactiveCertificates";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -20,7 +20,7 @@ export const RetroactiveCertificatesPanel = () => {
     <Card className="bg-[#151823] border-neutral-700/50">
       <CardHeader>
         <CardTitle className="text-white flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-viverblue" />
+          <Award className="h-5 w-5 text-viverblue" />
           Gerar Certificados Retroativos
         </CardTitle>
       </CardHeader>
@@ -89,7 +89,7 @@ export const RetroactiveCertificatesPanel = () => {
                       </>
                     ) : (
                       <>
-                        <Sparkles className="h-4 w-4 mr-2" />
+                        <Award className="h-4 w-4 mr-2" />
                         Gerar Todos
                       </>
                     )}

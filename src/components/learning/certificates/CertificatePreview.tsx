@@ -2,7 +2,7 @@ import React, { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Download, Share2, ExternalLink, Award, Sparkles } from "lucide-react";
+import { Download, Share2, ExternalLink, Award, Star } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { SocialShareButtons } from "./SocialShareButtons";
@@ -61,16 +61,16 @@ export const CertificatePreview = ({ certificate, onDownload }: CertificatePrevi
           >
             {/* Decorative Elements */}
             <div className="absolute top-8 left-8">
-              <Sparkles className="h-8 w-8 text-purple-400 opacity-60" />
+              <Star className="h-8 w-8 text-purple-400 opacity-60" />
             </div>
             <div className="absolute top-8 right-8">
-              <Sparkles className="h-8 w-8 text-blue-400 opacity-60" />
+              <Star className="h-8 w-8 text-blue-400 opacity-60" />
             </div>
             <div className="absolute bottom-8 left-8">
-              <Sparkles className="h-6 w-6 text-purple-300 opacity-40" />
+              <Star className="h-6 w-6 text-purple-300 opacity-40" />
             </div>
             <div className="absolute bottom-8 right-8">
-              <Sparkles className="h-6 w-6 text-blue-300 opacity-40" />
+              <Star className="h-6 w-6 text-blue-300 opacity-40" />
             </div>
 
             {/* Border */}

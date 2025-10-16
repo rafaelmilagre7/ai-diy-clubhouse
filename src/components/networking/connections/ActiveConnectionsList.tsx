@@ -4,7 +4,7 @@ import { ConnectionCard } from './ConnectionCard';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { InboxDrawer } from '../chat/InboxDrawer';
-import { Users, Sparkles } from 'lucide-react';
+import { Users } from 'lucide-react';
 
 export const ActiveConnectionsList = () => {
   const { activeConnections, isLoading, error } = useConnections();

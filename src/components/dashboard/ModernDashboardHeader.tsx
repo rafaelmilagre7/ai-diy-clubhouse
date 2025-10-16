@@ -1,7 +1,7 @@
 
 import { FC, memo } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getTimeBasedGreeting } from "@/utils/user";
 

@@ -1,7 +1,7 @@
 import React from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Sparkles } from "lucide-react";
+import { FileText, Award } from "lucide-react";
 import { useCertificateTemplate } from "@/hooks/learning/useCertificateTemplate";
 import { useCertificateTemplates } from "@/hooks/learning/useCertificateTemplates";
 
@@ -54,7 +54,7 @@ export const CertificateTemplateSelector = ({
     const template = templates[0];
     return (
       <div className={`flex items-center gap-2 p-3 bg-primary/5 border border-primary/20 rounded-lg ${className}`}>
-        <Sparkles className="h-4 w-4 text-primary" />
+        <Award className="h-4 w-4 text-primary" />
         <div className="flex-1">
           <span className="text-sm font-medium text-foreground">{template.name}</span>
           {template.description && (

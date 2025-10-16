@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { motion } from "framer-motion";
-import { Trophy, CheckCircle, Star, Sparkles } from "lucide-react";
+import { Trophy, CheckCircle, Star, Award } from "lucide-react";
 import confetti from "canvas-confetti";
 
 interface OnboardingSuccessProps {
@@ -232,7 +232,7 @@ export const OnboardingSuccess: React.FC<OnboardingSuccessProps> = ({
               }}
             >
               {i % 4 === 0 && <Star className="h-6 w-6 text-primary/60" />}
-              {i % 4 === 1 && <Sparkles className="h-5 w-5 text-accent/60" />}
+              {i % 4 === 1 && <Award className="h-5 w-5 text-accent/60" />}
               {i % 4 === 2 && <Trophy className="h-6 w-6 text-primary/40" />}
               {i % 4 === 3 && <CheckCircle className="h-5 w-5 text-accent/50" />}
             </motion.div>

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Lightbulb, Target, TrendingUp, Sparkles, CheckCircle } from 'lucide-react';
+import { Lightbulb, Target, TrendingUp, Loader2, Tag, CheckCircle, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -199,7 +199,7 @@ export const NetworkingOnboardingModal: React.FC<NetworkingOnboardingModalProps>
             {currentStep === 1 && (
               <div className="space-y-6 text-center animate-fade-in">
                 <div className="inline-block p-4 rounded-xl bg-viverblue/10 border border-viverblue/20 aurora-glow">
-                  <Sparkles className="w-12 h-12 text-viverblue" />
+                  <Users className="w-12 h-12 text-viverblue" />
                 </div>
                 
                 <div className="space-y-2">
@@ -363,7 +363,7 @@ export const NetworkingOnboardingModal: React.FC<NetworkingOnboardingModalProps>
               <div className="space-y-6 animate-fade-in">
                 <div className="flex items-center gap-3">
                   <div className="p-3 rounded-xl bg-strategy/10 border border-strategy/20 aurora-float">
-                    <Sparkles className="w-6 h-6 text-strategy" />
+                    <Tag className="w-6 h-6 text-strategy" />
                   </div>
                   <div>
                     <h3 className="text-xl font-bold text-text-primary">Palavras-chave</h3>
@@ -432,7 +432,7 @@ export const NetworkingOnboardingModal: React.FC<NetworkingOnboardingModalProps>
             {currentStep === 6 && (
               <div className="space-y-6 text-center animate-fade-in py-8">
                 <div className="inline-block p-6 rounded-xl bg-viverblue/10 border border-viverblue/20 aurora-pulse">
-                  <Sparkles className="w-16 h-16 text-viverblue animate-spin" />
+                  <Loader2 className="w-16 h-16 text-viverblue animate-spin" />
                 </div>
                 
                 <div className="space-y-2">

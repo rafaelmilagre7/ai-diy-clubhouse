@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles } from 'lucide-react';
+import { Star } from 'lucide-react';
 
 interface InviteWelcomeSectionProps {
   inviteData: {
@@ -32,7 +32,7 @@ const InviteWelcomeSection: React.FC<InviteWelcomeSectionProps> = ({ inviteData 
       {/* Main Content */}
       <div className="text-center space-y-4">
         <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 backdrop-blur-sm border border-emerald-500/30 rounded-full text-xs font-semibold text-emerald-400">
-          <Sparkles className="h-3 w-3" />
+          <Star className="h-3 w-3" />
           Convite Exclusivo
         </div>
         

@@ -3,7 +3,7 @@ import { useConnections } from '@/hooks/networking/useConnections';
 import { ConnectionCard } from './ConnectionCard';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Clock, Sparkles } from 'lucide-react';
+import { Clock } from 'lucide-react';
 
 export const PendingRequestsList = () => {
   const { pendingRequests, isLoading, error } = usePendingRequests();

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { User, Phone, MapPin, Calendar, Instagram, Linkedin, Camera, Sparkles } from 'lucide-react';
+import { User, Phone, MapPin, Calendar, Instagram, Linkedin, Camera, Star } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -394,7 +394,7 @@ export const Step1PersonalInfo: React.FC<Step1PersonalInfoProps> = ({
             Conte uma curiosidade sobre você (opcional)
           </Label>
           <div className="relative">
-            <Sparkles className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+            <Star className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
             <textarea
               id="fun_fact"
               placeholder="Ex: Já visitei 15 países, amo culinária japonesa, pratico yoga há 5 anos..."

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Lock, Sparkles } from 'lucide-react';
+import { Lock, Crown } from 'lucide-react';
 
 interface UnifiedContentBlockProps {
   sectionName: string; // 'networking', 'ferramentas', 'esta solução', 'este curso', etc.
@@ -68,8 +68,8 @@ export const UnifiedContentBlock: React.FC<UnifiedContentBlockProps> = ({
             {/* Ícone */}
             <div className="relative flex items-center justify-center w-full h-full">
               <Lock className="w-8 h-8 text-white" />
-              {/* Sparkles animado */}
-              <Sparkles className="absolute -top-1 -right-1 w-4 h-4 text-white/80 
+              {/* Crown animado */}
+              <Crown className="absolute -top-1 -right-1 w-4 h-4 text-white/80 
                                  animate-pulse opacity-0 group-hover:opacity-100 
                                  transition-opacity duration-500 delay-200" />
             </div>

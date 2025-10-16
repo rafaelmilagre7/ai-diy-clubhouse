@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Mail, MessageSquare, Users, ShoppingCart } from "lucide-react";
+import { Wand2, Mail, MessageSquare, Users, ShoppingCart } from "lucide-react";
 
 interface RuleTemplate {
   id: string;
@@ -273,7 +273,7 @@ export const RuleTemplates = ({ onSelectTemplate }: RuleTemplatesProps) => {
                   className="w-full"
                   size="sm"
                 >
-                  <Sparkles className="mr-2 h-3 w-3" />
+                  <Wand2 className="mr-2 h-3 w-3" />
                   Usar Template
                 </Button>
               </div>

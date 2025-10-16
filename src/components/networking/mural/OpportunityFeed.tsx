@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, Sparkles } from 'lucide-react';
+import { TrendingUp, Plus } from 'lucide-react';
 import { Opportunity } from '@/hooks/networking/useOpportunities';
 import { OpportunityCard } from './OpportunityCard';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -77,7 +77,7 @@ export const OpportunityFeed: React.FC<OpportunityFeedProps> = ({
               onClick={onPostClick}
               className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
             >
-              <Sparkles className="w-4 h-4 mr-2" />
+              <Plus className="w-4 h-4 mr-2" />
               Postar primeira oportunidade
             </Button>
           )}

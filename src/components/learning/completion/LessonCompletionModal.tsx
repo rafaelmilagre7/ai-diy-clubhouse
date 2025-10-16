@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { LessonNPSForm } from "../nps/LessonNPSForm";
-import { CheckCircle2, Sparkles, X } from "lucide-react";
+import { CheckCircle2, Star, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LearningLesson } from "@/lib/supabase";
 import { useLogging } from "@/hooks/useLogging";
@@ -55,7 +55,7 @@ export const LessonCompletionModal: React.FC<LessonCompletionModalProps> = ({
             <div className="flex justify-center">
               <div className="relative">
                 <CheckCircle2 className="h-12 w-12 text-primary animate-scale-in" />
-                <Sparkles className="h-4 w-4 absolute -top-1 -right-1 text-primary animate-pulse" />
+                <Star className="h-4 w-4 absolute -top-1 -right-1 text-primary animate-pulse" />
               </div>
             </div>
             <DialogTitle className="text-xl font-bold text-foreground">

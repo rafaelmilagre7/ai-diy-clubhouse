@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Brain, TrendingUp, Target, Star, Award, Zap, RefreshCw, Sparkles } from 'lucide-react';
+import { Brain, TrendingUp, Target, Star, Award, Zap, RefreshCw } from 'lucide-react';
 import { useAuth } from '@/contexts/auth';
 
 interface ImplementationTrailHeaderProps {
@@ -79,7 +79,7 @@ export const ImplementationTrailHeader = ({
                 <span className="font-semibold">
                   {isRegenerating ? 'Gerando nova trilha...' : 'Gerar nova trilha com IA'}
                 </span>
-                <Sparkles className="h-4 w-4 opacity-75 group-hover:opacity-100" />
+                <Zap className="h-4 w-4 opacity-75 group-hover:opacity-100" />
               </div>
             </Button>
           </div>
