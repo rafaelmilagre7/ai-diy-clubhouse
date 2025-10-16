@@ -100,7 +100,7 @@ export const ImplementationsAnalyticsTabContent = ({ timeRange }: Implementation
           description="Distribuição entre implementações concluídas e em andamento"
           category="value"
           index="name"
-          colors={['#10B981', '#F59E0B']}
+          colors={['hsl(var(--success))', 'hsl(var(--warning))']}
           valueFormatter={(value) => `${value} implementação${value !== 1 ? 'ões' : ''}`}
           size="medium"
           showLegend={true}
@@ -112,7 +112,7 @@ export const ImplementationsAnalyticsTabContent = ({ timeRange }: Implementation
           description="Distribuição das implementações por área de negócio"
           categories={['value']}
           index="name"
-          colors={['#3B82F6']}
+          colors={['hsl(var(--info))']}
           valueFormatter={(value) => `${value} implementação${value !== 1 ? 'ões' : ''}`}
           size="medium"
           layout="horizontal"
@@ -127,7 +127,7 @@ export const ImplementationsAnalyticsTabContent = ({ timeRange }: Implementation
           description="Padrão de atividade das implementações ao longo da semana"
           categories={['atividade']}
           index="day"
-          colors={['#8B5CF6']}
+          colors={['hsl(var(--secondary))']}
           valueFormatter={(value) => `${value} atividade${value !== 1 ? 's' : ''}`}
           size="large"
           curved={true}

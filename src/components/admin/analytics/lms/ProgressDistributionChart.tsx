@@ -41,7 +41,7 @@ export const ProgressDistributionChart = ({ data, isLoading }: ProgressDistribut
               data={chartData}
               index="name"
               categories={["value"]}
-              colors={["#0ABAB5"]}
+              colors={["hsl(var(--aurora-primary))"]}
               valueFormatter={(value) => `${value} alunos`}
             />
           ) : (

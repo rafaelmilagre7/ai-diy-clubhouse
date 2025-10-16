@@ -37,7 +37,7 @@ export const UserRoleDistributionChart: React.FC<UserRoleDistributionChartProps>
           data={data}
           index="name"
           category="value"
-          colors={['#0ABAB5', '#3B82F6', '#10B981', '#F59E0B', '#EF4444']}
+          colors={['hsl(var(--aurora-primary))', 'hsl(var(--info))', 'hsl(var(--success))', 'hsl(var(--warning))', 'hsl(var(--destructive))']}
           valueFormatter={(value) => `${value} usuário${value !== 1 ? 's' : ''}`}
           className="h-full"
         />

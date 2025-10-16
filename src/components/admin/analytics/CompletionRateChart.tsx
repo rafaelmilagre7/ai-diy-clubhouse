@@ -23,7 +23,7 @@ export const CompletionRateChart = ({ data }: CompletionRateChartProps) => {
             category="value"
             index="name"
             valueFormatter={(value) => `${value} implementações`}
-            colors={['#10B981', '#0ABAB5']}
+            colors={['hsl(var(--success))', 'hsl(var(--aurora-primary))']}
             className="h-[200px]"
           />
         ) : (

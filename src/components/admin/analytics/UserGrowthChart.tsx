@@ -55,7 +55,7 @@ export const UserGrowthChart = ({ data }: UserGrowthChartProps) => {
           data={chartData}
           categories={['novos', 'total']}
           index="name"
-          colors={['#3B82F6', '#0ABAB5']}
+          colors={['hsl(var(--info))', 'hsl(var(--aurora-primary))']}
           valueFormatter={(value) => `${value} usuário${value !== 1 ? 's' : ''}`}
           className="h-[300px]"
         />

@@ -11,7 +11,7 @@ interface MiniSparklineProps {
 
 export const MiniSparkline = ({ 
   data, 
-  color = '#0ABAB5', 
+  color = 'hsl(var(--aurora-primary))', 
   height = 40,
   className = '' 
 }: MiniSparklineProps) => {

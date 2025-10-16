@@ -108,7 +108,7 @@ export const SolutionsAnalyticsTabContent = ({ timeRange }: SolutionsAnalyticsTa
           description="Ranking das soluções por número de implementações"
           categories={['value']}
           index="name"
-          colors={['#0ABAB5']}
+          colors={['hsl(var(--aurora-primary))']}
           valueFormatter={(value) => `${value} implementação${value !== 1 ? 'ões' : ''}`}
           size="medium"
           layout="vertical"
@@ -120,7 +120,7 @@ export const SolutionsAnalyticsTabContent = ({ timeRange }: SolutionsAnalyticsTa
           description="Implementações organizadas por área de negócio"
           category="value"
           index="name"
-          colors={['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6']}
+          colors={['hsl(var(--info))', 'hsl(var(--success))', 'hsl(var(--warning))', 'hsl(var(--destructive))', 'hsl(var(--secondary))']}
           valueFormatter={(value) => `${value} implementação${value !== 1 ? 'ões' : ''}`}
           size="medium"
           showLegend={true}
@@ -135,7 +135,7 @@ export const SolutionsAnalyticsTabContent = ({ timeRange }: SolutionsAnalyticsTa
           description="Status de conclusão das implementações dos usuários"
           categories={['value']}
           index="name"
-          colors={['#10B981']}
+          colors={['hsl(var(--success))']}
           valueFormatter={(value) => `${value} implementação${value !== 1 ? 'ões' : ''}`}
           size="large"
           curved={true}

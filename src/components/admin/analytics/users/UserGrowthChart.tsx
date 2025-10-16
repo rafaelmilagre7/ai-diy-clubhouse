@@ -37,7 +37,7 @@ export const UserGrowthChart: React.FC<UserGrowthChartProps> = ({ data }) => {
           data={data}
           index="date"
           categories={['novos', 'total']}
-          colors={['#3B82F6', '#0ABAB5']}
+          colors={['hsl(var(--info))', 'hsl(var(--aurora-primary))']}
           valueFormatter={(value) => `${value} usuário${value !== 1 ? 's' : ''}`}
           className="h-full"
         />

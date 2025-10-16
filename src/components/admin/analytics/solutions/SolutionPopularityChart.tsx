@@ -37,7 +37,7 @@ export const SolutionPopularityChart: React.FC<SolutionPopularityChartProps> = (
           data={data}
           index="name"
           categories={['value']}
-          colors={['#0ABAB5']}
+          colors={['hsl(var(--aurora-primary))']}
           valueFormatter={(value) => `${value} visualização${value !== 1 ? 'ões' : ''}`}
           className="h-full"
         />

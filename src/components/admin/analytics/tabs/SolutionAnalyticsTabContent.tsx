@@ -149,7 +149,7 @@ export const SolutionAnalyticsTabContent = ({ timeRange }: SolutionAnalyticsTabC
                   data={data.solutionsByDifficulty}
                   index="name"
                   categories={["value"]}
-                  colors={["#F59E0B"]}
+                  colors={["hsl(var(--warning))"]}
                   valueFormatter={(value) => `${value} soluções`}
                 />
               ) : (

@@ -1,16 +1,36 @@
 
 export const chartColors = {
-  primary: '#0ABAB5',
-  secondary: '#8B5CF6',
-  success: '#10B981',
-  warning: '#F59E0B',
-  danger: '#EF4444',
-  info: '#3B82F6',
+  primary: 'hsl(var(--aurora-primary))',
+  secondary: 'hsl(var(--secondary))',
+  success: 'hsl(var(--success))',
+  warning: 'hsl(var(--warning))',
+  danger: 'hsl(var(--destructive))',
+  info: 'hsl(var(--info))',
   categorical: [
-    '#0ABAB5', '#8B5CF6', '#10B981', '#F59E0B', 
-    '#EF4444', '#3B82F6', '#EC4899', '#F97316'
+    'hsl(var(--aurora-primary))',
+    'hsl(var(--secondary))',
+    'hsl(var(--success))',
+    'hsl(var(--warning))',
+    'hsl(var(--destructive))',
+    'hsl(var(--info))',
+    'hsl(var(--aurora-primary-light))',
+    'hsl(var(--accent))'
   ]
 };
+
+// Helper para obter cores do design system para gráficos
+export const getAuroraChartColors = () => ({
+  primary: 'hsl(var(--aurora-primary))',
+  primaryLight: 'hsl(var(--aurora-primary-light))',
+  primaryDark: 'hsl(var(--aurora-primary-dark))',
+  success: 'hsl(var(--success))',
+  warning: 'hsl(var(--warning))',
+  danger: 'hsl(var(--destructive))',
+  info: 'hsl(var(--info))',
+  secondary: 'hsl(var(--secondary))',
+  muted: 'hsl(var(--muted-foreground))',
+  accent: 'hsl(var(--accent))'
+});
 
 export const formatChartData = (data: any[]): any[] => {
   if (!Array.isArray(data)) return [];

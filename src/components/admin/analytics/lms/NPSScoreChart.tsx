@@ -41,7 +41,7 @@ export const NPSScoreChart: React.FC<NPSScoreChartProps> = ({ npsData, isLoading
   ];
   
   // Cores para o gráfico de pizza
-  const chartColors = ['#22c55e', '#f59e0b', '#ef4444'];
+  const chartColors = ['hsl(var(--success))', 'hsl(var(--warning))', 'hsl(var(--destructive))'];
 
   // Verificar se temos valores válidos antes de renderizar o gráfico
   const hasValidData = chartData.some(item => item.value > 0);

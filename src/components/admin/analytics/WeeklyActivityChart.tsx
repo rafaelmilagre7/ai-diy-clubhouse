@@ -54,7 +54,7 @@ export const WeeklyActivityChart: React.FC<WeeklyActivityChartProps> = ({ data }
           data={chartData}
           categories={['atividade']}
           index="day"
-          colors={['#0ABAB5']}
+          colors={['hsl(var(--aurora-primary))']}
           valueFormatter={(value) => `${value} atividade${value !== 1 ? 's' : ''}`}
           className="h-[200px]"
         />

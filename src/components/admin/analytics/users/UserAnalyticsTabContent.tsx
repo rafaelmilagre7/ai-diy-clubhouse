@@ -103,7 +103,7 @@ export const UserAnalyticsTabContent = ({ timeRange }: UserAnalyticsTabContentPr
           description="Evolução do número de usuários ao longo do tempo"
           categories={['novos', 'total']}
           index="date"
-          colors={['#3B82F6', '#0ABAB5']}
+          colors={['hsl(var(--info))', 'hsl(var(--aurora-primary))']}
           valueFormatter={(value) => `${value} usuário${value !== 1 ? 's' : ''}`}
           size="medium"
           curved={true}
@@ -115,7 +115,7 @@ export const UserAnalyticsTabContent = ({ timeRange }: UserAnalyticsTabContentPr
           description="Distribuição de usuários por tipo de papel"
           category="value"
           index="name"
-          colors={['#0ABAB5', '#3B82F6', '#10B981', '#F59E0B', '#EF4444']}
+          colors={['hsl(var(--aurora-primary))', 'hsl(var(--info))', 'hsl(var(--success))', 'hsl(var(--warning))', 'hsl(var(--destructive))']}
           valueFormatter={(value) => `${value} usuário${value !== 1 ? 's' : ''}`}
           size="medium"
           showLegend={true}
@@ -130,7 +130,7 @@ export const UserAnalyticsTabContent = ({ timeRange }: UserAnalyticsTabContentPr
           description="Padrão de atividade dos usuários ao longo da semana"
           categories={['atividade']}
           index="day"
-          colors={['#0ABAB5']}
+          colors={['hsl(var(--aurora-primary))']}
           valueFormatter={(value) => `${value} atividade${value !== 1 ? 's' : ''}`}
           size="large"
           curved={true}

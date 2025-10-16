@@ -76,7 +76,7 @@ export const PopularSolutionsChart = ({ data }: PopularSolutionsChartProps) => {
           data={chartData}
           categories={['value']}
           index="name"
-          colors={['#0ABAB5']}
+          colors={['hsl(var(--aurora-primary))']}
           valueFormatter={(value) => `${value} implementações`}
           className="h-[300px]"
         />

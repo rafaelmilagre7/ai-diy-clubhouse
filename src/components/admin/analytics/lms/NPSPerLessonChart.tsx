@@ -27,7 +27,7 @@ export const NPSPerLessonChart: React.FC<NPSPerLessonChartProps> = ({ npsData, i
   }));
   
   // Criar array de cores para o gráfico
-  const barColors = ["#8B5CF6"]; // Cor padrão roxa para todas as barras
+  const barColors = ["hsl(var(--secondary))"]; // Cor do design system para todas as barras
   
   return (
     <Card className="col-span-1">

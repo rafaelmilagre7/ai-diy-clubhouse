@@ -37,7 +37,7 @@ export const UserActivityByDayChart: React.FC<UserActivityByDayChartProps> = ({ 
           data={data}
           index="name"
           categories={['atividade']}
-          colors={['#0ABAB5']}
+          colors={['hsl(var(--aurora-primary))']}
           valueFormatter={(value) => `${value} atividade${value !== 1 ? 's' : ''}`}
           className="h-full"
         />

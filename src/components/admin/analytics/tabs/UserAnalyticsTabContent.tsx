@@ -130,7 +130,7 @@ export const UserAnalyticsTabContent = ({ timeRange }: UserAnalyticsTabContentPr
                   data={data.usersByTime}
                   index="name"
                   categories={["novos", "total"]}
-                  colors={["#0ABAB5", "#3B82F6"]}
+                  colors={["hsl(var(--aurora-primary))", "hsl(var(--info))"]}
                   valueFormatter={(value) => `${value} usuários`}
                 />
               ) : (
@@ -184,7 +184,7 @@ export const UserAnalyticsTabContent = ({ timeRange }: UserAnalyticsTabContentPr
                 data={data.userActivityByDay}
                 index="day"
                 categories={["atividade"]}
-                colors={["#8B5CF6"]}
+                colors={["hsl(var(--secondary))"]}
                 valueFormatter={(value) => `${value} atividades`}
                 layout="vertical"
               />

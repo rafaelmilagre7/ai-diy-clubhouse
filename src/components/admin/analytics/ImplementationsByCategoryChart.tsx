@@ -76,7 +76,7 @@ export const ImplementationsByCategoryChart = ({ data }: ImplementationsByCatego
           category="value"
           index="name"
           valueFormatter={(value) => `${value} implementações`}
-          colors={['#0ABAB5', '#8B5CF6', '#3B82F6', '#10B981', '#F59E0B']}
+          colors={['hsl(var(--aurora-primary))', 'hsl(var(--secondary))', 'hsl(var(--info))', 'hsl(var(--success))', 'hsl(var(--warning))']}
           className="h-[200px]"
         />
       </CardContent>

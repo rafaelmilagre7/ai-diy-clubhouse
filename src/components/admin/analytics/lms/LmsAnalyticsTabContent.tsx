@@ -180,7 +180,7 @@ export const LmsAnalyticsTabContent = ({ timeRange }: LmsAnalyticsTabContentProp
           description="Top 5 aulas com maior score NPS"
           categories={['value']}
           index="name"
-          colors={['#0ABAB5']}
+          colors={['hsl(var(--aurora-primary))']}
           valueFormatter={(value) => `NPS ${value}`}
           size="medium"
           layout="horizontal"
@@ -192,7 +192,7 @@ export const LmsAnalyticsTabContent = ({ timeRange }: LmsAnalyticsTabContentProp
           description="Classificação dos estudantes por NPS"
           category="value"
           index="name"
-          colors={['#10B981', '#F59E0B', '#EF4444']}
+          colors={['hsl(var(--success))', 'hsl(var(--warning))', 'hsl(var(--destructive))']}
           valueFormatter={(value) => `${value} estudante${value !== 1 ? 's' : ''}`}
           size="medium"
           showLegend={true}
@@ -207,7 +207,7 @@ export const LmsAnalyticsTabContent = ({ timeRange }: LmsAnalyticsTabContentProp
           description="Distribuição do progresso de aprendizagem"
           category="value"
           index="name"
-          colors={['#6B7280', '#3B82F6', '#10B981']}
+          colors={['hsl(var(--muted-foreground))', 'hsl(var(--info))', 'hsl(var(--success))']}
           valueFormatter={(value) => `${value} estudante${value !== 1 ? 's' : ''}`}
           size="medium"
           showLegend={true}
@@ -219,7 +219,7 @@ export const LmsAnalyticsTabContent = ({ timeRange }: LmsAnalyticsTabContentProp
           description="Padrão de atividade dos estudantes por dia da semana"
           categories={['atividade']}
           index="day"
-          colors={['#8B5CF6']}
+          colors={['hsl(var(--secondary))']}
           valueFormatter={(value) => `${value} atividade${value !== 1 ? 's' : ''}`}
           size="medium"
           curved={true}

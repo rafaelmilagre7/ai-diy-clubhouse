@@ -20,11 +20,11 @@ interface UserSegmentChartProps {
 }
 
 const SEGMENT_COLORS = {
-  'Power Users': '#10B981',
-  'Ativos': '#3B82F6', 
-  'Dormentes': '#F59E0B',
-  'Em Risco': '#EF4444',
-  'Novos': '#8B5CF6'
+  'Power Users': 'hsl(var(--success))',
+  'Ativos': 'hsl(var(--info))', 
+  'Dormentes': 'hsl(var(--warning))',
+  'Em Risco': 'hsl(var(--destructive))',
+  'Novos': 'hsl(var(--secondary))'
 };
 
 export const UserSegmentChart = ({ data, loading }: UserSegmentChartProps) => {
