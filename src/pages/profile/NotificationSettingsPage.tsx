@@ -21,7 +21,6 @@ interface NotificationPreferences {
   community_new_topics: boolean;
   networking_messages: boolean;
   networking_connections: boolean;
-  networking_opportunities: boolean;
   solutions_comments: boolean;
   solutions_new_content: boolean;
   admin_communications: boolean;
@@ -340,21 +339,6 @@ const NotificationSettingsPage = () => {
                 />
               </div>
 
-              <Separator />
-
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label className="text-base">Oportunidades de networking</Label>
-                  <div className="text-sm text-muted-foreground">
-                    Notificar sobre oportunidades relevantes no marketplace
-                  </div>
-                </div>
-                <Switch
-                  checked={preferences.networking_opportunities}
-                  onCheckedChange={(checked) => updatePreference('networking_opportunities', checked)}
-                  disabled={saving}
-                />
-              </div>
             </CardContent>
           </Card>
 

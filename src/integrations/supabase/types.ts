@@ -3462,69 +3462,47 @@ export type Database = {
         }
         Relationships: []
       }
-      networking_opportunities: {
+      networking_opportunities_backup: {
         Row: {
           contact_preference: string | null
           created_at: string | null
-          description: string
-          id: string
+          description: string | null
+          id: string | null
           is_active: boolean | null
-          opportunity_type: string
+          opportunity_type: string | null
           tags: string[] | null
-          title: string
+          title: string | null
           updated_at: string | null
-          user_id: string
+          user_id: string | null
           views_count: number | null
         }
         Insert: {
           contact_preference?: string | null
           created_at?: string | null
-          description: string
-          id?: string
+          description?: string | null
+          id?: string | null
           is_active?: boolean | null
-          opportunity_type: string
+          opportunity_type?: string | null
           tags?: string[] | null
-          title: string
+          title?: string | null
           updated_at?: string | null
-          user_id: string
+          user_id?: string | null
           views_count?: number | null
         }
         Update: {
           contact_preference?: string | null
           created_at?: string | null
-          description?: string
-          id?: string
+          description?: string | null
+          id?: string | null
           is_active?: boolean | null
-          opportunity_type?: string
+          opportunity_type?: string | null
           tags?: string[] | null
-          title?: string
+          title?: string | null
           updated_at?: string | null
-          user_id?: string
+          user_id?: string | null
           views_count?: number | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "networking_opportunities_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "networking_opportunities_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles_networking_safe"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "networking_opportunities_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles_safe"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       networking_preferences: {
         Row: {

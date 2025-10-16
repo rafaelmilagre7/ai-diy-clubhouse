@@ -35,9 +35,6 @@ import NPSAnalytics from '@/pages/admin/NPSAnalytics';
 import CertificateTemplates from '@/pages/admin/CertificateTemplates';
 import CourseCertificateManager from '@/pages/admin/CourseCertificateManager';
 
-import NetworkingDashboard from '@/pages/admin/networking/NetworkingDashboard';
-import OpportunitiesManagement from '@/pages/admin/networking/OpportunitiesManagement';
-
 
 // Função helper para criar rotas protegidas com AdminLayout
 const createAdminRoute = (path: string, Component: React.ComponentType<any>) => ({
@@ -85,7 +82,4 @@ export const adminRoutes: RouteObject[] = [
   createAdminRoute("/admin/automations/new", AutomationForm),
   createAdminRoute("/admin/automations/logs", AutomationLogs),
   createAdminRoute("/admin/automations/:id", AutomationForm),
-  
-  createAdminRoute("/admin/networking", NetworkingDashboard),
-  createAdminRoute("/admin/networking/opportunities", OpportunitiesManagement),
 ];

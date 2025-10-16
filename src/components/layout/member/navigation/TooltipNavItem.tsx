@@ -34,15 +34,13 @@ export const TooltipNavItem: React.FC<TooltipNavItemProps> = ({
         const isCertificatesActive = to === "/learning/certificates" && pathname === "/learning/certificates";
         const isLearningActive = to === "/learning" && pathname.startsWith("/learning") && pathname !== "/learning/certificates";
         
-        // Lógica específica para /networking e /networking/mural
-        const isMuralActive = to === "/networking/mural" && pathname === "/networking/mural";
-        const isNetworkingActive = to === "/networking" && pathname === "/networking" && !pathname.startsWith("/networking/");
+        // Lógica específica para /networking
+        const isNetworkingActive = to === "/networking" && pathname === "/networking";
         
         // Lógica final: rotas específicas ou isActive padrão (exceto as com lógica customizada)
         const finalIsActive = 
           isCertificatesActive || 
           isLearningActive || 
-          isMuralActive || 
           isNetworkingActive || 
           (isActive && to !== "/learning" && to !== "/networking");
         
