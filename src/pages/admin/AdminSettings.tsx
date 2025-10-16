@@ -286,7 +286,7 @@ const AdminSettings = () => {
               <div className="rounded-lg border p-4 bg-amber-50 border-amber-200">
                 <div className="flex items-start gap-4">
                   <div className="mt-0.5">
-                    <AlertCircle className="h-5 w-5 text-amber-500" />
+                    <AlertCircle className="h-5 w-5 text-warning" />
                   </div>
                   <div>
                     <h4 className="text-sm font-medium text-amber-800">Aviso de Segurança</h4>

@@ -32,7 +32,7 @@ export const Step0UserType: React.FC<Step0UserTypeProps> = ({
       id: 'entrepreneur' as UserType,
       title: 'EMPRESÁRIO/GESTOR',
       description: 'Meu foco é na parte de negócios e estratégia com IA',
-      gradient: 'from-emerald-500 to-teal-500',
+      gradient: 'from-success to-success-light',
       features: [
         'Soluções para empresas',
         'ROI e métricas de negócio',  
@@ -44,7 +44,7 @@ export const Step0UserType: React.FC<Step0UserTypeProps> = ({
       id: 'learner' as UserType,
       title: 'HANDS ON, APRENDER E IMPLEMENTAR',
       description: 'Foco em mão na massa, aprender e implementar soluções de IA',
-      gradient: 'from-blue-500 to-indigo-500',
+      gradient: 'from-operational to-operational-dark',
       features: [
         'Conteúdo educacional',
         'Projetos práticos',

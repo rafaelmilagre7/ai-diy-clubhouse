@@ -64,9 +64,9 @@ const ProfilePage = () => {
 
   const getRoleColor = (role: string) => {
     switch (role) {
-      case 'admin': return 'bg-red-500';
-      case 'membro_club': return 'bg-blue-500';
-      case 'formacao': return 'bg-green-500';
+      case 'admin': return 'bg-destructive';
+      case 'membro_club': return 'bg-operational';
+      case 'formacao': return 'bg-success';
       default: return 'bg-gray-500';
     }
   };
@@ -246,10 +246,10 @@ const ProfilePage = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-muted-foreground">Concluídas</p>
-                      <p className="text-2xl font-bold text-green-500">{stats.completedSolutions}</p>
+                      <p className="text-2xl font-bold text-success">{stats.completedSolutions}</p>
                     </div>
-                    <div className="p-3 bg-green-500/10 rounded-full">
-                      <CheckCircle className="h-6 w-6 text-green-500" />
+                    <div className="p-3 bg-success/10 rounded-full">
+                      <CheckCircle className="h-6 w-6 text-success" />
                     </div>
                   </div>
                 </CardContent>
@@ -260,10 +260,10 @@ const ProfilePage = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-muted-foreground">Taxa de Conclusão</p>
-                      <p className="text-2xl font-bold text-blue-500">{stats.completionRate}%</p>
+                      <p className="text-2xl font-bold text-operational">{stats.completionRate}%</p>
                     </div>
-                    <div className="p-3 bg-blue-500/10 rounded-full">
-                      <Zap className="h-6 w-6 text-blue-500" />
+                    <div className="p-3 bg-operational/10 rounded-full">
+                      <Zap className="h-6 w-6 text-operational" />
                     </div>
                   </div>
                 </CardContent>
@@ -274,10 +274,10 @@ const ProfilePage = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-muted-foreground">Ativas</p>
-                      <p className="text-2xl font-bold text-orange-500">{stats.activeSolutions || stats.inProgressSolutions || 0}</p>
+                      <p className="text-2xl font-bold text-warning">{stats.activeSolutions || stats.inProgressSolutions || 0}</p>
                     </div>
-                    <div className="p-3 bg-orange-500/10 rounded-full">
-                      <Clock className="h-6 w-6 text-orange-500" />
+                    <div className="p-3 bg-warning/10 rounded-full">
+                      <Clock className="h-6 w-6 text-warning" />
                     </div>
                   </div>
                 </CardContent>
@@ -299,16 +299,16 @@ const ProfilePage = () => {
                     </div>
                     
                     <div className="grid grid-cols-3 gap-3 mt-6">
-                      <div className="text-center p-3 bg-gradient-to-br from-green-500/10 to-green-600/5 rounded-lg border border-green-500/20">
-                        <div className="text-xl font-bold text-green-500">{stats.completedSolutions}</div>
+                      <div className="text-center p-3 bg-gradient-to-br from-success/10 to-success-dark/5 rounded-lg border border-success/20">
+                        <div className="text-xl font-bold text-success">{stats.completedSolutions}</div>
                         <div className="text-xs text-muted-foreground">Concluídas</div>
                       </div>
-                      <div className="text-center p-3 bg-gradient-to-br from-blue-500/10 to-blue-600/5 rounded-lg border border-blue-500/20">
-                        <div className="text-xl font-bold text-blue-500">{stats.activeSolutions || stats.inProgressSolutions || 0}</div>
+                      <div className="text-center p-3 bg-gradient-to-br from-operational/10 to-operational-dark/5 rounded-lg border border-operational/20">
+                        <div className="text-xl font-bold text-operational">{stats.activeSolutions || stats.inProgressSolutions || 0}</div>
                         <div className="text-xs text-muted-foreground">Ativas</div>
                       </div>
-                      <div className="text-center p-3 bg-gradient-to-br from-purple-500/10 to-purple-600/5 rounded-lg border border-purple-500/20">
-                        <div className="text-xl font-bold text-purple-500">{Math.max(0, stats.totalSolutions - stats.completedSolutions - (stats.activeSolutions || stats.inProgressSolutions || 0))}</div>
+                      <div className="text-center p-3 bg-gradient-to-br from-strategy/10 to-strategy-dark/5 rounded-lg border border-strategy/20">
+                        <div className="text-xl font-bold text-strategy">{Math.max(0, stats.totalSolutions - stats.completedSolutions - (stats.activeSolutions || stats.inProgressSolutions || 0))}</div>
                         <div className="text-xs text-muted-foreground">Disponíveis</div>
                       </div>
                     </div>
@@ -372,12 +372,12 @@ const ProfilePage = () => {
                           <div className="flex items-center gap-4 text-sm text-muted-foreground">
                             <span>Módulo {impl.current_module}</span>
                             {impl.is_completed ? (
-                              <Badge className="bg-green-500 text-white">
+                              <Badge className="bg-success text-white">
                                 <CheckCircle className="w-3 h-3 mr-1" />
                                 Concluído
                               </Badge>
                             ) : (
-                              <Badge variant="outline" className="border-orange-500/30 text-orange-500">
+                              <Badge variant="outline" className="border-warning/30 text-warning">
                                 <Clock className="w-3 h-3 mr-1" />
                                 Em andamento
                               </Badge>

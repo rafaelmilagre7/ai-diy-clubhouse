@@ -23,7 +23,7 @@ export const PostContextMenu = ({ onDeleteClick }: PostContextMenuProps) => {
       <DropdownMenuContent align="end">
         <DropdownMenuItem 
           onClick={onDeleteClick}
-          className="text-red-500 hover:text-red-700 focus:text-red-700"
+          className="text-destructive hover:text-destructive-dark focus:text-destructive-dark"
         >
           <Trash2 className="h-4 w-4 mr-2" />
           Excluir

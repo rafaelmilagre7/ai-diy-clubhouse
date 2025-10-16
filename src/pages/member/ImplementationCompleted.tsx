@@ -202,11 +202,11 @@ const ImplementationCompleted = () => {
             </div>
             <div className="p-3 space-y-2">
               <div className="flex items-center gap-3 p-2 rounded-md hover:bg-slate-50 transition-colors">
-                <MessageSquare className="h-4 w-4 text-blue-500" />
+                <MessageSquare className="h-4 w-4 text-operational" />
                 <span className="text-sm">Compartilhe sua experiência com outros membros</span>
               </div>
               <div className="flex items-center gap-3 p-2 rounded-md hover:bg-slate-50 transition-colors">
-                <Trophy className="h-4 w-4 text-amber-500" />
+                <Trophy className="h-4 w-4 text-warning" />
                 <span className="text-sm">Explore mais soluções para desbloquear novas conquistas</span>
               </div>
             </div>

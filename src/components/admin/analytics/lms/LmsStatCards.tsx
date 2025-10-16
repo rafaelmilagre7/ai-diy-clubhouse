@@ -18,7 +18,7 @@ export const LmsStatCards: React.FC<LmsStatsProps> = ({ stats, isLoading }) => {
   // Função para determinar a cor do texto baseado no score NPS
   const npsScoreColorClass = (score: number) => {
     if (score >= 50) return "text-green-500";
-    if (score >= 0) return "text-amber-500";
+    if (score >= 0) return "text-warning";
     return "text-red-500";
   };
 

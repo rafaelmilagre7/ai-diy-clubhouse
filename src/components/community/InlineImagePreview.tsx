@@ -58,7 +58,7 @@ export const InlineImagePreview: React.FC<InlineImagePreviewProps> = ({
               variant="destructive"
               size="sm"
               onClick={onRemove}
-              className="bg-red-500/90 hover:bg-red-500"
+              className="bg-destructive/90 hover:bg-destructive"
             >
               <X className="h-4 w-4 mr-1" />
               Remover

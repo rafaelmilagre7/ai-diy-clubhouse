@@ -121,7 +121,7 @@ export function CursosList({ cursos, loading, onEdit, onDelete, isAdmin }: Curso
                       </DropdownMenuItem>
                       <DropdownMenuItem 
                         onClick={() => onDelete(curso.id)}
-                        className="text-red-500 focus:text-red-500"
+                        className="text-destructive focus:text-destructive"
                       >
                         <Trash2 className="h-4 w-4 mr-2" />
                         Excluir

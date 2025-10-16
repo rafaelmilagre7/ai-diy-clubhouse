@@ -71,7 +71,7 @@ const ModulesList = ({ modules, onEditModule, onPreview, isLoading }: ModulesLis
               <CardContent className="p-4 flex justify-between items-center">
                 <div className="flex items-start gap-3">
                   <div className="mt-1">
-                    {item.exists ? getModuleStatusIcon(item.module!) : <AlertCircle className="h-5 w-5 text-amber-500" />}
+                    {item.exists ? getModuleStatusIcon(item.module!) : <AlertCircle className="h-5 w-5 text-warning" />}
                   </div>
                   <div>
                     <div className="flex items-center gap-2">

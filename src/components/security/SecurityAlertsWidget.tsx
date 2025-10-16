@@ -98,9 +98,9 @@ export function SecurityAlertsWidget() {
             label: "IPs Suspeitos",
             value: metrics.suspiciousIPs.length,
             icon: Activity,
-            gradient: "from-amber-500/20 to-yellow-500/10",
-            iconColor: "text-amber-500",
-            border: "border-amber-500/30"
+            gradient: "from-warning/20 to-warning-light/10",
+            iconColor: "text-warning",
+            border: "border-warning/30"
           },
           {
             label: "Total Violações",

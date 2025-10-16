@@ -74,7 +74,7 @@ export const ReportModal = ({ open, onOpenChange, onSubmit, targetType }: Report
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-orange-500" />
+            <AlertTriangle className="h-5 w-5 text-warning" />
             Reportar {targetType === 'topic' ? 'Tópico' : 'Post'}
           </DialogTitle>
           <DialogDescription>

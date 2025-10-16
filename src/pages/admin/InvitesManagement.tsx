@@ -341,7 +341,7 @@ const ConfirmDeleteDialog = ({
         <div className="py-4">
           <p>Esta ação não pode ser desfeita. O convite será permanentemente removido do sistema.</p>
           {!invite.used_at && new Date(invite.expires_at) >= new Date() && (
-            <p className="text-sm text-amber-500 mt-2">
+            <p className="text-sm text-warning mt-2">
               Atenção: este convite ainda está ativo e não foi utilizado.
             </p>
           )}

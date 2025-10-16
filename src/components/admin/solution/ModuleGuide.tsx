@@ -20,7 +20,7 @@ const ModuleGuide: React.FC<ModuleGuideProps> = ({ moduleType }) => {
       case "implementation":
         return <List className="h-5 w-5 text-indigo-500" />;
       case "verification":
-        return <AlertTriangle className="h-5 w-5 text-amber-500" />;
+        return <AlertTriangle className="h-5 w-5 text-warning" />;
       case "results":
         return <BarChart className="h-5 w-5 text-aurora-primary" />;
       case "optimization":

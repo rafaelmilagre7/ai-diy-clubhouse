@@ -117,24 +117,24 @@ export const EmptyTopicsStateModern = ({ searchQuery }: EmptyTopicsStateModernPr
               {/* Encouraging Stats */}
               <div className="mt-12 grid grid-cols-3 gap-6 max-w-md mx-auto">
                 <div className="text-center">
-                  <div className="p-3 bg-blue-500/10 rounded-xl mb-2 mx-auto w-fit">
-                    <Users className="h-5 w-5 text-blue-500" />
+                  <div className="p-3 bg-operational/10 rounded-xl mb-2 mx-auto w-fit">
+                    <Users className="h-5 w-5 text-operational" />
                   </div>
-                  <p className="text-2xl font-bold text-blue-500">50+</p>
+                  <p className="text-2xl font-bold text-operational">50+</p>
                   <p className="text-xs text-muted-foreground">Membros Ativos</p>
                 </div>
                 <div className="text-center">
-                  <div className="p-3 bg-emerald-500/10 rounded-xl mb-2 mx-auto w-fit">
-                    <MessageSquare className="h-5 w-5 text-emerald-500" />
+                  <div className="p-3 bg-success/10 rounded-xl mb-2 mx-auto w-fit">
+                    <MessageSquare className="h-5 w-5 text-success" />
                   </div>
-                  <p className="text-2xl font-bold text-emerald-500">100+</p>
+                  <p className="text-2xl font-bold text-success">100+</p>
                   <p className="text-xs text-muted-foreground">Discussões</p>
                 </div>
                 <div className="text-center">
-                  <div className="p-3 bg-purple-500/10 rounded-xl mb-2 mx-auto w-fit">
-                    <MessageSquare className="h-5 w-5 text-purple-500" />
+                  <div className="p-3 bg-strategy/10 rounded-xl mb-2 mx-auto w-fit">
+                    <MessageSquare className="h-5 w-5 text-strategy" />
                   </div>
-                  <p className="text-2xl font-bold text-purple-500">24h</p>
+                  <p className="text-2xl font-bold text-strategy">24h</p>
                   <p className="text-xs text-muted-foreground">Resposta Média</p>
                 </div>
               </div>

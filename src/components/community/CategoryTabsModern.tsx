@@ -20,10 +20,10 @@ const categoryIcons = {
 };
 
 const categoryGradients = {
-  'Geral': 'data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500/20 data-[state=active]:to-cyan-500/20 data-[state=active]:text-blue-700 data-[state=active]:border-blue-300/50',
-  'Suporte': 'data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500/20 data-[state=active]:to-green-500/20 data-[state=active]:text-emerald-700 data-[state=active]:border-emerald-300/50',
-  'Implementação': 'data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500/20 data-[state=active]:to-pink-500/20 data-[state=active]:text-purple-700 data-[state=active]:border-purple-300/50',
-  'Feedback': 'data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500/20 data-[state=active]:to-red-500/20 data-[state=active]:text-orange-700 data-[state=active]:border-orange-300/50'
+  'Geral': 'data-[state=active]:bg-gradient-to-r data-[state=active]:from-operational/20 data-[state=active]:to-operational-light/20 data-[state=active]:text-operational data-[state=active]:border-operational/50',
+  'Suporte': 'data-[state=active]:bg-gradient-to-r data-[state=active]:from-success/20 data-[state=active]:to-success-light/20 data-[state=active]:text-success data-[state=active]:border-success/50',
+  'Implementação': 'data-[state=active]:bg-gradient-to-r data-[state=active]:from-strategy/20 data-[state=active]:to-strategy-light/20 data-[state=active]:text-strategy data-[state=active]:border-strategy/50',
+  'Feedback': 'data-[state=active]:bg-gradient-to-r data-[state=active]:from-warning/20 data-[state=active]:to-destructive/20 data-[state=active]:text-warning data-[state=active]:border-warning/50'
 };
 
 export const CategoryTabsModern = ({ categories, isLoading }: CategoryTabsModernProps) => {

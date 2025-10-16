@@ -46,8 +46,8 @@ export const CommunityStatistics = () => {
           </div>
           
           <div className="flex flex-col items-center">
-            <div className="flex items-center justify-center mb-2 h-10 w-10 rounded-full bg-green-500/10">
-              <CheckCircle2 className="h-5 w-5 text-green-500" />
+            <div className="flex items-center justify-center mb-2 h-10 w-10 rounded-full bg-success/10">
+              <CheckCircle2 className="h-5 w-5 text-success" />
             </div>
             <span className="text-xl font-bold">{solvedCount}</span>
             <span className="text-sm text-muted-foreground">Resolvidos</span>

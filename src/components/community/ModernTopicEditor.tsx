@@ -307,20 +307,20 @@ export const ModernTopicEditor: React.FC<ModernTopicEditorProps> = ({
               <div className="flex items-center gap-2 text-sm">
                 {autoSaveStatus === 'saving' && (
                   <>
-                    <Clock className="h-4 w-4 animate-spin text-blue-500" />
-                    <span className="text-blue-500">Salvando...</span>
+                    <Clock className="h-4 w-4 animate-spin text-operational" />
+                    <span className="text-operational">Salvando...</span>
                   </>
                 )}
                 {autoSaveStatus === 'saved' && (
                   <>
-                    <div className="h-2 w-2 bg-green-500 rounded-full" />
-                    <span className="text-green-500">Salvo</span>
+                    <div className="h-2 w-2 bg-success rounded-full" />
+                    <span className="text-success">Salvo</span>
                   </>
                 )}
                 {autoSaveStatus === 'error' && (
                   <>
-                    <AlertTriangle className="h-4 w-4 text-red-500" />
-                    <span className="text-red-500">Erro ao salvar</span>
+                    <AlertTriangle className="h-4 w-4 text-destructive" />
+                    <span className="text-destructive">Erro ao salvar</span>
                   </>
                 )}
               </div>
@@ -345,7 +345,7 @@ export const ModernTopicEditor: React.FC<ModernTopicEditorProps> = ({
                 placeholder="Digite um título claro e descritivo para seu tópico"
                 maxLength={100}
                 required
-                className={title.length > 80 ? 'border-yellow-500' : ''}
+                className={title.length > 80 ? 'border-warning' : ''}
               />
               {title.length < 5 && title.length > 0 && (
                 <p className="text-sm text-muted-foreground">

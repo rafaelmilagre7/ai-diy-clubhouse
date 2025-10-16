@@ -39,10 +39,10 @@ export const TopicItemModern = ({ topic, isPinned = false }: TopicItemModernProp
   };
 
   const categoryColors = {
-    'Geral': 'bg-blue-500/10 text-blue-700 border-blue-500/20',
-    'Suporte': 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20',
-    'Implementação': 'bg-purple-500/10 text-purple-700 border-purple-500/20',
-    'Feedback': 'bg-orange-500/10 text-orange-700 border-orange-500/20'
+    'Geral': 'bg-operational/10 text-operational border-operational/20',
+    'Suporte': 'bg-success/10 text-success border-success/20',
+    'Implementação': 'bg-strategy/10 text-strategy border-strategy/20',
+    'Feedback': 'bg-warning/10 text-warning border-warning/20'
   };
 
   return (

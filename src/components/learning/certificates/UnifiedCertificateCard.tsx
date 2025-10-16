@@ -286,7 +286,7 @@ Confira meu certificado: ${customDomainUrl}`;
             <div className="flex items-center justify-between">
               <div className="space-y-1">
                 <div className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
-                  <Star className="h-3 w-3 text-amber-500" />
+                  <Star className="h-3 w-3 text-warning" />
                   Código de Validação
                 </div>
                 <div className="text-sm font-mono text-foreground bg-background/50 px-2 py-1 rounded border">

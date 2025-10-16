@@ -184,7 +184,7 @@ export const AdvancedFilters = ({
                   onCheckedChange={(checked) => updateFilter('showFavorites', checked)}
                 />
                 <Label htmlFor="favorites" className="text-sm flex items-center">
-                  <Heart className="h-3 w-3 mr-1 text-red-500" />
+                  <Heart className="h-3 w-3 mr-1 text-destructive" />
                   Favoritos
                 </Label>
               </div>

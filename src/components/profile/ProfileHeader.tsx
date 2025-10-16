@@ -73,7 +73,7 @@ export const ProfileHeader = ({
             </div>
             <div className="flex justify-between text-sm">
               <span className="flex items-center text-medium-contrast">
-                <Clock className="h-4 w-4 mr-2 text-amber-500" />
+                <Clock className="h-4 w-4 mr-2 text-warning" />
                 Taxa de conclusão
               </span>
               <span className="font-medium text-high-contrast">{completionRate}%</span>

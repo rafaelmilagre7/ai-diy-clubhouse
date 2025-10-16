@@ -70,7 +70,7 @@ export const AulaHeader = ({
             <Badge 
               variant={isPublished ? "default" : "outline"}
               className={cn(
-                isPublished ? "bg-green-500 hover:bg-green-600" : "text-amber-500 border-amber-500"
+                isPublished ? "bg-success hover:bg-success-dark" : "text-warning border-warning"
               )}
             >
               {isPublished ? "Publicado" : "Rascunho"}

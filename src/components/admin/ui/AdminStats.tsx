@@ -33,7 +33,7 @@ export const AdminStats = ({
   const variants = {
     default: 'bg-surface-elevated border-border/50',
     success: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500',
-    warning: 'bg-amber-500/10 border-amber-500/20 text-amber-500',
+    warning: 'bg-warning/10 border-warning/20 text-warning',
     error: 'bg-red-500/10 border-red-500/20 text-red-500',
     info: 'bg-blue-500/10 border-blue-500/20 text-blue-500'
   };

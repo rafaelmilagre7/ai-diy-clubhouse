@@ -39,8 +39,8 @@ export const SolutionsMetrics = ({ solutions }: SolutionsMetricsProps) => {
       value: draftSolutions,
       subtitle: "Em desenvolvimento",
       icon: Clock,
-      color: "text-amber-500",
-      bgColor: "bg-amber-500/10"
+      color: "text-warning",
+      bgColor: "bg-warning/10"
     },
     {
       title: "Categorias",

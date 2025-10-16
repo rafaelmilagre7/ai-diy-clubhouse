@@ -13,7 +13,7 @@ export const SolutionBadge = ({ isSolved, className }: SolutionBadgeProps) => {
   return (
     <div 
       className={cn(
-        "inline-flex items-center rounded-full text-xs font-medium bg-green-500/20 text-green-500 px-2 py-0.5",
+        "inline-flex items-center rounded-full text-xs font-medium bg-success/20 text-success px-2 py-0.5",
         className
       )}
     >

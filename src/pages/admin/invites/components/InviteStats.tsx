@@ -42,9 +42,9 @@ const InviteStats = ({ invites }: InviteStatsProps) => {
       label: "Convites Ativos",
       value: activeInvites,
       icon: Clock,
-      gradient: "from-amber-500/20 to-orange-500/10",
-      iconColor: "text-amber-500",
-      border: "border-amber-500/30",
+      gradient: "from-warning/20 to-warning-light/10",
+      iconColor: "text-warning",
+      border: "border-warning/30",
       glow: "hover:shadow-amber-500/20"
     },
     {

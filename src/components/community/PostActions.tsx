@@ -54,7 +54,7 @@ export const PostActions = ({
           size="sm"
           onClick={isSolutionPost ? onUnmarkAsSolved : onMarkAsSolved}
           disabled={isSubmitting}
-          className={`text-xs h-8 ${isSolutionPost ? "border-green-500 text-green-600" : ""}`}
+          className={`text-xs h-8 ${isSolutionPost ? "border-success text-success" : ""}`}
         >
           <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
           {isSolutionPost ? "Remover solução" : "É solução"}

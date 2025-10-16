@@ -127,7 +127,7 @@ export const OverviewTabContent = ({ timeRange }: OverviewTabContentProps) => {
       <div className="space-y-6">
         {renderDataStatus()}
         <Alert className="mb-6 bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-900">
-          <AlertTriangle className="h-5 w-5 text-amber-500" />
+          <AlertTriangle className="h-5 w-5 text-warning" />
           <AlertTitle className="text-neutral-800 dark:text-white">Sem dados disponíveis</AlertTitle>
           <AlertDescription className="text-neutral-700 dark:text-neutral-300 space-y-4">
             <p>

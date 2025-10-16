@@ -37,11 +37,11 @@ export const MaterialGridView = ({
   const getFileIcon = (fileType: string | null, size = "h-8 w-8") => {
     if (!fileType) return <File className={size} />;
     
-    if (fileType.includes("pdf")) return <FileText className={`${size} text-red-500`} />;
-    if (fileType.includes("image")) return <FileImage className={`${size} text-green-500`} />;
-    if (fileType.includes("zip") || fileType.includes("rar")) return <FileArchive className={`${size} text-orange-500`} />;
-    if (fileType.includes("doc")) return <FileText className={`${size} text-blue-500`} />;
-    if (fileType.includes("code") || fileType.includes("json")) return <FileCode className={`${size} text-purple-500`} />;
+    if (fileType.includes("pdf")) return <FileText className={`${size} text-destructive`} />;
+    if (fileType.includes("image")) return <FileImage className={`${size} text-success`} />;
+    if (fileType.includes("zip") || fileType.includes("rar")) return <FileArchive className={`${size} text-warning`} />;
+    if (fileType.includes("doc")) return <FileText className={`${size} text-operational`} />;
+    if (fileType.includes("code") || fileType.includes("json")) return <FileCode className={`${size} text-strategy`} />;
     
     return <File className={size} />;
   };
@@ -120,7 +120,7 @@ export const MaterialGridView = ({
                     className="p-1 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
                   >
                     {isFavorite(recurso.id) ? (
-                      <Heart className="h-4 w-4 text-red-500 fill-current" />
+                      <Heart className="h-4 w-4 text-destructive fill-current" />
                     ) : (
                       <HeartOff className="h-4 w-4 text-muted-foreground" />
                     )}

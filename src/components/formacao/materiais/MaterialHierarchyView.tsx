@@ -46,11 +46,11 @@ export const MaterialHierarchyView = ({
   const getFileIcon = (fileType: string | null) => {
     if (!fileType) return <File className="h-4 w-4" />;
     
-    if (fileType.includes("pdf")) return <FileText className="h-4 w-4 text-red-500" />;
-    if (fileType.includes("image")) return <FileImage className="h-4 w-4 text-green-500" />;
-    if (fileType.includes("zip") || fileType.includes("rar")) return <FileArchive className="h-4 w-4 text-orange-500" />;
-    if (fileType.includes("doc")) return <FileText className="h-4 w-4 text-blue-500" />;
-    if (fileType.includes("code") || fileType.includes("json")) return <FileCode className="h-4 w-4 text-purple-500" />;
+    if (fileType.includes("pdf")) return <FileText className="h-4 w-4 text-destructive" />;
+    if (fileType.includes("image")) return <FileImage className="h-4 w-4 text-success" />;
+    if (fileType.includes("zip") || fileType.includes("rar")) return <FileArchive className="h-4 w-4 text-warning" />;
+    if (fileType.includes("doc")) return <FileText className="h-4 w-4 text-operational" />;
+    if (fileType.includes("code") || fileType.includes("json")) return <FileCode className="h-4 w-4 text-strategy" />;
     
     return <File className="h-4 w-4" />;
   };
@@ -176,7 +176,7 @@ export const MaterialHierarchyView = ({
                                   ) : (
                                     <ChevronRight className="h-4 w-4" />
                                   )}
-                                  <FolderOpen className="h-5 w-5 text-orange-500" />
+                                  <FolderOpen className="h-5 w-5 text-warning" />
                                   <div>
                                     <h4 className="font-medium">{moduleTitle}</h4>
                                     <p className="text-xs text-muted-foreground">
@@ -212,7 +212,7 @@ export const MaterialHierarchyView = ({
                                               ) : (
                                                 <ChevronRight className="h-3 w-3" />
                                               )}
-                                              <BookOpen className="h-4 w-4 text-blue-500" />
+                                              <BookOpen className="h-4 w-4 text-operational" />
                                               <h5 className="text-sm font-medium">{lessonTitle}</h5>
                                             </div>
                                             <Badge variant="outline" className="text-xs">

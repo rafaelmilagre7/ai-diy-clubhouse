@@ -214,7 +214,7 @@ export const AllLessonsList = ({
         
         <Card>
           <CardContent className="flex items-center p-6">
-            <BookOpen className="h-8 w-8 text-green-500 mr-4" />
+            <BookOpen className="h-8 w-8 text-success mr-4" />
             <div>
               <p className="text-2xl font-bold">
                 {filteredLessons.filter(lesson => isPublished(lesson)).length}
@@ -226,7 +226,7 @@ export const AllLessonsList = ({
         
         <Card>
           <CardContent className="flex items-center p-6">
-            <Layers className="h-8 w-8 text-orange-500 mr-4" />
+            <Layers className="h-8 w-8 text-warning mr-4" />
             <div>
               <p className="text-2xl font-bold">{courses.length}</p>
               <p className="text-xs text-muted-foreground">Cursos</p>

@@ -42,7 +42,7 @@ export const CommunitySidebar = () => {
             <>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <MessageSquare className="h-4 w-4 text-blue-500" />
+                  <MessageSquare className="h-4 w-4 text-operational" />
                   <span className="text-sm">Tópicos</span>
                 </div>
                 <span className="font-semibold">{topicCount}</span>
@@ -50,7 +50,7 @@ export const CommunitySidebar = () => {
               
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4 text-green-500" />
+                  <Users className="h-4 w-4 text-success" />
                   <span className="text-sm">Membros Ativos</span>
                 </div>
                 <span className="font-semibold">{activeUserCount}</span>
@@ -58,7 +58,7 @@ export const CommunitySidebar = () => {
               
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4 text-purple-500" />
+                  <TrendingUp className="h-4 w-4 text-strategy" />
                   <span className="text-sm">Resolvidos</span>
                 </div>
                 <span className="font-semibold">{solvedCount}</span>

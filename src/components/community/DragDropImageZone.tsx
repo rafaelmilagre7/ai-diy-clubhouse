@@ -71,7 +71,7 @@ export const DragDropImageZone: React.FC<DragDropImageZoneProps> = ({
         relative border-2 border-dashed rounded-lg p-6 text-center transition-all duration-200
         ${isDragOver ? 'border-primary bg-primary/5' : 'border-border'}
         ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-primary/50'}
-        ${isUploading ? 'border-blue-500 bg-blue-500/5' : ''}
+        ${isUploading ? 'border-operational bg-operational/5' : ''}
         ${className}
       `}
       onDrop={handleDrop}

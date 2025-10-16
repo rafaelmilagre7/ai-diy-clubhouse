@@ -45,7 +45,7 @@ export const PostHeader = ({
             </span>
           )}
           {isAdmin && (
-            <span className="bg-red-500/10 text-red-500 text-xs px-1.5 py-0.5 rounded">
+            <span className="bg-destructive/10 text-destructive text-xs px-1.5 py-0.5 rounded">
               Admin
             </span>
           )}

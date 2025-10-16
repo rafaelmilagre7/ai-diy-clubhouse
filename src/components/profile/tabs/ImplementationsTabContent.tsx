@@ -51,7 +51,7 @@ export const ImplementationsTabContent = ({ implementations }: ImplementationsTa
             variant={filter === 'in-progress' ? 'default' : 'outline'} 
             size="sm"
             onClick={() => setFilter('in-progress')}
-            className={filter === 'in-progress' ? '' : 'hover:bg-amber-600/10 hover:text-amber-500'}
+            className={filter === 'in-progress' ? '' : 'hover:bg-warning/10 hover:text-warning'}
           >
             <Clock className="mr-1 h-3.5 w-3.5" />
             Em andamento ({implementations.filter(i => !i.is_completed).length})
