@@ -19,13 +19,13 @@ const ImplementationStatus: React.FC<ImplementationStatusProps> = ({ isPublished
       <h4 className="text-sm font-medium mb-2">Status de Implementação</h4>
       <div className="grid grid-cols-2 gap-4">
         {/* Cartão de status das informações básicas sempre marcado como concluído */}
-        <Card className="p-4 border-l-4 border-l-[#0ABAB5]">
+        <Card className="p-4 border-l-4 border-l-aurora-primary">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <FileText className="h-5 w-5 text-[#0ABAB5]" />
+              <FileText className="h-5 w-5 text-aurora-primary" />
               <span className="font-medium">Informações Básicas</span>
             </div>
-            <CheckCircle2 className="h-5 w-5 text-[#0ABAB5]" />
+            <CheckCircle2 className="h-5 w-5 text-aurora-primary" />
           </div>
         </Card>
         

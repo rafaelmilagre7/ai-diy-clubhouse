@@ -30,7 +30,7 @@ export const ChecklistProgress = ({
         </p>
         
         {isComplete && (
-          <div className="flex items-center text-[#0ABAB5] text-sm">
+          <div className="flex items-center text-aurora-primary text-sm">
             <CheckCircle2 className="w-4 h-4 mr-1" />
             <span>Completo!</span>
           </div>

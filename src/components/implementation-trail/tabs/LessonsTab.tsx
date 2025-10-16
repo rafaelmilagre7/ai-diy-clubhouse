@@ -156,7 +156,7 @@ export const LessonsTab = ({ trail }: LessonsTabProps) => {
 
   const getPriorityLabel = (priority: number) => {
     switch (priority) {
-      case 1: return { label: 'Fundamentos', color: 'bg-viverblue', textColor: 'text-black' };
+      case 1: return { label: 'Fundamentos', color: 'bg-aurora-primary', textColor: 'text-black' };
       case 2: return { label: 'Intermediário', color: 'bg-[hsl(var(--vivercyan))]', textColor: 'text-black' };
       case 3: return { label: 'Avançado', color: 'bg-[hsl(var(--viverpetrol))]', textColor: 'text-white' };
       default: return { label: 'Recomendada', color: 'bg-muted', textColor: 'text-muted-foreground' };
@@ -165,7 +165,7 @@ export const LessonsTab = ({ trail }: LessonsTabProps) => {
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty?.toLowerCase()) {
-      case 'iniciante': return 'bg-viverblue/10 text-viverblue border-viverblue/20';
+      case 'iniciante': return 'bg-aurora-primary/10 text-aurora-primary border-aurora-primary/20';
       case 'intermediário': return 'bg-[hsl(var(--vivercyan))]/10 text-[hsl(var(--vivercyan))] border-[hsl(var(--vivercyan))]/20';
       case 'avançado': return 'bg-[hsl(var(--viverpetrol))]/10 text-[hsl(var(--viverpetrol-light))] border-[hsl(var(--viverpetrol))]/20';
       default: return 'bg-muted/50 text-muted-foreground border-muted/20';
@@ -223,7 +223,7 @@ export const LessonsTab = ({ trail }: LessonsTabProps) => {
             {/* Priority indicator */}
             <div className="absolute top-1 right-1">
               <div className={`w-1.5 h-1.5 rounded-full ${
-                item.priority === 1 ? 'bg-viverblue' :
+                item.priority === 1 ? 'bg-aurora-primary' :
                 item.priority === 2 ? 'bg-[hsl(var(--vivercyan))]' : 'bg-[hsl(var(--viverpetrol))]'
               }`}></div>
             </div>

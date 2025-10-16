@@ -24,7 +24,7 @@ export const SelectedToolCard: React.FC<SelectedToolCardProps> = ({
         <div>
           <h3 className="font-medium text-sm line-clamp-1">{tool.name}</h3>
           <div className="flex gap-2 mt-1">
-            <Badge variant="outline" className="bg-[#0ABAB5]/10 text-[#0ABAB5] text-xs">
+            <Badge variant="outline" className="bg-aurora-primary/10 text-aurora-primary text-xs">
               {tool.category}
             </Badge>
           </div>

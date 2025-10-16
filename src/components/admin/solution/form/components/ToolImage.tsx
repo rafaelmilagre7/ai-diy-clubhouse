@@ -31,7 +31,7 @@ export const ToolImage: React.FC<ToolImageProps> = ({ tool, size = "medium" }) =
           }}
         />
       ) : (
-        <div className="text-xl font-bold text-[#0ABAB5]">
+        <div className="text-xl font-bold text-aurora-primary">
           {getInitials()}
         </div>
       )}

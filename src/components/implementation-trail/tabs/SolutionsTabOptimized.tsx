@@ -47,7 +47,7 @@ export const SolutionsTabOptimized: React.FC<SolutionsTabOptimizedProps> = ({ tr
 
   const getPriorityLabel = (priority: number) => {
     switch (priority) {
-      case 1: return { label: 'Alta Prioridade', color: 'bg-viverblue', textColor: 'text-black' };
+      case 1: return { label: 'Alta Prioridade', color: 'bg-aurora-primary', textColor: 'text-black' };
       case 2: return { label: 'Média Prioridade', color: 'bg-[hsl(var(--vivercyan))]', textColor: 'text-black' };
       case 3: return { label: 'Baixa Prioridade', color: 'bg-[hsl(var(--viverpetrol))]', textColor: 'text-white' };
       default: return { label: 'Prioridade', color: 'bg-muted', textColor: 'text-muted-foreground' };
@@ -73,16 +73,16 @@ export const SolutionsTabOptimized: React.FC<SolutionsTabOptimizedProps> = ({ tr
     }
 
     return (
-      <Card className="group relative overflow-hidden border border-border/50 hover:border-viverblue/50 bg-gradient-to-br from-card/95 to-muted/30 backdrop-blur-sm transition-all duration-500 hover:scale-[1.01] hover:shadow-xl hover:shadow-viverblue/5 cursor-pointer">
+      <Card className="group relative overflow-hidden border border-border/50 hover:border-aurora-primary/50 bg-gradient-to-br from-card/95 to-muted/30 backdrop-blur-sm transition-all duration-500 hover:scale-[1.01] hover:shadow-xl hover:shadow-aurora-primary/5 cursor-pointer">
         {/* Animated glow effect */}
-        <div className="absolute inset-0 bg-gradient-to-r from-viverblue/5 via-transparent to-[hsl(var(--vivercyan))]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+        <div className="absolute inset-0 bg-gradient-to-r from-aurora-primary/5 via-transparent to-aurora-primary/3 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
         
         <div className="flex h-[200px] relative z-10" onClick={() => {
           console.log('🔗 [SOLUTION-CARD-OPT] Navegando para solução:', item.solutionId);
           navigate(`/solution/${item.solutionId}`);
         }}>
           {/* Solution Cover */}
-          <div className="w-[280px] relative overflow-hidden bg-gradient-to-br from-viverblue/20 to-[hsl(var(--vivercyan))]/20 rounded-l-xl">
+          <div className="w-[280px] relative overflow-hidden bg-gradient-to-br from-aurora-primary/20 to-aurora-primary/10 rounded-l-xl">
             {solutionData.thumbnail_url ? (
               <img 
                 src={solutionData.thumbnail_url} 
@@ -93,12 +93,12 @@ export const SolutionsTabOptimized: React.FC<SolutionsTabOptimizedProps> = ({ tr
               <div className="w-full h-full flex items-center justify-center relative">
                 {/* Background orbs */}
                 <div className="absolute inset-0 overflow-hidden rounded-l-xl">
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 bg-viverblue/20 rounded-full blur-xl animate-pulse" />
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 bg-aurora-primary/20 rounded-full blur-xl animate-pulse" />
                   <div className="absolute top-1/3 left-1/3 w-12 h-12 bg-operational/15 rounded-full blur-lg animate-pulse animation-delay-1000" />
                 </div>
                 
                 <div className="text-center relative z-10">
-                  <Target className="h-12 w-12 mx-auto mb-2 text-viverblue group-hover:scale-110 group-hover:rotate-6 transition-all duration-500" />
+                  <Target className="h-12 w-12 mx-auto mb-2 text-aurora-primary group-hover:scale-110 group-hover:rotate-6 transition-all duration-500" />
                   <p className="text-sm text-muted-foreground font-medium">Solução IA</p>
                 </div>
               </div>
@@ -114,7 +114,7 @@ export const SolutionsTabOptimized: React.FC<SolutionsTabOptimizedProps> = ({ tr
             {/* AI Score badge */}
             {item.aiScore && (
               <div className="absolute bottom-3 right-3">
-                <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-black/70 backdrop-blur-md rounded-lg border border-white/20 group-hover:bg-viverblue/90 transition-colors duration-300">
+                <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-black/70 backdrop-blur-md rounded-lg border border-white/20 group-hover:bg-aurora-primary/90 transition-colors duration-300">
                   <Brain className="h-3 w-3 text-white" />
                   <span className="text-xs text-white font-semibold">{Math.round(item.aiScore)}%</span>
                 </div>
@@ -128,7 +128,7 @@ export const SolutionsTabOptimized: React.FC<SolutionsTabOptimizedProps> = ({ tr
             <div className="space-y-2">
               <div className="flex items-start justify-between">
                 <div className="flex-1 pr-2">
-                  <h3 className="text-base font-bold text-foreground group-hover:text-viverblue transition-colors duration-300 line-clamp-2 mb-2 leading-snug">
+                  <h3 className="text-base font-bold text-foreground group-hover:text-aurora-primary transition-colors duration-300 line-clamp-2 mb-2 leading-snug">
                     {solutionData.title}
                   </h3>
                   
@@ -148,7 +148,7 @@ export const SolutionsTabOptimized: React.FC<SolutionsTabOptimizedProps> = ({ tr
                   </div>
                 </div>
                 
-                <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-viverblue group-hover:scale-110 transition-all duration-300 flex-shrink-0" />
+                <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-aurora-primary group-hover:scale-110 transition-all duration-300 flex-shrink-0" />
               </div>
               
               {/* Description */}
@@ -159,15 +159,15 @@ export const SolutionsTabOptimized: React.FC<SolutionsTabOptimizedProps> = ({ tr
 
             {/* AI Justification */}
             <div className="space-y-3">
-              <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-viverblue/5 to-[hsl(var(--vivercyan))]/5 border border-viverblue/10 p-3">
-                <div className="absolute inset-0 bg-gradient-to-r from-viverblue/5 to-transparent opacity-50" />
+              <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-aurora-primary/5 to-aurora-primary/3 border border-aurora-primary/10 p-3">
+                <div className="absolute inset-0 bg-gradient-to-r from-aurora-primary/5 to-transparent opacity-50" />
                 
                 <div className="flex items-start gap-2 relative z-10">
-                  <div className="p-1.5 bg-viverblue/10 rounded-md flex-shrink-0">
-                    <Star className="w-3 h-3 text-viverblue" />
+                  <div className="p-1.5 bg-aurora-primary/10 rounded-md flex-shrink-0">
+                    <Star className="w-3 h-3 text-aurora-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-xs font-semibold text-viverblue mb-1">Análise IA</h4>
+                    <h4 className="text-xs font-semibold text-aurora-primary mb-1">Análise IA</h4>
                     <p className="text-xs text-foreground leading-relaxed line-clamp-2">{item.justification}</p>
                   </div>
                 </div>
@@ -178,11 +178,11 @@ export const SolutionsTabOptimized: React.FC<SolutionsTabOptimizedProps> = ({ tr
                 <div className="space-y-1.5">
                   <div className="flex justify-between items-center">
                     <span className="text-xs text-muted-foreground">Compatibilidade IA</span>
-                    <span className="text-xs text-viverblue font-semibold">{Math.round(item.aiScore)}%</span>
+                    <span className="text-xs text-aurora-primary font-semibold">{Math.round(item.aiScore)}%</span>
                   </div>
                   <div className="relative h-1.5 bg-muted/30 rounded-full overflow-hidden">
                     <div 
-                      className="absolute left-0 top-0 h-full bg-gradient-to-r from-viverblue to-[hsl(var(--vivercyan))] rounded-full transition-all duration-1000"
+                      className="absolute left-0 top-0 h-full bg-gradient-to-r from-aurora-primary to-aurora-primary-dark rounded-full transition-all duration-1000"
                       style={{width: `${item.aiScore}%`}}
                     />
                   </div>
@@ -193,7 +193,7 @@ export const SolutionsTabOptimized: React.FC<SolutionsTabOptimizedProps> = ({ tr
               <Button 
                 size="sm"
                 variant="outline"
-                className="w-full group-hover:bg-viverblue group-hover:text-white group-hover:border-viverblue transition-all duration-300 text-xs"
+                className="w-full group-hover:bg-aurora-primary group-hover:text-white group-hover:border-aurora-primary transition-all duration-300 text-xs"
                 onClick={(e) => {
                   e.stopPropagation();
                   console.log('🔗 [SOLUTION-BTN] Navegando para solução:', item.solutionId);
@@ -239,9 +239,9 @@ export const SolutionsTabOptimized: React.FC<SolutionsTabOptimizedProps> = ({ tr
     <div className="space-y-8 animate-fade-in">
       {/* Header Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="aurora-glass border-viverblue/30">
+        <Card className="aurora-glass border-aurora-primary/30">
           <CardContent className="p-4 text-center">
-            <Target className="h-8 w-8 mx-auto mb-2 text-viverblue" />
+            <Target className="h-8 w-8 mx-auto mb-2 text-aurora-primary" />
             <div className="text-2xl font-bold text-foreground">{trail.priority1?.length || 0}</div>
             <div className="text-sm text-muted-foreground">Alta Prioridade</div>
           </CardContent>
@@ -267,7 +267,7 @@ export const SolutionsTabOptimized: React.FC<SolutionsTabOptimizedProps> = ({ tr
       {/* Loading state global */}
       {loading && (
         <div className="text-center py-8">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-viverblue" />
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-aurora-primary" />
           <p className="text-muted-foreground">Carregando dados das soluções...</p>
         </div>
       )}

@@ -23,7 +23,7 @@ export const WizardStepProgress = ({
 
   return (
     <TooltipProvider>
-      <div className="mb-4 px-4 py-3 rounded-xl shadow-md bg-white/80 border border-[#0ABAB5]/10 transition-all">
+      <div className="mb-4 px-4 py-3 rounded-xl shadow-md bg-white/80 border border-aurora-primary/10 transition-all">
         {/* Versão desktop - mostra todos os passos */}
         <div className="hidden md:flex items-center justify-between">
           {steps.map((step, index) => (
@@ -37,7 +37,7 @@ export const WizardStepProgress = ({
                       index < currentStep 
                         ? "bg-gradient-to-r from-green-500 to-green-400 border-green-400 text-white shadow-sm"
                         : index === currentStep 
-                          ? "bg-gradient-to-br from-[#0ABAB5] to-[#94fbf7] border-[#0ABAB5] text-white ring-2 ring-[#0ABAB5]/20 shadow-lg scale-110 z-10"
+                          ? "bg-gradient-to-br from-aurora-primary to-aurora-primary-light border-aurora-primary text-white ring-2 ring-aurora-primary/20 shadow-lg scale-110 z-10"
                           : "bg-neutral-100 border-neutral-200 text-neutral-400"
                     )}
                   >
@@ -51,7 +51,7 @@ export const WizardStepProgress = ({
                   </div>
                 </TooltipTrigger>
                 {stepTitles[index] && (
-                  <TooltipContent side="bottom" className="bg-[#0ABAB5] text-white text-xs">
+                  <TooltipContent side="bottom" className="bg-aurora-primary text-white text-xs">
                     {stepTitles[index]}
                   </TooltipContent>
                 )}
@@ -81,7 +81,7 @@ export const WizardStepProgress = ({
                   step < currentStep 
                     ? "bg-green-500 border-green-400 text-white"
                     : step === currentStep 
-                      ? "bg-[#0ABAB5] border-[#0ABAB5] text-white ring-1 ring-[#0ABAB5]/20 scale-105"
+                      ? "bg-aurora-primary border-aurora-primary text-white ring-1 ring-aurora-primary/20 scale-105"
                       : "bg-neutral-100 border-neutral-200 text-neutral-400"
                 )}
               >
