@@ -65,11 +65,11 @@ export const CredentialsValidator = () => {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'ok':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
+        return <CheckCircle className="h-4 w-4 text-success" />;
       case 'missing':
-        return <XCircle className="h-4 w-4 text-red-500" />;
+        return <XCircle className="h-4 w-4 text-destructive" />;
       case 'invalid':
-        return <AlertCircle className="h-4 w-4 text-yellow-500" />;
+        return <AlertCircle className="h-4 w-4 text-warning" />;
       default:
         return <AlertCircle className="h-4 w-4 text-gray-500" />;
     }

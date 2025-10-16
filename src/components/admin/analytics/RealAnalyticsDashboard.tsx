@@ -85,19 +85,19 @@ export const RealAnalyticsDashboard = () => {
       title: "Usuários Ativos (7d)",
       value: data.metrics.activeUsers.toLocaleString(),
       icon: Activity,
-      color: "text-green-500"
+      color: "text-success"
     },
     {
       title: "Total Implementações",
       value: data.metrics.totalImplementations.toLocaleString(),
       icon: Target,
-      color: "text-purple-500"
+      color: "text-strategy"
     },
     {
       title: "Taxa de Conclusão",
       value: `${data.metrics.completionRate}%`,
       icon: TrendingUp,
-      color: "text-orange-500"
+      color: "text-warning"
     }
   ];
 

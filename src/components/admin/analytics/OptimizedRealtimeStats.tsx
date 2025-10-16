@@ -104,21 +104,21 @@ export const OptimizedRealtimeStats = () => {
       value: formatTime(stats.avgImplementationTime),
       icon: Clock,
       description: "Para concluir implementação",
-      color: "text-green-500"
+      color: "text-success"
     },
     {
       title: "Implementações",
       value: stats.totalCompletions,
       icon: Award,
       description: "Total concluído",
-      color: "text-purple-500"
+      color: "text-strategy"
     },
     {
       title: "Atividade Semanal",
       value: stats.weeklyActivity,
       icon: Activity,
       description: "Interações nos últimos 7 dias",
-      color: "text-orange-500"
+      color: "text-warning"
     }
   ];
 

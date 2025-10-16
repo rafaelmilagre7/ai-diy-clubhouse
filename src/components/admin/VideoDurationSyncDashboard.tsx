@@ -109,9 +109,9 @@ export const VideoDurationSyncDashboard = () => {
 
   const getSyncStatusBadge = (percentage: number) => {
     if (percentage === 100) {
-      return <Badge variant="default" className="bg-green-500"><CheckCircle className="w-3 h-3 mr-1" />Completo</Badge>;
+      return <Badge variant="default" className="bg-success"><CheckCircle className="w-3 h-3 mr-1" />Completo</Badge>;
     } else if (percentage > 50) {
-      return <Badge variant="secondary" className="bg-yellow-500"><RefreshCw className="w-3 h-3 mr-1" />Parcial</Badge>;
+      return <Badge variant="secondary" className="bg-warning"><RefreshCw className="w-3 h-3 mr-1" />Parcial</Badge>;
     } else {
       return <Badge variant="destructive"><AlertCircle className="w-3 h-3 mr-1" />Pendente</Badge>;
     }

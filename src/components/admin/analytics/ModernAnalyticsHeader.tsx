@@ -52,8 +52,8 @@ export const ModernAnalyticsHeader = ({
             <h1 className="text-3xl font-bold tracking-tight text-foreground">
               Dashboard Analytics
             </h1>
-            <Badge variant="secondary" className="bg-green-500/10 text-green-500 border-green-500/20">
-              <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
+            <Badge variant="secondary" className="bg-success/10 text-success border-success/20">
+              <div className="w-2 h-2 bg-success rounded-full mr-2 animate-pulse"></div>
               Ao Vivo
             </Badge>
             {isOptimizationEnabled && (
@@ -63,7 +63,7 @@ export const ModernAnalyticsHeader = ({
               </Badge>
             )}
             {cacheEnabled && stats && (
-              <Badge variant="outline" className="bg-purple-500/10 text-purple-500 border-purple-500/20">
+              <Badge variant="outline" className="bg-strategy/10 text-strategy border-strategy/20">
                 Cache: {stats.hitRate}
               </Badge>
             )}
@@ -119,35 +119,35 @@ export const ModernAnalyticsHeader = ({
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-green-500 bg-card border-border">
+        <Card className="border-l-4 border-l-success bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Total de Soluções</p>
                 <p className="text-2xl font-bold text-card-foreground">{totalSolutions.toLocaleString()}</p>
               </div>
-              <div className="h-8 w-8 bg-green-500/10 rounded-lg flex items-center justify-center">
-                <TrendingUp className="h-4 w-4 text-green-500" />
+              <div className="h-8 w-8 bg-success/10 rounded-lg flex items-center justify-center">
+                <TrendingUp className="h-4 w-4 text-success" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-purple-500 bg-card border-border">
+        <Card className="border-l-4 border-l-strategy bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Cursos Ativos</p>
                 <p className="text-2xl font-bold text-card-foreground">{totalCourses.toLocaleString()}</p>
               </div>
-              <div className="h-8 w-8 bg-purple-500/10 rounded-lg flex items-center justify-center">
-                <TrendingUp className="h-4 w-4 text-purple-500" />
+              <div className="h-8 w-8 bg-strategy/10 rounded-lg flex items-center justify-center">
+                <TrendingUp className="h-4 w-4 text-strategy" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-orange-500 bg-card border-border">
+        <Card className="border-l-4 border-l-warning bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -160,8 +160,8 @@ export const ModernAnalyticsHeader = ({
                   })}
                 </p>
               </div>
-              <div className="h-8 w-8 bg-orange-500/10 rounded-lg flex items-center justify-center">
-                <Clock className="h-4 w-4 text-orange-500" />
+              <div className="h-8 w-8 bg-warning/10 rounded-lg flex items-center justify-center">
+                <Clock className="h-4 w-4 text-warning" />
               </div>
             </div>
           </CardContent>

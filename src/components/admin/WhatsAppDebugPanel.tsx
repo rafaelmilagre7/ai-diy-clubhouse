@@ -242,9 +242,9 @@ export function WhatsAppDebugPanel() {
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Credenciais</CardTitle>
                   {diagnostics.credentials?.success ? (
-                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <CheckCircle className="h-4 w-4 text-success" />
                   ) : (
-                    <XCircle className="h-4 w-4 text-red-500" />
+                    <XCircle className="h-4 w-4 text-destructive" />
                   )}
                 </CardHeader>
                 <CardContent>
@@ -258,9 +258,9 @@ export function WhatsAppDebugPanel() {
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">API WhatsApp</CardTitle>
                   {diagnostics.whatsapp_api?.success ? (
-                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <CheckCircle className="h-4 w-4 text-success" />
                   ) : (
-                    <XCircle className="h-4 w-4 text-red-500" />
+                    <XCircle className="h-4 w-4 text-destructive" />
                   )}
                 </CardHeader>
                 <CardContent>
@@ -274,9 +274,9 @@ export function WhatsAppDebugPanel() {
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Template</CardTitle>
                   {diagnostics.template_status?.success ? (
-                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <CheckCircle className="h-4 w-4 text-success" />
                   ) : (
-                    <XCircle className="h-4 w-4 text-red-500" />
+                    <XCircle className="h-4 w-4 text-destructive" />
                   )}
                 </CardHeader>
                 <CardContent>
@@ -290,9 +290,9 @@ export function WhatsAppDebugPanel() {
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Número</CardTitle>
                   {diagnostics.phone_number?.success ? (
-                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <CheckCircle className="h-4 w-4 text-success" />
                   ) : (
-                    <XCircle className="h-4 w-4 text-red-500" />
+                    <XCircle className="h-4 w-4 text-destructive" />
                   )}
                 </CardHeader>
                 <CardContent>
