@@ -53,8 +53,8 @@ export const SolutionAnalyticsTabContent = ({ timeRange }: SolutionAnalyticsTabC
       title: "Total de Soluções",
       value: data.totalSolutions.toLocaleString(),
       icon: FileText,
-      color: "text-blue-500",
-      bgColor: "bg-blue-50 dark:bg-blue-900/20"
+      color: "text-operational",
+      bgColor: "bg-operational/10 dark:bg-operational/20"
     },
     {
       title: "Soluções Publicadas",

@@ -71,7 +71,7 @@ export const OnboardingAnalyticsTabContent: React.FC<OnboardingAnalyticsTabConte
       title: "Total de Usuários",
       value: data.overview.totalUsers.toLocaleString(),
       icon: Users,
-      color: "text-blue-500"
+      color: "text-operational"
     },
     {
       title: "Taxa de Conclusão",

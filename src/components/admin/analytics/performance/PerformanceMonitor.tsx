@@ -90,7 +90,7 @@ export const PerformanceMonitor = () => {
         {/* Performance Score */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-blue-500" />
+            <TrendingUp className="h-4 w-4 text-operational" />
             <span className="text-sm font-medium">Performance Geral</span>
           </div>
           <Badge className={performance.color} variant="outline">

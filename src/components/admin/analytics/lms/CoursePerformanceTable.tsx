@@ -23,16 +23,16 @@ export const CoursePerformanceTable = ({ data, isLoading }: CoursePerformanceTab
   }
 
   const getCompletionBadge = (rate: number) => {
-    if (rate >= 75) return <Badge className="bg-green-500/10 text-green-600 hover:bg-green-500/20">Excelente</Badge>;
-    if (rate >= 50) return <Badge className="bg-blue-500/10 text-blue-600 hover:bg-blue-500/20">Boa</Badge>;
-    if (rate >= 25) return <Badge className="bg-yellow-500/10 text-yellow-600 hover:bg-yellow-500/20">Regular</Badge>;
-    return <Badge className="bg-red-500/10 text-red-600 hover:bg-red-500/20">Baixa</Badge>;
+    if (rate >= 75) return <Badge className="bg-success/10 text-success hover:bg-success/20">Excelente</Badge>;
+    if (rate >= 50) return <Badge className="bg-operational/10 text-operational hover:bg-operational/20">Boa</Badge>;
+    if (rate >= 25) return <Badge className="bg-warning/10 text-warning hover:bg-warning/20">Regular</Badge>;
+    return <Badge className="bg-destructive/10 text-destructive hover:bg-destructive/20">Baixa</Badge>;
   };
 
   const getProgressIcon = (progress: number) => {
-    if (progress >= 70) return <ArrowUpIcon className="h-4 w-4 text-green-500" />;
-    if (progress >= 40) return <TrendingUp className="h-4 w-4 text-blue-500" />;
-    return <ArrowDownIcon className="h-4 w-4 text-yellow-500" />;
+    if (progress >= 70) return <ArrowUpIcon className="h-4 w-4 text-success" />;
+    if (progress >= 40) return <TrendingUp className="h-4 w-4 text-operational" />;
+    return <ArrowDownIcon className="h-4 w-4 text-warning" />;
   };
 
   return (

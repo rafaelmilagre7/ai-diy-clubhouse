@@ -42,7 +42,7 @@ export const SolutionsAnalyticsTabContent = ({ timeRange }: SolutionsAnalyticsTa
       value: totalSolutions,
       icon: FileText,
       description: "Soluções ativas na plataforma",
-      color: "text-blue-500",
+      color: "text-operational",
       trend: null
     },
     {

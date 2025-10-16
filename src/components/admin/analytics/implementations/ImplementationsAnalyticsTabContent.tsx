@@ -41,7 +41,7 @@ export const ImplementationsAnalyticsTabContent = ({ timeRange }: Implementation
       title: "Total de Implementações",
       value: totalImplementations,
       icon: PlayCircle,
-      color: "text-blue-500",
+      color: "text-operational",
       trend: null
     },
     {
