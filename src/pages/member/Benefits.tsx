@@ -107,9 +107,9 @@ const Benefits = () => {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Card key={i} className="h-[280px] animate-pulse border-neutral-700 bg-[#151823]/80">
+              <Card key={i} className="h-[280px] animate-pulse border-border bg-card/80">
                 <CardContent className="p-6">
-                  <div className="h-full bg-neutral-800/70 rounded-lg"></div>
+                  <div className="h-full bg-muted/70 rounded-lg"></div>
                 </CardContent>
               </Card>
             ))}
@@ -122,7 +122,7 @@ const Benefits = () => {
   if (error) {
     return (
       <div className="container py-8">
-        <Card className="border-destructive bg-[#151823]/80">
+        <Card className="border-destructive bg-card/80">
           <CardHeader>
             <div className="flex items-center gap-2">
               <AlertCircle className="h-5 w-5 text-destructive" />
@@ -366,10 +366,10 @@ const BenefitCard = ({ tool }: { tool: Tool }) => {
         {/* Premium Overlay */}
         <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-black/40 to-black/60 z-30 flex items-center justify-center backdrop-blur-sm">
           <div className="text-center space-y-3">
-            <div className="p-3 bg-gradient-to-r from-viverblue via-viverblue/90 to-viverblue/80 rounded-full w-fit mx-auto shadow-2xl">
+            <div className="p-3 bg-gradient-to-r from-aurora-primary via-aurora-primary/90 to-aurora-primary/80 rounded-full w-fit mx-auto shadow-2xl">
               <Crown className="h-8 w-8 text-white" />
             </div>
-            <Badge className="bg-gradient-to-r from-viverblue via-viverblue/90 to-viverblue/80 text-white border-0 px-4 py-2 text-sm font-semibold shadow-lg">
+            <Badge className="bg-gradient-to-r from-aurora-primary via-aurora-primary/90 to-aurora-primary/80 text-white border-0 px-4 py-2 text-sm font-semibold shadow-lg">
               <Lock className="h-3 w-3 mr-2" />
               PREMIUM
             </Badge>
@@ -379,7 +379,7 @@ const BenefitCard = ({ tool }: { tool: Tool }) => {
         
         {/* Premium Badge no topo */}
         <Badge 
-          className="absolute top-3 right-3 bg-gradient-to-r from-viverblue via-viverblue/90 to-viverblue/80 text-white border-0 shadow-lg backdrop-blur-sm z-20"
+          className="absolute top-3 right-3 bg-gradient-to-r from-aurora-primary via-aurora-primary/90 to-aurora-primary/80 text-white border-0 shadow-lg backdrop-blur-sm z-20"
         >
           <Crown className="h-3 w-3 mr-1" />
           PREMIUM

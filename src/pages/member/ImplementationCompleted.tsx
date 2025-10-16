@@ -120,28 +120,28 @@ const ImplementationCompleted = () => {
   
   return (
     <div className="max-w-2xl mx-auto p-4 md:p-8">
-      <Card className="border-t-4 border-t-[#0ABAB5] shadow-lg overflow-hidden">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[#0ABAB5]/10 to-transparent -z-10 rounded-bl-full"></div>
-        <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-[#0ABAB5]/5 to-transparent -z-10 rounded-tr-full"></div>
+      <Card className="border-t-4 border-t-aurora-primary shadow-lg overflow-hidden">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-aurora-primary/10 to-transparent -z-10 rounded-bl-full"></div>
+        <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-aurora-primary/5 to-transparent -z-10 rounded-tr-full"></div>
         
         <CardHeader className="text-center pb-2">
           <div className="flex justify-center mb-3">
             <div className="relative">
-              <div className="absolute inset-0 bg-[#0ABAB5]/20 rounded-full pulse-subtle"></div>
-              <div className="rounded-full bg-[#0ABAB5]/10 p-3 relative z-10">
-                <Trophy className="h-10 w-10 text-[#0ABAB5]" />
+              <div className="absolute inset-0 bg-aurora-primary/20 rounded-full pulse-subtle"></div>
+              <div className="rounded-full bg-aurora-primary/10 p-3 relative z-10">
+                <Trophy className="h-10 w-10 text-aurora-primary" />
               </div>
             </div>
           </div>
-          <CardTitle className="text-2xl text-[#0ABAB5]">Parabéns! Implementação Concluída</CardTitle>
+          <CardTitle className="text-2xl text-aurora-primary">Parabéns! Implementação Concluída</CardTitle>
           <CardDescription className="text-base">
             Você concluiu com sucesso a implementação da solução <span className="font-medium">{solution.title}</span>.
           </CardDescription>
         </CardHeader>
         
         <CardContent className="space-y-6 pt-4">
-          <div className="bg-gradient-to-br from-[#0ABAB5]/5 to-white p-6 rounded-xl text-center">
-            <h3 className="font-medium text-lg text-[#0ABAB5] mb-2">
+          <div className="bg-gradient-to-br from-aurora-primary/5 to-white p-6 rounded-xl text-center">
+            <h3 className="font-medium text-lg text-aurora-primary mb-2">
               Você acaba de dar um grande passo na transformação digital do seu negócio!
             </h3>
             <p className="text-neutral-600">
@@ -151,20 +151,20 @@ const ImplementationCompleted = () => {
           
           {/* Estatísticas */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="bg-white p-3 rounded-lg border border-[#0ABAB5]/10 text-center stat-item-enter" style={{"--delay": "0"} as React.CSSProperties}>
-              <div className="text-2xl font-bold text-[#0ABAB5]">1</div>
+            <div className="bg-white p-3 rounded-lg border border-aurora-primary/10 text-center stat-item-enter" style={{"--delay": "0"} as React.CSSProperties}>
+              <div className="text-2xl font-bold text-aurora-primary">1</div>
               <div className="text-xs text-neutral-500">Solução</div>
             </div>
-            <div className="bg-white p-3 rounded-lg border border-[#0ABAB5]/10 text-center stat-item-enter" style={{"--delay": "1"} as React.CSSProperties}>
-              <div className="text-2xl font-bold text-[#0ABAB5]">8</div>
+            <div className="bg-white p-3 rounded-lg border border-aurora-primary/10 text-center stat-item-enter" style={{"--delay": "1"} as React.CSSProperties}>
+              <div className="text-2xl font-bold text-aurora-primary">8</div>
               <div className="text-xs text-neutral-500">Etapas</div>
             </div>
-            <div className="bg-white p-3 rounded-lg border border-[#0ABAB5]/10 text-center stat-item-enter" style={{"--delay": "2"} as React.CSSProperties}>
-              <div className="text-2xl font-bold text-[#0ABAB5]">+30%</div>
+            <div className="bg-white p-3 rounded-lg border border-aurora-primary/10 text-center stat-item-enter" style={{"--delay": "2"} as React.CSSProperties}>
+              <div className="text-2xl font-bold text-aurora-primary">+30%</div>
               <div className="text-xs text-neutral-500">Eficiência</div>
             </div>
-            <div className="bg-white p-3 rounded-lg border border-[#0ABAB5]/10 text-center stat-item-enter" style={{"--delay": "3"} as React.CSSProperties}>
-              <div className="text-2xl font-bold text-[#0ABAB5]">50</div>
+            <div className="bg-white p-3 rounded-lg border border-aurora-primary/10 text-center stat-item-enter" style={{"--delay": "3"} as React.CSSProperties}>
+              <div className="text-2xl font-bold text-aurora-primary">50</div>
               <div className="text-xs text-neutral-500">Pontos</div>
             </div>
           </div>
@@ -172,7 +172,7 @@ const ImplementationCompleted = () => {
           <div className="border rounded-md overflow-hidden bg-white">
             <div className="bg-slate-50 p-3 border-b">
               <h3 className="font-medium text-sm flex items-center gap-2">
-                <Award className="h-4 w-4 text-[#0ABAB5]" />
+                <Award className="h-4 w-4 text-aurora-primary" />
                 <span>Sua recompensa:</span>
               </h3>
             </div>
@@ -196,7 +196,7 @@ const ImplementationCompleted = () => {
           <div className="bg-white border rounded-md overflow-hidden mb-2">
             <div className="bg-slate-50 p-3 border-b">
               <h3 className="font-medium text-sm flex items-center gap-2">
-                <ArrowRight className="h-4 w-4 text-[#0ABAB5]" />
+                <ArrowRight className="h-4 w-4 text-aurora-primary" />
                 <span>Próximos passos:</span>
               </h3>
             </div>
@@ -216,7 +216,7 @@ const ImplementationCompleted = () => {
             <Button 
               variant="outline" 
               size="lg" 
-              className="w-full hover-lift border-[#0ABAB5]/30 hover:border-[#0ABAB5]/50 flex items-center gap-2"
+              className="w-full hover-lift border-aurora-primary/30 hover:border-aurora-primary/50 flex items-center gap-2"
               onClick={generateCertificate}
               disabled={isGenerating || !!certificateUrl}
             >
@@ -238,7 +238,7 @@ const ImplementationCompleted = () => {
             <Button 
               variant="outline" 
               size="lg" 
-              className="w-full hover-lift border-[#0ABAB5]/30 hover:border-[#0ABAB5]/50 flex items-center gap-2"
+              className="w-full hover-lift border-aurora-primary/30 hover:border-aurora-primary/50 flex items-center gap-2"
               onClick={shareAchievement}
             >
               <Share className="h-5 w-5" />
@@ -249,9 +249,8 @@ const ImplementationCompleted = () => {
         
         <CardFooter className="flex justify-center pt-0">
           <Button 
-            variant="default" 
+            variant="aurora-primary"
             onClick={() => navigate("/dashboard")}
-            className="bg-[#0ABAB5] hover:bg-[#089891] transition-colors"
           >
             Voltar para Dashboard
           </Button>

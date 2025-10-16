@@ -152,8 +152,8 @@ export const AuroraKpiGrid = memo(({
             
             {/* Floating particles effect sem sparkles */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              <div className="absolute top-4 right-6 w-1 h-1 bg-aurora rounded-full animate-pulse opacity-60" />
-              <div className="absolute bottom-6 left-8 w-1 h-1 bg-viverblue rounded-full animate-pulse opacity-40" style={{ animationDelay: '1s' }} />
+              <div className="absolute top-4 right-6 w-1 h-1 bg-aurora-primary rounded-full animate-pulse opacity-60" />
+              <div className="absolute bottom-6 left-8 w-1 h-1 bg-aurora-primary-light rounded-full animate-pulse opacity-40" style={{ animationDelay: '1s' }} />
               <div className="absolute top-1/2 right-1/4 w-0.5 h-0.5 bg-operational rounded-full animate-pulse opacity-50" style={{ animationDelay: '2s' }} />
             </div>
 

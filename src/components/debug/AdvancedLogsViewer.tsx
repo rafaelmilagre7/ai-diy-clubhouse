@@ -182,7 +182,7 @@ export const AdvancedLogsViewer: React.FC<AdvancedLogsViewerProps> = ({
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-lg">
-            <Bug className="h-5 w-5 text-viverblue" />
+            <Bug className="h-5 w-5 text-aurora-primary" />
             Logs Avançados de Debug
             {logs.length > 0 && (
               <Badge variant="secondary" className="ml-2">
@@ -294,7 +294,7 @@ export const AdvancedLogsViewer: React.FC<AdvancedLogsViewerProps> = ({
                     </div>
                     
                     {log.duration && (
-                      <Badge variant="outline" className="text-xs border-viverblue text-viverblue">
+                      <Badge variant="outline" className="text-xs border-aurora-primary text-aurora-primary">
                         <Clock className="w-3 h-3 mr-1" />
                         {log.duration}
                       </Badge>

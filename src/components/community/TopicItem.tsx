@@ -52,7 +52,7 @@ export const TopicItem = ({ topic }: TopicItemProps) => {
         <div className="flex-shrink-0">
           <Avatar className="h-10 w-10">
             <AvatarImage src={topic.profiles?.avatar_url || ''} />
-            <AvatarFallback className="bg-viverblue text-white text-sm">
+            <AvatarFallback className="bg-aurora-primary text-white text-sm">
               {getInitials(topic.profiles?.name || 'Usuário')}
             </AvatarFallback>
           </Avatar>
@@ -64,7 +64,7 @@ export const TopicItem = ({ topic }: TopicItemProps) => {
             <div className="flex-1">
               {/* Título com badges */}
               <div className="flex items-center gap-2 mb-2 flex-wrap">
-                <h3 className="font-semibold text-foreground hover:text-viverblue transition-colors line-clamp-2 flex-1">
+                <h3 className="font-semibold text-foreground hover:text-aurora-primary transition-colors line-clamp-2 flex-1">
                   {topic.title}
                 </h3>
                 

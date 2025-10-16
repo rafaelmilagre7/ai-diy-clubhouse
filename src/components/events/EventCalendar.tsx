@@ -67,7 +67,7 @@ export const EventCalendar = () => {
             )
           }}
           modifiersClassNames={{
-            event: 'bg-viverblue/10 font-medium text-viverblue hover:bg-viverblue/20 transition-colors'
+            event: 'bg-aurora-primary/10 font-medium text-aurora-primary hover:bg-aurora-primary/20 transition-colors'
           }}
           className="w-full min-h-[700px] p-6"
           classNames={{
@@ -82,7 +82,7 @@ export const EventCalendar = () => {
             cell: "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md",
             day: "h-full w-full p-2 font-normal hover:bg-accent/50 rounded-md transition-colors flex flex-col items-center justify-start",
             day_today: "bg-accent/30",
-            day_selected: "bg-viverblue/20 text-viverblue hover:bg-viverblue/30",
+            day_selected: "bg-aurora-primary/20 text-aurora-primary hover:bg-aurora-primary/30",
             day_outside: "opacity-50",
           }}
           components={{

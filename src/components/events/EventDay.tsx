@@ -18,11 +18,11 @@ export const EventDay = ({ events }: EventDayProps) => {
         <div className="flex flex-col gap-0.5">
           <Badge 
             variant="outline" 
-            className="text-[10px] truncate max-w-full bg-viverblue/5 border-viverblue/10 text-viverblue hover:bg-viverblue/10"
+            className="text-[10px] truncate max-w-full bg-aurora-primary/5 border-aurora-primary/10 text-aurora-primary hover:bg-aurora-primary/10"
           >
             {events[0].title}
           </Badge>
-          <div className="flex items-center justify-center text-[9px] text-viverblue/70">
+          <div className="flex items-center justify-center text-[9px] text-aurora-primary/70">
             <Clock className="w-2 h-2 mr-0.5" />
             {format(new Date(events[0].start_time), 'HH:mm', { locale: ptBR })}
           </div>
@@ -30,7 +30,7 @@ export const EventDay = ({ events }: EventDayProps) => {
       ) : (
         <Badge 
           variant="outline" 
-          className="text-[10px] truncate max-w-full bg-viverblue/5 border-viverblue/10 text-viverblue hover:bg-viverblue/10"
+          className="text-[10px] truncate max-w-full bg-aurora-primary/5 border-aurora-primary/10 text-aurora-primary hover:bg-aurora-primary/10"
         >
           {events.length} eventos
         </Badge>

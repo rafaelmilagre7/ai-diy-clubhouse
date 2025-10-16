@@ -44,7 +44,7 @@ const OptimizedLoadingScreen = memo<OptimizedLoadingScreenProps>(({
     <div className={containerClasses}>
       <Suspense fallback={
         <div className="flex items-center justify-center">
-          <div className="h-8 w-8 border-4 border-viverblue border-t-transparent rounded-full animate-spin" />
+          <div className="h-8 w-8 border-4 border-aurora-primary border-t-transparent rounded-full animate-spin" />
         </div>
       }>
         <LoadingState
@@ -58,7 +58,7 @@ const OptimizedLoadingScreen = memo<OptimizedLoadingScreenProps>(({
           <div className="mt-4 w-64">
             <div className="bg-muted rounded-full h-2 overflow-hidden">
               <div 
-                className="bg-viverblue h-full transition-all duration-300 ease-out"
+                className="bg-aurora-primary h-full transition-all duration-300 ease-out"
                 style={{ width: `${Math.min(100, Math.max(0, progressValue))}%` }}
               />
             </div>

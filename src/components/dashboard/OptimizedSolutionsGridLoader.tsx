@@ -34,7 +34,7 @@ const OptimizedSolutionsGridLoader = memo<OptimizedSolutionsGridLoaderProps>(({
     return (
       <div className="mb-6">
         <h2 className="text-2xl font-bold mb-2">{title}</h2>
-        <div className="h-1 w-20 bg-viverblue rounded-full" />
+        <div className="h-1 w-20 bg-aurora-primary rounded-full" />
       </div>
     );
   }, [showTitle, title]);

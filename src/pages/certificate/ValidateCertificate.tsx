@@ -74,10 +74,10 @@ const ValidateCertificate = () => {
     if (result.type === 'solution') {
       const data = result.data;
       return (
-        <div className="border rounded-lg overflow-hidden bg-[#151823] border-viverblue/20">
-          <div className="bg-viverblue/10 p-4 border-b border-viverblue/20">
+        <div className="border rounded-lg overflow-hidden bg-card border-aurora-primary/20">
+          <div className="bg-aurora-primary/10 p-4 border-b border-aurora-primary/20">
             <div className="flex items-center gap-2">
-              <Award className="h-5 w-5 text-viverblue" />
+              <Award className="h-5 w-5 text-aurora-primary" />
               <h3 className="font-semibold text-viverblue">Certificado de Implementação de Solução</h3>
             </div>
           </div>
@@ -115,7 +115,7 @@ const ValidateCertificate = () => {
               
               <div>
                 <h4 className="text-sm font-medium text-gray-400">Código de Validação</h4>
-                <p className="font-mono text-viverblue">{data.validation_code}</p>
+                <p className="font-mono text-aurora-primary">{data.validation_code}</p>
               </div>
             </div>
           </div>
@@ -124,10 +124,10 @@ const ValidateCertificate = () => {
     } else {
       const data = result.data;
       return (
-        <div className="border rounded-lg overflow-hidden bg-[#151823] border-viverblue/20">
-          <div className="bg-viverblue/10 p-4 border-b border-viverblue/20">
+        <div className="border rounded-lg overflow-hidden bg-card border-aurora-primary/20">
+          <div className="bg-aurora-primary/10 p-4 border-b border-aurora-primary/20">
             <div className="flex items-center gap-2">
-              <Award className="h-5 w-5 text-viverblue" />
+              <Award className="h-5 w-5 text-aurora-primary" />
               <h3 className="font-semibold text-viverblue">Certificado de Curso</h3>
             </div>
           </div>
@@ -153,7 +153,7 @@ const ValidateCertificate = () => {
               
               <div>
                 <h4 className="text-sm font-medium text-gray-400">Código de Validação</h4>
-                <p className="font-mono text-viverblue">{data.validation_code}</p>
+                <p className="font-mono text-aurora-primary">{data.validation_code}</p>
               </div>
             </div>
           </div>
@@ -193,10 +193,10 @@ const ValidateCertificate = () => {
                       value={validationCode}
                       onChange={(e) => setValidationCode(e.target.value)}
                       placeholder="Exemplo: ABCD-1234-XYZ9"
-                      className="flex-1 bg-[#151823] border-neutral-600 text-white placeholder:text-neutral-500"
+                      className="flex-1 bg-card border-border text-white placeholder:text-neutral-500"
                       required
                     />
-                    <Button type="submit" disabled={validation.isPending || !validationCode} className="bg-viverblue hover:bg-viverblue/90">
+                    <Button type="submit" disabled={validation.isPending || !validationCode} variant="aurora-primary">
                       {validation.isPending ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
                       ) : (

@@ -26,8 +26,8 @@ export const EventsListModal = ({ date, events, onSelectEvent, onClose }: Events
       <DialogContent className="max-w-lg surface-modal border-border/50 shadow-aurora-strong">
         <DialogHeader className="pb-4 border-b border-border/50">
           <DialogTitle className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-viverblue/10 border border-viverblue/20">
-              <CalendarIcon className="h-5 w-5 text-viverblue" />
+            <div className="p-2 rounded-lg bg-aurora-primary/10 border border-aurora-primary/20">
+              <CalendarIcon className="h-5 w-5 text-aurora-primary" />
             </div>
             <span className="capitalize text-heading-3">{formattedDate}</span>
           </DialogTitle>
@@ -37,10 +37,10 @@ export const EventsListModal = ({ date, events, onSelectEvent, onClose }: Events
           {events.map((event) => (
             <div 
               key={event.id} 
-              className="p-4 surface-elevated rounded-xl border border-border/50 hover:border-viverblue/50 hover:shadow-aurora transition-all duration-200 cursor-pointer group"
+              className="p-4 surface-elevated rounded-xl border border-border/50 hover:border-aurora-primary/50 hover:shadow-aurora transition-all duration-200 cursor-pointer group"
               onClick={() => onSelectEvent(event)}
             >
-              <h3 className="text-body-large font-semibold text-text-primary group-hover:text-viverblue transition-colors">
+              <h3 className="text-body-large font-semibold text-text-primary group-hover:text-aurora-primary transition-colors">
                 {event.title}
               </h3>
               
@@ -70,7 +70,7 @@ export const EventsListModal = ({ date, events, onSelectEvent, onClose }: Events
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="mt-3 text-viverblue hover:text-viverblue/80 hover:bg-viverblue/10 px-0 transition-colors"
+                className="mt-3 text-aurora-primary hover:text-aurora-primary/80 hover:bg-aurora-primary/10 px-0 transition-colors"
               >
                 Ver detalhes →
               </Button>

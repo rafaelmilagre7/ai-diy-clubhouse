@@ -108,7 +108,7 @@ export const LogsViewer: React.FC<LogsViewerProps> = ({ logs, onClear, className
                   onClick={() => setFilter(type)}
                   className={cn(
                     "h-7 px-2 text-xs",
-                    filter === type && "bg-viverblue hover:bg-viverblue-dark"
+                    filter === type && "bg-aurora-primary hover:bg-aurora-primary-dark"
                   )}
                 >
                   <Filter className="h-3 w-3 mr-1" />

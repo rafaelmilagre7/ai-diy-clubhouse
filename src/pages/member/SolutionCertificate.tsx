@@ -102,7 +102,7 @@ const SolutionCertificate = () => {
         </Button>
         
         <div className="flex items-center gap-3 mb-2">
-          <Award className="h-6 w-6 text-viverblue" />
+          <Award className="h-6 w-6 text-aurora-primary" />
           <h1 className="text-3xl font-bold text-white">Certificado de Implementação</h1>
         </div>
         
@@ -128,10 +128,10 @@ const SolutionCertificate = () => {
         />
       ) : isEligible ? (
         /* Se é elegível mas não tem certificado, mostrar botão para gerar */
-        <Card className="bg-[#151823] border-neutral-700/50">
+        <Card className="bg-card border-border/50">
           <CardHeader>
             <CardTitle className="text-white flex items-center gap-2">
-              <Award className="h-5 w-5 text-viverblue" />
+              <Award className="h-5 w-5 text-aurora-primary" />
               Gerar Certificado
             </CardTitle>
           </CardHeader>
@@ -149,7 +149,7 @@ const SolutionCertificate = () => {
                 <Button 
                   onClick={handleGenerate}
                   disabled={isGenerating}
-                  className="bg-viverblue hover:bg-viverblue/90 text-white"
+                  variant="aurora-primary"
                 >
                   <Award className="h-4 w-4 mr-2" />
                   {isGenerating ? 'Gerando certificado...' : 'Gerar Certificado'}
@@ -160,16 +160,16 @@ const SolutionCertificate = () => {
         </Card>
       ) : (
         /* Se não é elegível, mostrar status */
-        <Card className="bg-[#151823] border-neutral-700/50">
+        <Card className="bg-card border-border/50">
           <CardHeader>
             <CardTitle className="text-white flex items-center gap-2">
-              <Award className="h-5 w-5 text-viverblue" />
+              <Award className="h-5 w-5 text-aurora-primary" />
               Status do Certificado
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
-              <div className="p-4 rounded-lg bg-[#1A1E2E] border border-neutral-600">
+              <div className="p-4 rounded-lg bg-surface-elevated border border-border">
                 <h3 className="font-semibold text-white mb-2">Sobre esta solução</h3>
                 <p className="text-gray-300 text-sm mb-3">{solution.description}</p>
                 

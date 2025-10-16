@@ -28,7 +28,7 @@ export const NoSolutionsPlaceholder: FC = () => {
 
       <Button 
         onClick={handleExploreSolutions}
-        className="bg-gradient-to-r from-primary to-viverblue hover:from-primary/90 hover:to-viverblue/90 text-primary-foreground"
+        variant="aurora-primary"
       >
         Explorar Soluções
         <ArrowRight className="ml-2 h-4 w-4" />

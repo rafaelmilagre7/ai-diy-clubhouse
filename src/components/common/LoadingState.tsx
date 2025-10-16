@@ -51,7 +51,7 @@ export const LoadingState: React.FC<LoadingStateProps> = ({
             <div
               key={i}
               className={cn(
-                "bg-viverblue rounded-full animate-pulse",
+                "bg-aurora-primary rounded-full animate-pulse",
                 size === "sm" ? "h-2 w-2" : size === "md" ? "h-3 w-3" : "h-4 w-4"
               )}
               style={{
@@ -70,7 +70,7 @@ export const LoadingState: React.FC<LoadingStateProps> = ({
 
   return (
     <div className={containerClasses}>
-      <Loader2 className={cn("text-viverblue animate-spin", sizeClasses[size])} />
+      <Loader2 className={cn("text-aurora-primary animate-spin", sizeClasses[size])} />
       {message && (
         <p className="mt-4 text-sm text-muted-foreground text-center">{message}</p>
       )}

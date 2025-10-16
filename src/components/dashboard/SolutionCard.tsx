@@ -22,7 +22,7 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution, onClick })
       case 'Estratégia':
         return "border-l-strategy border-l-4 bg-strategy-darker/20";
       default:
-        return "border-l-viverblue border-l-4 bg-viverblue/10";
+        return "border-l-aurora-primary border-l-4 bg-aurora-primary/10";
     }
   };
   
@@ -42,7 +42,7 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution, onClick })
   const getDifficultyBadge = (difficulty: string) => {
     switch (difficulty) {
       case 'easy':
-        return <Badge variant="outline" className="bg-viverblue/20 text-viverblue border-viverblue/50">Fácil</Badge>;
+        return <Badge variant="outline" className="bg-aurora-primary/20 text-aurora-primary border-aurora-primary/50">Fácil</Badge>;
       case 'medium':
         return <Badge variant="outline" className="bg-primary/20 text-primary border-primary/50">Médio</Badge>;
       case 'advanced':
