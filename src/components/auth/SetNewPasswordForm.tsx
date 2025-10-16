@@ -183,8 +183,8 @@ export const SetNewPasswordForm = () => {
   if (isProcessingTokens) {
     return (
       <div className="text-center space-y-6">
-        <div className="rounded-full bg-viverblue/20 p-3 w-16 h-16 mx-auto flex items-center justify-center">
-          <Loader2 className="h-8 w-8 text-viverblue animate-spin" />
+        <div className="rounded-full bg-aurora-primary/20 p-3 w-16 h-16 mx-auto flex items-center justify-center">
+          <Loader2 className="h-8 w-8 text-aurora-primary animate-spin" />
         </div>
         
         <h3 className="text-xl font-medium text-white">Verificando link de redefinição...</h3>
@@ -213,8 +213,9 @@ export const SetNewPasswordForm = () => {
         <div className="pt-4">
           <Button
             type="button"
+            variant="aurora-primary"
             onClick={() => navigate("/reset-password")}
-            className="w-full bg-viverblue hover:bg-viverblue/90 text-white"
+            className="w-full"
           >
             Solicitar novo link
           </Button>
@@ -240,8 +241,9 @@ export const SetNewPasswordForm = () => {
         <div className="pt-4">
           <Button
             type="button"
+            variant="aurora-primary"
             onClick={() => performCleanupAndRedirect('/login', 'manual_redirect_from_reset')}
-            className="w-full bg-viverblue hover:bg-viverblue/90 text-white"
+            className="w-full"
           >
             Ir para login
           </Button>

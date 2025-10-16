@@ -139,7 +139,7 @@ export const ResetPasswordForm = ({ onBackToLogin }: ResetPasswordFormProps) => 
               setSubmitted(false);
               setError(null);
             }}
-            className="w-full text-viverblue hover:bg-viverblue/10"
+            className="w-full text-aurora-primary hover:bg-aurora-primary/10"
           >
             Enviar para outro e-mail
           </Button>
@@ -180,7 +180,7 @@ export const ResetPasswordForm = ({ onBackToLogin }: ResetPasswordFormProps) => 
               id="email"
               type="email"
               placeholder="Digite seu e-mail"
-              className={`pl-10 w-full py-3 px-3 bg-gray-700 border rounded-lg text-white focus:ring-2 focus:ring-viverblue focus:border-viverblue transition-colors ${
+              className={`pl-10 w-full py-3 px-3 bg-gray-700 border rounded-lg text-white focus:ring-2 focus:ring-aurora-primary focus:border-aurora-primary transition-colors ${
                 errors.email ? 'border-red-500' : 
                 email && isValid ? 'border-green-500' : 'border-gray-600'
               }`}
@@ -211,11 +211,8 @@ export const ResetPasswordForm = ({ onBackToLogin }: ResetPasswordFormProps) => 
         <div className="space-y-4 pt-2">
           <Button
             type="submit"
-            className={`w-full py-3 font-medium transition-all ${
-              isValid && !isLoading
-                ? 'bg-viverblue hover:bg-viverblue/90 text-white' 
-                : 'bg-gray-600 text-gray-300 cursor-not-allowed hover:bg-gray-600'
-            }`}
+            variant={isValid && !isLoading ? "aurora-primary" : "secondary"}
+            className="w-full py-3 font-medium"
             disabled={isLoading || !isValid}
           >
             {isLoading ? (

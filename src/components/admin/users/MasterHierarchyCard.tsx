@@ -65,14 +65,14 @@ export const MasterHierarchyCard = ({
   };
 
   return (
-    <Card className="border-2 border-border hover:border-viverblue/30 transition-all duration-200 shadow-sm hover:shadow-md">
+    <Card className="border-2 border-border hover:border-aurora-primary/30 transition-all duration-200 shadow-sm hover:shadow-md">
       <CardHeader className="pb-4">
         {/* Cabeçalho com informações do master e badge de membros */}
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 flex-1 min-w-0">
             <Avatar className="h-12 w-12 shrink-0">
               <AvatarImage src={master.avatar_url || undefined} />
-              <AvatarFallback className="bg-viverblue/10 text-viverblue">
+              <AvatarFallback className="bg-aurora-primary/10 text-aurora-primary">
                 {master.name?.substring(0, 2).toUpperCase() || 'M'}
               </AvatarFallback>
             </Avatar>
@@ -82,7 +82,7 @@ export const MasterHierarchyCard = ({
                 <h3 className="font-semibold text-foreground truncate">
                   {master.name}
                 </h3>
-                <Badge variant="secondary" className="text-xs shrink-0 bg-viverblue/10 text-viverblue border-viverblue/20">
+                <Badge variant="secondary" className="text-xs shrink-0 bg-aurora-primary/10 text-aurora-primary border-aurora-primary/20">
                   Master
                 </Badge>
               </div>
@@ -104,13 +104,13 @@ export const MasterHierarchyCard = ({
           {/* Badge com contador de membros e botão de expansão - UI melhorada */}
           <div className="flex items-center gap-3 shrink-0">
             <div 
-              className="flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-border bg-surface-elevated hover:bg-viverblue/5 hover:border-viverblue/50 cursor-pointer transition-all duration-200 group"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-border bg-surface-elevated hover:bg-aurora-primary/5 hover:border-aurora-primary/50 cursor-pointer transition-all duration-200 group"
               onClick={(e) => {
                 e.stopPropagation();
                 setIsExpanded(!isExpanded);
               }}
             >
-              <Users className="h-4 w-4 text-viverblue group-hover:scale-110 transition-transform" />
+              <Users className="h-4 w-4 text-aurora-primary group-hover:scale-110 transition-transform" />
               <span className="font-semibold text-foreground">
                 {memberCount}
               </span>
@@ -119,7 +119,7 @@ export const MasterHierarchyCard = ({
               </span>
               <ChevronDown 
                 className={cn(
-                  "h-5 w-5 text-viverblue transition-all duration-300 ml-1",
+                  "h-5 w-5 text-aurora-primary transition-all duration-300 ml-1",
                   isExpanded && "rotate-180",
                   "group-hover:scale-110"
                 )}
@@ -130,7 +130,7 @@ export const MasterHierarchyCard = ({
               variant="outline"
               size="sm"
               onClick={handleManageTeam}
-              className="gap-2 hover:bg-viverblue/10 hover:text-viverblue hover:border-viverblue/50 transition-all"
+              className="gap-2 hover:bg-aurora-primary/10 hover:text-aurora-primary hover:border-aurora-primary/50 transition-all"
             >
               <Settings className="h-4 w-4" />
               Gerenciar Equipe

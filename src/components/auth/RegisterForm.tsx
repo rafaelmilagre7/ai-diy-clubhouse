@@ -197,7 +197,8 @@ const RegisterForm = ({ inviteToken, prefilledEmail }: RegisterFormProps = {}) =
 
         <Button
           type="submit"
-          className="w-full bg-viverblue hover:bg-viverblue/90"
+          variant="aurora-primary"
+          className="w-full"
           disabled={isLoading}
         >
           {isLoading ? "Criando conta..." : "Criar conta"}

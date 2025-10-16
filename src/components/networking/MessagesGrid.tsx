@@ -41,8 +41,8 @@ export const MessagesGrid = () => {
     return (
       <div className="text-center py-16 space-y-4">
         <div className="flex justify-center">
-          <div className="bg-viverblue/10 rounded-full p-4">
-            <MessageCircle className="h-8 w-8 text-viverblue" />
+          <div className="bg-aurora-primary/10 rounded-full p-4">
+            <MessageCircle className="h-8 w-8 text-aurora-primary" />
           </div>
         </div>
         <div>
@@ -55,7 +55,7 @@ export const MessagesGrid = () => {
               const headerElement = document.querySelector('[data-tab="connections"]') as HTMLElement;
               if (headerElement) headerElement.click();
             }}
-            className="bg-viverblue hover:bg-viverblue/90 text-white"
+            variant="aurora-primary"
           >
             <Users className="h-4 w-4 mr-2" />
             Ver Conexões
@@ -70,14 +70,14 @@ export const MessagesGrid = () => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold text-textPrimary flex items-center gap-2">
-            <MessageCircle className="h-5 w-5 text-viverblue" />
+            <MessageCircle className="h-5 w-5 text-aurora-primary" />
             Mensagens
           </h2>
           <p className="text-sm text-textSecondary">
             Converse com suas conexões e construa relacionamentos
           </p>
         </div>
-        <Badge className="bg-viverblue/10 text-viverblue border-viverblue/30">
+        <Badge variant="default" className="bg-aurora-primary/10 text-aurora-primary border-aurora-primary/30">
           {acceptedConnections.length} conversas disponíveis
         </Badge>
       </div>
@@ -171,16 +171,16 @@ const ConversationCard = ({ connection, onOpenChat }: ConversationCardProps) => 
   });
 
   return (
-    <Card className="h-full overflow-hidden hover:shadow-md hover:translate-y-[-2px] transition-all duration-300 border-neutral-800/50 bg-[#151823] cursor-pointer group">
+    <Card className="h-full overflow-hidden hover:shadow-md hover:translate-y-[-2px] transition-all duration-300 border-border bg-card cursor-pointer group">
       <CardHeader className="pb-4 pt-6 px-6">
         <div className="flex items-center gap-3 mb-3">
           <div className="relative">
             <img 
               src={avatar} 
               alt={otherUser.name}
-              className="h-12 w-12 rounded-full object-cover border-2 border-neutral-700"
+              className="h-12 w-12 rounded-full object-cover border-2 border-border"
             />
-            <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full w-4 h-4 border-2 border-[#151823]"></div>
+            <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full w-4 h-4 border-2 border-card"></div>
           </div>
           <div className="flex-1">
             <h3 className="font-semibold text-white line-clamp-1">{otherUser.name}</h3>
@@ -206,7 +206,8 @@ const ConversationCard = ({ connection, onOpenChat }: ConversationCardProps) => 
 
         <Button 
           onClick={onOpenChat}
-          className="w-full bg-viverblue hover:bg-viverblue/90 text-white group-hover:bg-viverblue/80"
+          variant="aurora-primary"
+          className="w-full"
         >
           <Send className="h-4 w-4 mr-2" />
           Abrir Conversa

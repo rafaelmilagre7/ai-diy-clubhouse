@@ -80,7 +80,7 @@ export function ManageTeamDialog({ open, onOpenChange, master }: ManageTeamDialo
       <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5 text-viverblue" />
+            <Users className="h-5 w-5 text-aurora-primary" />
             Gerenciar Equipe - {master.name}
           </DialogTitle>
           <DialogDescription>
@@ -91,8 +91,8 @@ export function ManageTeamDialog({ open, onOpenChange, master }: ManageTeamDialo
         {/* Estatísticas da equipe */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-surface-elevated rounded-lg border border-border">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-viverblue/10 rounded-lg">
-              <Users className="h-5 w-5 text-viverblue" />
+            <div className="p-2 bg-aurora-primary/10 rounded-lg">
+              <Users className="h-5 w-5 text-aurora-primary" />
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Total de Membros</p>
@@ -100,8 +100,8 @@ export function ManageTeamDialog({ open, onOpenChange, master }: ManageTeamDialo
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-viverblue/10 rounded-lg">
-              <Building2 className="h-5 w-5 text-viverblue" />
+            <div className="p-2 bg-aurora-primary/10 rounded-lg">
+              <Building2 className="h-5 w-5 text-aurora-primary" />
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Organização</p>
@@ -111,8 +111,8 @@ export function ManageTeamDialog({ open, onOpenChange, master }: ManageTeamDialo
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-viverblue/10 rounded-lg">
-              <Briefcase className="h-5 w-5 text-viverblue" />
+            <div className="p-2 bg-aurora-primary/10 rounded-lg">
+              <Briefcase className="h-5 w-5 text-aurora-primary" />
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Setor</p>
@@ -154,11 +154,11 @@ export function ManageTeamDialog({ open, onOpenChange, master }: ManageTeamDialo
               {members.map((member) => (
                 <div
                   key={member.id}
-                  className="flex items-center gap-4 p-4 bg-surface-elevated border border-border rounded-lg hover:border-viverblue/50 transition-colors"
+                  className="flex items-center gap-4 p-4 bg-surface-elevated border border-border rounded-lg hover:border-aurora-primary/50 transition-colors"
                 >
                   <Avatar className="h-12 w-12">
                     <AvatarImage src={member.avatar_url || undefined} />
-                    <AvatarFallback className="bg-viverblue/10 text-viverblue">
+                    <AvatarFallback className="bg-aurora-primary/10 text-aurora-primary">
                       {member.name?.substring(0, 2).toUpperCase() || 'U'}
                     </AvatarFallback>
                   </Avatar>

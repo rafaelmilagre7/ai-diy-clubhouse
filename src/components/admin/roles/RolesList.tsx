@@ -103,7 +103,7 @@ export function RolesList({
                       p-3 rounded-lg transition-all duration-300 group-hover:scale-110
                       ${role.is_system 
                         ? 'bg-gradient-to-br from-revenue/20 to-strategy/20 group-hover:from-revenue/30 group-hover:to-strategy/30' 
-                        : 'bg-gradient-to-br from-operational/20 to-viverblue/20 group-hover:from-operational/30 group-hover:to-viverblue/30'
+                        : 'bg-gradient-to-br from-operational/20 to-aurora-primary/20 group-hover:from-operational/30 group-hover:to-aurora-primary/30'
                       }
                     `}>
                       {role.is_system ? (

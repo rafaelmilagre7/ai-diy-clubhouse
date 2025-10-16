@@ -97,7 +97,7 @@ export const UserRoleDialog = ({
         <div className="py-4">
           {loading ? (
             <div className="flex items-center justify-center py-4">
-              <Loader2 className="h-6 w-6 animate-spin text-viverblue" />
+              <Loader2 className="h-6 w-6 animate-spin text-aurora-primary" />
               <span className="ml-2">Carregando papel atual...</span>
             </div>
           ) : (

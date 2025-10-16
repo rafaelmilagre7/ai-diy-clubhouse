@@ -158,7 +158,7 @@ export const UsersTable: React.FC<UsersTableProps> = ({
                       <div className="relative">
                         <Avatar className="h-12 w-12 ring-2 ring-primary/10 transition-all duration-300 group-hover:ring-primary/20">
                           <AvatarImage src={user.avatar_url || undefined} />
-                          <AvatarFallback className="bg-gradient-to-br from-viverblue/20 to-operational/20 text-viverblue font-semibold">
+                          <AvatarFallback className="bg-gradient-to-br from-aurora-primary/20 to-operational/20 text-aurora-primary font-semibold">
                             {user.name?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
@@ -271,7 +271,7 @@ export const UsersTable: React.FC<UsersTableProps> = ({
                           variant={isActive ? 'default' : 'destructive'}
                           className={
                             isActive 
-                              ? 'bg-gradient-to-r from-operational to-viverblue text-white border-0' 
+                              ? 'bg-gradient-to-r from-operational to-aurora-primary text-white border-0' 
                               : 'bg-destructive/20 text-destructive border-destructive/30'
                           }
                         >

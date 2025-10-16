@@ -1,7 +1,7 @@
 
 export const chartTheme = {
   colors: {
-    primary: 'hsl(var(--viverblue))',
+    primary: 'hsl(var(--aurora-primary))',
     secondary: 'hsl(262 83% 58%)', 
     success: 'hsl(142 76% 36%)',
     warning: 'hsl(48 96% 53%)',
@@ -10,7 +10,7 @@ export const chartTheme = {
     
     // Paleta categórica expandida usando design system
     categorical: [
-      'hsl(var(--viverblue))', // Teal principal
+      'hsl(var(--aurora-primary))', // Teal principal
       'hsl(262 83% 58%)', // Purple
       'hsl(142 76% 36%)', // Green
       'hsl(48 96% 53%)', // Amber
@@ -24,7 +24,7 @@ export const chartTheme = {
 
     // Gradientes para área charts usando design system
     gradients: {
-      primary: ['hsl(var(--viverblue))', 'hsl(var(--viverblue) / 0.3)'],
+      primary: ['hsl(var(--aurora-primary))', 'hsl(var(--aurora-primary) / 0.3)'],
       secondary: ['hsl(262 83% 58%)', 'hsl(262 83% 58% / 0.3)'],
       success: ['hsl(142 76% 36%)', 'hsl(142 76% 36% / 0.3)'],
       warning: ['hsl(48 96% 53%)', 'hsl(48 96% 53% / 0.3)'],

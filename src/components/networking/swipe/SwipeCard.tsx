@@ -111,9 +111,9 @@ export const SwipeCard = ({
             </div>
 
             {/* Badge de Score Aurora Style */}
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-br from-aurora/10 to-viverblue/10 border-2 border-aurora/40 shadow-lg shadow-aurora/20 flex-shrink-0">
-              <Trophy className="h-4 w-4 text-aurora" />
-              <span className="text-sm font-bold text-aurora">{Math.round(card.score || 50)}%</span>
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-br from-aurora-primary/10 to-aurora-primary/5 border-2 border-aurora-primary/40 shadow-lg shadow-aurora-primary/20 flex-shrink-0">
+              <Trophy className="h-4 w-4 text-aurora-primary" />
+              <span className="text-sm font-bold text-aurora-primary">{Math.round(card.score || 50)}%</span>
             </div>
           </div>
 
@@ -128,9 +128,9 @@ export const SwipeCard = ({
 
           {/* Status Banner Aurora Style - Se conectado */}
           {localStatus === 'accepted' && (
-            <div className="bg-gradient-to-r from-aurora/10 to-viverblue/10 border-2 border-aurora/40 shadow-md rounded-lg p-2.5 mb-3 text-center text-sm flex-shrink-0">
-              <Check className="inline h-4 w-4 mr-1.5 text-aurora" />
-              <span className="text-aurora font-semibold">Vocês já estão conectados</span>
+            <div className="bg-gradient-to-r from-aurora-primary/10 to-aurora-primary/5 border-2 border-aurora-primary/40 shadow-md rounded-lg p-2.5 mb-3 text-center text-sm flex-shrink-0">
+              <Check className="inline h-4 w-4 mr-1.5 text-aurora-primary" />
+              <span className="text-aurora-primary font-semibold">Vocês já estão conectados</span>
             </div>
           )}
 
@@ -140,7 +140,8 @@ export const SwipeCard = ({
             <Button
               onClick={onOpenContact}
               size="lg"
-              className="relative w-full bg-gradient-to-r from-aurora to-viverblue hover:from-aurora/90 hover:to-viverblue/90 text-white shadow-xl shadow-aurora/30 hover:shadow-2xl hover:shadow-aurora/40 transition-all duration-300 font-bold text-base hover:scale-[1.02] border-0 overflow-hidden group"
+              variant="aurora-primary"
+              className="relative w-full shadow-xl shadow-aurora-primary/30 hover:shadow-2xl hover:shadow-aurora-primary/40 transition-all duration-300 font-bold text-base hover:scale-[1.02] overflow-hidden group"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <Phone className="h-5 w-5 mr-2 relative z-10" />
@@ -156,10 +157,10 @@ export const SwipeCard = ({
                 variant={localStatus === 'accepted' ? 'default' : 'outline'}
                 className={`flex-1 relative overflow-hidden group transition-all duration-300 font-bold text-base ${
                   localStatus === 'accepted'
-                    ? 'bg-aurora hover:bg-aurora/90 text-white border-0 shadow-lg shadow-aurora/40 hover:shadow-xl hover:shadow-aurora/50 hover:scale-[1.02]'
+                    ? 'bg-aurora-primary hover:bg-aurora-primary/90 text-white border-0 shadow-lg shadow-aurora-primary/40 hover:shadow-xl hover:shadow-aurora-primary/50 hover:scale-[1.02]'
                     : localStatus === 'pending'
                     ? 'bg-card/80 border-2 border-warning/60 text-foreground shadow-md cursor-not-allowed hover:scale-100'
-                    : 'bg-card/80 hover:bg-card border-2 border-aurora/50 text-foreground hover:border-aurora shadow-md hover:shadow-lg hover:shadow-aurora/20 hover:scale-[1.02]'
+                    : 'bg-card/80 hover:bg-card border-2 border-aurora-primary/50 text-foreground hover:border-aurora-primary shadow-md hover:shadow-lg hover:shadow-aurora-primary/20 hover:scale-[1.02]'
                 }`}
               >
                 {localStatus === 'accepted' ? (
@@ -174,12 +175,12 @@ export const SwipeCard = ({
                   </>
                 ) : isSendingRequest ? (
                   <>
-                    <Loader2 className="h-5 w-5 mr-2 animate-spin text-aurora" />
+                    <Loader2 className="h-5 w-5 mr-2 animate-spin text-aurora-primary" />
                     <span>Enviando...</span>
                   </>
                 ) : (
                   <>
-                    <UserPlus className="h-5 w-5 mr-2 text-aurora" />
+                    <UserPlus className="h-5 w-5 mr-2 text-aurora-primary" />
                     <span>Adicionar à Rede</span>
                   </>
                 )}
