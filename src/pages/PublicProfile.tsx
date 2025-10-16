@@ -138,7 +138,7 @@ export default function PublicProfile() {
               >
                 <Avatar className="w-40 h-40 border-4 border-background shadow-2xl">
                   <AvatarImage src={profile.avatar_url} alt={profile.name} />
-                  <AvatarFallback className="text-4xl bg-gradient-to-br from-aurora/30 to-viverblue/30 text-aurora font-bold">
+                  <AvatarFallback className="text-4xl bg-gradient-to-br from-aurora/30 to-aurora-primary/30 text-aurora font-bold">
                     {getInitials(profile.name)}
                   </AvatarFallback>
                 </Avatar>
@@ -196,7 +196,7 @@ export default function PublicProfile() {
                   <Button
                     onClick={() => navigate('/profile/edit')}
                     size="default"
-                    className="w-full gap-2 bg-gradient-to-r from-aurora via-viverblue to-operational hover:from-aurora/80 hover:via-viverblue/80 hover:to-operational/80 text-white shadow-md hover:shadow-lg border-0"
+                    className="w-full gap-2 bg-gradient-to-r from-aurora via-aurora-primary to-operational hover:from-aurora/80 hover:via-aurora-primary/80 hover:to-operational/80 text-white shadow-md hover:shadow-lg border-0"
                   >
                     <Edit className="h-4 w-4" />
                     <span className="text-sm">Editar Perfil</span>
@@ -213,7 +213,7 @@ export default function PublicProfile() {
                           ? 'bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 hover:from-green-600 hover:via-emerald-600 hover:to-teal-600 text-white'
                           : localStatus === 'pending'
                           ? 'bg-gradient-to-r from-yellow-500 via-amber-500 to-orange-500 text-white cursor-not-allowed opacity-80'
-                          : 'bg-gradient-to-r from-aurora via-viverblue to-operational hover:from-aurora/80 hover:via-viverblue/80 hover:to-operational/80 text-white'
+                          : 'bg-gradient-to-r from-aurora via-aurora-primary to-operational hover:from-aurora/80 hover:via-aurora-primary/80 hover:to-operational/80 text-white'
                       }`}
                     >
                       {localStatus === 'accepted' ? (
@@ -299,7 +299,7 @@ export default function PublicProfile() {
                     className="flex items-center justify-between p-3 rounded-lg aurora-glass-hover"
                   >
                     <span className="text-muted-foreground">Posts</span>
-                    <span className="text-2xl font-bold text-viverblue">{postsCount}</span>
+                    <span className="text-2xl font-bold text-aurora-primary">{postsCount}</span>
                   </motion.div>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground pt-2 border-t border-border/30">
                     <Calendar className="h-4 w-4" />
@@ -343,7 +343,7 @@ export default function PublicProfile() {
                   )}
                   {profile.company_name && (
                     <div className="flex items-center gap-3 p-3 rounded-lg aurora-glass-hover">
-                      <Building2 className="h-5 w-5 text-viverblue flex-shrink-0" />
+                      <Building2 className="h-5 w-5 text-aurora-primary flex-shrink-0" />
                       <div>
                         <p className="text-sm text-muted-foreground">Empresa</p>
                         <p className="font-medium">{profile.company_name}</p>

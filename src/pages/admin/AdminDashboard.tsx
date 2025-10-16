@@ -46,13 +46,13 @@ const AdminDashboard = () => {
   // Loading state with Aurora design
   if (loading) {
     return <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-viverblue/5 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-aurora-primary/5 via-transparent to-transparent" />
         
         <div className="relative p-6 md:p-8">
           <div className="max-w-7xl mx-auto space-y-8">
             <div className="space-y-4">
               <div className="flex items-center space-x-4">
-                <div className="p-3 rounded-xl bg-gradient-to-r from-viverblue/20 to-operational/20 backdrop-blur-sm">
+                <div className="p-3 rounded-xl bg-gradient-to-r from-aurora-primary/20 to-operational/20 backdrop-blur-sm">
                   <Skeleton className="h-8 w-8" />
                 </div>
                 <div className="space-y-2">
@@ -78,13 +78,13 @@ const AdminDashboard = () => {
   // Error state with Aurora design
   if (!statsData || !activityData) {
     return <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-viverblue/5 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-aurora-primary/5 via-transparent to-transparent" />
         
         <div className="relative p-6 md:p-8">
           <div className="max-w-7xl mx-auto space-y-8">
             <div className="flex items-center space-x-4">
-              <div className="p-3 rounded-xl bg-gradient-to-r from-viverblue/20 to-operational/20 backdrop-blur-sm border border-viverblue/20">
-                <BarChart3 className="h-8 w-8 text-viverblue" />
+              <div className="p-3 rounded-xl bg-gradient-to-r from-aurora-primary/20 to-operational/20 backdrop-blur-sm border border-aurora-primary/20">
+                <BarChart3 className="h-8 w-8 text-aurora-primary" />
               </div>
               <div>
                 <h1 className="text-display text-foreground">Dashboard Admin</h1>
@@ -116,8 +116,8 @@ const AdminDashboard = () => {
   const periodLabel = periodDays === 7 ? '7 dias' : periodDays === 30 ? '30 dias' : periodDays === 90 ? '90 dias' : periodDays === 365 ? 'Todo período' : `${periodDays} dias`;
   return <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
       {/* Aurora Background Effects */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-viverblue/5 via-transparent to-transparent" />
-      <div className="absolute top-0 right-0 -z-10 h-96 w-96 rounded-full bg-gradient-to-br from-viverblue/10 to-operational/10 blur-3xl animate-blob" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-aurora-primary/5 via-transparent to-transparent" />
+      <div className="absolute top-0 right-0 -z-10 h-96 w-96 rounded-full bg-gradient-to-br from-aurora-primary/10 to-operational/10 blur-3xl animate-blob" />
       <div className="absolute bottom-0 left-0 -z-10 h-96 w-96 rounded-full bg-gradient-to-tr from-strategy/10 to-revenue/10 blur-3xl animate-blob animation-delay-2000" />
       
       <div className="relative p-6 md:p-8">
@@ -129,7 +129,7 @@ const AdminDashboard = () => {
             
             <div className="flex items-center gap-3">
               <DashboardHeader timeRange={timeRange} setTimeRange={handleTimeRangeChange} />
-              <Button onClick={handleRefresh} variant="outline" size="sm" className="gap-2 aurora-focus bg-viverblue/10 border-viverblue/20 hover:bg-viverblue/20">
+              <Button onClick={handleRefresh} variant="outline" size="sm" className="gap-2 aurora-focus bg-aurora-primary/10 border-aurora-primary/20 hover:bg-aurora-primary/20">
                 <RefreshCw className="h-4 w-4" />
                 Atualizar
               </Button>
@@ -145,8 +145,8 @@ const AdminDashboard = () => {
                 <CardTitle className="text-label text-muted-foreground">
                   Novos Usuários
                 </CardTitle>
-                <div className="p-2 rounded-lg bg-viverblue/10 group-hover:bg-viverblue/20 transition-colors">
-                  <Users className="h-4 w-4 text-viverblue" />
+                <div className="p-2 rounded-lg bg-aurora-primary/10 group-hover:bg-aurora-primary/20 transition-colors">
+                  <Users className="h-4 w-4 text-aurora-primary" />
                 </div>
               </CardHeader>
               <CardContent>
@@ -238,7 +238,7 @@ const AdminDashboard = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2 p-3 rounded-lg bg-viverblue/5">
+                  <div className="space-y-2 p-3 rounded-lg bg-aurora-primary/5">
                     <p className="text-label text-muted-foreground">Total de Usuários</p>
                     <p className="text-heading-2">{(statsData?.totalUsers || 0).toLocaleString('pt-BR')}</p>
                   </div>
@@ -267,7 +267,7 @@ const AdminDashboard = () => {
                 <div className="space-y-3">
                   {statsData?.usersByRole?.map((role, index) => <div key={index} className="flex items-center justify-between p-3 rounded-lg surface-elevated">
                       <div className="flex items-center gap-3">
-                        <div className="w-3 h-3 rounded-full bg-gradient-to-r from-viverblue to-operational"></div>
+                        <div className="w-3 h-3 rounded-full bg-gradient-to-r from-aurora-primary to-operational"></div>
                         <span className="text-label text-foreground">{role.role}</span>
                       </div>
                       <span className="text-label text-foreground">
@@ -294,9 +294,9 @@ const AdminDashboard = () => {
               <CardContent>
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 gap-3">
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-viverblue/5">
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-aurora-primary/5">
                       <span className="text-label text-muted-foreground">Taxa de Crescimento</span>
-                      <span className="text-heading-3 text-viverblue">
+                      <span className="text-heading-3 text-aurora-primary">
                         {statsData?.periodGrowthRate ? `+${statsData.periodGrowthRate}%` : 'N/A'}
                       </span>
                     </div>

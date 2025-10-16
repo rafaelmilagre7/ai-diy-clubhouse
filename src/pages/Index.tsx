@@ -62,7 +62,7 @@ const Index = () => {
         <div className="max-w-md w-full space-y-8 animate-fade-in">
           <div className="text-center">
             <div className="mx-auto h-28 w-28 relative">
-              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-viverblue/20 to-viverblue-dark/10 animate-pulse-subtle"></div>
+              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-aurora-primary/20 to-aurora-primary/10 animate-pulse-subtle"></div>
               <img
                 className="mx-auto h-full w-auto relative z-10 drop-shadow-md"
                 src="/lovable-uploads/fe3733f5-092e-4a4e-bdd7-650b71aaa801.png"
@@ -71,7 +71,7 @@ const Index = () => {
               />
             </div>
             
-            <h1 className="mt-6 text-center text-4xl sm:text-5xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-viverblue via-indigo-600 to-viverblue-dark animate-gradient-shift bg-size-200">
+            <h1 className="mt-6 text-center text-4xl sm:text-5xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-aurora-primary via-aurora to-aurora-primary-light animate-gradient-shift bg-size-200">
               VIVER DE IA
             </h1>
             
@@ -84,13 +84,13 @@ const Index = () => {
             <div className="overflow-hidden h-2 mb-4 text-xs flex rounded-full bg-gray-200 dark:bg-gray-700">
               <div 
                 style={{ width: `${progress}%` }} 
-                className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r from-viverblue to-viverblue-light transition-all duration-300"
+                className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r from-aurora-primary to-aurora-primary-light transition-all duration-300"
               ></div>
             </div>
           </div>
 
           <div className="mt-8 flex justify-center">
-            <div className="inline-flex items-center px-5 py-3 border border-transparent text-base font-medium rounded-full shadow-md text-white bg-gradient-to-r from-viverblue to-viverblue-light hover:from-viverblue-dark hover:to-viverblue transition-all">
+            <div className="inline-flex items-center px-5 py-3 border border-transparent text-base font-medium rounded-full shadow-md text-white bg-gradient-to-r from-aurora-primary to-aurora-primary-light hover:from-aurora to-aurora-primary transition-all">
               {isLoading ? 'Verificando autenticação...' : 
                isRedirecting ? 'Redirecionando...' : 
                'Bem-vindo ao VIVER DE IA'

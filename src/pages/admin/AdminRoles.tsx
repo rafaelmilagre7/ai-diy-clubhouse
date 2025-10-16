@@ -76,7 +76,7 @@ export default function AdminRoles() {
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <Shield className="h-5 w-5 text-blue-500" />
+                  <Shield className="h-5 w-5 text-aurora-primary" />
                   <CardTitle className="text-lg">{role.name}</CardTitle>
                 </div>
                 {role.is_system && (

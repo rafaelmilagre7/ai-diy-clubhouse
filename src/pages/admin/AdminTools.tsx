@@ -23,22 +23,22 @@ const AdminTools = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-blue-500/5 p-6 space-y-8 relative overflow-hidden">
+      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-aurora-primary/5 p-6 space-y-8 relative overflow-hidden">
         {/* Aurora Background Elements */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-br from-blue-500/8 to-cyan-500/4 rounded-full blur-3xl animate-blob"></div>
+          <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-br from-aurora-primary/8 to-operational/4 rounded-full blur-3xl animate-blob"></div>
           <div className="absolute top-60 right-20 w-96 h-96 bg-gradient-to-br from-purple-500/6 to-pink-500/3 rounded-full blur-3xl animate-blob animation-delay-2000"></div>
           <div className="absolute bottom-20 left-1/3 w-80 h-80 bg-gradient-to-br from-indigo-500/4 to-aurora/3 rounded-full blur-3xl animate-blob animation-delay-4000"></div>
         </div>
 
         {/* Loading Header */}
-        <div className="aurora-glass rounded-2xl border border-blue-500/20 backdrop-blur-md animate-pulse">
-          <div className="bg-gradient-to-r from-blue-500/10 to-cyan-500/5 p-8 border-b border-blue-500/20">
+        <div className="aurora-glass rounded-2xl border border-aurora-primary/20 backdrop-blur-md animate-pulse">
+          <div className="bg-gradient-to-r from-aurora-primary/10 to-operational/5 p-8 border-b border-aurora-primary/20">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-500/20 to-cyan-500/10 rounded-2xl"></div>
+              <div className="w-16 h-16 bg-gradient-to-br from-aurora-primary/20 to-operational/10 rounded-2xl"></div>
               <div className="space-y-3 flex-1">
-                <div className="w-80 h-8 bg-gradient-to-r from-blue-500/20 to-cyan-500/10 rounded-lg"></div>
-                <div className="w-96 h-5 bg-gradient-to-r from-blue-500/15 to-cyan-500/8 rounded-lg"></div>
+                <div className="w-80 h-8 bg-gradient-to-r from-aurora-primary/20 to-operational/10 rounded-lg"></div>
+                <div className="w-96 h-5 bg-gradient-to-r from-aurora-primary/15 to-operational/8 rounded-lg"></div>
               </div>
             </div>
           </div>
@@ -47,26 +47,26 @@ const AdminTools = () => {
         {/* Loading Stats */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="aurora-glass rounded-2xl border border-blue-500/20 backdrop-blur-md animate-pulse">
-              <div className="bg-gradient-to-r from-blue-500/10 to-cyan-500/5 p-6 border-b border-white/10">
+            <div key={i} className="aurora-glass rounded-2xl border border-aurora-primary/20 backdrop-blur-md animate-pulse">
+              <div className="bg-gradient-to-r from-aurora-primary/10 to-operational/5 p-6 border-b border-white/10">
                 <div className="flex items-center justify-between">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500/20 to-cyan-500/10 rounded-xl"></div>
-                  <div className="w-16 h-8 bg-gradient-to-r from-blue-500/20 to-cyan-500/10 rounded-lg"></div>
+                  <div className="w-12 h-12 bg-gradient-to-br from-aurora-primary/20 to-operational/10 rounded-xl"></div>
+                  <div className="w-16 h-8 bg-gradient-to-r from-aurora-primary/20 to-operational/10 rounded-lg"></div>
                 </div>
               </div>
               <div className="p-4">
-                <div className="w-32 h-3 bg-gradient-to-r from-blue-500/15 to-cyan-500/8 rounded-full"></div>
+                <div className="w-32 h-3 bg-gradient-to-r from-aurora-primary/15 to-operational/8 rounded-full"></div>
               </div>
             </div>
           ))}
         </div>
 
         {/* Loading Content */}
-        <div className="aurora-glass rounded-2xl border border-blue-500/20 backdrop-blur-md p-8">
+        <div className="aurora-glass rounded-2xl border border-aurora-primary/20 backdrop-blur-md p-8">
           <div className="flex items-center justify-center py-20">
             <div className="relative">
-              <div className="w-20 h-20 aurora-glass rounded-full border-4 border-blue-500/30 border-t-blue-500 animate-spin"></div>
-              <div className="absolute inset-3 bg-gradient-to-br from-blue-500/20 to-cyan-500/10 rounded-full aurora-pulse"></div>
+              <div className="w-20 h-20 aurora-glass rounded-full border-4 border-aurora-primary/30 border-t-aurora-primary animate-spin"></div>
+              <div className="absolute inset-3 bg-gradient-to-br from-aurora-primary/20 to-operational/10 rounded-full aurora-pulse"></div>
             </div>
             <div className="ml-6">
               <h3 className="text-2xl font-semibold aurora-text-gradient mb-2">Carregando Ferramentas</h3>
@@ -113,24 +113,24 @@ const AdminTools = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-blue-500/5 p-6 space-y-8 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-aurora-primary/5 p-6 space-y-8 relative overflow-hidden">
       {/* Aurora Background Elements */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-br from-blue-500/8 to-cyan-500/4 rounded-full blur-3xl animate-blob"></div>
+        <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-br from-aurora-primary/8 to-operational/4 rounded-full blur-3xl animate-blob"></div>
         <div className="absolute top-60 right-20 w-96 h-96 bg-gradient-to-br from-purple-500/6 to-pink-500/3 rounded-full blur-3xl animate-blob animation-delay-2000"></div>
         <div className="absolute bottom-20 left-1/3 w-80 h-80 bg-gradient-to-br from-indigo-500/4 to-aurora/3 rounded-full blur-3xl animate-blob animation-delay-4000"></div>
       </div>
 
       {/* Enhanced Header with Aurora Style */}
-      <div className="relative aurora-glass rounded-2xl p-8 border border-blue-500/20 backdrop-blur-md">
+      <div className="relative aurora-glass rounded-2xl p-8 border border-aurora-primary/20 backdrop-blur-md">
         <div className="flex flex-col lg:flex-row justify-between items-start gap-6">
           <div className="flex items-start gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-2 h-16 bg-gradient-to-b from-blue-500 via-cyan-500 to-purple-500 rounded-full aurora-glow"></div>
+              <div className="w-2 h-16 bg-gradient-to-b from-aurora-primary via-operational to-strategy rounded-full aurora-glow"></div>
               <div>
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/10 aurora-glass">
-                    <Wrench className="h-6 w-6 text-blue-500" />
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-aurora-primary/20 to-operational/10 aurora-glass">
+                    <Wrench className="h-6 w-6 text-aurora-primary" />
                   </div>
                   <h1 className="text-4xl font-bold aurora-text-gradient">
                     Gestão de Ferramentas
@@ -147,7 +147,7 @@ const AdminTools = () => {
             <Button
               onClick={handleRefresh}
               variant="outline"
-              className="h-12 px-6 aurora-glass border-blue-500/30 hover:border-blue-500/50 hover:bg-blue-500/10 text-blue-500 font-medium backdrop-blur-sm"
+              className="h-12 px-6 aurora-glass border-aurora-primary/30 hover:border-aurora-primary/50 hover:bg-aurora-primary/10 text-aurora-primary font-medium backdrop-blur-sm"
             >
               <RefreshCcw className="h-4 w-4 mr-2" />
               Atualizar
@@ -191,9 +191,9 @@ const AdminTools = () => {
             label: "Total de Ferramentas",
             value: totalTools,
             icon: Package,
-            gradient: "from-blue-500/20 to-cyan-500/10",
-            iconColor: "text-blue-500",
-            border: "border-blue-500/30",
+            gradient: "from-aurora-primary/20 to-operational/10",
+            iconColor: "text-aurora-primary",
+            border: "border-aurora-primary/30",
             description: "Ferramentas cadastradas"
           },
           {

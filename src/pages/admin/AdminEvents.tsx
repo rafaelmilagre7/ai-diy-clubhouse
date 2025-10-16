@@ -63,20 +63,20 @@ const AdminEvents = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
       {/* Aurora Background Effects */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-viverblue/5 via-transparent to-transparent" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-aurora-primary/5 via-transparent to-transparent" />
       <div className="absolute top-0 right-0 -z-10 h-96 w-96 rounded-full bg-gradient-to-br from-operational/10 to-strategy/10 blur-3xl animate-blob" />
-      <div className="absolute bottom-0 left-0 -z-10 h-96 w-96 rounded-full bg-gradient-to-tr from-revenue/10 to-viverblue/10 blur-3xl animate-blob animation-delay-2000" />
+      <div className="absolute bottom-0 left-0 -z-10 h-96 w-96 rounded-full bg-gradient-to-tr from-revenue/10 to-aurora-primary/10 blur-3xl animate-blob animation-delay-2000" />
       
       <div className="relative p-6 md:p-8 space-y-8">
         {/* Modern Header */}
         <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-6">
           <div className="space-y-4">
             <div className="flex items-center space-x-4">
-              <div className="p-3 rounded-xl bg-gradient-to-r from-viverblue/20 to-operational/20 backdrop-blur-sm border border-viverblue/20">
-                <Calendar className="h-8 w-8 text-viverblue" />
+              <div className="p-3 rounded-xl bg-gradient-to-r from-aurora-primary/20 to-operational/20 backdrop-blur-sm border border-aurora-primary/20">
+                <Calendar className="h-8 w-8 text-aurora-primary" />
               </div>
               <div>
-                <h1 className="text-display text-foreground bg-gradient-to-r from-viverblue to-operational bg-clip-text text-transparent">
+                <h1 className="text-display text-foreground bg-gradient-to-r from-aurora-primary to-operational bg-clip-text text-transparent">
                   Gerenciar Eventos
                 </h1>
                 <p className="text-body-large text-muted-foreground">
@@ -112,7 +112,7 @@ const AdminEvents = () => {
             
             <Button
               onClick={() => setShowCreateDialog(true)}
-              className="aurora-focus gap-2 bg-gradient-to-r from-viverblue to-operational hover:from-viverblue/90 hover:to-operational/90"
+              className="aurora-focus gap-2 bg-gradient-to-r from-aurora-primary to-operational hover:from-aurora-primary/90 hover:to-operational/90"
             >
               <Plus className="h-4 w-4" />
               Novo Evento
@@ -125,12 +125,12 @@ const AdminEvents = () => {
           <Card className="surface-elevated border-0 shadow-aurora transition-all duration-300 hover:shadow-aurora-strong group">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-label text-muted-foreground">Total de Eventos</CardTitle>
-              <div className="p-2 rounded-lg bg-gradient-to-br from-viverblue/20 to-viverblue/10 transition-all duration-300 group-hover:from-viverblue/30 group-hover:to-viverblue/20">
-                <Calendar className="h-4 w-4 text-viverblue" />
+              <div className="p-2 rounded-lg bg-gradient-to-br from-aurora-primary/20 to-aurora-primary/10 transition-all duration-300 group-hover:from-aurora-primary/30 group-hover:to-aurora-primary/20">
+                <Calendar className="h-4 w-4 text-aurora-primary" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-heading-2 text-foreground mb-2 bg-gradient-to-r from-viverblue to-viverblue/80 bg-clip-text text-transparent">
+              <div className="text-heading-2 text-foreground mb-2 bg-gradient-to-r from-aurora-primary to-aurora-primary/80 bg-clip-text text-transparent">
                 {totalEvents}
               </div>
               <p className="text-caption text-muted-foreground">
