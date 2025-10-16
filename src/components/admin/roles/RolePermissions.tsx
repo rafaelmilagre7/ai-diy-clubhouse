@@ -278,16 +278,16 @@ export function RolePermissions({ open, onOpenChange, role }: RolePermissionsPro
       <div
         key={permission.id}
         className={`group relative rounded-xl border transition-all duration-300 ${
-          isActive 
-            ? 'bg-aurora/5 border-aurora/30 shadow-lg shadow-aurora/5' 
-            : 'bg-card border-border/30 hover:border-aurora/20 hover:bg-aurora/5'
+            isActive 
+              ? 'bg-aurora-primary/5 border-aurora-primary/30 shadow-lg shadow-aurora-primary/5' 
+              : 'bg-card border-border/30 hover:border-aurora-primary/20 hover:bg-aurora-primary/5'
         }`}
       >
         <div className="flex items-center gap-4 p-5">
           <div className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${
             isActive 
-              ? 'bg-aurora/15 text-aurora shadow-sm' 
-              : 'bg-muted/50 text-muted-foreground group-hover:bg-aurora/10 group-hover:text-aurora'
+              ? 'bg-aurora-primary/15 text-aurora-primary shadow-sm' 
+              : 'bg-muted/50 text-muted-foreground group-hover:bg-aurora-primary/10 group-hover:text-aurora-primary'
           }`}>
             <FeatureIcon className="w-6 h-6" />
           </div>
@@ -298,7 +298,7 @@ export function RolePermissions({ open, onOpenChange, role }: RolePermissionsPro
                 {permission.name}
               </h4>
               {isActive && (
-                <CheckCircle2 className="w-5 h-5 text-aurora flex-shrink-0" />
+                <CheckCircle2 className="w-5 h-5 text-aurora-primary flex-shrink-0" />
               )}
             </div>
             
@@ -372,8 +372,8 @@ export function RolePermissions({ open, onOpenChange, role }: RolePermissionsPro
       <DialogContent className="max-w-4xl h-[85vh] flex flex-col bg-background border-border">
         <DialogHeader className="flex-shrink-0 pb-4 border-b border-border/50">
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-aurora/20 to-viverblue/20 flex items-center justify-center">
-              <ShieldCheck className="w-6 h-6 text-aurora" />
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-aurora-primary/20 to-aurora-primary/10 flex items-center justify-center">
+              <ShieldCheck className="w-6 h-6 text-aurora-primary" />
             </div>
             <div className="flex-1">
               <DialogTitle className="text-xl font-semibold text-foreground">
@@ -392,17 +392,17 @@ export function RolePermissions({ open, onOpenChange, role }: RolePermissionsPro
           
           {role && (
             <div className="flex flex-wrap gap-3 mt-4">
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-aurora/10 rounded-full">
-                <CheckCircle2 className="w-4 h-4 text-aurora" />
-                <span className="text-sm font-medium text-aurora">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-aurora-primary/10 rounded-full">
+                <CheckCircle2 className="w-4 h-4 text-aurora-primary" />
+                <span className="text-sm font-medium text-aurora-primary">
                   {activePermissions} ativas
                 </span>
               </div>
               
               {!isSystemAdmin && (
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-viverblue/10 rounded-full">
-                  <Globe className="w-4 h-4 text-viverblue" />
-                  <span className="text-sm text-viverblue">
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-aurora-primary-light/10 rounded-full">
+                  <Globe className="w-4 h-4 text-aurora-primary-light" />
+                  <span className="text-sm text-aurora-primary-light">
                     {activeFeatures.length} de {userFeatures.length} funcionalidades
                   </span>
                 </div>
@@ -423,22 +423,22 @@ export function RolePermissions({ open, onOpenChange, role }: RolePermissionsPro
         {(loading || isLoading) ? (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center space-y-4">
-              <div className="w-12 h-12 rounded-full bg-aurora/10 flex items-center justify-center mx-auto">
-                <Loader2 className="w-6 h-6 animate-spin text-aurora" />
+              <div className="w-12 h-12 rounded-full bg-aurora-primary/10 flex items-center justify-center mx-auto">
+                <Loader2 className="w-6 h-6 animate-spin text-aurora-primary" />
               </div>
               <p className="text-muted-foreground">Carregando permissões...</p>
             </div>
           </div>
         ) : (
-          <div className="flex-1 overflow-hidden">
+            <div className="flex-1 overflow-hidden">
             <div className="h-full overflow-y-auto space-y-6 pr-2" style={{ scrollbarGutter: 'stable' }}>
               
               {/* Funcionalidades para Roles Personalizados */}
               {!isSystemAdmin && userFeatures.length > 0 && (
-                <div className="space-y-4">
+                  <div className="space-y-4">
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-viverblue/20 to-aurora/20 flex items-center justify-center">
-                      <Globe className="w-5 h-5 text-viverblue" />
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-aurora-primary/20 to-aurora-primary/10 flex items-center justify-center">
+                      <Globe className="w-5 h-5 text-aurora-primary" />
                     </div>
                     <div>
                       <h3 className="text-lg font-semibold text-foreground">
