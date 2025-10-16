@@ -56,8 +56,8 @@ export const UserAnalyticsTabContent = ({ timeRange }: UserAnalyticsTabContentPr
       title: "Total de Usuários",
       value: data.totalUsers.toLocaleString(),
       icon: Users,
-      color: "text-blue-500",
-      bgColor: "bg-blue-50 dark:bg-blue-900/20"
+      color: "text-operational",
+      bgColor: "bg-operational/10 dark:bg-operational/20"
     },
     {
       title: "Usuários Ativos (7d)",

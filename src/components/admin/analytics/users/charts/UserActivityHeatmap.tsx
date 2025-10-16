@@ -44,10 +44,10 @@ export const UserActivityHeatmap = ({ data, loading }: UserActivityHeatmapProps)
 
   const getIntensityColor = (activity: number) => {
     if (activity < 10) return 'bg-gray-100';
-    if (activity < 25) return 'bg-blue-100';
-    if (activity < 50) return 'bg-blue-200';
-    if (activity < 75) return 'bg-blue-400';
-    return 'bg-blue-600';
+    if (activity < 25) return 'bg-operational/20';
+    if (activity < 50) return 'bg-operational/40';
+    if (activity < 75) return 'bg-operational/60';
+    return 'bg-operational';
   };
 
   const getIntensityText = (activity: number) => {
@@ -106,10 +106,10 @@ export const UserActivityHeatmap = ({ data, loading }: UserActivityHeatmapProps)
             <span className="text-xs text-gray-500">Menos ativo</span>
             <div className="flex space-x-px">
               <div className="w-3 h-3 bg-gray-100 rounded-sm" />
-              <div className="w-3 h-3 bg-blue-100 rounded-sm" />
-              <div className="w-3 h-3 bg-blue-200 rounded-sm" />
-              <div className="w-3 h-3 bg-blue-400 rounded-sm" />
-              <div className="w-3 h-3 bg-blue-600 rounded-sm" />
+              <div className="w-3 h-3 bg-operational/20 rounded-sm" />
+              <div className="w-3 h-3 bg-operational/40 rounded-sm" />
+              <div className="w-3 h-3 bg-operational/60 rounded-sm" />
+              <div className="w-3 h-3 bg-operational rounded-sm" />
             </div>
             <span className="text-xs text-gray-500">Mais ativo</span>
           </div>
@@ -118,7 +118,7 @@ export const UserActivityHeatmap = ({ data, loading }: UserActivityHeatmapProps)
           <div className="border-t pt-4">
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div className="flex items-center space-x-2">
-                <Clock className="h-4 w-4 text-blue-500" />
+                <Clock className="h-4 w-4 text-operational" />
                 <div>
                   <div className="font-medium">Pico de Atividade</div>
                   <div className="text-gray-600">Terça, 14:00-16:00</div>

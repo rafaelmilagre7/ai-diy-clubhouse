@@ -38,7 +38,7 @@ export const EnhancedUserAnalytics = ({ timeRange }: EnhancedUserAnalyticsProps)
       value: data?.usersByTime?.length || 0,
       icon: Users,
       description: "Média dos últimos dias",
-      color: "text-blue-500",
+      color: "text-operational",
       trend: null
     },
     {

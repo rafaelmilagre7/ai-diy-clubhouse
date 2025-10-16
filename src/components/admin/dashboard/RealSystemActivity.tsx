@@ -53,15 +53,15 @@ export const RealSystemActivity = ({ activityData, loading }: RealSystemActivity
   const getActivityIcon = (type: string) => {
     switch (type.toLowerCase()) {
       case 'novos usuários':
-        return <UserPlus className="h-5 w-5 text-blue-500" />;
+        return <UserPlus className="h-5 w-5 text-operational" />;
       case 'implementações ativas':
-        return <Zap className="h-5 w-5 text-orange-500" />;
+        return <Zap className="h-5 w-5 text-warning" />;
       case 'implementações concluídas':
-        return <CheckCircle className="h-5 w-5 text-emerald-500" />;
+        return <CheckCircle className="h-5 w-5 text-success" />;
       case 'atividade do fórum':
-        return <MessageSquare className="h-5 w-5 text-purple-500" />;
+        return <MessageSquare className="h-5 w-5 text-strategy" />;
       case 'usuários ativos':
-        return <Activity className="h-5 w-5 text-green-500" />;
+        return <Activity className="h-5 w-5 text-success" />;
       default:
         return <TrendingUp className="h-5 w-5 text-gray-500" />;
     }

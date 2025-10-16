@@ -96,7 +96,7 @@ export const OnboardingStatusTab = ({ data, loading }: OnboardingStatusTabProps)
                 <p className="text-sm font-medium text-muted-foreground">Total de Usuários</p>
                 <p className="text-3xl font-bold">{totalUsers}</p>
               </div>
-              <Users className="h-8 w-8 text-blue-500" />
+              <Users className="h-8 w-8 text-operational" />
             </div>
           </CardContent>
         </Card>

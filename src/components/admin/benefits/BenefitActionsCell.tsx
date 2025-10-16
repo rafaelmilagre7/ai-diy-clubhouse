@@ -30,7 +30,7 @@ export const BenefitActionsCell = ({ tool }: BenefitActionsCellProps) => {
         variant="outline" 
         size="sm"
         onClick={() => setAccessControlOpen(true)}
-        className="aurora-glass border-blue-500/30 hover:border-blue-500/50 hover:bg-blue-500/10 text-blue-500 font-medium backdrop-blur-sm transition-all duration-300"
+        className="aurora-glass border-operational/30 hover:border-operational/50 hover:bg-operational/10 text-operational font-medium backdrop-blur-sm transition-all duration-300"
       >
         <Shield className="h-3 w-3 mr-1" />
         Acesso
