@@ -63,15 +63,15 @@
 /* Aurora Style Utilities */
 .aurora-border {
   border-image: linear-gradient(135deg, 
-    hsl(var(--aurora)), 
     hsl(var(--viverblue)), 
-    hsl(var(--operational))
+    hsl(var(--vivercyan)), 
+    hsl(var(--viverpetrol))
   ) 1;
 }
 
 /* Enhanced focus states for Aurora */
 .aurora-focus {
-  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aurora/40 focus-visible:ring-offset-2 focus-visible:ring-offset-card;
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-viverblue/40 focus-visible:ring-offset-2 focus-visible:ring-offset-card;
 }
 
 /* Scale animation for celebration overlay */
@@ -106,9 +106,9 @@
 .loading-skeleton {
   background: linear-gradient(90deg, 
     hsl(var(--muted)) 0%, 
-    hsl(var(--primary) / 0.1) 25%,
+    hsl(var(--viverblue) / 0.1) 25%,
     hsl(var(--muted) / 0.8) 50%, 
-    hsl(var(--primary) / 0.1) 75%,
+    hsl(var(--viverblue) / 0.1) 75%,
     hsl(var(--muted)) 100%
   );
   background-size: 200% 100%;
@@ -198,9 +198,18 @@
 
 /* Enhanced Card Interactions */
 .aurora-card {
-  @apply relative overflow-hidden bg-gradient-to-br from-card/90 to-card/70 backdrop-blur-sm;
-  @apply border border-border/50 hover:border-aurora/30 transition-all duration-500;
-  @apply hover:shadow-2xl hover:shadow-aurora/10 hover:-translate-y-2;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(to bottom right, hsl(var(--card) / 0.9), hsl(var(--card) / 0.7));
+  backdrop-filter: blur(4px);
+  border: 1px solid hsl(var(--border) / 0.5);
+  transition: all 0.5s;
+}
+
+.aurora-card:hover {
+  border-color: hsl(var(--viverblue) / 0.3);
+  box-shadow: 0 25px 50px -12px hsl(var(--viverblue) / 0.1);
+  transform: translateY(-0.5rem);
 }
 
 .aurora-card::before {
@@ -222,9 +231,9 @@
 .loading-skeleton {
   background: linear-gradient(90deg, 
     hsl(var(--muted)) 0%, 
-    hsl(var(--aurora) / 0.1) 25%,
+    hsl(var(--viverblue) / 0.1) 25%,
     hsl(var(--muted) / 0.8) 50%, 
-    hsl(var(--aurora) / 0.1) 75%,
+    hsl(var(--viverblue) / 0.1) 75%,
     hsl(var(--muted)) 100%
   );
   background-size: 200% 100%;
@@ -233,9 +242,16 @@
 
 /* Enhanced Button Hover Effects */
 .aurora-button {
-  @apply relative overflow-hidden transition-all duration-300;
-  @apply bg-gradient-to-r from-aurora to-revenue hover:from-aurora-dark hover:to-revenue-dark;
-  @apply shadow-lg hover:shadow-xl;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s;
+  background: linear-gradient(to right, hsl(var(--viverblue)), hsl(var(--vivercyan)));
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+.aurora-button:hover {
+  background: linear-gradient(to right, hsl(var(--viverblue-dark)), hsl(var(--vivercyan-dark)));
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
 }
 
 .aurora-button::before {
@@ -257,28 +273,51 @@
 
 /* Glassmorphism Enhanced */
 .glass-enhanced {
-  @apply bg-white/10 backdrop-blur-md border border-white/20;
-  @apply shadow-lg shadow-black/10;
+  background-color: rgb(255 255 255 / 0.1);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgb(255 255 255 / 0.2);
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
 }
 
 .glass-card-hover {
-  @apply glass-enhanced hover:bg-white/15 hover:border-white/30;
-  @apply transition-all duration-300 hover:shadow-xl hover:shadow-aurora/20;
+  background-color: rgb(255 255 255 / 0.1);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgb(255 255 255 / 0.2);
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  transition: all 0.3s;
+}
+
+.glass-card-hover:hover {
+  background-color: rgb(255 255 255 / 0.15);
+  border-color: rgb(255 255 255 / 0.3);
+  box-shadow: 0 20px 25px -5px hsl(var(--viverblue) / 0.2), 0 8px 10px -6px hsl(var(--viverblue) / 0.2);
 }
 
 /* Gradient Text Effects */
 .aurora-gradient-text {
-  @apply bg-gradient-to-r from-aurora via-revenue to-operational bg-clip-text text-transparent;
+  background: linear-gradient(to right, hsl(var(--viverblue)), hsl(var(--vivercyan)), hsl(var(--viverpetrol)));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .revenue-gradient-text {
-  @apply bg-gradient-to-r from-revenue to-revenue-light bg-clip-text text-transparent;
+  background: linear-gradient(to right, hsl(var(--vivercyan)), hsl(var(--vivercyan-light)));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 /* Enhanced Focus States */
 .aurora-focus-ring {
-  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aurora/40;
-  @apply focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+.aurora-focus-ring:focus-visible {
+  outline: 2px solid hsl(var(--viverblue) / 0.4);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px hsl(var(--background));
 }
 
 /* Floating Animation Delays */
@@ -291,7 +330,7 @@
 /* Enhanced Scrollbar */
 .aurora-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: hsl(var(--aurora) / 0.3) transparent;
+  scrollbar-color: hsl(var(--viverblue) / 0.3) transparent;
 }
 
 .aurora-scrollbar::-webkit-scrollbar {
@@ -303,31 +342,35 @@
 }
 
 .aurora-scrollbar::-webkit-scrollbar-thumb {
-  background: linear-gradient(to bottom, hsl(var(--aurora) / 0.3), hsl(var(--revenue) / 0.3));
+  background: linear-gradient(to bottom, hsl(var(--viverblue) / 0.3), hsl(var(--vivercyan) / 0.3));
   border-radius: 4px;
 }
 
 .aurora-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(to bottom, hsl(var(--aurora) / 0.5), hsl(var(--revenue) / 0.5));
+  background: linear-gradient(to bottom, hsl(var(--viverblue) / 0.5), hsl(var(--vivercyan) / 0.5));
 }
 
 /* Progress Bar Aurora Style */
 .aurora-progress {
-  @apply bg-gradient-to-r from-aurora via-revenue to-operational;
-  @apply shadow-sm shadow-aurora/20;
+  background: linear-gradient(to right, hsl(var(--viverblue)), hsl(var(--vivercyan)), hsl(var(--viverpetrol)));
+  box-shadow: 0 1px 2px 0 hsl(var(--viverblue) / 0.2);
 }
 
 /* Status Indicators */
 .status-active {
-  @apply bg-green-400 shadow-lg shadow-green-400/30 animate-pulse;
+  background-color: rgb(74 222 128);
+  box-shadow: 0 10px 15px -3px rgb(74 222 128 / 0.3), 0 4px 6px -4px rgb(74 222 128 / 0.3);
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 .status-pending {
-  @apply bg-amber-400 shadow-lg shadow-amber-400/30;
+  background-color: rgb(251 191 36);
+  box-shadow: 0 10px 15px -3px rgb(251 191 36 / 0.3), 0 4px 6px -4px rgb(251 191 36 / 0.3);
 }
 
 .status-completed {
-  @apply bg-aurora shadow-lg shadow-aurora/30;
+  background-color: hsl(var(--viverblue));
+  box-shadow: 0 10px 15px -3px hsl(var(--viverblue) / 0.3), 0 4px 6px -4px hsl(var(--viverblue) / 0.3);
 }
 
 /* Enhanced Backdrop */
@@ -338,7 +381,20 @@
 
 /* Module Number Badge */
 .module-badge {
-  @apply w-8 h-8 bg-gradient-to-br from-aurora to-revenue rounded-full;
-  @apply flex items-center justify-center text-white text-sm font-bold shadow-lg;
-  @apply transition-transform duration-300 hover:scale-110;
+  width: 2rem;
+  height: 2rem;
+  background: linear-gradient(to bottom right, hsl(var(--viverblue)), hsl(var(--vivercyan)));
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 700;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  transition: transform 0.3s;
+}
+
+.module-badge:hover {
+  transform: scale(1.1);
 }

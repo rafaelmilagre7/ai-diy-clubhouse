@@ -81,24 +81,21 @@
   --viverpetrol-dark: 185 88% 18%;
   --viverpetrol-darker: 185 88% 13%;
   
-  /* --- Track Colors --- */
-  --revenue: 231 44% 48%;
-  --revenue-light: 231 44% 68%;
-  --revenue-lighter: 231 44% 88%;
-  --revenue-dark: 231 65% 25%;
-  --revenue-darker: 231 82% 13%;
+  /* --- Aliases de Compatibilidade (apontam para cores da marca) --- */
+  --aurora: var(--viverblue);        /* → Ciano principal */
+  --revenue: var(--vivercyan);       /* → Turquesa */
+  --operational: var(--vivercyan);   /* → Turquesa */
+  --strategy: var(--viverpetrol);    /* → Petróleo */
   
-  --operational: 28 100% 60%;
-  --operational-light: 28 100% 70%;
-  --operational-lighter: 28 100% 90%;
-  --operational-dark: 28 100% 45%;
-  --operational-darker: 28 100% 30%;
-  
-  --strategy: 174 100% 27%;
-  --strategy-light: 174 51% 44%;
-  --strategy-lighter: 174 51% 74%;
-  --strategy-dark: 174 100% 13%;
-  --strategy-darker: 174 100% 7%;
+  /* Variantes dos aliases */
+  --aurora-light: var(--viverblue-light);
+  --aurora-dark: var(--viverblue-dark);
+  --revenue-light: var(--vivercyan-light);
+  --revenue-dark: var(--vivercyan-dark);
+  --operational-light: var(--vivercyan-light);
+  --operational-dark: var(--vivercyan-dark);
+  --strategy-light: var(--viverpetrol-light);
+  --strategy-dark: var(--viverpetrol-dark);
 
   /* --- Onboarding Specific --- */
   --onboarding-bg: 216 28% 7%;
