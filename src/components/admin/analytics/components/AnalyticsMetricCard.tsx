@@ -32,7 +32,7 @@ export const AnalyticsMetricCard = ({
       green: 'border-l-green-500 bg-gradient-to-r from-green-50/10 to-transparent',
       purple: 'border-l-purple-500 bg-gradient-to-r from-purple-50/10 to-transparent',
       orange: 'border-l-orange-500 bg-gradient-to-r from-orange-50/10 to-transparent',
-      cyan: 'border-l-cyan-500 bg-gradient-to-r from-cyan-50/10 to-transparent',
+      cyan: 'border-l-aurora-primary bg-gradient-to-r from-aurora-primary/10 to-transparent',
       indigo: 'border-l-indigo-500 bg-gradient-to-r from-indigo-50/10 to-transparent',
       pink: 'border-l-pink-500 bg-gradient-to-r from-pink-50/10 to-transparent'
     };
@@ -45,7 +45,7 @@ export const AnalyticsMetricCard = ({
       green: 'bg-green-500/10 text-green-400',
       purple: 'bg-purple-500/10 text-purple-400',
       orange: 'bg-orange-500/10 text-orange-400',
-      cyan: 'bg-cyan-500/10 text-cyan-400',
+      cyan: 'bg-aurora-primary/10 text-aurora-primary',
       indigo: 'bg-indigo-500/10 text-indigo-400',
       pink: 'bg-pink-500/10 text-pink-400'
     };

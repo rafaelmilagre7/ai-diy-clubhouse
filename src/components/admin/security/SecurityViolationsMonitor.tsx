@@ -166,8 +166,8 @@ export const SecurityViolationsMonitor: React.FC = () => {
           {
             label: "Total",
             value: stats.total,
-            gradient: "from-blue-500/20 to-cyan-500/10",
-            border: "border-blue-500/30",
+            gradient: "from-aurora-primary/20 to-aurora-primary/10",
+            border: "border-aurora-primary/30",
             icon: "🛡️"
           },
           {
@@ -292,10 +292,10 @@ export const SecurityViolationsMonitor: React.FC = () => {
                 >
                   <div className="flex items-start gap-4">
                     <div className={`p-4 rounded-xl aurora-glass ${
-                      violation.severity === 'critical' ? 'bg-gradient-to-br from-destructive/25 to-red-500/15' :
-                      violation.severity === 'high' ? 'bg-gradient-to-br from-orange-500/25 to-red-500/15' :
-                      violation.severity === 'medium' ? 'bg-gradient-to-br from-amber-500/25 to-yellow-500/15' :
-                      'bg-gradient-to-br from-blue-500/25 to-cyan-500/15'
+                      violation.severity === 'critical' ? 'bg-gradient-to-br from-destructive/25 to-destructive/15' :
+                      violation.severity === 'high' ? 'bg-gradient-to-br from-warning/25 to-warning/15' :
+                      violation.severity === 'medium' ? 'bg-gradient-to-br from-warning/20 to-warning/10' :
+                      'bg-gradient-to-br from-aurora-primary/25 to-aurora-primary/15'
                     }`}>
                       {getSeverityIcon(violation.severity)}
                     </div>

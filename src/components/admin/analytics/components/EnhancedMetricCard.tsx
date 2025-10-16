@@ -60,9 +60,9 @@ export const EnhancedMetricCard = ({
         gradient: 'from-orange-50/50 to-transparent dark:from-orange-900/10'
       },
       cyan: {
-        border: 'border-l-cyan-500',
-        icon: 'text-cyan-500 bg-cyan-50 dark:bg-cyan-900/20',
-        gradient: 'from-cyan-50/50 to-transparent dark:from-cyan-900/10'
+        border: 'border-l-aurora-primary',
+        icon: 'text-aurora-primary bg-aurora-primary/10 dark:bg-aurora-primary/20',
+        gradient: 'from-aurora-primary/10 to-transparent dark:from-aurora-primary/10'
       },
       indigo: {
         border: 'border-l-indigo-500',

@@ -39,7 +39,7 @@ export const DifficultyDistributionChart: React.FC<DifficultyDistributionChartPr
           category="value"
           valueFormatter={(value) => `${value} solução${value !== 1 ? 'ões' : ''}`}
           className="h-full"
-          colors={["#4ade80", "#fbbf24", "#f87171"]}
+          colors={["hsl(var(--success))", "hsl(var(--warning))", "hsl(var(--destructive))"]}
         />
       </CardContent>
     </Card>

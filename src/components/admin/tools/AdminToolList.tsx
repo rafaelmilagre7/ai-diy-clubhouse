@@ -172,33 +172,33 @@ export const AdminToolList = ({ refreshTrigger }: AdminToolListProps) => {
     return (
       <div className="space-y-6 animate-fade-in">
         {/* Loading Filters */}
-        <div className="aurora-glass rounded-2xl p-6 border border-blue-500/20 backdrop-blur-md">
+        <div className="aurora-glass rounded-2xl p-6 border border-aurora-primary/20 backdrop-blur-md">
           <div className="flex items-center gap-4">
-            <div className="flex-1 h-12 bg-gradient-to-r from-blue-500/20 to-cyan-500/10 rounded-xl animate-pulse"></div>
-            <div className="w-48 h-12 bg-gradient-to-r from-blue-500/20 to-cyan-500/10 rounded-xl animate-pulse"></div>
-            <div className="w-32 h-12 bg-gradient-to-r from-blue-500/20 to-cyan-500/10 rounded-xl animate-pulse"></div>
+            <div className="flex-1 h-12 bg-gradient-to-r from-aurora-primary/20 to-aurora-primary/10 rounded-xl animate-pulse"></div>
+            <div className="w-48 h-12 bg-gradient-to-r from-aurora-primary/20 to-aurora-primary/10 rounded-xl animate-pulse"></div>
+            <div className="w-32 h-12 bg-gradient-to-r from-aurora-primary/20 to-aurora-primary/10 rounded-xl animate-pulse"></div>
           </div>
         </div>
         
         {/* Loading Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="aurora-glass rounded-2xl border border-blue-500/20 backdrop-blur-md animate-pulse">
-              <div className="bg-gradient-to-r from-blue-500/10 to-cyan-500/5 p-6 border-b border-white/10">
+            <div key={i} className="aurora-glass rounded-2xl border border-aurora-primary/20 backdrop-blur-md animate-pulse">
+              <div className="bg-gradient-to-r from-aurora-primary/10 to-aurora-primary/5 p-6 border-b border-white/10">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500/20 to-cyan-500/10 rounded-xl"></div>
+                  <div className="w-12 h-12 bg-gradient-to-br from-aurora-primary/20 to-aurora-primary/10 rounded-xl"></div>
                   <div className="flex-1 space-y-2">
-                    <div className="w-32 h-4 bg-gradient-to-r from-blue-500/20 to-cyan-500/10 rounded"></div>
-                    <div className="w-20 h-3 bg-gradient-to-r from-blue-500/15 to-cyan-500/8 rounded"></div>
+                    <div className="w-32 h-4 bg-gradient-to-r from-aurora-primary/20 to-aurora-primary/10 rounded"></div>
+                    <div className="w-20 h-3 bg-gradient-to-r from-aurora-primary/15 to-aurora-primary/8 rounded"></div>
                   </div>
                 </div>
               </div>
               <div className="p-6 space-y-3">
-                <div className="w-full h-3 bg-gradient-to-r from-blue-500/15 to-cyan-500/8 rounded"></div>
-                <div className="w-4/5 h-3 bg-gradient-to-r from-blue-500/15 to-cyan-500/8 rounded"></div>
+                <div className="w-full h-3 bg-gradient-to-r from-aurora-primary/15 to-aurora-primary/8 rounded"></div>
+                <div className="w-4/5 h-3 bg-gradient-to-r from-aurora-primary/15 to-aurora-primary/8 rounded"></div>
                 <div className="flex gap-2 mt-4">
-                  <div className="w-16 h-8 bg-gradient-to-r from-blue-500/20 to-cyan-500/10 rounded"></div>
-                  <div className="w-16 h-8 bg-gradient-to-r from-blue-500/20 to-cyan-500/10 rounded"></div>
+                  <div className="w-16 h-8 bg-gradient-to-r from-aurora-primary/20 to-aurora-primary/10 rounded"></div>
+                  <div className="w-16 h-8 bg-gradient-to-r from-aurora-primary/20 to-aurora-primary/10 rounded"></div>
                 </div>
               </div>
             </div>
@@ -210,11 +210,11 @@ export const AdminToolList = ({ refreshTrigger }: AdminToolListProps) => {
 
   if (filteredTools.length === 0) {
     return (
-      <div className="aurora-glass rounded-2xl border border-blue-500/20 backdrop-blur-md overflow-hidden">
-        <div className="bg-gradient-to-r from-blue-500/10 via-cyan-500/5 to-transparent p-8 border-b border-blue-500/20">
+      <div className="aurora-glass rounded-2xl border border-aurora-primary/20 backdrop-blur-md overflow-hidden">
+        <div className="bg-gradient-to-r from-aurora-primary/10 via-aurora-primary/5 to-transparent p-8 border-b border-aurora-primary/20">
           <div className="flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/10 aurora-glass">
-              <Wrench className="h-6 w-6 text-blue-500" />
+            <div className="p-3 rounded-xl bg-gradient-to-br from-aurora-primary/20 to-aurora-primary/10 aurora-glass">
+              <Wrench className="h-6 w-6 text-aurora-primary" />
             </div>
             <div>
               <h2 className="text-2xl font-bold aurora-text-gradient">Ferramentas</h2>
@@ -240,7 +240,7 @@ export const AdminToolList = ({ refreshTrigger }: AdminToolListProps) => {
               : 'Comece criando sua primeira ferramenta para a plataforma.'}
           </p>
           <Link to="/admin/tools/new">
-            <Button className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300">
+            <Button className="bg-gradient-to-r from-aurora-primary to-aurora-primary-light hover:from-aurora-primary-dark hover:to-aurora-primary text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300">
               <Plus className="h-4 w-4 mr-2" />
               {tools.length === 0 ? 'Criar Primeira Ferramenta' : 'Nova Ferramenta'}
             </Button>
@@ -253,26 +253,26 @@ export const AdminToolList = ({ refreshTrigger }: AdminToolListProps) => {
   return (
     <div className="space-y-8">
       {/* Enhanced Filters Section */}
-      <div className="aurora-glass rounded-2xl p-6 border border-blue-500/20 backdrop-blur-md">
+      <div className="aurora-glass rounded-2xl p-6 border border-aurora-primary/20 backdrop-blur-md">
         <div className="space-y-6">
           {/* Search and Primary Actions */}
           <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4">
             <div className="relative flex-1 max-w-md">
               <div className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10">
-                <Search className="h-5 w-5 text-blue-500/70" />
+                <Search className="h-5 w-5 text-aurora-primary/70" />
               </div>
               <Input
                 type="search"
                 placeholder="Buscar por nome, descrição ou tags..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-12 h-12 aurora-glass border-blue-500/30 bg-background/50 backdrop-blur-sm focus:border-blue-500/50 focus:ring-blue-500/20 font-medium"
+                className="pl-12 h-12 aurora-glass border-aurora-primary/30 bg-background/50 backdrop-blur-sm focus:border-aurora-primary/50 focus:ring-aurora-primary/20 font-medium"
               />
             </div>
             
             <div className="flex items-center gap-3">
               <Link to="/admin/tools/new">
-                <Button className="h-12 px-6 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300">
+                <Button className="h-12 px-6 bg-gradient-to-r from-aurora-primary to-aurora-primary-light hover:from-aurora-primary-dark hover:to-aurora-primary text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300">
                   <Plus className="h-4 w-4 mr-2" />
                   Nova Ferramenta
                 </Button>
@@ -289,10 +289,10 @@ export const AdminToolList = ({ refreshTrigger }: AdminToolListProps) => {
             
             <div className="flex flex-wrap gap-3">
               <Select value={selectedCategory || 'all'} onValueChange={(value) => setSelectedCategory(value === 'all' ? null : value as ToolCategory)}>
-                <SelectTrigger className="w-48 aurora-glass border-blue-500/30 bg-background/50 backdrop-blur-sm">
+                <SelectTrigger className="w-48 aurora-glass border-aurora-primary/30 bg-background/50 backdrop-blur-sm">
                   <SelectValue placeholder="Categoria" />
                 </SelectTrigger>
-                <SelectContent className="aurora-glass backdrop-blur-md border-blue-500/30">
+                <SelectContent className="aurora-glass backdrop-blur-md border-aurora-primary/30">
                   <SelectItem value="all">Todas as categorias</SelectItem>
                   {categories.map((category) => (
                     <SelectItem key={category} value={category}>
@@ -303,10 +303,10 @@ export const AdminToolList = ({ refreshTrigger }: AdminToolListProps) => {
               </Select>
 
               <Select value={statusFilter} onValueChange={(value: any) => setStatusFilter(value)}>
-                <SelectTrigger className="w-36 aurora-glass border-blue-500/30 bg-background/50 backdrop-blur-sm">
+                <SelectTrigger className="w-36 aurora-glass border-aurora-primary/30 bg-background/50 backdrop-blur-sm">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
-                <SelectContent className="aurora-glass backdrop-blur-md border-blue-500/30">
+                <SelectContent className="aurora-glass backdrop-blur-md border-aurora-primary/30">
                   <SelectItem value="all">Todos os status</SelectItem>
                   <SelectItem value="active">Ativas</SelectItem>
                   <SelectItem value="inactive">Inativas</SelectItem>
@@ -314,10 +314,10 @@ export const AdminToolList = ({ refreshTrigger }: AdminToolListProps) => {
               </Select>
 
               <Select value={benefitFilter} onValueChange={(value: any) => setBenefitFilter(value)}>
-                <SelectTrigger className="w-40 aurora-glass border-blue-500/30 bg-background/50 backdrop-blur-sm">
+                <SelectTrigger className="w-40 aurora-glass border-aurora-primary/30 bg-background/50 backdrop-blur-sm">
                   <SelectValue placeholder="Benefícios" />
                 </SelectTrigger>
-                <SelectContent className="aurora-glass backdrop-blur-md border-blue-500/30">
+                <SelectContent className="aurora-glass backdrop-blur-md border-aurora-primary/30">
                   <SelectItem value="all">Todos</SelectItem>
                   <SelectItem value="with-benefits">Com benefícios</SelectItem>
                   <SelectItem value="without-benefits">Sem benefícios</SelectItem>
@@ -325,10 +325,10 @@ export const AdminToolList = ({ refreshTrigger }: AdminToolListProps) => {
               </Select>
 
               <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-                <SelectTrigger className="w-36 aurora-glass border-blue-500/30 bg-background/50 backdrop-blur-sm">
+                <SelectTrigger className="w-36 aurora-glass border-aurora-primary/30 bg-background/50 backdrop-blur-sm">
                   <SelectValue placeholder="Ordenar" />
                 </SelectTrigger>
-                <SelectContent className="aurora-glass backdrop-blur-md border-blue-500/30">
+                <SelectContent className="aurora-glass backdrop-blur-md border-aurora-primary/30">
                   <SelectItem value="name">Nome A-Z</SelectItem>
                   <SelectItem value="category">Categoria</SelectItem>
                   <SelectItem value="status">Status</SelectItem>
@@ -340,8 +340,8 @@ export const AdminToolList = ({ refreshTrigger }: AdminToolListProps) => {
             {/* Results Counter */}
             {(searchQuery || selectedCategory || statusFilter !== 'all' || benefitFilter !== 'all') && (
               <div className="text-sm text-muted-foreground flex items-center gap-2 ml-auto">
-                <div className="w-2 h-2 bg-blue-500 rounded-full aurora-pulse"></div>
-                Exibindo <span className="font-bold text-blue-500">{filteredTools.length}</span> de <span className="font-bold">{tools.length}</span> ferramentas
+                <div className="w-2 h-2 bg-aurora-primary rounded-full aurora-pulse"></div>
+                Exibindo <span className="font-bold text-aurora-primary">{filteredTools.length}</span> de <span className="font-bold">{tools.length}</span> ferramentas
               </div>
             )}
           </div>
@@ -353,22 +353,22 @@ export const AdminToolList = ({ refreshTrigger }: AdminToolListProps) => {
         {filteredTools.map((tool, index) => (
           <div 
             key={tool.id} 
-            className="aurora-glass rounded-2xl border border-muted/20 backdrop-blur-md overflow-hidden group hover:border-blue-500/30 transition-all duration-500 hover:shadow-2xl animate-fade-in"
+            className="aurora-glass rounded-2xl border border-muted/20 backdrop-blur-md overflow-hidden group hover:border-aurora-primary/30 transition-all duration-500 hover:shadow-2xl animate-fade-in"
             style={{ animationDelay: `${index * 50}ms` }}
           >
             {/* Enhanced Header */}
             <div className={`bg-gradient-to-r ${
               tool.status 
-                ? 'from-green-500/10 via-blue-500/5 to-transparent' 
-                : 'from-gray-500/10 via-slate-500/5 to-transparent'
+                ? 'from-success/10 via-aurora-primary/5 to-transparent' 
+                : 'from-muted/10 via-muted/5 to-transparent'
             } p-6 border-b border-white/10`}>
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-4 flex-1">
                   <div className="relative">
                     <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${
                       tool.status 
-                        ? 'from-blue-500/20 to-cyan-500/10' 
-                        : 'from-gray-500/20 to-slate-500/10'
+                        ? 'from-aurora-primary/20 to-aurora-primary/10' 
+                        : 'from-muted/20 to-muted/10'
                     } aurora-glass flex items-center justify-center overflow-hidden`}>
                       {tool.logo_url ? (
                         <img 
@@ -378,7 +378,7 @@ export const AdminToolList = ({ refreshTrigger }: AdminToolListProps) => {
                         />
                       ) : (
                         <div className={`text-lg font-bold ${
-                          tool.status ? 'text-blue-500' : 'text-gray-500'
+                          tool.status ? 'text-aurora-primary' : 'text-muted-foreground'
                         }`}>
                           {tool.name.substring(0, 2).toUpperCase()}
                         </div>
@@ -392,7 +392,7 @@ export const AdminToolList = ({ refreshTrigger }: AdminToolListProps) => {
                   </div>
                   
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-foreground truncate text-lg group-hover:text-blue-500 transition-colors">
+                    <h3 className="font-bold text-foreground truncate text-lg group-hover:text-aurora-primary transition-colors">
                       {tool.name}
                     </h3>
                     <div className="flex items-center gap-2 mt-1">
@@ -400,8 +400,8 @@ export const AdminToolList = ({ refreshTrigger }: AdminToolListProps) => {
                         variant="outline" 
                         className={`text-xs ${
                           tool.status
-                            ? 'bg-blue-500/10 text-blue-500 border-blue-500/30'
-                            : 'bg-gray-500/10 text-gray-500 border-gray-500/30'
+                            ? 'bg-aurora-primary/10 text-aurora-primary border-aurora-primary/30'
+                            : 'bg-muted/10 text-muted-foreground border-muted/30'
                         }`}
                       >
                         {tool.category}

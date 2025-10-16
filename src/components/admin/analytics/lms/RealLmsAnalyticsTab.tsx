@@ -104,8 +104,8 @@ export const RealLmsAnalyticsTab = ({ timeRange }: RealLmsAnalyticsTabProps) => 
       title: "Matrículas Ativas",
       value: data.activeEnrollments.toLocaleString(),
       icon: Users,
-      color: "text-cyan-500",
-      bgColor: "bg-cyan-50 dark:bg-cyan-900/20",
+      color: "text-aurora-primary",
+      bgColor: "bg-aurora-primary/10 dark:bg-aurora-primary/20",
       description: "Com atividade recente"
     }
   ];
