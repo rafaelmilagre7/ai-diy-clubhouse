@@ -204,7 +204,7 @@ export const VideoDurationSyncDashboard = () => {
             )}
           </div>
 
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+          <div className="mt-6 p-4 bg-operational/10 rounded-lg">
             <h5 className="font-medium mb-2">📋 Como usar:</h5>
             <ul className="text-sm space-y-1 text-muted-foreground">
               <li>• <strong>Sincronizar Tudo:</strong> Processa todos os vídeos que ainda não têm duração</li>

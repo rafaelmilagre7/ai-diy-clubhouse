@@ -49,14 +49,14 @@ export const PerformanceMonitor = () => {
     const cacheSize = stats.cacheStats.size;
     
     let score = 'Excelente';
-    let color = 'text-green-600';
+    let color = 'text-success';
     
     if (hitRate < 60 || cacheSize > 40) {
       score = 'Precisa Melhorar';
-      color = 'text-red-600';
+      color = 'text-destructive';
     } else if (hitRate < 80 || cacheSize > 30) {
       score = 'Bom';
-      color = 'text-yellow-600';
+      color = 'text-warning';
     }
     
     return { score, color };

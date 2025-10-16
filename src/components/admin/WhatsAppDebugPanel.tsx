@@ -155,19 +155,19 @@ export function WhatsAppDebugPanel() {
         </CardHeader>
         <CardContent className="space-y-2">
           {check.details?.map((detail: string, index: number) => (
-            <div key={index} className="text-sm text-green-600 flex items-center">
+            <div key={index} className="text-sm text-success flex items-center">
               <CheckCircle className="mr-2 h-3 w-3" />
               {detail}
             </div>
           ))}
           {check.warnings?.map((warning: string, index: number) => (
-            <div key={index} className="text-sm text-yellow-600 flex items-center">
+            <div key={index} className="text-sm text-warning flex items-center">
               <AlertCircle className="mr-2 h-3 w-3" />
               {warning}
             </div>
           ))}
           {check.errors?.map((error: string, index: number) => (
-            <div key={index} className="text-sm text-red-600 flex items-center">
+            <div key={index} className="text-sm text-destructive flex items-center">
               <XCircle className="mr-2 h-3 w-3" />
               {error}
             </div>

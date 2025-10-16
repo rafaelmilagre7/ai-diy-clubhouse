@@ -78,26 +78,26 @@ export const CredentialsValidator = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'ok':
-        return 'bg-green-100 text-green-800 border-green-200';
+        return 'bg-success/10 text-success border-success/30';
       case 'missing':
-        return 'bg-red-100 text-red-800 border-red-200';
+        return 'bg-destructive/10 text-destructive border-destructive/30';
       case 'invalid':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+        return 'bg-warning/10 text-warning border-warning/30';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'bg-muted text-muted-foreground border-border';
     }
   };
 
   const getOverallStatusColor = (status: string) => {
     switch (status) {
       case 'healthy':
-        return 'text-green-600';
+        return 'text-success';
       case 'partial':
-        return 'text-yellow-600';
+        return 'text-warning';
       case 'critical':
-        return 'text-red-600';
+        return 'text-destructive';
       default:
-        return 'text-gray-600';
+        return 'text-muted-foreground';
     }
   };
 

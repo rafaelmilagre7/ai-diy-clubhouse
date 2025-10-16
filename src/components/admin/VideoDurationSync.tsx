@@ -139,10 +139,10 @@ export const VideoDurationSync = () => {
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-2xl font-bold text-green-600">{result.success}</p>
+                      <p className="text-2xl font-bold text-success">{result.success}</p>
                       <p className="text-sm text-muted-foreground">Sucessos</p>
                     </div>
-                    <CheckCircle className="h-8 w-8 text-green-600" />
+                    <CheckCircle className="h-8 w-8 text-success" />
                   </div>
                 </CardContent>
               </Card>
@@ -152,10 +152,10 @@ export const VideoDurationSync = () => {
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-2xl font-bold text-red-600">{result.failed}</p>
+                      <p className="text-2xl font-bold text-destructive">{result.failed}</p>
                       <p className="text-sm text-muted-foreground">Falhas</p>
                     </div>
-                    <AlertCircle className="h-8 w-8 text-red-600" />
+                    <AlertCircle className="h-8 w-8 text-destructive" />
                   </div>
                 </CardContent>
               </Card>
@@ -171,7 +171,7 @@ export const VideoDurationSync = () => {
                       <span className="font-mono text-xs">{item.videoId}</span>
                       <div className="flex items-center gap-2">
                         {item.success ? (
-                          <Badge variant="default" className="bg-green-100 text-green-800">
+                          <Badge variant="default" className="bg-success/10 text-success">
                             Sucesso
                           </Badge>
                         ) : (

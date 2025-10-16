@@ -297,16 +297,16 @@ const InviteDebug = () => {
                   </Badge>
                   
                   {templateTestResult.invite && (
-                    <div className="bg-gray-50 p-3 rounded text-sm">
+                    <div className="bg-muted/50 p-3 rounded text-sm">
                       <p><strong>Convite Criado:</strong></p>
                       <p>ID: {templateTestResult.invite.id}</p>
                       <p>Token: {templateTestResult.invite.token}</p>
-                      <p>URL: <a href={templateTestResult.invite.url} target="_blank" className="text-blue-600 underline">{templateTestResult.invite.url}</a></p>
+                      <p>URL: <a href={templateTestResult.invite.url} target="_blank" className="text-operational underline">{templateTestResult.invite.url}</a></p>
                     </div>
                   )}
 
                   {templateTestResult.whatsapp && (
-                    <div className="bg-blue-50 p-3 rounded text-sm">
+                    <div className="bg-operational/10 p-3 rounded text-sm">
                       <p><strong>WhatsApp:</strong></p>
                       <p>Status: {templateTestResult.whatsapp.success ? 'Enviado' : 'Falhou'}</p>
                       <p>Método: {templateTestResult.whatsapp.method}</p>
@@ -318,12 +318,12 @@ const InviteDebug = () => {
                   )}
 
                   {templateTestResult.error && (
-                    <div className="bg-red-50 p-3 rounded text-sm text-red-700">
+                    <div className="bg-destructive/10 p-3 rounded text-sm text-destructive">
                       <strong>Erro:</strong> {templateTestResult.error}
                     </div>
                   )}
 
-                  <pre className="bg-gray-100 p-3 rounded text-xs overflow-auto max-h-40">
+                  <pre className="bg-muted p-3 rounded text-xs overflow-auto max-h-40">
                     {JSON.stringify(templateTestResult, null, 2)}
                   </pre>
                 </div>
@@ -343,7 +343,7 @@ const InviteDebug = () => {
                       {debugInfo.sqlFunction.count} resultado(s)
                     </Badge>
                     {debugInfo.sqlFunction.error && (
-                      <p className="text-sm text-red-600 mt-2">
+                      <p className="text-sm text-destructive mt-2">
                         {debugInfo.sqlFunction.error.message}
                       </p>
                     )}
@@ -378,7 +378,7 @@ const InviteDebug = () => {
                   <CardTitle className="text-sm">Detalhes Completos</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <pre className="bg-gray-100 p-4 rounded text-xs overflow-auto">
+                  <pre className="bg-muted p-4 rounded text-xs overflow-auto">
                     {JSON.stringify(debugInfo, null, 2)}
                   </pre>
                 </CardContent>

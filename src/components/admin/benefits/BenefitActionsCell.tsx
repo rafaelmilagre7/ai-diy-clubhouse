@@ -19,7 +19,7 @@ export const BenefitActionsCell = ({ tool }: BenefitActionsCellProps) => {
         <Button 
           variant="outline" 
           size="sm"
-          className="aurora-glass border-green-500/30 hover:border-green-500/50 hover:bg-green-500/10 text-green-500 font-medium backdrop-blur-sm transition-all duration-300"
+          className="aurora-glass border-success/30 hover:border-success/50 hover:bg-success/10 text-success font-medium backdrop-blur-sm transition-all duration-300"
         >
           <Edit className="h-3 w-3 mr-1" />
           Editar

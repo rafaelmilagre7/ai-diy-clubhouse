@@ -143,16 +143,16 @@ export const OnboardingStatusCard: React.FC = () => {
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Concluído:</span>
-              <span className="font-medium text-green-600">{stats.completed}</span>
+              <span className="font-medium text-success">{stats.completed}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Pendente:</span>
-              <span className="font-medium text-orange-600">{stats.pending}</span>
+              <span className="font-medium text-revenue">{stats.pending}</span>
             </div>
             {stats.legacy_users > 0 && (
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Usuários legacy:</span>
-                <span className="font-medium text-blue-600">{stats.legacy_users}</span>
+                <span className="font-medium text-operational">{stats.legacy_users}</span>
               </div>
             )}
           </div>

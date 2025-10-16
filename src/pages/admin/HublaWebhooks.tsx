@@ -81,20 +81,20 @@ export default function HublaWebhooks() {
 
   const getStatusBadge = (processed: boolean) => {
     if (processed) {
-      return <Badge className="bg-green-100 text-green-800"><CheckCircle2 className="w-3 h-3 mr-1" />Processado</Badge>;
+      return <Badge className="bg-success/10 text-success"><CheckCircle2 className="w-3 h-3 mr-1" />Processado</Badge>;
     }
-    return <Badge className="bg-yellow-100 text-yellow-800"><Clock className="w-3 h-3 mr-1" />Pendente</Badge>;
+    return <Badge className="bg-warning/10 text-warning"><Clock className="w-3 h-3 mr-1" />Pendente</Badge>;
   };
 
   const getEventTypeBadge = (eventType: string) => {
     const colors = {
-      'payment.approved': 'bg-green-100 text-green-800',
-      'payment.completed': 'bg-green-100 text-green-800',
-      'payment.failed': 'bg-red-100 text-red-800',
-      'payment.declined': 'bg-red-100 text-red-800',
-      'subscription.created': 'bg-blue-100 text-blue-800',
-      'subscription.cancelled': 'bg-orange-100 text-orange-800',
-      'unknown': 'bg-gray-100 text-gray-800'
+      'payment.approved': 'bg-success/10 text-success',
+      'payment.completed': 'bg-success/10 text-success',
+      'payment.failed': 'bg-destructive/10 text-destructive',
+      'payment.declined': 'bg-destructive/10 text-destructive',
+      'subscription.created': 'bg-operational/10 text-operational',
+      'subscription.cancelled': 'bg-revenue/10 text-revenue',
+      'unknown': 'bg-muted text-muted-foreground'
     };
     
     const colorClass = colors[eventType as keyof typeof colors] || colors.unknown;
