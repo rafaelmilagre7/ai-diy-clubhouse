@@ -201,7 +201,7 @@ export const SolutionsTab: React.FC<SolutionsTabProps> = ({ trail }) => {
 
   const getPriorityLabel = (priority: number) => {
     switch (priority) {
-      case 1: return { label: 'Alta Prioridade', color: 'bg-viverblue', textColor: 'text-white' };
+      case 1: return { label: 'Alta Prioridade', color: 'bg-aurora-primary', textColor: 'text-white' };
       case 2: return { label: 'Média Prioridade', color: 'bg-operational', textColor: 'text-white' };
       case 3: return { label: 'Baixa Prioridade', color: 'bg-revenue', textColor: 'text-white' };
       default: return { label: 'Prioridade', color: 'bg-muted', textColor: 'text-muted-foreground' };
@@ -210,9 +210,9 @@ export const SolutionsTab: React.FC<SolutionsTabProps> = ({ trail }) => {
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty?.toLowerCase()) {
-      case 'iniciante': return 'bg-viverblue/10 text-viverblue border-viverblue/20';
-      case 'intermediário': return 'bg-[hsl(var(--vivercyan))]/10 text-[hsl(var(--vivercyan))] border-[hsl(var(--vivercyan))]/20';
-      case 'avançado': return 'bg-[hsl(var(--viverpetrol))]/10 text-[hsl(var(--viverpetrol-light))] border-[hsl(var(--viverpetrol))]/20';
+      case 'iniciante': return 'bg-aurora-primary/10 text-aurora-primary border-aurora-primary/20';
+      case 'intermediário': return 'bg-aurora-primary/10 text-aurora-primary border-aurora-primary/20';
+      case 'avançado': return 'bg-aurora-primary/10 text-aurora-primary border-aurora-primary/20';
       default: return 'bg-muted/50 text-muted-foreground border-muted/20';
     }
   };
@@ -240,9 +240,9 @@ export const SolutionsTab: React.FC<SolutionsTabProps> = ({ trail }) => {
     }
 
     return (
-      <Card className="group relative overflow-hidden border border-border/50 hover:border-viverblue/50 bg-gradient-to-br from-card/95 to-muted/30 backdrop-blur-sm transition-all duration-500 hover:scale-[1.01] hover:shadow-xl hover:shadow-viverblue/5 cursor-pointer">
+      <Card className="group relative overflow-hidden border border-border/50 hover:border-aurora-primary/50 bg-gradient-to-br from-card/95 to-muted/30 backdrop-blur-sm transition-all duration-500 hover:scale-[1.01] hover:shadow-xl hover:shadow-aurora-primary/5 cursor-pointer">
         {/* Animated glow effect */}
-        <div className="absolute inset-0 bg-gradient-to-r from-viverblue/5 via-transparent to-operational/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+        <div className="absolute inset-0 bg-gradient-to-r from-aurora-primary/5 via-transparent to-aurora-primary/3 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
         
         {/* Shimmer effect */}
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-out" />
@@ -284,15 +284,15 @@ export const SolutionsTab: React.FC<SolutionsTabProps> = ({ trail }) => {
                 </div>
               </div>
             ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-viverblue/20 to-operational/20 relative rounded-l-xl">
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-aurora-primary/20 to-aurora-primary/10 relative rounded-l-xl">
                 {/* Animated background orbs */}
                 <div className="absolute inset-0 overflow-hidden rounded-l-xl">
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 bg-viverblue/20 rounded-full blur-xl animate-pulse" />
-                  <div className="absolute top-1/3 left-1/3 w-12 h-12 bg-operational/15 rounded-full blur-lg animate-pulse animation-delay-1000" />
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 bg-aurora-primary/20 rounded-full blur-xl animate-pulse" />
+                  <div className="absolute top-1/3 left-1/3 w-12 h-12 bg-aurora-primary/15 rounded-full blur-lg animate-pulse animation-delay-1000" />
                 </div>
                 
                 <div className="text-center relative z-10">
-                  <Target className="h-12 w-12 mx-auto mb-2 text-viverblue group-hover:scale-110 group-hover:rotate-6 transition-all duration-500" />
+                  <Target className="h-12 w-12 mx-auto mb-2 text-aurora-primary group-hover:scale-110 group-hover:rotate-6 transition-all duration-500" />
                   <p className="text-sm text-muted-foreground font-medium">Solução IA</p>
                 </div>
               </div>
@@ -359,16 +359,16 @@ export const SolutionsTab: React.FC<SolutionsTabProps> = ({ trail }) => {
 
             {/* AI Justification with Aurora styling - Compacto */}
             <div className="space-y-3">
-              <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-viverblue/5 to-operational/5 border border-viverblue/10 p-3">
+              <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-aurora-primary/5 to-aurora-primary/3 border border-aurora-primary/10 p-3">
                 {/* Background pattern */}
-                <div className="absolute inset-0 bg-gradient-to-r from-viverblue/5 to-transparent opacity-50" />
+                <div className="absolute inset-0 bg-gradient-to-r from-aurora-primary/5 to-transparent opacity-50" />
                 
                 <div className="flex items-start gap-2 relative z-10">
-                  <div className="p-1.5 bg-viverblue/10 rounded-md flex-shrink-0">
-                    <Star className="w-3 h-3 text-viverblue" />
+                  <div className="p-1.5 bg-aurora-primary/10 rounded-md flex-shrink-0">
+                    <Star className="w-3 h-3 text-aurora-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-xs font-semibold text-viverblue mb-1">Análise IA</h4>
+                    <h4 className="text-xs font-semibold text-aurora-primary mb-1">Análise IA</h4>
                     <p className="text-xs text-foreground leading-relaxed line-clamp-2">{item.justification}</p>
                   </div>
                 </div>
@@ -379,11 +379,11 @@ export const SolutionsTab: React.FC<SolutionsTabProps> = ({ trail }) => {
                 <div className="space-y-1.5">
                   <div className="flex justify-between items-center">
                     <span className="text-xs text-muted-foreground">Compatibilidade IA</span>
-                    <span className="text-xs text-viverblue font-semibold">{Math.round(realCompatibilityScore)}%</span>
+                    <span className="text-xs text-aurora-primary font-semibold">{Math.round(realCompatibilityScore)}%</span>
                   </div>
                   <div className="relative h-1.5 bg-muted/30 rounded-full overflow-hidden">
                     <div 
-                      className="absolute left-0 top-0 h-full bg-gradient-to-r from-viverblue to-operational rounded-full transition-all duration-1000 group-hover:from-viverblue group-hover:to-viverblue"
+                      className="absolute left-0 top-0 h-full bg-gradient-to-r from-aurora-primary to-aurora-primary-dark rounded-full transition-all duration-1000 group-hover:from-aurora-primary group-hover:to-aurora-primary"
                       style={{width: `${realCompatibilityScore}%`}}
                     />
                   </div>

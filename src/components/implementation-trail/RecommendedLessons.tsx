@@ -27,24 +27,24 @@ const LessonCard = ({ lesson }: { lesson: RecommendedLesson }) => {
 
   const getPriorityColor = () => {
     const colors = {
-      1: "bg-viverblue/20 text-viverblue border-viverblue/30",
-      2: "bg-[hsl(var(--vivercyan))]/20 text-[hsl(var(--vivercyan))] border-[hsl(var(--vivercyan))]/30", 
-      3: "bg-[hsl(var(--viverpetrol))]/20 text-[hsl(var(--viverpetrol-light))] border-[hsl(var(--viverpetrol))]/30"
+      1: "bg-aurora-primary/20 text-aurora-primary border-aurora-primary/30",
+      2: "bg-aurora-primary/20 text-aurora-primary border-aurora-primary/30", 
+      3: "bg-aurora-primary/20 text-aurora-primary border-aurora-primary/30"
     };
     return colors[lesson.priority as keyof typeof colors] || colors[3];
   };
 
   return (
-    <Card className="netflix-card-hover glass-dark border border-neutral-700/50 hover:border-viverblue/50 group relative overflow-hidden backdrop-blur-sm bg-gradient-to-br from-neutral-900/90 to-neutral-800/90 transition-all duration-300 hover:scale-[1.02]">
+    <Card className="netflix-card-hover glass-dark border border-neutral-700/50 hover:border-aurora-primary/50 group relative overflow-hidden backdrop-blur-sm bg-gradient-to-br from-neutral-900/90 to-neutral-800/90 transition-all duration-300 hover:scale-[1.02]">
       <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       
       <CardContent className="p-0 relative z-10">
         <div className="flex h-40">
           {/* Seção da imagem/ícone */}
-          <div className="w-64 relative overflow-hidden rounded-l-xl bg-gradient-to-br from-viverblue/20 to-[hsl(var(--vivercyan))]/20">
+          <div className="w-64 relative overflow-hidden rounded-l-xl bg-gradient-to-br from-aurora-primary/20 to-aurora-primary/10">
             <div className="w-full h-full flex items-center justify-center">
               <div className="text-center">
-                <PlayCircle className="h-16 w-16 mx-auto mb-2 text-viverblue group-hover:scale-110 transition-transform duration-300" />
+                <PlayCircle className="h-16 w-16 mx-auto mb-2 text-aurora-primary group-hover:scale-110 transition-transform duration-300" />
                 <p className="text-xs text-medium-contrast">Aula Recomendada</p>
               </div>
             </div>
@@ -85,7 +85,7 @@ const LessonCard = ({ lesson }: { lesson: RecommendedLesson }) => {
               <Button 
                 size="sm" 
                 onClick={handleViewLesson}
-                className="bg-viverblue hover:bg-viverblue/90 text-white shadow-lg hover:shadow-viverblue/25 hover:shadow-xl group-hover:scale-105 transition-all duration-200"
+                className="bg-aurora-primary hover:bg-aurora-primary-dark text-white shadow-lg hover:shadow-aurora-primary/25 hover:shadow-xl group-hover:scale-105 transition-all duration-200"
               >
                 Ver Aula
                 <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform duration-200" />
@@ -107,12 +107,12 @@ export const RecommendedLessons = ({ lessons }: RecommendedLessonsProps) => {
     <div className="space-y-6">
       {/* Header da seção */}
       <div className="relative">
-        <div className="absolute inset-0 bg-gradient-to-r from-viverblue/20 via-[hsl(var(--vivercyan))]/10 to-transparent rounded-2xl blur-xl opacity-50" />
-        <Card className="glass-dark border-2 border-viverblue/40 bg-viverblue/5 relative overflow-hidden backdrop-blur-sm">
+        <div className="absolute inset-0 bg-gradient-to-r from-aurora-primary/20 via-aurora-primary/10 to-transparent rounded-2xl blur-xl opacity-50" />
+        <Card className="glass-dark border-2 border-aurora-primary/40 bg-aurora-primary/5 relative overflow-hidden backdrop-blur-sm">
           <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-transparent" />
           <CardHeader className="relative z-10">
             <div className="flex items-center gap-3">
-              <GraduationCap className="h-6 w-6 text-viverblue animate-pulse" />
+              <GraduationCap className="h-6 w-6 text-aurora-primary animate-pulse" />
               <div>
                 <CardTitle className="text-high-contrast text-2xl font-bold">
                   📚 Aulas Recomendadas

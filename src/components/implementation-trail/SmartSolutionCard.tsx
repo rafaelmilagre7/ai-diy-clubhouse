@@ -19,20 +19,20 @@ interface SmartSolutionCardProps {
 const PRIORITY_CONFIG = {
   priority1: { 
     label: 'Alta', 
-    color: 'text-viverblue', 
-    bgColor: 'bg-viverblue/40 border-viverblue',
+    color: 'text-aurora-primary', 
+    bgColor: 'bg-aurora-primary/40 border-aurora-primary',
     emoji: '🔥'
   },
   priority2: { 
     label: 'Média', 
-    color: 'text-[hsl(var(--vivercyan))]', 
-    bgColor: 'bg-[hsl(var(--vivercyan))]/40 border-[hsl(var(--vivercyan))]',
+    color: 'text-aurora-primary', 
+    bgColor: 'bg-aurora-primary/40 border-aurora-primary',
     emoji: '⚡'
   },
   priority3: { 
     label: 'Baixa', 
-    color: 'text-[hsl(var(--viverpetrol-light))]', 
-    bgColor: 'bg-[hsl(var(--viverpetrol))]/40 border-[hsl(var(--viverpetrol))]',
+    color: 'text-aurora-primary-light', 
+    bgColor: 'bg-aurora-primary/30 border-aurora-primary',
     emoji: '📋'
   }
 } as const;
@@ -40,20 +40,20 @@ const PRIORITY_CONFIG = {
 const DIFFICULTY_CONFIG = {
   easy: { 
     label: 'Fácil', 
-    color: 'text-viverblue', 
-    bgColor: 'bg-viverblue/40 border-viverblue',
+    color: 'text-aurora-primary', 
+    bgColor: 'bg-aurora-primary/40 border-aurora-primary',
     emoji: '🟢'
   },
   medium: { 
     label: 'Médio', 
-    color: 'text-[hsl(var(--vivercyan))]', 
-    bgColor: 'bg-[hsl(var(--vivercyan))]/40 border-[hsl(var(--vivercyan))]',
+    color: 'text-aurora-primary', 
+    bgColor: 'bg-aurora-primary/40 border-aurora-primary',
     emoji: '🟡'
   },
   advanced: { 
     label: 'Avançado', 
-    color: 'text-[hsl(var(--viverpetrol-light))]', 
-    bgColor: 'bg-[hsl(var(--viverpetrol))]/40 border-[hsl(var(--viverpetrol))]',
+    color: 'text-aurora-primary-light', 
+    bgColor: 'bg-aurora-primary/30 border-aurora-primary',
     emoji: '🔴'
   }
 } as const;
@@ -79,8 +79,8 @@ const CATEGORY_CONFIG = {
   },
   'IA e Automação': { 
     icon: Brain, 
-    borderColor: 'border-l-viverblue border-l-4',
-    bgColor: 'bg-viverblue/10',
+    borderColor: 'border-l-aurora-primary border-l-4',
+    bgColor: 'bg-aurora-primary/10',
     emoji: '🤖'
   },
   'Processos': { 
@@ -93,20 +93,20 @@ const CATEGORY_CONFIG = {
 
 const AI_SCORE_CONFIG = {
   high: { 
-    color: 'text-viverblue', 
-    bgColor: 'bg-viverblue/40 border-viverblue',
+    color: 'text-aurora-primary', 
+    bgColor: 'bg-aurora-primary/40 border-aurora-primary',
     emoji: '🎯',
     label: 'Alta Compatibilidade'
   },
   medium: { 
-    color: 'text-[hsl(var(--vivercyan))]', 
-    bgColor: 'bg-[hsl(var(--vivercyan))]/40 border-[hsl(var(--vivercyan))]',
+    color: 'text-aurora-primary', 
+    bgColor: 'bg-aurora-primary/40 border-aurora-primary',
     emoji: '🎪',
     label: 'Boa Compatibilidade'
   },
   low: { 
-    color: 'text-[hsl(var(--viverpetrol-light))]', 
-    bgColor: 'bg-[hsl(var(--viverpetrol))]/40 border-[hsl(var(--viverpetrol))]',
+    color: 'text-aurora-primary-light', 
+    bgColor: 'bg-aurora-primary/30 border-aurora-primary',
     emoji: '⚠️',
     label: 'Baixa Compatibilidade'
   }
@@ -135,7 +135,7 @@ export const SmartSolutionCard = ({
 
   const getCategoryStyle = (category: string) => {
     const config = CATEGORY_CONFIG[category as keyof typeof CATEGORY_CONFIG];
-    return config ? `${config.borderColor} ${config.bgColor}` : "border-l-viverblue border-l-4 bg-viverblue/10";
+    return config ? `${config.borderColor} ${config.bgColor}` : "border-l-aurora-primary border-l-4 bg-aurora-primary/10";
   };
 
   const getCategoryIcon = (category: string) => {
@@ -205,7 +205,7 @@ export const SmartSolutionCard = ({
         {/* Implemented Badge */}
         {isImplemented && (
           <div className="absolute bottom-2 right-2">
-            <Badge className="bg-viverblue/40 text-viverblue border-viverblue text-xs">
+            <Badge className="bg-aurora-primary/40 text-aurora-primary border-aurora-primary text-xs">
               Implementado
             </Badge>
           </div>

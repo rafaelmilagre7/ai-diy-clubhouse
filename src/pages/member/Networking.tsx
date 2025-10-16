@@ -219,7 +219,7 @@ const Networking = () => {
             onClick={previousCard}
             disabled={!hasPrevious}
             size="lg"
-            className="h-20 w-20 rounded-full shadow-2xl bg-gradient-to-br from-[#0ABAB5] to-[#065F5D] hover:from-[#088A87] hover:to-[#044D4B] text-white border-0 disabled:opacity-20 transition-all shrink-0 hover:scale-110 disabled:hover:scale-100"
+            className="h-20 w-20 rounded-full shadow-2xl bg-gradient-to-br from-aurora-primary to-aurora-primary-dark hover:from-aurora-primary/90 hover:to-aurora-primary-dark/90 text-white border-0 disabled:opacity-20 transition-all shrink-0 hover:scale-110 disabled:hover:scale-100"
           >
             <ChevronLeft className="h-10 w-10" />
           </Button>
@@ -248,7 +248,7 @@ const Networking = () => {
             onClick={nextCard}
             disabled={!hasNext}
             size="lg"
-            className="h-20 w-20 rounded-full shadow-2xl bg-gradient-to-br from-[#0ABAB5] via-[#088A87] to-[#065F5D] hover:from-[#088A87] hover:via-[#065F5D] hover:to-[#044D4B] hover:shadow-aurora/30 text-white border-0 disabled:opacity-20 transition-all shrink-0 hover:scale-110 disabled:hover:scale-100"
+            className="h-20 w-20 rounded-full shadow-2xl bg-gradient-to-br from-aurora-primary via-aurora-primary-dark to-aurora-primary-dark hover:from-aurora-primary/90 hover:via-aurora-primary-dark/90 hover:to-aurora-primary-dark/90 hover:shadow-aurora/30 text-white border-0 disabled:opacity-20 transition-all shrink-0 hover:scale-110 disabled:hover:scale-100"
           >
             <ChevronRight className="h-10 w-10" />
           </Button>

@@ -93,7 +93,7 @@ export const SwipeCard = ({
                 alt={card.name}
                 className="object-cover"
               />
-              <AvatarFallback className="text-2xl font-bold bg-gradient-to-br from-viverblue to-aurora text-white">
+              <AvatarFallback className="text-2xl font-bold bg-gradient-to-br from-aurora-primary to-aurora-primary-light text-white">
                 {getInitials(card.name)}
               </AvatarFallback>
             </Avatar>
