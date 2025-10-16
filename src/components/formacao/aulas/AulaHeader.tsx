@@ -95,7 +95,7 @@ export const AulaHeader = ({
         </div>
         
         {isAdmin && onEditar && (
-          <Button onClick={onEditar} className="shrink-0 bg-viverblue hover:bg-viverblue/90">
+          <Button onClick={onEditar} className="shrink-0 bg-aurora-primary hover:bg-aurora-primary/90">
             <Edit className="h-4 w-4 mr-2" />
             Editar Aula
           </Button>

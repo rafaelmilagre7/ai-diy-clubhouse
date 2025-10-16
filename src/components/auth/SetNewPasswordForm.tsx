@@ -277,7 +277,7 @@ export const SetNewPasswordForm = () => {
               id="password"
               type={showPassword ? "text" : "password"}
               placeholder="Digite sua nova senha"
-              className={`pl-10 pr-12 w-full py-3 px-3 bg-gray-700 border rounded-lg text-white focus:ring-2 focus:ring-viverblue focus:border-viverblue transition-colors ${
+              className={`pl-10 pr-12 w-full py-3 px-3 bg-gray-700 border rounded-lg text-white focus:ring-2 focus:ring-aurora-primary focus:border-aurora-primary transition-colors ${
                 password && !passwordValidation.isValid ? 'border-red-500' : 
                 password && passwordValidation.isValid ? 'border-green-500' : 'border-gray-600'
               }`}
@@ -321,7 +321,7 @@ export const SetNewPasswordForm = () => {
               id="confirmPassword"
               type={showConfirmPassword ? "text" : "password"}
               placeholder="Digite novamente sua nova senha"
-              className={`pl-10 pr-12 w-full py-3 px-3 bg-gray-700 border rounded-lg text-white focus:ring-2 focus:ring-viverblue focus:border-viverblue transition-colors ${
+              className={`pl-10 pr-12 w-full py-3 px-3 bg-gray-700 border rounded-lg text-white focus:ring-2 focus:ring-aurora-primary focus:border-aurora-primary transition-colors ${
                 confirmPassword && !passwordsMatch ? 'border-red-500' : 
                 confirmPassword && passwordsMatch ? 'border-green-500' : 'border-gray-600'
               }`}
@@ -374,7 +374,7 @@ export const SetNewPasswordForm = () => {
             type="submit"
             className={`w-full py-3 font-medium transition-all ${
               passwordValidation.isValid && passwordsMatch 
-                ? 'bg-viverblue hover:bg-viverblue/90 text-white' 
+                ? 'bg-aurora-primary hover:bg-aurora-primary/90 text-white' 
                 : 'bg-gray-600 text-gray-300 cursor-not-allowed hover:bg-gray-600'
             }`}
             disabled={isLoading || !passwordValidation.isValid || !passwordsMatch}

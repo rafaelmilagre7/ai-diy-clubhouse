@@ -215,7 +215,7 @@ const SignUpForm = ({ onBackToLogin }: SignUpFormProps) => {
               onChange={(e) => setName(e.target.value)}
               disabled={isLoading}
               required
-              className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
+              className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-aurora-primary focus:border-aurora-primary"
             />
           </div>
 
@@ -229,7 +229,7 @@ const SignUpForm = ({ onBackToLogin }: SignUpFormProps) => {
               onChange={(e) => setEmail(e.target.value)}
               disabled={isLoading}
               required
-              className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
+              className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-aurora-primary focus:border-aurora-primary"
             />
           </div>
           
@@ -244,7 +244,7 @@ const SignUpForm = ({ onBackToLogin }: SignUpFormProps) => {
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isLoading}
                 required
-                className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500 pr-10"
+                className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-aurora-primary focus:border-aurora-primary pr-10"
               />
               <Button
                 type="button"
@@ -308,7 +308,7 @@ const SignUpForm = ({ onBackToLogin }: SignUpFormProps) => {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 disabled={isLoading}
                 required
-                className={`bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500 pr-10 ${
+                className={`bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-aurora-primary focus:border-aurora-primary pr-10 ${
                   confirmPassword && !passwordsMatch ? 'border-red-500' : 
                   confirmPassword && passwordsMatch ? 'border-green-500' : ''
                 }`}
