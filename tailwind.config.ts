@@ -93,6 +93,13 @@ const config: Config = {
           darker: "hsl(var(--viverblue-darker))",
         },
         
+        // Aurora Primary - cor principal da marca (#0ABAB5)
+        'aurora-primary': {
+          DEFAULT: "hsl(var(--aurora-primary))",
+          light: "hsl(var(--aurora-primary-light))",
+          dark: "hsl(var(--aurora-primary-dark))",
+        },
+        
         // Track colors
         revenue: {
           DEFAULT: "hsl(var(--revenue))",

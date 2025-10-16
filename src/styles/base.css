@@ -81,6 +81,11 @@
   --viverpetrol-dark: 185 88% 18%;
   --viverpetrol-darker: 185 88% 13%;
   
+  /* Cor principal da marca (#0ABAB5) - usada em botões, CTAs e highlights */
+  --aurora-primary: 178 90% 38%;
+  --aurora-primary-light: 178 90% 50%;
+  --aurora-primary-dark: 178 90% 28%;
+  
   /* --- Aliases de Compatibilidade (apontam para cores da marca) --- */
   --aurora: var(--viverblue);        /* → Ciano principal */
   --revenue: var(--vivercyan);       /* → Turquesa */

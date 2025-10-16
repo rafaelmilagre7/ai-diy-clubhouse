@@ -26,9 +26,9 @@ const ResourceUploadCard: React.FC<ResourceUploadCardProps> = ({
   };
 
   return (
-    <Card className="border-2 border-dashed border-[#0ABAB5]/30 hover:border-[#0ABAB5]/50 transition-all">
+    <Card className="border-2 border-dashed border-aurora-primary/30 hover:border-aurora-primary/50 transition-all">
       <CardHeader className="pb-3">
-        <CardTitle className="text-[#0ABAB5] flex items-center text-xl">
+        <CardTitle className="text-aurora-primary flex items-center text-xl">
           <Upload className="h-5 w-5 mr-2" />
           Upload Rápido
         </CardTitle>

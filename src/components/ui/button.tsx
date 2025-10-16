@@ -20,6 +20,7 @@ const buttonVariants = cva(
         ghost: "hover:bg-accent hover:text-accent-foreground hover:shadow-sm",
         link: "text-primary underline-offset-4 hover:underline hover:text-primary/80",
         aurora: "bg-gradient-to-r from-aurora to-aurora-light text-white shadow-md hover:shadow-aurora hover:-translate-y-0.5 hover:scale-105",
+        "aurora-primary": "bg-aurora-primary hover:bg-aurora-primary-dark text-white shadow-md hover:shadow-lg hover:shadow-aurora-primary/20 transition-all duration-200",
       },
       size: {
         default: "h-10 px-4 py-2",

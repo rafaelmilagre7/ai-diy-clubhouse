@@ -19,7 +19,7 @@ const ResourceList: React.FC<ResourceListProps> = ({
   formatFileSize
 }) => {
   return (
-    <Card className="border border-[#0ABAB5]/10">
+    <Card className="border border-aurora-primary/10">
       <CardHeader className="pb-2">
         <CardTitle className="text-base flex items-center justify-between">
           <span className="text-lg">Materiais Adicionados</span>

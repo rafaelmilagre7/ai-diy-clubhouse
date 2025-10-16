@@ -71,7 +71,7 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
 
   return (
     <div className="space-y-6">
-      <Card className="border border-[#0ABAB5]/20">
+      <Card className="border border-aurora-primary/20">
         <CardHeader>
           <CardTitle>Materiais de Apoio</CardTitle>
           <CardDescription>
@@ -97,7 +97,8 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
       <Button 
         onClick={saveAndContinue}
         disabled={savingResources || saving}
-        className="w-full bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
+        className="w-full"
+        variant="aurora-primary"
       >
         {savingResources ? (
           <>

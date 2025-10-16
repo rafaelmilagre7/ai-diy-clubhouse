@@ -257,7 +257,7 @@ const VideoLessonsForm: React.FC<VideoLessonsFormProps> = ({
           </CardContent>
         </Card>}
       
-      <Button onClick={saveAndContinue} disabled={savingVideos || saving} className="w-full bg-[#0ABAB5] hover:bg-[#0ABAB5]/90">
+      <Button onClick={saveAndContinue} disabled={savingVideos || saving} variant="aurora-primary" className="w-full">
         {savingVideos ? <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             Salvando...

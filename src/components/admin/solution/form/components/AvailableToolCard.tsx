@@ -21,14 +21,14 @@ export const AvailableToolCard: React.FC<AvailableToolCardProps> = ({
 }) => {
   return (
     <Card className={`flex flex-col h-full border overflow-hidden shadow-sm bg-card text-card-foreground ${
-      isSelected ? "border-[#0ABAB5]" : ""
+      isSelected ? "border-aurora-primary" : ""
     }`}>
       <CardHeader className="pb-3 pt-4 px-4 flex-row items-center gap-3">
         <ToolImage tool={tool} size="small" />
         <div>
           <h3 className="font-medium text-sm line-clamp-1">{tool.name}</h3>
           <div className="flex gap-2 mt-1">
-            <Badge variant="outline" className="bg-[#0ABAB5]/10 text-[#0ABAB5] text-xs">
+            <Badge variant="outline" className="bg-aurora-primary/10 text-aurora-primary text-xs">
               {tool.category}
             </Badge>
           </div>
@@ -43,7 +43,7 @@ export const AvailableToolCard: React.FC<AvailableToolCardProps> = ({
         <button
           className={`text-sm ${
             isSelected
-              ? "text-[#0ABAB5]"
+              ? "text-aurora-primary"
               : "text-blue-600"
           }`}
           onClick={isSelected ? onDeselect : onSelect}

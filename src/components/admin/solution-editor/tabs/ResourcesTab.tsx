@@ -83,7 +83,8 @@ const ResourcesTab: React.FC<ResourcesTabProps> = ({
             <Button 
               onClick={handleSaveWithToast}
               disabled={isSaving || saving}
-              className="w-full bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
+              variant="aurora-primary"
+              className="w-full"
             >
               {isSaving ? (
                 <>

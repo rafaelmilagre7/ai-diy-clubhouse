@@ -20,8 +20,8 @@ export const ProgressSummary = ({
       <Card>
         <CardContent className="pt-6">
           <div className="flex items-center">
-            <div className="mr-4 rounded-full bg-[#0ABAB5]/10 p-2">
-              <CheckCircle className="h-6 w-6 text-[#0ABAB5]" />
+            <div className="mr-4 rounded-full bg-aurora-primary/10 p-2">
+              <CheckCircle className="h-6 w-6 text-aurora-primary" />
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">Implementações Completas</p>
@@ -34,8 +34,8 @@ export const ProgressSummary = ({
       <Card>
         <CardContent className="pt-6">
           <div className="flex items-center">
-            <div className="mr-4 rounded-full bg-[#0ABAB5]/10 p-2">
-              <Clock className="h-6 w-6 text-[#0ABAB5]" />
+            <div className="mr-4 rounded-full bg-aurora-primary/10 p-2">
+              <Clock className="h-6 w-6 text-aurora-primary" />
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">Em Andamento</p>
@@ -48,8 +48,8 @@ export const ProgressSummary = ({
       <Card>
         <CardContent className="pt-6">
           <div className="flex items-center">
-            <div className="mr-4 rounded-full bg-[#0ABAB5]/10 p-2">
-              <TrendingUp className="h-6 w-6 text-[#0ABAB5]" />
+            <div className="mr-4 rounded-full bg-aurora-primary/10 p-2">
+              <TrendingUp className="h-6 w-6 text-aurora-primary" />
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">Seu Progresso</p>

@@ -50,7 +50,7 @@ const ModulesList = ({ modules, onEditModule, onPreview, isLoading }: ModulesLis
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-8">
-        <div className="animate-spin h-8 w-8 border-4 border-[#0ABAB5] border-t-transparent rounded-full"></div>
+        <div className="animate-spin h-8 w-8 border-4 border-aurora-primary border-t-transparent rounded-full"></div>
       </div>
     );
   }
@@ -65,7 +65,7 @@ const ModulesList = ({ modules, onEditModule, onPreview, isLoading }: ModulesLis
             <Card 
               key={item.id}
               className={`transition-all ${
-                item.exists ? "hover:border-[#0ABAB5]/60" : "opacity-60 hover:opacity-100"
+                item.exists ? "hover:border-aurora-primary/60" : "opacity-60 hover:opacity-100"
               }`}
             >
               <CardContent className="p-4 flex justify-between items-center">
@@ -95,9 +95,8 @@ const ModulesList = ({ modules, onEditModule, onPreview, isLoading }: ModulesLis
                 </div>
                 <Button 
                   size="sm" 
-                  variant={item.exists ? "default" : "outline"}
+                  variant={item.exists ? "aurora-primary" : "outline"}
                   onClick={() => onEditModule(moduleIndex)}
-                  className={item.exists ? "bg-[#0ABAB5] hover:bg-[#0ABAB5]/90" : ""}
                 >
                   <Edit2 className="h-4 w-4 mr-1" />
                   {item.exists ? "Editar" : "Criar"}

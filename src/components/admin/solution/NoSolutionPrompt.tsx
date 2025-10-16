@@ -16,7 +16,7 @@ const NoSolutionPrompt: React.FC<NoSolutionPromptProps> = ({ onSave, saving }) =
       <Button
         onClick={onSave}
         disabled={saving}
-        className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
+        variant="aurora-primary"
       >
         {saving ? "Salvando..." : "Salvar Solução"}
       </Button>

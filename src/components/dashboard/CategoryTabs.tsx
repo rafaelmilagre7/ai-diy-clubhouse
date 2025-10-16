@@ -20,7 +20,7 @@ export const CategoryTabs = ({ activeCategory, setActiveCategory }: CategoryTabs
           className={cn(
             "text-sm whitespace-nowrap",
             activeCategory === category.id
-              ? "bg-[#0ABAB5]/10 text-[#0ABAB5] hover:bg-[#0ABAB5]/20 hover:text-[#0ABAB5]"
+              ? "bg-aurora-primary/10 text-aurora-primary hover:bg-aurora-primary/20 hover:text-aurora-primary"
               : "text-gray-600 hover:text-gray-900"
           )}
         >

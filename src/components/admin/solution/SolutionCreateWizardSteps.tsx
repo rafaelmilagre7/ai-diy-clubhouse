@@ -23,13 +23,13 @@ const SolutionCreateWizardSteps: React.FC<SolutionCreateWizardStepsProps> = ({ c
             flex items-center justify-center w-8 h-8 rounded-full 
             text-sm font-bold
             ${idx === currentStep 
-              ? 'bg-[#0ABAB5] text-white border-2 border-[#0ABAB5]'
+              ? 'bg-aurora-primary text-white border-2 border-aurora-primary'
               : 'bg-gray-100 text-gray-700 border border-gray-300'
             }
           `}>
             {idx + 1}
           </div>
-          <span className={`ml-2 mr-4 text-sm ${idx === currentStep ? 'text-[#0ABAB5] font-semibold' : 'text-gray-500'}`}>
+          <span className={`ml-2 mr-4 text-sm ${idx === currentStep ? 'text-aurora-primary font-semibold' : 'text-gray-500'}`}>
             {step}
           </span>
           {idx < steps.length - 1 && (

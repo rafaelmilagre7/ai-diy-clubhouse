@@ -91,7 +91,8 @@ const BasicInfoForm = ({
         <Button 
           type="submit" 
           disabled={saving} 
-          className="w-full bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
+          variant="aurora-primary"
+          className="w-full"
         >
           {saving ? (
             <>
