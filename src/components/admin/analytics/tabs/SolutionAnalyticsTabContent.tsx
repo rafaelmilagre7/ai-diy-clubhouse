@@ -60,22 +60,22 @@ export const SolutionAnalyticsTabContent = ({ timeRange }: SolutionAnalyticsTabC
       title: "Soluções Publicadas",
       value: data.publishedSolutions.toLocaleString(),
       icon: CheckCircle,
-      color: "text-green-500",
-      bgColor: "bg-green-50 dark:bg-green-900/20"
+      color: "text-success",
+      bgColor: "bg-success/10"
     },
     {
       title: "Total de Implementações",
       value: data.totalImplementations.toLocaleString(),
       icon: BarChart3,
-      color: "text-purple-500",
-      bgColor: "bg-purple-50 dark:bg-purple-900/20"
+      color: "text-strategy",
+      bgColor: "bg-strategy/10"
     },
     {
       title: "Taxa Média de Conclusão",
       value: `${data.averageCompletionRate}%`,
       icon: Target,
-      color: "text-orange-500",
-      bgColor: "bg-orange-50 dark:bg-orange-900/20"
+      color: "text-revenue",
+      bgColor: "bg-revenue/10"
     }
   ];
 

@@ -50,7 +50,7 @@ export const SolutionsAnalyticsTabContent = ({ timeRange }: SolutionsAnalyticsTa
       value: totalImplementations,
       icon: TrendingUp,
       description: "Em andamento ou concluídas",
-      color: "text-green-500",
+      color: "text-success",
       trend: null
     },
     {
@@ -60,7 +60,7 @@ export const SolutionsAnalyticsTabContent = ({ timeRange }: SolutionsAnalyticsTa
         : "0%",
       icon: Target,
       description: "Implementações concluídas",
-      color: "text-purple-500",
+      color: "text-strategy",
       trend: null
     },
     {
@@ -68,7 +68,7 @@ export const SolutionsAnalyticsTabContent = ({ timeRange }: SolutionsAnalyticsTa
       value: activeUsers,
       icon: Users,
       description: "Implementando soluções",
-      color: "text-orange-500",
+      color: "text-revenue",
       trend: null
     }
   ];

@@ -77,19 +77,19 @@ export const OnboardingAnalyticsTabContent: React.FC<OnboardingAnalyticsTabConte
       title: "Taxa de Conclusão",
       value: `${data.overview.completionRate}%`,
       icon: Target,
-      color: "text-green-500"
+      color: "text-success"
     },
     {
       title: "Taxa de Abandono",
       value: `${data.overview.abandonmentRate}%`,
       icon: TrendingUp,
-      color: "text-red-500"
+      color: "text-destructive"
     },
     {
       title: "Tempo Médio (dias)",
       value: data.overview.averageCompletionTime.toString(),
       icon: Clock,
-      color: "text-purple-500"
+      color: "text-strategy"
     }
   ];
 

@@ -63,8 +63,8 @@ export const UserAnalyticsTabContent = ({ timeRange }: UserAnalyticsTabContentPr
       title: "Usuários Ativos (7d)",
       value: data.activeUsers.toLocaleString(),
       icon: Activity,
-      color: "text-green-500",
-      bgColor: "bg-green-50 dark:bg-green-900/20"
+      color: "text-success",
+      bgColor: "bg-success/10"
     },
     {
       title: "Novos Usuários",
@@ -72,15 +72,15 @@ export const UserAnalyticsTabContent = ({ timeRange }: UserAnalyticsTabContentPr
         ? data.usersByTime[data.usersByTime.length - 1]?.novos?.toLocaleString() || '0'
         : '0',
       icon: UserPlus,
-      color: "text-purple-500",
-      bgColor: "bg-purple-50 dark:bg-purple-900/20"
+      color: "text-strategy",
+      bgColor: "bg-strategy/10"
     },
     {
       title: "Taxa de Engajamento",
       value: data.totalUsers > 0 ? `${Math.round((data.activeUsers / data.totalUsers) * 100)}%` : "0%",
       icon: TrendingUp,
-      color: "text-orange-500",
-      bgColor: "bg-orange-50 dark:bg-orange-900/20"
+      color: "text-revenue",
+      bgColor: "bg-revenue/10"
     }
   ];
 

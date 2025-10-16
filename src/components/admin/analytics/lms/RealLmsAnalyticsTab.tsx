@@ -72,32 +72,32 @@ export const RealLmsAnalyticsTab = ({ timeRange }: RealLmsAnalyticsTabProps) => 
       title: "Total de Aulas",
       value: data.totalLessons.toLocaleString(),
       icon: BookOpen,
-      color: "text-green-500",
-      bgColor: "bg-green-50 dark:bg-green-900/20",
+      color: "text-success",
+      bgColor: "bg-success/10",
       description: "Aulas disponíveis"
     },
     {
       title: "Cursos Iniciados",
       value: data.coursesStarted.toLocaleString(),
       icon: PlayCircle,
-      color: "text-purple-500",
-      bgColor: "bg-purple-50 dark:bg-purple-900/20",
+      color: "text-strategy",
+      bgColor: "bg-strategy/10",
       description: "No período selecionado"
     },
     {
       title: "Cursos Concluídos",
       value: data.coursesCompleted.toLocaleString(),
       icon: CheckCircle,
-      color: "text-emerald-500",
-      bgColor: "bg-emerald-50 dark:bg-emerald-900/20",
+      color: "text-success",
+      bgColor: "bg-success/10",
       description: "No período selecionado"
     },
     {
       title: "Progresso Médio",
       value: `${data.averageProgress}%`,
       icon: TrendingUp,
-      color: "text-orange-500",
-      bgColor: "bg-orange-50 dark:bg-orange-900/20",
+      color: "text-revenue",
+      bgColor: "bg-revenue/10",
       description: "Todos os cursos"
     },
     {

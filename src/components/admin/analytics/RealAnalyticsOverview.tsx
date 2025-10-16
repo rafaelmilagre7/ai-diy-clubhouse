@@ -74,19 +74,19 @@ export const RealAnalyticsOverview = ({ timeRange }: RealAnalyticsOverviewProps)
       title: "Usuários Ativos (7d)",
       value: data.overview.activeUsers.toLocaleString(),
       icon: Activity,
-      color: "text-green-500"
+      color: "text-success"
     },
     {
       title: "Implementações Completas",
       value: data.overview.completedImplementations.toLocaleString(),
       icon: Target,
-      color: "text-purple-500"
+      color: "text-strategy"
     },
     {
       title: "Taxa de Conclusão",
       value: `${data.overview.overallCompletionRate}%`,
       icon: TrendingUp,
-      color: "text-orange-500"
+      color: "text-revenue"
     }
   ];
 
