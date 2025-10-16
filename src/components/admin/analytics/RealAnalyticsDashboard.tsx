@@ -58,7 +58,7 @@ export const RealAnalyticsDashboard = () => {
       <div className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle className="text-red-600">Erro ao carregar Analytics</CardTitle>
+            <CardTitle className="text-destructive">Erro ao carregar Analytics</CardTitle>
             <CardDescription>{error}</CardDescription>
           </CardHeader>
           <CardContent>

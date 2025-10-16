@@ -62,9 +62,9 @@ export const SupabaseStatsCard: React.FC<SupabaseStatsCardProps> = ({
   };
 
   const getStatusBadge = (value: number, good: number, warning: number) => {
-    if (value >= good) return <Badge className="bg-green-100 text-green-800">Excelente</Badge>;
-    if (value >= warning) return <Badge className="bg-yellow-100 text-yellow-800">Atenção</Badge>;
-    return <Badge className="bg-red-100 text-red-800">Crítico</Badge>;
+    if (value >= good) return <Badge className="bg-success/10 text-success">Excelente</Badge>;
+    if (value >= warning) return <Badge className="bg-warning/10 text-warning">Atenção</Badge>;
+    return <Badge className="bg-destructive/10 text-destructive">Crítico</Badge>;
   };
 
   if (loading) {
@@ -105,7 +105,7 @@ export const SupabaseStatsCard: React.FC<SupabaseStatsCardProps> = ({
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <Database className="w-5 h-5 text-blue-600" />
+              <Database className="w-5 h-5 text-operational" />
               <CardTitle className="text-lg">Database</CardTitle>
             </div>
             {getTrendIcon(data.dbStats.successRate, 95)}
@@ -147,7 +147,7 @@ export const SupabaseStatsCard: React.FC<SupabaseStatsCardProps> = ({
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <Shield className="w-5 h-5 text-green-600" />
+              <Shield className="w-5 h-5 text-success" />
               <CardTitle className="text-lg">Autenticação</CardTitle>
             </div>
             {getTrendIcon(data.authStats.activeUsers24h, 10)}
@@ -156,7 +156,7 @@ export const SupabaseStatsCard: React.FC<SupabaseStatsCardProps> = ({
         </CardHeader>
         <CardContent className="space-y-3">
           <div>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-2xl font-bold text-success">
               {data.authStats.activeUsers24h}
             </div>
             <div className="text-sm text-muted-foreground">Usuários Ativos</div>
@@ -169,13 +169,13 @@ export const SupabaseStatsCard: React.FC<SupabaseStatsCardProps> = ({
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-muted-foreground">Sucessos</span>
-              <span className="text-sm font-medium text-green-600">
+              <span className="text-sm font-medium text-success">
                 {data.authStats.successfulLogins}
               </span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-muted-foreground">Falhas</span>
-              <span className="text-sm font-medium text-red-600">
+              <span className="text-sm font-medium text-destructive">
                 {data.authStats.failedLogins}
               </span>
             </div>
@@ -196,7 +196,7 @@ export const SupabaseStatsCard: React.FC<SupabaseStatsCardProps> = ({
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <Zap className="w-5 h-5 text-orange-600" />
+              <Zap className="w-5 h-5 text-revenue" />
               <CardTitle className="text-lg">Edge Functions</CardTitle>
             </div>
             {getTrendIcon(data.edgeFunctionStats.errorRate, 5, true)}
@@ -205,7 +205,7 @@ export const SupabaseStatsCard: React.FC<SupabaseStatsCardProps> = ({
         </CardHeader>
         <CardContent className="space-y-3">
           <div>
-            <div className="text-2xl font-bold text-orange-600">
+            <div className="text-2xl font-bold text-revenue">
               {data.edgeFunctionStats.totalInvocations}
             </div>
             <div className="text-sm text-muted-foreground">Invocações</div>
@@ -235,7 +235,7 @@ export const SupabaseStatsCard: React.FC<SupabaseStatsCardProps> = ({
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <Activity className="w-5 h-5 text-purple-600" />
+              <Activity className="w-5 h-5 text-strategy" />
               <CardTitle className="text-lg">Sistema</CardTitle>
             </div>
             {getTrendIcon(data.realTimeMetrics.memoryUsage, 80, true)}

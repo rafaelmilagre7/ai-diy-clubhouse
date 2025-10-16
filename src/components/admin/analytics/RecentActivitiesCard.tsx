@@ -27,17 +27,17 @@ export const RecentActivitiesCard = ({
   const getEventTypeColor = (eventType: string) => {
     switch (eventType.toLowerCase()) {
       case 'login':
-        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+        return 'bg-success/10 text-success dark:bg-success/20 dark:text-success';
       case 'logout':
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+        return 'bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground';
       case 'view':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+        return 'bg-operational/10 text-operational dark:bg-operational/20 dark:text-operational';
       case 'start':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
+        return 'bg-warning/10 text-warning dark:bg-warning/20 dark:text-warning';
       case 'complete':
-        return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300';
+        return 'bg-strategy/10 text-strategy dark:bg-strategy/20 dark:text-strategy';
       default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+        return 'bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground';
     }
   };
 

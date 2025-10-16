@@ -144,7 +144,7 @@ export const OptimizedRealtimeStats = () => {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-red-600">Erro nas Estatísticas</CardTitle>
+          <CardTitle className="text-destructive">Erro nas Estatísticas</CardTitle>
           <CardDescription>{error}</CardDescription>
         </CardHeader>
       </Card>

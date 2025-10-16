@@ -35,7 +35,7 @@ export const TrendIndicator = ({
   const content = (
     <div className={cn(
       "flex items-center gap-1",
-      isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400",
+      isPositive ? "text-success dark:text-success" : "text-destructive dark:text-destructive",
       textSizes[size],
       className
     )}>
@@ -57,8 +57,8 @@ export const TrendIndicator = ({
         className={cn(
           "px-2 py-1",
           isPositive 
-            ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-800" 
-            : "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800"
+            ? "bg-success/10 text-success border-success/30 dark:bg-success/20 dark:text-success dark:border-success/50" 
+            : "bg-destructive/10 text-destructive border-destructive/30 dark:bg-destructive/20 dark:text-destructive dark:border-destructive/50"
         )}
       >
         {content}

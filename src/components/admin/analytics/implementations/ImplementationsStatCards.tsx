@@ -99,7 +99,7 @@ export const ImplementationsStatCards: React.FC<ImplementationsStatCardsProps> =
             {stats.abandonmentRate}%
           </CardTitle>
           <CardDescription className="flex items-center gap-1">
-            <span>{stats.abandonmentRate > 30 ? <ArrowUp className="h-4 w-4 text-destructive" /> : <ArrowDown className="h-4 w-4 text-emerald-500" />}</span>
+            <span>{stats.abandonmentRate > 30 ? <ArrowUp className="h-4 w-4 text-destructive" /> : <ArrowDown className="h-4 w-4 text-success" />}</span>
             <span>Taxa de abandono</span>
           </CardDescription>
         </CardHeader>
