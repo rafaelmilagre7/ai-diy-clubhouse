@@ -40,24 +40,24 @@ export const EnhancedMetricCard = ({
   const getColorClasses = () => {
     const schemes = {
       blue: {
-        border: 'border-l-blue-500',
-        icon: 'text-blue-500 bg-blue-50 dark:bg-blue-900/20',
-        gradient: 'from-blue-50/50 to-transparent dark:from-blue-900/10'
+        border: 'border-l-operational',
+        icon: 'text-operational bg-operational/10 dark:bg-operational/20',
+        gradient: 'from-operational/10 to-transparent dark:from-operational/10'
       },
       green: {
-        border: 'border-l-green-500',
-        icon: 'text-green-500 bg-green-50 dark:bg-green-900/20',
-        gradient: 'from-green-50/50 to-transparent dark:from-green-900/10'
+        border: 'border-l-success',
+        icon: 'text-success bg-success/10 dark:bg-success/20',
+        gradient: 'from-success/10 to-transparent dark:from-success/10'
       },
       purple: {
-        border: 'border-l-purple-500',
-        icon: 'text-purple-500 bg-purple-50 dark:bg-purple-900/20',
-        gradient: 'from-purple-50/50 to-transparent dark:from-purple-900/10'
+        border: 'border-l-strategy',
+        icon: 'text-strategy bg-strategy/10 dark:bg-strategy/20',
+        gradient: 'from-strategy/10 to-transparent dark:from-strategy/10'
       },
       orange: {
-        border: 'border-l-orange-500',
-        icon: 'text-orange-500 bg-orange-50 dark:bg-orange-900/20',
-        gradient: 'from-orange-50/50 to-transparent dark:from-orange-900/10'
+        border: 'border-l-warning',
+        icon: 'text-warning bg-warning/10 dark:bg-warning/20',
+        gradient: 'from-warning/10 to-transparent dark:from-warning/10'
       },
       cyan: {
         border: 'border-l-aurora-primary',
@@ -65,14 +65,14 @@ export const EnhancedMetricCard = ({
         gradient: 'from-aurora-primary/10 to-transparent dark:from-aurora-primary/10'
       },
       indigo: {
-        border: 'border-l-indigo-500',
-        icon: 'text-indigo-500 bg-indigo-50 dark:bg-indigo-900/20',
-        gradient: 'from-indigo-50/50 to-transparent dark:from-indigo-900/10'
+        border: 'border-l-operational',
+        icon: 'text-operational bg-operational/10 dark:bg-operational/20',
+        gradient: 'from-operational/10 to-transparent dark:from-operational/10'
       },
       pink: {
-        border: 'border-l-pink-500',
-        icon: 'text-pink-500 bg-pink-50 dark:bg-pink-900/20',
-        gradient: 'from-pink-50/50 to-transparent dark:from-pink-900/10'
+        border: 'border-l-accent',
+        icon: 'text-accent bg-accent/10 dark:bg-accent/20',
+        gradient: 'from-accent/10 to-transparent dark:from-accent/10'
       }
     };
     return schemes[colorScheme];

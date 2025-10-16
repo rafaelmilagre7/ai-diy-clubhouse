@@ -28,26 +28,26 @@ export const AnalyticsMetricCard = ({
 }: AnalyticsMetricCardProps) => {
   const getColorClasses = () => {
     const schemes = {
-      blue: 'border-l-blue-500 bg-gradient-to-r from-blue-50/10 to-transparent',
-      green: 'border-l-green-500 bg-gradient-to-r from-green-50/10 to-transparent',
-      purple: 'border-l-purple-500 bg-gradient-to-r from-purple-50/10 to-transparent',
-      orange: 'border-l-orange-500 bg-gradient-to-r from-orange-50/10 to-transparent',
+      blue: 'border-l-operational bg-gradient-to-r from-operational/10 to-transparent',
+      green: 'border-l-success bg-gradient-to-r from-success/10 to-transparent',
+      purple: 'border-l-strategy bg-gradient-to-r from-strategy/10 to-transparent',
+      orange: 'border-l-warning bg-gradient-to-r from-warning/10 to-transparent',
       cyan: 'border-l-aurora-primary bg-gradient-to-r from-aurora-primary/10 to-transparent',
-      indigo: 'border-l-indigo-500 bg-gradient-to-r from-indigo-50/10 to-transparent',
-      pink: 'border-l-pink-500 bg-gradient-to-r from-pink-50/10 to-transparent'
+      indigo: 'border-l-operational bg-gradient-to-r from-operational/10 to-transparent',
+      pink: 'border-l-accent bg-gradient-to-r from-accent/10 to-transparent'
     };
     return schemes[colorScheme];
   };
 
   const getIconBgColor = () => {
     const schemes = {
-      blue: 'bg-blue-500/10 text-blue-400',
-      green: 'bg-green-500/10 text-green-400',
-      purple: 'bg-purple-500/10 text-purple-400',
-      orange: 'bg-orange-500/10 text-orange-400',
+      blue: 'bg-operational/10 text-operational',
+      green: 'bg-success/10 text-success',
+      purple: 'bg-strategy/10 text-strategy',
+      orange: 'bg-warning/10 text-warning',
       cyan: 'bg-aurora-primary/10 text-aurora-primary',
-      indigo: 'bg-indigo-500/10 text-indigo-400',
-      pink: 'bg-pink-500/10 text-pink-400'
+      indigo: 'bg-operational/10 text-operational',
+      pink: 'bg-accent/10 text-accent'
     };
     return schemes[colorScheme];
   };

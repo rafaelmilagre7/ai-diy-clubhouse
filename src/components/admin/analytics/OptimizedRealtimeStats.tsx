@@ -97,7 +97,7 @@ export const OptimizedRealtimeStats = () => {
       value: stats.activeUsers24h,
       icon: Users,
       description: "Nas últimas 24 horas",
-      color: "text-blue-500"
+      color: "text-operational"
     },
     {
       title: "Tempo Médio",

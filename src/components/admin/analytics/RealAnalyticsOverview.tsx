@@ -68,7 +68,7 @@ export const RealAnalyticsOverview = ({ timeRange }: RealAnalyticsOverviewProps)
       title: "Total de Usuários",
       value: data.overview.totalUsers.toLocaleString(),
       icon: Users,
-      color: "text-blue-500"
+      color: "text-operational"
     },
     {
       title: "Usuários Ativos (7d)",

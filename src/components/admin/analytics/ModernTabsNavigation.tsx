@@ -65,10 +65,10 @@ export const ModernTabsNavigation = ({
 
   const getStatusColor = (status?: string) => {
     switch (status) {
-      case 'success': return 'bg-green-500/10 text-green-500 border-green-500/20';
-      case 'warning': return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
-      case 'error': return 'bg-red-500/10 text-red-500 border-red-500/20';
-      case 'active': return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
+      case 'success': return 'bg-success/10 text-success border-success/20';
+      case 'warning': return 'bg-warning/10 text-warning border-warning/20';
+      case 'error': return 'bg-destructive/10 text-destructive border-destructive/20';
+      case 'active': return 'bg-operational/10 text-operational border-operational/20';
       default: return 'bg-muted/10 text-muted-foreground border-muted/20';
     }
   };
@@ -115,10 +115,10 @@ export const ModernTabsNavigation = ({
                   {tab.status && (
                     <div className={`
                       absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-card
-                      ${tab.status === 'active' && 'bg-blue-500 animate-pulse'}
-                      ${tab.status === 'success' && 'bg-green-500'}
-                      ${tab.status === 'warning' && 'bg-yellow-500'}
-                      ${tab.status === 'error' && 'bg-red-500'}
+                      ${tab.status === 'active' && 'bg-operational animate-pulse'}
+                      ${tab.status === 'success' && 'bg-success'}
+                      ${tab.status === 'warning' && 'bg-warning'}
+                      ${tab.status === 'error' && 'bg-destructive'}
                     `} />
                   )}
                 </TabsTrigger>

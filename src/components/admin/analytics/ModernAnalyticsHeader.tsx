@@ -57,7 +57,7 @@ export const ModernAnalyticsHeader = ({
               Ao Vivo
             </Badge>
             {isOptimizationEnabled && (
-              <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-500/20">
+              <Badge variant="outline" className="bg-operational/10 text-operational border-operational/20">
                 <Zap className="w-3 h-3 mr-1" />
                 Otimizado
               </Badge>
@@ -105,15 +105,15 @@ export const ModernAnalyticsHeader = ({
 
       {/* Status Cards Row */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="border-l-4 border-l-blue-500 bg-card border-border">
+        <Card className="border-l-4 border-l-operational bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Usuários Totais</p>
                 <p className="text-2xl font-bold text-card-foreground">{totalUsers.toLocaleString()}</p>
               </div>
-              <div className="h-8 w-8 bg-blue-500/10 rounded-lg flex items-center justify-center">
-                <TrendingUp className="h-4 w-4 text-blue-500" />
+              <div className="h-8 w-8 bg-operational/10 rounded-lg flex items-center justify-center">
+                <TrendingUp className="h-4 w-4 text-operational" />
               </div>
             </div>
           </CardContent>

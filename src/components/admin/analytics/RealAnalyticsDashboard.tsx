@@ -79,7 +79,7 @@ export const RealAnalyticsDashboard = () => {
       title: "Total de Usuários",
       value: data.metrics.totalUsers.toLocaleString(),
       icon: Users,
-      color: "text-blue-500"
+      color: "text-operational"
     },
     {
       title: "Usuários Ativos (7d)",
