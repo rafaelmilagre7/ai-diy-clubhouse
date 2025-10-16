@@ -34,7 +34,7 @@ export const PrioritySection = ({
 
   const getPriorityGradient = () => {
     const gradients = {
-      1: "bg-gradient-to-r from-viverblue/20 via-viverblue/10 to-transparent",
+      1: "bg-gradient-to-r from-aurora-primary/20 via-aurora-primary/10 to-transparent",
       2: "bg-gradient-to-r from-[hsl(var(--vivercyan))]/20 via-[hsl(var(--vivercyan))]/10 to-transparent", 
       3: "bg-gradient-to-r from-[hsl(var(--viverpetrol))]/20 via-[hsl(var(--viverpetrol))]/10 to-transparent"
     };

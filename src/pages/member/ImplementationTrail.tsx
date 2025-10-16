@@ -70,7 +70,7 @@ const ImplementationTrail = () => {
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 relative overflow-hidden">
       {/* Aurora background effects */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-viverblue/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-aurora-primary/10 rounded-full blur-3xl animate-pulse" />
         <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-[hsl(var(--vivercyan))]/10 rounded-full blur-3xl animate-pulse animation-delay-2000" />
         <div className="absolute top-1/2 right-1/3 w-64 h-64 bg-[hsl(var(--viverpetrol))]/10 rounded-full blur-3xl animate-pulse animation-delay-4000" />
       </div>

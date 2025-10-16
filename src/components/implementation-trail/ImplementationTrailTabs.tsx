@@ -31,10 +31,10 @@ export const ImplementationTrailTabs = ({ trail }: ImplementationTrailTabsProps)
   return (
     <div className="space-y-6 animate-fade-in">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 aurora-glass border-viverblue/20">
+        <TabsList className="grid w-full grid-cols-3 aurora-glass border-aurora-primary/20">
           <TabsTrigger 
             value="overview" 
-            className="flex items-center gap-2 data-[state=active]:bg-viverblue data-[state=active]:text-white"
+            className="flex items-center gap-2 data-[state=active]:bg-aurora-primary data-[state=active]:text-white"
           >
             <Eye className="h-4 w-4" />
             <span className="hidden sm:inline">Visão Geral</span>
@@ -42,20 +42,20 @@ export const ImplementationTrailTabs = ({ trail }: ImplementationTrailTabsProps)
           </TabsTrigger>
           <TabsTrigger 
             value="solutions" 
-            className="flex items-center gap-2 data-[state=active]:bg-viverblue data-[state=active]:text-white"
+            className="flex items-center gap-2 data-[state=active]:bg-aurora-primary data-[state=active]:text-white"
           >
             <Target className="h-4 w-4" />
             <span className="hidden sm:inline">Soluções</span>
             <span className="sm:hidden">Soluções</span>
             {totalSolutions > 0 && (
-              <span className="bg-viverblue text-white text-xs px-2 py-0.5 rounded-full ml-1">
+              <span className="bg-aurora-primary text-white text-xs px-2 py-0.5 rounded-full ml-1">
                 {totalSolutions}
               </span>
             )}
           </TabsTrigger>
           <TabsTrigger 
             value="lessons" 
-            className="flex items-center gap-2 data-[state=active]:bg-viverblue data-[state=active]:text-white"
+            className="flex items-center gap-2 data-[state=active]:bg-aurora-primary data-[state=active]:text-white"
           >
             <GraduationCap className="h-4 w-4" />
             <span className="hidden sm:inline">Aulas</span>
