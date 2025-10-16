@@ -35,9 +35,9 @@ export const CommentForm = ({
     <Card className="p-4 bg-backgroundLight border-white/10">
       <form onSubmit={handleSubmit} className="space-y-4">
         {replyTo && (
-          <div className="flex items-center justify-between p-3 bg-viverblue/5 rounded-md border border-viverblue/20">
+          <div className="flex items-center justify-between p-3 bg-aurora-primary/5 rounded-md border border-aurora-primary/20">
             <div className="flex items-center gap-2">
-              <MessageSquare className="h-4 w-4 text-viverblue" />
+              <MessageSquare className="h-4 w-4 text-aurora-primary" />
               <span className="text-sm font-medium text-textPrimary">
                 Respondendo para {replyTo.profiles?.name || 'Usuário'}
               </span>
@@ -47,7 +47,7 @@ export const CommentForm = ({
               variant="ghost" 
               size="sm" 
               onClick={cancelReply} 
-              className="h-6 w-6 p-0 hover:bg-viverblue/10"
+              className="h-6 w-6 p-0 hover:bg-aurora-primary/10"
             >
               <X className="h-4 w-4 text-textSecondary" />
             </Button>
@@ -59,14 +59,14 @@ export const CommentForm = ({
           value={comment}
           onChange={(e) => setComment(e.target.value)}
           placeholder={replyTo ? "Escreva sua resposta..." : "Compartilhe sua experiência ou dúvida sobre esta solução..."}
-          className="min-h-24 resize-y bg-[#151823] border-white/10 text-textPrimary focus-visible:ring-viverblue"
+          className="min-h-24 resize-y bg-card border-border text-textPrimary focus-visible:ring-aurora-primary"
         />
         
         <div className="flex justify-end">
           <Button 
             type="submit"
+            variant="aurora-primary"
             disabled={!comment.trim() || isSubmitting}
-            className="bg-viverblue hover:bg-viverblue/90 text-white"
           >
             {isSubmitting ? (
               <>

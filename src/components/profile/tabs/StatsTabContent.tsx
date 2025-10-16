@@ -30,9 +30,9 @@ export const StatsTabContent = ({ stats, implementations }: StatsTabContentProps
       <CardContent className="px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
-            <div className="bg-[#1A1E2E] p-4 rounded-lg border border-neutral-700/50 animate-fade-in">
+            <div className="bg-surface-elevated p-4 rounded-lg border border-border animate-fade-in">
               <h4 className="text-sm font-medium text-white mb-3 flex items-center">
-                <BarChart className="h-4 w-4 mr-2 text-viverblue" />
+                <BarChart className="h-4 w-4 mr-2 text-aurora-primary" />
                 Distribuição por Categoria
               </h4>
               <div className="space-y-3">
@@ -93,19 +93,19 @@ export const StatsTabContent = ({ stats, implementations }: StatsTabContentProps
               </div>
             </div>
             
-            <div className="bg-[#1A1E2E] p-4 rounded-lg border border-neutral-700/50 animate-fade-in">
+            <div className="bg-surface-elevated p-4 rounded-lg border border-border animate-fade-in">
               <h4 className="text-sm font-medium text-white mb-3 flex items-center">
-                <Clock className="h-4 w-4 mr-2 text-viverblue" />
+                <Clock className="h-4 w-4 mr-2 text-aurora-primary" />
                 Tempo de Uso
               </h4>
               <div className="grid grid-cols-2 gap-4 mt-2">
-                <Card className="dark-mode-card border-viverblue/10 hover:border-viverblue/30 transition-all duration-300">
+                <Card className="dark-mode-card border-aurora-primary/10 hover:border-aurora-primary/30 transition-all duration-300">
                   <CardContent className="p-4 text-center">
                     <p className="text-3xl font-bold text-high-contrast">{stats.totalTimeSpent || 0}</p>
                     <p className="text-xs text-medium-contrast">minutos totais</p>
                   </CardContent>
                 </Card>
-                <Card className="dark-mode-card border-viverblue/10 hover:border-viverblue/30 transition-all duration-300">
+                <Card className="dark-mode-card border-aurora-primary/10 hover:border-aurora-primary/30 transition-all duration-300">
                   <CardContent className="p-4 text-center">
                     <p className="text-3xl font-bold text-high-contrast">{stats.avgTimePerSolution || 0}</p>
                     <p className="text-xs text-medium-contrast">min. por solução</p>
@@ -116,20 +116,20 @@ export const StatsTabContent = ({ stats, implementations }: StatsTabContentProps
           </div>
           
           <div className="space-y-4">
-            <div className="bg-[#1A1E2E] p-4 rounded-lg border border-neutral-700/50 animate-fade-in">
+            <div className="bg-surface-elevated p-4 rounded-lg border border-border animate-fade-in">
               <h4 className="text-sm font-medium text-white mb-3 flex items-center">
-                <Clock className="h-4 w-4 mr-2 text-viverblue" />
+                <Clock className="h-4 w-4 mr-2 text-aurora-primary" />
                 Atividade Recente
               </h4>
               <div className="mt-2 space-y-3">
                 {recentImplementations.length > 0 ? (
                   recentImplementations.map((implementation, index) => (
-                    <div key={index} className="flex items-start gap-3 bg-[#151823] p-3 rounded-lg border border-neutral-800 hover:border-viverblue/30 transition-all duration-300">
-                      <div className="h-8 w-8 rounded-full bg-viverblue/10 flex items-center justify-center">
+                    <div key={index} className="flex items-start gap-3 bg-card p-3 rounded-lg border border-border hover:border-aurora-primary/30 transition-all duration-300">
+                      <div className="h-8 w-8 rounded-full bg-aurora-primary/10 flex items-center justify-center">
                         {implementation.is_completed ? (
-                          <CheckCircle className="h-4 w-4 text-viverblue" />
+                          <CheckCircle className="h-4 w-4 text-aurora-primary" />
                         ) : (
-                          <Clock className="h-4 w-4 text-viverblue" />
+                          <Clock className="h-4 w-4 text-aurora-primary" />
                         )}
                       </div>
                       <div>
@@ -153,13 +153,13 @@ export const StatsTabContent = ({ stats, implementations }: StatsTabContentProps
               </div>
             </div>
             
-            <div className="bg-[#1A1E2E] p-4 rounded-lg border border-neutral-700/50 animate-fade-in">
+            <div className="bg-surface-elevated p-4 rounded-lg border border-border animate-fade-in">
               <h4 className="text-sm font-medium text-white mb-3">
                 Próximos Passos Recomendados
               </h4>
               <div className="mt-2 space-y-3">
                 {implementations.some(imp => !imp.is_completed) ? (
-                  <Card className="p-3 dark-mode-card hover:shadow-md transition-all border-viverblue/10">
+                  <Card className="p-3 dark-mode-card hover:shadow-md transition-all border-aurora-primary/10">
                     <div className="flex justify-between items-center">
                       <div>
                         <p className="text-sm font-medium text-high-contrast">
@@ -173,7 +173,7 @@ export const StatsTabContent = ({ stats, implementations }: StatsTabContentProps
                         size="sm" 
                         variant="outline" 
                         asChild
-                        className="hover:bg-viverblue/10 hover:text-viverblue"
+                        className="hover:bg-aurora-primary/10 hover:text-aurora-primary"
                       >
                         <Link 
                           to={`/implement/${implementations.find(imp => !imp.is_completed)?.solution?.id}/${implementations.find(imp => !imp.is_completed)?.current_module}`}
@@ -186,7 +186,7 @@ export const StatsTabContent = ({ stats, implementations }: StatsTabContentProps
                     </div>
                   </Card>
                 ) : (
-                  <Card className="p-3 dark-mode-card hover:shadow-md transition-all border-viverblue/10">
+                  <Card className="p-3 dark-mode-card hover:shadow-md transition-all border-aurora-primary/10">
                     <div className="flex justify-between items-center">
                       <div>
                         <p className="text-sm font-medium text-high-contrast">
@@ -200,7 +200,7 @@ export const StatsTabContent = ({ stats, implementations }: StatsTabContentProps
                         size="sm" 
                         variant="outline" 
                         asChild
-                        className="hover:bg-viverblue/10 hover:text-viverblue"
+                        className="hover:bg-aurora-primary/10 hover:text-aurora-primary"
                       >
                         <Link to="/solutions" className="flex items-center">
                           Explorar
@@ -212,7 +212,7 @@ export const StatsTabContent = ({ stats, implementations }: StatsTabContentProps
                 )}
                 
                 {stats.categoryDistribution.Estratégia.completed === 0 && (
-                  <Card className="p-3 dark-mode-card hover:shadow-md transition-all border-viverblue/10">
+                  <Card className="p-3 dark-mode-card hover:shadow-md transition-all border-aurora-primary/10">
                     <div className="flex justify-between items-center">
                       <div>
                         <p className="text-sm font-medium text-high-contrast">
@@ -226,7 +226,7 @@ export const StatsTabContent = ({ stats, implementations }: StatsTabContentProps
                         size="sm" 
                         variant="outline" 
                         asChild
-                        className="hover:bg-viverblue/10 hover:text-viverblue"
+                        className="hover:bg-aurora-primary/10 hover:text-aurora-primary"
                       >
                         <Link to="/solutions?category=strategy" className="flex items-center">
                           Explorar

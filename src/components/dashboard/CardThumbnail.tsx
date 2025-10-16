@@ -22,8 +22,8 @@ export const CardThumbnail = ({ thumbnailUrl }: CardThumbnailProps) => {
           loading="lazy"
         />
       ) : (
-        <div className="w-full h-full flex items-center justify-center bg-[#151823]">
-          <span className="text-neutral-600 text-base">Sem imagem</span>
+        <div className="w-full h-full flex items-center justify-center bg-card">
+          <span className="text-muted-foreground text-base">Sem imagem</span>
         </div>
       )}
     </div>

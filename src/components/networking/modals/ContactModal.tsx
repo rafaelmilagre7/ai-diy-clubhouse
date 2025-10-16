@@ -58,14 +58,14 @@ export const ContactModal = ({ isOpen, onClose, card }: ContactModalProps) => {
             >
               {/* Aurora Background Effects */}
               <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-aurora/5 rounded-full blur-3xl animate-blob" />
-                <div className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-viverblue/5 rounded-full blur-3xl animate-blob animation-delay-2000" />
+                <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-aurora-primary/5 rounded-full blur-3xl animate-blob" />
+                <div className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-aurora-primary-light/5 rounded-full blur-3xl animate-blob animation-delay-2000" />
               </div>
 
               {/* Header com gradiente */}
-              <div className="relative p-6 border-b border-aurora/10">
+              <div className="relative p-6 border-b border-aurora-primary/10">
                 <div className="space-y-1">
-                  <h2 className="text-xl font-bold bg-gradient-to-r from-aurora via-viverblue to-operational bg-clip-text text-transparent">
+                  <h2 className="text-xl font-bold bg-gradient-to-r from-aurora-primary via-aurora-primary-light to-operational bg-clip-text text-transparent">
                     Informações de Contato
                   </h2>
                   <p className="text-sm text-muted-foreground">
@@ -77,12 +77,12 @@ export const ContactModal = ({ isOpen, onClose, card }: ContactModalProps) => {
               {/* Content */}
               <div className="relative p-6 space-y-6">
                 {/* Avatar + Info Card */}
-                <div className="flex items-center gap-4 p-4 rounded-xl liquid-glass-card border border-aurora/10">
+                <div className="flex items-center gap-4 p-4 rounded-xl liquid-glass-card border border-aurora-primary/10">
                   <div className="relative">
-                    <div className="absolute inset-0 bg-aurora/20 blur-xl rounded-full" />
-                    <Avatar className="relative h-16 w-16 border-2 border-aurora/20">
+                    <div className="absolute inset-0 bg-aurora-primary/20 blur-xl rounded-full" />
+                    <Avatar className="relative h-16 w-16 border-2 border-aurora-primary/20">
                       <AvatarImage src={card.avatarUrl} alt={card.name} className="object-cover" />
-                      <AvatarFallback className="bg-gradient-to-br from-aurora/30 to-viverblue/30 text-aurora font-bold text-lg">
+                      <AvatarFallback className="bg-gradient-to-br from-aurora-primary/30 to-aurora-primary-light/30 text-aurora-primary font-bold text-lg">
                         {getInitials(card.name)}
                       </AvatarFallback>
                     </Avatar>
@@ -100,19 +100,19 @@ export const ContactModal = ({ isOpen, onClose, card }: ContactModalProps) => {
                   {card.email && (
                     <div className="space-y-2">
                       <label className="text-xs font-semibold text-muted-foreground flex items-center gap-2 uppercase tracking-wide">
-                        <div className="p-1.5 rounded-md bg-aurora/10">
-                          <Mail className="h-3.5 w-3.5 text-aurora" />
+                        <div className="p-1.5 rounded-md bg-aurora-primary/10">
+                          <Mail className="h-3.5 w-3.5 text-aurora-primary" />
                         </div>
                         Email
                       </label>
                       <div className="flex gap-2">
-                        <div className="flex-1 px-4 py-3 liquid-glass-card rounded-xl border border-aurora/10 text-sm font-medium">
+                        <div className="flex-1 px-4 py-3 liquid-glass-card rounded-xl border border-aurora-primary/10 text-sm font-medium">
                           {card.email}
                         </div>
                         <Button
                           size="sm"
                           onClick={() => copyToClipboard(card.email, 'Email')}
-                          className="px-4 bg-aurora/10 hover:bg-aurora/20 text-aurora border border-aurora/20"
+                          className="px-4 bg-aurora-primary/10 hover:bg-aurora-primary/20 text-aurora-primary border border-aurora-primary/20"
                         >
                           <Copy className="h-4 w-4" />
                         </Button>
@@ -130,13 +130,13 @@ export const ContactModal = ({ isOpen, onClose, card }: ContactModalProps) => {
                         WhatsApp
                       </label>
                       <div className="flex gap-2">
-                        <div className="flex-1 px-4 py-3 liquid-glass-card rounded-xl border border-aurora/10 text-sm font-medium">
+                        <div className="flex-1 px-4 py-3 liquid-glass-card rounded-xl border border-aurora-primary/10 text-sm font-medium">
                           {card.whatsappNumber}
                         </div>
                         <Button
                           size="sm"
                           onClick={() => copyToClipboard(card.whatsappNumber || '', 'WhatsApp')}
-                          className="px-4 bg-aurora/10 hover:bg-aurora/20 text-aurora border border-aurora/20"
+                          className="px-4 bg-aurora-primary/10 hover:bg-aurora-primary/20 text-aurora-primary border border-aurora-primary/20"
                         >
                           <Copy className="h-4 w-4" />
                         </Button>
@@ -173,10 +173,11 @@ export const ContactModal = ({ isOpen, onClose, card }: ContactModalProps) => {
               </div>
 
               {/* Footer */}
-              <div className="relative p-6 border-t border-aurora/10">
+              <div className="relative p-6 border-t border-aurora-primary/10">
                 <Button 
                   onClick={onClose}
-                  className="w-full h-12 bg-gradient-to-r from-[#0ABAB5] via-[#088A87] to-[#065F5D] hover:from-[#088A87] hover:via-[#065F5D] hover:to-[#044D4B] hover:shadow-lg hover:shadow-aurora/30 transition-all text-white font-semibold border-0"
+                  variant="aurora-primary"
+                  className="w-full h-12 font-semibold"
                 >
                   Concluído
                 </Button>

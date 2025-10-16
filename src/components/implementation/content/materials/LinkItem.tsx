@@ -18,8 +18,8 @@ export const LinkItem = ({ link }: LinkItemProps) => {
   };
   
   return (
-    <div className="bg-[#1A1E2E] border border-white/10 rounded-lg p-4 flex items-start space-x-4">
-      <div className="bg-viverblue/20 text-viverblue p-2 rounded-md">
+    <div className="bg-surface-elevated border border-border rounded-lg p-4 flex items-start space-x-4">
+      <div className="bg-aurora-primary/20 text-aurora-primary p-2 rounded-md">
         <LinkIcon className="h-5 w-5" />
       </div>
       
@@ -38,7 +38,7 @@ export const LinkItem = ({ link }: LinkItemProps) => {
       <Button 
         variant="outline" 
         size="sm" 
-        className="bg-transparent border-viverblue/20 text-viverblue hover:bg-viverblue/10"
+        className="bg-transparent border-aurora-primary/20 text-aurora-primary hover:bg-aurora-primary/10"
         onClick={handleOpenLink}
       >
         <ExternalLink className="h-4 w-4 mr-2" />

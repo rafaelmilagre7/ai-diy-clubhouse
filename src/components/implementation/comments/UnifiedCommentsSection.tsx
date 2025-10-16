@@ -144,7 +144,7 @@ export const UnifiedCommentsSection: React.FC<UnifiedCommentsSectionProps> = ({
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-2 mb-6">
-          <MessageSquare className="h-5 w-5 text-viverblue" />
+          <MessageSquare className="h-5 w-5 text-aurora-primary" />
           <h3 className="text-lg font-semibold">Comentários</h3>
         </div>
         
@@ -166,7 +166,7 @@ export const UnifiedCommentsSection: React.FC<UnifiedCommentsSectionProps> = ({
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
-        <MessageSquare className="h-5 w-5 text-viverblue" />
+        <MessageSquare className="h-5 w-5 text-aurora-primary" />
         <h3 className="text-lg font-semibold text-textPrimary">
           Comentários ({comments.length})
         </h3>
@@ -179,14 +179,14 @@ export const UnifiedCommentsSection: React.FC<UnifiedCommentsSectionProps> = ({
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
             placeholder="Compartilhe sua experiência, dúvidas ou dicas sobre esta solução..."
-            className="min-h-24 resize-y bg-[#151823] border-white/10 text-textPrimary focus-visible:ring-viverblue"
+            className="min-h-24 resize-y bg-card border-border text-textPrimary focus-visible:ring-aurora-primary"
           />
           
           <div className="flex justify-end">
             <Button 
               type="submit"
+              variant="aurora-primary"
               disabled={!newComment.trim() || addCommentMutation.isPending}
-              className="bg-viverblue hover:bg-viverblue/90 text-white"
             >
               {addCommentMutation.isPending ? (
                 <>
@@ -206,8 +206,8 @@ export const UnifiedCommentsSection: React.FC<UnifiedCommentsSectionProps> = ({
 
       {/* Lista de comentários */}
       {comments.length === 0 ? (
-        <Card className="p-8 text-center border-dashed border-2 border-viverblue/20 bg-viverblue/5">
-          <MessageSquare className="h-12 w-12 mx-auto text-viverblue/40 mb-4" />
+        <Card className="p-8 text-center border-dashed border-2 border-aurora-primary/20 bg-aurora-primary/5">
+          <MessageSquare className="h-12 w-12 mx-auto text-aurora-primary/40 mb-4" />
           <p className="text-textSecondary">
             Seja o primeiro a comentar sobre esta solução!
           </p>
@@ -220,7 +220,7 @@ export const UnifiedCommentsSection: React.FC<UnifiedCommentsSectionProps> = ({
                 {/* Comentário principal */}
                 <div className="flex gap-4">
                   <Avatar className="h-10 w-10">
-                    <AvatarFallback className="bg-viverblue/10 text-viverblue">
+                    <AvatarFallback className="bg-aurora-primary/10 text-aurora-primary">
                       {comment.profiles?.name?.charAt(0)?.toUpperCase() || 'U'}
                     </AvatarFallback>
                   </Avatar>
@@ -243,7 +243,7 @@ export const UnifiedCommentsSection: React.FC<UnifiedCommentsSectionProps> = ({
                         variant="ghost"
                         size="sm"
                         onClick={() => startReply(comment.id)}
-                        className="text-textSecondary hover:text-viverblue hover:bg-viverblue/10"
+                        className="text-textSecondary hover:text-aurora-primary hover:bg-aurora-primary/10"
                       >
                         <Reply className="h-4 w-4 mr-1" />
                         Responder
@@ -258,7 +258,7 @@ export const UnifiedCommentsSection: React.FC<UnifiedCommentsSectionProps> = ({
 
                 {/* Formulário de resposta */}
                 {replyingTo === comment.id && (
-                  <div className="ml-14 space-y-3 p-3 bg-viverblue/5 rounded-md border border-viverblue/20">
+                  <div className="ml-14 space-y-3 p-3 bg-aurora-primary/5 rounded-md border border-aurora-primary/20">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium text-textPrimary">
                         Respondendo para {comment.profiles?.name || 'Usuário'}
@@ -267,7 +267,7 @@ export const UnifiedCommentsSection: React.FC<UnifiedCommentsSectionProps> = ({
                         variant="ghost" 
                         size="sm" 
                         onClick={cancelReply}
-                        className="h-6 w-6 p-0 hover:bg-viverblue/10"
+                        className="h-6 w-6 p-0 hover:bg-aurora-primary/10"
                       >
                         <X className="h-4 w-4" />
                       </Button>
@@ -277,7 +277,7 @@ export const UnifiedCommentsSection: React.FC<UnifiedCommentsSectionProps> = ({
                       value={replyContent}
                       onChange={(e) => setReplyContent(e.target.value)}
                       placeholder="Escreva sua resposta..."
-                      className="min-h-20 bg-[#151823] border-white/10 text-textPrimary focus-visible:ring-viverblue"
+                      className="min-h-20 bg-card border-border text-textPrimary focus-visible:ring-aurora-primary"
                     />
                     
                     <div className="flex justify-end gap-2">
@@ -286,9 +286,9 @@ export const UnifiedCommentsSection: React.FC<UnifiedCommentsSectionProps> = ({
                       </Button>
                       <Button
                         size="sm"
+                        variant="aurora-primary"
                         onClick={() => handleSubmitReply(comment.id)}
                         disabled={!replyContent.trim() || addCommentMutation.isPending}
-                        className="bg-viverblue hover:bg-viverblue/90 text-white"
                       >
                         <Send className="h-3 w-3 mr-1" />
                         Responder

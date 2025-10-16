@@ -73,7 +73,7 @@ export const NetworkingAnalytics = () => {
             Acompanhe seu desempenho e evolução no networking
           </p>
         </div>
-        <Badge className="bg-viverblue/10 text-viverblue border-viverblue/30">
+        <Badge variant="default" className="bg-aurora-primary/10 text-aurora-primary border-aurora-primary/30">
           <BarChart3 className="h-3 w-3 mr-1" />
           Métricas Avançadas
         </Badge>
@@ -92,7 +92,7 @@ export const NetworkingAnalytics = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
             >
-              <Card className="border-neutral-800/50 bg-[#151823]">
+              <Card className="border-border bg-card">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <div className={`p-2 rounded-lg ${stat.bgColor}`}>
@@ -123,7 +123,7 @@ export const NetworkingAnalytics = () => {
       {/* Gráficos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Gráfico de Evolução Temporal */}
-        <Card className="border-neutral-800/50 bg-[#151823]">
+        <Card className="border-border bg-card">
           <CardHeader>
             <CardTitle className="text-white">Evolução Mensal</CardTitle>
           </CardHeader>
@@ -150,7 +150,7 @@ export const NetworkingAnalytics = () => {
         </Card>
 
         {/* Performance Indicators */}
-        <Card className="border-neutral-800/50 bg-[#151823]">
+        <Card className="border-border bg-card">
           <CardHeader>
             <CardTitle className="text-white">Indicadores de Performance</CardTitle>
           </CardHeader>
@@ -169,18 +169,18 @@ export const NetworkingAnalytics = () => {
                 </div>
               </div>
 
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="text-neutral-300">Compatibilidade Média</span>
-                  <span className="text-white">{stats.avgCompatibility.toFixed(1)}%</span>
+                <div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="text-neutral-300">Compatibilidade Média</span>
+                    <span className="text-white">{stats.avgCompatibility.toFixed(1)}%</span>
+                  </div>
+                  <div className="w-full bg-neutral-800 rounded-full h-2">
+                    <div 
+                      className="bg-aurora-primary h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${stats.avgCompatibility}%` }}
+                    />
+                  </div>
                 </div>
-                <div className="w-full bg-neutral-800 rounded-full h-2">
-                  <div 
-                    className="bg-viverblue h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${stats.avgCompatibility}%` }}
-                  />
-                </div>
-              </div>
 
               <div className="pt-2 border-t border-neutral-800">
                 <h4 className="text-sm font-medium text-white mb-2">Resumo do Mês</h4>
@@ -207,7 +207,7 @@ export const NetworkingAnalytics = () => {
       </div>
 
       {/* Atividade Recente */}
-      <Card className="border-neutral-800/50 bg-[#151823]">
+      <Card className="border-border bg-card">
         <CardHeader>
           <CardTitle className="text-white">Atividade Recente</CardTitle>
         </CardHeader>
@@ -215,14 +215,14 @@ export const NetworkingAnalytics = () => {
           {recentEvents && recentEvents.length > 0 ? (
             <div className="space-y-3 max-h-60 overflow-y-auto">
               {recentEvents.slice(0, 10).map((event, index) => (
-                <motion.div
-                  key={event.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="flex items-center gap-3 text-sm"
-                >
-                  <div className="w-2 h-2 bg-viverblue rounded-full flex-shrink-0" />
+                  <motion.div
+                    key={event.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="flex items-center gap-3 text-sm"
+                  >
+                    <div className="w-2 h-2 bg-aurora-primary rounded-full flex-shrink-0" />
                   <span className="text-neutral-300 flex-1">
                     {getEventDescription(event)}
                   </span>

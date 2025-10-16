@@ -26,7 +26,7 @@ export const ImplementationsTabContent = ({ implementations }: ImplementationsTa
   
   return (
     <div className="space-y-4 animate-fade-in">
-      <div className="flex items-center justify-between bg-[#1A1E2E] p-2 rounded-lg mb-4">
+      <div className="flex items-center justify-between bg-surface-elevated p-2 rounded-lg mb-4">
         <div className="flex items-center gap-2 text-sm text-medium-contrast">
           <Filter className="h-4 w-4" /> Filtrar por:
         </div>
@@ -69,7 +69,7 @@ export const ImplementationsTabContent = ({ implementations }: ImplementationsTa
           ))}
         </div>
       ) : (
-        <div className="text-center py-12 bg-[#1A1E2E] rounded-lg border border-neutral-700/50">
+        <div className="text-center py-12 bg-surface-elevated rounded-lg border border-border">
           <p className="text-medium-contrast">Nenhuma implementação encontrada com o filtro atual.</p>
         </div>
       )}

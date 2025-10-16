@@ -44,13 +44,13 @@ export const ToolItem = ({
             onError={(e) => {
               // Em caso de erro ao carregar a imagem, mostrar a letra inicial
               e.currentTarget.style.display = 'none';
-              e.currentTarget.parentElement?.classList.add('bg-viverblue/20');
+              e.currentTarget.parentElement?.classList.add('bg-aurora-primary/20');
               e.currentTarget.parentElement?.classList.remove('bg-white');
               const fallback = document.createElement('div');
-              fallback.className = 'font-semibold text-viverblue';
+              fallback.className = 'font-semibold text-aurora-primary';
               fallback.textContent = firstLetter;
               e.currentTarget.parentElement?.appendChild(fallback);
-            }} 
+            }}
           />
         </div>
       );
@@ -58,7 +58,7 @@ export const ToolItem = ({
     
     // Fallback para quando não temos o logo
     return (
-      <div className="bg-viverblue/20 text-viverblue h-10 w-10 rounded-md flex items-center justify-center font-semibold">
+      <div className="bg-aurora-primary/20 text-aurora-primary h-10 w-10 rounded-md flex items-center justify-center font-semibold">
         {firstLetter}
       </div>
     );
@@ -78,14 +78,14 @@ export const ToolItem = ({
   };
 
   return (
-    <div className="bg-[#1A1E2E] border border-white/10 rounded-lg p-4 flex flex-col h-full shadow-sm">
+    <div className="bg-surface-elevated border border-border rounded-lg p-4 flex flex-col h-full shadow-sm">
       <div className="flex items-start gap-3 mb-4">
         {getToolAvatar(toolName)}
         <div className="space-y-1">
           <h3 className="font-medium text-neutral-100">{formatName(toolName)}</h3>
           <div className="flex flex-wrap gap-2">
             {isRequired && (
-              <Badge variant="outline" className="bg-viverblue/10 text-viverblue border-viverblue/20 text-xs">
+              <Badge variant="outline" className="bg-aurora-primary/10 text-aurora-primary border-aurora-primary/20 text-xs">
                 Necessário
               </Badge>
             )}
@@ -102,7 +102,7 @@ export const ToolItem = ({
         <div className="mt-auto pt-3">
           <Button 
             variant="outline"
-            className="w-full bg-transparent border-viverblue/20 text-viverblue hover:bg-viverblue/10 hover:text-viverblue"
+            className="w-full bg-transparent border-aurora-primary/20 text-aurora-primary hover:bg-aurora-primary/10 hover:text-aurora-primary"
             onClick={() => window.open(`https://app.viverdeia.ai/tools/${toolId}`, '_blank')}
           >
             <ArrowRight className="mr-2 h-4 w-4" />
@@ -113,7 +113,7 @@ export const ToolItem = ({
         <div className="mt-auto pt-3">
           <Button 
             variant="outline"
-            className="w-full bg-transparent border-viverblue/20 text-viverblue hover:bg-viverblue/10 hover:text-viverblue"
+            className="w-full bg-transparent border-aurora-primary/20 text-aurora-primary hover:bg-aurora-primary/10 hover:text-aurora-primary"
             onClick={() => window.open(toolUrl, '_blank')}
           >
             <ExternalLink className="mr-2 h-4 w-4" />

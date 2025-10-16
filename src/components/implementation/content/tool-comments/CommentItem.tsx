@@ -58,17 +58,17 @@ export const CommentItem = ({ comment, onReply, onLike, onDelete }: CommentItemP
   const profileAvatarUrl = comment.profiles?.avatar_url;
 
   return (
-    <Card className="bg-[#151823] border-white/10 shadow-sm hover:shadow-md hover:border-white/20 transition-all duration-300">
+    <Card className="bg-card border-border shadow-sm hover:shadow-md hover:border-border transition-all duration-300">
       <div className="p-4 space-y-4">
         <div className="flex gap-4">
-          <Avatar className="h-10 w-10 ring-2 ring-viverblue/10">
+          <Avatar className="h-10 w-10 ring-2 ring-aurora-primary/10">
             <AvatarImage 
               src={profileAvatarUrl} 
               alt={profileName}
               className="object-cover"
               onError={() => console.log('Erro ao carregar avatar:', profileAvatarUrl)}
             />
-            <AvatarFallback className="bg-viverblue/10 text-viverblue font-medium border border-viverblue/20">
+            <AvatarFallback className="bg-aurora-primary/10 text-aurora-primary font-medium border border-aurora-primary/20">
               {getInitials(profileName)}
             </AvatarFallback>
           </Avatar>
@@ -79,7 +79,7 @@ export const CommentItem = ({ comment, onReply, onLike, onDelete }: CommentItemP
                 <div className="flex items-center gap-2">
                   <span className="font-semibold text-textPrimary">{profileName}</span>
                   {profileRole === 'admin' && (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-viverblue/10 text-viverblue">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-aurora-primary/10 text-aurora-primary">
                       <Shield className="h-3 w-3 mr-1" />
                       ADMIN
                     </span>
@@ -109,8 +109,8 @@ export const CommentItem = ({ comment, onReply, onLike, onDelete }: CommentItemP
                 variant="ghost" 
                 size="sm" 
                 onClick={() => onLike(comment)}
-                className={`text-xs hover:bg-viverblue/10 ${
-                  comment.user_has_liked ? 'text-viverblue' : 'text-textSecondary hover:text-textPrimary'
+                className={`text-xs hover:bg-aurora-primary/10 ${
+                  comment.user_has_liked ? 'text-aurora-primary' : 'text-textSecondary hover:text-textPrimary'
                 }`}
               >
                 <ThumbsUp className="h-3.5 w-3.5 mr-1" />
@@ -121,7 +121,7 @@ export const CommentItem = ({ comment, onReply, onLike, onDelete }: CommentItemP
                 variant="ghost" 
                 size="sm" 
                 onClick={() => onReply(comment)}
-                className="text-xs text-textSecondary hover:text-textPrimary hover:bg-viverblue/10"
+                className="text-xs text-textSecondary hover:text-textPrimary hover:bg-aurora-primary/10"
               >
                 <MessageSquare className="h-3.5 w-3.5 mr-1" />
                 Responder
@@ -141,7 +141,7 @@ export const CommentItem = ({ comment, onReply, onLike, onDelete }: CommentItemP
             </div>
             
             {comment.replies && comment.replies.length > 0 && (
-              <div className="space-y-4 mt-4 pl-6 border-l-2 border-viverblue/10">
+              <div className="space-y-4 mt-4 pl-6 border-l-2 border-aurora-primary/10">
                 {comment.replies.map(reply => {
                   // Log para diagnóstico de respostas
                   log('Dados de resposta:', { 

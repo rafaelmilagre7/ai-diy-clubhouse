@@ -193,8 +193,9 @@ export const MeetingScheduler = ({ participantId, participantName, connectionId 
             </Button>
             <Button 
               type="submit" 
+              variant="aurora-primary"
               disabled={scheduleMeeting.isPending}
-              className="flex-1 bg-viverblue hover:bg-viverblue/90"
+              className="flex-1"
             >
               {scheduleMeeting.isPending ? 'Agendando...' : 'Agendar Reunião'}
             </Button>
@@ -256,12 +257,12 @@ export const MeetingsList = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
                 >
-                  <Card className="border-neutral-800/50 bg-[#151823]">
+                  <Card className="border-border bg-card">
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center gap-3">
-                          <div className="p-2 bg-viverblue/10 rounded-lg">
-                            <Icon className="h-4 w-4 text-viverblue" />
+                          <div className="p-2 bg-aurora-primary/10 rounded-lg">
+                            <Icon className="h-4 w-4 text-aurora-primary" />
                           </div>
                           <div>
                             <h4 className="font-medium text-white">{meeting.title}</h4>
