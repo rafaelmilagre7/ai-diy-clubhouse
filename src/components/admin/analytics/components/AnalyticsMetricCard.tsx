@@ -90,7 +90,7 @@ export const AnalyticsMetricCard = ({
               {trend && (
                 <div className={cn(
                   "text-xs px-2 py-1 rounded-full",
-                  trend.value > 0 ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"
+                  trend.value > 0 ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"
                 )}>
                   {trend.value > 0 ? '+' : ''}{trend.value}%
                 </div>

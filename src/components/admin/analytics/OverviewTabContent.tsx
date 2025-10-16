@@ -108,7 +108,7 @@ export const OverviewTabContent = ({ timeRange }: OverviewTabContentProps) => {
       <div className="space-y-6">
         {renderDataStatus()}
         <Alert className="mb-6 bg-white dark:bg-slate-900 border border-red-200 dark:border-red-900">
-          <AlertTriangle className="h-5 w-5 text-red-500" />
+          <AlertTriangle className="h-5 w-5 text-destructive" />
           <AlertTitle className="text-neutral-800 dark:text-white">Erro ao carregar dados</AlertTitle>
           <AlertDescription className="text-neutral-700 dark:text-neutral-300 space-y-4">
             <p>{error}</p>

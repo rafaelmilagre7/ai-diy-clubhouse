@@ -19,9 +19,9 @@ interface NPSScoreChartProps {
 export const NPSScoreChart: React.FC<NPSScoreChartProps> = ({ npsData, isLoading }) => {
   // Função para determinar a cor do texto baseado no score NPS
   const npsScoreColorClass = () => {
-    if (npsData.overall >= 50) return "text-green-500";
+    if (npsData.overall >= 50) return "text-success";
     if (npsData.overall >= 0) return "text-warning";
-    return "text-red-500";
+    return "text-destructive";
   };
   
   // Status baseado no NPS

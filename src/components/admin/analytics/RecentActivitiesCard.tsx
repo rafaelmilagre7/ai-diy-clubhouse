@@ -106,7 +106,7 @@ export const RecentActivitiesCard = ({
           <div className="text-center py-6 text-sm text-muted-foreground">
             <Activity className="h-8 w-8 mx-auto mb-2 opacity-50" />
             <p>Erro ao carregar atividades</p>
-            <p className="text-xs text-red-500 mt-1">{error}</p>
+            <p className="text-xs text-destructive mt-1">{error}</p>
           </div>
         ) : activities.length === 0 ? (
           <div className="text-center py-6 text-sm text-muted-foreground">

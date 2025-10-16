@@ -52,11 +52,11 @@ export const SupabaseStatsCard: React.FC<SupabaseStatsCardProps> = ({
 }) => {
   const getTrendIcon = (value: number, threshold: number, inverted = false) => {
     if (inverted) {
-      if (value > threshold) return <TrendingDown className="w-4 h-4 text-red-500" />;
-      if (value < threshold * 0.5) return <TrendingUp className="w-4 h-4 text-green-500" />;
+      if (value > threshold) return <TrendingDown className="w-4 h-4 text-destructive" />;
+      if (value < threshold * 0.5) return <TrendingUp className="w-4 h-4 text-success" />;
     } else {
-      if (value > threshold) return <TrendingUp className="w-4 h-4 text-green-500" />;
-      if (value < threshold * 0.5) return <TrendingDown className="w-4 h-4 text-red-500" />;
+      if (value > threshold) return <TrendingUp className="w-4 h-4 text-success" />;
+      if (value < threshold * 0.5) return <TrendingDown className="w-4 h-4 text-destructive" />;
     }
     return <Minus className="w-4 h-4 text-gray-400" />;
   };

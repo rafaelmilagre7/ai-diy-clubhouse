@@ -48,21 +48,21 @@ export const ImplementationsAnalyticsTabContent = ({ timeRange }: Implementation
       title: "Taxa de Conclusão",
       value: `${completionRate}%`,
       icon: CheckCircle,
-      color: "text-green-500",
+      color: "text-success",
       trend: null
     },
     {
       title: "Em Andamento",
       value: inProgressImplementations,
       icon: Clock,
-      color: "text-yellow-500",
+      color: "text-warning",
       trend: null
     },
     {
       title: "Usuários Implementando",
       value: data?.usersByTime?.length || 0,
       icon: Users,
-      color: "text-purple-500",
+      color: "text-strategy",
       trend: null
     }
   ];

@@ -90,57 +90,57 @@ export const NPSEvolutionOverview: React.FC<NPSEvolutionOverviewProps> = ({
       </Card>
 
       {/* Promotores */}
-      <Card className="border-l-4 border-l-green-500">
+      <Card className="border-l-4 border-l-success">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-            <ThumbsUp className="h-4 w-4 text-green-600" />
+            <ThumbsUp className="h-4 w-4 text-success" />
             Promotores
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-3xl font-bold text-green-600">
+          <div className="text-3xl font-bold text-success">
             {promotersPercent.toFixed(1)}%
           </div>
           <div className="mt-1 text-xs text-muted-foreground">
             {currentData?.promoters || 0} usuários
           </div>
-          <div className="mt-1 text-xs text-green-600">
+          <div className="mt-1 text-xs text-success">
             Notas 9-10
           </div>
         </CardContent>
       </Card>
 
       {/* Neutros */}
-      <Card className="border-l-4 border-l-yellow-500">
+      <Card className="border-l-4 border-l-warning">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-            <Minus className="h-4 w-4 text-yellow-600" />
+            <Minus className="h-4 w-4 text-warning" />
             Neutros
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-3xl font-bold text-yellow-600">
+          <div className="text-3xl font-bold text-warning">
             {neutralsPercent.toFixed(1)}%
           </div>
           <div className="mt-1 text-xs text-muted-foreground">
             {currentData?.neutrals || 0} usuários
           </div>
-          <div className="mt-1 text-xs text-yellow-600">
+          <div className="mt-1 text-xs text-warning">
             Notas 7-8
           </div>
         </CardContent>
       </Card>
 
       {/* Detratores */}
-      <Card className="border-l-4 border-l-red-500">
+      <Card className="border-l-4 border-l-destructive">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-            <ThumbsDown className="h-4 w-4 text-red-600" />
+            <ThumbsDown className="h-4 w-4 text-destructive" />
             Detratores
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-3xl font-bold text-red-600">
+          <div className="text-3xl font-bold text-destructive">
             {detractorsPercent.toFixed(1)}%
           </div>
           <div className="mt-1 text-xs text-muted-foreground">
