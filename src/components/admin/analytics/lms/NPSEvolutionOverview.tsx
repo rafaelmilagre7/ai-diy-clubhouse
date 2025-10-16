@@ -49,9 +49,9 @@ export const NPSEvolutionOverview: React.FC<NPSEvolutionOverviewProps> = ({
     : 0;
 
   const getNPSColor = (score: number) => {
-    if (score >= 50) return 'text-green-600';
-    if (score >= 0) return 'text-yellow-600';
-    return 'text-red-600';
+    if (score >= 50) return 'text-success';
+    if (score >= 0) return 'text-warning';
+    return 'text-destructive';
   };
 
   return (
@@ -70,13 +70,13 @@ export const NPSEvolutionOverview: React.FC<NPSEvolutionOverviewProps> = ({
           <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
             {npsChange > 0 ? (
               <>
-                <TrendingUp className="h-3 w-3 text-green-600" />
-                <span className="text-green-600">+{npsChange.toFixed(1)}</span>
+                <TrendingUp className="h-3 w-3 text-success" />
+                <span className="text-success">+{npsChange.toFixed(1)}</span>
               </>
             ) : npsChange < 0 ? (
               <>
-                <TrendingDown className="h-3 w-3 text-red-600" />
-                <span className="text-red-600">{npsChange.toFixed(1)}</span>
+                <TrendingDown className="h-3 w-3 text-destructive" />
+                <span className="text-destructive">{npsChange.toFixed(1)}</span>
               </>
             ) : (
               <span>Sem mudança</span>
@@ -146,7 +146,7 @@ export const NPSEvolutionOverview: React.FC<NPSEvolutionOverviewProps> = ({
           <div className="mt-1 text-xs text-muted-foreground">
             {currentData?.detractors || 0} usuários
           </div>
-          <div className="mt-1 text-xs text-red-600">
+          <div className="mt-1 text-xs text-destructive">
             Notas 0-6
           </div>
         </CardContent>

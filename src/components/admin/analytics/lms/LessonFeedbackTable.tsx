@@ -31,9 +31,9 @@ interface LessonFeedbackTableProps {
 
 export const LessonFeedbackTable: React.FC<LessonFeedbackTableProps> = ({ feedbackData, isLoading }) => {
   const getNpsScoreColor = (score: number) => {
-    if (score >= 9) return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
-    if (score >= 7) return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
-    return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
+    if (score >= 9) return "bg-success/10 text-success dark:bg-success/20 dark:text-success";
+    if (score >= 7) return "bg-warning/10 text-warning dark:bg-warning/20 dark:text-warning";
+    return "bg-destructive/10 text-destructive dark:bg-destructive/20 dark:text-destructive";
   };
 
   // Gerar dados simulados se necessário

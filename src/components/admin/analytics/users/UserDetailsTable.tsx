@@ -46,11 +46,11 @@ export const UserDetailsTable = ({ users, loading, onUserAction }: UserDetailsTa
 
   const getSegmentColor = (segment: string) => {
     switch (segment) {
-      case 'Power User': return 'bg-green-100 text-green-800';
-      case 'Ativo': return 'bg-blue-100 text-blue-800';
-      case 'Dormentes': return 'bg-yellow-100 text-yellow-800';
-      case 'Em Risco': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'Power User': return 'bg-success/10 text-success';
+      case 'Ativo': return 'bg-operational/10 text-operational';
+      case 'Dormentes': return 'bg-warning/10 text-warning';
+      case 'Em Risco': return 'bg-destructive/10 text-destructive';
+      default: return 'bg-muted text-muted-foreground';
     }
   };
 
@@ -102,7 +102,7 @@ export const UserDetailsTable = ({ users, loading, onUserAction }: UserDetailsTa
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Users className="h-5 w-5 text-blue-600" />
+            <Users className="h-5 w-5 text-operational" />
             Detalhes dos Usuários
           </div>
           <Badge variant="outline">{users.length} usuários</Badge>
@@ -174,18 +174,18 @@ export const UserDetailsTable = ({ users, loading, onUserAction }: UserDetailsTa
                       <div className="flex items-center space-x-2">
                         {user.onboarding_completed ? (
                           <div title="Onboarding completo">
-                            <UserCheck className="h-4 w-4 text-green-500" />
+                            <UserCheck className="h-4 w-4 text-success" />
                           </div>
                         ) : (
                           <div title="Onboarding pendente">
-                            <Calendar className="h-4 w-4 text-yellow-500" />
+                            <Calendar className="h-4 w-4 text-warning" />
                           </div>
                         )}
                         <div title={`Health Score: ${user.healthScore}`}>
                           <Activity 
                             className={`h-4 w-4 ${
-                              user.healthScore > 70 ? 'text-green-500' :
-                              user.healthScore > 40 ? 'text-yellow-500' : 'text-red-500'
+                              user.healthScore > 70 ? 'text-success' :
+                              user.healthScore > 40 ? 'text-warning' : 'text-destructive'
                             }`}
                           />
                         </div>
@@ -220,7 +220,7 @@ export const UserDetailsTable = ({ users, loading, onUserAction }: UserDetailsTa
                           )}
                           <DropdownMenuItem 
                             onClick={() => onUserAction(user.id, 'suspend')}
-                            className="text-red-600"
+                            className="text-destructive"
                           >
                             <Ban className="mr-2 h-4 w-4" />
                             Suspender

@@ -76,7 +76,7 @@ export const UserSegmentChart = ({ data, loading }: UserSegmentChartProps) => {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Users className="h-5 w-5 text-purple-600" />
+          <Users className="h-5 w-5 text-strategy" />
           Segmentação de Usuários
         </CardTitle>
         <CardDescription>
@@ -136,12 +136,12 @@ export const UserSegmentChart = ({ data, loading }: UserSegmentChartProps) => {
                   <div className="flex items-center space-x-2">
                     <span className="text-sm font-medium">{segment.percentage}%</span>
                     {segment.trend >= 0 ? (
-                      <div className="flex items-center text-green-600">
+                      <div className="flex items-center text-success">
                         <TrendingUp className="h-3 w-3" />
                         <span className="text-xs">+{segment.trend}%</span>
                       </div>
                     ) : (
-                      <div className="flex items-center text-red-600">
+                      <div className="flex items-center text-destructive">
                         <TrendingDown className="h-3 w-3" />
                         <span className="text-xs">{segment.trend}%</span>
                       </div>

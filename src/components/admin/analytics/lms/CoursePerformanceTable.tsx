@@ -79,10 +79,10 @@ export const CoursePerformanceTable = ({ data, isLoading }: CoursePerformanceTab
                       <span className="font-medium">{course.totalLessons}</span>
                     </TableCell>
                     <TableCell className="text-center">
-                      <span className="font-medium text-blue-600">{course.usersStarted}</span>
+                      <span className="font-medium text-operational">{course.usersStarted}</span>
                     </TableCell>
                     <TableCell className="text-center">
-                      <span className="font-medium text-green-600">{course.usersCompleted}</span>
+                      <span className="font-medium text-success">{course.usersCompleted}</span>
                     </TableCell>
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center gap-2">
@@ -97,7 +97,7 @@ export const CoursePerformanceTable = ({ data, isLoading }: CoursePerformanceTab
                       </div>
                     </TableCell>
                     <TableCell className="text-center">
-                      <span className="font-medium text-purple-600">{course.activeEnrollments}</span>
+                      <span className="font-medium text-strategy">{course.activeEnrollments}</span>
                     </TableCell>
                   </TableRow>
                 ))

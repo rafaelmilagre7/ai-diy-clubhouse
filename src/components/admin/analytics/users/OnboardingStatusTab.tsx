@@ -106,10 +106,10 @@ export const OnboardingStatusTab = ({ data, loading }: OnboardingStatusTabProps)
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Onboarding Completo</p>
-                <p className="text-3xl font-bold text-green-600">{completedUsers.length}</p>
+                <p className="text-3xl font-bold text-success">{completedUsers.length}</p>
                 <p className="text-xs text-muted-foreground mt-1">{completionRate}% do total</p>
               </div>
-              <CheckCircle className="h-8 w-8 text-green-500" />
+              <CheckCircle className="h-8 w-8 text-success" />
             </div>
           </CardContent>
         </Card>
@@ -119,10 +119,10 @@ export const OnboardingStatusTab = ({ data, loading }: OnboardingStatusTabProps)
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Onboarding Pendente</p>
-                <p className="text-3xl font-bold text-orange-600">{incompleteUsers.length}</p>
+                <p className="text-3xl font-bold text-revenue">{incompleteUsers.length}</p>
                 <p className="text-xs text-muted-foreground mt-1">{100 - completionRate}% do total</p>
               </div>
-              <Clock className="h-8 w-8 text-orange-500" />
+              <Clock className="h-8 w-8 text-revenue" />
             </div>
           </CardContent>
         </Card>
@@ -157,7 +157,7 @@ export const OnboardingStatusTab = ({ data, loading }: OnboardingStatusTabProps)
                 variant={statusFilter === 'completed' ? 'default' : 'outline'}
                 onClick={() => setStatusFilter('completed')}
                 size="sm"
-                className="text-green-700"
+                className="text-success"
               >
                 <UserCheck className="h-4 w-4 mr-1" />
                 Completos ({completedUsers.length})
@@ -166,7 +166,7 @@ export const OnboardingStatusTab = ({ data, loading }: OnboardingStatusTabProps)
                 variant={statusFilter === 'incomplete' ? 'default' : 'outline'}
                 onClick={() => setStatusFilter('incomplete')}
                 size="sm"
-                className="text-orange-700"
+                className="text-revenue"
               >
                 <UserX className="h-4 w-4 mr-1" />
                 Pendentes ({incompleteUsers.length})
@@ -214,13 +214,13 @@ interface UserOnboardingCardProps {
 
 const UserOnboardingCard = ({ user }: UserOnboardingCardProps) => {
   const getStatusColor = (completed: boolean) => {
-    return completed ? 'text-green-600 bg-green-50' : 'text-orange-600 bg-orange-50';
+    return completed ? 'text-success bg-success/10' : 'text-revenue bg-revenue/10';
   };
 
   const getStatusIcon = (completed: boolean) => {
     return completed ? 
-      <CheckCircle className="h-4 w-4 text-green-600" /> : 
-      <Clock className="h-4 w-4 text-orange-600" />;
+      <CheckCircle className="h-4 w-4 text-success" /> : 
+      <Clock className="h-4 w-4 text-revenue" />;
   };
 
   const formatDate = (dateString: string | null) => {

@@ -44,7 +44,7 @@ export const UserFunnelChart = ({ data, loading }: UserFunnelChartProps) => {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Users className="h-5 w-5 text-blue-600" />
+          <Users className="h-5 w-5 text-operational" />
           Funil de Conversão
         </CardTitle>
         <CardDescription>
@@ -63,11 +63,11 @@ export const UserFunnelChart = ({ data, loading }: UserFunnelChartProps) => {
                 <div 
                   className={`
                     relative p-4 rounded-lg transition-all duration-300 hover:shadow-md
-                    ${index === 0 ? 'bg-blue-50 border-blue-200' :
-                      index === 1 ? 'bg-indigo-50 border-indigo-200' :
-                      index === 2 ? 'bg-purple-50 border-purple-200' :
-                      index === 3 ? 'bg-pink-50 border-pink-200' :
-                      'bg-green-50 border-green-200'}
+                    ${index === 0 ? 'bg-operational/10 border-operational/30' :
+                      index === 1 ? 'bg-info/10 border-info/30' :
+                      index === 2 ? 'bg-strategy/10 border-strategy/30' :
+                      index === 3 ? 'bg-accent/10 border-accent/30' :
+                      'bg-success/10 border-success/30'}
                     border-2
                   `}
                   style={{ 
@@ -86,11 +86,11 @@ export const UserFunnelChart = ({ data, loading }: UserFunnelChartProps) => {
                     </div>
                     
                     <div className="flex items-center space-x-2">
-                      <span className="text-sm font-medium text-green-600">
+                      <span className="text-sm font-medium text-success">
                         {step.conversionRate}%
                       </span>
                       {step.dropoffRate > 0 && (
-                        <div className="flex items-center text-red-600">
+                        <div className="flex items-center text-destructive">
                           <TrendingDown className="h-3 w-3" />
                           <span className="text-xs ml-1">{step.dropoffRate}%</span>
                         </div>
@@ -123,28 +123,28 @@ export const UserFunnelChart = ({ data, loading }: UserFunnelChartProps) => {
           <div className="mt-6 p-4 bg-gray-50 rounded-lg">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
               <div>
-                <div className="text-lg font-bold text-blue-600">
+                <div className="text-lg font-bold text-operational">
                   {data[0]?.users.toLocaleString()}
                 </div>
-                <div className="text-xs text-gray-600">Total Cadastros</div>
+                <div className="text-xs text-muted-foreground">Total Cadastros</div>
               </div>
               <div>
-                <div className="text-lg font-bold text-green-600">
+                <div className="text-lg font-bold text-success">
                   {data[data.length - 1]?.users.toLocaleString()}
                 </div>
-                <div className="text-xs text-gray-600">Usuários Ativos</div>
+                <div className="text-xs text-muted-foreground">Usuários Ativos</div>
               </div>
               <div>
-                <div className="text-lg font-bold text-purple-600">
+                <div className="text-lg font-bold text-strategy">
                   {data[data.length - 1]?.conversionRate}%
                 </div>
-                <div className="text-xs text-gray-600">Taxa Conversão Final</div>
+                <div className="text-xs text-muted-foreground">Taxa Conversão Final</div>
               </div>
               <div>
-                <div className="text-lg font-bold text-orange-600">
+                <div className="text-lg font-bold text-revenue">
                   {Math.round(data.reduce((sum, step) => sum + step.dropoffRate, 0) / data.length)}%
                 </div>
-                <div className="text-xs text-gray-600">Abandono Médio</div>
+                <div className="text-xs text-muted-foreground">Abandono Médio</div>
               </div>
             </div>
           </div>

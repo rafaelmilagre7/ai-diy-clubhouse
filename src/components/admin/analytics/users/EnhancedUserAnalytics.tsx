@@ -46,7 +46,7 @@ export const EnhancedUserAnalytics = ({ timeRange }: EnhancedUserAnalyticsProps)
       value: data?.usersByTime?.filter(u => u.novos > 0)?.length || 0,
       icon: UserCheck,
       description: "Últimos 7 dias",
-      color: "text-green-500",
+      color: "text-success",
       trend: null
     },
     {
@@ -54,7 +54,7 @@ export const EnhancedUserAnalytics = ({ timeRange }: EnhancedUserAnalyticsProps)
       value: `${Math.round((data?.dayOfWeekActivity?.reduce((acc, d) => acc + d.atividade, 0) || 0) / (data?.dayOfWeekActivity?.length || 1))}%`,
       icon: Activity,
       description: "Sessões de um evento",
-      color: "text-purple-500", 
+      color: "text-strategy", 
       trend: null
     },
     {
@@ -62,7 +62,7 @@ export const EnhancedUserAnalytics = ({ timeRange }: EnhancedUserAnalyticsProps)
       value: data?.userCompletionRate?.reduce((acc, item) => acc + item.value, 0) || 0,
       icon: Award,
       description: "Por usuário ativo",
-      color: "text-orange-500",
+      color: "text-revenue",
       trend: null
     }
   ];
@@ -174,10 +174,10 @@ interface UserKPICardProps {
 
 const UserKPICard = ({ title, value, change, icon, color, loading }: UserKPICardProps) => {
   const colorClasses = {
-    blue: 'text-blue-600 bg-blue-50',
-    green: 'text-green-600 bg-green-50',
-    purple: 'text-purple-600 bg-purple-50',
-    orange: 'text-orange-600 bg-orange-50'
+    blue: 'text-operational bg-operational/10',
+    green: 'text-success bg-success/10',
+    purple: 'text-strategy bg-strategy/10',
+    orange: 'text-revenue bg-revenue/10'
   };
 
   const isPositive = change >= 0;
@@ -191,12 +191,12 @@ const UserKPICard = ({ title, value, change, icon, color, loading }: UserKPICard
           </div>
           <div className="flex items-center space-x-1">
             {isPositive ? (
-              <TrendingUp className="h-4 w-4 text-green-500" />
+              <TrendingUp className="h-4 w-4 text-success" />
             ) : (
-              <TrendingDown className="h-4 w-4 text-red-500" />
+              <TrendingDown className="h-4 w-4 text-destructive" />
             )}
             <span className={`text-sm font-medium ${
-              isPositive ? 'text-green-600' : 'text-red-600'
+              isPositive ? 'text-success' : 'text-destructive'
             }`}>
               {Math.abs(change)}%
             </span>
@@ -299,27 +299,27 @@ const UserEngagementMetrics = ({ data, loading }: any) => (
     <CardContent>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="text-center p-4 border rounded-lg">
-          <Zap className="h-8 w-8 mx-auto mb-2 text-yellow-500" />
+          <Zap className="h-8 w-8 mx-auto mb-2 text-warning" />
           <div className="text-2xl font-bold">{data?.avgSessionTime || '25m'}</div>
-          <div className="text-sm text-gray-600">Tempo médio por sessão</div>
+          <div className="text-sm text-muted-foreground">Tempo médio por sessão</div>
         </div>
         
         <div className="text-center p-4 border rounded-lg">
-          <Eye className="h-8 w-8 mx-auto mb-2 text-blue-500" />
+          <Eye className="h-8 w-8 mx-auto mb-2 text-operational" />
           <div className="text-2xl font-bold">{data?.pageViewsPerSession || '4.2'}</div>
-          <div className="text-sm text-gray-600">Pages por sessão</div>
+          <div className="text-sm text-muted-foreground">Pages por sessão</div>
         </div>
         
         <div className="text-center p-4 border rounded-lg">
-          <Award className="h-8 w-8 mx-auto mb-2 text-green-500" />
+          <Award className="h-8 w-8 mx-auto mb-2 text-success" />
           <div className="text-2xl font-bold">{data?.featureAdoption || '78%'}</div>
-          <div className="text-sm text-gray-600">Adoção de features</div>
+          <div className="text-sm text-muted-foreground">Adoção de features</div>
         </div>
         
         <div className="text-center p-4 border rounded-lg">
-          <Activity className="h-8 w-8 mx-auto mb-2 text-purple-500" />
+          <Activity className="h-8 w-8 mx-auto mb-2 text-strategy" />
           <div className="text-2xl font-bold">{data?.dailyActiveUsers || '156'}</div>
-          <div className="text-sm text-gray-600">DAU médio</div>
+          <div className="text-sm text-muted-foreground">DAU médio</div>
         </div>
       </div>
     </CardContent>
@@ -349,8 +349,8 @@ const UserJourneyAnalysis = ({ data, loading }: any) => (
                 <div className="text-sm text-gray-600">{point.description}</div>
               </div>
               <div className="text-right">
-                <div className="text-lg font-semibold text-red-600">{point.dropoffRate}%</div>
-                <div className="text-sm text-gray-600">{point.users} usuários</div>
+                <div className="text-lg font-semibold text-destructive">{point.dropoffRate}%</div>
+                <div className="text-sm text-muted-foreground">{point.users} usuários</div>
               </div>
             </div>
           )) || (
@@ -376,20 +376,20 @@ const UserGrowthTrendCard = ({ data, loading }: any) => (
       ) : (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">Projeção 30 dias</span>
-            <span className="font-semibold text-green-600">+{data?.projectedGrowth || 45} usuários</span>
+            <span className="text-sm text-muted-foreground">Projeção 30 dias</span>
+            <span className="font-semibold text-success">+{data?.projectedGrowth || 45} usuários</span>
           </div>
           
           <Progress value={data?.growthProgress || 68} className="h-2" />
           
           <div className="grid grid-cols-2 gap-4 pt-4">
             <div className="text-center">
-              <div className="text-lg font-bold text-blue-600">{data?.organicGrowth || '82%'}</div>
-              <div className="text-xs text-gray-600">Crescimento Orgânico</div>
+              <div className="text-lg font-bold text-operational">{data?.organicGrowth || '82%'}</div>
+              <div className="text-xs text-muted-foreground">Crescimento Orgânico</div>
             </div>
             <div className="text-center">
-              <div className="text-lg font-bold text-purple-600">{data?.referralGrowth || '18%'}</div>
-              <div className="text-xs text-gray-600">Via Indicações</div>
+              <div className="text-lg font-bold text-strategy">{data?.referralGrowth || '18%'}</div>
+              <div className="text-xs text-muted-foreground">Via Indicações</div>
             </div>
           </div>
         </div>

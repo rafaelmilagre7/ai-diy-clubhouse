@@ -61,7 +61,7 @@ export const UserRetentionChart = ({ data, loading }: UserRetentionChartProps) =
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <TrendingUp className="h-5 w-5 text-orange-600" />
+          <TrendingUp className="h-5 w-5 text-revenue" />
           Análise de Retenção
         </CardTitle>
         <CardDescription>
@@ -101,21 +101,21 @@ export const UserRetentionChart = ({ data, loading }: UserRetentionChartProps) =
           {/* Métricas principais */}
           <div className="grid grid-cols-3 gap-4 pt-4 border-t">
             <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">{day1Retention}%</div>
-              <div className="text-sm text-gray-600">Retenção D1</div>
+              <div className="text-2xl font-bold text-operational">{day1Retention}%</div>
+              <div className="text-sm text-muted-foreground">Retenção D1</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-orange-600">{day30Retention}%</div>
-              <div className="text-sm text-gray-600">Retenção D30</div>
+              <div className="text-2xl font-bold text-revenue">{day30Retention}%</div>
+              <div className="text-sm text-muted-foreground">Retenção D30</div>
             </div>
             <div className="text-center">
               <div className={`text-2xl font-bold ${
-                retentionHealth === 'Boa' ? 'text-green-600' :
-                retentionHealth === 'Regular' ? 'text-yellow-600' : 'text-red-600'
+                retentionHealth === 'Boa' ? 'text-success' :
+                retentionHealth === 'Regular' ? 'text-warning' : 'text-destructive'
               }`}>
                 {retentionHealth}
               </div>
-              <div className="text-sm text-gray-600">Saúde Geral</div>
+              <div className="text-sm text-muted-foreground">Saúde Geral</div>
             </div>
           </div>
 
@@ -135,8 +135,8 @@ export const UserRetentionChart = ({ data, loading }: UserRetentionChartProps) =
             <div className="mt-2 text-xs">
               <span className="font-medium">Status atual:</span>
               <span className={`ml-1 ${
-                day30Retention > 40 ? 'text-green-600' : 
-                day30Retention > 25 ? 'text-yellow-600' : 'text-red-600'
+                day30Retention > 40 ? 'text-success' : 
+                day30Retention > 25 ? 'text-warning' : 'text-destructive'
               }`}>
                 {day30Retention > 40 ? 'Acima da média' : 
                  day30Retention > 25 ? 'Na média' : 'Abaixo da média'}

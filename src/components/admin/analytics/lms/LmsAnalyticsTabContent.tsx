@@ -227,10 +227,10 @@ export const LmsAnalyticsTabContent = ({ timeRange }: LmsAnalyticsTabContentProp
       </div>
 
       {/* System Status Alert */}
-      <Alert className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
-        <TrendingUp className="h-4 w-4 text-blue-600" />
-        <AlertTitle className="text-blue-800 dark:text-blue-200">Analytics Avançado Ativo</AlertTitle>
-        <AlertDescription className="text-blue-700 dark:text-blue-300">
+      <Alert className="bg-operational/10 dark:bg-operational/20 border-operational/30 dark:border-operational/50">
+        <TrendingUp className="h-4 w-4 text-operational" />
+        <AlertTitle className="text-operational dark:text-operational">Analytics Avançado Ativo</AlertTitle>
+        <AlertDescription className="text-operational/80 dark:text-operational/90">
           Sistema de analytics modernizado com métricas em tempo real, 
           gráficos interativos e indicadores de performance avançados.
         </AlertDescription>
