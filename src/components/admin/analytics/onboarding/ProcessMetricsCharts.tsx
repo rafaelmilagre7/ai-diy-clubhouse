@@ -30,7 +30,7 @@ export const ProcessMetricsCharts: React.FC<ProcessMetricsChartsProps> = ({ data
                         {step.users} usuários ({step.percentage}%)
                       </span>
                       {step.dropoffRate > 0 && (
-                        <span className="text-xs text-red-500">
+                        <span className="text-xs text-destructive">
                           -{step.dropoffRate}% abandono
                         </span>
                       )}

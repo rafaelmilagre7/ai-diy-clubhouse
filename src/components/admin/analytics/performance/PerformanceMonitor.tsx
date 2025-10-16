@@ -39,9 +39,9 @@ export const PerformanceMonitor = () => {
 
   const getHitRateColor = (hitRate: string) => {
     const rate = parseFloat(hitRate);
-    if (rate >= 80) return 'bg-green-500';
-    if (rate >= 60) return 'bg-yellow-500';
-    return 'bg-red-500';
+    if (rate >= 80) return 'bg-success';
+    if (rate >= 60) return 'bg-warning';
+    return 'bg-destructive';
   };
 
   const getPerformanceScore = () => {
@@ -102,7 +102,7 @@ export const PerformanceMonitor = () => {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Database className="h-4 w-4 text-purple-500" />
+              <Database className="h-4 w-4 text-strategy" />
               <span className="text-sm">Taxa de Acerto do Cache</span>
             </div>
             <div className="flex items-center gap-2">
