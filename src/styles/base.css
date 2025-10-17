@@ -144,6 +144,49 @@
   --transition-slow: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-bounce: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ============================================
+     GLASS SYSTEM COLORS - Normalização Fase 13
+     Substituem rgba(255, 255, 255, X) e rgba(31, 38, 135, X)
+     ============================================ */
+  --glass-white-base: 0 0% 100%;          /* rgba(255, 255, 255, X) */
+  --glass-shadow-primary: 223 26% 33%;    /* rgba(31, 38, 135, X) */
+  --glass-shadow-light: 0 0% 0%;          /* rgba(0, 0, 0, X) */
+
+  /* ============================================
+     STATUS COLORS - Normalização Fase 13
+     Substituem rgb(74 222 128), rgb(251 191 36)
+     ============================================ */
+  --status-success-rgb: 142 76% 68%;      /* rgb(74 222 128) */
+  --status-warning-rgb: 38 92% 50%;       /* rgb(251 191 36) */
+
+  /* ============================================
+     DARK MODE INPUT COLORS - Normalização Fase 13
+     Substituem rgb(31, 41, 55), rgb(75, 85, 99)
+     ============================================ */
+  --input-dark-bg: 218 19% 19%;           /* rgb(31, 41, 55) */
+  --input-dark-border: 218 11% 47%;       /* rgb(75, 85, 99) */
+  --input-dark-hover: 217 18% 31%;        /* rgb(55, 65, 81) */
+  --input-dark-text: 220 9% 46%;          /* rgb(156, 163, 175) */
+
+  /* ============================================
+     GLOW BORDER COLORS - Normalização Fase 13
+     Para efeitos glow de cards premium
+     ============================================ */
+  --glow-blue-start: 202 100% 65%;        /* rgba(79, 172, 254, 0.8) */
+  --glow-blue-end: 184 100% 50%;          /* rgba(0, 242, 254, 0.8) */
+  --glow-green-start: 145 77% 59%;        /* rgba(67, 233, 123, 0.8) */
+  --glow-green-end: 169 92% 60%;          /* rgba(56, 249, 215, 0.8) */
+  --glow-pink-start: 293 89% 78%;         /* rgba(240, 147, 251, 0.8) */
+  --glow-pink-end: 353 86% 65%;           /* rgba(245, 87, 108, 0.8) */
+
+  /* ============================================
+     SHIMMER COLORS - Normalização Fase 13
+     Para animações shimmer/skeleton
+     ============================================ */
+  --shimmer-start: 0 0% 100%;             /* rgba(255, 255, 255, 0.6) */
+  --shimmer-mid: 0 0% 100%;               /* rgba(255, 255, 255, 0.9) */
+  --shimmer-transparent: 0 0% 100%;       /* rgba(255, 255, 255, 0.2) */
 }
 
 .light {
