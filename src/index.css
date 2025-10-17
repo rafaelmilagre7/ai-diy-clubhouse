@@ -11,6 +11,7 @@
 @import './styles/liquid-glass.css';
 @import './styles/toast-aurora.css';
 @import './styles/accessibility.css';
+@import './styles/social-brands.css';
 
 @tailwind base;
 @tailwind components;

@@ -119,7 +119,7 @@ export const EnhancedAreaChart: React.FC<EnhancedAreaChartProps> = ({
                 r: 6, 
                 stroke: chartColors[idx], 
                 strokeWidth: 2, 
-                fill: '#fff' 
+                fill: 'hsl(var(--background))' 
               }}
               animationDuration={chartTheme.animations.duration}
             />

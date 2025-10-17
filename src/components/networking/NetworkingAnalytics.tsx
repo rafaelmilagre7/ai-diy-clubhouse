@@ -28,32 +28,32 @@ export const NetworkingAnalytics = () => {
       value: stats.totalMatches,
       growth: stats.matchesGrowth,
       icon: Target,
-      color: 'text-blue-400',
-      bgColor: 'bg-blue-500/10'
+      color: 'text-info',
+      bgColor: 'bg-info/10'
     },
     {
       title: 'Conexões Ativas',
       value: stats.totalConnections,
       growth: stats.connectionsGrowth,
       icon: Users,
-      color: 'text-green-400',
-      bgColor: 'bg-green-500/10'
+      color: 'text-operational',
+      bgColor: 'bg-operational/10'
     },
     {
       title: 'Mensagens Enviadas',
       value: stats.totalMessages,
       growth: 0,
       icon: MessageCircle,
-      color: 'text-purple-400',
-      bgColor: 'bg-purple-500/10'
+      color: 'text-aurora-primary',
+      bgColor: 'bg-aurora-primary/10'
     },
     {
       title: 'Reuniões Agendadas',
       value: stats.totalMeetings,
       growth: 0,
       icon: Calendar,
-      color: 'text-orange-400',
-      bgColor: 'bg-orange-500/10'
+      color: 'text-warning',
+      bgColor: 'bg-warning/10'
     }
   ];
 
@@ -133,7 +133,7 @@ export const NetworkingAnalytics = () => {
                 data={chartData}
                 index="month"
                 categories={["matches", "connections"]}
-                colors={["#0D8ABC", "#22C55E"]}
+                colors={["hsl(var(--info))", "hsl(var(--operational))"]}
                 valueFormatter={(value) => value.toString()}
                 className="h-72"
               />
@@ -161,9 +161,9 @@ export const NetworkingAnalytics = () => {
                   <span className="text-neutral-300">Taxa de Sucesso</span>
                   <span className="text-white">{stats.successRate.toFixed(1)}%</span>
                 </div>
-                <div className="w-full bg-neutral-800 rounded-full h-2">
+                <div className="w-full bg-muted rounded-full h-2">
                   <div 
-                    className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                    className="bg-operational h-2 rounded-full transition-all duration-300"
                     style={{ width: `${Math.min(stats.successRate, 100)}%` }}
                   />
                 </div>
@@ -174,7 +174,7 @@ export const NetworkingAnalytics = () => {
                     <span className="text-neutral-300">Compatibilidade Média</span>
                     <span className="text-white">{stats.avgCompatibility.toFixed(1)}%</span>
                   </div>
-                  <div className="w-full bg-neutral-800 rounded-full h-2">
+                  <div className="w-full bg-muted rounded-full h-2">
                     <div 
                       className="bg-aurora-primary h-2 rounded-full transition-all duration-300"
                       style={{ width: `${stats.avgCompatibility}%` }}
@@ -182,22 +182,22 @@ export const NetworkingAnalytics = () => {
                   </div>
                 </div>
 
-              <div className="pt-2 border-t border-neutral-800">
-                <h4 className="text-sm font-medium text-white mb-2">Resumo do Mês</h4>
+              <div className="pt-2 border-t border-border">
+                <h4 className="text-sm font-medium text-foreground mb-2">Resumo do Mês</h4>
                 <div className="space-y-2">
                   <div className="flex justify-between text-xs">
-                    <span className="text-neutral-400">Matches → Conexões</span>
-                    <span className="text-green-400">
+                    <span className="text-muted-foreground">Matches → Conexões</span>
+                    <span className="text-operational">
                       {stats.totalConnections}/{stats.totalMatches}
                     </span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span className="text-neutral-400">Conversas Ativas</span>
-                    <span className="text-purple-400">{stats.totalMessages} msgs</span>
+                    <span className="text-muted-foreground">Conversas Ativas</span>
+                    <span className="text-aurora-primary">{stats.totalMessages} msgs</span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span className="text-neutral-400">Reuniões Marcadas</span>
-                    <span className="text-orange-400">{stats.totalMeetings}</span>
+                    <span className="text-muted-foreground">Reuniões Marcadas</span>
+                    <span className="text-warning">{stats.totalMeetings}</span>
                   </div>
                 </div>
               </div>

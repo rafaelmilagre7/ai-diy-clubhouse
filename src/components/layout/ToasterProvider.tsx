@@ -10,16 +10,7 @@ export const ToasterProvider = () => {
       closeButton
       toastOptions={{
         duration: 5000,
-        className: 'toast-custom-class',
-        style: {
-          background: '#1A1E2E',
-          color: 'white',
-          border: '1px solid rgba(255,255,255,0.1)',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-          fontWeight: 500,
-          padding: '16px',
-          fontSize: '15px',
-        }
+        className: 'toast-custom-class bg-card text-foreground border border-border shadow-lg font-medium p-4 text-sm',
       }}
       visibleToasts={2}
       expand={false}

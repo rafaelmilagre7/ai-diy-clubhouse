@@ -54,7 +54,7 @@ export const UserSegmentChart = ({ data, loading }: UserSegmentChartProps) => {
     name: segment.name,
     value: segment.count,
     percentage: segment.percentage,
-    color: SEGMENT_COLORS[segment.name as keyof typeof SEGMENT_COLORS] || '#6B7280'
+    color: SEGMENT_COLORS[segment.name as keyof typeof SEGMENT_COLORS] || 'hsl(var(--muted-foreground))'
   })) || [];
 
   const CustomTooltip = ({ active, payload }: any) => {
@@ -118,7 +118,7 @@ export const UserSegmentChart = ({ data, loading }: UserSegmentChartProps) => {
                   <div 
                     className="w-3 h-3 rounded-full"
                     style={{ 
-                      backgroundColor: SEGMENT_COLORS[segment.name as keyof typeof SEGMENT_COLORS] || '#6B7280'
+                      backgroundColor: SEGMENT_COLORS[segment.name as keyof typeof SEGMENT_COLORS] || 'hsl(var(--muted-foreground))'
                     }}
                   />
                   <div>

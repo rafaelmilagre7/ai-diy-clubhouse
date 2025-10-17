@@ -20,22 +20,22 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, cla
     // Links: [text](url) -> <a>
     html = html.replace(
       /\[([^\]]+)\]\(([^)]+)\)/g,
-      '<a href="$2" style="color: #3b82f6; text-decoration: underline;" target="_blank" rel="noopener noreferrer">$1</a>'
+      '<a href="$2" class="text-primary underline" target="_blank" rel="noopener noreferrer">$1</a>'
     );
     
     // Negrito: **text** -> <strong>
-    html = html.replace(/\*\*(.*?)\*\*/g, '<strong style="font-weight: 600;">$1</strong>');
+    html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold">$1</strong>');
     
     // Itálico: *text* -> <em>
-    html = html.replace(/\*(.*?)\*/g, '<em style="font-style: italic;">$1</em>');
+    html = html.replace(/\*(.*?)\*/g, '<em class="italic">$1</em>');
     
     // Sublinhado: __text__ -> <u>
-    html = html.replace(/__(.*?)__/g, '<u style="text-decoration: underline;">$1</u>');
+    html = html.replace(/__(.*?)__/g, '<u class="underline">$1</u>');
     
     // Código inline: `code` -> <code>
     html = html.replace(
       /`([^`]+)`/g, 
-      '<code style="background-color: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: 14px; font-family: monospace;">$1</code>'
+      '<code class="bg-muted text-foreground px-1.5 py-0.5 rounded text-sm font-mono">$1</code>'
     );
     
     // Quebras de linha -> <br>

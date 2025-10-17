@@ -101,7 +101,7 @@ export const LessonTagManager = ({ form, fieldName = 'tags' }: LessonTagManagerP
         name: newTagName.trim(),
         category: newTagCategory,
         description: `Tag ${newTagName}`,
-        color: '#6366f1', // Cor padrão
+        color: 'hsl(var(--primary))',
         order_index: 0,
         is_active: true
       });

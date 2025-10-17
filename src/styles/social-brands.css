@@ -1,0 +1,23 @@
+/**
+ * Social Media Brand Colors
+ * Cores oficiais das marcas de redes sociais
+ * Normalize: usar hsl(var(--social-*)) em vez de cores hardcoded
+ */
+
+:root {
+  /* WhatsApp */
+  --social-whatsapp: 142 70% 49%;        /* #25D366 */
+  --social-whatsapp-hover: 142 70% 40%;  /* #1DA851 */
+  
+  /* LinkedIn */
+  --social-linkedin: 201 100% 35%;       /* #0077B5 */
+  --social-linkedin-hover: 201 100% 26%; /* #005885 */
+  
+  /* Twitter/X */
+  --social-twitter: 0 0% 0%;             /* #000000 (preto para X) */
+  --social-twitter-hover: 0 0% 31%;      /* #4F4F4F (cinza escuro) */
+  
+  /* LinkedIn Alternativo (usado em alguns botões) */
+  --social-linkedin-alt: 207 81% 40%;    /* #0A66C2 */
+  --social-linkedin-alt-hover: 207 100% 25%; /* #004182 */
+}

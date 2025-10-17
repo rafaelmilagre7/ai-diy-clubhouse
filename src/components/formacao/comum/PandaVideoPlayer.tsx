@@ -164,15 +164,14 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
         width={width}
         height={height}
         loading="eager"
-        className="w-full h-full rounded-md"
         frameBorder="0"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
         allowFullScreen
         onLoad={handleLoad}
         onError={handleError}
         referrerPolicy="strict-origin-when-cross-origin"
+        className="w-full h-full rounded-md bg-surface-base"
         style={{ 
-          backgroundColor: '#0f172a',
           opacity: loading ? 0 : 1,
           transition: 'opacity 0.3s ease-in-out'
         }}
