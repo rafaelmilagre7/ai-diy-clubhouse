@@ -52,11 +52,11 @@ export const UserRoleDialog = ({
   const getRoleIcon = (roleName: string) => {
     switch(roleName.toLowerCase()) {
       case 'admin':
-        return <Shield className="h-4 w-4 mr-2 text-blue-600" />;
+        return <Shield className="h-4 w-4 mr-2 text-operational" />;
       case 'moderator':
-        return <Shield className="h-4 w-4 mr-2 text-purple-600" />;
+        return <Shield className="h-4 w-4 mr-2 text-strategy" />;
       default:
-        return <User className="h-4 w-4 mr-2 text-green-600" />;
+        return <User className="h-4 w-4 mr-2 text-operational" />;
     }
   };
 

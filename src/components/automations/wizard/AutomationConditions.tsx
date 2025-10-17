@@ -169,20 +169,20 @@ export const AutomationConditions = ({ conditions, onChange }: AutomationConditi
           {/* Help Section */}
           <Collapsible open={showHelp} onOpenChange={setShowHelp}>
             <CollapsibleContent className="space-y-4">
-              <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="p-4 bg-operational/10 rounded-lg border border-operational/30">
                 <div className="flex items-start gap-3">
-                  <Lightbulb className="h-5 w-5 text-blue-600 mt-0.5" />
+                  <Lightbulb className="h-5 w-5 text-operational mt-0.5" />
                   <div className="space-y-3">
                     <div>
-                      <h4 className="font-medium text-blue-900">Como Funcionam as Condições</h4>
-                      <p className="text-sm text-blue-700 mt-1">
+                      <h4 className="font-medium text-operational">Como Funcionam as Condições</h4>
+                      <p className="text-sm text-operational/90 mt-1">
                         As condições são verificadas sempre que um evento é recebido. 
                         Todas as condições do grupo devem ser verdadeiras (AND) ou 
                         pelo menos uma deve ser verdadeira (OR) para executar as ações.
                       </p>
                     </div>
                     <div>
-                      <h4 className="font-medium text-blue-900">Padrões Comuns</h4>
+                      <h4 className="font-medium text-operational">Padrões Comuns</h4>
                       <div className="grid gap-2 mt-2">
                         {commonPatterns.map((pattern, index) => (
                           <div 

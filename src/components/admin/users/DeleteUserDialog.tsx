@@ -54,8 +54,8 @@ export const DeleteUserDialog: React.FC<DeleteUserDialogProps> = ({
           <AlertDialogDescription>
             Tem certeza que deseja remover <strong>COMPLETAMENTE</strong> o usuário <strong>{user?.name || user?.email}</strong>?
             
-            <div className="mt-4 p-3 bg-red-50 dark:bg-red-950/20 rounded-md border border-red-200 dark:border-red-800">
-              <p className="text-sm text-red-800 dark:text-red-200">
+            <div className="mt-4 p-3 bg-status-error/10 rounded-md border border-status-error/30">
+              <p className="text-sm text-status-error">
                 ⚠️ Esta ação é <strong>irreversível</strong> e removerá o usuário completamente da plataforma.
               </p>
             </div>

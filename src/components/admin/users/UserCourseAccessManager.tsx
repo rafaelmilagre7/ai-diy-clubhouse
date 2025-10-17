@@ -118,7 +118,7 @@ export const UserCourseAccessManager: React.FC<UserCourseAccessManagerProps> = (
         );
       } else {
         return (
-          <Badge variant="destructive" className="bg-red-500/10 text-red-700 border-red-500/20">
+          <Badge variant="destructive" className="bg-status-error/10 text-status-error border-status-error/30">
             <ShieldX className="w-3 h-3 mr-1" />
             Negado
           </Badge>
@@ -128,7 +128,7 @@ export const UserCourseAccessManager: React.FC<UserCourseAccessManagerProps> = (
     
     if (courseStatus.hasRoleAccess) {
       return (
-        <Badge variant="secondary" className="bg-blue-500/10 text-blue-700 border-blue-500/20">
+        <Badge variant="secondary" className="bg-operational/10 text-operational border-operational/30">
           <Shield className="w-3 h-3 mr-1" />
           Por Papel
         </Badge>
@@ -196,7 +196,7 @@ export const UserCourseAccessManager: React.FC<UserCourseAccessManagerProps> = (
                           </p>
                         )}
                         {courseStatus.overrideExpiresAt && (
-                          <p className="text-xs text-amber-600 mt-1">
+                          <p className="text-xs text-revenue mt-1">
                             Expira: {format(new Date(courseStatus.overrideExpiresAt), 'dd/MM/yyyy', { locale: ptBR })}
                           </p>
                         )}
@@ -221,19 +221,19 @@ export const UserCourseAccessManager: React.FC<UserCourseAccessManagerProps> = (
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span>Acesso por papel:</span>
-                        <span className={selectedCourse.hasRoleAccess ? "text-emerald-600" : "text-red-600"}>
+                        <span className={selectedCourse.hasRoleAccess ? "text-operational" : "text-status-error"}>
                           {selectedCourse.hasRoleAccess ? "Sim" : "Não"}
                         </span>
                       </div>
                       <div className="flex justify-between">
                         <span>Override ativo:</span>
-                        <span className={selectedCourse.hasOverride ? "text-blue-600" : "text-muted-foreground"}>
+                        <span className={selectedCourse.hasOverride ? "text-operational" : "text-muted-foreground"}>
                           {selectedCourse.hasOverride ? `${selectedCourse.overrideType}` : "Nenhum"}
                         </span>
                       </div>
                       <div className="flex justify-between font-medium">
                         <span>Acesso final:</span>
-                        <span className={selectedCourse.finalAccess ? "text-emerald-600" : "text-red-600"}>
+                        <span className={selectedCourse.finalAccess ? "text-operational" : "text-status-error"}>
                           {selectedCourse.finalAccess ? "Permitido" : "Negado"}
                         </span>
                       </div>

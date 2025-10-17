@@ -58,7 +58,7 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
         <Button
           onClick={handleSave}
           disabled={saving}
-          className="flex items-center bg-green-600 hover:bg-green-700"
+          className="flex items-center bg-operational hover:bg-operational/90"
         >
           {saving ? (
             <>

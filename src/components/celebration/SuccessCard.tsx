@@ -44,11 +44,11 @@ export const SuccessCard: React.FC<SuccessCardProps> = ({
   const renderIcon = () => {
     switch (type) {
       case "implementation":
-        return <Award className="h-8 w-8 text-yellow-500" />;
+        return <Award className="h-8 w-8 text-revenue" />;
       case "module":
-        return <Star className="h-8 w-8 text-purple-500" />;
+        return <Star className="h-8 w-8 text-strategy" />;
       default:
-        return <CheckCircle className="h-8 w-8 text-green-500" />;
+        return <CheckCircle className="h-8 w-8 text-operational" />;
     }
   };
   
@@ -56,11 +56,11 @@ export const SuccessCard: React.FC<SuccessCardProps> = ({
   const getTypeStyles = () => {
     switch (type) {
       case "implementation":
-        return "bg-gradient-to-br from-yellow-50 to-amber-100 border-yellow-300";
+        return "bg-gradient-to-br from-revenue/10 to-revenue/20 border-revenue/30";
       case "module":
-        return "bg-gradient-to-br from-purple-50 to-violet-100 border-purple-300";
+        return "bg-gradient-to-br from-strategy/10 to-strategy/20 border-strategy/30";
       default:
-        return "bg-gradient-to-br from-green-50 to-emerald-100 border-green-300";
+        return "bg-gradient-to-br from-operational/10 to-operational/20 border-operational/30";
     }
   };
   
