@@ -15,82 +15,30 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Aurora Background Animations */
+/* ===== ANIMATIONS ===== */
+
+/* Blob Animation */
 @keyframes blob {
-  0% {
-    transform: translate(0px, 0px) scale(1);
-  }
-  33% {
-    transform: translate(30px, -50px) scale(1.1);
-  }
-  66% {
-    transform: translate(-20px, 20px) scale(0.9);
-  }
-  100% {
-    transform: translate(0px, 0px) scale(1);
-  }
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -50px) scale(1.1); }
+  66% { transform: translate(-20px, 20px) scale(0.9); }
 }
 
 .animate-blob {
-  animation: blob 7s infinite;
+  animation: blob 7s infinite ease-in-out;
 }
 
-.animation-delay-2000 {
-  animation-delay: 2s;
-}
-
-.animation-delay-4000 {
-  animation-delay: 4s;
-}
-
-/* Line clamp utility */
-.line-clamp-2 {
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-}
-
-/* Glassmorphism effects */
-.glass {
-  @apply bg-white/10 backdrop-blur-md border border-white/20;
-}
-
-.glass-dark {
-  @apply bg-black/10 backdrop-blur-md border border-white/10;
-}
-
-/* Aurora Style Utilities */
-.aurora-border {
-  border-image: linear-gradient(135deg, 
-    hsl(var(--aurora-primary)), 
-    hsl(var(--aurora-primary-light)), 
-    hsl(var(--aurora-primary-dark))
-  ) 1;
-}
-
-/* Enhanced focus states for Aurora */
-.aurora-focus {
-  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aurora-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-card;
-}
-
-/* Scale animation for celebration overlay */
+/* Scale Animation */
 @keyframes scale-in {
-  from {
-    opacity: 0;
-    transform: scale(0.8);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 .animate-scale-in {
   animation: scale-in 0.5s ease-out forwards;
 }
 
-/* Shimmer Animation para Loading States Aprimorado */
+/* Shimmer Animation */
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
@@ -102,7 +50,59 @@
   background-size: 200% 100%;
 }
 
-/* Enhanced Loading States com Aurora */
+/* Float Animation */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Animation Delays */
+.animation-delay-100 { animation-delay: 100ms; }
+.animation-delay-200 { animation-delay: 200ms; }
+.animation-delay-300 { animation-delay: 300ms; }
+.animation-delay-500 { animation-delay: 500ms; }
+.animation-delay-700 { animation-delay: 700ms; }
+.animation-delay-2000 { animation-delay: 2s; }
+.animation-delay-4000 { animation-delay: 4s; }
+
+/* ===== UTILITY CLASSES ===== */
+
+/* Line Clamp */
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+/* Glassmorphism */
+.glass {
+  @apply bg-white/10 backdrop-blur-md border border-white/20;
+}
+
+.glass-dark {
+  @apply bg-black/10 backdrop-blur-md border border-white/10;
+}
+
+/* Aurora Border */
+.aurora-border {
+  border-image: linear-gradient(135deg, 
+    hsl(var(--aurora-primary)), 
+    hsl(var(--aurora-primary-light)), 
+    hsl(var(--aurora-primary-dark))
+  ) 1;
+}
+
+/* Aurora Focus */
+.aurora-focus {
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aurora-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-card;
+}
+
+/* Loading Skeleton */
 .loading-skeleton {
   background: linear-gradient(90deg, 
     hsl(var(--muted)) 0%, 
@@ -138,15 +138,8 @@
   background-color: hsl(var(--border) / 0.8);
 }
 
-.scrollbar-thumb-border {
-  scrollbar-color: hsl(var(--border)) transparent;
-}
+/* ===== PROFILE & CARDS ===== */
 
-.scrollbar-track-transparent {
-  scrollbar-color: hsl(var(--border)) transparent;
-}
-
-/* Profile Page Styles */
 .glass-card {
   @apply bg-card/50 backdrop-blur-sm border border-border/50 hover:border-border/80 transition-all duration-300;
 }
@@ -155,27 +148,11 @@
   @apply shadow-lg shadow-primary/5;
 }
 
-/* Gradient text effect */
-.gradient-text {
-  @apply bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent;
-}
-
-/* Custom animations */
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-}
-
-.animate-float {
-  animation: float 6s ease-in-out infinite;
-}
-
-/* Profile avatar hover effect */
 .profile-avatar-container:hover .profile-avatar {
   @apply scale-105 shadow-xl;
 }
 
-/* Custom scrollbar for tabs content */
+/* Tabs Scrollbar */
 .tabs-content {
   scrollbar-width: thin;
   scrollbar-color: hsl(var(--muted)) transparent;
@@ -194,16 +171,15 @@
   border-radius: 3px;
 }
 
-/* VIA Aurora Style - Enhanced Visual Elements */
+/* ===== AURORA CARDS ===== */
 
-/* Enhanced Card Interactions */
 .aurora-card {
   position: relative;
   overflow: hidden;
   background: linear-gradient(to bottom right, hsl(var(--card) / 0.9), hsl(var(--card) / 0.7));
   backdrop-filter: blur(4px);
   border: 1px solid hsl(var(--border) / 0.5);
-  transition: all 0.5s;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .aurora-card:hover {
@@ -227,30 +203,18 @@
   left: 100%;
 }
 
-/* Loading Skeleton with Aurora Colors */
-.loading-skeleton {
-  background: linear-gradient(90deg, 
-    hsl(var(--muted)) 0%, 
-    hsl(var(--aurora-primary) / 0.1) 25%,
-    hsl(var(--muted) / 0.8) 50%, 
-    hsl(var(--aurora-primary) / 0.1) 75%,
-    hsl(var(--muted)) 100%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.5s ease-in-out infinite;
-}
+/* ===== AURORA BUTTONS ===== */
 
-/* Enhanced Button Hover Effects */
 .aurora-button {
   position: relative;
   overflow: hidden;
-  transition: all 0.3s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   background: linear-gradient(to right, hsl(var(--aurora-primary)), hsl(var(--aurora-primary-light)));
   box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
 }
 
 .aurora-button:hover {
-  background: linear-gradient(to right, hsl(var(--aurora-primary-dark)), hsl(var(--aurora-primary-dark)));
+  background: linear-gradient(to right, hsl(var(--aurora-primary-dark)), hsl(var(--aurora-primary)));
   box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
 }
 
@@ -271,29 +235,32 @@
   height: 200px;
 }
 
-/* Glassmorphism Enhanced */
+/* ===== ENHANCED GLASSMORPHISM ===== */
+
 .glass-enhanced {
   background-color: rgb(255 255 255 / 0.1);
   backdrop-filter: blur(12px);
   border: 1px solid rgb(255 255 255 / 0.2);
-  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
 }
 
 .glass-card-hover {
   background-color: rgb(255 255 255 / 0.1);
   backdrop-filter: blur(12px);
   border: 1px solid rgb(255 255 255 / 0.2);
-  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  transition: all 0.3s;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .glass-card-hover:hover {
   background-color: rgb(255 255 255 / 0.15);
   border-color: rgb(255 255 255 / 0.3);
-  box-shadow: 0 20px 25px -5px hsl(var(--aurora-primary) / 0.2), 0 8px 10px -6px hsl(var(--aurora-primary) / 0.2);
+  box-shadow: 0 20px 25px -5px hsl(var(--aurora-primary) / 0.2);
 }
 
-/* Gradient Text Effects */
+/* ===== GRADIENT TEXT ===== */
+
+.gradient-text,
 .aurora-gradient-text {
   background: linear-gradient(to right, hsl(var(--aurora-primary)), hsl(var(--aurora-primary-light)), hsl(var(--aurora-primary-dark)));
   -webkit-background-clip: text;
@@ -308,26 +275,8 @@
   color: transparent;
 }
 
-/* Enhanced Focus States */
-.aurora-focus-ring {
-  outline: 2px solid transparent;
-  outline-offset: 2px;
-}
+/* ===== AURORA SCROLLBAR ===== */
 
-.aurora-focus-ring:focus-visible {
-  outline: 2px solid hsl(var(--aurora-primary) / 0.4);
-  outline-offset: 2px;
-  box-shadow: 0 0 0 2px hsl(var(--background));
-}
-
-/* Floating Animation Delays */
-.animation-delay-100 { animation-delay: 100ms; }
-.animation-delay-200 { animation-delay: 200ms; }
-.animation-delay-300 { animation-delay: 300ms; }
-.animation-delay-500 { animation-delay: 500ms; }
-.animation-delay-700 { animation-delay: 700ms; }
-
-/* Enhanced Scrollbar */
 .aurora-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: hsl(var(--aurora-primary) / 0.3) transparent;
@@ -350,36 +299,40 @@
   background: linear-gradient(to bottom, hsl(var(--aurora-primary) / 0.5), hsl(var(--aurora-primary-light) / 0.5));
 }
 
-/* Progress Bar Aurora Style */
+/* ===== AURORA PROGRESS ===== */
+
 .aurora-progress {
   background: linear-gradient(to right, hsl(var(--aurora-primary)), hsl(var(--aurora-primary-light)), hsl(var(--aurora-primary-dark)));
   box-shadow: 0 1px 2px 0 hsl(var(--aurora-primary) / 0.2);
 }
 
-/* Status Indicators */
+/* ===== STATUS INDICATORS ===== */
+
 .status-active {
   background-color: rgb(74 222 128);
-  box-shadow: 0 10px 15px -3px rgb(74 222 128 / 0.3), 0 4px 6px -4px rgb(74 222 128 / 0.3);
+  box-shadow: 0 10px 15px -3px rgb(74 222 128 / 0.3);
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 .status-pending {
   background-color: rgb(251 191 36);
-  box-shadow: 0 10px 15px -3px rgb(251 191 36 / 0.3), 0 4px 6px -4px rgb(251 191 36 / 0.3);
+  box-shadow: 0 10px 15px -3px rgb(251 191 36 / 0.3);
 }
 
 .status-completed {
   background-color: hsl(var(--aurora-primary));
-  box-shadow: 0 10px 15px -3px hsl(var(--aurora-primary) / 0.3), 0 4px 6px -4px hsl(var(--aurora-primary) / 0.3);
+  box-shadow: 0 10px 15px -3px hsl(var(--aurora-primary) / 0.3);
 }
 
-/* Enhanced Backdrop */
+/* ===== AURORA BACKDROP ===== */
+
 .aurora-backdrop {
   backdrop-filter: blur(20px) saturate(180%);
   background: rgba(255, 255, 255, 0.1);
 }
 
-/* Module Number Badge */
+/* ===== MODULE BADGE ===== */
+
 .module-badge {
   width: 2rem;
   height: 2rem;
@@ -391,8 +344,8 @@
   color: white;
   font-size: 0.875rem;
   font-weight: 700;
-  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  transition: transform 0.3s;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .module-badge:hover {
