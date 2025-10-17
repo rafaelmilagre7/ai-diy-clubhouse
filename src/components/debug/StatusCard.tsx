@@ -23,15 +23,15 @@ export const StatusCard: React.FC<StatusCardProps> = ({
   const getStatusIcon = () => {
     if (warning) return <AlertTriangle className="h-5 w-5 text-amber-400" />;
     return success ? (
-      <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+      <CheckCircle2 className="h-5 w-5 text-operational" />
     ) : (
-      <XCircle className="h-5 w-5 text-red-400" />
+      <XCircle className="h-5 w-5 text-status-error" />
     );
   };
   
   const getStatusColor = () => {
     if (warning) return "border-amber-500/30 bg-amber-500/5";
-    return success ? "border-emerald-500/30 bg-emerald-500/5" : "border-red-500/30 bg-red-500/5";
+    return success ? "border-operational/30 bg-operational/5" : "border-status-error/30 bg-status-error/5";
   };
   
   return (

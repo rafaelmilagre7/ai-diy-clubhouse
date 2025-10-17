@@ -85,7 +85,7 @@ export const AulaHeader = ({
             <div className="mt-2">
               <Link 
                 to={`/learning/course/${courseId}/lesson/${aula.id}`}
-                className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
+                className="inline-flex items-center text-sm text-operational hover:text-operational-dark"
               >
                 <Eye className="h-4 w-4 mr-1" />
                 Visualizar como aluno

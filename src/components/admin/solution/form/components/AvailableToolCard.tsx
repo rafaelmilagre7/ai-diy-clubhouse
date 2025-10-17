@@ -56,7 +56,7 @@ export const AvailableToolCard: React.FC<AvailableToolCardProps> = ({
             href={tool.official_url} 
             target="_blank" 
             rel="noopener noreferrer"
-            className="text-gray-500"
+            className="text-muted-foreground"
           >
             <ExternalLink className="h-4 w-4" />
           </a>

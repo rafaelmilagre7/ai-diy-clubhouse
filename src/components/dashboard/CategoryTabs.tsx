@@ -21,7 +21,7 @@ export const CategoryTabs = ({ activeCategory, setActiveCategory }: CategoryTabs
             "text-sm whitespace-nowrap",
             activeCategory === category.id
               ? "bg-aurora-primary/10 text-aurora-primary hover:bg-aurora-primary/20 hover:text-aurora-primary"
-              : "text-gray-600 hover:text-gray-900"
+              : "text-muted-foreground hover:text-foreground"
           )}
         >
           {category.name}

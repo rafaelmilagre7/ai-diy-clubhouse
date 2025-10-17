@@ -30,7 +30,7 @@ export function SolutionButton({
           <Button
             variant={isSolved ? "outline" : "ghost"}
             size="sm"
-            className={isSolved ? "text-green-600 border-green-200" : "text-muted-foreground"}
+            className={isSolved ? "text-operational border-operational/30" : "text-muted-foreground"}
             onClick={() => isSolved ? onUnmarkAsSolved() : onMarkAsSolved()}
             disabled={isSubmitting}
           >

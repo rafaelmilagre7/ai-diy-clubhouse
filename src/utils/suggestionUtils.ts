@@ -19,16 +19,16 @@ export const getStatusLabel = (status: string): string => {
 export const getStatusColor = (status: string): string => {
   switch (status) {
     case 'new':
-      return 'bg-blue-100 text-blue-800 hover:bg-blue-100/80';
+      return 'bg-operational/10 text-operational hover:bg-operational/20';
     case 'under_review':
-      return 'bg-purple-100 text-purple-800 hover:bg-purple-100/80';
+      return 'bg-strategy/10 text-strategy hover:bg-strategy/20';
     case 'in_development':
-      return 'bg-amber-100 text-amber-800 hover:bg-amber-100/80';
+      return 'bg-status-warning/10 text-status-warning hover:bg-status-warning/20';
     case 'implemented':
-      return 'bg-green-100 text-green-800 hover:bg-green-100/80';
+      return 'bg-operational/10 text-operational hover:bg-operational/20';
     case 'rejected':
-      return 'bg-red-100 text-red-800 hover:bg-red-100/80';
+      return 'bg-status-error/10 text-status-error hover:bg-status-error/20';
     default:
-      return 'bg-gray-100 text-gray-800 hover:bg-gray-100/80';
+      return 'bg-muted text-foreground hover:bg-muted/80';
   }
 };

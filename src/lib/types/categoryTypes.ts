@@ -39,8 +39,8 @@ export function getCategoryDetails(category: string | SolutionCategory) {
     case SolutionCategory.RECEITA:
       return {
         name: 'Receita',
-        color: 'text-green-600',
-        bgColor: 'bg-green-100',
+        color: 'text-revenue',
+        bgColor: 'bg-revenue/10',
         icon: '💰',
         description: 'Estratégias para aumentar receita'
       };
@@ -48,8 +48,8 @@ export function getCategoryDetails(category: string | SolutionCategory) {
     case SolutionCategory.OPERACIONAL:
       return {
         name: 'Operacional',
-        color: 'text-blue-600',
-        bgColor: 'bg-blue-100',
+        color: 'text-operational',
+        bgColor: 'bg-operational/10',
         icon: '⚙️',
         description: 'Otimização de processos operacionais'
       };
@@ -57,16 +57,16 @@ export function getCategoryDetails(category: string | SolutionCategory) {
     case SolutionCategory.ESTRATEGIA:
       return {
         name: 'Estratégia',
-        color: 'text-purple-600',
-        bgColor: 'bg-purple-100',
+        color: 'text-strategy',
+        bgColor: 'bg-strategy/10',
         icon: '🎯',
         description: 'Planejamento e estratégias de negócio'
       };
     default:
       return {
         name: 'Geral',
-        color: 'text-gray-600',
-        bgColor: 'bg-gray-100',
+        color: 'text-muted-foreground',
+        bgColor: 'bg-muted',
         icon: '📋',
         description: 'Categoria geral'
       };

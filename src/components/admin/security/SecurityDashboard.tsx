@@ -14,7 +14,7 @@ export const SecurityDashboard = () => {
       <Card>
         <CardContent className="p-6">
           <div className="text-center py-8">
-            <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-yellow-500" />
+            <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-status-warning" />
             <h3 className="text-lg font-semibold mb-2">Acesso Restrito</h3>
             <p className="text-muted-foreground">
               Apenas administradores podem acessar o dashboard de segurança.

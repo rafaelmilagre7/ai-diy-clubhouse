@@ -33,7 +33,7 @@ export const PostHeader = ({
           <h3 className="font-medium text-base leading-none">
             {profile?.name || "Usuário Anônimo"}
             {isSolution && (
-              <span className="ml-2 text-green-600 text-xs inline-flex items-center gap-1">
+              <span className="ml-2 text-operational text-xs inline-flex items-center gap-1">
                 <CheckCircle2 className="h-3 w-3" />
                 Solução
               </span>

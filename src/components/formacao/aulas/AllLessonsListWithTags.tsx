@@ -117,14 +117,14 @@ export const AllLessonsListWithTags: React.FC<AllLessonsListWithTagsProps> = ({
         
         <Card>
           <CardContent className="pt-6">
-            <div className="text-2xl font-bold text-green-600">{stats.published}</div>
+            <div className="text-2xl font-bold text-operational">{stats.published}</div>
             <p className="text-xs text-muted-foreground">Publicadas</p>
           </CardContent>
         </Card>
         
         <Card>
           <CardContent className="pt-6">
-            <div className="text-2xl font-bold text-yellow-600">{stats.draft}</div>
+            <div className="text-2xl font-bold text-status-warning">{stats.draft}</div>
             <p className="text-xs text-muted-foreground">Rascunhos</p>
           </CardContent>
         </Card>

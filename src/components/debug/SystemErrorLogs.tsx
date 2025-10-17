@@ -77,9 +77,9 @@ export const SystemErrorLogs: React.FC = () => {
   const getSeverityIcon = (severity: string) => {
     switch (severity) {
       case 'ERROR':
-        return <XCircle className="h-4 w-4 text-red-500" />;
+        return <XCircle className="h-4 w-4 text-status-error" />;
       case 'WARNING':
-        return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
+        return <AlertTriangle className="h-4 w-4 text-status-warning" />;
       default:
         return <Activity className="h-4 w-4 text-muted-foreground" />;
     }
@@ -153,7 +153,7 @@ export const SystemErrorLogs: React.FC = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
             {Object.entries(errorStats).map(([category, count]) => (
               <div key={category} className="text-center p-3 border rounded-lg">
-                <div className="text-lg font-bold text-red-600">{count}</div>
+                <div className="text-lg font-bold text-status-error">{count}</div>
                 <div className="text-sm text-muted-foreground">{category}</div>
               </div>
             ))}

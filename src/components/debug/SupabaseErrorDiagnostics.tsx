@@ -26,13 +26,13 @@ export const SupabaseErrorDiagnostics: React.FC = () => {
       case 'operational':
       case 'connected':
       case 'authenticated':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
+        return <CheckCircle className="h-4 w-4 text-operational" />;
       case 'slow':
-        return <Clock className="h-4 w-4 text-yellow-500" />;
+        return <Clock className="h-4 w-4 text-status-warning" />;
       case 'error':
       case 'disconnected':
       case 'unauthenticated':
-        return <AlertTriangle className="h-4 w-4 text-red-500" />;
+        return <AlertTriangle className="h-4 w-4 text-status-error" />;
       default:
         return <Activity className="h-4 w-4 text-muted-foreground" />;
     }
@@ -43,13 +43,13 @@ export const SupabaseErrorDiagnostics: React.FC = () => {
       case 'operational':
       case 'connected':
       case 'authenticated':
-        return 'bg-green-500/10 text-green-700 border-green-500/20';
+        return 'bg-operational/10 text-operational border-operational/20';
       case 'slow':
-        return 'bg-yellow-500/10 text-yellow-700 border-yellow-500/20';
+        return 'bg-status-warning/10 text-status-warning border-status-warning/20';
       case 'error':
       case 'disconnected':
       case 'unauthenticated':
-        return 'bg-red-500/10 text-red-700 border-red-500/20';
+        return 'bg-status-error/10 text-status-error border-status-error/20';
       default:
         return 'bg-muted/10 text-muted-foreground border-border';
     }
@@ -84,7 +84,7 @@ export const SupabaseErrorDiagnostics: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Status da Conexão */}
             <div className="flex items-center gap-3 p-3 border rounded-lg">
-              <Wifi className="h-6 w-6 text-blue-600" />
+              <Wifi className="h-6 w-6 text-operational" />
               <div>
                 <div className="flex items-center gap-2">
                   {getStatusIcon(healthStatus.connectionStatus)}
@@ -98,7 +98,7 @@ export const SupabaseErrorDiagnostics: React.FC = () => {
 
             {/* Status da Autenticação */}
             <div className="flex items-center gap-3 p-3 border rounded-lg">
-              <Shield className="h-6 w-6 text-purple-600" />
+              <Shield className="h-6 w-6 text-strategy" />
               <div>
                 <div className="flex items-center gap-2">
                   {getStatusIcon(healthStatus.authStatus)}
@@ -112,7 +112,7 @@ export const SupabaseErrorDiagnostics: React.FC = () => {
 
             {/* Status do Banco */}
             <div className="flex items-center gap-3 p-3 border rounded-lg">
-              <Database className="h-6 w-6 text-green-600" />
+              <Database className="h-6 w-6 text-operational" />
               <div>
                 <div className="flex items-center gap-2">
                   {getStatusIcon(healthStatus.databaseStatus)}
@@ -126,7 +126,7 @@ export const SupabaseErrorDiagnostics: React.FC = () => {
 
             {/* Status do Storage */}
             <div className="flex items-center gap-3 p-3 border rounded-lg">
-              <Server className="h-6 w-6 text-orange-600" />
+              <Server className="h-6 w-6 text-status-warning" />
               <div>
                 <div className="flex items-center gap-2">
                   {getStatusIcon(healthStatus.storageStatus)}

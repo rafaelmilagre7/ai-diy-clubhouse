@@ -61,7 +61,7 @@ const MaterialItem: React.FC<MaterialItemProps> = ({ material, onRemove }) => {
           variant="outline" 
           size="sm"
           onClick={handleRemove}
-          className="flex gap-1 text-red-500 hover:text-red-700 hover:bg-red-50"
+          className="flex gap-1 text-status-error hover:text-status-error-dark hover:bg-status-error/10"
         >
           <Trash2 className="h-4 w-4 flex-shrink-0" />
           <span className="sm:hidden md:inline">Remover</span>
