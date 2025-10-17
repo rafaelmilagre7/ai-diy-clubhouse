@@ -68,29 +68,29 @@ const AdminSuggestionsPage = () => {
         return {
           label: 'Em Análise',
           icon: Clock,
-          className: 'bg-yellow-500/10 text-yellow-700 border-yellow-500/20 dark:text-yellow-400',
-          dotColor: 'bg-yellow-500'
+          className: 'bg-status-warning/10 text-status-warning border-status-warning/20',
+          dotColor: 'bg-status-warning'
         };
       case 'in_development':
         return {
           label: 'Em Desenvolvimento',
           icon: Clock,
-          className: 'bg-orange-500/10 text-orange-700 border-orange-500/20 dark:text-orange-400',
-          dotColor: 'bg-orange-500'
+          className: 'bg-status-warning/10 text-status-warning border-status-warning/20',
+          dotColor: 'bg-status-warning'
         };
       case 'completed':
         return {
           label: 'Implementada',
           icon: CheckCircle,
-          className: 'bg-green-500/10 text-green-700 border-green-500/20 dark:text-green-400',
-          dotColor: 'bg-green-500'
+          className: 'bg-operational/10 text-operational border-operational/20',
+          dotColor: 'bg-operational'
         };
       case 'declined':
         return {
           label: 'Recusada',
           icon: XCircle,
-          className: 'bg-red-500/10 text-red-700 border-red-500/20 dark:text-red-400',
-          dotColor: 'bg-red-500'
+          className: 'bg-status-error/10 text-status-error border-status-error/20',
+          dotColor: 'bg-status-error'
         };
       default:
         return {

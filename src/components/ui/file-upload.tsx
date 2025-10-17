@@ -189,7 +189,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
               href={initialFileUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm text-blue-600 hover:underline ml-2"
+              className="text-sm text-operational hover:underline ml-2"
             >
               Visualizar arquivo atual
             </a>
@@ -198,9 +198,9 @@ export const FileUpload: React.FC<FileUploadProps> = ({
       </div>
       
       {!errorMessage && !isUploading && fileName && (
-        <Alert variant="default" className="bg-green-50 border-green-100 py-2">
-          <Check className="h-4 w-4 text-green-600" />
-          <AlertDescription className="text-green-700 text-xs">
+        <Alert variant="default" className="bg-operational/10 border-operational/30 py-2">
+          <Check className="h-4 w-4 text-operational" />
+          <AlertDescription className="text-operational text-xs">
             Arquivo selecionado: {fileName}
           </AlertDescription>
         </Alert>

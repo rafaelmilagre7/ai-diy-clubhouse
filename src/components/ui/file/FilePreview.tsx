@@ -14,7 +14,7 @@ export const FilePreview = ({ url }: FilePreviewProps) => {
         alt="Preview"
         className="h-20 w-20 object-contain border rounded"
       />
-      <div className="absolute top-1 right-1 bg-green-500 text-white rounded-full p-1">
+      <div className="absolute top-1 right-1 bg-operational text-white rounded-full p-1">
         <Check className="h-4 w-4" />
       </div>
     </div>

@@ -121,8 +121,8 @@ export const VideoDisplay: React.FC<VideoDisplayProps> = ({
             return (
               <div 
                 key={video.id}
-                className={`flex gap-3 p-2 rounded-md cursor-pointer hover:bg-gray-100 transition-colors ${
-                  activeVideoId === video.id ? 'bg-gray-100 border border-primary/30' : ''
+                className={`flex gap-3 p-2 rounded-md cursor-pointer hover:bg-muted transition-colors ${
+                  activeVideoId === video.id ? 'bg-muted border border-primary/30' : ''
                 }`}
                 onClick={() => handleVideoClick(video)}
               >

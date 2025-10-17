@@ -46,7 +46,7 @@ export const FileInput: React.FC<FileInputProps> = ({
               <button 
                 type="button"
                 onClick={onClearFile} 
-                className="p-1 hover:bg-gray-200 rounded-full"
+                className="p-1 hover:bg-muted rounded-full"
                 disabled={uploading}
               >
                 <X className="h-4 w-4" />

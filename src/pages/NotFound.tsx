@@ -49,8 +49,8 @@ const NotFound = () => {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-lg">
         <CardHeader className="text-center">
-          <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-            <MapPin className="w-8 h-8 text-blue-600" />
+          <div className="mx-auto w-16 h-16 bg-operational/20 rounded-full flex items-center justify-center mb-4">
+            <MapPin className="w-8 h-8 text-operational" />
           </div>
           <CardTitle className="text-3xl font-bold mb-2">404</CardTitle>
           <p className="text-xl text-muted-foreground">Página não encontrada</p>

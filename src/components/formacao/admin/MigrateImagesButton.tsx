@@ -130,12 +130,12 @@ export const MigrateImagesButton = () => {
       )}
 
       {result && (
-        <div className={`p-4 rounded-lg border ${result.success ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+        <div className={`p-4 rounded-lg border ${result.success ? 'bg-operational/10 border-operational/30' : 'bg-status-error/10 border-status-error/30'}`}>
           <div className="flex items-center gap-2 mb-2">
             {result.success ? (
-              <CheckCircle className="h-5 w-5 text-green-600" />
+              <CheckCircle className="h-5 w-5 text-operational" />
             ) : (
-              <AlertCircle className="h-5 w-5 text-red-600" />
+              <AlertCircle className="h-5 w-5 text-status-error" />
             )}
             <h4 className="font-medium">Resultado da Migração</h4>
           </div>
