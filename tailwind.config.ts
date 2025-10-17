@@ -78,6 +78,20 @@ const config: Config = {
         'select-md': '160px',
         'select-lg': '180px',
         'select-xl': '220px',
+        'table-sm': '200px',
+        'table-md': '300px',
+      },
+      
+      maxHeight: {
+        'chart-sm': '200px',
+        'chart-md': '300px',
+        'chart-lg': '400px',
+        'chart-xl': '500px',
+      },
+      
+      maxWidth: {
+        'table-sm': '200px',
+        'table-md': '300px',
       },
       
       // === BLUR & BACKDROP ===

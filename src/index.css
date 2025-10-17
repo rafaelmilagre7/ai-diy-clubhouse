@@ -135,7 +135,7 @@
 
 .scrollbar-thin::-webkit-scrollbar-thumb {
   background-color: hsl(var(--border));
-  border-radius: 3px;
+  border-radius: var(--radius-xs);
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
@@ -172,7 +172,7 @@
 
 .tabs-content::-webkit-scrollbar-thumb {
   background: hsl(var(--muted));
-  border-radius: 3px;
+  border-radius: var(--radius-xs);
 }
 
 /* ===== AURORA CARDS ===== */

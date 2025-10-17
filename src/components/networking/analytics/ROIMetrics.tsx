@@ -18,32 +18,32 @@ export const ROIMetrics: React.FC<ROIMetricsProps> = ({ analytics }) => {
       label: 'Valor Total Gerado',
       value: `R$ ${(analytics.estimatedValue / 1000).toFixed(1)}k`,
       icon: DollarSign,
-      color: 'text-emerald-500',
-      bgColor: 'bg-emerald-500/10',
+      color: 'text-system-healthy',
+      bgColor: 'bg-system-healthy/10',
       trend: '+32%'
     },
     {
       label: 'Valor por Conexão',
       value: `R$ ${(avgValuePerConnection / 1000).toFixed(1)}k`,
       icon: Target,
-      color: 'text-blue-500',
-      bgColor: 'bg-blue-500/10',
+      color: 'text-operational',
+      bgColor: 'bg-operational/10',
       trend: '+18%'
     },
     {
       label: 'Taxa de Conversão',
       value: '68%',
       icon: TrendingUp,
-      color: 'text-purple-500',
-      bgColor: 'bg-purple-500/10',
+      color: 'text-primary',
+      bgColor: 'bg-primary/10',
       trend: '+12%'
     },
     {
       label: 'Score de Qualidade',
       value: '94/100',
       icon: Award,
-      color: 'text-orange-500',
-      bgColor: 'bg-orange-500/10',
+      color: 'text-status-warning',
+      bgColor: 'bg-status-warning/10',
       trend: '+8%'
     }
   ];
@@ -74,7 +74,7 @@ export const ROIMetrics: React.FC<ROIMetricsProps> = ({ analytics }) => {
                   <Icon className={`h-5 w-5 ${metric.color}`} />
                 </div>
                 
-                <Badge variant="outline" className="text-xs bg-green-500/10 text-green-600 border-green-500/30">
+                <Badge variant="outline" className="text-xs bg-system-healthy/10 text-system-healthy border-system-healthy/30">
                   {metric.trend}
                 </Badge>
               </div>

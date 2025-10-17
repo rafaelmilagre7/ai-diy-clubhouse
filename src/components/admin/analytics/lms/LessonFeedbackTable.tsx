@@ -61,7 +61,7 @@ export const LessonFeedbackTable: React.FC<LessonFeedbackTableProps> = ({ feedba
             ))}
           </div>
         ) : (
-          <div className="overflow-auto max-h-[400px]">
+          <div className="overflow-auto max-h-chart-lg">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -76,7 +76,7 @@ export const LessonFeedbackTable: React.FC<LessonFeedbackTableProps> = ({ feedba
                 {displayData.length > 0 ? (
                   displayData.map((item) => (
                     <TableRow key={item.id}>
-                      <TableCell className="font-medium max-w-[200px] truncate">
+                      <TableCell className="font-medium max-w-table-sm truncate">
                         {item.lessonTitle}
                       </TableCell>
                       <TableCell>
@@ -85,7 +85,7 @@ export const LessonFeedbackTable: React.FC<LessonFeedbackTableProps> = ({ feedba
                         </Badge>
                       </TableCell>
                       <TableCell>{item.userName}</TableCell>
-                      <TableCell className="max-w-[300px]">
+                      <TableCell className="max-w-table-md">
                         {item.feedback ? (
                           <div className="max-h-24 overflow-y-auto">
                             {item.feedback}

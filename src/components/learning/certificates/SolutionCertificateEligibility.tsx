@@ -72,9 +72,9 @@ export const SolutionCertificateEligibility = ({
 
   if (!isCompleted) {
     return (
-      <Alert className="bg-amber-900/20 border-amber-700">
-        <AlertTitle className="text-amber-300">Implementação em Progresso</AlertTitle>
-        <AlertDescription className="text-amber-200">
+      <Alert className="bg-status-warning/20 border-status-warning">
+        <AlertTitle className="text-status-warning">Implementação em Progresso</AlertTitle>
+        <AlertDescription className="text-muted-foreground">
           Complete a implementação desta solução para se tornar elegível ao certificado.
         </AlertDescription>
       </Alert>
@@ -85,7 +85,7 @@ export const SolutionCertificateEligibility = ({
     return (
       <div className="space-y-4 p-4 border rounded-lg bg-card border-aurora-primary/20">
         <div className="flex items-center gap-2">
-          <CheckCircle2 className="h-5 w-5 text-green-500" />
+          <CheckCircle2 className="h-5 w-5 text-system-healthy" />
           <h3 className="text-lg font-semibold text-foreground">Elegível para Certificado</h3>
         </div>
         
@@ -117,9 +117,9 @@ export const SolutionCertificateEligibility = ({
 
   if (isEligible === false) {
     return (
-      <Alert variant="destructive" className="bg-red-900/20 border-red-700">
-        <AlertTitle className="text-red-300">Não Elegível</AlertTitle>
-        <AlertDescription className="text-red-200">
+      <Alert variant="destructive" className="bg-status-error/20 border-status-error">
+        <AlertTitle className="text-status-error">Não Elegível</AlertTitle>
+        <AlertDescription className="text-muted-foreground">
           Complete todos os módulos da implementação para se tornar elegível ao certificado.
         </AlertDescription>
       </Alert>

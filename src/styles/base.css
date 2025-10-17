@@ -172,14 +172,37 @@
   --transition-slow: 300ms;
   
   /* === BLUR TOKENS === */
+  --blur-xs: 4px;
   --blur-sm: 8px;
   --blur-md: 12px;
   --blur-lg: 16px;
+  --blur-xl: 20px;
+  --blur-2xl: 24px;
+  --blur-3xl: 40px;
+  --blur-4xl: 60px;
+  
+  /* === BORDER RADIUS TOKENS === */
+  --radius-xs: 0.1875rem; /* 3px */
+  --radius-sm: 0.5rem;     /* 8px */
+  --radius-md: 0.75rem;    /* 12px */
+  --radius-lg: 1rem;       /* 16px */
+  --radius-xl: 1.25rem;    /* 20px */
+  --radius-2xl: 1.5rem;    /* 24px */
+  --radius-3xl: 1.75rem;   /* 28px */
   
   /* === CHART DIMENSIONS === */
   --chart-height-sm: 200px;
   --chart-height-md: 300px;
   --chart-height-lg: 400px;
+  --chart-height-xl: 500px;
+  
+  /* === WIDTH TOKENS === */
+  --width-select-sm: 140px;
+  --width-select-md: 160px;
+  --width-select-lg: 180px;
+  --width-select-xl: 220px;
+  --width-table-sm: 200px;
+  --width-table-md: 300px;
 
   /* ============================================
      GLASS SYSTEM COLORS - Normalização Fase 13

@@ -9,10 +9,10 @@
 
 .liquid-glass-card {
   background: hsl(var(--glass-white-base) / 0.08);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(var(--blur-xl)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--blur-xl)) saturate(180%);
   border: 1px solid hsl(var(--glass-white-base) / 0.18);
-  border-radius: 24px;
+  border-radius: var(--radius-2xl);
   box-shadow: 0 8px 32px 0 hsl(var(--glass-shadow-primary) / 0.37);
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -26,20 +26,20 @@
 /* Modal variation - sem hover transform para manter posicionamento fixo */
 .liquid-glass-modal {
   background: hsl(var(--glass-white-base) / 0.08);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(var(--blur-xl)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--blur-xl)) saturate(180%);
   border: 1px solid hsl(var(--glass-white-base) / 0.18);
-  border-radius: 24px;
+  border-radius: var(--radius-2xl);
   box-shadow: 0 8px 32px 0 hsl(var(--glass-shadow-primary) / 0.37);
   /* SEM transition ou hover com transform! */
 }
 
 .liquid-glass-card-premium {
   background: linear-gradient(135deg, hsl(var(--glass-white-base) / 0.1) 0%, hsl(var(--glass-white-base) / 0.05) 100%);
-  backdrop-filter: blur(24px) saturate(200%);
-  -webkit-backdrop-filter: blur(24px) saturate(200%);
+  backdrop-filter: blur(var(--blur-2xl)) saturate(200%);
+  -webkit-backdrop-filter: blur(var(--blur-2xl)) saturate(200%);
   border: 1px solid hsl(var(--glass-white-base) / 0.2);
-  border-radius: 28px;
+  border-radius: var(--radius-3xl);
   box-shadow: 
     0 8px 32px 0 hsl(var(--glass-shadow-primary) / 0.37),
     inset 0 1px 0 0 hsl(var(--glass-white-base) / 0.15);
@@ -68,14 +68,14 @@
 
 .glow-border {
   position: relative;
-  border-radius: 24px;
+  border-radius: var(--radius-2xl);
 }
 
 .glow-border::before {
   content: '';
   position: absolute;
   inset: -2px;
-  border-radius: 24px;
+  border-radius: var(--radius-2xl);
   padding: 2px;
   background: var(--gradient-glow-purple);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
@@ -132,7 +132,7 @@
 .liquid-blob {
   position: absolute;
   border-radius: 50%;
-  filter: blur(60px);
+  filter: blur(var(--blur-4xl));
   opacity: 0.3;
   mix-blend-mode: screen;
   animation: blob-float 20s infinite ease-in-out;
@@ -288,7 +288,7 @@
   z-index: -1;
   opacity: 0;
   transition: opacity 0.4s ease;
-  filter: blur(20px);
+  filter: blur(var(--blur-xl));
 }
 
 .glow-effect:hover::after {
@@ -396,7 +396,7 @@
     hsl(var(--glass-white-base) / 0.05) 100%);
   background-size: 200% 100%;
   animation: skeleton-loading 1.5s infinite;
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
 }
 
 @keyframes skeleton-loading {
@@ -425,8 +425,8 @@
    ============================================ */
 
 .backdrop-blur-premium {
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(var(--blur-2xl)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--blur-2xl)) saturate(180%);
 }
 
 .text-shadow-glow {
@@ -448,11 +448,11 @@
 
 @media (max-width: 768px) {
   .liquid-glass-card {
-    border-radius: 20px;
+    border-radius: var(--radius-xl);
   }
   
   .liquid-blob {
-    filter: blur(40px);
+    filter: blur(var(--blur-3xl));
     opacity: 0.2;
   }
 }
