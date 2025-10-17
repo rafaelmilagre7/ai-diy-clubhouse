@@ -15,20 +15,20 @@ export const ContentRenderer = ({ content }: ContentRendererProps) => {
     // Limpa o HTML para evitar XSS
     let cleanHtml = DOMPurify.sanitize(htmlContent);
     
-    // Adiciona classes Tailwind para melhorar contraste no tema escuro - cores mais claras
+    // Adiciona classes Tailwind com tokens semânticos do design system
     cleanHtml = cleanHtml
-      .replace(/<h1/g, '<h1 class="text-neutral-100 text-2xl font-semibold mb-4"')
-      .replace(/<h2/g, '<h2 class="text-neutral-100 text-xl font-semibold mb-3"')
-      .replace(/<h3/g, '<h3 class="text-neutral-100 text-lg font-semibold mb-2"')
-      .replace(/<h4/g, '<h4 class="text-neutral-100 font-semibold mb-2"')
-      .replace(/<h5/g, '<h5 class="text-neutral-100 font-medium mb-2"')
-      .replace(/<h6/g, '<h6 class="text-neutral-100 font-medium mb-2"')
-      .replace(/<p/g, '<p class="text-neutral-200 mb-4"')
-      .replace(/<ul/g, '<ul class="list-disc pl-5 mb-4 text-neutral-200"')
-      .replace(/<ol/g, '<ol class="list-decimal pl-5 mb-4 text-neutral-200"')
-      .replace(/<li/g, '<li class="mb-1 text-neutral-200"')
+      .replace(/<h1/g, '<h1 class="text-foreground text-2xl font-semibold mb-4"')
+      .replace(/<h2/g, '<h2 class="text-foreground text-xl font-semibold mb-3"')
+      .replace(/<h3/g, '<h3 class="text-foreground text-lg font-semibold mb-2"')
+      .replace(/<h4/g, '<h4 class="text-foreground font-semibold mb-2"')
+      .replace(/<h5/g, '<h5 class="text-foreground font-medium mb-2"')
+      .replace(/<h6/g, '<h6 class="text-foreground font-medium mb-2"')
+      .replace(/<p/g, '<p class="text-foreground/90 mb-4"')
+      .replace(/<ul/g, '<ul class="list-disc pl-5 mb-4 text-foreground/90"')
+      .replace(/<ol/g, '<ol class="list-decimal pl-5 mb-4 text-foreground/90"')
+      .replace(/<li/g, '<li class="mb-1 text-foreground/90"')
       .replace(/<a /g, '<a class="text-aurora-primary hover:text-aurora-primary-light underline" ')
-      .replace(/<blockquote/g, '<blockquote class="pl-4 border-l-2 border-aurora-primary/30 italic text-neutral-300 my-4"')
+      .replace(/<blockquote/g, '<blockquote class="pl-4 border-l-2 border-aurora-primary/30 italic text-muted-foreground my-4"')
       .replace(/<pre/g, '<pre class="bg-background p-4 rounded-md overflow-auto my-4"')
       .replace(/<code/g, '<code class="font-mono bg-surface-elevated px-1 rounded"');
     
@@ -47,17 +47,17 @@ export const ContentRenderer = ({ content }: ContentRendererProps) => {
       }
       
       if (content?.text) {
-        return <div className="text-neutral-200 whitespace-pre-wrap">{content.text}</div>;
+        return <div className="text-foreground/90 whitespace-pre-wrap">{content.text}</div>;
       }
       
       if (content?.overview) {
         return <div dangerouslySetInnerHTML={createSafeHTML(content.overview)} />;
       }
 
-      return <p className="text-neutral-200">Conteúdo não disponível.</p>;
+      return <p className="text-foreground/90">Conteúdo não disponível.</p>;
     } catch (error) {
       console.error("Erro ao renderizar conteúdo:", error);
-      return <p className="text-red-400">Erro ao renderizar o conteúdo.</p>;
+      return <p className="text-status-error">Erro ao renderizar o conteúdo.</p>;
     }
   };
 

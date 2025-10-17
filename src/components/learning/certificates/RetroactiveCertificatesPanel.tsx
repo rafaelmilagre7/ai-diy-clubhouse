@@ -62,7 +62,7 @@ export const RetroactiveCertificatesPanel = () => {
 
           {isAdmin && (
             <>
-              <div className="border-t border-neutral-700 pt-4">
+              <div className="border-t border-border pt-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="flex items-center gap-2">

@@ -15,6 +15,9 @@ interface CertificatePreviewProps {
 export const CertificatePreview = ({ certificate, onDownload }: CertificatePreviewProps) => {
   const certificateRef = useRef<HTMLDivElement>(null);
 
+  // ⚠️ EXCEÇÃO DESIGN SYSTEM: Este componente usa cores hardcoded RGB
+  // Motivo: Certificados precisam de cores fixas para geração de PDF/PNG fora do navegador
+  // Gradientes e cores não podem usar CSS variables pois não funcionam em canvas/PDF
   const courseName = certificate.learning_courses?.title || "Curso";
   const studentName = certificate.profiles?.name || "Estudante";
   const issueDate = format(new Date(certificate.issued_at), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });

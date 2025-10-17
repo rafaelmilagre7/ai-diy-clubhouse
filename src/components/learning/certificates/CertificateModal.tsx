@@ -140,7 +140,7 @@ export const CertificateModal = ({ certificate, isOpen, onClose }: CertificateMo
               variant="ghost"
               size="icon"
               onClick={onClose}
-              className="text-white hover:bg-neutral-800"
+              className="text-white hover:bg-accent"
             >
               <X className="h-4 w-4" />
             </Button>
@@ -159,7 +159,7 @@ export const CertificateModal = ({ certificate, isOpen, onClose }: CertificateMo
           </div>
 
           {/* Botões de Ação */}
-          <div className="flex flex-col sm:flex-row gap-3 justify-center border-t border-neutral-700 pt-4">
+          <div className="flex flex-col sm:flex-row gap-3 justify-center border-t border-border pt-4">
             <Button
               onClick={handleOpenForPrint}
               disabled={isGenerating}
@@ -189,7 +189,7 @@ export const CertificateModal = ({ certificate, isOpen, onClose }: CertificateMo
 
           {/* Debug info (apenas em desenvolvimento) */}
           {import.meta.env.DEV && (
-            <div className="text-xs text-gray-500 space-y-1">
+            <div className="text-xs text-muted-foreground space-y-1">
               <div>Template: Hardcoded VIVER DE IA</div>
               <div>Certificate ID: {certificate.id}</div>
               <div>Layout: Fundo escuro + moldura neon turquesa</div>

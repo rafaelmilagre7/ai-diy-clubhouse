@@ -505,7 +505,7 @@ export const AdminToolList = ({ refreshTrigger }: AdminToolListProps) => {
                       <AlertDialogCancel>Cancelar</AlertDialogCancel>
                       <AlertDialogAction 
                         onClick={() => handleDelete(tool.id)}
-                        className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700"
+                        className="bg-gradient-to-r from-destructive to-destructive/90 hover:from-destructive/90 hover:to-destructive/80"
                       >
                         Excluir Permanentemente
                       </AlertDialogAction>

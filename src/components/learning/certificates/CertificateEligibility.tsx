@@ -75,7 +75,7 @@ export const CertificateEligibility = ({
     return (
       <div className="space-y-4 p-4 border rounded-lg bg-card border-aurora-primary/20">
         <div className="flex items-center gap-2">
-          <CheckCircle2 className="h-5 w-5 text-green-500" />
+          <CheckCircle2 className="h-5 w-5 text-system-healthy" />
           <h3 className="text-lg font-semibold text-foreground">Elegível para Certificado</h3>
         </div>
         

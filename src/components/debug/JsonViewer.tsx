@@ -52,7 +52,7 @@ export const JsonViewer: React.FC<JsonViewerProps> = ({ data, title, className =
       {!isCollapsed && (
         <div className="bg-surface-elevated border border-border rounded-lg overflow-hidden">
           <pre className="p-4 text-sm text-foreground overflow-auto max-h-64">
-            <code className="text-green-400">
+            <code className="text-system-healthy">
               {jsonString}
             </code>
           </pre>

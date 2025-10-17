@@ -260,7 +260,7 @@ Confira meu certificado: ${customDomainUrl}`;
               {certificate.title}
             </h3>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <BadgeCheck className="h-4 w-4 text-emerald-500" />
+              <BadgeCheck className="h-4 w-4 text-system-healthy" />
               <span className="font-medium">Certificado de {isSolution ? 'Implementação' : 'Conclusão'}</span>
             </div>
           </div>
