@@ -32,31 +32,31 @@ export const AdminStats = ({
 }: AdminStatsProps) => {
   const variants = {
     default: 'bg-surface-elevated border-border/50',
-    success: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500',
+    success: 'bg-operational/10 border-operational/20 text-operational',
     warning: 'bg-warning/10 border-warning/20 text-warning',
-    error: 'bg-red-500/10 border-red-500/20 text-red-500',
-    info: 'bg-blue-500/10 border-blue-500/20 text-blue-500'
+    error: 'bg-status-error/10 border-status-error/20 text-status-error',
+    info: 'bg-operational/10 border-operational/20 text-operational'
   };
 
   const getTrendIcon = (trend: 'up' | 'down' | 'neutral') => {
     switch (trend) {
       case 'up':
-        return <TrendingUp className="h-4 w-4 text-emerald-500" />;
+        return <TrendingUp className="h-4 w-4 text-operational" />;
       case 'down':
-        return <TrendingDown className="h-4 w-4 text-red-500" />;
+        return <TrendingDown className="h-4 w-4 text-status-error" />;
       default:
-        return <Minus className="h-4 w-4 text-text-muted" />;
+        return <Minus className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
   const getTrendColor = (trend: 'up' | 'down' | 'neutral') => {
     switch (trend) {
       case 'up':
-        return 'text-emerald-500';
+        return 'text-operational';
       case 'down':
-        return 'text-red-500';
+        return 'text-status-error';
       default:
-        return 'text-text-muted';
+        return 'text-muted-foreground';
     }
   };
 

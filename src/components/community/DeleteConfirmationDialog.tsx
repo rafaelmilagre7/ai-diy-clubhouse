@@ -33,16 +33,16 @@ export const DeleteConfirmationDialog = ({
       <AlertDialogContent className="max-w-md">
         <AlertDialogHeader>
           <div className="flex items-center gap-3 mb-2">
-            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-100">
-              <Trash2 className="h-6 w-6 text-red-600" />
+            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-status-error/20">
+              <Trash2 className="h-6 w-6 text-status-error" />
             </div>
             <div>
-              <AlertDialogTitle className="text-lg font-semibold text-gray-900">
+              <AlertDialogTitle className="text-lg font-semibold text-foreground">
                 {title}
               </AlertDialogTitle>
             </div>
           </div>
-          <AlertDialogDescription className="text-sm text-gray-600 leading-relaxed">
+          <AlertDialogDescription className="text-sm text-muted-foreground leading-relaxed">
             <div className="flex items-start gap-2">
               <AlertTriangle className="h-4 w-4 text-warning mt-0.5 flex-shrink-0" />
               <span>{description}</span>

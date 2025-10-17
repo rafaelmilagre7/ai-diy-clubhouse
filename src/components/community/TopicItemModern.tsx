@@ -124,14 +124,14 @@ export const TopicItemModern = ({ topic, isPinned = false }: TopicItemModernProp
                   )}
                   
                   {topic.is_locked && (
-                    <Badge variant="secondary" className="gap-1 bg-red-500/10 text-red-700 border-red-500/20">
+                    <Badge variant="secondary" className="gap-1 bg-status-error/10 text-status-error border-status-error/20">
                       <Lock className="h-3 w-3" />
                       Travado
                     </Badge>
                   )}
                   
                   {topic.is_solved && (
-                    <Badge className="gap-1 bg-gradient-to-r from-emerald-500/20 to-green-500/20 text-emerald-700 border-emerald-500/30">
+                    <Badge className="gap-1 bg-gradient-to-r from-operational/20 to-operational/20 text-operational border-operational/30">
                       <CheckCircle className="h-3 w-3" />
                       Resolvido
                     </Badge>

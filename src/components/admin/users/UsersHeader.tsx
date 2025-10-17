@@ -35,7 +35,7 @@ export const UsersHeader: React.FC<UsersHeaderProps> = ({
             onClick={() => setCleanupDialogOpen(true)}
             variant="outline"
             size="sm"
-            className="text-red-600 border-red-200 hover:bg-red-50"
+            className="text-status-error border-status-error/30 hover:bg-status-error/10"
           >
             <Trash2 className="mr-2 h-4 w-4" />
             Limpeza Manual

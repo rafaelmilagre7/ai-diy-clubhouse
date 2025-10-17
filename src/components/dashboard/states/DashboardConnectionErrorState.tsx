@@ -10,8 +10,8 @@ export const DashboardConnectionErrorState: FC = () => {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[50vh] text-center space-y-6">
-      <div className="flex items-center justify-center w-16 h-16 bg-red-500/10 rounded-full">
-        <AlertTriangle className="h-8 w-8 text-red-400" />
+      <div className="flex items-center justify-center w-16 h-16 bg-status-error/10 rounded-full">
+        <AlertTriangle className="h-8 w-8 text-status-error" />
       </div>
       
       <div className="space-y-2">
@@ -25,7 +25,7 @@ export const DashboardConnectionErrorState: FC = () => {
 
       <Button 
         onClick={handleRefresh}
-        className="bg-red-600 hover:bg-red-700 text-white"
+        className="bg-status-error hover:bg-status-error/90 text-white"
       >
         <RefreshCw className="mr-2 h-4 w-4" />
         Tentar Novamente

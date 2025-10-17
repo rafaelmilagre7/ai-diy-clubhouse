@@ -69,21 +69,21 @@ export const TopicItem = ({ topic }: TopicItemProps) => {
                 </h3>
                 
                 {topic.is_pinned && (
-                  <Badge variant="secondary" className="gap-1 bg-blue-100 text-blue-700">
+                  <Badge variant="secondary" className="gap-1 bg-operational/20 text-operational">
                     <Pin className="h-3 w-3" />
                     Fixado
                   </Badge>
                 )}
                 
                 {topic.is_locked && (
-                  <Badge variant="secondary" className="gap-1 bg-red-100 text-red-700">
+                  <Badge variant="secondary" className="gap-1 bg-status-error/20 text-status-error">
                     <Lock className="h-3 w-3" />
                     Travado
                   </Badge>
                 )}
                 
                 {topic.is_solved && (
-                  <Badge variant="secondary" className="gap-1 bg-green-100 text-green-700">
+                  <Badge variant="secondary" className="gap-1 bg-operational/20 text-operational">
                     <CheckCircle className="h-3 w-3" />
                     Resolvido
                   </Badge>

@@ -25,8 +25,8 @@ export const TopicListError = ({ onRetry, categorySlug }: TopicListErrorProps) =
   };
   
   return (
-    <div className="text-center py-8 space-y-4 border border-red-200 rounded-lg bg-red-50/30 p-6">
-      <CircleAlert className="h-12 w-12 mx-auto text-red-500 mb-4" />
+    <div className="text-center py-8 space-y-4 border border-status-error/30 rounded-lg bg-status-error/10 p-6">
+      <CircleAlert className="h-12 w-12 mx-auto text-status-error mb-4" />
       <h3 className="text-xl font-medium mb-2">Erro ao carregar tópicos</h3>
       <p className="text-muted-foreground mb-2">
         Não foi possível carregar os tópicos desta categoria devido a um problema de conexão com o servidor.

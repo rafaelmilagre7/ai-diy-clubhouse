@@ -31,8 +31,8 @@ export const SolutionsMetrics = ({ solutions }: SolutionsMetricsProps) => {
       value: publishedSolutions,
       subtitle: `${totalSolutions > 0 ? Math.round((publishedSolutions / totalSolutions) * 100) : 0}% do total`,
       icon: Globe,
-      color: "text-emerald-500",
-      bgColor: "bg-emerald-500/10"
+      color: "text-operational",
+      bgColor: "bg-operational/10"
     },
     {
       title: "Rascunhos",
@@ -47,16 +47,16 @@ export const SolutionsMetrics = ({ solutions }: SolutionsMetricsProps) => {
       value: categoriesCount,
       subtitle: "Tipos diferentes",
       icon: Target,
-      color: "text-blue-500",
-      bgColor: "bg-blue-500/10"
+      color: "text-operational",
+      bgColor: "bg-operational/10"
     },
     {
       title: "Recentes",
       value: recentSolutions,
       subtitle: "Últimos 7 dias",
       icon: TrendingUp,
-      color: "text-purple-500",
-      bgColor: "bg-purple-500/10"
+      color: "text-strategy",
+      bgColor: "bg-strategy/10"
     }
   ];
 

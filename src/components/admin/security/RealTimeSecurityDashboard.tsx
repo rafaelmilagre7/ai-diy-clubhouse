@@ -112,9 +112,9 @@ export const RealTimeSecurityDashboard = () => {
 
   if (error) {
     return (
-      <Card className="border-red-200">
+      <Card className="border-status-error/30">
         <CardContent className="p-6">
-          <div className="flex items-center space-x-2 text-red-600">
+          <div className="flex items-center space-x-2 text-status-error">
             <AlertTriangle className="h-5 w-5" />
             <span>Erro ao carregar dados de segurança: {error}</span>
           </div>
@@ -199,7 +199,7 @@ export const RealTimeSecurityDashboard = () => {
           <Button 
             onClick={handleRunAnalysis} 
             disabled={isAnalyzing}
-            className="bg-blue-600 hover:bg-blue-700"
+            className="bg-operational hover:bg-operational/90"
           >
             {isAnalyzing ? (
               <>

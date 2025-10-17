@@ -279,7 +279,7 @@ export const SetNewPasswordForm = () => {
               placeholder="Digite sua nova senha"
               className={`pl-10 pr-12 w-full py-3 px-3 bg-surface-elevated border rounded-lg text-white focus:ring-2 focus:ring-aurora-primary focus:border-aurora-primary transition-colors ${
                 password && !passwordValidation.isValid ? 'border-status-error' : 
-                password && passwordValidation.isValid ? 'border-status-success' : 'border-gray-600'
+                password && passwordValidation.isValid ? 'border-operational' : 'border-border'
               }`}
               disabled={isLoading}
             />
@@ -309,12 +309,12 @@ export const SetNewPasswordForm = () => {
         </div>
 
         <div className="space-y-3">
-          <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-200">
+          <label htmlFor="confirmPassword" className="block text-sm font-medium text-foreground">
             Confirme a nova senha
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-              <Lock className="h-5 w-5 text-gray-400" />
+              <Lock className="h-5 w-5 text-muted-foreground" />
             </div>
             <input
               {...register("confirmPassword")}
@@ -323,7 +323,7 @@ export const SetNewPasswordForm = () => {
               placeholder="Digite novamente sua nova senha"
               className={`pl-10 pr-12 w-full py-3 px-3 bg-surface-elevated border rounded-lg text-white focus:ring-2 focus:ring-aurora-primary focus:border-aurora-primary transition-colors ${
                 confirmPassword && !passwordsMatch ? 'border-status-error' : 
-                confirmPassword && passwordsMatch ? 'border-status-success' : 'border-gray-600'
+                confirmPassword && passwordsMatch ? 'border-operational' : 'border-border'
               }`}
               disabled={isLoading}
             />
@@ -365,7 +365,7 @@ export const SetNewPasswordForm = () => {
         {password && password.length > 0 && (
           <PasswordRequirements 
             requirements={passwordValidation.requirements}
-            className="bg-gray-800/50 p-4 rounded-lg border border-gray-700"
+            className="bg-muted/30 p-4 rounded-lg border border-border"
           />
         )}
 

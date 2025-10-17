@@ -132,21 +132,21 @@ export const SecurityViolationsMonitor: React.FC = () => {
         {/* Loading Stats */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="aurora-glass rounded-2xl border border-orange-500/20 backdrop-blur-md overflow-hidden animate-pulse">
-              <div className="bg-gradient-to-r from-orange-500/10 to-red-500/5 p-6">
-                <div className="w-12 h-8 bg-gradient-to-r from-orange-500/20 to-red-500/10 rounded-lg mb-2"></div>
-                <div className="w-16 h-3 bg-gradient-to-r from-orange-500/20 to-red-500/10 rounded-full"></div>
+            <div key={i} className="aurora-glass rounded-2xl border border-status-warning/20 backdrop-blur-md overflow-hidden animate-pulse">
+              <div className="bg-gradient-to-r from-status-warning/10 to-status-error/5 p-6">
+                <div className="w-12 h-8 bg-gradient-to-r from-status-warning/20 to-status-error/10 rounded-lg mb-2"></div>
+                <div className="w-16 h-3 bg-gradient-to-r from-status-warning/20 to-status-error/10 rounded-full"></div>
               </div>
             </div>
           ))}
         </div>
         
         {/* Loading Content */}
-        <div className="aurora-glass rounded-2xl border border-orange-500/20 backdrop-blur-md p-8">
+        <div className="aurora-glass rounded-2xl border border-status-warning/20 backdrop-blur-md p-8">
           <div className="flex items-center justify-center py-12">
             <div className="relative">
-              <div className="w-16 h-16 aurora-glass rounded-full border-4 border-orange-500/30 border-t-orange-500 animate-spin"></div>
-              <div className="absolute inset-2 bg-gradient-to-br from-orange-500/20 to-red-500/10 rounded-full aurora-pulse"></div>
+              <div className="w-16 h-16 aurora-glass rounded-full border-4 border-status-warning/30 border-t-status-warning animate-spin"></div>
+              <div className="absolute inset-2 bg-gradient-to-br from-status-warning/20 to-status-error/10 rounded-full aurora-pulse"></div>
             </div>
             <div className="ml-4">
               <h3 className="text-lg font-semibold aurora-text-gradient">Carregando Dados de Segurança</h3>
@@ -173,7 +173,7 @@ export const SecurityViolationsMonitor: React.FC = () => {
           {
             label: "Críticas",
             value: stats.critical,
-            gradient: "from-destructive/20 to-red-500/10",
+            gradient: "from-destructive/20 to-status-error/10",
             border: "border-destructive/30",
             icon: "🚨"
           },
@@ -243,8 +243,8 @@ export const SecurityViolationsMonitor: React.FC = () => {
       )}
 
       {/* Enhanced Violations List */}
-      <div className="aurora-glass rounded-2xl border border-orange-500/20 backdrop-blur-md overflow-hidden">
-        <div className="bg-gradient-to-r from-orange-500/10 via-red-500/5 to-transparent p-6 border-b border-orange-500/20">
+      <div className="aurora-glass rounded-2xl border border-status-warning/20 backdrop-blur-md overflow-hidden">
+        <div className="bg-gradient-to-r from-status-warning/10 via-status-error/5 to-transparent p-6 border-b border-status-warning/20">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-xl bg-severity-high/20 aurora-glass">
@@ -260,7 +260,7 @@ export const SecurityViolationsMonitor: React.FC = () => {
             <Button 
               onClick={loadViolations}
               disabled={loading}
-              className="h-12 px-6 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300"
+              className="h-12 px-6 bg-gradient-to-r from-status-warning to-status-error hover:from-status-warning/90 hover:to-status-error/90 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300"
             >
               <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
               Atualizar

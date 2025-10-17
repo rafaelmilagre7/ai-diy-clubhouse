@@ -36,8 +36,8 @@ export const OptimizedKpiGrid = memo(({
       value: completed,
       percentage: stats.completionRate,
       icon: Trophy,
-      colorClass: 'text-green-600',
-      bgClass: 'bg-green-50',
+      colorClass: 'text-operational',
+      bgClass: 'bg-operational/10',
       description: 'Implementações finalizadas'
     },
     {
@@ -46,8 +46,8 @@ export const OptimizedKpiGrid = memo(({
       value: inProgress,
       percentage: stats.progressRate,
       icon: Target,
-      colorClass: 'text-blue-600',
-      bgClass: 'bg-blue-50',
+      colorClass: 'text-operational',
+      bgClass: 'bg-operational/10',
       description: 'Soluções em implementação'
     },
     {
@@ -56,8 +56,8 @@ export const OptimizedKpiGrid = memo(({
       value: total,
       percentage: 100,
       icon: TrendingUp,
-      colorClass: 'text-purple-600',
-      bgClass: 'bg-purple-50',
+      colorClass: 'text-strategy',
+      bgClass: 'bg-strategy/10',
       description: 'Soluções na plataforma'
     }
   ], [completed, inProgress, total, stats]);
