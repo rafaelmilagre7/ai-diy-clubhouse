@@ -229,7 +229,7 @@ export const ActionPlanAssistant: React.FC<ActionPlanAssistantProps> = ({
           <Button 
             onClick={generateActionPlan} 
             disabled={isAnalyzing}
-            className="w-full bg-gradient-to-r from-severity-low to-severity-medium hover:opacity-90"
+            className="w-full bg-gradient-severity hover:opacity-90"
           >
             {isAnalyzing ? (
               <>

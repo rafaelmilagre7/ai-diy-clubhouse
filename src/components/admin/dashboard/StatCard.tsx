@@ -80,7 +80,7 @@ export const StatCard = ({
         </div>
         
         {icon && (
-          <div className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 aurora-glow">
+          <div className="p-3 rounded-xl gradient-aurora-card aurora-glow">
             <div className={cn(getIconColor())}>
               {icon}
             </div>

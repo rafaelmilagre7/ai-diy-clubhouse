@@ -66,7 +66,7 @@ export const RealStatsOverview = ({ data, loading }: RealStatsOverviewProps) => 
       <div className="aurora-glass rounded-xl p-6 aurora-pulse">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-3 h-3 bg-gradient-to-r from-primary to-secondary rounded-full aurora-glow"></div>
+            <div className="w-3 h-3 bg-gradient-aurora rounded-full aurora-glow"></div>
             <span className="text-foreground font-medium">
               Período ativo: <span className="aurora-text-gradient font-bold">{periodLabel}</span>
             </span>

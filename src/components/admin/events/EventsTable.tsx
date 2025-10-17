@@ -145,7 +145,7 @@ export const EventsTable = ({ events: propEvents }: EventsTableProps) => {
   if (error && !propEvents) {
     return (
       <div className="text-center py-12">
-        <div className="p-4 rounded-xl bg-gradient-to-r from-destructive/20 to-destructive/10 backdrop-blur-sm border border-destructive/20 inline-block mb-4">
+        <div className="p-4 rounded-xl gradient-error-card backdrop-blur-sm border border-destructive/20 inline-block mb-4">
           <Trash2 className="h-8 w-8 text-destructive" />
         </div>
         <h3 className="text-heading-3 text-destructive mb-2">Erro ao carregar eventos</h3>
@@ -159,7 +159,7 @@ export const EventsTable = ({ events: propEvents }: EventsTableProps) => {
   if (events.length === 0) {
     return (
       <div className="text-center py-12">
-        <div className="p-4 rounded-xl bg-gradient-to-r from-muted/20 to-muted/10 backdrop-blur-sm border border-muted/20 inline-block mb-4">
+        <div className="p-4 rounded-xl gradient-muted-card backdrop-blur-sm border border-muted/20 inline-block mb-4">
           <Calendar className="h-8 w-8 text-muted-foreground" />
         </div>
         <h3 className="text-heading-3 text-foreground mb-2">Nenhum evento encontrado</h3>
@@ -219,10 +219,10 @@ export const EventsTable = ({ events: propEvents }: EventsTableProps) => {
                         <div className={`
                           p-3 rounded-lg transition-smooth group-hover:scale-110
                           ${startDate.isToday 
-                            ? 'bg-gradient-to-br from-strategy/20 to-revenue/20 group-hover:from-strategy/30 group-hover:to-revenue/30' 
+                            ? 'gradient-revenue-card group-hover:from-strategy/30 group-hover:to-revenue/30' 
                             : startDate.isUpcoming
-                              ? 'bg-gradient-to-br from-operational/20 to-aurora-primary/20 group-hover:from-operational/30 group-hover:to-aurora-primary/30'
-                              : 'bg-gradient-to-br from-muted/20 to-muted/10 group-hover:from-muted/30 group-hover:to-muted/20'
+                              ? 'gradient-operational-card group-hover:from-operational/30 group-hover:to-aurora-primary/30'
+                              : 'gradient-muted-card group-hover:from-muted/30 group-hover:to-muted/20'
                           }
                         `}>
                           <Calendar className={`h-6 w-6 ${

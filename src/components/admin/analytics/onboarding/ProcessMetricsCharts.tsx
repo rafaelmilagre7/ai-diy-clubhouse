@@ -38,7 +38,7 @@ export const ProcessMetricsCharts: React.FC<ProcessMetricsChartsProps> = ({ data
                   </div>
                   <div className="w-full bg-muted rounded-full h-3">
                     <div
-                      className="bg-gradient-to-r from-operational to-strategy h-3 rounded-full transition-smooth"
+                      className="bg-gradient-operational h-3 rounded-full transition-smooth"
                       style={{ width: `${step.percentage}%` }}
                     />
                   </div>

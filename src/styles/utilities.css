@@ -21,6 +21,55 @@
   background-clip: text;
 }
 
+/* --- Gradient Utilities (BATCH 4) --- */
+.gradient-aurora-card {
+  @apply bg-gradient-to-br from-aurora-primary/20 to-aurora-primary/10;
+}
+
+.gradient-operational-card {
+  @apply bg-gradient-to-br from-operational/20 to-aurora-primary/20;
+}
+
+.gradient-revenue-card {
+  @apply bg-gradient-to-br from-revenue/20 to-strategy/20;
+}
+
+.gradient-success-card {
+  @apply bg-gradient-to-br from-status-success/20 to-status-success/10;
+}
+
+.gradient-error-card {
+  @apply bg-gradient-to-br from-status-error/20 to-status-error/10;
+}
+
+.gradient-warning-card {
+  @apply bg-gradient-to-br from-status-warning/20 to-status-error/10;
+}
+
+.gradient-muted-card {
+  @apply bg-gradient-to-br from-muted/20 to-muted/10;
+}
+
+.gradient-primary-subtle {
+  @apply bg-gradient-to-r from-primary/10 to-transparent;
+}
+
+.gradient-aurora-subtle {
+  @apply bg-gradient-to-r from-aurora-primary/10 to-transparent;
+}
+
+.gradient-operational-subtle {
+  @apply bg-gradient-to-r from-operational/10 to-transparent;
+}
+
+.gradient-strategy-subtle {
+  @apply bg-gradient-to-r from-strategy/10 to-transparent;
+}
+
+.gradient-severity-high {
+  @apply bg-gradient-to-r from-status-warning/10 via-status-error/5 to-transparent;
+}
+
 /* --- Animation Utilities --- */
 .animate-bounce-in {
   animation: bounce-in 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);

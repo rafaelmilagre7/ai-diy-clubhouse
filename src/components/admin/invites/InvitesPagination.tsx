@@ -64,7 +64,7 @@ export const InvitesPagination = memo<InvitesPaginationProps>(({
   const visiblePages = totalPages > 1 ? getVisiblePages() : [];
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-6 bg-gradient-to-r from-muted/30 to-muted/10 border-t border-muted/20">
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-6 gradient-muted-card border-t border-muted/20">
       {/* Informações de paginação */}
       <div className="flex items-center gap-4 text-sm text-muted-foreground">
         <span>

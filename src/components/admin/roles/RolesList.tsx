@@ -67,7 +67,7 @@ export function RolesList({
   if (roles.length === 0) {
     return (
       <div className="text-center py-12">
-        <div className="p-4 rounded-xl bg-gradient-to-r from-muted/20 to-muted/10 backdrop-blur-sm border border-muted/20 inline-block mb-4">
+        <div className="p-4 rounded-xl gradient-muted-card backdrop-blur-sm border border-muted/20 inline-block mb-4">
           <Shield className="h-8 w-8 text-muted-foreground" />
         </div>
         <h3 className="text-heading-3 text-foreground mb-2">Nenhum papel encontrado</h3>
@@ -102,8 +102,8 @@ export function RolesList({
                     <div className={`
                       p-3 rounded-lg transition-smooth group-hover:scale-110
                       ${role.is_system 
-                        ? 'bg-gradient-to-br from-revenue/20 to-strategy/20 group-hover:from-revenue/30 group-hover:to-strategy/30' 
-                        : 'bg-gradient-to-br from-operational/20 to-aurora-primary/20 group-hover:from-operational/30 group-hover:to-aurora-primary/30'
+                        ? 'gradient-revenue-card group-hover:from-revenue/30 group-hover:to-strategy/30' 
+                        : 'gradient-operational-card group-hover:from-operational/30 group-hover:to-aurora-primary/30'
                       }
                     `}>
                       {role.is_system ? (
@@ -141,7 +141,7 @@ export function RolesList({
                       variant={role.is_system ? 'default' : 'outline'}
                       className={
                         role.is_system 
-                          ? 'bg-gradient-to-r from-revenue to-strategy text-white border-0' 
+                          ? 'bg-gradient-revenue text-white border-0' 
                           : 'bg-operational/20 text-operational border-operational/30'
                       }
                     >

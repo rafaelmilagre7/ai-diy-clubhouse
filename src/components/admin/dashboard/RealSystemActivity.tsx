@@ -136,7 +136,7 @@ export const RealSystemActivity = ({ activityData, loading }: RealSystemActivity
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="p-2 rounded-lg bg-gradient-to-br from-primary/20 to-secondary/20">
+                  <div className="p-2 rounded-lg gradient-aurora-card">
                     {getActivityIcon(activity.type)}
                   </div>
                   <div>

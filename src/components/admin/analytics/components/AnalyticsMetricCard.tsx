@@ -28,13 +28,13 @@ export const AnalyticsMetricCard = ({
 }: AnalyticsMetricCardProps) => {
   const getColorClasses = () => {
     const schemes = {
-      blue: 'border-l-operational bg-gradient-to-r from-operational/10 to-transparent',
-      green: 'border-l-success bg-gradient-to-r from-success/10 to-transparent',
-      purple: 'border-l-strategy bg-gradient-to-r from-strategy/10 to-transparent',
-      orange: 'border-l-warning bg-gradient-to-r from-warning/10 to-transparent',
-      cyan: 'border-l-aurora-primary bg-gradient-to-r from-aurora-primary/10 to-transparent',
-      indigo: 'border-l-operational bg-gradient-to-r from-operational/10 to-transparent',
-      pink: 'border-l-accent bg-gradient-to-r from-accent/10 to-transparent'
+      blue: 'border-l-operational gradient-operational-subtle',
+      green: 'border-l-success gradient-success-card',
+      purple: 'border-l-strategy gradient-strategy-subtle',
+      orange: 'border-l-warning gradient-warning-card',
+      cyan: 'border-l-aurora-primary gradient-aurora-subtle',
+      indigo: 'border-l-operational gradient-operational-subtle',
+      pink: 'border-l-accent gradient-primary-subtle'
     };
     return schemes[colorScheme];
   };

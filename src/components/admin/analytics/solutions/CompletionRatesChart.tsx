@@ -51,7 +51,7 @@ export const CompletionRatesChart: React.FC<CompletionRatesChartProps> = ({
   return (
     <Card className="overflow-hidden transition-smooth bg-card backdrop-blur-sm hover:shadow-md border border-border">
       <CardHeader className="pb-2 border-b border-border">
-        <CardTitle className="text-lg font-semibold bg-gradient-to-r from-primary to-operational bg-clip-text text-transparent">
+        <CardTitle className="text-lg font-semibold bg-gradient-primary bg-clip-text text-transparent">
           Taxas de Conclusão
         </CardTitle>
         <CardDescription className="text-muted-foreground">

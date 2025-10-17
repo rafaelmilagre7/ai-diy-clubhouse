@@ -347,6 +347,37 @@ const config: Config = {
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
+        
+        // === SEMANTIC GRADIENTS - BATCH 4 ===
+        // Brand gradients
+        'gradient-aurora': 'linear-gradient(135deg, hsl(var(--aurora-primary)), hsl(var(--aurora-primary-light)))',
+        'gradient-aurora-subtle': 'linear-gradient(135deg, hsl(var(--aurora-primary) / 0.1), hsl(var(--aurora-primary-light) / 0.05))',
+        'gradient-primary': 'linear-gradient(135deg, hsl(var(--primary)), hsl(var(--operational)))',
+        'gradient-primary-subtle': 'linear-gradient(135deg, hsl(var(--primary) / 0.2), hsl(var(--primary) / 0.1))',
+        
+        // Track gradients
+        'gradient-revenue': 'linear-gradient(135deg, hsl(var(--revenue)), hsl(var(--strategy)))',
+        'gradient-revenue-subtle': 'linear-gradient(135deg, hsl(var(--revenue) / 0.2), hsl(var(--strategy) / 0.2))',
+        'gradient-operational': 'linear-gradient(135deg, hsl(var(--operational)), hsl(var(--aurora-primary)))',
+        'gradient-operational-subtle': 'linear-gradient(135deg, hsl(var(--operational) / 0.2), hsl(var(--aurora-primary) / 0.2))',
+        'gradient-strategy': 'linear-gradient(135deg, hsl(var(--strategy)), hsl(var(--revenue)))',
+        'gradient-strategy-subtle': 'linear-gradient(135deg, hsl(var(--strategy) / 0.2), hsl(var(--revenue) / 0.2))',
+        
+        // Status gradients
+        'gradient-success': 'linear-gradient(135deg, hsl(var(--status-success)), hsl(var(--status-success-light)))',
+        'gradient-success-subtle': 'linear-gradient(135deg, hsl(var(--status-success) / 0.15), transparent)',
+        'gradient-error': 'linear-gradient(135deg, hsl(var(--status-error)), hsl(var(--status-error-light)))',
+        'gradient-error-subtle': 'linear-gradient(135deg, hsl(var(--status-error) / 0.15), hsl(var(--status-error) / 0.05))',
+        'gradient-warning': 'linear-gradient(135deg, hsl(var(--status-warning)), hsl(var(--status-error)))',
+        'gradient-warning-subtle': 'linear-gradient(135deg, hsl(var(--status-warning) / 0.1), hsl(var(--status-error) / 0.05))',
+        
+        // Neutral gradients
+        'gradient-muted': 'linear-gradient(135deg, hsl(var(--muted) / 0.2), hsl(var(--muted) / 0.1))',
+        'gradient-surface': 'linear-gradient(135deg, hsl(var(--surface-elevated)), hsl(var(--surface-base)))',
+        
+        // Severity gradients (security)
+        'gradient-severity': 'linear-gradient(135deg, hsl(var(--severity-low)), hsl(var(--severity-medium)))',
+        'gradient-severity-critical': 'linear-gradient(135deg, hsl(var(--severity-critical)), hsl(var(--severity-high)))',
       },
       
       // Sombras Aurora aprimoradas

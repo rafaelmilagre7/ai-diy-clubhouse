@@ -37,7 +37,7 @@ export const UserDistributionChart = ({ data, loading }: UserDistributionChartPr
     <div className="aurora-glass rounded-xl aurora-hover-scale">
       <div className="p-6 border-b border-border/50">
         <div className="flex items-center gap-3 mb-2">
-          <div className="p-2 rounded-lg bg-gradient-to-br from-primary/20 to-secondary/20">
+          <div className="p-2 rounded-lg gradient-aurora-card">
             <Users className="h-6 w-6 text-primary" />
           </div>
           <h3 className="text-xl font-bold aurora-text-gradient">
@@ -70,7 +70,7 @@ export const UserDistributionChart = ({ data, loading }: UserDistributionChartPr
                   className="aurora-glass rounded-lg p-3 flex items-center justify-between hover:bg-primary/5 transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 rounded-full bg-gradient-to-r from-primary to-secondary aurora-glow"></div>
+                    <div className="w-3 h-3 rounded-full bg-gradient-aurora aurora-glow"></div>
                     <span className="font-semibold text-foreground">{item.role}</span>
                   </div>
                   <span className="aurora-text-gradient font-bold">
