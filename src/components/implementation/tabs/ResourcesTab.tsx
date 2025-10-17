@@ -146,7 +146,7 @@ const ResourcesTab: React.FC<ResourcesTabProps> = ({ solutionId, onComplete }) =
     }
     
     // Ícone padrão
-    return <FileIcon className="h-6 w-6 text-gray-500" />;
+    return <FileIcon className="h-6 w-6 text-muted-foreground" />;
   };
 
   const getFileFormatName = (resource: Resource): string => {
@@ -287,8 +287,8 @@ const ResourcesTab: React.FC<ResourcesTabProps> = ({ solutionId, onComplete }) =
             {externalLinks.map((link, index) => (
               <Card key={index} className="p-6 hover:shadow-lg transition-shadow">
                 <div className="flex items-start space-x-4">
-                  <div className="flex-shrink-0 bg-blue-500/10 p-3 rounded-lg">
-                    <ExternalLink className="h-6 w-6 text-blue-500" />
+                  <div className="flex-shrink-0 bg-operational/10 p-3 rounded-lg">
+                    <ExternalLink className="h-6 w-6 text-operational" />
                   </div>
                   
                   <div className="flex-1 min-w-0">
@@ -306,7 +306,7 @@ const ResourcesTab: React.FC<ResourcesTabProps> = ({ solutionId, onComplete }) =
                   <div className="flex-shrink-0">
                     <Button
                       onClick={() => window.open(link.url, '_blank', 'noopener,noreferrer')}
-                      className="bg-blue-500 hover:bg-blue-600"
+                      className="bg-operational hover:bg-operational/90"
                     >
                       <ExternalLink className="h-4 w-4 mr-2" />
                       Acessar

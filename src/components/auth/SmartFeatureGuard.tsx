@@ -23,7 +23,7 @@ export const SmartFeatureGuard: React.FC<SmartFeatureGuardProps> = ({
     return (
       <div className="flex justify-center items-center py-12">
         <LoadingSpinner size="lg" />
-        <p className="ml-4 text-gray-400">Verificando permissões...</p>
+        <p className="ml-4 text-muted-foreground">Verificando permissões...</p>
       </div>
     );
   }

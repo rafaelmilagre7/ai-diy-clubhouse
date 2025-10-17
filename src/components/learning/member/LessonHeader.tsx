@@ -56,7 +56,7 @@ export const LessonHeader = ({
       <div className="flex items-center gap-3 flex-wrap">
         <h1 className="text-3xl font-bold text-foreground leading-tight">{title}</h1>
         {isCompleted && (
-          <div className="flex items-center gap-2 bg-gradient-to-r from-green-500/20 to-emerald-500/10 text-green-600 dark:text-emerald-400 px-3 py-1.5 rounded-full text-sm font-medium border border-green-500/20 backdrop-blur-sm">
+          <div className="flex items-center gap-2 bg-operational/20 text-operational px-3 py-1.5 rounded-full text-sm font-medium border border-operational/20 backdrop-blur-sm">
             <CheckCircle className="h-4 w-4" />
             <span>Concluído</span>
           </div>

@@ -11,9 +11,9 @@ const VoteStatus = ({ userVote }: VoteStatusProps) => {
     <div className="text-sm text-muted-foreground flex-1 ml-2">
       {userVote ? (
         userVote.vote_type === 'upvote' ? (
-          <span className="font-medium text-green-600">Você apoiou esta sugestão</span>
+          <span className="font-medium text-operational">Você apoiou esta sugestão</span>
         ) : (
-          <span className="font-medium text-red-600">Você não apoiou esta sugestão</span>
+          <span className="font-medium text-status-error">Você não apoiou esta sugestão</span>
         )
       ) : (
         <span>Vote para mostrar seu apoio</span>

@@ -23,7 +23,7 @@ export const FileInput: React.FC<FileInputProps> = ({
   return (
     <div className="space-y-4">
       {fieldLabel && (
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block text-sm font-medium text-foreground">
           {fieldLabel}
         </label>
       )}

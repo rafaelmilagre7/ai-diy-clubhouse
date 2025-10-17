@@ -23,7 +23,7 @@ export const PasswordRequirements = ({ requirements, className = '' }: PasswordR
 
   return (
     <div className={`space-y-2 ${className}`}>
-      <p className="text-sm font-medium text-gray-300">Requisitos da senha:</p>
+      <p className="text-sm font-medium text-foreground">Requisitos da senha:</p>
       <ul className="space-y-1">
         {passwordRequirementsText.map((text, index) => {
           const isMet = requirementsArray[index];
@@ -31,13 +31,13 @@ export const PasswordRequirements = ({ requirements, className = '' }: PasswordR
             <li 
               key={index}
               className={`flex items-center space-x-2 text-sm transition-colors ${
-                isMet ? 'text-green-400' : 'text-gray-400'
+                isMet ? 'text-operational' : 'text-muted-foreground'
               }`}
             >
               {isMet ? (
-                <Check className="h-4 w-4 text-green-400" />
+                <Check className="h-4 w-4 text-operational" />
               ) : (
-                <X className="h-4 w-4 text-gray-400" />
+                <X className="h-4 w-4 text-muted-foreground" />
               )}
               <span className={isMet ? 'line-through' : ''}>{text}</span>
             </li>

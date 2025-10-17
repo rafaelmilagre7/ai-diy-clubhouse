@@ -26,20 +26,20 @@ export const ImplementationHeader: React.FC<ImplementationHeaderProps> = ({
             {solution.title}
           </CardTitle>
           <div className="flex items-center gap-4">
-            <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+            <Badge variant="secondary" className="bg-operational/10 text-operational border-operational/20">
               {solution.category}
             </Badge>
-            <Badge variant="outline" className="text-gray-300 border-gray-600">
+            <Badge variant="outline" className="text-foreground border-border">
               {solution.difficulty}
             </Badge>
           </div>
         </div>
         <div className="text-right">
-          <div className="flex items-center gap-2 text-gray-300 mb-2">
+          <div className="flex items-center gap-2 text-foreground mb-2">
             <Target className="h-4 w-4" />
             <span className="text-sm">Implementação</span>
           </div>
-          <div className="flex items-center gap-2 text-gray-400">
+          <div className="flex items-center gap-2 text-muted-foreground">
             <Clock className="h-4 w-4" />
             <span className="text-sm">Etapa {currentModuleIndex + 1} de {totalModules}</span>
           </div>

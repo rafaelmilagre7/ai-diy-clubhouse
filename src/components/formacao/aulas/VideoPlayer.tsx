@@ -66,7 +66,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     return (
       <Card>
         <CardContent className="p-0">
-          <div className="aspect-video bg-gray-100 flex items-center justify-center">
+          <div className="aspect-video bg-muted flex items-center justify-center">
             <p className="text-muted-foreground">Selecione um vídeo para assistir</p>
           </div>
         </CardContent>

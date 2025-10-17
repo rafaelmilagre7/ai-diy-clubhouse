@@ -113,7 +113,7 @@ export const SuccessCard: React.FC<SuccessCardProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
-            className="text-gray-700 mt-2"
+            className="text-muted-foreground mt-2"
           >
             {message}
           </motion.p>

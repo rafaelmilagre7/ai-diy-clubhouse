@@ -144,18 +144,18 @@ export const FileUpload = ({
             <div className="flex flex-col items-center justify-center pt-5 pb-6">
               {uploading ? (
                 <>
-                  <Loader2 className="w-8 h-8 mb-3 text-gray-500 animate-spin" />
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <Loader2 className="w-8 h-8 mb-3 text-muted-foreground animate-spin" />
+                  <p className="text-sm text-muted-foreground">
                     Fazendo upload... {uploadProgress}%
                   </p>
                 </>
               ) : (
                 <>
-                  <Upload className="w-8 h-8 mb-3 text-gray-500" />
-                  <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                  <Upload className="w-8 h-8 mb-3 text-muted-foreground" />
+                  <p className="mb-2 text-sm text-muted-foreground">
                     <span className="font-semibold">Clique para upload</span> ou arraste o arquivo
                   </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                  <p className="text-xs text-muted-foreground">
                     Tamanho máximo recomendado: 10MB
                   </p>
                 </>
@@ -173,12 +173,12 @@ export const FileUpload = ({
         </div>
       ) : (
         <div className="flex items-center p-4 space-x-4 border rounded-lg bg-muted">
-          <File className="h-10 w-10 flex-shrink-0 text-blue-600" />
+          <File className="h-10 w-10 flex-shrink-0 text-operational" />
           <div className="flex-1 min-w-0">
-            <p className="font-medium text-gray-900 truncate dark:text-white">
+            <p className="font-medium text-foreground truncate">
               {fileName}
             </p>
-            <p className="text-sm text-gray-500 truncate dark:text-gray-400">
+            <p className="text-sm text-muted-foreground truncate">
               Arquivo carregado com sucesso
             </p>
           </div>

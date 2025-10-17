@@ -58,11 +58,11 @@ export const LessonNavigationBar: React.FC<LessonNavigationBarProps> = ({
             disabled={isUpdating} 
             className={`gap-2 px-6 py-3 font-medium transition-all duration-300 border-0 ${
               isCompleted 
-                ? "bg-gradient-to-r from-green-500/20 to-emerald-500/10 text-green-600 dark:text-emerald-400 hover:from-green-500/30 hover:to-emerald-500/20 backdrop-blur-sm" 
+                ? "bg-operational/20 text-operational hover:bg-operational/30 backdrop-blur-sm" 
                 : "bg-gradient-to-r from-primary via-primary to-primary/80 text-white hover:from-primary/90 hover:via-primary/90 hover:to-primary/70 shadow-lg hover:shadow-xl backdrop-blur-sm"
             }`}
           >
-            <CheckCircle className={`h-4 w-4 ${isCompleted ? "text-green-600 dark:text-emerald-400" : "text-white"}`} />
+            <CheckCircle className={`h-4 w-4 ${isCompleted ? "text-operational" : "text-white"}`} />
             {isUpdating ? "Salvando..." : isCompleted ? "Aula Concluída" : "Marcar como Concluída"}
           </Button>
         </div>

@@ -52,7 +52,7 @@ export const TooltipNavItem: React.FC<TooltipNavItemProps> = ({
             ? "bg-gradient-to-r from-primary/15 to-primary/10 text-primary shadow-sm border border-primary/20" 
             : "text-muted-foreground hover:text-foreground",
           !sidebarOpen && "justify-center px-2 w-10 h-10",
-          adminOnly && "bg-gradient-to-r from-orange-500/10 to-red-500/10 border border-orange-500/20"
+          adminOnly && "bg-gradient-to-r from-status-warning/10 to-status-error/10 border border-status-warning/20"
         );
       }}
     >
@@ -60,7 +60,7 @@ export const TooltipNavItem: React.FC<TooltipNavItemProps> = ({
         <Icon className={cn(
           "h-5 w-5 flex-shrink-0 transition-all duration-200",
           "group-hover:scale-110",
-          adminOnly && "text-orange-500"
+          adminOnly && "text-status-warning"
         )} />
         {isNew && (
           <div className="absolute -top-1 -right-1 h-2 w-2 bg-primary rounded-full animate-pulse" />
@@ -71,7 +71,7 @@ export const TooltipNavItem: React.FC<TooltipNavItemProps> = ({
         <div className="flex items-center justify-between flex-1 min-w-0">
           <span className={cn(
             "truncate transition-colors duration-200",
-            adminOnly && "text-orange-600 dark:text-orange-400 font-semibold"
+            adminOnly && "text-status-warning font-semibold"
           )}>
             {label}
           </span>
@@ -81,12 +81,12 @@ export const TooltipNavItem: React.FC<TooltipNavItemProps> = ({
             </span>
           )}
           {isNew && (
-            <span className="ml-2 px-2 py-0.5 text-xs bg-green-500/20 text-green-600 dark:text-green-400 rounded-full font-medium">
+            <span className="ml-2 px-2 py-0.5 text-xs bg-operational/20 text-operational rounded-full font-medium">
               Novo
             </span>
           )}
           {adminOnly && (
-            <span className="ml-2 px-2 py-0.5 text-xs bg-orange-500/20 text-orange-600 dark:text-orange-400 rounded-full font-medium">
+            <span className="ml-2 px-2 py-0.5 text-xs bg-status-warning/20 text-status-warning rounded-full font-medium">
               Admin
             </span>
           )}
@@ -106,7 +106,7 @@ export const TooltipNavItem: React.FC<TooltipNavItemProps> = ({
             <div className="flex items-center gap-2">
               {label}
               {adminOnly && (
-                <span className="px-1.5 py-0.5 text-xs bg-orange-500/20 text-orange-600 rounded">
+                <span className="px-1.5 py-0.5 text-xs bg-status-warning/20 text-status-warning rounded">
                   Admin
                 </span>
               )}

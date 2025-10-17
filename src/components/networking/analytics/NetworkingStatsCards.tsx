@@ -14,48 +14,48 @@ export const NetworkingStatsCards: React.FC<NetworkingStatsCardsProps> = ({ anal
       title: 'Total de Conexões',
       value: analytics.totalConnections,
       icon: Users,
-      color: 'from-blue-500/20 to-blue-600/10',
-      iconColor: 'text-blue-500',
+      color: 'from-operational/20 to-operational/30',
+      iconColor: 'text-operational',
       trend: '+12%'
     },
     {
       title: 'Conversas Ativas',
       value: analytics.activeConversations,
       icon: MessageSquare,
-      color: 'from-green-500/20 to-green-600/10',
-      iconColor: 'text-green-500',
+      color: 'from-operational/20 to-operational/30',
+      iconColor: 'text-operational',
       trend: '+8%'
     },
     {
       title: 'Matches Este Mês',
       value: analytics.matchesThisMonth,
       icon: Target,
-      color: 'from-purple-500/20 to-purple-600/10',
-      iconColor: 'text-purple-500',
+      color: 'from-strategy/20 to-strategy/30',
+      iconColor: 'text-strategy',
       trend: '+24%'
     },
     {
       title: 'Taxa de Resposta',
       value: `${analytics.responseRate}%`,
       icon: TrendingUp,
-      color: 'from-orange-500/20 to-orange-600/10',
-      iconColor: 'text-orange-500',
+      color: 'from-status-warning/20 to-status-warning/30',
+      iconColor: 'text-status-warning',
       trend: '+5%'
     },
     {
       title: 'Tempo Médio Resposta',
       value: analytics.averageResponseTime,
       icon: Clock,
-      color: 'from-cyan-500/20 to-cyan-600/10',
-      iconColor: 'text-cyan-500',
+      color: 'from-operational/20 to-operational/30',
+      iconColor: 'text-operational',
       trend: '-15%'
     },
     {
       title: 'Valor Estimado',
       value: `R$ ${(analytics.estimatedValue / 1000).toFixed(1)}k`,
       icon: DollarSign,
-      color: 'from-emerald-500/20 to-emerald-600/10',
-      iconColor: 'text-emerald-500',
+      color: 'from-revenue/20 to-revenue/30',
+      iconColor: 'text-revenue',
       trend: '+32%'
     }
   ];
@@ -80,7 +80,7 @@ export const NetworkingStatsCards: React.FC<NetworkingStatsCardsProps> = ({ anal
                     <Icon className={`h-6 w-6 ${stat.iconColor}`} />
                   </div>
                   
-                  <span className="text-xs font-medium px-2 py-1 rounded-full bg-green-500/20 text-green-600 border border-green-500/30">
+                  <span className="text-xs font-medium px-2 py-1 rounded-full bg-operational/20 text-operational border border-operational/30">
                     {stat.trend}
                   </span>
                 </div>

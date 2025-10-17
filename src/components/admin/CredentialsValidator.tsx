@@ -71,7 +71,7 @@ export const CredentialsValidator = () => {
       case 'invalid':
         return <AlertCircle className="h-4 w-4 text-warning" />;
       default:
-        return <AlertCircle className="h-4 w-4 text-gray-500" />;
+        return <AlertCircle className="h-4 w-4 text-muted-foreground" />;
     }
   };
 

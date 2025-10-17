@@ -298,7 +298,7 @@ const SignUpForm = ({ onBackToLogin }: SignUpFormProps) => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="confirmPassword" className="text-gray-200">Confirmar senha *</Label>
+            <Label htmlFor="confirmPassword" className="text-foreground">Confirmar senha *</Label>
             <div className="relative">
               <Input
                 id="confirmPassword"

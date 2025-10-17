@@ -235,7 +235,7 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
                   <div className="flex gap-2">
                     <div className="relative flex-grow">
                       <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                        <Link className="h-4 w-4 text-gray-400" />
+                        <Link className="h-4 w-4 text-muted-foreground" />
                       </div>
                       <Input 
                         type="url" 

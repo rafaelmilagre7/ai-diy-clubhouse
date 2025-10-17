@@ -37,21 +37,21 @@ export const PerformanceDashboard = () => {
               </Button>
             </div>
           </div>
-          <p className="text-xs text-gray-400">Ctrl+Shift+P para alternar</p>
+          <p className="text-xs text-muted-foreground">Ctrl+Shift+P para alternar</p>
         </CardHeader>
         
         <CardContent className="space-y-3 text-xs">
           {report && (
             <>
               <div>
-                <h4 className="font-semibold text-yellow-400 mb-1">Resumo</h4>
+                <h4 className="font-semibold text-status-warning mb-1">Resumo</h4>
                 <p>Total de eventos: {report.totalEvents}</p>
                 <p>Operações lentas (&gt;1s): {report.slowOperations?.length || 0}</p>
               </div>
 
               {report.slowOperations?.length > 0 && (
                 <div>
-                  <h4 className="font-semibold text-red-400 mb-1">🚨 Operações Lentas</h4>
+                  <h4 className="font-semibold text-status-error mb-1">🚨 Operações Lentas</h4>
                   <div className="space-y-1">
                     {report.slowOperations.slice(0, 5).map((op: any, i: number) => (
                       <div key={i} className="flex justify-between items-center">
@@ -67,7 +67,7 @@ export const PerformanceDashboard = () => {
 
               {report.averageByComponent && (
                 <div>
-                  <h4 className="font-semibold text-blue-400 mb-1">📊 Médias por Componente</h4>
+                  <h4 className="font-semibold text-operational mb-1">📊 Médias por Componente</h4>
                   <div className="space-y-1">
                     {Object.entries(report.averageByComponent)
                       .sort(([,a]: any, [,b]: any) => b.average - a.average)
@@ -94,15 +94,15 @@ export const PerformanceDashboard = () => {
 
               {report.recentEvents?.length > 0 && (
                 <div>
-                  <h4 className="font-semibold text-green-400 mb-1">📝 Eventos Recentes</h4>
+                  <h4 className="font-semibold text-operational mb-1">📝 Eventos Recentes</h4>
                   <div className="space-y-1 max-h-24 overflow-y-auto">
                     {report.recentEvents.slice(-8).map((event: any, i: number) => (
-                      <div key={i} className="text-xs text-gray-300">
-                        <span className="text-gray-500">
+                      <div key={i} className="text-xs text-foreground/80">
+                        <span className="text-muted-foreground">
                           {new Date(event.timestamp + performance.timeOrigin).toLocaleTimeString()}
                         </span>
                         {' '}
-                        <span className="text-blue-300">{event.component}</span>
+                        <span className="text-operational">{event.component}</span>
                         {' → '}
                         <span>{event.event}</span>
                         {event.duration && (

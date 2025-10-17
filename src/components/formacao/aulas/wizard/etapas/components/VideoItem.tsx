@@ -29,7 +29,7 @@ export const VideoItem: React.FC<VideoItemProps> = ({
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center">
           <div {...dragHandleProps} className="cursor-grab mr-2">
-            <GripVertical className="h-4 w-4 text-gray-500" />
+            <GripVertical className="h-4 w-4 text-muted-foreground" />
           </div>
           <span className="font-medium">Vídeo {index + 1}</span>
         </div>
@@ -68,7 +68,7 @@ export const VideoItem: React.FC<VideoItemProps> = ({
         {video.thumbnail_url && (
           <div className="mt-2">
             <p className="text-sm font-medium mb-1">Preview:</p>
-            <div className="aspect-video bg-gray-100 rounded-md overflow-hidden relative">
+            <div className="aspect-video bg-muted rounded-md overflow-hidden relative">
               <img 
                 src={video.thumbnail_url}
                 alt="Thumbnail do vídeo"

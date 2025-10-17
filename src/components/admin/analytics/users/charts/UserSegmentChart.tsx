@@ -61,7 +61,7 @@ export const UserSegmentChart = ({ data, loading }: UserSegmentChartProps) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-white p-3 border rounded-lg shadow-lg">
+        <div className="bg-card p-3 border rounded-lg shadow-lg">
           <p className="font-semibold">{data.name}</p>
           <p className="text-sm text-muted-foreground">
             {data.value} usuários ({data.percentage}%)
@@ -112,7 +112,7 @@ export const UserSegmentChart = ({ data, loading }: UserSegmentChartProps) => {
             {data?.map((segment) => (
               <div 
                 key={segment.name}
-                className="flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
+                className="flex items-center justify-between p-3 rounded-lg bg-muted hover:bg-muted/80 transition-colors"
               >
                 <div className="flex items-center space-x-3">
                   <div 

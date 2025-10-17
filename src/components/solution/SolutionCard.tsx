@@ -17,11 +17,11 @@ interface SolutionCardProps {
 const getDifficultyBadgeStyle = (difficulty: string) => {
   switch (difficulty) {
     case "easy":
-      return "bg-green-900/40 text-green-300 border-green-700";
+      return "bg-operational/20 text-operational border-operational/30";
     case "medium":
-      return "bg-yellow-900/40 text-yellow-300 border-yellow-700";
+      return "bg-status-warning/20 text-status-warning border-status-warning/30";
     case "advanced":
-      return "bg-red-900/40 text-red-300 border-red-700";
+      return "bg-status-error/20 text-status-error border-status-error/30";
     default:
       return "bg-muted/60 text-muted-foreground border-border";
   }
@@ -38,24 +38,24 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({
     let icon;
     switch (category) {
       case 'Receita':
-        icon = <TrendingUp className="h-4 w-4 text-green-400" />;
+        icon = <TrendingUp className="h-4 w-4 text-revenue" />;
         break;
       case 'Operacional':
-        icon = <Settings className="h-4 w-4 text-blue-400" />;
+        icon = <Settings className="h-4 w-4 text-operational" />;
         break;
       case 'Estratégia':
-        icon = <BarChart className="h-4 w-4 text-purple-400" />;
+        icon = <BarChart className="h-4 w-4 text-strategy" />;
         break;
       default:
-        icon = <Zap className="h-4 w-4 text-gray-400" />;
+        icon = <Zap className="h-4 w-4 text-muted-foreground" />;
     }
 
     return {
       ...details,
       icon,
-      color: category === 'Receita' ? 'bg-green-900/40 text-green-300 border-green-700' :
-             category === 'Operacional' ? 'bg-blue-900/40 text-blue-300 border-blue-700' :
-             category === 'Estratégia' ? 'bg-purple-900/40 text-purple-300 border-purple-700' :
+      color: category === 'Receita' ? 'bg-revenue/20 text-revenue border-revenue/30' :
+             category === 'Operacional' ? 'bg-operational/20 text-operational border-operational/30' :
+             category === 'Estratégia' ? 'bg-strategy/20 text-strategy border-strategy/30' :
              'bg-muted/60 text-muted-foreground border-border'
     };
   };
