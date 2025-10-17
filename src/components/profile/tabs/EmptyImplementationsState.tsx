@@ -11,7 +11,7 @@ export const EmptyImplementationsState = () => {
         <Lightbulb className="h-8 w-8 text-aurora-primary" />
       </div>
       <h3 className="text-xl font-semibold text-white mb-2">Nenhuma implementação encontrada</h3>
-      <p className="text-neutral-400 max-w-md mb-6">
+      <p className="text-muted-foreground max-w-md mb-6">
         Parece que você ainda não iniciou nenhuma implementação. 
         Explore nossas soluções para começar a implementar IA no seu negócio.
       </p>

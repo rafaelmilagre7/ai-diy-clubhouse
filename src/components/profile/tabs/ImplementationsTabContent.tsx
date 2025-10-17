@@ -42,7 +42,7 @@ export const ImplementationsTabContent = ({ implementations }: ImplementationsTa
             variant={filter === 'completed' ? 'default' : 'outline'} 
             size="sm"
             onClick={() => setFilter('completed')}
-            className={filter === 'completed' ? '' : 'hover:bg-green-600/10 hover:text-green-500'}
+            className={filter === 'completed' ? '' : 'hover:bg-system-healthy/10 hover:text-system-healthy'}
           >
             <Check className="mr-1 h-3.5 w-3.5" />
             Concluídos ({implementations.filter(i => i.is_completed).length})

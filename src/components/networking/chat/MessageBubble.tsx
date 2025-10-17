@@ -257,7 +257,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
           {isOwnMessage && (
             <>
               {message.read_at ? (
-                <CheckCheck className="w-3 h-3 text-blue-500" />
+                <CheckCheck className="w-3 h-3 text-operational" />
               ) : message.delivered_at ? (
                 <CheckCheck className="w-3 h-3 text-muted-foreground" />
               ) : (

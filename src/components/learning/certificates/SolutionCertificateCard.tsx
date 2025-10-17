@@ -140,7 +140,7 @@ export const SolutionCertificateCard = ({
             </div>
           </div>
           
-          <div className={`bg-gradient-to-r ${categoryConfig.color} border border-neutral-600/30 rounded-lg p-3`}>
+          <div className={`bg-gradient-to-r ${categoryConfig.color} border border-border rounded-lg p-3`}>
             <div className={`text-xs font-medium mb-1 ${categoryConfig.iconColor}`}>Código de Validação</div>
             <div className="text-sm text-white font-mono bg-black/30 px-2 py-1 rounded">
               {certificate.validation_code}

@@ -52,7 +52,7 @@ export const ProfileHeader = ({
           <p className="text-sm text-medium-contrast mt-1">{profileEmail || ""}</p>
           
           <div className="w-full mt-6 space-y-3">
-            <div className="flex justify-between items-center text-sm bg-neutral-800/30 p-3 rounded-lg">
+            <div className="flex justify-between items-center text-sm bg-accent/30 p-3 rounded-lg">
               <span className="flex items-center text-medium-contrast">
                 <Calendar className="h-4 w-4 mr-2 text-viverblue" />
                 Membro desde
@@ -66,7 +66,7 @@ export const ProfileHeader = ({
             </div>
             <div className="flex justify-between text-sm">
               <span className="flex items-center text-medium-contrast">
-                <CheckCircle className="h-4 w-4 mr-2 text-green-500" />
+                <CheckCircle className="h-4 w-4 mr-2 text-system-healthy" />
                 Concluídas
               </span>
               <span className="font-medium text-high-contrast">{completedSolutions}</span>

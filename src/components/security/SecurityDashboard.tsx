@@ -162,9 +162,9 @@ export const SecurityDashboard: React.FC<SecurityDashboardProps> = ({ days = 7 }
                   <metric.icon className={`h-6 w-6 ${metric.iconColor}`} />
                 </div>
                 <div className="text-right">
-                  <p className={`text-3xl font-bold group-hover:scale-110 transition-transform duration-300 ${
+                  <p className={`text-3xl font-bold group-hover:scale-110 transition-smooth ${
                     metric.value === 'Alerta' ? 'text-destructive' : 
-                    metric.value === 'Seguro' ? 'text-green-500' : 
+                    metric.value === 'Seguro' ? 'text-system-healthy' : 
                     'aurora-text-gradient'
                   }`}>
                     {metric.value}
@@ -195,7 +195,7 @@ export const SecurityDashboard: React.FC<SecurityDashboardProps> = ({ days = 7 }
           </TabsTrigger>
           <TabsTrigger 
             value="types"
-            className="data-[state=active]:aurora-glass data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500/20 data-[state=active]:to-cyan-500/10 data-[state=active]:text-blue-500 data-[state=active]:shadow-lg transition-all duration-300 rounded-xl font-medium"
+            className="data-[state=active]:aurora-glass data-[state=active]:bg-gradient-to-r data-[state=active]:from-operational/20 data-[state=active]:to-operational/10 data-[state=active]:text-operational data-[state=active]:shadow-lg transition-smooth rounded-xl font-medium"
           >
             Tipos de Violação
           </TabsTrigger>
@@ -220,8 +220,8 @@ export const SecurityDashboard: React.FC<SecurityDashboardProps> = ({ days = 7 }
               <div className="space-y-4">
                 {violations.length === 0 ? (
                   <div className="text-center py-12">
-                    <div className="p-4 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-500/10 aurora-glass mx-auto w-fit mb-4">
-                      <Shield className="h-12 w-12 text-green-500 aurora-pulse" />
+                    <div className="p-4 rounded-xl bg-gradient-to-br from-system-healthy/20 to-system-healthy/10 aurora-glass mx-auto w-fit mb-4">
+                      <Shield className="h-12 w-12 text-system-healthy aurora-pulse" />
                     </div>
                     <h4 className="text-lg font-bold aurora-text-gradient mb-2">Nenhuma Violação Detectada</h4>
                     <p className="text-muted-foreground">

@@ -38,7 +38,7 @@ export const StatsTabContent = ({ stats, implementations }: StatsTabContentProps
               <div className="space-y-3">
                 <div>
                   <div className="flex justify-between text-sm mb-1">
-                    <span className="text-blue-400 font-medium flex items-center">
+                    <span className="text-operational font-medium flex items-center">
                       <TrendingUp className="h-3.5 w-3.5 mr-1.5" />
                       Aumento de Receita
                     </span>

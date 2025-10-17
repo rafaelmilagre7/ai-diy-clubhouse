@@ -100,7 +100,7 @@ export const NetworkingAnalytics = () => {
                     </div>
                     {stat.growth !== 0 && (
                       <div className={`flex items-center gap-1 text-xs ${
-                        isPositiveGrowth ? 'text-green-400' : 'text-red-400'
+                        isPositiveGrowth ? 'text-system-healthy' : 'text-status-error'
                       }`}>
                         {isPositiveGrowth ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
                         {Math.abs(stat.growth).toFixed(1)}%

@@ -39,7 +39,7 @@ export const SolutionHeaderSection = ({ solution }: SolutionHeaderSectionProps) 
             {solution.estimated_time && (
               <Badge 
                 variant="outline" 
-                className="text-neutral-300 border-neutral-600 hover:border-viverblue/30 hover:text-viverblue-light transition-colors"
+                className="text-muted-foreground border-border hover:border-primary hover:text-primary transition-smooth"
               >
                 <Clock className="h-3 w-3 mr-1" />
                 {solution.estimated_time}min

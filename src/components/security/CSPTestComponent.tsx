@@ -98,7 +98,7 @@ export const CSPTestComponent: React.FC = () => {
 
   const getResultIcon = (result: boolean | null) => {
     if (result === null) return <div className="w-4 h-4 bg-muted rounded-full animate-pulse" />;
-    return result ? <CheckCircle className="w-4 h-4 text-green-500" /> : <XCircle className="w-4 h-4 text-red-500" />;
+    return result ? <CheckCircle className="w-4 h-4 text-system-healthy" /> : <XCircle className="w-4 h-4 text-status-error" />;
   };
 
   const getResultBadge = (result: boolean | null, goodValue: boolean) => {

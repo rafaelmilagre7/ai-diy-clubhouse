@@ -153,7 +153,7 @@ export const SolutionSidebar = ({
                 <TrendingUp className="h-4 w-4 mr-2" />
                 Nível
               </span>
-              <Badge variant="outline" className="bg-neutral-800/60 text-neutral-300 border-neutral-600">
+              <Badge variant="outline" className="bg-muted text-muted-foreground border-border">
                 {solution.difficulty === 'easy' ? 'Iniciante' : 
                  solution.difficulty === 'medium' ? 'Intermediário' : 'Avançado'}
               </Badge>

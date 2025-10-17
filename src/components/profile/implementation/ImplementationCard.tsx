@@ -39,7 +39,7 @@ export const ImplementationCard = ({ implementation }: ImplementationCardProps) 
       case "Estratégia":
         return "bg-strategy/10 text-strategy border-strategy/30";
       default:
-        return "bg-neutral-800/60 text-neutral-300 border-neutral-600";
+        return "bg-muted text-muted-foreground border-border";
     }
   };
 

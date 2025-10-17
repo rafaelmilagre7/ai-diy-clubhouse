@@ -15,7 +15,7 @@ export const OnlineIndicator = ({ userId, className }: OnlineIndicatorProps) => 
     <div
       className={cn(
         'absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-background',
-        presence.isOnline ? 'bg-green-500' : 'bg-gray-400',
+        presence.isOnline ? 'bg-system-healthy' : 'bg-muted',
         className
       )}
       title={

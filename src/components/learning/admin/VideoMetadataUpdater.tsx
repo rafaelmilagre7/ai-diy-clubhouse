@@ -79,7 +79,7 @@ export const VideoMetadataUpdater: React.FC<VideoMetadataUpdaterProps> = ({
               <p>Total de vídeos processados: {result.totalProcessed}</p>
               <p>Vídeos atualizados: {result.success}</p>
               {result.failed > 0 && (
-                <p className="text-amber-600 dark:text-amber-400">
+                <p className="text-status-warning">
                   Falha ao atualizar {result.failed} vídeo(s)
                 </p>
               )}

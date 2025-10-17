@@ -214,7 +214,7 @@ export const ContractImplementationModal = ({
             <Button
               variant="outline"
               onClick={onClose}
-              className="flex-1 border-neutral-600 text-neutral-300 hover:bg-neutral-800"
+              className="flex-1 border-border text-muted-foreground hover:bg-accent"
               disabled={isSubmitting}
             >
               Cancelar
