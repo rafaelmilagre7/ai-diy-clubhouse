@@ -21,7 +21,7 @@ export const StatusCard: React.FC<StatusCardProps> = ({
   className = ""
 }) => {
   const getStatusIcon = () => {
-    if (warning) return <AlertTriangle className="h-5 w-5 text-amber-400" />;
+    if (warning) return <AlertTriangle className="h-5 w-5 text-status-warning" />;
     return success ? (
       <CheckCircle2 className="h-5 w-5 text-operational" />
     ) : (
@@ -30,7 +30,7 @@ export const StatusCard: React.FC<StatusCardProps> = ({
   };
   
   const getStatusColor = () => {
-    if (warning) return "border-amber-500/30 bg-amber-500/5";
+    if (warning) return "border-status-warning/30 bg-status-warning/5";
     return success ? "border-operational/30 bg-operational/5" : "border-status-error/30 bg-status-error/5";
   };
   
@@ -51,7 +51,7 @@ export const StatusCard: React.FC<StatusCardProps> = ({
           variant={success ? "default" : "destructive"}
           className={cn(
             "text-sm font-medium px-3 py-1",
-            warning && "bg-amber-600 text-amber-100 hover:bg-amber-700"
+            warning && "bg-status-warning text-foreground hover:bg-status-warning/90"
           )}
         >
           {value}

@@ -42,37 +42,37 @@ const InviteErrorState: React.FC<InviteErrorStateProps> = ({
         return {
           icon: AlertTriangle,
           title: 'Convite Expirado',
-          color: 'text-orange-600',
-          bgColor: 'from-orange-50 to-orange-100',
-          iconBg: 'bg-orange-100',
-          iconColor: 'text-orange-600'
+          color: 'text-status-warning',
+          bgColor: 'from-status-warning/10 to-status-warning/5',
+          iconBg: 'bg-status-warning/10',
+          iconColor: 'text-status-warning'
         };
       case 'used':
         return {
           icon: XCircle,
           title: 'Convite Já Utilizado',
-          color: 'text-blue-600',
-          bgColor: 'from-blue-50 to-blue-100',
-          iconBg: 'bg-blue-100',
-          iconColor: 'text-blue-600'
+          color: 'text-operational',
+          bgColor: 'from-operational/10 to-operational/5',
+          iconBg: 'bg-operational/10',
+          iconColor: 'text-operational'
         };
       case 'invalid':
         return {
           icon: XCircle,
           title: 'Convite Inválido',
-          color: 'text-red-600',
-          bgColor: 'from-red-50 to-red-100',
-          iconBg: 'bg-red-100',
-          iconColor: 'text-red-600'
+          color: 'text-status-error',
+          bgColor: 'from-status-error/10 to-status-error/5',
+          iconBg: 'bg-status-error/10',
+          iconColor: 'text-status-error'
         };
       default:
         return {
           icon: AlertTriangle,
           title: 'Erro no Convite',
-          color: 'text-yellow-600',
-          bgColor: 'from-yellow-50 to-yellow-100',
-          iconBg: 'bg-yellow-100',
-          iconColor: 'text-yellow-600'
+          color: 'text-status-warning',
+          bgColor: 'from-status-warning/10 to-status-warning/5',
+          iconBg: 'bg-status-warning/10',
+          iconColor: 'text-status-warning'
         };
     }
   };

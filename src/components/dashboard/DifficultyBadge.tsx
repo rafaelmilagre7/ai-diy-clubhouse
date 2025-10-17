@@ -25,13 +25,13 @@ export const DifficultyBadge = ({ difficulty }: DifficultyBadgeProps) => {
   const getStyleClass = () => {
     switch (difficulty) {
       case 'easy':
-        return 'bg-neutral-800/60 text-emerald-400 border-0';
+        return 'bg-surface-elevated/60 text-system-healthy border-0';
       case 'medium':
-        return 'bg-neutral-800/60 text-amber-400 border-0';
+        return 'bg-surface-elevated/60 text-status-warning border-0';
       case 'advanced':
-        return 'bg-neutral-800/60 text-rose-400 border-0';
+        return 'bg-surface-elevated/60 text-system-critical border-0';
       default:
-        return 'bg-neutral-800/60 text-neutral-300 border-0';
+        return 'bg-surface-elevated/60 text-muted-foreground border-0';
     }
   };
   

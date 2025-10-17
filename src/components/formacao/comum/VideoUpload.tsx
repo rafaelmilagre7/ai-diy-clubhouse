@@ -208,9 +208,9 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
           
           {renderVideoPreview()}
           
-          <Alert variant="success" className="bg-blue-50">
+          <Alert variant="success" className="bg-operational/10">
             <div className="flex items-start">
-              <Check className="h-4 w-4 mt-1 text-blue-600" />
+              <Check className="h-4 w-4 mt-1 text-operational" />
               <AlertDescription className="ml-2">
                 Vídeo adicionado com sucesso
               </AlertDescription>

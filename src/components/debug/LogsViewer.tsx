@@ -57,9 +57,9 @@ export const LogsViewer: React.FC<LogsViewerProps> = ({ logs, onClear, className
   
   const getLogColor = (type: LogEntry['type']) => {
     switch (type) {
-      case 'success': return 'text-emerald-400';
-      case 'error': return 'text-red-400';
-      case 'warning': return 'text-amber-400';
+      case 'success': return 'text-system-healthy';
+      case 'error': return 'text-status-error';
+      case 'warning': return 'text-status-warning';
       default: return 'text-muted-foreground';
     }
   };

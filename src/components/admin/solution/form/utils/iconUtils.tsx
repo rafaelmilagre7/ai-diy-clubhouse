@@ -19,7 +19,7 @@ export const getFileIcon = (type?: string) => {
     case 'pdf':
       return <FileText className="text-severity-critical" {...iconProps} />;
     case 'document':
-      return <FileText className="text-sky-500" {...iconProps} />;
+      return <FileText className="text-operational" {...iconProps} />;
     case 'spreadsheet':
       return <FileSpreadsheet className="text-operational" {...iconProps} />;
     case 'presentation':

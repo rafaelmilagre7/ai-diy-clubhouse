@@ -158,7 +158,7 @@ const CommentsTab: React.FC<CommentsTabProps> = ({ solutionId, onComplete }) => 
                 <div>
                   <div className={cn(
                     "text-2xl font-bold",
-                    npsScore >= 50 ? "text-green-400" : npsScore >= 0 ? "text-yellow-400" : "text-red-400"
+                    npsScore >= 50 ? "text-system-healthy" : npsScore >= 0 ? "text-status-warning" : "text-system-critical"
                   )}>
                     {npsScore > 0 ? '+' : ''}{npsScore}
                   </div>
@@ -205,15 +205,15 @@ const CommentsTab: React.FC<CommentsTabProps> = ({ solutionId, onComplete }) => 
               </Button>
             </div>
           ) : (
-            <div className="p-4 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-xl backdrop-blur-sm">
+            <div className="p-4 bg-gradient-to-r from-system-healthy/10 to-operational/10 rounded-xl backdrop-blur-sm">
               <div className="flex items-center gap-2 mb-2">
-                <Star className="w-5 h-5 text-green-400" />
-                <span className="font-medium text-green-300">
+                <Star className="w-5 h-5 text-system-healthy" />
+                <span className="font-medium text-system-healthy">
                   Você avaliou esta solução com nota {userRating.rating}
                 </span>
               </div>
               {userRating.feedback && (
-                <p className="text-sm text-green-400/80 mt-2">"{userRating.feedback}"</p>
+                <p className="text-sm text-system-healthy/80 mt-2">"{userRating.feedback}"</p>
               )}
             </div>
           )}

@@ -355,11 +355,11 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
         <form onSubmit={handleSubmit} className="space-y-4">
         {/* Exibir erro se houver */}
         {error && (
-          <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 mb-6 backdrop-blur-sm">
-            <p className="text-sm text-red-200 font-medium">⚠️ {error}</p>
+          <div className="bg-status-error/10 border border-status-error/20 rounded-2xl p-4 mb-6 backdrop-blur-sm">
+            <p className="text-sm text-status-error font-medium">⚠️ {error}</p>
             <button 
               onClick={() => setError("")}
-              className="text-xs text-red-300 hover:text-red-100 mt-2 underline"
+              className="text-xs text-status-error/80 hover:text-status-error mt-2 underline"
             >
               Dispensar
             </button>
@@ -443,32 +443,32 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
               </div>
               
               <div className="grid grid-cols-2 gap-1 text-xs">
-                <div className={`flex items-center gap-1 ${passwordValidation.length ? 'text-emerald-300' : 'text-white/50'}`}>
-                  <CheckCircle className={`h-3 w-3 ${passwordValidation.length ? 'text-emerald-300' : 'text-white/50'}`} />
+                <div className={`flex items-center gap-1 ${passwordValidation.length ? 'text-system-healthy' : 'text-muted-foreground'}`}>
+                  <CheckCircle className={`h-3 w-3 ${passwordValidation.length ? 'text-system-healthy' : 'text-muted-foreground'}`} />
                   8+ caracteres
                 </div>
-                <div className={`flex items-center gap-1 ${passwordValidation.uppercase ? 'text-emerald-300' : 'text-white/50'}`}>
-                  <CheckCircle className={`h-3 w-3 ${passwordValidation.uppercase ? 'text-emerald-300' : 'text-white/50'}`} />
+                <div className={`flex items-center gap-1 ${passwordValidation.uppercase ? 'text-system-healthy' : 'text-muted-foreground'}`}>
+                  <CheckCircle className={`h-3 w-3 ${passwordValidation.uppercase ? 'text-system-healthy' : 'text-muted-foreground'}`} />
                   Maiúscula
                 </div>
-                <div className={`flex items-center gap-1 ${passwordValidation.lowercase ? 'text-emerald-300' : 'text-white/50'}`}>
-                  <CheckCircle className={`h-3 w-3 ${passwordValidation.lowercase ? 'text-emerald-300' : 'text-white/50'}`} />
+                <div className={`flex items-center gap-1 ${passwordValidation.lowercase ? 'text-system-healthy' : 'text-muted-foreground'}`}>
+                  <CheckCircle className={`h-3 w-3 ${passwordValidation.lowercase ? 'text-system-healthy' : 'text-muted-foreground'}`} />
                   Minúscula
                 </div>
-                <div className={`flex items-center gap-1 ${passwordValidation.number ? 'text-emerald-300' : 'text-white/50'}`}>
-                  <CheckCircle className={`h-3 w-3 ${passwordValidation.number ? 'text-emerald-300' : 'text-white/50'}`} />
+                <div className={`flex items-center gap-1 ${passwordValidation.number ? 'text-system-healthy' : 'text-muted-foreground'}`}>
+                  <CheckCircle className={`h-3 w-3 ${passwordValidation.number ? 'text-system-healthy' : 'text-muted-foreground'}`} />
                   Número
                 </div>
-                <div className={`flex items-center gap-1 col-span-2 ${passwordValidation.special ? 'text-emerald-300' : 'text-white/50'}`}>
-                  <CheckCircle className={`h-3 w-3 ${passwordValidation.special ? 'text-emerald-300' : 'text-white/50'}`} />
+                <div className={`flex items-center gap-1 col-span-2 ${passwordValidation.special ? 'text-system-healthy' : 'text-muted-foreground'}`}>
+                  <CheckCircle className={`h-3 w-3 ${passwordValidation.special ? 'text-system-healthy' : 'text-muted-foreground'}`} />
                   Especial (!@#$%)
                 </div>
               </div>
               
               {passwordValidation.score >= 4 && (
-                <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-2 flex items-center gap-2 backdrop-blur-sm">
-                  <CheckCircle className="h-3 w-3 text-emerald-300" />
-                  <p className="text-xs font-medium text-emerald-300">Senha segura!</p>
+                <div className="bg-system-healthy/10 border border-system-healthy/30 rounded-lg p-2 flex items-center gap-2 backdrop-blur-sm">
+                  <CheckCircle className="h-3 w-3 text-system-healthy" />
+                  <p className="text-xs font-medium text-system-healthy">Senha segura!</p>
                 </div>
               )}
             </div>
@@ -488,7 +488,7 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
               placeholder="Digite a senha novamente"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="pl-10 pr-10 h-11 bg-surface-elevated/50 border-border/50 text-foreground placeholder:text-muted-foreground rounded-lg backdrop-blur-sm focus:bg-surface-elevated focus:border-emerald-500/50 transition-all"
+              className="pl-10 pr-10 h-11 bg-surface-elevated/50 border-border/50 text-foreground placeholder:text-muted-foreground rounded-lg backdrop-blur-sm focus:bg-surface-elevated focus:border-system-healthy/50 transition-all"
             />
             <button
               type="button"
@@ -502,9 +502,9 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
           {/* Validação de confirmação */}
           {confirmPassword && (
             <div className={`flex items-center gap-2 text-xs ${
-              passwordsMatch ? 'text-emerald-300' : 'text-red-300'
+              passwordsMatch ? 'text-system-healthy' : 'text-status-error'
             }`}>
-              <CheckCircle className={`h-3 w-3 ${passwordsMatch ? 'text-emerald-300' : 'text-red-300'}`} />
+              <CheckCircle className={`h-3 w-3 ${passwordsMatch ? 'text-system-healthy' : 'text-status-error'}`} />
               {passwordsMatch ? 'Senhas coincidem' : 'As senhas não coincidem'}
             </div>
           )}
@@ -512,7 +512,7 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
 
         <Button
           type="submit"
-          className="w-full h-12 font-semibold text-base transition-all duration-300 group bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 hover:from-emerald-700 hover:via-emerald-600 hover:to-teal-600 shadow-lg hover:shadow-emerald-500/25 rounded-lg text-white border-0"
+          className="w-full h-12 font-semibold text-base transition-all duration-300 group bg-gradient-to-r from-system-healthy via-system-healthy/90 to-operational hover:from-system-healthy/90 hover:via-system-healthy/80 hover:to-operational/90 shadow-lg hover:shadow-system-healthy/25 rounded-lg text-white border-0"
           disabled={isLoading || !isPasswordValid || !passwordsMatch}
         >
           {isLoading ? (
@@ -531,7 +531,7 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
 
         <div className="text-center">
           <div className="bg-card/30 border border-border/30 rounded-lg p-4 space-y-2 backdrop-blur-sm">
-            <div className="flex items-center justify-center gap-2 text-emerald-400">
+            <div className="flex items-center justify-center gap-2 text-system-healthy">
               <CheckCircle className="h-4 w-4" />
               <p className="text-xs font-semibold">Segurança garantida</p>
             </div>

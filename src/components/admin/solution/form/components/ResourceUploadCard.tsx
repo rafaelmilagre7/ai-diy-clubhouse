@@ -47,7 +47,7 @@ const ResourceUploadCard: React.FC<ResourceUploadCardProps> = ({
         {!bucketReady && (
           <Alert variant="warning" className="mb-4">
             <Info className="h-4 w-4" />
-            <AlertDescription className="text-amber-800 dark:text-amber-200">
+            <AlertDescription className="text-status-warning dark:text-status-warning">
               O sistema de armazenamento pode não estar totalmente configurado. 
               O upload de arquivos pode não funcionar corretamente.
             </AlertDescription>

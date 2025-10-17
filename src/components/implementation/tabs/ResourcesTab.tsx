@@ -117,32 +117,32 @@ const ResourcesTab: React.FC<ResourcesTabProps> = ({ solutionId, onComplete }) =
     
     // Verificar por tipo primeiro
     if (fileType.includes('image') || format.includes('image')) {
-      return <FileImage className="h-6 w-6 text-purple-500" />;
+      return <FileImage className="h-6 w-6 text-strategy" />;
     }
     
     if (fileType.includes('video') || format.includes('video')) {
-      return <FileVideo className="h-6 w-6 text-orange-500" />;
+      return <FileVideo className="h-6 w-6 text-status-warning" />;
     }
     
     if (fileType.includes('pdf') || format.includes('pdf') || fileName.includes('.pdf')) {
-      return <FileText className="h-6 w-6 text-red-500" />;
+      return <FileText className="h-6 w-6 text-system-critical" />;
     }
     
     if (fileType.includes('document') || format.includes('doc') || fileName.includes('.doc')) {
-      return <FileText className="h-6 w-6 text-blue-500" />;
+      return <FileText className="h-6 w-6 text-operational" />;
     }
     
     if (fileType.includes('spreadsheet') || format.includes('xls') || fileName.includes('.xls')) {
-      return <FileArchive className="h-6 w-6 text-green-500" />;
+      return <FileArchive className="h-6 w-6 text-system-healthy" />;
     }
     
     // Verificar extensões do nome do arquivo
     if (fileName.includes('.jpg') || fileName.includes('.png') || fileName.includes('.gif') || fileName.includes('.webp')) {
-      return <FileImage className="h-6 w-6 text-purple-500" />;
+      return <FileImage className="h-6 w-6 text-strategy" />;
     }
     
     if (fileName.includes('.mp4') || fileName.includes('.webm') || fileName.includes('.mov')) {
-      return <FileVideo className="h-6 w-6 text-orange-500" />;
+      return <FileVideo className="h-6 w-6 text-status-warning" />;
     }
     
     // Ícone padrão
