@@ -33,7 +33,7 @@ export const EventsListModal = ({ date, events, onSelectEvent, onClose }: Events
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+        <div className="space-y-4 max-h-modal-sm overflow-y-auto pr-2">
           {events.map((event) => (
             <div 
               key={event.id} 

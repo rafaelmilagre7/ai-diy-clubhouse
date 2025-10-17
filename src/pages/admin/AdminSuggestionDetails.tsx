@@ -221,7 +221,7 @@ const AdminSuggestionDetails = () => {
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
                 placeholder="Digite seu comentário oficial..."
-                className="w-full min-h-[120px] p-3 border rounded-md"
+                className="w-full min-h-chart-sm p-3 border rounded-md"
                 disabled={isSubmitting}
               />
               <Button type="submit" disabled={isSubmitting || !comment.trim()}>

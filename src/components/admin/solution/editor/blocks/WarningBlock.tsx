@@ -23,7 +23,7 @@ const WarningBlock: React.FC<WarningBlockProps> = ({ data, onChange }) => {
         value={data.text}
         onChange={(e) => onChange({ ...data, text: e.target.value })}
         placeholder="Texto do aviso..."
-        className="min-h-[100px]"
+        className="min-h-chart-sm"
       />
       
       <div className="mt-4 p-4 border-l-4 border-status-warning bg-status-warning-lighter rounded">

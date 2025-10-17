@@ -80,7 +80,7 @@ export const EventRoleCheckboxes = ({ selectedRoles, onChange }: EventRoleCheckb
           </Badge>
         )}
       </div>
-      <ScrollArea className="h-[220px] rounded-md border border-border/50 p-4 bg-card">
+      <ScrollArea className="h-scroll-sm rounded-md border border-border/50 p-4 bg-card">
         <div className="space-y-2">
           {roles.map((role) => {
             const isChecked = selectedRoles.includes(role.id);

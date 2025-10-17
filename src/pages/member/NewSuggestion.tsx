@@ -163,7 +163,7 @@ const NewSuggestionPage = () => {
                   <Textarea
                     id="description"
                     placeholder="Descreva sua sugestão em detalhes..."
-                    className="min-h-[150px] bg-background border-border focus:border-primary transition-colors resize-none"
+                    className="min-h-chart-sm bg-background border-border focus:border-primary transition-colors resize-none"
                     {...register('description', { required: 'A descrição é obrigatória' })}
                   />
                   {errors.description && (

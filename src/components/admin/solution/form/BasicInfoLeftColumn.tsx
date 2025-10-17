@@ -40,8 +40,8 @@ const BasicInfoLeftColumn = ({ form }: BasicInfoLeftColumnProps) => {
             <FormControl>
               <Textarea 
                 placeholder="Descreva brevemente o objetivo desta solução e seus benefícios..." 
-                className="min-h-[120px]"
-                {...field} 
+                className="min-h-chart-sm"
+                {...field}
               />
             </FormControl>
             <FormDescription>

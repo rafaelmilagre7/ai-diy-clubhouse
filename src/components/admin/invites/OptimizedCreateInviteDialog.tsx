@@ -43,7 +43,7 @@ const OptimizedCreateInviteDialog = memo<OptimizedCreateInviteDialogProps>(({ ro
           Novo Convite
         </Button>
       </DialogTrigger>
-      <DialogContent className="dark max-w-md max-h-[90vh] overflow-y-auto bg-surface-elevated text-foreground border-border">
+      <DialogContent className="dark max-w-md max-h-modal-lg overflow-y-auto bg-surface-elevated text-foreground border-border">
         {open && (
           <CreateInviteContent 
             roles={roles}

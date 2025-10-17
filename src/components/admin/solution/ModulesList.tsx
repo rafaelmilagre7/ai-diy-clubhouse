@@ -56,7 +56,7 @@ const ModulesList = ({ modules, onEditModule, onPreview, isLoading }: ModulesLis
   }
 
   return (
-    <ScrollArea className="max-h-[500px] pr-4">
+    <ScrollArea className="max-h-scroll-lg pr-4">
       <div className="space-y-3">
         {allModuleTypes.map((item) => {
           const moduleIndex = item.exists ? modules.findIndex(m => m.type === item.type) : -1;

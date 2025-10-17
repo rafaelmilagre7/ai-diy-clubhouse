@@ -32,7 +32,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ data, onChange }) => {
         value={data.code}
         onChange={(e) => onChange({ code: e.target.value })}
         placeholder="Código aqui..."
-        className="font-mono text-sm min-h-[150px]"
+        className="min-h-chart-sm"
       />
     </div>
   );

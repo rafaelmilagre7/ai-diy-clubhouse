@@ -175,7 +175,7 @@ export const ContactModal = ({ isOpen, onClose, userId, userName, initialData }:
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden p-0 bg-gradient-to-br from-background via-background to-background/95">
+      <DialogContent className="max-w-2xl max-h-modal-lg overflow-hidden p-0 bg-gradient-to-br from-background via-background to-background/95">
         <DialogHeader className="sr-only">
           <DialogTitle>Contato de {userName}</DialogTitle>
           <DialogDescription>Detalhes de contato e links profissionais</DialogDescription>

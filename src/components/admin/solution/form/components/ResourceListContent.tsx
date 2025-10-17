@@ -34,7 +34,7 @@ const ResourceListContent: React.FC<ResourceListContentProps> = ({
 
   return (
     <CardContent>
-      <ScrollArea className="h-[500px] pr-4">
+      <ScrollArea className="h-scroll-lg pr-4">
         <div className="space-y-3">
           {resources.map((resource) => (
             <ResourceItem 

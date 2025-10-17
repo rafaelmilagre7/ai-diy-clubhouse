@@ -124,7 +124,7 @@ export const CertificateModal = ({ certificate, isOpen, onClose }: CertificateMo
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl max-h-[95vh] overflow-y-auto bg-background border-border">
+      <DialogContent className="max-w-6xl max-h-modal-xl overflow-y-auto bg-background border-border">
         <DialogHeader className="flex flex-row items-center justify-between">
           <DialogTitle className="text-foreground">Preview do Certificado</DialogTitle>
           <div className="flex items-center gap-2">

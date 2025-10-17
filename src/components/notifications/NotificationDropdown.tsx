@@ -87,7 +87,7 @@ export const NotificationDropdown = () => {
       
       <DropdownMenuContent 
         align="end" 
-        className="w-96 max-h-[80vh] overflow-hidden bg-background border shadow-lg z-50"
+        className="w-96 max-h-modal-md overflow-hidden bg-background border shadow-lg z-50"
       >
         {/* Header */}
         <div className="sticky top-0 bg-background border-b px-4 py-3 z-10">

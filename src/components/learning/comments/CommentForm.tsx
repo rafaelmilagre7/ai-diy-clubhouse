@@ -103,7 +103,7 @@ export const CommentForm: React.FC<CommentFormProps> = ({
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder={placeholder}
-            className="resize-none min-h-[100px] bg-white/5 border border-white/20 backdrop-blur-sm text-foreground placeholder:text-muted-foreground/60 focus:border-primary/30 focus:bg-white/10 transition-smooth"
+            className="resize-none min-h-chart-sm bg-white/5 border border-white/20 backdrop-blur-sm text-foreground placeholder:text-muted-foreground/60 focus:border-primary/30 focus:bg-white/10 transition-smooth"
           />
           
           <div className="flex justify-end gap-2">

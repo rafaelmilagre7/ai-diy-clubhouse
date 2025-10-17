@@ -137,7 +137,7 @@ export const CursoFormDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-dialog-lg max-h-modal-lg overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isEditing ? "Editar Curso" : "Criar Novo Curso"}</DialogTitle>
           <DialogDescription>

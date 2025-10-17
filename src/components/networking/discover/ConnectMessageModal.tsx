@@ -126,7 +126,7 @@ export const ConnectMessageModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl bg-surface-modal border-aurora/20 max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-2xl bg-surface-modal border-aurora/20 max-h-modal-lg overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <Sparkles className="w-5 h-5 text-aurora" />

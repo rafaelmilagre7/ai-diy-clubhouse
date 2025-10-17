@@ -125,7 +125,7 @@ export const CommentReplyModal: React.FC<CommentReplyModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-modal-lg overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Responder Comentário</DialogTitle>
         </DialogHeader>

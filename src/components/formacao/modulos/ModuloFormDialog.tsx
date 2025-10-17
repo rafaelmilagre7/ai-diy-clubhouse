@@ -172,7 +172,7 @@ export const ModuloFormDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-full max-w-lg mx-4 max-h-modal-lg overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isEditing ? "Editar Módulo" : "Criar Novo Módulo"}</DialogTitle>
           <DialogDescription>

@@ -70,7 +70,7 @@ const EtapaInfoBasica: React.FC<EtapaInfoBasicaProps> = ({
                 <FormControl>
                   <Textarea
                     placeholder="Descreva brevemente o conteúdo da aula"
-                    className="min-h-[100px]"
+                    className="min-h-chart-sm"
                     {...field}
                   />
                 </FormControl>

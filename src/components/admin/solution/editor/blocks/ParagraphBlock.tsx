@@ -15,7 +15,7 @@ const ParagraphBlock: React.FC<ParagraphBlockProps> = ({ data, onChange }) => {
       value={data.text}
       onChange={(e) => onChange({ text: e.target.value })}
       placeholder="Digite seu texto aqui..."
-      className="min-h-[100px]"
+      className="min-h-chart-sm"
     />
   );
 };

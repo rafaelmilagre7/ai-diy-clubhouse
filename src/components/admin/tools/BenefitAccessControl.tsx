@@ -118,7 +118,7 @@ export function BenefitAccessControl({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md max-h-[80vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-md max-h-modal-md overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Controle de Acesso ao Benefício</DialogTitle>
           <DialogDescription>

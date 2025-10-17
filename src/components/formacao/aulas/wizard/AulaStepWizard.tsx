@@ -190,7 +190,7 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full max-w-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+      <DialogContent className="w-full max-w-3xl max-h-modal-lg overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle>{aula ? "Editar Aula" : "Criar Nova Aula"}</DialogTitle>
           <WizardProgress 

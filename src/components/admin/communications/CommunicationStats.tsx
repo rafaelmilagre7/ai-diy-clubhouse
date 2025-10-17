@@ -45,7 +45,7 @@ export const CommunicationStats: React.FC<CommunicationStatsProps> = ({
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-modal-lg overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Estatísticas do Comunicado</DialogTitle>
         </DialogHeader>

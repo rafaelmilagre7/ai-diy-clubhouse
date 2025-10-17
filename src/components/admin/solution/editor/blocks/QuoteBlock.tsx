@@ -19,7 +19,7 @@ const QuoteBlock: React.FC<QuoteBlockProps> = ({ data, onChange }) => {
         value={data.text}
         onChange={(e) => onChange({ ...data, text: e.target.value })}
         placeholder="Citação..."
-        className="min-h-[120px]"
+        className="min-h-chart-sm"
       />
       <Input
         value={data.caption || ''}

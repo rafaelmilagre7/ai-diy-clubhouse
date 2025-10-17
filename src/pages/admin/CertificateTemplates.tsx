@@ -370,7 +370,7 @@ export default function CertificateTemplates() {
 
       {/* Dialog para Edição/Criação */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
+        <DialogContent className="max-w-4xl max-h-modal-lg overflow-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Palette className="h-5 w-5" />
@@ -388,7 +388,7 @@ export default function CertificateTemplates() {
 
       {/* Dialog para Preview */}
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-        <DialogContent className="max-w-5xl max-h-[90vh] overflow-auto">
+        <DialogContent className="max-w-5xl max-h-modal-lg overflow-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Eye className="h-5 w-5" />

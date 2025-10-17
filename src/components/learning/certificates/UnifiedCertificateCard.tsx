@@ -319,7 +319,7 @@ Confira meu certificado: ${customDomainUrl}`;
                   Visualizar
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-6xl w-full max-h-[85vh] certificate-dialog">
+              <DialogContent className="max-w-6xl w-full max-h-modal-lg certificate-dialog">
                 <DialogHeader className="px-6 pt-6 pb-4 border-b">
                   <div className="flex items-center justify-between">
                     <DialogTitle className="text-2xl font-bold text-foreground">

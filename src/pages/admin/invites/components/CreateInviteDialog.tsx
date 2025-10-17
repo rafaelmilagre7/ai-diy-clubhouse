@@ -103,7 +103,7 @@ const CreateInviteDialog = ({ roles, onInviteCreated }: CreateInviteDialogProps)
           Novo Convite
         </Button>
       </DialogTrigger>
-      <DialogContent className="dark sm:max-w-[600px] max-h-[90vh] overflow-y-auto bg-surface-elevated text-foreground border border-border">
+      <DialogContent className="dark sm:max-w-dialog-lg max-h-modal-lg overflow-y-auto bg-surface-elevated text-foreground border border-border">
         <form onSubmit={handleSubmit} className="space-y-6">
           <DialogHeader className="space-y-3">
             <DialogTitle className="text-xl font-semibold text-foreground">Criar Novo Convite</DialogTitle>

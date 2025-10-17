@@ -83,7 +83,7 @@ export function CourseAccessControl({
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-dialog-lg max-h-modal-md overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Gerenciar Acesso ao Curso</DialogTitle>
           <DialogDescription>

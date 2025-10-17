@@ -684,7 +684,7 @@ const FormacaoAulaNova = () => {
                     <FormControl>
                       <Textarea
                         placeholder="Descreva o conteúdo desta aula"
-                        className="min-h-[100px]"
+                        className="min-h-chart-sm"
                         {...field}
                       />
                     </FormControl>

@@ -71,6 +71,12 @@ const config: Config = {
         'chart-md': '300px',
         'chart-lg': '400px',
         'chart-xl': '500px',
+        // Scroll area heights
+        'scroll-sm': '220px',
+        'scroll-md': '320px',
+        'scroll-lg': '420px',
+        'scroll-xl': '520px',
+        'scroll-full': 'calc(100vh - 12rem)',
       },
       
       width: {
@@ -99,11 +105,21 @@ const config: Config = {
         'chart-md': '300px',
         'chart-lg': '400px',
         'chart-xl': '500px',
+        // Modal heights
+        'modal-sm': '60vh',
+        'modal-md': '80vh',
+        'modal-lg': '90vh',
+        'modal-xl': '95vh',
       },
       
       maxWidth: {
         'table-sm': '200px',
         'table-md': '300px',
+        // Dialog widths
+        'dialog-sm': '28rem',    // 448px
+        'dialog-md': '32rem',    // 512px
+        'dialog-lg': '40rem',    // 640px
+        'dialog-xl': '48rem',    // 768px
       },
       
       // === BLUR & BACKDROP ===
