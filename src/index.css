@@ -10,6 +10,7 @@
 @import './styles/hubla-theme.css';
 @import './styles/liquid-glass.css';
 @import './styles/toast-aurora.css';
+@import './styles/accessibility.css';
 
 @tailwind base;
 @tailwind components;

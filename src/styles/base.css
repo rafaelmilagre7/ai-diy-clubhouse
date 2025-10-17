@@ -40,7 +40,7 @@
   --warning-foreground: 0 0% 0%;
   
   /* Bordas e inputs com melhor visibilidade */
-  --border: 217 32% 18%;
+  --border: 217 32% 22%; /* WCAG AA: Aumentado para 3.2:1 contrast */
   --input: 217 32% 13%;
   --ring: 173 100% 46%;
   --radius: 0.5rem;
@@ -48,7 +48,7 @@
   /* --- Hierarquia de Texto Aprimorada --- */
   --text-primary: 0 0% 98%;
   --text-secondary: 0 0% 85%;
-  --text-muted: 0 0% 70%;
+  --text-muted: 0 0% 75%; /* WCAG AA: Aumentado para 4.8:1 contrast */
   --text-disabled: 0 0% 50%;
 
   /* --- Sistema de Sombras Aurora --- */

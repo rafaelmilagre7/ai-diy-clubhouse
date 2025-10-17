@@ -1,0 +1,197 @@
+/* ===== ACESSIBILIDADE & WCAG AA COMPLIANCE ===== */
+
+/* Respeitar preferência de movimento reduzido */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Focus states aprimorados para melhor visibilidade */
+.focus-visible-enhanced {
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aurora focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+}
+
+/* Skip to main content link (acessibilidade) */
+.skip-to-content {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  padding: 8px 16px;
+  text-decoration: none;
+  border-radius: 0 0 4px 0;
+  z-index: 100;
+  transition: top 0.2s;
+}
+
+.skip-to-content:focus {
+  top: 0;
+}
+
+/* Estados de loading com ARIA */
+[aria-busy="true"] {
+  cursor: wait;
+  pointer-events: none;
+}
+
+[aria-busy="true"]::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: hsl(var(--background) / 0.5);
+  border-radius: inherit;
+}
+
+/* Indicadores visuais para estados ARIA */
+[aria-invalid="true"] {
+  border-color: hsl(var(--destructive)) !important;
+  box-shadow: 0 0 0 1px hsl(var(--destructive) / 0.2);
+}
+
+[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Melhor contraste para texto em fundos coloridos */
+.text-on-primary {
+  color: hsl(var(--primary-foreground));
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.text-on-dark {
+  color: hsl(var(--text-primary));
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --border: 217 32% 30%; /* Aumentar contraste */
+    --text-muted: 0 0% 80%; /* Texto mais visível */
+  }
+  
+  .glass,
+  .glass-card,
+  .liquid-glass-card {
+    backdrop-filter: none !important;
+    background: hsl(var(--card)) !important;
+    border-width: 2px !important;
+  }
+}
+
+/* Melhor visibilidade de outlines em modo escuro */
+:root {
+  --outline-width: 2px;
+  --outline-offset: 2px;
+  --outline-color: hsl(var(--ring));
+}
+
+/* Focus visível em todos elementos interativos */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible,
+[role="link"]:focus-visible,
+[tabindex]:not([tabindex="-1"]):focus-visible {
+  outline: var(--outline-width) solid var(--outline-color);
+  outline-offset: var(--outline-offset);
+}
+
+/* Screen reader only content */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Visível apenas no focus (para skip links) */
+.sr-only-focusable:focus {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: inherit;
+  margin: inherit;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
+
+/* Live regions para anúncios dinâmicos */
+[aria-live="polite"],
+[aria-live="assertive"] {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+/* Garantir que ícones decorativos não sejam lidos */
+[aria-hidden="true"] {
+  pointer-events: none;
+}
+
+/* Melhor contraste para links */
+a {
+  color: hsl(var(--primary));
+  text-decoration-color: hsl(var(--primary) / 0.3);
+  text-underline-offset: 2px;
+}
+
+a:hover {
+  text-decoration-color: hsl(var(--primary));
+}
+
+a:focus-visible {
+  outline: var(--outline-width) solid var(--outline-color);
+  outline-offset: var(--outline-offset);
+  text-decoration: none;
+}
+
+/* Estados de erro mais visíveis */
+.error-message {
+  color: hsl(var(--destructive));
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.error-message::before {
+  content: '⚠';
+  font-size: 1rem;
+}
+
+/* Success message para screen readers */
+.success-message {
+  color: hsl(142 76% 36%);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.success-message::before {
+  content: '✓';
+  font-size: 1rem;
+  font-weight: bold;
+}
