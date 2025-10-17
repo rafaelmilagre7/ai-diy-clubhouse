@@ -22,12 +22,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Hook para métodos de autenticação
   const { signIn, signOut } = useAuthMethods({ setIsLoading });
 
-  // Estados derivados memoizados
+  // Estados derivados memoizados com logs robustos
   const isAdmin = useMemo(() => {
+    if (!profile) {
+      console.log('⚠️ [AUTH] isAdmin: false (perfil não carregado ainda)');
+      return false;
+    }
+    
     const roleName = profile?.user_roles?.name;
     const permissions = profile?.user_roles?.permissions || {};
-    return roleName === 'admin' || permissions.all === true || false;
-  }, [profile?.user_roles?.name, profile?.user_roles?.permissions]);
+    const result = roleName === 'admin' || permissions.all === true;
+    
+    console.log('🔐 [AUTH] Verificação isAdmin:', {
+      userId: profile.id?.substring(0, 8) + '***',
+      email: profile.email?.substring(0, 3) + '***',
+      roleName,
+      hasUserRoles: !!profile.user_roles,
+      roleId: profile.role_id,
+      permissionsAll: permissions.all,
+      result,
+      timestamp: new Date().toISOString()
+    });
+    
+    return result;
+  }, [profile?.id, profile?.email, profile?.role_id, profile?.user_roles?.name, profile?.user_roles?.permissions]);
   
   const isFormacao = useMemo(() => {
     const roleName = profile?.user_roles?.name;
