@@ -38,8 +38,8 @@ export const LessonListItem = ({
   const content = (
     <div className={cn(
       "group flex items-center justify-between p-4 hover:bg-accent/20 transition-colors",
-      isCompleted && "bg-green-50/50 dark:bg-green-950/20",
-      inProgress && !isCompleted && "bg-blue-50/50 dark:bg-blue-950/20"
+      isCompleted && "bg-system-healthy/10",
+      inProgress && !isCompleted && "bg-operational/10"
     )}>
       <div className="flex items-center gap-3">
         <div className="flex-shrink-0 relative">
@@ -50,7 +50,7 @@ export const LessonListItem = ({
               </div>
             </div>
           ) : isCompleted ? (
-            <CheckCircle className="h-5 w-5 text-green-500" />
+            <CheckCircle className="h-5 w-5 text-system-healthy" />
           ) : inProgress ? (
             <div className="h-5 w-5 rounded-full border-2 border-primary flex items-center justify-center">
               <div 

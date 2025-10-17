@@ -159,11 +159,11 @@ export const LessonThumbnail = ({
                   {/* Difficulty Badge */}
                   {lesson.difficulty_level && (
                     <div className="flex">
-                      <span className={cn(
+                  <span className={cn(
                         "text-xs px-2 py-1 rounded-full font-medium backdrop-blur-sm",
-                        lesson.difficulty_level === 'beginner' && "bg-emerald-500/80 text-white",
-                        lesson.difficulty_level === 'intermediate' && "bg-amber-500/80 text-white",
-                        lesson.difficulty_level === 'advanced' && "bg-red-500/80 text-white"
+                        lesson.difficulty_level === 'beginner' && "bg-system-healthy/80 text-white",
+                        lesson.difficulty_level === 'intermediate' && "bg-status-warning/80 text-white",
+                        lesson.difficulty_level === 'advanced' && "bg-status-error/80 text-white"
                       )}>
                         {lesson.difficulty_level === 'beginner' && "Iniciante"}
                         {lesson.difficulty_level === 'intermediate' && "Intermediário"}
@@ -224,7 +224,7 @@ export const LessonThumbnail = ({
           {isCompleted && (
             <Badge 
               variant="secondary" 
-              className="text-xs bg-emerald-100 text-emerald-700 border-emerald-200"
+              className="text-xs bg-system-healthy/20 text-system-healthy border-system-healthy/30"
             >
               ✓ Concluído
             </Badge>

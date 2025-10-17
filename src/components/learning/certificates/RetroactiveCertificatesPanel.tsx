@@ -25,9 +25,9 @@ export const RetroactiveCertificatesPanel = () => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Alert className="bg-blue-900/20 border-blue-700/30">
-          <Award className="h-4 w-4 text-blue-400" />
-          <AlertDescription className="text-blue-200">
+        <Alert className="bg-operational/10 border-operational/20">
+          <Award className="h-4 w-4 text-operational" />
+          <AlertDescription className="text-foreground">
             Se você completou cursos ou implementou soluções mas não possui os certificados, 
             use esta função para gerar automaticamente todos os certificados que você tem direito.
           </AlertDescription>
@@ -67,7 +67,7 @@ export const RetroactiveCertificatesPanel = () => {
                   <div>
                     <div className="flex items-center gap-2">
                       <h4 className="font-medium text-foreground">Todos os Usuários</h4>
-                      <Badge variant="outline" className="border-orange-500/50 text-orange-400">
+                      <Badge variant="outline" className="border-status-warning/50 text-status-warning">
                         <ShieldCheck className="h-3 w-3 mr-1" />
                         Admin
                       </Badge>
@@ -80,7 +80,7 @@ export const RetroactiveCertificatesPanel = () => {
                     onClick={() => generateAllRetroactiveCertificates()}
                     disabled={isGeneratingAll}
                     variant="outline"
-                    className="border-orange-500/50 text-orange-400 hover:bg-orange-500/10"
+                    className="border-status-warning/50 text-status-warning hover:bg-status-warning/10"
                   >
                     {isGeneratingAll ? (
                       <>

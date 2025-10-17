@@ -211,14 +211,14 @@ Confira meu certificado: ${customDomainUrl}`;
         <DropdownMenuItem 
           onClick={handleShareLinkedIn} 
           disabled={isGeneratingPDF}
-          className="cursor-pointer bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200 text-blue-700 mb-2 hover:from-blue-100 hover:to-blue-200"
+          className="cursor-pointer bg-operational/10 border-operational/20 text-operational mb-2 hover:bg-operational/20"
         >
-          <Linkedin className="h-4 w-4 mr-2 text-blue-600" />
+          <Linkedin className="h-4 w-4 mr-2 text-operational" />
           <div className="flex flex-col flex-1">
             <span className="font-medium">
               {isGeneratingPDF ? "Gerando PDF..." : "Compartilhar no LinkedIn"}
             </span>
-            <span className="text-xs text-blue-600">
+            <span className="text-xs text-operational">
               Com link direto do certificado em PDF
             </span>
           </div>
@@ -227,14 +227,14 @@ Confira meu certificado: ${customDomainUrl}`;
         <DropdownMenuItem 
           onClick={handleShareWhatsApp} 
           disabled={isGeneratingPDF}
-          className="cursor-pointer bg-gradient-to-r from-green-50 to-green-100 border-green-200 text-green-700 mb-2 hover:from-green-100 hover:to-green-200"
+          className="cursor-pointer bg-system-healthy/10 border-system-healthy/20 text-system-healthy mb-2 hover:bg-system-healthy/20"
         >
-          <MessageCircle className="h-4 w-4 mr-2 text-green-600" />
+          <MessageCircle className="h-4 w-4 mr-2 text-system-healthy" />
           <div className="flex flex-col flex-1">
             <span className="font-medium">
               {isGeneratingPDF ? "Gerando PDF..." : "Compartilhar no WhatsApp"}
             </span>
-            <span className="text-xs text-green-600">
+            <span className="text-xs text-system-healthy">
               Com link direto do certificado em PDF
             </span>
           </div>

@@ -59,16 +59,16 @@ export const SolutionRecommendationCard = ({
 
   if (loading) {
     return (
-      <Card className="netflix-card-hover glass-dark border border-neutral-700/50 animate-pulse">
+      <Card className="netflix-card-hover glass-dark border border-border/50 animate-pulse">
         <CardContent className="p-0">
           <div className="flex h-48">
-            <div className="w-80 bg-neutral-800 rounded-l-xl"></div>
+            <div className="w-80 bg-surface-elevated rounded-l-xl"></div>
             <div className="flex-1 p-6 space-y-4">
-              <div className="h-4 bg-neutral-700 rounded w-1/3"></div>
-              <div className="h-6 bg-neutral-700 rounded w-2/3"></div>
+              <div className="h-4 bg-muted rounded w-1/3"></div>
+              <div className="h-6 bg-muted rounded w-2/3"></div>
               <div className="space-y-2">
-                <div className="h-3 bg-neutral-700 rounded"></div>
-                <div className="h-3 bg-neutral-700 rounded w-4/5"></div>
+                <div className="h-3 bg-muted rounded"></div>
+                <div className="h-3 bg-muted rounded w-4/5"></div>
               </div>
             </div>
           </div>
@@ -185,7 +185,7 @@ export const SolutionRecommendationCard = ({
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-between pt-4 border-t border-neutral-700/50">
+            <div className="flex items-center justify-between pt-4 border-t border-border/50">
               {recommendation.estimatedTime && (
                 <div className="flex items-center gap-2 text-sm text-medium-contrast group-hover:text-high-contrast transition-colors duration-200">
                   <Clock className="h-4 w-4" />

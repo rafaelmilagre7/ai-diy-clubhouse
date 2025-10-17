@@ -333,7 +333,7 @@ Confira meu certificado: ${customDomainUrl}`;
                         disabled={isGeneratingPDF}
                         variant="outline"
                         size="sm"
-                        className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200 text-blue-700 hover:from-blue-100 hover:to-blue-200 hover:text-blue-800 transition-all duration-200 shadow-sm hover:shadow-md"
+                        className="bg-operational/10 border-operational/20 text-operational hover:bg-operational/20 transition-all duration-200 shadow-sm hover:shadow-md"
                       >
                         <Linkedin className="h-4 w-4 mr-2" />
                         {isGeneratingPDF ? "Gerando..." : "LinkedIn"}
@@ -344,7 +344,7 @@ Confira meu certificado: ${customDomainUrl}`;
                         disabled={isGeneratingPDF}
                         variant="outline"
                         size="sm"
-                        className="bg-gradient-to-r from-green-50 to-green-100 border-green-200 text-green-700 hover:from-green-100 hover:to-green-200 hover:text-green-800 transition-all duration-200 shadow-sm hover:shadow-md"
+                        className="bg-system-healthy/10 border-system-healthy/20 text-system-healthy hover:bg-system-healthy/20 transition-all duration-200 shadow-sm hover:shadow-md"
                       >
                         <MessageCircle className="h-4 w-4 mr-2" />
                         {isGeneratingPDF ? "Gerando..." : "WhatsApp"}

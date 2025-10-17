@@ -38,9 +38,9 @@ export const VideoPlaylist: React.FC<VideoPlaylistProps> = ({
           >
             <div className="flex-shrink-0 mt-1">
               {isVideoCompleted(video.id) ? (
-                <CheckCircle className="h-5 w-5 text-green-500" />
+                <CheckCircle className="h-5 w-5 text-system-healthy" />
               ) : index === currentVideoIndex ? (
-                <PlayCircle className="h-5 w-5 text-blue-500" />
+                <PlayCircle className="h-5 w-5 text-operational" />
               ) : (
                 <PlayCircle className="h-5 w-5 text-muted-foreground" />
               )}
@@ -48,8 +48,8 @@ export const VideoPlaylist: React.FC<VideoPlaylistProps> = ({
             <div className="flex-grow">
               <p className={cn(
                 "font-medium text-sm", 
-                index === currentVideoIndex && "text-blue-500",
-                isVideoCompleted(video.id) && "text-green-500"
+                index === currentVideoIndex && "text-operational",
+                isVideoCompleted(video.id) && "text-system-healthy"
               )}>
                 {video.title}
               </p>
@@ -64,7 +64,7 @@ export const VideoPlaylist: React.FC<VideoPlaylistProps> = ({
               {progresses[video.id] && progresses[video.id] > 0 && progresses[video.id] < 95 && (
                 <div className="w-full h-1 bg-muted rounded-full mt-2 overflow-hidden">
                   <div 
-                    className="h-full bg-blue-500 rounded-full" 
+                    className="h-full bg-operational rounded-full" 
                     style={{ width: `${progresses[video.id]}%` }}
                   />
                 </div>

@@ -59,11 +59,11 @@ export const ConnectionsGrid = () => {
           </p>
         </div>
         <div className="flex gap-3">
-          <div className="px-3 py-1.5 bg-green-500/10 text-green-400 border border-green-500/30 rounded-full text-sm font-medium">
+          <div className="px-3 py-1.5 bg-system-healthy/10 text-system-healthy border border-system-healthy/30 rounded-full text-sm font-medium">
             {acceptedConnections.length} ativas
           </div>
           {pendingConnections.length > 0 && (
-            <div className="px-3 py-1.5 bg-yellow-500/10 text-yellow-400 border border-yellow-500/30 rounded-full text-sm font-medium">
+            <div className="px-3 py-1.5 bg-status-warning/10 text-status-warning border border-status-warning/30 rounded-full text-sm font-medium">
               {pendingConnections.length} pendentes
             </div>
           )}
@@ -130,19 +130,19 @@ const ConnectionCard = ({ connection, onOpenChat }: ConnectionCardProps) => {
     switch (status) {
       case 'accepted': 
         return { 
-          color: 'bg-green-500/10 text-green-400 border-green-500/30',
+          color: 'bg-system-healthy/10 text-system-healthy border-system-healthy/30',
           icon: CheckCircle2,
           label: 'Conectado'
         };
       case 'pending': 
         return { 
-          color: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30',
+          color: 'bg-status-warning/10 text-status-warning border-status-warning/30',
           icon: Clock,
           label: 'Pendente'
         };
       default: 
         return { 
-          color: 'bg-neutral-500/10 text-neutral-400 border-neutral-500/30',
+          color: 'bg-muted/50 text-muted-foreground border-border',
           icon: Clock,
           label: 'Status'
         };

@@ -101,8 +101,8 @@ export const CourseSearchBar: React.FC<CourseSearchBarProps> = ({
 
       {/* Dicas de busca quando não há resultados */}
       {hasResults && resultsCount === 0 && (
-        <Card className="p-4 bg-amber-50/50 border-l-4 border-l-amber-400 dark:bg-amber-950/20">
-          <div className="text-sm text-amber-800 dark:text-amber-200">
+        <Card className="p-4 bg-status-warning/10 border-l-4 border-l-status-warning">
+          <div className="text-sm text-status-warning">
             <div className="font-medium mb-2">💡 Dicas para melhorar sua busca:</div>
             <ul className="space-y-1 text-xs">
               <li>• Tente usar palavras-chave mais gerais</li>

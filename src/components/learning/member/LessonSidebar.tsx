@@ -58,7 +58,7 @@ export const LessonSidebar = ({
             <div 
               className={cn(
                 "h-full rounded-full",
-                progressPercentage < 100 ? "bg-blue-500" : "bg-green-500"
+                progressPercentage < 100 ? "bg-operational" : "bg-system-healthy"
               )} 
               style={{ width: `${progressPercentage}%` }}
             ></div>
@@ -81,9 +81,9 @@ export const LessonSidebar = ({
               >
                 <div className="flex-shrink-0 mr-3">
                   {isCompleted ? (
-                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <CheckCircle className="h-4 w-4 text-system-healthy" />
                   ) : isCurrent ? (
-                    <Circle className="h-4 w-4 fill-blue-500 text-blue-500" />
+                    <Circle className="h-4 w-4 fill-operational text-operational" />
                   ) : (
                     <Circle className="h-4 w-4 text-muted-foreground" />
                   )}

@@ -106,9 +106,9 @@ export const SolutionCertificateCard = ({
           
           {/* Status de conclusão */}
           <div className="absolute top-4 left-4">
-            <CheckCircle2 className="h-6 w-6 text-green-400" />
+            <CheckCircle2 className="h-6 w-6 text-system-healthy" />
             {hasCachedPDF && (
-              <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse" />
+              <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-system-healthy rounded-full animate-pulse" />
             )}
           </div>
         </div>
@@ -149,7 +149,7 @@ export const SolutionCertificateCard = ({
 
           {hasCachedPDF && (
             <div className="text-center">
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-green-500/10 border border-green-500/20 rounded-full text-green-400 text-xs">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-system-healthy/10 border border-system-healthy/20 rounded-full text-system-healthy text-xs">
                 ✓ Pronto para download
               </div>
             </div>

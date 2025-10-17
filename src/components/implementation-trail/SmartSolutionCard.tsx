@@ -233,8 +233,8 @@ export const SmartSolutionCard = ({
         </div>
       </CardContent>
       
-      <CardFooter className="px-4 py-3 flex items-center justify-between border-t border-neutral-800">
-        <div className="flex items-center space-x-1 text-xs text-neutral-300">
+      <CardFooter className="px-4 py-3 flex items-center justify-between border-t border-border">
+        <div className="flex items-center space-x-1 text-xs text-muted-foreground">
           {getCategoryIcon(solution.category)}
           <span>{solution.category}</span>
         </div>

@@ -35,7 +35,7 @@ const LessonCard = ({ lesson }: { lesson: RecommendedLesson }) => {
   };
 
   return (
-    <Card className="netflix-card-hover glass-dark border border-neutral-700/50 hover:border-aurora-primary/50 group relative overflow-hidden backdrop-blur-sm bg-gradient-to-br from-neutral-900/90 to-neutral-800/90 transition-all duration-300 hover:scale-[1.02]">
+    <Card className="netflix-card-hover glass-dark border border-border/50 hover:border-aurora-primary/50 group relative overflow-hidden backdrop-blur-sm bg-gradient-to-br from-surface-base/90 to-surface-elevated/90 transition-all duration-300 hover:scale-[1.02]">
       <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       
       <CardContent className="p-0 relative z-10">
@@ -76,7 +76,7 @@ const LessonCard = ({ lesson }: { lesson: RecommendedLesson }) => {
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-between pt-3 border-t border-neutral-700/50">
+            <div className="flex items-center justify-between pt-3 border-t border-border/50">
               <div className="flex items-center gap-2 text-sm text-medium-contrast group-hover:text-high-contrast transition-colors duration-200">
                 <GraduationCap className="h-4 w-4" />
                 <span>Aprendizado</span>

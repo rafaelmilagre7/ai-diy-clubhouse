@@ -46,11 +46,11 @@ export class TrailErrorBoundary extends Component<Props, State> {
                 </div>
               </div>
               
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <h3 className="text-lg font-semibold text-foreground mb-2">
                 Erro ao carregar trilha
               </h3>
               
-              <p className="text-gray-600 mb-6 text-sm">
+              <p className="text-muted-foreground mb-6 text-sm">
                 Algo inesperado aconteceu. Vamos tentar recarregar sua trilha personalizada.
               </p>
               

@@ -109,8 +109,8 @@ export const OverviewTabContent = ({ timeRange }: OverviewTabContentProps) => {
         {renderDataStatus()}
         <Alert className="mb-6 bg-background border border-status-error/30">
           <AlertTriangle className="h-5 w-5 text-destructive" />
-          <AlertTitle className="text-neutral-800 dark:text-white">Erro ao carregar dados</AlertTitle>
-          <AlertDescription className="text-neutral-700 dark:text-neutral-300 space-y-4">
+          <AlertTitle className="text-foreground">Erro ao carregar dados</AlertTitle>
+          <AlertDescription className="text-muted-foreground space-y-4">
             <p>{error}</p>
             <Button variant="outline" size="sm" onClick={refetch}>
               <RefreshCw className="h-4 w-4 mr-2" />
@@ -128,8 +128,8 @@ export const OverviewTabContent = ({ timeRange }: OverviewTabContentProps) => {
         {renderDataStatus()}
         <Alert className="mb-6 bg-background border border-status-warning/30">
           <AlertTriangle className="h-5 w-5 text-warning" />
-          <AlertTitle className="text-neutral-800 dark:text-white">Sem dados disponíveis</AlertTitle>
-          <AlertDescription className="text-neutral-700 dark:text-neutral-300 space-y-4">
+          <AlertTitle className="text-foreground">Sem dados disponíveis</AlertTitle>
+          <AlertDescription className="text-muted-foreground space-y-4">
             <p>
               Não foram encontrados dados de análise para o período selecionado. 
               Tente selecionar um período diferente ou verificar se existem registros no sistema.

@@ -146,7 +146,7 @@ export const SolutionsAnalyticsTable: React.FC<SolutionsAnalyticsTableProps> = (
         </CardHeader>
         <CardContent>
           <div className="flex justify-center items-center h-64">
-            <p className="text-neutral-300">Carregando dados...</p>
+            <p className="text-muted-foreground">Carregando dados...</p>
           </div>
         </CardContent>
       </Card>
@@ -162,7 +162,7 @@ export const SolutionsAnalyticsTable: React.FC<SolutionsAnalyticsTableProps> = (
         </CardHeader>
         <CardContent>
           <div className="flex justify-center items-center h-64">
-            <p className="text-neutral-300">Sem dados disponíveis</p>
+            <p className="text-muted-foreground">Sem dados disponíveis</p>
           </div>
         </CardContent>
       </Card>
@@ -184,7 +184,7 @@ export const SolutionsAnalyticsTable: React.FC<SolutionsAnalyticsTableProps> = (
             className="max-w-sm"
           />
         </div>
-        <div className="rounded-md border border-neutral-700">
+        <div className="rounded-md border border-border">
           <Table>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
@@ -227,7 +227,7 @@ export const SolutionsAnalyticsTable: React.FC<SolutionsAnalyticsTableProps> = (
           </Table>
         </div>
         <div className="flex items-center justify-end space-x-2 py-4">
-          <div className="text-sm text-neutral-300">
+          <div className="text-sm text-muted-foreground">
             Página {table.getState().pagination.pageIndex + 1} de{' '}
             {table.getPageCount()}
           </div>

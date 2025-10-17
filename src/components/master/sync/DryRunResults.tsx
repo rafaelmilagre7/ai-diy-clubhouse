@@ -102,24 +102,24 @@ export const DryRunResults: React.FC<DryRunResultsProps> = ({ result }) => {
         {/* Estatísticas - Linha 2: Warnings e Não Encontrados */}
         {(result.stats.warnings > 0 || result.stats.masters_not_found > 0 || result.stats.members_not_found > 0) && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="flex items-center gap-3 p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
-              <AlertCircle className="w-8 h-8 text-yellow-600" />
+            <div className="flex items-center gap-3 p-4 rounded-lg bg-status-warning/10 border border-status-warning/20">
+              <AlertCircle className="w-8 h-8 text-status-warning" />
               <div>
                 <div className="text-2xl font-bold">{result.stats.warnings}</div>
                 <div className="text-sm text-muted-foreground">Avisos</div>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 p-4 rounded-lg bg-orange-500/10 border border-orange-500/20">
-              <Users className="w-8 h-8 text-orange-600" />
+            <div className="flex items-center gap-3 p-4 rounded-lg bg-status-warning/10 border border-status-warning/20">
+              <Users className="w-8 h-8 text-status-warning" />
               <div>
                 <div className="text-2xl font-bold">{result.stats.masters_not_found}</div>
                 <div className="text-sm text-muted-foreground">Masters Ausentes</div>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 p-4 rounded-lg bg-amber-500/10 border border-amber-500/20">
-              <UserPlus className="w-8 h-8 text-amber-600" />
+            <div className="flex items-center gap-3 p-4 rounded-lg bg-status-warning/10 border border-status-warning/20">
+              <UserPlus className="w-8 h-8 text-status-warning" />
               <div>
                 <div className="text-2xl font-bold">{result.stats.members_not_found}</div>
                 <div className="text-sm text-muted-foreground">Membros Ausentes</div>
@@ -141,7 +141,7 @@ export const DryRunResults: React.FC<DryRunResultsProps> = ({ result }) => {
 
         {!result.dryRun && result.stats.errors === 0 && result.stats.warnings === 0 && (
           <Alert>
-            <CheckCircle className="h-4 w-4 text-green-600" />
+            <CheckCircle className="h-4 w-4 text-system-healthy" />
             <AlertDescription>
               ✅ Sincronização concluída com sucesso! Todos os dados foram processados corretamente.
             </AlertDescription>
@@ -150,7 +150,7 @@ export const DryRunResults: React.FC<DryRunResultsProps> = ({ result }) => {
 
         {!result.dryRun && result.stats.errors === 0 && result.stats.warnings > 0 && (
           <Alert>
-            <AlertCircle className="h-4 w-4 text-yellow-600" />
+            <AlertCircle className="h-4 w-4 text-status-warning" />
             <AlertDescription>
               ✅ Sincronização concluída com {result.stats.warnings} aviso(s).
               {result.stats.masters_not_found > 0 && ` ${result.stats.masters_not_found} master(s) não foram encontrados no sistema e foram ignorados.`}
@@ -186,9 +186,9 @@ export const DryRunResults: React.FC<DryRunResultsProps> = ({ result }) => {
                     ❌ Erros Críticos ({errorLogs.length})
                   </div>
                   {errorLogs.map((log, index) => (
-                    <div key={`error-${index}`} className="p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                    <div key={`error-${index}`} className="p-3 rounded-lg bg-status-error/10 border border-status-error/20">
                       <div className="flex items-start gap-2">
-                        <XCircle className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
+                        <XCircle className="w-4 h-4 text-status-error mt-0.5 flex-shrink-0" />
                         <div className="space-y-1 flex-1">
                           <div className="text-sm font-medium">{log.operation}</div>
                           <div className="text-xs text-muted-foreground">
@@ -196,7 +196,7 @@ export const DryRunResults: React.FC<DryRunResultsProps> = ({ result }) => {
                             {log.member_email && ` → Membro: ${log.member_email}`}
                           </div>
                           {log.message && (
-                            <div className="text-xs text-red-600">{log.message}</div>
+                            <div className="text-xs text-status-error">{log.message}</div>
                           )}
                         </div>
                       </div>
@@ -212,9 +212,9 @@ export const DryRunResults: React.FC<DryRunResultsProps> = ({ result }) => {
                     ⚠️ Avisos ({warningLogs.length})
                   </div>
                   {warningLogs.slice(0, 20).map((log, index) => (
-                    <div key={`warning-${index}`} className="p-2 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+                    <div key={`warning-${index}`} className="p-2 rounded-lg bg-status-warning/10 border border-status-warning/20">
                       <div className="flex items-start gap-2">
-                        <AlertCircle className="w-4 h-4 text-yellow-600 mt-0.5 flex-shrink-0" />
+                        <AlertCircle className="w-4 h-4 text-status-warning mt-0.5 flex-shrink-0" />
                         <div className="space-y-0.5 flex-1">
                           <div className="text-xs font-medium">{log.operation}</div>
                           <div className="text-xs text-muted-foreground">
@@ -222,7 +222,7 @@ export const DryRunResults: React.FC<DryRunResultsProps> = ({ result }) => {
                             {log.member_email && ` → ${log.member_email}`}
                           </div>
                           {log.message && (
-                            <div className="text-xs text-yellow-700">{log.message}</div>
+                            <div className="text-xs text-status-warning">{log.message}</div>
                           )}
                         </div>
                       </div>
@@ -240,7 +240,7 @@ export const DryRunResults: React.FC<DryRunResultsProps> = ({ result }) => {
               {successLogs.slice(0, 50).map((log, index) => (
                 <div key={`success-${index}`} className="p-2 rounded-lg bg-muted/50 text-sm">
                   <div className="flex items-start gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                    <CheckCircle className="w-4 h-4 text-system-healthy mt-0.5 flex-shrink-0" />
                     <div className="space-y-0.5 flex-1">
                       <div className="flex items-center gap-2">
                         <Badge variant="outline" className="text-xs">

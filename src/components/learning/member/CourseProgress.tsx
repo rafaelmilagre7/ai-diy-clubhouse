@@ -24,7 +24,7 @@ export const CourseProgress: React.FC<CourseProgressProps> = ({
         <div className="flex items-center gap-2">
           <span className={cn(
             "font-medium",
-            isCompleted ? "text-green-500" : "text-primary"
+            isCompleted ? "text-system-healthy" : "text-primary"
           )}>
             {percentage}%
           </span>
@@ -35,7 +35,7 @@ export const CourseProgress: React.FC<CourseProgressProps> = ({
       <Progress
         value={percentage}
         className="h-2"
-        indicatorClassName={isCompleted ? "bg-green-500" : undefined}
+        indicatorClassName={isCompleted ? "bg-system-healthy" : undefined}
       />
       
       <p className="text-sm text-muted-foreground mt-2">
