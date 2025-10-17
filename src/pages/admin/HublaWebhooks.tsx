@@ -274,7 +274,7 @@ export default function HublaWebhooks() {
                         <Copy className="w-4 h-4" />
                       </Button>
                     </div>
-                    <ScrollArea className="h-[400px]">
+                    <ScrollArea className="h-scroll-lg">
                       <pre className="text-xs bg-muted p-3 rounded overflow-auto">
                         {JSON.stringify(selectedWebhook.payload, null, 2)}
                       </pre>

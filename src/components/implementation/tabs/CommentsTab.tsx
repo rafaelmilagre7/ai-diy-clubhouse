@@ -188,12 +188,12 @@ const CommentsTab: React.FC<CommentsTabProps> = ({ solutionId, onComplete }) => 
                 </div>
               </div>
               
-              <Textarea
-                placeholder="Conte-nos mais sobre sua experiência (opcional)..."
-                value={ratingFeedback}
-                onChange={(e) => setRatingFeedback(e.target.value)}
-                className="min-h-[80px] bg-card/50 backdrop-blur-sm border-0"
-              />
+            <Textarea
+              placeholder="Conte-nos mais sobre sua experiência (opcional)..."
+              value={ratingFeedback}
+              onChange={(e) => setRatingFeedback(e.target.value)}
+              className="min-h-20 bg-card/50 backdrop-blur-sm border-0"
+            />
               
               <Button
                 onClick={handleSubmitRating}

@@ -178,7 +178,7 @@ export const DryRunResults: React.FC<DryRunResultsProps> = ({ result }) => {
             </Badge>
           </div>
 
-          <ScrollArea className="h-[400px] rounded-md border p-4">
+          <ScrollArea className="h-scroll-lg rounded-md border p-4">
             <div className="space-y-2">
               {errorLogs.length > 0 && (
                 <>

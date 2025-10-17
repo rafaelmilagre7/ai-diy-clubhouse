@@ -40,7 +40,7 @@ const StepsPreview: React.FC<StepsPreviewProps> = ({ data }) => {
                 <img 
                   src={step.imageUrl} 
                   alt={`Imagem para ${step.title}`} 
-                  className="max-h-[200px] object-contain rounded"
+                  className="max-h-80 object-contain rounded"
                 />
               </div>
             )}

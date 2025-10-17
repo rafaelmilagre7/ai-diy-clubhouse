@@ -27,7 +27,7 @@ const MaterialsList: React.FC<MaterialsListProps> = ({
             <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
           </div>
         ) : materials.length > 0 ? (
-          <ScrollArea className="h-[400px] pr-4">
+          <ScrollArea className="h-scroll-lg pr-4">
             <div className="space-y-3">
               {materials.map((material) => (
                 <MaterialItem 

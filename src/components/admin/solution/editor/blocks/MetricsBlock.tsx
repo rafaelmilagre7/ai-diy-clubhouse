@@ -66,7 +66,7 @@ const MetricsBlock: React.FC<MetricsBlockProps> = ({ data, onChange }) => {
         value={data.description}
         onChange={(e) => onChange({ ...data, description: e.target.value })}
         placeholder="Descrição ou contextualização das métricas..."
-        className="min-h-[80px]"
+        className="min-h-20"
       />
       
       <div className="space-y-4 mt-4">

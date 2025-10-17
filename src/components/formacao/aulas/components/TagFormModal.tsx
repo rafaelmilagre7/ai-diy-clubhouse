@@ -140,7 +140,7 @@ export const TagFormModal: React.FC<TagFormModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-dialog-md">
         <DialogHeader>
           <DialogTitle>
             {editingTag ? "Editar Tag" : "Nova Tag"}

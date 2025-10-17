@@ -29,7 +29,7 @@ const ModuleSummaryCard: React.FC<ModuleSummaryCardProps> = ({ modules }) => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <ScrollArea className="h-[300px] pr-4">
+        <ScrollArea className="h-scroll-md pr-4">
           <div className="space-y-6">
             {modules.map((module, index) => (
               <div key={module.id} className="space-y-2">

@@ -26,7 +26,7 @@ export const VideoPlaylist: React.FC<VideoPlaylistProps> = ({
   
   return (
     <div className="bg-card border rounded-md overflow-hidden">
-      <div className="max-h-[400px] overflow-y-auto">
+      <div className="max-h-modal-sm overflow-y-auto">
         {safeVideos.map((video, index) => (
           <div
             key={video.id}

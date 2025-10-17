@@ -54,7 +54,7 @@ export const EventModal = ({ event, onClose }: EventModalProps) => {
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-dialog-lg">
         <DialogHeader>
           <DialogTitle>{event.title}</DialogTitle>
         </DialogHeader>

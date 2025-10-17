@@ -189,7 +189,7 @@ export const PandaVideoSelector: React.FC<PandaVideoSelectorProps> = ({
       </div>
 
       <div className="border rounded-md p-1 overflow-hidden">
-        <div className="max-h-[400px] overflow-y-auto p-1 space-y-2">
+        <div className="max-h-modal-sm overflow-y-auto p-1 space-y-2">
           {loading ? (
             // Esqueletos para carregamento
             Array(5).fill(0).map((_, i) => (

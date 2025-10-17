@@ -27,7 +27,7 @@ const CTABlock: React.FC<CTABlockProps> = ({ data, onChange }) => {
         value={data.text}
         onChange={(e) => onChange({ ...data, text: e.target.value })}
         placeholder="Texto da chamada para ação..."
-        className="min-h-[80px]"
+        className="min-h-20"
       />
       
       <div className="grid grid-cols-2 gap-3">

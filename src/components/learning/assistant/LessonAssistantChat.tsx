@@ -114,7 +114,7 @@ export const LessonAssistantChat: React.FC<LessonAssistantChatProps> = ({
         </CardDescription>
       </CardHeader>
       <CardContent className="p-0">
-        <div className="h-[400px] overflow-y-auto p-4 space-y-4">
+        <div className="h-scroll-lg overflow-y-auto p-4 space-y-4">
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground space-y-4 py-10">
               <BotIcon className="h-12 w-12" />

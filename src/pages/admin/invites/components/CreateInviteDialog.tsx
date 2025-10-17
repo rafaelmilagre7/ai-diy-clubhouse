@@ -206,13 +206,13 @@ const CreateInviteDialog = ({ roles, onInviteCreated }: CreateInviteDialogProps)
                 <Label htmlFor="notes" className="text-sm font-medium text-foreground">
                   Nome/Observações (opcional)
                 </Label>
-                <Textarea
-                  id="notes"
-                  placeholder="Nome da pessoa ou informações adicionais"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  className="min-h-[80px] resize-none bg-surface-elevated border-border text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-operational focus:border-transparent"
-                />
+              <Textarea
+                id="notes"
+                placeholder="Nome da pessoa ou informações adicionais"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                className="min-h-20 resize-none bg-surface-elevated border-border text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-operational focus:border-transparent"
+              />
                 <p className="text-xs text-muted-foreground">
                   💡 Se informar apenas um nome, ele será automaticamente preenchido no registro
                 </p>

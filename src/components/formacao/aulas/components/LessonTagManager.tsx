@@ -183,30 +183,30 @@ export const LessonTagManager = ({ form, fieldName = 'tags' }: LessonTagManagerP
                 align="start"
                 side="bottom"
                 sideOffset={4}
-                style={{ 
-                  maxHeight: 'min(500px, 85vh)',
-                  overflowY: 'hidden'
-                }}
-              >
-                <div className="flex flex-col max-h-[500px] bg-popover rounded-md overflow-hidden">
-                  {/* Header fixo com busca */}
-                  <div className="flex-shrink-0 p-3 border-b border-border bg-popover sticky top-0 z-10">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                      <Input
-                        placeholder="Buscar tags..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10 h-9 bg-background border-border focus:ring-2 focus:ring-primary focus:border-primary"
-                      />
-                    </div>
+              style={{ 
+                maxHeight: 'min(500px, 85vh)',
+                overflowY: 'hidden'
+              }}
+            >
+              <div className="flex flex-col max-h-modal-md bg-popover rounded-md overflow-hidden">
+                {/* Header fixo com busca */}
+                <div className="flex-shrink-0 p-3 border-b border-border bg-popover sticky top-0 z-10">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                    <Input
+                      placeholder="Buscar tags..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10 h-9 bg-background border-border focus:ring-2 focus:ring-primary focus:border-primary"
+                    />
                   </div>
+                </div>
 
-                  {/* Área scrollável com as tags (nativa, com suporte a trackpad) */}
-                  <div className="flex-1 bg-popover">
-                    <div
-                      ref={scrollRef}
-                      className="h-[350px] px-1 overflow-y-auto"
+                {/* Área scrollável com as tags (nativa, com suporte a trackpad) */}
+                <div className="flex-1 bg-popover">
+                  <div
+                    ref={scrollRef}
+                    className="h-scroll-md px-1 overflow-y-auto"
                       onWheel={(e) => {
                         if (scrollRef.current) {
                           scrollRef.current.scrollTop += e.deltaY

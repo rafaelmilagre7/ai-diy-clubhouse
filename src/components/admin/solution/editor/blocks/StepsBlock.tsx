@@ -86,7 +86,7 @@ const StepsBlock: React.FC<StepsBlockProps> = ({ data, onChange }) => {
                 value={step.description}
                 onChange={(e) => updateStep(index, "description", e.target.value)}
                 placeholder="Descrição detalhada deste passo..."
-                className="min-h-[80px]"
+                className="min-h-20"
               />
               
               <Input

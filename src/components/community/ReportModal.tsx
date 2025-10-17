@@ -101,29 +101,23 @@ export const ReportModal = ({ open, onOpenChange, onSubmit, targetType }: Report
 
           <div>
             <Label htmlFor="reason">Motivo (obrigatório)</Label>
-            <Textarea
-              id="reason"
-              placeholder="Explique brevemente o problema..."
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              className="min-h-[80px]"
-              maxLength={500}
-            />
-            <p className="text-xs text-muted-foreground mt-1">
-              {reason.length}/500 caracteres
-            </p>
-          </div>
-
-          <div>
-            <Label htmlFor="description">Detalhes Adicionais (opcional)</Label>
-            <Textarea
-              id="description"
-              placeholder="Adicione mais detalhes se necessário..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="min-h-[80px]"
-              maxLength={1000}
-            />
+          <Textarea
+            id="reason"
+            placeholder="Explique brevemente o problema..."
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            className="min-h-20"
+            maxLength={500}
+          />
+...
+          <Textarea
+            id="description"
+            placeholder="Adicione mais detalhes se necessário..."
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className="min-h-20"
+            maxLength={1000}
+          />
             <p className="text-xs text-muted-foreground mt-1">
               {description.length}/1000 caracteres
             </p>

@@ -337,13 +337,13 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
                 </div>
 
                 <div className="ml-7 space-y-2">
-                  <Textarea
-                    placeholder="Adicione suas notas sobre esta etapa..."
-                    value={currentNotes}
-                    onChange={(e) => handleNotesLocalChange(e.target.value)}
-                    className="min-h-[80px]"
-                    disabled={updateMutation.isPending}
-                  />
+                <Textarea
+                  placeholder="Adicione suas notas sobre esta etapa..."
+                  value={currentNotes}
+                  onChange={(e) => handleNotesLocalChange(e.target.value)}
+                  className="min-h-20"
+                  disabled={updateMutation.isPending}
+                />
                   {showNotesSave && (
                     <Button
                       size="sm"

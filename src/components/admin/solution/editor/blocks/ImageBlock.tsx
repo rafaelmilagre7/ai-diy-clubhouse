@@ -117,11 +117,11 @@ const ImageBlock: React.FC<ImageBlockProps> = ({ data, onChange }) => {
       
       {data.url ? (
         <div className="mt-4 border rounded-md overflow-hidden">
-          <div className="max-h-[300px] overflow-hidden bg-muted flex items-center justify-center">
+          <div className="max-h-96 overflow-hidden bg-muted flex items-center justify-center">
             <img 
               src={data.url} 
               alt={data.alt || 'Preview'} 
-              className="max-h-[300px] max-w-full object-contain mx-auto"
+              className="max-h-96 max-w-full object-contain mx-auto"
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
                 target.src = "https://placehold.co/600x400?text=Imagem+não+encontrada";

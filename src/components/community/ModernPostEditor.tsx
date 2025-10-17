@@ -300,14 +300,14 @@ export const ModernPostEditor = ({
           <TabsContent value="edit" className="mt-0">
             <Card>
               <CardContent className="p-0">
-                <Textarea
-                  ref={textareaRef}
-                  placeholder={placeholder}
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  className="min-h-[200px] resize-none border-none shadow-none focus-visible:ring-0"
-                  rows={8}
-                />
+              <Textarea
+                ref={textareaRef}
+                placeholder={placeholder}
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                className="min-h-52 resize-none border-none shadow-none focus-visible:ring-0"
+                rows={8}
+              />
               </CardContent>
             </Card>
           </TabsContent>

@@ -103,7 +103,7 @@ export const CSVPreview: React.FC<CSVPreviewProps> = ({ file, validation }) => {
           </div>
         </div>
 
-        <ScrollArea className="h-[400px] rounded-md border p-4">
+        <ScrollArea className="h-scroll-lg rounded-md border p-4">
           <div className="space-y-4">
             {preview.masters.map((master, index) => {
               const members = preview.members.get(master) || [];

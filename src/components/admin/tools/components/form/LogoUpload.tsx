@@ -122,9 +122,9 @@ export const LogoUpload = ({ form }: LogoUploadProps) => {
               >
                 <X className="h-4 w-4 mr-1" />
                 Remover
-              </Button>
-            </div>
-            <div className="border rounded-md p-4 bg-muted/30 flex items-center justify-center min-h-[120px]">
+            </Button>
+          </div>
+          <div className="border rounded-md p-4 bg-muted/30 flex items-center justify-center min-h-32">
               <img
                 src={logoUrl}
                 alt="Preview do logo"

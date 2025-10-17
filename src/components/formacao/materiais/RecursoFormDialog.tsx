@@ -162,7 +162,7 @@ export const RecursoFormDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-dialog-lg">
         <DialogHeader>
           <DialogTitle>{isEditing ? "Editar Material" : "Adicionar Material"}</DialogTitle>
           <DialogDescription>

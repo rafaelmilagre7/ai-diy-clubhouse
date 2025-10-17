@@ -129,7 +129,7 @@ export const UserRoleManager = ({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-dialog-sm">
         <DialogHeader>
           <DialogTitle>Alterar Função do Usuário</DialogTitle>
           <DialogDescription>

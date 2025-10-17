@@ -29,7 +29,7 @@ const VideoBlock: React.FC<VideoBlockProps> = ({ data, onChange }) => {
           <video 
             src={data.url} 
             controls 
-            className="max-h-[200px] w-full"
+            className="max-h-80 w-full"
           />
         </div>
       )}

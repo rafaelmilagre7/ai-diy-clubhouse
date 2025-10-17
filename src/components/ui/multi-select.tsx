@@ -139,7 +139,7 @@ export function MultiSelect({
         </div>
       </PopoverTrigger>
       <PopoverContent className="p-0" align="start" sideOffset={5}>
-        <div className="max-h-[300px] overflow-y-auto py-1">
+        <div className="max-h-96 overflow-y-auto py-1">
           {maxItems && selectedItems.length >= maxItems && (
             <p className="px-2 py-1.5 text-sm text-muted-foreground">
               Máximo de {maxItems} itens selecionados

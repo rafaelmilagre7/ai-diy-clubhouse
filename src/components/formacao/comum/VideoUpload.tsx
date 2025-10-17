@@ -171,7 +171,7 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
         <div className="relative rounded-md overflow-hidden bg-black">
           <video 
             controls 
-            className="w-full h-auto max-h-[300px]" 
+            className="w-full h-auto max-h-96" 
             src={value}
           >
             Seu navegador não suporta a reprodução deste vídeo.

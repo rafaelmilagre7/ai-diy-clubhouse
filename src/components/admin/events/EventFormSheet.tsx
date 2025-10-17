@@ -16,7 +16,7 @@ export const EventFormSheet = ({ event, onClose }: EventFormSheetProps) => {
   
   return (
     <Sheet open onOpenChange={onClose}>
-      <SheetContent className="w-full sm:max-w-[600px] overflow-y-auto flex flex-col h-full p-0 surface-modal border-l border-border/50">
+      <SheetContent className="w-full sm:max-w-dialog-lg overflow-y-auto flex flex-col h-full p-0 surface-modal border-l border-border/50">
         <div className="flex justify-between items-center p-6 border-b border-border/50 sticky top-0 bg-surface-modal/95 backdrop-blur-sm z-10">
           <SheetHeader className="mb-0">
             <div className="flex items-center gap-3">
