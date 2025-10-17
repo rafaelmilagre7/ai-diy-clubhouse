@@ -37,7 +37,7 @@ export const NPSPerLessonChart: React.FC<NPSPerLessonChartProps> = ({ npsData, i
           Score NPS para as {chartData.length > 0 ? chartData.length : 10} aulas mais avaliadas
         </CardDescription>
       </CardHeader>
-      <CardContent className="h-[300px]">
+      <CardContent className="h-chart-md">
         {isLoading ? (
           <div className="h-full w-full flex flex-col space-y-2 justify-center">
             <Skeleton className="h-8 w-full" />

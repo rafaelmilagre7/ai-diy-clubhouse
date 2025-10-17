@@ -26,10 +26,10 @@ export const ProfessionalInfoCharts: React.FC<ProfessionalInfoChartsProps> = ({ 
               index="name"
               colors={['blue']}
               valueFormatter={(value) => `${value} usuários`}
-              className="h-[300px]"
+              className="h-chart-md"
             />
           ) : (
-            <div className="flex items-center justify-center h-[300px]">
+            <div className="flex items-center justify-center h-chart-md">
               <p className="text-muted-foreground">Não há dados suficientes para mostrar</p>
             </div>
           )}
@@ -51,10 +51,10 @@ export const ProfessionalInfoCharts: React.FC<ProfessionalInfoChartsProps> = ({ 
               category="value"
               index="name"
               valueFormatter={(value) => `${value} empresas`}
-              className="h-[300px]"
+              className="h-chart-md"
             />
           ) : (
-            <div className="flex items-center justify-center h-[300px]">
+            <div className="flex items-center justify-center h-chart-md">
               <p className="text-muted-foreground">Não há dados suficientes para mostrar</p>
             </div>
           )}
@@ -77,10 +77,10 @@ export const ProfessionalInfoCharts: React.FC<ProfessionalInfoChartsProps> = ({ 
               index="name"
               colors={['green']}
               valueFormatter={(value) => `${value} usuários`}
-              className="h-[300px]"
+              className="h-chart-md"
             />
           ) : (
-            <div className="flex items-center justify-center h-[300px]">
+            <div className="flex items-center justify-center h-chart-md">
               <p className="text-muted-foreground">Não há dados suficientes para mostrar</p>
             </div>
           )}
@@ -102,10 +102,10 @@ export const ProfessionalInfoCharts: React.FC<ProfessionalInfoChartsProps> = ({ 
               category="value"
               index="name"
               valueFormatter={(value) => `${value} empresas`}
-              className="h-[300px]"
+              className="h-chart-md"
             />
           ) : (
-            <div className="flex items-center justify-center h-[300px]">
+            <div className="flex items-center justify-center h-chart-md">
               <p className="text-muted-foreground">Não há dados suficientes para mostrar</p>
             </div>
           )}

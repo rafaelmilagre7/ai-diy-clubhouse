@@ -37,7 +37,7 @@ export const OverviewTabContent = ({ timeRange }: OverviewTabContentProps) => {
             <Skeleton className="h-4 w-[150px]" />
           </CardHeader>
           <CardContent>
-            <Skeleton className="h-[300px] w-full" />
+            <Skeleton className="h-chart-md w-full" />
           </CardContent>
         </Card>
         
@@ -47,7 +47,7 @@ export const OverviewTabContent = ({ timeRange }: OverviewTabContentProps) => {
             <Skeleton className="h-4 w-[150px]" />
           </CardHeader>
           <CardContent>
-            <Skeleton className="h-[300px] w-full" />
+            <Skeleton className="h-chart-md w-full" />
           </CardContent>
         </Card>
       </div>
@@ -60,7 +60,7 @@ export const OverviewTabContent = ({ timeRange }: OverviewTabContentProps) => {
               <Skeleton className="h-4 w-[100px]" />
             </CardHeader>
             <CardContent>
-              <Skeleton className="h-[200px] w-full" />
+              <Skeleton className="h-chart-sm w-full" />
             </CardContent>
           </Card>
         ))}

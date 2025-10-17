@@ -63,7 +63,7 @@ export const NPSScoreChart: React.FC<NPSScoreChartProps> = ({ npsData, isLoading
           )}
         </CardDescription>
       </CardHeader>
-      <CardContent className="h-[300px]">
+      <CardContent className="h-chart-md">
         {isLoading ? (
           <div className="h-full w-full flex items-center justify-center">
             <Skeleton className="h-[250px] w-[250px] rounded-full" />

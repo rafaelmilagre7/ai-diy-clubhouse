@@ -46,7 +46,7 @@ export const ProcessMetricsCharts: React.FC<ProcessMetricsChartsProps> = ({ data
               ))}
             </div>
           ) : (
-            <div className="flex items-center justify-center h-[300px]">
+            <div className="flex items-center justify-center h-chart-md">
               <p className="text-muted-foreground">Não há dados suficientes para mostrar</p>
             </div>
           )}
@@ -69,10 +69,10 @@ export const ProcessMetricsCharts: React.FC<ProcessMetricsChartsProps> = ({ data
               index="range"
               colors={['emerald']}
               valueFormatter={(value) => `${value} usuários`}
-              className="h-[300px]"
+              className="h-chart-md"
             />
           ) : (
-            <div className="flex items-center justify-center h-[300px]">
+            <div className="flex items-center justify-center h-chart-md">
               <p className="text-muted-foreground">Não há dados suficientes para mostrar</p>
             </div>
           )}
@@ -95,10 +95,10 @@ export const ProcessMetricsCharts: React.FC<ProcessMetricsChartsProps> = ({ data
               index="week"
               colors={['blue', 'green']}
               valueFormatter={(value) => `${value} usuários`}
-              className="h-[300px]"
+              className="h-chart-md"
             />
           ) : (
-            <div className="flex items-center justify-center h-[300px]">
+            <div className="flex items-center justify-center h-chart-md">
               <p className="text-muted-foreground">Não há dados suficientes para mostrar</p>
             </div>
           )}

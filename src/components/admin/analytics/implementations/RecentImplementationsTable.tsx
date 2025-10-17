@@ -19,7 +19,7 @@ export const RecentImplementationsTable: React.FC<RecentImplementationsTableProp
           <CardDescription className="animate-pulse h-4 w-1/2 bg-muted rounded"></CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-[300px] w-full animate-pulse bg-muted/50 rounded"></div>
+          <div className="h-chart-md w-full animate-pulse bg-muted/50 rounded"></div>
         </CardContent>
       </Card>
     );
@@ -69,7 +69,7 @@ export const RecentImplementationsTable: React.FC<RecentImplementationsTableProp
             </Table>
           </div>
         ) : (
-          <div className="flex items-center justify-center h-[200px]">
+          <div className="flex items-center justify-center h-chart-sm">
             <p className="text-muted-foreground">Nenhuma implementação recente encontrada</p>
           </div>
         )}

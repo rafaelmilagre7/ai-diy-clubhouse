@@ -51,7 +51,7 @@ export const ChatModal = ({ isOpen, onClose, recipientId, recipientName, recipie
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md h-[600px] flex flex-col">
+      <DialogContent className="sm:max-w-md h-chart-xl flex flex-col">
         <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">

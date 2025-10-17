@@ -17,7 +17,7 @@ export const UserGrowthChart: React.FC<UserGrowthChartProps> = ({ data }) => {
             Evolução do número de usuários ao longo do tempo
           </CardDescription>
         </CardHeader>
-        <CardContent className="h-[350px] flex items-center justify-center">
+        <CardContent className="h-chart-lg flex items-center justify-center">
           <p className="text-muted-foreground">Sem dados disponíveis</p>
         </CardContent>
       </Card>
@@ -32,7 +32,7 @@ export const UserGrowthChart: React.FC<UserGrowthChartProps> = ({ data }) => {
           Evolução do número de usuários ao longo do tempo
         </CardDescription>
       </CardHeader>
-      <CardContent className="h-[350px]">
+      <CardContent className="h-chart-lg">
         <AreaChart
           data={data}
           index="date"

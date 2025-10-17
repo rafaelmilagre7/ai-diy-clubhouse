@@ -21,7 +21,7 @@ export const NPSByCourseChart: React.FC<NPSByCourseChartProps> = ({ data, isLoad
           <CardDescription>Score agregado de cada curso</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-[400px] flex items-center justify-center">
+          <div className="h-chart-lg flex items-center justify-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
         </CardContent>
@@ -40,7 +40,7 @@ export const NPSByCourseChart: React.FC<NPSByCourseChartProps> = ({ data, isLoad
           <CardDescription>Score agregado de cada curso</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-[400px] flex items-center justify-center text-muted-foreground">
+          <div className="h-chart-lg flex items-center justify-center text-muted-foreground">
             Sem dados disponíveis para o período selecionado
           </div>
         </CardContent>

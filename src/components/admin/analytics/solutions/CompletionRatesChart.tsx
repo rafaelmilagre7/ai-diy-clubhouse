@@ -41,7 +41,7 @@ export const CompletionRatesChart: React.FC<CompletionRatesChartProps> = ({
           <Skeleton className="h-6 w-48 mb-2" />
           <Skeleton className="h-4 w-64" />
         </CardHeader>
-        <CardContent className="h-[300px]">
+        <CardContent className="h-chart-md">
           <Skeleton className="h-full w-full" />
         </CardContent>
       </Card>
@@ -58,7 +58,7 @@ export const CompletionRatesChart: React.FC<CompletionRatesChartProps> = ({
           Top 5 soluções com maiores taxas de conclusão
         </CardDescription>
       </CardHeader>
-      <CardContent className="h-[300px] pt-6">
+      <CardContent className="h-chart-md pt-6">
         {!data || data.length === 0 ? (
           <div className="h-full flex items-center justify-center">
             <p className="text-muted-foreground">Sem dados disponíveis</p>

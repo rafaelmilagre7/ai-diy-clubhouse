@@ -29,8 +29,8 @@ export const LmsAnalyticsTabContent = ({ timeRange }: LmsAnalyticsTabContentProp
       </MetricsGrid>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="h-[350px] bg-muted animate-pulse rounded-lg" />
-        <div className="h-[350px] bg-muted animate-pulse rounded-lg" />
+        <div className="h-chart-lg bg-muted animate-pulse rounded-lg" />
+        <div className="h-chart-lg bg-muted animate-pulse rounded-lg" />
       </div>
     </div>
   );

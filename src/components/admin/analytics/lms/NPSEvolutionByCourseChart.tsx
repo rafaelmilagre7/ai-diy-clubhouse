@@ -41,7 +41,7 @@ export const NPSEvolutionByCourseChart: React.FC<NPSEvolutionByCourseChartProps>
           <CardDescription>Comparação temporal entre cursos</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-[500px] flex items-center justify-center">
+          <div className="h-chart-xl flex items-center justify-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
         </CardContent>
@@ -60,7 +60,7 @@ export const NPSEvolutionByCourseChart: React.FC<NPSEvolutionByCourseChartProps>
           <CardDescription>Comparação temporal entre cursos</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-[500px] flex items-center justify-center text-muted-foreground">
+          <div className="h-chart-xl flex items-center justify-center text-muted-foreground">
             Sem dados disponíveis para o período selecionado
           </div>
         </CardContent>
@@ -160,7 +160,7 @@ export const NPSEvolutionByCourseChart: React.FC<NPSEvolutionByCourseChartProps>
         </div>
 
         {selectedCourses.length === 0 ? (
-          <div className="h-[400px] flex items-center justify-center text-muted-foreground">
+          <div className="h-chart-lg flex items-center justify-center text-muted-foreground">
             Selecione pelo menos um curso para visualizar
           </div>
         ) : (

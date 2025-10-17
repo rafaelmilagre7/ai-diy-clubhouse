@@ -26,10 +26,10 @@ export const GoalsAndObjectivesCharts: React.FC<GoalsAndObjectivesChartsProps> =
               index="name"
               colors={['orange']}
               valueFormatter={(value) => `${value} usuários`}
-              className="h-[300px]"
+              className="h-chart-md"
             />
           ) : (
-            <div className="flex items-center justify-center h-[300px]">
+            <div className="flex items-center justify-center h-chart-md">
               <p className="text-muted-foreground">Não há dados suficientes para mostrar</p>
             </div>
           )}
@@ -52,10 +52,10 @@ export const GoalsAndObjectivesCharts: React.FC<GoalsAndObjectivesChartsProps> =
               index="name"
               colors={['teal']}
               valueFormatter={(value) => `${value} menções`}
-              className="h-[300px]"
+              className="h-chart-md"
             />
           ) : (
-            <div className="flex items-center justify-center h-[300px]">
+            <div className="flex items-center justify-center h-chart-md">
               <p className="text-muted-foreground">Não há dados suficientes para mostrar</p>
             </div>
           )}
@@ -77,10 +77,10 @@ export const GoalsAndObjectivesCharts: React.FC<GoalsAndObjectivesChartsProps> =
               category="value"
               index="name"
               valueFormatter={(value) => `${value} usuários`}
-              className="h-[300px]"
+              className="h-chart-md"
             />
           ) : (
-            <div className="flex items-center justify-center h-[300px]">
+            <div className="flex items-center justify-center h-chart-md">
               <p className="text-muted-foreground">Não há dados suficientes para mostrar</p>
             </div>
           )}
@@ -102,10 +102,10 @@ export const GoalsAndObjectivesCharts: React.FC<GoalsAndObjectivesChartsProps> =
               category="value"
               index="name"
               valueFormatter={(value) => `${value} usuários`}
-              className="h-[300px]"
+              className="h-chart-md"
             />
           ) : (
-            <div className="flex items-center justify-center h-[300px]">
+            <div className="flex items-center justify-center h-chart-md">
               <p className="text-muted-foreground">Não há dados suficientes para mostrar</p>
             </div>
           )}

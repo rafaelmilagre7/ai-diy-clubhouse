@@ -17,7 +17,7 @@ export const SolutionPopularityChart: React.FC<SolutionPopularityChartProps> = (
             Top 5 soluções com maior número de visualizações
           </CardDescription>
         </CardHeader>
-        <CardContent className="h-[300px] flex items-center justify-center">
+        <CardContent className="h-chart-md flex items-center justify-center">
           <p className="text-muted-foreground">Sem dados disponíveis</p>
         </CardContent>
       </Card>
@@ -32,7 +32,7 @@ export const SolutionPopularityChart: React.FC<SolutionPopularityChartProps> = (
           Top 5 soluções com maior número de visualizações
         </CardDescription>
       </CardHeader>
-      <CardContent className="h-[300px]">
+      <CardContent className="h-chart-md">
         <BarChart
           data={data}
           index="name"

@@ -17,13 +17,13 @@ export const DashboardCharts = ({ engagementData, completionRateData, loading }:
         <Card>
           <CardContent className="p-6">
             <Skeleton className="h-4 w-[180px] mb-4 mt-2" />
-            <Skeleton className="h-[300px] w-full rounded-md" />
+            <Skeleton className="h-chart-md w-full rounded-md" />
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-6">
             <Skeleton className="h-4 w-[180px] mb-4 mt-2" />
-            <Skeleton className="h-[300px] w-full rounded-md" />
+            <Skeleton className="h-chart-md w-full rounded-md" />
           </CardContent>
         </Card>
       </div>

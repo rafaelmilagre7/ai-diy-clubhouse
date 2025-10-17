@@ -175,7 +175,7 @@ export const ConnectMessageModal = ({
               value={customMessage || messageTemplates[selectedStyle]}
               onChange={(e) => setCustomMessage(e.target.value)}
               placeholder="Escreva sua mensagem..."
-              className="min-h-[200px] bg-surface-elevated border-border text-text-primary resize-none"
+              className="min-h-chart-sm bg-surface-elevated border-border text-text-primary resize-none"
             />
             <p className="text-xs text-text-muted">
               Você pode editar a mensagem sugerida pela IA ou escrever sua própria versão

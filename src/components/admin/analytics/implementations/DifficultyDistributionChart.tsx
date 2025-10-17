@@ -18,7 +18,7 @@ export const DifficultyDistributionChart: React.FC<DifficultyDistributionChartPr
           <CardDescription className="animate-pulse h-4 w-1/2 bg-muted rounded"></CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-[300px] w-full animate-pulse bg-muted/50 rounded"></div>
+          <div className="h-chart-md w-full animate-pulse bg-muted/50 rounded"></div>
         </CardContent>
       </Card>
     );
@@ -54,10 +54,10 @@ export const DifficultyDistributionChart: React.FC<DifficultyDistributionChartPr
             category="value"
             index="name"
             valueFormatter={(value) => `${value} implementações`}
-            className="h-[300px]"
+            className="h-chart-md"
           />
         ) : (
-          <div className="flex items-center justify-center h-[300px]">
+          <div className="flex items-center justify-center h-chart-md">
             <p className="text-muted-foreground">Não há dados suficientes para mostrar</p>
           </div>
         )}

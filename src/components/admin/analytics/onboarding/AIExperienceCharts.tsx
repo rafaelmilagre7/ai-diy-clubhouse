@@ -25,10 +25,10 @@ export const AIExperienceCharts: React.FC<AIExperienceChartsProps> = ({ data }) 
               category="value"
               index="name"
               valueFormatter={(value) => `${value} usuários`}
-              className="h-[300px]"
+              className="h-chart-md"
             />
           ) : (
-            <div className="flex items-center justify-center h-[300px]">
+            <div className="flex items-center justify-center h-chart-md">
               <p className="text-muted-foreground">Não há dados suficientes para mostrar</p>
             </div>
           )}
@@ -51,10 +51,10 @@ export const AIExperienceCharts: React.FC<AIExperienceChartsProps> = ({ data }) 
               index="name"
               colors={['purple']}
               valueFormatter={(value) => `${value} usuários`}
-              className="h-[300px]"
+              className="h-chart-md"
             />
           ) : (
-            <div className="flex items-center justify-center h-[300px]">
+            <div className="flex items-center justify-center h-chart-md">
               <p className="text-muted-foreground">Não há dados suficientes para mostrar</p>
             </div>
           )}
@@ -76,10 +76,10 @@ export const AIExperienceCharts: React.FC<AIExperienceChartsProps> = ({ data }) 
               category="value"
               index="name"
               valueFormatter={(value) => `${value} usuários`}
-              className="h-[300px]"
+              className="h-chart-md"
             />
           ) : (
-            <div className="flex items-center justify-center h-[300px]">
+            <div className="flex items-center justify-center h-chart-md">
               <p className="text-muted-foreground">Não há dados suficientes para mostrar</p>
             </div>
           )}

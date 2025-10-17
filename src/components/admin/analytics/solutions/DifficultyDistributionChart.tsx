@@ -17,7 +17,7 @@ export const DifficultyDistributionChart: React.FC<DifficultyDistributionChartPr
             Soluções agrupadas por nível de dificuldade
           </CardDescription>
         </CardHeader>
-        <CardContent className="h-[300px] flex items-center justify-center">
+        <CardContent className="h-chart-md flex items-center justify-center">
           <p className="text-muted-foreground">Sem dados disponíveis</p>
         </CardContent>
       </Card>
@@ -32,7 +32,7 @@ export const DifficultyDistributionChart: React.FC<DifficultyDistributionChartPr
           Soluções agrupadas por nível de dificuldade
         </CardDescription>
       </CardHeader>
-      <CardContent className="h-[300px]">
+      <CardContent className="h-chart-md">
         <PieChart
           data={data}
           index="name"

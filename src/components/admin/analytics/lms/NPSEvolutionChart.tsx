@@ -23,7 +23,7 @@ export const NPSEvolutionChart: React.FC<NPSEvolutionChartProps> = ({ data, isLo
           <CardDescription>Todas as aulas</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-[300px] flex items-center justify-center">
+          <div className="h-chart-md flex items-center justify-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
         </CardContent>
@@ -42,7 +42,7 @@ export const NPSEvolutionChart: React.FC<NPSEvolutionChartProps> = ({ data, isLo
           <CardDescription>Todas as aulas</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+          <div className="h-chart-md flex items-center justify-center text-muted-foreground">
             Sem dados disponíveis para o período selecionado
           </div>
         </CardContent>
