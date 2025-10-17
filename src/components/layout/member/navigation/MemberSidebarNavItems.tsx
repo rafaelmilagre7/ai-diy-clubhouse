@@ -192,7 +192,7 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
         {isAdmin && (
           <>
             {sidebarOpen && (
-              <div className="mx-3 border-t border-orange-500/30" />
+              <div className="mx-3 border-t border-status-warning/30" />
             )}
             <SidebarNavigationGroup title="Administração" sidebarOpen={sidebarOpen}>
               <TooltipNavItem
@@ -212,7 +212,7 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
     
     return (
       <div className="space-y-2 px-3 py-4">
-        <div className="p-4 text-red-500 text-sm bg-red-50 dark:bg-red-900/20 rounded-lg">
+        <div className="p-4 text-status-error text-sm bg-status-error/10 rounded-lg">
           Erro no contexto de autenticação
         </div>
         <TooltipNavItem

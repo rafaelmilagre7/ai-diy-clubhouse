@@ -92,8 +92,8 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     return (
       <Card>
         <CardContent className="p-0">
-          <div className="aspect-video bg-rose-50 flex items-center justify-center">
-            <p className="text-rose-500 text-center px-4">{error}</p>
+          <div className="aspect-video bg-status-error/10 flex items-center justify-center">
+            <p className="text-status-error text-center px-4">{error}</p>
           </div>
         </CardContent>
       </Card>
@@ -134,8 +134,8 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         return <YoutubeEmbed youtubeId={youtubeId} title={video.title} />;
       } else {
         return (
-          <div className="aspect-video bg-rose-50 flex items-center justify-center">
-            <p className="text-rose-500">URL do YouTube inválida</p>
+          <div className="aspect-video bg-status-error/10 flex items-center justify-center">
+            <p className="text-status-error">URL do YouTube inválida</p>
           </div>
         );
       }
@@ -159,8 +159,8 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
       );
     } else {
       return (
-        <div className="aspect-video bg-rose-50 flex items-center justify-center">
-          <p className="text-rose-500">URL do vídeo não disponível</p>
+        <div className="aspect-video bg-status-error/10 flex items-center justify-center">
+          <p className="text-status-error">URL do vídeo não disponível</p>
         </div>
       );
     }

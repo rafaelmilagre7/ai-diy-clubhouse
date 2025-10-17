@@ -49,9 +49,9 @@ export const CommentList = ({
 
   if (error) {
     return (
-      <Alert variant="destructive" className="bg-red-950/50 border-red-800/50">
-        <AlertTriangle className="h-4 w-4 text-red-400" />
-        <AlertDescription className="text-red-200">
+      <Alert variant="destructive" className="bg-status-error/10 border-status-error/30">
+        <AlertTriangle className="h-4 w-4 text-status-error" />
+        <AlertDescription className="text-status-error">
           Erro ao carregar comentários: {error.message || "Ocorreu um erro inesperado"}
         </AlertDescription>
       </Alert>

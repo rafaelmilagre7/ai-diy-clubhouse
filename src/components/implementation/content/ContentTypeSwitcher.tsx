@@ -44,7 +44,7 @@ export const ContentTypeSwitcher = ({ contentType, module }: ContentTypeSwitcher
   } catch (error) {
     logError("Error rendering content type", error);
     return (
-      <div className="p-4 bg-red-50 border border-red-200 rounded-md text-red-600">
+      <div className="p-4 bg-status-error/10 border border-status-error/30 rounded-md text-status-error">
         <p className="font-medium">Erro ao renderizar conteúdo</p>
         <p className="text-sm">Ocorreu um problema ao exibir este conteúdo. Por favor, tente novamente mais tarde.</p>
       </div>

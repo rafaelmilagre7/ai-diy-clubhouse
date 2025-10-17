@@ -93,7 +93,7 @@ export const CommentItem = ({ comment, onReply, onLike, onDelete }: CommentItemP
                   variant="ghost" 
                   size="sm" 
                   onClick={() => onDelete(comment)}
-                  className="h-8 w-8 p-0 text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                  className="h-8 w-8 p-0 text-status-error hover:text-status-error/80 hover:bg-status-error/10"
                 >
                   <Trash className="h-4 w-4" />
                 </Button>
@@ -132,7 +132,7 @@ export const CommentItem = ({ comment, onReply, onLike, onDelete }: CommentItemP
                   variant="ghost" 
                   size="sm" 
                   onClick={() => onDelete(comment)}
-                  className="text-xs text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                  className="text-xs text-status-error hover:text-status-error/80 hover:bg-status-error/10"
                 >
                   <Trash className="h-3.5 w-3.5 mr-1" />
                   Excluir

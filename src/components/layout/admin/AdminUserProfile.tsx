@@ -59,7 +59,7 @@ export const AdminUserProfile = ({ sidebarOpen }: AdminUserProfileProps) => {
         </div>
         
         <div className="mt-2">
-          <Badge variant="secondary" className="text-xs bg-red-500/20 text-red-300 border-red-500/30">
+          <Badge variant="secondary" className="text-xs bg-status-error/20 text-status-error border-status-error/30">
             Administrador
           </Badge>
         </div>

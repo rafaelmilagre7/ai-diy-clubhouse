@@ -344,7 +344,7 @@ const SignUpForm = ({ onBackToLogin }: SignUpFormProps) => {
           <div className="space-y-3 pt-2">
             <Button 
               type="submit" 
-              className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-semibold uppercase tracking-wide" 
+              className="w-full bg-operational hover:bg-operational/90 text-white font-semibold uppercase tracking-wide" 
               disabled={isLoading || !passwordsMatch || passwordStrength.score < 3}
             >
               {isLoading ? (

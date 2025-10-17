@@ -182,7 +182,7 @@ export const CertificateModal = ({ certificate, isOpen, onClose }: CertificateMo
 
           {/* Info do Template */}
           <div className="text-center">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 text-sm">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-operational/10 border border-operational/20 rounded-full text-operational text-sm">
               ✓ Template: VIVER DE IA Neon (Hardcoded)
             </div>
           </div>

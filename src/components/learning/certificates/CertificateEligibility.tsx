@@ -62,9 +62,9 @@ export const CertificateEligibility = ({
 
   if (!isCompleted) {
     return (
-      <Alert className="bg-amber-900/20 border-amber-700">
-        <AlertTitle className="text-amber-300">Curso em Progresso</AlertTitle>
-        <AlertDescription className="text-amber-200">
+      <Alert className="bg-status-warning/20 border-status-warning">
+        <AlertTitle className="text-status-warning">Curso em Progresso</AlertTitle>
+        <AlertDescription className="text-muted-foreground">
           Complete todas as aulas do curso para se tornar elegível ao certificado. Progresso atual: {progressPercentage}%
         </AlertDescription>
       </Alert>
@@ -107,9 +107,9 @@ export const CertificateEligibility = ({
 
   if (isEligible === false) {
     return (
-      <Alert variant="destructive" className="bg-red-900/20 border-red-700">
-        <AlertTitle className="text-red-300">Não Elegível</AlertTitle>
-        <AlertDescription className="text-red-200">
+      <Alert variant="destructive" className="bg-status-error/20 border-status-error">
+        <AlertTitle className="text-status-error">Não Elegível</AlertTitle>
+        <AlertDescription className="text-muted-foreground">
           Complete todas as aulas do curso para se tornar elegível ao certificado.
         </AlertDescription>
       </Alert>

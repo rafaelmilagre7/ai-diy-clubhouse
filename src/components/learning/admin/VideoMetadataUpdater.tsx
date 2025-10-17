@@ -70,9 +70,9 @@ export const VideoMetadataUpdater: React.FC<VideoMetadataUpdaterProps> = ({
         )}
         
         {result && (
-          <div className="bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300 p-4 rounded-md mb-4">
+          <div className="bg-operational/10 text-operational p-4 rounded-md mb-4">
             <div className="flex items-center">
-              <CheckCircle className="h-5 w-5 mr-2 text-green-600 dark:text-green-400" />
+              <CheckCircle className="h-5 w-5 mr-2 text-operational" />
               <p className="font-medium">Atualização concluída com sucesso!</p>
             </div>
             <div className="mt-2 text-sm">
