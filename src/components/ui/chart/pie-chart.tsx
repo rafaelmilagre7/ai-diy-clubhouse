@@ -43,7 +43,7 @@ export const PieChart: React.FC<PieChartProps> = ({
             cy="50%"
             labelLine={false}
             outerRadius={80}
-            fill="#8884d8"
+            fill="hsl(var(--aurora-primary))"
             dataKey={category}
             nameKey={index}
           >

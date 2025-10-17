@@ -79,23 +79,23 @@ export const AreaChart: React.FC<AreaChartProps> = ({
               </linearGradient>
             ))}
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
+          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
           <XAxis 
             dataKey={index} 
-            stroke="#9CA3AF"
+            stroke="hsl(var(--text-muted))"
             fontSize={12}
           />
           <YAxis 
-            stroke="#9CA3AF"
+            stroke="hsl(var(--text-muted))"
             fontSize={12}
             tickFormatter={valueFormatter}
           />
           <Tooltip 
             formatter={(value: number) => [valueFormatter(value), '']}
-            labelStyle={{ color: '#374151' }}
+            labelStyle={{ color: 'hsl(var(--text-muted))' }}
             contentStyle={{ 
-              backgroundColor: '#1F2937', 
-              border: '1px solid #374151',
+              backgroundColor: 'hsl(var(--popover))', 
+              border: '1px solid hsl(var(--border))',
               borderRadius: '6px'
             }}
           />
@@ -140,24 +140,24 @@ export const BarChart: React.FC<BarChartProps> = ({
           layout={layout}
           margin={{ top: 10, right: 30, left: 20, bottom: 5 }}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
+          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
           {layout === 'vertical' ? (
             <>
-              <XAxis type="number" stroke="#9CA3AF" fontSize={12} tickFormatter={valueFormatter} />
-              <YAxis type="category" dataKey={index} stroke="#9CA3AF" fontSize={12} width={100} />
+              <XAxis type="number" stroke="hsl(var(--text-muted))" fontSize={12} tickFormatter={valueFormatter} />
+              <YAxis type="category" dataKey={index} stroke="hsl(var(--text-muted))" fontSize={12} width={100} />
             </>
           ) : (
             <>
-              <XAxis dataKey={index} stroke="#9CA3AF" fontSize={12} />
-              <YAxis stroke="#9CA3AF" fontSize={12} tickFormatter={valueFormatter} />
+              <XAxis dataKey={index} stroke="hsl(var(--text-muted))" fontSize={12} />
+              <YAxis stroke="hsl(var(--text-muted))" fontSize={12} tickFormatter={valueFormatter} />
             </>
           )}
           <Tooltip 
             formatter={(value: number) => [valueFormatter(value), '']}
-            labelStyle={{ color: '#374151' }}
+            labelStyle={{ color: 'hsl(var(--text-muted))' }}
             contentStyle={{ 
-              backgroundColor: '#1F2937', 
-              border: '1px solid #374151',
+              backgroundColor: 'hsl(var(--popover))', 
+              border: '1px solid hsl(var(--border))',
               borderRadius: '6px'
             }}
           />
@@ -211,8 +211,8 @@ export const PieChart: React.FC<PieChartProps> = ({
           <Tooltip 
             formatter={(value: number) => [valueFormatter(value), '']}
             contentStyle={{ 
-              backgroundColor: '#1F2937', 
-              border: '1px solid #374151',
+              backgroundColor: 'hsl(var(--popover))', 
+              border: '1px solid hsl(var(--border))',
               borderRadius: '6px'
             }}
           />

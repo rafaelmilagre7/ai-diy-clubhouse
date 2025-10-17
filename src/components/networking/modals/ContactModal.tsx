@@ -124,8 +124,8 @@ export const ContactModal = ({ isOpen, onClose, card }: ContactModalProps) => {
                   {card.whatsappNumber && (
                     <div className="space-y-2">
                       <label className="text-xs font-semibold text-muted-foreground flex items-center gap-2 uppercase tracking-wide">
-                        <div className="p-1.5 rounded-md bg-[#25D366]/10">
-                          <Phone className="h-3.5 w-3.5 text-[#25D366]" />
+                        <div className="p-1.5 rounded-md bg-[hsl(var(--social-whatsapp))]/10">
+                          <Phone className="h-3.5 w-3.5 text-[hsl(var(--social-whatsapp))]" />
                         </div>
                         WhatsApp
                       </label>
@@ -143,7 +143,7 @@ export const ContactModal = ({ isOpen, onClose, card }: ContactModalProps) => {
                         <Button
                           size="sm"
                           onClick={openWhatsApp}
-                          className="px-4 bg-[#25D366] hover:bg-[#20BA5A] text-white border-0"
+                          className="px-4 bg-[hsl(var(--social-whatsapp))] hover:bg-[hsl(var(--social-whatsapp-hover))] text-white border-0"
                         >
                           <MessageCircle className="h-4 w-4" />
                         </Button>
@@ -155,13 +155,13 @@ export const ContactModal = ({ isOpen, onClose, card }: ContactModalProps) => {
                   {card.linkedinUrl && (
                     <div className="space-y-2">
                       <label className="text-xs font-semibold text-muted-foreground flex items-center gap-2 uppercase tracking-wide">
-                        <div className="p-1.5 rounded-md bg-[#0A66C2]/10">
-                          <Linkedin className="h-3.5 w-3.5 text-[#0A66C2]" />
+                        <div className="p-1.5 rounded-md bg-[hsl(var(--social-linkedin))]/10">
+                          <Linkedin className="h-3.5 w-3.5 text-[hsl(var(--social-linkedin))]" />
                         </div>
                         LinkedIn
                       </label>
                       <Button
-                        className="w-full gap-2 bg-[#0A66C2] hover:bg-[#004182] text-white border-0 h-12"
+                        className="w-full gap-2 bg-[hsl(var(--social-linkedin))] hover:bg-[hsl(var(--social-linkedin-hover))] text-white border-0 h-12"
                         onClick={() => window.open(card.linkedinUrl, '_blank', 'noopener,noreferrer')}
                       >
                         <Linkedin className="h-5 w-5" />

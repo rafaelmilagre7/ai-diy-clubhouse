@@ -23,10 +23,10 @@ export const GlowButton: React.FC<GlowButtonProps> = ({
   const [ripples, setRipples] = useState<Array<{ x: number; y: number; id: number }>>([]);
 
   const variantClasses = {
-    primary: 'gradient-networking text-white hover:shadow-[0_0_30px_rgba(102,126,234,0.6)]',
-    secondary: 'bg-white/10 text-white border border-white/20 hover:bg-white/20 hover:shadow-[0_0_30px_rgba(255,255,255,0.3)]',
-    success: 'gradient-knowledge text-white hover:shadow-[0_0_30px_rgba(67,233,123,0.6)]',
-    danger: 'gradient-commercial text-white hover:shadow-[0_0_30px_rgba(245,87,108,0.6)]'
+    primary: 'gradient-networking text-white hover:[box-shadow:var(--shadow-glow-networking)]',
+    secondary: 'bg-white/10 text-white border border-white/20 hover:bg-white/20 hover:[box-shadow:var(--shadow-glow-secondary)]',
+    success: 'gradient-knowledge text-white hover:[box-shadow:var(--shadow-glow-knowledge)]',
+    danger: 'gradient-commercial text-white hover:[box-shadow:var(--shadow-glow-commercial)]'
   };
 
   const sizeClasses = {

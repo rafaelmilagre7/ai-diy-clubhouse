@@ -31,8 +31,7 @@ import {
   YAxis,
   Cell,
 } from "recharts";
-
-const colors = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8", "#FF6B6B", "#6A6AFF", "#FFD700"];
+import { chartColors } from '@/lib/chart-utils';
 
 const SolutionMetrics = () => {
   const { id } = useParams<{ id: string }>();
@@ -272,9 +271,9 @@ const SolutionMetrics = () => {
                         <XAxis type="number" />
                         <YAxis dataKey="name" type="category" width={150} />
                         <Tooltip />
-                        <Bar dataKey="value" fill="#0ABAB5">
+                        <Bar dataKey="value" fill="hsl(var(--aurora-primary))">
                           {completionFunnelData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+                            <Cell key={`cell-${index}`} fill={chartColors.categorical[index % chartColors.categorical.length]} />
                           ))}
                         </Bar>
                       </BarChart>
@@ -307,8 +306,8 @@ const SolutionMetrics = () => {
                           dataKey="value"
                           label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
                         >
-                          <Cell fill="#0ABAB5" />
-                          <Cell fill="#f5f5f5" />
+                          <Cell fill="hsl(var(--aurora-primary))" />
+                          <Cell fill="hsl(var(--muted))" />
                         </Pie>
                         <Tooltip />
                       </PieChart>
