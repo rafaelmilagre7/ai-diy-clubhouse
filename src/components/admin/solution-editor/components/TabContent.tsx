@@ -122,7 +122,7 @@ const TabContent: React.FC<TabContentProps> = ({
   }
 
   // Default alert for unrecognized steps
-  return <Alert variant="default" className="border-amber-200 bg-slate-900">
+  return <Alert variant="default" className="border-operational/20 bg-card">
       <AlertTitle>Etapa não reconhecida</AlertTitle>
       <AlertDescription>
         Por favor, volte para uma etapa válida ou recarregue a página.

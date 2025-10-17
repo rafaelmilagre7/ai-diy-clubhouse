@@ -286,7 +286,7 @@ export const SetNewPasswordForm = () => {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-300 transition-colors"
+              className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground transition-colors"
             >
               {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
             </button>
@@ -330,7 +330,7 @@ export const SetNewPasswordForm = () => {
             <button
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-300 transition-colors"
+              className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground transition-colors"
             >
               {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
             </button>
@@ -375,7 +375,7 @@ export const SetNewPasswordForm = () => {
             className={`w-full py-3 font-medium transition-all ${
               passwordValidation.isValid && passwordsMatch 
                 ? 'bg-aurora-primary hover:bg-aurora-primary/90 text-white' 
-                : 'bg-gray-600 text-gray-300 cursor-not-allowed hover:bg-gray-600'
+                : 'bg-muted text-muted-foreground cursor-not-allowed hover:bg-muted'
             }`}
             disabled={isLoading || !passwordValidation.isValid || !passwordsMatch}
           >

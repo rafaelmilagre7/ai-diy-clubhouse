@@ -18,7 +18,7 @@ export const DashboardConnectionErrorState: FC = () => {
         <h2 className="text-2xl font-bold text-white">
           Erro de Conexão
         </h2>
-        <p className="text-gray-400 max-w-md">
+        <p className="text-muted-foreground max-w-md">
           Não foi possível carregar seus dados. Verifique sua conexão e tente novamente.
         </p>
       </div>

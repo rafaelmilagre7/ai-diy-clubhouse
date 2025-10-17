@@ -272,10 +272,10 @@ export const AdvancedLogsViewer: React.FC<AdvancedLogsViewerProps> = ({
               {filteredLogs.map((log) => (
                 <div 
                   key={log.id} 
-                  className="flex items-start gap-3 p-3 rounded hover:bg-slate-800/50 transition-colors border border-slate-700/50"
+                  className="flex items-start gap-3 p-3 rounded hover:bg-muted/50 transition-colors border border-border/50"
                 >
                   <div className="flex items-center gap-2 min-w-0 flex-1">
-                    <span className="text-xs text-slate-500 font-mono min-w-[60px]">
+                    <span className="text-xs text-muted-foreground font-mono min-w-[60px]">
                       {log.timestamp}
                     </span>
                     
@@ -288,7 +288,7 @@ export const AdvancedLogsViewer: React.FC<AdvancedLogsViewerProps> = ({
                     
                     <div className="flex items-center gap-2">
                       {getLogIcon(log.level)}
-                      <span className="text-sm text-slate-200 flex-1 min-w-0">
+                      <span className="text-sm text-foreground flex-1 min-w-0">
                         {log.message}
                       </span>
                     </div>

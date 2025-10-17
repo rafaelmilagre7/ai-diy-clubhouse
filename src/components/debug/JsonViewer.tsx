@@ -25,13 +25,13 @@ export const JsonViewer: React.FC<JsonViewerProps> = ({ data, title, className =
     <div className={`space-y-2 ${className}`}>
       {title && (
         <div className="flex items-center justify-between">
-          <h4 className="text-sm font-medium text-slate-200">{title}</h4>
+          <h4 className="text-sm font-medium text-foreground">{title}</h4>
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setIsCollapsed(!isCollapsed)}
-              className="h-6 px-2 text-xs text-slate-400 hover:text-slate-200"
+              className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
             >
               {isCollapsed ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
               {isCollapsed ? 'Mostrar' : 'Ocultar'}
@@ -40,7 +40,7 @@ export const JsonViewer: React.FC<JsonViewerProps> = ({ data, title, className =
               variant="ghost"
               size="sm"
               onClick={copyToClipboard}
-              className="h-6 px-2 text-xs text-slate-400 hover:text-slate-200"
+              className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
             >
               <Copy className="h-3 w-3 mr-1" />
               Copiar

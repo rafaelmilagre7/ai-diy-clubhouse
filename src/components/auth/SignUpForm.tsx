@@ -250,7 +250,7 @@ const SignUpForm = ({ onBackToLogin }: SignUpFormProps) => {
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-gray-400 hover:text-gray-300"
+                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-muted-foreground hover:text-foreground"
                 onClick={() => setShowPassword(!showPassword)}
                 disabled={isLoading}
               >
@@ -317,7 +317,7 @@ const SignUpForm = ({ onBackToLogin }: SignUpFormProps) => {
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-gray-400 hover:text-gray-300"
+                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-muted-foreground hover:text-foreground"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 disabled={isLoading}
               >
@@ -360,7 +360,7 @@ const SignUpForm = ({ onBackToLogin }: SignUpFormProps) => {
             <Button 
               type="button" 
               variant="ghost"
-              className="w-full text-gray-300 hover:text-white"
+              className="w-full text-muted-foreground hover:text-foreground"
               onClick={onBackToLogin}
               disabled={isLoading}
             >

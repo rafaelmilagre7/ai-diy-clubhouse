@@ -372,14 +372,14 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
             Nome completo
           </Label>
           <div className="relative">
-            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/60" />
+            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               id="name"
               type="text"
               placeholder="Seu nome completo"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="pl-10 h-11 bg-slate-800/50 border-slate-600/50 text-white placeholder:text-white/50 rounded-lg backdrop-blur-sm focus:bg-slate-700/50 focus:border-emerald-500/50 transition-all"
+              className="pl-10 h-11 bg-surface-elevated/50 border-border/50 text-foreground placeholder:text-muted-foreground rounded-lg backdrop-blur-sm focus:bg-surface-elevated focus:border-emerald-500/50 transition-all"
             />
           </div>
         </div>
@@ -390,7 +390,7 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
             Email
           </Label>
           <div className="relative">
-            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/60" />
+            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               id="register-email"
               type="email"
@@ -398,7 +398,7 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={!!prefilledEmail}
-              className="pl-10 h-11 bg-slate-800/50 border-slate-600/50 text-white placeholder:text-white/50 rounded-lg backdrop-blur-sm focus:bg-slate-700/50 focus:border-emerald-500/50 transition-all disabled:opacity-60"
+              className="pl-10 h-11 bg-surface-elevated/50 border-border/50 text-foreground placeholder:text-muted-foreground rounded-lg backdrop-blur-sm focus:bg-surface-elevated focus:border-emerald-500/50 transition-all disabled:opacity-60"
             />
           </div>
         </div>
@@ -409,19 +409,19 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
             Senha
           </Label>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/60" />
+            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               id="register-password"
               type={showPassword ? "text" : "password"}
               placeholder="Crie uma senha forte"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="pl-10 pr-10 h-11 bg-slate-800/50 border-slate-600/50 text-white placeholder:text-white/50 rounded-lg backdrop-blur-sm focus:bg-slate-700/50 focus:border-emerald-500/50 transition-all"
+              className="pl-10 pr-10 h-11 bg-surface-elevated/50 border-border/50 text-foreground placeholder:text-muted-foreground rounded-lg backdrop-blur-sm focus:bg-surface-elevated focus:border-emerald-500/50 transition-all"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/60 hover:text-white transition-colors"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
@@ -429,9 +429,9 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
 
           {/* Validação da senha - mais compacta */}
           {password && (
-            <div className="bg-slate-800/30 border border-slate-600/30 rounded-lg p-3 space-y-2 backdrop-blur-sm">
+            <div className="bg-card/30 border border-border/30 rounded-lg p-3 space-y-2 backdrop-blur-sm">
               <div className="flex items-center justify-between">
-                <p className="text-xs font-medium text-white/90">Força da senha:</p>
+                <p className="text-xs font-medium text-foreground/90">Força da senha:</p>
                 <div className={`px-2 py-1 rounded-full text-xs font-medium ${
                   passwordValidation.strength === 'weak' ? 'bg-red-500/20 text-red-300 border border-red-500/30' :
                   passwordValidation.strength === 'medium' ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30' :
@@ -488,7 +488,7 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
               placeholder="Digite a senha novamente"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="pl-10 pr-10 h-11 bg-slate-800/50 border-slate-600/50 text-white placeholder:text-white/50 rounded-lg backdrop-blur-sm focus:bg-slate-700/50 focus:border-emerald-500/50 transition-all"
+              className="pl-10 pr-10 h-11 bg-surface-elevated/50 border-border/50 text-foreground placeholder:text-muted-foreground rounded-lg backdrop-blur-sm focus:bg-surface-elevated focus:border-emerald-500/50 transition-all"
             />
             <button
               type="button"
@@ -530,12 +530,12 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
         </form>
 
         <div className="text-center">
-          <div className="bg-slate-800/30 border border-slate-600/30 rounded-lg p-4 space-y-2 backdrop-blur-sm">
+          <div className="bg-card/30 border border-border/30 rounded-lg p-4 space-y-2 backdrop-blur-sm">
             <div className="flex items-center justify-center gap-2 text-emerald-400">
               <CheckCircle className="h-4 w-4" />
               <p className="text-xs font-semibold">Segurança garantida</p>
             </div>
-            <p className="text-xs text-white/70 leading-relaxed">
+            <p className="text-xs text-muted-foreground leading-relaxed">
               Seus dados são protegidos com criptografia de nível bancário.
             </p>
           </div>

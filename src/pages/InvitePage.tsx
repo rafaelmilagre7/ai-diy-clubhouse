@@ -139,8 +139,8 @@ const InvitePage = () => {
               
               {/* Register Form */}
               <div className="order-1 lg:order-2 flex items-center justify-center">
-                <div className="w-full max-w-sm bg-slate-800/40 backdrop-blur-lg border border-slate-700/50 rounded-2xl p-6 shadow-2xl">
-                  <ModernRegisterForm 
+                <div className="w-full max-w-sm bg-card/40 backdrop-blur-lg border border-border/50 rounded-2xl p-6 shadow-2xl">
+                  <ModernRegisterForm
                     inviteToken={token}
                     prefilledEmail={validationResult.invite.email}
                     prefilledName={validationResult.invite.profile_data?.name}

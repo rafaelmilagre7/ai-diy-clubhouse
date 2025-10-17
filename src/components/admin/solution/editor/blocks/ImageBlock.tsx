@@ -117,7 +117,7 @@ const ImageBlock: React.FC<ImageBlockProps> = ({ data, onChange }) => {
       
       {data.url ? (
         <div className="mt-4 border rounded-md overflow-hidden">
-          <div className="max-h-[300px] overflow-hidden bg-slate-100 flex items-center justify-center">
+          <div className="max-h-[300px] overflow-hidden bg-muted flex items-center justify-center">
             <img 
               src={data.url} 
               alt={data.alt || 'Preview'} 
@@ -130,13 +130,13 @@ const ImageBlock: React.FC<ImageBlockProps> = ({ data, onChange }) => {
           </div>
           
           {data.caption && (
-            <div className="p-3 bg-slate-50 text-sm text-center text-slate-600">
+            <div className="p-3 bg-muted text-sm text-center text-muted-foreground">
               {data.caption}
             </div>
           )}
         </div>
       ) : (
-        <div className="mt-4 border rounded-md p-8 bg-slate-50 flex flex-col items-center justify-center text-slate-400">
+        <div className="mt-4 border rounded-md p-8 bg-muted flex flex-col items-center justify-center text-muted-foreground">
           <Image className="h-10 w-10 mb-2" />
           <p className="text-sm">Insira uma URL ou faça upload de uma imagem</p>
         </div>

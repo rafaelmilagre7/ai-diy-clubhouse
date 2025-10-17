@@ -36,8 +36,8 @@ export const RetroactiveCertificatesPanel = () => {
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="font-medium text-white">Meus Certificados</h4>
-              <p className="text-sm text-gray-400">
+              <h4 className="font-medium text-foreground">Meus Certificados</h4>
+              <p className="text-sm text-muted-foreground">
                 Gera certificados para todos os cursos e soluções que você completou
               </p>
             </div>
@@ -66,13 +66,13 @@ export const RetroactiveCertificatesPanel = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="flex items-center gap-2">
-                      <h4 className="font-medium text-white">Todos os Usuários</h4>
+                      <h4 className="font-medium text-foreground">Todos os Usuários</h4>
                       <Badge variant="outline" className="border-orange-500/50 text-orange-400">
                         <ShieldCheck className="h-3 w-3 mr-1" />
                         Admin
                       </Badge>
                     </div>
-                    <p className="text-sm text-gray-400">
+                    <p className="text-sm text-muted-foreground">
                       Gera certificados retroativos para todos os usuários elegíveis
                     </p>
                   </div>

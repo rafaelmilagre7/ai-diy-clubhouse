@@ -127,7 +127,7 @@ export const ResetPasswordForm = ({ onBackToLogin }: ResetPasswordFormProps) => 
             type="button"
             variant="outline"
             onClick={onBackToLogin ? onBackToLogin : () => navigate("/login")}
-            className="w-full text-white bg-gray-700 hover:bg-gray-600 border-gray-600"
+            className="w-full text-foreground bg-muted hover:bg-muted/80 border-border"
           >
             Voltar para login
           </Button>

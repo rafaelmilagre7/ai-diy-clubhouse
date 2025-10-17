@@ -126,13 +126,13 @@ export const CertificateModal = ({ certificate, isOpen, onClose }: CertificateMo
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-6xl max-h-[95vh] overflow-y-auto bg-background border-border">
         <DialogHeader className="flex flex-row items-center justify-between">
-          <DialogTitle className="text-white">Preview do Certificado</DialogTitle>
+          <DialogTitle className="text-foreground">Preview do Certificado</DialogTitle>
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="sm"
               onClick={handleRefreshTemplate}
-              className="text-gray-400 hover:text-white"
+              className="text-muted-foreground hover:text-foreground"
             >
               <RefreshCw className="h-4 w-4" />
             </Button>

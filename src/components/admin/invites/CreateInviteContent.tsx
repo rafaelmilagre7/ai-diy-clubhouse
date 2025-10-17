@@ -119,15 +119,15 @@ const CreateInviteContent = memo<CreateInviteContentProps>(({ roles, onInviteCre
   return (
     <form onSubmit={handleSubmit}>
       <DialogHeader className="pb-3">
-        <DialogTitle className="text-white">Criar Convite</DialogTitle>
-        <DialogDescription className="text-sm text-gray-300">
+        <DialogTitle className="text-foreground">Criar Convite</DialogTitle>
+        <DialogDescription className="text-sm text-muted-foreground">
           Convide um novo usuário via email e/ou WhatsApp.
         </DialogDescription>
       </DialogHeader>
       
       <div className="space-y-3 py-2">
         <div className="space-y-1.5">
-          <Label htmlFor="email" className="text-sm text-white">Email *</Label>
+          <Label htmlFor="email" className="text-sm text-foreground">Email *</Label>
           <Input
             id="email"
             type="email"
@@ -135,39 +135,39 @@ const CreateInviteContent = memo<CreateInviteContentProps>(({ roles, onInviteCre
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="h-9 bg-gray-800 border-gray-700 text-white placeholder:text-gray-400"
+            className="h-9 bg-surface-elevated border-border text-foreground placeholder:text-muted-foreground"
           />
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="phone" className="text-sm text-white">
+          <Label htmlFor="phone" className="text-sm text-foreground">
             Telefone {(channelPreference === 'whatsapp' || channelPreference === 'both') && '*'}
           </Label>
           <PhoneInput
             defaultCountry="br"
             value={phone}
             onChange={handlePhoneChange}
-            inputClassName="h-9 bg-gray-800 border-gray-700 text-white placeholder:text-gray-400 flex-1"
+            inputClassName="h-9 bg-surface-elevated border-border text-foreground placeholder:text-muted-foreground flex-1"
             countrySelectorStyleProps={{
-              className: "h-9 bg-gray-800 border-gray-700"
+              className: "h-9 bg-surface-elevated border-border"
             }}
             className="phone-input-container"
             preferredCountries={['br', 'us', 'ar', 'cl', 'co', 'mx']}
           />
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-muted-foreground">
             Selecione o país e digite o número (necessário para WhatsApp)
           </p>
         </div>
         
         <div className="space-y-1.5">
-          <Label htmlFor="role" className="text-sm text-white">Papel *</Label>
+          <Label htmlFor="role" className="text-sm text-foreground">Papel *</Label>
           <Select value={roleId} onValueChange={setRoleId} required>
-            <SelectTrigger className="h-9 bg-gray-800 border-gray-700 text-white">
-              <SelectValue placeholder="Selecione o papel" className="text-gray-400" />
+            <SelectTrigger className="h-9 bg-surface-elevated border-border text-foreground">
+              <SelectValue placeholder="Selecione o papel" className="text-muted-foreground" />
             </SelectTrigger>
-            <SelectContent className="bg-gray-800 border-gray-700">
+            <SelectContent className="bg-surface-elevated border-border">
               {roles.map((role) => (
-                <SelectItem key={role.id} value={role.id} className="text-white hover:bg-gray-700">
+                <SelectItem key={role.id} value={role.id} className="text-foreground hover:bg-muted">
                   {role.name}
                 </SelectItem>
               ))}
@@ -176,7 +176,7 @@ const CreateInviteContent = memo<CreateInviteContentProps>(({ roles, onInviteCre
         </div>
 
         <div className="space-y-2">
-          <Label className="text-sm text-white">Canal de Envio *</Label>
+          <Label className="text-sm text-foreground">Canal de Envio *</Label>
           <RadioGroup 
             value={channelPreference} 
             onValueChange={(value: 'email' | 'whatsapp' | 'both') => setChannelPreference(value)}
@@ -187,17 +187,17 @@ const CreateInviteContent = memo<CreateInviteContentProps>(({ roles, onInviteCre
             {(['email', 'whatsapp', 'both'] as const).map((channel) => (
               <div 
                 key={channel} 
-                className="flex items-center space-x-2 border border-gray-700 rounded-md p-2 hover:bg-gray-800/50 transition-colors focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 focus-within:ring-offset-gray-900"
+                className="flex items-center space-x-2 border border-border rounded-md p-2 hover:bg-muted/50 transition-colors focus-within:ring-2 focus-within:ring-operational focus-within:ring-offset-2 focus-within:ring-offset-background"
                 data-testid={`channel-option-${channel}`}
               >
                 <RadioGroupItem 
                   value={channel} 
                   id={`channel-${channel}`} 
-                  className="border-gray-700 text-white"
+                  className="border-border text-foreground"
                 />
                 <Label 
                   htmlFor={`channel-${channel}`} 
-                  className="flex items-center gap-2 cursor-pointer flex-1 text-sm text-white"
+                  className="flex items-center gap-2 cursor-pointer flex-1 text-sm text-foreground"
                 >
                   {getChannelIcon(channel)}
                   <div>

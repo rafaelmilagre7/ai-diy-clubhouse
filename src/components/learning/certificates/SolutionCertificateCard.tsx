@@ -125,17 +125,17 @@ export const SolutionCertificateCard = ({
         
         <CardContent className="space-y-4">
           {solution?.description && (
-            <p className="text-sm text-gray-400 line-clamp-2">
+            <p className="text-sm text-muted-foreground line-clamp-2">
               {solution.description}
             </p>
           )}
           
           <div className="space-y-2">
-            <div className="flex items-center gap-2 text-sm text-gray-300">
+            <div className="flex items-center gap-2 text-sm text-foreground">
               <Calendar className={`h-4 w-4 ${categoryConfig.iconColor}`} />
               <span>Implementado em {implementationDate}</span>
             </div>
-            <div className="text-xs text-gray-500">
+            <div className="text-xs text-muted-foreground">
               Certificado emitido em {issuedDate}
             </div>
           </div>
@@ -168,7 +168,7 @@ export const SolutionCertificateCard = ({
           <Button
             onClick={handleDownload}
             variant="outline"
-            className="border-neutral-600 text-gray-300 hover:bg-neutral-800"
+            className="border-border text-foreground hover:bg-muted"
             title="Baixar PDF"
           >
             <Download className="h-4 w-4" />
@@ -177,7 +177,7 @@ export const SolutionCertificateCard = ({
           <Button
             onClick={handlePreview}
             variant="outline"
-            className="border-neutral-600 text-gray-300 hover:bg-neutral-800"
+            className="border-border text-foreground hover:bg-muted"
             title="Visualizar"
           >
             <Eye className="h-4 w-4" />

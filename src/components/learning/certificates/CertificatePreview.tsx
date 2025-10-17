@@ -125,7 +125,7 @@ export const CertificatePreview = ({ certificate, onDownload }: CertificatePrevi
                 </div>
               </div>
               
-              <p className="text-xs text-gray-400 mt-4">
+              <p className="text-xs text-muted-foreground mt-4">
                 Verifique a autenticidade deste certificado em: viverdeia.ai/validar/{validationCode}
               </p>
             </div>

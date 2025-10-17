@@ -47,12 +47,12 @@ const InviteWelcomeSection: React.FC<InviteWelcomeSectionProps> = ({ inviteData 
         </div>
 
         {/* Invite Card */}
-        <div className="bg-slate-800/50 backdrop-blur-md border border-slate-700/50 rounded-xl p-4 max-w-sm mx-auto shadow-xl">
+        <div className="bg-card/50 backdrop-blur-md border border-border/50 rounded-xl p-4 max-w-sm mx-auto shadow-xl">
           <div className="flex items-center justify-center gap-2 mb-3">
             <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse shadow-lg shadow-emerald-400/50"></div>
-            <p className="text-xs font-semibold text-white/90">Acesso liberado para:</p>
+            <p className="text-xs font-semibold text-foreground/90">Acesso liberado para:</p>
           </div>
-          <p className="font-bold text-base text-white mb-3">{inviteData.email}</p>
+          <p className="font-bold text-base text-foreground mb-3">{inviteData.email}</p>
           {inviteData.role && (
             <div className="inline-flex px-3 py-1 bg-emerald-500/20 border border-emerald-500/30 rounded-full">
               <p className="text-xs font-medium text-emerald-400">

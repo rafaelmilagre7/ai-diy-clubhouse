@@ -63,7 +63,7 @@ export const SolutionCertificateEligibility = ({
       <Alert className="bg-aurora-primary/10 border-aurora-primary/20">
         <Award className="h-4 w-4 text-aurora-primary" />
         <AlertTitle className="text-aurora-primary">Parabéns!</AlertTitle>
-        <AlertDescription className="text-gray-300">
+        <AlertDescription className="text-muted-foreground">
           Você já possui o certificado de implementação desta solução.
         </AlertDescription>
       </Alert>
@@ -86,10 +86,10 @@ export const SolutionCertificateEligibility = ({
       <div className="space-y-4 p-4 border rounded-lg bg-card border-aurora-primary/20">
         <div className="flex items-center gap-2">
           <CheckCircle2 className="h-5 w-5 text-green-500" />
-          <h3 className="text-lg font-semibold text-white">Elegível para Certificado</h3>
+          <h3 className="text-lg font-semibold text-foreground">Elegível para Certificado</h3>
         </div>
         
-        <p className="text-gray-300">
+        <p className="text-muted-foreground">
           Parabéns! Você completou com sucesso a implementação desta solução e está elegível para receber seu certificado.
         </p>
         

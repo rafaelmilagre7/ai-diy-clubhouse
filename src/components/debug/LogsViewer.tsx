@@ -60,7 +60,7 @@ export const LogsViewer: React.FC<LogsViewerProps> = ({ logs, onClear, className
       case 'success': return 'text-emerald-400';
       case 'error': return 'text-red-400';
       case 'warning': return 'text-amber-400';
-      default: return 'text-slate-300';
+      default: return 'text-muted-foreground';
     }
   };
   

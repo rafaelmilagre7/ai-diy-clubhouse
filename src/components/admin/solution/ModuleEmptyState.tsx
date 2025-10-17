@@ -47,9 +47,9 @@ const ModuleEmptyState: React.FC<ModuleEmptyStateProps> = ({
         </Button>
       </div>
 
-      <Alert variant="default" className="border-blue-200 max-w-xl bg-slate-800">
-        <AlertCircle className="h-4 w-4 text-blue-500" />
-        <AlertTitle className="text-slate-50">Dica</AlertTitle>
+      <Alert variant="default" className="border-operational/20 bg-card">
+        <AlertCircle className="h-4 w-4 text-operational" />
+        <AlertTitle className="text-foreground">Dica</AlertTitle>
         <AlertDescription className="text-sm text-left">
           Recomendamos seguir o fluxo de módulos padrão para garantir uma
           experiência completa para seus membros. Comece com a Landing e termine
