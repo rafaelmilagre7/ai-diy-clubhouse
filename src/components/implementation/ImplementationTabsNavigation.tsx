@@ -50,7 +50,7 @@ export const ImplementationTabsNavigation = ({
               "data-[state=active]:border data-[state=active]:border-aurora-primary/40",
               "data-[state=active]:text-white data-[state=active]:font-semibold",
               "data-[state=active]:shadow-lg data-[state=active]:shadow-aurora-primary/15",
-              "data-[state=inactive]:text-neutral-400 data-[state=inactive]:hover:text-neutral-200 data-[state=inactive]:hover:bg-white/8",
+              "data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground data-[state=inactive]:hover:bg-white/8",
               "group backdrop-blur-sm"
             )}
             onClick={() => setActiveTab(tab.id)}
@@ -58,7 +58,7 @@ export const ImplementationTabsNavigation = ({
             {/* Icon with enhanced glow effect when active */}
             <div className={cn(
               "transition-all duration-300 relative",
-              activeTab === tab.id ? "text-aurora-primary-light [filter:drop-shadow(var(--shadow-glow-tab))]" : "text-neutral-400 group-hover:text-neutral-300"
+              activeTab === tab.id ? "text-aurora-primary-light [filter:drop-shadow(var(--shadow-glow-tab))]" : "text-muted-foreground group-hover:text-foreground"
             )}>
               {tab.icon}
               {/* Icon glow effect */}
@@ -72,7 +72,7 @@ export const ImplementationTabsNavigation = ({
             {/* Label with better typography */}
             <span className={cn(
               "text-xs font-medium leading-none transition-all duration-300",
-              activeTab === tab.id ? "text-white" : "text-neutral-400 group-hover:text-neutral-300"
+              activeTab === tab.id ? "text-white" : "text-muted-foreground group-hover:text-foreground"
             )}>
               {tab.label}
             </span>

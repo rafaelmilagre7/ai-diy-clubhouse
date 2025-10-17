@@ -300,7 +300,7 @@ export const EnhancedAutomationWizard = () => {
               <Button 
                 type="submit" 
                 disabled={loading}
-                className="bg-gradient-to-r from-green-600 to-green-500"
+                className="bg-gradient-to-r from-system-healthy to-system-healthy/90"
               >
                 <Save className="mr-2 h-4 w-4" />
                 {loading ? 'Salvando...' : (isEditing ? 'Atualizar' : 'Criar Automação')}

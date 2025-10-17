@@ -145,7 +145,7 @@ export const SupabaseErrorDiagnostics: React.FC = () => {
               <h4 className="font-medium mb-3">Problemas Detectados:</h4>
               <div className="space-y-2">
                 {healthStatus.issues.map((issue, index) => (
-                  <Alert key={index} className="border-red-200">
+                  <Alert key={index} className="border-status-error/20">
                     <AlertTriangle className="h-4 w-4" />
                     <AlertDescription>{issue}</AlertDescription>
                   </Alert>

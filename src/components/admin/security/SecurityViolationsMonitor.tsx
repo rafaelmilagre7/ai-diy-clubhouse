@@ -226,9 +226,9 @@ export const SecurityViolationsMonitor: React.FC = () => {
       {/* Critical Alerts */}
       {stats.critical > 0 && (
         <div className="aurora-glass rounded-2xl border border-destructive/30 backdrop-blur-md overflow-hidden animate-fade-in">
-          <div className="bg-gradient-to-r from-destructive/15 via-red-500/10 to-transparent p-6 border-b border-destructive/20">
+          <div className="bg-gradient-to-r from-status-error/15 via-status-error/10 to-transparent p-6 border-b border-status-error/20">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-destructive/25 to-red-500/15 aurora-glass">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-status-error/25 to-status-error/15 aurora-glass">
                 <AlertTriangle className="h-6 w-6 text-destructive aurora-pulse" />
               </div>
               <div>

@@ -47,7 +47,7 @@ export const ModuloHeader: React.FC<ModuloHeaderProps> = ({
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-black/20" />
           </div>
         ) : (
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-slate-700" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background to-surface-base" />
         )}
         
         <div className="absolute bottom-0 left-0 right-0 p-6 text-white">

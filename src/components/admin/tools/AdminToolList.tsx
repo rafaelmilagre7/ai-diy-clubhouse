@@ -385,7 +385,7 @@ export const AdminToolList = ({ refreshTrigger }: AdminToolListProps) => {
                       )}
                     </div>
                     {tool.has_member_benefit && (
-                      <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                      <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-strategy to-accent rounded-full flex items-center justify-center">
                         <Gift className="w-3 h-3 text-white" />
                       </div>
                     )}

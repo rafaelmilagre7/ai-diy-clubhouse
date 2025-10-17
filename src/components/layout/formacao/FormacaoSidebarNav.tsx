@@ -92,7 +92,7 @@ export const FormacaoSidebarNav = ({ sidebarOpen }: FormacaoSidebarNavProps) => 
                   item.isActive 
                     ? "text-accent-foreground" 
                     : "text-muted-foreground hover:text-foreground",
-                  item.isBackLink && "text-neutral-400 hover:text-neutral-200 border-b border-white/10 mb-2"
+                  item.isBackLink && "text-muted-foreground hover:text-foreground border-b border-border mb-2"
                 )}
               >
                 <item.icon className={cn("h-4 w-4", !sidebarOpen && "mx-auto")} />
@@ -101,7 +101,7 @@ export const FormacaoSidebarNav = ({ sidebarOpen }: FormacaoSidebarNavProps) => 
             </div>
             {/* Separador após o link de retorno */}
             {item.isBackLink && index === 0 && (
-              <div className="my-2 border-b border-white/10" />
+              <div className="my-2 border-b-2 border-border" />
             )}
           </div>
         ))}

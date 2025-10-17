@@ -84,7 +84,7 @@ const AuthLayout = () => {
   // Não mostrar formulário se usuário já está logado
   if (user && profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-operational/20 to-surface-base">
         <div className="flex flex-col items-center space-y-4">
           <Loader2 className="h-8 w-8 animate-spin text-white" />
           <p className="text-white/80">Redirecionando...</p>
@@ -94,7 +94,7 @@ const AuthLayout = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-black">
+    <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden bg-gradient-to-br from-background via-surface-base to-background">
       {/* Fundo tecnológico sofisticado */}
       <div className="absolute inset-0 w-full h-full">
         {/* Grid pattern */}

@@ -14,7 +14,7 @@ const InviteWelcomeSection: React.FC<InviteWelcomeSectionProps> = ({ inviteData 
   return (
     <div className="relative flex flex-col justify-center space-y-4 h-full">
       {/* Background Elements */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 -z-10" />
+      <div className="absolute inset-0 bg-gradient-to-br from-background via-surface-base to-background -z-10" />
       <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-operational/10 rounded-full blur-3xl -z-10 animate-pulse" />
       <div className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-operational/5 rounded-full blur-2xl -z-10 animate-pulse animation-delay-2000" />
 

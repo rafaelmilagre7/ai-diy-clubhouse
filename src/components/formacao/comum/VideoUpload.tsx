@@ -188,9 +188,9 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
           <div className="flex justify-between items-center">
             <div className="flex items-center">
               {videoType === "youtube" ? (
-                <Youtube className="h-5 w-5 text-red-600 mr-2" />
+                <Youtube className="h-5 w-5 text-status-error mr-2" />
               ) : (
-                <Video className="h-5 w-5 text-blue-600 mr-2" />
+                <Video className="h-5 w-5 text-operational mr-2" />
               )}
               <span className="text-sm font-medium">
                 {videoType === "youtube" ? "Vídeo do YouTube" : "Vídeo Enviado"}

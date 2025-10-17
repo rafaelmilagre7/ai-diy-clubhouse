@@ -105,7 +105,7 @@ export const MigrateImagesButton = () => {
                 <li>Fazer upload para o Supabase Storage</li>
                 <li>Atualizar as URLs no banco de dados</li>
               </ul>
-              <p className="text-amber-600 font-medium">
+              <p className="text-status-warning font-medium">
                 ⚠️ Esta operação pode levar alguns minutos dependendo da quantidade de imagens.
               </p>
             </AlertDialogDescription>

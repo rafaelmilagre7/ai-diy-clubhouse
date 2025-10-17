@@ -52,21 +52,21 @@ export const PandaVideoEmbed: React.FC<PandaVideoEmbedProps> = ({
   
   return (
     <div className="space-y-2">
-      {label && <Label className="text-neutral-800 dark:text-white font-medium">{label}</Label>}
+      {label && <Label className="text-foreground font-medium">{label}</Label>}
       <Textarea
         placeholder="Cole aqui o código iframe do Panda Video"
         value={value}
         onChange={(e) => handleChange(e.target.value)}
-        className="font-mono text-xs h-32 resize-none text-neutral-800 dark:text-white"
+        className="font-mono text-xs h-32 resize-none text-foreground"
       />
       {description && (
-        <p className="text-sm text-neutral-600 dark:text-neutral-300">{description}</p>
+        <p className="text-sm text-muted-foreground">{description}</p>
       )}
       {error && (
         <p className="text-sm text-destructive">{error}</p>
       )}
       {value && !error && (
-        <div className="text-sm text-green-600 dark:text-green-400">
+        <div className="text-sm text-system-healthy">
           Código de incorporação válido
         </div>
       )}

@@ -104,7 +104,7 @@ export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
           <h3 className="text-lg font-semibold bg-gradient-to-r from-white via-aurora-primary-light to-aurora-primary bg-clip-text text-transparent">
             Ferramentas Necessárias
           </h3>
-          <p className="text-neutral-300 mt-1 text-sm">
+          <p className="text-muted-foreground mt-1 text-sm">
             Para implementar esta solução, você precisará das seguintes ferramentas:
           </p>
         </div>

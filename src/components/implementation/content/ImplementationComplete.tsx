@@ -76,7 +76,7 @@ export const ImplementationComplete = ({ module, onComplete, onPrevious }: Imple
           <h2 className="text-3xl font-bold bg-gradient-to-r from-white via-aurora-primary-light to-aurora-primary bg-clip-text text-transparent">
             Módulo Concluído!
           </h2>
-          <p className="text-lg text-neutral-300 max-w-md mx-auto leading-relaxed">
+          <p className="text-lg text-muted-foreground max-w-md mx-auto leading-relaxed">
             Parabéns! Você completou este módulo com sucesso. 
             {currentProgress < 100 ? " Continue para o próximo passo da sua jornada." : " Você concluiu toda a implementação!"}
           </p>
@@ -91,10 +91,10 @@ export const ImplementationComplete = ({ module, onComplete, onPrevious }: Imple
             className="space-y-3"
           >
             <div className="flex items-center justify-between text-sm">
-              <span className="text-neutral-400">Progresso Total</span>
+              <span className="text-muted-foreground">Progresso Total</span>
               <span className="text-aurora-primary-light font-medium">{Math.round(currentProgress)}%</span>
             </div>
-            <div className="w-full bg-neutral-700/50 rounded-full h-2 overflow-hidden">
+            <div className="w-full bg-muted/50 rounded-full h-2 overflow-hidden">
               <motion.div 
                 className="h-full bg-gradient-to-r from-aurora-primary to-aurora-primary-dark rounded-full shadow-lg shadow-aurora-primary/30"
                 initial={{ width: 0 }}
@@ -115,7 +115,7 @@ export const ImplementationComplete = ({ module, onComplete, onPrevious }: Imple
           <Button
             variant="outline"
             onClick={onPrevious}
-            className="text-neutral-300 border-neutral-600 hover:border-aurora-primary/50 hover:text-aurora-primary-light hover:bg-aurora-primary/10 transition-all duration-300"
+            className="text-muted-foreground border-border hover:border-aurora-primary/50 hover:text-aurora-primary-light hover:bg-aurora-primary/10 transition-all duration-300"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Módulo Anterior

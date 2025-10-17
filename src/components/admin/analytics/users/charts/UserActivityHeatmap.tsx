@@ -91,7 +91,7 @@ export const UserActivityHeatmap = ({ data, loading }: UserActivityHeatmapProps)
                     return (
                       <div
                         key={`${day}-${hour}`}
-                        className={`w-3 h-3 rounded-sm ${getIntensityColor(activity)} cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all`}
+                        className={`w-3 h-3 rounded-sm ${getIntensityColor(activity)} cursor-pointer hover:ring-2 hover:ring-operational transition-all`}
                         title={`${day} ${hour}:00 - ${getIntensityText(activity)}: ${Math.round(activity)}% atividade`}
                       />
                     );

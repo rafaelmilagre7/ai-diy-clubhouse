@@ -137,7 +137,7 @@ export const LogsViewer: React.FC<LogsViewerProps> = ({ logs, onClear, className
                   variant="outline" 
                   size="sm"
                   onClick={onClear}
-                  className="h-7 px-2 text-xs hover:bg-red-600 hover:text-white"
+                  className="h-7 px-2 text-xs hover:bg-destructive hover:text-destructive-foreground"
                 >
                   <Trash2 className="h-3 w-3 mr-1" />
                   Limpar
