@@ -3,7 +3,7 @@ import React from 'react';
 export const LessonLoadingSkeleton = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/80 to-primary/5">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(120,119,198,0.3),transparent_50%)]" />
+      <div className="absolute inset-0" style={{ backgroundImage: 'var(--gradient-radial-purple)' }} />
       <div className="relative">
         <div className="container py-6 animate-fade-in">
           {/* Header Skeleton */}

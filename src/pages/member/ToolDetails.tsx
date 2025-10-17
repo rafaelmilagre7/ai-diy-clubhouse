@@ -92,7 +92,7 @@ const ToolDetails = () => {
             <div className="relative bg-white/5 backdrop-blur-sm border border-white/10 p-6 rounded-xl shadow-2xl">
               <div className="absolute inset-0 opacity-5 pointer-events-none rounded-xl">
                 <div className="absolute inset-0 rounded-xl" style={{
-                  backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.2) 1px, transparent 0)',
+                  backgroundImage: 'var(--pattern-dots-light)',
                   backgroundSize: '15px 15px'
                 }} />
               </div>

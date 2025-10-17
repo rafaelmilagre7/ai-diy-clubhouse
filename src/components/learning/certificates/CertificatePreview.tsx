@@ -52,11 +52,7 @@ export const CertificatePreview = ({ certificate, onDownload }: CertificatePrevi
             ref={certificateRef}
             className="relative bg-gradient-to-br from-white via-purple-50 to-blue-50 p-12 min-h-[600px] flex flex-col justify-center items-center text-center"
             style={{
-              backgroundImage: `
-                radial-gradient(circle at 20% 80%, rgba(120, 53, 235, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(37, 99, 235, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 40% 40%, rgba(168, 85, 247, 0.05) 0%, transparent 50%)
-              `
+              backgroundImage: 'var(--gradient-radial-cert)'
             }}
           >
             {/* Decorative Elements */}
