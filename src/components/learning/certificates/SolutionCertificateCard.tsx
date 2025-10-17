@@ -28,26 +28,26 @@ export const SolutionCertificateCard = ({
     switch (category) {
       case 'Receita':
         return {
-          color: 'from-green-500/20 via-emerald-400/15 to-teal-400/10',
-          badgeColor: 'bg-green-500/20 text-green-300 border-green-500/30',
-          iconColor: 'text-green-400',
-          buttonColor: 'from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600',
+          color: 'from-operational/20 via-operational/15 to-operational/10',
+          badgeColor: 'bg-operational/20 text-operational border-operational/30',
+          iconColor: 'text-operational',
+          buttonColor: 'from-operational to-operational/80 hover:from-operational/90 hover:to-operational/70',
           icon: TrendingUp
         };
       case 'Operacional':
         return {
-          color: 'from-blue-500/20 via-cyan-400/15 to-sky-400/10',
-          badgeColor: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
-          iconColor: 'text-blue-400',
-          buttonColor: 'from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600',
+          color: 'from-operational/20 via-operational/15 to-operational/10',
+          badgeColor: 'bg-operational/20 text-operational border-operational/30',
+          iconColor: 'text-operational',
+          buttonColor: 'from-operational to-operational/80 hover:from-operational/90 hover:to-operational/70',
           icon: Target
         };
       case 'Estratégia':
         return {
-          color: 'from-purple-500/20 via-violet-400/15 to-indigo-400/10',
-          badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
-          iconColor: 'text-purple-400',
-          buttonColor: 'from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600',
+          color: 'from-strategy/20 via-strategy/15 to-strategy/10',
+          badgeColor: 'bg-strategy/20 text-strategy border-strategy/30',
+          iconColor: 'text-strategy',
+          buttonColor: 'from-strategy to-strategy/80 hover:from-strategy/90 hover:to-strategy/70',
           icon: Zap
         };
       default:

@@ -124,11 +124,11 @@ export const FormacaoHealthCheck = () => {
   const getStatusBadge = () => {
     switch (healthStatus.apiStatus) {
       case 'healthy':
-        return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Sistema OK</Badge>;
+        return <Badge className="bg-operational/20 text-operational hover:bg-operational/20">Sistema OK</Badge>;
       case 'degraded':
-        return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">Lentidão</Badge>;
+        return <Badge className="bg-status-warning/20 text-status-warning hover:bg-status-warning/20">Lentidão</Badge>;
       case 'down':
-        return <Badge className="bg-red-100 text-red-800 hover:bg-red-100">Indisponível</Badge>;
+        return <Badge className="bg-status-error/20 text-status-error hover:bg-status-error/20">Indisponível</Badge>;
     }
   };
 

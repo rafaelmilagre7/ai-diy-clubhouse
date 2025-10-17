@@ -81,7 +81,7 @@ export const CourseCard: React.FC<CourseCardProps> = ({
           </Button>
           
           {isCompleted && (
-            <div className="absolute top-2 left-2 bg-green-500 text-white rounded-full p-1">
+            <div className="absolute top-2 left-2 bg-operational text-white rounded-full p-1">
               <CheckCircle className="h-5 w-5" />
             </div>
           )}
@@ -101,7 +101,7 @@ export const CourseCard: React.FC<CourseCardProps> = ({
                   <Progress 
                     value={progress} 
                     className="h-1 bg-white/30" 
-                    indicatorClassName={isCompleted ? "bg-green-500" : "bg-primary"}
+                    indicatorClassName={isCompleted ? "bg-operational" : "bg-primary"}
                   />
                   <div className="flex justify-between text-xs mt-1">
                     <span>{progress}% completo</span>

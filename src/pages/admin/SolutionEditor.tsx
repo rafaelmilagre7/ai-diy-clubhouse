@@ -78,11 +78,11 @@ const SolutionEditor = () => {
     const difficulty = currentValues.difficulty;
     switch (difficulty) {
       case "easy":
-        return "bg-green-500";
+        return "bg-operational";
       case "medium":
-        return "bg-orange-500";
+        return "bg-status-warning";
       case "advanced":
-        return "bg-red-500";
+        return "bg-status-error";
       default:
         return "bg-muted";
     }

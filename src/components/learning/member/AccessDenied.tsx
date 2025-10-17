@@ -18,8 +18,8 @@ export function AccessDenied({
   
   return (
     <div className="flex flex-col items-center justify-center p-10 text-center min-h-[60vh]">
-      <div className="bg-red-100 dark:bg-red-900/20 p-6 rounded-full mb-6">
-        <Lock className="h-16 w-16 text-red-500 dark:text-red-400" />
+      <div className="bg-status-error/20 p-6 rounded-full mb-6">
+        <Lock className="h-16 w-16 text-status-error" />
       </div>
       
       <h1 className="text-2xl font-bold mb-4">{title}</h1>
