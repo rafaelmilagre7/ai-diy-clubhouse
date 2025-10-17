@@ -21,7 +21,8 @@ import {
   Home,
   BookOpen,
   Webhook,
-  Network
+  Network,
+  Palette
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -126,6 +127,11 @@ const navigationItems = [
     title: "Diagnósticos",
     href: "/admin/diagnostics",
     icon: Stethoscope,
+  },
+  {
+    title: "Design System",
+    href: "/admin/style-guide",
+    icon: Palette,
   },
 ];
 
