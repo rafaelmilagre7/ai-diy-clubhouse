@@ -5,8 +5,8 @@
 }
 
 .phone-input-container .react-international-phone-country-selector-button {
-  background: rgb(31, 41, 55) !important;
-  border: 1px solid rgb(75, 85, 99) !important;
+  background: hsl(var(--input-dark-bg)) !important;
+  border: 1px solid hsl(var(--input-dark-border)) !important;
   color: white !important;
   border-radius: 0.375rem 0 0 0.375rem !important;
   height: 2.25rem !important;
@@ -14,7 +14,7 @@
 }
 
 .phone-input-container .react-international-phone-country-selector-button:hover {
-  background: rgb(55, 65, 81) !important;
+  background: hsl(var(--input-dark-hover)) !important;
 }
 
 .phone-input-container .react-international-phone-input {
@@ -23,28 +23,28 @@
 }
 
 .phone-input-container .react-international-phone-country-selector-dropdown {
-  background: rgb(31, 41, 55) !important;
-  border: 1px solid rgb(75, 85, 99) !important;
+  background: hsl(var(--input-dark-bg)) !important;
+  border: 1px solid hsl(var(--input-dark-border)) !important;
   color: white !important;
   z-index: 9999 !important;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+  box-shadow: 0 10px 15px -3px hsl(var(--glass-shadow-light) / 0.1), 0 4px 6px -2px hsl(var(--glass-shadow-light) / 0.05) !important;
 }
 
 .phone-input-container .react-international-phone-country-selector-dropdown__list {
-  background: rgb(31, 41, 55) !important;
+  background: hsl(var(--input-dark-bg)) !important;
   max-height: 200px !important;
   overflow-y: auto !important;
 }
 
 .phone-input-container .react-international-phone-country-selector-dropdown__list-item {
   color: white !important;
-  background: rgb(31, 41, 55) !important;
+  background: hsl(var(--input-dark-bg)) !important;
   padding: 8px 12px !important;
-  border-bottom: 1px solid rgb(55, 65, 81) !important;
+  border-bottom: 1px solid hsl(var(--input-dark-hover)) !important;
 }
 
 .phone-input-container .react-international-phone-country-selector-dropdown__list-item:hover {
-  background: rgb(55, 65, 81) !important;
+  background: hsl(var(--input-dark-hover)) !important;
   color: white !important;
 }
 
@@ -57,5 +57,5 @@
 }
 
 .phone-input-container .react-international-phone-country-selector-dropdown__list-item .react-international-phone-country-selector-dropdown__list-item-dial-code {
-  color: rgb(156, 163, 175) !important;
+  color: hsl(var(--input-dark-text-muted)) !important;
 }

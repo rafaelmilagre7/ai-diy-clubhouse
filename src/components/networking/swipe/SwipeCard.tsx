@@ -190,7 +190,7 @@ export const SwipeCard = ({
                 <Button
                   onClick={handleLinkedInClick}
                   size="lg"
-                  className="relative overflow-hidden group bg-[hsl(var(--social-linkedin-alt))] hover:bg-[hsl(var(--social-linkedin-alt-hover))] text-white border-0 shadow-lg shadow-[hsl(var(--social-linkedin-alt))]/30 hover:shadow-xl hover:shadow-[hsl(var(--social-linkedin-alt))]/40 transition-all duration-300 font-bold hover:scale-[1.02] px-6"
+                  className="relative overflow-hidden group bg-social-linkedin-alt hover:bg-social-linkedin-alt text-white border-0 shadow-lg shadow-social-linkedin-alt/30 hover:shadow-xl hover:shadow-social-linkedin-alt/40 transition-all duration-300 font-bold hover:scale-[1.02] px-6"
                   title="Ver perfil no LinkedIn"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />

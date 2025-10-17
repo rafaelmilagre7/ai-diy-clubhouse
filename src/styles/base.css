@@ -1,387 +1,47 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
+/**
+ * BASE CSS - Variáveis de Design System
+ * Cores base em HSL para suporte a dark mode e acessibilidade
+ */
 
 :root {
-  /* --- Design System Colors (HSL) - Dark Theme Aprimorado --- */
-  --background: 216 28% 7%;
-  --foreground: 0 0% 98%;
+  /* ========================================
+     GLASS SYSTEM COLORS
+     ======================================== */
+  --glass-white-base: 0 0% 100%;
+  --glass-shadow-primary: 223 26% 33%;        /* rgba(31, 38, 135) */
+  --glass-shadow-light: 0 0% 0%;              /* rgba(0, 0, 0) */
   
-  /* Sistema de Elevação Progressiva */
-  --surface-base: 216 28% 7%;
-  --surface-elevated: 217 32% 10%;
-  --surface-overlay: 217 32% 13%;
-  --surface-modal: 217 32% 16%;
+  /* ========================================
+     STATUS COLORS
+     ======================================== */
+  --status-success: 142 76% 68%;              /* rgb(74, 222, 128) */
+  --status-warning: 38 92% 50%;               /* rgb(251, 191, 36) */
   
-  /* Cards com melhor contraste */
-  --card: 217 32% 10%;
-  --card-foreground: 0 0% 98%;
-  --popover: 217 32% 13%;
-  --popover-foreground: 0 0% 98%;
+  /* ========================================
+     DARK MODE INPUTS (Phone Input)
+     ======================================== */
+  --input-dark-bg: 218 19% 19%;               /* rgb(31, 41, 55) */
+  --input-dark-border: 218 11% 47%;           /* rgb(75, 85, 99) */
+  --input-dark-hover: 217 18% 31%;            /* rgb(55, 65, 81) */
+  --input-dark-text-muted: 218 11% 65%;       /* rgb(156, 163, 175) */
   
-  /* Cores primárias mantidas */
-  --primary: 173 100% 46%;
-  --primary-foreground: 240 10% 3.9%;
+  /* ========================================
+     SCROLLBAR COLORS
+     ======================================== */
+  --scrollbar-track: 0 0% 100%;               /* Transparente com fallback */
+  --scrollbar-thumb: 177 70% 41%;             /* Aurora primary */
   
-  /* Secundárias com melhor contraste */
-  --secondary: 217 32% 13%;
-  --secondary-foreground: 0 0% 98%;
+  /* ========================================
+     SHIMMER & ANIMATIONS
+     ======================================== */
+  --shimmer-start: 0 0% 100%;                 /* White */
+  --shimmer-middle: 0 0% 100%;                /* White */
   
-  /* Muted com contraste otimizado */
-  --muted: 217 32% 13%;
-  --muted-foreground: 0 0% 75%;
-  
-  /* Accent melhorado */
-  --accent: 217 32% 15%;
-  --accent-foreground: 0 0% 98%;
-  
-  /* Cores de estado */
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 0 0% 98%;
-  --warning: 43 96% 56%;
-  --warning-foreground: 0 0% 0%;
-  
-  /* Bordas e inputs com melhor visibilidade */
-  --border: 217 32% 22%; /* WCAG AA: Aumentado para 3.2:1 contrast */
-  --input: 217 32% 13%;
-  --ring: 173 100% 46%;
-  --radius: 0.5rem;
-
-  /* --- Hierarquia de Texto Aprimorada --- */
-  --text-primary: 0 0% 98%;
-  --text-secondary: 0 0% 85%;
-  --text-muted: 0 0% 75%; /* WCAG AA: Aumentado para 4.8:1 contrast */
-  --text-disabled: 0 0% 50%;
-
-  /* --- Sistema de Sombras Aurora --- */
-  --shadow-sm: 0 2px 4px hsl(216 28% 4% / 0.1);
-  --shadow-md: 0 4px 12px hsl(216 28% 4% / 0.15);
-  --shadow-lg: 0 8px 24px hsl(216 28% 4% / 0.2);
-  --shadow-xl: 0 12px 32px hsl(216 28% 4% / 0.25);
-  --shadow-aurora: 0 0 20px hsl(var(--primary) / 0.1);
-  --shadow-aurora-strong: 0 0 30px hsl(var(--primary) / 0.2);
-  
-  /* --- Sombras para GlowButton --- */
-  --shadow-glow-networking: 0 0 30px hsl(262 83% 58% / 0.6);
-  --shadow-glow-secondary: 0 0 30px hsl(0 0% 100% / 0.3);
-  --shadow-glow-knowledge: 0 0 30px hsl(142 76% 36% / 0.6);
-  --shadow-glow-commercial: 0 0 30px hsl(330 81% 60% / 0.6);
-
-  /* --- Custom Design Tokens - Viver de IA Brand Colors --- */
-  /* Ciano vibrante - cor principal (#00FFFF) */
-  --viverblue: 180 100% 50%;
-  --viverblue-light: 180 100% 65%;
-  --viverblue-lighter: 180 100% 80%;
-  --viverblue-dark: 180 100% 40%;
-  --viverblue-darker: 180 100% 30%;
-  
-  /* --- Brand Social Colors --- */
-  --brand-whatsapp: 142 70% 49%;    /* #25D366 */
-  --brand-linkedin: 201 100% 35%;   /* #0077B5 */
-  --brand-linkedin-dark: 201 100% 26%; /* #005885 */
-  
-  /* --- Engagement & Analytics Colors --- */
-  --engagement-high: 142 76% 36%;   /* Verde - alta taxa */
-  --engagement-medium: 43 96% 56%;  /* Amarelo - taxa média */
-  --engagement-low: 0 84% 60%;      /* Vermelho - taxa baixa */
-  --engagement-neutral: 220 9% 46%; /* Cinza - neutro */
-  
-  /* --- Gradientes Decorativos Liquid Glass --- */
-  --gradient-blob-purple: linear-gradient(135deg, hsl(248 53% 58%) 0%, hsl(282 44% 47%) 100%);
-  --gradient-blob-pink: linear-gradient(135deg, hsl(314 80% 74%) 0%, hsl(349 75% 61%) 100%);
-  --gradient-blob-cyan: linear-gradient(135deg, hsl(197 92% 61%) 0%, hsl(185 100% 50%) 100%);
-  --gradient-blob-green: linear-gradient(135deg, hsl(154 73% 59%) 0%, hsl(170 97% 60%) 100%);
-  
-  --gradient-glow-purple: linear-gradient(135deg, hsl(248 53% 58% / 0.6) 0%, hsl(282 44% 47% / 0.6) 50%, hsl(248 53% 58% / 0.6) 100%);
-  --gradient-glow-blue: linear-gradient(135deg, hsl(197 92% 61% / 0.8) 0%, hsl(185 100% 50% / 0.8) 100%);
-  --gradient-glow-green: linear-gradient(135deg, hsl(154 73% 59% / 0.8) 0%, hsl(170 97% 60% / 0.8) 100%);
-  --gradient-glow-pink: linear-gradient(135deg, hsl(314 80% 74% / 0.8) 0%, hsl(349 75% 61% / 0.8) 100%);
-  
-  /* Azul turquesa (#0BC8D5) */
-  --vivercyan: 184 90% 44%;
-  --vivercyan-light: 184 90% 60%;
-  --vivercyan-lighter: 184 90% 75%;
-  --vivercyan-dark: 184 90% 34%;
-  --vivercyan-darker: 184 90% 24%;
-  
-  /* Azul petróleo (#076770) */
-  --viverpetrol: 185 88% 23%;
-  --viverpetrol-light: 185 88% 35%;
-  --viverpetrol-lighter: 185 88% 50%;
-  --viverpetrol-dark: 185 88% 18%;
-  --viverpetrol-darker: 185 88% 13%;
-  
-  /* Cor principal da marca (#0ABAB5) - usada em botões, CTAs e highlights */
-  --aurora-primary: 178 90% 38%;
-  --aurora-primary-light: 178 90% 50%;
-  --aurora-primary-dark: 178 90% 28%;
-  
-  /* --- Aliases de Compatibilidade (apontam para aurora-primary) --- */
-  --aurora: var(--aurora-primary);        /* → Turquesa principal #0ABAB5 */
-  --revenue: var(--aurora-primary);       /* → Turquesa */
-  --operational: var(--aurora-primary);   /* → Turquesa */
-  --strategy: var(--aurora-primary-dark); /* → Turquesa escuro */
-  
-  /* Variantes dos aliases */
-  --aurora-light: var(--aurora-primary-light);
-  --aurora-dark: var(--aurora-primary-dark);
-  --revenue-light: var(--aurora-primary-light);
-  --revenue-dark: var(--aurora-primary-dark);
-  --operational-light: var(--aurora-primary-light);
-  --operational-dark: var(--aurora-primary-dark);
-  --strategy-light: var(--aurora-primary-light);
-  --strategy-dark: var(--aurora-primary-dark);
-
-  /* --- Onboarding Specific --- */
-  --onboarding-bg: 216 28% 7%;
-  --onboarding-card: 217 32% 10%;
-  --onboarding-card-hover: 217 32% 13%;
-  --onboarding-text: 0 0% 98%;
-  --onboarding-text-muted: 0 0% 75%;
-  --onboarding-border: 217 32% 18%;
-  --onboarding-accent: 173 100% 46%;
-
-  /* --- Transições e Animações Aprimoradas --- */
-  --transition-base: all 0.2s ease-out;
-  --transition-slow: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-bounce: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  /* ========================================
+     GRADIENT COLORS
+     ======================================== */
+  --gradient-blob-purple: 248 53% 58%;        /* Aurora blobs */
+  --gradient-blob-pink: 314 80% 74%;
+  --gradient-blob-cyan: 197 92% 61%;
+  --gradient-blob-green: 154 73% 59%;
 }
-
-.light {
-  --background: 0 0% 100%;
-  --foreground: 240 10% 3.9%;
-  
-  /* Sistema de Elevação para Light Mode */
-  --surface-base: 0 0% 100%;
-  --surface-elevated: 0 0% 98%;
-  --surface-overlay: 0 0% 96%;
-  --surface-modal: 0 0% 94%;
-  
-  --card: 0 0% 98%;
-  --card-foreground: 240 10% 3.9%;
-  --popover: 0 0% 96%;
-  --popover-foreground: 240 10% 3.9%;
-  --primary: 173 100% 46%;
-  --primary-foreground: 0 0% 98%;
-  --secondary: 240 4.8% 95.9%;
-  --secondary-foreground: 240 5.9% 10%;
-  --muted: 240 4.8% 95.9%;
-  --muted-foreground: 240 3.8% 50%;
-  --accent: 240 4.8% 93%;
-  --accent-foreground: 240 5.9% 10%;
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 0 0% 98%;
-  --warning: 43 96% 56%;
-  --warning-foreground: 0 0% 0%;
-  --border: 240 5.9% 88%;
-  --input: 240 5.9% 95%;
-  --ring: 173 100% 46%;
-
-  /* Hierarquia de Texto para Light Mode */
-  --text-primary: 240 10% 3.9%;
-  --text-secondary: 240 5.9% 20%;
-  --text-muted: 240 3.8% 50%;
-  --text-disabled: 240 3.8% 70%;
-
-  /* Sombras para Light Mode */
-  --shadow-sm: 0 2px 4px hsl(0 0% 0% / 0.05);
-  --shadow-md: 0 4px 12px hsl(0 0% 0% / 0.1);
-  --shadow-lg: 0 8px 24px hsl(0 0% 0% / 0.15);
-  --shadow-xl: 0 12px 32px hsl(0 0% 0% / 0.2);
-  --shadow-aurora: 0 0 20px hsl(var(--primary) / 0.15);
-  --shadow-aurora-strong: 0 0 30px hsl(var(--primary) / 0.25);
-}
-
-* {
-  border-color: hsl(var(--border));
-}
-
-body {
-  background-color: hsl(var(--background));
-  color: hsl(var(--foreground));
-  font-family: 'Inter', system-ui, sans-serif;
-  line-height: 1.6;
-  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
-}
-
-h1, h2, h3, h4, h5, h6 {
-  font-family: 'Outfit', system-ui, sans-serif;
-  font-weight: 600;
-  line-height: 1.2;
-  letter-spacing: -0.025em;
-}
-
-/* Utilitários de Hierarquia Visual */
-/* Typography Scale */
-.text-display {
-  @apply text-4xl font-bold tracking-tight;
-  color: hsl(var(--text-primary));
-  line-height: 1.1;
-  }
-
-  .text-heading-1 {
-    @apply text-3xl font-semibold tracking-tight;
-    color: hsl(var(--text-primary));
-    line-height: 1.15;
-  }
-
-  .text-heading-2 {
-    @apply text-2xl font-semibold tracking-tight;
-    color: hsl(var(--text-primary));
-    line-height: 1.2;
-  }
-
-  .text-heading-3 {
-    @apply text-xl font-medium;
-    color: hsl(var(--text-primary));
-    line-height: 1.25;
-  }
-
-  .text-body-large {
-    @apply text-lg font-normal;
-    color: hsl(var(--text-primary));
-    line-height: 1.5;
-  }
-
-  .text-body {
-    @apply text-base font-normal;
-    color: hsl(var(--text-primary));
-    line-height: 1.6;
-  }
-
-  .text-body-small {
-    @apply text-sm font-normal;
-    color: hsl(var(--text-secondary));
-    line-height: 1.5;
-  }
-
-  .text-caption {
-    @apply text-xs font-medium;
-    color: hsl(var(--text-muted));
-    line-height: 1.4;
-  }
-
-  .text-label {
-    @apply text-sm font-medium;
-    color: hsl(var(--text-primary));
-    line-height: 1.4;
-  }
-
-  /* Surfaces com Elevação */
-  .surface-base {
-    background-color: hsl(var(--surface-base));
-    border-color: hsl(var(--border));
-  }
-
-  .surface-elevated {
-    background-color: hsl(var(--surface-elevated));
-    border-color: hsl(var(--border));
-    box-shadow: var(--shadow-sm);
-  }
-
-  .surface-overlay {
-    background-color: hsl(var(--surface-overlay));
-    border-color: hsl(var(--border));
-    box-shadow: var(--shadow-md);
-    backdrop-filter: blur(8px);
-  }
-
-  .surface-modal {
-    background-color: hsl(var(--surface-modal));
-    border-color: hsl(var(--border));
-    box-shadow: var(--shadow-xl);
-    backdrop-filter: blur(12px);
-  }
-
-  /* Estados Interativos */
-  .interactive-hover {
-    @apply transition-all duration-200;
-    transform-origin: center;
-  }
-
-  .interactive-hover:hover {
-    @apply shadow-md;
-    transform: translateY(-1px) scale(1.02);
-    background-color: hsl(var(--accent));
-    color: hsl(var(--accent-foreground));
-  }
-
-  .interactive-press {
-    @apply transition-transform duration-100;
-  }
-
-  .interactive-press:active {
-    transform: scale(0.98);
-  }
-
-  .interactive-focus {
-    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aurora focus-visible:ring-offset-2;
-  }
-
-  /* Aurora Focus Ring */
-  .aurora-focus {
-    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aurora/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background;
-  }
-
-  /* Sombras Aurora */
-  .shadow-aurora {
-    box-shadow: var(--shadow-aurora);
-  }
-
-  .shadow-aurora-strong {
-    box-shadow: var(--shadow-aurora-strong);
-  }
-
-  /* Loading States Aprimorados */
-  .skeleton {
-    @apply bg-muted animate-pulse rounded;
-    background: linear-gradient(90deg, 
-      hsl(var(--muted)) 0%, 
-      hsl(var(--muted) / 0.8) 50%, 
-      hsl(var(--muted)) 100%
-    );
-    background-size: 200% 100%;
-    animation: shimmer 1.5s ease-in-out infinite;
-  }
-
-  .skeleton-text {
-    @apply skeleton h-4 w-3/4;
-  }
-
-  .skeleton-heading {
-    @apply skeleton h-6 w-1/2;
-  }
-
-  /* Content Sections */
-  .content-section {
-    @apply space-y-6 p-6 rounded-lg surface-elevated;
-  }
-
-  .content-section-header {
-    @apply pb-4;
-    border-bottom: 1px solid hsl(var(--border) / 0.5);
-  }
-
-  /* Status Indicators */
-  .status-success {
-    background-color: hsl(142 76% 36% / 0.1);
-    color: hsl(142 76% 36%);
-    border-color: hsl(142 76% 36% / 0.2);
-  }
-
-  .status-warning {
-    background-color: hsl(43 96% 56% / 0.1);
-    color: hsl(43 96% 56%);
-    border-color: hsl(43 96% 56% / 0.2);
-  }
-
-  .status-error {
-    background-color: hsl(0 84% 60% / 0.1);
-    color: hsl(0 84% 60%);
-    border-color: hsl(0 84% 60% / 0.2);
-  }
-
-  .status-info {
-    background-color: hsl(221 83% 53% / 0.1);
-    color: hsl(221 83% 53%);
-    border-color: hsl(221 83% 53% / 0.2);
-  }

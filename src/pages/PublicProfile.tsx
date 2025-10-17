@@ -260,9 +260,9 @@ export default function PublicProfile() {
                     onClick={() => window.open(profile.linkedin_url, '_blank')}
                     variant="outline"
                     size="default"
-                    className="w-full gap-2 border-[hsl(var(--social-linkedin))]/30 hover:bg-[hsl(var(--social-linkedin))]/5"
+                    className="w-full gap-2 border-social-linkedin/30 hover:bg-social-linkedin/5"
                   >
-                    <Linkedin className="h-4 w-4 text-[hsl(var(--social-linkedin))]" />
+                    <Linkedin className="h-4 w-4 text-social-linkedin" />
                     <span className="text-sm">LinkedIn</span>
                   </Button>
                 )}
