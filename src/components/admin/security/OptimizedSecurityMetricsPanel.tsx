@@ -168,28 +168,28 @@ export const OptimizedSecurityMetricsPanel = memo<OptimizedSecurityMetricsPanelP
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
             <div className="p-3 border rounded-lg">
-              <div className="text-xl font-bold text-blue-600">
+              <div className="text-xl font-bold text-operational">
                 {metrics.totalEvents}
               </div>
               <p className="text-xs text-muted-foreground">Total de Eventos</p>
             </div>
             
             <div className="p-3 border rounded-lg">
-              <div className="text-xl font-bold text-red-600">
+              <div className="text-xl font-bold text-severity-critical">
                 {metrics.criticalEvents}
               </div>
               <p className="text-xs text-muted-foreground">Eventos Críticos</p>
             </div>
             
             <div className="p-3 border rounded-lg">
-              <div className="text-xl font-bold text-orange-600">
+              <div className="text-xl font-bold text-severity-high">
                 {metrics.activeIncidents}
               </div>
               <p className="text-xs text-muted-foreground">Incidentes Ativos</p>
             </div>
             
             <div className="p-3 border rounded-lg">
-              <div className="text-xl font-bold text-purple-600">
+              <div className="text-xl font-bold text-operational">
                 {metrics.anomaliesDetected}
               </div>
               <p className="text-xs text-muted-foreground">Anomalias</p>

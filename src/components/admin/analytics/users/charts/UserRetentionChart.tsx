@@ -42,9 +42,9 @@ export const UserRetentionChart = ({ data, loading }: UserRetentionChartProps) =
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white p-3 border rounded-lg shadow-lg">
+        <div className="bg-background p-3 border rounded-lg shadow-lg">
           <p className="font-semibold">{label}</p>
-          <p className="text-sm text-blue-600">
+          <p className="text-sm text-operational">
             Retenção: {payload[0].value}%
           </p>
         </div>
@@ -121,12 +121,12 @@ export const UserRetentionChart = ({ data, loading }: UserRetentionChartProps) =
           </div>
 
           {/* Benchmarks e insights */}
-          <div className="bg-gray-50 p-3 rounded-lg">
+          <div className="bg-muted p-3 rounded-lg">
             <div className="flex items-center mb-2">
-              <Calendar className="h-4 w-4 text-gray-600 mr-2" />
+              <Calendar className="h-4 w-4 text-muted-foreground mr-2" />
               <span className="text-sm font-medium">Benchmarks da Indústria</span>
             </div>
-            <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
+            <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
               <div>📊 D1: 70-85% (Bom)</div>
               <div>📊 D7: 55-70% (Bom)</div>
               <div>📊 D30: 35-45% (Bom)</div>

@@ -113,8 +113,8 @@ export const RealSystemActivity = ({ activityData, loading }: RealSystemActivity
           </div>
           <div className="flex items-center gap-3 aurora-glass px-4 py-2 rounded-lg">
             <div className={`w-2 h-2 rounded-full aurora-glow ${
-              activityData.systemHealth === 'healthy' ? 'bg-emerald-500' :
-              activityData.systemHealth === 'warning' ? 'bg-amber-500' : 'bg-red-500'
+              activityData.systemHealth === 'healthy' ? 'bg-system-healthy' :
+              activityData.systemHealth === 'warning' ? 'bg-system-warning' : 'bg-system-critical'
             }`}></div>
             <span className="text-sm font-medium">Status:</span>
             <span className={`font-bold ${getHealthColor(activityData.systemHealth)}`}>
