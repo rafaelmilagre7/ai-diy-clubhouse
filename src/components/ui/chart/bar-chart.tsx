@@ -4,6 +4,7 @@ import { Bar, BarChart as RechartsBarChart, ResponsiveContainer, XAxis, YAxis, C
 import { ChartContainer } from './chart-container'
 import { ChartTooltip, ChartTooltipContent } from './chart-tooltip'
 import { validateBarChartData } from '@/lib/chart-validation'
+import { chartColors } from '@/lib/chart-utils'
 
 interface BarChartProps {
   data: any[]
@@ -19,7 +20,7 @@ export const BarChart: React.FC<BarChartProps> = ({
   data,
   index,
   categories,
-  colors = ['#0ABAB5', '#3B82F6', '#10B981', '#F59E0B', '#EF4444'],
+  colors = chartColors.categorical,
   valueFormatter,
   className,
   layout = 'horizontal'

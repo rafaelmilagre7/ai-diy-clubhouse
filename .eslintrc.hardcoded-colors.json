@@ -1,0 +1,15 @@
+{
+  "rules": {
+    "no-restricted-syntax": [
+      "warn",
+      {
+        "selector": "Literal[value=/#[0-9A-Fa-f]{3,8}/]",
+        "message": "❌ Não use cores hexadecimais hardcoded. Use variáveis CSS do design system (hsl(var(--aurora-primary))) ou chartColors de chart-utils.ts"
+      },
+      {
+        "selector": "TemplateElement[value.raw=/#[0-9A-Fa-f]{3,8}/]",
+        "message": "❌ Não use cores hexadecimais hardcoded. Use variáveis CSS do design system (hsl(var(--aurora-primary))) ou chartColors de chart-utils.ts"
+      }
+    ]
+  }
+}

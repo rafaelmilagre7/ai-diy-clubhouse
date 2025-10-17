@@ -4,6 +4,7 @@ import { Area, AreaChart as RechartsAreaChart, ResponsiveContainer, XAxis, YAxis
 import { ChartContainer } from './chart-container'
 import { ChartTooltip, ChartTooltipContent } from './chart-tooltip'
 import { validateAreaChartData } from '@/lib/chart-validation'
+import { chartColors } from '@/lib/chart-utils'
 
 interface AreaChartProps {
   data: any[]
@@ -18,7 +19,7 @@ export const AreaChart: React.FC<AreaChartProps> = ({
   data,
   index,
   categories,
-  colors = ['#0ABAB5', '#3B82F6', '#10B981', '#F59E0B', '#EF4444'],
+  colors = chartColors.categorical,
   valueFormatter,
   className
 }) => {

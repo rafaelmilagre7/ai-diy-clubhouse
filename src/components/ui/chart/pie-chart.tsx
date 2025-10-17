@@ -4,6 +4,7 @@ import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, Tooltip, 
 import { ChartContainer } from './chart-container'
 import { ChartTooltip, ChartTooltipContent } from './chart-tooltip'
 import { validatePieChartData } from '@/lib/chart-validation'
+import { chartColors } from '@/lib/chart-utils'
 
 interface PieChartProps {
   data: any[]
@@ -18,7 +19,7 @@ export const PieChart: React.FC<PieChartProps> = ({
   data,
   index,
   category,
-  colors = ['#0ABAB5', '#3B82F6', '#10B981', '#F59E0B', '#EF4444'],
+  colors = chartColors.categorical,
   valueFormatter,
   className
 }) => {

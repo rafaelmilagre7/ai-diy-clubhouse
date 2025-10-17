@@ -18,6 +18,23 @@ export const OnboardingSuccess: React.FC<OnboardingSuccessProps> = ({
   useEffect(() => {
     console.log('[CONFETTI] Iniciando celebração de confetti...');
     
+    // Extrai cores do design system
+    const getDesignColors = () => {
+      const style = getComputedStyle(document.documentElement);
+      const primary = style.getPropertyValue('--aurora-primary').trim();
+      const destructive = style.getPropertyValue('--destructive').trim();
+      
+      return [
+        primary ? `hsl(${primary})` : '#0ABAB5',
+        destructive ? `hsl(${destructive})` : '#E11D48',
+        '#7C3AED',
+        '#F59E0B',
+        '#10B981'
+      ];
+    };
+    
+    const colors = getDesignColors();
+    
     // Sequência de confetes mais elaborada e vistosa
     const celebrateCompletion = () => {
       console.log('[CONFETTI] Primeira explosão central');
@@ -26,7 +43,7 @@ export const OnboardingSuccess: React.FC<OnboardingSuccessProps> = ({
         particleCount: 150,
         spread: 90,
         origin: { y: 0.6 },
-        colors: ['#0ABAB5', '#E11D48', '#7C3AED', '#F59E0B', '#10B981']
+        colors: colors
       });
 
       // Segunda explosão lateral esquerda
@@ -37,7 +54,7 @@ export const OnboardingSuccess: React.FC<OnboardingSuccessProps> = ({
           angle: 60,
           spread: 65,
           origin: { x: 0, y: 0.8 },
-          colors: ['#0ABAB5', '#E11D48', '#F59E0B']
+          colors: [colors[0], colors[1], colors[3]]
         });
       }, 300);
 
@@ -49,7 +66,7 @@ export const OnboardingSuccess: React.FC<OnboardingSuccessProps> = ({
           angle: 120,
           spread: 65,
           origin: { x: 1, y: 0.8 },
-          colors: ['#7C3AED', '#10B981', '#0ABAB5']
+          colors: [colors[2], colors[4], colors[0]]
         });
       }, 600);
 
@@ -65,7 +82,7 @@ export const OnboardingSuccess: React.FC<OnboardingSuccessProps> = ({
             x: Math.random(),
             y: Math.random() - 0.2
           },
-          colors: ['#0ABAB5', '#E11D48', '#7C3AED', '#F59E0B', '#10B981']
+          colors: colors
         });
       }, 900);
 
@@ -76,7 +93,7 @@ export const OnboardingSuccess: React.FC<OnboardingSuccessProps> = ({
           particleCount: 100,
           spread: 120,
           origin: { y: 0.2 },
-          colors: ['#0ABAB5', '#E11D48', '#7C3AED']
+          colors: [colors[0], colors[1], colors[2]]
         });
       }, 1200);
     };

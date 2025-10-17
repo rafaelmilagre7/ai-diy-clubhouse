@@ -1,21 +1,36 @@
 
+/**
+ * Design System Chart Colors
+ * Todas as cores são referenciadas via CSS variables para consistência total
+ */
 export const chartColors = {
   primary: 'hsl(var(--aurora-primary))',
   secondary: 'hsl(var(--secondary))',
-  success: 'hsl(var(--success))',
-  warning: 'hsl(var(--warning))',
+  success: 'hsl(142 76% 36%)',
+  warning: 'hsl(43 96% 56%)',
   danger: 'hsl(var(--destructive))',
-  info: 'hsl(var(--info))',
+  info: 'hsl(221 83% 53%)',
+  
+  // Paleta categórica alinhada com chartTheme.ts
   categorical: [
-    'hsl(var(--aurora-primary))',
-    'hsl(var(--secondary))',
-    'hsl(var(--success))',
-    'hsl(var(--warning))',
-    'hsl(var(--destructive))',
-    'hsl(var(--info))',
-    'hsl(var(--aurora-primary-light))',
-    'hsl(var(--accent))'
-  ]
+    'hsl(var(--aurora-primary))',  // Teal principal
+    'hsl(262 83% 58%)',            // Purple
+    'hsl(142 76% 36%)',            // Green
+    'hsl(48 96% 53%)',             // Amber
+    'hsl(var(--destructive))',     // Red
+    'hsl(221 83% 53%)',            // Blue
+    'hsl(330 81% 60%)',            // Pink
+    'hsl(25 95% 53%)',             // Orange
+  ],
+  
+  // Paleta de gradientes para área charts
+  gradients: {
+    primary: ['hsl(var(--aurora-primary))', 'hsl(var(--aurora-primary) / 0.3)'],
+    secondary: ['hsl(262 83% 58%)', 'hsl(262 83% 58% / 0.3)'],
+    success: ['hsl(142 76% 36%)', 'hsl(142 76% 36% / 0.3)'],
+    warning: ['hsl(48 96% 53%)', 'hsl(48 96% 53% / 0.3)'],
+    danger: ['hsl(var(--destructive))', 'hsl(var(--destructive) / 0.3)'],
+  }
 };
 
 // Helper para obter cores do design system para gráficos
@@ -83,3 +98,28 @@ export const calculateGrowthRate = (current: number, previous: number): number =
   if (previous === 0) return current > 0 ? 100 : 0;
   return Math.round(((current - previous) / previous) * 100);
 };
+
+/**
+ * Helper para extrair cores reais do CSS quando necessário
+ * Útil para bibliotecas que não suportam CSS variables diretamente
+ */
+export const getCSSVariableColor = (variableName: string): string => {
+  if (typeof window === 'undefined') return '';
+  const color = getComputedStyle(document.documentElement)
+    .getPropertyValue(variableName)
+    .trim();
+  return color ? `hsl(${color})` : '';
+};
+
+/**
+ * Obtém cores do design system extraindo valores CSS
+ */
+export const getDesignSystemColors = () => ({
+  primary: getCSSVariableColor('--aurora-primary'),
+  primaryLight: getCSSVariableColor('--aurora-primary-light'),
+  primaryDark: getCSSVariableColor('--aurora-primary-dark'),
+  success: getCSSVariableColor('--success') || 'hsl(142 76% 36%)',
+  warning: getCSSVariableColor('--warning') || 'hsl(43 96% 56%)',
+  danger: getCSSVariableColor('--destructive'),
+  muted: getCSSVariableColor('--muted-foreground'),
+});
