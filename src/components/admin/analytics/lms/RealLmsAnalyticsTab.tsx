@@ -117,7 +117,7 @@ export const RealLmsAnalyticsTab = ({ timeRange }: RealLmsAnalyticsTabProps) => 
         {kpiCards.map((stat, index) => {
           const IconComponent = stat.icon;
           return (
-            <Card key={index} className="hover:shadow-md transition-shadow duration-200">
+            <Card key={index} className="hover:shadow-md transition-smooth">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   {stat.title}

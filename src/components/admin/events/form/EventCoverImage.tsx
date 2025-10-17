@@ -82,7 +82,7 @@ export const EventCoverImage = ({ form }: EventCoverImageProps) => {
                   <Button
                     type="button"
                     variant="outline"
-                    className={`transition-all duration-200 ${
+                    className={`transition-smooth ${
                       isUploading 
                         ? "opacity-70 cursor-not-allowed" 
                         : "hover:bg-aurora-primary/10 hover:border-aurora-primary/30 hover:text-aurora-primary"

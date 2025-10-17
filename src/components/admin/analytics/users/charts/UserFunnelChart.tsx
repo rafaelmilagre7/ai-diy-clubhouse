@@ -62,7 +62,7 @@ export const UserFunnelChart = ({ data, loading }: UserFunnelChartProps) => {
                 {/* Funnel Step */}
                 <div 
                   className={`
-                    relative p-4 rounded-lg transition-all duration-300 hover:shadow-md
+                    relative p-4 rounded-lg transition-smooth hover:shadow-md
                     ${index === 0 ? 'bg-operational/10 border-operational/30' :
                       index === 1 ? 'bg-info/10 border-info/30' :
                       index === 2 ? 'bg-strategy/10 border-strategy/30' :

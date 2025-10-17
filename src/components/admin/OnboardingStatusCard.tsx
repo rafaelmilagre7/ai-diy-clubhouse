@@ -160,7 +160,7 @@ export const OnboardingStatusCard: React.FC = () => {
           {/* Progress bar */}
           <div className="w-full bg-muted rounded-full h-2">
             <div 
-              className="bg-primary rounded-full h-2 transition-all duration-300"
+              className="bg-primary rounded-full h-2 transition-smooth"
               style={{ width: `${completionRate}%` }}
             />
           </div>

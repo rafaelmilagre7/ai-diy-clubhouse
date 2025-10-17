@@ -28,7 +28,7 @@ export const AdminButton = React.forwardRef<HTMLButtonElement, AdminButtonProps>
       <Button
         ref={ref}
         className={cn(
-          'h-10 px-4 transition-all duration-200',
+          'h-10 px-4 transition-smooth',
           'aurora-focus interactive-press',
           variant === 'default' && 'bg-aurora hover:bg-aurora-dark text-white shadow-aurora/20',
           variant === 'outline' && 'border-aurora/30 text-aurora hover:bg-aurora/10',

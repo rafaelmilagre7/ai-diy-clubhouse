@@ -70,7 +70,7 @@ export const AdminCard = ({
   return (
     <CardComponent
       className={cn(
-        'rounded-xl transition-all duration-200',
+        'rounded-xl transition-smooth',
         variants[variant],
         interactive && 'cursor-pointer interactive-hover',
         className

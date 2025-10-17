@@ -208,7 +208,7 @@ export default function PublicProfile() {
                       onClick={handleAddConnection}
                       disabled={localStatus !== 'none' || isSendingRequest}
                       size="default"
-                      className={`w-full gap-2 transition-all duration-300 shadow-md hover:shadow-lg border-0 ${
+                      className={`w-full gap-2 transition-smooth shadow-md hover:shadow-lg border-0 ${
                         localStatus === 'accepted'
                           ? 'bg-gradient-to-r from-success via-success-light to-success-dark hover:from-success-dark hover:via-success hover:to-success-light text-white'
                           : localStatus === 'pending'

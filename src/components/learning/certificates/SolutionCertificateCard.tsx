@@ -86,12 +86,12 @@ export const SolutionCertificateCard = ({
   
   return (
     <>
-      <Card className="group overflow-hidden bg-card/80 backdrop-blur-sm border-border hover:border-aurora-primary/30 transition-all duration-300 hover:shadow-lg hover:shadow-aurora-primary/10 hover:-translate-y-1">
+      <Card className="group overflow-hidden bg-card/80 backdrop-blur-sm border-border hover:border-aurora-primary/30 transition-smooth hover:shadow-lg hover:shadow-aurora-primary/10 hover:-translate-y-1">
         {/* Header com gradiente dinâmico */}
         <div className={`bg-gradient-to-br ${categoryConfig.color} pb-4 pt-8 relative overflow-hidden`}>
           <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent"></div>
           <div className="flex justify-center relative z-10">
-            <div className="bg-white/10 backdrop-blur-sm rounded-full p-4 group-hover:scale-110 transition-transform duration-300">
+            <div className="bg-white/10 backdrop-blur-sm rounded-full p-4 group-hover:scale-110 transition-smooth">
               <Award className={`h-16 w-16 ${categoryConfig.iconColor}`} />
             </div>
           </div>
@@ -114,7 +114,7 @@ export const SolutionCertificateCard = ({
         </div>
         
         <CardHeader className="pb-3">
-          <CardTitle className="text-lg font-semibold text-white group-hover:text-aurora-primary transition-colors duration-300 line-clamp-2">
+          <CardTitle className="text-lg font-semibold text-white group-hover:text-aurora-primary transition-smooth line-clamp-2">
             {solution?.title || "Certificado de Implementação"}
           </CardTitle>
           <div className={`flex items-center gap-2 text-sm ${categoryConfig.iconColor}`}>
@@ -159,7 +159,7 @@ export const SolutionCertificateCard = ({
         <CardFooter className="pt-0 flex gap-2">
           <Button
             onClick={handlePreview}
-            className={`flex-1 bg-gradient-to-r ${categoryConfig.buttonColor} text-white font-semibold transition-all duration-300 group-hover:shadow-lg`}
+            className={`flex-1 bg-gradient-to-r ${categoryConfig.buttonColor} text-white font-semibold transition-smooth group-hover:shadow-lg`}
           >
             <Printer className="h-4 w-4 mr-2" />
             Imprimir

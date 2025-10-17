@@ -204,14 +204,14 @@ Confira meu certificado: ${customDomainUrl}`;
   const coverImage = certificate.image_url || certificate.learning_courses?.cover_image_url || certificate.solutions?.thumbnail_url;
 
   return (
-    <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-background to-muted/20 hover:shadow-xl transition-all duration-300 animate-fade-in">
+    <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-background to-muted/20 hover:shadow-xl transition-smooth animate-fade-in">
       {/* Capa visual */}
       <div className="relative h-48 overflow-hidden">
         {coverImage ? (
           <img 
             src={coverImage} 
             alt={certificate.title}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            className="w-full h-full object-cover transition-smooth group-hover:scale-105"
           />
         ) : (
           <div className={`w-full h-full bg-gradient-to-br ${isSolution ? 'from-accent/20 via-accent/10 to-accent/5' : 'from-primary/20 via-primary/10 to-primary/5'} flex items-center justify-center`}>
@@ -333,7 +333,7 @@ Confira meu certificado: ${customDomainUrl}`;
                         disabled={isGeneratingPDF}
                         variant="outline"
                         size="sm"
-                        className="bg-operational/10 border-operational/20 text-operational hover:bg-operational/20 transition-all duration-200 shadow-sm hover:shadow-md"
+                        className="bg-operational/10 border-operational/20 text-operational hover:bg-operational/20 transition-smooth shadow-sm hover:shadow-md"
                       >
                         <Linkedin className="h-4 w-4 mr-2" />
                         {isGeneratingPDF ? "Gerando..." : "LinkedIn"}
@@ -344,7 +344,7 @@ Confira meu certificado: ${customDomainUrl}`;
                         disabled={isGeneratingPDF}
                         variant="outline"
                         size="sm"
-                        className="bg-system-healthy/10 border-system-healthy/20 text-system-healthy hover:bg-system-healthy/20 transition-all duration-200 shadow-sm hover:shadow-md"
+                        className="bg-system-healthy/10 border-system-healthy/20 text-system-healthy hover:bg-system-healthy/20 transition-smooth shadow-sm hover:shadow-md"
                       >
                         <MessageCircle className="h-4 w-4 mr-2" />
                         {isGeneratingPDF ? "Gerando..." : "WhatsApp"}

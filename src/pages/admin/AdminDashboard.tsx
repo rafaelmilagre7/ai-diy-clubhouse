@@ -140,7 +140,7 @@ const AdminDashboard = () => {
           <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-4" key={`stats-grid-${timeRange}-${lastRefresh.getTime()}`}>
             
             {/* Novos Usuários */}
-            <Card className="surface-elevated border-0 shadow-aurora hover:shadow-aurora-strong transition-all duration-300 group">
+            <Card className="surface-elevated border-0 shadow-aurora hover:shadow-aurora-strong transition-smooth group">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-label text-muted-foreground">
                   Novos Usuários
@@ -164,7 +164,7 @@ const AdminDashboard = () => {
             </Card>
 
             {/* Usuários Ativos */}
-            <Card className="surface-elevated border-0 shadow-aurora hover:shadow-aurora-strong transition-all duration-300 group">
+            <Card className="surface-elevated border-0 shadow-aurora hover:shadow-aurora-strong transition-smooth group">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-label text-muted-foreground">
                   Usuários Ativos
@@ -184,7 +184,7 @@ const AdminDashboard = () => {
             </Card>
 
             {/* Implementações */}
-            <Card className="surface-elevated border-0 shadow-aurora hover:shadow-aurora-strong transition-all duration-300 group">
+            <Card className="surface-elevated border-0 shadow-aurora hover:shadow-aurora-strong transition-smooth group">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-label text-muted-foreground">
                   Implementações
@@ -204,7 +204,7 @@ const AdminDashboard = () => {
             </Card>
 
             {/* Implementações Completas */}
-            <Card className="surface-elevated border-0 shadow-aurora hover:shadow-aurora-strong transition-all duration-300 group">
+            <Card className="surface-elevated border-0 shadow-aurora hover:shadow-aurora-strong transition-smooth group">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-label text-muted-foreground">
                   Implementações Completas

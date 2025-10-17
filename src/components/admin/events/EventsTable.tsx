@@ -188,7 +188,7 @@ export const EventsTable = ({ events: propEvents }: EventsTableProps) => {
                 ease: 'easeOut' 
               }}
             >
-              <Card className="surface-elevated border-0 shadow-aurora transition-all duration-300 hover:shadow-aurora-strong group h-full">
+              <Card className="surface-elevated border-0 shadow-aurora transition-smooth hover:shadow-aurora-strong group h-full">
                 <CardHeader className="pb-3">
                   <div className="flex items-start gap-4">
                     {/* Event Image or Icon */}
@@ -217,7 +217,7 @@ export const EventsTable = ({ events: propEvents }: EventsTableProps) => {
                         </div>
                       ) : (
                         <div className={`
-                          p-3 rounded-lg transition-all duration-300 group-hover:scale-110
+                          p-3 rounded-lg transition-smooth group-hover:scale-110
                           ${startDate.isToday 
                             ? 'bg-gradient-to-br from-strategy/20 to-revenue/20 group-hover:from-strategy/30 group-hover:to-revenue/30' 
                             : startDate.isUpcoming

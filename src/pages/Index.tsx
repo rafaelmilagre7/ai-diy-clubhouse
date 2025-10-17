@@ -84,7 +84,7 @@ const Index = () => {
             <div className="overflow-hidden h-2 mb-4 text-xs flex rounded-full bg-muted">
               <div 
                 style={{ width: `${progress}%` }} 
-                className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r from-aurora-primary to-aurora-primary-light transition-all duration-300"
+                className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r from-aurora-primary to-aurora-primary-light transition-smooth"
               ></div>
             </div>
           </div>

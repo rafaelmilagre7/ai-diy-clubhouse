@@ -56,7 +56,7 @@ export const EnhancedUserStats = ({ stats, loading, onFilterClick }: EnhancedUse
     <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
       {/* Total de Usuários */}
       <Card 
-        className="surface-elevated border-0 shadow-sm hover:shadow-md cursor-pointer transition-all duration-200 group"
+        className="surface-elevated border-0 shadow-sm hover:shadow-md cursor-pointer transition-smooth group"
         onClick={() => onFilterClick?.('all')}
       >
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 pt-4 px-4">
@@ -78,7 +78,7 @@ export const EnhancedUserStats = ({ stats, loading, onFilterClick }: EnhancedUse
       
       {/* Masters e Equipes */}
       <Card 
-        className="surface-elevated border-0 shadow-sm hover:shadow-md cursor-pointer transition-all duration-200 group"
+        className="surface-elevated border-0 shadow-sm hover:shadow-md cursor-pointer transition-smooth group"
         onClick={() => onFilterClick?.('masters')}
       >
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 pt-4 px-4">
@@ -101,7 +101,7 @@ export const EnhancedUserStats = ({ stats, loading, onFilterClick }: EnhancedUse
       {/* Onboarding Completo */}
       {stats.onboarding_completed !== undefined && (
         <Card 
-          className="surface-elevated border-0 shadow-sm hover:shadow-md cursor-pointer transition-all duration-200 group"
+          className="surface-elevated border-0 shadow-sm hover:shadow-md cursor-pointer transition-smooth group"
           onClick={() => onFilterClick?.('onboarding_completed')}
         >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 pt-4 px-4">
@@ -125,7 +125,7 @@ export const EnhancedUserStats = ({ stats, loading, onFilterClick }: EnhancedUse
       {/* Onboarding Pendente */}
       {stats.onboarding_pending !== undefined && (
         <Card 
-          className="surface-elevated border-0 shadow-sm hover:shadow-md cursor-pointer transition-all duration-200 group"
+          className="surface-elevated border-0 shadow-sm hover:shadow-md cursor-pointer transition-smooth group"
           onClick={() => onFilterClick?.('onboarding_pending')}
         >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 pt-4 px-4">

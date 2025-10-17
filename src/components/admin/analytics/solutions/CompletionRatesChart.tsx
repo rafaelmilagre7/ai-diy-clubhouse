@@ -36,7 +36,7 @@ export const CompletionRatesChart: React.FC<CompletionRatesChartProps> = ({
 
   if (isLoading) {
     return (
-      <Card className="overflow-hidden transition-all duration-300 hover:shadow-md">
+      <Card className="overflow-hidden transition-smooth hover:shadow-md">
         <CardHeader className="pb-2">
           <Skeleton className="h-6 w-48 mb-2" />
           <Skeleton className="h-4 w-64" />
@@ -49,7 +49,7 @@ export const CompletionRatesChart: React.FC<CompletionRatesChartProps> = ({
   }
 
   return (
-    <Card className="overflow-hidden transition-all duration-300 bg-card backdrop-blur-sm hover:shadow-md border border-border">
+    <Card className="overflow-hidden transition-smooth bg-card backdrop-blur-sm hover:shadow-md border border-border">
       <CardHeader className="pb-2 border-b border-border">
         <CardTitle className="text-lg font-semibold bg-gradient-to-r from-primary to-operational bg-clip-text text-transparent">
           Taxas de Conclusão

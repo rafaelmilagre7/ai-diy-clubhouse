@@ -115,7 +115,7 @@ const AuthLayout = () => {
                     <img
                       src="/lovable-uploads/fe3733f5-092e-4a4e-bdd7-650b71aaa801.png"
                       alt="VIVER DE IA"
-                      className="relative h-20 w-auto object-contain hover:scale-105 transition-transform duration-300"
+                      className="relative h-20 w-auto object-contain hover:scale-105 transition-smooth"
                     />
                   </div>
                 </div>
@@ -138,7 +138,7 @@ const AuthLayout = () => {
                         placeholder="Digite seu email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="pl-10 h-12 bg-white/5 border-white/20 text-white placeholder:text-muted-foreground focus:bg-white/10 focus:border-aurora-primary/50 transition-all duration-200 rounded-lg"
+                        className="pl-10 h-12 bg-white/5 border-white/20 text-white placeholder:text-muted-foreground focus:bg-white/10 focus:border-aurora-primary/50 transition-smooth rounded-lg"
                         disabled={isSigningIn}
                         required
                       />
@@ -154,7 +154,7 @@ const AuthLayout = () => {
                         placeholder="Digite sua senha"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="pl-10 h-12 bg-white/5 border-white/20 text-white placeholder:text-muted-foreground focus:bg-white/10 focus:border-aurora-primary/50 transition-all duration-200 rounded-lg"
+                        className="pl-10 h-12 bg-white/5 border-white/20 text-white placeholder:text-muted-foreground focus:bg-white/10 focus:border-aurora-primary/50 transition-smooth rounded-lg"
                         disabled={isSigningIn}
                         required
                       />
@@ -163,7 +163,7 @@ const AuthLayout = () => {
                   <Button
                     type="submit"
                     variant="aurora-primary"
-                    className="w-full h-12 font-semibold text-base shadow-lg hover:shadow-aurora-primary/25 transition-all duration-300 hover:scale-[1.02]"
+                    className="w-full h-12 font-semibold text-base shadow-lg hover:shadow-aurora-primary/25 transition-smooth hover:scale-[1.02]"
                     disabled={isSigningIn || isLoading}
                   >
                     {isSigningIn ? (

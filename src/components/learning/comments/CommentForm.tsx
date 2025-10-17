@@ -79,7 +79,7 @@ export const CommentForm: React.FC<CommentFormProps> = ({
             variant="ghost"
             size="sm"
             onClick={onCancel}
-            className="h-7 px-2 bg-white/10 border-0 hover:bg-white/20 text-muted-foreground hover:text-foreground transition-all duration-200"
+            className="h-7 px-2 bg-white/10 border-0 hover:bg-white/20 text-muted-foreground hover:text-foreground transition-smooth"
           >
             Cancelar
           </Button>
@@ -103,7 +103,7 @@ export const CommentForm: React.FC<CommentFormProps> = ({
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder={placeholder}
-            className="resize-none min-h-[100px] bg-white/5 border border-white/20 backdrop-blur-sm text-foreground placeholder:text-muted-foreground/60 focus:border-primary/30 focus:bg-white/10 transition-all duration-300"
+            className="resize-none min-h-[100px] bg-white/5 border border-white/20 backdrop-blur-sm text-foreground placeholder:text-muted-foreground/60 focus:border-primary/30 focus:bg-white/10 transition-smooth"
           />
           
           <div className="flex justify-end gap-2">

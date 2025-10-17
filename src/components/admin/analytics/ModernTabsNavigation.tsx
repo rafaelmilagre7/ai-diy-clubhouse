@@ -88,7 +88,7 @@ export const ModernTabsNavigation = ({
                   key={tab.value}
                   value={tab.value}
                   className={`
-                    relative flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium transition-all duration-200 rounded-sm
+                    relative flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium transition-smooth rounded-sm
                     ${isActive 
                       ? 'bg-aurora-primary text-white shadow-lg transform scale-105' 
                       : 'text-muted-foreground hover:text-foreground hover:bg-accent'

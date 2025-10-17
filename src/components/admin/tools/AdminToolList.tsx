@@ -240,7 +240,7 @@ export const AdminToolList = ({ refreshTrigger }: AdminToolListProps) => {
               : 'Comece criando sua primeira ferramenta para a plataforma.'}
           </p>
           <Link to="/admin/tools/new">
-            <Button className="bg-gradient-to-r from-aurora-primary to-aurora-primary-light hover:from-aurora-primary-dark hover:to-aurora-primary text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300">
+            <Button className="bg-gradient-to-r from-aurora-primary to-aurora-primary-light hover:from-aurora-primary-dark hover:to-aurora-primary text-white font-medium shadow-lg hover:shadow-xl transition-smooth">
               <Plus className="h-4 w-4 mr-2" />
               {tools.length === 0 ? 'Criar Primeira Ferramenta' : 'Nova Ferramenta'}
             </Button>
@@ -272,7 +272,7 @@ export const AdminToolList = ({ refreshTrigger }: AdminToolListProps) => {
             
             <div className="flex items-center gap-3">
               <Link to="/admin/tools/new">
-                <Button className="h-12 px-6 bg-gradient-to-r from-aurora-primary to-aurora-primary-light hover:from-aurora-primary-dark hover:to-aurora-primary text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300">
+                <Button className="h-12 px-6 bg-gradient-to-r from-aurora-primary to-aurora-primary-light hover:from-aurora-primary-dark hover:to-aurora-primary text-white font-medium shadow-lg hover:shadow-xl transition-smooth">
                   <Plus className="h-4 w-4 mr-2" />
                   Nova Ferramenta
                 </Button>
@@ -353,7 +353,7 @@ export const AdminToolList = ({ refreshTrigger }: AdminToolListProps) => {
         {filteredTools.map((tool, index) => (
           <div 
             key={tool.id} 
-            className="aurora-glass rounded-2xl border border-muted/20 backdrop-blur-md overflow-hidden group hover:border-aurora-primary/30 transition-all duration-500 hover:shadow-2xl animate-fade-in"
+            className="aurora-glass rounded-2xl border border-muted/20 backdrop-blur-md overflow-hidden group hover:border-aurora-primary/30 transition-smooth hover:shadow-2xl animate-fade-in"
             style={{ animationDelay: `${index * 50}ms` }}
           >
             {/* Enhanced Header */}
@@ -476,7 +476,7 @@ export const AdminToolList = ({ refreshTrigger }: AdminToolListProps) => {
                   <Button 
                     variant="outline" 
                     size="sm"
-                    className="aurora-glass border-operational/30 hover:border-operational/50 hover:bg-operational/10 text-operational font-medium backdrop-blur-sm transition-all duration-300"
+                    className="aurora-glass border-operational/30 hover:border-operational/50 hover:bg-operational/10 text-operational font-medium backdrop-blur-sm transition-smooth"
                   >
                     <Edit className="h-3 w-3 mr-1" />
                     Editar
@@ -488,7 +488,7 @@ export const AdminToolList = ({ refreshTrigger }: AdminToolListProps) => {
                       variant="outline" 
                       size="sm"
                       disabled={deletingId === tool.id}
-                      className="aurora-glass border-status-error/30 hover:border-status-error/50 hover:bg-status-error/10 text-status-error font-medium backdrop-blur-sm transition-all duration-300"
+                      className="aurora-glass border-status-error/30 hover:border-status-error/50 hover:bg-status-error/10 text-status-error font-medium backdrop-blur-sm transition-smooth"
                     >
                       <Trash className="h-3 w-3 mr-1" />
                       {deletingId === tool.id ? 'Excluindo...' : 'Excluir'}

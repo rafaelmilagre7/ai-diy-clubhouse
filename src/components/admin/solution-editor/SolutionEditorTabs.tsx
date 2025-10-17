@@ -93,7 +93,7 @@ const SolutionEditorTabs: React.FC<SolutionEditorTabsProps> = ({
                   data-[state=active]:border-l-0 data-[state=active]:border-r-0
                   text-muted-foreground hover:text-foreground hover:bg-background/50
                   disabled:opacity-40 disabled:cursor-not-allowed
-                  transition-all duration-200 font-medium text-sm
+                  transition-smooth font-medium text-sm
                 "
               >
                 {tab.label}

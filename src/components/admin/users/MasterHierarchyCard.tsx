@@ -65,7 +65,7 @@ export const MasterHierarchyCard = ({
   };
 
   return (
-    <Card className="border-2 border-border hover:border-aurora-primary/30 transition-all duration-200 shadow-sm hover:shadow-md">
+    <Card className="border-2 border-border hover:border-aurora-primary/30 transition-smooth shadow-sm hover:shadow-md">
       <CardHeader className="pb-4">
         {/* Cabeçalho com informações do master e badge de membros */}
         <div className="flex items-center justify-between gap-4">

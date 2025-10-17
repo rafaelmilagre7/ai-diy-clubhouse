@@ -96,7 +96,7 @@ export const InviteCreationLoadingIndicator: React.FC<InviteCreationLoadingIndic
           {updatedSteps.map((step, index) => (
             <div 
               key={step.id} 
-              className={`flex items-center gap-3 p-2 rounded-lg transition-all duration-300 ${
+              className={`flex items-center gap-3 p-2 rounded-lg transition-smooth ${
                 step.status === 'active' ? 'bg-status-info-lighter border border-status-info/20' : ''
               }`}
             >

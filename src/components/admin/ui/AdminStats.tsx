@@ -85,7 +85,7 @@ export const AdminStats = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
       className={cn(
-        'rounded-xl border p-6 transition-all duration-200 hover:shadow-md',
+        'rounded-xl border p-6 transition-smooth hover:shadow-md',
         variants[variant],
         className
       )}

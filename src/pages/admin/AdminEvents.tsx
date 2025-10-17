@@ -122,10 +122,10 @@ const AdminEvents = () => {
 
         {/* Enhanced Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-          <Card className="surface-elevated border-0 shadow-aurora transition-all duration-300 hover:shadow-aurora-strong group">
+          <Card className="surface-elevated border-0 shadow-aurora transition-smooth hover:shadow-aurora-strong group">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-label text-muted-foreground">Total de Eventos</CardTitle>
-              <div className="p-2 rounded-lg bg-gradient-to-br from-aurora-primary/20 to-aurora-primary/10 transition-all duration-300 group-hover:from-aurora-primary/30 group-hover:to-aurora-primary/20">
+              <div className="p-2 rounded-lg bg-gradient-to-br from-aurora-primary/20 to-aurora-primary/10 transition-smooth group-hover:from-aurora-primary/30 group-hover:to-aurora-primary/20">
                 <Calendar className="h-4 w-4 text-aurora-primary" />
               </div>
             </CardHeader>
@@ -139,10 +139,10 @@ const AdminEvents = () => {
             </CardContent>
           </Card>
 
-          <Card className="surface-elevated border-0 shadow-aurora transition-all duration-300 hover:shadow-aurora-strong group">
+          <Card className="surface-elevated border-0 shadow-aurora transition-smooth hover:shadow-aurora-strong group">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-label text-muted-foreground">Próximos Eventos</CardTitle>
-              <div className="p-2 rounded-lg bg-gradient-to-br from-operational/20 to-operational/10 transition-all duration-300 group-hover:from-operational/30 group-hover:to-operational/20">
+              <div className="p-2 rounded-lg bg-gradient-to-br from-operational/20 to-operational/10 transition-smooth group-hover:from-operational/30 group-hover:to-operational/20">
                 <CalendarDays className="h-4 w-4 text-operational" />
               </div>
             </CardHeader>
@@ -156,10 +156,10 @@ const AdminEvents = () => {
             </CardContent>
           </Card>
 
-          <Card className="surface-elevated border-0 shadow-aurora transition-all duration-300 hover:shadow-aurora-strong group">
+          <Card className="surface-elevated border-0 shadow-aurora transition-smooth hover:shadow-aurora-strong group">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-label text-muted-foreground">Eventos Hoje</CardTitle>
-              <div className="p-2 rounded-lg bg-gradient-to-br from-strategy/20 to-strategy/10 transition-all duration-300 group-hover:from-strategy/30 group-hover:to-strategy/20">
+              <div className="p-2 rounded-lg bg-gradient-to-br from-strategy/20 to-strategy/10 transition-smooth group-hover:from-strategy/30 group-hover:to-strategy/20">
                 <Clock className="h-4 w-4 text-strategy" />
               </div>
             </CardHeader>
@@ -173,10 +173,10 @@ const AdminEvents = () => {
             </CardContent>
           </Card>
 
-          <Card className="surface-elevated border-0 shadow-aurora transition-all duration-300 hover:shadow-aurora-strong group">
+          <Card className="surface-elevated border-0 shadow-aurora transition-smooth hover:shadow-aurora-strong group">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-label text-muted-foreground">Recorrentes</CardTitle>
-              <div className="p-2 rounded-lg bg-gradient-to-br from-revenue/20 to-revenue/10 transition-all duration-300 group-hover:from-revenue/30 group-hover:to-revenue/20">
+              <div className="p-2 rounded-lg bg-gradient-to-br from-revenue/20 to-revenue/10 transition-smooth group-hover:from-revenue/30 group-hover:to-revenue/20">
                 <Repeat className="h-4 w-4 text-revenue" />
               </div>
             </CardHeader>
@@ -190,10 +190,10 @@ const AdminEvents = () => {
             </CardContent>
           </Card>
 
-          <Card className="surface-elevated border-0 shadow-aurora transition-all duration-300 hover:shadow-aurora-strong group">
+          <Card className="surface-elevated border-0 shadow-aurora transition-smooth hover:shadow-aurora-strong group">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-label text-muted-foreground">Únicos</CardTitle>
-              <div className="p-2 rounded-lg bg-gradient-to-br from-surface-accent/20 to-surface-accent/10 transition-all duration-300 group-hover:from-surface-accent/30 group-hover:to-surface-accent/20">
+              <div className="p-2 rounded-lg bg-gradient-to-br from-surface-accent/20 to-surface-accent/10 transition-smooth group-hover:from-surface-accent/30 group-hover:to-surface-accent/20">
                 <Users className="h-4 w-4 text-surface-accent" />
               </div>
             </CardHeader>

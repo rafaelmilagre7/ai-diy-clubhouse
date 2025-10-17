@@ -19,7 +19,7 @@ export const BenefitActionsCell = ({ tool }: BenefitActionsCellProps) => {
         <Button 
           variant="outline" 
           size="sm"
-          className="aurora-glass border-success/30 hover:border-success/50 hover:bg-success/10 text-success font-medium backdrop-blur-sm transition-all duration-300"
+          className="aurora-glass border-success/30 hover:border-success/50 hover:bg-success/10 text-success font-medium backdrop-blur-sm transition-smooth"
         >
           <Edit className="h-3 w-3 mr-1" />
           Editar
@@ -30,7 +30,7 @@ export const BenefitActionsCell = ({ tool }: BenefitActionsCellProps) => {
         variant="outline" 
         size="sm"
         onClick={() => setAccessControlOpen(true)}
-        className="aurora-glass border-operational/30 hover:border-operational/50 hover:bg-operational/10 text-operational font-medium backdrop-blur-sm transition-all duration-300"
+        className="aurora-glass border-operational/30 hover:border-operational/50 hover:bg-operational/10 text-operational font-medium backdrop-blur-sm transition-smooth"
       >
         <Shield className="h-3 w-3 mr-1" />
         Acesso

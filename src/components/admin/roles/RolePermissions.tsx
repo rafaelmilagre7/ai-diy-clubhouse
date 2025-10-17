@@ -277,7 +277,7 @@ export function RolePermissions({ open, onOpenChange, role }: RolePermissionsPro
     return (
       <div
         key={permission.id}
-        className={`group relative rounded-xl border transition-all duration-300 ${
+        className={`group relative rounded-xl border transition-smooth ${
             isActive 
               ? 'bg-aurora-primary/5 border-aurora-primary/30 shadow-lg shadow-aurora-primary/5' 
               : 'bg-card border-border/30 hover:border-aurora-primary/20 hover:bg-aurora-primary/5'
@@ -329,7 +329,7 @@ export function RolePermissions({ open, onOpenChange, role }: RolePermissionsPro
     return (
       <div
         key={permission.id}
-        className={`group relative rounded-lg border transition-all duration-300 ${
+        className={`group relative rounded-lg border transition-smooth ${
           isActive 
             ? 'bg-destructive/5 border-destructive/20' 
             : 'bg-card border-border/30 hover:border-destructive/20'
