@@ -116,9 +116,9 @@ export const SecurityDashboard: React.FC<SecurityDashboardProps> = ({ days = 7 }
             label: "Total de Violações",
             value: metrics.totalViolations,
             icon: Shield,
-            gradient: "from-blue-500/20 to-cyan-500/10",
-            iconColor: "text-blue-500",
-            border: "border-blue-500/30",
+            gradient: "from-operational/20 to-operational/10",
+            iconColor: "text-operational",
+            border: "border-operational/30",
             description: `Período de ${metrics.periodDays} dias`
           },
           {
@@ -134,9 +134,9 @@ export const SecurityDashboard: React.FC<SecurityDashboardProps> = ({ days = 7 }
             label: "Violações Recentes",
             value: metrics.recentViolations,
             icon: TrendingUp,
-            gradient: "from-orange-500/20 to-amber-500/10",
-            iconColor: "text-orange-500",
-            border: "border-orange-500/30",
+            gradient: "from-status-warning/20 to-status-warning/10",
+            iconColor: "text-status-warning",
+            border: "border-status-warning/30",
             description: `Últimos ${metrics.periodDays} dias`
           },
           {
@@ -145,9 +145,9 @@ export const SecurityDashboard: React.FC<SecurityDashboardProps> = ({ days = 7 }
             icon: metrics.criticalViolations > 0 ? XCircle : CheckCircle,
             gradient: metrics.criticalViolations > 0 
               ? "from-destructive/20 to-red-500/10" 
-              : "from-green-500/20 to-emerald-500/10",
-            iconColor: metrics.criticalViolations > 0 ? "text-destructive" : "text-green-500",
-            border: metrics.criticalViolations > 0 ? "border-destructive/30" : "border-green-500/30",
+              : "from-operational/20 to-operational/10",
+            iconColor: metrics.criticalViolations > 0 ? "text-destructive" : "text-operational",
+            border: metrics.criticalViolations > 0 ? "border-destructive/30" : "border-operational/30",
             description: metrics.criticalViolations > 0 ? 'Sistema comprometido' : 'Sistema protegido'
           }
         ].map((metric, index) => (
@@ -280,7 +280,7 @@ export const SecurityDashboard: React.FC<SecurityDashboardProps> = ({ days = 7 }
                         </div>
                         <div className="flex items-center gap-2">
                           {violation.resolved ? (
-                            <Badge variant="outline" className="text-green-500 border-green-500/30 bg-green-500/10">
+                            <Badge variant="outline" className="text-operational border-operational/30 bg-operational/10">
                               ✓ Resolvido
                             </Badge>
                           ) : isAdmin ? (
@@ -305,11 +305,11 @@ export const SecurityDashboard: React.FC<SecurityDashboardProps> = ({ days = 7 }
         </TabsContent>
 
         <TabsContent value="types" className="space-y-6 mt-8">
-          <div className="aurora-glass rounded-2xl border border-blue-500/20 backdrop-blur-md overflow-hidden">
-            <div className="bg-gradient-to-r from-blue-500/10 via-cyan-500/5 to-transparent p-6 border-b border-blue-500/20">
+          <div className="aurora-glass rounded-2xl border border-operational/20 backdrop-blur-md overflow-hidden">
+            <div className="bg-gradient-to-r from-operational/10 via-operational/5 to-transparent p-6 border-b border-operational/20">
               <div className="flex items-center gap-3">
-                <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/10 aurora-glass">
-                  <TrendingUp className="h-5 w-5 text-blue-500" />
+                <div className="p-3 rounded-xl bg-gradient-to-br from-operational/20 to-operational/10 aurora-glass">
+                  <TrendingUp className="h-5 w-5 text-operational" />
                 </div>
                 <div>
                   <h3 className="text-xl font-bold aurora-text-gradient">Tipos de Violação</h3>

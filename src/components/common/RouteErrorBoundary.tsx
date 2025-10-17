@@ -106,8 +106,8 @@ class RouteErrorBoundary extends Component<RouteErrorBoundaryProps, RouteErrorBo
         <div className="min-h-screen bg-background flex items-center justify-center p-4">
           <Card className="w-full max-w-lg">
             <CardHeader className="text-center">
-              <div className="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-                <MapPin className="w-6 h-6 text-blue-600" />
+              <div className="mx-auto w-12 h-12 bg-operational/20 rounded-full flex items-center justify-center mb-4">
+                <MapPin className="w-6 h-6 text-operational" />
               </div>
               <CardTitle className="text-xl">
                 {isRouteError ? 'Página não encontrada' : 'Erro na página'}
@@ -120,11 +120,11 @@ class RouteErrorBoundary extends Component<RouteErrorBoundaryProps, RouteErrorBo
                   <p className="text-muted-foreground">
                     A página que você está procurando não existe ou não pôde ser carregada.
                   </p>
-                  <div className="bg-blue-50 border border-blue-200 rounded p-3">
-                    <p className="text-sm text-blue-800">
+                  <div className="bg-operational/10 border border-operational/30 rounded p-3">
+                    <p className="text-sm text-operational">
                       <strong>URL atual:</strong> {window.location.pathname}
                     </p>
-                    <p className="text-sm text-blue-700 mt-1">
+                    <p className="text-sm text-operational/90 mt-1">
                       Verifique se o endereço está correto ou tente navegar pelo menu.
                     </p>
                   </div>

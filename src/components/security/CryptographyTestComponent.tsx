@@ -70,13 +70,13 @@ export const CryptographyTestComponent: React.FC = () => {
 
   return (
     <div className="space-y-6 max-w-4xl">
-      <Card className="border-red-200 bg-red-50">
+      <Card className="border-status-error/30 bg-status-error/10">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-red-800">
+          <CardTitle className="flex items-center gap-2 text-status-error">
             <AlertTriangle className="w-5 h-5" />
             Demonstração: Criptografia Falsa vs Real
           </CardTitle>
-          <CardDescription className="text-red-700">
+          <CardDescription className="text-status-error/90">
             Veja como a implementação anterior era vulnerável
           </CardDescription>
         </CardHeader>
@@ -125,9 +125,9 @@ export const CryptographyTestComponent: React.FC = () => {
       {/* Resultados */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Criptografia Falsa */}
-        <Card className="border-red-200">
+        <Card className="border-status-error/30">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-red-600">
+            <CardTitle className="flex items-center gap-2 text-status-error">
               <Unlock className="w-4 h-4" />
               "Criptografia" Falsa (Vulnerável)
             </CardTitle>
@@ -159,9 +159,9 @@ export const CryptographyTestComponent: React.FC = () => {
               </Button>
             )}
             
-            <div className="text-sm text-red-600 bg-red-100 p-3 rounded">
+            <div className="text-sm text-status-error bg-status-error/20 p-3 rounded">
               <strong>Problema:</strong> Qualquer pessoa pode abrir o console do browser e executar:
-              <code className="block mt-1 bg-red-200 p-1 rounded">
+              <code className="block mt-1 bg-status-error/30 p-1 rounded">
                 atob("dados_criptografados") // Dados expostos!
               </code>
             </div>
@@ -169,9 +169,9 @@ export const CryptographyTestComponent: React.FC = () => {
         </Card>
 
         {/* Criptografia Real */}
-        <Card className="border-green-200">
+        <Card className="border-operational/30">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-green-600">
+            <CardTitle className="flex items-center gap-2 text-operational">
               <Shield className="w-4 h-4" />
               Criptografia Real (Segura)
             </CardTitle>
@@ -214,9 +214,9 @@ export const CryptographyTestComponent: React.FC = () => {
               </div>
             )}
 
-            <div className="text-sm text-green-600 bg-green-100 p-3 rounded">
+            <div className="text-sm text-operational bg-operational/20 p-3 rounded">
               <strong>Segurança:</strong> Mesmo com acesso ao código, é impossível descriptografar:
-              <code className="block mt-1 bg-green-200 p-1 rounded">
+              <code className="block mt-1 bg-operational/30 p-1 rounded">
                 // Tentativa no console = dados binários inúteis
                 atob("dados_aes") ❌ Impossível quebrar!
               </code>

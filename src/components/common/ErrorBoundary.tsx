@@ -54,10 +54,10 @@ const DefaultErrorFallback: React.FC<{ error?: Error; retry?: () => void }> = ({
 }) => (
   <div className="min-h-[200px] flex items-center justify-center">
     <div className="text-center space-y-4">
-      <div className="text-red-500 text-lg font-semibold">
+      <div className="text-status-error text-lg font-semibold">
         Algo deu errado
       </div>
-      <div className="text-gray-600 text-sm max-w-md">
+      <div className="text-muted-foreground text-sm max-w-md">
         {error?.message || 'Ocorreu um erro inesperado'}
       </div>
       {retry && (

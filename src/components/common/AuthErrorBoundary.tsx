@@ -103,8 +103,8 @@ class AuthErrorBoundary extends Component<AuthErrorBoundaryProps, AuthErrorBound
         <div className="min-h-screen bg-background flex items-center justify-center p-4">
           <Card className="w-full max-w-lg">
             <CardHeader className="text-center">
-              <div className="mx-auto w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mb-4">
-                <Shield className="w-6 h-6 text-orange-600" />
+              <div className="mx-auto w-12 h-12 bg-status-warning/20 rounded-full flex items-center justify-center mb-4">
+                <Shield className="w-6 h-6 text-status-warning" />
               </div>
               <CardTitle className="text-xl">
                 {isAuthError ? 'Problema de Autenticação' : 'Erro de Segurança'}
@@ -117,11 +117,11 @@ class AuthErrorBoundary extends Component<AuthErrorBoundaryProps, AuthErrorBound
                   <p className="text-muted-foreground">
                     Sua sessão expirou ou você não tem permissão para acessar esta área.
                   </p>
-                  <div className="bg-orange-50 border border-orange-200 rounded p-3">
-                    <p className="text-sm text-orange-800">
+                  <div className="bg-status-warning/10 border border-status-warning/30 rounded p-3">
+                    <p className="text-sm text-status-warning">
                       <strong>Possíveis causas:</strong>
                     </p>
-                    <ul className="text-sm text-orange-700 mt-1 space-y-1">
+                    <ul className="text-sm text-status-warning/90 mt-1 space-y-1">
                       <li>• Sessão expirada</li>
                       <li>• Permissões insuficientes</li>
                       <li>• Token de acesso inválido</li>

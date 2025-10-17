@@ -29,8 +29,8 @@ export const NetworkError: React.FC<NetworkErrorProps> = ({
     <div className="min-h-[300px] flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-            <WifiOff className="w-6 h-6 text-blue-600" />
+          <div className="mx-auto w-12 h-12 bg-operational/20 rounded-full flex items-center justify-center mb-4">
+            <WifiOff className="w-6 h-6 text-operational" />
           </div>
           <CardTitle className="text-xl">{title}</CardTitle>
         </CardHeader>

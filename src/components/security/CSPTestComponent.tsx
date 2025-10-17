@@ -184,9 +184,9 @@ export const CSPTestComponent: React.FC = () => {
 
         {/* Informações da Edge Function */}
         {securityHeaders && (
-          <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-            <h4 className="font-medium text-green-800 mb-2">Edge Function Ativa</h4>
-            <div className="text-sm text-green-700 space-y-1">
+          <div className="p-4 bg-operational/10 border border-operational/30 rounded-lg">
+            <h4 className="font-medium text-operational mb-2">Edge Function Ativa</h4>
+            <div className="text-sm text-operational/90 space-y-1">
               <p><strong>Timestamp:</strong> {securityHeaders.timestamp}</p>
               <p><strong>Nonce Gerado:</strong> <code>{securityHeaders.nonce}</code></p>
               <p><strong>Ambiente:</strong> {securityHeaders.environment}</p>
@@ -196,21 +196,21 @@ export const CSPTestComponent: React.FC = () => {
 
         {/* Erros */}
         {error && (
-          <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-            <h4 className="font-medium text-red-800 mb-2">Erro na Edge Function</h4>
-            <p className="text-sm text-red-700">{error}</p>
+          <div className="p-4 bg-status-error/10 border border-status-error/30 rounded-lg">
+            <h4 className="font-medium text-status-error mb-2">Erro na Edge Function</h4>
+            <p className="text-sm text-status-error/90">{error}</p>
           </div>
         )}
 
         {/* Resultado Geral */}
         <div className="text-center pt-4 border-t">
           {Object.values(testResults).every(result => result === true) && (
-            <div className="text-green-600 font-medium">
+            <div className="text-operational font-medium">
               🛡️ Todos os testes de segurança passaram!
             </div>
           )}
           {Object.values(testResults).some(result => result === false) && (
-            <div className="text-red-600 font-medium">
+            <div className="text-status-error font-medium">
               ⚠️ Alguns testes falharam. Verifique a configuração CSP.
             </div>
           )}

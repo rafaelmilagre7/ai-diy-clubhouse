@@ -252,7 +252,7 @@ const UserOnboardingCard = ({ user }: UserOnboardingCardProps) => {
             </Badge>
           </div>
           
-          <div className="flex items-center space-x-4 text-sm text-gray-500 mt-1">
+          <div className="flex items-center space-x-4 text-sm text-muted-foreground mt-1">
             <div className="flex items-center space-x-1">
               <Mail className="h-3 w-3" />
               <span>{user.email}</span>
@@ -276,7 +276,7 @@ const UserOnboardingCard = ({ user }: UserOnboardingCardProps) => {
       <div className="flex items-center space-x-2 text-sm">
         <div className="text-right">
           <p className="font-medium">Health Score: {user.healthScore || 0}/100</p>
-          <p className="text-gray-500">Segmento: {user.segment || 'N/A'}</p>
+          <p className="text-muted-foreground">Segmento: {user.segment || 'N/A'}</p>
         </div>
         
         {!user.onboarding_completed && (

@@ -140,8 +140,8 @@ export const SecureInput: React.FC<SecureInputProps> = ({
           placeholder={placeholder}
           className={`
             ${className}
-            ${hasError ? 'border-red-500 focus:border-red-500' : ''}
-            ${isFocused ? 'ring-2 ring-blue-500/20' : ''}
+            ${hasError ? 'border-status-error focus:border-status-error' : ''}
+            ${isFocused ? 'ring-2 ring-operational/20' : ''}
             ${type === 'password' ? 'pr-20' : 'pr-10'}
           `}
           maxLength={maxLength}
@@ -170,11 +170,11 @@ export const SecureInput: React.FC<SecureInputProps> = ({
           )}
           
           {isFocused && (
-            <Shield className="h-4 w-4 text-green-500" aria-label="Entrada protegida" />
+            <Shield className="h-4 w-4 text-operational" aria-label="Entrada protegida" />
           )}
           
           {hasError && (
-            <AlertTriangle className="h-4 w-4 text-red-500" aria-label="Erro de validação" />
+            <AlertTriangle className="h-4 w-4 text-status-error" aria-label="Erro de validação" />
           )}
         </div>
       </div>
@@ -183,7 +183,7 @@ export const SecureInput: React.FC<SecureInputProps> = ({
       {hasError && (
         <p 
           id={`${name}-error`}
-          className="mt-1 text-sm text-red-600"
+          className="mt-1 text-sm text-status-error"
           role="alert"
         >
           {validationError}

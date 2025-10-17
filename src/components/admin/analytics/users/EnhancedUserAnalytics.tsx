@@ -335,7 +335,7 @@ const UserJourneyAnalysis = ({ data, loading }: any) => (
     </CardHeader>
     <CardContent>
       {loading ? (
-        <div className="h-64 bg-gray-200 animate-pulse rounded" />
+        <div className="h-64 bg-muted animate-pulse rounded" />
       ) : (
         <div className="space-y-6">
           <div className="flex items-center justify-between">
@@ -347,7 +347,7 @@ const UserJourneyAnalysis = ({ data, loading }: any) => (
             <div key={index} className="flex items-center justify-between p-3 bg-muted rounded-lg">
               <div>
                 <div className="font-medium">{point.page}</div>
-                <div className="text-sm text-gray-600">{point.description}</div>
+                <div className="text-sm text-muted-foreground">{point.description}</div>
               </div>
               <div className="text-right">
                 <div className="text-lg font-semibold text-destructive">{point.dropoffRate}%</div>
@@ -355,7 +355,7 @@ const UserJourneyAnalysis = ({ data, loading }: any) => (
               </div>
             </div>
           )) || (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-muted-foreground">
               Carregando dados da jornada...
             </div>
           )}
@@ -373,7 +373,7 @@ const UserGrowthTrendCard = ({ data, loading }: any) => (
     </CardHeader>
     <CardContent>
       {loading ? (
-        <div className="h-40 bg-gray-200 animate-pulse rounded" />
+        <div className="h-40 bg-muted animate-pulse rounded" />
       ) : (
         <div className="space-y-4">
           <div className="flex items-center justify-between">

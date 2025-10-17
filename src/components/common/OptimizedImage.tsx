@@ -68,10 +68,10 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
   if (isLoading) {
     return (
       <div 
-        className={`bg-gray-200 animate-pulse flex items-center justify-center ${className}`}
+        className={`bg-muted animate-pulse flex items-center justify-center ${className}`}
         {...props}
       >
-        <span className="text-gray-500 text-sm">Carregando...</span>
+        <span className="text-muted-foreground text-sm">Carregando...</span>
       </div>
     );
   }
@@ -79,10 +79,10 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
   if (hasError && !fallbackSrc) {
     return (
       <div 
-        className={`bg-gray-100 border border-gray-300 flex items-center justify-center ${className}`}
+        className={`bg-muted/30 border border-border flex items-center justify-center ${className}`}
         {...props}
       >
-        <span className="text-gray-500 text-sm">Imagem não disponível</span>
+        <span className="text-muted-foreground text-sm">Imagem não disponível</span>
       </div>
     );
   }

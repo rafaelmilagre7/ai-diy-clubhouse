@@ -30,7 +30,7 @@ export const UserFunnelChart = ({ data, loading }: UserFunnelChartProps) => {
         <CardContent>
           <div className="space-y-4">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-16 bg-gray-200 animate-pulse rounded" />
+              <div key={i} className="h-16 bg-muted animate-pulse rounded" />
             ))}
           </div>
         </CardContent>
@@ -78,7 +78,7 @@ export const UserFunnelChart = ({ data, loading }: UserFunnelChartProps) => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                       <div className="flex items-center space-x-2">
-                        <span className="font-semibold text-gray-900">{step.name}</span>
+                        <span className="font-semibold text-foreground">{step.name}</span>
                         <Badge variant="secondary" className="text-xs">
                           {step.users.toLocaleString()} usuários
                         </Badge>
@@ -110,7 +110,7 @@ export const UserFunnelChart = ({ data, loading }: UserFunnelChartProps) => {
                 {/* Connection line to next step */}
                 {!isLastStep && (
                   <div className="flex justify-center my-2">
-                    <div className="w-px h-4 bg-gray-300"></div>
+                    <div className="w-px h-4 bg-border"></div>
                   </div>
                 )}
               </div>

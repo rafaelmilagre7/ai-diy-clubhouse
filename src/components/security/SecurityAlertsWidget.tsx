@@ -39,11 +39,11 @@ export function SecurityAlertsWidget() {
       case 'critical':
         return <AlertTriangle className="h-5 w-5 text-destructive" />;
       case 'high':
-        return <AlertTriangle className="h-5 w-5 text-orange-500" />;
+        return <AlertTriangle className="h-5 w-5 text-status-warning" />;
       case 'medium':
-        return <Activity className="h-5 w-5 text-yellow-500" />;
+        return <Activity className="h-5 w-5 text-status-warning" />;
       default:
-        return <Activity className="h-5 w-5 text-blue-500" />;
+        return <Activity className="h-5 w-5 text-operational" />;
     }
   };
 
@@ -90,9 +90,9 @@ export function SecurityAlertsWidget() {
             label: "Falhas de Login",
             value: metrics.failedLogins,
             icon: Shield,
-            gradient: "from-orange-500/20 to-amber-500/10",
-            iconColor: "text-orange-500",
-            border: "border-orange-500/30"
+            gradient: "from-status-warning/20 to-status-warning/10",
+            iconColor: "text-status-warning",
+            border: "border-status-warning/30"
           },
           {
             label: "IPs Suspeitos",
@@ -106,9 +106,9 @@ export function SecurityAlertsWidget() {
             label: "Total Violações",
             value: metrics.totalViolations,
             icon: X,
-            gradient: "from-blue-500/20 to-cyan-500/10",
-            iconColor: "text-blue-500",
-            border: "border-blue-500/30"
+            gradient: "from-operational/20 to-operational/10",
+            iconColor: "text-operational",
+            border: "border-operational/30"
           }
         ].map((metric, index) => (
           <div 
@@ -212,11 +212,11 @@ export function SecurityAlertsWidget() {
 
       {/* Enhanced Suspicious IPs */}
       {metrics.suspiciousIPs.length > 0 && (
-        <div className="aurora-glass rounded-2xl border border-orange-500/20 backdrop-blur-md overflow-hidden">
-          <div className="bg-gradient-to-r from-orange-500/10 via-red-500/5 to-transparent p-6 border-b border-orange-500/20">
+        <div className="aurora-glass rounded-2xl border border-status-warning/20 backdrop-blur-md overflow-hidden">
+          <div className="bg-gradient-to-r from-status-warning/10 via-status-error/5 to-transparent p-6 border-b border-status-warning/20">
             <div className="flex items-center gap-3">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500/20 to-red-500/10 aurora-glass">
-                <Activity className="h-5 w-5 text-orange-500" />
+              <div className="p-3 rounded-xl bg-gradient-to-br from-status-warning/20 to-status-error/10 aurora-glass">
+                <Activity className="h-5 w-5 text-status-warning" />
               </div>
               <h3 className="text-lg font-bold aurora-text-gradient">
                 IPs Suspeitos Detectados
@@ -252,10 +252,10 @@ export function SecurityAlertsWidget() {
 
       {/* Enhanced Healthy Status */}
       {alerts.length === 0 && metrics.recentViolations === 0 && (
-        <div className="aurora-glass rounded-2xl p-8 border border-green-500/20 backdrop-blur-md">
+        <div className="aurora-glass rounded-2xl p-8 border border-operational/20 backdrop-blur-md">
           <div className="text-center space-y-4">
-            <div className="p-4 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-500/10 aurora-glass mx-auto w-fit">
-              <Shield className="h-8 w-8 text-green-500 aurora-pulse" />
+            <div className="p-4 rounded-xl bg-gradient-to-br from-operational/20 to-operational/10 aurora-glass mx-auto w-fit">
+              <Shield className="h-8 w-8 text-operational aurora-pulse" />
             </div>
             <div>
               <h3 className="text-xl font-bold aurora-text-gradient mb-2">Sistema Seguro</h3>

@@ -237,7 +237,7 @@ export const UserDetailsTable = ({ users, loading, onUserAction }: UserDetailsTa
           {/* Paginação */}
           {totalPages > 1 && (
             <div className="flex items-center justify-between">
-              <div className="text-sm text-gray-500">
+              <div className="text-sm text-muted-foreground">
                 Exibindo {startIndex + 1}-{Math.min(endIndex, users.length)} de {users.length} usuários
               </div>
               

@@ -72,7 +72,7 @@ export const SecureFormInput: React.FC<SecureFormInputProps> = ({
     value: cleanValue,
     onChange: handleChange,
     placeholder,
-    className: `${className} ${hasXSSAttempt ? 'border-red-500 border-2' : ''}`,
+    className: `${className} ${hasXSSAttempt ? 'border-status-error border-2' : ''}`,
     maxLength,
     disabled
   };
@@ -83,11 +83,11 @@ export const SecureFormInput: React.FC<SecureFormInputProps> = ({
       <div className="absolute top-2 right-2 z-10 flex items-center gap-1">
         {hasXSSAttempt ? (
           <div title="Conteúdo suspeito detectado e limpo">
-            <AlertTriangle className="h-4 w-4 text-red-500" />
+            <AlertTriangle className="h-4 w-4 text-status-error" />
           </div>
         ) : (
           <div title="Input seguro">
-            <Shield className="h-4 w-4 text-green-500 opacity-50" />
+            <Shield className="h-4 w-4 text-operational opacity-50" />
           </div>
         )}
       </div>
@@ -104,7 +104,7 @@ export const SecureFormInput: React.FC<SecureFormInputProps> = ({
 
       {/* Aviso de segurança */}
       {hasXSSAttempt && (
-        <div className="mt-1 text-xs text-red-600 flex items-center gap-1">
+        <div className="mt-1 text-xs text-status-error flex items-center gap-1">
           <AlertTriangle className="h-3 w-3" />
           Conteúdo potencialmente malicioso foi detectado e removido
         </div>

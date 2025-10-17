@@ -112,10 +112,10 @@ export const ErrorDebugInfo: React.FC<ErrorDebugInfoProps> = ({
 
   return (
     <div className="fixed bottom-4 right-4 z-50 w-96 max-h-96 overflow-hidden">
-      <Card className="border-red-200 bg-red-50">
+      <Card className="border-status-error/30 bg-status-error/10">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-sm text-red-800 flex items-center gap-2">
+            <CardTitle className="text-sm text-status-error flex items-center gap-2">
               <Bug className="w-4 h-4" />
               Error Debug Info (DEV)
             </CardTitle>
@@ -131,22 +131,22 @@ export const ErrorDebugInfo: React.FC<ErrorDebugInfoProps> = ({
         </CardHeader>
         
         <CardContent className="space-y-3 text-sm">
-          <div>
-            <strong className="text-red-800">Error:</strong>
-            <p className="text-red-700 break-words">{error.message}</p>
-          </div>
-
-          {context && (
             <div>
-              <strong className="text-red-800">Context:</strong>
-              <p className="text-red-700">{context}</p>
+              <strong className="text-status-error">Error:</strong>
+              <p className="text-status-error/90 break-words">{error.message}</p>
             </div>
-          )}
 
-          <div>
-            <strong className="text-red-800">Type:</strong>
-            <p className="text-red-700">{error.name}</p>
-          </div>
+            {context && (
+              <div>
+                <strong className="text-status-error">Context:</strong>
+                <p className="text-status-error/90">{context}</p>
+              </div>
+            )}
+
+            <div>
+              <strong className="text-status-error">Type:</strong>
+              <p className="text-status-error/90">{error.name}</p>
+            </div>
 
           {import.meta.env.DEV && error.stack && (
             <div>
@@ -162,7 +162,7 @@ export const ErrorDebugInfo: React.FC<ErrorDebugInfoProps> = ({
                 </Button>
               </div>
               {showStack && (
-                <pre className="text-xs text-red-600 bg-red-100 p-2 rounded overflow-auto max-h-32">
+                <pre className="text-xs text-status-error bg-status-error/20 p-2 rounded overflow-auto max-h-32">
                   {error.stack}
                 </pre>
               )}

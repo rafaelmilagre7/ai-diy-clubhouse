@@ -40,9 +40,9 @@ export const UserSegmentChart = ({ data, loading }: UserSegmentChartProps) => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="h-40 bg-gray-200 animate-pulse rounded" />
+            <div className="h-40 bg-muted animate-pulse rounded" />
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-12 bg-gray-100 animate-pulse rounded" />
+              <div key={i} className="h-12 bg-muted/50 animate-pulse rounded" />
             ))}
           </div>
         </CardContent>
@@ -63,7 +63,7 @@ export const UserSegmentChart = ({ data, loading }: UserSegmentChartProps) => {
       return (
         <div className="bg-white p-3 border rounded-lg shadow-lg">
           <p className="font-semibold">{data.name}</p>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
             {data.value} usuários ({data.percentage}%)
           </p>
         </div>
@@ -128,7 +128,7 @@ export const UserSegmentChart = ({ data, loading }: UserSegmentChartProps) => {
                         {segment.count} usuários
                       </Badge>
                     </div>
-                    <p className="text-sm text-gray-600">{segment.description}</p>
+                    <p className="text-sm text-muted-foreground">{segment.description}</p>
                   </div>
                 </div>
                 
@@ -149,7 +149,7 @@ export const UserSegmentChart = ({ data, loading }: UserSegmentChartProps) => {
                   </div>
                   
                   <div className="flex items-center space-x-2">
-                    <span className="text-xs text-gray-500">Health Score:</span>
+                    <span className="text-xs text-muted-foreground">Health Score:</span>
                     <div className="flex items-center space-x-1">
                       <Progress value={segment.healthScore} className="w-12 h-1" />
                       <span className="text-xs font-medium">{segment.healthScore}</span>
@@ -163,7 +163,7 @@ export const UserSegmentChart = ({ data, loading }: UserSegmentChartProps) => {
           {/* Resumo dos insights */}
           <div className="border-t pt-4">
             <h4 className="font-semibold mb-2">💡 Insights Principais</h4>
-            <div className="space-y-2 text-sm text-gray-600">
+            <div className="space-y-2 text-sm text-muted-foreground">
               {data && (
                 <>
                   <p>

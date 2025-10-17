@@ -107,7 +107,7 @@ export const LoadingFallback: React.FC<LoadingFallbackProps> = ({
         <CardContent className="p-6">
           <div className="flex flex-col items-center space-y-4">
             {circuitBreakerActive ? (
-              <AlertCircle className="h-12 w-12 text-yellow-500" />
+              <AlertCircle className="h-12 w-12 text-status-warning" />
             ) : (
               <Loader2 className="h-12 w-12 animate-spin text-primary" />
             )}
@@ -119,7 +119,7 @@ export const LoadingFallback: React.FC<LoadingFallbackProps> = ({
               <p className="text-sm text-muted-foreground">{getLoadingMessage()}</p>
               
               {retryCount > 0 && !circuitBreakerActive && (
-                <p className="text-xs text-yellow-600">
+                <p className="text-xs text-status-warning">
                   Tentativa {retryCount + 1}...
                 </p>
               )}
@@ -133,13 +133,13 @@ export const LoadingFallback: React.FC<LoadingFallbackProps> = ({
 
             {/* Estados específicos de loading */}
             {loadingState.auth && (
-              <div className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
+              <div className="text-xs text-operational bg-operational/10 px-2 py-1 rounded">
                 Verificando autenticação...
               </div>
             )}
             
             {loadingState.data && (
-              <div className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">
+              <div className="text-xs text-operational bg-operational/10 px-2 py-1 rounded">
                 Carregando dados...
               </div>
             )}
