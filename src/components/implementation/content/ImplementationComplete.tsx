@@ -63,7 +63,7 @@ export const ImplementationComplete = ({ module, onComplete, onPrevious }: Imple
           }}
           className="mx-auto w-24 h-24 bg-gradient-to-br from-aurora-primary/20 to-aurora-primary-dark/25 rounded-full flex items-center justify-center border border-aurora-primary/30 shadow-2xl shadow-aurora-primary/20"
         >
-          <CheckCircle2 className="h-12 w-12 text-aurora-primary-light drop-shadow-[0_0_8px_rgba(10,171,181,0.4)]" />
+          <CheckCircle2 className="h-12 w-12 text-aurora-primary-light [filter:drop-shadow(var(--shadow-glow-icon))]" />
         </motion.div>
 
         {/* Success Message */}

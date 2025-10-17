@@ -33,7 +33,7 @@ export const SuggestionCard: React.FC<SuggestionCardProps> = ({
         group h-full cursor-pointer transition-all duration-300 hover:shadow-md hover:-translate-y-1
         bg-card/50 backdrop-blur-sm
         ${suggestion.status === 'implemented' 
-          ? 'border-2 border-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.15)] bg-emerald-50/20 dark:bg-emerald-950/10' 
+          ? 'border-2 border-emerald-400 [box-shadow:var(--shadow-success-glow)] bg-emerald-50/20 dark:bg-emerald-950/10' 
           : 'border-border'
         }
       `}

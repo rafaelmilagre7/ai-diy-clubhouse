@@ -271,7 +271,7 @@ const SolutionMetrics = () => {
                         <XAxis type="number" />
                         <YAxis dataKey="name" type="category" width={150} />
                         <Tooltip />
-                        <Bar dataKey="value" fill="hsl(var(--aurora-primary))">
+                        <Bar dataKey="value">
                           {completionFunnelData.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={chartColors.categorical[index % chartColors.categorical.length]} />
                           ))}
@@ -342,7 +342,7 @@ const SolutionMetrics = () => {
                       />
                       <YAxis label={{ value: 'Taxa de Abandono (%)', angle: -90, position: 'insideLeft' }} />
                       <Tooltip />
-                      <Bar dataKey="rate" fill="#FF6B6B" name="Taxa de Abandono (%)" />
+                      <Bar dataKey="rate" fill={chartColors.categorical[1]} name="Taxa de Abandono (%)" />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -377,8 +377,8 @@ const SolutionMetrics = () => {
                       <YAxis />
                       <Tooltip />
                       <Legend />
-                      <Line type="monotone" dataKey="views" stroke="#0088FE" name="Visualizações" />
-                      <Line type="monotone" dataKey="completions" stroke="#00C49F" name="Conclusões" />
+                      <Line type="monotone" dataKey="views" stroke={chartColors.categorical[2]} name="Visualizações" />
+                      <Line type="monotone" dataKey="completions" stroke={chartColors.categorical[3]} name="Conclusões" />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>

@@ -32,7 +32,7 @@ export const UnifiedContentBlock: React.FC<UnifiedContentBlockProps> = ({
         {/* Padrão de pontos sutil */}
         <div className="absolute inset-0 opacity-10 pointer-events-none"
              style={{
-               backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.3) 1px, transparent 0)',
+               backgroundImage: 'var(--pattern-dots-medium)',
                backgroundSize: '20px 20px'
              }}></div>
         

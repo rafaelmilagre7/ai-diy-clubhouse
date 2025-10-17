@@ -14,7 +14,7 @@ export const SolutionHeaderSection = ({ solution }: SolutionHeaderSectionProps) 
       {/* Subtle dots pattern */}
       <div className="absolute inset-0 opacity-5 pointer-events-none rounded-2xl">
         <div className="absolute inset-0 rounded-2xl" style={{
-          backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.2) 1px, transparent 0)',
+          backgroundImage: 'var(--pattern-dots-light)',
           backgroundSize: '20px 20px'
         }} />
       </div>

@@ -43,10 +43,10 @@ export const ConnectionsChart: React.FC<ConnectionsChartProps> = ({ analytics })
           />
           <Tooltip 
             contentStyle={{
-              backgroundColor: 'hsl(var(--card))',
-              border: '1px solid hsl(var(--border))',
+              backgroundColor: 'hsl(var(--popover))',
+              borderColor: 'hsl(var(--border))',
               borderRadius: '8px',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+              boxShadow: 'var(--shadow-card-soft)'
             }}
             labelStyle={{ color: 'hsl(var(--foreground))' }}
           />

@@ -31,7 +31,7 @@ export const ImplementationTabsNavigation = ({
       {/* Subtle dots pattern */}
       <div className="absolute inset-0 opacity-[0.03] pointer-events-none rounded-2xl">
         <div className="absolute inset-0 rounded-2xl" style={{
-          backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.4) 1px, transparent 0)',
+          backgroundImage: 'var(--pattern-dots-strong)',
           backgroundSize: '12px 12px'
         }} />
       </div>
@@ -58,7 +58,7 @@ export const ImplementationTabsNavigation = ({
             {/* Icon with enhanced glow effect when active */}
             <div className={cn(
               "transition-all duration-300 relative",
-              activeTab === tab.id ? "text-aurora-primary-light drop-shadow-[0_0_8px_rgba(10,171,181,0.3)]" : "text-neutral-400 group-hover:text-neutral-300"
+              activeTab === tab.id ? "text-aurora-primary-light [filter:drop-shadow(var(--shadow-glow-tab))]" : "text-neutral-400 group-hover:text-neutral-300"
             )}>
               {tab.icon}
               {/* Icon glow effect */}

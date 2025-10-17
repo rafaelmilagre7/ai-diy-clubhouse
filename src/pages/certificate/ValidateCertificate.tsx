@@ -163,7 +163,7 @@ const ValidateCertificate = () => {
   };
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0A0B14] to-[#1A1E2E] text-white flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-surface-base to-surface-raised text-white flex flex-col">
       <header className="border-b border-neutral-700/50">
         <div className="container mx-auto py-4 flex justify-between items-center">
           <h1 className="text-xl font-bold text-white">Verificação de Certificados</h1>

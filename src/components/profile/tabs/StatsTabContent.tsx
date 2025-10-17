@@ -50,7 +50,7 @@ export const StatsTabContent = ({ stats, implementations }: StatsTabContentProps
                     } 
                     className="h-2"
                     style={{
-                      background: 'rgba(57, 73, 171, 0.1)'
+                      background: 'var(--category-receita-bg)'
                     }}
                   />
                 </div>
@@ -68,7 +68,7 @@ export const StatsTabContent = ({ stats, implementations }: StatsTabContentProps
                     } 
                     className="h-2"
                     style={{
-                      background: 'rgba(142, 36, 170, 0.1)'
+                      background: 'var(--category-operacional-bg)'
                     }}
                   />
                 </div>
@@ -86,7 +86,7 @@ export const StatsTabContent = ({ stats, implementations }: StatsTabContentProps
                     } 
                     className="h-2"
                     style={{
-                      background: 'rgba(0, 137, 123, 0.1)'
+                      background: 'var(--category-estrategia-bg)'
                     }}
                   />
                 </div>

@@ -12,6 +12,7 @@
 @import './styles/toast-aurora.css';
 @import './styles/accessibility.css';
 @import './styles/social-brands.css';
+@import './styles/decorative-patterns.css';
 
 @tailwind base;
 @tailwind components;

@@ -1,0 +1,36 @@
+/**
+ * Decorative Patterns & Effects
+ * Padrões visuais reutilizáveis da plataforma Aurora
+ * Criado na Fase 9: Normalização Total 100%
+ */
+
+:root {
+  /* ===== DOT PATTERNS ===== */
+  --pattern-dots-light: radial-gradient(circle at 1px 1px, hsl(var(--foreground) / 0.2) 1px, transparent 0);
+  --pattern-dots-medium: radial-gradient(circle at 1px 1px, hsl(var(--foreground) / 0.3) 1px, transparent 0);
+  --pattern-dots-strong: radial-gradient(circle at 1px 1px, hsl(var(--foreground) / 0.4) 1px, transparent 0);
+  
+  /* Grid Pattern */
+  --pattern-grid-aurora: linear-gradient(hsl(var(--aurora-primary) / 0.03) 1px, transparent 1px), 
+                         linear-gradient(90deg, hsl(var(--aurora-primary) / 0.03) 1px, transparent 1px);
+  
+  /* ===== GLOW SHADOWS ===== */
+  --shadow-glow-tab: 0 0 8px hsl(var(--aurora-primary) / 0.3);
+  --shadow-glow-icon: 0 0 8px hsl(var(--aurora-primary) / 0.4);
+  --shadow-success-glow: 0 0 20px hsl(142 76% 36% / 0.15);
+  
+  /* ===== CARD SHADOWS ===== */
+  --shadow-card-soft: 0 4px 6px -1px hsl(var(--background) / 0.1);
+  
+  /* ===== CATEGORY BACKGROUND OVERLAYS ===== */
+  --category-receita-bg: hsl(237 48% 45% / 0.1);
+  --category-operacional-bg: hsl(286 65% 40% / 0.1);
+  --category-estrategia-bg: hsl(174 100% 27% / 0.1);
+  --category-aurora-bg: hsl(var(--aurora-primary) / 0.1);
+  
+  /* ===== GRADIENTS FOR COMPLEX DECORATIVE PATTERNS ===== */
+  --gradient-radial-purple: radial-gradient(ellipse at top, hsl(243 75% 59% / 0.3), transparent 50%);
+  --gradient-radial-cert: radial-gradient(circle at 20% 80%, hsl(261 51% 51% / 0.1) 0%, transparent 50%),
+                          radial-gradient(circle at 80% 20%, hsl(221 83% 53% / 0.1) 0%, transparent 50%),
+                          radial-gradient(circle at 40% 40%, hsl(271 91% 65% / 0.05) 0%, transparent 50%);
+}

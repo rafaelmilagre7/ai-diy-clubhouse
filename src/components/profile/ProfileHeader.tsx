@@ -89,7 +89,7 @@ export const ProfileHeader = ({
               value={completionRate} 
               className="h-2" 
               style={{
-                background: 'rgba(0, 234, 217, 0.1)'
+                background: 'var(--category-aurora-bg)'
               }}
             />
           </div>
