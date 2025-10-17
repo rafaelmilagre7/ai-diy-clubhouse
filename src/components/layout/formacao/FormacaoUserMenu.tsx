@@ -34,11 +34,11 @@ export const FormacaoUserMenu = ({ sidebarOpen }: FormacaoUserMenuProps) => {
     return (
       <div className="flex justify-center">
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+        <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="relative h-8 w-8 rounded-full hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring">
               <Avatar className="h-8 w-8">
                 <AvatarImage src={profile?.avatar_url} alt={profile?.name || "Usuário"} />
-                <AvatarFallback>{getInitials(profile?.name)}</AvatarFallback>
+                <AvatarFallback className="bg-primary text-primary-foreground">{getInitials(profile?.name)}</AvatarFallback>
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
@@ -82,10 +82,10 @@ export const FormacaoUserMenu = ({ sidebarOpen }: FormacaoUserMenuProps) => {
     <div className="p-4">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+          <Button variant="ghost" className="relative h-8 w-8 rounded-full hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring">
             <Avatar className="h-8 w-8">
               <AvatarImage src={profile?.avatar_url} alt={profile?.name || "Usuário"} />
-              <AvatarFallback>{getInitials(profile?.name)}</AvatarFallback>
+              <AvatarFallback className="bg-primary text-primary-foreground">{getInitials(profile?.name)}</AvatarFallback>
             </Avatar>
           </Button>
         </DropdownMenuTrigger>

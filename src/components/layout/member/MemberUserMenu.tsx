@@ -29,10 +29,10 @@ export const MemberUserMenu = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+        <Button variant="ghost" className="relative h-8 w-8 rounded-full hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring">
           <Avatar className="h-8 w-8">
             <AvatarImage src={profile?.avatar_url} alt={profile?.name || "Usuário"} />
-            <AvatarFallback className="bg-viverblue text-white">{getInitials(profile?.name)}</AvatarFallback>
+            <AvatarFallback className="bg-primary text-primary-foreground">{getInitials(profile?.name)}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
