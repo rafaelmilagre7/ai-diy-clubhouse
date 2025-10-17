@@ -23,13 +23,15 @@ export const OnboardingSuccess: React.FC<OnboardingSuccessProps> = ({
       const style = getComputedStyle(document.documentElement);
       const primary = style.getPropertyValue('--aurora-primary').trim();
       const destructive = style.getPropertyValue('--destructive').trim();
+      const warning = style.getPropertyValue('--warning').trim();
+      const engagementHigh = style.getPropertyValue('--engagement-high').trim();
       
       return [
-        primary ? `hsl(${primary})` : '#0ABAB5',
-        destructive ? `hsl(${destructive})` : '#E11D48',
-        '#7C3AED',
-        '#F59E0B',
-        '#10B981'
+        primary ? `hsl(${primary})` : 'hsl(178 90% 38%)',
+        destructive ? `hsl(${destructive})` : 'hsl(0 62.8% 30.6%)',
+        warning ? `hsl(${warning})` : 'hsl(43 96% 56%)',
+        engagementHigh ? `hsl(${engagementHigh})` : 'hsl(142 76% 36%)',
+        'hsl(248 53% 58%)'
       ];
     };
     

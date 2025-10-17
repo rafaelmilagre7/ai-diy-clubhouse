@@ -32,6 +32,7 @@ import { z } from "zod";
 import { useCreateTag, useUpdateTag } from "@/hooks/useLessonTags";
 import { LessonTag } from "@/lib/supabase/types/learning";
 import { Palette } from "lucide-react";
+import { chartColors } from "@/lib/chart-utils";
 
 const tagSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
@@ -50,18 +51,8 @@ interface TagFormModalProps {
   editingTag?: LessonTag | null;
 }
 
-const predefinedColors = [
-  "#ef4444", // red
-  "#f59e0b", // amber
-  "#eab308", // yellow
-  "#22c55e", // green
-  "#06b6d4", // cyan
-  "#3b82f6", // blue
-  "#8b5cf6", // violet
-  "#a855f7", // purple
-  "#ec4899", // pink
-  "#6b7280", // gray
-];
+// Usar paleta de cores do design system
+const predefinedColors = chartColors.categorical;
 
 const categories = [
   "Marketing & Conteúdo",

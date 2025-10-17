@@ -67,6 +67,28 @@
   --viverblue-dark: 180 100% 40%;
   --viverblue-darker: 180 100% 30%;
   
+  /* --- Brand Social Colors --- */
+  --brand-whatsapp: 142 70% 49%;    /* #25D366 */
+  --brand-linkedin: 201 100% 35%;   /* #0077B5 */
+  --brand-linkedin-dark: 201 100% 26%; /* #005885 */
+  
+  /* --- Engagement & Analytics Colors --- */
+  --engagement-high: 142 76% 36%;   /* Verde - alta taxa */
+  --engagement-medium: 43 96% 56%;  /* Amarelo - taxa média */
+  --engagement-low: 0 84% 60%;      /* Vermelho - taxa baixa */
+  --engagement-neutral: 220 9% 46%; /* Cinza - neutro */
+  
+  /* --- Gradientes Decorativos Liquid Glass --- */
+  --gradient-blob-purple: linear-gradient(135deg, hsl(248 53% 58%) 0%, hsl(282 44% 47%) 100%);
+  --gradient-blob-pink: linear-gradient(135deg, hsl(314 80% 74%) 0%, hsl(349 75% 61%) 100%);
+  --gradient-blob-cyan: linear-gradient(135deg, hsl(197 92% 61%) 0%, hsl(185 100% 50%) 100%);
+  --gradient-blob-green: linear-gradient(135deg, hsl(154 73% 59%) 0%, hsl(170 97% 60%) 100%);
+  
+  --gradient-glow-purple: linear-gradient(135deg, hsl(248 53% 58% / 0.6) 0%, hsl(282 44% 47% / 0.6) 50%, hsl(248 53% 58% / 0.6) 100%);
+  --gradient-glow-blue: linear-gradient(135deg, hsl(197 92% 61% / 0.8) 0%, hsl(185 100% 50% / 0.8) 100%);
+  --gradient-glow-green: linear-gradient(135deg, hsl(154 73% 59% / 0.8) 0%, hsl(170 97% 60% / 0.8) 100%);
+  --gradient-glow-pink: linear-gradient(135deg, hsl(314 80% 74% / 0.8) 0%, hsl(349 75% 61% / 0.8) 100%);
+  
   /* Azul turquesa (#0BC8D5) */
   --vivercyan: 184 90% 44%;
   --vivercyan-light: 184 90% 60%;

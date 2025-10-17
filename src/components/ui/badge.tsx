@@ -24,9 +24,9 @@ const badgeVariants = cva(
         neutral:
           "border-border bg-muted text-muted-foreground hover:bg-muted/80",
         whatsapp:
-          "border-[#25D366]/30 bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20",
+          "border-brand-whatsapp/30 bg-brand-whatsapp/10 text-brand-whatsapp hover:bg-brand-whatsapp/20",
         linkedin:
-          "border-[#0077B5]/30 bg-[#0077B5]/10 text-[#0077B5] hover:bg-[#0077B5]/20",
+          "border-brand-linkedin/30 bg-brand-linkedin/10 text-brand-linkedin hover:bg-brand-linkedin/20",
       },
     },
     defaultVariants: {

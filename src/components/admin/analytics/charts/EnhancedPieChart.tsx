@@ -101,7 +101,7 @@ export const EnhancedPieChart: React.FC<EnhancedPieChartProps> = ({
               <Cell 
                 key={`cell-${idx}`} 
                 fill={chartColors[idx]}
-                stroke="#fff"
+                stroke="hsl(var(--background))"
                 strokeWidth={2}
               />
             ))}
@@ -120,7 +120,7 @@ export const EnhancedPieChart: React.FC<EnhancedPieChartProps> = ({
               verticalAlign="bottom" 
               height={36}
               formatter={(value) => (
-                <span style={{ color: '#6B7280', fontSize: '14px' }}>
+                <span className="text-sm text-muted-foreground">
                   {value}
                 </span>
               )}

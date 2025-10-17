@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { TrendingUp, Calendar } from 'lucide-react';
+import { chartTheme } from '../../charts/chartTheme';
 
 interface UserRetentionChartProps {
   data?: any;
@@ -74,24 +75,24 @@ export const UserRetentionChart = ({ data, loading }: UserRetentionChartProps) =
           <div className="h-48">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={retentionData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.styles.grid.stroke} />
                 <XAxis 
                   dataKey="period" 
-                  tick={{ fontSize: 12 }}
-                  stroke="#6b7280"
+                  tick={{ fontSize: 12, fill: chartTheme.styles.axis.stroke }}
+                  stroke={chartTheme.styles.axis.stroke}
                 />
                 <YAxis 
-                  tick={{ fontSize: 12 }}
-                  stroke="#6b7280"
+                  tick={{ fontSize: 12, fill: chartTheme.styles.axis.stroke }}
+                  stroke={chartTheme.styles.axis.stroke}
                   domain={[0, 100]}
                 />
                 <Tooltip content={<CustomTooltip />} />
                 <Line 
                   type="monotone" 
                   dataKey="retention" 
-                  stroke="#f97316" 
+                  stroke={chartTheme.colors.categorical[3]}
                   strokeWidth={3}
-                  dot={{ fill: '#f97316', strokeWidth: 2, r: 4 }}
+                  dot={{ fill: chartTheme.colors.categorical[3], strokeWidth: 2, r: 4 }}
                   activeDot={{ r: 6 }}
                 />
               </LineChart>

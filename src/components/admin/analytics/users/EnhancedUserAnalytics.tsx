@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { DataStatusIndicator } from '../DataStatusIndicator';
 import { useAnalyticsData } from "@/hooks/analytics/useAnalyticsData";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { chartColors } from '@/lib/chart-utils';
 import { 
   Users, 
   TrendingUp, 
@@ -115,8 +116,8 @@ export const EnhancedUserAnalytics = ({ timeRange }: EnhancedUserAnalyticsProps)
                 <XAxis dataKey="date" />
                 <YAxis />
                 <Tooltip />
-                <Line type="monotone" dataKey="usuarios" stroke="#8884d8" strokeWidth={2} />
-                <Line type="monotone" dataKey="total" stroke="#82ca9d" strokeWidth={2} />
+                <Line type="monotone" dataKey="usuarios" stroke={chartColors.categorical[0]} strokeWidth={2} />
+                <Line type="monotone" dataKey="total" stroke={chartColors.categorical[1]} strokeWidth={2} />
               </LineChart>
             </ResponsiveContainer>
           ) : (
@@ -148,7 +149,7 @@ export const EnhancedUserAnalytics = ({ timeRange }: EnhancedUserAnalyticsProps)
                 <XAxis dataKey="name" />
                 <YAxis />
                 <Tooltip />
-                <Bar dataKey="value" fill="#8884d8" />
+                <Bar dataKey="value" fill={chartColors.categorical[0]} />
               </BarChart>
             </ResponsiveContainer>
           ) : (

@@ -93,8 +93,9 @@ export const getEngagementLevel = (completionRate: number): string => {
 };
 
 export const getEngagementColor = (completionRate: number): string => {
-  if (completionRate >= 80) return '#10B981'; // green
-  if (completionRate >= 50) return '#F59E0B'; // yellow
-  if (completionRate >= 20) return '#EF4444'; // red
-  return '#6B7280'; // gray
+  // Retorna CSS variables do design system
+  if (completionRate >= 80) return 'hsl(var(--engagement-high))'; // verde
+  if (completionRate >= 50) return 'hsl(var(--engagement-medium))'; // amarelo
+  if (completionRate >= 20) return 'hsl(var(--engagement-low))'; // vermelho
+  return 'hsl(var(--engagement-neutral))'; // cinza
 };
