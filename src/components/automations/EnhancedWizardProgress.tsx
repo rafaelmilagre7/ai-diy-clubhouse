@@ -126,7 +126,7 @@ export const EnhancedWizardProgress = ({
                   className={cn(
                     "flex items-center gap-3 p-3 rounded-lg border transition-all",
                     isActive && "border-primary bg-primary/5",
-                    isCompleted && "border-green-200 bg-green-50/50",
+                    isCompleted && "border-operational/30 bg-operational/10",
                     !isActive && !isCompleted && "border-muted bg-muted/30",
                     canClick && "cursor-pointer hover:bg-muted/50"
                   )}
@@ -134,7 +134,7 @@ export const EnhancedWizardProgress = ({
                 >
                   <div className={cn(
                     "w-8 h-8 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all",
-                    isCompleted && "border-green-500 bg-green-500 text-white",
+                    isCompleted && "border-operational bg-operational text-white",
                     isActive && !isCompleted && "border-primary bg-primary text-primary-foreground",
                     !isActive && !isCompleted && "border-muted-foreground/30 text-muted-foreground"
                   )}>
@@ -149,7 +149,7 @@ export const EnhancedWizardProgress = ({
                     <div className={cn(
                       "font-medium text-sm transition-colors",
                       isActive && "text-primary",
-                      isCompleted && "text-green-700",
+                      isCompleted && "text-operational",
                       !isActive && !isCompleted && "text-muted-foreground"
                     )}>
                       {step.title}

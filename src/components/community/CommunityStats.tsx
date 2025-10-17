@@ -11,33 +11,33 @@ export const CommunityStats = () => {
       title: "Tópicos Totais",
       value: topicCount,
       icon: MessageSquare,
-      color: "text-blue-600",
-      bgColor: "bg-blue-50",
-      border: "border-blue-200"
+      color: "text-operational",
+      bgColor: "bg-operational/10",
+      border: "border-operational/30"
     },
     {
       title: "Membros Ativos",
       value: activeUserCount,
       icon: Users,
-      color: "text-green-600",
-      bgColor: "bg-green-50",
-      border: "border-green-200"
+      color: "text-operational",
+      bgColor: "bg-operational/10",
+      border: "border-operational/30"
     },
     {
       title: "Tópicos Resolvidos",
       value: solvedCount,
       icon: CheckCircle2,
-      color: "text-purple-600",
-      bgColor: "bg-purple-50",
-      border: "border-purple-200"
+      color: "text-strategy",
+      bgColor: "bg-strategy/10",
+      border: "border-strategy/30"
     },
     {
       title: "Ativos Hoje",
       value: Math.floor(Math.random() * 20) + 5, // Simulação
       icon: TrendingUp,
-      color: "text-orange-600",
-      bgColor: "bg-orange-50",
-      border: "border-orange-200"
+      color: "text-revenue",
+      bgColor: "bg-revenue/10",
+      border: "border-revenue/30"
     }
   ];
 

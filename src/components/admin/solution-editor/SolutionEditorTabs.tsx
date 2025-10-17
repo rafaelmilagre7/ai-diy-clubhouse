@@ -99,7 +99,7 @@ const SolutionEditorTabs: React.FC<SolutionEditorTabsProps> = ({
                 {tab.label}
                 {/* Indicador de aba completada */}
                 {solution?.id && tab.value !== 'basic' && !tab.disabled && (
-                  <div className="absolute top-2 right-2 w-2 h-2 bg-green-500 rounded-full" />
+                  <div className="absolute top-2 right-2 w-2 h-2 bg-operational rounded-full" />
                 )}
               </TabsTrigger>
             ))}

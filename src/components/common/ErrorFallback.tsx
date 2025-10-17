@@ -45,7 +45,7 @@ export const ErrorFallback: React.FC<CustomErrorFallbackProps> = ({
   if (variant === 'minimal') {
     return (
       <div className="flex flex-col items-center justify-center p-8 text-center">
-        {icon || <AlertTriangle className="w-8 h-8 text-orange-500 mb-4" />}
+        {icon || <AlertTriangle className="w-8 h-8 text-status-warning mb-4" />}
         <h3 className="text-lg font-medium mb-2">{title}</h3>
         <p className="text-muted-foreground mb-4">{description}</p>
         <div className="flex gap-2">
@@ -68,8 +68,8 @@ export const ErrorFallback: React.FC<CustomErrorFallbackProps> = ({
     <div className="min-h-[400px] flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="mx-auto w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mb-4">
-            {icon || <AlertTriangle className="w-6 h-6 text-orange-600" />}
+          <div className="mx-auto w-12 h-12 bg-status-warning/10 rounded-full flex items-center justify-center mb-4">
+            {icon || <AlertTriangle className="w-6 h-6 text-status-warning" />}
           </div>
           <CardTitle className="text-xl">{title}</CardTitle>
         </CardHeader>

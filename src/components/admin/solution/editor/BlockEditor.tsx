@@ -145,7 +145,7 @@ const BlockEditor: React.FC<BlockEditorProps> = ({
         );
       default:
         return (
-          <div className="p-4 bg-red-50 text-red-600 rounded-md">
+          <div className="p-4 bg-status-error/10 text-status-error rounded-md">
             Tipo de bloco desconhecido: {type}
           </div>
         );
@@ -187,7 +187,7 @@ const BlockEditor: React.FC<BlockEditorProps> = ({
             variant="ghost"
             size="icon"
             onClick={() => onRemove(index)}
-            className="h-8 w-8 text-red-500 opacity-60 hover:opacity-100"
+            className="h-8 w-8 text-status-error opacity-60 hover:opacity-100"
           >
             <Trash2 className="h-4 w-4" />
           </Button>

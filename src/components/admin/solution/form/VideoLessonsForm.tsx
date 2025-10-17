@@ -239,7 +239,7 @@ const VideoLessonsForm: React.FC<VideoLessonsFormProps> = ({
               {videoLessons.map(video => <div key={video.id} className="border rounded-md overflow-hidden">
                   <div className="p-3 border-b flex items-center justify-between bg-surface-elevated">
                     <div className="flex items-center gap-2">
-                      <Play className="h-4 w-4 text-blue-500" />
+                      <Play className="h-4 w-4 text-operational" />
                       <span className="font-medium">{video.title}</span>
                     </div>
                     <Button variant="outline" size="sm" onClick={() => handleRemoveVideo(video.id)}>
