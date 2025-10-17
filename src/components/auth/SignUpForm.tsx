@@ -267,28 +267,28 @@ const SignUpForm = ({ onBackToLogin }: SignUpFormProps) => {
                       key={level}
                       className={`h-2 flex-1 rounded ${
                         passwordStrength.score >= level
-                          ? passwordStrength.color === 'red' ? 'bg-red-500'
-                          : passwordStrength.color === 'yellow' ? 'bg-yellow-500'
-                          : 'bg-green-500'
+                          ? passwordStrength.color === 'red' ? 'bg-status-error'
+                          : passwordStrength.color === 'yellow' ? 'bg-status-warning'
+                          : 'bg-operational'
                           : 'bg-muted'
                       }`}
                     />
                   ))}
                 </div>
                 <div className="grid grid-cols-2 gap-x-4 text-xs">
-                  <span className={`flex items-center gap-1 ${passwordStrength.checks.length ? 'text-green-400' : 'text-gray-400'}`}>
+                  <span className={`flex items-center gap-1 ${passwordStrength.checks.length ? 'text-operational' : 'text-muted-foreground'}`}>
                     {passwordStrength.checks.length ? <CheckCircle className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
                     8+ caracteres
                   </span>
-                  <span className={`flex items-center gap-1 ${passwordStrength.checks.numbers ? 'text-green-400' : 'text-gray-400'}`}>
+                  <span className={`flex items-center gap-1 ${passwordStrength.checks.numbers ? 'text-operational' : 'text-muted-foreground'}`}>
                     {passwordStrength.checks.numbers ? <CheckCircle className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
                     Números
                   </span>
-                  <span className={`flex items-center gap-1 ${passwordStrength.checks.lowercase && passwordStrength.checks.uppercase ? 'text-green-400' : 'text-gray-400'}`}>
+                  <span className={`flex items-center gap-1 ${passwordStrength.checks.lowercase && passwordStrength.checks.uppercase ? 'text-operational' : 'text-muted-foreground'}`}>
                     {passwordStrength.checks.lowercase && passwordStrength.checks.uppercase ? <CheckCircle className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
                     Maiús/Minús
                   </span>
-                  <span className={`flex items-center gap-1 ${passwordStrength.checks.special ? 'text-green-400' : 'text-gray-400'}`}>
+                  <span className={`flex items-center gap-1 ${passwordStrength.checks.special ? 'text-operational' : 'text-muted-foreground'}`}>
                     {passwordStrength.checks.special ? <CheckCircle className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
                     Símbolos
                   </span>
@@ -309,8 +309,8 @@ const SignUpForm = ({ onBackToLogin }: SignUpFormProps) => {
                 disabled={isLoading}
                 required
                 className={`bg-surface-elevated border-border text-white placeholder-muted-foreground focus:ring-aurora-primary focus:border-aurora-primary pr-10 ${
-                  confirmPassword && !passwordsMatch ? 'border-red-500' : 
-                  confirmPassword && passwordsMatch ? 'border-green-500' : ''
+                  confirmPassword && !passwordsMatch ? 'border-status-error' : 
+                  confirmPassword && passwordsMatch ? 'border-operational' : ''
                 }`}
               />
               <Button
@@ -325,7 +325,7 @@ const SignUpForm = ({ onBackToLogin }: SignUpFormProps) => {
               </Button>
             </div>
             {confirmPassword && (
-              <p className={`text-xs flex items-center gap-1 ${passwordsMatch ? 'text-green-400' : 'text-red-400'}`}>
+              <p className={`text-xs flex items-center gap-1 ${passwordsMatch ? 'text-operational' : 'text-status-error'}`}>
                 {passwordsMatch ? (
                   <>  
                     <CheckCircle className="h-3 w-3" />

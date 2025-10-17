@@ -142,19 +142,19 @@ export const AutomationActions = ({ actions, onChange }: AutomationActionsProps)
           {/* Help Section */}
           <Collapsible open={showHelp} onOpenChange={setShowHelp}>
             <CollapsibleContent className="space-y-4">
-              <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="p-4 bg-operational/10 rounded-lg border border-operational/30">
                 <div className="flex items-start gap-3">
-                  <Lightbulb className="h-5 w-5 text-blue-600 mt-0.5" />
+                  <Lightbulb className="h-5 w-5 text-operational mt-0.5" />
                   <div className="space-y-3">
                     <div>
-                      <h4 className="font-medium text-blue-900">Como Funcionam as Ações</h4>
-                      <p className="text-sm text-blue-700 mt-1">
+                      <h4 className="font-medium text-operational">Como Funcionam as Ações</h4>
+                      <p className="text-sm text-operational/90 mt-1">
                         As ações são executadas sequencialmente quando as condições são atendidas. 
                         Se uma ação falhar, as próximas podem ainda ser executadas dependendo da configuração.
                       </p>
                     </div>
                     <div>
-                      <h4 className="font-medium text-blue-900">Ações Rápidas</h4>
+                      <h4 className="font-medium text-operational">Ações Rápidas</h4>
                       <div className="grid gap-2 mt-2">
                         {quickActions.map((quickAction, index) => (
                           <div 
@@ -253,15 +253,15 @@ export const AutomationActions = ({ actions, onChange }: AutomationActionsProps)
 
           {/* Validation */}
           {actions.length > 0 && (
-            <div className="p-3 bg-green-50 rounded-lg border border-green-200">
-              <div className="flex items-center gap-2 text-green-700">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+            <div className="p-3 bg-operational/10 rounded-lg border border-operational/30">
+              <div className="flex items-center gap-2 text-operational">
+                <div className="w-2 h-2 bg-operational rounded-full"></div>
                 <span className="text-sm font-medium">
                   {actions.filter(a => a.enabled !== false).length} ação(ões) ativa(s) configurada(s)
                 </span>
               </div>
               {actions.some(a => a.enabled === false) && (
-                <p className="text-xs text-yellow-600 mt-1">
+                <p className="text-xs text-status-warning mt-1">
                   {actions.filter(a => a.enabled === false).length} ação(ões) desabilitada(s) não serão executadas
                 </p>
               )}

@@ -109,9 +109,9 @@ export const UserStatsDebugger = () => {
 
   const getStatusIcon = (condition: boolean) => {
     return condition ? (
-      <CheckCircle className="h-4 w-4 text-green-600" />
+      <CheckCircle className="h-4 w-4 text-operational" />
     ) : (
-      <XCircle className="h-4 w-4 text-red-600" />
+      <XCircle className="h-4 w-4 text-status-error" />
     );
   };
 
@@ -131,7 +131,7 @@ export const UserStatsDebugger = () => {
 
   if (!debugData) {
     return (
-      <Card className="border-yellow-200 bg-yellow-50">
+      <Card className="border-status-warning/30 bg-status-warning/10">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Bug className="h-5 w-5" />
@@ -152,7 +152,7 @@ export const UserStatsDebugger = () => {
 
   return (
     <div className="space-y-6">
-      <Card className="border-blue-200 bg-blue-50">
+      <Card className="border-operational/30 bg-operational/10">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
@@ -177,7 +177,7 @@ export const UserStatsDebugger = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Status geral */}
-          <Alert className={consistency?.totalConsistent && consistency?.orgConsistent ? 'border-green-200 bg-green-50' : 'border-orange-200 bg-orange-50'}>
+          <Alert className={consistency?.totalConsistent && consistency?.orgConsistent ? 'border-operational/30 bg-operational/10' : 'border-status-warning/30 bg-status-warning/10'}>
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
               Status geral: {consistency?.totalConsistent && consistency?.orgConsistent ? 

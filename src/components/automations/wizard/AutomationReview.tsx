@@ -43,15 +43,15 @@ export const AutomationReview = ({ formData }: AutomationReviewProps) => {
   return (
     <div className="space-y-6">
       {/* Validation Status */}
-      <Card className={`border-l-4 ${isValid ? 'border-l-green-500 bg-green-50/50' : 'border-l-yellow-500 bg-yellow-50/50'}`}>
+      <Card className={`border-l-4 ${isValid ? 'border-l-operational bg-operational/10' : 'border-l-status-warning bg-status-warning/10'}`}>
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2">
             {isValid ? (
-              <CheckCircle className="h-5 w-5 text-green-600" />
+              <CheckCircle className="h-5 w-5 text-operational" />
             ) : (
-              <AlertCircle className="h-5 w-5 text-yellow-600" />
+              <AlertCircle className="h-5 w-5 text-status-warning" />
             )}
-            <CardTitle className={`text-lg ${isValid ? 'text-green-800' : 'text-yellow-800'}`}>
+            <CardTitle className={`text-lg ${isValid ? 'text-operational' : 'text-status-warning'}`}>
               {isValid ? 'Automação Pronta para Salvar' : 'Verificar Configurações'}
             </CardTitle>
           </div>
@@ -60,31 +60,31 @@ export const AutomationReview = ({ formData }: AutomationReviewProps) => {
           <div className="space-y-2 text-sm">
             <div className="flex items-center gap-2">
               {hasValidName ? (
-                <CheckCircle className="h-4 w-4 text-green-500" />
+                <CheckCircle className="h-4 w-4 text-operational" />
               ) : (
-                <AlertCircle className="h-4 w-4 text-red-500" />
+                <AlertCircle className="h-4 w-4 text-status-error" />
               )}
-              <span className={hasValidName ? 'text-green-700' : 'text-red-700'}>
+              <span className={hasValidName ? 'text-operational' : 'text-status-error'}>
                 Nome da automação
               </span>
             </div>
             <div className="flex items-center gap-2">
               {hasValidConditions ? (
-                <CheckCircle className="h-4 w-4 text-green-500" />
+                <CheckCircle className="h-4 w-4 text-operational" />
               ) : (
-                <AlertCircle className="h-4 w-4 text-red-500" />
+                <AlertCircle className="h-4 w-4 text-status-error" />
               )}
-              <span className={hasValidConditions ? 'text-green-700' : 'text-red-700'}>
+              <span className={hasValidConditions ? 'text-operational' : 'text-status-error'}>
                 Condições de execução ({conditionsCount} configuradas)
               </span>
             </div>
             <div className="flex items-center gap-2">
               {hasValidActions ? (
-                <CheckCircle className="h-4 w-4 text-green-500" />
+                <CheckCircle className="h-4 w-4 text-operational" />
               ) : (
-                <AlertCircle className="h-4 w-4 text-red-500" />
+                <AlertCircle className="h-4 w-4 text-status-error" />
               )}
-              <span className={hasValidActions ? 'text-green-700' : 'text-red-700'}>
+              <span className={hasValidActions ? 'text-operational' : 'text-status-error'}>
                 Ações a executar ({activeActionsCount} ativas de {actionsCount} configuradas)
               </span>
             </div>
@@ -132,9 +132,9 @@ export const AutomationReview = ({ formData }: AutomationReviewProps) => {
               <div className="text-sm font-medium text-muted-foreground">Prioridade</div>
               <div className="flex items-center gap-2 mt-1">
                 <div className={`w-2 h-2 rounded-full ${
-                  formData.priority === 1 ? 'bg-red-500' :
-                  formData.priority === 2 ? 'bg-orange-500' :
-                  formData.priority === 3 ? 'bg-yellow-500' :
+                  formData.priority === 1 ? 'bg-severity-critical' :
+                  formData.priority === 2 ? 'bg-severity-high' :
+                  formData.priority === 3 ? 'bg-status-warning' :
                   formData.priority === 4 ? 'bg-operational' : 'bg-muted'
                 }`}></div>
                 <span className="text-sm font-medium">{formData.priority}</span>
@@ -260,12 +260,12 @@ export const AutomationReview = ({ formData }: AutomationReviewProps) => {
             </p>
             
             {formData.is_active ? (
-              <div className="flex items-center justify-center gap-2 text-green-600 text-sm mt-3">
+              <div className="flex items-center justify-center gap-2 text-operational text-sm mt-3">
                 <CheckCircle className="h-4 w-4" />
                 <span>A automação será ativada imediatamente após salvar</span>
               </div>
             ) : (
-              <div className="flex items-center justify-center gap-2 text-yellow-600 text-sm mt-3">
+              <div className="flex items-center justify-center gap-2 text-status-warning text-sm mt-3">
                 <AlertCircle className="h-4 w-4" />
                 <span>A automação ficará inativa até ser ativada manualmente</span>
               </div>

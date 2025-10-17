@@ -224,13 +224,13 @@ export const ConditionBuilder = ({ conditions, onChange, availableFields }: Cond
     );
 
     return (
-      <Card key={condition.id} className={`border-l-4 ${needsMigration ? 'border-l-yellow-500' : 'border-l-blue-500'}`}>
+      <Card key={condition.id} className={`border-l-4 ${needsMigration ? 'border-l-status-warning' : 'border-l-operational'}`}>
         <CardContent className="p-4">
           {/* Warning para campos que precisam de migração */}
           {needsMigration && (
-            <div className="mb-3 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
-              <div className="flex items-center gap-2 text-yellow-700">
-                <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+            <div className="mb-3 p-2 bg-status-warning/10 border border-status-warning/30 rounded text-xs">
+              <div className="flex items-center gap-2 text-status-warning">
+                <div className="w-2 h-2 bg-status-warning rounded-full"></div>
                 <span>Campo incompatível detectado. Recomendamos atualizar para: 
                   <strong className="ml-1">
                     {availableFields.find(f => f.aliases && f.aliases.includes(condition.field))?.value}
@@ -262,10 +262,10 @@ export const ConditionBuilder = ({ conditions, onChange, availableFields }: Cond
                   {isLegacyField && (
                     <SelectItem value={condition.field}>
                       <div>
-                        <div className="font-medium text-yellow-600">
+                        <div className="font-medium text-status-warning">
                           {field.label} ⚠️
                         </div>
-                        <div className="text-xs text-yellow-500">
+                        <div className="text-xs text-status-warning/80">
                           Campo incompatível - considere migrar
                         </div>
                       </div>
@@ -442,8 +442,8 @@ export const ConditionBuilder = ({ conditions, onChange, availableFields }: Cond
 
   return (
     <div className="space-y-4">
-      <div className="p-4 bg-gradient-to-r from-blue-50 to-blue-100/50 border border-blue-200 rounded-lg">
-        <div className="text-sm text-blue-800">
+      <div className="p-4 bg-operational/10 border border-operational/30 rounded-lg">
+        <div className="text-sm text-operational">
           <div className="font-semibold mb-3 flex items-center gap-2">
             💡 Campos mais usados da Hubla:
           </div>
@@ -461,7 +461,7 @@ export const ConditionBuilder = ({ conditions, onChange, availableFields }: Cond
               <div><strong>payload.event.couponCode</strong> - Cupom usado</div>
             </div>
           </div>
-          <div className="mt-3 text-xs italic bg-blue-600/10 p-2 rounded">
+          <div className="mt-3 text-xs italic bg-operational/20 p-2 rounded">
             <strong>Exemplo:</strong> Para automatizar vendas do "Combo Viver de IA", use <code>payload.event.groupName</code> igual a "Combo Viver de IA"
           </div>
         </div>

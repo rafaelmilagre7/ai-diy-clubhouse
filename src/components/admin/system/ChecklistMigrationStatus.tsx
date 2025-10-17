@@ -72,45 +72,45 @@ const ChecklistMigrationStatus: React.FC = () => {
   const isSuccess = migrationStatus?.migrationComplete;
 
   return (
-    <Card className={isSuccess ? "border-green-200 bg-green-50" : "border-orange-200 bg-orange-50"}>
+    <Card className={isSuccess ? "border-operational/30 bg-operational/10" : "border-status-warning/30 bg-status-warning/10"}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           {isSuccess ? (
-            <CheckCircle className="w-5 h-5 text-green-600" />
+            <CheckCircle className="w-5 h-5 text-operational" />
           ) : (
-            <AlertTriangle className="w-5 h-5 text-orange-600" />
+            <AlertTriangle className="w-5 h-5 text-status-warning" />
           )}
           Status da Migração do Sistema de Checklists
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="text-center p-4 bg-white rounded-lg border">
-            <Database className="w-8 h-8 mx-auto mb-2 text-blue-600" />
-            <div className="text-2xl font-bold text-blue-600">
+          <div className="text-center p-4 bg-card rounded-lg border border-border">
+            <Database className="w-8 h-8 mx-auto mb-2 text-operational" />
+            <div className="text-2xl font-bold text-operational">
               {migrationStatus?.oldImplementationCount || 0}
             </div>
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-muted-foreground">
               Implementation Checkpoints (Antiga)
             </div>
           </div>
 
-          <div className="text-center p-4 bg-white rounded-lg border">
-            <Database className="w-8 h-8 mx-auto mb-2 text-purple-600" />
-            <div className="text-2xl font-bold text-purple-600">
+          <div className="text-center p-4 bg-card rounded-lg border border-border">
+            <Database className="w-8 h-8 mx-auto mb-2 text-strategy" />
+            <div className="text-2xl font-bold text-strategy">
               {migrationStatus?.oldUserChecklistsCount || 0}
             </div>
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-muted-foreground">
               User Checklists (Antiga)
             </div>
           </div>
 
-          <div className="text-center p-4 bg-white rounded-lg border">
-            <Database className="w-8 h-8 mx-auto mb-2 text-green-600" />
-            <div className="text-2xl font-bold text-green-600">
+          <div className="text-center p-4 bg-card rounded-lg border border-border">
+            <Database className="w-8 h-8 mx-auto mb-2 text-operational" />
+            <div className="text-2xl font-bold text-operational">
               {migrationStatus?.totalUnified || 0}
             </div>
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-muted-foreground">
               Unified Checklists (Nova)
             </div>
           </div>
@@ -129,7 +129,7 @@ const ChecklistMigrationStatus: React.FC = () => {
           </div>
         )}
 
-        <div className={`p-4 rounded-lg ${isSuccess ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'}`}>
+        <div className={`p-4 rounded-lg ${isSuccess ? 'bg-operational/20 text-operational' : 'bg-status-warning/20 text-status-warning'}`}>
           {isSuccess ? (
             <div>
               <div className="font-medium mb-1">✅ Migração e Correção Concluída com Sucesso!</div>
@@ -138,9 +138,9 @@ const ChecklistMigrationStatus: React.FC = () => {
                 <div>• {migrationStatus?.uniqueSolutionsWithTemplates} soluções com templates criados</div>
                 <div>• {migrationStatus?.uniqueSolutionsWithUserChecklists} soluções com checklists de usuários</div>
                 {migrationStatus?.templatesConsistency ? (
-                  <div className="text-green-700 font-medium">• ✅ Todas as soluções com checklists têm templates (problema corrigido)</div>
+                  <div className="text-operational-dark font-medium">• ✅ Todas as soluções com checklists têm templates (problema corrigido)</div>
                 ) : (
-                  <div className="text-red-700 font-medium">• ⚠️ Algumas soluções ainda não têm templates</div>
+                  <div className="text-status-error font-medium">• ⚠️ Algumas soluções ainda não têm templates</div>
                 )}
               </div>
             </div>
