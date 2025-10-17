@@ -98,10 +98,7 @@ const AuthLayout = () => {
       {/* Fundo tecnológico sofisticado */}
       <div className="absolute inset-0 w-full h-full">
         {/* Grid pattern */}
-        <div 
-          className="absolute inset-0 bg-[size:50px_50px]" 
-          style={{ backgroundImage: 'var(--pattern-grid-aurora)' }}
-        />
+        <div className="absolute inset-0 bg-grid-pattern" />
         
         {/* Radial gradient overlay */}
         <div className="absolute inset-0 bg-gradient-radial from-transparent via-black/20 to-black/40" />

@@ -48,8 +48,8 @@ export const SolutionsTabOptimized: React.FC<SolutionsTabOptimizedProps> = ({ tr
   const getPriorityLabel = (priority: number) => {
     switch (priority) {
       case 1: return { label: 'Alta Prioridade', color: 'bg-aurora-primary', textColor: 'text-black' };
-      case 2: return { label: 'Média Prioridade', color: 'bg-[hsl(var(--vivercyan))]', textColor: 'text-black' };
-      case 3: return { label: 'Baixa Prioridade', color: 'bg-[hsl(var(--viverpetrol))]', textColor: 'text-white' };
+      case 2: return { label: 'Média Prioridade', color: 'bg-vivercyan', textColor: 'text-black' };
+      case 3: return { label: 'Baixa Prioridade', color: 'bg-viverpetrol', textColor: 'text-white' };
       default: return { label: 'Prioridade', color: 'bg-muted', textColor: 'text-muted-foreground' };
     }
   };

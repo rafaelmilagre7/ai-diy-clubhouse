@@ -143,7 +143,7 @@ export const ContactModal = ({ isOpen, onClose, card }: ContactModalProps) => {
                         <Button
                           size="sm"
                           onClick={openWhatsApp}
-                          className="px-4 bg-[hsl(var(--social-whatsapp))] hover:bg-[hsl(var(--social-whatsapp-hover))] text-white border-0"
+                          className="px-4 bg-social-whatsapp hover:bg-social-whatsapp-hover text-white border-0"
                         >
                           <MessageCircle className="h-4 w-4" />
                         </Button>
@@ -161,7 +161,7 @@ export const ContactModal = ({ isOpen, onClose, card }: ContactModalProps) => {
                         LinkedIn
                       </label>
                       <Button
-                        className="w-full gap-2 bg-[hsl(var(--social-linkedin))] hover:bg-[hsl(var(--social-linkedin-hover))] text-white border-0 h-12"
+                        className="w-full gap-2 bg-social-linkedin hover:bg-social-linkedin-hover text-white border-0 h-12"
                         onClick={() => window.open(card.linkedinUrl, '_blank', 'noopener,noreferrer')}
                       >
                         <Linkedin className="h-5 w-5" />

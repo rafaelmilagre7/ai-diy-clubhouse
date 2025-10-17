@@ -18,7 +18,7 @@ export default function AdminAnalytics() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
       {/* Aurora Background Effects */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-aurora-primary/5 via-transparent to-transparent" />
+      <div className="absolute inset-0 bg-gradient-radial from-aurora-primary/5 via-transparent to-transparent" />
       <div className="absolute top-0 right-0 -z-10 h-96 w-96 rounded-full bg-gradient-to-br from-operational/10 to-strategy/10 blur-3xl animate-blob" />
       <div className="absolute bottom-0 left-0 -z-10 h-96 w-96 rounded-full bg-gradient-to-tr from-revenue/10 to-aurora-primary/10 blur-3xl animate-blob animation-delay-2000" />
       

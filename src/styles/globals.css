@@ -5,6 +5,12 @@
 
 /* ... keep existing code (all existing styles) ... */
 
+/* Decorative Background Patterns */
+.bg-grid-pattern {
+  background-image: var(--pattern-grid-aurora);
+  background-size: 20px 20px;
+}
+
 /* Animações para os componentes da comunidade */
 @keyframes blob {
   0% {
