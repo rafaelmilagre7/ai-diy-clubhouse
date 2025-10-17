@@ -246,7 +246,7 @@ const CreateInviteContent = memo<CreateInviteContentProps>(({ roles, onInviteCre
         <Button type="button" variant="outline" onClick={onClose} className="h-9 border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white">
           Cancelar
         </Button>
-        <Button type="submit" disabled={isCreating} className="h-9 bg-blue-600 hover:bg-blue-700 text-white">
+        <Button type="submit" disabled={isCreating} className="h-9 bg-aurora-primary hover:bg-aurora-primary-dark text-white">
           {isCreating ? (
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>

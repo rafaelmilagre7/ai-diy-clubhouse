@@ -31,7 +31,7 @@ export const OverviewTabContent = ({ timeRange }: OverviewTabContentProps) => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="border border-gray-200 dark:border-gray-800 shadow-sm">
+        <Card className="border shadow-sm">
           <CardHeader className="pb-2">
             <Skeleton className="h-5 w-[200px]" />
             <Skeleton className="h-4 w-[150px]" />
@@ -41,7 +41,7 @@ export const OverviewTabContent = ({ timeRange }: OverviewTabContentProps) => {
           </CardContent>
         </Card>
         
-        <Card className="border border-gray-200 dark:border-gray-800 shadow-sm">
+        <Card className="border shadow-sm">
           <CardHeader className="pb-2">
             <Skeleton className="h-5 w-[200px]" />
             <Skeleton className="h-4 w-[150px]" />
@@ -54,7 +54,7 @@ export const OverviewTabContent = ({ timeRange }: OverviewTabContentProps) => {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {Array(3).fill(0).map((_, i) => (
-          <Card key={i} className="border border-gray-200 dark:border-gray-800 shadow-sm">
+          <Card key={i} className="border shadow-sm">
             <CardHeader className="pb-2">
               <Skeleton className="h-5 w-[150px]" />
               <Skeleton className="h-4 w-[100px]" />
@@ -107,7 +107,7 @@ export const OverviewTabContent = ({ timeRange }: OverviewTabContentProps) => {
     return (
       <div className="space-y-6">
         {renderDataStatus()}
-        <Alert className="mb-6 bg-white dark:bg-slate-900 border border-red-200 dark:border-red-900">
+        <Alert className="mb-6 bg-background border border-status-error/30">
           <AlertTriangle className="h-5 w-5 text-destructive" />
           <AlertTitle className="text-neutral-800 dark:text-white">Erro ao carregar dados</AlertTitle>
           <AlertDescription className="text-neutral-700 dark:text-neutral-300 space-y-4">
@@ -126,7 +126,7 @@ export const OverviewTabContent = ({ timeRange }: OverviewTabContentProps) => {
     return (
       <div className="space-y-6">
         {renderDataStatus()}
-        <Alert className="mb-6 bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-900">
+        <Alert className="mb-6 bg-background border border-status-warning/30">
           <AlertTriangle className="h-5 w-5 text-warning" />
           <AlertTitle className="text-neutral-800 dark:text-white">Sem dados disponíveis</AlertTitle>
           <AlertDescription className="text-neutral-700 dark:text-neutral-300 space-y-4">

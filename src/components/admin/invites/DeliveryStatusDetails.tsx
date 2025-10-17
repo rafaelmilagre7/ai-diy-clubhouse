@@ -155,7 +155,7 @@ export const DeliveryStatusDetails: React.FC<DeliveryStatusDetailsProps> = ({
                       )}
                     </p>
                     {event.metadata?.bounce_message && (
-                      <p className="text-xs text-red-600 mt-1">{event.metadata.bounce_message}</p>
+                      <p className="text-xs text-status-error mt-1">{event.metadata.bounce_message}</p>
                     )}
                   </div>
                 </div>

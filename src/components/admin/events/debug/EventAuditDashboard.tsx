@@ -204,11 +204,11 @@ export const EventAuditDashboard = () => {
               <div className="text-xs text-muted-foreground">Total Eventos</div>
             </div>
             <div className="text-center p-3 border rounded-lg">
-              <div className="text-2xl font-bold text-green-600">{stats.publicEvents}</div>
+              <div className="text-2xl font-bold text-system-healthy">{stats.publicEvents}</div>
               <div className="text-xs text-muted-foreground">Eventos Públicos</div>
             </div>
             <div className="text-center p-3 border rounded-lg">
-              <div className="text-2xl font-bold text-yellow-600">{stats.restrictedEvents}</div>
+              <div className="text-2xl font-bold text-status-warning">{stats.restrictedEvents}</div>
               <div className="text-xs text-muted-foreground">Eventos Restritos</div>
             </div>
             <div className="text-center p-3 border rounded-lg">
@@ -216,11 +216,11 @@ export const EventAuditDashboard = () => {
               <div className="text-xs text-muted-foreground">Total Usuários</div>
             </div>
             <div className="text-center p-3 border rounded-lg">
-              <div className="text-2xl font-bold text-red-600">{stats.usersWithoutRole}</div>
+              <div className="text-2xl font-bold text-severity-critical">{stats.usersWithoutRole}</div>
               <div className="text-xs text-muted-foreground">Sem Role</div>
             </div>
             <div className="text-center p-3 border rounded-lg">
-              <div className="text-2xl font-bold text-orange-600">{stats.orphanedAccessControls}</div>
+              <div className="text-2xl font-bold text-severity-high">{stats.orphanedAccessControls}</div>
               <div className="text-xs text-muted-foreground">Controles Órfãos</div>
             </div>
           </div>
@@ -233,7 +233,7 @@ export const EventAuditDashboard = () => {
             </h4>
             
             {inconsistencies.length === 0 ? (
-              <div className="text-center py-8 text-green-600">
+              <div className="text-center py-8 text-system-healthy">
                 <Shield className="w-12 h-12 mx-auto mb-2" />
                 <p className="font-semibold">Tudo certo!</p>
                 <p className="text-sm text-muted-foreground">Nenhuma inconsistência encontrada nos dados.</p>
@@ -242,9 +242,9 @@ export const EventAuditDashboard = () => {
               <div className="space-y-3">
                 {inconsistencies.map((inconsistency, index) => (
                   <Card key={index} className={`border-l-4 ${
-                    inconsistency.severity === 'high' ? 'border-l-red-500' :
-                    inconsistency.severity === 'medium' ? 'border-l-yellow-500' :
-                    'border-l-blue-500'
+                    inconsistency.severity === 'high' ? 'border-l-severity-critical' :
+                    inconsistency.severity === 'medium' ? 'border-l-severity-medium' :
+                    'border-l-severity-low'
                   }`}>
                     <CardContent className="pt-4">
                       <div className="flex items-start justify-between">
@@ -262,7 +262,7 @@ export const EventAuditDashboard = () => {
                           <p className="text-sm text-muted-foreground mb-2">
                             <strong>Item afetado:</strong> {inconsistency.affected_item}
                           </p>
-                          <p className="text-sm text-green-700 bg-green-50 p-2 rounded">
+                          <p className="text-sm text-system-healthy bg-system-healthy/10 p-2 rounded">
                             <strong>Ação sugerida:</strong> {inconsistency.suggested_action}
                           </p>
                         </div>

@@ -23,8 +23,8 @@ export const InviteSystemStatusIndicator: React.FC<InviteSystemStatusIndicatorPr
       case 'ready':
         return {
           icon: CheckCircle,
-          color: 'bg-green-500',
-          textColor: 'text-green-700',
+          color: 'bg-system-healthy',
+          textColor: 'text-system-healthy',
           badge: 'success',
           label: 'Sistema Otimizado',
           description: `Performance ideal • ${metrics.averageInviteTime}ms médio`
@@ -32,8 +32,8 @@ export const InviteSystemStatusIndicator: React.FC<InviteSystemStatusIndicatorPr
       case 'warming':
         return {
           icon: Clock,
-          color: 'bg-yellow-500',
-          textColor: 'text-yellow-700',
+          color: 'bg-status-warning',
+          textColor: 'text-status-warning',
           badge: 'default',
           label: 'Otimizando...',
           description: 'Aquecendo edge functions'
@@ -41,8 +41,8 @@ export const InviteSystemStatusIndicator: React.FC<InviteSystemStatusIndicatorPr
       case 'failed':
         return {
           icon: AlertCircle,
-          color: 'bg-red-500',
-          textColor: 'text-red-700',
+          color: 'bg-status-error',
+          textColor: 'text-status-error',
           badge: 'destructive',
           label: 'Sistema Lento',
           description: 'Otimização falhou • Performance pode estar reduzida'
@@ -50,8 +50,8 @@ export const InviteSystemStatusIndicator: React.FC<InviteSystemStatusIndicatorPr
       default:
         return {
           icon: Zap,
-          color: 'bg-gray-500',
-          textColor: 'text-gray-700',
+          color: 'bg-muted',
+          textColor: 'text-muted-foreground',
           badge: 'secondary',
           label: 'Não Otimizado',
           description: 'Clique para otimizar performance'
@@ -104,7 +104,7 @@ export const InviteSystemStatusIndicator: React.FC<InviteSystemStatusIndicatorPr
                 </p>
               )}
               {metrics.successRate < 100 && (
-                <p className="text-xs text-orange-600">
+                <p className="text-xs text-status-warning">
                   Taxa de sucesso: {metrics.successRate.toFixed(1)}%
                 </p>
               )}

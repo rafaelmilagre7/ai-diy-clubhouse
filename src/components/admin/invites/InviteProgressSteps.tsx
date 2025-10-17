@@ -77,21 +77,21 @@ export const InviteProgressSteps: React.FC<InviteProgressStepsProps> = ({
               className={cn(
                 "flex flex-col items-center gap-2 flex-1",
                 isActive && "text-primary",
-                isCompleted && "text-green-600",
+                isCompleted && "text-status-success",
                 isError && step === 'error' && "text-destructive"
               )}
             >
               <div className={cn(
                 "flex items-center justify-center w-8 h-8 rounded-full border-2 transition-colors",
                 isActive && "border-primary bg-primary/10",
-                isCompleted && "border-green-600 bg-green-600/10",
+                isCompleted && "border-status-success bg-status-success/10",
                 !isActive && !isCompleted && "border-muted-foreground/30"
               )}>
                 <Icon 
                   className={cn(
                     "h-4 w-4",
                     isActive && step === 'creating' && "animate-spin",
-                    isCompleted && "text-green-600",
+                    isCompleted && "text-status-success",
                     isActive && "text-primary"
                   )} 
                 />
@@ -100,7 +100,7 @@ export const InviteProgressSteps: React.FC<InviteProgressStepsProps> = ({
                 <div className={cn(
                   "text-sm font-medium",
                   isActive && "text-primary",
-                  isCompleted && "text-green-600"
+                  isCompleted && "text-status-success"
                 )}>
                   {stepInfo.label}
                 </div>
@@ -151,7 +151,7 @@ export const InviteProgressSteps: React.FC<InviteProgressStepsProps> = ({
                 <span className="text-xs">Email:</span>
                 <span className={cn(
                   "text-xs font-medium",
-                  channelStatus.email === 'success' && "text-green-600",
+                  channelStatus.email === 'success' && "text-status-success",
                   channelStatus.email === 'error' && "text-destructive",
                   channelStatus.email === 'sending' && "text-primary"
                 )}>
@@ -166,7 +166,7 @@ export const InviteProgressSteps: React.FC<InviteProgressStepsProps> = ({
                 <span className="text-xs">WhatsApp:</span>
                 <span className={cn(
                   "text-xs font-medium",
-                  channelStatus.whatsapp === 'success' && "text-green-600",
+                  channelStatus.whatsapp === 'success' && "text-status-success",
                   channelStatus.whatsapp === 'error' && "text-destructive",
                   channelStatus.whatsapp === 'sending' && "text-primary"
                 )}>

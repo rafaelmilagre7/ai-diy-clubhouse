@@ -48,22 +48,22 @@ export const InviteTrackingDetails: React.FC<InviteTrackingDetailsProps> = ({ in
   const getStatusIcon = (status: string, channel: 'email' | 'whatsapp') => {
     if (channel === 'email') {
       switch (status) {
-        case 'sent': return <Mail className="h-3 w-3 text-blue-600" />;
-        case 'delivered': return <MailCheck className="h-3 w-3 text-green-600" />;
-        case 'opened': return <Eye className="h-3 w-3 text-emerald-600" />;
-        case 'clicked': return <MousePointer className="h-3 w-3 text-indigo-600" />;
-        case 'bounced': return <AlertTriangle className="h-3 w-3 text-orange-600" />;
-        case 'complained': return <XCircle className="h-3 w-3 text-red-600" />;
-        case 'failed': return <XCircle className="h-3 w-3 text-red-600" />;
-        default: return <Clock className="h-3 w-3 text-gray-500" />;
+        case 'sent': return <Mail className="h-3 w-3 text-tracking-sent" />;
+        case 'delivered': return <MailCheck className="h-3 w-3 text-tracking-delivered" />;
+        case 'opened': return <Eye className="h-3 w-3 text-tracking-opened" />;
+        case 'clicked': return <MousePointer className="h-3 w-3 text-tracking-clicked" />;
+        case 'bounced': return <AlertTriangle className="h-3 w-3 text-tracking-bounced" />;
+        case 'complained': return <XCircle className="h-3 w-3 text-tracking-failed" />;
+        case 'failed': return <XCircle className="h-3 w-3 text-tracking-failed" />;
+        default: return <Clock className="h-3 w-3 text-muted-foreground" />;
       }
     } else {
       switch (status) {
-        case 'sent': return <MessageSquare className="h-3 w-3 text-green-600" />;
-        case 'delivered': return <MessageCircle className="h-3 w-3 text-emerald-600" />;
-        case 'read': return <Eye className="h-3 w-3 text-blue-600" />;
-        case 'failed': return <XCircle className="h-3 w-3 text-red-600" />;
-        default: return <Timer className="h-3 w-3 text-yellow-600" />;
+        case 'sent': return <MessageSquare className="h-3 w-3 text-tracking-sent" />;
+        case 'delivered': return <MessageCircle className="h-3 w-3 text-tracking-delivered" />;
+        case 'read': return <Eye className="h-3 w-3 text-tracking-opened" />;
+        case 'failed': return <XCircle className="h-3 w-3 text-tracking-failed" />;
+        default: return <Timer className="h-3 w-3 text-status-warning" />;
       }
     }
   };
@@ -149,7 +149,7 @@ export const InviteTrackingDetails: React.FC<InviteTrackingDetailsProps> = ({ in
                   </span>
                 )}
                 {delivery.metadata?.simulated && (
-                  <span className="text-xs text-orange-600">
+                  <span className="text-xs text-status-warning">
                     (Configuração pendente)
                   </span>
                 )}

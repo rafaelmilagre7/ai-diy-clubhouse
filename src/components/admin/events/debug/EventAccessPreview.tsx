@@ -171,8 +171,8 @@ export const EventAccessPreview = ({ selectedRoles, eventId }: EventAccessPrevie
             {/* Status do Evento */}
             <div className={`p-4 rounded-lg border-2 ${
               isPublicEvent 
-                ? 'bg-green-50 border-green-200 text-green-800' 
-                : 'bg-yellow-50 border-yellow-200 text-yellow-800'
+                ? 'bg-permission-granted/10 border-permission-granted/20 text-permission-granted' 
+                : 'bg-permission-partial/10 border-permission-partial/20 text-permission-partial'
             }`}>
               <div className="flex items-center gap-2 font-semibold mb-2">
                 {isPublicEvent ? (

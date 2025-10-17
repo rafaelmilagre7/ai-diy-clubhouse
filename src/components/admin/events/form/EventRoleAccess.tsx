@@ -27,13 +27,13 @@ export const EventRoleAccess = ({ selectedRoles, onChange, eventId }: EventRoleA
         <FormMessage />
         <Alert variant="default" className={`mt-2 ${
           selectedRoles.length > 0 
-            ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800' 
-            : 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+            ? 'bg-permission-partial/10 border-permission-partial/20' 
+            : 'bg-permission-granted/10 border-permission-granted/20'
         }`}>
           <AlertDescription className={`text-sm ${
             selectedRoles.length > 0 
-              ? 'text-yellow-800 dark:text-yellow-200' 
-              : 'text-green-800 dark:text-green-200'
+              ? 'text-permission-partial' 
+              : 'text-permission-granted'
           }`}>
             {selectedRoles.length === 0 
               ? "Evento público: Todos os usuários terão acesso a este evento."

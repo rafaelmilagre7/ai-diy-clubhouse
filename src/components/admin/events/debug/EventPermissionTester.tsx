@@ -170,13 +170,13 @@ export const EventPermissionTester = () => {
         </Button>
 
         {result && (
-          <Card className={`border-2 ${result.hasAccess ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
+          <Card className={`border-2 ${result.hasAccess ? 'border-permission-granted/20 bg-permission-granted/10' : 'border-permission-denied/20 bg-permission-denied/10'}`}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 {result.hasAccess ? (
-                  <CheckCircle className="w-5 h-5 text-green-600" />
+                  <CheckCircle className="w-5 h-5 text-permission-granted" />
                 ) : (
-                  <XCircle className="w-5 h-5 text-red-600" />
+                  <XCircle className="w-5 h-5 text-permission-denied" />
                 )}
                 {result.hasAccess ? 'ACESSO PERMITIDO' : 'ACESSO NEGADO'}
               </CardTitle>
@@ -232,7 +232,7 @@ export const EventPermissionTester = () => {
                   <AlertTriangle className="w-4 h-4" />
                   Resultado da Análise
                 </h4>
-                <p className={`text-sm p-3 rounded ${result.hasAccess ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                <p className={`text-sm p-3 rounded ${result.hasAccess ? 'bg-permission-granted/20 text-permission-granted' : 'bg-permission-denied/20 text-permission-denied'}`}>
                   {result.reason}
                 </p>
               </div>

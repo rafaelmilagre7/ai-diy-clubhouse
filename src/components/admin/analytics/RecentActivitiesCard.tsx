@@ -73,7 +73,7 @@ export const RecentActivitiesCard = ({
   };
 
   return (
-    <Card className="border border-gray-200 dark:border-gray-800 shadow-sm">
+    <Card className="border shadow-sm">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base font-semibold flex items-center gap-2">
@@ -94,10 +94,10 @@ export const RecentActivitiesCard = ({
           <div className="space-y-3">
             {Array(5).fill(0).map((_, i) => (
               <div key={i} className="flex items-center space-x-3">
-                <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse" />
+                <div className="h-8 w-8 bg-muted rounded-full animate-pulse" />
                 <div className="flex-1 space-y-1">
-                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-                  <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded w-3/4 animate-pulse" />
+                  <div className="h-3 bg-muted rounded animate-pulse" />
+                  <div className="h-2 bg-muted rounded w-3/4 animate-pulse" />
                 </div>
               </div>
             ))}
@@ -119,7 +119,7 @@ export const RecentActivitiesCard = ({
             {activities.slice(0, 8).map((activity) => (
               <div 
                 key={activity.id} 
-                className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+                className="flex items-center justify-between p-2 rounded-lg hover:bg-accent transition-colors"
               >
                 <div className="flex items-center space-x-3 flex-1">
                   <Badge 
@@ -130,20 +130,20 @@ export const RecentActivitiesCard = ({
                     {activity.event_type}
                   </Badge>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                    <p className="text-sm font-medium text-foreground truncate">
                       {activity.user_name || 'Usuário'}
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                    <p className="text-xs text-muted-foreground truncate">
                       {activity.solution || 'Sistema'}
                     </p>
                     {activity.user_email && (
-                      <p className="text-xs text-gray-400 dark:text-gray-500 truncate">
+                      <p className="text-xs text-muted-foreground/80 truncate">
                         {activity.user_email}
                       </p>
                     )}
                   </div>
                 </div>
-                <div className="flex items-center text-xs text-gray-400 dark:text-gray-500 ml-2">
+                <div className="flex items-center text-xs text-muted-foreground ml-2">
                   <Clock className="h-3 w-3 mr-1" />
                   {formatRelativeTime(activity.created_at)}
                 </div>
