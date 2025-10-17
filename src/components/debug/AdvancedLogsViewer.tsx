@@ -140,7 +140,7 @@ export const AdvancedLogsViewer: React.FC<AdvancedLogsViewerProps> = ({
       case 'connectivity': return 'border-green-500 text-green-300';
       case 'templates': return 'border-purple-500 text-purple-300';
       case 'test': return 'border-orange-500 text-orange-300';
-      default: return 'border-gray-500 text-gray-300';
+      default: return 'border-border text-muted-foreground';
     }
   };
 
@@ -220,17 +220,17 @@ export const AdvancedLogsViewer: React.FC<AdvancedLogsViewerProps> = ({
         {/* Filtros Avançados */}
         <div className="flex flex-wrap items-center gap-3 pt-4">
           <div className="flex items-center gap-2">
-            <Search className="h-4 w-4 text-slate-400" />
+            <Search className="h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Buscar nos logs..."
               value={filter.search}
               onChange={(e) => setFilter(prev => ({ ...prev, search: e.target.value }))}
-              className="w-48 h-8 text-sm bg-slate-800 border-slate-600"
+              className="w-48 h-8 text-sm bg-surface-elevated border-border"
             />
           </div>
           
           <Select value={filter.category} onValueChange={(value) => setFilter(prev => ({ ...prev, category: value }))}>
-            <SelectTrigger className="w-36 h-8 text-sm bg-slate-800 border-slate-600">
+            <SelectTrigger className="w-36 h-8 text-sm bg-surface-elevated border-border">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -244,7 +244,7 @@ export const AdvancedLogsViewer: React.FC<AdvancedLogsViewerProps> = ({
           </Select>
           
           <Select value={filter.level} onValueChange={(value) => setFilter(prev => ({ ...prev, level: value }))}>
-            <SelectTrigger className="w-32 h-8 text-sm bg-slate-800 border-slate-600">
+            <SelectTrigger className="w-32 h-8 text-sm bg-surface-elevated border-border">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -259,9 +259,9 @@ export const AdvancedLogsViewer: React.FC<AdvancedLogsViewerProps> = ({
       </CardHeader>
       
       <CardContent>
-        <div className="bg-slate-900 border border-slate-700 rounded-lg p-4 max-h-96 overflow-y-auto scrollbar-thin scrollbar-track-slate-800 scrollbar-thumb-slate-600">
+        <div className="bg-surface-elevated border border-border rounded-lg p-4 max-h-96 overflow-y-auto">
           {filteredLogs.length === 0 ? (
-            <p className="text-slate-400 text-center py-8 text-sm">
+            <p className="text-muted-foreground text-center py-8 text-sm">
               {logs.length === 0 
                 ? 'Os logs aparecerão aqui...' 
                 : 'Nenhum log corresponde aos filtros selecionados'

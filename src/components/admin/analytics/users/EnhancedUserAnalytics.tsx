@@ -205,11 +205,11 @@ const UserKPICard = ({ title, value, change, icon, color, loading }: UserKPICard
         </div>
         
         <div className="mt-4">
-          <p className="text-sm font-medium text-gray-600">{title}</p>
+          <p className="text-sm font-medium text-foreground">{title}</p>
           {loading ? (
-            <div className="h-8 bg-gray-200 animate-pulse rounded mt-1" />
+            <div className="h-8 bg-muted animate-pulse rounded mt-1" />
           ) : (
-            <p className="text-2xl font-bold text-gray-900">{value}</p>
+            <p className="text-2xl font-bold text-foreground">{value}</p>
           )}
         </div>
       </CardContent>
@@ -228,7 +228,7 @@ const UserSegmentBreakdown = ({ data, loading }: any) => (
       {loading ? (
         <div className="animate-pulse space-y-4">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-20 bg-gray-200 rounded" />
+            <div key={i} className="h-20 bg-muted rounded" />
           ))}
         </div>
       ) : (
@@ -237,7 +237,7 @@ const UserSegmentBreakdown = ({ data, loading }: any) => (
             <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
               <div className="flex items-center space-x-3">
                 <Badge variant="outline">{segment.name}</Badge>
-                <span className="text-sm text-gray-600">{segment.description}</span>
+                <span className="text-sm text-foreground">{segment.description}</span>
               </div>
               <div className="flex items-center space-x-4">
                 <span className="text-lg font-semibold">{segment.count}</span>
@@ -261,7 +261,7 @@ const UserRoleAnalysis = ({ data, loading }: any) => (
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="h-32 bg-gray-200 animate-pulse rounded" />
+            <div key={i} className="h-32 bg-muted animate-pulse rounded" />
           ))}
         </div>
       ) : (
@@ -278,7 +278,7 @@ const UserRoleAnalysis = ({ data, loading }: any) => (
                   <span>{role.completionRate}%</span>
                 </div>
                 <Progress value={role.completionRate} />
-                <div className="flex justify-between text-sm text-gray-600">
+                <div className="flex justify-between text-sm text-foreground">
                   <span>Engajamento</span>
                   <span>{role.engagementScore}/100</span>
                 </div>

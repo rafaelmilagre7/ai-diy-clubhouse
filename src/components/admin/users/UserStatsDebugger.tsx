@@ -281,7 +281,7 @@ export const UserStatsDebugger = () => {
             <summary className="cursor-pointer font-medium">
               Dados brutos (para desenvolvedores)
             </summary>
-            <pre className="mt-2 text-xs bg-gray-100 p-2 rounded overflow-auto">
+            <pre className="mt-2 text-xs bg-muted p-2 rounded overflow-auto">
               {JSON.stringify(debugData, null, 2)}
             </pre>
           </details>

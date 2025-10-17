@@ -111,7 +111,7 @@ export const UserRoleDialog = ({
                     <div className="flex items-center">
                       {getRoleIcon(role.name)}
                       {role.name.charAt(0).toUpperCase() + role.name.slice(1)}
-                      {role.is_system && <span className="ml-2 text-xs text-gray-400">(sistema)</span>}
+                      {role.is_system && <span className="ml-2 text-xs text-muted-foreground">(sistema)</span>}
                     </div>
                   </SelectItem>
                 ))}

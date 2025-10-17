@@ -50,7 +50,7 @@ export const EnhancedBarChart: React.FC<EnhancedBarChartProps> = ({
   if (!loading && (!data || data.length === 0)) {
     return (
       <ChartContainer title={title} description={description} size={size} className={className}>
-        <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
+        <div className="flex items-center justify-center h-full text-muted-foreground">
           <div className="text-center">
             <div className="text-2xl mb-2">📊</div>
             <p>Sem dados disponíveis para exibição</p>

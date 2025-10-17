@@ -122,7 +122,7 @@ const AuthLayout = () => {
                 <CardTitle className="text-3xl font-bold text-white mb-2">
                   Bem-vindo de volta
                 </CardTitle>
-                <CardDescription className="text-gray-300 text-base">
+                <CardDescription className="text-muted-foreground text-base">
                   Acesse a plataforma de soluções e educação de IA da sua empresa
                 </CardDescription>
               </CardHeader>
@@ -131,14 +131,14 @@ const AuthLayout = () => {
                   <div className="space-y-2">
                     <Label htmlFor="email" className="text-white/90 font-medium">Email</Label>
                     <div className="relative group">
-                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-aurora-primary transition-colors" />
+                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-aurora-primary transition-colors" />
                       <Input
                         id="email"
                         type="email"
                         placeholder="Digite seu email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="pl-10 h-12 bg-white/5 border-white/20 text-white placeholder:text-gray-400 focus:bg-white/10 focus:border-aurora-primary/50 transition-all duration-200 rounded-lg"
+                        className="pl-10 h-12 bg-white/5 border-white/20 text-white placeholder:text-muted-foreground focus:bg-white/10 focus:border-aurora-primary/50 transition-all duration-200 rounded-lg"
                         disabled={isSigningIn}
                         required
                       />
@@ -147,14 +147,14 @@ const AuthLayout = () => {
                   <div className="space-y-2">
                     <Label htmlFor="password" className="text-white/90 font-medium">Senha</Label>
                     <div className="relative group">
-                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-aurora-primary transition-colors" />
+                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-aurora-primary transition-colors" />
                       <Input
                         id="password"
                         type="password"
                         placeholder="Digite sua senha"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="pl-10 h-12 bg-white/5 border-white/20 text-white placeholder:text-gray-400 focus:bg-white/10 focus:border-aurora-primary/50 transition-all duration-200 rounded-lg"
+                        className="pl-10 h-12 bg-white/5 border-white/20 text-white placeholder:text-muted-foreground focus:bg-white/10 focus:border-aurora-primary/50 transition-all duration-200 rounded-lg"
                         disabled={isSigningIn}
                         required
                       />

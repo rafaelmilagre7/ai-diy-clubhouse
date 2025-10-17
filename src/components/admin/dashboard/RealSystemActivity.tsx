@@ -63,7 +63,7 @@ export const RealSystemActivity = ({ activityData, loading }: RealSystemActivity
       case 'usuários ativos':
         return <Activity className="h-5 w-5 text-success" />;
       default:
-        return <TrendingUp className="h-5 w-5 text-gray-500" />;
+        return <TrendingUp className="h-5 w-5 text-muted-foreground" />;
     }
   };
 

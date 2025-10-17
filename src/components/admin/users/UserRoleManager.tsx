@@ -141,7 +141,7 @@ export const UserRoleManager = ({
           <div className="space-y-2">
             <p className="text-sm font-medium">Função atual</p>
             {currentRole ? (
-              <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-200">
+              <Badge className="bg-muted text-foreground hover:bg-muted/80">
                 {formatRoleName(currentRole)}
               </Badge>
             ) : (

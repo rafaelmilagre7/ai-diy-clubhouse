@@ -89,7 +89,7 @@ export const UserDetailsTable = ({ users, loading, onUserAction }: UserDetailsTa
         <CardContent>
           <div className="space-y-4">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-16 bg-gray-200 animate-pulse rounded" />
+              <div key={i} className="h-16 bg-muted animate-pulse rounded" />
             ))}
           </div>
         </CardContent>
@@ -129,12 +129,12 @@ export const UserDetailsTable = ({ users, loading, onUserAction }: UserDetailsTa
               </TableHeader>
               <TableBody>
                 {currentUsers.map((user) => (
-                  <TableRow key={user.id} className="hover:bg-gray-50">
+                  <TableRow key={user.id} className="hover:bg-muted/50">
                     <TableCell>
                       <div className="space-y-1">
                         <div className="font-medium">{user.name || 'Nome não informado'}</div>
-                        <div className="text-sm text-gray-500">{user.email}</div>
-                        <div className="text-xs text-gray-400">
+                        <div className="text-sm text-muted-foreground">{user.email}</div>
+                        <div className="text-xs text-muted-foreground">
                           Cadastrado {formatLastActivity(user.created_at)}
                         </div>
                       </div>
@@ -158,7 +158,7 @@ export const UserDetailsTable = ({ users, loading, onUserAction }: UserDetailsTa
                           <Progress value={user.healthScore} className="w-16 h-2" />
                           <span className="text-sm font-medium">{user.healthScore}</span>
                         </div>
-                        <div className="text-xs text-gray-500">
+                        <div className="text-xs text-muted-foreground">
                           {user.activityCount} atividades
                         </div>
                       </div>

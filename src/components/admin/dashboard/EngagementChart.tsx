@@ -46,8 +46,8 @@ export const EngagementChart = ({ data, loading = false }: EngagementChartProps)
   }
 
   return (
-    <Card className="overflow-hidden transition-all duration-300 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm hover:shadow-md border border-gray-100 dark:border-gray-800">
-      <CardHeader className="pb-2 border-b border-gray-100 dark:border-gray-800">
+    <Card className="overflow-hidden transition-all duration-300 bg-card backdrop-blur-sm hover:shadow-md border border-border">
+      <CardHeader className="pb-2 border-b border-border">
         <CardTitle className="text-lg font-semibold bg-gradient-to-r from-primary to-operational bg-clip-text text-transparent">
           Atividade Mensal
         </CardTitle>

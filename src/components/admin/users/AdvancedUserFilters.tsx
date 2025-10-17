@@ -27,8 +27,8 @@ interface AdvancedUserFiltersProps {
 const USER_TYPES: FilterOption[] = [
   { label: 'Todos os usuários', value: 'all', icon: <Users className="h-4 w-4" /> },
   { label: 'Masters & Equipes', value: 'masters', icon: <Crown className="h-4 w-4 text-yellow-600" /> },
-  { label: 'Membros de equipe', value: 'team_members', icon: <Building2 className="h-4 w-4 text-blue-600" /> },
-  { label: 'Usuários individuais', value: 'individual', icon: <Users className="h-4 w-4 text-gray-600" /> }
+  { label: 'Membros de equipe', value: 'team_members', icon: <Building2 className="h-4 w-4 text-operational" /> },
+  { label: 'Usuários individuais', value: 'individual', icon: <Users className="h-4 w-4 text-muted-foreground" /> }
 ];
 
 const STATUS_OPTIONS: FilterOption[] = [

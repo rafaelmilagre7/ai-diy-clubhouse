@@ -132,7 +132,7 @@ const RegisterForm = ({ inviteToken, prefilledEmail }: RegisterFormProps = {}) =
           </Label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-              <User className="h-5 w-5 text-gray-400" />
+              <User className="h-5 w-5 text-muted-foreground" />
             </div>
             <Input
               id="name"
@@ -140,7 +140,7 @@ const RegisterForm = ({ inviteToken, prefilledEmail }: RegisterFormProps = {}) =
               placeholder="Seu nome completo"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="pl-10 bg-gray-800 border-gray-700 text-white"
+              className="pl-10 bg-surface-elevated border-border text-white"
             />
           </div>
         </div>
@@ -151,7 +151,7 @@ const RegisterForm = ({ inviteToken, prefilledEmail }: RegisterFormProps = {}) =
           </Label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-              <Mail className="h-5 w-5 text-gray-400" />
+              <Mail className="h-5 w-5 text-muted-foreground" />
             </div>
             <Input
               id="register-email"
@@ -160,7 +160,7 @@ const RegisterForm = ({ inviteToken, prefilledEmail }: RegisterFormProps = {}) =
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={!!prefilledEmail} // Desabilitar edição se email vem do convite
-              className="pl-10 bg-gray-800 border-gray-700 text-white disabled:opacity-50"
+              className="pl-10 bg-surface-elevated border-border text-white disabled:opacity-50"
             />
           </div>
         </div>
@@ -171,7 +171,7 @@ const RegisterForm = ({ inviteToken, prefilledEmail }: RegisterFormProps = {}) =
           </Label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-              <Lock className="h-5 w-5 text-gray-400" />
+              <Lock className="h-5 w-5 text-muted-foreground" />
             </div>
             <Input
               id="register-password"
@@ -179,7 +179,7 @@ const RegisterForm = ({ inviteToken, prefilledEmail }: RegisterFormProps = {}) =
               placeholder="Crie uma senha forte"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="pl-10 pr-10 bg-gray-800 border-gray-700 text-white"
+              className="pl-10 pr-10 bg-surface-elevated border-border text-white"
             />
             <button
               type="button"
@@ -187,9 +187,9 @@ const RegisterForm = ({ inviteToken, prefilledEmail }: RegisterFormProps = {}) =
               className="absolute inset-y-0 right-0 flex items-center pr-3"
             >
               {showPassword ? (
-                <EyeOff className="h-5 w-5 text-gray-400" />
+                <EyeOff className="h-5 w-5 text-muted-foreground" />
               ) : (
-                <Eye className="h-5 w-5 text-gray-400" />
+                <Eye className="h-5 w-5 text-muted-foreground" />
               )}
             </button>
           </div>

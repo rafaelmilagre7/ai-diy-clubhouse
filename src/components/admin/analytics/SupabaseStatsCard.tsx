@@ -58,7 +58,7 @@ export const SupabaseStatsCard: React.FC<SupabaseStatsCardProps> = ({
       if (value > threshold) return <TrendingUp className="w-4 h-4 text-success" />;
       if (value < threshold * 0.5) return <TrendingDown className="w-4 h-4 text-destructive" />;
     }
-    return <Minus className="w-4 h-4 text-gray-400" />;
+    return <Minus className="w-4 h-4 text-muted-foreground" />;
   };
 
   const getStatusBadge = (value: number, good: number, warning: number) => {

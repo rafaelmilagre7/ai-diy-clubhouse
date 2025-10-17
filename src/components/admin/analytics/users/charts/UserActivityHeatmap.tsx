@@ -19,7 +19,7 @@ export const UserActivityHeatmap = ({ data, loading }: UserActivityHeatmapProps)
           <CardDescription>Padrões de atividade por horário</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-48 bg-gray-200 animate-pulse rounded" />
+          <div className="h-48 bg-muted animate-pulse rounded" />
         </CardContent>
       </Card>
     );
@@ -43,7 +43,7 @@ export const UserActivityHeatmap = ({ data, loading }: UserActivityHeatmapProps)
   const activityData = generateActivityData();
 
   const getIntensityColor = (activity: number) => {
-    if (activity < 10) return 'bg-gray-100';
+    if (activity < 10) return 'bg-muted/20';
     if (activity < 25) return 'bg-operational/20';
     if (activity < 50) return 'bg-operational/40';
     if (activity < 75) return 'bg-operational/60';
@@ -72,7 +72,7 @@ export const UserActivityHeatmap = ({ data, loading }: UserActivityHeatmapProps)
       <CardContent>
         <div className="space-y-4">
           {/* Legenda de horários */}
-          <div className="flex items-center justify-between text-xs text-gray-500">
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span>00:00</span>
             <span>06:00</span>
             <span>12:00</span>
@@ -84,7 +84,7 @@ export const UserActivityHeatmap = ({ data, loading }: UserActivityHeatmapProps)
           <div className="space-y-1">
             {days.map((day) => (
               <div key={day} className="flex items-center space-x-1">
-                <div className="w-8 text-xs text-gray-600 font-medium">{day}</div>
+                <div className="w-8 text-xs text-foreground font-medium">{day}</div>
                 <div className="flex space-x-px">
                   {hours.map((hour) => {
                     const activity = activityData.find(d => d.day === day && d.hour === hour)?.activity || 0;
@@ -103,15 +103,13 @@ export const UserActivityHeatmap = ({ data, loading }: UserActivityHeatmapProps)
 
           {/* Legenda de intensidade */}
           <div className="flex items-center justify-between pt-2">
-            <span className="text-xs text-gray-500">Menos ativo</span>
+            <span className="text-xs text-muted-foreground">Menos ativo</span>
             <div className="flex space-x-px">
-              <div className="w-3 h-3 bg-gray-100 rounded-sm" />
-              <div className="w-3 h-3 bg-operational/20 rounded-sm" />
-              <div className="w-3 h-3 bg-operational/40 rounded-sm" />
-              <div className="w-3 h-3 bg-operational/60 rounded-sm" />
+              <div className="w-3 h-3 bg-muted/20 rounded-sm" />
+...
               <div className="w-3 h-3 bg-operational rounded-sm" />
             </div>
-            <span className="text-xs text-gray-500">Mais ativo</span>
+            <span className="text-xs text-muted-foreground">Mais ativo</span>
           </div>
 
           {/* Insights */}
@@ -121,14 +119,14 @@ export const UserActivityHeatmap = ({ data, loading }: UserActivityHeatmapProps)
                 <Clock className="h-4 w-4 text-operational" />
                 <div>
                   <div className="font-medium">Pico de Atividade</div>
-                  <div className="text-gray-600">Terça, 14:00-16:00</div>
+                  <div className="text-foreground">Terça, 14:00-16:00</div>
                 </div>
               </div>
               <div className="flex items-center space-x-2">
                 <Activity className="h-4 w-4 text-success" />
                 <div>
                   <div className="font-medium">Dia Mais Ativo</div>
-                  <div className="text-gray-600">Terça-feira</div>
+                  <div className="text-foreground">Terça-feira</div>
                 </div>
               </div>
             </div>

@@ -34,8 +34,8 @@ export const OnboardingStatusTab = ({ data, loading }: OnboardingStatusTabProps)
             <Card key={i}>
               <CardContent className="p-6">
                 <div className="animate-pulse space-y-3">
-                  <div className="h-8 bg-gray-200 rounded"></div>
-                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                  <div className="h-8 bg-muted rounded"></div>
+                  <div className="h-4 bg-muted rounded w-3/4"></div>
                 </div>
               </CardContent>
             </Card>
@@ -45,7 +45,7 @@ export const OnboardingStatusTab = ({ data, loading }: OnboardingStatusTabProps)
           {[...Array(2)].map((_, i) => (
             <Card key={i}>
               <CardContent className="p-6">
-                <div className="h-80 bg-gray-200 animate-pulse rounded"></div>
+                <div className="h-80 bg-muted animate-pulse rounded"></div>
               </CardContent>
             </Card>
           ))}
@@ -136,7 +136,7 @@ export const OnboardingStatusTab = ({ data, loading }: OnboardingStatusTabProps)
         <CardContent>
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
                 placeholder="Buscar por nome ou email..."
                 value={searchTerm}
@@ -191,8 +191,8 @@ export const OnboardingStatusTab = ({ data, loading }: OnboardingStatusTabProps)
         <CardContent>
           {filteredUsers.length === 0 ? (
             <div className="text-center py-8">
-              <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">Nenhum usuário encontrado com os filtros aplicados</p>
+              <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground">Nenhum usuário encontrado com os filtros aplicados</p>
             </div>
           ) : (
             <div className="space-y-4">
