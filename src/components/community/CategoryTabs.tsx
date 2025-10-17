@@ -11,10 +11,10 @@ interface CategoryTabsProps {
 }
 
 const categoryColors = {
-  'Geral': 'data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200',
-  'Suporte': 'data-[state=active]:bg-red-50 data-[state=active]:text-red-700 data-[state=active]:border-red-200',
-  'Implementação': 'data-[state=active]:bg-green-50 data-[state=active]:text-green-700 data-[state=active]:border-green-200',
-  'Feedback': 'data-[state=active]:bg-purple-50 data-[state=active]:text-purple-700 data-[state=active]:border-purple-200'
+  'Geral': 'data-[state=active]:bg-operational/10 data-[state=active]:text-operational data-[state=active]:border-operational/30',
+  'Suporte': 'data-[state=active]:bg-status-error/10 data-[state=active]:text-status-error data-[state=active]:border-status-error/30',
+  'Implementação': 'data-[state=active]:bg-operational/10 data-[state=active]:text-operational data-[state=active]:border-operational/30',
+  'Feedback': 'data-[state=active]:bg-strategy/10 data-[state=active]:text-strategy data-[state=active]:border-strategy/30'
 };
 
 export const CategoryTabs = ({ categories, isLoading }: CategoryTabsProps) => {

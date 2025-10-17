@@ -107,8 +107,8 @@ export const HublaInviteAction = ({ action, onUpdate, onRemove, compact = false 
                 </CardDescription>
               )}
               {!compact && (
-                <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-                  <div className="text-sm text-green-800">
+                <div className="mt-3 p-3 bg-operational/10 border border-operational/30 rounded-lg">
+                  <div className="text-sm text-operational">
                     <strong>🎯 Fluxo Automático:</strong> Quando as condições forem atendidas → Criar convite → Enviar por email/WhatsApp → Usuário recebe acesso automaticamente
                   </div>
                 </div>
@@ -379,9 +379,9 @@ export const HublaInviteAction = ({ action, onUpdate, onRemove, compact = false 
         </Collapsible>
 
         {/* Status */}
-        <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
-          <div className="flex items-center gap-2 text-green-700">
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+        <div className="flex items-center justify-between p-3 bg-operational/10 rounded-lg border border-operational/30">
+          <div className="flex items-center gap-2 text-operational">
+            <div className="w-2 h-2 bg-operational rounded-full"></div>
             <span className="text-sm font-medium">
               Ação configurada
             </span>

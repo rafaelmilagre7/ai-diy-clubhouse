@@ -283,16 +283,16 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
     return (
       <div className="text-center space-y-8 py-12">
         <div className="relative">
-          <div className="w-24 h-24 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto animate-bounce shadow-lg">
+          <div className="w-24 h-24 bg-gradient-to-br from-operational to-operational-dark rounded-full flex items-center justify-center mx-auto animate-bounce shadow-lg">
             <CheckCircle className="h-12 w-12 text-white" />
           </div>
-          <div className="absolute -top-2 -right-2 w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center animate-ping">
+          <div className="absolute -top-2 -right-2 w-8 h-8 bg-revenue rounded-full flex items-center justify-center animate-ping">
             <span className="text-xs">🎉</span>
           </div>
         </div>
         
         <div className="space-y-4">
-          <h3 className="font-heading text-3xl font-bold bg-gradient-to-r from-green-600 to-green-500 bg-clip-text text-transparent">
+          <h3 className="font-heading text-3xl font-bold bg-gradient-to-r from-operational to-operational-light bg-clip-text text-transparent">
             Bem-vindo à elite da IA empresarial!
           </h3>
           <p className="text-lg text-muted-foreground max-w-md mx-auto">
@@ -433,9 +433,9 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
               <div className="flex items-center justify-between">
                 <p className="text-xs font-medium text-foreground/90">Força da senha:</p>
                 <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  passwordValidation.strength === 'weak' ? 'bg-red-500/20 text-red-300 border border-red-500/30' :
-                  passwordValidation.strength === 'medium' ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30' :
-                  'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                  passwordValidation.strength === 'weak' ? 'bg-status-error/20 text-status-error border border-status-error/30' :
+                  passwordValidation.strength === 'medium' ? 'bg-status-warning/20 text-status-warning border border-status-warning/30' :
+                  'bg-operational/20 text-operational border border-operational/30'
                 }`}>
                   {passwordValidation.strength === 'weak' ? 'Fraca' :
                    passwordValidation.strength === 'medium' ? 'Média' : 'Forte'}

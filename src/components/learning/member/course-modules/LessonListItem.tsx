@@ -69,9 +69,9 @@ export const LessonListItem = ({
             {lesson.difficulty_level && (
               <span className={cn(
                 "text-xs px-1.5 py-0.5 rounded-md",
-                lesson.difficulty_level === 'beginner' && "bg-green-100 text-green-800",
-                lesson.difficulty_level === 'intermediate' && "bg-yellow-100 text-yellow-800",
-                lesson.difficulty_level === 'advanced' && "bg-red-100 text-red-800"
+                lesson.difficulty_level === 'beginner' && "bg-operational/20 text-operational",
+                lesson.difficulty_level === 'intermediate' && "bg-status-warning/20 text-status-warning",
+                lesson.difficulty_level === 'advanced' && "bg-status-error/20 text-status-error"
               )}>
                 {lesson.difficulty_level === 'beginner' && "Iniciante"}
                 {lesson.difficulty_level === 'intermediate' && "Intermediário"}
