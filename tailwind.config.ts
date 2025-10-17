@@ -122,6 +122,37 @@ const config: Config = {
           dark: "hsl(var(--strategy-dark))",
           darker: "hsl(var(--strategy-darker))",
         },
+        
+        // Priority colors
+        vivercyan: {
+          DEFAULT: "hsl(var(--vivercyan))",
+          light: "hsl(var(--vivercyan-light))",
+          lighter: "hsl(var(--vivercyan-lighter))",
+          dark: "hsl(var(--vivercyan-dark))",
+          darker: "hsl(var(--vivercyan-darker))",
+        },
+        viverpetrol: {
+          DEFAULT: "hsl(var(--viverpetrol))",
+          light: "hsl(var(--viverpetrol-light))",
+          lighter: "hsl(var(--viverpetrol-lighter))",
+          dark: "hsl(var(--viverpetrol-dark))",
+          darker: "hsl(var(--viverpetrol-darker))",
+        },
+        
+        // Social brand colors
+        'social-whatsapp': {
+          DEFAULT: "hsl(var(--social-whatsapp))",
+          hover: "hsl(var(--social-whatsapp-hover))",
+        },
+        'social-linkedin': {
+          DEFAULT: "hsl(var(--social-linkedin))",
+          hover: "hsl(var(--social-linkedin-hover))",
+          alt: "hsl(var(--social-linkedin-alt))",
+        },
+        'social-twitter': {
+          DEFAULT: "hsl(var(--social-twitter))",
+          hover: "hsl(var(--social-twitter-hover))",
+        },
       },
       
       // Gradientes customizados

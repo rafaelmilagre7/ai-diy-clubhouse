@@ -8,7 +8,7 @@ export const LessonLoadingSkeleton = () => {
         <div className="container py-6 animate-fade-in">
           {/* Header Skeleton */}
           <div className="flex items-center mb-6">
-            <div className="w-32 h-10 bg-gradient-to-r from-muted/50 via-muted/30 to-muted/50 rounded-lg animate-pulse bg-[length:200%_100%] animate-shimmer"></div>
+            <div className="w-32 h-10 bg-gradient-to-r from-muted/50 via-muted/30 to-muted/50 rounded-lg animate-pulse shimmer-gradient animate-shimmer"></div>
           </div>
           
           {/* Breadcrumb Skeleton */}
@@ -22,7 +22,7 @@ export const LessonLoadingSkeleton = () => {
           
           {/* Lesson Header Skeleton */}
           <div className="mb-8">
-            <div className="w-3/4 h-8 bg-gradient-to-r from-muted/60 via-muted/40 to-muted/60 rounded-lg mb-4 animate-pulse bg-[length:200%_100%] animate-shimmer"></div>
+            <div className="w-3/4 h-8 bg-gradient-to-r from-muted/60 via-muted/40 to-muted/60 rounded-lg mb-4 animate-pulse shimmer-gradient animate-shimmer"></div>
             <div className="w-1/2 h-6 bg-muted/50 rounded-lg animate-pulse"></div>
           </div>
           

@@ -247,17 +247,17 @@ export const SolutionsTabOptimized: React.FC<SolutionsTabOptimizedProps> = ({ tr
           </CardContent>
         </Card>
         
-        <Card className="aurora-glass border-[hsl(var(--vivercyan))]/30">
+        <Card className="aurora-glass border-vivercyan/30">
           <CardContent className="p-4 text-center">
-            <Clock className="h-8 w-8 mx-auto mb-2 text-[hsl(var(--vivercyan))]" />
+            <Clock className="h-8 w-8 mx-auto mb-2 text-vivercyan" />
             <div className="text-2xl font-bold text-foreground">{trail.priority2?.length || 0}</div>
             <div className="text-sm text-muted-foreground">Média Prioridade</div>
           </CardContent>
         </Card>
         
-        <Card className="aurora-glass border-[hsl(var(--viverpetrol))]/30">
+        <Card className="aurora-glass border-viverpetrol/30">
           <CardContent className="p-4 text-center">
-            <Brain className="h-8 w-8 mx-auto mb-2 text-[hsl(var(--viverpetrol))]" />
+            <Brain className="h-8 w-8 mx-auto mb-2 text-viverpetrol" />
             <div className="text-2xl font-bold text-foreground">{trail.priority3?.length || 0}</div>
             <div className="text-sm text-muted-foreground">Baixa Prioridade</div>
           </CardContent>

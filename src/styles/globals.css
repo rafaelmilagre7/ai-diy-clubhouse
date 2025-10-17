@@ -11,6 +11,11 @@
   background-size: 20px 20px;
 }
 
+/* Shimmer gradient for skeletons */
+.shimmer-gradient {
+  background-size: 200% 100%;
+}
+
 /* Animações para os componentes da comunidade */
 @keyframes blob {
   0% {
