@@ -116,7 +116,7 @@ export const CertificatePreview = ({ certificate, onDownload }: CertificatePrevi
             </div>
 
             {/* Footer */}
-            <div className="mt-12 pt-8 border-t border-gray-200">
+            <div className="mt-12 pt-8 border-t border-border">
               <div className="flex items-center justify-center space-x-4">
                 <div className="text-center">
                   <div className="w-32 h-px bg-gray-400 mb-2"></div>

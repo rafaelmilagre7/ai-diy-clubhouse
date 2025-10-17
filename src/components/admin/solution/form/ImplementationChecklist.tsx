@@ -197,8 +197,8 @@ const ImplementationChecklist: React.FC<ImplementationChecklistProps> = ({
     return (
       <div className="space-y-6">
         <div className="animate-pulse">
-          <div className="h-4 bg-gray-200 rounded w-1/4 mb-2"></div>
-          <div className="h-8 bg-gray-200 rounded"></div>
+          <div className="h-4 bg-muted rounded w-1/4 mb-2"></div>
+          <div className="h-8 bg-muted rounded"></div>
         </div>
       </div>
     );
@@ -222,7 +222,7 @@ const ImplementationChecklist: React.FC<ImplementationChecklistProps> = ({
                 {completedCount}/{checklistItems.length} concluídos
               </Badge>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
+            <div className="w-full bg-muted rounded-full h-2">
               <div 
                 className="bg-primary h-2 rounded-full transition-all"
                 style={{ width: `${progressPercentage}%` }}

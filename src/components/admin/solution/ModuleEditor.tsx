@@ -60,7 +60,7 @@ const ModuleEditor = ({ module, onSave }: ModuleEditorProps) => {
                 placeholder="Título do módulo"
                 className="text-xl font-bold"
               />
-              <div className="bg-slate-100 rounded px-3 py-1 text-sm">
+              <div className="bg-muted rounded px-3 py-1 text-sm">
                 Tipo: {getModuleTypeName(module.type)}
               </div>
             </div>

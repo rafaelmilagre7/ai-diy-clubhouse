@@ -138,7 +138,7 @@ export const FileUpload = ({
             className={cn(
               "flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer",
               "bg-muted hover:bg-muted/80",
-              "border-gray-300 dark:border-gray-600"
+              "border-border dark:border-border"
             )}
           >
             <div className="flex flex-col items-center justify-center pt-5 pb-6">

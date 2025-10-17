@@ -43,8 +43,8 @@ export const AvailableToolCard: React.FC<AvailableToolCardProps> = ({
         <button
           className={`text-sm ${
             isSelected
-              ? "text-aurora-primary"
-              : "text-blue-600"
+            ? "text-aurora-primary"
+            : "text-operational"
           }`}
           onClick={isSelected ? onDeselect : onSelect}
         >

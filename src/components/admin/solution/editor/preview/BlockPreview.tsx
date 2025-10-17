@@ -27,8 +27,8 @@ const BlockPreview: React.FC<BlockPreviewProps> = ({ block }) => {
   // Type safety check
   if (!type || !data) {
     return (
-      <div className="bg-red-100 p-4 rounded my-4 border border-red-300">
-        <p className="text-red-600">
+      <div className="bg-status-error/10 p-4 rounded my-4 border border-status-error/30">
+        <p className="text-status-error">
           Bloco inválido: faltando tipo ou dados
         </p>
       </div>

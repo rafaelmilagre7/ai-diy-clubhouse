@@ -253,14 +253,14 @@ export const AutomationConditions = ({ conditions, onChange }: AutomationConditi
 
           {/* Validation */}
           {conditions?.conditions?.length > 0 && (
-            <div className="p-3 bg-green-50 rounded-lg border border-green-200">
-              <div className="flex items-center gap-2 text-green-700">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+            <div className="p-3 bg-operational/10 rounded-lg border border-operational/30">
+              <div className="flex items-center gap-2 text-operational/90">
+                <div className="w-2 h-2 bg-operational rounded-full"></div>
                 <span className="text-sm font-medium">
                   {conditions.conditions.length} condição(ões) configurada(s)
                 </span>
               </div>
-              <p className="text-xs text-green-600 mt-1">
+              <p className="text-xs text-operational mt-1">
                 As condições serão verificadas usando operador {conditions.operator}
               </p>
             </div>

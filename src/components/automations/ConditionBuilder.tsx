@@ -494,7 +494,7 @@ export const ConditionBuilder = ({ conditions, onChange, availableFields }: Cond
       {renderGroup(conditions)}
 
       {conditions.conditions.length === 0 && (
-        <div className="text-center py-12 text-muted-foreground border-2 border-dashed border-blue-200 bg-blue-50/30 rounded-lg">
+        <div className="text-center py-12 text-muted-foreground border-2 border-dashed border-operational/30 bg-operational/10 rounded-lg">
           <div className="space-y-3">
             <div className="text-4xl">🎯</div>
             <p className="font-medium">Nenhuma condição definida ainda</p>

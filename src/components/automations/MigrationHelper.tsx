@@ -78,9 +78,9 @@ export const MigrationHelper = ({ conditions, onMigrate }: MigrationHelperProps)
   };
 
   return (
-    <Card className="border-yellow-200 bg-yellow-50">
+    <Card className="border-status-warning/30 bg-status-warning/10">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-yellow-800">
+        <CardTitle className="flex items-center gap-2 text-status-warning">
           <AlertTriangle className="h-5 w-5" />
           Migração de Campos Necessária
         </CardTitle>

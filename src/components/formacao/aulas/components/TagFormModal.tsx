@@ -220,8 +220,8 @@ export const TagFormModal: React.FC<TagFormModalProps> = ({
                     type="button"
                     className={`w-8 h-8 rounded-full border-2 ${
                       form.watch("color") === color 
-                        ? "border-primary shadow-lg" 
-                        : "border-gray-300"
+                      ? "border-primary shadow-lg" 
+                      : "border-border"
                     }`}
                     style={{ backgroundColor: color }}
                     onClick={() => handleColorChange(color)}

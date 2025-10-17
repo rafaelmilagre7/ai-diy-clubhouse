@@ -30,8 +30,8 @@ export const HublaEventSelector = ({ selectedEvent, onEventChange }: HublaEventS
         <CardDescription>
           Escolha qual evento da Hubla deve ativar esta automação. Normalmente você vai querer "Nova Venda" para enviar convites automáticos quando alguém comprar um produto.
         </CardDescription>
-        <div className="mt-3 p-3 bg-orange-50 border border-orange-200 rounded-lg">
-          <div className="text-sm text-orange-800">
+        <div className="mt-3 p-3 bg-status-warning/10 border border-status-warning/30 rounded-lg">
+          <div className="text-sm text-status-warning">
             <strong>⚡ Recomendado:</strong> Use "Nova Venda" para automações de convite pós-compra. Depois adicione condições para filtrar produtos específicos.
           </div>
         </div>

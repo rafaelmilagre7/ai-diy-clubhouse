@@ -27,18 +27,18 @@ const MaterialItem: React.FC<MaterialItemProps> = ({ material, onRemove }) => {
           <p className="text-sm text-muted-foreground line-clamp-2">{material.metadata.description}</p>
           
           <div className="flex flex-wrap gap-2 mt-2">
-            <span className="px-2 py-0.5 bg-gray-200 text-gray-700 rounded text-xs capitalize">
+            <span className="px-2 py-0.5 bg-muted text-foreground rounded text-xs capitalize">
               {material.type}
             </span>
             
             {(material.format || material.metadata.format) && (
-              <span className="px-2 py-0.5 bg-gray-200 text-gray-700 rounded text-xs">
+              <span className="px-2 py-0.5 bg-muted text-foreground rounded text-xs">
                 {material.format || material.metadata.format}
               </span>
             )}
             
             {(material.size || material.metadata.size) && (
-              <span className="px-2 py-0.5 bg-gray-200 text-gray-700 rounded text-xs">
+              <span className="px-2 py-0.5 bg-muted text-foreground rounded text-xs">
                 {formatFileSize(material.size || material.metadata.size || 0)}
               </span>
             )}
