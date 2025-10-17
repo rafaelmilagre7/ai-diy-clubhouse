@@ -23,7 +23,7 @@ export const PermissionGuard: React.FC<PermissionGuardProps> = ({
   if (loading) {
     return (
       <div className="space-y-3">
-        <Skeleton className="h-8 w-[200px]" />
+        <Skeleton className="h-8 w-skeleton-lg" />
         <Skeleton className="h-4 w-full" />
         <Skeleton className="h-4 w-[60%]" />
       </div>

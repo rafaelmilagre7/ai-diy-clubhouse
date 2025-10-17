@@ -107,8 +107,8 @@ export const RecentActivity = ({ activities, loading }: RecentActivityProps) => 
               <div key={index} className="flex items-center gap-4">
                 <Skeleton className="h-10 w-10 rounded-full" />
                 <div className="space-y-2">
-                  <Skeleton className="h-4 w-[250px]" />
-                  <Skeleton className="h-3 w-[120px]" />
+                  <Skeleton className="h-4 w-skeleton-xl" />
+                  <Skeleton className="h-3 w-skeleton-sm" />
                 </div>
               </div>
             ))}

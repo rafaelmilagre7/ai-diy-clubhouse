@@ -46,7 +46,7 @@ export const EventBasicInfo = ({ form }: EventBasicInfoProps) => {
                 <Textarea 
                   {...field} 
                   placeholder="Descreva o evento, objetivos e público-alvo..." 
-                  className="resize-none bg-surface-base border-border/50 focus:border-aurora-primary/50 transition-colors min-h-[100px]"
+                  className="resize-none bg-surface-base border-border/50 focus:border-aurora-primary/50 transition-smooth min-h-[100px]"
                   rows={4}
                 />
               </FormControl>

@@ -86,11 +86,12 @@ const config: Config = {
         'skeleton-lg': '200px',
         'skeleton-xl': '300px',
       },
-      transitionDuration: {
-        'fast': '150ms',
-        'base': '200ms',
-        'slow': '300ms',
-        'slower': '500ms',
+      
+      minHeight: {
+        'chart-sm': '200px',
+        'chart-md': '300px',
+        'chart-lg': '400px',
+        'chart-xl': '500px',
       },
       
       maxHeight: {

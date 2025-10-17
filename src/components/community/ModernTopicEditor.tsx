@@ -433,7 +433,7 @@ Você pode usar Markdown:
 - [links](https://exemplo.com)
 - Listas com - ou 1.
 - Arraste imagens aqui ou use o botão acima"
-                    className="min-h-[300px] resize-none"
+                    className="min-h-chart-md resize-none"
                     required
                   />
                   
@@ -462,7 +462,7 @@ Você pode usar Markdown:
                 </TabsContent>
 
                 <TabsContent value="preview">
-                  <Card className="min-h-[300px]">
+                  <Card className="min-h-chart-md">
                     <CardContent className="p-6">
                       {content.trim() ? (
                         <MarkdownRenderer content={content} />

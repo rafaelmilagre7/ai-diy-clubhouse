@@ -26,7 +26,7 @@ export const NetworkError: React.FC<NetworkErrorProps> = ({
   };
 
   return (
-    <div className="min-h-[300px] flex items-center justify-center p-4">
+    <div className="min-h-chart-md flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto w-12 h-12 bg-operational/20 rounded-full flex items-center justify-center mb-4">

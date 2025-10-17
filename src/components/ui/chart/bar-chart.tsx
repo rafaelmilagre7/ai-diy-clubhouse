@@ -29,7 +29,7 @@ export const BarChart: React.FC<BarChartProps> = ({
   
   if (!validation.isValid) {
     return (
-      <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+      <div className="flex items-center justify-center h-chart-md text-muted-foreground">
         <p>Dados insuficientes para exibir o gráfico</p>
       </div>
     )

@@ -110,7 +110,7 @@ const SmartSkeleton = memo<SmartSkeletonProps>(({
             </div>
             
             {/* Content area */}
-            <Skeleton className="h-[300px] w-full" />
+            <Skeleton className="h-chart-md w-full" />
           </div>
         );
 

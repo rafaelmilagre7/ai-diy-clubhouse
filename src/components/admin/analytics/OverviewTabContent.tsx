@@ -24,8 +24,8 @@ export const OverviewTabContent = ({ timeRange }: OverviewTabContentProps) => {
     <div className="space-y-6">
       <div className="flex justify-between items-center mb-4">
         <div className="space-y-2">
-          <Skeleton className="h-6 w-[200px]" />
-          <Skeleton className="h-4 w-[300px]" />
+          <Skeleton className="h-6 w-skeleton-lg" />
+          <Skeleton className="h-4 w-skeleton-xl" />
         </div>
         <DataStatusIndicator loading={true} />
       </div>
@@ -33,8 +33,8 @@ export const OverviewTabContent = ({ timeRange }: OverviewTabContentProps) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="border shadow-sm">
           <CardHeader className="pb-2">
-            <Skeleton className="h-5 w-[200px]" />
-            <Skeleton className="h-4 w-[150px]" />
+            <Skeleton className="h-5 w-skeleton-lg" />
+            <Skeleton className="h-4 w-skeleton-md" />
           </CardHeader>
           <CardContent>
             <Skeleton className="h-chart-md w-full" />
@@ -43,8 +43,8 @@ export const OverviewTabContent = ({ timeRange }: OverviewTabContentProps) => {
         
         <Card className="border shadow-sm">
           <CardHeader className="pb-2">
-            <Skeleton className="h-5 w-[200px]" />
-            <Skeleton className="h-4 w-[150px]" />
+            <Skeleton className="h-5 w-skeleton-lg" />
+            <Skeleton className="h-4 w-skeleton-md" />
           </CardHeader>
           <CardContent>
             <Skeleton className="h-chart-md w-full" />
@@ -56,8 +56,8 @@ export const OverviewTabContent = ({ timeRange }: OverviewTabContentProps) => {
         {Array(3).fill(0).map((_, i) => (
           <Card key={i} className="border shadow-sm">
             <CardHeader className="pb-2">
-              <Skeleton className="h-5 w-[150px]" />
-              <Skeleton className="h-4 w-[100px]" />
+              <Skeleton className="h-5 w-skeleton-md" />
+              <Skeleton className="h-4 w-skeleton-sm" />
             </CardHeader>
             <CardContent>
               <Skeleton className="h-chart-sm w-full" />

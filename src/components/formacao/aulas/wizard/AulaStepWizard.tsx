@@ -178,7 +178,7 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
   if (initialLoading) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="w-full max-w-3xl p-4 sm:p-6 flex items-center justify-center min-h-[300px]">
+        <DialogContent className="w-full max-w-3xl p-4 sm:p-6 flex items-center justify-center min-h-chart-md">
           <div className="flex flex-col items-center gap-4">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
             <p>Carregando dados da aula...</p>

@@ -108,7 +108,7 @@ export const EnhancedUserAnalytics = ({ timeRange }: EnhancedUserAnalyticsProps)
         </CardHeader>
         <CardContent>
           {loading ? (
-            <Skeleton className="h-[300px] w-full" />
+            <Skeleton className="h-chart-md w-full" />
           ) : data?.usersByTime && data.usersByTime.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={data.usersByTime}>
@@ -121,7 +121,7 @@ export const EnhancedUserAnalytics = ({ timeRange }: EnhancedUserAnalyticsProps)
               </LineChart>
             </ResponsiveContainer>
           ) : (
-            <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+            <div className="flex items-center justify-center h-chart-md text-muted-foreground">
               Dados de crescimento não disponíveis para o período selecionado
             </div>
           )}
@@ -141,7 +141,7 @@ export const EnhancedUserAnalytics = ({ timeRange }: EnhancedUserAnalyticsProps)
         </CardHeader>
         <CardContent>
           {loading ? (
-            <Skeleton className="h-[300px] w-full" />
+            <Skeleton className="h-chart-md w-full" />
           ) : data?.implementationsByCategory ? (
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={data.implementationsByCategory}>
@@ -153,7 +153,7 @@ export const EnhancedUserAnalytics = ({ timeRange }: EnhancedUserAnalyticsProps)
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+            <div className="flex items-center justify-center h-chart-md text-muted-foreground">
               Dados do funil não disponíveis para o período selecionado
             </div>
           )}
