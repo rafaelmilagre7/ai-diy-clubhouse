@@ -85,12 +85,12 @@ export const EnhancedUserStats = ({ stats, loading, onFilterClick }: EnhancedUse
           <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
             Masters + Equipes
           </CardTitle>
-          <div className="h-8 w-8 rounded-full bg-amber-500/10 flex items-center justify-center group-hover:bg-amber-500/20 transition-colors">
-            <Crown className="h-4 w-4 text-amber-600" />
+          <div className="h-8 w-8 rounded-full bg-revenue/10 flex items-center justify-center group-hover:bg-revenue/20 transition-colors">
+            <Crown className="h-4 w-4 text-revenue" />
           </div>
         </CardHeader>
         <CardContent className="px-4 pb-4">
-          <div className="text-3xl font-bold mb-1 text-amber-600">{stats.masters}</div>
+          <div className="text-3xl font-bold mb-1 text-revenue">{stats.masters}</div>
           <p className="text-xs text-muted-foreground flex items-center gap-1">
             <Shield className="h-3 w-3" />
             Com suas equipes
@@ -132,12 +132,12 @@ export const EnhancedUserStats = ({ stats, loading, onFilterClick }: EnhancedUse
             <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
               Pendente
             </CardTitle>
-            <div className="h-8 w-8 rounded-full bg-orange-500/10 flex items-center justify-center group-hover:bg-orange-500/20 transition-colors">
-              <Clock className="h-4 w-4 text-orange-600" />
+            <div className="h-8 w-8 rounded-full bg-status-warning/10 flex items-center justify-center group-hover:bg-status-warning/20 transition-colors">
+              <Clock className="h-4 w-4 text-status-warning" />
             </div>
           </CardHeader>
           <CardContent className="px-4 pb-4">
-            <div className="text-3xl font-bold mb-1 text-orange-600">{stats.onboarding_pending}</div>
+            <div className="text-3xl font-bold mb-1 text-status-warning">{stats.onboarding_pending}</div>
             <p className="text-xs text-muted-foreground flex items-center gap-1">
               <User className="h-3 w-3" />
               Aguardando

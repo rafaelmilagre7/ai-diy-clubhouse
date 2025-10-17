@@ -26,21 +26,21 @@ interface AdvancedUserFiltersProps {
 
 const USER_TYPES: FilterOption[] = [
   { label: 'Todos os usuários', value: 'all', icon: <Users className="h-4 w-4" /> },
-  { label: 'Masters & Equipes', value: 'masters', icon: <Crown className="h-4 w-4 text-yellow-600" /> },
+  { label: 'Masters & Equipes', value: 'masters', icon: <Crown className="h-4 w-4 text-revenue" /> },
   { label: 'Membros de equipe', value: 'team_members', icon: <Building2 className="h-4 w-4 text-operational" /> },
   { label: 'Usuários individuais', value: 'individual', icon: <Users className="h-4 w-4 text-muted-foreground" /> }
 ];
 
 const STATUS_OPTIONS: FilterOption[] = [
   { label: 'Todos os status', value: 'all' },
-  { label: 'Ativos', value: 'active', icon: <CheckCircle className="h-4 w-4 text-green-600" /> },
-  { label: 'Inativos', value: 'inactive', icon: <X className="h-4 w-4 text-red-600" /> }
+  { label: 'Ativos', value: 'active', icon: <CheckCircle className="h-4 w-4 text-operational" /> },
+  { label: 'Inativos', value: 'inactive', icon: <X className="h-4 w-4 text-status-error" /> }
 ];
 
 const ONBOARDING_OPTIONS: FilterOption[] = [
   { label: 'Todos', value: 'all' },
-  { label: 'Completo', value: 'completed', icon: <CheckCircle className="h-4 w-4 text-green-600" /> },
-  { label: 'Pendente', value: 'incomplete', icon: <Clock className="h-4 w-4 text-orange-600" /> }
+  { label: 'Completo', value: 'completed', icon: <CheckCircle className="h-4 w-4 text-operational" /> },
+  { label: 'Pendente', value: 'incomplete', icon: <Clock className="h-4 w-4 text-status-warning" /> }
 ];
 
 const DATE_RANGES: FilterOption[] = [

@@ -407,7 +407,7 @@ export const AdminToolList = ({ refreshTrigger }: AdminToolListProps) => {
                         {tool.category}
                       </Badge>
                       {!tool.status && (
-                        <Badge variant="outline" className="text-xs bg-red-500/10 text-red-500 border-red-500/30">
+                        <Badge variant="outline" className="text-xs bg-status-error/10 text-status-error border-status-error/30">
                           Inativa
                         </Badge>
                       )}
@@ -455,13 +455,13 @@ export const AdminToolList = ({ refreshTrigger }: AdminToolListProps) => {
               
               {/* Performance Metrics */}
               {tool.has_member_benefit && (
-                <div className="mt-4 p-3 aurora-glass rounded-lg bg-gradient-to-r from-purple-500/5 to-pink-500/5 border border-purple-500/20">
+                <div className="mt-4 p-3 aurora-glass rounded-lg bg-gradient-to-r from-strategy/5 to-accent/5 border border-strategy/20">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <BarChart3 className="h-4 w-4 text-purple-500" />
-                      <span className="text-sm font-medium text-purple-600 dark:text-purple-400">Cliques no Benefício</span>
+                      <BarChart3 className="h-4 w-4 text-strategy" />
+                      <span className="text-sm font-medium text-strategy">Cliques no Benefício</span>
                     </div>
-                    <Badge variant="outline" className="bg-purple-500/10 text-purple-500 border-purple-500/30">
+                    <Badge variant="outline" className="bg-strategy/10 text-strategy border-strategy/30">
                       {tool.benefit_clicks || 0}
                     </Badge>
                   </div>
@@ -476,7 +476,7 @@ export const AdminToolList = ({ refreshTrigger }: AdminToolListProps) => {
                   <Button 
                     variant="outline" 
                     size="sm"
-                    className="aurora-glass border-blue-500/30 hover:border-blue-500/50 hover:bg-blue-500/10 text-blue-500 font-medium backdrop-blur-sm transition-all duration-300"
+                    className="aurora-glass border-operational/30 hover:border-operational/50 hover:bg-operational/10 text-operational font-medium backdrop-blur-sm transition-all duration-300"
                   >
                     <Edit className="h-3 w-3 mr-1" />
                     Editar
@@ -488,13 +488,13 @@ export const AdminToolList = ({ refreshTrigger }: AdminToolListProps) => {
                       variant="outline" 
                       size="sm"
                       disabled={deletingId === tool.id}
-                      className="aurora-glass border-red-500/30 hover:border-red-500/50 hover:bg-red-500/10 text-red-500 font-medium backdrop-blur-sm transition-all duration-300"
+                      className="aurora-glass border-status-error/30 hover:border-status-error/50 hover:bg-status-error/10 text-status-error font-medium backdrop-blur-sm transition-all duration-300"
                     >
                       <Trash className="h-3 w-3 mr-1" />
                       {deletingId === tool.id ? 'Excluindo...' : 'Excluir'}
                     </Button>
                   </AlertDialogTrigger>
-                  <AlertDialogContent className="aurora-glass backdrop-blur-md border-red-500/30">
+                  <AlertDialogContent className="aurora-glass backdrop-blur-md border-status-error/30">
                     <AlertDialogHeader>
                       <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
                       <AlertDialogDescription>
@@ -515,7 +515,7 @@ export const AdminToolList = ({ refreshTrigger }: AdminToolListProps) => {
               </div>
               
               <a href={tool.official_url} target="_blank" rel="noopener noreferrer">
-                <Button size="sm" variant="ghost" className="text-blue-500 hover:bg-blue-500/10 hover:text-blue-600">
+                <Button size="sm" variant="ghost" className="text-operational hover:bg-operational/10 hover:text-operational">
                   <ExternalLink className="h-4 w-4" />
                 </Button>
               </a>

@@ -71,7 +71,7 @@ export const ManualCleanupDialog: React.FC<ManualCleanupDialogProps> = ({
       <AlertDialogContent className="max-w-2xl">
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2">
-            <Trash2 className="h-5 w-5 text-red-600" />
+            <Trash2 className="h-5 w-5 text-status-error" />
             🧹 Limpeza Manual Completa
           </AlertDialogTitle>
           <AlertDialogDescription className="space-y-4">
@@ -95,17 +95,17 @@ export const ManualCleanupDialog: React.FC<ManualCleanupDialogProps> = ({
             {result && (
               <div className={`p-4 rounded-md border ${
                 result.success 
-                  ? 'bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800' 
-                  : 'bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800'
+                  ? 'bg-operational/10 border-operational/30' 
+                  : 'bg-status-error/10 border-status-error/30'
               }`}>
                 <div className="flex items-center gap-2 mb-2">
                   {result.success ? (
-                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <CheckCircle className="h-4 w-4 text-operational" />
                   ) : (
-                    <AlertTriangle className="h-4 w-4 text-red-600" />
+                    <AlertTriangle className="h-4 w-4 text-status-error" />
                   )}
                   <p className={`text-sm font-medium ${
-                    result.success ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200'
+                    result.success ? 'text-operational' : 'text-status-error'
                   }`}>
                     {result.message}
                   </p>
@@ -157,7 +157,7 @@ export const ManualCleanupDialog: React.FC<ManualCleanupDialogProps> = ({
               handleCleanup();
             }}
             disabled={isProcessing || !email.trim()}
-            className="bg-red-600 hover:bg-red-700"
+            className="bg-status-error hover:bg-status-error/90"
           >
             {isProcessing ? (
               <>

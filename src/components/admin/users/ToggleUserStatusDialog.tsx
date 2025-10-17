@@ -59,13 +59,13 @@ export const ToggleUserStatusDialog: React.FC<ToggleUserStatusDialogProps> = ({
             
             <div className={`mt-4 p-3 rounded-md border ${
               isActive 
-                ? 'bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-800' 
-                : 'bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800'
+                ? 'bg-status-warning/10 border-status-warning/30' 
+                : 'bg-operational/10 border-operational/30'
             }`}>
               <p className={`text-sm ${
                 isActive 
-                  ? 'text-orange-800 dark:text-orange-200' 
-                  : 'text-green-800 dark:text-green-200'
+                  ? 'text-status-warning' 
+                  : 'text-operational'
               }`}>
                 {isActive 
                   ? '🚫 O usuário será desativado e não poderá mais acessar a plataforma.' 
@@ -86,8 +86,8 @@ export const ToggleUserStatusDialog: React.FC<ToggleUserStatusDialogProps> = ({
             }}
             disabled={isToggling}
             className={isActive 
-              ? "bg-orange-600 text-white hover:bg-orange-700" 
-              : "bg-green-600 text-white hover:bg-green-700"
+              ? "bg-status-warning text-white hover:bg-status-warning/90" 
+              : "bg-operational text-white hover:bg-operational/90"
             }
           >
             {isToggling ? (

@@ -42,11 +42,11 @@ export const AutomationBasicInfo = ({
               id="name"
               placeholder="Ex: Boas-vindas automáticas Hubla"
               {...register('name', { required: 'Nome é obrigatório' })}
-              className={errors.name ? 'border-red-500' : ''}
+              className={errors.name ? 'border-status-error' : ''}
             />
             {errors.name && (
-              <p className="text-sm text-red-600 flex items-center gap-1">
-                <span className="w-1 h-1 bg-red-600 rounded-full"></span>
+              <p className="text-sm text-status-error flex items-center gap-1">
+                <span className="w-1 h-1 bg-status-error rounded-full"></span>
                 {errors.name.message}
               </p>
             )}
@@ -131,25 +131,25 @@ export const AutomationBasicInfo = ({
                 <SelectContent>
                   <SelectItem value="1">
                     <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                      <div className="w-2 h-2 bg-severity-critical rounded-full"></div>
                       <span>Alta (1)</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="2">
                     <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                      <div className="w-2 h-2 bg-severity-high rounded-full"></div>
                       <span>Média-Alta (2)</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="3">
                     <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                      <div className="w-2 h-2 bg-status-warning rounded-full"></div>
                       <span>Média (3)</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="4">
                     <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                      <div className="w-2 h-2 bg-operational rounded-full"></div>
                       <span>Média-Baixa (4)</span>
                     </div>
                   </SelectItem>
