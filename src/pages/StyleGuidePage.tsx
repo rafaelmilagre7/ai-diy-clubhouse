@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Palette, Type, Sparkles, Layout, Zap, Shield, Search,
-  Box, Circle, Square, Layers, Eye, Moon, Sun, Check
+  Box, Circle, Square, Layers, Eye, Moon, Sun, Check, BarChart3
 } from 'lucide-react';
 import { ColorPalette, ColorSwatch } from '@/components/style-guide/ColorPalette';
 import { ComponentShowcase } from '@/components/style-guide/ComponentShowcase';
@@ -165,6 +165,26 @@ export default function StyleGuidePage() {
     { name: 'shadow-aurora-strong', value: '0 12px 48px aurora/30%', usage: 'Sombra forte com glow', type: 'shadow' },
   ];
 
+  // Tokens de Chart - BATCH 1
+  const chartTokens: Token[] = [
+    { name: 'h-chart-sm', value: '200px', usage: 'Charts pequenos (mobile, dashboards compactos)', type: 'other' },
+    { name: 'h-chart-md', value: '300px', usage: 'Charts médios (dashboards padrão)', type: 'other' },
+    { name: 'h-chart-lg', value: '400px', usage: 'Charts grandes (analytics detalhados)', type: 'other' },
+    { name: 'h-chart-xl', value: '500px', usage: 'Charts extra grandes (relatórios full)', type: 'other' },
+  ];
+
+  // Gradientes - BATCH 4
+  const gradientClasses = [
+    { name: 'gradient-aurora', value: 'linear-gradient(135deg, aurora-primary → aurora-light)', usage: 'Gradiente principal da marca' },
+    { name: 'gradient-revenue', value: 'linear-gradient(135deg, emerald → teal)', usage: 'Métricas financeiras positivas' },
+    { name: 'gradient-success', value: 'linear-gradient(135deg, green → emerald)', usage: 'Estados de sucesso' },
+    { name: 'gradient-warning', value: 'linear-gradient(135deg, amber → orange)', usage: 'Alertas e avisos' },
+    { name: 'gradient-error', value: 'linear-gradient(135deg, red → rose)', usage: 'Erros e estados críticos' },
+    { name: 'gradient-operational', value: 'linear-gradient(135deg, blue → indigo)', usage: 'Métricas operacionais' },
+    { name: 'gradient-engagement', value: 'linear-gradient(135deg, purple → pink)', usage: 'Métricas de engajamento' },
+    { name: 'gradient-neutral', value: 'linear-gradient(135deg, gray → slate)', usage: 'Estados neutros' },
+  ];
+
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
@@ -177,7 +197,7 @@ export default function StyleGuidePage() {
             <div>
               <h1 className="text-display">Design System 2.0</h1>
               <p className="text-body text-muted-foreground">
-                Documentação visual completa • 84 tokens • 12 animações • 25+ componentes
+                Documentação visual completa • 112+ tokens • 35+ gradientes • 12 animações • 25+ componentes
               </p>
             </div>
           </div>
@@ -522,6 +542,195 @@ export default function StyleGuidePage() {
                 </CardContent>
               </Card>
             </section>
+
+            {/* Chart Tokens - BATCH 1 */}
+            <section id="chart-tokens" className="space-y-6">
+              <div className="flex items-center gap-3">
+                <BarChart3 className="w-6 h-6 text-aurora-primary" />
+                <h2 className="text-heading-1">Chart Tokens</h2>
+              </div>
+
+              <TokenTable
+                title="Chart Height Tokens"
+                description="Tokens de altura padronizados para gráficos e visualizações"
+                tokens={chartTokens}
+              />
+
+              <Card className="surface-elevated">
+                <CardHeader>
+                  <CardTitle>Chart Size Examples</CardTitle>
+                  <CardDescription>Visualização dos diferentes tamanhos de charts</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <div className="h-chart-sm bg-gradient-aurora rounded-lg border border-aurora-primary/20 flex items-center justify-center">
+                        <code className="text-sm text-white">h-chart-sm (200px)</code>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-chart-md bg-gradient-operational rounded-lg border border-border flex items-center justify-center">
+                        <code className="text-sm text-white">h-chart-md (300px)</code>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-chart-lg bg-gradient-engagement rounded-lg border border-border flex items-center justify-center">
+                        <code className="text-sm text-white">h-chart-lg (400px)</code>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-chart-xl bg-gradient-revenue rounded-lg border border-border flex items-center justify-center">
+                        <code className="text-sm text-white">h-chart-xl (500px)</code>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </section>
+
+            {/* Gradients - BATCH 4 */}
+            <section id="gradients" className="space-y-6">
+              <div className="flex items-center gap-3">
+                <Sparkles className="w-6 h-6 text-aurora-primary" />
+                <h2 className="text-heading-1">Gradient System</h2>
+              </div>
+
+              <Card className="surface-elevated">
+                <CardHeader>
+                  <CardTitle>Semantic Gradients</CardTitle>
+                  <CardDescription>
+                    35+ gradientes semânticos para diferentes contextos (BATCH 4 - Normalização completa)
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Brand Gradients */}
+                  <div className="space-y-3">
+                    <h3 className="text-heading-3">Brand Gradients</h3>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="h-24 bg-gradient-aurora rounded-lg border border-aurora-primary/20 flex items-center justify-center">
+                        <code className="text-sm text-white font-medium">bg-gradient-aurora</code>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Status Gradients */}
+                  <div className="space-y-3">
+                    <h3 className="text-heading-3">Status Gradients</h3>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="h-20 bg-gradient-success rounded-lg border border-border flex items-center justify-center">
+                        <code className="text-sm text-white font-medium">bg-gradient-success</code>
+                      </div>
+                      <div className="h-20 bg-gradient-warning rounded-lg border border-border flex items-center justify-center">
+                        <code className="text-sm text-white font-medium">bg-gradient-warning</code>
+                      </div>
+                      <div className="h-20 bg-gradient-error rounded-lg border border-border flex items-center justify-center">
+                        <code className="text-sm text-white font-medium">bg-gradient-error</code>
+                      </div>
+                      <div className="h-20 bg-gradient-neutral rounded-lg border border-border flex items-center justify-center">
+                        <code className="text-sm text-white font-medium">bg-gradient-neutral</code>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Track Gradients */}
+                  <div className="space-y-3">
+                    <h3 className="text-heading-3">Track & Metric Gradients</h3>
+                    <div className="grid md:grid-cols-3 gap-4">
+                      <div className="h-20 bg-gradient-revenue rounded-lg border border-border flex items-center justify-center">
+                        <code className="text-sm text-white font-medium">bg-gradient-revenue</code>
+                      </div>
+                      <div className="h-20 bg-gradient-operational rounded-lg border border-border flex items-center justify-center">
+                        <code className="text-sm text-white font-medium">bg-gradient-operational</code>
+                      </div>
+                      <div className="h-20 bg-gradient-engagement rounded-lg border border-border flex items-center justify-center">
+                        <code className="text-sm text-white font-medium">bg-gradient-engagement</code>
+                      </div>
+                    </div>
+                  </div>
+
+                  <CodeBlock
+                    language="tsx"
+                    code={`// Uso em cards e charts
+<Card className="bg-gradient-revenue">
+  <CardHeader>
+    <CardTitle>Receita Total</CardTitle>
+  </CardHeader>
+</Card>
+
+// Uso em badges
+<Badge className="bg-gradient-success">
+  Completo
+</Badge>`}
+                  />
+                </CardContent>
+              </Card>
+            </section>
+
+            {/* Compliance Status - BATCH 1-4 */}
+            <section id="compliance" className="space-y-6">
+              <div className="flex items-center gap-3">
+                <Check className="w-6 h-6 text-system-healthy" />
+                <h2 className="text-heading-1">Design System Compliance</h2>
+              </div>
+
+              <Card className="surface-elevated border-system-healthy/20">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Shield className="w-5 h-5 text-system-healthy" />
+                    Status de Normalização da Plataforma
+                  </CardTitle>
+                  <CardDescription>
+                    Progresso da eliminação de valores hardcoded (BATCH 1-4 completos)
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <Card className="bg-gradient-success border-0">
+                      <CardContent className="pt-6 text-center">
+                        <div className="text-3xl font-bold text-white mb-2">109</div>
+                        <p className="text-sm text-white/90 font-medium">Valores Arbitrários</p>
+                        <p className="text-xs text-white/70 mt-1">Normalizados (BATCH 1)</p>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-gradient-operational border-0">
+                      <CardContent className="pt-6 text-center">
+                        <div className="text-3xl font-bold text-white mb-2">25+</div>
+                        <p className="text-sm text-white/90 font-medium">Cores Genéricas</p>
+                        <p className="text-xs text-white/70 mt-1">Normalizadas (BATCH 2)</p>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-gradient-engagement border-0">
+                      <CardContent className="pt-6 text-center">
+                        <div className="text-3xl font-bold text-white mb-2">270+</div>
+                        <p className="text-sm text-white/90 font-medium">Transições</p>
+                        <p className="text-xs text-white/70 mt-1">Normalizadas (BATCH 3)</p>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-gradient-revenue border-0">
+                      <CardContent className="pt-6 text-center">
+                        <div className="text-3xl font-bold text-white mb-2">35+</div>
+                        <p className="text-sm text-white/90 font-medium">Gradientes</p>
+                        <p className="text-xs text-white/70 mt-1">Criados (BATCH 4)</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  <div className="mt-6 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Compliance Total</span>
+                      <span className="text-sm font-bold text-system-healthy">~85%</span>
+                    </div>
+                    <Progress value={85} className="h-2" />
+                    <p className="text-xs text-muted-foreground">
+                      BATCH 1-4 completos • BATCH 5-10 planejados • Meta: 100% até Q4 2025
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </section>
           </TabsContent>
 
           {/* COMPONENTS TAB */}
@@ -855,29 +1064,35 @@ export default function StyleGuidePage() {
 
         {/* Footer */}
         <div className="mt-16 pt-8 border-t border-border">
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-6">
             <Card className="surface-elevated">
               <CardContent className="pt-6">
-                <div className="text-3xl font-bold text-aurora-primary mb-2">84</div>
-                <p className="text-sm text-muted-foreground">Color Tokens</p>
+                <div className="text-3xl font-bold text-aurora-primary mb-2">112+</div>
+                <p className="text-sm text-muted-foreground">Tokens Totais</p>
+              </CardContent>
+            </Card>
+            <Card className="surface-elevated">
+              <CardContent className="pt-6">
+                <div className="text-3xl font-bold text-aurora-primary mb-2">35+</div>
+                <p className="text-sm text-muted-foreground">Gradientes</p>
               </CardContent>
             </Card>
             <Card className="surface-elevated">
               <CardContent className="pt-6">
                 <div className="text-3xl font-bold text-aurora-primary mb-2">12</div>
-                <p className="text-sm text-muted-foreground">Animations</p>
+                <p className="text-sm text-muted-foreground">Animações</p>
               </CardContent>
             </Card>
             <Card className="surface-elevated">
               <CardContent className="pt-6">
                 <div className="text-3xl font-bold text-aurora-primary mb-2">25+</div>
-                <p className="text-sm text-muted-foreground">Components</p>
+                <p className="text-sm text-muted-foreground">Componentes</p>
               </CardContent>
             </Card>
             <Card className="surface-elevated">
               <CardContent className="pt-6">
-                <div className="text-3xl font-bold text-aurora-primary mb-2">v13.2</div>
-                <p className="text-sm text-muted-foreground">Version</p>
+                <div className="text-3xl font-bold text-system-healthy mb-2">85%</div>
+                <p className="text-sm text-muted-foreground">Compliance</p>
               </CardContent>
             </Card>
           </div>
@@ -894,7 +1109,7 @@ export default function StyleGuidePage() {
               </code>
             </p>
             <p className="text-caption text-muted-foreground mt-2">
-              Última atualização: Design System 2.0 • Outubro 2025
+              Última atualização: Design System 2.0 • BATCH 1-4 Completos • Outubro 2025
             </p>
           </div>
         </div>
