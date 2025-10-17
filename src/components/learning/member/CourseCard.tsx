@@ -75,18 +75,18 @@ export const CourseCard: React.FC<CourseCardProps> = ({
           
           <Button 
             size="icon" 
-            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-black rounded-full w-12 h-12 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-card/90 hover:bg-card text-foreground rounded-full w-12 h-12 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
           >
             <Play className="h-6 w-6 fill-current" />
           </Button>
           
           {isCompleted && (
-            <div className="absolute top-2 left-2 bg-operational text-white rounded-full p-1">
+            <div className="absolute top-2 left-2 bg-operational text-primary-foreground rounded-full p-1">
               <CheckCircle className="h-5 w-5" />
             </div>
           )}
           
-          <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+          <div className="absolute bottom-0 left-0 right-0 p-4 text-primary-foreground">
             <h3 className="font-semibold text-lg line-clamp-1 drop-shadow-md group-hover:line-clamp-none transition-all">
               {title}
             </h3>

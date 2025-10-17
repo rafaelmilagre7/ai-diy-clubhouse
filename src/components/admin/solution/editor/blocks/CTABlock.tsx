@@ -52,7 +52,7 @@ const CTABlock: React.FC<CTABlockProps> = ({ data, onChange }) => {
           <p className="mb-6 text-muted-foreground">
             {data.text || "Texto da chamada para ação irá aparecer aqui."}
           </p>
-          <button className="inline-flex items-center px-6 py-3 bg-aurora-primary text-white rounded-full font-medium hover:bg-aurora-primary-dark transition-colors">
+          <button className="inline-flex items-center px-6 py-3 bg-aurora-primary text-primary-foreground rounded-full font-medium hover:bg-aurora-primary-dark transition-colors">
             {data.buttonText || "Continuar"}
             <ArrowRight className="ml-2 h-4 w-4" />
           </button>

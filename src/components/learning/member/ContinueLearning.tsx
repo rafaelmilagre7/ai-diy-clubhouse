@@ -117,7 +117,7 @@ export const ContinueLearning = ({ className }: ContinueLearningProps) => {
                 </div>
                 
                 <div className="flex items-center gap-4">
-                  <Button className="gap-2 bg-white text-black hover:bg-white/90">
+                  <Button className="gap-2 bg-card text-foreground hover:bg-card/90">
                     <Play className="h-4 w-4 fill-current" />
                     Continuar
                   </Button>
@@ -126,7 +126,7 @@ export const ContinueLearning = ({ className }: ContinueLearningProps) => {
               
               {/* Botão de play centralizado que aparece em hover */}
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="bg-white/90 rounded-full p-6 opacity-0 group-hover:opacity-100 transition-opacity transform group-hover:scale-105 duration-300 shadow-xl">
+                <div className="bg-card/90 rounded-full p-6 opacity-0 group-hover:opacity-100 transition-opacity transform group-hover:scale-105 duration-300 shadow-xl">
                   <Play className="h-8 w-8 text-primary fill-current" />
                 </div>
               </div>
