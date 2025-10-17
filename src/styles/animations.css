@@ -37,10 +37,10 @@
 
 @keyframes netflix-glow {
   0% {
-    box-shadow: 0 4px 20px hsl(var(--aurora-primary) / 0.1);
+    box-shadow: 0 4px 20px rgba(10, 186, 181, 0.1);
   }
   100% {
-    box-shadow: 0 8px 40px hsl(var(--aurora-primary) / 0.3);
+    box-shadow: 0 8px 40px rgba(10, 186, 181, 0.3);
   }
 }
 
@@ -59,17 +59,17 @@
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: hsl(var(--scrollbar-track) / 0.1);
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 4px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: hsl(var(--scrollbar-thumb) / 0.6);
+  background: rgba(10, 186, 181, 0.6);
   border-radius: 4px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--scrollbar-thumb) / 0.8);
+  background: rgba(10, 186, 181, 0.8);
 }
 
 /* Aurora Background Animations */

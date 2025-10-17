@@ -198,7 +198,7 @@
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, hsl(var(--glass-white-base) / 0.1), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
   transition: left 0.5s;
 }
 
@@ -228,7 +228,7 @@
   left: 50%;
   width: 0;
   height: 0;
-  background: radial-gradient(circle, hsl(var(--glass-white-base) / 0.3) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
   transition: all 0.3s ease;
   transform: translate(-50%, -50%);
 }
@@ -241,23 +241,23 @@
 /* ===== ENHANCED GLASSMORPHISM ===== */
 
 .glass-enhanced {
-  background-color: hsl(var(--glass-white-base) / 0.1);
+  background-color: rgb(255 255 255 / 0.1);
   backdrop-filter: blur(12px);
-  border: 1px solid hsl(var(--glass-white-base) / 0.2);
-  box-shadow: 0 10px 15px -3px hsl(var(--glass-shadow-light) / 0.1);
+  border: 1px solid rgb(255 255 255 / 0.2);
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
 }
 
 .glass-card-hover {
-  background-color: hsl(var(--glass-white-base) / 0.1);
+  background-color: rgb(255 255 255 / 0.1);
   backdrop-filter: blur(12px);
-  border: 1px solid hsl(var(--glass-white-base) / 0.2);
-  box-shadow: 0 10px 15px -3px hsl(var(--glass-shadow-light) / 0.1);
+  border: 1px solid rgb(255 255 255 / 0.2);
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .glass-card-hover:hover {
-  background-color: hsl(var(--glass-white-base) / 0.15);
-  border-color: hsl(var(--glass-white-base) / 0.3);
+  background-color: rgb(255 255 255 / 0.15);
+  border-color: rgb(255 255 255 / 0.3);
   box-shadow: 0 20px 25px -5px hsl(var(--aurora-primary) / 0.2);
 }
 
@@ -312,14 +312,14 @@
 /* ===== STATUS INDICATORS ===== */
 
 .status-active {
-  background-color: hsl(var(--status-success));
-  box-shadow: 0 10px 15px -3px hsl(var(--status-success) / 0.3);
+  background-color: rgb(74 222 128);
+  box-shadow: 0 10px 15px -3px rgb(74 222 128 / 0.3);
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 .status-pending {
-  background-color: hsl(var(--status-warning));
-  box-shadow: 0 10px 15px -3px hsl(var(--status-warning) / 0.3);
+  background-color: rgb(251 191 36);
+  box-shadow: 0 10px 15px -3px rgb(251 191 36 / 0.3);
 }
 
 .status-completed {
@@ -331,7 +331,7 @@
 
 .aurora-backdrop {
   backdrop-filter: blur(20px) saturate(180%);
-  background: hsl(var(--glass-white-base) / 0.1);
+  background: rgba(255, 255, 255, 0.1);
 }
 
 /* ===== MODULE BADGE ===== */
