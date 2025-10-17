@@ -136,11 +136,11 @@ export function BenefitAccessControl({
           </div>
         ) : (
           <div className="space-y-4 py-2">
-            <div className="flex items-center space-x-2 rounded-md border p-4 bg-amber-50">
-              <Shield className="h-5 w-5 text-amber-600" />
+            <div className="flex items-center space-x-2 rounded-md border p-4 bg-status-warning/10">
+              <Shield className="h-5 w-5 text-status-warning" />
               <div className="text-sm">
-                <p className="font-medium text-amber-800">Acesso Restrito</p>
-                <p className="text-amber-800/80 text-xs">
+                <p className="font-medium text-status-warning">Acesso Restrito</p>
+                <p className="text-status-warning/80 text-xs">
                   Os papéis selecionados terão acesso a este benefício. Se nenhum papel for selecionado, o benefício estará disponível para todos.
                 </p>
               </div>

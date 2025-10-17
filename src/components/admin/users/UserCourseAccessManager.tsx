@@ -111,7 +111,7 @@ export const UserCourseAccessManager: React.FC<UserCourseAccessManagerProps> = (
           new Date(courseStatus.overrideExpiresAt) <= new Date();
         
         return (
-          <Badge variant={isExpired ? "outline" : "default"} className="bg-emerald-500/10 text-emerald-700 border-emerald-500/20">
+          <Badge variant={isExpired ? "outline" : "default"} className="bg-operational/10 text-operational border-operational/20">
             <ShieldCheck className="w-3 h-3 mr-1" />
             {isExpired ? 'Expirado' : 'Concedido'}
           </Badge>

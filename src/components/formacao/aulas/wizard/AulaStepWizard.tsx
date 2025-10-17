@@ -141,8 +141,8 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
   const renderStorageWarning = () => {
     if (storageChecking) {
       return (
-        <div className="bg-blue-50 border border-blue-300 p-3 rounded-md mt-2 mb-4">
-          <p className="text-blue-800 text-sm flex items-center">
+        <div className="bg-operational/10 border border-operational/30 p-3 rounded-md mt-2 mb-4">
+          <p className="text-operational text-sm flex items-center">
             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
             Verificando configuração de armazenamento...
           </p>
@@ -152,9 +152,9 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
     
     if (!storageReady) {
       return (
-        <div className="bg-amber-50 border border-amber-300 p-3 rounded-md mt-2 mb-4">
+        <div className="bg-status-warning/10 border border-status-warning/30 p-3 rounded-md mt-2 mb-4">
           <div className="flex flex-col space-y-2">
-            <p className="text-amber-800 text-sm">
+            <p className="text-status-warning text-sm">
               <strong>Atenção:</strong> A configuração de armazenamento pode não estar completa. 
               Alguns recursos como upload de imagens e vídeos podem não funcionar corretamente.
             </p>
@@ -204,9 +204,9 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
         {renderStorageWarning()}
         
         {isSaving && (
-          <div className="bg-blue-50 border border-blue-200 p-4 rounded-md mb-4 flex items-center space-x-3">
-            <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
-            <p className="text-blue-700">
+          <div className="bg-operational/10 border border-operational/30 p-4 rounded-md mb-4 flex items-center space-x-3">
+            <Loader2 className="h-4 w-4 animate-spin text-operational" />
+            <p className="text-operational">
               {currentSaveStep || "Salvando aula..."}
             </p>
           </div>

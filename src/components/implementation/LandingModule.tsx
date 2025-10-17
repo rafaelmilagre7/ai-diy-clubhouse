@@ -22,30 +22,30 @@ export const LandingModule = ({ module, onComplete }: LandingModuleProps) => {
         </p>
       </div>
       
-      <div className="bg-blue-50 p-6 rounded-lg border border-blue-100">
-        <h2 className="text-xl font-semibold mb-4 text-blue-800">O que você vai aprender</h2>
+      <div className="bg-operational/10 p-6 rounded-lg border border-operational/20">
+        <h2 className="text-xl font-semibold mb-4 text-operational">O que você vai aprender</h2>
         <ul className="space-y-3">
           <li className="flex items-start">
-            <div className="h-6 w-6 rounded-full bg-blue-200 text-blue-800 flex items-center justify-center mr-3 flex-shrink-0">1</div>
+            <div className="h-6 w-6 rounded-full bg-operational/20 text-operational flex items-center justify-center mr-3 flex-shrink-0">1</div>
             <span>Como configurar todas as ferramentas necessárias</span>
           </li>
           <li className="flex items-start">
-            <div className="h-6 w-6 rounded-full bg-blue-200 text-blue-800 flex items-center justify-center mr-3 flex-shrink-0">2</div>
+            <div className="h-6 w-6 rounded-full bg-operational/20 text-operational flex items-center justify-center mr-3 flex-shrink-0">2</div>
             <span>O passo a passo detalhado da implementação</span>
           </li>
           <li className="flex items-start">
-            <div className="h-6 w-6 rounded-full bg-blue-200 text-blue-800 flex items-center justify-center mr-3 flex-shrink-0">3</div>
+            <div className="h-6 w-6 rounded-full bg-operational/20 text-operational flex items-center justify-center mr-3 flex-shrink-0">3</div>
             <span>Como validar que tudo está funcionando corretamente</span>
           </li>
           <li className="flex items-start">
-            <div className="h-6 w-6 rounded-full bg-blue-200 text-blue-800 flex items-center justify-center mr-3 flex-shrink-0">4</div>
+            <div className="h-6 w-6 rounded-full bg-operational/20 text-operational flex items-center justify-center mr-3 flex-shrink-0">4</div>
             <span>Estratégias para otimizar e escalar os resultados</span>
           </li>
         </ul>
       </div>
       
-      <div className="bg-amber-50 p-6 rounded-lg border border-amber-100">
-        <h2 className="text-xl font-semibold mb-4 text-amber-800">Antes de começar</h2>
+      <div className="bg-status-warning/10 p-6 rounded-lg border border-status-warning/20">
+        <h2 className="text-xl font-semibold mb-4 text-status-warning">Antes de começar</h2>
         <p className="mb-4">
           Esta implementação levará aproximadamente 1-2 horas para ser concluída.
           Recomendamos que você reserve esse tempo para seguir todos os passos sem interrupções.

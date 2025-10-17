@@ -55,16 +55,16 @@ export const ImplementationNavigation = ({
                   ? "hover:bg-white/10 cursor-pointer" 
                   : "cursor-not-allowed opacity-50",
                 isCurrent && "bg-aurora-primary/20 border border-aurora-primary/30",
-                isCompleted && !isCurrent && "bg-green-500/10 border border-green-500/20"
+                isCompleted && !isCurrent && "bg-operational/10 border border-operational/20"
               )}
             >
               <div className="flex-shrink-0">
                 {isCompleted ? (
-                  <CheckCircle2 className="h-5 w-5 text-green-400" />
+                  <CheckCircle2 className="h-5 w-5 text-operational" />
                 ) : isCurrent ? (
                   <PlayCircle className="h-5 w-5 text-aurora-primary" />
                 ) : (
-                  <Circle className="h-5 w-5 text-neutral-500" />
+                  <Circle className="h-5 w-5 text-muted-foreground" />
                 )}
               </div>
               
@@ -72,17 +72,17 @@ export const ImplementationNavigation = ({
                 <p className={cn(
                   "text-sm font-medium truncate",
                   isCurrent ? "text-aurora-primary" : 
-                  isCompleted ? "text-green-400" : 
-                  isClickable ? "text-neutral-200" : "text-neutral-500"
+                  isCompleted ? "text-operational" : 
+                  isClickable ? "text-foreground" : "text-muted-foreground"
                 )}>
                   {module.title}
                 </p>
-                <p className="text-xs text-neutral-400 capitalize">
+                <p className="text-xs text-muted-foreground capitalize">
                   {module.type}
                 </p>
               </div>
               
-              <div className="flex-shrink-0 text-xs text-neutral-500">
+              <div className="flex-shrink-0 text-xs text-muted-foreground">
                 {index + 1}
               </div>
             </button>

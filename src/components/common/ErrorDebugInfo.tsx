@@ -101,7 +101,7 @@ export const ErrorDebugInfo: React.FC<ErrorDebugInfoProps> = ({
           size="sm"
           variant="outline"
           onClick={() => setIsExpanded(true)}
-          className="bg-red-50 border-red-200 text-red-700 hover:bg-red-100"
+          className="bg-status-error/10 border-status-error/30 text-status-error hover:bg-status-error/20"
         >
           <Bug className="w-4 h-4 mr-1" />
           Debug Info
@@ -151,7 +151,7 @@ export const ErrorDebugInfo: React.FC<ErrorDebugInfoProps> = ({
           {import.meta.env.DEV && error.stack && (
             <div>
               <div className="flex items-center justify-between">
-                <strong className="text-red-800">Stack Trace:</strong>
+                <strong className="text-status-error">Stack Trace:</strong>
                 <Button
                   size="sm"
                   variant="ghost"

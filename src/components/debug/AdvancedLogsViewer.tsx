@@ -117,10 +117,10 @@ export const AdvancedLogsViewer: React.FC<AdvancedLogsViewerProps> = ({
 
   const getLogIcon = (level: AdvancedLogEntry['level']) => {
     switch (level) {
-      case 'success': return <CheckCircle className="h-4 w-4 text-emerald-400" />;
-      case 'error': return <XCircle className="h-4 w-4 text-red-400" />;
-      case 'warning': return <AlertTriangle className="h-4 w-4 text-amber-400" />;
-      default: return <Info className="h-4 w-4 text-blue-400" />;
+      case 'success': return <CheckCircle className="h-4 w-4 text-operational" />;
+      case 'error': return <XCircle className="h-4 w-4 text-status-error" />;
+      case 'warning': return <AlertTriangle className="h-4 w-4 text-status-warning" />;
+      default: return <Info className="h-4 w-4 text-operational" />;
     }
   };
 
@@ -136,10 +136,10 @@ export const AdvancedLogsViewer: React.FC<AdvancedLogsViewerProps> = ({
 
   const getCategoryColor = (category: AdvancedLogEntry['category']) => {
     switch (category) {
-      case 'config': return 'border-blue-500 text-blue-300';
-      case 'connectivity': return 'border-green-500 text-green-300';
-      case 'templates': return 'border-purple-500 text-purple-300';
-      case 'test': return 'border-orange-500 text-orange-300';
+      case 'config': return 'border-operational text-operational';
+      case 'connectivity': return 'border-operational text-operational';
+      case 'templates': return 'border-strategy text-strategy';
+      case 'test': return 'border-status-warning text-status-warning';
       default: return 'border-border text-muted-foreground';
     }
   };
@@ -207,7 +207,7 @@ export const AdvancedLogsViewer: React.FC<AdvancedLogsViewerProps> = ({
                   variant="outline" 
                   size="sm"
                   onClick={onClear}
-                  className="h-7 px-2 text-xs hover:bg-red-600 hover:text-white"
+                  className="h-7 px-2 text-xs hover:bg-status-error/10 hover:text-status-error hover:border-status-error/30"
                 >
                   <Trash2 className="h-3 w-3 mr-1" />
                   Limpar

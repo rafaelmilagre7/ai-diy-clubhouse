@@ -43,7 +43,7 @@ export const ImplementationConfirmationModal = ({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <CheckCircle className="h-5 w-5 text-green-600" />
+            <CheckCircle className="h-5 w-5 text-operational" />
             Confirmar Implementação
           </DialogTitle>
           <DialogDescription>
@@ -58,8 +58,8 @@ export const ImplementationConfirmationModal = ({
             seu progresso no VIVER DE IA e libera acesso para certificados e benefícios.
           </p>
           
-          <div className="bg-blue-50 p-3 rounded border border-blue-100">
-            <p className="text-sm text-blue-700">
+          <div className="bg-operational/10 p-3 rounded border border-operational/20">
+            <p className="text-sm text-operational">
               Ao confirmar, você declara que implementou com sucesso esta solução 
               em sua empresa ou ambiente de negócios.
             </p>

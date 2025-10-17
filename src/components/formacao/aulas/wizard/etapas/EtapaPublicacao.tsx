@@ -183,8 +183,8 @@ const EtapaPublicacao: React.FC<EtapaPublicacaoProps> = ({
                   </p>
                 </div>
                 
-                <Alert className="bg-amber-50 border-amber-200 text-amber-800">
-                  <AlertCircle className="h-4 w-4 text-amber-800" />
+                <Alert className="bg-status-warning/10 border-status-warning/30 text-status-warning">
+                  <AlertCircle className="h-4 w-4 text-status-warning" />
                   <AlertDescription>
                     Para usar esta funcionalidade, você deve ter criado um assistente no painel da OpenAI e configurado a chave da API nas configurações.
                   </AlertDescription>
@@ -203,7 +203,7 @@ const EtapaPublicacao: React.FC<EtapaPublicacaoProps> = ({
       )}
 
       {saveStatus === "success" && (
-        <div className="bg-green-100 p-4 rounded-md text-green-800 flex items-start space-x-2">
+        <div className="bg-operational/10 p-4 rounded-md text-operational flex items-start space-x-2">
           <CheckCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
           <p>Aula salva com sucesso! O diálogo será fechado em breve.</p>
         </div>

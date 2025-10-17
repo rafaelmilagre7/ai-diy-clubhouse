@@ -180,7 +180,7 @@ export const MaterialGridView = ({
                       variant="outline" 
                       size="sm" 
                       onClick={() => onEdit(recurso)}
-                      className="hover:bg-blue-50 hover:border-blue-300"
+                      className="hover:bg-operational/10 hover:border-operational/30"
                     >
                       Editar
                     </Button>
@@ -188,7 +188,7 @@ export const MaterialGridView = ({
                       variant="outline" 
                       size="sm" 
                       onClick={() => onDelete(recurso.id)}
-                      className="hover:bg-red-50 hover:border-red-300 text-red-600"
+                      className="hover:bg-status-error/10 hover:border-status-error/30 text-status-error"
                     >
                       Excluir
                     </Button>

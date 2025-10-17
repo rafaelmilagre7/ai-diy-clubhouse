@@ -61,11 +61,11 @@ export const ModuleContent = ({ module, onComplete, onInteraction, onError }: Mo
     }
     
     return (
-      <div className="p-8 bg-red-50 border border-red-200 rounded-lg">
-        <h3 className="text-lg font-medium text-red-800 mb-2">
+      <div className="p-8 bg-status-error/10 border border-status-error/30 rounded-lg">
+        <h3 className="text-lg font-medium text-status-error mb-2">
           Erro ao exibir conteúdo
         </h3>
-        <p className="text-red-700">
+        <p className="text-status-error">
           Ocorreu um erro ao carregar o conteúdo deste módulo. Por favor, recarregue a página ou tente novamente mais tarde.
         </p>
       </div>

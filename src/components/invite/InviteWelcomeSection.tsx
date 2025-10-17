@@ -15,8 +15,8 @@ const InviteWelcomeSection: React.FC<InviteWelcomeSectionProps> = ({ inviteData 
     <div className="relative flex flex-col justify-center space-y-4 h-full">
       {/* Background Elements */}
       <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 -z-10" />
-      <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -z-10 animate-pulse" />
-      <div className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-teal-500/5 rounded-full blur-2xl -z-10 animate-pulse animation-delay-2000" />
+      <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-operational/10 rounded-full blur-3xl -z-10 animate-pulse" />
+      <div className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-operational/5 rounded-full blur-2xl -z-10 animate-pulse animation-delay-2000" />
 
       {/* Logo Section */}
       <div className="text-center">
@@ -31,7 +31,7 @@ const InviteWelcomeSection: React.FC<InviteWelcomeSectionProps> = ({ inviteData 
 
       {/* Main Content */}
       <div className="text-center space-y-4">
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 backdrop-blur-sm border border-emerald-500/30 rounded-full text-xs font-semibold text-emerald-400">
+        <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-operational/20 to-operational/30 backdrop-blur-sm border border-operational/30 rounded-full text-xs font-semibold text-operational">
           <Star className="h-3 w-3" />
           Convite Exclusivo
         </div>
@@ -49,13 +49,13 @@ const InviteWelcomeSection: React.FC<InviteWelcomeSectionProps> = ({ inviteData 
         {/* Invite Card */}
         <div className="bg-card/50 backdrop-blur-md border border-border/50 rounded-xl p-4 max-w-sm mx-auto shadow-xl">
           <div className="flex items-center justify-center gap-2 mb-3">
-            <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse shadow-lg shadow-emerald-400/50"></div>
+            <div className="w-2 h-2 bg-operational rounded-full animate-pulse shadow-lg shadow-operational/50"></div>
             <p className="text-xs font-semibold text-foreground/90">Acesso liberado para:</p>
           </div>
           <p className="font-bold text-base text-foreground mb-3">{inviteData.email}</p>
           {inviteData.role && (
-            <div className="inline-flex px-3 py-1 bg-emerald-500/20 border border-emerald-500/30 rounded-full">
-              <p className="text-xs font-medium text-emerald-400">
+            <div className="inline-flex px-3 py-1 bg-operational/20 border border-operational/30 rounded-full">
+              <p className="text-xs font-medium text-operational">
                 {inviteData.role.name}
               </p>
             </div>

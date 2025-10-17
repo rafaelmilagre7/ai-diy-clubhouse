@@ -54,8 +54,8 @@ export const CelebrationModule = ({ module, onComplete }: CelebrationModuleProps
   return (
     <div className="max-w-3xl mx-auto space-y-8 py-8 animate-fade-in">
       <div className="text-center">
-        <div className="inline-flex items-center justify-center h-20 w-20 rounded-full bg-green-100 mb-6">
-          <CheckCircle className="h-10 w-10 text-green-600" />
+        <div className="inline-flex items-center justify-center h-20 w-20 rounded-full bg-operational/10 mb-6">
+          <CheckCircle className="h-10 w-10 text-operational" />
         </div>
         <h1 className="text-3xl font-bold mb-4">
           Parabéns! Implementação Concluída
@@ -65,7 +65,7 @@ export const CelebrationModule = ({ module, onComplete }: CelebrationModuleProps
         </p>
       </div>
       
-      <div className="bg-green-50 p-6 rounded-lg border border-green-100">
+      <div className="bg-operational/10 p-6 rounded-lg border border-operational/20">
         <h2 className="text-xl font-semibold mb-4 flex items-center">
           <Award className="mr-2 h-6 w-6 text-aurora-primary" />
           Suas conquistas
@@ -90,8 +90,8 @@ export const CelebrationModule = ({ module, onComplete }: CelebrationModuleProps
         <h2 className="text-xl font-semibold mb-4">Próximos passos</h2>
         <ul className="space-y-4">
           <li className="flex items-start">
-            <div className="bg-amber-100 p-2 rounded-full mr-3 flex-shrink-0">
-              <Share2 className="h-5 w-5 text-amber-700" />
+            <div className="bg-status-warning/10 p-2 rounded-full mr-3 flex-shrink-0">
+              <Share2 className="h-5 w-5 text-status-warning" />
             </div>
             <div>
               <h3 className="font-medium">Compartilhe seus resultados</h3>
@@ -101,8 +101,8 @@ export const CelebrationModule = ({ module, onComplete }: CelebrationModuleProps
             </div>
           </li>
           <li className="flex items-start">
-            <div className="bg-blue-100 p-2 rounded-full mr-3 flex-shrink-0">
-              <ArrowRight className="h-5 w-5 text-blue-700" />
+            <div className="bg-operational/10 p-2 rounded-full mr-3 flex-shrink-0">
+              <ArrowRight className="h-5 w-5 text-operational" />
             </div>
             <div>
               <h3 className="font-medium">Explore mais soluções</h3>
@@ -117,7 +117,7 @@ export const CelebrationModule = ({ module, onComplete }: CelebrationModuleProps
       <div className="flex justify-center space-x-4 pt-8">
         <Button 
           onClick={onComplete} 
-          className="bg-green-600 hover:bg-green-700"
+          className="bg-operational hover:bg-operational/90"
         >
           <CheckCircle className="mr-2 h-5 w-5" />
           Finalizar

@@ -157,7 +157,7 @@ export const SecureLoginForm: React.FC = () => {
     <Card className="w-full max-w-md mx-auto">
       <CardHeader className="space-y-1">
         <div className="flex items-center justify-center space-x-2">
-          <Shield className="h-6 w-6 text-blue-600" />
+          <Shield className="h-6 w-6 text-operational" />
           <CardTitle className="text-2xl font-bold">Login Seguro</CardTitle>
         </div>
         <CardDescription className="text-center">
@@ -218,7 +218,7 @@ export const SecureLoginForm: React.FC = () => {
           </div>
           
           {rateLimitInfo.remaining !== undefined && rateLimitInfo.remaining <= 2 && (
-            <div className="text-sm text-amber-600">
+            <div className="text-sm text-status-warning">
               Atenção: {rateLimitInfo.remaining} tentativa(s) restante(s)
             </div>
           )}

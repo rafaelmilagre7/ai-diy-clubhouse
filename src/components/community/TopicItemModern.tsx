@@ -53,13 +53,13 @@ export const TopicItemModern = ({ topic, isPinned = false }: TopicItemModernProp
     >
       {/* Glow Effect for Pinned Topics */}
       {isPinned && (
-        <div className="absolute -inset-1 bg-gradient-to-r from-amber-500/20 to-orange-500/20 rounded-2xl blur-xl opacity-50 group-hover:opacity-75 transition-opacity"></div>
+        <div className="absolute -inset-1 bg-gradient-to-r from-status-warning/20 to-status-warning/30 rounded-2xl blur-xl opacity-50 group-hover:opacity-75 transition-opacity"></div>
       )}
       
       {/* Main Card */}
       <div className={`relative bg-background/80 backdrop-blur-xl border rounded-2xl p-6 transition-all duration-300 hover:shadow-2xl ${
         isPinned 
-          ? 'border-amber-500/30 bg-gradient-to-br from-amber-500/5 to-orange-500/5' 
+          ? 'border-status-warning/30 bg-gradient-to-br from-status-warning/5 to-status-warning/10' 
           : 'border-border/50 hover:border-border/80'
       }`}>
         
@@ -79,7 +79,7 @@ export const TopicItemModern = ({ topic, isPinned = false }: TopicItemModernProp
                 </Avatar>
                 
                 {/* Status Indicator */}
-                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-background shadow-lg"></div>
+                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-operational rounded-full border-2 border-background shadow-lg"></div>
               </div>
             </div>
 
@@ -117,7 +117,7 @@ export const TopicItemModern = ({ topic, isPinned = false }: TopicItemModernProp
                 
                 <div className="flex gap-2 flex-shrink-0">
                   {topic.is_pinned && (
-                    <Badge className="gap-1 bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-700 border-amber-500/30 hover:from-amber-500/30 hover:to-orange-500/30">
+                    <Badge className="gap-1 bg-gradient-to-r from-status-warning/20 to-status-warning/30 text-status-warning border-status-warning/30 hover:from-status-warning/30 hover:to-status-warning/40">
                       <Pin className="h-3 w-3" />
                       Fixado
                     </Badge>
@@ -131,7 +131,7 @@ export const TopicItemModern = ({ topic, isPinned = false }: TopicItemModernProp
                   )}
                   
                   {topic.is_solved && (
-                    <Badge className="gap-1 bg-gradient-to-r from-operational/20 to-operational/20 text-operational border-operational/30">
+                    <Badge className="gap-1 bg-operational/20 text-operational border-operational/30">
                       <CheckCircle className="h-3 w-3" />
                       Resolvido
                     </Badge>

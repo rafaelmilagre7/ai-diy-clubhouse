@@ -112,7 +112,7 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
       <Card className={`w-full ${className}`}>
         <CardContent className="p-0">
           <div 
-            className="flex flex-col items-center justify-center bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 rounded-lg p-6"
+            className="flex flex-col items-center justify-center bg-status-error/10 dark:bg-status-error/5 text-status-error rounded-lg p-6"
             style={{ width, height }}
           >
             <AlertTriangle className="w-12 h-12 mb-4" />
@@ -123,7 +123,7 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
                 onClick={handleRetry} 
                 variant="outline" 
                 size="sm"
-                className="border-rose-200 hover:bg-rose-100 dark:border-rose-800 dark:hover:bg-rose-900/20"
+                className="border-status-error/30 hover:bg-status-error/10"
               >
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Tentar Novamente
@@ -132,7 +132,7 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
                 onClick={openVideoDirectly} 
                 variant="outline" 
                 size="sm"
-                className="border-blue-200 hover:bg-blue-100 dark:border-blue-800 dark:hover:bg-blue-900/20"
+                className="border-operational/30 hover:bg-operational/10"
               >
                 <ExternalLink className="w-4 h-4 mr-2" />
                 Abrir Direto

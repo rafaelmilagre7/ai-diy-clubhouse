@@ -35,10 +35,10 @@ export const WizardStepProgress = ({
                     className={cn(
                       "relative flex items-center justify-center w-8 h-8 rounded-full border-2 transition-all duration-300 text-xs font-medium",
                       index < currentStep 
-                        ? "bg-gradient-to-r from-green-500 to-green-400 border-green-400 text-white shadow-sm"
+                        ? "bg-operational border-operational text-white shadow-sm"
                         : index === currentStep 
                           ? "bg-gradient-to-br from-aurora-primary to-aurora-primary-light border-aurora-primary text-white ring-2 ring-aurora-primary/20 shadow-lg scale-110 z-10"
-                          : "bg-neutral-100 border-neutral-200 text-neutral-400"
+                          : "bg-muted border-border text-muted-foreground"
                     )}
                   >
                     {index === 0 ? (
@@ -62,7 +62,7 @@ export const WizardStepProgress = ({
                 <div
                   className={cn(
                     "flex-1 h-1 mx-1 transition-colors duration-300 rounded-full",
-                    index < currentStep ? "bg-gradient-to-r from-green-400 to-green-200" : "bg-neutral-200"
+                    index < currentStep ? "bg-operational" : "bg-border"
                   )}
                 />
               )}
@@ -79,10 +79,10 @@ export const WizardStepProgress = ({
                 className={cn(
                   "relative flex items-center justify-center w-6 h-6 rounded-full border transition-all duration-300 text-xs",
                   step < currentStep 
-                    ? "bg-green-500 border-green-400 text-white"
+                    ? "bg-operational border-operational text-white"
                     : step === currentStep 
                       ? "bg-aurora-primary border-aurora-primary text-white ring-1 ring-aurora-primary/20 scale-105"
-                      : "bg-neutral-100 border-neutral-200 text-neutral-400"
+                      : "bg-muted border-border text-muted-foreground"
                 )}
               >
                 {step < currentStep ? (
@@ -97,7 +97,7 @@ export const WizardStepProgress = ({
                 <div
                   className={cn(
                     "flex-1 h-0.5 mx-0.5 transition-colors duration-300 rounded-full",
-                    step < currentStep ? "bg-green-400" : "bg-neutral-200"
+                    step < currentStep ? "bg-operational" : "bg-border"
                   )}
                 />
               )}

@@ -225,11 +225,11 @@ export const PandaVideoSelector: React.FC<PandaVideoSelectorProps> = ({
               <div
                 key={video.id}
                 className={`flex items-start space-x-3 p-2 border rounded-md cursor-pointer transition-colors hover:bg-muted ${
-                  selectedVideoId === video.id ? "bg-blue-50 border-blue-200" : ""
+                  selectedVideoId === video.id ? "bg-operational/10 border-operational/30" : ""
                 }`}
                 onClick={() => handleVideoSelect(video)}
               >
-                <div className="relative h-16 w-28 flex-shrink-0 bg-gray-100 rounded overflow-hidden">
+                <div className="relative h-16 w-28 flex-shrink-0 bg-muted rounded overflow-hidden">
                   {video.thumbnail_url ? (
                     <img 
                       src={video.thumbnail_url} 
@@ -238,7 +238,7 @@ export const PandaVideoSelector: React.FC<PandaVideoSelectorProps> = ({
                     />
                   ) : (
                     <div className="flex items-center justify-center h-full">
-                      <Video className="h-8 w-8 text-gray-400" />
+                      <Video className="h-8 w-8 text-muted-foreground" />
                     </div>
                   )}
                   {video.duration_seconds && (

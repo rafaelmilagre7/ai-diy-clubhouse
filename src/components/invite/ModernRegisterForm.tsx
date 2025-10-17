@@ -282,17 +282,17 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
   if (step === 'success') {
     return (
       <div className="text-center space-y-8 py-12">
-        <div className="relative">
-          <div className="w-24 h-24 bg-gradient-to-br from-operational to-operational-dark rounded-full flex items-center justify-center mx-auto animate-bounce shadow-lg">
-            <CheckCircle className="h-12 w-12 text-white" />
+          <div className="relative">
+            <div className="w-24 h-24 bg-operational rounded-full flex items-center justify-center mx-auto animate-bounce shadow-lg">
+              <CheckCircle className="h-12 w-12 text-white" />
+            </div>
+            <div className="absolute -top-2 -right-2 w-8 h-8 bg-revenue rounded-full flex items-center justify-center animate-ping">
+              <span className="text-xs">🎉</span>
+            </div>
           </div>
-          <div className="absolute -top-2 -right-2 w-8 h-8 bg-revenue rounded-full flex items-center justify-center animate-ping">
-            <span className="text-xs">🎉</span>
-          </div>
-        </div>
         
         <div className="space-y-4">
-          <h3 className="font-heading text-3xl font-bold bg-gradient-to-r from-operational to-operational-light bg-clip-text text-transparent">
+          <h3 className="font-heading text-3xl font-bold bg-operational text-white bg-clip-text p-2 rounded">
             Bem-vindo à elite da IA empresarial!
           </h3>
           <p className="text-lg text-muted-foreground max-w-md mx-auto">
@@ -300,19 +300,19 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
           </p>
         </div>
 
-        <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 border-2 border-green-200 dark:border-green-800 rounded-xl p-6 max-w-md mx-auto">
-          <p className="text-sm font-semibold text-green-800 dark:text-green-200 mb-4">🚀 Seus próximos passos:</p>
-          <ul className="text-sm text-green-700 dark:text-green-300 space-y-2 text-left">
+        <div className="bg-operational/10 dark:bg-operational/5 border-2 border-operational/30 dark:border-operational/20 rounded-xl p-6 max-w-md mx-auto">
+          <p className="text-sm font-semibold text-operational dark:text-operational mb-4">🚀 Seus próximos passos:</p>
+          <ul className="text-sm text-operational/90 dark:text-operational/80 space-y-2 text-left">
             <li className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-green-600" />
+              <CheckCircle className="h-4 w-4 text-operational" />
               Confirme seu e-mail (chegará em até 2 min)
             </li>
             <li className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-green-600" />
+              <CheckCircle className="h-4 w-4 text-operational" />
               Complete seu cadastro
             </li>
             <li className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-green-600" />
+              <CheckCircle className="h-4 w-4 text-operational" />
               Acesse conteúdos exclusivos da comunidade
             </li>
           </ul>
@@ -336,8 +336,8 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
     >
       <div className="space-y-6">
         <div className="text-center space-y-3">
-          <div className="w-16 h-16 bg-gradient-to-br from-emerald-500/30 to-teal-500/30 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-emerald-500/20">
-            <User className="h-8 w-8 text-emerald-400" />
+          <div className="w-16 h-16 bg-operational/20 to-operational/30 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-operational/20">
+            <User className="h-8 w-8 text-operational" />
           </div>
           <h2 className="font-heading text-xl font-bold text-white">
             Finalize seu acesso
@@ -345,8 +345,8 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
           <p className="text-white/80 text-sm leading-relaxed">
             Complete seu cadastro para acessar a plataforma
           </p>
-          <div className="bg-emerald-500/20 border border-emerald-500/30 rounded-lg p-2 max-w-xs mx-auto backdrop-blur-sm">
-            <p className="text-xs text-emerald-400 font-medium">
+          <div className="bg-operational/20 border border-operational/30 rounded-lg p-2 max-w-xs mx-auto backdrop-blur-sm">
+            <p className="text-xs text-operational font-medium">
               ⚡ Acesso liberado em menos de 2 minutos
             </p>
           </div>
@@ -379,7 +379,7 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
               placeholder="Seu nome completo"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="pl-10 h-11 bg-surface-elevated/50 border-border/50 text-foreground placeholder:text-muted-foreground rounded-lg backdrop-blur-sm focus:bg-surface-elevated focus:border-emerald-500/50 transition-all"
+              className="pl-10 h-11 bg-surface-elevated/50 border-border/50 text-foreground placeholder:text-muted-foreground rounded-lg backdrop-blur-sm focus:bg-surface-elevated focus:border-operational/50 transition-all"
             />
           </div>
         </div>
@@ -398,7 +398,7 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={!!prefilledEmail}
-              className="pl-10 h-11 bg-surface-elevated/50 border-border/50 text-foreground placeholder:text-muted-foreground rounded-lg backdrop-blur-sm focus:bg-surface-elevated focus:border-emerald-500/50 transition-all disabled:opacity-60"
+              className="pl-10 h-11 bg-surface-elevated/50 border-border/50 text-foreground placeholder:text-muted-foreground rounded-lg backdrop-blur-sm focus:bg-surface-elevated focus:border-operational/50 transition-all disabled:opacity-60"
             />
           </div>
         </div>
@@ -416,7 +416,7 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
               placeholder="Crie uma senha forte"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="pl-10 pr-10 h-11 bg-surface-elevated/50 border-border/50 text-foreground placeholder:text-muted-foreground rounded-lg backdrop-blur-sm focus:bg-surface-elevated focus:border-emerald-500/50 transition-all"
+              className="pl-10 pr-10 h-11 bg-surface-elevated/50 border-border/50 text-foreground placeholder:text-muted-foreground rounded-lg backdrop-blur-sm focus:bg-surface-elevated focus:border-operational/50 transition-all"
             />
             <button
               type="button"

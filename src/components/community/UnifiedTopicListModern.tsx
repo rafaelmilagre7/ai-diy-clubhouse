@@ -49,13 +49,13 @@ export const UnifiedTopicListModern = ({
           className="relative"
         >
           {/* Pinned Section Header */}
-          <div className="flex items-center gap-3 mb-6 p-4 bg-gradient-to-r from-amber-500/10 to-orange-500/10 backdrop-blur-sm rounded-2xl border border-amber-500/20">
-            <div className="p-2 bg-gradient-to-br from-amber-500/20 to-orange-500/20 rounded-lg">
-              <Pin className="h-4 w-4 text-amber-600" />
+          <div className="flex items-center gap-3 mb-6 p-4 bg-gradient-to-r from-status-warning/10 to-status-warning/15 backdrop-blur-sm rounded-2xl border border-status-warning/20">
+            <div className="p-2 bg-gradient-to-br from-status-warning/20 to-status-warning/30 rounded-lg">
+              <Pin className="h-4 w-4 text-status-warning" />
             </div>
             <div>
-              <h3 className="font-semibold text-amber-700">Tópicos Fixados</h3>
-              <p className="text-sm text-amber-600/80">Importantes para toda a comunidade</p>
+              <h3 className="font-semibold text-status-warning">Tópicos Fixados</h3>
+              <p className="text-sm text-status-warning/80">Importantes para toda a comunidade</p>
             </div>
           </div>
           
