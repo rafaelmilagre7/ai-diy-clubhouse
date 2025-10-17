@@ -80,6 +80,17 @@ const config: Config = {
         'select-xl': '220px',
         'table-sm': '200px',
         'table-md': '300px',
+        'badge-sm': '20px',
+        'skeleton-sm': '100px',
+        'skeleton-md': '150px',
+        'skeleton-lg': '200px',
+        'skeleton-xl': '300px',
+      },
+      transitionDuration: {
+        'fast': '150ms',
+        'base': '200ms',
+        'slow': '300ms',
+        'slower': '500ms',
       },
       
       maxHeight: {

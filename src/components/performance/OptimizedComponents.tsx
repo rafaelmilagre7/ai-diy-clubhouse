@@ -20,9 +20,9 @@ export const OptimizedSolutionCard = memo<{
 
   const statusColor = useMemo(() => {
     switch (status) {
-      case 'completed': return 'bg-green-500/10 text-green-400 border-green-500/20';
-      case 'active': return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
-      case 'recommended': return 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20';
+      case 'completed': return 'bg-system-healthy/10 text-system-healthy border-system-healthy/20';
+      case 'active': return 'bg-operational/10 text-operational border-operational/20';
+      case 'recommended': return 'bg-status-warning/10 text-status-warning border-status-warning/20';
       default: return 'bg-muted/10 text-muted-foreground border-border';
     }
   }, [status]);
@@ -30,7 +30,7 @@ export const OptimizedSolutionCard = memo<{
   return (
     <Card 
       className={cn(
-        "group cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-lg bg-card border-border",
+        "group cursor-pointer transition-smooth hover:scale-[1.02] hover:shadow-lg bg-card border-border",
         className
       )}
       onClick={handleClick}
@@ -74,7 +74,7 @@ export const OptimizedToolCard = memo<{
 
   return (
     <Card 
-      className="group cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-lg bg-card border-border"
+      className="group cursor-pointer transition-smooth hover:scale-[1.02] hover:shadow-lg bg-card border-border"
       onClick={handleClick}
     >
       <CardHeader className="pb-3">
@@ -119,8 +119,8 @@ export const OptimizedStatCard = memo<{
 }>(({ title, value, description, trend, icon, className }) => {
   const trendColor = useMemo(() => {
     switch (trend) {
-      case 'up': return 'text-green-400';
-      case 'down': return 'text-red-400';
+      case 'up': return 'text-system-healthy';
+      case 'down': return 'text-status-error';
       default: return 'text-muted-foreground';
     }
   }, [trend]);

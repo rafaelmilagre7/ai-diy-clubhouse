@@ -23,10 +23,10 @@ const Toaster = ({ ...props }: ToasterProps) => {
           cancelButton:
             "bg-white/10 hover:bg-white/20 text-white border-none rounded-lg",
           title: "font-semibold text-base text-white",
-          success: "bg-gradient-to-br from-emerald-500/90 to-green-600/90 border-emerald-400/30 shadow-emerald-500/20",
-          error: "bg-gradient-to-br from-red-500/90 to-rose-600/90 border-red-400/30 shadow-red-500/20",
-          info: "bg-gradient-to-br from-blue-500/90 to-cyan-600/90 border-blue-400/30 shadow-blue-500/20",
-          warning: "bg-gradient-to-br from-amber-500/90 to-orange-600/90 border-amber-400/30 shadow-amber-500/20",
+          success: "gradient-success-solid border-emerald-400/30 shadow-lg shadow-emerald-500/20",
+          error: "gradient-error-solid border-red-400/30 shadow-lg shadow-red-500/20",
+          info: "gradient-info-solid border-blue-400/30 shadow-lg shadow-blue-500/20",
+          warning: "gradient-warning-solid border-amber-400/30 shadow-lg shadow-amber-500/20",
         },
       }}
       {...props}

@@ -88,6 +88,22 @@
   --gradient-blob-purple: linear-gradient(135deg, hsl(248 53% 58%) 0%, hsl(282 44% 47%) 100%);
   --gradient-blob-pink: linear-gradient(135deg, hsl(314 80% 74%) 0%, hsl(349 75% 61%) 100%);
   --gradient-blob-cyan: linear-gradient(135deg, hsl(197 92% 61%) 0%, hsl(185 100% 50%) 100%);
+  
+  /* Gradient Tokens - Success */
+  --gradient-success: linear-gradient(to bottom right, hsl(var(--system-healthy) / 0.2), hsl(var(--system-healthy) / 0.1));
+  --gradient-success-solid: linear-gradient(to bottom right, hsl(var(--system-healthy) / 0.9), hsl(142 71% 35% / 0.9));
+  
+  /* Gradient Tokens - Error */
+  --gradient-error: linear-gradient(to bottom right, hsl(var(--status-error) / 0.2), hsl(var(--status-error) / 0.1));
+  --gradient-error-solid: linear-gradient(to bottom right, hsl(var(--destructive) / 0.9), hsl(0 84% 50% / 0.9));
+  
+  /* Gradient Tokens - Warning */
+  --gradient-warning: linear-gradient(to bottom right, hsl(var(--status-warning) / 0.2), hsl(var(--status-warning) / 0.1));
+  --gradient-warning-solid: linear-gradient(to bottom right, hsl(45 93% 47% / 0.9), hsl(33 100% 50% / 0.9));
+  
+  /* Gradient Tokens - Info */
+  --gradient-info: linear-gradient(to bottom right, hsl(var(--operational) / 0.2), hsl(var(--operational) / 0.1));
+  --gradient-info-solid: linear-gradient(to bottom right, hsl(217 91% 60% / 0.9), hsl(195 100% 50% / 0.9));
   --gradient-blob-green: linear-gradient(135deg, hsl(154 73% 59%) 0%, hsl(170 97% 60%) 100%);
   
   --gradient-glow-purple: linear-gradient(135deg, hsl(248 53% 58% / 0.6) 0%, hsl(282 44% 47% / 0.6) 50%, hsl(248 53% 58% / 0.6) 100%);

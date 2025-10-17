@@ -32,28 +32,28 @@ export const ActivityWidget = ({ activities, isLoading = false }: ActivityWidget
   const getActivityIcon = (type: Activity['type']) => {
     switch (type) {
       case 'completion':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
+        return <CheckCircle className="h-4 w-4 text-system-healthy" />;
       case 'start':
-        return <Zap className="h-4 w-4 text-blue-500" />;
+        return <Zap className="h-4 w-4 text-operational" />;
       case 'progress':
-        return <Clock className="h-4 w-4 text-orange-500" />;
+        return <Clock className="h-4 w-4 text-status-warning" />;
       case 'achievement':
-        return <Star className="h-4 w-4 text-yellow-500" />;
+        return <Star className="h-4 w-4 text-status-warning" />;
       default:
-        return <Calendar className="h-4 w-4 text-gray-500" />;
+        return <Calendar className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
   const getActivityColor = (type: Activity['type']) => {
     switch (type) {
       case 'completion':
-        return 'bg-green-500/10 border-green-500/20';
+        return 'bg-system-healthy/10 border-system-healthy/20';
       case 'start':
-        return 'bg-blue-500/10 border-blue-500/20';
+        return 'bg-operational/10 border-operational/20';
       case 'progress':
-        return 'bg-orange-500/10 border-orange-500/20';
+        return 'bg-status-warning/10 border-status-warning/20';
       case 'achievement':
-        return 'bg-yellow-500/10 border-yellow-500/20';
+        return 'bg-status-warning/10 border-status-warning/20';
       default:
         return 'bg-muted/10 border-border';
     }
@@ -62,13 +62,13 @@ export const ActivityWidget = ({ activities, isLoading = false }: ActivityWidget
   const getActivityBadge = (type: Activity['type']) => {
     switch (type) {
       case 'completion':
-        return <Badge className="bg-green-500 text-white text-xs">Concluído</Badge>;
+        return <Badge className="bg-system-healthy text-white text-xs">Concluído</Badge>;
       case 'start':
-        return <Badge className="bg-blue-500 text-white text-xs">Iniciado</Badge>;
+        return <Badge className="bg-operational text-white text-xs">Iniciado</Badge>;
       case 'progress':
-        return <Badge variant="outline" className="border-orange-500 text-orange-500 text-xs">Progresso</Badge>;
+        return <Badge variant="outline" className="border-status-warning text-status-warning text-xs">Progresso</Badge>;
       case 'achievement':
-        return <Badge className="bg-yellow-500 text-black text-xs">Conquista</Badge>;
+        return <Badge className="bg-status-warning text-white text-xs">Conquista</Badge>;
       default:
         return null;
     }

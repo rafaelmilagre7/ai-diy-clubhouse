@@ -171,10 +171,10 @@ export const NetworkingPreferences = () => {
                   whileTap={{ scale: 0.98 }}
                 >
                   <div
-                    className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                    className={`p-3 rounded-lg border cursor-pointer transition-smooth ${
                       isSelected 
                         ? 'border-aurora-primary bg-aurora-primary/10' 
-                        : 'border-neutral-700 hover:border-neutral-600'
+                        : 'border-border hover:border-muted'
                     }`}
                     onClick={() => setLocalPrefs(prev => ({
                       ...prev,
@@ -185,7 +185,7 @@ export const NetworkingPreferences = () => {
                     }))}
                   >
                     <div className="flex items-center gap-2">
-                      <Icon className={`h-4 w-4 ${isSelected ? 'text-aurora-primary' : 'text-neutral-400'}`} />
+                      <Icon className={`h-4 w-4 ${isSelected ? 'text-aurora-primary' : 'text-muted-foreground'}`} />
                       <span className={`text-sm ${isSelected ? 'text-aurora-primary' : 'text-textPrimary'}`}>
                         {type.label}
                       </span>
@@ -282,10 +282,10 @@ export const NetworkingPreferences = () => {
                   <Badge
                     key={industry}
                     variant={isSelected ? "default" : "outline"}
-                    className={`cursor-pointer transition-colors ${
+                    className={`cursor-pointer transition-smooth ${
                       isSelected 
                         ? 'bg-aurora-primary hover:bg-aurora-primary/90' 
-                        : 'hover:bg-neutral-800'
+                        : 'hover:bg-accent'
                     }`}
                     onClick={() => setLocalPrefs(prev => ({
                       ...prev,
@@ -319,10 +319,10 @@ export const NetworkingPreferences = () => {
                   <Badge
                     key={location}
                     variant={isSelected ? "default" : "outline"}
-                    className={`cursor-pointer transition-colors ${
+                    className={`cursor-pointer transition-smooth ${
                       isSelected 
                         ? 'bg-aurora-primary hover:bg-aurora-primary/90' 
-                        : 'hover:bg-neutral-800'
+                        : 'hover:bg-accent'
                     }`}
                     onClick={() => setLocalPrefs(prev => ({
                       ...prev,

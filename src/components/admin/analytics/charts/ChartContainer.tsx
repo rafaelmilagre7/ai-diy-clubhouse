@@ -25,15 +25,15 @@ export const ChartContainer: React.FC<ChartContainerProps> = ({
 }) => {
   const getSizeClasses = () => {
     switch (size) {
-      case 'small': return 'h-[250px]';
-      case 'large': return 'h-[450px]';
+      case 'small': return 'h-chart-sm';
+      case 'large': return 'h-chart-lg';
       default: return 'h-chart-md';
     }
   };
 
   return (
     <Card className={cn(
-      "bg-card border-border shadow-sm hover:shadow-md transition-all duration-300",
+      "bg-card border-border shadow-sm hover:shadow-md transition-smooth",
       className
     )}>
       <CardHeader className="pb-2">

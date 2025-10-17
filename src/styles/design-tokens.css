@@ -37,6 +37,17 @@
   transition: all var(--transition-slow) cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
+/* === GRADIENT UTILITIES === */
+.gradient-success { background: var(--gradient-success); }
+.gradient-error { background: var(--gradient-error); }
+.gradient-warning { background: var(--gradient-warning); }
+.gradient-info { background: var(--gradient-info); }
+
+.gradient-success-solid { background: var(--gradient-success-solid); }
+.gradient-error-solid { background: var(--gradient-error-solid); }
+.gradient-warning-solid { background: var(--gradient-warning-solid); }
+.gradient-info-solid { background: var(--gradient-info-solid); }
+
 /* === CHART UTILITIES === */
 .chart-container-sm { height: var(--chart-height-sm); }
 .chart-container-md { height: var(--chart-height-md); }
