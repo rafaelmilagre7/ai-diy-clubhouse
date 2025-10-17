@@ -154,7 +154,7 @@ const ChecklistMigrationStatus: React.FC = () => {
           )}
         </div>
 
-        <div className="text-xs text-gray-500 space-y-1">
+        <div className="text-xs text-muted-foreground space-y-1">
           <div><strong>Problema Original:</strong> Checklists não apareciam no Admin porque soluções tinham checklists de usuários mas não tinham templates.</div>
           <div><strong>Solução Implementada:</strong> Sistema unificado + correção automática criando templates para todas as soluções baseados nos dados existentes.</div>
           <div><strong>Benefícios:</strong> Checklists aparecem corretamente tanto no Admin quanto no dashboard de Membros, com dados consistentes.</div>

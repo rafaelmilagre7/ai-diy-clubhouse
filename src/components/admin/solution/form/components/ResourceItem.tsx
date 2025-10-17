@@ -15,7 +15,7 @@ const ResourceItem: React.FC<ResourceItemProps> = ({
   handleRemoveResource,
   formatFileSize
 }) => {
-  return <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-md gap-3 bg-zinc-900">
+  return <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-md gap-3 bg-surface-base">
       <div className="flex items-start gap-3">
         {getFileIcon(resource.type)}
         <div className="flex-1 min-w-0">

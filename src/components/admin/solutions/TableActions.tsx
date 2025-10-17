@@ -34,23 +34,23 @@ export const TableActions: React.FC<TableActionsProps> = ({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="text-neutral-300 hover:text-white">
+        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
           <MoreVertical className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="bg-popover border text-popover-foreground">
-        <DropdownMenuItem className="hover:bg-neutral-800 text-white cursor-pointer" onClick={onEdit}>
+        <DropdownMenuItem className="hover:bg-surface-elevated text-foreground cursor-pointer" onClick={onEdit}>
           <FileEdit className="mr-2 h-4 w-4" />
           <span>Editar</span>
         </DropdownMenuItem>
         <Link to={`/solution/${solutionId}`} target="_blank">
-          <DropdownMenuItem className="hover:bg-neutral-800 text-white cursor-pointer">
+          <DropdownMenuItem className="hover:bg-surface-elevated text-foreground cursor-pointer">
             <Eye className="mr-2 h-4 w-4" />
             <span>Visualizar</span>
           </DropdownMenuItem>
         </Link>
         <DropdownMenuItem 
-          className="hover:bg-neutral-800 text-white cursor-pointer"
+          className="hover:bg-surface-elevated text-foreground cursor-pointer"
           onClick={(e) => {
             e.preventDefault();
             handleDelete();

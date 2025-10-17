@@ -38,7 +38,7 @@ export const LessonResources = ({ resources = [] }: { resources: LessonResourceP
     const fileType = resource.file_type?.toLowerCase();
     
     if (resource.external_url) {
-      return <LinkIcon className="h-5 w-5 text-blue-500" />;
+      return <LinkIcon className="h-5 w-5 text-operational" />;
     }
     
     if (!fileType) {
@@ -46,15 +46,15 @@ export const LessonResources = ({ resources = [] }: { resources: LessonResourceP
     }
     
     if (fileType.includes("pdf") || fileType.includes("doc")) {
-      return <FileText className="h-5 w-5 text-orange-500" />;
+      return <FileText className="h-5 w-5 text-status-warning" />;
     }
     
     if (fileType.includes("image") || fileType.includes("png") || fileType.includes("jpg") || fileType.includes("jpeg")) {
-      return <FileImage className="h-5 w-5 text-purple-500" />;
+      return <FileImage className="h-5 w-5 text-strategy" />;
     }
     
     if (fileType.includes("video") || fileType.includes("mp4")) {
-      return <FileVideo className="h-5 w-5 text-red-500" />;
+      return <FileVideo className="h-5 w-5 text-status-error" />;
     }
     
     return <FilePlus2 className="h-5 w-5 text-muted-foreground" />;
@@ -202,7 +202,7 @@ export const LessonResources = ({ resources = [] }: { resources: LessonResourceP
                             </span>
                           )}
                           {resource.external_url && (
-                            <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded-full border border-blue-500/20">
+                            <span className="text-xs bg-operational/20 text-operational px-2 py-1 rounded-full border border-operational/20">
                               Link externo
                             </span>
                           )}

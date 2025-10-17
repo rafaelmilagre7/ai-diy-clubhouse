@@ -21,7 +21,7 @@ export const ImplementationProgress = ({
         <p className="text-sm font-medium text-white">
           Módulo {currentModule + 1} de {totalModules}
         </p>
-        <p className="text-xs text-neutral-400">
+        <p className="text-xs text-muted-foreground">
           {completedModules.length} concluídos
         </p>
       </div>
@@ -31,7 +31,7 @@ export const ImplementationProgress = ({
           value={progressPercentage} 
           className="h-2"
         />
-        <p className="text-xs text-neutral-400 mt-1 text-center">
+        <p className="text-xs text-muted-foreground mt-1 text-center">
           {Math.round(progressPercentage)}%
         </p>
       </div>

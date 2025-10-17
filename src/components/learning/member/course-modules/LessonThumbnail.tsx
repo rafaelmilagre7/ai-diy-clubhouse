@@ -178,7 +178,7 @@ export const LessonThumbnail = ({
           
           {/* Status Indicators */}
           {isCompleted && (
-            <div className="absolute top-3 right-3 bg-emerald-500 text-white rounded-full p-1.5 shadow-lg">
+            <div className="absolute top-3 right-3 bg-system-healthy text-white rounded-full p-1.5 shadow-lg">
               <CheckCircle className="h-4 w-4" />
             </div>
           )}

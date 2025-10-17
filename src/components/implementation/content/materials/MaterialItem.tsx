@@ -37,16 +37,16 @@ export const MaterialItem = ({ material, onDownload }: MaterialItemProps) => {
       </div>
       
       <div className="flex-1 min-w-0">
-        <h4 className="text-base font-medium mb-1 text-neutral-100">
+        <h4 className="text-base font-medium mb-1 text-foreground">
           {material.name}
         </h4>
         
         {material.description && (
-          <p className="text-sm text-neutral-400 mb-3 line-clamp-2">{material.description}</p>
+          <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{material.description}</p>
         )}
         
         {material.format && (
-          <p className="text-xs text-neutral-500 uppercase">{material.format}</p>
+          <p className="text-xs text-muted-foreground uppercase">{material.format}</p>
         )}
       </div>
       

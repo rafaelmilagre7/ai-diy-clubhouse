@@ -113,11 +113,11 @@ export const FormacaoHealthCheck = () => {
   const getStatusIcon = () => {
     switch (healthStatus.apiStatus) {
       case 'healthy':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
+        return <CheckCircle className="h-4 w-4 text-system-healthy" />;
       case 'degraded':
-        return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
+        return <AlertTriangle className="h-4 w-4 text-status-warning" />;
       case 'down':
-        return <Circle className="h-4 w-4 text-red-500" />;
+        return <Circle className="h-4 w-4 text-status-error" />;
     }
   };
 
@@ -180,7 +180,7 @@ export const FormacaoHealthCheck = () => {
         <div className="space-y-2 text-xs text-muted-foreground">
           <div className="flex justify-between">
             <span>Tempo de resposta:</span>
-            <span className={healthStatus.responseTime > 2000 ? 'text-yellow-600' : 'text-green-600'}>
+            <span className={healthStatus.responseTime > 2000 ? 'text-status-warning' : 'text-system-healthy'}>
               {formatResponseTime(healthStatus.responseTime)}
             </span>
           </div>
@@ -191,7 +191,7 @@ export const FormacaoHealthCheck = () => {
           </div>
           
           {healthStatus.consecutiveFailures > 0 && (
-            <div className="flex justify-between text-red-600">
+            <div className="flex justify-between text-status-error">
               <span>Falhas consecutivas:</span>
               <span>{healthStatus.consecutiveFailures}</span>
             </div>

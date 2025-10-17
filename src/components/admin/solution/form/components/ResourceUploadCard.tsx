@@ -32,7 +32,7 @@ const ResourceUploadCard: React.FC<ResourceUploadCardProps> = ({
           <Upload className="h-5 w-5 mr-2" />
           Upload Rápido
         </CardTitle>
-        <CardDescription className="text-base text-neutral-700 dark:text-neutral-300">
+        <CardDescription className="text-base text-muted-foreground">
           Adicione PDFs, documentos, planilhas e outros materiais de apoio.
         </CardDescription>
       </CardHeader>
@@ -67,7 +67,7 @@ const ResourceUploadCard: React.FC<ResourceUploadCardProps> = ({
             />
           </div>
           
-          <p className="text-sm text-neutral-700 dark:text-neutral-300">
+          <p className="text-sm text-muted-foreground">
             Formatos suportados: PDF, Word, Excel, PowerPoint, imagens e outros arquivos.
           </p>
         </div>

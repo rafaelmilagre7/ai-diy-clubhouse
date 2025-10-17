@@ -82,7 +82,7 @@ export const ToolItem = ({
       <div className="flex items-start gap-3 mb-4">
         {getToolAvatar(toolName)}
         <div className="space-y-1">
-          <h3 className="font-medium text-neutral-100">{formatName(toolName)}</h3>
+          <h3 className="font-medium text-foreground">{formatName(toolName)}</h3>
           <div className="flex flex-wrap gap-2">
             {isRequired && (
               <Badge variant="outline" className="bg-aurora-primary/10 text-aurora-primary border-aurora-primary/20 text-xs">

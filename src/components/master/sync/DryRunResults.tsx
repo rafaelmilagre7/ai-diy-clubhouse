@@ -46,12 +46,12 @@ export const DryRunResults: React.FC<DryRunResultsProps> = ({ result }) => {
         <CardTitle className="flex items-center gap-2">
           {result.dryRun ? (
             <>
-              <AlertCircle className="w-5 h-5 text-blue-600" />
+              <AlertCircle className="w-5 h-5 text-operational" />
               Resultado da Simulação (Dry-Run)
             </>
           ) : (
             <>
-              <CheckCircle className="w-5 h-5 text-green-600" />
+              <CheckCircle className="w-5 h-5 text-system-healthy" />
               Resultado da Sincronização
             </>
           )}
@@ -66,32 +66,32 @@ export const DryRunResults: React.FC<DryRunResultsProps> = ({ result }) => {
       <CardContent className="space-y-6">
         {/* Estatísticas - Linha 1 */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="flex items-center gap-3 p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
-            <Users className="w-8 h-8 text-blue-600" />
+          <div className="flex items-center gap-3 p-4 rounded-lg bg-operational/10 border border-operational/20">
+            <Users className="w-8 h-8 text-operational" />
             <div>
               <div className="text-2xl font-bold">{result.stats.masters_processed}</div>
               <div className="text-sm text-muted-foreground">Masters</div>
             </div>
           </div>
           
-          <div className="flex items-center gap-3 p-4 rounded-lg bg-green-500/10 border border-green-500/20">
-            <UserPlus className="w-8 h-8 text-green-600" />
+          <div className="flex items-center gap-3 p-4 rounded-lg bg-system-healthy/10 border border-system-healthy/20">
+            <UserPlus className="w-8 h-8 text-system-healthy" />
             <div>
               <div className="text-2xl font-bold">{result.stats.members_processed}</div>
               <div className="text-sm text-muted-foreground">Membros</div>
             </div>
           </div>
           
-          <div className="flex items-center gap-3 p-4 rounded-lg bg-purple-500/10 border border-purple-500/20">
-            <Building className="w-8 h-8 text-purple-600" />
+          <div className="flex items-center gap-3 p-4 rounded-lg bg-strategy/10 border border-strategy/20">
+            <Building className="w-8 h-8 text-strategy" />
             <div>
               <div className="text-2xl font-bold">{result.stats.organizations_created}</div>
               <div className="text-sm text-muted-foreground">Organizations</div>
             </div>
           </div>
           
-          <div className="flex items-center gap-3 p-4 rounded-lg bg-red-500/10 border border-red-500/20">
-            <XCircle className="w-8 h-8 text-red-600" />
+          <div className="flex items-center gap-3 p-4 rounded-lg bg-status-error/10 border border-status-error/20">
+            <XCircle className="w-8 h-8 text-status-error" />
             <div>
               <div className="text-2xl font-bold">{result.stats.errors}</div>
               <div className="text-sm text-muted-foreground">Erros Críticos</div>
@@ -182,7 +182,7 @@ export const DryRunResults: React.FC<DryRunResultsProps> = ({ result }) => {
             <div className="space-y-2">
               {errorLogs.length > 0 && (
                 <>
-                  <div className="text-sm font-semibold text-red-600 mb-2">
+                  <div className="text-sm font-semibold text-status-error mb-2">
                     ❌ Erros Críticos ({errorLogs.length})
                   </div>
                   {errorLogs.map((log, index) => (
@@ -208,7 +208,7 @@ export const DryRunResults: React.FC<DryRunResultsProps> = ({ result }) => {
 
               {warningLogs.length > 0 && (
                 <>
-                  <div className="text-sm font-semibold text-yellow-600 mb-2">
+                  <div className="text-sm font-semibold text-status-warning mb-2">
                     ⚠️ Avisos ({warningLogs.length})
                   </div>
                   {warningLogs.slice(0, 20).map((log, index) => (

@@ -51,14 +51,14 @@ export const LessonItem = ({ lesson, courseId, isCompleted, videos = [], hasAcce
             <Lock className="h-3 w-3 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
           </div>
         ) : isCompleted ? (
-          <CheckCircle className="h-5 w-5 text-green-600" />
+          <CheckCircle className="h-5 w-5 text-system-healthy" />
         ) : (
           <Circle className="h-5 w-5 text-muted-foreground" />
         )}
       </div>
       
       <div className="flex-grow">
-        <h4 className={`font-medium ${isCompleted ? 'text-green-700' : ''}`}>
+        <h4 className={`font-medium ${isCompleted ? 'text-system-healthy' : ''}`}>
           {lesson.title}
         </h4>
         

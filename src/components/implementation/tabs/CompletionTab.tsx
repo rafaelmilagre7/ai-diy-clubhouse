@@ -228,7 +228,7 @@ const CompletionTab: React.FC<CompletionTabProps> = ({
 
               <div className="bg-muted/50 rounded-xl p-6 mb-6">
                 <h4 className="font-semibold mb-3 flex items-center justify-center gap-2">
-                  <Star className="w-5 h-5 text-yellow-500" />
+                  <Star className="w-5 h-5 text-status-warning" />
                   Resumo da sua jornada
                 </h4>
                 <div className="text-sm text-muted-foreground space-y-2">

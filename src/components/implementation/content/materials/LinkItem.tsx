@@ -24,15 +24,15 @@ export const LinkItem = ({ link }: LinkItemProps) => {
       </div>
       
       <div className="flex-1 min-w-0">
-        <h4 className="text-base font-medium mb-1 text-neutral-100">
+        <h4 className="text-base font-medium mb-1 text-foreground">
           {link.title}
         </h4>
         
         {link.description && (
-          <p className="text-sm text-neutral-400 mb-3 line-clamp-2">{link.description}</p>
+          <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{link.description}</p>
         )}
         
-        <p className="text-xs text-neutral-500 truncate">{link.url}</p>
+        <p className="text-xs text-muted-foreground truncate">{link.url}</p>
       </div>
       
       <Button 

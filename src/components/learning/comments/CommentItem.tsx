@@ -103,7 +103,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
               <span className="text-xs px-2 py-1 bg-gradient-to-r from-primary/20 to-primary/10 text-primary rounded-full border border-primary/20">Admin</span>
             )}
             {profileRole === 'formacao' && (
-              <span className="text-xs px-2 py-1 bg-gradient-to-r from-amber-500/20 to-amber-400/10 text-amber-600 rounded-full border border-amber-500/20">Instrutor</span>
+              <span className="text-xs px-2 py-1 bg-gradient-to-r from-status-warning/20 to-status-warning/10 text-status-warning rounded-full border border-status-warning/20">Instrutor</span>
             )}
           </div>
           
