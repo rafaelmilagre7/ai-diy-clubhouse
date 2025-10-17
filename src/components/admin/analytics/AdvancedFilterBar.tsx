@@ -80,7 +80,7 @@ export const AdvancedFilterBar = ({
             <div className="flex items-center space-x-2">
               <Calendar className="h-4 w-4 text-muted-foreground" />
               <Select value={timeRange} onValueChange={onTimeRangeChange}>
-                <SelectTrigger className="w-[180px] bg-background border-border text-foreground">
+                <SelectTrigger className="w-select-lg bg-background border-border text-foreground">
                   <SelectValue placeholder="Selecionar período" />
                 </SelectTrigger>
                 <SelectContent className="bg-popover border-border">
@@ -100,7 +100,7 @@ export const AdvancedFilterBar = ({
             {/* Category Filter */}
             {onCategoryChange && (
               <Select value={category} onValueChange={onCategoryChange}>
-                <SelectTrigger className="w-[160px] bg-background border-border text-foreground">
+                <SelectTrigger className="w-select-md bg-background border-border text-foreground">
                   <SelectValue placeholder="Categoria" />
                 </SelectTrigger>
                 <SelectContent className="bg-popover border-border">
@@ -127,7 +127,7 @@ export const AdvancedFilterBar = ({
             {/* Difficulty Filter */}
             {onDifficultyChange && (
               <Select value={difficulty} onValueChange={onDifficultyChange}>
-                <SelectTrigger className="w-[160px] bg-background border-border text-foreground">
+                <SelectTrigger className="w-select-md bg-background border-border text-foreground">
                   <SelectValue placeholder="Dificuldade" />
                 </SelectTrigger>
                 <SelectContent className="bg-popover border-border">

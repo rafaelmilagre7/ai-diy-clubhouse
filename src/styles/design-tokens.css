@@ -1,0 +1,43 @@
+/* ===== DESIGN TOKENS UTILITY CLASSES ===== */
+
+/* === SPACING UTILITIES === */
+.spacing-xs { gap: var(--spacing-xs); }
+.spacing-sm { gap: var(--spacing-sm); }
+.spacing-md { gap: var(--spacing-md); }
+.spacing-lg { gap: var(--spacing-lg); }
+
+/* === TYPOGRAPHY UTILITIES === */
+.text-display { 
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.2;
+}
+
+.text-heading { 
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+}
+
+.text-body { 
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-normal);
+}
+
+.text-caption { 
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-normal);
+}
+
+/* === TRANSITION UTILITIES === */
+.transition-smooth {
+  transition: all var(--transition-base) cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.transition-bounce {
+  transition: all var(--transition-slow) cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* === CHART UTILITIES === */
+.chart-container-sm { height: var(--chart-height-sm); }
+.chart-container-md { height: var(--chart-height-md); }
+.chart-container-lg { height: var(--chart-height-lg); }

@@ -45,7 +45,7 @@ const ProgressRing = ({ progress, size = 48, strokeWidth = 4 }: {
           fill="transparent"
           strokeDasharray={circumference}
           strokeDashoffset={offset}
-          className="transition-all duration-1000 ease-out"
+          className="transition-slowest"
           strokeLinecap="round"
         />
       </svg>
@@ -196,7 +196,7 @@ export const AuroraKpiGrid = memo(({
                       item.id === 'completed' ? 'from-strategy to-strategy-light' :
                       item.id === 'progress' ? 'from-strategy-light to-strategy-lighter' :
                       'from-strategy-light to-strategy'
-                    } rounded-full transition-all duration-1000 ease-out aurora-shimmer`}
+                    } rounded-full transition-slowest aurora-shimmer`}
                     style={{ width: `${item.id === 'total' ? 100 : item.percentage}%` }}
                   />
                 </div>

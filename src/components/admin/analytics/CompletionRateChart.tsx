@@ -24,10 +24,10 @@ export const CompletionRateChart = ({ data }: CompletionRateChartProps) => {
             index="name"
             valueFormatter={(value) => `${value} implementações`}
             colors={['hsl(var(--success))', 'hsl(var(--aurora-primary))']}
-            className="h-[200px]"
+            className="h-chart-sm"
           />
         ) : (
-          <div className="flex items-center justify-center h-[200px] text-muted-foreground">
+          <div className="flex items-center justify-center h-chart-sm text-muted-foreground">
             Sem dados disponíveis para exibição
           </div>
         )}

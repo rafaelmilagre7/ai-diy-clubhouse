@@ -2,6 +2,7 @@
 /* Modularização dos estilos em arquivos separados para facilitar manutenção */
 
 @import './styles/base.css';
+@import './styles/design-tokens.css';
 @import './styles/components.css';
 @import './styles/utilities.css';
 @import './styles/notifications.css';

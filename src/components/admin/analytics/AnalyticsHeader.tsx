@@ -27,7 +27,7 @@ export const AnalyticsHeader: React.FC<AnalyticsHeaderProps> = ({
           <div>
             <label className="text-sm font-medium block mb-2">Período</label>
             <Select value={timeRange} onValueChange={setTimeRange}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-select-lg">
                 <SelectValue placeholder="Selecionar período" />
               </SelectTrigger>
               <SelectContent>
@@ -43,7 +43,7 @@ export const AnalyticsHeader: React.FC<AnalyticsHeaderProps> = ({
             <div>
               <label className="text-sm font-medium block mb-2">Categoria</label>
               <Select value={category} onValueChange={setCategory}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-select-lg">
                   <SelectValue placeholder="Selecionar categoria" />
                 </SelectTrigger>
                 <SelectContent>
@@ -60,7 +60,7 @@ export const AnalyticsHeader: React.FC<AnalyticsHeaderProps> = ({
             <div>
               <label className="text-sm font-medium block mb-2">Dificuldade</label>
               <Select value={difficulty} onValueChange={setDifficulty}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-select-lg">
                   <SelectValue placeholder="Selecionar dificuldade" />
                 </SelectTrigger>
                 <SelectContent>

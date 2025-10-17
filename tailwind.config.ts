@@ -19,6 +19,76 @@ const config: Config = {
       },
     },
     extend: {
+      // === SPACING SYSTEM (8px base) ===
+      spacing: {
+        'xs': '0.25rem',  // 4px
+        'sm': '0.5rem',   // 8px
+        'md': '1rem',     // 16px
+        'lg': '1.5rem',   // 24px
+        'xl': '2rem',     // 32px
+        '2xl': '3rem',    // 48px
+        '3xl': '4rem',    // 64px
+      },
+      
+      // === TYPOGRAPHY SCALE ===
+      fontSize: {
+        'xs': ['0.75rem', { lineHeight: '1rem' }],      // 12px
+        'sm': ['0.875rem', { lineHeight: '1.25rem' }],  // 14px
+        'base': ['1rem', { lineHeight: '1.5rem' }],     // 16px
+        'lg': ['1.125rem', { lineHeight: '1.75rem' }],  // 18px
+        'xl': ['1.25rem', { lineHeight: '1.75rem' }],   // 20px
+        '2xl': ['1.5rem', { lineHeight: '2rem' }],      // 24px
+        '3xl': ['1.875rem', { lineHeight: '2.25rem' }], // 30px
+        '4xl': ['2.25rem', { lineHeight: '2.5rem' }],   // 36px
+      },
+      
+      fontWeight: {
+        light: '300',
+        normal: '400',
+        medium: '500',
+        semibold: '600',
+        bold: '700',
+        extrabold: '800',
+      },
+      
+      // === TRANSITION SYSTEM ===
+      transitionDuration: {
+        fast: '150ms',
+        base: '200ms',
+        slow: '300ms',
+        slower: '500ms',
+        slowest: '1000ms',
+      },
+      
+      transitionTimingFunction: {
+        'smooth': 'cubic-bezier(0.4, 0, 0.2, 1)',
+        'bounce': 'cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+      },
+      
+      // === CHART DIMENSIONS ===
+      height: {
+        'chart-sm': '200px',
+        'chart-md': '300px',
+        'chart-lg': '400px',
+        'chart-xl': '500px',
+      },
+      
+      width: {
+        'select-sm': '140px',
+        'select-md': '160px',
+        'select-lg': '180px',
+        'select-xl': '220px',
+      },
+      
+      // === BLUR & BACKDROP ===
+      backdropBlur: {
+        xs: '4px',
+        sm: '8px',
+        md: '12px',
+        lg: '16px',
+        xl: '24px',
+      },
+      
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

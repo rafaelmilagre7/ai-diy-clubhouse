@@ -27,7 +27,7 @@ export const ChartContainer: React.FC<ChartContainerProps> = ({
     switch (size) {
       case 'small': return 'h-[250px]';
       case 'large': return 'h-[450px]';
-      default: return 'h-[350px]';
+      default: return 'h-chart-md';
     }
   };
 
@@ -68,9 +68,9 @@ export const ChartSkeleton: React.FC<{ size?: 'small' | 'medium' | 'large' }> = 
 }) => {
   const getSkeletonHeight = () => {
     switch (size) {
-      case 'small': return 'h-[200px]';
-      case 'large': return 'h-[400px]';
-      default: return 'h-[300px]';
+      case 'small': return 'h-chart-sm';
+      case 'large': return 'h-chart-lg';
+      default: return 'h-chart-md';
     }
   };
 

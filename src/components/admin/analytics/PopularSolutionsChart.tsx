@@ -23,7 +23,7 @@ export const PopularSolutionsChart = ({ data }: PopularSolutionsChartProps) => {
             Top 5 soluções mais implementadas
           </CardDescription>
         </CardHeader>
-        <CardContent className="h-[300px] flex items-center justify-center">
+        <CardContent className="h-chart-md flex items-center justify-center">
           <div className="text-center text-muted-foreground">
             <div className="text-2xl mb-2">🏆</div>
             <p>Carregando dados de soluções...</p>
@@ -53,7 +53,7 @@ export const PopularSolutionsChart = ({ data }: PopularSolutionsChartProps) => {
             Top 5 soluções mais implementadas
           </CardDescription>
         </CardHeader>
-        <CardContent className="h-[300px] flex items-center justify-center">
+        <CardContent className="h-chart-md flex items-center justify-center">
           <div className="text-center text-muted-foreground">
             <div className="text-2xl mb-2">📝</div>
             <p>Nenhuma implementação encontrada</p>
@@ -78,7 +78,7 @@ export const PopularSolutionsChart = ({ data }: PopularSolutionsChartProps) => {
           index="name"
           colors={['hsl(var(--aurora-primary))']}
           valueFormatter={(value) => `${value} implementações`}
-          className="h-[300px]"
+          className="h-chart-md"
         />
       </CardContent>
     </Card>

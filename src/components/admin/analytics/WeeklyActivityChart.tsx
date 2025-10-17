@@ -23,7 +23,7 @@ export const WeeklyActivityChart: React.FC<WeeklyActivityChartProps> = ({ data }
             Atividade dos usuários por dia da semana
           </CardDescription>
         </CardHeader>
-        <CardContent className="h-[200px] flex items-center justify-center">
+        <CardContent className="h-chart-sm flex items-center justify-center">
           <div className="text-center text-muted-foreground">
             <div className="text-2xl mb-2">📅</div>
             <p>Carregando dados de atividade...</p>
@@ -56,7 +56,7 @@ export const WeeklyActivityChart: React.FC<WeeklyActivityChartProps> = ({ data }
           index="day"
           colors={['hsl(var(--aurora-primary))']}
           valueFormatter={(value) => `${value} atividade${value !== 1 ? 's' : ''}`}
-          className="h-[200px]"
+          className="h-chart-sm"
         />
       </CardContent>
     </Card>

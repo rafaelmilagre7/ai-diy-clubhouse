@@ -23,7 +23,7 @@ export const UserGrowthChart = ({ data }: UserGrowthChartProps) => {
             Novos usuários registrados ao longo do tempo
           </CardDescription>
         </CardHeader>
-        <CardContent className="h-[300px] flex items-center justify-center">
+        <CardContent className="h-chart-md flex items-center justify-center">
           <div className="text-center text-muted-foreground">
             <div className="text-2xl mb-2">📈</div>
             <p>Carregando dados de crescimento...</p>
@@ -57,7 +57,7 @@ export const UserGrowthChart = ({ data }: UserGrowthChartProps) => {
           index="name"
           colors={['hsl(var(--info))', 'hsl(var(--aurora-primary))']}
           valueFormatter={(value) => `${value} usuário${value !== 1 ? 's' : ''}`}
-          className="h-[300px]"
+          className="h-chart-md"
         />
       </CardContent>
     </Card>
