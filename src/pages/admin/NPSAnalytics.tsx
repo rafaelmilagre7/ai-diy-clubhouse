@@ -108,9 +108,9 @@ const NPSAnalytics: React.FC = () => {
   const responsesLoading = false;
 
   const getScoreColor = (score: number) => {
-    if (score >= 9) return 'bg-green-100 text-green-800 border-green-200';
-    if (score >= 7) return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-    return 'bg-red-100 text-red-800 border-red-200';
+    if (score >= 9) return 'bg-status-success-lighter text-status-success border-status-success/30';
+    if (score >= 7) return 'bg-status-warning-lighter text-status-warning border-status-warning/30';
+    return 'bg-status-error-lighter text-status-error border-status-error/30';
   };
 
   const getScoreLabel = (score: number) => {
@@ -120,9 +120,9 @@ const NPSAnalytics: React.FC = () => {
   };
 
   const getNPSColor = (npsScore: number) => {
-    if (npsScore >= 50) return 'text-green-600';
-    if (npsScore >= 0) return 'text-yellow-600';
-    return 'text-red-600';
+    if (npsScore >= 50) return 'text-system-healthy';
+    if (npsScore >= 0) return 'text-status-warning';
+    return 'text-status-error';
   };
 
   const exportData = () => {
@@ -309,15 +309,15 @@ const NPSAnalytics: React.FC = () => {
           <CardContent>
             <div className="space-y-1">
               <div className="flex justify-between text-xs">
-                <span className="text-green-600">Promotores:</span>
+                <span className="text-system-healthy">Promotores:</span>
                 <span className="font-medium">{analytics?.promoters || 0}</span>
               </div>
               <div className="flex justify-between text-xs">
-                <span className="text-yellow-600">Neutros:</span>
+                <span className="text-status-warning">Neutros:</span>
                 <span className="font-medium">{analytics?.passives || 0}</span>
               </div>
               <div className="flex justify-between text-xs">
-                <span className="text-red-600">Detratores:</span>
+                <span className="text-status-error">Detratores:</span>
                 <span className="font-medium">{analytics?.detractors || 0}</span>
               </div>
             </div>

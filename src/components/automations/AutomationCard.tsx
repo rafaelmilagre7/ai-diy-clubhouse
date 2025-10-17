@@ -35,25 +35,25 @@ export const AutomationCard = ({ rule, onToggle, onEdit, onDelete }: AutomationC
 
   const getRuleTypeColor = (type: string) => {
     switch (type) {
-      case 'webhook': return 'bg-blue-100 text-blue-800';
-      case 'schedule': return 'bg-green-100 text-green-800';
-      case 'manual': return 'bg-purple-100 text-purple-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'webhook': return 'bg-status-info/20 text-status-info border-status-info/30';
+      case 'schedule': return 'bg-system-healthy/20 text-system-healthy border-system-healthy/30';
+      case 'manual': return 'bg-operational/20 text-operational border-operational/30';
+      default: return 'bg-muted text-muted-foreground border-border';
     }
   };
 
   return (
     <Card className={`transition-all hover:shadow-md ${
-      rule.is_active ? 'border-green-200 bg-green-50/50' : 'border-gray-200 bg-gray-50/50'
+      rule.is_active ? 'border-system-healthy/30 bg-system-healthy/5' : 'border-border bg-muted/50'
     }`}>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="space-y-1">
             <CardTitle className="text-lg flex items-center gap-2">
               {rule.is_active ? (
-                <CheckCircle className="h-5 w-5 text-green-600" />
+                <CheckCircle className="h-5 w-5 text-system-healthy" />
               ) : (
-                <Clock className="h-5 w-5 text-gray-400" />
+                <Clock className="h-5 w-5 text-muted-foreground" />
               )}
               {rule.name}
             </CardTitle>
@@ -78,7 +78,7 @@ export const AutomationCard = ({ rule, onToggle, onEdit, onDelete }: AutomationC
           <div className="flex items-center justify-between">
             <div className="text-sm text-muted-foreground">
               Status: <span className={`font-medium ${
-                rule.is_active ? 'text-green-600' : 'text-gray-500'
+                rule.is_active ? 'text-system-healthy' : 'text-muted-foreground'
               }`}>
                 {rule.is_active ? 'Ativa' : 'Inativa'}
               </span>
@@ -132,7 +132,7 @@ export const AutomationCard = ({ rule, onToggle, onEdit, onDelete }: AutomationC
               size="sm"
               variant="outline"
               onClick={() => onDelete(rule.id)}
-              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              className="text-status-error hover:text-status-error hover:bg-status-error/10 border-status-error/30"
             >
               <Trash2 className="h-3 w-3" />
             </Button>

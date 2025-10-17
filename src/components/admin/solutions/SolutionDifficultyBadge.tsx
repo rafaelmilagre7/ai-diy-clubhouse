@@ -13,9 +13,9 @@ export const SolutionDifficultyBadge: React.FC<SolutionDifficultyBadgeProps> = (
   className
 }) => {
   const badgeStyles = {
-    easy: "bg-green-900/40 text-green-300 border-green-700",
-    medium: "bg-amber-900/40 text-amber-300 border-amber-700", 
-    advanced: "bg-red-900/40 text-red-300 border-red-700",
+    easy: "bg-difficulty-beginner/20 text-difficulty-beginner border-difficulty-beginner/30",
+    medium: "bg-difficulty-intermediate/20 text-difficulty-intermediate border-difficulty-intermediate/30", 
+    advanced: "bg-difficulty-advanced/20 text-difficulty-advanced border-difficulty-advanced/30",
   };
   
   const difficultyText = {

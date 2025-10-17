@@ -69,10 +69,10 @@ export const AutomationDashboard = ({ onCreateRule, onViewLogs, onViewRules }: A
         <Card className="hover-scale">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Taxa de Sucesso</CardTitle>
-            <TrendingUp className="h-4 w-4 text-green-600" />
+            <TrendingUp className="h-4 w-4 text-system-healthy" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{successRate.toFixed(1)}%</div>
+            <div className="text-2xl font-bold text-system-healthy">{successRate.toFixed(1)}%</div>
             <Progress value={successRate} className="mt-2 h-2" />
             <p className="text-xs text-muted-foreground mt-1">
               {logStats?.success || 0} sucessos nos últimos 7 dias
@@ -83,22 +83,22 @@ export const AutomationDashboard = ({ onCreateRule, onViewLogs, onViewRules }: A
         <Card className="hover-scale">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Execuções Hoje</CardTitle>
-            <Activity className="h-4 w-4 text-blue-600" />
+            <Activity className="h-4 w-4 text-status-info" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{logStats?.total || 0}</div>
+            <div className="text-2xl font-bold text-status-info">{logStats?.total || 0}</div>
             <div className="flex items-center gap-2 mt-2">
               <div className="flex items-center gap-1">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span className="text-xs text-green-600">{logStats?.success || 0}</span>
+                <div className="w-2 h-2 bg-system-healthy rounded-full"></div>
+                <span className="text-xs text-system-healthy">{logStats?.success || 0}</span>
               </div>
               <div className="flex items-center gap-1">
-                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                <span className="text-xs text-red-600">{logStats?.failed || 0}</span>
+                <div className="w-2 h-2 bg-status-error rounded-full"></div>
+                <span className="text-xs text-status-error">{logStats?.failed || 0}</span>
               </div>
               <div className="flex items-center gap-1">
-                <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                <span className="text-xs text-yellow-600">{logStats?.pending || 0}</span>
+                <div className="w-2 h-2 bg-status-warning rounded-full"></div>
+                <span className="text-xs text-status-warning">{logStats?.pending || 0}</span>
               </div>
             </div>
           </CardContent>
@@ -107,12 +107,12 @@ export const AutomationDashboard = ({ onCreateRule, onViewLogs, onViewRules }: A
         <Card className="hover-scale">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Tempo Médio</CardTitle>
-            <Clock className="h-4 w-4 text-purple-600" />
+            <Clock className="h-4 w-4 text-operational" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-purple-600">{avgExecutionTime}ms</div>
+            <div className="text-2xl font-bold text-operational">{avgExecutionTime}ms</div>
             <div className="flex items-center mt-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+              <div className="w-2 h-2 bg-performance-excellent rounded-full mr-2"></div>
               <p className="text-xs text-muted-foreground">
                 Performance otimizada
               </p>
@@ -141,7 +141,7 @@ export const AutomationDashboard = ({ onCreateRule, onViewLogs, onViewRules }: A
               onClick={onCreateRule}
             >
               <div className="flex items-start gap-3">
-                <PlayCircle className="h-5 w-5 text-green-600 mt-0.5" />
+                <PlayCircle className="h-5 w-5 text-system-healthy mt-0.5" />
                 <div className="text-left">
                   <div className="font-medium">Criar Nova Regra</div>
                   <div className="text-sm text-muted-foreground">
@@ -157,7 +157,7 @@ export const AutomationDashboard = ({ onCreateRule, onViewLogs, onViewRules }: A
               onClick={onViewRules}
             >
               <div className="flex items-start gap-3">
-                <Users className="h-5 w-5 text-blue-600 mt-0.5" />
+                <Users className="h-5 w-5 text-status-info mt-0.5" />
                 <div className="text-left">
                   <div className="font-medium">Gerenciar Regras</div>
                   <div className="text-sm text-muted-foreground">
@@ -173,7 +173,7 @@ export const AutomationDashboard = ({ onCreateRule, onViewLogs, onViewRules }: A
               onClick={onViewLogs}
             >
               <div className="flex items-start gap-3">
-                <Activity className="h-5 w-5 text-purple-600 mt-0.5" />
+                <Activity className="h-5 w-5 text-operational mt-0.5" />
                 <div className="text-left">
                   <div className="font-medium">Monitorar Execuções</div>
                   <div className="text-sm text-muted-foreground">
@@ -208,8 +208,8 @@ export const AutomationDashboard = ({ onCreateRule, onViewLogs, onViewRules }: A
                   </span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <PlayCircle className="h-3 w-3 text-green-500" />
-                  <span className="text-xs text-green-600">Ativo</span>
+                  <PlayCircle className="h-3 w-3 text-system-healthy" />
+                  <span className="text-xs text-system-healthy">Ativo</span>
                 </div>
               </div>
 
@@ -223,16 +223,16 @@ export const AutomationDashboard = ({ onCreateRule, onViewLogs, onViewRules }: A
                   </span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <Clock className="h-3 w-3 text-blue-500" />
-                  <span className="text-xs text-blue-600">Programado</span>
+                  <Clock className="h-3 w-3 text-status-info" />
+                  <span className="text-xs text-status-info">Programado</span>
                 </div>
               </div>
 
               {logStats?.failed > 0 && (
-                <div className="flex items-center justify-between p-2 bg-red-50 rounded-lg border border-red-200">
+                <div className="flex items-center justify-between p-2 bg-status-error-lighter rounded-lg border border-status-error/20">
                   <div className="flex items-center gap-2">
-                    <AlertTriangle className="h-4 w-4 text-red-500" />
-                    <span className="text-sm text-red-700">
+                    <AlertTriangle className="h-4 w-4 text-status-error" />
+                    <span className="text-sm text-status-error">
                       {logStats.failed} falhas recentes
                     </span>
                   </div>
@@ -247,8 +247,8 @@ export const AutomationDashboard = ({ onCreateRule, onViewLogs, onViewRules }: A
               <div className="text-sm text-muted-foreground">
                 Sistema funcionando normalmente
               </div>
-              <div className="text-xs text-green-600 flex items-center gap-1 mt-1">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <div className="text-xs text-system-healthy flex items-center gap-1 mt-1">
+                <div className="w-2 h-2 bg-system-healthy rounded-full"></div>
                 Última execução há 2 minutos
               </div>
             </div>

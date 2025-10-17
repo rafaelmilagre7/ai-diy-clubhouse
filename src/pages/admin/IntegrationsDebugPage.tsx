@@ -291,11 +291,11 @@ export const IntegrationsDebugPage = () => {
                 </Button>
 
                 {settingsResult && (
-                  <div className={`mt-4 p-4 rounded-lg ${settingsResult.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+                  <div className={`mt-4 p-4 rounded-lg ${settingsResult.success ? 'bg-status-success-lighter border border-status-success/30' : 'bg-status-error-lighter border border-status-error/30'}`}>
                     <h4 className="font-semibold mb-2">Resultado da Validação:</h4>
                     {settingsResult.success && (
                       <div className="space-y-2">
-                        <p className="text-sm text-green-800">✅ Token validado com sucesso!</p>
+                        <p className="text-sm text-status-success">✅ Token validado com sucesso!</p>
                         <p className="text-sm">
                           <strong>Conta:</strong> {settingsResult.validation?.account_name || 'N/A'}
                         </p>
@@ -334,8 +334,8 @@ export const IntegrationsDebugPage = () => {
                     
                     {!settingsResult.success && (
                       <div className="space-y-2">
-                        <p className="text-sm text-red-800">❌ Erro na validação</p>
-                        <p className="text-sm text-red-700">{settingsResult.error}</p>
+                        <p className="text-sm text-status-error">❌ Erro na validação</p>
+                        <p className="text-sm text-status-error">{settingsResult.error}</p>
                       </div>
                     )}
                   </div>
@@ -387,9 +387,9 @@ export const IntegrationsDebugPage = () => {
                       <span>PIPEDRIVE_API_TOKEN</span>
                     </div>
                     {secretsStatus.pipedrive ? (
-                      <CheckCircle className="h-5 w-5 text-green-500" />
+                      <CheckCircle className="h-5 w-5 text-system-healthy" />
                     ) : (
-                      <XCircle className="h-5 w-5 text-red-500" />
+                      <XCircle className="h-5 w-5 text-status-error" />
                     )}
                   </div>
                 </div>
@@ -485,9 +485,9 @@ export const IntegrationsDebugPage = () => {
                       <span>DISCORD_WEBHOOK_URL</span>
                     </div>
                     {secretsStatus.discord ? (
-                      <CheckCircle className="h-5 w-5 text-green-500" />
+                      <CheckCircle className="h-5 w-5 text-system-healthy" />
                     ) : (
-                      <XCircle className="h-5 w-5 text-red-500" />
+                      <XCircle className="h-5 w-5 text-status-error" />
                     )}
                   </div>
                 </div>

@@ -200,8 +200,8 @@ export const SetNewPasswordForm = () => {
   if (sessionError || !isValidSession) {
     return (
       <div className="text-center space-y-6">
-        <div className="rounded-full bg-red-500/20 p-3 w-16 h-16 mx-auto flex items-center justify-center">
-          <AlertCircle className="h-8 w-8 text-red-500" />
+        <div className="rounded-full bg-status-error/20 p-3 w-16 h-16 mx-auto flex items-center justify-center">
+          <AlertCircle className="h-8 w-8 text-status-error" />
         </div>
         
         <h3 className="text-xl font-medium text-white">Link inválido</h3>
@@ -228,8 +228,8 @@ export const SetNewPasswordForm = () => {
   if (isSuccess) {
     return (
       <div className="text-center space-y-6">
-        <div className="rounded-full bg-green-500/20 p-3 w-16 h-16 mx-auto flex items-center justify-center">
-          <Check className="h-8 w-8 text-green-500" />
+        <div className="rounded-full bg-status-success/20 p-3 w-16 h-16 mx-auto flex items-center justify-center">
+          <Check className="h-8 w-8 text-status-success" />
         </div>
         
         <h3 className="text-xl font-medium text-white">Senha atualizada!</h3>
@@ -278,8 +278,8 @@ export const SetNewPasswordForm = () => {
               type={showPassword ? "text" : "password"}
               placeholder="Digite sua nova senha"
               className={`pl-10 pr-12 w-full py-3 px-3 bg-gray-700 border rounded-lg text-white focus:ring-2 focus:ring-aurora-primary focus:border-aurora-primary transition-colors ${
-                password && !passwordValidation.isValid ? 'border-red-500' : 
-                password && passwordValidation.isValid ? 'border-green-500' : 'border-gray-600'
+                password && !passwordValidation.isValid ? 'border-status-error' : 
+                password && passwordValidation.isValid ? 'border-status-success' : 'border-gray-600'
               }`}
               disabled={isLoading}
             />
@@ -301,7 +301,7 @@ export const SetNewPasswordForm = () => {
           )}
           
           {errors.password && (
-            <p className="text-red-400 text-sm flex items-center gap-2">
+            <p className="text-status-error text-sm flex items-center gap-2">
               <AlertCircle className="h-4 w-4" />
               {errors.password.message}
             </p>
@@ -322,8 +322,8 @@ export const SetNewPasswordForm = () => {
               type={showConfirmPassword ? "text" : "password"}
               placeholder="Digite novamente sua nova senha"
               className={`pl-10 pr-12 w-full py-3 px-3 bg-gray-700 border rounded-lg text-white focus:ring-2 focus:ring-aurora-primary focus:border-aurora-primary transition-colors ${
-                confirmPassword && !passwordsMatch ? 'border-red-500' : 
-                confirmPassword && passwordsMatch ? 'border-green-500' : 'border-gray-600'
+                confirmPassword && !passwordsMatch ? 'border-status-error' : 
+                confirmPassword && passwordsMatch ? 'border-status-success' : 'border-gray-600'
               }`}
               disabled={isLoading}
             />
@@ -341,20 +341,20 @@ export const SetNewPasswordForm = () => {
             <div className="flex items-center gap-2 text-sm">
               {passwordsMatch ? (
                 <>
-                  <Check className="h-4 w-4 text-green-500" />
-                  <span className="text-green-400">As senhas coincidem</span>
+                  <Check className="h-4 w-4 text-status-success" />
+                  <span className="text-status-success">As senhas coincidem</span>
                 </>
               ) : (
                 <>
-                  <AlertCircle className="h-4 w-4 text-red-500" />
-                  <span className="text-red-400">As senhas não coincidem</span>
+                  <AlertCircle className="h-4 w-4 text-status-error" />
+                  <span className="text-status-error">As senhas não coincidem</span>
                 </>
               )}
             </div>
           )}
           
           {errors.confirmPassword && (
-            <p className="text-red-400 text-sm flex items-center gap-2">
+            <p className="text-status-error text-sm flex items-center gap-2">
               <AlertCircle className="h-4 w-4" />
               {errors.confirmPassword.message}
             </p>

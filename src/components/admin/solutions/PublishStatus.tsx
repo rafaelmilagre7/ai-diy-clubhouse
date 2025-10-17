@@ -19,7 +19,7 @@ export const PublishStatus: React.FC<PublishStatusProps> = ({ published, onToggl
     return (
       <Badge 
         variant="outline" 
-        className="bg-green-900/40 text-green-300 border-green-700 cursor-pointer hover:bg-green-800/40"
+        className="bg-status-success/20 text-status-success border-status-success/30 cursor-pointer hover:bg-status-success/30"
         onClick={handleClick}
       >
         <Check className="mr-1 h-3 w-3" />
@@ -31,7 +31,7 @@ export const PublishStatus: React.FC<PublishStatusProps> = ({ published, onToggl
   return (
     <Badge 
       variant="outline" 
-      className="bg-amber-900/40 text-amber-300 border-amber-700 cursor-pointer hover:bg-amber-800/40"
+      className="bg-status-warning/20 text-status-warning border-status-warning/30 cursor-pointer hover:bg-status-warning/30"
       onClick={handleClick}
     >
       <X className="mr-1 h-3 w-3" />

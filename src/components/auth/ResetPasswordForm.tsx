@@ -101,8 +101,8 @@ export const ResetPasswordForm = ({ onBackToLogin }: ResetPasswordFormProps) => 
   if (submitted) {
     return (
       <div className="text-center space-y-6">
-        <div className="rounded-full bg-green-500/20 p-4 w-20 h-20 mx-auto flex items-center justify-center">
-          <Check className="h-10 w-10 text-green-500" />
+        <div className="rounded-full bg-status-success/20 p-4 w-20 h-20 mx-auto flex items-center justify-center">
+          <Check className="h-10 w-10 text-status-success" />
         </div>
         
         <div className="space-y-2">
@@ -160,9 +160,9 @@ export const ResetPasswordForm = ({ onBackToLogin }: ResetPasswordFormProps) => 
       </div>
 
       {error && (
-        <div className="bg-red-900/30 border border-red-600 rounded-md p-3 flex items-start gap-3">
-          <AlertTriangle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
-          <p className="text-sm text-red-200">{error}</p>
+        <div className="bg-status-error/20 border border-status-error rounded-md p-3 flex items-start gap-3">
+          <AlertTriangle className="h-5 w-5 text-status-error shrink-0 mt-0.5" />
+          <p className="text-sm text-status-error">{error}</p>
         </div>
       )}
 
@@ -181,8 +181,8 @@ export const ResetPasswordForm = ({ onBackToLogin }: ResetPasswordFormProps) => 
               type="email"
               placeholder="Digite seu e-mail"
               className={`pl-10 w-full py-3 px-3 bg-gray-700 border rounded-lg text-white focus:ring-2 focus:ring-aurora-primary focus:border-aurora-primary transition-colors ${
-                errors.email ? 'border-red-500' : 
-                email && isValid ? 'border-green-500' : 'border-gray-600'
+                errors.email ? 'border-status-error' : 
+                email && isValid ? 'border-status-success' : 'border-gray-600'
               }`}
               disabled={isLoading}
             />
@@ -190,13 +190,13 @@ export const ResetPasswordForm = ({ onBackToLogin }: ResetPasswordFormProps) => 
             {/* Feedback visual para email válido */}
             {email && isValid && !errors.email && (
               <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                <Check className="h-5 w-5 text-green-500" />
+                <Check className="h-5 w-5 text-status-success" />
               </div>
             )}
           </div>
           
           {errors.email && (
-            <p className="text-red-400 text-sm flex items-center gap-2">
+            <p className="text-status-error text-sm flex items-center gap-2">
               <AlertTriangle className="h-4 w-4" />
               {errors.email.message}
             </p>
