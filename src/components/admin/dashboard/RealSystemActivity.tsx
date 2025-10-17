@@ -69,10 +69,10 @@ export const RealSystemActivity = ({ activityData, loading }: RealSystemActivity
 
   const getHealthColor = (health: string) => {
     switch (health) {
-      case 'healthy': return 'text-green-500';
-      case 'warning': return 'text-yellow-500';
-      case 'critical': return 'text-red-500';
-      default: return 'text-gray-500';
+      case 'healthy': return 'text-system-healthy';
+      case 'warning': return 'text-system-warning';
+      case 'critical': return 'text-system-critical';
+      default: return 'text-muted-foreground';
     }
   };
 

@@ -44,8 +44,8 @@ export function DataCleaningResults({
           
           {contact.corrections.length > 0 && (
             <div className="mt-2">
-              <p className="text-sm font-medium text-orange-700">Correções aplicadas:</p>
-              <ul className="text-xs text-orange-600 ml-2">
+              <p className="text-sm font-medium text-status-warning">Correções aplicadas:</p>
+              <ul className="text-xs text-status-warning ml-2">
                 {contact.corrections.map((correction, idx) => (
                   <li key={idx}>• {correction}</li>
                 ))}
@@ -55,8 +55,8 @@ export function DataCleaningResults({
           
           {contact.errors.length > 0 && (
             <div className="mt-2">
-              <p className="text-sm font-medium text-red-700">Problemas encontrados:</p>
-              <ul className="text-xs text-red-600 ml-2">
+              <p className="text-sm font-medium text-status-error">Problemas encontrados:</p>
+              <ul className="text-xs text-status-error ml-2">
                 {contact.errors.map((error, idx) => (
                   <li key={idx}>• {error}</li>
                 ))}
@@ -65,12 +65,12 @@ export function DataCleaningResults({
           )}
           
           {contact.status === 'corrected' && (
-            <div className="mt-2 p-2 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded text-xs">
-              <p className="font-medium text-slate-900 dark:text-slate-100">Original:</p>
-              <p className="text-slate-700 dark:text-slate-300">E-mail: {contact.original.email}</p>
-              {contact.original.phone && <p className="text-slate-700 dark:text-slate-300">Tel: {contact.original.phone}</p>}
-              {contact.original.role && <p className="text-slate-700 dark:text-slate-300">Papel: {contact.original.role}</p>}
-              {contact.original.channel && <p className="text-slate-700 dark:text-slate-300">Canal: {contact.original.channel}</p>}
+            <div className="mt-2 p-2 bg-muted border border-border rounded text-xs">
+              <p className="font-medium text-foreground">Original:</p>
+              <p className="text-muted-foreground">E-mail: {contact.original.email}</p>
+              {contact.original.phone && <p className="text-muted-foreground">Tel: {contact.original.phone}</p>}
+              {contact.original.role && <p className="text-muted-foreground">Papel: {contact.original.role}</p>}
+              {contact.original.channel && <p className="text-muted-foreground">Canal: {contact.original.channel}</p>}
             </div>
           )}
         </div>
@@ -111,19 +111,19 @@ export function DataCleaningResults({
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">{summary.validCount}</div>
+              <div className="text-2xl font-bold text-status-success">{summary.validCount}</div>
               <div className="text-sm text-muted-foreground">Válidos</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-orange-600">{summary.correctedCount}</div>
+              <div className="text-2xl font-bold text-status-warning">{summary.correctedCount}</div>
               <div className="text-sm text-muted-foreground">Corrigidos</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-red-600">{summary.invalidCount}</div>
+              <div className="text-2xl font-bold text-status-error">{summary.invalidCount}</div>
               <div className="text-sm text-muted-foreground">Inválidos</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">{summary.duplicateCount}</div>
+              <div className="text-2xl font-bold text-status-info">{summary.duplicateCount}</div>
               <div className="text-sm text-muted-foreground">Duplicatas</div>
             </div>
           </div>

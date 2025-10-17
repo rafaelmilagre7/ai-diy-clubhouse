@@ -132,21 +132,21 @@ export const CommunicationStats: React.FC<CommunicationStatsProps> = ({
                       </div>
                       <div>
                         <div className="text-sm text-muted-foreground">Entregues</div>
-                        <div className="text-xl font-bold text-green-600">{data.delivered}</div>
+                        <div className="text-xl font-bold text-status-success">{data.delivered}</div>
                         <Badge variant="secondary" className="text-xs">
                           {successRate.toFixed(1)}%
                         </Badge>
                       </div>
                       <div>
                         <div className="text-sm text-muted-foreground">Pendentes</div>
-                        <div className="text-xl font-bold text-yellow-600">{data.pending}</div>
+                        <div className="text-xl font-bold text-status-warning">{data.pending}</div>
                         <Badge variant="secondary" className="text-xs">
                           {pendingRate.toFixed(1)}%
                         </Badge>
                       </div>
                       <div>
                         <div className="text-sm text-muted-foreground">Falhas</div>
-                        <div className="text-xl font-bold text-red-600">{data.failed}</div>
+                        <div className="text-xl font-bold text-status-error">{data.failed}</div>
                         <Badge variant="destructive" className="text-xs">
                           {failedRate.toFixed(1)}%
                         </Badge>

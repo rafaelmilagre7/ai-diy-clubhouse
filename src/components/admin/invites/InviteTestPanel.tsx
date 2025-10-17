@@ -102,9 +102,9 @@ export const InviteTestPanel = () => {
   };
 
   return (
-    <Card className="border-2 border-blue-200 bg-blue-50/50">
+    <Card className="border-2 border-status-info/20 bg-status-info-lighter/50">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-blue-800">
+        <CardTitle className="flex items-center gap-2 text-status-info">
           <Send className="h-5 w-5" />
           Painel de Teste - Sistema de Convites
         </CardTitle>
@@ -116,9 +116,9 @@ export const InviteTestPanel = () => {
           <Card>
             <CardContent className="pt-4">
               <div className="flex items-center gap-2">
-                <Mail className="h-4 w-4 text-blue-500" />
+                <Mail className="h-4 w-4 text-status-info" />
                 <span className="text-sm font-medium">Email</span>
-                <Badge variant="outline" className="text-green-600 border-green-600">
+                <Badge variant="outline" className="text-status-success border-status-success">
                   <CheckCircle className="h-3 w-3 mr-1" />
                   Ativo
                 </Badge>
@@ -129,9 +129,9 @@ export const InviteTestPanel = () => {
           <Card>
             <CardContent className="pt-4">
               <div className="flex items-center gap-2">
-                <Phone className="h-4 w-4 text-green-500" />
+                <Phone className="h-4 w-4 text-status-success" />
                 <span className="text-sm font-medium">WhatsApp</span>
-                <Badge variant="outline" className="text-yellow-600 border-yellow-600">
+                <Badge variant="outline" className="text-status-warning border-status-warning">
                   <AlertCircle className="h-3 w-3 mr-1" />
                   Config.
                 </Badge>
@@ -142,9 +142,9 @@ export const InviteTestPanel = () => {
           <Card>
             <CardContent className="pt-4">
               <div className="flex items-center gap-2">
-                <MessageCircle className="h-4 w-4 text-purple-500" />
+                <MessageCircle className="h-4 w-4 text-primary" />
                 <span className="text-sm font-medium">Automático</span>
-                <Badge variant="outline" className="text-green-600 border-green-600">
+                <Badge variant="outline" className="text-status-success border-status-success">
                   <CheckCircle className="h-3 w-3 mr-1" />
                   Funcional
                 </Badge>
@@ -155,7 +155,7 @@ export const InviteTestPanel = () => {
 
         {/* Teste de Email */}
         <div className="space-y-3">
-          <h3 className="font-semibold text-gray-800 flex items-center gap-2">
+          <h3 className="font-semibold text-foreground flex items-center gap-2">
             <Mail className="h-4 w-4" />
             Testar Envio de Email
           </h3>
@@ -189,7 +189,7 @@ export const InviteTestPanel = () => {
 
         {/* Teste de WhatsApp */}
         <div className="space-y-3">
-          <h3 className="font-semibold text-gray-800 flex items-center gap-2">
+          <h3 className="font-semibold text-foreground flex items-center gap-2">
             <Phone className="h-4 w-4" />
             Testar Envio de WhatsApp
           </h3>
@@ -223,7 +223,7 @@ export const InviteTestPanel = () => {
 
         {/* Teste de Processamento */}
         <div className="space-y-3">
-          <h3 className="font-semibold text-gray-800 flex items-center gap-2">
+          <h3 className="font-semibold text-foreground flex items-center gap-2">
             <MessageCircle className="h-4 w-4" />
             Processar Convite Existente
           </h3>
@@ -274,9 +274,9 @@ export const InviteTestPanel = () => {
         </div>
 
         {/* Instruções */}
-        <div className="bg-gray-50 p-4 rounded-lg border">
-          <h4 className="font-medium text-gray-800 mb-2">💡 Instruções de Teste</h4>
-          <ul className="text-sm text-gray-600 space-y-1">
+        <div className="bg-muted/50 p-4 rounded-lg border">
+          <h4 className="font-medium text-foreground mb-2">💡 Instruções de Teste</h4>
+          <ul className="text-sm text-muted-foreground space-y-1">
             <li>• <strong>Email:</strong> Funcionará se o RESEND_API_KEY estiver configurado</li>
             <li>• <strong>WhatsApp:</strong> Será simulado se as credenciais não estiverem configuradas</li>
             <li>• <strong>Processar:</strong> Use o ID de um convite real existente no banco</li>

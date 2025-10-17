@@ -244,6 +244,11 @@
   --tracking-clicked: 262 83% 58%;         /* Roxo - clicado */
   --tracking-bounced: 38 92% 50%;          /* Laranja - rejeitado */
   --tracking-failed: 0 84% 60%;            /* Vermelho - falhou */
+
+  /* System Health - Fase 14.1 */
+  --system-healthy: 142 76% 36%;           /* Verde - sistema saudável */
+  --system-warning: 43 96% 56%;            /* Amarelo - aviso */
+  --system-critical: 0 84% 60%;            /* Vermelho - crítico */
 }
 
 .light {

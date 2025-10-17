@@ -78,6 +78,12 @@ export default function StyleGuidePage() {
     { name: 'Failed', cssVar: 'hsl(var(--tracking-failed))', className: 'bg-tracking-failed', hex: 'Vermelho' },
   ];
 
+  const systemHealthColors = [
+    { name: 'Healthy', cssVar: 'hsl(var(--system-healthy))', className: 'bg-system-healthy', hex: 'Verde' },
+    { name: 'Warning', cssVar: 'hsl(var(--system-warning))', className: 'bg-system-warning', hex: 'Amarelo' },
+    { name: 'Critical', cssVar: 'hsl(var(--system-critical))', className: 'bg-system-critical', hex: 'Vermelho' },
+  ];
+
 
   // Sistema de Superfícies
   const surfaceColors = [

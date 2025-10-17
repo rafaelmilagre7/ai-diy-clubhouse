@@ -60,16 +60,16 @@ export const InviteValidationDebugPanel = () => {
 
   const getValidationStatusIcon = (isValid: boolean) => {
     return isValid ? (
-      <CheckCircle className="h-5 w-5 text-green-600" />
+      <CheckCircle className="h-5 w-5 text-status-success" />
     ) : (
-      <XCircle className="h-5 w-5 text-red-600" />
+      <XCircle className="h-5 w-5 text-status-error" />
     );
   };
 
   const getLogStatusBadge = (action: string) => {
     switch (action) {
       case 'validation_success':
-        return <Badge className="bg-green-100 text-green-800">Sucesso</Badge>;
+        return <Badge className="bg-status-success-lighter text-status-success border-status-success/20">Sucesso</Badge>;
       case 'validation_failed':
         return <Badge variant="destructive">Falha</Badge>;
       default:
@@ -111,7 +111,7 @@ export const InviteValidationDebugPanel = () => {
 
             {validationResults && (
               <div className="space-y-4">
-                <Alert className={validationResults.isValid ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}>
+                <Alert className={validationResults.isValid ? 'border-status-success bg-status-success-lighter' : 'border-status-error bg-status-error-lighter'}>
                   <div className="flex items-center gap-2">
                     {getValidationStatusIcon(validationResults.isValid)}
                     <AlertDescription className="flex-1">

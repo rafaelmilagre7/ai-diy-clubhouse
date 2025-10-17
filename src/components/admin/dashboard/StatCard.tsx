@@ -34,22 +34,22 @@ export const StatCard = ({
   // Determinar cores com base no colorScheme
   const getIconColor = () => {
     switch(colorScheme) {
-      case "green": return "text-emerald-500";
-      case "emerald": return "text-emerald-500";
-      case "red": return "text-red-500";
-      case "orange": return "text-orange-500";
-      case "purple": return "text-purple-500";
-      case "indigo": return "text-indigo-500";
-      case "blue": return "text-blue-500";
+      case "green": return "text-operational";
+      case "emerald": return "text-operational";
+      case "red": return "text-status-error";
+      case "orange": return "text-revenue";
+      case "purple": return "text-primary";
+      case "indigo": return "text-strategy";
+      case "blue": return "text-status-info";
       default: return "text-primary";
     }
   };
 
   const getPercentageColor = () => {
     if (effectivelyPositive) {
-      return "text-green-400";
+      return "text-system-healthy";
     } else {
-      return "text-red-400";
+      return "text-system-critical";
     }
   };
 

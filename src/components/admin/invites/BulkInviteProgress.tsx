@@ -25,14 +25,14 @@ export function BulkInviteProgress({
   const getStatusIcon = (item: BulkInviteItem) => {
     switch (item.status) {
       case 'success':
-        return <CheckCircle2 className="h-4 w-4 text-green-500" />;
+        return <CheckCircle2 className="h-4 w-4 text-status-success" />;
       case 'error':
-        return <XCircle className="h-4 w-4 text-red-500" />;
+        return <XCircle className="h-4 w-4 text-status-error" />;
       case 'creating':
       case 'sending':
-        return <Loader2 className="h-4 w-4 text-blue-500 animate-spin" />;
+        return <Loader2 className="h-4 w-4 text-status-info animate-spin" />;
       default:
-        return <Clock className="h-4 w-4 text-gray-400" />;
+        return <Clock className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
@@ -85,15 +85,15 @@ export function BulkInviteProgress({
           {/* Estatísticas */}
           <div className="grid grid-cols-3 gap-4 py-2">
             <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">{progress.successful}</div>
+              <div className="text-2xl font-bold text-status-success">{progress.successful}</div>
               <div className="text-sm text-muted-foreground">Sucessos</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-red-600">{progress.failed}</div>
+              <div className="text-2xl font-bold text-status-error">{progress.failed}</div>
               <div className="text-sm text-muted-foreground">Falhas</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">{progress.total - progress.processed}</div>
+              <div className="text-2xl font-bold text-status-info">{progress.total - progress.processed}</div>
               <div className="text-sm text-muted-foreground">Pendentes</div>
             </div>
           </div>
@@ -139,17 +139,17 @@ export function BulkInviteProgress({
           {/* Botões de Ação */}
           <div className="flex justify-between pt-4 border-t">
             {progress.isRunning ? (
-              <div className="flex items-center gap-2 text-blue-600">
+              <div className="flex items-center gap-2 text-status-info">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 <span className="text-sm">Processando...</span>
               </div>
             ) : (
               <div className="text-sm text-muted-foreground">
                 {progress.successful > 0 && (
-                  <span className="text-green-600">✓ {progress.successful} enviados com sucesso</span>
+                  <span className="text-status-success">✓ {progress.successful} enviados com sucesso</span>
                 )}
                 {progress.failed > 0 && (
-                  <span className="text-red-600 ml-4">✗ {progress.failed} falharam</span>
+                  <span className="text-status-error ml-4">✗ {progress.failed} falharam</span>
                 )}
               </div>
             )}

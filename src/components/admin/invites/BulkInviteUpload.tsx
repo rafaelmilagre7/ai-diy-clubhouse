@@ -291,7 +291,7 @@ export function BulkInviteUpload({ roles, rolesLoading = false, onProceedWithCon
                         />
                       </div>
                       {csvFile && (
-                        <div className="text-sm text-green-600">
+                        <div className="text-sm text-status-success">
                           ✓ {csvFile.name} carregado
                         </div>
                       )}

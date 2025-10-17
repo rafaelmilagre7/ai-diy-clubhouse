@@ -52,13 +52,13 @@ export const InviteCreationLoadingIndicator: React.FC<InviteCreationLoadingIndic
   const getStepIcon = (status: InviteCreationStep['status']) => {
     switch (status) {
       case 'completed':
-        return <CheckCircle className="w-4 h-4 text-green-500" />;
+        return <CheckCircle className="w-4 h-4 text-status-success" />;
       case 'active':
-        return <Zap className="w-4 h-4 text-blue-500 animate-pulse" />;
+        return <Zap className="w-4 h-4 text-status-info animate-pulse" />;
       case 'error':
-        return <AlertCircle className="w-4 h-4 text-red-500" />;
+        return <AlertCircle className="w-4 h-4 text-status-error" />;
       default:
-        return <Clock className="w-4 h-4 text-gray-400" />;
+        return <Clock className="w-4 h-4 text-muted-foreground" />;
     }
   };
 
@@ -66,17 +66,17 @@ export const InviteCreationLoadingIndicator: React.FC<InviteCreationLoadingIndic
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-6">
+      <div className="bg-background rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">
-          <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
-            <Mail className="w-6 h-6 text-blue-600" />
+          <div className="w-12 h-12 bg-status-info-lighter rounded-full flex items-center justify-center mx-auto">
+            <Mail className="w-6 h-6 text-status-info" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900">
+          <h3 className="text-lg font-semibold text-foreground">
             Criando Convite
           </h3>
           {email && (
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-muted-foreground">
               Para: <span className="font-medium">{email}</span>
             </p>
           )}
@@ -84,7 +84,7 @@ export const InviteCreationLoadingIndicator: React.FC<InviteCreationLoadingIndic
 
         {/* Progress Bar */}
         <div className="space-y-2">
-          <div className="flex justify-between text-sm text-gray-600">
+          <div className="flex justify-between text-sm text-muted-foreground">
             <span>Progresso</span>
             <span>{Math.round(progress)}%</span>
           </div>
@@ -97,22 +97,22 @@ export const InviteCreationLoadingIndicator: React.FC<InviteCreationLoadingIndic
             <div 
               key={step.id} 
               className={`flex items-center gap-3 p-2 rounded-lg transition-all duration-300 ${
-                step.status === 'active' ? 'bg-blue-50 border border-blue-200' : ''
+                step.status === 'active' ? 'bg-status-info-lighter border border-status-info/20' : ''
               }`}
             >
               {getStepIcon(step.status)}
               <span className={`text-sm ${
-                step.status === 'completed' ? 'text-green-700 font-medium' :
-                step.status === 'active' ? 'text-blue-700 font-medium' :
-                step.status === 'error' ? 'text-red-700 font-medium' :
-                'text-gray-500'
+                step.status === 'completed' ? 'text-status-success font-medium' :
+                step.status === 'active' ? 'text-status-info font-medium' :
+                step.status === 'error' ? 'text-status-error font-medium' :
+                'text-muted-foreground'
               }`}>
                 {step.label}
               </span>
               
               {step.status === 'active' && (
                 <div className="flex-1 flex justify-end">
-                  <div className="w-4 h-4 border-2 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+                  <div className="w-4 h-4 border-2 border-status-info/20 border-t-status-info rounded-full animate-spin" />
                 </div>
               )}
             </div>
@@ -122,15 +122,15 @@ export const InviteCreationLoadingIndicator: React.FC<InviteCreationLoadingIndic
         {/* Estimated Time */}
         {estimatedTime > 0 && (
           <div className="text-center">
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-muted-foreground">
               Tempo estimado: ~{Math.round(estimatedTime / 1000)}s
             </p>
           </div>
         )}
 
         {/* Performance Tip */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-          <p className="text-xs text-blue-700">
+        <div className="bg-status-info-lighter border border-status-info/20 rounded-lg p-3">
+          <p className="text-xs text-status-info">
             <Zap className="w-3 h-3 inline mr-1" />
             Sistema otimizado para máxima velocidade
           </p>

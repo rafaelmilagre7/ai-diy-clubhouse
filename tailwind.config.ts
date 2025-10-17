@@ -188,13 +188,20 @@ const config: Config = {
           },
         },
         
-        // Priority System
-        priority: {
-          low: "hsl(var(--priority-low))",
-          normal: "hsl(var(--priority-normal))",
-          high: "hsl(var(--priority-high))",
-          urgent: "hsl(var(--priority-urgent))",
-        },
+  // Priority System
+  priority: {
+    low: "hsl(var(--priority-low))",
+    normal: "hsl(var(--priority-normal))",
+    high: "hsl(var(--priority-high))",
+    urgent: "hsl(var(--priority-urgent))",
+  },
+  
+  // System Health - Fase 14.1
+  system: {
+    healthy: "hsl(var(--system-healthy))",
+    warning: "hsl(var(--system-warning))",
+    critical: "hsl(var(--system-critical))",
+  },
         
         // Email Tracking
         tracking: {

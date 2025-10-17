@@ -28,22 +28,22 @@ export function WhatsAppDiagnosticPanel() {
   const getStatusIcon = (status: string) => {
     switch (status?.toLowerCase()) {
       case 'approved':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
+        return <CheckCircle className="h-4 w-4 text-status-success" />;
       case 'pending':
-        return <Clock className="h-4 w-4 text-yellow-500" />;
+        return <Clock className="h-4 w-4 text-status-warning" />;
       case 'rejected':
-        return <XCircle className="h-4 w-4 text-red-500" />;
+        return <XCircle className="h-4 w-4 text-status-error" />;
       default:
-        return <AlertTriangle className="h-4 w-4 text-gray-500" />;
+        return <AlertTriangle className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
   const getStatusBadge = (status: string) => {
     switch (status?.toLowerCase()) {
       case 'approved':
-        return <Badge variant="default" className="bg-green-100 text-green-800">Aprovado</Badge>;
+        return <Badge variant="default" className="bg-status-success-lighter text-status-success border-status-success/20">Aprovado</Badge>;
       case 'pending':
-        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Pendente</Badge>;
+        return <Badge variant="secondary" className="bg-status-warning-lighter text-status-warning border-status-warning/20">Pendente</Badge>;
       case 'rejected':
         return <Badge variant="destructive">Rejeitado</Badge>;
       default:
@@ -241,21 +241,21 @@ export function WhatsAppDiagnosticPanel() {
         <div className="space-y-2">
           <h3 className="font-semibold text-lg">Checklist de Configuração</h3>
           
-          <div className="space-y-1 text-sm">
+          <div className="space-y-2 text-sm">
             <div className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-green-500" />
+              <CheckCircle className="h-4 w-4 text-status-success" />
               <span>Edge Functions configuradas</span>
             </div>
             <div className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-green-500" />
+              <CheckCircle className="h-4 w-4 text-status-success" />
               <span>Sistema de logs implementado</span>
             </div>
             <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-yellow-500" />
+              <Clock className="h-4 w-4 text-status-warning" />
               <span>Webhook configurado (verificar URL no Meta)</span>
             </div>
             <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-yellow-500" />
+              <Clock className="h-4 w-4 text-status-warning" />
               <span>Template "convitevia" (verificar aprovação)</span>
             </div>
           </div>

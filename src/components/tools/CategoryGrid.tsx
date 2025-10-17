@@ -105,35 +105,35 @@ export const CategoryGrid = ({ selectedCategory, onCategoryChange }: CategoryGri
   // Define ícones para cada categoria
   const getCategoryIcon = (category: string | null) => {
     const iconSize = 20;
-    const iconColor = selectedCategory === category ? "hsl(var(--aurora))" : "hsl(var(--text-muted))";
+    const iconClassName = selectedCategory === category ? "text-aurora" : "text-muted-foreground";
     
     switch(category) {
       case 'Modelos de IA e Interfaces':
-        return <Layers size={iconSize} style={{ color: iconColor }} />;
+        return <Layers size={iconSize} className={iconClassName} />;
       case 'Geração de Conteúdo Visual':
-        return <Image size={iconSize} style={{ color: iconColor }} />;
+        return <Image size={iconSize} className={iconClassName} />;
       case 'Geração e Processamento de Áudio':
-        return <Headphones size={iconSize} style={{ color: iconColor }} />;
+        return <Headphones size={iconSize} className={iconClassName} />;
       case 'Automação e Integrações':
-        return <Settings size={iconSize} style={{ color: iconColor }} />;
+        return <Settings size={iconSize} className={iconClassName} />;
       case 'Comunicação e Atendimento':
-        return <MessageSquare size={iconSize} style={{ color: iconColor }} />;
+        return <MessageSquare size={iconSize} className={iconClassName} />;
       case 'Captura e Análise de Dados':
-        return <Database size={iconSize} style={{ color: iconColor }} />;
+        return <Database size={iconSize} className={iconClassName} />;
       case 'Pesquisa e Síntese de Informações':
-        return <Search size={iconSize} style={{ color: iconColor }} />;
+        return <Search size={iconSize} className={iconClassName} />;
       case 'Gestão de Documentos e Conteúdo':
-        return <Book size={iconSize} style={{ color: iconColor }} />;
+        return <Book size={iconSize} className={iconClassName} />;
       case 'Marketing e CRM':
-        return <TrendingUp size={iconSize} style={{ color: iconColor }} />;
+        return <TrendingUp size={iconSize} className={iconClassName} />;
       case 'Produtividade e Organização':
-        return <Calendar size={iconSize} style={{ color: iconColor }} />;
+        return <Calendar size={iconSize} className={iconClassName} />;
       case 'Desenvolvimento e Código':
-        return <Code size={iconSize} style={{ color: iconColor }} />;
+        return <Code size={iconSize} className={iconClassName} />;
       case 'Plataformas de Mídia':
-        return <Monitor size={iconSize} style={{ color: iconColor }} />;
+        return <Monitor size={iconSize} className={iconClassName} />;
       default: // 'Todas'
-        return <LayoutGrid size={iconSize} style={{ color: iconColor }} />;
+        return <LayoutGrid size={iconSize} className={iconClassName} />;
     }
   };
 

@@ -39,15 +39,15 @@ export const RecentActivity = ({ activities, loading }: RecentActivityProps) => 
   const getEventIcon = (eventType: string) => {
     switch (eventType) {
       case 'view':
-        return <Eye className="h-5 w-5 text-blue-500" />;
+        return <Eye className="h-5 w-5 text-status-info" />;
       case 'start':
-        return <Play className="h-5 w-5 text-green-500" />;
+        return <Play className="h-5 w-5 text-status-success" />;
       case 'complete':
-        return <CheckCircle className="h-5 w-5 text-purple-500" />;
+        return <CheckCircle className="h-5 w-5 text-primary" />;
       case 'login':
-        return <User className="h-5 w-5 text-indigo-500" />;
+        return <User className="h-5 w-5 text-strategy" />;
       default:
-        return <FileText className="h-5 w-5 text-gray-500" />;
+        return <FileText className="h-5 w-5 text-muted-foreground" />;
     }
   };
   
