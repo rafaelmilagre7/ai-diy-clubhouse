@@ -18,10 +18,10 @@ export const PerformanceIndicator = memo<PerformanceIndicatorProps>(({
   componentName
 }) => {
   const getPerformanceLevel = (time: number) => {
-    if (time < 50) return { level: 'excelente', color: 'text-green-600', bg: 'bg-green-50' };
-    if (time < 100) return { level: 'bom', color: 'text-blue-600', bg: 'bg-blue-50' };
-    if (time < 200) return { level: 'regular', color: 'text-yellow-600', bg: 'bg-yellow-50' };
-    return { level: 'lento', color: 'text-red-600', bg: 'bg-red-50' };
+    if (time < 50) return { level: 'excelente', color: 'text-performance-excellent', bg: 'bg-performance-excellent/10' };
+    if (time < 100) return { level: 'bom', color: 'text-performance-good', bg: 'bg-performance-good/10' };
+    if (time < 200) return { level: 'regular', color: 'text-performance-fair', bg: 'bg-performance-fair/10' };
+    return { level: 'lento', color: 'text-performance-poor', bg: 'bg-performance-poor/10' };
   };
 
   const performance = getPerformanceLevel(renderTime);

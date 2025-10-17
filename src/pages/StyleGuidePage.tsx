@@ -84,6 +84,38 @@ export default function StyleGuidePage() {
     { name: 'Critical', cssVar: 'hsl(var(--system-critical))', className: 'bg-system-critical', hex: 'Vermelho' },
   ];
 
+  // Severity Colors - Fase 14.2
+  const severityColors = [
+    { name: 'Critical', cssVar: 'hsl(var(--severity-critical))', className: 'bg-severity-critical', hex: 'Vermelho' },
+    { name: 'High', cssVar: 'hsl(var(--severity-high))', className: 'bg-severity-high', hex: 'Laranja' },
+    { name: 'Medium', cssVar: 'hsl(var(--severity-medium))', className: 'bg-severity-medium', hex: 'Amarelo' },
+    { name: 'Low', cssVar: 'hsl(var(--severity-low))', className: 'bg-severity-low', hex: 'Azul' },
+    { name: 'Info', cssVar: 'hsl(var(--severity-info))', className: 'bg-severity-info', hex: 'Cinza' },
+  ];
+
+  const permissionColors = [
+    { name: 'Granted', cssVar: 'hsl(var(--permission-granted))', className: 'bg-permission-granted', hex: 'Verde' },
+    { name: 'Partial', cssVar: 'hsl(var(--permission-partial))', className: 'bg-permission-partial', hex: 'Amarelo' },
+    { name: 'Denied', cssVar: 'hsl(var(--permission-denied))', className: 'bg-permission-denied', hex: 'Vermelho' },
+    { name: 'Restricted', cssVar: 'hsl(var(--permission-restricted))', className: 'bg-permission-restricted', hex: 'Laranja' },
+  ];
+
+  const difficultyColors = [
+    { name: 'Beginner', cssVar: 'hsl(var(--difficulty-beginner))', className: 'bg-difficulty-beginner', hex: 'Verde' },
+    { name: 'Intermediate', cssVar: 'hsl(var(--difficulty-intermediate))', className: 'bg-difficulty-intermediate', hex: 'Azul' },
+    { name: 'Advanced', cssVar: 'hsl(var(--difficulty-advanced))', className: 'bg-difficulty-advanced', hex: 'Laranja' },
+    { name: 'Expert', cssVar: 'hsl(var(--difficulty-expert))', className: 'bg-difficulty-expert', hex: 'Roxo' },
+  ];
+
+  const performanceColors = [
+    { name: 'Excellent', cssVar: 'hsl(var(--performance-excellent))', className: 'bg-performance-excellent', hex: 'Verde' },
+    { name: 'Good', cssVar: 'hsl(var(--performance-good))', className: 'bg-performance-good', hex: 'Azul' },
+    { name: 'Fair', cssVar: 'hsl(var(--performance-fair))', className: 'bg-performance-fair', hex: 'Amarelo' },
+    { name: 'Poor', cssVar: 'hsl(var(--performance-poor))', className: 'bg-performance-poor', hex: 'Vermelho' },
+  ];
+
+  const semanticStatusColors = [...statusColors, ...priorityColors, ...trackingColors, ...systemHealthColors, ...severityColors, ...permissionColors, ...difficultyColors, ...performanceColors];
+
 
   // Sistema de Superfícies
   const surfaceColors = [

@@ -53,52 +53,52 @@ export const EmailTrackingCell: React.FC<EmailTrackingCellProps> = ({ inviteId }
       case 'clicked':
         const clickCount = metadata?.click_count;
         return {
-          icon: <MousePointer className="h-3 w-3 text-indigo-600" />,
+          icon: <MousePointer className="h-3 w-3 text-tracking-clicked" />,
           text: clickCount && clickCount > 1 ? `Clicado (${clickCount}x)` : 'Clicado',
-          color: 'text-indigo-600'
+          color: 'text-tracking-clicked'
         };
       case 'opened':
         const openCount = metadata?.open_count;
         return {
-          icon: <Eye className="h-3 w-3 text-emerald-600" />,
+          icon: <Eye className="h-3 w-3 text-tracking-opened" />,
           text: openCount && openCount > 1 ? `Aberto (${openCount}x)` : 'Aberto',
-          color: 'text-emerald-600'
+          color: 'text-tracking-opened'
         };
       case 'delivered':
         return {
-          icon: <MailCheck className="h-3 w-3 text-green-600" />,
+          icon: <MailCheck className="h-3 w-3 text-tracking-delivered" />,
           text: 'Entregue',
-          color: 'text-green-600'
+          color: 'text-tracking-delivered'
         };
       case 'sent':
         return {
-          icon: <Mail className="h-3 w-3 text-blue-600" />,
+          icon: <Mail className="h-3 w-3 text-tracking-sent" />,
           text: 'Enviado',
-          color: 'text-blue-600'
+          color: 'text-tracking-sent'
         };
       case 'bounced':
         return {
-          icon: <AlertTriangle className="h-3 w-3 text-orange-600" />,
+          icon: <AlertTriangle className="h-3 w-3 text-tracking-bounced" />,
           text: 'Rejeitado',
-          color: 'text-orange-600'
+          color: 'text-tracking-bounced'
         };
       case 'complained':
         return {
-          icon: <XCircle className="h-3 w-3 text-red-600" />,
+          icon: <XCircle className="h-3 w-3 text-tracking-failed" />,
           text: 'Spam',
-          color: 'text-red-600'
+          color: 'text-tracking-failed'
         };
       case 'failed':
         return {
-          icon: <XCircle className="h-3 w-3 text-red-600" />,
+          icon: <XCircle className="h-3 w-3 text-tracking-failed" />,
           text: 'Falhou',
-          color: 'text-red-600'
+          color: 'text-tracking-failed'
         };
       default:
         return {
-          icon: <Clock className="h-3 w-3 text-gray-500" />,
+          icon: <Clock className="h-3 w-3 text-status-neutral" />,
           text: 'Pendente',
-          color: 'text-gray-500'
+          color: 'text-status-neutral'
         };
     }
   };

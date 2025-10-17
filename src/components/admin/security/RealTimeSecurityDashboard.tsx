@@ -130,10 +130,10 @@ export const RealTimeSecurityDashboard = () => {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
-              <Shield className="h-5 w-5 text-green-500" />
+              <Shield className="h-5 w-5 text-system-healthy" />
               <div>
                 <p className="text-sm font-medium">Status do Sistema</p>
-                <p className="text-2xl font-bold text-green-600">Seguro</p>
+                <p className="text-2xl font-bold text-system-healthy">Seguro</p>
               </div>
             </div>
           </CardContent>
@@ -142,7 +142,7 @@ export const RealTimeSecurityDashboard = () => {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
-              <Activity className="h-5 w-5 text-blue-500" />
+              <Activity className="h-5 w-5 text-severity-low" />
               <div>
                 <p className="text-sm font-medium">Eventos (24h)</p>
                 <p className="text-2xl font-bold">{metrics.totalEvents}</p>
@@ -154,7 +154,7 @@ export const RealTimeSecurityDashboard = () => {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
-              <AlertTriangle className="h-5 w-5 text-orange-500" />
+              <AlertTriangle className="h-5 w-5 text-severity-high" />
               <div>
                 <p className="text-sm font-medium">Incidentes Ativos</p>
                 <p className="text-2xl font-bold">{metrics.activeIncidents}</p>
@@ -166,7 +166,7 @@ export const RealTimeSecurityDashboard = () => {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
-              <TrendingUp className="h-5 w-5 text-purple-500" />
+              <TrendingUp className="h-5 w-5 text-severity-medium" />
               <div>
                 <p className="text-sm font-medium">Anomalias</p>
                 <p className="text-2xl font-bold">{metrics.anomaliesDetected}</p>

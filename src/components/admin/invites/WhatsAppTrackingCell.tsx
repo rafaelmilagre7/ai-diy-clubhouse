@@ -52,41 +52,41 @@ export const WhatsAppTrackingCell: React.FC<WhatsAppTrackingCellProps> = ({ invi
     switch (whatsappStatus) {
       case 'read':
         return {
-          icon: <Eye className="h-3 w-3 text-blue-600" />,
+          icon: <Eye className="h-3 w-3 text-tracking-opened" />,
           text: 'Lido',
-          color: 'text-blue-600'
+          color: 'text-tracking-opened'
         };
       case 'delivered':
         return {
-          icon: <MessageCircle className="h-3 w-3 text-emerald-600" />,
+          icon: <MessageCircle className="h-3 w-3 text-tracking-delivered" />,
           text: 'Entregue',
-          color: 'text-emerald-600'
+          color: 'text-tracking-delivered'
         };
       case 'sent':
       case 'queued':
         return {
-          icon: <MessageSquare className="h-3 w-3 text-green-600" />,
+          icon: <MessageSquare className="h-3 w-3 text-tracking-sent" />,
           text: 'Enviado',
-          color: 'text-green-600'
+          color: 'text-tracking-sent'
         };
       case 'failed':
       case 'undelivered':
         return {
-          icon: <XCircle className="h-3 w-3 text-red-600" />,
+          icon: <XCircle className="h-3 w-3 text-tracking-failed" />,
           text: 'Falhou',
-          color: 'text-red-600'
+          color: 'text-tracking-failed'
         };
       case 'simulated':
         return {
-          icon: <Timer className="h-3 w-3 text-orange-600" />,
+          icon: <Timer className="h-3 w-3 text-tracking-bounced" />,
           text: 'Simulado',
-          color: 'text-orange-600'
+          color: 'text-tracking-bounced'
         };
       default:
         return {
-          icon: <Timer className="h-3 w-3 text-yellow-600" />,
+          icon: <Timer className="h-3 w-3 text-status-warning" />,
           text: 'Processando',
-          color: 'text-yellow-600'
+          color: 'text-status-warning'
         };
     }
   };
@@ -118,7 +118,7 @@ export const WhatsAppTrackingCell: React.FC<WhatsAppTrackingCellProps> = ({ invi
         </span>
       )}
       {bestDelivery.metadata?.simulated && (
-        <span className="text-xs text-orange-600">
+        <span className="text-xs text-tracking-bounced">
           Config. pendente
         </span>
       )}

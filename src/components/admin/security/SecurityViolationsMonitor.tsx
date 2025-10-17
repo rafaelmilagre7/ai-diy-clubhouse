@@ -180,22 +180,22 @@ export const SecurityViolationsMonitor: React.FC = () => {
           {
             label: "Altas",
             value: stats.high,
-            gradient: "from-orange-500/20 to-red-500/10",
-            border: "border-orange-500/30",
+            gradient: "from-severity-high/20 to-severity-high/10",
+            border: "border-severity-high/30",
             icon: "⚠️"
           },
           {
             label: "Médias",
             value: stats.medium,
-            gradient: "from-amber-500/20 to-yellow-500/10",
-            border: "border-amber-500/30",
+            gradient: "from-severity-medium/20 to-severity-medium/10",
+            border: "border-severity-medium/30",
             icon: "⚡"
           },
           {
             label: "Últimas 24h",
             value: stats.last24h,
-            gradient: "from-green-500/20 to-emerald-500/10",
-            border: "border-green-500/30",
+            gradient: "from-system-healthy/20 to-system-healthy/10",
+            border: "border-system-healthy/30",
             icon: "🕐"
           }
         ].map((stat, index) => (
@@ -247,8 +247,8 @@ export const SecurityViolationsMonitor: React.FC = () => {
         <div className="bg-gradient-to-r from-orange-500/10 via-red-500/5 to-transparent p-6 border-b border-orange-500/20">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500/20 to-red-500/10 aurora-glass">
-                <Shield className="h-6 w-6 text-orange-500" />
+              <div className="p-3 rounded-xl bg-severity-high/20 aurora-glass">
+                <Shield className="h-6 w-6 text-severity-high" />
               </div>
               <div>
                 <h3 className="text-2xl font-bold aurora-text-gradient">Violações Recentes</h3>
@@ -271,8 +271,8 @@ export const SecurityViolationsMonitor: React.FC = () => {
         <div className="p-8">
           {violations.length === 0 ? (
             <div className="text-center py-16">
-              <div className="p-6 rounded-2xl bg-gradient-to-br from-green-500/20 to-emerald-500/10 aurora-glass mx-auto w-fit mb-6">
-                <Shield className="h-16 w-16 text-green-500 aurora-pulse" />
+            <div className="p-6 rounded-2xl bg-system-healthy/20 aurora-glass mx-auto w-fit mb-6">
+                <Shield className="h-16 w-16 text-system-healthy aurora-pulse" />
               </div>
               <h4 className="text-2xl font-bold aurora-text-gradient mb-4">Sistema Protegido</h4>
               <p className="text-lg text-muted-foreground mb-2">
@@ -291,11 +291,11 @@ export const SecurityViolationsMonitor: React.FC = () => {
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
                   <div className="flex items-start gap-4">
-                    <div className={`p-4 rounded-xl aurora-glass ${
-                      violation.severity === 'critical' ? 'bg-gradient-to-br from-destructive/25 to-destructive/15' :
-                      violation.severity === 'high' ? 'bg-gradient-to-br from-warning/25 to-warning/15' :
-                      violation.severity === 'medium' ? 'bg-gradient-to-br from-warning/20 to-warning/10' :
-                      'bg-gradient-to-br from-aurora-primary/25 to-aurora-primary/15'
+                <div className={`p-4 rounded-xl aurora-glass ${
+                      violation.severity === 'critical' ? 'bg-severity-critical/20' :
+                      violation.severity === 'high' ? 'bg-severity-high/20' :
+                      violation.severity === 'medium' ? 'bg-severity-medium/20' :
+                      'bg-severity-low/20'
                     }`}>
                       {getSeverityIcon(violation.severity)}
                     </div>
@@ -322,20 +322,20 @@ export const SecurityViolationsMonitor: React.FC = () => {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-muted-foreground">
                           {violation.user_id && (
                             <div className="flex items-center gap-2 p-2 aurora-glass rounded-lg">
-                              <User className="h-4 w-4 text-blue-500" />
+                              <User className="h-4 w-4 text-severity-low" />
                               <span className="font-mono">{violation.user_id.substring(0, 8)}***</span>
                             </div>
                           )}
                           
                           {violation.resource_id && (
                             <div className="flex items-center gap-2 p-2 aurora-glass rounded-lg">
-                              <Database className="h-4 w-4 text-green-500" />
+                              <Database className="h-4 w-4 text-system-healthy" />
                               <span className="font-mono">{violation.resource_id}</span>
                             </div>
                           )}
                           
                           <div className="flex items-center gap-2 p-2 aurora-glass rounded-lg">
-                            <Clock className="h-4 w-4 text-orange-500" />
+                            <Clock className="h-4 w-4 text-severity-high" />
                             <span>{new Date(violation.timestamp).toLocaleString('pt-BR')}</span>
                           </div>
                         </div>

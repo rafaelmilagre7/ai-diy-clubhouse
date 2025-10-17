@@ -51,20 +51,20 @@ export const DeliveryStatusDetails: React.FC<DeliveryStatusDetailsProps> = ({
   const getEventIcon = (status: string, channel: 'email' | 'whatsapp') => {
     if (channel === 'whatsapp') {
       switch (status) {
-        case 'delivered': return <MessageCircle className="h-4 w-4 text-green-600" />;
-        case 'read': return <Eye className="h-4 w-4 text-blue-600" />;
-        case 'failed': return <XCircle className="h-4 w-4 text-red-600" />;
-        default: return <Clock className="h-4 w-4 text-gray-600" />;
+        case 'delivered': return <MessageCircle className="h-4 w-4 text-tracking-delivered" />;
+        case 'read': return <Eye className="h-4 w-4 text-tracking-opened" />;
+        case 'failed': return <XCircle className="h-4 w-4 text-tracking-failed" />;
+        default: return <Clock className="h-4 w-4 text-status-neutral" />;
       }
     } else {
       switch (status) {
-        case 'sent': return <Mail className="h-4 w-4 text-blue-600" />;
-        case 'delivered': return <CheckCircle className="h-4 w-4 text-green-600" />;
-        case 'opened': return <Eye className="h-4 w-4 text-emerald-600" />;
-        case 'clicked': return <MousePointer className="h-4 w-4 text-indigo-600" />;
-        case 'bounced': return <AlertTriangle className="h-4 w-4 text-orange-600" />;
-        case 'complained': return <XCircle className="h-4 w-4 text-red-600" />;
-        default: return <Clock className="h-4 w-4 text-gray-600" />;
+        case 'sent': return <Mail className="h-4 w-4 text-tracking-sent" />;
+        case 'delivered': return <CheckCircle className="h-4 w-4 text-tracking-delivered" />;
+        case 'opened': return <Eye className="h-4 w-4 text-tracking-opened" />;
+        case 'clicked': return <MousePointer className="h-4 w-4 text-tracking-clicked" />;
+        case 'bounced': return <AlertTriangle className="h-4 w-4 text-tracking-bounced" />;
+        case 'complained': return <XCircle className="h-4 w-4 text-tracking-failed" />;
+        default: return <Clock className="h-4 w-4 text-status-neutral" />;
       }
     }
   };
@@ -136,7 +136,7 @@ export const DeliveryStatusDetails: React.FC<DeliveryStatusDetailsProps> = ({
         {emailEvents.length > 0 && (
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <Mail className="h-4 w-4 text-blue-600" />
+              <Mail className="h-4 w-4 text-tracking-sent" />
               <h4 className="font-medium text-sm">Email</h4>
             </div>
             <div className="space-y-2">
@@ -171,7 +171,7 @@ export const DeliveryStatusDetails: React.FC<DeliveryStatusDetailsProps> = ({
         {whatsappEvents.length > 0 && (
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <MessageCircle className="h-4 w-4 text-green-600" />
+              <MessageCircle className="h-4 w-4 text-tracking-delivered" />
               <h4 className="font-medium text-sm">WhatsApp</h4>
             </div>
             <div className="space-y-2">

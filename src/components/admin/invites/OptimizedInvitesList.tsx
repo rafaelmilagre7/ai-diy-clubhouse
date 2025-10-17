@@ -63,15 +63,15 @@ const InviteListItem = memo<{
     }
     
     if (isUsed) {
-      return <Badge variant="default" className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">✅ Usado</Badge>;
+      return <Badge variant="default" className="bg-status-success-lighter text-status-success border-status-success/30 text-xs">✅ Usado</Badge>;
     }
     
     if (isExpired) {
-      return <Badge variant="secondary" className="bg-amber-500/20 text-amber-400 border-amber-500/30 text-xs">⏰ Expirado</Badge>;
+      return <Badge variant="secondary" className="bg-status-warning-lighter text-status-warning border-status-warning/30 text-xs">⏰ Expirado</Badge>;
     }
     
     if (isActive) {
-      return <Badge variant="outline" className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-xs">🟢 Ativo</Badge>;
+      return <Badge variant="outline" className="bg-status-info-lighter text-status-info border-status-info/30 text-xs">🟢 Ativo</Badge>;
     }
     
     return null;
@@ -79,9 +79,9 @@ const InviteListItem = memo<{
 
   const getChannelIcon = useCallback(() => {
     const channel = invite.preferred_channel;
-    if (channel === 'whatsapp') return <MessageCircle className="h-3 w-3 text-green-500" />;
-    if (channel === 'both') return <div className="flex gap-1"><Mail className="h-3 w-3 text-blue-500" /><MessageCircle className="h-3 w-3 text-green-500" /></div>;
-    return <Mail className="h-3 w-3 text-blue-500" />;
+    if (channel === 'whatsapp') return <MessageCircle className="h-3 w-3 text-tracking-delivered" />;
+    if (channel === 'both') return <div className="flex gap-1"><Mail className="h-3 w-3 text-tracking-sent" /><MessageCircle className="h-3 w-3 text-tracking-delivered" /></div>;
+    return <Mail className="h-3 w-3 text-tracking-sent" />;
   }, [invite.preferred_channel]);
 
   return (
@@ -112,7 +112,7 @@ const InviteListItem = memo<{
           </div>
           
           {invite.used_at ? (
-            <div className="flex items-center gap-1 text-green-400">
+            <div className="flex items-center gap-1 text-status-success">
               <Clock className="h-3 w-3" />
               <span>Usado {formatDistanceToNow(new Date(invite.used_at), { locale: ptBR, addSuffix: true })}</span>
             </div>

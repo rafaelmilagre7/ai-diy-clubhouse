@@ -202,6 +202,39 @@ const config: Config = {
     warning: "hsl(var(--system-warning))",
     critical: "hsl(var(--system-critical))",
   },
+  
+  // Severity Colors - Security & Alerts - Fase 14.2
+  severity: {
+    critical: "hsl(var(--severity-critical))",
+    high: "hsl(var(--severity-high))",
+    medium: "hsl(var(--severity-medium))",
+    low: "hsl(var(--severity-low))",
+    info: "hsl(var(--severity-info))",
+  },
+  
+  // Permission Colors - Access Control - Fase 14.2
+  permission: {
+    granted: "hsl(var(--permission-granted))",
+    partial: "hsl(var(--permission-partial))",
+    denied: "hsl(var(--permission-denied))",
+    restricted: "hsl(var(--permission-restricted))",
+  },
+  
+  // Difficulty Levels - Content Complexity - Fase 14.2
+  difficulty: {
+    beginner: "hsl(var(--difficulty-beginner))",
+    intermediate: "hsl(var(--difficulty-intermediate))",
+    advanced: "hsl(var(--difficulty-advanced))",
+    expert: "hsl(var(--difficulty-expert))",
+  },
+  
+  // Performance Colors - Speed Metrics - Fase 14.2
+  performance: {
+    excellent: "hsl(var(--performance-excellent))",
+    good: "hsl(var(--performance-good))",
+    fair: "hsl(var(--performance-fair))",
+    poor: "hsl(var(--performance-poor))",
+  },
         
         // Email Tracking
         tracking: {

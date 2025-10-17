@@ -161,9 +161,9 @@ export const SecurityMetricsPanel: React.FC<SecurityMetricsPanelProps> = ({
 
       {/* Alertas Críticos */}
       {criticalPatterns.length > 0 && (
-        <Card className="lg:col-span-2 border-red-200">
+        <Card className="lg:col-span-2 border-status-error/30">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-red-600">
+            <CardTitle className="flex items-center gap-2 text-status-error">
               <AlertTriangle className="h-5 w-5" />
               Alertas Críticos
             </CardTitle>
@@ -174,19 +174,19 @@ export const SecurityMetricsPanel: React.FC<SecurityMetricsPanelProps> = ({
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {criticalPatterns.map((pattern, index) => (
-                <div key={index} className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div key={index} className="bg-status-error-lighter border border-status-error/20 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-2">
                     <Badge variant="destructive">
                       {pattern.severity}
                     </Badge>
-                    <span className="text-2xl font-bold text-red-600">
+                    <span className="text-2xl font-bold text-status-error">
                       {pattern.count}
                     </span>
                   </div>
-                  <h4 className="font-semibold text-red-800 mb-1">
+                  <h4 className="font-semibold text-status-error mb-1">
                     {pattern.type}
                   </h4>
-                  <p className="text-sm text-red-700">
+                  <p className="text-sm text-status-error">
                     {pattern.description}
                   </p>
                 </div>

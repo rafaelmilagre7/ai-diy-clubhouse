@@ -67,13 +67,13 @@ export const SecurityAlertSystem = ({ alerts, onAcknowledge, onDismiss }: Securi
   const getAlertTypeIcon = (alertType: string) => {
     switch (alertType) {
       case 'security_breach':
-        return <AlertTriangle className="h-5 w-5 text-red-500" />;
+        return <AlertTriangle className="h-5 w-5 text-severity-critical" />;
       case 'anomaly_detected':
-        return <Shield className="h-5 w-5 text-yellow-500" />;
+        return <Shield className="h-5 w-5 text-severity-medium" />;
       case 'system_alert':
-        return <Bell className="h-5 w-5 text-blue-500" />;
+        return <Bell className="h-5 w-5 text-severity-low" />;
       default:
-        return <Bell className="h-5 w-5 text-gray-500" />;
+        return <Bell className="h-5 w-5 text-severity-info" />;
     }
   };
 
@@ -141,8 +141,8 @@ export const SecurityAlertSystem = ({ alerts, onAcknowledge, onDismiss }: Securi
                 className={`border rounded-lg p-4 ${
                   alert.is_acknowledged ? 'bg-muted/30' : 'bg-background'
                 } ${
-                  alert.severity === 'critical' ? 'border-red-500' : 
-                  alert.severity === 'high' ? 'border-orange-500' : 'border-border'
+                  alert.severity === 'critical' ? 'border-severity-critical' : 
+                  alert.severity === 'high' ? 'border-severity-high' : 'border-border'
                 }`}
               >
                 <div className="flex items-start gap-3">

@@ -172,20 +172,20 @@ export const ActionPlanAssistant: React.FC<ActionPlanAssistantProps> = ({
 
   const getSectionIcon = (title: string) => {
     const titleLower = title.toLowerCase();
-    if (titleLower.includes('diagnóstico')) return <BarChart3 className="h-5 w-5 text-blue-500" />;
-    if (titleLower.includes('problemas')) return <AlertTriangle className="h-5 w-5 text-red-500" />;
-    if (titleLower.includes('ações') || titleLower.includes('prioritárias')) return <Target className="h-5 w-5 text-green-500" />;
-    if (titleLower.includes('conteúdo') || titleLower.includes('melhorias')) return <Lightbulb className="h-5 w-5 text-warning" />;
-    if (titleLower.includes('métricas') || titleLower.includes('acompanhamento')) return <TrendingUp className="h-5 w-5 text-purple-500" />;
-    if (titleLower.includes('cronograma') || titleLower.includes('prazo')) return <Calendar className="h-5 w-5 text-indigo-500" />;
+    if (titleLower.includes('diagnóstico')) return <BarChart3 className="h-5 w-5 text-severity-low" />;
+    if (titleLower.includes('problemas')) return <AlertTriangle className="h-5 w-5 text-severity-critical" />;
+    if (titleLower.includes('ações') || titleLower.includes('prioritárias')) return <Target className="h-5 w-5 text-system-healthy" />;
+    if (titleLower.includes('conteúdo') || titleLower.includes('melhorias')) return <Lightbulb className="h-5 w-5 text-status-warning" />;
+    if (titleLower.includes('métricas') || titleLower.includes('acompanhamento')) return <TrendingUp className="h-5 w-5 text-severity-medium" />;
+    if (titleLower.includes('cronograma') || titleLower.includes('prazo')) return <Calendar className="h-5 w-5 text-severity-low" />;
     return <CheckCircle className="h-5 w-5 text-primary" />;
   };
 
   const getNPSStatus = () => {
     const score = npsData.overall;
-    if (score >= 50) return { label: 'Excelente', color: 'bg-green-100 text-green-700', icon: '🚀' };
-    if (score >= 0) return { label: 'Bom', color: 'bg-yellow-100 text-yellow-700', icon: '⚡' };
-    return { label: 'Crítico', color: 'bg-red-100 text-red-700', icon: '🔥' };
+    if (score >= 50) return { label: 'Excelente', color: 'bg-system-healthy/10 text-system-healthy', icon: '🚀' };
+    if (score >= 0) return { label: 'Bom', color: 'bg-status-warning/10 text-status-warning', icon: '⚡' };
+    return { label: 'Crítico', color: 'bg-system-critical/10 text-system-critical', icon: '🔥' };
   };
 
   const status = getNPSStatus();
@@ -196,8 +196,8 @@ export const ActionPlanAssistant: React.FC<ActionPlanAssistantProps> = ({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500/20 to-purple-500/10">
-              <Bot className="h-6 w-6 text-blue-600" />
+            <div className="p-2 rounded-lg bg-severity-low/20">
+              <Bot className="h-6 w-6 text-severity-low" />
             </div>
             Assistente de Customer Success
             <Badge className={status.color}>{status.icon} {status.label}</Badge>
@@ -213,11 +213,11 @@ export const ActionPlanAssistant: React.FC<ActionPlanAssistantProps> = ({
               <div className="text-sm text-muted-foreground">Score NPS</div>
             </div>
             <div className="text-center p-3 rounded-lg bg-muted/50">
-              <div className="text-2xl font-bold text-green-600">{npsData.distribution.promoters}%</div>
+              <div className="text-2xl font-bold text-system-healthy">{npsData.distribution.promoters}%</div>
               <div className="text-sm text-muted-foreground">Promotores</div>
             </div>
             <div className="text-center p-3 rounded-lg bg-muted/50">
-              <div className="text-2xl font-bold text-red-600">{npsData.distribution.detractors}%</div>
+              <div className="text-2xl font-bold text-system-critical">{npsData.distribution.detractors}%</div>
               <div className="text-sm text-muted-foreground">Detratores</div>
             </div>
             <div className="text-center p-3 rounded-lg bg-muted/50">
@@ -229,7 +229,7 @@ export const ActionPlanAssistant: React.FC<ActionPlanAssistantProps> = ({
           <Button 
             onClick={generateActionPlan} 
             disabled={isAnalyzing}
-            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+            className="w-full bg-gradient-to-r from-severity-low to-severity-medium hover:opacity-90"
           >
             {isAnalyzing ? (
               <>
@@ -248,9 +248,9 @@ export const ActionPlanAssistant: React.FC<ActionPlanAssistantProps> = ({
 
       {/* Erro */}
       {error && (
-        <Alert className="border-red-200 bg-red-50">
-          <AlertTriangle className="h-4 w-4 text-red-600" />
-          <AlertDescription className="text-red-700">
+        <Alert className="border-status-error/30 bg-status-error-lighter">
+          <AlertTriangle className="h-4 w-4 text-status-error" />
+          <AlertDescription className="text-status-error">
             {error}
           </AlertDescription>
         </Alert>
@@ -261,7 +261,7 @@ export const ActionPlanAssistant: React.FC<ActionPlanAssistantProps> = ({
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Target className="h-5 w-5 text-green-600" />
+              <Target className="h-5 w-5 text-system-healthy" />
               Plano de Ação Estratégico
             </CardTitle>
             <CardDescription>
