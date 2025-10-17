@@ -225,15 +225,15 @@ export const MeetingsList = () => {
   const getStatusConfig = (status: string) => {
     switch (status) {
       case 'scheduled': 
-        return { color: 'bg-blue-500/10 text-blue-400 border-blue-500/30', label: 'Agendada' };
+        return { color: 'bg-operational/10 text-operational border-operational/30', label: 'Agendada' };
       case 'confirmed': 
-        return { color: 'bg-green-500/10 text-green-400 border-green-500/30', label: 'Confirmada' };
+        return { color: 'bg-system-healthy/10 text-system-healthy border-system-healthy/30', label: 'Confirmada' };
       case 'cancelled': 
-        return { color: 'bg-red-500/10 text-red-400 border-red-500/30', label: 'Cancelada' };
+        return { color: 'bg-status-error/10 text-status-error border-status-error/30', label: 'Cancelada' };
       case 'completed': 
         return { color: 'bg-muted/10 text-muted-foreground border-border', label: 'Concluída' };
       default: 
-        return { color: 'bg-neutral-500/10 text-neutral-400 border-neutral-500/30', label: status };
+        return { color: 'bg-muted/10 text-muted-foreground border-border', label: status };
     }
   };
 
@@ -266,7 +266,7 @@ export const MeetingsList = () => {
                           </div>
                           <div>
                             <h4 className="font-medium text-white">{meeting.title}</h4>
-                            <p className="text-sm text-neutral-400">com {otherUser?.name}</p>
+                            <p className="text-sm text-muted-foreground">com {otherUser?.name}</p>
                           </div>
                         </div>
                         <Badge className={statusConfig.color}>
@@ -274,7 +274,7 @@ export const MeetingsList = () => {
                         </Badge>
                       </div>
 
-                      <div className="space-y-2 text-sm text-neutral-300">
+                      <div className="space-y-2 text-sm text-foreground">
                         <div className="flex items-center gap-2">
                           <Calendar className="h-4 w-4" />
                           {format(new Date(meeting.scheduled_for), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
@@ -284,7 +284,7 @@ export const MeetingsList = () => {
                           {meeting.duration_minutes} minutos
                         </div>
                         {meeting.description && (
-                          <p className="text-neutral-400 text-xs bg-neutral-800/50 p-2 rounded">
+                          <p className="text-muted-foreground text-xs bg-surface-elevated/50 p-2 rounded">
                             {meeting.description}
                           </p>
                         )}
@@ -298,7 +298,7 @@ export const MeetingsList = () => {
                             status: 'confirmed' 
                           })}
                           disabled={meeting.status === 'confirmed'}
-                          className="bg-green-600 hover:bg-green-700 text-xs"
+                          className="bg-operational hover:bg-operational/90 text-xs"
                         >
                           <CheckCircle className="h-3 w-3 mr-1" />
                           Confirmar
@@ -307,7 +307,7 @@ export const MeetingsList = () => {
                           size="sm"
                           variant="outline"
                           onClick={() => cancelMeeting.mutate(meeting.id)}
-                          className="border-red-500/30 text-red-400 hover:bg-red-500/10 text-xs"
+                          className="border-status-error/30 text-status-error hover:bg-status-error/10 text-xs"
                         >
                           <XCircle className="h-3 w-3 mr-1" />
                           Cancelar
@@ -335,11 +335,11 @@ export const MeetingsList = () => {
               return (
                 <div
                   key={meeting.id}
-                  className="flex items-center justify-between p-3 bg-neutral-900/50 rounded-lg"
+                  className="flex items-center justify-between p-3 bg-surface-elevated/50 rounded-lg"
                 >
                   <div>
                     <p className="text-sm text-white">{meeting.title}</p>
-                    <p className="text-xs text-neutral-400">
+                    <p className="text-xs text-muted-foreground">
                       {format(new Date(meeting.scheduled_for), "dd/MM/yyyy", { locale: ptBR })} • {otherUser?.name}
                     </p>
                   </div>
@@ -354,7 +354,7 @@ export const MeetingsList = () => {
       )}
 
       {upcomingMeetings.length === 0 && pastMeetings.length === 0 && (
-        <div className="text-center py-12 text-neutral-400">
+        <div className="text-center py-12 text-muted-foreground">
           <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
           <h3 className="text-lg font-medium mb-2">Nenhuma reunião agendada</h3>
           <p className="text-sm">Comece agendando reuniões com suas conexões!</p>

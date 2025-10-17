@@ -25,11 +25,11 @@ const categoryLabels: Record<string, string> = {
 };
 
 const categoryColors: Record<string, string> = {
-  learning: 'bg-blue-500/10 text-blue-500',
-  community: 'bg-green-500/10 text-green-500',
-  networking: 'bg-purple-500/10 text-purple-500',
-  solutions: 'bg-orange-500/10 text-orange-500',
-  admin: 'bg-red-500/10 text-red-500',
+  learning: 'bg-operational/10 text-operational',
+  community: 'bg-system-healthy/10 text-system-healthy',
+  networking: 'bg-strategy/10 text-strategy',
+  solutions: 'bg-status-warning/10 text-status-warning',
+  admin: 'bg-status-error/10 text-status-error',
   general: 'bg-muted/10 text-muted-foreground'
 };
 
@@ -176,7 +176,7 @@ export const NotificationCenter = () => {
                   </div>
                   
                   {notification.priority && notification.priority >= 8 && (
-                    <div className="absolute top-2 left-2 h-1 w-1 rounded-full bg-red-500" />
+                    <div className="absolute top-2 left-2 h-1 w-1 rounded-full bg-status-error" />
                   )}
                 </div>
               ))}

@@ -14,7 +14,7 @@ const VideoTab: React.FC<VideoTabProps> = ({
   saving,
 }) => {
   return (
-    <div className="text-neutral-800 dark:text-white">
+    <div className="text-foreground">
       <VideoLessonsForm 
         solutionId={solutionId} 
         onSave={onSave} 

@@ -69,7 +69,7 @@ const TabHeader: React.FC<TabHeaderProps> = ({ currentStep, activeTab }) => {
   return (
     <div className="px-6 pt-4 pb-2 border-b">
       <h2 className="text-xl font-semibold text-aurora-primary">{getTabTitle()}</h2>
-      <p className="text-sm text-neutral-600 dark:text-neutral-300 mt-1">
+      <p className="text-sm text-muted-foreground mt-1">
         {getTabDescription()}
       </p>
     </div>

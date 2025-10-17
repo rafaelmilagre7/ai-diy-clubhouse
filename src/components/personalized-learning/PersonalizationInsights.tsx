@@ -28,9 +28,9 @@ export const PersonalizationInsights: React.FC<PersonalizationInsightsProps> = (
   focusAreas = []
 }) => {
   const getStrengthColor = (strength: number) => {
-    if (strength >= 80) return 'text-green-500';
-    if (strength >= 60) return 'text-yellow-500';
-    return 'text-red-500';
+    if (strength >= 80) return 'text-system-healthy';
+    if (strength >= 60) return 'text-status-warning';
+    return 'text-status-error';
   };
 
   const getStrengthLabel = (strength: number) => {

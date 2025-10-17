@@ -82,12 +82,12 @@ export const ConnectionNotifications = () => {
             className={`p-4 rounded-lg border transition-colors ${
               !notification.is_read 
                 ? 'bg-aurora-primary/5 border-aurora-primary/20' 
-                : 'bg-background border-neutral-200'
+                : 'bg-background border-border'
             }`}
           >
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-neutral-200 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
                   {notification.sender.avatar_url ? (
                     <img
                       src={notification.sender.avatar_url}
@@ -95,7 +95,7 @@ export const ConnectionNotifications = () => {
                       className="w-10 h-10 rounded-full object-cover"
                     />
                   ) : (
-                    <User className="h-5 w-5 text-neutral-600" />
+                    <User className="h-5 w-5 text-muted-foreground" />
                   )}
                 </div>
                 <div className="flex-1">

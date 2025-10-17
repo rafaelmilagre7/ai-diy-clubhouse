@@ -54,7 +54,7 @@ export const NotificationDropdown = () => {
       case 'urgent':
         return 'border-l-destructive bg-destructive/5';
       case 'high':
-        return 'border-l-orange-500 bg-orange-500/5';
+        return 'border-l-status-warning bg-status-warning/5';
       case 'normal':
         return 'border-l-primary bg-primary/5';
       default:

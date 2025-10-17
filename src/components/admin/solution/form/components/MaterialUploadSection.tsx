@@ -21,7 +21,7 @@ const MaterialUploadSection: React.FC<MaterialUploadSectionProps> = ({
 
 
   return (
-    <div className="text-neutral-800 dark:text-white">
+    <div className="text-foreground">
       <ResourceUploadCard 
         handleUploadComplete={onUploadComplete}
         bucketReady={bucketReady}

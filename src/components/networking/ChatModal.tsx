@@ -54,7 +54,7 @@ export const ChatModal = ({ isOpen, onClose, recipientId, recipientName, recipie
       <DialogContent className="sm:max-w-md h-[600px] flex flex-col">
         <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-neutral-200 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
               {recipientAvatar ? (
                 <img
                   src={recipientAvatar}
@@ -62,7 +62,7 @@ export const ChatModal = ({ isOpen, onClose, recipientId, recipientName, recipie
                   className="w-8 h-8 rounded-full object-cover"
                 />
               ) : (
-                <User className="h-4 w-4 text-neutral-600" />
+                <User className="h-4 w-4 text-muted-foreground" />
               )}
             </div>
             <span>{recipientName}</span>
@@ -77,7 +77,7 @@ export const ChatModal = ({ isOpen, onClose, recipientId, recipientName, recipie
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-neutral-50 rounded-lg">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-muted/10 rounded-lg">
           {messages.length === 0 ? (
             <div className="text-center text-textSecondary py-8">
               <p>Nenhuma mensagem ainda.</p>
@@ -96,12 +96,12 @@ export const ChatModal = ({ isOpen, onClose, recipientId, recipientName, recipie
                     className={`max-w-[70%] rounded-lg p-3 ${
                       isOwnMessage
                         ? 'bg-aurora-primary text-white'
-                        : 'bg-white border border-neutral-200'
+                        : 'bg-background border border-border'
                     }`}
                   >
                     <p className="text-sm">{message.content}</p>
                     <p className={`text-xs mt-1 ${
-                      isOwnMessage ? 'text-blue-100' : 'text-neutral-500'
+                      isOwnMessage ? 'text-primary-foreground/70' : 'text-muted-foreground'
                     }`}>
                       {formatDistanceToNow(new Date(message.created_at), {
                         addSuffix: true,

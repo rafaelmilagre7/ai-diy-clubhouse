@@ -45,7 +45,7 @@ const ResourcesTab: React.FC<ResourcesTabProps> = ({
   };
 
   return (
-    <div className="space-y-6 text-neutral-800 dark:text-white">
+    <div className="space-y-6 text-foreground">
       <div className="space-y-4">
         <h2 className="text-xl font-semibold">Materiais da Solução</h2>
         <p className="text-muted-foreground">

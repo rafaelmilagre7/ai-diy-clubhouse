@@ -89,7 +89,7 @@ export const TopActiveUsersTable: React.FC<TopActiveUsersTableProps> = ({ users 
                       </Avatar>
                       <div>
                         <div className="font-medium">{user.name}</div>
-                        <div className="text-xs text-neutral-300">{user.email}</div>
+                        <div className="text-xs text-muted-foreground">{user.email}</div>
                       </div>
                     </div>
                   </TableCell>

@@ -54,26 +54,26 @@ export const PersonalizedLessonsGrid: React.FC<PersonalizedLessonsGridProps> = (
       case 1:
         return {
           label: 'Alta Prioridade',
-          color: 'bg-red-500/20 text-red-400 border-red-500/30',
-          bgGradient: 'from-red-500/10 to-red-600/5'
+          color: 'bg-status-error/20 text-status-error border-status-error/30',
+          bgGradient: 'from-status-error/10 to-status-error/5'
         };
       case 2:
         return {
           label: 'Prioridade Média',
-          color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-          bgGradient: 'from-yellow-500/10 to-yellow-600/5'
+          color: 'bg-status-warning/20 text-status-warning border-status-warning/30',
+          bgGradient: 'from-status-warning/10 to-status-warning/5'
         };
       case 3:
         return {
           label: 'Prioridade Baixa',
-          color: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-          bgGradient: 'from-blue-500/10 to-blue-600/5'
+          color: 'bg-operational/20 text-operational border-operational/30',
+          bgGradient: 'from-operational/10 to-operational/5'
         };
       default:
         return {
           label: 'Prioridade Padrão',
           color: 'bg-muted/20 text-muted-foreground border-border',
-          bgGradient: 'from-gray-500/10 to-gray-600/5'
+          bgGradient: 'from-muted/10 to-muted/5'
         };
     }
   };

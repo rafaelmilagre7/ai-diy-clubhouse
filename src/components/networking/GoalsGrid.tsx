@@ -101,10 +101,10 @@ interface GoalCardProps {
 const GoalCard = ({ goal }: GoalCardProps) => {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'high': return 'bg-red-500/10 text-red-400 border-red-500/30';
-      case 'medium': return 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30';
-      case 'low': return 'bg-green-500/10 text-green-400 border-green-500/30';
-      default: return 'bg-neutral-500/10 text-neutral-400 border-neutral-500/30';
+      case 'high': return 'bg-status-error/10 text-status-error border-status-error/30';
+      case 'medium': return 'bg-status-warning/10 text-status-warning border-status-warning/30';
+      case 'low': return 'bg-system-healthy/10 text-system-healthy border-system-healthy/30';
+      default: return 'bg-muted/10 text-muted-foreground border-border';
     }
   };
 
@@ -135,19 +135,19 @@ const GoalCard = ({ goal }: GoalCardProps) => {
           </Badge>
         </div>
         
-        <p className="text-xs text-neutral-400 line-clamp-2">{goal.description}</p>
+        <p className="text-xs text-muted-foreground line-clamp-2">{goal.description}</p>
       </CardHeader>
 
       <CardContent className="px-6 pb-6 space-y-4">
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-neutral-400">Progresso</span>
+            <span className="text-muted-foreground">Progresso</span>
             <span className="text-aurora-primary font-medium">{goal.current}/{goal.target}</span>
           </div>
           <Progress value={goal.progress} className="h-2" />
           <div className="flex items-center justify-between text-xs">
-            <span className="text-neutral-500">{goal.progress}% concluído</span>
-            <span className="text-neutral-500">📅 {goal.deadline}</span>
+            <span className="text-muted-foreground">{goal.progress}% concluído</span>
+            <span className="text-muted-foreground">📅 {goal.deadline}</span>
           </div>
         </div>
 
@@ -176,9 +176,9 @@ const StatsCard = ({ title, value, change, icon: Icon, positive }: StatsCardProp
       <CardContent className="p-4">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs text-neutral-400">{title}</p>
+            <p className="text-xs text-muted-foreground">{title}</p>
             <p className="text-2xl font-bold text-white mt-1">{value}</p>
-            <p className={`text-xs mt-1 ${positive ? 'text-green-400' : 'text-red-400'}`}>
+            <p className={`text-xs mt-1 ${positive ? 'text-system-healthy' : 'text-status-error'}`}>
               {change} vs mês anterior
             </p>
           </div>

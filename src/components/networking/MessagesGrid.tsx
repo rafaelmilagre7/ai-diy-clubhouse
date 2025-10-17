@@ -84,12 +84,12 @@ export const MessagesGrid = () => {
 
       {/* Barra de busca */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-neutral-400" />
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           placeholder="Buscar conversas..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10 bg-neutral-900 border-neutral-700 text-white placeholder:text-neutral-400"
+          className="pl-10 bg-surface-elevated border-border text-foreground placeholder:text-muted-foreground"
         />
       </div>
 
@@ -111,7 +111,7 @@ export const MessagesGrid = () => {
       </div>
 
       {filteredConnections.length === 0 && searchTerm && (
-        <div className="text-center py-12 text-neutral-400">
+        <div className="text-center py-12 text-muted-foreground">
           <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
           <h3 className="text-lg font-medium mb-2">Nenhuma conversa encontrada</h3>
           <p className="text-sm">Tente buscar por um nome ou empresa diferente</p>
@@ -180,26 +180,26 @@ const ConversationCard = ({ connection, onOpenChat }: ConversationCardProps) => 
               alt={otherUser.name}
               className="h-12 w-12 rounded-full object-cover border-2 border-border"
             />
-            <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full w-4 h-4 border-2 border-card"></div>
+            <div className="absolute -bottom-1 -right-1 bg-system-healthy rounded-full w-4 h-4 border-2 border-card"></div>
           </div>
           <div className="flex-1">
             <h3 className="font-semibold text-white line-clamp-1">{otherUser.name}</h3>
-            <p className="text-sm text-neutral-400 line-clamp-1">{otherUser.current_position || 'Profissional'}</p>
+            <p className="text-sm text-muted-foreground line-clamp-1">{otherUser.current_position || 'Profissional'}</p>
           </div>
         </div>
 
-        <div className="text-sm text-neutral-300">
+        <div className="text-sm text-foreground">
           <p className="line-clamp-1">{otherUser.company_name || 'Empresa'}</p>
         </div>
       </CardHeader>
 
       <CardContent className="px-6 pb-6 space-y-4">
-        <div className="bg-neutral-800/50 rounded-lg p-3">
-          <div className="flex items-center gap-2 text-xs text-neutral-400 mb-2">
+        <div className="bg-surface-elevated/50 rounded-lg p-3">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
             <Clock className="h-3 w-3" />
             Conectados {timeAgo}
           </div>
-          <p className="text-sm text-neutral-300">
+          <p className="text-sm text-foreground">
             Última atividade: {timeAgo}
           </p>
         </div>

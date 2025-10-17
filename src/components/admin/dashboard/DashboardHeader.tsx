@@ -11,7 +11,7 @@ export const DashboardHeader = ({ timeRange, setTimeRange }: DashboardHeaderProp
     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
       <div>
         <h1 className="text-3xl font-bold text-white">Dashboard Admin</h1>
-        <p className="text-neutral-300 dark:text-neutral-300 mt-1">
+        <p className="text-muted-foreground mt-1">
           Plataforma VIVER DE IA
         </p>
       </div>

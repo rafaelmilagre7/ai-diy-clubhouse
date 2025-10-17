@@ -138,7 +138,7 @@ export const NetworkingAnalytics = () => {
                 className="h-72"
               />
             ) : (
-              <div className="h-72 flex items-center justify-center text-neutral-400">
+              <div className="h-72 flex items-center justify-center text-muted-foreground">
                 <div className="text-center">
                   <Activity className="h-12 w-12 mx-auto mb-2 opacity-50" />
                   <p>Dados insuficientes para gráfico</p>
@@ -158,7 +158,7 @@ export const NetworkingAnalytics = () => {
             <div className="space-y-3">
               <div>
                 <div className="flex justify-between text-sm mb-1">
-                  <span className="text-neutral-300">Taxa de Sucesso</span>
+                  <span className="text-foreground">Taxa de Sucesso</span>
                   <span className="text-white">{stats.successRate.toFixed(1)}%</span>
                 </div>
                 <div className="w-full bg-muted rounded-full h-2">
@@ -171,7 +171,7 @@ export const NetworkingAnalytics = () => {
 
                 <div>
                   <div className="flex justify-between text-sm mb-1">
-                    <span className="text-neutral-300">Compatibilidade Média</span>
+                    <span className="text-foreground">Compatibilidade Média</span>
                     <span className="text-white">{stats.avgCompatibility.toFixed(1)}%</span>
                   </div>
                   <div className="w-full bg-muted rounded-full h-2">
@@ -223,17 +223,17 @@ export const NetworkingAnalytics = () => {
                     className="flex items-center gap-3 text-sm"
                   >
                     <div className="w-2 h-2 bg-aurora-primary rounded-full flex-shrink-0" />
-                  <span className="text-neutral-300 flex-1">
+                  <span className="text-foreground flex-1">
                     {getEventDescription(event)}
                   </span>
-                  <span className="text-neutral-500 text-xs">
+                  <span className="text-muted-foreground text-xs">
                     {new Date(event.created_at).toLocaleDateString('pt-BR')}
                   </span>
                 </motion.div>
               ))}
             </div>
           ) : (
-            <div className="text-center py-8 text-neutral-400">
+            <div className="text-center py-8 text-muted-foreground">
               <Activity className="h-8 w-8 mx-auto mb-2 opacity-50" />
               <p>Nenhuma atividade recente</p>
               <p className="text-xs">Comece a fazer networking para ver suas métricas!</p>

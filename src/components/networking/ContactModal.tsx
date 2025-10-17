@@ -227,7 +227,7 @@ export const ContactModal = ({ isOpen, onClose, userId, userName, initialData }:
                       </div>
                       </div>
                       {/* Indicador online */}
-                      <div className="absolute bottom-1 right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-background shadow-lg"></div>
+                      <div className="absolute bottom-1 right-1 w-4 h-4 bg-system-healthy rounded-full border-2 border-background shadow-lg"></div>
                     </div>
 
                     {/* Nome e cargo */}
