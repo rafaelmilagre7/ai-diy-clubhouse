@@ -189,7 +189,7 @@ export const SetNewPasswordForm = () => {
         
         <h3 className="text-xl font-medium text-white">Verificando link de redefinição...</h3>
         
-        <p className="text-gray-300">
+        <p className="text-muted-foreground">
           Aguarde enquanto validamos seu link de redefinição de senha.
         </p>
       </div>
@@ -206,7 +206,7 @@ export const SetNewPasswordForm = () => {
         
         <h3 className="text-xl font-medium text-white">Link inválido</h3>
         
-        <p className="text-gray-300">
+        <p className="text-muted-foreground">
           {sessionError || "O link de redefinição é inválido ou expirou. Solicite um novo link."}
         </p>
         
@@ -234,7 +234,7 @@ export const SetNewPasswordForm = () => {
         
         <h3 className="text-xl font-medium text-white">Senha atualizada!</h3>
         
-        <p className="text-gray-300">
+        <p className="text-muted-foreground">
           Sua senha foi alterada com sucesso. Você será redirecionado para a página de login.
         </p>
         
@@ -258,26 +258,26 @@ export const SetNewPasswordForm = () => {
         <h1 className="text-xl font-semibold text-white text-center">
           Definir Nova Senha
         </h1>
-        <p className="text-gray-300 mt-2 text-center">
+        <p className="text-muted-foreground mt-2 text-center">
           Digite sua nova senha para continuar
         </p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div className="space-y-3">
-          <label htmlFor="password" className="block text-sm font-medium text-gray-200">
+          <label htmlFor="password" className="block text-sm font-medium text-foreground">
             Nova senha
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-              <Lock className="h-5 w-5 text-gray-400" />
+              <Lock className="h-5 w-5 text-muted-foreground" />
             </div>
             <input
               {...register("password")}
               id="password"
               type={showPassword ? "text" : "password"}
               placeholder="Digite sua nova senha"
-              className={`pl-10 pr-12 w-full py-3 px-3 bg-gray-700 border rounded-lg text-white focus:ring-2 focus:ring-aurora-primary focus:border-aurora-primary transition-colors ${
+              className={`pl-10 pr-12 w-full py-3 px-3 bg-surface-elevated border rounded-lg text-white focus:ring-2 focus:ring-aurora-primary focus:border-aurora-primary transition-colors ${
                 password && !passwordValidation.isValid ? 'border-status-error' : 
                 password && passwordValidation.isValid ? 'border-status-success' : 'border-gray-600'
               }`}

@@ -194,19 +194,19 @@ const SignUpForm = ({ onBackToLogin }: SignUpFormProps) => {
       exit={{ opacity: 0, x: -20 }}
       className="w-full"
     >
-      <div className="bg-gray-800 border border-gray-700 rounded-lg shadow-xl p-6">
+      <div className="bg-surface-elevated border border-border rounded-lg shadow-xl p-6">
         <div className="text-center pb-4">
           <h2 className="text-2xl text-white mb-2">
             Criar nova conta
           </h2>
-          <p className="text-gray-300">
+          <p className="text-muted-foreground">
             {inviteToken ? "Complete seu cadastro para acessar a plataforma" : "Cadastre-se para acessar"}
           </p>
         </div>
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name" className="text-gray-200">Nome completo *</Label>
+            <Label htmlFor="name" className="text-foreground">Nome completo *</Label>
             <Input
               id="name"
               type="text"
@@ -215,12 +215,12 @@ const SignUpForm = ({ onBackToLogin }: SignUpFormProps) => {
               onChange={(e) => setName(e.target.value)}
               disabled={isLoading}
               required
-              className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-aurora-primary focus:border-aurora-primary"
+              className="bg-surface-elevated border-border text-white placeholder-muted-foreground focus:ring-aurora-primary focus:border-aurora-primary"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email" className="text-gray-200">Email *</Label>
+            <Label htmlFor="email" className="text-foreground">Email *</Label>
             <Input
               id="email"
               type="email"
@@ -229,12 +229,12 @@ const SignUpForm = ({ onBackToLogin }: SignUpFormProps) => {
               onChange={(e) => setEmail(e.target.value)}
               disabled={isLoading}
               required
-              className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-aurora-primary focus:border-aurora-primary"
+              className="bg-surface-elevated border-border text-white placeholder-muted-foreground focus:ring-aurora-primary focus:border-aurora-primary"
             />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="password" className="text-gray-200">Senha *</Label>
+            <Label htmlFor="password" className="text-foreground">Senha *</Label>
             <div className="relative">
               <Input
                 id="password"
@@ -244,7 +244,7 @@ const SignUpForm = ({ onBackToLogin }: SignUpFormProps) => {
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isLoading}
                 required
-                className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-aurora-primary focus:border-aurora-primary pr-10"
+                className="bg-surface-elevated border-border text-white placeholder-muted-foreground focus:ring-aurora-primary focus:border-aurora-primary pr-10"
               />
               <Button
                 type="button"

@@ -132,18 +132,18 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
           Novo Convite
         </Button>
       </DialogTrigger>
-      <DialogContent className="dark max-w-md max-h-[90vh] overflow-y-auto bg-gray-900 text-white border-gray-700">
+      <DialogContent className="dark max-w-md max-h-[90vh] overflow-y-auto bg-surface-elevated text-foreground border-border">
         <form onSubmit={handleSubmit}>
           <DialogHeader className="pb-3">
-            <DialogTitle className="text-white">Criar Convite</DialogTitle>
-            <DialogDescription className="text-sm text-gray-300">
+            <DialogTitle className="text-foreground">Criar Convite</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
               Convide um novo usuário via email e/ou WhatsApp.
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-3 py-2">
             <div className="space-y-1.5">
-              <Label htmlFor="email" className="text-sm text-white">Email *</Label>
+              <Label htmlFor="email" className="text-sm text-foreground">Email *</Label>
               <Input
                 id="email"
                 type="email"
@@ -151,39 +151,39 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="h-9 bg-gray-800 border-gray-700 text-white placeholder:text-gray-400"
+                className="h-9 bg-surface-elevated border-border text-foreground placeholder:text-muted-foreground"
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="phone" className="text-sm text-white">
+              <Label htmlFor="phone" className="text-sm text-foreground">
                 Telefone {(channelPreference === 'whatsapp' || channelPreference === 'both') && '*'}
               </Label>
               <PhoneInput
                 defaultCountry="br"
                 value={phone}
                 onChange={handlePhoneChange}
-                inputClassName="h-9 bg-gray-800 border-gray-700 text-white placeholder:text-gray-400 flex-1"
+                inputClassName="h-9 bg-surface-elevated border-border text-foreground placeholder:text-muted-foreground flex-1"
                 countrySelectorStyleProps={{
-                  className: "h-9 bg-gray-800 border-gray-700"
+                  className: "h-9 bg-surface-elevated border-border"
                 }}
                 className="phone-input-container"
                 preferredCountries={['br', 'us', 'ar', 'cl', 'co', 'mx']}
               />
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-muted-foreground">
                 Selecione o país e digite o número (necessário para WhatsApp)
               </p>
             </div>
             
             <div className="space-y-1.5">
-              <Label htmlFor="role" className="text-sm text-white">Papel *</Label>
+              <Label htmlFor="role" className="text-sm text-foreground">Papel *</Label>
               <Select value={roleId} onValueChange={setRoleId} required>
-                <SelectTrigger className="h-9 bg-gray-800 border-gray-700 text-white">
-                  <SelectValue placeholder="Selecione o papel" className="text-gray-400" />
+                <SelectTrigger className="h-9 bg-surface-elevated border-border text-foreground">
+                  <SelectValue placeholder="Selecione o papel" className="text-muted-foreground" />
                 </SelectTrigger>
-                <SelectContent className="bg-gray-800 border-gray-700">
+                <SelectContent className="bg-surface-elevated border-border">
                   {roles.map((role) => (
-                    <SelectItem key={role.id} value={role.id} className="text-white hover:bg-gray-700">
+                    <SelectItem key={role.id} value={role.id} className="text-foreground hover:bg-muted">
                       {role.name}
                     </SelectItem>
                   ))}
@@ -192,7 +192,7 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
             </div>
 
             <div className="space-y-2">
-              <Label className="text-sm text-white">Canal de Envio *</Label>
+              <Label className="text-sm text-foreground">Canal de Envio *</Label>
               <RadioGroup 
                 value={channelPreference} 
                 onValueChange={(value: 'email' | 'whatsapp' | 'both') => setChannelPreference(value)}

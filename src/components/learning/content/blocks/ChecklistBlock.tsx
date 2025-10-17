@@ -27,7 +27,7 @@ export const ChecklistBlock: React.FC<ChecklistBlockProps> = ({ data, interactiv
                 <Square className="h-5 w-5 text-muted-foreground" />
               )}
             </div>
-            <span className="ml-2 text-gray-800 dark:text-gray-200">{item.text}</span>
+            <span className="ml-2 text-foreground">{item.text}</span>
           </li>
         ))}
       </ul>

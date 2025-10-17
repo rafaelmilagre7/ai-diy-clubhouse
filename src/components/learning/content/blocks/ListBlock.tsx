@@ -18,7 +18,7 @@ export const ListBlock: React.FC<ListBlockProps> = ({ data, listType = "unordere
     return (
       <ol className="list-decimal pl-6 mb-4 space-y-2">
         {items.map((item, index) => (
-          <li key={index} className="text-gray-800 dark:text-gray-200">
+          <li key={index} className="text-foreground">
             {item}
           </li>
         ))}
@@ -29,7 +29,7 @@ export const ListBlock: React.FC<ListBlockProps> = ({ data, listType = "unordere
   return (
     <ul className="list-disc pl-6 mb-4 space-y-2">
       {items.map((item, index) => (
-        <li key={index} className="text-gray-800 dark:text-gray-200">
+        <li key={index} className="text-foreground">
           {item}
         </li>
       ))}

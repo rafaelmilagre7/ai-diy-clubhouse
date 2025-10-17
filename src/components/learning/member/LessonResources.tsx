@@ -42,7 +42,7 @@ export const LessonResources = ({ resources = [] }: { resources: LessonResourceP
     }
     
     if (!fileType) {
-      return <FilePlus2 className="h-5 w-5 text-gray-500" />;
+      return <FilePlus2 className="h-5 w-5 text-muted-foreground" />;
     }
     
     if (fileType.includes("pdf") || fileType.includes("doc")) {
@@ -57,7 +57,7 @@ export const LessonResources = ({ resources = [] }: { resources: LessonResourceP
       return <FileVideo className="h-5 w-5 text-red-500" />;
     }
     
-    return <FilePlus2 className="h-5 w-5 text-gray-500" />;
+    return <FilePlus2 className="h-5 w-5 text-muted-foreground" />;
   };
 
   // Função para formatar tamanho do arquivo

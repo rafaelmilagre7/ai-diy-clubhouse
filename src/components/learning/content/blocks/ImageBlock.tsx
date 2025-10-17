@@ -27,7 +27,7 @@ export const ImageBlock: React.FC<ImageBlockProps> = ({ data }) => {
         />
       </div>
       {caption && (
-        <figcaption className="text-sm text-center text-gray-500 mt-2">
+        <figcaption className="text-sm text-center text-muted-foreground mt-2">
           {caption}
         </figcaption>
       )}

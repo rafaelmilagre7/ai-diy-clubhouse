@@ -75,13 +75,13 @@ const Index = () => {
               VIVER DE IA
             </h1>
             
-            <p className="mt-3 text-center text-lg text-gray-600 dark:text-gray-300 max-w-sm mx-auto">
+            <p className="mt-3 text-center text-lg text-muted-foreground max-w-sm mx-auto">
               Implemente soluções de IA com autonomia e sucesso
             </p>
           </div>
 
           <div className="relative pt-1 w-full max-w-xs mx-auto mt-8">
-            <div className="overflow-hidden h-2 mb-4 text-xs flex rounded-full bg-gray-200 dark:bg-gray-700">
+            <div className="overflow-hidden h-2 mb-4 text-xs flex rounded-full bg-muted">
               <div 
                 style={{ width: `${progress}%` }} 
                 className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r from-aurora-primary to-aurora-primary-light transition-all duration-300"
@@ -100,20 +100,20 @@ const Index = () => {
 
           {isLoading && (
             <div className="mt-4 text-center">
-              <p className="text-sm text-gray-500 dark:text-gray-400 animate-pulse">
+              <p className="text-sm text-muted-foreground animate-pulse">
                 Carregando suas informações...
               </p>
             </div>
           )}
           
           <div className="text-center mt-4">
-            <p className="text-gray-500 dark:text-gray-400">
+            <p className="text-muted-foreground">
               {isRedirecting ? "Redirecionando automaticamente..." : "Preparando sua experiência..."}
             </p>
           </div>
         </div>
         
-        <div className="absolute bottom-4 left-0 w-full flex justify-center text-xs text-gray-400">
+        <div className="absolute bottom-4 left-0 w-full flex justify-center text-xs text-muted-foreground">
           © {new Date().getFullYear()} VIVER DE IA • Todos os direitos reservados
         </div>
       </div>

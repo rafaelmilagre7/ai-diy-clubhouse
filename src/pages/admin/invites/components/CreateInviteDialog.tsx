@@ -103,11 +103,11 @@ const CreateInviteDialog = ({ roles, onInviteCreated }: CreateInviteDialogProps)
           Novo Convite
         </Button>
       </DialogTrigger>
-      <DialogContent className="dark sm:max-w-[600px] max-h-[90vh] overflow-y-auto bg-gray-900 text-white border border-gray-700">
+      <DialogContent className="dark sm:max-w-[600px] max-h-[90vh] overflow-y-auto bg-surface-elevated text-foreground border border-border">
         <form onSubmit={handleSubmit} className="space-y-6">
           <DialogHeader className="space-y-3">
-            <DialogTitle className="text-xl font-semibold text-white">Criar Novo Convite</DialogTitle>
-            <DialogDescription className="text-gray-300">
+            <DialogTitle className="text-xl font-semibold text-foreground">Criar Novo Convite</DialogTitle>
+            <DialogDescription className="text-muted-foreground">
               Envie um convite para novos membros acessarem a plataforma. Um perfil será criado automaticamente.
             </DialogDescription>
           </DialogHeader>
@@ -116,7 +116,7 @@ const CreateInviteDialog = ({ roles, onInviteCreated }: CreateInviteDialogProps)
             {/* Formulário */}
             <div className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium text-white">
+                <Label htmlFor="email" className="text-sm font-medium text-foreground">
                   Email *
                 </Label>
                 <Input
@@ -126,29 +126,29 @@ const CreateInviteDialog = ({ roles, onInviteCreated }: CreateInviteDialogProps)
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="h-10 bg-gray-800 border-gray-700 text-white placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="h-10 bg-surface-elevated border-border text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-operational focus:border-transparent"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="channel" className="text-sm font-medium text-white">
+                <Label htmlFor="channel" className="text-sm font-medium text-foreground">
                   Canal de Envio *
                 </Label>
                 <Select value={channelPreference} onValueChange={(value: 'email' | 'whatsapp' | 'both') => setChannelPreference(value)}>
-                  <SelectTrigger id="channel" className="h-10 bg-gray-800 border-gray-700 text-white">
+                  <SelectTrigger id="channel" className="h-10 bg-surface-elevated border-border text-foreground">
                     <SelectValue placeholder="Como enviar o convite?" />
                   </SelectTrigger>
-                  <SelectContent className="bg-gray-800 border-gray-700">
-                    <SelectItem value="email" className="text-white hover:bg-gray-700">📧 Apenas Email</SelectItem>
-                    <SelectItem value="whatsapp" className="text-white hover:bg-gray-700">📱 Apenas WhatsApp</SelectItem>
-                    <SelectItem value="both" className="text-white hover:bg-gray-700">📧📱 Email + WhatsApp</SelectItem>
+                  <SelectContent className="bg-surface-elevated border-border">
+                    <SelectItem value="email" className="text-foreground hover:bg-muted">📧 Apenas Email</SelectItem>
+                    <SelectItem value="whatsapp" className="text-foreground hover:bg-muted">📱 Apenas WhatsApp</SelectItem>
+                    <SelectItem value="both" className="text-foreground hover:bg-muted">📧📱 Email + WhatsApp</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               {(channelPreference === 'whatsapp' || channelPreference === 'both') && (
                 <div className="space-y-2">
-                  <Label htmlFor="phone" className="text-sm font-medium text-white">
+                  <Label htmlFor="phone" className="text-sm font-medium text-foreground">
                     Telefone *
                   </Label>
                   <Input
@@ -158,25 +158,25 @@ const CreateInviteDialog = ({ roles, onInviteCreated }: CreateInviteDialogProps)
                     value={phone}
                     onChange={handlePhoneChange}
                     required
-                    className="h-10 bg-gray-800 border-gray-700 text-white placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="h-10 bg-surface-elevated border-border text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-operational focus:border-transparent"
                   />
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-muted-foreground">
                     Formato: (11) 99999-9999
                   </p>
                 </div>
               )}
               
               <div className="space-y-2">
-                <Label htmlFor="role" className="text-sm font-medium text-white">
+                <Label htmlFor="role" className="text-sm font-medium text-foreground">
                   Papel *
                 </Label>
                 <Select value={roleId} onValueChange={setRoleId} required>
-                  <SelectTrigger id="role" className="h-10 bg-gray-800 border-gray-700 text-white">
+                  <SelectTrigger id="role" className="h-10 bg-surface-elevated border-border text-foreground">
                     <SelectValue placeholder="Selecione um papel" />
                   </SelectTrigger>
-                  <SelectContent className="bg-gray-800 border-gray-700">
+                  <SelectContent className="bg-surface-elevated border-border">
                     {roles.map((role) => (
-                      <SelectItem key={role.id} value={role.id} className="text-white hover:bg-gray-700">
+                      <SelectItem key={role.id} value={role.id} className="text-foreground hover:bg-muted">
                         {role.name}
                       </SelectItem>
                     ))}
@@ -185,25 +185,25 @@ const CreateInviteDialog = ({ roles, onInviteCreated }: CreateInviteDialogProps)
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="expiration" className="text-sm font-medium text-white">
+                <Label htmlFor="expiration" className="text-sm font-medium text-foreground">
                   Expira em
                 </Label>
                 <Select value={expiration} onValueChange={setExpiration}>
-                  <SelectTrigger id="expiration" className="h-10 bg-gray-800 border-gray-700 text-white">
+                  <SelectTrigger id="expiration" className="h-10 bg-surface-elevated border-border text-foreground">
                     <SelectValue placeholder="Período de expiração" />
                   </SelectTrigger>
-                  <SelectContent className="bg-gray-800 border-gray-700">
-                    <SelectItem value="1 day" className="text-white hover:bg-gray-700">1 dia</SelectItem>
-                    <SelectItem value="3 days" className="text-white hover:bg-gray-700">3 dias</SelectItem>
-                    <SelectItem value="7 days" className="text-white hover:bg-gray-700">7 dias</SelectItem>
-                    <SelectItem value="14 days" className="text-white hover:bg-gray-700">14 dias</SelectItem>
-                    <SelectItem value="30 days" className="text-white hover:bg-gray-700">30 dias</SelectItem>
+                  <SelectContent className="bg-surface-elevated border-border">
+                    <SelectItem value="1 day" className="text-foreground hover:bg-muted">1 dia</SelectItem>
+                    <SelectItem value="3 days" className="text-foreground hover:bg-muted">3 dias</SelectItem>
+                    <SelectItem value="7 days" className="text-foreground hover:bg-muted">7 dias</SelectItem>
+                    <SelectItem value="14 days" className="text-foreground hover:bg-muted">14 dias</SelectItem>
+                    <SelectItem value="30 days" className="text-foreground hover:bg-muted">30 dias</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="notes" className="text-sm font-medium text-white">
+                <Label htmlFor="notes" className="text-sm font-medium text-foreground">
                   Nome/Observações (opcional)
                 </Label>
                 <Textarea
@@ -211,9 +211,9 @@ const CreateInviteDialog = ({ roles, onInviteCreated }: CreateInviteDialogProps)
                   placeholder="Nome da pessoa ou informações adicionais"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  className="min-h-[80px] resize-none bg-gray-800 border-gray-700 text-white placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="min-h-[80px] resize-none bg-surface-elevated border-border text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-operational focus:border-transparent"
                 />
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-muted-foreground">
                   💡 Se informar apenas um nome, ele será automaticamente preenchido no registro
                 </p>
               </div>

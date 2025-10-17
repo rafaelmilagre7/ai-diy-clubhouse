@@ -41,8 +41,8 @@ export const StatusCard: React.FC<StatusCardProps> = ({
       className
     )}>
       <div className="flex items-center gap-3">
-        {icon && <div className="text-slate-400">{icon}</div>}
-        <span className="font-medium text-slate-200 text-base">{title}</span>
+        {icon && <div className="text-muted-foreground">{icon}</div>}
+        <span className="font-medium text-foreground text-base">{title}</span>
       </div>
       
       <div className="flex items-center gap-3">

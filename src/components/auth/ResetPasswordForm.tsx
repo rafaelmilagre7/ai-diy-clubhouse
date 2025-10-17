@@ -107,14 +107,14 @@ export const ResetPasswordForm = ({ onBackToLogin }: ResetPasswordFormProps) => 
         
         <div className="space-y-2">
           <h3 className="text-xl font-medium text-white">E-mail enviado!</h3>
-          <p className="text-gray-300 text-sm">
+          <p className="text-muted-foreground text-sm">
             Se o e-mail estiver registrado em nossa plataforma, você receberá um link para redefinir sua senha em alguns minutos.
           </p>
         </div>
         
-        <div className="bg-blue-900/30 border border-blue-600 rounded-lg p-4 text-left">
-          <h4 className="text-blue-200 font-medium mb-2">📧 Próximos passos:</h4>
-          <ul className="text-blue-200/80 text-sm space-y-1">
+        <div className="bg-operational/30 border border-operational rounded-lg p-4 text-left">
+          <h4 className="text-operational-light font-medium mb-2">📧 Próximos passos:</h4>
+          <ul className="text-operational-light/80 text-sm space-y-1">
             <li>• Verifique sua caixa de entrada</li>
             <li>• Não se esqueça de checar a pasta de spam</li>
             <li>• O link expira em 5 minutos por segurança</li>
@@ -154,7 +154,7 @@ export const ResetPasswordForm = ({ onBackToLogin }: ResetPasswordFormProps) => 
         <h1 className="text-xl font-semibold text-white text-center">
           Recuperar Senha
         </h1>
-        <p className="text-gray-300 mt-2 text-center">
+        <p className="text-muted-foreground mt-2 text-center">
           Digite seu e-mail para receber um link de recuperação
         </p>
       </div>
@@ -168,12 +168,12 @@ export const ResetPasswordForm = ({ onBackToLogin }: ResetPasswordFormProps) => 
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div className="space-y-3">
-          <label htmlFor="email" className="block text-sm font-medium text-gray-200">
+          <label htmlFor="email" className="block text-sm font-medium text-foreground">
             E-mail cadastrado
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-              <Mail className="h-5 w-5 text-gray-400" />
+              <Mail className="h-5 w-5 text-muted-foreground" />
             </div>
             <input
               {...register("email")}

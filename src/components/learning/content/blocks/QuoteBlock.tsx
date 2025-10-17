@@ -11,7 +11,7 @@ export const QuoteBlock: React.FC<QuoteBlockProps> = ({ data }) => {
   
   return (
     <blockquote className="my-6 border-l-4 border-primary pl-4 py-2 bg-primary/5 rounded">
-      <p className="italic text-gray-800 dark:text-gray-200">{text}</p>
+      <p className="italic text-foreground">{text}</p>
       {caption && (
         <footer className="text-right text-sm text-muted-foreground mt-2">
           — {caption}

@@ -200,7 +200,7 @@ export const LessonVideoPlayer: React.FC<LessonVideoPlayerProps> = ({
       
       {/* Debug info (apenas em desenvolvimento) */}
       {import.meta.env.DEV && (
-        <div className="mt-4 p-2 bg-gray-100 dark:bg-gray-800 rounded text-xs">
+        <div className="mt-4 p-2 bg-muted rounded text-xs">
           <strong>Debug Info:</strong><br/>
           Vídeos Props: {safeVideos.length} | 
           Vídeos Robust: {robustVideos?.length || 0} | 

@@ -149,9 +149,9 @@ export const LogsViewer: React.FC<LogsViewerProps> = ({ logs, onClear, className
       </CardHeader>
       
       <CardContent>
-        <div className="bg-slate-900 border border-slate-700 rounded-lg p-4 max-h-80 overflow-y-auto scrollbar-thin scrollbar-track-slate-800 scrollbar-thumb-slate-600">
+        <div className="bg-surface-elevated border border-border rounded-lg p-4 max-h-80 overflow-y-auto">
           {filteredLogs.length === 0 ? (
-            <p className="text-slate-400 text-center py-8 text-sm">
+            <p className="text-muted-foreground text-center py-8 text-sm">
               {logs.length === 0 ? 'Os logs aparecerão aqui...' : 'Nenhum log corresponde ao filtro selecionado'}
             </p>
           ) : (
@@ -159,9 +159,9 @@ export const LogsViewer: React.FC<LogsViewerProps> = ({ logs, onClear, className
               {filteredLogs.map((log) => (
                 <div 
                   key={log.id} 
-                  className="flex items-start gap-3 p-2 rounded hover:bg-slate-800/50 transition-colors"
+                  className="flex items-start gap-3 p-2 rounded hover:bg-muted/50 transition-colors"
                 >
-                  <span className="text-xs text-slate-500 font-mono min-w-[60px]">
+                  <span className="text-xs text-muted-foreground font-mono min-w-[60px]">
                     {log.timestamp}
                   </span>
                   <span className="text-sm">

@@ -34,7 +34,7 @@ export const SupabaseErrorDiagnostics: React.FC = () => {
       case 'unauthenticated':
         return <AlertTriangle className="h-4 w-4 text-red-500" />;
       default:
-        return <Activity className="h-4 w-4 text-gray-500" />;
+        return <Activity className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
@@ -51,7 +51,7 @@ export const SupabaseErrorDiagnostics: React.FC = () => {
       case 'unauthenticated':
         return 'bg-red-500/10 text-red-700 border-red-500/20';
       default:
-        return 'bg-gray-500/10 text-gray-700 border-gray-500/20';
+        return 'bg-muted/10 text-muted-foreground border-border';
     }
   };
 
