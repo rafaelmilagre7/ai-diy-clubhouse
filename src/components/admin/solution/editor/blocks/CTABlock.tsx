@@ -44,15 +44,15 @@ const CTABlock: React.FC<CTABlockProps> = ({ data, onChange }) => {
         />
       </div>
       
-      <div className="mt-6 p-6 rounded-lg border border-indigo-200 bg-indigo-50">
+      <div className="mt-6 p-6 rounded-lg border border-aurora-primary/20 bg-aurora-primary/10">
         <div className="max-w-lg mx-auto text-center">
-          <h3 className="font-bold text-xl text-indigo-800 mb-3">
+          <h3 className="font-bold text-xl mb-3">
             {data.title || "Próximos Passos"}
           </h3>
-          <p className="mb-6 text-indigo-600">
+          <p className="mb-6 text-muted-foreground">
             {data.text || "Texto da chamada para ação irá aparecer aqui."}
           </p>
-          <button className="inline-flex items-center px-6 py-3 bg-indigo-600 text-white rounded-full font-medium hover:bg-indigo-700 transition-colors">
+          <button className="inline-flex items-center px-6 py-3 bg-aurora-primary text-white rounded-full font-medium hover:bg-aurora-primary-dark transition-colors">
             {data.buttonText || "Continuar"}
             <ArrowRight className="ml-2 h-4 w-4" />
           </button>

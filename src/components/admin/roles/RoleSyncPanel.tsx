@@ -113,9 +113,9 @@ export const RoleSyncPanel = () => {
     <div className="space-y-6">
       {/* Mensagem de Sucesso da Migration */}
       {showMigrationSuccess && (
-        <Alert className="border-green-200 bg-green-50">
-          <CheckCircle2 className="h-4 w-4 text-green-600" />
-          <AlertDescription className="text-green-800">
+        <Alert className="border-system-healthy/20 bg-system-healthy/10">
+          <CheckCircle2 className="h-4 w-4 text-system-healthy" />
+          <AlertDescription className="text-system-healthy">
             <div className="flex items-center justify-between">
               <span>
                 ✅ Sistema atualizado com sucesso! As funções SQL foram recriadas para resolver problemas de cache.
@@ -124,7 +124,7 @@ export const RoleSyncPanel = () => {
                 variant="ghost" 
                 size="sm"
                 onClick={() => setShowMigrationSuccess(false)}
-                className="text-green-600 hover:text-green-700"
+                className="text-system-healthy hover:text-system-healthy/80"
               >
                 ✕
               </Button>
@@ -148,13 +148,13 @@ export const RoleSyncPanel = () => {
               <div className="flex items-center gap-2">
                 {systemHealthy ? (
                   <>
-                    <CheckCircle className="h-5 w-5 text-green-600" />
-                    <span className="text-green-800 font-medium">Sistema Operacional</span>
+                    <CheckCircle className="h-5 w-5 text-system-healthy" />
+                    <span className="text-system-healthy font-medium">Sistema Operacional</span>
                   </>
                 ) : (
                   <>
-                    <AlertTriangle className="h-5 w-5 text-orange-600" />
-                    <span className="text-orange-800 font-medium">Sistema Instável - Operações limitadas</span>
+                    <AlertTriangle className="h-5 w-5 text-status-warning" />
+                    <span className="text-status-warning font-medium">Sistema Instável - Operações limitadas</span>
                   </>
                 )}
               </div>
@@ -164,15 +164,15 @@ export const RoleSyncPanel = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Total de Usuários */}
             <div className="text-center p-4 border rounded-lg">
-              <Users className="h-8 w-8 mx-auto text-blue-600 mb-2" />
+              <Users className="h-8 w-8 mx-auto text-status-info mb-2" />
               <div className="text-2xl font-bold">{auditData?.total_users || 0}</div>
               <div className="text-sm text-muted-foreground">Total de Usuários</div>
             </div>
 
             {/* Inconsistências */}
             <div className="text-center p-4 border rounded-lg">
-              <AlertTriangle className="h-8 w-8 mx-auto text-orange-600 mb-2" />
-              <div className="text-2xl font-bold text-orange-600">
+              <AlertTriangle className="h-8 w-8 mx-auto text-status-warning mb-2" />
+              <div className="text-2xl font-bold text-status-warning">
                 {auditData?.inconsistencies_count || 0}
               </div>
               <div className="text-sm text-muted-foreground">Inconsistências</div>
@@ -180,8 +180,8 @@ export const RoleSyncPanel = () => {
 
             {/* Usuários sem Role */}
             <div className="text-center p-4 border rounded-lg">
-              <AlertCircle className="h-8 w-8 mx-auto text-red-600 mb-2" />
-              <div className="text-2xl font-bold text-red-600">
+              <AlertCircle className="h-8 w-8 mx-auto text-status-error mb-2" />
+              <div className="text-2xl font-bold text-status-error">
                 {auditData?.users_without_roles || 0}
               </div>
               <div className="text-sm text-muted-foreground">Sem Roles</div>
@@ -245,7 +245,7 @@ export const RoleSyncPanel = () => {
               <Button 
                 onClick={handleSyncRoles} 
                 disabled={isLoading}
-                className="bg-orange-600 hover:bg-orange-700"
+                className="bg-status-warning hover:bg-status-warning-dark"
               >
                 <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
                 Corrigir Automaticamente ({issues.length})

@@ -12,23 +12,23 @@ const ModuleGuide: React.FC<ModuleGuideProps> = ({ moduleType }) => {
   const getIcon = () => {
     switch (moduleType) {
       case "landing":
-        return <FileText className="h-5 w-5 text-blue-500" />;
+        return <FileText className="h-5 w-5 text-operational" />;
       case "overview":
-        return <Video className="h-5 w-5 text-purple-500" />;
+        return <Video className="h-5 w-5 text-operational" />;
       case "preparation":
-        return <CheckSquare className="h-5 w-5 text-green-500" />;
+        return <CheckSquare className="h-5 w-5 text-system-healthy" />;
       case "implementation":
-        return <List className="h-5 w-5 text-indigo-500" />;
+        return <List className="h-5 w-5 text-operational" />;
       case "verification":
-        return <AlertTriangle className="h-5 w-5 text-warning" />;
+        return <AlertTriangle className="h-5 w-5 text-status-warning" />;
       case "results":
         return <BarChart className="h-5 w-5 text-aurora-primary" />;
       case "optimization":
-        return <Zap className="h-5 w-5 text-orange-500" />;
+        return <Zap className="h-5 w-5 text-operational" />;
       case "celebration":
-        return <Award className="h-5 w-5 text-pink-500" />;
+        return <Award className="h-5 w-5 text-operational" />;
       default:
-        return <HelpCircle className="h-5 w-5 text-gray-500" />;
+        return <HelpCircle className="h-5 w-5 text-muted-foreground" />;
     }
   };
 
@@ -140,20 +140,20 @@ const ModuleGuide: React.FC<ModuleGuideProps> = ({ moduleType }) => {
   const guidance = getGuidance();
 
   return (
-    <Card className="bg-blue-50 border-blue-200">
+    <Card className="bg-status-info-lighter border-status-info/20">
       <CardContent className="p-4">
         <div className="flex items-start gap-3">
           {getIcon()}
           <div>
-            <h3 className="font-medium text-blue-800">{guidance.title}</h3>
-            <p className="text-sm text-blue-700 mt-1">{guidance.description}</p>
+            <h3 className="font-medium text-status-info">{guidance.title}</h3>
+            <p className="text-sm text-muted-foreground mt-1">{guidance.description}</p>
             
             <div className="mt-3 space-y-2">
-              <h4 className="text-sm font-medium text-blue-800">Dicas para este módulo:</h4>
+              <h4 className="text-sm font-medium text-status-info">Dicas para este módulo:</h4>
               <ul className="space-y-1">
                 {guidance.tips.map((tip, index) => (
-                  <li key={index} className="text-sm text-blue-700 flex items-start gap-2">
-                    <span className="inline-block h-4 w-4 rounded-full bg-blue-200 text-blue-800 flex items-center justify-center text-xs mt-0.5">
+                  <li key={index} className="text-sm text-muted-foreground flex items-start gap-2">
+                    <span className="inline-block h-4 w-4 rounded-full bg-status-info/20 text-status-info flex items-center justify-center text-xs mt-0.5">
                       {index + 1}
                     </span>
                     {tip}

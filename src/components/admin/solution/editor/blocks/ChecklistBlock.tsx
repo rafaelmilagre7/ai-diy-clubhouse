@@ -77,20 +77,20 @@ const ChecklistBlock: React.FC<ChecklistBlockProps> = ({ data, onChange }) => {
         Adicionar Item
       </Button>
       
-      <div className="mt-4 p-4 border border-green-200 bg-green-50 rounded">
-        <h4 className="font-bold text-green-800 mb-3">Checklist de Verificação</h4>
+      <div className="mt-4 p-4 border border-system-healthy/20 bg-system-healthy/10 rounded">
+        <h4 className="font-bold text-system-healthy mb-3">Checklist de Verificação</h4>
         <div className="space-y-3">
           {data.items.map((item, index) => (
             <div key={index} className="flex items-start gap-2">
               <Checkbox 
                 id={`preview-item-${index}`} 
                 checked={item.checked}
-                className="mt-0.5 h-5 w-5 border-green-700"
+                className="mt-0.5 h-5 w-5 border-system-healthy"
                 disabled
               />
               <Label 
                 htmlFor={`preview-item-${index}`} 
-                className="text-green-800 font-medium cursor-pointer"
+                className="text-system-healthy font-medium cursor-pointer"
               >
                 {item.text || "Item da checklist..."}
               </Label>

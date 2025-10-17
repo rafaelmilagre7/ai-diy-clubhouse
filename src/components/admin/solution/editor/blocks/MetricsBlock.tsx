@@ -45,11 +45,11 @@ const MetricsBlock: React.FC<MetricsBlockProps> = ({ data, onChange }) => {
 
   const getMetricColor = (index: number) => {
     const colors = [
-      "bg-blue-50 border-blue-200 text-blue-800",
-      "bg-green-50 border-green-200 text-green-800",
-      "bg-purple-50 border-purple-200 text-purple-800",
-      "bg-amber-50 border-amber-200 text-amber-800",
-      "bg-rose-50 border-rose-200 text-rose-800",
+      "bg-operational/10 border-operational/20 text-operational",
+      "bg-system-healthy/10 border-system-healthy/20 text-system-healthy",
+      "bg-operational/10 border-operational/20 text-operational",
+      "bg-status-warning/10 border-status-warning/20 text-status-warning",
+      "bg-operational/10 border-operational/20 text-operational",
     ];
     return colors[index % colors.length];
   };
@@ -122,9 +122,9 @@ const MetricsBlock: React.FC<MetricsBlockProps> = ({ data, onChange }) => {
         ))}
       </div>
       
-      <div className="mt-6 p-6 border rounded-md bg-slate-50">
-        <h4 className="font-bold text-xl text-slate-800 mb-2">{data.title || "Métricas"}</h4>
-        {data.description && <p className="mt-1 text-slate-600 mb-4">{data.description}</p>}
+      <div className="mt-6 p-6 border rounded-md bg-muted">
+        <h4 className="font-bold text-xl mb-2">{data.title || "Métricas"}</h4>
+        {data.description && <p className="mt-1 text-muted-foreground mb-4">{data.description}</p>}
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-3">
           {data.metrics.map((metric, index) => (

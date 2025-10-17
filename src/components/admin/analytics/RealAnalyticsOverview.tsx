@@ -53,10 +53,10 @@ export const RealAnalyticsOverview = ({ timeRange }: RealAnalyticsOverviewProps)
 
   if (error || !data) {
     return (
-      <Alert className="bg-white dark:bg-slate-900 border border-red-200 dark:border-red-900">
+      <Alert className="bg-background border border-status-error/30">
         <AlertTriangle className="h-5 w-5 text-destructive" />
-        <AlertTitle className="text-neutral-800 dark:text-white">Erro ao carregar dados</AlertTitle>
-        <AlertDescription className="text-neutral-700 dark:text-neutral-300">
+        <AlertTitle>Erro ao carregar dados</AlertTitle>
+        <AlertDescription>
           {error || 'Não foi possível carregar os dados de analytics. Tente novamente.'}
         </AlertDescription>
       </Alert>

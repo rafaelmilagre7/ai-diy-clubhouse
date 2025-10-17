@@ -26,9 +26,9 @@ const WarningBlock: React.FC<WarningBlockProps> = ({ data, onChange }) => {
         className="min-h-[100px]"
       />
       
-      <div className="mt-4 p-4 border-l-4 border-amber-500 bg-amber-50 rounded">
-        <h4 className="font-bold text-amber-800">{data.title || "Atenção"}</h4>
-        <p className="text-amber-700 mt-1">{data.text || "Texto do aviso irá aparecer aqui."}</p>
+      <div className="mt-4 p-4 border-l-4 border-status-warning bg-status-warning-lighter rounded">
+        <h4 className="font-bold text-status-warning">{data.title || "Atenção"}</h4>
+        <p className="text-status-warning mt-1">{data.text || "Texto do aviso irá aparecer aqui."}</p>
       </div>
     </div>
   );

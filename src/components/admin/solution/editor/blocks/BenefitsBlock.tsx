@@ -51,8 +51,8 @@ const BenefitsBlock: React.FC<BenefitsBlockProps> = ({ data, onChange }) => {
         
         {data.items.map((item, index) => (
           <div key={index} className="flex items-center gap-2 border p-3 rounded-md">
-            <div className="flex items-center gap-2 flex-1">
-              <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0" />
+          <div className="flex items-center gap-2 flex-1">
+            <CheckCircle2 className="h-5 w-5 text-system-healthy flex-shrink-0" />
               <Input
                 value={item}
                 onChange={(e) => updateItem(index, e.target.value)}
@@ -72,13 +72,13 @@ const BenefitsBlock: React.FC<BenefitsBlockProps> = ({ data, onChange }) => {
         ))}
       </div>
       
-      <div className="mt-6 p-6 border border-green-200 bg-green-50 rounded-lg">
-        <h3 className="font-bold text-xl text-green-800 mb-4">{data.title || "Benefícios"}</h3>
+      <div className="mt-6 p-6 border border-system-healthy/20 bg-system-healthy/10 rounded-lg">
+        <h3 className="font-bold text-xl text-system-healthy mb-4">{data.title || "Benefícios"}</h3>
         <ul className="space-y-3">
           {data.items.map((item, index) => (
             <li key={index} className="flex items-start gap-3">
-              <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
-              <span className="text-green-700">{item || "Descrição do benefício"}</span>
+              <CheckCircle2 className="h-5 w-5 text-system-healthy mt-0.5 flex-shrink-0" />
+              <span className="text-system-healthy">{item || "Descrição do benefício"}</span>
             </li>
           ))}
         </ul>

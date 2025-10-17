@@ -64,13 +64,13 @@ const TipsBlock: React.FC<TipsBlockProps> = ({ data, onChange }) => {
         Adicionar Dica
       </Button>
       
-      <div className="mt-4 p-4 border border-pink-200 bg-pink-50 rounded">
-        <h4 className="font-bold text-pink-800">{data.title || "Dicas de Otimização"}</h4>
+      <div className="mt-4 p-4 border border-status-info/30 bg-status-info-lighter rounded">
+        <h4 className="font-bold text-status-info">{data.title || "Dicas de Otimização"}</h4>
         <ul className="mt-2 space-y-2">
           {data.items.map((item, index) => (
             <li key={index} className="flex items-start">
-              <span className="text-pink-500 font-bold mr-2">💡</span>
-              <span className="text-pink-700">{item || "Descrição da dica de otimização"}</span>
+              <span className="text-status-info font-bold mr-2">💡</span>
+              <span className="text-status-info">{item || "Descrição da dica de otimização"}</span>
             </li>
           ))}
         </ul>

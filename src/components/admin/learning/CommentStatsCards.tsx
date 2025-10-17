@@ -39,32 +39,32 @@ export const CommentStatsCards: React.FC<CommentStatsCardsProps> = ({
       value: stats.total_comments,
       description: "Comentários recebidos",
       icon: MessageSquare,
-      color: "text-blue-600",
-      bgColor: "bg-blue-50"
+      color: "text-status-info",
+      bgColor: "bg-status-info-lighter"
     },
     {
       title: "Comentários Respondidos",
       value: stats.replied_comments,
       description: "Já foram respondidos",
       icon: CheckCircle,
-      color: "text-green-600",
-      bgColor: "bg-green-50"
+      color: "text-system-healthy",
+      bgColor: "bg-system-healthy/10"
     },
     {
       title: "Comentários Pendentes",
       value: stats.pending_comments,
       description: "Aguardando resposta",
       icon: Clock,
-      color: "text-orange-600",
-      bgColor: "bg-orange-50"
+      color: "text-status-warning",
+      bgColor: "bg-status-warning-lighter"
     },
     {
       title: "Taxa de Resposta",
       value: `${stats.reply_rate}%`,
       description: "Percentual respondido",
       icon: TrendingUp,
-      color: stats.reply_rate >= 80 ? "text-green-600" : stats.reply_rate >= 60 ? "text-orange-600" : "text-red-600",
-      bgColor: stats.reply_rate >= 80 ? "bg-green-50" : stats.reply_rate >= 60 ? "bg-orange-50" : "bg-red-50"
+      color: stats.reply_rate >= 80 ? "text-system-healthy" : stats.reply_rate >= 60 ? "text-status-warning" : "text-status-error",
+      bgColor: stats.reply_rate >= 80 ? "bg-system-healthy/10" : stats.reply_rate >= 60 ? "bg-status-warning-lighter" : "bg-status-error-lighter"
     }
   ];
 
