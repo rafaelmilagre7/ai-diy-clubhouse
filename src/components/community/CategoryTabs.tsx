@@ -38,7 +38,7 @@ export const CategoryTabs = ({ categories, isLoading }: CategoryTabsProps) => {
           value={category.slug} 
           className={`min-w-max px-4 py-3 transition-all duration-200 ${
             categoryColors[category.name as keyof typeof categoryColors] || 
-            'data-[state=active]:bg-gray-50 data-[state=active]:text-gray-700'
+            'data-[state=active]:bg-muted data-[state=active]:text-foreground'
           }`}
         >
           <span className="mr-2 text-lg">

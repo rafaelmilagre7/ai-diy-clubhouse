@@ -140,7 +140,7 @@ export const VideoDurationSyncDashboard = () => {
               <p className="text-sm text-muted-foreground">
                 {totalSynced} de {totalVideos} vídeos sincronizados ({overallPercentage}%)
               </p>
-              <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="w-full bg-muted rounded-full h-2">
                 <div 
                   className="bg-primary h-2 rounded-full transition-all duration-300" 
                   style={{ width: `${overallPercentage}%` }}
@@ -184,7 +184,7 @@ export const VideoDurationSyncDashboard = () => {
                       <p className="text-sm text-muted-foreground">
                         {course.videos_with_duration}/{course.total_videos} vídeos sincronizados
                       </p>
-                      <div className="w-48 bg-gray-200 rounded-full h-1.5">
+                      <div className="w-48 bg-muted rounded-full h-1.5">
                         <div 
                           className="bg-primary h-1.5 rounded-full transition-all duration-300" 
                           style={{ width: `${course.sync_percentage}%` }}

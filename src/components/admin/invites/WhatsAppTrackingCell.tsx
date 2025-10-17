@@ -21,7 +21,7 @@ export const WhatsAppTrackingCell: React.FC<WhatsAppTrackingCellProps> = ({ invi
   if (loading) {
     return (
       <div className="flex items-center gap-1">
-        <Clock className="h-3 w-3 animate-spin text-gray-400" />
+        <Clock className="h-3 w-3 animate-spin text-muted-foreground" />
         <span className="text-xs text-muted-foreground">...</span>
       </div>
     );

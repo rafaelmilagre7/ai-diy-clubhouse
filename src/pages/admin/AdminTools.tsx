@@ -210,8 +210,8 @@ const AdminTools = () => {
             value: inactiveTools,
             icon: RefreshCcw,
             gradient: "from-gray-500/20 to-slate-500/10",
-            iconColor: "text-gray-500",
-            border: "border-gray-500/30",
+            iconColor: "text-muted-foreground",
+            border: "border-border",
             description: "Aguardando ativação"
           },
           {

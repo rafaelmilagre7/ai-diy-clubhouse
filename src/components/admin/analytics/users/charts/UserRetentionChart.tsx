@@ -21,7 +21,7 @@ export const UserRetentionChart = ({ data, loading }: UserRetentionChartProps) =
           <CardDescription>Retenção de usuários por coorte</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-48 bg-gray-200 animate-pulse rounded" />
+          <div className="h-48 bg-muted animate-pulse rounded" />
         </CardContent>
       </Card>
     );

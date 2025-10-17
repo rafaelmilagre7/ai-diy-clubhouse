@@ -321,7 +321,7 @@ export const SetNewPasswordForm = () => {
               id="confirmPassword"
               type={showConfirmPassword ? "text" : "password"}
               placeholder="Digite novamente sua nova senha"
-              className={`pl-10 pr-12 w-full py-3 px-3 bg-gray-700 border rounded-lg text-white focus:ring-2 focus:ring-aurora-primary focus:border-aurora-primary transition-colors ${
+              className={`pl-10 pr-12 w-full py-3 px-3 bg-surface-elevated border rounded-lg text-white focus:ring-2 focus:ring-aurora-primary focus:border-aurora-primary transition-colors ${
                 confirmPassword && !passwordsMatch ? 'border-status-error' : 
                 confirmPassword && passwordsMatch ? 'border-status-success' : 'border-gray-600'
               }`}

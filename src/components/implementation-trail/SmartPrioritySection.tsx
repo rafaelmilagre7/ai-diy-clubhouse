@@ -75,7 +75,7 @@ export const SmartPrioritySection = ({
           
           if (!solution) {
             return (
-              <div key={recommendation.solutionId} className="p-4 border rounded-lg bg-gray-50">
+              <div key={recommendation.solutionId} className="p-4 border rounded-lg bg-muted">
                 <p className="text-medium-contrast">
                   Solução não encontrada (ID: {recommendation.solutionId})
                 </p>

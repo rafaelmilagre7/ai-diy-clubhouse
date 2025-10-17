@@ -30,7 +30,7 @@ const categoryColors: Record<string, string> = {
   networking: 'bg-purple-500/10 text-purple-500',
   solutions: 'bg-orange-500/10 text-orange-500',
   admin: 'bg-red-500/10 text-red-500',
-  general: 'bg-gray-500/10 text-gray-500'
+  general: 'bg-muted/10 text-muted-foreground'
 };
 
 export const NotificationCenter = () => {

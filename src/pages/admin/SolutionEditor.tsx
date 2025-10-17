@@ -84,7 +84,7 @@ const SolutionEditor = () => {
       case "advanced":
         return "bg-red-500";
       default:
-        return "bg-gray-500";
+        return "bg-muted";
     }
   };
   

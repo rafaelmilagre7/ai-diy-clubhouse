@@ -120,7 +120,7 @@ export const UserFunnelChart = ({ data, loading }: UserFunnelChartProps) => {
         
         {/* Summary */}
         {data && (
-          <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+          <div className="mt-6 p-4 bg-muted rounded-lg">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
               <div>
                 <div className="text-lg font-bold text-operational">

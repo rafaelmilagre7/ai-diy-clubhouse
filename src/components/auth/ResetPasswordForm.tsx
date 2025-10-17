@@ -180,9 +180,9 @@ export const ResetPasswordForm = ({ onBackToLogin }: ResetPasswordFormProps) => 
               id="email"
               type="email"
               placeholder="Digite seu e-mail"
-              className={`pl-10 w-full py-3 px-3 bg-gray-700 border rounded-lg text-white focus:ring-2 focus:ring-aurora-primary focus:border-aurora-primary transition-colors ${
+              className={`pl-10 w-full py-3 px-3 bg-surface-elevated border rounded-lg text-white focus:ring-2 focus:ring-aurora-primary focus:border-aurora-primary transition-colors ${
                 errors.email ? 'border-status-error' : 
-                email && isValid ? 'border-status-success' : 'border-gray-600'
+                email && isValid ? 'border-status-success' : 'border-border'
               }`}
               disabled={isLoading}
             />
@@ -203,7 +203,7 @@ export const ResetPasswordForm = ({ onBackToLogin }: ResetPasswordFormProps) => 
           )}
           
           {/* Dica para o usuário */}
-          <p className="text-gray-400 text-xs">
+          <p className="text-muted-foreground text-xs">
             Digite o e-mail que você usou para criar sua conta
           </p>
         </div>
@@ -229,7 +229,7 @@ export const ResetPasswordForm = ({ onBackToLogin }: ResetPasswordFormProps) => 
             type="button"
             variant="outline"
             onClick={onBackToLogin ? onBackToLogin : () => navigate("/login")}
-            className="w-full text-white bg-gray-700 hover:bg-gray-600 border-gray-600"
+            className="w-full text-white bg-surface-elevated hover:bg-muted border-border"
             disabled={isLoading}
           >
             Voltar para login

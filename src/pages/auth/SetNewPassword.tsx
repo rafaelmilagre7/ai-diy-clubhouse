@@ -34,7 +34,7 @@ const SetNewPassword = () => {
           </h2>
         </div>
 
-        <div className="bg-gray-800 border border-gray-700 rounded-lg shadow-xl p-6">
+        <div className="bg-surface-elevated border border-border rounded-lg shadow-xl p-6">
           <SetNewPasswordForm />
         </div>
         

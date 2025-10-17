@@ -199,7 +199,7 @@ const AdminAutomations = () => {
             <CardTitle className="text-sm font-medium">Regras Inativas</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-500">{stats.inactive}</div>
+            <div className="text-2xl font-bold text-muted-foreground">{stats.inactive}</div>
           </CardContent>
         </Card>
       </div>

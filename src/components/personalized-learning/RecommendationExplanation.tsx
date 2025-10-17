@@ -38,7 +38,7 @@ export const RecommendationExplanation: React.FC<RecommendationExplanationProps>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Análise Personalizada */}
-        <div className="bg-white/50 dark:bg-gray-900/30 rounded-lg p-4 border border-blue-200/30 dark:border-blue-800/30">
+        <div className="bg-background/50 rounded-lg p-4 border border-operational/30">
           <div className="flex items-start gap-3">
             <div className="bg-blue-100 dark:bg-blue-900/40 rounded-full p-2 mt-1">
               <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />

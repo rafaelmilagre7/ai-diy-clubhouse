@@ -18,7 +18,7 @@ export const PasswordStrengthIndicator = ({ strength, className = '' }: Password
         </span>
       </div>
       
-      <div className="w-full bg-gray-600 rounded-full h-2">
+      <div className="w-full bg-muted rounded-full h-2">
         <div
           className="h-2 rounded-full transition-all duration-300 ease-in-out"
           style={{

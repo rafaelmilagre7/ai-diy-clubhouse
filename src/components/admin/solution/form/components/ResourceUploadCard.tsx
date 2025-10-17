@@ -55,7 +55,7 @@ const ResourceUploadCard: React.FC<ResourceUploadCardProps> = ({
         )}
         
         <div className="space-y-6">
-          <div className="p-6 rounded-md bg-gray-50 dark:bg-gray-800">
+          <div className="p-6 rounded-md bg-muted">
             <FileUpload 
               bucketName="solution_files" 
               folder="documents" 

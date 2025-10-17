@@ -135,7 +135,7 @@ export const AutomationReview = ({ formData }: AutomationReviewProps) => {
                   formData.priority === 1 ? 'bg-red-500' :
                   formData.priority === 2 ? 'bg-orange-500' :
                   formData.priority === 3 ? 'bg-yellow-500' :
-                  formData.priority === 4 ? 'bg-blue-500' : 'bg-gray-500'
+                  formData.priority === 4 ? 'bg-operational' : 'bg-muted'
                 }`}></div>
                 <span className="text-sm font-medium">{formData.priority}</span>
               </div>

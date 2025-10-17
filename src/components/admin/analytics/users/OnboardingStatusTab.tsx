@@ -229,7 +229,7 @@ const UserOnboardingCard = ({ user }: UserOnboardingCardProps) => {
   };
 
   return (
-    <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+    <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
       <div className="flex items-center space-x-4">
         <Avatar className="h-10 w-10">
           <AvatarImage src={user.avatar_url} />

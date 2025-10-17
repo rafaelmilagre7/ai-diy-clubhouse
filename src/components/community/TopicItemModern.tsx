@@ -101,7 +101,7 @@ export const TopicItemModern = ({ topic, isPinned = false }: TopicItemModernProp
                     variant="outline" 
                     className={`text-xs font-medium ${
                       categoryColors[topic.category.name as keyof typeof categoryColors] || 
-                      'bg-gray-500/10 text-gray-700 border-gray-500/20'
+                      'bg-muted/10 text-muted-foreground border-border'
                     }`}
                   >
                     {topic.category.name}

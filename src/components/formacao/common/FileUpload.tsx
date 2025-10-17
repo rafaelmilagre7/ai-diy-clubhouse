@@ -137,7 +137,7 @@ export const FileUpload = ({
           <label
             className={cn(
               "flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer",
-              "bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600",
+              "bg-muted hover:bg-muted/80",
               "border-gray-300 dark:border-gray-600"
             )}
           >
@@ -172,7 +172,7 @@ export const FileUpload = ({
           </label>
         </div>
       ) : (
-        <div className="flex items-center p-4 space-x-4 border rounded-lg bg-gray-50 dark:bg-gray-700">
+        <div className="flex items-center p-4 space-x-4 border rounded-lg bg-muted">
           <File className="h-10 w-10 flex-shrink-0 text-blue-600" />
           <div className="flex-1 min-w-0">
             <p className="font-medium text-gray-900 truncate dark:text-white">

@@ -397,7 +397,7 @@ export default function CertificateTemplates() {
           </DialogHeader>
           
           {selectedTemplate && (
-            <div className="p-4 bg-gray-50 rounded-lg">
+            <div className="p-4 bg-muted rounded-lg">
               <p className="text-center text-muted-foreground">
                 Preview do template: {selectedTemplate.name}
               </p>

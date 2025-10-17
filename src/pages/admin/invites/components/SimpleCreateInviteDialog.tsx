@@ -199,9 +199,9 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
                 className="grid grid-cols-1 gap-1.5"
               >
                 {(['email', 'whatsapp', 'both'] as const).map((channel) => (
-                  <div key={channel} className="flex items-center space-x-2 border border-gray-700 rounded-md p-2 hover:bg-gray-800/50">
-                    <RadioGroupItem value={channel} id={channel} className="border-gray-700 text-white" />
-                    <Label htmlFor={channel} className="flex items-center gap-2 cursor-pointer flex-1 text-sm text-white">
+                  <div key={channel} className="flex items-center space-x-2 border border-border rounded-md p-2 hover:bg-muted/50">
+                    <RadioGroupItem value={channel} id={channel} className="border-border text-foreground" />
+                    <Label htmlFor={channel} className="flex items-center gap-2 cursor-pointer flex-1 text-sm text-foreground">
                       {getChannelIcon(channel)}
                       <div>
                         <div className="font-medium">
@@ -216,37 +216,37 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
             
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1.5">
-                <Label htmlFor="expiration" className="text-sm text-white">Válido por</Label>
+                <Label htmlFor="expiration" className="text-sm text-foreground">Válido por</Label>
                 <Select value={expiration} onValueChange={setExpiration}>
-                  <SelectTrigger className="h-9 bg-gray-800 border-gray-700 text-white">
+                  <SelectTrigger className="h-9 bg-surface-elevated border-border text-foreground">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-gray-800 border-gray-700">
-                    <SelectItem value="1 day" className="text-white hover:bg-gray-700">1 dia</SelectItem>
-                    <SelectItem value="3 days" className="text-white hover:bg-gray-700">3 dias</SelectItem>
-                    <SelectItem value="7 days" className="text-white hover:bg-gray-700">7 dias</SelectItem>
-                    <SelectItem value="14 days" className="text-white hover:bg-gray-700">14 dias</SelectItem>
-                    <SelectItem value="30 days" className="text-white hover:bg-gray-700">30 dias</SelectItem>
+                  <SelectContent className="bg-surface-elevated border-border">
+                    <SelectItem value="1 day" className="text-foreground hover:bg-muted">1 dia</SelectItem>
+                    <SelectItem value="3 days" className="text-foreground hover:bg-muted">3 dias</SelectItem>
+                    <SelectItem value="7 days" className="text-foreground hover:bg-muted">7 dias</SelectItem>
+                    <SelectItem value="14 days" className="text-foreground hover:bg-muted">14 dias</SelectItem>
+                    <SelectItem value="30 days" className="text-foreground hover:bg-muted">30 dias</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
             
             <div className="space-y-1.5">
-              <Label htmlFor="notes" className="text-sm text-white">Observações (opcional)</Label>
+              <Label htmlFor="notes" className="text-sm text-foreground">Observações (opcional)</Label>
               <Textarea
                 id="notes"
                 placeholder="Informações extras..."
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={2}
-                className="resize-none text-sm bg-gray-800 border-gray-700 text-white placeholder:text-gray-400"
+                className="resize-none text-sm bg-surface-elevated border-border text-foreground placeholder:text-muted-foreground"
               />
             </div>
           </div>
           
           <DialogFooter className="pt-3">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)} className="h-9 border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white">
+            <Button type="button" variant="outline" onClick={() => setOpen(false)} className="h-9 border-border text-muted-foreground hover:bg-muted hover:text-foreground">
               Cancelar
             </Button>
             <Button type="submit" disabled={isCreating} className="h-9 bg-blue-600 hover:bg-blue-700 text-white">

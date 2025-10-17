@@ -213,37 +213,37 @@ const CreateInviteContent = memo<CreateInviteContentProps>(({ roles, onInviteCre
         
         <div className="grid grid-cols-2 gap-2">
           <div className="space-y-1.5">
-            <Label htmlFor="expiration" className="text-sm text-white">Válido por</Label>
+            <Label htmlFor="expiration" className="text-sm text-foreground">Válido por</Label>
             <Select value={expiration} onValueChange={setExpiration}>
-              <SelectTrigger className="h-9 bg-gray-800 border-gray-700 text-white">
+              <SelectTrigger className="h-9 bg-surface-elevated border-border text-foreground">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-gray-800 border-gray-700">
-                <SelectItem value="1 day" className="text-white hover:bg-gray-700">1 dia</SelectItem>
-                <SelectItem value="3 days" className="text-white hover:bg-gray-700">3 dias</SelectItem>
-                <SelectItem value="7 days" className="text-white hover:bg-gray-700">7 dias</SelectItem>
-                <SelectItem value="14 days" className="text-white hover:bg-gray-700">14 dias</SelectItem>
-                <SelectItem value="30 days" className="text-white hover:bg-gray-700">30 dias</SelectItem>
+              <SelectContent className="bg-surface-elevated border-border">
+                <SelectItem value="1 day" className="text-foreground hover:bg-muted">1 dia</SelectItem>
+                <SelectItem value="3 days" className="text-foreground hover:bg-muted">3 dias</SelectItem>
+                <SelectItem value="7 days" className="text-foreground hover:bg-muted">7 dias</SelectItem>
+                <SelectItem value="14 days" className="text-foreground hover:bg-muted">14 dias</SelectItem>
+                <SelectItem value="30 days" className="text-foreground hover:bg-muted">30 dias</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
         
         <div className="space-y-1.5">
-          <Label htmlFor="notes" className="text-sm text-white">Observações (opcional)</Label>
+          <Label htmlFor="notes" className="text-sm text-foreground">Observações (opcional)</Label>
           <Textarea
             id="notes"
             placeholder="Informações extras..."
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={2}
-            className="resize-none text-sm bg-gray-800 border-gray-700 text-white placeholder:text-gray-400"
+            className="resize-none text-sm bg-surface-elevated border-border text-foreground placeholder:text-muted-foreground"
           />
         </div>
       </div>
       
       <DialogFooter className="pt-3">
-        <Button type="button" variant="outline" onClick={onClose} className="h-9 border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white">
+        <Button type="button" variant="outline" onClick={onClose} className="h-9 border-border text-muted-foreground hover:bg-muted hover:text-foreground">
           Cancelar
         </Button>
         <Button type="submit" disabled={isCreating} className="h-9 bg-aurora-primary hover:bg-aurora-primary-dark text-white">

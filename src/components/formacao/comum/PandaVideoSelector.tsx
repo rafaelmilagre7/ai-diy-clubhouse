@@ -224,7 +224,7 @@ export const PandaVideoSelector: React.FC<PandaVideoSelectorProps> = ({
             filteredVideos.map((video) => (
               <div
                 key={video.id}
-                className={`flex items-start space-x-3 p-2 border rounded-md cursor-pointer transition-colors hover:bg-gray-50 ${
+                className={`flex items-start space-x-3 p-2 border rounded-md cursor-pointer transition-colors hover:bg-muted ${
                   selectedVideoId === video.id ? "bg-blue-50 border-blue-200" : ""
                 }`}
                 onClick={() => handleVideoSelect(video)}

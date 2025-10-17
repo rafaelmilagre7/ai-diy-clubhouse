@@ -393,7 +393,7 @@ export const PandaVideoUpload = ({
         </div>
       ) : (
         <div className="flex flex-col items-center space-y-2">
-          <div className="flex aspect-video w-full cursor-pointer items-center justify-center rounded-md border border-dashed hover:bg-gray-50">
+          <div className="flex aspect-video w-full cursor-pointer items-center justify-center rounded-md border border-dashed hover:bg-muted">
             <label htmlFor="video-upload" className="flex h-full w-full flex-col items-center justify-center cursor-pointer">
               <div className="flex flex-col items-center justify-center py-5 text-center">
                 <Video className="mb-2 h-10 w-10 text-muted-foreground" />

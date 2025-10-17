@@ -155,7 +155,7 @@ export const AutomationBasicInfo = ({
                   </SelectItem>
                   <SelectItem value="5">
                     <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
+                      <div className="w-2 h-2 bg-muted rounded-full"></div>
                       <span>Baixa (5)</span>
                     </div>
                   </SelectItem>

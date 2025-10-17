@@ -231,7 +231,7 @@ export const MeetingsList = () => {
       case 'cancelled': 
         return { color: 'bg-red-500/10 text-red-400 border-red-500/30', label: 'Cancelada' };
       case 'completed': 
-        return { color: 'bg-gray-500/10 text-gray-400 border-gray-500/30', label: 'Concluída' };
+        return { color: 'bg-muted/10 text-muted-foreground border-border', label: 'Concluída' };
       default: 
         return { color: 'bg-neutral-500/10 text-neutral-400 border-neutral-500/30', label: status };
     }

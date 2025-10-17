@@ -23,7 +23,7 @@ const getDifficultyBadgeStyle = (difficulty: string) => {
     case "advanced":
       return "bg-red-900/40 text-red-300 border-red-700";
     default:
-      return "bg-gray-800/60 text-gray-300 border-gray-700";
+      return "bg-muted/60 text-muted-foreground border-border";
   }
 };
 
@@ -56,7 +56,7 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({
       color: category === 'Receita' ? 'bg-green-900/40 text-green-300 border-green-700' :
              category === 'Operacional' ? 'bg-blue-900/40 text-blue-300 border-blue-700' :
              category === 'Estratégia' ? 'bg-purple-900/40 text-purple-300 border-purple-700' :
-             'bg-gray-800/60 text-gray-300 border-gray-700'
+             'bg-muted/60 text-muted-foreground border-border'
     };
   };
 

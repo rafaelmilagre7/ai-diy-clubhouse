@@ -344,7 +344,7 @@ const UserJourneyAnalysis = ({ data, loading }: any) => (
           </div>
           
           {data?.dropoffPoints?.map((point: any, index: number) => (
-            <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div key={index} className="flex items-center justify-between p-3 bg-muted rounded-lg">
               <div>
                 <div className="font-medium">{point.page}</div>
                 <div className="text-sm text-gray-600">{point.description}</div>

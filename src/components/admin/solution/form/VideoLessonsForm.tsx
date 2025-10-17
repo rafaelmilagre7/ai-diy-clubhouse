@@ -237,7 +237,7 @@ const VideoLessonsForm: React.FC<VideoLessonsFormProps> = ({
             <h3 className="text-base font-medium mb-4">Vídeos Adicionados</h3>
             <div className="space-y-4">
               {videoLessons.map(video => <div key={video.id} className="border rounded-md overflow-hidden">
-                  <div className="p-3 border-b flex items-center justify-between bg-gray-900">
+                  <div className="p-3 border-b flex items-center justify-between bg-surface-elevated">
                     <div className="flex items-center gap-2">
                       <Play className="h-4 w-4 text-blue-500" />
                       <span className="font-medium">{video.title}</span>

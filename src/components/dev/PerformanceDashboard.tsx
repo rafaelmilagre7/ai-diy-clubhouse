@@ -14,7 +14,7 @@ export const PerformanceDashboard = () => {
 
   return (
     <div className="fixed bottom-4 right-4 z-50 max-w-md max-h-96 overflow-auto">
-      <Card className="bg-gray-900 text-white border-gray-700">
+      <Card className="bg-surface-elevated text-foreground border-border">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm">Performance Monitor</CardTitle>

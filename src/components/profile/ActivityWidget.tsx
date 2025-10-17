@@ -55,7 +55,7 @@ export const ActivityWidget = ({ activities, isLoading = false }: ActivityWidget
       case 'achievement':
         return 'bg-yellow-500/10 border-yellow-500/20';
       default:
-        return 'bg-gray-500/10 border-gray-500/20';
+        return 'bg-muted/10 border-border';
     }
   };
 

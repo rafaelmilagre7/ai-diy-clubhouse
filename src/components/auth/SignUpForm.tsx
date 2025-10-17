@@ -270,7 +270,7 @@ const SignUpForm = ({ onBackToLogin }: SignUpFormProps) => {
                           ? passwordStrength.color === 'red' ? 'bg-red-500'
                           : passwordStrength.color === 'yellow' ? 'bg-yellow-500'
                           : 'bg-green-500'
-                          : 'bg-gray-600'
+                          : 'bg-muted'
                       }`}
                     />
                   ))}
@@ -308,7 +308,7 @@ const SignUpForm = ({ onBackToLogin }: SignUpFormProps) => {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 disabled={isLoading}
                 required
-                className={`bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-aurora-primary focus:border-aurora-primary pr-10 ${
+                className={`bg-surface-elevated border-border text-white placeholder-muted-foreground focus:ring-aurora-primary focus:border-aurora-primary pr-10 ${
                   confirmPassword && !passwordsMatch ? 'border-red-500' : 
                   confirmPassword && passwordsMatch ? 'border-green-500' : ''
                 }`}

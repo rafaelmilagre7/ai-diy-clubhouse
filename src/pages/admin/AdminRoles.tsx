@@ -62,7 +62,7 @@ export default function AdminRoles() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Gestão de Papéis</h1>
-          <p className="text-gray-600">Gerencie os papéis e permissões dos usuários</p>
+          <p className="text-muted-foreground">Gerencie os papéis e permissões dos usuários</p>
         </div>
         <Button onClick={() => setShowCreateForm(true)}>
           <Plus className="mr-2 h-4 w-4" />
