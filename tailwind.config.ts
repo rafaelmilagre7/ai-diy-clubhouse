@@ -153,6 +153,58 @@ const config: Config = {
           DEFAULT: "hsl(var(--social-twitter))",
           hover: "hsl(var(--social-twitter-hover))",
         },
+        
+        // Semantic Status Colors - Fase 14
+        status: {
+          success: {
+            DEFAULT: "hsl(var(--status-success))",
+            light: "hsl(var(--status-success-light))",
+            lighter: "hsl(var(--status-success-lighter))",
+            dark: "hsl(var(--status-success-dark))",
+          },
+          error: {
+            DEFAULT: "hsl(var(--status-error))",
+            light: "hsl(var(--status-error-light))",
+            lighter: "hsl(var(--status-error-lighter))",
+            dark: "hsl(var(--status-error-dark))",
+          },
+          warning: {
+            DEFAULT: "hsl(var(--status-warning))",
+            light: "hsl(var(--status-warning-light))",
+            lighter: "hsl(var(--status-warning-lighter))",
+            dark: "hsl(var(--status-warning-dark))",
+          },
+          info: {
+            DEFAULT: "hsl(var(--status-info))",
+            light: "hsl(var(--status-info-light))",
+            lighter: "hsl(var(--status-info-lighter))",
+            dark: "hsl(var(--status-info-dark))",
+          },
+          neutral: {
+            DEFAULT: "hsl(var(--status-neutral))",
+            light: "hsl(var(--status-neutral-light))",
+            lighter: "hsl(var(--status-neutral-lighter))",
+            dark: "hsl(var(--status-neutral-dark))",
+          },
+        },
+        
+        // Priority System
+        priority: {
+          low: "hsl(var(--priority-low))",
+          normal: "hsl(var(--priority-normal))",
+          high: "hsl(var(--priority-high))",
+          urgent: "hsl(var(--priority-urgent))",
+        },
+        
+        // Email Tracking
+        tracking: {
+          sent: "hsl(var(--tracking-sent))",
+          delivered: "hsl(var(--tracking-delivered))",
+          opened: "hsl(var(--tracking-opened))",
+          clicked: "hsl(var(--tracking-clicked))",
+          bounced: "hsl(var(--tracking-bounced))",
+          failed: "hsl(var(--tracking-failed))",
+        },
       },
       
       // Gradientes customizados

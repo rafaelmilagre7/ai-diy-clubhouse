@@ -27,10 +27,10 @@ const TEMPLATE_TYPES = [
 ];
 
 const PRIORITY_OPTIONS = [
-  { value: 'low' as const, label: 'Baixa', color: 'bg-gray-100 text-gray-800' },
-  { value: 'normal' as const, label: 'Normal', color: 'bg-blue-100 text-blue-800' },
-  { value: 'high' as const, label: 'Alta', color: 'bg-yellow-100 text-yellow-800' },
-  { value: 'urgent' as const, label: 'Urgente', color: 'bg-red-100 text-red-800' },
+  { value: 'low' as const, label: 'Baixa', color: 'bg-priority-low/10 text-priority-low border-priority-low/20' },
+  { value: 'normal' as const, label: 'Normal', color: 'bg-priority-normal/10 text-priority-normal border-priority-normal/20' },
+  { value: 'high' as const, label: 'Alta', color: 'bg-priority-high/10 text-priority-high border-priority-high/20' },
+  { value: 'urgent' as const, label: 'Urgente', color: 'bg-priority-urgent/10 text-priority-urgent border-priority-urgent/20' },
 ];
 
 type TemplateType = 'announcement' | 'maintenance' | 'event' | 'educational' | 'urgent';

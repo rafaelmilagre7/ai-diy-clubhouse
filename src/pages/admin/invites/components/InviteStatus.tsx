@@ -15,7 +15,7 @@ const InviteStatus = ({ invite }: InviteStatusProps) => {
   // Verificar se foi usado
   if (invite.used_at) {
     return (
-      <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200">
+      <Badge variant="secondary" className="bg-status-success-lighter text-status-success border-status-success/20">
         <CheckCircle className="h-3 w-3 mr-1" />
         Utilizado
       </Badge>
@@ -25,7 +25,7 @@ const InviteStatus = ({ invite }: InviteStatusProps) => {
   // Verificar se expirou
   if (new Date(invite.expires_at) < new Date()) {
     return (
-      <Badge variant="destructive" className="bg-red-50 text-red-700 border-red-200">
+      <Badge variant="destructive" className="bg-status-error-lighter text-status-error border-status-error/20">
         <XCircle className="h-3 w-3 mr-1" />
         Expirado
       </Badge>
@@ -46,7 +46,7 @@ const InviteStatus = ({ invite }: InviteStatusProps) => {
 
   // Fallback para o status básico
   return (
-    <Badge variant="default" className="bg-blue-50 text-blue-700 border-blue-200">
+    <Badge variant="default" className="bg-status-info-lighter text-status-info border-status-info/20">
       <Clock className="h-3 w-3 mr-1" />
       Ativo
     </Badge>

@@ -19,6 +19,7 @@ import { LiquidGlassCard } from '@/components/ui/LiquidGlassCard';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { Progress } from '@/components/ui/progress';
+import { StatusBadge } from '@/components/ui/status-badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -51,6 +52,32 @@ export default function StyleGuidePage() {
     { name: 'LinkedIn', cssVar: 'hsl(var(--social-linkedin))', className: 'bg-social-linkedin', hex: '#0A66C2' },
     { name: 'Twitter', cssVar: 'hsl(var(--social-twitter))', className: 'bg-social-twitter', hex: '#1DA1F2' },
   ];
+
+  // Status Semantic Colors - Fase 14
+  const statusColors = [
+    { name: 'Success', cssVar: 'hsl(var(--status-success))', className: 'bg-status-success', hex: 'Verde' },
+    { name: 'Error', cssVar: 'hsl(var(--status-error))', className: 'bg-status-error', hex: 'Vermelho' },
+    { name: 'Warning', cssVar: 'hsl(var(--status-warning))', className: 'bg-status-warning', hex: 'Amarelo' },
+    { name: 'Info', cssVar: 'hsl(var(--status-info))', className: 'bg-status-info', hex: 'Azul' },
+    { name: 'Neutral', cssVar: 'hsl(var(--status-neutral))', className: 'bg-status-neutral', hex: 'Cinza' },
+  ];
+
+  const priorityColors = [
+    { name: 'Low', cssVar: 'hsl(var(--priority-low))', className: 'bg-priority-low', hex: 'Cinza' },
+    { name: 'Normal', cssVar: 'hsl(var(--priority-normal))', className: 'bg-priority-normal', hex: 'Azul' },
+    { name: 'High', cssVar: 'hsl(var(--priority-high))', className: 'bg-priority-high', hex: 'Amarelo' },
+    { name: 'Urgent', cssVar: 'hsl(var(--priority-urgent))', className: 'bg-priority-urgent', hex: 'Vermelho' },
+  ];
+
+  const trackingColors = [
+    { name: 'Sent', cssVar: 'hsl(var(--tracking-sent))', className: 'bg-tracking-sent', hex: 'Azul' },
+    { name: 'Delivered', cssVar: 'hsl(var(--tracking-delivered))', className: 'bg-tracking-delivered', hex: 'Verde' },
+    { name: 'Opened', cssVar: 'hsl(var(--tracking-opened))', className: 'bg-tracking-opened', hex: 'Verde Claro' },
+    { name: 'Clicked', cssVar: 'hsl(var(--tracking-clicked))', className: 'bg-tracking-clicked', hex: 'Roxo' },
+    { name: 'Bounced', cssVar: 'hsl(var(--tracking-bounced))', className: 'bg-tracking-bounced', hex: 'Laranja' },
+    { name: 'Failed', cssVar: 'hsl(var(--tracking-failed))', className: 'bg-tracking-failed', hex: 'Vermelho' },
+  ];
+
 
   // Sistema de Superfícies
   const surfaceColors = [
@@ -201,6 +228,59 @@ export default function StyleGuidePage() {
                 </CardHeader>
                 <CardContent>
                   <ColorPalette colors={socialColors} columns={3} />
+                </CardContent>
+              </Card>
+
+              {/* Status Semantic Colors - Fase 14 */}
+              <Card className="surface-elevated">
+                <CardHeader>
+                  <CardTitle>Status Semantic Colors</CardTitle>
+                  <CardDescription>
+                    Sistema de cores semânticas para status, prioridades e tracking - Fase 14
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Status Colors */}
+                  <div className="space-y-4">
+                    <h3 className="text-heading-3">Status Colors</h3>
+                    <ColorPalette colors={statusColors} columns={5} />
+                    <div className="flex gap-3 flex-wrap pt-2">
+                      <StatusBadge status="success">Success</StatusBadge>
+                      <StatusBadge status="error">Error</StatusBadge>
+                      <StatusBadge status="warning">Warning</StatusBadge>
+                      <StatusBadge status="info">Info</StatusBadge>
+                      <StatusBadge status="neutral">Neutral</StatusBadge>
+                    </div>
+                    <CodeBlock
+                      language="tsx"
+                      code={`<StatusBadge status="success">Success</StatusBadge>
+<StatusBadge status="error">Error</StatusBadge>
+<StatusBadge status="warning">Warning</StatusBadge>
+<StatusBadge status="info">Info</StatusBadge>
+<StatusBadge status="neutral">Neutral</StatusBadge>`}
+                    />
+                  </div>
+
+                  {/* Priority Colors */}
+                  <div className="space-y-4">
+                    <h3 className="text-heading-3">Priority Colors</h3>
+                    <ColorPalette colors={priorityColors} columns={4} />
+                    <div className="flex gap-3 flex-wrap pt-2">
+                      <Badge className="bg-priority-low/10 text-priority-low border-priority-low/20">Low</Badge>
+                      <Badge className="bg-priority-normal/10 text-priority-normal border-priority-normal/20">Normal</Badge>
+                      <Badge className="bg-priority-high/10 text-priority-high border-priority-high/20">High</Badge>
+                      <Badge className="bg-priority-urgent/10 text-priority-urgent border-priority-urgent/20">Urgent</Badge>
+                    </div>
+                  </div>
+
+                  {/* Tracking Colors */}
+                  <div className="space-y-4">
+                    <h3 className="text-heading-3">Email Tracking Colors</h3>
+                    <ColorPalette colors={trackingColors} columns={3} />
+                    <p className="text-body-small text-muted-foreground">
+                      Cores específicas para status de email tracking (enviado, entregue, aberto, clicado, rejeitado, falhou)
+                    </p>
+                  </div>
                 </CardContent>
               </Card>
 

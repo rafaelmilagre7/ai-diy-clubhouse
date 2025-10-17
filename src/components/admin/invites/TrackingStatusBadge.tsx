@@ -48,21 +48,21 @@ export const TrackingStatusBadge: React.FC<TrackingStatusBadgeProps> = ({
             icon: Clock,
             text: 'Aguardando',
             variant: 'secondary' as const,
-            className: 'bg-gray-50 text-gray-700 border-gray-200'
+            className: 'bg-status-neutral-lighter text-status-neutral border-status-neutral/20'
           };
         case 'sent':
           return {
             icon: Mail,
             text: 'Enviado',
             variant: 'outline' as const,
-            className: 'bg-blue-50 text-blue-700 border-blue-200'
+            className: 'bg-tracking-sent/10 text-tracking-sent border-tracking-sent/20'
           };
         case 'delivered':
           return {
             icon: MailCheck,
             text: 'Entregue',
             variant: 'outline' as const,
-            className: 'bg-green-50 text-green-700 border-green-200'
+            className: 'bg-tracking-delivered/10 text-tracking-delivered border-tracking-delivered/20'
           };
         case 'opened':
           return {
@@ -71,7 +71,7 @@ export const TrackingStatusBadge: React.FC<TrackingStatusBadgeProps> = ({
               ? `Aberto (${metadata.open_count}x)` 
               : 'Aberto',
             variant: 'outline' as const,
-            className: 'bg-emerald-50 text-emerald-700 border-emerald-200'
+            className: 'bg-tracking-opened/10 text-tracking-opened border-tracking-opened/20'
           };
         case 'clicked':
           return {
@@ -80,28 +80,28 @@ export const TrackingStatusBadge: React.FC<TrackingStatusBadgeProps> = ({
               ? `Clicado (${metadata.click_count}x)` 
               : 'Clicado',
             variant: 'default' as const,
-            className: 'bg-indigo-50 text-indigo-700 border-indigo-200'
+            className: 'bg-tracking-clicked/10 text-tracking-clicked border-tracking-clicked/20'
           };
         case 'bounced':
           return {
             icon: AlertTriangle,
             text: 'Rejeitado',
             variant: 'destructive' as const,
-            className: 'bg-orange-50 text-orange-700 border-orange-200'
+            className: 'bg-tracking-bounced/10 text-tracking-bounced border-tracking-bounced/20'
           };
         case 'complained':
           return {
             icon: XCircle,
             text: 'Spam',
             variant: 'destructive' as const,
-            className: 'bg-red-50 text-red-700 border-red-200'
+            className: 'bg-status-error-lighter text-status-error border-status-error/20'
           };
         case 'failed':
           return {
             icon: XCircle,
             text: 'Falhou',
             variant: 'destructive' as const,
-            className: 'bg-red-50 text-red-700 border-red-200'
+            className: 'bg-tracking-failed/10 text-tracking-failed border-tracking-failed/20'
           };
       }
     }
@@ -116,21 +116,21 @@ export const TrackingStatusBadge: React.FC<TrackingStatusBadgeProps> = ({
             icon: MessageSquare,
             text: 'Enviado',
             variant: 'outline' as const,
-            className: 'bg-green-50 text-green-700 border-green-200'
+            className: 'bg-tracking-sent/10 text-tracking-sent border-tracking-sent/20'
           };
         case 'delivered':
           return {
             icon: MessageCircle,
             text: 'Entregue',
             variant: 'outline' as const,
-            className: 'bg-emerald-50 text-emerald-700 border-emerald-200'
+            className: 'bg-tracking-delivered/10 text-tracking-delivered border-tracking-delivered/20'
           };
         case 'read':
           return {
             icon: Eye,
             text: 'Lido',
             variant: 'default' as const,
-            className: 'bg-blue-50 text-blue-700 border-blue-200'
+            className: 'bg-tracking-opened/10 text-tracking-opened border-tracking-opened/20'
           };
         case 'failed':
         case 'undelivered':
@@ -138,7 +138,7 @@ export const TrackingStatusBadge: React.FC<TrackingStatusBadgeProps> = ({
             icon: XCircle,
             text: 'Falhou',
             variant: 'destructive' as const,
-            className: 'bg-red-50 text-red-700 border-red-200'
+            className: 'bg-tracking-failed/10 text-tracking-failed border-tracking-failed/20'
           };
         case 'pending':
         default:
@@ -146,7 +146,7 @@ export const TrackingStatusBadge: React.FC<TrackingStatusBadgeProps> = ({
             icon: Timer,
             text: 'Processando',
             variant: 'secondary' as const,
-            className: 'bg-yellow-50 text-yellow-700 border-yellow-200'
+            className: 'bg-status-warning-lighter text-status-warning border-status-warning/20'
           };
       }
     }
@@ -159,7 +159,7 @@ export const TrackingStatusBadge: React.FC<TrackingStatusBadgeProps> = ({
           icon: MousePointer,
           text: 'Interagiu',
           variant: 'default' as const,
-          className: 'bg-indigo-50 text-indigo-700 border-indigo-200'
+          className: 'bg-tracking-clicked/10 text-tracking-clicked border-tracking-clicked/20'
         };
       }
       if (metadata.opened_at) {
@@ -167,7 +167,7 @@ export const TrackingStatusBadge: React.FC<TrackingStatusBadgeProps> = ({
           icon: Eye,
           text: 'Visualizado',
           variant: 'outline' as const,
-          className: 'bg-emerald-50 text-emerald-700 border-emerald-200'
+          className: 'bg-tracking-opened/10 text-tracking-opened border-tracking-opened/20'
         };
       }
       if (metadata.delivered_at) {
@@ -175,7 +175,7 @@ export const TrackingStatusBadge: React.FC<TrackingStatusBadgeProps> = ({
           icon: CheckCircle,
           text: 'Entregue',
           variant: 'outline' as const,
-          className: 'bg-green-50 text-green-700 border-green-200'
+          className: 'bg-tracking-delivered/10 text-tracking-delivered border-tracking-delivered/20'
         };
       }
       if (metadata.sent_at) {
@@ -183,7 +183,7 @@ export const TrackingStatusBadge: React.FC<TrackingStatusBadgeProps> = ({
           icon: Send,
           text: 'Enviado',
           variant: 'outline' as const,
-          className: 'bg-blue-50 text-blue-700 border-blue-200'
+          className: 'bg-tracking-sent/10 text-tracking-sent border-tracking-sent/20'
         };
       }
     }
@@ -193,7 +193,7 @@ export const TrackingStatusBadge: React.FC<TrackingStatusBadgeProps> = ({
       icon: Clock,
       text: 'Aguardando',
       variant: 'secondary' as const,
-      className: 'bg-gray-50 text-gray-700 border-gray-200'
+      className: 'bg-status-neutral-lighter text-status-neutral border-status-neutral/20'
     };
   };
 

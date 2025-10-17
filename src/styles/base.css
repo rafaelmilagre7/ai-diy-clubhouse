@@ -194,6 +194,56 @@
      ============================================ */
   --toast-glass-white: 0 0% 100%;         /* rgba(255, 255, 255, X) para toasts */
   --toast-shadow-dark: 0 0% 0%;           /* rgba(0, 0, 0, X) para sombras de toast */
+
+  /* ============================================
+     SEMANTIC STATUS COLORS - Normalização Fase 14
+     Sistema de cores semânticas para status, prioridades e tracking
+     Substituem bg-green-, bg-red-, bg-yellow-, bg-blue-, bg-gray-
+     ============================================ */
+
+  /* Status Success (Verde) */
+  --status-success: 142 76% 36%;           /* Verde principal */
+  --status-success-light: 142 76% 68%;     /* bg-green-100 equivalent */
+  --status-success-lighter: 142 76% 92%;   /* bg-green-50 equivalent */
+  --status-success-dark: 142 76% 25%;      /* hover state */
+
+  /* Status Error (Vermelho) */
+  --status-error: 0 84% 60%;               /* Vermelho principal */
+  --status-error-light: 0 84% 75%;         /* bg-red-100 equivalent */
+  --status-error-lighter: 0 84% 96%;       /* bg-red-50 equivalent */
+  --status-error-dark: 0 84% 45%;          /* hover state */
+
+  /* Status Warning (Amarelo) */
+  --status-warning: 43 96% 56%;            /* Amarelo principal */
+  --status-warning-light: 43 96% 70%;      /* bg-yellow-100 equivalent */
+  --status-warning-lighter: 43 96% 92%;    /* bg-yellow-50 equivalent */
+  --status-warning-dark: 43 96% 40%;       /* hover state */
+
+  /* Status Info (Azul) */
+  --status-info: 207 90% 54%;              /* Azul principal */
+  --status-info-light: 207 90% 70%;        /* bg-blue-100 equivalent */
+  --status-info-lighter: 207 90% 96%;      /* bg-blue-50 equivalent */
+  --status-info-dark: 207 90% 40%;         /* hover state */
+
+  /* Status Neutral (Cinza) */
+  --status-neutral: 220 9% 46%;            /* Cinza principal */
+  --status-neutral-light: 220 9% 70%;      /* bg-gray-100 equivalent */
+  --status-neutral-lighter: 220 9% 96%;    /* bg-gray-50 equivalent */
+  --status-neutral-dark: 220 9% 30%;       /* hover state */
+
+  /* Priority System */
+  --priority-low: 220 9% 46%;              /* Cinza - baixa prioridade */
+  --priority-normal: 207 90% 54%;          /* Azul - normal */
+  --priority-high: 43 96% 56%;             /* Amarelo - alta */
+  --priority-urgent: 0 84% 60%;            /* Vermelho - urgente */
+
+  /* Email Tracking Status */
+  --tracking-sent: 207 90% 54%;            /* Azul - enviado */
+  --tracking-delivered: 142 76% 36%;       /* Verde - entregue */
+  --tracking-opened: 154 73% 59%;          /* Verde claro - aberto */
+  --tracking-clicked: 262 83% 58%;         /* Roxo - clicado */
+  --tracking-bounced: 38 92% 50%;          /* Laranja - rejeitado */
+  --tracking-failed: 0 84% 60%;            /* Vermelho - falhou */
 }
 
 .light {
