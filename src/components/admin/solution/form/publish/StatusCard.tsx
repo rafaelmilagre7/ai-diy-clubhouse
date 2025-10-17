@@ -15,16 +15,16 @@ const StatusCard: React.FC<StatusCardProps> = ({ icon, title, status }) => {
   
   switch (status) {
     case "check":
-      statusIcon = <CheckCircle2 className="h-5 w-5 text-green-600" />;
-      statusColor = "border-l-green-600";
+      statusIcon = <CheckCircle2 className="h-5 w-5 text-system-healthy" />;
+      statusColor = "border-l-system-healthy";
       break;
     case "warning":
-      statusIcon = <AlertTriangle className="h-5 w-5 text-amber-600" />;
-      statusColor = "border-l-amber-600";
+      statusIcon = <AlertTriangle className="h-5 w-5 text-status-warning" />;
+      statusColor = "border-l-status-warning";
       break;
     case "pending":
-      statusIcon = <AlertCircle className="h-5 w-5 text-slate-400" />;
-      statusColor = "border-l-slate-400";
+      statusIcon = <AlertCircle className="h-5 w-5 text-muted-foreground" />;
+      statusColor = "border-l-border";
       break;
   }
   
@@ -33,7 +33,7 @@ const StatusCard: React.FC<StatusCardProps> = ({ icon, title, status }) => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           {React.cloneElement(icon as React.ReactElement, { 
-            className: `h-5 w-5 ${status === "check" ? "text-green-600" : status === "warning" ? "text-amber-600" : "text-slate-400"}` 
+            className: `h-5 w-5 ${status === "check" ? "text-system-healthy" : status === "warning" ? "text-status-warning" : "text-muted-foreground"}` 
           })}
           <span className="font-medium">{title}</span>
         </div>

@@ -22,10 +22,10 @@ const ModulesList = ({ modules, onEditModule, onPreview, isLoading }: ModulesLis
     const hasContent = module.content?.blocks && module.content.blocks.length > 0;
     
     if (!hasContent) {
-      return <XCircle className="h-5 w-5 text-red-500" />;
+      return <XCircle className="h-5 w-5 text-status-error" />;
     }
     
-    return <CheckCircle className="h-5 w-5 text-green-500" />;
+    return <CheckCircle className="h-5 w-5 text-system-healthy" />;
   };
   
   // Função para obter a descrição do tipo de módulo

@@ -29,10 +29,10 @@ const BasicInfoRightColumn: React.FC<BasicInfoRightColumnProps> = ({
   // Função para obter a cor correspondente à dificuldade
   const getDifficultyColor = (diff: string) => {
     switch (diff) {
-      case "easy": return "bg-green-500 text-white";
-      case "medium": return "bg-yellow-500 text-white";
-      case "advanced": return "bg-orange-500 text-white";
-      default: return "bg-gray-500 text-white";
+      case "easy": return "bg-difficulty-beginner text-white";
+      case "medium": return "bg-difficulty-intermediate text-white";
+      case "advanced": return "bg-difficulty-advanced text-white";
+      default: return "bg-muted text-foreground";
     }
   };
 
@@ -97,13 +97,13 @@ const BasicInfoRightColumn: React.FC<BasicInfoRightColumnProps> = ({
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                <SelectItem value="easy" className="bg-green-100 hover:bg-green-200">
+                <SelectItem value="easy" className="bg-difficulty-beginner/10 hover:bg-difficulty-beginner/20">
                   Fácil
                 </SelectItem>
-                <SelectItem value="medium" className="bg-yellow-100 hover:bg-yellow-200">
+                <SelectItem value="medium" className="bg-difficulty-intermediate/10 hover:bg-difficulty-intermediate/20">
                   Normal
                 </SelectItem>
-                <SelectItem value="advanced" className="bg-orange-100 hover:bg-orange-200">
+                <SelectItem value="advanced" className="bg-difficulty-advanced/10 hover:bg-difficulty-advanced/20">
                   Avançado
                 </SelectItem>
               </SelectContent>
