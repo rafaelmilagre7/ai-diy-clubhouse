@@ -51,6 +51,8 @@ export const NotificationBell = () => {
         return '🎓';
       case 'new_lesson':
         return '📚';
+      case 'new_module':
+        return '📂';
       
       // Soluções
       case 'new_solution':
@@ -59,12 +61,26 @@ export const NotificationBell = () => {
       // Sugestões
       case 'suggestion_status_change':
         return '📋';
+      case 'official_suggestion_comment':
+        return '📢';
       
       // Comunidade
       case 'topic_solved':
         return '✅';
       case 'community_reply':
         return '💬';
+      case 'community_mention':
+        return '👤';
+      
+      // Eventos
+      case 'event_reminder_24h':
+        return '📅';
+      case 'event_reminder_1h':
+        return '⏰';
+      
+      // Certificados
+      case 'certificate_available':
+        return '🎖️';
       
       // Admin
       case 'admin_communication':

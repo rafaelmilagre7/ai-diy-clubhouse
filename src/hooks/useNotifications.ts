@@ -45,6 +45,10 @@ const groupNotifications = (notifications: Notification[]): Notification[] => {
         existing.title = `${existing.grouped_count} novas respostas no seu comentário`;
       } else if (notification.type === 'new_lesson') {
         existing.title = `${existing.grouped_count} novas aulas adicionadas`;
+      } else if (notification.type === 'new_module') {
+        existing.title = `${existing.grouped_count} novos módulos adicionados`;
+      } else if (notification.type === 'community_mention') {
+        existing.title = `${existing.grouped_count} novas menções`;
       }
     } else {
       grouped.set(groupKey, {
@@ -180,7 +184,8 @@ export const useNotifications = () => {
           
           // Notificações de alta prioridade (sempre mostram toast)
           if (newNotification.priority === 'high' || 
-              ['new_course', 'new_solution', 'suggestion_status_change', 'topic_solved'].includes(newNotification.type)) {
+              ['new_course', 'new_solution', 'suggestion_status_change', 'topic_solved', 
+               'official_suggestion_comment', 'certificate_available', 'event_reminder_1h'].includes(newNotification.type)) {
             toast.success(newNotification.title, {
               description: newNotification.message,
               action: newNotification.action_url ? {
@@ -190,7 +195,7 @@ export const useNotifications = () => {
             });
           }
           // Notificações de comunidade
-          else if (newNotification.type === 'community_reply') {
+          else if (['community_reply', 'community_mention'].includes(newNotification.type)) {
             toast.info(newNotification.title, {
               description: newNotification.message,
               action: {
@@ -209,7 +214,13 @@ export const useNotifications = () => {
             });
           }
           // Notificações de aprendizado (prioridade normal)
-          else if (newNotification.type === 'new_lesson') {
+          else if (['new_lesson', 'new_module'].includes(newNotification.type)) {
+            toast.info(newNotification.title, {
+              description: newNotification.message,
+            });
+          }
+          // Notificações de eventos
+          else if (['event_reminder_24h'].includes(newNotification.type)) {
             toast.info(newNotification.title, {
               description: newNotification.message,
             });
