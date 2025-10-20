@@ -1,5 +1,4 @@
 import React, { memo } from 'react';
-import { Badge } from '@/components/ui/badge';
 import { Solution } from '@/lib/supabase';
 import { TrendingUp, Settings, BarChart } from 'lucide-react';
 import { GlassCard } from '@/components/ui/GlassCard';
@@ -16,25 +15,25 @@ const getCategoryVariant = (category: string) => {
       return {
         variant: 'revenue' as const,
         icon: <TrendingUp className="h-3.5 w-3.5" />,
-        badgeClass: 'bg-revenue/20 text-revenue border-revenue/30',
+        badgeClass: 'bg-revenue/20 text-revenue border-revenue/30 border',
       };
     case 'Operacional':
       return {
         variant: 'operational' as const,
         icon: <Settings className="h-3.5 w-3.5" />,
-        badgeClass: 'bg-operational/20 text-operational border-operational/30',
+        badgeClass: 'bg-operational/20 text-operational border-operational/30 border',
       };
     case 'Estratégia':
       return {
         variant: 'strategy' as const,
         icon: <BarChart className="h-3.5 w-3.5" />,
-        badgeClass: 'bg-strategy/20 text-strategy border-strategy/30',
+        badgeClass: 'bg-strategy/20 text-strategy border-strategy/30 border',
       };
     default:
       return {
         variant: 'default' as const,
         icon: <TrendingUp className="h-3.5 w-3.5" />,
-        badgeClass: 'bg-aurora-primary/20 text-aurora-primary border-aurora-primary/30',
+        badgeClass: 'bg-aurora-primary/20 text-aurora-primary border-aurora-primary/30 border',
       };
   }
 };
@@ -70,13 +69,10 @@ export const AuroraGlassSolutionCard = memo<AuroraGlassSolutionCardProps>(({ sol
       {/* Conteúdo */}
       <div className="p-md space-y-sm">
         {/* Badge da categoria com cor específica */}
-        <Badge 
-          variant="outline" 
-          className={`text-xs font-medium ${categoryConfig.badgeClass}`}
-        >
-          <span className="mr-1">{categoryConfig.icon}</span>
+        <div className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${categoryConfig.badgeClass}`}>
+          {categoryConfig.icon}
           {solution.category}
-        </Badge>
+        </div>
 
         {/* Título */}
         <h3 className="font-semibold text-base text-foreground line-clamp-2">
