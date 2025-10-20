@@ -185,7 +185,8 @@ export const useNotifications = () => {
           // Notificações de alta prioridade (sempre mostram toast)
           if (newNotification.priority === 'high' || 
               ['new_course', 'new_solution', 'suggestion_status_change', 'topic_solved', 
-               'official_suggestion_comment', 'certificate_available', 'event_reminder_1h'].includes(newNotification.type)) {
+               'official_suggestion_comment', 'certificate_available', 'event_reminder_1h',
+               'suggestion_milestone', 'topic_milestone', 'connection_anniversary'].includes(newNotification.type)) {
             toast.success(newNotification.title, {
               description: newNotification.message,
               action: newNotification.action_url ? {

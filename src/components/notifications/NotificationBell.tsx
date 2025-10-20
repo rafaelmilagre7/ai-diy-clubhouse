@@ -82,6 +82,18 @@ export const NotificationBell = () => {
       case 'certificate_available':
         return '🎖️';
       
+      // Gamificação
+      case 'suggestion_milestone':
+        return '🎯';
+      case 'topic_milestone':
+        return '👥';
+      case 'course_reminder':
+        return '📚';
+      case 'solution_reminder':
+        return '💡';
+      case 'connection_anniversary':
+        return '🎉';
+      
       // Admin
       case 'admin_communication':
         return '📢';
