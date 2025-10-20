@@ -10,7 +10,7 @@ import { OnboardingStatusCard } from "@/components/admin/OnboardingStatusCard";
 import { RecentActivitiesCard } from "@/components/admin/analytics/RecentActivitiesCard";
 import { NotificationHealthMonitor } from "@/components/admin/notifications/NotificationHealthMonitor";
 
-import { RefreshCw, Users, Activity, CheckCircle, TrendingUp, BarChart3, Zap, Star } from "lucide-react";
+import { RefreshCw, Users, Activity, CheckCircle, TrendingUp, BarChart3, Zap, Star, Info } from "lucide-react";
 import { VideoDurationSync } from "@/components/admin/VideoDurationSync";
 const AdminDashboard = () => {
   const [timeRange, setTimeRange] = useState('30d');
@@ -143,6 +143,23 @@ const AdminDashboard = () => {
               </AdminButton>
             </div>
           </div>
+
+          {/* Historical Data Warning */}
+          {activityData?.dataMetadata?.isHistoricalData && (
+            <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/20">
+              <div className="flex items-center gap-2">
+                <Info className="h-5 w-5 text-amber-500 flex-shrink-0" />
+                <p className="text-sm text-muted-foreground">
+                  {activityData.dataMetadata.dataRangeDescription}
+                  {activityData.dataMetadata.newestDataDate && (
+                    <span className="ml-1">
+                      (última atividade: {new Date(activityData.dataMetadata.newestDataDate).toLocaleDateString('pt-BR')})
+                    </span>
+                  )}
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Enhanced Metrics Cards */}
           <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-4" key={`stats-grid-${timeRange}-${lastRefresh.getTime()}`}>

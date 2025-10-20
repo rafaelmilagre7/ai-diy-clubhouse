@@ -22,6 +22,12 @@ interface SystemActivity {
   forumActivity: number;
   timeRange: string;
   lastUpdated: string;
+  dataMetadata?: {
+    oldestDataDate?: string;
+    newestDataDate?: string;
+    isHistoricalData?: boolean;
+    dataRangeDescription?: string;
+  };
 }
 
 export const useRealSystemActivity = (timeRange: string) => {
@@ -50,37 +56,77 @@ export const useRealSystemActivity = (timeRange: string) => {
       }
       
       try {
-        // Novos cadastros no período
+        // Buscar datas mais recentes e antigas dos dados para calcular período real
+        const { data: newestProfile } = await supabase
+          .from('profiles')
+          .select('created_at')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        const { data: oldestProfile } = await supabase
+          .from('profiles')
+          .select('created_at')
+          .order('created_at', { ascending: true })
+          .limit(1)
+          .single();
+
+        // Calcular período baseado na data mais recente real dos dados
+        const recentDate = newestProfile?.created_at ? new Date(newestProfile.created_at) : new Date();
+        const calculatedStartDate = new Date(recentDate);
+        
+        switch (timeRange) {
+          case '7d':
+            calculatedStartDate.setDate(calculatedStartDate.getDate() - 7);
+            break;
+          case '30d':
+            calculatedStartDate.setDate(calculatedStartDate.getDate() - 30);
+            break;
+          case '90d':
+            calculatedStartDate.setDate(calculatedStartDate.getDate() - 90);
+            break;
+          case '1y':
+            calculatedStartDate.setFullYear(calculatedStartDate.getFullYear() - 1);
+            break;
+        }
+
+        // Novos cadastros no período calculado
         const { count: recentSignups } = await supabase
           .from('profiles')
           .select('*', { count: 'exact', head: true })
-          .gte('created_at', startDate.toISOString());
+          .gte('created_at', calculatedStartDate.toISOString());
 
-        // Usuários ativos no período (com alguma atividade)
-        const { count: activeToday } = await supabase
+        // Total de usuários únicos com atividade (não filtrado por período)
+        const { data: uniqueActiveUsers } = await supabase
           .from('analytics')
-          .select('user_id', { count: 'exact', head: true })
-          .gte('created_at', startDate.toISOString());
+          .select('user_id');
+        
+        const activeUsersCount = new Set(uniqueActiveUsers?.map(a => a.user_id) || []).size;
 
-        // Atividade na comunidade (novos tópicos e posts no período)
+        // Total de implementações
+        const { count: totalImplementations } = await supabase
+          .from('implementation_trails')
+          .select('*', { count: 'exact', head: true });
+
+        // Implementações completas
+        const { count: completedImplementations } = await supabase
+          .from('implementation_trails')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'completed');
+
+        // Atividade na comunidade no período calculado
         const { count: topicsInPeriod } = await supabase
           .from('community_topics')
           .select('*', { count: 'exact', head: true })
-          .gte('created_at', startDate.toISOString());
+          .gte('created_at', calculatedStartDate.toISOString());
 
         const { count: postsInPeriod } = await supabase
           .from('community_posts')
           .select('*', { count: 'exact', head: true })
-          .gte('created_at', startDate.toISOString());
+          .gte('created_at', calculatedStartDate.toISOString());
 
-        // Implementações iniciadas no período
-        const { count: implementationsInPeriod } = await supabase
-          .from('implementation_trails')
-          .select('*', { count: 'exact', head: true })
-          .gte('created_at', startDate.toISOString());
-
-        // Buscar atividades recentes reais do audit_logs com informações do usuário
-        const { data: auditLogs, error: auditError } = await supabase
+        // Buscar atividades recentes reais do audit_logs (sem filtro de data para pegar as mais recentes)
+        const { data: auditLogs } = await supabase
           .from('audit_logs')
           .select(`
             id,
@@ -91,7 +137,6 @@ export const useRealSystemActivity = (timeRange: string) => {
             timestamp,
             resource_id
           `)
-          .gte('timestamp', startDate.toISOString())
           .order('timestamp', { ascending: false })
           .limit(20);
 
@@ -116,16 +161,27 @@ export const useRealSystemActivity = (timeRange: string) => {
           user_email: profileMap.get(log.user_id)?.email
         })) || [];
 
+        // Determinar se estamos usando dados históricos
+        const isHistorical = recentDate < new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
         return {
-          totalLogins: activeToday || 0,
+          totalLogins: activeUsersCount || 0,
           newUsers: recentSignups || 0,
-          activeImplementations: implementationsInPeriod || 0,
-          completedSolutions: 0, // Pode ser implementado futuramente
+          activeImplementations: totalImplementations || 0,
+          completedSolutions: completedImplementations || 0,
           systemHealth: 'healthy' as const,
           recentActivities,
           forumActivity: (topicsInPeriod || 0) + (postsInPeriod || 0),
           timeRange,
-          lastUpdated: new Date().toISOString()
+          lastUpdated: new Date().toISOString(),
+          dataMetadata: {
+            oldestDataDate: oldestProfile?.created_at,
+            newestDataDate: newestProfile?.created_at,
+            isHistoricalData: isHistorical,
+            dataRangeDescription: isHistorical 
+              ? 'Dados históricos da plataforma' 
+              : 'Dados atuais da plataforma'
+          }
         };
 
       } catch (error) {
