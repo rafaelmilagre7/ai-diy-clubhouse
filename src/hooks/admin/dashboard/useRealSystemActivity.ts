@@ -96,12 +96,10 @@ export const useRealSystemActivity = (timeRange: string) => {
           .select('*', { count: 'exact', head: true })
           .gte('created_at', calculatedStartDate.toISOString());
 
-        // Total de usuários únicos com atividade (não filtrado por período)
-        const { data: uniqueActiveUsers } = await supabase
-          .from('analytics')
-          .select('user_id');
-        
-        const activeUsersCount = new Set(uniqueActiveUsers?.map(a => a.user_id) || []).size;
+        // Total de usuários (como "usuários ativos")
+        const { count: totalUsers } = await supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true });
 
         // Total de implementações
         const { count: totalImplementations } = await supabase
@@ -165,7 +163,7 @@ export const useRealSystemActivity = (timeRange: string) => {
         const isHistorical = recentDate < new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
         return {
-          totalLogins: activeUsersCount || 0,
+          totalLogins: totalUsers || 0,
           newUsers: recentSignups || 0,
           activeImplementations: totalImplementations || 0,
           completedSolutions: completedImplementations || 0,
