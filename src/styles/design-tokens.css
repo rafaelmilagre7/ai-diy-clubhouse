@@ -360,6 +360,46 @@
 .border-performance-poor { border-color: hsl(var(--performance-poor)); }
 .border-performance-poor\/30 { border-color: hsl(var(--performance-poor) / 0.3); }
 
+/* === AI INSIGHTS UTILITIES (FASE 4) === */
+.ai-notification {
+  @apply bg-gradient-to-br from-aurora-primary/10 to-aurora-primary/5;
+  @apply border border-aurora-primary/20;
+  @apply shadow-premium;
+  @apply backdrop-blur-sm;
+}
+
+.ai-badge {
+  @apply inline-flex items-center gap-1 px-2 py-1 rounded-full;
+  @apply bg-aurora-primary/20 text-aurora-primary;
+  @apply text-xs font-semibold;
+  @apply animate-pulse-subtle;
+}
+
+.ai-shine {
+  position: relative;
+  overflow: hidden;
+}
+
+.ai-shine::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent 0%, hsl(var(--aurora-primary) / 0.3) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: shine-effect 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.ai-glow-text {
+  @apply text-transparent bg-clip-text;
+  @apply bg-gradient-to-r from-aurora-primary via-aurora to-aurora-primary-light;
+  @apply animate-gradient-shift;
+  background-size: 200% auto;
+}
+
 /* === SEVERITY COLOR UTILITIES === */
 .text-severity-critical { color: hsl(var(--severity-critical)); }
 .bg-severity-critical { background-color: hsl(var(--severity-critical)); }

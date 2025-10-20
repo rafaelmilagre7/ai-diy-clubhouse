@@ -450,6 +450,9 @@ const config: Config = {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
         
+        // Gradiente para shine effect
+        'shine-gradient': 'linear-gradient(90deg, transparent 0%, hsl(var(--aurora-primary) / 0.3) 50%, transparent 100%)',
+        
         // === SEMANTIC GRADIENTS - BATCH 4 ===
         // Brand gradients
         'gradient-aurora': 'linear-gradient(135deg, hsl(var(--aurora-primary)), hsl(var(--aurora-primary-light)))',
@@ -490,6 +493,10 @@ const config: Config = {
         xl: "var(--shadow-xl)",
         aurora: "var(--shadow-aurora)",
         "aurora-strong": "var(--shadow-aurora-strong)",
+        "glow-sm": "0 0 10px hsl(var(--aurora-primary) / 0.3)",
+        "glow-md": "0 0 20px hsl(var(--aurora-primary) / 0.4)",
+        "glow-lg": "0 0 30px hsl(var(--aurora-primary) / 0.5)",
+        "premium": "0 4px 20px hsl(var(--aurora-primary) / 0.2), 0 0 40px hsl(var(--aurora-primary) / 0.1)",
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -602,6 +609,52 @@ const config: Config = {
           "50%": {
             transform: "translateY(-10px)"
           }
+        },
+        
+        // Gradient Shift - animação de gradiente para textos
+        "gradient-shift": {
+          "0%, 100%": {
+            backgroundPosition: "0% 50%"
+          },
+          "50%": {
+            backgroundPosition: "100% 50%"
+          }
+        },
+        
+        // Pulse Subtle - pulsação suave para badges
+        "pulse-subtle": {
+          "0%, 100%": {
+            opacity: "1",
+            transform: "scale(1)"
+          },
+          "50%": {
+            opacity: "0.9",
+            transform: "scale(0.98)"
+          }
+        },
+        
+        // Pulse Premium - pulsação premium para IA insights
+        "pulse-premium": {
+          "0%, 100%": {
+            opacity: "1",
+            transform: "scale(1)",
+            boxShadow: "0 0 0 0 hsl(var(--aurora-primary) / 0.4)"
+          },
+          "50%": {
+            opacity: "0.95",
+            transform: "scale(1.02)",
+            boxShadow: "0 0 20px 8px hsl(var(--aurora-primary) / 0.2)"
+          }
+        },
+        
+        // Shine Effect - efeito brilho para elementos premium
+        "shine-effect": {
+          "0%": {
+            backgroundPosition: "-200% center"
+          },
+          "100%": {
+            backgroundPosition: "200% center"
+          }
         }
       },
       animation: {
@@ -619,6 +672,10 @@ const config: Config = {
         "spin-slow": "spin-slow 8s linear infinite",
         "blob": "blob 7s infinite",
         "float": "float 4s ease-in-out infinite",
+        "gradient-shift": "gradient-shift 3s ease infinite",
+        "pulse-subtle": "pulse-subtle 2s ease-in-out infinite",
+        "pulse-premium": "pulse-premium 2.5s ease-in-out infinite",
+        "shine-effect": "shine-effect 3s ease-in-out infinite",
         
         // Combinações de animações
         "enter": "fade-in 0.3s ease-out, scale-in 0.2s ease-out",
