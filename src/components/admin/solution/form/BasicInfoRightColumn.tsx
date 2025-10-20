@@ -29,9 +29,9 @@ const BasicInfoRightColumn: React.FC<BasicInfoRightColumnProps> = ({
   // Função para obter a cor correspondente à dificuldade
   const getDifficultyColor = (diff: string) => {
     switch (diff) {
-      case "easy": return "bg-difficulty-beginner text-white";
-      case "medium": return "bg-difficulty-intermediate text-white";
-      case "advanced": return "bg-difficulty-advanced text-white";
+      case "easy": return "bg-difficulty-beginner text-primary-foreground";
+      case "medium": return "bg-difficulty-intermediate text-primary-foreground";
+      case "advanced": return "bg-difficulty-advanced text-primary-foreground";
       default: return "bg-muted text-foreground";
     }
   };

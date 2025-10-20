@@ -91,7 +91,7 @@ export const SolutionCertificateCard = ({
         <div className={`bg-gradient-to-br ${categoryConfig.color} pb-4 pt-8 relative overflow-hidden`}>
           <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent"></div>
           <div className="flex justify-center relative z-10">
-            <div className="bg-white/10 backdrop-blur-sm rounded-full p-4 group-hover:scale-110 transition-smooth">
+            <div className="bg-surface-elevated/50 backdrop-blur-sm rounded-full p-4 group-hover:scale-110 transition-smooth">
               <Award className={`h-16 w-16 ${categoryConfig.iconColor}`} />
             </div>
           </div>
@@ -114,7 +114,7 @@ export const SolutionCertificateCard = ({
         </div>
         
         <CardHeader className="pb-3">
-          <CardTitle className="text-lg font-semibold text-white group-hover:text-aurora-primary transition-smooth line-clamp-2">
+          <CardTitle className="text-lg font-semibold text-foreground group-hover:text-aurora-primary transition-smooth line-clamp-2">
             {solution?.title || "Certificado de Implementação"}
           </CardTitle>
           <div className={`flex items-center gap-2 text-sm ${categoryConfig.iconColor}`}>
@@ -142,7 +142,7 @@ export const SolutionCertificateCard = ({
           
           <div className={`bg-gradient-to-r ${categoryConfig.color} border border-border rounded-lg p-3`}>
             <div className={`text-xs font-medium mb-1 ${categoryConfig.iconColor}`}>Código de Validação</div>
-            <div className="text-sm text-white font-mono bg-black/30 px-2 py-1 rounded">
+            <div className="text-sm text-foreground font-mono bg-background/50 px-2 py-1 rounded">
               {certificate.validation_code}
             </div>
           </div>
@@ -159,7 +159,7 @@ export const SolutionCertificateCard = ({
         <CardFooter className="pt-0 flex gap-2">
           <Button
             onClick={handlePreview}
-            className={`flex-1 bg-gradient-to-r ${categoryConfig.buttonColor} text-white font-semibold transition-smooth group-hover:shadow-lg`}
+            className={`flex-1 bg-gradient-to-r ${categoryConfig.buttonColor} text-primary-foreground font-semibold transition-smooth group-hover:shadow-lg`}
           >
             <Printer className="h-4 w-4 mr-2" />
             Imprimir

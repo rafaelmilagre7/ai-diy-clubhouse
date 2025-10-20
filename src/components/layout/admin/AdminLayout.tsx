@@ -18,7 +18,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       {/* Overlay mobile */}
       {typeof window !== 'undefined' && window.innerWidth < 768 && sidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-30"
+          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-30"
           onClick={() => setSidebarOpen(false)}
           aria-label="Fechar menu"
         />

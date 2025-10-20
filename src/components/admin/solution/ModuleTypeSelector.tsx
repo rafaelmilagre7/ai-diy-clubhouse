@@ -50,7 +50,7 @@ const ModuleTypeSelector: React.FC<ModuleTypeSelectorProps> = ({
         >
           <CardContent className="p-4 flex flex-col items-center text-center">
             <div className={cn(
-              "p-2 rounded-full mb-2 text-white",
+              "p-2 rounded-full mb-2 text-primary-foreground",
               selectedType === moduleType.type ? "bg-primary" : "bg-muted-foreground"
             )}>
               {getIconForType(moduleType.type)}

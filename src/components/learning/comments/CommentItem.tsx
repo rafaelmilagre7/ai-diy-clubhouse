@@ -86,7 +86,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
   const avatarUrl = profileData.avatar_url || "";
   
   return (
-    <div className={`backdrop-blur-sm bg-white/5 border-0 rounded-xl p-4 shadow-lg transition-all duration-300 hover:bg-white/10 ${isReply ? 'border-l-4 border-l-primary/30 ml-4' : ''}`}>
+    <div className={`backdrop-blur-sm bg-surface-elevated/30 border-0 rounded-xl p-4 shadow-lg transition-all duration-300 hover:bg-surface-elevated/50 ${isReply ? 'border-l-4 border-l-primary/30 ml-4' : ''}`}>
       <div className="flex gap-3">
         <Avatar className="h-8 w-8 ring-2 ring-white/20">
           <AvatarImage src={avatarUrl} alt={profileName} />
@@ -116,7 +116,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="h-8 px-3 text-xs bg-white/5 border-0 hover:bg-white/10 transition-all duration-200"
+                className="h-8 px-3 text-xs bg-surface-elevated/30 border-0 hover:bg-surface-elevated/50 transition-all duration-200"
                 onClick={handleReplyClick}
               >
                 <MessageSquare className="h-3.5 w-3.5 mr-1" />
@@ -130,7 +130,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
               className={`h-8 px-3 text-xs border-0 transition-all duration-200 ${
                 comment.user_has_liked 
                   ? 'bg-gradient-to-r from-primary/20 to-primary/10 text-primary hover:from-primary/30 hover:to-primary/20' 
-                  : 'bg-white/5 hover:bg-white/10'
+                  : 'bg-surface-elevated/30 hover:bg-surface-elevated/50'
               }`}
               onClick={() => onLike(comment.id)}
             >

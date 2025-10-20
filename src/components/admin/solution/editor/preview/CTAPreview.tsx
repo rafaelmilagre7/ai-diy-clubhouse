@@ -17,7 +17,7 @@ const CTAPreview: React.FC<CTAPreviewProps> = ({ data }) => {
       
       <a 
         href={data.buttonLink || "#"} 
-        className="inline-block px-6 py-2 bg-aurora-primary text-white rounded-full font-medium hover:bg-aurora-primary-dark transition-colors"
+        className="inline-block px-6 py-2 bg-aurora-primary text-primary-foreground rounded-full font-medium hover:bg-aurora-primary-dark transition-colors"
       >
         {data.buttonText || "Continuar"}
       </a>

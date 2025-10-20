@@ -525,7 +525,7 @@ export function RolePermissions({ open, onOpenChange, role }: RolePermissionsPro
             </div>
             <Button 
               onClick={() => onOpenChange(false)}
-              className="bg-aurora hover:bg-aurora/90 text-white px-6"
+              className="bg-aurora hover:bg-aurora/90 text-primary-foreground px-6"
             >
               Salvar Alterações
             </Button>

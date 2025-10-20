@@ -72,8 +72,8 @@ export const EventCoverImage = ({ form }: EventCoverImageProps) => {
                       alt="Prévia da imagem do evento" 
                       className="w-full max-h-48 object-cover rounded-xl border border-border/50 shadow-md"
                     />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center">
-                      <span className="text-white text-sm font-medium">Clique para alterar</span>
+                    <div className="absolute inset-0 bg-background/70 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center">
+                      <span className="text-foreground text-sm font-medium">Clique para alterar</span>
                     </div>
                   </div>
                 )}

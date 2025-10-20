@@ -162,7 +162,7 @@ export const UnifiedCertificatesList = ({
             onClick={handleGeneratePending}
             disabled={isGeneratingPending}
             size="lg"
-            className="bg-gradient-to-r from-aurora to-primary hover:from-aurora/90 hover:to-primary/90 text-white font-bold px-10 py-4 rounded-2xl shadow-2xl hover:shadow-aurora/25 transition-smooth transform hover:scale-105 group"
+            className="bg-gradient-to-r from-aurora to-primary hover:from-aurora/90 hover:to-primary/90 text-primary-foreground font-bold px-10 py-4 rounded-2xl shadow-2xl hover:shadow-aurora/25 transition-smooth transform hover:scale-105 group"
           >
             <Zap className="h-6 w-6 mr-3 group-hover:animate-bounce" />
             {isGeneratingPending ? "🔍 Verificando..." : "✨ Descobrir Meus Certificados"}

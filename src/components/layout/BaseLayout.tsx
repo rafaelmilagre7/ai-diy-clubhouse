@@ -84,7 +84,7 @@ const BaseLayout: React.FC<BaseLayoutProps> = ({
       {/* Overlay para mobile quando sidebar está aberta */}
       {variant === "formacao" && sidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 md:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}

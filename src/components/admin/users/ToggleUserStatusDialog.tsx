@@ -86,8 +86,8 @@ export const ToggleUserStatusDialog: React.FC<ToggleUserStatusDialogProps> = ({
             }}
             disabled={isToggling}
             className={isActive 
-              ? "bg-status-warning text-white hover:bg-status-warning/90" 
-              : "bg-operational text-white hover:bg-operational/90"
+              ? "bg-status-warning text-primary-foreground hover:bg-status-warning/90" 
+              : "bg-operational text-primary-foreground hover:bg-operational/90"
             }
           >
             {isToggling ? (

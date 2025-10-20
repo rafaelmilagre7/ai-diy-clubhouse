@@ -23,7 +23,7 @@ const SolutionCreateWizardSteps: React.FC<SolutionCreateWizardStepsProps> = ({ c
             flex items-center justify-center w-8 h-8 rounded-full 
             text-sm font-bold
             ${idx === currentStep 
-              ? 'bg-aurora-primary text-white border-2 border-aurora-primary'
+              ? 'bg-aurora-primary text-primary-foreground border-2 border-aurora-primary'
               : 'bg-muted text-foreground border border-border'
             }
           `}>

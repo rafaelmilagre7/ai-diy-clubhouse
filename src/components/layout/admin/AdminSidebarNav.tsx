@@ -193,7 +193,7 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
 
       {/* Divisor */}
       <div className="my-4">
-        <div className="h-px bg-white/10"></div>
+        <div className="h-px bg-border/30"></div>
       </div>
 
       {/* Navegação entre Plataformas */}

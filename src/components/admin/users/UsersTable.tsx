@@ -260,7 +260,7 @@ export const UsersTable: React.FC<UsersTableProps> = ({
                           variant={roleName === 'admin' ? 'default' : 'secondary'}
                           className={
                             roleName === 'admin' 
-                              ? 'bg-gradient-to-r from-revenue to-strategy text-white border-0' 
+                              ? 'bg-gradient-to-r from-revenue to-strategy text-primary-foreground border-0' 
                               : 'bg-surface-accent/20 text-surface-accent border-surface-accent/30'
                           }
                         >
@@ -271,7 +271,7 @@ export const UsersTable: React.FC<UsersTableProps> = ({
                           variant={isActive ? 'default' : 'destructive'}
                           className={
                             isActive 
-                              ? 'bg-gradient-to-r from-operational to-aurora-primary text-white border-0' 
+                              ? 'bg-gradient-to-r from-operational to-aurora-primary text-primary-foreground border-0' 
                               : 'bg-destructive/20 text-destructive border-destructive/30'
                           }
                         >

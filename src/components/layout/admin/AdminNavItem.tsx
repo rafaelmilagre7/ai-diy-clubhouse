@@ -17,8 +17,8 @@ export const AdminNavItem = ({ label, icon: Icon, href, isActive }: AdminNavItem
       className={cn(
         "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
         isActive
-          ? "bg-white/10 text-white"
-          : "text-white/70 hover:bg-white/5 hover:text-white"
+          ? "bg-surface-elevated/50 text-foreground"
+          : "text-muted-foreground hover:bg-surface-elevated/30 hover:text-foreground"
       )}
     >
       <Icon className="w-4 h-4" />

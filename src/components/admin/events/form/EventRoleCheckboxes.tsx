@@ -69,7 +69,7 @@ export const EventRoleCheckboxes = ({ selectedRoles, onChange }: EventRoleCheckb
     <div>
       <div className="flex items-center gap-2 mb-2">
         {selectedCount > 0 ? (
-          <Badge className="bg-aurora-primary hover:bg-aurora-primary-dark text-white">
+          <Badge className="bg-aurora-primary hover:bg-aurora-primary-dark text-primary-foreground">
             <Users className="w-3 h-3 mr-1" />
             {selectedCount} {selectedCount === 1 ? 'papel selecionado' : 'papéis selecionados'}
           </Badge>

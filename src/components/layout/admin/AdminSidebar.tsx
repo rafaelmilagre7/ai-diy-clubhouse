@@ -38,7 +38,7 @@ export const AdminSidebar = ({
         
         {/* Divisor visual */}
         <div className="my-1 px-3">
-          <div className="h-px bg-white/5"></div>
+          <div className="h-px bg-border/30"></div>
         </div>
 
         {/* Navegação */}
@@ -47,13 +47,13 @@ export const AdminSidebar = ({
         </div>
         
         {/* Footer */}
-        <div className="p-4 border-t border-white/5">
+        <div className="p-4 border-t border-border/30">
           {sidebarOpen ? (
-            <div className="text-xs text-white/50 text-center">
+            <div className="text-xs text-muted-foreground text-center">
               Painel Administrativo
             </div>
           ) : (
-            <div className="text-xs text-white/50 text-center">
+            <div className="text-xs text-muted-foreground text-center">
               Admin
             </div>
           )}

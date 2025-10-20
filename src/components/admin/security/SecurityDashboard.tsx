@@ -29,7 +29,7 @@ export const SecurityDashboard = () => {
   return (
     <div className="space-y-6">
       {/* Banner de identificação */}
-      <div className="bg-gradient-to-r from-aurora-primary to-secondary rounded-lg p-4 text-white">
+      <div className="bg-gradient-to-r from-aurora-primary to-secondary rounded-lg p-4 text-primary-foreground">
         <div className="flex items-center gap-3">
           <Shield className="h-6 w-6" />
           <div>

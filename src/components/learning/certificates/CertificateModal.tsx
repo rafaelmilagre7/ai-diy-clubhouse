@@ -140,7 +140,7 @@ export const CertificateModal = ({ certificate, isOpen, onClose }: CertificateMo
               variant="ghost"
               size="icon"
               onClick={onClose}
-              className="text-white hover:bg-accent"
+              className="text-foreground hover:bg-accent"
             >
               <X className="h-4 w-4" />
             </Button>
@@ -149,7 +149,7 @@ export const CertificateModal = ({ certificate, isOpen, onClose }: CertificateMo
         
         <div className="space-y-6">
           {/* Preview do Certificado */}
-          <div className="flex justify-center bg-white p-4 rounded-lg">
+          <div className="flex justify-center bg-card p-4 rounded-lg">
             <div ref={certificateRef} className="transform scale-75 origin-top">
               <CertificateRenderer
                 template={template}

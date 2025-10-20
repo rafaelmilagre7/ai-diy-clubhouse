@@ -184,7 +184,7 @@ export const AdminToolList = ({ refreshTrigger }: AdminToolListProps) => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="aurora-glass rounded-2xl border border-aurora-primary/20 backdrop-blur-md animate-pulse">
-              <div className="bg-gradient-to-r from-aurora-primary/10 to-aurora-primary/5 p-6 border-b border-white/10">
+              <div className="bg-gradient-to-r from-aurora-primary/10 to-aurora-primary/5 p-6 border-b border-border/30">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-gradient-to-br from-aurora-primary/20 to-aurora-primary/10 rounded-xl"></div>
                   <div className="flex-1 space-y-2">
@@ -240,7 +240,7 @@ export const AdminToolList = ({ refreshTrigger }: AdminToolListProps) => {
               : 'Comece criando sua primeira ferramenta para a plataforma.'}
           </p>
           <Link to="/admin/tools/new">
-            <Button className="bg-gradient-to-r from-aurora-primary to-aurora-primary-light hover:from-aurora-primary-dark hover:to-aurora-primary text-white font-medium shadow-lg hover:shadow-xl transition-smooth">
+            <Button className="bg-gradient-to-r from-aurora-primary to-aurora-primary-light hover:from-aurora-primary-dark hover:to-aurora-primary text-primary-foreground font-medium shadow-lg hover:shadow-xl transition-smooth">
               <Plus className="h-4 w-4 mr-2" />
               {tools.length === 0 ? 'Criar Primeira Ferramenta' : 'Nova Ferramenta'}
             </Button>
@@ -272,7 +272,7 @@ export const AdminToolList = ({ refreshTrigger }: AdminToolListProps) => {
             
             <div className="flex items-center gap-3">
               <Link to="/admin/tools/new">
-                <Button className="h-12 px-6 bg-gradient-to-r from-aurora-primary to-aurora-primary-light hover:from-aurora-primary-dark hover:to-aurora-primary text-white font-medium shadow-lg hover:shadow-xl transition-smooth">
+                <Button className="h-12 px-6 bg-gradient-to-r from-aurora-primary to-aurora-primary-light hover:from-aurora-primary-dark hover:to-aurora-primary text-primary-foreground font-medium shadow-lg hover:shadow-xl transition-smooth">
                   <Plus className="h-4 w-4 mr-2" />
                   Nova Ferramenta
                 </Button>
@@ -361,7 +361,7 @@ export const AdminToolList = ({ refreshTrigger }: AdminToolListProps) => {
               tool.status 
                 ? 'from-success/10 via-aurora-primary/5 to-transparent' 
                 : 'from-muted/10 via-muted/5 to-transparent'
-            } p-6 border-b border-white/10`}>
+            } p-6 border-b border-border/30`}>
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-4 flex-1">
                   <div className="relative">
@@ -386,7 +386,7 @@ export const AdminToolList = ({ refreshTrigger }: AdminToolListProps) => {
                     </div>
                     {tool.has_member_benefit && (
                       <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-strategy to-accent rounded-full flex items-center justify-center">
-                        <Gift className="w-3 h-3 text-white" />
+                        <Gift className="w-3 h-3 text-primary-foreground" />
                       </div>
                     )}
                   </div>
@@ -417,7 +417,7 @@ export const AdminToolList = ({ refreshTrigger }: AdminToolListProps) => {
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-white/10">
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-surface-elevated/30">
                       <MoreVertical className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>

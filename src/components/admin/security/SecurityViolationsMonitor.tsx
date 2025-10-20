@@ -204,7 +204,7 @@ export const SecurityViolationsMonitor: React.FC = () => {
             className={`aurora-glass rounded-2xl border ${stat.border} backdrop-blur-md overflow-hidden group cursor-pointer transition-smooth hover:scale-[1.02] hover:shadow-2xl animate-fade-in`}
             style={{ animationDelay: `${index * 100}ms` }}
           >
-            <div className={`bg-gradient-to-r ${stat.gradient} p-6 border-b border-white/10`}>
+            <div className={`bg-gradient-to-r ${stat.gradient} p-6 border-b border-border/30`}>
               <div className="flex items-center justify-between">
                 <div className="text-2xl">{stat.icon}</div>
                 <div className="text-right">
@@ -260,7 +260,7 @@ export const SecurityViolationsMonitor: React.FC = () => {
             <Button 
               onClick={loadViolations}
               disabled={loading}
-              className="h-12 px-6 bg-gradient-to-r from-status-warning to-status-error hover:from-status-warning/90 hover:to-status-error/90 text-white font-medium shadow-lg hover:shadow-xl transition-smooth"
+              className="h-12 px-6 bg-gradient-to-r from-status-warning to-status-error hover:from-status-warning/90 hover:to-status-error/90 text-primary-foreground font-medium shadow-lg hover:shadow-xl transition-smooth"
             >
               <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
               Atualizar

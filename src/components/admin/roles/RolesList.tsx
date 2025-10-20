@@ -141,7 +141,7 @@ export function RolesList({
                       variant={role.is_system ? 'default' : 'outline'}
                       className={
                         role.is_system 
-                          ? 'bg-gradient-revenue text-white border-0' 
+                          ? 'bg-gradient-revenue text-primary-foreground border-0' 
                           : 'bg-operational/20 text-operational border-operational/30'
                       }
                     >

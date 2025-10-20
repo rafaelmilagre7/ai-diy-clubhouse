@@ -90,7 +90,7 @@ export const ModernTabsNavigation = ({
                   className={`
                     relative flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium transition-smooth rounded-sm
                     ${isActive 
-                      ? 'bg-aurora-primary text-white shadow-lg transform scale-105' 
+                      ? 'bg-aurora-primary text-primary-foreground shadow-lg transform scale-105' 
                       : 'text-muted-foreground hover:text-foreground hover:bg-accent'
                     }
                   `}
@@ -104,7 +104,7 @@ export const ModernTabsNavigation = ({
                       variant="secondary" 
                       className={`
                         ml-1 text-xs px-1.5 py-0.5 min-w-[20px] h-5 flex items-center justify-center
-                        ${isActive ? 'bg-white/20 text-white border-white/20' : 'bg-muted text-muted-foreground border-muted'}
+                        ${isActive ? 'bg-surface-elevated/50 text-foreground border-border/30' : 'bg-muted text-muted-foreground border-muted'}
                       `}
                     >
                       {tab.count > 999 ? '999+' : tab.count}

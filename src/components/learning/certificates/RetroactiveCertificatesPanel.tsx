@@ -19,7 +19,7 @@ export const RetroactiveCertificatesPanel = () => {
   return (
     <Card className="bg-card border-border">
       <CardHeader>
-        <CardTitle className="text-white flex items-center gap-2">
+        <CardTitle className="text-foreground flex items-center gap-2">
           <Award className="h-5 w-5 text-aurora-primary" />
           Gerar Certificados Retroativos
         </CardTitle>

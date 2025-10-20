@@ -41,7 +41,7 @@ export const CommentForm: React.FC<CommentFormProps> = ({
   
   if (!user) {
     return (
-      <div className="text-center p-4 bg-backgroundLight/30 rounded-lg border border-white/10">
+      <div className="text-center p-4 bg-surface-elevated/30 rounded-lg border border-border/30">
         <p className="text-textSecondary">Faça login para comentar nesta aula.</p>
       </div>
     );
@@ -79,7 +79,7 @@ export const CommentForm: React.FC<CommentFormProps> = ({
             variant="ghost"
             size="sm"
             onClick={onCancel}
-            className="h-7 px-2 bg-white/10 border-0 hover:bg-white/20 text-muted-foreground hover:text-foreground transition-smooth"
+            className="h-7 px-2 bg-surface-elevated/50 border-0 hover:bg-surface-elevated text-muted-foreground hover:text-foreground transition-smooth"
           >
             Cancelar
           </Button>
@@ -103,7 +103,7 @@ export const CommentForm: React.FC<CommentFormProps> = ({
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder={placeholder}
-            className="resize-none min-h-chart-sm bg-white/5 border border-white/20 backdrop-blur-sm text-foreground placeholder:text-muted-foreground/60 focus:border-primary/30 focus:bg-white/10 transition-smooth"
+            className="resize-none min-h-chart-sm bg-surface-elevated/30 border border-border/50 backdrop-blur-sm text-foreground placeholder:text-muted-foreground/60 focus:border-primary/30 focus:bg-surface-elevated/50 transition-smooth"
           />
           
           <div className="flex justify-end gap-2">
@@ -113,7 +113,7 @@ export const CommentForm: React.FC<CommentFormProps> = ({
                 variant="ghost"
                 onClick={onCancel}
                 disabled={isSubmitting}
-                className="bg-white/5 border-0 hover:bg-white/10 text-muted-foreground hover:text-foreground transition-all duration-200"
+                className="bg-surface-elevated/30 border-0 hover:bg-surface-elevated/50 text-muted-foreground hover:text-foreground transition-all duration-200"
               >
                 Cancelar
               </Button>
@@ -122,7 +122,7 @@ export const CommentForm: React.FC<CommentFormProps> = ({
             <Button 
               type="submit"
               disabled={!content.trim() || isSubmitting}
-              className="bg-gradient-to-r from-primary via-primary to-primary/80 text-white hover:from-primary/90 hover:via-primary/90 hover:to-primary/70 border-0 shadow-lg hover:shadow-xl backdrop-blur-sm transition-all duration-300 disabled:opacity-50"
+              className="bg-gradient-to-r from-primary via-primary to-primary/80 text-primary-foreground hover:from-primary/90 hover:via-primary/90 hover:to-primary/70 border-0 shadow-lg hover:shadow-xl backdrop-blur-sm transition-all duration-300 disabled:opacity-50"
             >
               {isSubmitting ? (
                 <>

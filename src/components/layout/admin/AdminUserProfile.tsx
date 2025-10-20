@@ -35,7 +35,7 @@ export const AdminUserProfile = ({ sidebarOpen }: AdminUserProfileProps) => {
   }
 
   return (
-    <Card className="bg-white/5 border-white/10">
+    <Card className="bg-surface-elevated/50 border-border/30">
       <CardContent className="p-3">
         <div className="flex items-center space-x-3">
           <Avatar className="h-10 w-10">
@@ -49,10 +49,10 @@ export const AdminUserProfile = ({ sidebarOpen }: AdminUserProfileProps) => {
           </Avatar>
           
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate text-white">
+            <p className="text-sm font-medium truncate text-foreground">
               {user.user_metadata?.name || profile?.name || 'Admin'}
             </p>
-            <p className="text-xs text-white/70 truncate">
+            <p className="text-xs text-muted-foreground truncate">
               {user.email}
             </p>
           </div>
