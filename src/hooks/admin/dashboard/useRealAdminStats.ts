@@ -63,23 +63,16 @@ export const useRealAdminStats = (timeRange: string) => {
       
       console.log(`🔄 [STATS] Carregando estatísticas para período: ${timeRange}`);
       
-      // === BUSCAR DATA MAIS RECENTE DOS DADOS (não usar "hoje") ===
-      const { data: newestProfile } = await supabase
-        .from('profiles')
+      // === BUSCAR DATA MAIS RECENTE DAS IMPLEMENTATION_TRAILS ===
+      const { data: newestTrail } = await supabase
+        .from('implementation_trails')
         .select('created_at')
         .order('created_at', { ascending: false })
         .limit(1)
         .single();
 
-      const { data: oldestProfile } = await supabase
-        .from('profiles')
-        .select('created_at')
-        .order('created_at', { ascending: true })
-        .limit(1)
-        .single();
-
-      // Usar a data mais recente REAL dos dados como referência
-      const recentDate = newestProfile?.created_at ? new Date(newestProfile.created_at) : new Date();
+      // Usar a data mais recente REAL das implementation_trails como referência
+      const recentDate = newestTrail?.created_at ? new Date(newestTrail.created_at) : new Date();
       
       // Calcular período baseado nos dados reais
       const daysMap: { [key: string]: number } = {
