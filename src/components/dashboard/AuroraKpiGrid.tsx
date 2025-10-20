@@ -1,8 +1,7 @@
-
 import { memo, useMemo } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { LiquidGlassCard } from '@/components/ui/LiquidGlassCard';
 import { Trophy, Target, TrendingUp } from 'lucide-react';
-
+import { Skeleton } from '@/components/ui/skeleton';
 interface AuroraKpiGridProps {
   completed: number;
   inProgress: number;
@@ -40,17 +39,17 @@ const ProgressRing = ({ progress, size = 48, strokeWidth = 4 }: {
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke="hsl(var(--aurora))"
+          stroke="hsl(var(--aurora-primary))"
           strokeWidth={strokeWidth}
           fill="transparent"
           strokeDasharray={circumference}
           strokeDashoffset={offset}
-          className="transition-slowest"
+          className="transition-all duration-500"
           strokeLinecap="round"
         />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-xs font-bold text-aurora">{progress}%</span>
+        <span className="text-xs font-bold text-aurora-primary">{progress}%</span>
       </div>
     </div>
   );
@@ -81,10 +80,6 @@ export const AuroraKpiGrid = memo(({
       value: completed,
       percentage: stats.completionRate,
       icon: Trophy,
-      gradient: 'from-strategy/10 via-strategy-light/5 to-strategy-lighter/10',
-      iconColor: 'text-strategy',
-      accentColor: 'border-strategy/30',
-      glowColor: 'group-hover:shadow-strategy/20',
       description: 'Soluções implementadas com sucesso'
     },
     {
@@ -93,10 +88,6 @@ export const AuroraKpiGrid = memo(({
       value: inProgress,
       percentage: stats.progressRate,
       icon: Target,
-      gradient: 'from-strategy-light/10 via-strategy/5 to-strategy-lighter/10',
-      iconColor: 'text-strategy-light',
-      accentColor: 'border-strategy-light/30',
-      glowColor: 'group-hover:shadow-strategy-light/20',
       description: 'Implementações em andamento'
     },
     {
@@ -105,10 +96,6 @@ export const AuroraKpiGrid = memo(({
       value: total,
       percentage: 100,
       icon: TrendingUp,
-      gradient: 'from-strategy-light/10 via-strategy/5 to-strategy-lighter/10',
-      iconColor: 'text-strategy-light',
-      accentColor: 'border-strategy-light/30',
-      glowColor: 'group-hover:shadow-strategy-light/20',
       description: 'Total de soluções na plataforma'
     }
   ], [completed, inProgress, total, stats]);
@@ -117,57 +104,46 @@ export const AuroraKpiGrid = memo(({
     return (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-lg">
         {[1, 2, 3].map((i) => (
-          <Card key={i} className="animate-pulse aurora-glass border-aurora/20">
-            <CardContent className="p-lg">
+          <LiquidGlassCard key={i} hoverable={false}>
+            <div className="p-lg">
               <div className="flex items-center justify-between mb-md">
                 <div className="flex items-center space-x-md">
-                  <div className="w-12 h-12 bg-muted/50 rounded-xl"></div>
+                  <Skeleton className="w-12 h-12 rounded-xl" />
                   <div className="space-y-2">
-                    <div className="h-4 bg-muted/50 rounded w-24"></div>
-                    <div className="h-6 bg-muted/50 rounded w-16"></div>
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-6 w-16" />
                   </div>
                 </div>
-                <div className="w-12 h-12 bg-muted/50 rounded-full"></div>
+                <Skeleton className="w-12 h-12 rounded-full" />
               </div>
-              <div className="h-3 bg-muted/50 rounded w-3/4"></div>
-            </CardContent>
-          </Card>
+              <Skeleton className="h-3 w-3/4" />
+            </div>
+          </LiquidGlassCard>
         ))}
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-lg">
-      {kpiItems.map((item) => {
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-lg animate-fade-in">
+      {kpiItems.map((item, index) => {
         const IconComponent = item.icon;
         
         return (
-          <Card 
-            key={item.id} 
-            className={`group relative overflow-hidden aurora-glass hover:aurora-glass-hover transition-all duration-500 hover:scale-[1.02] border-l-4 ${item.accentColor} hover:shadow-xl ${item.glowColor}`}
-          >
-            {/* Background gradient overlay */}
-            <div className={`absolute inset-0 bg-gradient-to-br ${item.gradient} opacity-50 group-hover:opacity-80 transition-opacity duration-500`} />
-            
-            {/* Floating particles effect sem sparkles */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              <div className="absolute top-4 right-6 w-1 h-1 bg-aurora-primary rounded-full animate-pulse opacity-60" />
-              <div className="absolute bottom-6 left-8 w-1 h-1 bg-aurora-primary-light rounded-full animate-pulse opacity-40" style={{ animationDelay: '1s' }} />
-              <div className="absolute top-1/2 right-1/4 w-0.5 h-0.5 bg-operational rounded-full animate-pulse opacity-50" style={{ animationDelay: '2s' }} />
-            </div>
-
-            <CardContent className="relative p-lg z-10">
+          <div key={item.id} style={{ animationDelay: `${index * 0.1}s` }} className="animate-fade-in">
+            <LiquidGlassCard 
+              className="group hover:shadow-aurora-primary/20"
+              hoverable
+            >
+            <div className="p-lg">
               <div className="flex items-center justify-between mb-md">
                 <div className="flex items-center space-x-md">
-                  <div className={`p-md rounded-xl backdrop-blur-sm bg-surface-elevated/50 group-hover:scale-110 transition-all duration-300 border border-border/30`}>
-                    <IconComponent className={`h-6 w-6 ${item.iconColor} group-hover:drop-shadow-lg transition-all duration-300`} />
+                  <div className="p-md rounded-xl bg-aurora-primary/10 group-hover:bg-aurora-primary/20 transition-all duration-300">
+                    <IconComponent className="h-6 w-6 text-aurora-primary" />
                   </div>
                   <div>
-                    <p className="text-sm font-outfit font-medium text-muted-foreground/90 mb-1">{item.title}</p>
-                    <div className="flex items-baseline space-x-sm">
-                      <p className="text-2xl font-inter font-bold text-foreground">{item.value}</p>
-                    </div>
+                    <p className="text-sm font-medium text-muted-foreground mb-1">{item.title}</p>
+                    <p className="text-3xl font-bold text-foreground">{item.value}</p>
                   </div>
                 </div>
                 
@@ -180,29 +156,26 @@ export const AuroraKpiGrid = memo(({
                 
                 {/* Ícone especial para total */}
                 {item.id === 'total' && (
-                  <div className="flex-shrink-0 p-sm rounded-full bg-gradient-to-r from-strategy/20 to-strategy-light/20 backdrop-blur-sm">
-                    <TrendingUp className="h-6 w-6 text-strategy-light" />
+                  <div className="flex-shrink-0 p-sm rounded-full bg-aurora-primary/10">
+                    <TrendingUp className="h-6 w-6 text-aurora-primary-light" />
                   </div>
                 )}
               </div>
               
-              <div className="space-y-2">
-                <p className="text-xs font-outfit text-muted-foreground/80">{item.description}</p>
+              <div className="space-y-2 mt-md">
+                <p className="text-xs text-muted-foreground">{item.description}</p>
                 
-                {/* Barra de progresso visual para todos os itens */}
-                <div className="w-full h-1.5 bg-muted/30 rounded-full overflow-hidden">
-                   <div 
-                    className={`h-full bg-gradient-to-r ${
-                      item.id === 'completed' ? 'from-strategy to-strategy-light' :
-                      item.id === 'progress' ? 'from-strategy-light to-strategy-lighter' :
-                      'from-strategy-light to-strategy'
-                    } rounded-full transition-slowest aurora-shimmer`}
+                {/* Barra de progresso visual */}
+                <div className="w-full h-1.5 bg-muted/20 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-aurora-primary to-aurora-primary-light rounded-full transition-all duration-500"
                     style={{ width: `${item.id === 'total' ? 100 : item.percentage}%` }}
                   />
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </LiquidGlassCard>
+          </div>
         );
       })}
     </div>
