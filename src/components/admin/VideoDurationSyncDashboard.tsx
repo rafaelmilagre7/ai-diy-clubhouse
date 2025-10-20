@@ -168,18 +168,18 @@ export const VideoDurationSyncDashboard = () => {
             </Button>
           </div>
 
-          <div className="grid gap-4">
+          <div className="grid gap-md">
             <h4 className="font-medium">Status por Curso:</h4>
             {isLoading ? (
-              <div className="text-center py-8">
+              <div className="text-center py-xl">
                 <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-2" />
                 <p>Carregando status de sincronização...</p>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-sm">
                 {syncStatus?.map((course) => (
-                  <div key={course.course_title} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="space-y-1">
+                  <div key={course.course_title} className="flex items-center justify-between p-md border rounded-lg">
+                    <div className="space-y-xs">
                       <h5 className="font-medium">{course.course_title}</h5>
                       <p className="text-sm text-muted-foreground">
                         {course.videos_with_duration}/{course.total_videos} vídeos sincronizados
@@ -192,7 +192,7 @@ export const VideoDurationSyncDashboard = () => {
                       </div>
                     </div>
                     
-                    <div className="text-right space-y-2">
+                    <div className="text-right space-y-sm">
                       {getSyncStatusBadge(course.sync_percentage)}
                       <div className="text-lg font-semibold">
                         {course.sync_percentage}%

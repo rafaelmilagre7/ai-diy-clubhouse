@@ -74,7 +74,7 @@ export default function PublicProfile() {
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="flex flex-col items-center gap-4"
+          className="flex flex-col items-center gap-md"
         >
           <Loader2 className="h-12 w-12 animate-spin text-aurora" />
           <p className="text-muted-foreground">Carregando perfil...</p>
@@ -92,7 +92,7 @@ export default function PublicProfile() {
           <p className="text-muted-foreground mb-lg">
             O perfil que você está procurando não existe ou foi removido.
           </p>
-          <Button onClick={() => navigate('/networking')} className="gap-2">
+          <Button onClick={() => navigate('/networking')} className="gap-sm">
             <ArrowLeft className="h-4 w-4" />
             Voltar para Networking
           </Button>
@@ -116,12 +116,12 @@ export default function PublicProfile() {
         <div className="absolute inset-0 aurora-gradient opacity-60" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/50 to-background" />
         
-        <div className="relative container mx-auto px-4 h-full flex items-end pb-8">
+        <div className="relative container mx-auto px-md h-full flex items-end pb-xl">
           <motion.div
             initial={{ y: 30, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.2, duration: 0.5 }}
-            className="flex flex-col md:flex-row items-center md:items-end gap-6 w-full"
+            className="flex flex-col md:flex-row items-center md:items-end gap-lg w-full"
           >
             {/* Avatar com glow */}
             <div className="relative">
@@ -147,9 +147,9 @@ export default function PublicProfile() {
 
             {/* Nome e Cargo */}
             <div className="flex-1 text-center md:text-left">
-              <h1 className="text-4xl font-bold text-foreground mb-2">{profile.name}</h1>
+              <h1 className="text-4xl font-bold text-foreground mb-sm">{profile.name}</h1>
               {profile.current_position && (
-                <p className="text-xl text-muted-foreground mb-1">{profile.current_position}</p>
+                <p className="text-xl text-muted-foreground mb-xs">{profile.current_position}</p>
               )}
               {profile.company_name && (
                 <p className="text-lg text-muted-foreground font-semibold">{profile.company_name}</p>
@@ -160,7 +160,7 @@ export default function PublicProfile() {
       </motion.div>
 
       {/* Conteúdo Principal */}
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-md py-xl">
         <div className="max-w-6xl mx-auto">
           {/* Banner de perfil incompleto */}
           {!isComplete && isOwnProfile && (

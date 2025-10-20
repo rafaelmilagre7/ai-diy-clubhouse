@@ -15,7 +15,7 @@ export const VideosDurationUpdater = () => {
   };
 
   return (
-    <div className="p-4 border rounded-lg">
+    <div className="p-md border rounded-lg">
       <h3 className="text-lg font-semibold mb-2">Atualizar Durações dos Vídeos</h3>
       <p className="text-sm text-muted-foreground mb-4">
         Executa a atualização das durações de todos os vídeos no sistema.

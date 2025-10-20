@@ -177,7 +177,7 @@ const AcceptInvite: React.FC = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-md" />
           <p className="text-muted-foreground">Validando convite...</p>
         </div>
       </div>
@@ -192,7 +192,7 @@ const AcceptInvite: React.FC = () => {
             <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-md" />
             <CardTitle>Convite Inválido</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-md">
             <Alert variant="destructive">
               <AlertDescription>{error}</AlertDescription>
             </Alert>
@@ -223,8 +223,8 @@ const AcceptInvite: React.FC = () => {
 
         {/* Invite Info */}
         <Card>
-          <CardContent className="pt-6 space-y-3">
-            <div className="flex items-center gap-3">
+          <CardContent className="pt-lg space-y-sm">
+            <div className="flex items-center gap-sm">
               <Mail className="h-5 w-5 text-primary" />
               <div>
                 <p className="font-medium">{inviteData.email}</p>
@@ -235,7 +235,7 @@ const AcceptInvite: React.FC = () => {
             </div>
             
             {inviteData.notes && (
-              <div className="bg-muted/50 p-3 rounded-lg">
+              <div className="bg-muted/50 p-sm rounded-lg">
                 <p className="text-sm">{inviteData.notes}</p>
               </div>
             )}
@@ -249,7 +249,7 @@ const AcceptInvite: React.FC = () => {
           </CardHeader>
           <CardContent>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+              <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-md">
                 <FormField
                   control={form.control}
                   name="name"
@@ -309,12 +309,12 @@ const AcceptInvite: React.FC = () => {
                 <Button type="submit" className="w-full" disabled={isSubmitting}>
                   {isSubmitting ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <Loader2 className="mr-sm h-4 w-4 animate-spin" />
                       Criando conta...
                     </>
                   ) : (
                     <>
-                      <CheckCircle className="mr-2 h-4 w-4" />
+                      <CheckCircle className="mr-sm h-4 w-4" />
                       Aceitar convite
                     </>
                   )}

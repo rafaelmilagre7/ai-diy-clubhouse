@@ -153,7 +153,7 @@ export function WhatsAppDebugPanel() {
             </Badge>
           </div>
         </CardHeader>
-        <CardContent className="space-y-2">
+        <CardContent className="space-y-sm">
           {check.details?.map((detail: string, index: number) => (
             <div key={index} className="text-sm text-success flex items-center">
               <CheckCircle className="mr-2 h-3 w-3" />
@@ -230,14 +230,14 @@ export function WhatsAppDebugPanel() {
           <TabsTrigger value="test">Teste de Envio</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="space-y-4">
+        <TabsContent value="overview" className="space-y-md">
           {loading ? (
-            <div className="flex items-center justify-center p-8">
+            <div className="flex items-center justify-center p-xl">
               <Loader2 className="h-8 w-8 animate-spin" />
               <span className="ml-2">Executando diagnósticos...</span>
             </div>
           ) : diagnostics ? (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-md md:grid-cols-2 lg:grid-cols-4">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Credenciais</CardTitle>
@@ -303,7 +303,7 @@ export function WhatsAppDebugPanel() {
               </Card>
             </div>
           ) : (
-            <div className="text-center p-8 text-muted-foreground">
+            <div className="text-center p-xl text-muted-foreground">
               Clique em "Verificar Status" para executar os diagnósticos
             </div>
           )}
