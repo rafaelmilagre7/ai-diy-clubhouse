@@ -65,7 +65,7 @@ const BaseLayout: React.FC<BaseLayoutProps> = ({
           "flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out",
           // Para FormacaoLayout, aplicar margem baseada no estado da sidebar
           variant === "formacao" && sidebarOpen && "ml-64 md:ml-64",
-          variant === "formacao" && !sidebarOpen && "ml-0 md:ml-[70px]"
+          variant === "formacao" && !sidebarOpen && "ml-0 md:ml-sidebar-collapsed"
         )}
       >
         <ContentComponent

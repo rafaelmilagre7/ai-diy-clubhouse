@@ -180,7 +180,7 @@ export const ModuleLessons = ({
               return (
                 <CarouselItem 
                   key={lesson.id} 
-                  className="pl-4 basis-[280px] sm:basis-[320px] md:basis-[280px] lg:basis-[300px]"
+                  className="pl-4 basis-lesson-card sm:basis-lesson-card-lg md:basis-lesson-card sm:md:basis-lesson-card-md"
                 >
                   <LessonThumbnail
                     lesson={lesson}

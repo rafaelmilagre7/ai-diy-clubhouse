@@ -45,7 +45,7 @@ export function TokenTable({ title, description, tokens }: TokenTableProps) {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-table-sm">Token</TableHead>
-                <TableHead className="w-[250px]">Valor</TableHead>
+                <TableHead className="w-table-md">Valor</TableHead>
                 <TableHead>Uso</TableHead>
                 {tokens.some(t => t.type) && <TableHead className="w-button-min">Tipo</TableHead>}
               </TableRow>

@@ -140,6 +140,7 @@ const config: Config = {
         'showcase': '120px',
         'transition': '100px',
         'section': '70vh',
+        'textarea': '40px',
       },
       
       maxHeight: {
@@ -184,6 +185,13 @@ const config: Config = {
         'dialog-form-sm': '425px',
         'dialog-form': '500px',
         'dialog-form-lg': '600px',
+      },
+      
+      flexBasis: {
+        'lesson-card': '280px',
+        'lesson-card-sm': '280px',
+        'lesson-card-md': '300px',
+        'lesson-card-lg': '320px',
       },
       
       // === BLUR & BACKDROP ===

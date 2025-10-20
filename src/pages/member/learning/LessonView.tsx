@@ -161,7 +161,7 @@ const LessonView = () => {
               progress={isCompleted ? 100 : 0}
             />
             
-            <div className="backdrop-blur-sm bg-white/5 rounded-2xl border border-white/10 p-6 shadow-2xl min-h-[400px]">
+            <div className="backdrop-blur-sm bg-white/5 rounded-2xl border border-white/10 p-6 shadow-2xl min-h-feature-block">
               <Suspense fallback={
                 <div className="w-full h-96 flex items-center justify-center">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
