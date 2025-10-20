@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
 import { toast } from 'sonner';
+import { useNotificationSound } from './useNotificationSound';
 
 export interface Notification {
   id: string;
@@ -20,14 +21,50 @@ export interface Notification {
   action_url?: string;
   grouped_with?: string;
   read_at?: string;
+  grouped_count?: number;
+  grouped_ids?: string[];
 }
+
+// Função para agrupar notificações similares
+const groupNotifications = (notifications: Notification[]): Notification[] => {
+  const grouped: Map<string, Notification> = new Map();
+  
+  notifications.forEach(notification => {
+    // Criar chave para agrupamento baseada em type, action_url e se é não lida
+    const groupKey = `${notification.type}-${notification.action_url}-${notification.is_read}`;
+    
+    if (grouped.has(groupKey)) {
+      const existing = grouped.get(groupKey)!;
+      existing.grouped_count = (existing.grouped_count || 1) + 1;
+      existing.grouped_ids = [...(existing.grouped_ids || [existing.id]), notification.id];
+      
+      // Atualizar título para refletir o agrupamento
+      if (notification.type === 'comment_liked') {
+        existing.title = `${existing.grouped_count} pessoas curtiram seu comentário`;
+      } else if (notification.type === 'comment_replied') {
+        existing.title = `${existing.grouped_count} novas respostas no seu comentário`;
+      }
+    } else {
+      grouped.set(groupKey, {
+        ...notification,
+        grouped_count: 1,
+        grouped_ids: [notification.id]
+      });
+    }
+  });
+  
+  return Array.from(grouped.values()).sort((a, b) => 
+    new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
+};
 
 export const useNotifications = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { playSound } = useNotificationSound();
 
   // Buscar notificações do usuário
-  const { data: notifications = [], isLoading } = useQuery({
+  const { data: rawNotifications = [], isLoading } = useQuery({
     queryKey: ['notifications', user?.id],
     queryFn: async () => {
       if (!user) return [];
@@ -44,16 +81,24 @@ export const useNotifications = () => {
       return data as Notification[];
     },
     enabled: !!user,
-    refetchInterval: 30000, // Atualizar a cada 30 segundos
+    refetchInterval: 30000,
   });
 
-  // Marcar notificação como lida
+  // Agrupar notificações similares
+  const notifications = React.useMemo(() => 
+    groupNotifications(rawNotifications), 
+    [rawNotifications]
+  );
+
+  // Marcar notificação como lida (pode ser um grupo)
   const markAsRead = useMutation({
-    mutationFn: async (notificationId: string) => {
+    mutationFn: async (notificationIdOrIds: string | string[]) => {
+      const ids = Array.isArray(notificationIdOrIds) ? notificationIdOrIds : [notificationIdOrIds];
+      
       const { error } = await supabase
         .from('notifications')
         .update({ is_read: true, read_at: new Date().toISOString() })
-        .eq('id', notificationId);
+        .in('id', ids);
 
       if (error) throw error;
     },
@@ -125,6 +170,9 @@ export const useNotifications = () => {
         (payload) => {
           queryClient.invalidateQueries({ queryKey: ['notifications'] });
           
+          // Tocar som de notificação
+          playSound();
+          
           // Mostrar toast para notificações importantes
           const newNotification = payload.new as Notification;
           if (newNotification.type === 'community_reply') {
@@ -141,6 +189,10 @@ export const useNotifications = () => {
               }
             });
           } else if (newNotification.type === 'admin_communication' || newNotification.type === 'urgent') {
+            toast.info(newNotification.title, {
+              description: newNotification.message,
+            });
+          } else if (newNotification.type === 'comment_liked' || newNotification.type === 'comment_replied') {
             toast.info(newNotification.title, {
               description: newNotification.message,
             });

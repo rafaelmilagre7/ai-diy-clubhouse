@@ -26,9 +26,10 @@ export const NotificationBell = () => {
   } = useNotifications();
 
   const handleNotificationClick = async (notification: any) => {
-    // Marcar como lida
+    // Marcar como lida (incluindo notificações agrupadas)
     if (!notification.is_read) {
-      await markAsRead(notification.id);
+      const idsToMark = notification.grouped_ids || [notification.id];
+      await markAsRead(idsToMark);
     }
 
     // Navegar para a URL se houver
@@ -124,6 +125,14 @@ export const NotificationBell = () => {
                       !notification.is_read ? "text-textPrimary" : "text-textSecondary"
                     )}>
                       {notification.title}
+                      {notification.grouped_count && notification.grouped_count > 1 && (
+                        <span className={cn(
+                          "ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold rounded-full",
+                          "bg-aurora-primary/20 text-aurora-primary"
+                        )}>
+                          {notification.grouped_count}
+                        </span>
+                      )}
                     </p>
                     {!notification.is_read && (
                       <span className="w-2 h-2 bg-aurora-primary rounded-full flex-shrink-0 mt-1.5 animate-pulse" />
