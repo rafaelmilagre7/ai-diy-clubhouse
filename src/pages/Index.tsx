@@ -58,8 +58,8 @@ const Index = () => {
       fallbackMessage="Preparando seu ambiente..."
       className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800"
     >
-      <div className="min-h-screen flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8 animate-fade-in">
+      <div className="min-h-screen flex flex-col items-center justify-center py-lg px-md sm:px-lg lg:px-xl">
+        <div className="max-w-md w-full space-y-xl animate-fade-in">
           <div className="text-center">
             <div className="mx-auto h-28 w-28 relative">
               <div className="absolute inset-0 rounded-full bg-gradient-to-br from-aurora-primary/20 to-aurora-primary/10 animate-pulse-subtle"></div>
@@ -71,17 +71,17 @@ const Index = () => {
               />
             </div>
             
-            <h1 className="mt-6 text-center text-4xl sm:text-5xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-aurora-primary via-aurora to-aurora-primary-light animate-gradient-shift bg-size-200">
+            <h1 className="mt-lg text-center text-4xl sm:text-5xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-aurora-primary via-aurora to-aurora-primary-light animate-gradient-shift bg-size-200">
               VIVER DE IA
             </h1>
             
-            <p className="mt-3 text-center text-lg text-muted-foreground max-w-sm mx-auto">
+            <p className="mt-sm text-center text-lg text-muted-foreground max-w-sm mx-auto">
               Implemente soluções de IA com autonomia e sucesso
             </p>
           </div>
 
-          <div className="relative pt-1 w-full max-w-xs mx-auto mt-8">
-            <div className="overflow-hidden h-2 mb-4 text-xs flex rounded-full bg-muted">
+          <div className="relative pt-xs w-full max-w-xs mx-auto mt-xl">
+            <div className="overflow-hidden h-2 mb-md text-xs flex rounded-full bg-muted">
               <div 
                 style={{ width: `${progress}%` }} 
                 className="shadow-none flex flex-col text-center whitespace-nowrap text-primary-foreground justify-center bg-gradient-to-r from-aurora-primary to-aurora-primary-light transition-smooth"
@@ -89,8 +89,8 @@ const Index = () => {
             </div>
           </div>
 
-          <div className="mt-8 flex justify-center">
-            <div className="inline-flex items-center px-5 py-3 border border-transparent text-base font-medium rounded-full shadow-md text-primary-foreground bg-gradient-to-r from-aurora-primary to-aurora-primary-light hover:from-aurora to-aurora-primary transition-all">
+          <div className="mt-xl flex justify-center">
+            <div className="inline-flex items-center px-lg py-sm border border-transparent text-base font-medium rounded-full shadow-md text-primary-foreground bg-gradient-to-r from-aurora-primary to-aurora-primary-light hover:from-aurora to-aurora-primary transition-all">
               {isLoading ? 'Verificando autenticação...' : 
                isRedirecting ? 'Redirecionando...' : 
                'Bem-vindo ao VIVER DE IA'
@@ -99,14 +99,14 @@ const Index = () => {
           </div>
 
           {isLoading && (
-            <div className="mt-4 text-center">
+            <div className="mt-md text-center">
               <p className="text-sm text-muted-foreground animate-pulse">
                 Carregando suas informações...
               </p>
             </div>
           )}
           
-          <div className="text-center mt-4">
+          <div className="text-center mt-md">
             <p className="text-muted-foreground">
               {isRedirecting ? "Redirecionando automaticamente..." : "Preparando sua experiência..."}
             </p>

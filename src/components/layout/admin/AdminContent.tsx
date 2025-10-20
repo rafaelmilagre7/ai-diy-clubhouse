@@ -22,25 +22,25 @@ export const AdminContent = ({ children, sidebarOpen, setSidebarOpen }: AdminCon
       )}
     >
       {/* Header */}
-      <header className="flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4 relative z-10">
+      <header className="flex h-16 shrink-0 items-center gap-sm border-b bg-background px-md relative z-10">
         <Button
           variant="ghost"
           size="icon"
-          className="md:hidden -ml-1"
+          className="md:hidden -ml-xs"
           onClick={() => setSidebarOpen(!sidebarOpen)}
           aria-label="Abrir menu"
         >
           <Menu className="h-4 w-4" />
         </Button>
         
-        <Separator orientation="vertical" className="mr-2 h-4" />
+        <Separator orientation="vertical" className="mr-sm h-4" />
         
         <div className="flex-1">
           <h1 className="font-semibold">Painel Administrativo</h1>
         </div>
 
         <div 
-          className="flex items-center gap-2 relative z-20"
+          className="flex items-center gap-sm relative z-20"
           onClick={(e) => {
             console.log("🔍 [ADMIN-HEADER] Clique na área de ações do usuário", e);
           }}
@@ -51,7 +51,7 @@ export const AdminContent = ({ children, sidebarOpen, setSidebarOpen }: AdminCon
       </header>
 
       {/* Content */}
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 overflow-auto p-lg">
         <div className="mx-auto max-w-7xl w-full">
           {children}
         </div>

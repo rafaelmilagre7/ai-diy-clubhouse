@@ -33,9 +33,9 @@ export const MemberSidebarNavItem: React.FC<MemberSidebarNavItemProps> = ({
       to={to}
       className={({ isActive }) =>
         cn(
-          "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-foreground hover:bg-accent/50",
+          "flex items-center gap-sm rounded-lg px-sm py-sm text-muted-foreground transition-all hover:text-foreground hover:bg-accent/50",
           isActive && "bg-accent text-accent-foreground shadow-sm",
-          !sidebarOpen && "justify-center px-2"
+          !sidebarOpen && "justify-center px-sm"
         )
       }
     >

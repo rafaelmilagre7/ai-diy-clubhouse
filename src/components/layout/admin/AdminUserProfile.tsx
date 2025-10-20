@@ -36,8 +36,8 @@ export const AdminUserProfile = ({ sidebarOpen }: AdminUserProfileProps) => {
 
   return (
     <Card className="bg-surface-elevated/50 border-border/30">
-      <CardContent className="p-3">
-        <div className="flex items-center space-x-3">
+      <CardContent className="p-sm">
+        <div className="flex items-center space-x-sm">
           <Avatar className="h-10 w-10">
             <AvatarImage 
               src={profile?.avatar_url || user.user_metadata?.avatar_url} 
@@ -58,7 +58,7 @@ export const AdminUserProfile = ({ sidebarOpen }: AdminUserProfileProps) => {
           </div>
         </div>
         
-        <div className="mt-2">
+        <div className="mt-sm">
           <Badge variant="secondary" className="text-xs bg-status-error/20 text-status-error border-status-error/30">
             Administrador
           </Badge>

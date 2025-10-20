@@ -49,7 +49,7 @@ export const AdminUserMenu = () => {
         sideOffset={8}
       >
         <DropdownMenuLabel className="font-normal">
-          <div className="flex flex-col space-y-1">
+          <div className="flex flex-col space-y-xs">
             <p className="text-sm font-medium leading-none">{profile?.name || "Usuário"}</p>
             <p className="text-xs leading-none text-muted-foreground">
               {user?.email || "Sem email"}
@@ -59,13 +59,13 @@ export const AdminUserMenu = () => {
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link to="/profile" className="cursor-pointer">
-            <User className="mr-2 h-4 w-4" />
+            <User className="mr-sm h-4 w-4" />
             <span>Perfil</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link to="/dashboard" className="cursor-pointer">
-            <Settings className="mr-2 h-4 w-4" />
+            <Settings className="mr-sm h-4 w-4" />
             <span>Dashboard Membro</span>
           </Link>
         </DropdownMenuItem>
@@ -74,7 +74,7 @@ export const AdminUserMenu = () => {
           onClick={() => signOut()}
           className="cursor-pointer text-destructive focus:text-destructive"
         >
-          <LogOut className="mr-2 h-4 w-4" />
+          <LogOut className="mr-sm h-4 w-4" />
           <span>Sair</span>
         </DropdownMenuItem>
       </DropdownMenuContent>

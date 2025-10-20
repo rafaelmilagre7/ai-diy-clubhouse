@@ -16,15 +16,15 @@ export const SidebarNavigationGroup: React.FC<SidebarNavigationGroupProps> = ({
   className
 }) => {
   return (
-    <div className={cn("space-y-1", className)}>
+    <div className={cn("space-y-xs", className)}>
       {sidebarOpen && (
-        <div className="px-3 py-2">
+        <div className="px-sm py-sm">
           <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             {title}
           </h3>
         </div>
       )}
-      <div className="space-y-1">
+      <div className="space-y-xs">
         {children}
       </div>
     </div>

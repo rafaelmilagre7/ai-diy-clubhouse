@@ -42,7 +42,7 @@ export const MemberContent: React.FC<MemberContentProps> = ({
         setSidebarOpen={setSidebarOpen}
       />
       
-      <main className="flex-1 p-6 overflow-auto">
+      <main className="flex-1 p-lg overflow-auto">
         {children}
       </main>
     </div>

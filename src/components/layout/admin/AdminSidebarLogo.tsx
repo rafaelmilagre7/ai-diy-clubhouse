@@ -13,7 +13,7 @@ export const AdminSidebarLogo = ({ sidebarOpen, setSidebarOpen }: AdminSidebarLo
   const isMobile = useIsMobile();
 
   return (
-    <div className="flex h-16 shrink-0 items-center justify-between px-3">
+    <div className="flex h-16 shrink-0 items-center justify-between px-sm">
       <div className="flex items-center overflow-hidden min-w-0">
         <img
           src="/lovable-uploads/fe3733f5-092e-4a4e-bdd7-650b71aaa801.png"

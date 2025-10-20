@@ -161,9 +161,9 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
   };
 
   return (
-    <nav className="flex-1 px-3 py-2 flex flex-col">
+    <nav className="flex-1 px-sm py-sm flex flex-col">
       {/* Navegação Principal do Admin */}
-      <div className="flex flex-col space-y-1">
+      <div className="flex flex-col space-y-xs">
         {navigationItems.map((item) => {
           const active = isActive(item.href);
           
@@ -172,8 +172,8 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
               key={item.href}
               variant="ghost"
               className={cn(
-                "w-full justify-start gap-3 h-10 px-3 text-sm font-medium transition-all duration-200 rounded-lg group",
-                !sidebarOpen && "justify-center px-2",
+                "w-full justify-start gap-sm h-10 px-sm text-sm font-medium transition-all duration-200 rounded-lg group",
+                !sidebarOpen && "justify-center px-sm",
                 active 
                   ? "bg-surface-elevated/50 text-foreground shadow-lg border border-border" 
                   : "text-muted-foreground hover:text-foreground hover:bg-surface-elevated/30 hover:shadow-md"
@@ -192,14 +192,14 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
       </div>
 
       {/* Divisor */}
-      <div className="my-4">
+      <div className="my-md">
         <div className="h-px bg-border/30"></div>
       </div>
 
       {/* Navegação entre Plataformas */}
-      <div className="space-y-1">
+      <div className="space-y-xs">
         {sidebarOpen && (
-          <div className="px-3 py-2">
+          <div className="px-sm py-sm">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               Outras Plataformas
             </p>
@@ -214,10 +214,10 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
               key={item.href}
               variant="ghost"
               className={cn(
-                "w-full justify-start gap-3 h-10 px-3 text-sm font-medium transition-all duration-200 rounded-lg group",
-                !sidebarOpen && "justify-center px-2",
+                "w-full justify-start gap-sm h-10 px-sm text-sm font-medium transition-all duration-200 rounded-lg group",
+                !sidebarOpen && "justify-center px-sm",
                 active 
-                  ? "bg-status-warning/20 text-status-warning border border-status-warning/30" 
+                  ? "bg-status-warning/20 text-status-warning border border-status-warning/30"
                   : "text-muted-foreground hover:text-status-warning hover:bg-status-warning/10"
               )}
               asChild

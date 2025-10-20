@@ -47,7 +47,7 @@ export default function CommunityHome() {
           />
 
           {/* Full Width Content */}
-          <div className="max-w-7xl mx-auto px-6 pb-12">
+          <div className="max-w-7xl mx-auto px-lg pb-lg">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               {/* Modern Category Navigation */}
               <CategoryTabsModern 
@@ -64,7 +64,7 @@ export default function CommunityHome() {
               />
 
               {/* Topics Content - Full Width with animations */}
-              <div className="space-y-6 animate-fade-in">
+              <div className="space-y-lg animate-fade-in">
                 <TabsContent value="todos" className="mt-0">
                   <UnifiedTopicListModern
                     topics={topics}

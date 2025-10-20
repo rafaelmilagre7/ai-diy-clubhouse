@@ -32,12 +32,12 @@ export const AdminSidebar = ({
         <AdminSidebarLogo sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
         
         {/* Perfil do usuário */}
-        <div className="px-3 pb-4">
+        <div className="px-sm pb-md">
           <AdminUserProfile sidebarOpen={sidebarOpen} />
         </div>
         
         {/* Divisor visual */}
-        <div className="my-1 px-3">
+        <div className="my-xs px-sm">
           <div className="h-px bg-border/30"></div>
         </div>
 
@@ -47,7 +47,7 @@ export const AdminSidebar = ({
         </div>
         
         {/* Footer */}
-        <div className="p-4 border-t border-border/30">
+        <div className="p-md border-t border-border/30">
           {sidebarOpen ? (
             <div className="text-xs text-muted-foreground text-center">
               Painel Administrativo

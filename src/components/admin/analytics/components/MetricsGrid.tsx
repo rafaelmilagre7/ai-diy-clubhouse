@@ -23,9 +23,9 @@ export const MetricsGrid = ({
     };
 
     const gapClasses = {
-      sm: 'gap-3',
-      md: 'gap-4',
-      lg: 'gap-6'
+      sm: 'gap-sm',
+      md: 'gap-md',
+      lg: 'gap-lg'
     };
 
     return `grid ${columnClasses[columns]} ${gapClasses[gap]}`;
