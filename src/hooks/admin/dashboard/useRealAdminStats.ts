@@ -63,7 +63,25 @@ export const useRealAdminStats = (timeRange: string) => {
       
       console.log(`🔄 [STATS] Carregando estatísticas para período: ${timeRange}`);
       
-      // Calcular data de início baseada no timeRange
+      // === BUSCAR DATA MAIS RECENTE DOS DADOS (não usar "hoje") ===
+      const { data: newestProfile } = await supabase
+        .from('profiles')
+        .select('created_at')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      const { data: oldestProfile } = await supabase
+        .from('profiles')
+        .select('created_at')
+        .order('created_at', { ascending: true })
+        .limit(1)
+        .single();
+
+      // Usar a data mais recente REAL dos dados como referência
+      const recentDate = newestProfile?.created_at ? new Date(newestProfile.created_at) : new Date();
+      
+      // Calcular período baseado nos dados reais
       const daysMap: { [key: string]: number } = {
         '7d': 7,
         '30d': 30,
@@ -72,10 +90,12 @@ export const useRealAdminStats = (timeRange: string) => {
       };
       
       const daysBack = daysMap[timeRange] || 30;
-      const startDate = new Date();
+      const startDate = new Date(recentDate);
       startDate.setDate(startDate.getDate() - daysBack);
       
-      console.log(`📅 [STATS] Período: ${daysBack} dias, desde: ${startDate.toISOString()}`);
+      console.log(`📅 [STATS] Período: ${daysBack} dias`);
+      console.log(`📅 [STATS] Data mais recente dos dados: ${recentDate.toISOString()}`);
+      console.log(`📅 [STATS] Data de início do período: ${startDate.toISOString()}`);
 
       // === DADOS CUMULATIVOS (não mudam com período) ===
       
@@ -209,6 +229,8 @@ export const useRealAdminStats = (timeRange: string) => {
       
       console.log('✅ [STATS] Estatísticas carregadas:', {
         periodo: `${daysBack} dias`,
+        dataReferencia: recentDate.toISOString(),
+        dataInicio: startDate.toISOString(),
         totalUsers: finalStats.totalUsers,
         totalSolutions: finalStats.totalSolutions,
         totalLearningLessons: finalStats.totalLearningLessons,
