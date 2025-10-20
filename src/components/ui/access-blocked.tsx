@@ -80,10 +80,10 @@ export const AccessBlocked: React.FC<AccessBlockedProps> = ({
   const Icon = config.icon;
 
   return (
-    <div className={`flex items-center justify-center min-h-feature-block p-4 ${className}`}>
+    <div className={`flex items-center justify-center min-h-feature-block p-md ${className}`}>
       <Card className={`max-w-md w-full ${config.bgColor} ${config.borderColor} border-2`}>
         <CardHeader className="text-center">
-          <div className={`mx-auto p-3 rounded-full ${config.bgColor} w-fit mb-4`}>
+          <div className={`mx-auto p-md rounded-full ${config.bgColor} w-fit mb-md`}>
             <Icon className={`h-8 w-8 ${config.color}`} />
           </div>
           <CardTitle className={`text-xl ${config.color}`}>
@@ -102,7 +102,7 @@ export const AccessBlocked: React.FC<AccessBlockedProps> = ({
               {upgradeMessage || config.upgradeMessage}
             </p>
             
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-sm">
               <Button 
                 variant="outline"
                 className={`${config.color} ${config.borderColor} hover:${config.bgColor}`}

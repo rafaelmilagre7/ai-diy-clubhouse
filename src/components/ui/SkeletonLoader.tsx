@@ -41,9 +41,9 @@ interface SkeletonCardProps {
 export const SkeletonCard: React.FC<SkeletonCardProps> = ({ variant = 'match' }) => {
   if (variant === 'match') {
     return (
-      <div className="liquid-glass-card p-6 space-y-4">
+      <div className="liquid-glass-card p-lg space-y-md">
         {/* Avatar */}
-        <div className="flex items-start gap-4">
+        <div className="flex items-start gap-md">
           <SkeletonLoader variant="circle" className="w-16 h-16 flex-shrink-0" />
           <div className="flex-1 space-y-2">
             <SkeletonLoader className="h-6 w-3/4" />
@@ -68,7 +68,7 @@ export const SkeletonCard: React.FC<SkeletonCardProps> = ({ variant = 'match' })
         </div>
 
         {/* Actions */}
-        <div className="flex gap-2">
+        <div className="flex gap-sm">
           <SkeletonLoader className="h-10 flex-1" />
           <SkeletonLoader className="h-10 w-32" />
         </div>
@@ -78,15 +78,15 @@ export const SkeletonCard: React.FC<SkeletonCardProps> = ({ variant = 'match' })
 
   if (variant === 'connection') {
     return (
-      <div className="liquid-glass-card p-6 space-y-4">
-        <div className="flex items-center gap-4">
+      <div className="liquid-glass-card p-lg space-y-md">
+        <div className="flex items-center gap-md">
           <SkeletonLoader variant="circle" className="w-14 h-14 flex-shrink-0" />
           <div className="flex-1 space-y-2">
             <SkeletonLoader className="h-5 w-2/3" />
             <SkeletonLoader className="h-4 w-1/2" />
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-sm">
           <SkeletonLoader className="h-8 flex-1" />
           <SkeletonLoader className="h-8 flex-1" />
           <SkeletonLoader className="h-8 flex-1" />
@@ -97,7 +97,7 @@ export const SkeletonCard: React.FC<SkeletonCardProps> = ({ variant = 'match' })
 
   if (variant === 'metric') {
     return (
-      <div className="liquid-glass-card p-6 space-y-3">
+      <div className="liquid-glass-card p-lg space-y-md">
         <SkeletonLoader className="h-4 w-24" />
         <SkeletonLoader className="h-10 w-20" />
         <SkeletonLoader className="h-3 w-32" />
@@ -119,7 +119,7 @@ export const SkeletonGrid: React.FC<SkeletonGridProps> = ({
 }) => {
   return (
     <div className={cn(
-      "grid gap-6",
+      "grid gap-lg",
       variant === 'match' && "grid-cols-1 md:grid-cols-2 lg:grid-cols-3",
       variant === 'connection' && "grid-cols-1 md:grid-cols-2",
       variant === 'metric' && "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"

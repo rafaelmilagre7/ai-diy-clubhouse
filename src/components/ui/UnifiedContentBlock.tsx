@@ -51,7 +51,7 @@ export const UnifiedContentBlock: React.FC<UnifiedContentBlockProps> = ({
         </div>
         
         {/* Conteúdo centralizado */}
-        <div className="relative text-center space-y-6 px-6 max-w-md">
+        <div className="relative text-center space-y-lg px-lg max-w-md">
           {/* Ícone principal com animação */}
           <div className="relative mx-auto w-20 h-20">
             {/* Círculo de fundo com gradiente */}
@@ -88,7 +88,7 @@ export const UnifiedContentBlock: React.FC<UnifiedContentBlockProps> = ({
               </h4>
               
               {/* Linha decorativa */}
-              <div className="flex items-center justify-center gap-3">
+              <div className="flex items-center justify-center gap-md">
                 <div className="h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent w-12
                                group-hover:via-primary/80 transition-colors duration-500"></div>
                 <Lock className="h-3 w-3 text-primary/70 group-hover:text-primary transition-colors duration-300" />
@@ -104,7 +104,7 @@ export const UnifiedContentBlock: React.FC<UnifiedContentBlockProps> = ({
           </div>
           
           {/* Indicador de ação */}
-          <div className="inline-flex items-center gap-3 px-6 py-3 
+          <div className="inline-flex items-center gap-md px-lg py-md 
                          bg-white/10 backdrop-blur-sm rounded-full border border-white/20
                          group-hover:bg-white/20 group-hover:border-white/30 
                          transition-all duration-300 shadow-lg">

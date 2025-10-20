@@ -247,7 +247,7 @@ export const SuperFileUpload: React.FC<SuperFileUploadProps> = ({
           </label>
         )}
         
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-sm">
           <Button
             type="button"
             variant="outline"
@@ -317,7 +317,7 @@ export const SuperFileUpload: React.FC<SuperFileUploadProps> = ({
           </label>
         )}
         
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-sm">
           <Button
             type="button"
             variant="outline"
@@ -383,7 +383,7 @@ export const SuperFileUpload: React.FC<SuperFileUploadProps> = ({
 
         {/* Status de arquivo enviado */}
         {uploadedFile && !previewUrl && (
-          <div className="flex items-center gap-2 p-2 border rounded-lg bg-muted/50">
+          <div className="flex items-center gap-sm p-sm border rounded-lg bg-muted/50">
             <File className="h-4 w-4 text-blue-600" />
             <span className="text-sm flex-1">{uploadedFile.name}</span>
             <span className="text-xs text-muted-foreground">

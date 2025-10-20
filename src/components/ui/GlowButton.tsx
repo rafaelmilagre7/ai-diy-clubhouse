@@ -30,9 +30,9 @@ export const GlowButton: React.FC<GlowButtonProps> = ({
   };
 
   const sizeClasses = {
-    sm: 'px-4 py-2 text-sm rounded-lg',
-    md: 'px-6 py-3 text-base rounded-xl',
-    lg: 'px-8 py-4 text-lg rounded-2xl'
+    sm: 'px-md py-sm text-sm rounded-lg',
+    md: 'px-lg py-md text-base rounded-xl',
+    lg: 'px-xl py-md text-lg rounded-2xl'
   };
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -82,7 +82,7 @@ export const GlowButton: React.FC<GlowButtonProps> = ({
           }}
         />
       ))}
-      <span className="relative z-10 flex items-center justify-center gap-2">
+      <span className="relative z-10 flex items-center justify-center gap-sm">
         {children}
       </span>
     </button>

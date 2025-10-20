@@ -49,7 +49,7 @@ export const PriorityBadge: React.FC<PriorityBadgeProps> = ({
     <Badge
       variant={config.variant}
       className={cn(
-        "flex items-center gap-1",
+        "flex items-center gap-xs",
         config.className,
         className
       )}

@@ -262,7 +262,7 @@ export const UnifiedFileUpload: React.FC<UnifiedFileUploadProps> = ({
         </label>
       )}
       
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-sm">
         <Button
           type="button"
           variant="outline"
