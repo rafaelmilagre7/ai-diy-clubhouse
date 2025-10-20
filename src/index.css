@@ -14,6 +14,7 @@
 @import './styles/accessibility.css';
 @import './styles/social-brands.css';
 @import './styles/decorative-patterns.css';
+@import './styles/aurora-glass-card-effects.css';
 
 @tailwind base;
 @tailwind components;
