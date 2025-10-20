@@ -116,15 +116,15 @@ const DataAuditPage = () => {
 
       {/* Erro */}
       {error && (
-        <Card className="border-red-200 bg-red-50">
+        <Card className="border-status-error/20 bg-status-error/5">
           <CardHeader>
-            <CardTitle className="text-red-800 flex items-center gap-2">
+            <CardTitle className="text-status-error-dark flex items-center gap-2">
               <AlertTriangle className="h-5 w-5" />
               Erro na Auditoria
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-red-700">{error}</p>
+            <p className="text-status-error-dark">{error}</p>
           </CardContent>
         </Card>
       )}
@@ -229,9 +229,9 @@ const DataAuditPage = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 {report.duplicates.length === 0 ? (
-                  <CheckCircle2 className="h-5 w-5 text-green-500" />
+                  <CheckCircle2 className="h-5 w-5 text-status-success" />
                 ) : (
-                  <AlertTriangle className="h-5 w-5 text-orange-500" />
+                  <AlertTriangle className="h-5 w-5 text-revenue" />
                 )}
                 Recomendações
               </CardTitle>
@@ -240,7 +240,7 @@ const DataAuditPage = () => {
               <ul className="space-y-2">
                 {report.recommendations.map((recommendation, index) => (
                   <li key={index} className="flex items-start gap-2">
-                    <div className="w-2 h-2 rounded-full bg-blue-500 mt-2 flex-shrink-0" />
+                    <div className="w-2 h-2 rounded-full bg-status-info mt-2 flex-shrink-0" />
                     <span className="text-sm">{recommendation}</span>
                   </li>
                 ))}

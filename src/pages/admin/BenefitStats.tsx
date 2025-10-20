@@ -129,11 +129,11 @@ const BenefitStats = () => {
       </div>
 
       {/* Enhanced Header with Aurora Style */}
-      <div className="relative aurora-glass rounded-2xl p-8 border border-green-500/20 backdrop-blur-md">
+      <div className="relative aurora-glass rounded-2xl p-8 border border-status-success/20 backdrop-blur-md">
         <div className="flex flex-col lg:flex-row justify-between items-start gap-6">
           <div className="flex items-start gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-2 h-16 bg-gradient-to-b from-green-500 via-emerald-500 to-aurora-primary rounded-full aurora-glow"></div>
+              <div className="w-2 h-16 bg-gradient-to-b from-status-success via-operational to-aurora-primary rounded-full aurora-glow"></div>
               <div>
                 <div className="flex items-center gap-3 mb-2">
                   <div className="p-3 rounded-xl bg-gradient-to-br from-success/20 to-success/10 aurora-glass">
@@ -151,7 +151,7 @@ const BenefitStats = () => {
           </div>
           
           <Link to="/admin/tools/new">
-            <Button className="h-12 px-6 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-primary-foreground font-medium shadow-lg hover:shadow-xl transition-all duration-300">
+            <Button className="h-12 px-6 bg-gradient-to-r from-status-success to-operational hover:from-status-success-dark hover:to-operational-dark text-primary-foreground font-medium shadow-lg hover:shadow-xl transition-all duration-300">
               <Plus className="h-4 w-4 mr-2" />
               Nova Ferramenta com Benefício
             </Button>
@@ -161,7 +161,7 @@ const BenefitStats = () => {
         {/* Quick Stats */}
         <div className="flex gap-6 mt-6">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full aurora-pulse"></div>
+            <div className="w-3 h-3 bg-gradient-to-r from-status-success-light to-operational rounded-full aurora-pulse"></div>
             <span className="text-sm font-medium text-muted-foreground">
               {toolsWithBenefits} Ferramentas Ativas
             </span>
@@ -173,7 +173,7 @@ const BenefitStats = () => {
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-gradient-to-r from-purple-400 to-pink-500 rounded-full aurora-pulse"></div>
+            <div className="w-3 h-3 bg-gradient-to-r from-strategy-light to-aurora-secondary rounded-full aurora-pulse"></div>
             <span className="text-sm font-medium text-muted-foreground">
               Conversão Ativa
             </span>
@@ -182,28 +182,28 @@ const BenefitStats = () => {
       </div>
 
       {/* Enhanced Search Section */}
-      <div className="aurora-glass rounded-2xl p-6 border border-green-500/20 backdrop-blur-md">
+      <div className="aurora-glass rounded-2xl p-6 border border-status-success/20 backdrop-blur-md">
         <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4">
           <div className="relative flex-1 max-w-md">
             <div className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10">
-              <Search className="h-5 w-5 text-green-500/70" />
+              <Search className="h-5 w-5 text-status-success/70" />
             </div>
             <Input
               type="search"
               placeholder="Buscar ferramentas e benefícios..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-12 h-12 aurora-glass border-green-500/30 bg-background/50 backdrop-blur-sm focus:border-green-500/50 focus:ring-green-500/20 font-medium"
+              className="pl-12 h-12 aurora-glass border-status-success/30 bg-background/50 backdrop-blur-sm focus:border-status-success/50 focus:ring-status-success/20 font-medium"
             />
             <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-              <div className="w-2 h-2 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full aurora-pulse"></div>
+              <div className="w-2 h-2 bg-gradient-to-r from-status-success to-operational rounded-full aurora-pulse"></div>
             </div>
           </div>
           
           <Button
             onClick={fetchBenefitStats}
             variant="outline"
-            className="h-12 px-6 aurora-glass border-green-500/30 hover:border-green-500/50 hover:bg-green-500/10 text-green-500 font-medium backdrop-blur-sm"
+            className="h-12 px-6 aurora-glass border-status-success/30 hover:border-status-success/50 hover:bg-status-success/10 text-status-success font-medium backdrop-blur-sm"
           >
             <RefreshCw className="h-4 w-4 mr-2" />
             Atualizar Dados
@@ -211,8 +211,8 @@ const BenefitStats = () => {
           
           {searchQuery && filteredStats.length !== stats.length && (
             <div className="text-sm text-muted-foreground flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full aurora-pulse"></div>
-              Exibindo <span className="font-bold text-green-500">{filteredStats.length}</span> de <span className="font-bold">{stats.length}</span> resultados
+              <div className="w-2 h-2 bg-status-success rounded-full aurora-pulse"></div>
+              Exibindo <span className="font-bold text-status-success">{filteredStats.length}</span> de <span className="font-bold">{stats.length}</span> resultados
             </div>
           )}
         </div>
@@ -288,11 +288,11 @@ const BenefitStats = () => {
       </div>
       
       {/* Enhanced Benefits Table */}
-      <div className="aurora-glass rounded-2xl border border-green-500/20 backdrop-blur-md overflow-hidden animate-fade-in animation-delay-500">
-        <div className="bg-gradient-to-r from-green-500/10 via-emerald-500/5 to-transparent p-8 border-b border-green-500/20">
+      <div className="aurora-glass rounded-2xl border border-status-success/20 backdrop-blur-md overflow-hidden animate-fade-in animation-delay-500">
+        <div className="bg-gradient-to-r from-status-success/10 via-operational/5 to-transparent p-8 border-b border-status-success/20">
           <div className="flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-500/10 aurora-glass">
-              <BarChart3 className="h-6 w-6 text-green-500" />
+            <div className="p-3 rounded-xl bg-gradient-to-br from-status-success/20 to-operational/10 aurora-glass">
+              <BarChart3 className="h-6 w-6 text-status-success" />
             </div>
             <div>
               <h2 className="text-2xl font-bold aurora-text-gradient">Desempenho por Ferramenta</h2>
@@ -343,14 +343,14 @@ const BenefitStats = () => {
               {filteredStats.map((stat, index) => (
                 <div 
                   key={stat.id}
-                  className="aurora-glass rounded-xl p-4 border border-muted/20 backdrop-blur-sm hover:border-green-500/30 transition-all duration-300 animate-fade-in"
+                  className="aurora-glass rounded-xl p-4 border border-muted/20 backdrop-blur-sm hover:border-status-success/30 transition-all duration-300 animate-fade-in"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
                   <div className="grid grid-cols-12 gap-4 items-center">
                     <div className="col-span-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-green-500/20 to-emerald-500/10 aurora-glass flex items-center justify-center">
-                          <Gift className="h-5 w-5 text-green-500" />
+                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-status-success/20 to-operational/10 aurora-glass flex items-center justify-center">
+                          <Gift className="h-5 w-5 text-status-success" />
                         </div>
                         <div>
                           <p className="font-medium text-foreground">{stat.name}</p>
@@ -367,7 +367,7 @@ const BenefitStats = () => {
                     <div className="col-span-2">
                       <Badge 
                         variant="outline" 
-                        className="bg-green-500/10 text-green-500 border-green-500/30 font-medium"
+                        className="bg-status-success/10 text-status-success border-status-success/30 font-medium"
                       >
                         {stat.category}
                       </Badge>

@@ -98,7 +98,7 @@ const AtualizarDuracoesPage: React.FC = () => {
             )}
             
             {!aula && !curso && (
-              <div className="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-900 rounded-md">
+              <div className="mt-4 p-4 bg-status-warning/10 dark:bg-status-warning/20 border border-status-warning/20 dark:border-status-warning/30 rounded-md">
                 <p>Você está atualizando as durações de todos os vídeos da plataforma.</p>
               </div>
             )}

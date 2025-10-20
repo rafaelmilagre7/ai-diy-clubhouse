@@ -36,11 +36,11 @@ export const CourseCertificateManager = () => {
         </CardContent>
       </Card>
 
-      <Card className="border-amber-200 bg-amber-50/50">
+      <Card className="border-status-warning/20 bg-status-warning/5">
         <CardHeader>
-          <CardTitle className="text-amber-800 text-base">ℹ️ Como Funciona</CardTitle>
+          <CardTitle className="text-status-warning-dark text-base">ℹ️ Como Funciona</CardTitle>
         </CardHeader>
-        <CardContent className="text-sm text-amber-700 space-y-2">
+        <CardContent className="text-sm text-status-warning-dark space-y-2">
           <p>
             • <strong>Sincronização Individual:</strong> Cada curso pode ser sincronizado separadamente
           </p>

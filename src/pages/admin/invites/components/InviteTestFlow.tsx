@@ -109,10 +109,10 @@ export const InviteTestFlow: React.FC<InviteTestFlowProps> = ({ roles, onInviteC
   const isProcessing = isDeleting || isCreating || flowStep !== 'idle';
 
   return (
-    <Card className="border-purple-200 bg-purple-50/50">
+    <Card className="border-strategy/20 bg-strategy/5">
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-medium flex items-center gap-2">
-          <TestTube className="h-4 w-4 text-purple-500" />
+          <TestTube className="h-4 w-4 text-strategy" />
           🧪 Fluxo de Teste Automatizado
         </CardTitle>
       </CardHeader>
@@ -159,7 +159,7 @@ export const InviteTestFlow: React.FC<InviteTestFlowProps> = ({ roles, onInviteC
             onClick={handleTestFlow}
             disabled={!testEmail || !selectedRole || isProcessing}
             variant="outline"
-            className="text-sm border-purple-300 hover:bg-purple-100"
+            className="text-sm border-strategy/30 hover:bg-strategy/10"
           >
             {isProcessing ? (
               <>
@@ -178,19 +178,19 @@ export const InviteTestFlow: React.FC<InviteTestFlowProps> = ({ roles, onInviteC
           
           <div className="flex gap-1">
             {flowStep === 'cleaning' && (
-              <Badge variant="outline" className="text-xs border-orange-300 text-orange-700">
+              <Badge variant="outline" className="text-xs border-revenue/30 text-revenue">
                 <UserX className="h-3 w-3 mr-1" />
                 Limpando
               </Badge>
             )}
             {flowStep === 'inviting' && (
-              <Badge variant="outline" className="text-xs border-blue-300 text-blue-700">
+              <Badge variant="outline" className="text-xs border-status-info/30 text-status-info">
                 <Mail className="h-3 w-3 mr-1" />
                 Enviando
               </Badge>
             )}
             {flowStep === 'complete' && (
-              <Badge variant="outline" className="text-xs border-green-300 text-green-700">
+              <Badge variant="outline" className="text-xs border-status-success/30 text-status-success">
                 <CheckCircle className="h-3 w-3 mr-1" />
                 Sucesso
               </Badge>
@@ -198,11 +198,11 @@ export const InviteTestFlow: React.FC<InviteTestFlowProps> = ({ roles, onInviteC
           </div>
         </div>
         
-        <div className="bg-purple-100 dark:bg-purple-900/20 p-3 rounded border border-purple-200 dark:border-purple-800">
-          <p className="text-xs text-purple-700 dark:text-purple-300">
+        <div className="bg-strategy/20 dark:bg-strategy/20 p-3 rounded border border-strategy/30 dark:border-strategy/30">
+          <p className="text-xs text-strategy-dark dark:text-strategy-light">
             <strong>🔄 Processo Automatizado:</strong>
           </p>
-          <ol className="text-xs text-purple-600 dark:text-purple-400 mt-1 space-y-1">
+          <ol className="text-xs text-strategy-dark dark:text-strategy-light mt-1 space-y-1">
             <li>1. 🔍 Verifica se email precisa ser limpo</li>
             <li>2. 🧹 Executa soft delete se necessário</li>
             <li>3. ✨ Aguarda limpeza completar</li>

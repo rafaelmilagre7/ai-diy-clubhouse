@@ -166,7 +166,7 @@ const AdminSuggestionsPage = () => {
     return (
       <div className="container py-6">
         <h1 className="text-2xl font-bold mb-4">Gerenciar Sugestões</h1>
-        <div className="p-4 bg-red-50 border border-red-300 rounded-md text-red-700">
+        <div className="p-4 bg-status-error/10 border border-status-error/30 rounded-md text-status-error-dark">
           <h3 className="text-lg font-medium">Erro ao carregar sugestões</h3>
           <p className="mt-2">{error.message || 'Ocorreu um erro inesperado ao carregar as sugestões'}</p>
           <Button onClick={() => refetch()} className="mt-4" variant="outline">
@@ -237,8 +237,8 @@ const AdminSuggestionsPage = () => {
                       </TableCell>
                       <TableCell>
                         <span className={`font-semibold ${
-                          netVotes > 0 ? 'text-green-600 dark:text-green-400' : 
-                          netVotes < 0 ? 'text-red-600 dark:text-red-400' : 
+                          netVotes > 0 ? 'text-status-success dark:text-status-success-light' : 
+                          netVotes < 0 ? 'text-status-error dark:text-status-error-light' :
                           'text-muted-foreground'
                         }`}>
                           {netVotes > 0 ? `+${netVotes}` : netVotes}

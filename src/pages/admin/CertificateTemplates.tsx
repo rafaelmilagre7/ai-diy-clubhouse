@@ -214,7 +214,7 @@ export default function CertificateTemplates() {
         <Card className="hover-scale">
           <CardContent className="p-6">
             <div className="flex items-center space-x-4">
-              <Sparkles className="h-8 w-8 text-green-500" />
+              <Sparkles className="h-8 w-8 text-status-success" />
               <div>
                 <p className="text-2xl font-bold">{templates.filter(t => t.isActive).length}</p>
                 <p className="text-sm text-muted-foreground">Ativos</p>
@@ -238,7 +238,7 @@ export default function CertificateTemplates() {
         <Card className="hover-scale">
           <CardContent className="p-6">
             <div className="flex items-center space-x-4">
-              <Code className="h-8 w-8 text-purple-500" />
+              <Code className="h-8 w-8 text-strategy" />
               <div>
                 <p className="text-2xl font-bold">{templates.filter(t => t.metadata.category === 'Personalizado').length}</p>
                 <p className="text-sm text-muted-foreground">Personalizados</p>

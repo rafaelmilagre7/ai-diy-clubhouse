@@ -71,7 +71,7 @@ const SimpleInvitesList = ({
         );
       case 'both':
         return (
-          <Badge variant="outline" className="text-purple-700 border-purple-200 bg-purple-50">
+          <Badge variant="outline" className="text-strategy border-strategy/20 bg-strategy/5">
             <Send className="h-3 w-3 mr-1" />
             Email + WhatsApp
           </Badge>
@@ -79,7 +79,7 @@ const SimpleInvitesList = ({
       case 'email':
       default:
         return (
-          <Badge variant="outline" className="text-blue-700 border-blue-200 bg-blue-50">
+          <Badge variant="outline" className="text-status-info border-status-info/20 bg-status-info/5">
             <Mail className="h-3 w-3 mr-1" />
             Email
           </Badge>

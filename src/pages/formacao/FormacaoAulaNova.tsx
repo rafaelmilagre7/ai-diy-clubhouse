@@ -608,14 +608,14 @@ const FormacaoAulaNova = () => {
             <CardContent className="space-y-6">
               {/* Status de verificação da tabela */}
               {!tableChecked ? (
-                <div className="p-4 border rounded-md bg-yellow-50 text-yellow-800">
+                <div className="p-4 border rounded-md bg-status-warning/10 text-status-warning-dark">
                   <p className="text-sm flex items-center">
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     Verificando estrutura da tabela...
                   </p>
                 </div>
               ) : tableColumns === null ? (
-                <div className="p-4 border rounded-md bg-red-50 text-red-800">
+                <div className="p-4 border rounded-md bg-status-error/10 text-status-error-dark">
                   <p className="text-sm font-semibold">Não foi possível verificar a estrutura da tabela</p>
                   <p className="text-sm mt-1">Algumas funcionalidades podem não funcionar corretamente,
                     mas tentaremos criar a aula mesmo assim.</p>

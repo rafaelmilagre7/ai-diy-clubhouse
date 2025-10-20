@@ -201,10 +201,10 @@ const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTa
                   relative px-4 py-2.5 rounded-xl font-medium transition-all duration-300 backdrop-blur-sm
                   ${statusFilter === filter.key 
                     ? filter.key === 'failed' 
-                      ? 'aurora-glass bg-gradient-to-r from-red-500/20 to-orange-500/10 text-red-400 border border-red-400/30 shadow-lg animate-pulse' 
+                      ? 'aurora-glass bg-gradient-to-r from-status-error/20 to-revenue/10 text-status-error border border-status-error/30 shadow-lg animate-pulse' 
                       : 'aurora-glass bg-gradient-to-r from-aurora/20 to-aurora-primary/10 text-aurora border border-aurora/30 shadow-lg'
                     : filter.key === 'failed' && (filter as any).count > 0
-                      ? 'bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-400/20 hover:border-red-400/40'
+                      ? 'bg-status-error/10 hover:bg-status-error/20 text-status-error hover:text-status-error-light border border-status-error/20 hover:border-status-error/40'
                       : 'bg-muted/30 hover:bg-muted/50 text-muted-foreground hover:text-foreground border border-muted/20'
                   }
                 `}

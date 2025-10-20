@@ -303,13 +303,13 @@ export const IntegrationsDebugPage = () => {
                           <strong>Domínio usado:</strong> {settingsResult.validation?.domain_used || 'api.pipedrive.com'}
                         </p>
                         
-                        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded">
-                          <h5 className="font-semibold text-blue-800 mb-2">Próximos Passos:</h5>
+                        <div className="mt-4 p-3 bg-status-info/10 border border-status-info/20 rounded">
+                          <h5 className="font-semibold text-status-info-dark mb-2">Próximos Passos:</h5>
                           <div className="space-y-1">
-                            <p className="text-sm text-blue-700">1. Copie os valores abaixo</p>
-                            <p className="text-sm text-blue-700">2. Acesse o Supabase Dashboard</p>
-                            <p className="text-sm text-blue-700">3. Vá em Settings → Environment Variables</p>
-                            <p className="text-sm text-blue-700">4. Atualize os secrets com os novos valores</p>
+                            <p className="text-sm text-status-info-dark">1. Copie os valores abaixo</p>
+                            <p className="text-sm text-status-info-dark">2. Acesse o Supabase Dashboard</p>
+                            <p className="text-sm text-status-info-dark">3. Vá em Settings → Environment Variables</p>
+                            <p className="text-sm text-status-info-dark">4. Atualize os secrets com os novos valores</p>
                           </div>
                           
                           <div className="mt-3 p-2 bg-background rounded border">
@@ -758,15 +758,15 @@ export const IntegrationsDebugPage = () => {
                 <h3 className="text-lg font-semibold">Status da Implementação</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <CheckCircle className="h-4 w-4 text-status-success" />
                     <span className="text-sm">Tabela implementation_requests</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <CheckCircle className="h-4 w-4 text-status-success" />
                     <span className="text-sm">Edge Functions criadas</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <CheckCircle className="h-4 w-4 text-status-success" />
                     <span className="text-sm">Validação implementada</span>
                   </div>
                 </div>

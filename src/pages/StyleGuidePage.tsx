@@ -993,7 +993,7 @@ export default function StyleGuidePage() {
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <h4 className="font-semibold flex items-center gap-2">
-                      <Check className="w-4 h-4 text-green-500" />
+                      <Check className="w-4 h-4 text-status-success" />
                       Color Contrast
                     </h4>
                     <p className="text-sm text-muted-foreground">
@@ -1003,7 +1003,7 @@ export default function StyleGuidePage() {
                   
                   <div className="space-y-2">
                     <h4 className="font-semibold flex items-center gap-2">
-                      <Check className="w-4 h-4 text-green-500" />
+                      <Check className="w-4 h-4 text-status-success" />
                       Focus Indicators
                     </h4>
                     <p className="text-sm text-muted-foreground">
@@ -1013,7 +1013,7 @@ export default function StyleGuidePage() {
                   
                   <div className="space-y-2">
                     <h4 className="font-semibold flex items-center gap-2">
-                      <Check className="w-4 h-4 text-green-500" />
+                      <Check className="w-4 h-4 text-status-success" />
                       Keyboard Navigation
                     </h4>
                     <p className="text-sm text-muted-foreground">
@@ -1023,7 +1023,7 @@ export default function StyleGuidePage() {
                   
                   <div className="space-y-2">
                     <h4 className="font-semibold flex items-center gap-2">
-                      <Check className="w-4 h-4 text-green-500" />
+                      <Check className="w-4 h-4 text-status-success" />
                       Screen Reader Support
                     </h4>
                     <p className="text-sm text-muted-foreground">
@@ -1033,7 +1033,7 @@ export default function StyleGuidePage() {
                   
                   <div className="space-y-2">
                     <h4 className="font-semibold flex items-center gap-2">
-                      <Check className="w-4 h-4 text-green-500" />
+                      <Check className="w-4 h-4 text-status-success" />
                       Reduced Motion
                     </h4>
                     <p className="text-sm text-muted-foreground">

@@ -260,11 +260,11 @@ export const TestPlan: React.FC = () => {
                 </div>
 
                 <div className="space-y-4">
-                  <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
-                    <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
+                  <div className="p-4 bg-status-info/10 dark:bg-status-info/20 rounded-lg">
+                    <h4 className="font-medium text-status-info-dark dark:text-status-info-light mb-2">
                       🔧 O que este teste faz:
                     </h4>
-                    <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+                    <ul className="text-sm text-status-info-dark dark:text-status-info-light space-y-1">
                       <li>1. Verifica se o usuário já existe</li>
                       <li>2. Executa limpeza/exclusão se necessário</li>
                       <li>3. Cria novo convite no banco</li>
@@ -366,11 +366,11 @@ export const TestPlan: React.FC = () => {
                 </Card>
               </div>
 
-              <div className="p-4 bg-amber-50 dark:bg-amber-950/20 rounded-lg">
-                <h4 className="font-medium text-amber-900 dark:text-amber-100 mb-2">
+              <div className="p-4 bg-status-warning/10 dark:bg-status-warning/20 rounded-lg">
+                <h4 className="font-medium text-status-warning-dark dark:text-status-warning-light mb-2">
                   ⚠️ Pontos de Atenção:
                 </h4>
-                <ul className="text-sm text-amber-800 dark:text-amber-200 space-y-1">
+                <ul className="text-sm text-status-warning-dark dark:text-status-warning-light space-y-1">
                   <li>• Verifique se a chave RESEND_API_KEY está configurada</li>
                   <li>• Confirme se o domínio está verificado no Resend</li>
                   <li>• Monitore os logs das Edge Functions em tempo real</li>

@@ -10,10 +10,10 @@ export const EmailStatusMonitor: React.FC = () => {
 
   if (sendError) {
     return (
-      <Card className="border-red-200 bg-red-50/50">
+      <Card className="border-status-error/20 bg-status-error/5">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 text-red-500" />
+            <AlertTriangle className="h-4 w-4 text-status-error" />
             Sistema Profissional de Emails
           </CardTitle>
         </CardHeader>
@@ -21,7 +21,7 @@ export const EmailStatusMonitor: React.FC = () => {
         <CardContent>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-red-500" />
+              <AlertTriangle className="h-4 w-4 text-status-error" />
               <span className="text-sm font-medium">Erro temporário detectado</span>
             </div>
             
@@ -30,7 +30,7 @@ export const EmailStatusMonitor: React.FC = () => {
             </Badge>
           </div>
           
-          <p className="text-xs text-red-600 mt-2">
+          <p className="text-xs text-status-error mt-2">
             {sendError.message}
           </p>
           
@@ -44,7 +44,7 @@ export const EmailStatusMonitor: React.FC = () => {
 
   if (isSending) {
     return (
-      <Card className="border-blue-200 bg-blue-50/50">
+      <Card className="border-status-info/20 bg-status-info/5">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
             <RefreshCw className="h-4 w-4 animate-spin" />
@@ -54,7 +54,7 @@ export const EmailStatusMonitor: React.FC = () => {
         
         <CardContent>
           <div className="flex items-center gap-2">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-status-info"></div>
             <span className="text-sm font-medium">Enviando convite profissional...</span>
           </div>
           
@@ -71,10 +71,10 @@ export const EmailStatusMonitor: React.FC = () => {
   }
 
   return (
-    <Card className="border-green-200 bg-green-50/50">
+    <Card className="border-status-success/20 bg-status-success/5">
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-medium flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-green-500" />
+          <Sparkles className="h-4 w-4 text-status-success" />
           Sistema Profissional Operacional
         </CardTitle>
       </CardHeader>
@@ -82,16 +82,16 @@ export const EmailStatusMonitor: React.FC = () => {
       <CardContent>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <CheckCircle className="h-4 w-4 text-green-500" />
+            <CheckCircle className="h-4 w-4 text-status-success" />
             <span className="text-sm font-medium">Sistema otimizado para testes</span>
           </div>
           
           <div className="flex gap-1">
-            <Badge variant="default" className="bg-green-100 text-green-800">
+            <Badge variant="default" className="bg-status-success/20 text-status-success-dark">
               <Zap className="h-3 w-3 mr-1" />
               Pro
             </Badge>
-            <Badge variant="outline" className="border-purple-200 text-purple-700">
+            <Badge variant="outline" className="border-strategy/20 text-strategy">
               <TestTube className="h-3 w-3 mr-1" />
               Debug
             </Badge>
@@ -108,8 +108,8 @@ export const EmailStatusMonitor: React.FC = () => {
           <p>🚀 <strong>Fluxo de Teste:</strong> Delete → Clean → Re-invite otimizado</p>
         </div>
         
-        <div className="bg-green-100 dark:bg-green-900/20 p-2 rounded mt-2 border border-green-200 dark:border-green-800">
-          <p className="text-xs text-green-700 dark:text-green-300 font-medium">
+        <div className="bg-status-success/20 dark:bg-status-success/20 p-2 rounded mt-2 border border-status-success/30 dark:border-status-success/30">
+          <p className="text-xs text-status-success-dark dark:text-status-success-light font-medium">
             💡 <strong>Dica:</strong> Use o botão 🗑️ → "Soft Delete" → "Novo Convite" para reutilizar emails durante testes
           </p>
         </div>

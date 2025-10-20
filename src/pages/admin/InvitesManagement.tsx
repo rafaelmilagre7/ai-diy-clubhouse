@@ -467,7 +467,7 @@ const InvitesList = ({
                       Expirado
                     </Badge>
                   ) : (
-                    <Badge variant="default" className="flex items-center gap-1 bg-green-500 hover:bg-green-600">
+                    <Badge variant="default" className="flex items-center gap-1 bg-status-success hover:bg-status-success-dark">
                       <CheckCircle className="h-3 w-3" />
                       Ativo
                     </Badge>

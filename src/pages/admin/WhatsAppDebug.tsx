@@ -66,7 +66,7 @@ const StatusCard: React.FC<{
     switch (status) {
       case 'success': return 'border-primary bg-primary/5';
       case 'error': return 'border-destructive bg-destructive/5';
-      case 'warning': return 'border-orange-500 bg-orange-500/5';
+      case 'warning': return 'border-status-warning bg-status-warning/5';
       case 'loading': return 'border-muted bg-muted/5';
       default: return 'border-muted bg-muted/5';
     }
@@ -714,16 +714,16 @@ const WhatsAppDebug: React.FC = () => {
                   <div className="text-2xl font-bold text-primary">{allTemplates.summary.total}</div>
                   <div className="text-sm text-muted-foreground">Total</div>
                 </div>
-                <div className="text-center p-3 bg-green-500/5 rounded-lg">
-                  <div className="text-2xl font-bold text-green-600">{allTemplates.summary.approved}</div>
+                <div className="text-center p-3 bg-status-success/5 rounded-lg">
+                  <div className="text-2xl font-bold text-status-success">{allTemplates.summary.approved}</div>
                   <div className="text-sm text-muted-foreground">Aprovados</div>
                 </div>
-                <div className="text-center p-3 bg-yellow-500/5 rounded-lg">
-                  <div className="text-2xl font-bold text-yellow-600">{allTemplates.summary.pending}</div>
+                <div className="text-center p-3 bg-status-warning/5 rounded-lg">
+                  <div className="text-2xl font-bold text-status-warning">{allTemplates.summary.pending}</div>
                   <div className="text-sm text-muted-foreground">Pendentes</div>
                 </div>
-                <div className="text-center p-3 bg-red-500/5 rounded-lg">
-                  <div className="text-2xl font-bold text-red-600">{allTemplates.summary.rejected}</div>
+                <div className="text-center p-3 bg-status-error/5 rounded-lg">
+                  <div className="text-2xl font-bold text-status-error">{allTemplates.summary.rejected}</div>
                   <div className="text-sm text-muted-foreground">Rejeitados</div>
                 </div>
               </div>
