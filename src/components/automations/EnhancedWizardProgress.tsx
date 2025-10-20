@@ -134,7 +134,7 @@ export const EnhancedWizardProgress = ({
                 >
                   <div className={cn(
                     "w-8 h-8 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all",
-                    isCompleted && "border-operational bg-operational text-white",
+                    isCompleted && "border-operational bg-operational text-primary-foreground",
                     isActive && !isCompleted && "border-primary bg-primary text-primary-foreground",
                     !isActive && !isCompleted && "border-muted-foreground/30 text-muted-foreground"
                   )}>

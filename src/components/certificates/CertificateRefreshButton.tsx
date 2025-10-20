@@ -35,7 +35,7 @@ export const CertificateRefreshButton = ({
         onClick={handleTemplateUpdate}
         size={size}
         variant="outline"
-        className={`bg-gradient-to-r from-system-healthy to-operational hover:from-system-healthy/90 hover:to-operational/90 text-white border-0 ${className}`}
+        className={`bg-gradient-to-r from-system-healthy to-operational hover:from-system-healthy/90 hover:to-operational/90 text-primary-foreground border-0 ${className}`}
       >
         <Palette className="w-4 h-4 mr-2" />
         Atualizar Design

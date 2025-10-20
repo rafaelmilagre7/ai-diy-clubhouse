@@ -113,7 +113,7 @@ const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTa
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="aurora-glass rounded-2xl border border-aurora/20 backdrop-blur-md overflow-hidden animate-pulse">
-              <div className="bg-gradient-to-r from-aurora/10 to-aurora-primary/5 p-4 border-b border-white/10">
+              <div className="bg-gradient-to-r from-aurora/10 to-aurora-primary/5 p-4 border-b border-border/30">
                 <div className="flex items-center justify-between">
                   <div className="w-10 h-10 bg-gradient-to-br from-aurora/20 to-aurora-primary/10 rounded-xl"></div>
                   <div className="w-12 h-8 bg-gradient-to-r from-aurora/20 to-aurora-primary/10 rounded-lg"></div>
@@ -274,7 +274,7 @@ const SimpleInvitesTab = ({ invites, loading, onInvitesChange }: SimpleInvitesTa
                   onClick={handleBulkReactivateClick}
                   disabled={isBulkReactivating}
                   size="default"
-                  className="h-12 px-6 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300"
+                  className="h-12 px-6 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-primary-foreground font-medium shadow-lg hover:shadow-xl transition-all duration-300"
                 >
                   {isBulkReactivating ? (
                     <RefreshCw className="h-4 w-4 mr-2 animate-spin" />

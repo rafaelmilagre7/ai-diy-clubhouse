@@ -160,7 +160,7 @@ export const AuroraKpiGrid = memo(({
             <CardContent className="relative p-6 z-10">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-4">
-                  <div className={`p-3 rounded-xl backdrop-blur-sm bg-white/10 group-hover:scale-110 transition-all duration-300 border border-white/20`}>
+                  <div className={`p-3 rounded-xl backdrop-blur-sm bg-surface-elevated/50 group-hover:scale-110 transition-all duration-300 border border-border/30`}>
                     <IconComponent className={`h-6 w-6 ${item.iconColor} group-hover:drop-shadow-lg transition-all duration-300`} />
                   </div>
                   <div>

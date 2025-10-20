@@ -89,7 +89,7 @@ const BenefitStats = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="aurora-glass rounded-2xl border border-success/20 backdrop-blur-md animate-pulse">
-              <div className="bg-gradient-to-r from-success/10 to-success-light/5 p-6 border-b border-white/10">
+              <div className="bg-gradient-to-r from-success/10 to-success-light/5 p-6 border-b border-border/30">
                 <div className="flex items-center justify-between">
                   <div className="w-12 h-12 bg-gradient-to-br from-success/20 to-success-light/10 rounded-xl"></div>
                   <div className="w-16 h-8 bg-gradient-to-r from-success/20 to-success-light/10 rounded-lg"></div>
@@ -151,7 +151,7 @@ const BenefitStats = () => {
           </div>
           
           <Link to="/admin/tools/new">
-            <Button className="h-12 px-6 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300">
+            <Button className="h-12 px-6 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-primary-foreground font-medium shadow-lg hover:shadow-xl transition-all duration-300">
               <Plus className="h-4 w-4 mr-2" />
               Nova Ferramenta com Benefício
             </Button>
@@ -263,7 +263,7 @@ const BenefitStats = () => {
             className={`aurora-glass rounded-2xl border ${metric.border} backdrop-blur-md overflow-hidden group cursor-pointer transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl animate-fade-in`}
             style={{ animationDelay: `${index * 100}ms` }}
           >
-            <div className={`bg-gradient-to-r ${metric.gradient} p-6 border-b border-white/10`}>
+            <div className={`bg-gradient-to-r ${metric.gradient} p-6 border-b border-border/30`}>
               <div className="flex items-center justify-between">
                 <div className={`p-3 rounded-xl aurora-glass bg-gradient-to-br ${metric.gradient}`}>
                   <metric.icon className={`h-6 w-6 ${metric.iconColor}`} />
@@ -319,7 +319,7 @@ const BenefitStats = () => {
               </p>
               {!searchQuery && (
                 <Link to="/admin/tools/new">
-                  <Button className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300">
+                  <Button className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-primary-foreground font-medium shadow-lg hover:shadow-xl transition-all duration-300">
                     <Plus className="h-4 w-4 mr-2" />
                     Criar Primeira Ferramenta
                   </Button>

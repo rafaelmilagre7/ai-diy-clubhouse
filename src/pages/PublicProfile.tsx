@@ -196,7 +196,7 @@ export default function PublicProfile() {
                   <Button
                     onClick={() => navigate('/profile/edit')}
                     size="default"
-                    className="w-full gap-2 bg-gradient-to-r from-aurora via-aurora-primary to-operational hover:from-aurora/80 hover:via-aurora-primary/80 hover:to-operational/80 text-white shadow-md hover:shadow-lg border-0"
+                    className="w-full gap-2 bg-gradient-to-r from-aurora via-aurora-primary to-operational hover:from-aurora/80 hover:via-aurora-primary/80 hover:to-operational/80 text-primary-foreground shadow-md hover:shadow-lg border-0"
                   >
                     <Edit className="h-4 w-4" />
                     <span className="text-sm">Editar Perfil</span>
@@ -210,10 +210,10 @@ export default function PublicProfile() {
                       size="default"
                       className={`w-full gap-2 transition-smooth shadow-md hover:shadow-lg border-0 ${
                         localStatus === 'accepted'
-                          ? 'bg-gradient-to-r from-success via-success-light to-success-dark hover:from-success-dark hover:via-success hover:to-success-light text-white'
+                          ? 'bg-gradient-to-r from-success via-success-light to-success-dark hover:from-success-dark hover:via-success hover:to-success-light text-primary-foreground'
                           : localStatus === 'pending'
-                          ? 'bg-gradient-to-r from-warning via-warning-light to-warning-dark text-white cursor-not-allowed opacity-80'
-                          : 'bg-gradient-to-r from-aurora via-aurora-primary to-operational hover:from-aurora/80 hover:via-aurora-primary/80 hover:to-operational/80 text-white'
+                          ? 'bg-gradient-to-r from-warning via-warning-light to-warning-dark text-primary-foreground cursor-not-allowed opacity-80'
+                          : 'bg-gradient-to-r from-aurora via-aurora-primary to-operational hover:from-aurora/80 hover:via-aurora-primary/80 hover:to-operational/80 text-primary-foreground'
                       }`}
                     >
                       {localStatus === 'accepted' ? (

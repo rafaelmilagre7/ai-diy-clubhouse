@@ -67,7 +67,7 @@ const InviteStats = ({ invites }: InviteStatsProps) => {
           style={{ animationDelay: `${index * 100}ms` }}
         >
           {/* Gradient Header */}
-          <div className={`bg-gradient-to-r ${stat.gradient} p-4 border-b border-white/10`}>
+          <div className={`bg-gradient-to-r ${stat.gradient} p-4 border-b border-border/30`}>
             <div className="flex items-center justify-between">
               <div className={`p-3 rounded-xl aurora-glass bg-gradient-to-br ${stat.gradient}`}>
                 <stat.icon className={`h-5 w-5 ${stat.iconColor}`} />

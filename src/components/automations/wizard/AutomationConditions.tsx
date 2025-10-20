@@ -187,7 +187,7 @@ export const AutomationConditions = ({ conditions, onChange }: AutomationConditi
                         {commonPatterns.map((pattern, index) => (
                           <div 
                             key={index}
-                            className="flex items-center justify-between p-2 bg-white rounded border"
+                            className="flex items-center justify-between p-2 bg-card rounded border"
                           >
                             <div>
                               <div className="text-sm font-medium">{pattern.name}</div>

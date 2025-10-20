@@ -159,7 +159,7 @@ export const AutomationActions = ({ actions, onChange }: AutomationActionsProps)
                         {quickActions.map((quickAction, index) => (
                           <div 
                             key={index}
-                            className="flex items-center justify-between p-2 bg-white rounded border"
+                            className="flex items-center justify-between p-2 bg-card rounded border"
                           >
                             <div>
                               <div className="text-sm font-medium">{quickAction.name}</div>
@@ -194,7 +194,7 @@ export const AutomationActions = ({ actions, onChange }: AutomationActionsProps)
               <div className="flex items-center gap-2 overflow-x-auto">
                 {actionFlow.map((action, index) => (
                   <div key={index} className="flex items-center gap-2 flex-shrink-0">
-                    <div className="flex items-center gap-2 p-2 bg-white rounded border">
+                    <div className="flex items-center gap-2 p-2 bg-card rounded border">
                       <Badge variant="outline" className="text-xs">
                         {action.stepNumber}
                       </Badge>

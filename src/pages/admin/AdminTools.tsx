@@ -48,7 +48,7 @@ const AdminTools = () => {
         <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="aurora-glass rounded-2xl border border-aurora-primary/20 backdrop-blur-md animate-pulse">
-              <div className="bg-gradient-to-r from-aurora-primary/10 to-operational/5 p-6 border-b border-white/10">
+              <div className="bg-gradient-to-r from-aurora-primary/10 to-operational/5 p-6 border-b border-border/30">
                 <div className="flex items-center justify-between">
                   <div className="w-12 h-12 bg-gradient-to-br from-aurora-primary/20 to-operational/10 rounded-xl"></div>
                   <div className="w-16 h-8 bg-gradient-to-r from-aurora-primary/20 to-operational/10 rounded-lg"></div>
@@ -101,7 +101,7 @@ const AdminTools = () => {
           <div className="p-8 text-center">
             <Button 
               onClick={handleRefresh}
-              className="bg-gradient-to-r from-destructive to-destructive-dark hover:from-destructive-dark hover:to-destructive text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300"
+              className="bg-gradient-to-r from-destructive to-destructive-dark hover:from-destructive-dark hover:to-destructive text-primary-foreground font-medium shadow-lg hover:shadow-xl transition-all duration-300"
             >
               <RefreshCcw className="h-4 w-4 mr-2" />
               Tentar Novamente
@@ -238,7 +238,7 @@ const AdminTools = () => {
             className={`aurora-glass rounded-2xl border ${stat.border} backdrop-blur-md overflow-hidden group cursor-pointer transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl animate-fade-in`}
             style={{ animationDelay: `${index * 100}ms` }}
           >
-            <div className={`bg-gradient-to-r ${stat.gradient} p-6 border-b border-white/10`}>
+            <div className={`bg-gradient-to-r ${stat.gradient} p-6 border-b border-border/30`}>
               <div className="flex items-center justify-between">
                 <div className={`p-3 rounded-xl aurora-glass bg-gradient-to-br ${stat.gradient}`}>
                   <stat.icon className={`h-6 w-6 ${stat.iconColor}`} />

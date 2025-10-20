@@ -249,10 +249,10 @@ const SimpleCreateInviteDialog = ({ roles, onInviteCreated }: SimpleCreateInvite
             <Button type="button" variant="outline" onClick={() => setOpen(false)} className="h-9 border-border text-muted-foreground hover:bg-muted hover:text-foreground">
               Cancelar
             </Button>
-            <Button type="submit" disabled={isCreating} className="h-9 bg-blue-600 hover:bg-blue-700 text-white">
+            <Button type="submit" disabled={isCreating} className="h-9 bg-blue-600 hover:bg-blue-700 text-primary-foreground">
               {isCreating ? (
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                  <div className="w-4 h-4 border-2 border-primary-foreground/20 border-t-primary-foreground rounded-full animate-spin"></div>
                   Criando...
                 </div>
               ) : (

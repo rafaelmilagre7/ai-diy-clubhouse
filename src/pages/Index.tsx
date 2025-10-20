@@ -84,13 +84,13 @@ const Index = () => {
             <div className="overflow-hidden h-2 mb-4 text-xs flex rounded-full bg-muted">
               <div 
                 style={{ width: `${progress}%` }} 
-                className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r from-aurora-primary to-aurora-primary-light transition-smooth"
+                className="shadow-none flex flex-col text-center whitespace-nowrap text-primary-foreground justify-center bg-gradient-to-r from-aurora-primary to-aurora-primary-light transition-smooth"
               ></div>
             </div>
           </div>
 
           <div className="mt-8 flex justify-center">
-            <div className="inline-flex items-center px-5 py-3 border border-transparent text-base font-medium rounded-full shadow-md text-white bg-gradient-to-r from-aurora-primary to-aurora-primary-light hover:from-aurora to-aurora-primary transition-all">
+            <div className="inline-flex items-center px-5 py-3 border border-transparent text-base font-medium rounded-full shadow-md text-primary-foreground bg-gradient-to-r from-aurora-primary to-aurora-primary-light hover:from-aurora to-aurora-primary transition-all">
               {isLoading ? 'Verificando autenticação...' : 
                isRedirecting ? 'Redirecionando...' : 
                'Bem-vindo ao VIVER DE IA'

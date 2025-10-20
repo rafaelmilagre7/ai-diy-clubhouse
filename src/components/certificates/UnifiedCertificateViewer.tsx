@@ -34,7 +34,7 @@ export const UnifiedCertificateViewer = ({
             <div className="flex items-center justify-center mb-4">
               <div className="w-16 h-16 rounded-full aurora-gradient p-1">
                 <div className="w-full h-full bg-card rounded-full flex items-center justify-center">
-                  <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-8 h-8 text-foreground" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                   </svg>
                 </div>

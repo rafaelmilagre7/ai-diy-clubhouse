@@ -98,7 +98,7 @@ export const MigrationHelper = ({ conditions, onMigrate }: MigrationHelperProps)
           {legacyConditions.map((condition, index) => (
             <div 
               key={`${condition.id}-${index}`}
-              className="flex items-center justify-between p-3 bg-white rounded-lg border"
+              className="flex items-center justify-between p-3 bg-card rounded-lg border"
             >
               <div className="flex items-center gap-3">
                 <Badge variant="outline" className="text-xs">
@@ -126,7 +126,7 @@ export const MigrationHelper = ({ conditions, onMigrate }: MigrationHelperProps)
           </Button>
         </div>
 
-        <div className="text-xs text-muted-foreground p-2 bg-white rounded border">
+        <div className="text-xs text-muted-foreground p-2 bg-card rounded border">
           <strong>O que isso faz:</strong> Atualiza os nomes dos campos para a nova estrutura da Hubla, 
           mantendo todos os operadores e valores existentes. Suas automações continuarão funcionando normalmente.
         </div>

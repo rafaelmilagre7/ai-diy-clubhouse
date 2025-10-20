@@ -93,8 +93,8 @@ export const SuccessCard: React.FC<SuccessCardProps> = ({
             className="mx-auto mb-3 flex justify-center"
           >
             <div className="relative">
-              <div className="absolute inset-0 rounded-full bg-white/80 scale-150 blur-md"></div>
-              <div className="relative bg-white p-3 rounded-full shadow-inner">
+              <div className="absolute inset-0 rounded-full bg-card/80 scale-150 blur-md"></div>
+              <div className="relative bg-card p-3 rounded-full shadow-inner">
                 {renderIcon()}
               </div>
             </div>

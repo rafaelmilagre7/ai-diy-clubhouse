@@ -15,7 +15,7 @@ export const DashboardConnectionErrorState: FC = () => {
       </div>
       
       <div className="space-y-2">
-        <h2 className="text-2xl font-bold text-white">
+        <h2 className="text-2xl font-bold text-foreground">
           Erro de Conexão
         </h2>
         <p className="text-muted-foreground max-w-md">
@@ -25,7 +25,7 @@ export const DashboardConnectionErrorState: FC = () => {
 
       <Button 
         onClick={handleRefresh}
-        className="bg-status-error hover:bg-status-error/90 text-white"
+        className="bg-status-error hover:bg-status-error/90 text-primary-foreground"
       >
         <RefreshCw className="mr-2 h-4 w-4" />
         Tentar Novamente

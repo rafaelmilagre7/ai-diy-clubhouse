@@ -196,7 +196,7 @@ const SignUpForm = ({ onBackToLogin }: SignUpFormProps) => {
     >
       <div className="bg-surface-elevated border border-border rounded-lg shadow-xl p-6">
         <div className="text-center pb-4">
-          <h2 className="text-2xl text-white mb-2">
+          <h2 className="text-2xl text-foreground mb-2">
             Criar nova conta
           </h2>
           <p className="text-muted-foreground">
@@ -215,7 +215,7 @@ const SignUpForm = ({ onBackToLogin }: SignUpFormProps) => {
               onChange={(e) => setName(e.target.value)}
               disabled={isLoading}
               required
-              className="bg-surface-elevated border-border text-white placeholder-muted-foreground focus:ring-aurora-primary focus:border-aurora-primary"
+              className="bg-surface-elevated border-border text-foreground placeholder-muted-foreground focus:ring-aurora-primary focus:border-aurora-primary"
             />
           </div>
 
@@ -229,7 +229,7 @@ const SignUpForm = ({ onBackToLogin }: SignUpFormProps) => {
               onChange={(e) => setEmail(e.target.value)}
               disabled={isLoading}
               required
-              className="bg-surface-elevated border-border text-white placeholder-muted-foreground focus:ring-aurora-primary focus:border-aurora-primary"
+              className="bg-surface-elevated border-border text-foreground placeholder-muted-foreground focus:ring-aurora-primary focus:border-aurora-primary"
             />
           </div>
           
@@ -244,7 +244,7 @@ const SignUpForm = ({ onBackToLogin }: SignUpFormProps) => {
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isLoading}
                 required
-                className="bg-surface-elevated border-border text-white placeholder-muted-foreground focus:ring-aurora-primary focus:border-aurora-primary pr-10"
+                className="bg-surface-elevated border-border text-foreground placeholder-muted-foreground focus:ring-aurora-primary focus:border-aurora-primary pr-10"
               />
               <Button
                 type="button"
@@ -308,7 +308,7 @@ const SignUpForm = ({ onBackToLogin }: SignUpFormProps) => {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 disabled={isLoading}
                 required
-                className={`bg-surface-elevated border-border text-white placeholder-muted-foreground focus:ring-aurora-primary focus:border-aurora-primary pr-10 ${
+                className={`bg-surface-elevated border-border text-foreground placeholder-muted-foreground focus:ring-aurora-primary focus:border-aurora-primary pr-10 ${
                   confirmPassword && !passwordsMatch ? 'border-status-error' : 
                   confirmPassword && passwordsMatch ? 'border-operational' : ''
                 }`}
@@ -344,7 +344,7 @@ const SignUpForm = ({ onBackToLogin }: SignUpFormProps) => {
           <div className="space-y-3 pt-2">
             <Button 
               type="submit" 
-              className="w-full bg-operational hover:bg-operational/90 text-white font-semibold uppercase tracking-wide" 
+              className="w-full bg-operational hover:bg-operational/90 text-primary-foreground font-semibold uppercase tracking-wide" 
               disabled={isLoading || !passwordsMatch || passwordStrength.score < 3}
             >
               {isLoading ? (
