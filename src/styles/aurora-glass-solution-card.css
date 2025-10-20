@@ -1,0 +1,75 @@
+/* ===== AURORA GLASS SOLUTION CARD STYLES ===== */
+
+/* Base card styling */
+.aurora-glass-solution-card {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+}
+
+/* Hover state enhancements */
+.aurora-glass-solution-card:hover {
+  transform: translateY(-4px);
+}
+
+/* Category-specific gradients for hover states */
+.aurora-glass-solution-card:hover .category-gradient-revenue {
+  background: linear-gradient(to top, 
+    hsl(var(--revenue) / 0.7) 0%, 
+    hsl(var(--revenue) / 0.5) 50%, 
+    hsl(var(--revenue) / 0.3) 100%
+  );
+}
+
+.aurora-glass-solution-card:hover .category-gradient-operational {
+  background: linear-gradient(to top, 
+    hsl(var(--operational) / 0.7) 0%, 
+    hsl(var(--operational) / 0.5) 50%, 
+    hsl(var(--operational) / 0.3) 100%
+  );
+}
+
+.aurora-glass-solution-card:hover .category-gradient-strategy {
+  background: linear-gradient(to top, 
+    hsl(var(--strategy) / 0.7) 0%, 
+    hsl(var(--strategy) / 0.5) 50%, 
+    hsl(var(--strategy) / 0.3) 100%
+  );
+}
+
+/* Enhanced glass effect */
+.aurora-glass-solution-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0) 50%
+  );
+  pointer-events: none;
+  z-index: 15;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.aurora-glass-solution-card:hover::after {
+  opacity: 1;
+}
+
+/* Smooth transitions for text content */
+.aurora-glass-solution-card h3 {
+  transition: color 0.3s ease;
+}
+
+.aurora-glass-solution-card:hover h3 {
+  color: hsl(var(--foreground));
+}
+
+/* Performance optimization */
+.aurora-glass-solution-card * {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
