@@ -105,24 +105,24 @@ export const CommentItem = ({ comment, solutionId, moduleId, onReply, onDelete }
             <div className="flex gap-2 pt-2">
               <Button 
                 variant="ghost" 
-                size="sm"
+                size="default"
                 disabled={isProcessing(comment.id)}
                 onClick={handleLike}
                 className={cn(
-                  "text-xs transition-all duration-fast ease-smooth",
+                  "text-sm transition-all duration-fast ease-smooth",
                   comment.user_has_liked 
-                    ? 'text-aurora-primary hover:text-aurora-primary/80 hover:bg-aurora-primary/10' 
-                    : 'text-textSecondary hover:text-textPrimary hover:bg-surface-elevated/50',
+                    ? 'text-aurora-primary bg-aurora-primary/10 hover:bg-aurora-primary/20 border border-aurora-primary/30' 
+                    : 'text-textSecondary hover:text-aurora-primary hover:bg-aurora-primary/5 border border-transparent',
                   isProcessing(comment.id) && "opacity-70 cursor-not-allowed"
                 )}
               >
                 <ThumbsUp 
                   className={cn(
-                    "h-3.5 w-3.5 mr-1 transition-all duration-fast",
+                    "h-4 w-4 mr-2 transition-all duration-fast",
                     comment.user_has_liked && "fill-current scale-110"
                   )} 
                 />
-                {comment.likes_count || 0}
+                <span className="font-medium">{comment.likes_count || 0}</span>
               </Button>
               
               <Button 
