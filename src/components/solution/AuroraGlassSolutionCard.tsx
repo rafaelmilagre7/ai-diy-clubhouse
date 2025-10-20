@@ -45,33 +45,11 @@ const getCategoryColor = (category: string) => {
 };
 
 export const AuroraGlassSolutionCard = memo<AuroraGlassSolutionCardProps>(({ solution, onClick }) => {
-  const cardRef = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);
-  const [rotation, setRotation] = useState({ x: 0, y: 0 });
-
   const categoryStyle = getCategoryColor(solution.category);
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!cardRef.current) return;
-
-    const rect = cardRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left - rect.width / 2;
-    const y = e.clientY - rect.top - rect.height / 2;
-
-    const rotateX = -(y / rect.height) * 3;
-    const rotateY = (x / rect.width) * 3;
-
-    setRotation({ x: rotateX, y: rotateY });
-  };
-
-  const handleMouseLeave = () => {
-    setIsHovered(false);
-    setRotation({ x: 0, y: 0 });
-  };
 
   return (
     <motion.div
-      ref={cardRef}
       className={cn(
         "aurora-glass-solution-card relative overflow-hidden rounded-2xl cursor-pointer",
         "bg-gradient-to-br from-card/90 to-card/60",
@@ -79,28 +57,18 @@ export const AuroraGlassSolutionCard = memo<AuroraGlassSolutionCardProps>(({ sol
         categoryStyle.border,
         isHovered && categoryStyle.glow
       )}
-      style={{
-        transformStyle: 'preserve-3d',
-        perspective: 1000,
-      }}
       initial={{ opacity: 0, y: 20 }}
       animate={{
         opacity: 1,
         y: 0,
-        rotateX: rotation.x,
-        rotateY: rotation.y,
         scale: isHovered ? 1.02 : 1,
       }}
       transition={{
-        opacity: { duration: 0.3 },
-        y: { duration: 0.3 },
-        rotateX: { type: 'spring', stiffness: 300, damping: 20 },
-        rotateY: { type: 'spring', stiffness: 300, damping: 20 },
-        scale: { type: 'spring', stiffness: 300, damping: 20 },
+        duration: 0.3,
+        ease: "easeOut"
       }}
       onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={handleMouseLeave}
-      onMouseMove={handleMouseMove}
+      onMouseLeave={() => setIsHovered(false)}
       onClick={onClick}
     >
       {/* Glass reflection overlay */}
