@@ -21,7 +21,6 @@ export const CommentsSection = ({ solutionId, moduleId }: CommentsSectionProps) 
     handleSubmitComment,
     startReply,
     cancelReply,
-    likeComment,
     deleteComment
   } = useModuleCommentsRefactored(solutionId, moduleId);
 
@@ -46,8 +45,9 @@ export const CommentsSection = ({ solutionId, moduleId }: CommentsSectionProps) 
       <CommentList
         comments={comments}
         isLoading={isLoading}
+        solutionId={solutionId}
+        moduleId={moduleId}
         onReply={startReply}
-        onLike={likeComment}
         onDelete={deleteComment}
       />
     </div>

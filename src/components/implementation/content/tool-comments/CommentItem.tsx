@@ -8,33 +8,31 @@ import { Button } from '@/components/ui/button';
 import { MessageSquare, Shield, ThumbsUp, Trash } from 'lucide-react';
 import { useAuth } from '@/contexts/auth';
 import { Card } from '@/components/ui/card';
-import { useLogging } from '@/hooks/useLogging';
+import { useOptimisticLike } from '@/hooks/comments/useOptimisticLike';
+import { cn } from '@/lib/utils';
 
 interface CommentItemProps {
   comment: Comment;
+  solutionId: string;
+  moduleId: string;
   onReply: (comment: Comment) => void;
-  onLike: (comment: Comment) => void;
   onDelete: (comment: Comment) => void;
 }
 
-export const CommentItem = ({ comment, onReply, onLike, onDelete }: CommentItemProps) => {
+export const CommentItem = ({ comment, solutionId, moduleId, onReply, onDelete }: CommentItemProps) => {
   const { user } = useAuth();
-  const { log } = useLogging();
   const isAuthor = user?.id === comment.user_id;
   
-  // Log para diagnóstico
-  React.useEffect(() => {
-    console.log('🔍 [CommentItem] Renderizando comentário:', { 
-      commentId: comment.id, 
-      hasProfile: !!comment.profiles,
-      profileData: comment.profiles,
-      userId: comment.user_id,
-      currentUser: user?.id,
-      isAuthor,
-      avatarUrl: comment.profiles?.avatar_url,
-      fullComment: comment
-    });
-  }, [comment, user?.id, isAuthor]);
+  // Hook otimista para likes
+  const { likeComment, isProcessing } = useOptimisticLike({
+    commentTable: 'solution_comments',
+    likeTable: 'solution_comment_likes',
+    queryKey: ['solution-comments', solutionId, moduleId]
+  });
+
+  const handleLike = () => {
+    likeComment(comment.id, comment.user_has_liked || false, comment.likes_count || 0);
+  };
   
   const formatDate = (dateString: string) => {
     try {
@@ -107,13 +105,23 @@ export const CommentItem = ({ comment, onReply, onLike, onDelete }: CommentItemP
             <div className="flex gap-2 pt-2">
               <Button 
                 variant="ghost" 
-                size="sm" 
-                onClick={() => onLike(comment)}
-                className={`text-xs hover:bg-aurora-primary/10 ${
-                  comment.user_has_liked ? 'text-aurora-primary' : 'text-textSecondary hover:text-textPrimary'
-                }`}
+                size="sm"
+                disabled={isProcessing(comment.id)}
+                onClick={handleLike}
+                className={cn(
+                  "text-xs transition-all duration-fast ease-smooth",
+                  comment.user_has_liked 
+                    ? 'text-aurora-primary hover:text-aurora-primary/80 hover:bg-aurora-primary/10' 
+                    : 'text-textSecondary hover:text-textPrimary hover:bg-surface-elevated/50',
+                  isProcessing(comment.id) && "opacity-70 cursor-not-allowed"
+                )}
               >
-                <ThumbsUp className="h-3.5 w-3.5 mr-1" />
+                <ThumbsUp 
+                  className={cn(
+                    "h-3.5 w-3.5 mr-1 transition-all duration-fast",
+                    comment.user_has_liked && "fill-current scale-110"
+                  )} 
+                />
                 {comment.likes_count || 0}
               </Button>
               
@@ -142,24 +150,16 @@ export const CommentItem = ({ comment, onReply, onLike, onDelete }: CommentItemP
             
             {comment.replies && comment.replies.length > 0 && (
               <div className="space-y-4 mt-4 pl-6 border-l-2 border-aurora-primary/10">
-                {comment.replies.map(reply => {
-                  // Log para diagnóstico de respostas
-                  log('Dados de resposta:', { 
-                    replyId: reply.id, 
-                    hasProfile: !!reply.profiles,
-                    profileData: reply.profiles || 'Perfil não disponível' 
-                  });
-                  
-                  return (
-                    <CommentItem 
-                      key={reply.id} 
-                      comment={reply} 
-                      onReply={onReply} 
-                      onLike={onLike} 
-                      onDelete={onDelete}
-                    />
-                  );
-                })}
+                {comment.replies.map(reply => (
+                  <CommentItem 
+                    key={reply.id} 
+                    comment={reply}
+                    solutionId={solutionId}
+                    moduleId={moduleId}
+                    onReply={onReply}
+                    onDelete={onDelete}
+                  />
+                ))}
               </div>
             )}
           </div>

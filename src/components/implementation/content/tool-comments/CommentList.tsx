@@ -12,8 +12,9 @@ interface CommentListProps {
   comments: Comment[];
   isLoading: boolean;
   error?: Error | null;
+  solutionId: string;
+  moduleId: string;
   onReply: (comment: Comment) => void;
-  onLike: (comment: Comment) => void;
   onDelete: (comment: Comment) => void;
 }
 
@@ -21,8 +22,9 @@ export const CommentList = ({
   comments,
   isLoading,
   error,
+  solutionId,
+  moduleId,
   onReply,
-  onLike,
   onDelete
 }: CommentListProps) => {
   const { log } = useLogging();
@@ -96,9 +98,10 @@ export const CommentList = ({
       {safeComments.map(comment => (
         <CommentItem 
           key={comment.id} 
-          comment={comment} 
-          onReply={onReply} 
-          onLike={onLike} 
+          comment={comment}
+          solutionId={solutionId}
+          moduleId={moduleId}
+          onReply={onReply}
           onDelete={onDelete}
         />
       ))}

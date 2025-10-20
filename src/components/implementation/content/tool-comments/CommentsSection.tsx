@@ -53,12 +53,6 @@ export const CommentsSection = ({ solutionId, moduleId }: CommentsSectionProps) 
     // Adicionamos o refreshTrigger na dependência para relogar quando for atualizado
   }, [solutionId, moduleId, comments.length, isLoading, refreshTrigger, log]);
 
-  // Adaptar as funções para passar diretamente o objeto de comentário
-  const handleLikeComment = (comment: Comment) => {
-    log('Curtindo comentário', { commentId: comment.id });
-    likeComment(comment);
-  };
-
   const handleDeleteComment = (comment: Comment) => {
     log('Deletando comentário', { commentId: comment.id });
     deleteComment(comment);
@@ -102,8 +96,9 @@ export const CommentsSection = ({ solutionId, moduleId }: CommentsSectionProps) 
         comments={comments}
         isLoading={isLoading}
         error={error as Error | null}
+        solutionId={solutionId}
+        moduleId={moduleId}
         onReply={startReply}
-        onLike={handleLikeComment}
         onDelete={handleDeleteComment}
       />
     </div>
