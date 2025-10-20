@@ -1,15 +1,15 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { AdminCard } from '@/components/admin/ui/AdminCard';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Plus, Search, Send, Edit, Trash2, Eye, Clock, CheckCircle, AlertCircle, Users } from 'lucide-react';
 import { useCommunications, AdminCommunication } from '@/hooks/admin/useCommunications';
 import { CommunicationEditor } from '@/components/admin/communications/CommunicationEditor';
 import { CommunicationStats } from '@/components/admin/communications/CommunicationStats';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -82,38 +82,59 @@ const AdminCommunications = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold">Comunicações Administrativas</h1>
-          <p className="text-muted-foreground">
-            Gerencie e envie comunicados para usuários da plataforma
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-aurora-primary/5 p-6 space-y-8 relative overflow-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-aurora-primary/5 via-transparent to-transparent" />
+      
+      <div className="relative space-y-8">
+        {/* Modern Header with Aurora Style */}
+        <div className="aurora-glass rounded-2xl p-8 border border-aurora-primary/20 backdrop-blur-md">
+          <div className="flex flex-col lg:flex-row justify-between items-start gap-6">
+            <div className="flex items-start gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-16 bg-gradient-to-b from-aurora-primary via-operational to-strategy rounded-full aurora-glow"></div>
+                <div>
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="p-3 rounded-xl bg-gradient-to-br from-aurora-primary/20 to-operational/10 aurora-glass">
+                      <Send className="h-6 w-6 text-aurora-primary" />
+                    </div>
+                    <h1 className="text-4xl font-bold aurora-text-gradient">
+                      Comunicações Administrativas
+                    </h1>
+                  </div>
+                  <p className="text-lg text-muted-foreground font-medium">
+                    Gerencie e envie comunicados para usuários da plataforma
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <AdminButton 
+                size="lg"
+                onClick={handleNewCommunication}
+                icon={<Plus />}
+              >
+                Novo Comunicado
+              </AdminButton>
+            </div>
+          </div>
         </div>
-        <AdminButton 
-          onClick={handleNewCommunication}
-          icon={<Plus />}
-        >
-          Novo Comunicado
-        </AdminButton>
-      </div>
 
-      {/* Search */}
-      <AdminCard variant="elevated">
-        <div className="relative">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar comunicados..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-      </AdminCard>
+        {/* Search */}
+        <AdminCard variant="elevated" className="animate-fade-in">
+          <div className="relative">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar comunicados..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 aurora-focus"
+            />
+          </div>
+        </AdminCard>
 
-      {/* Communications List */}
-      <div className="grid gap-4">
+        {/* Communications List */}
+        <div className="grid gap-4">
         {filteredCommunications.map((communication) => (
           <Card key={communication.id} className="hover:shadow-md transition-shadow">
             <CardHeader>
@@ -238,13 +259,14 @@ const AdminCommunications = () => {
         ))}
       </div>
 
-      {filteredCommunications.length === 0 && (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <p className="text-muted-foreground">Nenhum comunicado encontrado</p>
-          </CardContent>
-        </Card>
-      )}
+        {filteredCommunications.length === 0 && (
+          <Card className="surface-elevated border-0 shadow-aurora">
+            <CardContent className="py-12 text-center">
+              <p className="text-muted-foreground">Nenhum comunicado encontrado</p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
 
       {/* Editor Modal */}
       {showEditor && (

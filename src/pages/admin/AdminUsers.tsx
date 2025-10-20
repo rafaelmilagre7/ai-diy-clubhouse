@@ -2,6 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { AdminCard } from '@/components/admin/ui/AdminCard';
+import { AdminStatsCard } from '@/components/admin/ui/AdminStatsCard';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
@@ -13,7 +14,9 @@ import {
   Users,
   Crown,
   RefreshCcw,
-  History
+  History,
+  CheckCircle,
+  Clock
 } from 'lucide-react';
 import { useUsers } from '@/hooks/admin/useUsers';
 import { useUserExport } from '@/hooks/admin/useUserExport';
@@ -205,32 +208,54 @@ export default function AdminUsers() {
   }
 
   return (
-    <div className="space-y-4">
-      {/* Header Compacto */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Gestão de Usuários</h1>
-          <p className="text-sm text-muted-foreground">
-            Gerencie usuários, permissões e equipes
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-aurora-primary/5 p-6 space-y-8 relative overflow-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-aurora-primary/5 via-transparent to-transparent" />
+      
+      <div className="relative space-y-8">
+        {/* Modern Header with Aurora Style */}
+        <div className="aurora-glass rounded-2xl p-8 border border-aurora-primary/20 backdrop-blur-md">
+          <div className="flex flex-col lg:flex-row justify-between items-start gap-6">
+            <div className="flex items-start gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-16 bg-gradient-to-b from-aurora-primary via-operational to-strategy rounded-full aurora-glow"></div>
+                <div>
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="p-3 rounded-xl bg-gradient-to-br from-aurora-primary/20 to-operational/10 aurora-glass">
+                      <Users className="h-6 w-6 text-aurora-primary" />
+                    </div>
+                    <h1 className="text-4xl font-bold aurora-text-gradient">
+                      Gestão de Usuários
+                    </h1>
+                  </div>
+                  <p className="text-lg text-muted-foreground font-medium">
+                    Gerencie {stats.total_users} usuários, permissões e equipes da plataforma
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <AdminButton
+                onClick={() => exportUsers(users, searchQuery)}
+                disabled={isExporting || users.length === 0}
+                variant="outline"
+                size="lg"
+                icon={<Download className={isExporting ? 'animate-pulse' : ''} />}
+              >
+                Exportar
+              </AdminButton>
+              <AdminButton
+                onClick={fetchUsers}
+                disabled={isRefreshing}
+                variant="outline"
+                size="lg"
+                icon={<RefreshCw className={isRefreshing ? 'animate-spin' : ''} />}
+              >
+                Atualizar
+              </AdminButton>
+            </div>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <AdminButton
-            onClick={() => exportUsers(users, searchQuery)}
-            disabled={isExporting || users.length === 0}
-            size="sm"
-            variant="outline"
-            icon={<Download className={isExporting ? 'animate-pulse' : ''} />}
-          />
-          <AdminButton
-            onClick={fetchUsers}
-            disabled={isRefreshing}
-            size="sm"
-            variant="outline"
-            icon={<RefreshCw className={isRefreshing ? 'animate-spin' : ''} />}
-          />
-        </div>
-      </div>
 
       {/* Tabs System */}
       <Tabs defaultValue="usuarios" className="w-full">
@@ -252,12 +277,61 @@ export default function AdminUsers() {
         {/* Tab: Usuários */}
         <TabsContent value="usuarios" className="space-y-4 mt-4">
 
-      {/* Estatísticas Clicáveis */}
-      <EnhancedUserStats 
-        stats={stats} 
-        loading={loading} 
-        onFilterClick={handleFilterByType}
-      />
+        {/* Enhanced Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div 
+            onClick={() => handleFilterByType('all')}
+            className="cursor-pointer"
+          >
+            <AdminStatsCard
+              label="Total de Usuários"
+              value={stats.total_users}
+              icon={Users}
+              variant="primary"
+              description="Todos os usuários"
+              loading={loading}
+            />
+          </div>
+          <div 
+            onClick={() => handleFilterByType('masters')}
+            className="cursor-pointer"
+          >
+            <AdminStatsCard
+              label="Masters"
+              value={stats.masters}
+              icon={Crown}
+              variant="warning"
+              description="Com equipes"
+              loading={loading}
+            />
+          </div>
+          <div 
+            onClick={() => handleFilterByType('onboarding_completed')}
+            className="cursor-pointer"
+          >
+            <AdminStatsCard
+              label="Onboarding Completo"
+              value={stats.onboarding_completed || 0}
+              icon={CheckCircle}
+              variant="success"
+              description="Cadastro completo"
+              loading={loading}
+            />
+          </div>
+          <div 
+            onClick={() => handleFilterByType('onboarding_pending')}
+            className="cursor-pointer"
+          >
+            <AdminStatsCard
+              label="Onboarding Pendente"
+              value={stats.onboarding_pending || 0}
+              icon={Clock}
+              variant="warning"
+              description="Cadastro incompleto"
+              loading={loading}
+            />
+          </div>
+        </div>
 
       {/* Filtros Simplificados */}
       <AdvancedUserFilters
@@ -424,6 +498,7 @@ export default function AdminUsers() {
           </Card>
         </TabsContent>
       </Tabs>
+      </div>
 
       {/* Dialogs */}
       <UserRoleDialog

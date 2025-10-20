@@ -59,68 +59,100 @@ export default function AdminRoles() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Gestão de Papéis</h1>
-          <p className="text-muted-foreground">Gerencie os papéis e permissões dos usuários</p>
-        </div>
-        <AdminButton onClick={() => setShowCreateForm(true)} icon={<Plus />}>
-          Novo Papel
-        </AdminButton>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {roles.map((role) => (
-          <Card key={role.id} className="relative">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <Shield className="h-5 w-5 text-aurora-primary" />
-                  <CardTitle className="text-lg">{role.name}</CardTitle>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-aurora-primary/5 p-6 space-y-8 relative overflow-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-aurora-primary/5 via-transparent to-transparent" />
+      
+      <div className="relative space-y-8">
+        {/* Modern Header with Aurora Style */}
+        <div className="aurora-glass rounded-2xl p-8 border border-aurora-primary/20 backdrop-blur-md">
+          <div className="flex flex-col lg:flex-row justify-between items-start gap-6">
+            <div className="flex items-start gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-16 bg-gradient-to-b from-aurora-primary via-operational to-strategy rounded-full aurora-glow"></div>
+                <div>
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="p-3 rounded-xl bg-gradient-to-br from-aurora-primary/20 to-operational/10 aurora-glass">
+                      <Shield className="h-6 w-6 text-aurora-primary" />
+                    </div>
+                    <h1 className="text-4xl font-bold aurora-text-gradient">
+                      Gestão de Papéis
+                    </h1>
+                  </div>
+                  <p className="text-lg text-muted-foreground font-medium">
+                    Gerencie os papéis e permissões dos usuários da plataforma
+                  </p>
                 </div>
-                {role.is_system && (
-                  <Badge variant="secondary" className="text-xs">
-                    Sistema
-                  </Badge>
-                )}
               </div>
-              {role.description && (
-                <CardDescription>{role.description}</CardDescription>
-              )}
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="space-y-3">
-                <div className="flex items-center text-sm text-gray-600">
-                  <Users className="mr-2 h-4 w-4" />
-                  {getPermissionCount(role.permissions)} permissões
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <AdminButton 
+                size="lg"
+                onClick={() => setShowCreateForm(true)} 
+                icon={<Plus />}
+              >
+                Novo Papel
+              </AdminButton>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {roles.map((role, index) => (
+            <Card 
+              key={role.id} 
+              className="surface-elevated border-0 shadow-aurora animate-fade-in"
+              style={{ animationDelay: `${index * 100}ms` }}
+            >
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Shield className="h-5 w-5 text-aurora-primary" />
+                    <CardTitle className="text-lg">{role.name}</CardTitle>
+                  </div>
+                  {role.is_system && (
+                    <Badge variant="secondary" className="text-xs">
+                      Sistema
+                    </Badge>
+                  )}
                 </div>
-                
-                <div className="flex gap-2">
-                  <AdminButton
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleEdit(role)}
-                    icon={<Pencil />}
-                  >
-                    Editar
-                  </AdminButton>
-                  {!role.is_system && (
+                {role.description && (
+                  <CardDescription>{role.description}</CardDescription>
+                )}
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="space-y-3">
+                  <div className="flex items-center text-sm text-gray-600">
+                    <Users className="mr-2 h-4 w-4" />
+                    {getPermissionCount(role.permissions)} permissões
+                  </div>
+                  
+                  <div className="flex gap-2">
                     <AdminButton
                       variant="outline"
                       size="sm"
-                      onClick={() => handleDelete(role)}
-                      disabled={isDeleting}
-                      icon={<Trash2 />}
+                      onClick={() => handleEdit(role)}
+                      icon={<Pencil />}
                     >
-                      Deletar
+                      Editar
                     </AdminButton>
-                  )}
+                    {!role.is_system && (
+                      <AdminButton
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDelete(role)}
+                        disabled={isDeleting}
+                        icon={<Trash2 />}
+                      >
+                        Deletar
+                      </AdminButton>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
 
       {/* Dialog para criar papel */}
