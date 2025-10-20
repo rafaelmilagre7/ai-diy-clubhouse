@@ -189,7 +189,7 @@ export const UnifiedFileUpload: React.FC<UnifiedFileUploadProps> = ({
 
   if (variant === 'dropzone') {
     return (
-      <div className="space-y-4">
+      <div className="space-y-md">
         {fieldLabel && (
           <label className="text-sm font-medium text-foreground">
             {fieldLabel}
@@ -255,7 +255,7 @@ export const UnifiedFileUpload: React.FC<UnifiedFileUploadProps> = ({
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-md">
       {fieldLabel && (
         <label className="text-sm font-medium text-foreground">
           {fieldLabel}

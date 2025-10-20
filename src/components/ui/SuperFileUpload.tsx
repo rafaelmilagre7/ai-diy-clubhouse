@@ -240,7 +240,7 @@ export const SuperFileUpload: React.FC<SuperFileUploadProps> = ({
 
   if (variant === 'minimal') {
     return (
-      <div className={cn('space-y-2', className)}>
+      <div className={cn('space-y-sm', className)}>
         {fieldLabel && (
           <label className="text-sm font-medium text-foreground">
             {fieldLabel}
@@ -310,7 +310,7 @@ export const SuperFileUpload: React.FC<SuperFileUploadProps> = ({
 
   if (variant === 'button') {
     return (
-      <div className={cn('space-y-3', className)}>
+      <div className={cn('space-y-md', className)}>
         {fieldLabel && (
           <label className="text-sm font-medium text-foreground">
             {fieldLabel}
@@ -412,7 +412,7 @@ export const SuperFileUpload: React.FC<SuperFileUploadProps> = ({
 
   // Variant: dropzone (padrão)
   return (
-    <div className={cn('space-y-4', className)}>
+    <div className={cn('space-y-md', className)}>
       {fieldLabel && (
         <label className="text-sm font-medium text-foreground">
           {fieldLabel}

@@ -80,8 +80,8 @@ export const UnifiedContentBlock: React.FC<UnifiedContentBlockProps> = ({
           </div>
           
           {/* Texto principal */}
-          <div className="space-y-3">
-            <div className="space-y-2">
+          <div className="space-y-md">
+            <div className="space-y-sm">
               <h4 className="text-white font-bold text-2xl tracking-tight
                            group-hover:text-white/95 transition-colors duration-300">
                 Conteúdo Exclusivo

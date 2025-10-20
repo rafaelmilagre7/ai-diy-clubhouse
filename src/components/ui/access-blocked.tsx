@@ -90,14 +90,14 @@ export const AccessBlocked: React.FC<AccessBlockedProps> = ({
             {title || config.title}
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-md">
           <Alert className={`${config.borderColor} ${config.bgColor}`}>
             <AlertDescription className="text-center text-muted-foreground">
               {description || config.description}
             </AlertDescription>
           </Alert>
           
-          <div className="text-center space-y-3">
+          <div className="text-center space-y-md">
             <p className="text-sm text-muted-foreground">
               {upgradeMessage || config.upgradeMessage}
             </p>
