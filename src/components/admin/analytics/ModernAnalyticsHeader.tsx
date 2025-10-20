@@ -48,7 +48,7 @@ export const ModernAnalyticsHeader = ({
             <span>/</span>
             <span className="text-foreground font-medium">Analytics</span>
           </nav>
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-sm">
             <h1 className="text-3xl font-bold tracking-tight text-foreground">
               Dashboard Analytics
             </h1>

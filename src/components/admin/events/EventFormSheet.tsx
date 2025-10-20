@@ -39,7 +39,7 @@ export const EventFormSheet = ({ event, onClose }: EventFormSheetProps) => {
         </div>
 
         <ScrollArea className="flex-1 h-viewport-calc">
-          <div className="px-6 py-6">
+          <div className="px-lg py-lg">
             <EventForm 
               event={event}
               onSuccess={onClose}

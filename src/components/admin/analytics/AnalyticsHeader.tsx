@@ -23,9 +23,9 @@ export const AnalyticsHeader: React.FC<AnalyticsHeaderProps> = ({
   return (
     <Card>
       <CardContent className="pt-6">
-        <div className="flex flex-wrap gap-4 items-center">
+        <div className="flex flex-wrap gap-md items-center">
           <div>
-            <label className="text-sm font-medium block mb-2">Período</label>
+            <label className="text-sm font-medium block mb-sm">Período</label>
             <Select value={timeRange} onValueChange={setTimeRange}>
               <SelectTrigger className="w-select-lg">
                 <SelectValue placeholder="Selecionar período" />
