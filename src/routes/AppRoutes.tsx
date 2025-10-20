@@ -1,6 +1,6 @@
 
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, lazy, Suspense } from 'react';
 import { adminRoutes } from './AdminRoutes';
 import { memberRoutes } from './MemberRoutes';
 import { authRoutes } from './AuthRoutes';
@@ -8,11 +8,14 @@ import { formacaoRoutes } from './FormacaoRoutes';
 import { certificateRoutes } from './CertificateRoutes';
 import { CommunityRedirects } from '@/components/routing/CommunityRedirects';
 import { TokenRedirectHandler } from '@/components/auth/TokenRedirectHandler';
-import NotFound from '@/pages/NotFound';
-import InvitePage from '@/pages/InvitePage';
-import AcceptInvite from '@/pages/AcceptInvite';
-import OnboardingPage from '@/pages/OnboardingPage';
-import AulaView from '@/pages/formacao/aulas/AulaView';
+import OptimizedLoadingScreen from '@/components/common/OptimizedLoadingScreen';
+
+// Lazy loading de páginas para melhor performance inicial
+const NotFound = lazy(() => import('@/pages/NotFound'));
+const InvitePage = lazy(() => import('@/pages/InvitePage'));
+const AcceptInvite = lazy(() => import('@/pages/AcceptInvite'));
+const OnboardingPage = lazy(() => import('@/pages/OnboardingPage'));
+const AulaView = lazy(() => import('@/pages/formacao/aulas/AulaView'));
 
 const AppRoutes = () => {
   const location = useLocation();
@@ -70,12 +73,28 @@ const AppRoutes = () => {
       
       <Routes>
         {/* Onboarding Route - Para novos usuários */}
-        <Route path="/onboarding" element={<OnboardingPage />} />
+        <Route path="/onboarding" element={
+          <Suspense fallback={<OptimizedLoadingScreen />}>
+            <OnboardingPage />
+          </Suspense>
+        } />
         
         {/* Convite Routes - Alta prioridade e fora do sistema de autenticação */}
-        <Route path="/convite/:token" element={<InvitePage />} />
-        <Route path="/convite" element={<InvitePage />} />
-        <Route path="/accept-invite/:token" element={<AcceptInvite />} />
+        <Route path="/convite/:token" element={
+          <Suspense fallback={<OptimizedLoadingScreen />}>
+            <InvitePage />
+          </Suspense>
+        } />
+        <Route path="/convite" element={
+          <Suspense fallback={<OptimizedLoadingScreen />}>
+            <InvitePage />
+          </Suspense>
+        } />
+        <Route path="/accept-invite/:token" element={
+          <Suspense fallback={<OptimizedLoadingScreen />}>
+            <AcceptInvite />
+          </Suspense>
+        } />
         
         {/* Certificate Routes - Públicas */}
         {certificateRoutes.map((route) => (
@@ -103,10 +122,18 @@ const AppRoutes = () => {
         ))}
         
         {/* Rota especial para visualização de aulas como membro */}
-        <Route path="/formacao/aulas/view/:cursoId/:aulaId" element={<AulaView />} />
+        <Route path="/formacao/aulas/view/:cursoId/:aulaId" element={
+          <Suspense fallback={<OptimizedLoadingScreen />}>
+            <AulaView />
+          </Suspense>
+        } />
         
         {/* Fallback route */}
-        <Route path="*" element={<NotFound />} />
+        <Route path="*" element={
+          <Suspense fallback={<OptimizedLoadingScreen />}>
+            <NotFound />
+          </Suspense>
+        } />
       </Routes>
     </>
   );
