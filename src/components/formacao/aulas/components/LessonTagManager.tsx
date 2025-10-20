@@ -179,7 +179,7 @@ export const LessonTagManager = ({ form, fieldName = 'tags' }: LessonTagManagerP
                 </Button>
               </PopoverTrigger>
               <PopoverContent 
-                className="w-[var(--radix-popover-trigger-width)] max-w-[95vw] min-w-mobile p-0 bg-popover border shadow-lg z-[200]" 
+                className="w-[var(--radix-popover-trigger-width)] max-w-viewport-95 min-w-mobile p-0 bg-popover border shadow-lg z-[200]"
                 align="start"
                 side="bottom"
                 sideOffset={4}

@@ -112,7 +112,7 @@ export const NotificationCenter = () => {
           </div>
         </SheetHeader>
 
-        <ScrollArea className="h-[calc(100vh-140px)] mt-4">
+        <ScrollArea className="h-viewport-notification mt-4">
           {filteredNotifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
               <Bell className="h-12 w-12 mb-4 opacity-20" />

@@ -60,7 +60,7 @@ const WizardProgress: React.FC<WizardProgressProps> = ({
               {i < totalSteps - 1 && (
                 <div
                   className={cn(
-                    "h-0.5 w-full max-w-[5rem] flex-1",
+                    "h-0.5 w-full max-w-progress-bar flex-1",
                     i < currentStep
                       ? "bg-primary"
                       : "bg-muted-foreground/30"

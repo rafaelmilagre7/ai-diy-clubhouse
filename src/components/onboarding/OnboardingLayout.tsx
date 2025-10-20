@@ -81,7 +81,7 @@ export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
       </header>
 
       {/* Main Content */}
-      <main className="relative z-10 container mx-auto px-6 py-6 min-h-[calc(100vh-120px)] flex items-center">
+      <main className="relative z-10 container mx-auto px-6 py-6 min-h-viewport-onboarding flex items-center">
         <motion.div initial={{
         opacity: 0,
         y: 20

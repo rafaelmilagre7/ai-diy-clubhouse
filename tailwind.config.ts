@@ -84,6 +84,7 @@ const config: Config = {
         'viewport-85': '85vh',
         'viewport-full': '100vh',
         'viewport-calc': 'calc(100vh - 120px)',
+        'viewport-notification': 'calc(100vh - 140px)', // notificações
         'calendar': '700px',
         'event-row': '100px',
         'solution-card': '200px',
@@ -141,6 +142,7 @@ const config: Config = {
         'transition': '100px',
         'section': '70vh',
         'textarea': '40px',
+        'viewport-onboarding': 'calc(100vh - 120px)', // onboarding
       },
       
       maxHeight: {
@@ -168,6 +170,9 @@ const config: Config = {
         'card': '280px',
         'stat': '72px',
         'profile-button': '140px',
+        'menu': '8rem',      // 128px - menus contextuais
+        'menu-lg': '12rem',  // 192px - menus grandes
+        'vote': '3rem',      // 48px - display de votos
       },
       
       maxWidth: {
@@ -185,6 +190,11 @@ const config: Config = {
         'dialog-form-sm': '425px',
         'dialog-form': '500px',
         'dialog-form-lg': '600px',
+        'chat-bubble': '70%',   // bolhas de chat
+        'chat-assistant': '80%', // chat do assistente
+        'viewport-95': '95vw',   // modais responsivos
+        'progress-bar': '5rem',  // barras de progresso
+        'trail-progress': '94%', // progresso de trilhas
       },
       
       flexBasis: {

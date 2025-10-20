@@ -132,7 +132,7 @@ export const LessonAssistantChat: React.FC<LessonAssistantChatProps> = ({
                 }`}
               >
                 <div 
-                  className={`flex items-start gap-2 max-w-[80%] ${
+                  className={`flex items-start gap-2 max-w-chat-assistant ${
                     msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'
                   }`}
                 >
