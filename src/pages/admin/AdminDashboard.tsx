@@ -237,7 +237,7 @@ const AdminDashboard = () => {
           {/* Enhanced Activities with New Component */}
           <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
             <RecentActivitiesCard 
-              activities={[]} // Dados serão integrados com o hook unificado em breve
+              activities={[]}
               loading={loading}
             />
             
