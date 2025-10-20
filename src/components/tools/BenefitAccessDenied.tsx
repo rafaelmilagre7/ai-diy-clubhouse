@@ -21,18 +21,18 @@ export function BenefitAccessDenied({
   const navigate = useNavigate();
   
   return (
-    <div className="flex flex-col items-center justify-center p-6 text-center">
-      <div className="bg-status-error/10 dark:bg-status-error/20 p-4 rounded-full mb-4">
+    <div className="flex flex-col items-center justify-center p-lg text-center">
+      <div className="bg-status-error/10 dark:bg-status-error/20 p-md rounded-full mb-md">
         <Lock className="h-12 w-12 text-status-error dark:text-status-error" />
       </div>
       
-      <h2 className="text-xl font-bold mb-2">{title}</h2>
+      <h2 className="text-xl font-bold mb-sm">{title}</h2>
       
-      <p className="text-muted-foreground mb-6 max-w-sm">
+      <p className="text-muted-foreground mb-lg max-w-sm">
         {message}
       </p>
       
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div className="flex flex-col sm:flex-row gap-sm">
         {onClose && (
           <Button 
             variant="outline"

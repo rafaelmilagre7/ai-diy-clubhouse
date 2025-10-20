@@ -14,8 +14,8 @@ export const SolutionsAccessError: React.FC<SolutionsAccessErrorProps> = ({ erro
   }
 
   return (
-    <div className="flex items-center justify-center min-h-feature-block p-4">
-      <div className="max-w-lg w-full space-y-6">
+    <div className="flex items-center justify-center min-h-feature-block p-md">
+      <div className="max-w-lg w-full space-y-lg">
         <Alert className="border-destructive/40 bg-destructive/5">
           <ShieldCheck className="h-5 w-5 text-destructive" />
           <AlertTitle className="text-destructive">Erro de Acesso</AlertTitle>
@@ -24,15 +24,15 @@ export const SolutionsAccessError: React.FC<SolutionsAccessErrorProps> = ({ erro
           </AlertDescription>
         </Alert>
 
-        <div className="bg-card/60 backdrop-blur-sm border border-border/40 rounded-lg p-6 space-y-4">
-          <div className="text-center space-y-3">
+        <div className="bg-card/60 backdrop-blur-sm border border-border/40 rounded-lg p-lg space-y-md">
+          <div className="text-center space-y-sm">
             <h3 className="text-lg font-medium">Precisa de Ajuda?</h3>
             <p className="text-sm text-muted-foreground">
               Entre em contato com nossa equipe para resolver questões de acesso.
             </p>
           </div>
 
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-sm">
             <Button
               variant="outline"
               className="w-full"

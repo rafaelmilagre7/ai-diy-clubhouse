@@ -81,10 +81,10 @@ const InviteErrorState: React.FC<InviteErrorStateProps> = ({
   const IconComponent = errorConfig.icon;
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-md">
       <div className="w-full max-w-lg">
-        <div className="bg-card border border-border rounded-lg p-8 shadow-lg">
-          <div className="text-center space-y-6">
+        <div className="bg-card border border-border rounded-lg p-xl shadow-lg">
+          <div className="text-center space-y-lg">
             {/* Error Icon */}
           <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto">
             <IconComponent className="h-8 w-8 text-destructive" />

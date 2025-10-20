@@ -24,17 +24,17 @@ export const ConnectionsGrid = () => {
 
   if (!acceptedConnections.length) {
     return (
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-card/50 to-muted/30 border border-dashed border-border/50 p-12">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-card/50 to-muted/30 border border-dashed border-border/50 p-3xl">
         <div className="absolute inset-0 bg-dot-pattern opacity-5"></div>
-        <div className="relative flex flex-col items-center text-center space-y-6">
+        <div className="relative flex flex-col items-center text-center space-y-lg">
           <div className="relative group">
             <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl group-hover:blur-2xl transition-all duration-500"></div>
-            <div className="relative bg-primary/10 rounded-full p-6">
+            <div className="relative bg-primary/10 rounded-full p-lg">
               <Users className="h-12 w-12 text-primary" />
             </div>
           </div>
           
-          <div className="space-y-3">
+          <div className="space-y-sm">
             <h3 className="text-2xl font-heading font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
               Nenhuma conexão ainda
             </h3>
@@ -48,9 +48,9 @@ export const ConnectionsGrid = () => {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-xl">
       <div className="flex items-center justify-between">
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <h2 className="text-2xl font-heading font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
             Suas Conexões
           </h2>
@@ -58,12 +58,12 @@ export const ConnectionsGrid = () => {
             Gerencie e acompanhe suas conexões de networking
           </p>
         </div>
-        <div className="flex gap-3">
-          <div className="px-3 py-1.5 bg-system-healthy/10 text-system-healthy border border-system-healthy/30 rounded-full text-sm font-medium">
+        <div className="flex gap-sm">
+          <div className="px-sm py-xs bg-system-healthy/10 text-system-healthy border border-system-healthy/30 rounded-full text-sm font-medium">
             {acceptedConnections.length} ativas
           </div>
           {pendingConnections.length > 0 && (
-            <div className="px-3 py-1.5 bg-status-warning/10 text-status-warning border border-status-warning/30 rounded-full text-sm font-medium">
+            <div className="px-sm py-xs bg-status-warning/10 text-status-warning border border-status-warning/30 rounded-full text-sm font-medium">
               {pendingConnections.length} pendentes
             </div>
           )}
