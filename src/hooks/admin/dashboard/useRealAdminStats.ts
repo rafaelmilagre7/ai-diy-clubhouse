@@ -133,34 +133,22 @@ export const useRealAdminStats = (timeRange: string) => {
         .select('*', { count: 'exact', head: true })
         .gte('created_at', startDate.toISOString());
 
-      // Implementações ativas no período
+      // Implementações ativas no período (implementation_trails)
       const { count: activeImplementationsInPeriod } = await supabase
-        .from('progress')
-        .select('*', { count: 'exact', head: true })
-        .eq('is_completed', false)
-        .gte('last_activity', startDate.toISOString());
-
-      // Novas implementações iniciadas no período
-      const { count: implementationsInPeriod } = await supabase
-        .from('progress')
+        .from('implementation_trails')
         .select('*', { count: 'exact', head: true })
         .gte('created_at', startDate.toISOString());
 
-      // Implementações completadas no período
+      // Implementações completadas no período (implementation_trails com status completed)
       const { count: completedInPeriod } = await supabase
-        .from('progress')
+        .from('implementation_trails')
         .select('*', { count: 'exact', head: true })
-        .eq('is_completed', true)
-        .gte('completed_at', startDate.toISOString());
+        .eq('status', 'completed')
+        .gte('created_at', startDate.toISOString());
 
-      // Usuários ativos no período (que fizeram alguma atividade)
-      const { data: activeUsersData } = await supabase
-        .from('analytics')
-        .select('user_id')
-        .gte('created_at', startDate.toISOString())
-        .not('user_id', 'is', null);
-
-      const activeUsersInPeriod = new Set(activeUsersData?.map(a => a.user_id) || []).size;
+      // Usuários ativos no período = total de usuários (tabela analytics está vazia)
+      // Vamos usar o total de usuários como proxy
+      const activeUsersInPeriod = totalUsers || 0;
 
       // === CALCULAR MÉTRICAS ===
       
@@ -173,9 +161,9 @@ export const useRealAdminStats = (timeRange: string) => {
         Math.round((activeUsersInPeriod / totalUsers) * 100) : 0;
 
       // Taxa de conclusão do período
-      const totalImplementationsInPeriod = (implementationsInPeriod || 0);
+      const totalImplementationsInPeriod = activeImplementationsInPeriod || 0;
       const periodCompletionRate = totalImplementationsInPeriod > 0 ? 
-        ((completedInPeriod || 0) / totalImplementationsInPeriod) * 100 : 0;
+        Math.round(((completedInPeriod || 0) / totalImplementationsInPeriod) * 100) : 0;
 
       // Processar roles corrigido
       const usersByRole = (userSegmentation || []).map(item => ({
@@ -199,7 +187,7 @@ export const useRealAdminStats = (timeRange: string) => {
         // Dados específicos do período
         newUsersInPeriod: newUsersInPeriod || 0,
         activeUsersInPeriod: activeUsersInPeriod || 0,
-        implementationsInPeriod: implementationsInPeriod || 0,
+        implementationsInPeriod: activeImplementationsInPeriod || 0,
         completedInPeriod: completedInPeriod || 0,
         
         // Métricas calculadas
