@@ -1,0 +1,247 @@
+/* ===== FLOATING GLASS CARD - CONCEITO 3 ===== */
+
+/* Wrapper principal */
+.floating-glass-wrapper {
+  position: relative;
+  width: 100%;
+  height: 340px;
+  border-radius: 1rem;
+  overflow: hidden;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 0.1);
+}
+
+.floating-glass-wrapper:hover {
+  transform: translateY(-8px);
+}
+
+/* Background com cover image */
+.floating-glass-background {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.floating-glass-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.floating-glass-wrapper:hover .floating-glass-image {
+  transform: scale(1.08);
+}
+
+/* Overlay gradient */
+.floating-glass-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    hsl(var(--background) / 0.3) 40%,
+    hsl(var(--background) / 0.85) 100%
+  );
+  z-index: 2;
+}
+
+/* Placeholder quando não tem imagem */
+.floating-glass-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    135deg,
+    hsl(var(--aurora-primary) / 0.15) 0%,
+    hsl(var(--aurora-primary-dark) / 0.25) 100%
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.floating-glass-placeholder-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 1rem;
+  background: hsl(var(--card) / 0.5);
+  backdrop-filter: blur(12px);
+  border: 1px solid hsl(var(--aurora-primary) / 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: hsl(var(--aurora-primary));
+}
+
+.floating-glass-placeholder-icon svg {
+  width: 40px;
+  height: 40px;
+}
+
+/* Scan line tecnológica */
+.scan-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    hsl(var(--aurora-primary) / 0.6) 50%,
+    transparent 100%
+  );
+  animation: scan 3s linear infinite;
+  z-index: 3;
+  opacity: 0.5;
+}
+
+@keyframes scan {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.5;
+  }
+  90% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateY(340px);
+    opacity: 0;
+  }
+}
+
+/* Card flutuante glassmórfico */
+.floating-glass-content {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  right: 16px;
+  z-index: 10;
+  padding: 1.25rem;
+  background: linear-gradient(
+    135deg,
+    hsl(var(--card) / 0.92) 0%,
+    hsl(var(--card) / 0.85) 100%
+  );
+  backdrop-filter: blur(16px) saturate(1.4);
+  border: 1px solid hsl(var(--aurora-primary) / 0.2);
+  border-radius: 0.75rem;
+  box-shadow: 
+    0 20px 40px -12px hsl(var(--background) / 0.5),
+    0 0 1px hsl(var(--aurora-primary) / 0.3),
+    inset 0 1px 0 hsl(var(--foreground) / 0.03);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateZ(0);
+}
+
+.floating-glass-wrapper:hover .floating-glass-content {
+  border-color: hsl(var(--aurora-primary) / 0.5);
+  box-shadow: 
+    0 30px 60px -12px hsl(var(--aurora-primary) / 0.2),
+    0 0 0 1px hsl(var(--aurora-primary) / 0.4),
+    inset 0 1px 0 hsl(var(--foreground) / 0.05);
+  transform: translateY(-4px) translateZ(0);
+}
+
+/* LED Corner Accents */
+.led-corner {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border: 2px solid hsl(var(--aurora-primary) / 0.4);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.led-corner-tl {
+  top: -1px;
+  left: -1px;
+  border-right: none;
+  border-bottom: none;
+  border-top-left-radius: 0.75rem;
+}
+
+.led-corner-tr {
+  top: -1px;
+  right: -1px;
+  border-left: none;
+  border-bottom: none;
+  border-top-right-radius: 0.75rem;
+}
+
+.led-corner-bl {
+  bottom: -1px;
+  left: -1px;
+  border-right: none;
+  border-top: none;
+  border-bottom-left-radius: 0.75rem;
+}
+
+.led-corner-br {
+  bottom: -1px;
+  right: -1px;
+  border-left: none;
+  border-top: none;
+  border-bottom-right-radius: 0.75rem;
+}
+
+.floating-glass-wrapper:hover .led-corner {
+  border-color: hsl(var(--aurora-primary) / 0.8);
+  box-shadow: 0 0 8px hsl(var(--aurora-primary) / 0.4);
+}
+
+/* Hover indicator */
+.floating-glass-hover-indicator {
+  margin-top: 1rem;
+  overflow: hidden;
+}
+
+/* Floating particles */
+.floating-particles {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.floating-particle {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  background: hsl(var(--aurora-primary) / 0.6);
+  border-radius: 50%;
+  opacity: 0;
+  animation: particle-float 6s infinite ease-in-out;
+}
+
+@keyframes particle-float {
+  0% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.6;
+  }
+  90% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .floating-glass-wrapper {
+    height: 300px;
+  }
+  
+  .floating-glass-content {
+    bottom: 12px;
+    left: 12px;
+    right: 12px;
+    padding: 1rem;
+  }
+}
