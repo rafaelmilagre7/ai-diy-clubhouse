@@ -175,7 +175,7 @@ export const NotificationCenter = () => {
                     </Button>
                   </div>
                   
-                  {notification.priority && notification.priority >= 8 && (
+                  {notification.priority === 'high' && (
                     <div className="absolute top-2 left-2 h-1 w-1 rounded-full bg-status-error" />
                   )}
                 </div>

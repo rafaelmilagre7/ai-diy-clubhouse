@@ -40,10 +40,38 @@ export const NotificationBell = () => {
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
+      // Comentários
       case 'comment_liked':
         return '👍';
       case 'comment_replied':
         return '💬';
+      
+      // Learning
+      case 'new_course':
+        return '🎓';
+      case 'new_lesson':
+        return '📚';
+      
+      // Soluções
+      case 'new_solution':
+        return '💡';
+      
+      // Sugestões
+      case 'suggestion_status_change':
+        return '📋';
+      
+      // Comunidade
+      case 'topic_solved':
+        return '✅';
+      case 'community_reply':
+        return '💬';
+      
+      // Admin
+      case 'admin_communication':
+        return '📢';
+      case 'urgent':
+        return '⚠️';
+      
       default:
         return '🔔';
     }

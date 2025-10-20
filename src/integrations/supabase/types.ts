@@ -6981,13 +6981,24 @@ export type Database = {
         Returns: Json
       }
       create_notification: {
-        Args: {
-          p_message: string
-          p_metadata?: Json
-          p_title: string
-          p_type?: string
-          p_user_id: string
-        }
+        Args:
+          | {
+              p_action_url?: string
+              p_category?: string
+              p_data?: Json
+              p_message: string
+              p_priority?: string
+              p_title: string
+              p_type: string
+              p_user_id: string
+            }
+          | {
+              p_message: string
+              p_metadata?: Json
+              p_title: string
+              p_type?: string
+              p_user_id: string
+            }
         Returns: Json
       }
       create_onboarding_backup: {

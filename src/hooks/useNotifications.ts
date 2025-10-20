@@ -16,7 +16,7 @@ export interface Notification {
   created_at: string;
   expires_at?: string;
   data?: Record<string, any>;
-  priority?: number;
+  priority?: string;
   category?: string;
   action_url?: string;
   grouped_with?: string;
@@ -43,6 +43,8 @@ const groupNotifications = (notifications: Notification[]): Notification[] => {
         existing.title = `${existing.grouped_count} pessoas curtiram seu comentário`;
       } else if (notification.type === 'comment_replied') {
         existing.title = `${existing.grouped_count} novas respostas no seu comentário`;
+      } else if (notification.type === 'new_lesson') {
+        existing.title = `${existing.grouped_count} novas aulas adicionadas`;
       }
     } else {
       grouped.set(groupKey, {
@@ -175,24 +177,45 @@ export const useNotifications = () => {
           
           // Mostrar toast para notificações importantes
           const newNotification = payload.new as Notification;
-          if (newNotification.type === 'community_reply') {
+          
+          // Notificações de alta prioridade (sempre mostram toast)
+          if (newNotification.priority === 'high' || 
+              ['new_course', 'new_solution', 'suggestion_status_change', 'topic_solved'].includes(newNotification.type)) {
+            toast.success(newNotification.title, {
+              description: newNotification.message,
+              action: newNotification.action_url ? {
+                label: 'Ver',
+                onClick: () => window.location.href = newNotification.action_url!
+              } : undefined
+            });
+          }
+          // Notificações de comunidade
+          else if (newNotification.type === 'community_reply') {
             toast.info(newNotification.title, {
               description: newNotification.message,
               action: {
                 label: 'Ver',
                 onClick: () => {
                   const topicId = newNotification.data?.topic_id;
-                  if (topicId) {
-                    window.location.href = `/community/topic/${topicId}`;
-                  }
+                  if (topicId) window.location.href = `/community/topic/${topicId}`;
                 }
               }
             });
-          } else if (newNotification.type === 'admin_communication' || newNotification.type === 'urgent') {
+          }
+          // Notificações de comentários
+          else if (newNotification.type === 'comment_liked' || newNotification.type === 'comment_replied') {
             toast.info(newNotification.title, {
               description: newNotification.message,
             });
-          } else if (newNotification.type === 'comment_liked' || newNotification.type === 'comment_replied') {
+          }
+          // Notificações de aprendizado (prioridade normal)
+          else if (newNotification.type === 'new_lesson') {
+            toast.info(newNotification.title, {
+              description: newNotification.message,
+            });
+          }
+          // Admin e urgentes
+          else if (newNotification.type === 'admin_communication' || newNotification.type === 'urgent') {
             toast.info(newNotification.title, {
               description: newNotification.message,
             });
