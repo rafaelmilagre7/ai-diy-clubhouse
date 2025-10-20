@@ -101,11 +101,11 @@ export const ContinueLearning = ({ className }: ContinueLearningProps) => {
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent" />
               
               {/* Conteúdo */}
-              <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+              <div className="absolute bottom-0 left-0 right-0 p-6 text-foreground">
                 <div className="mb-4">
-                  <div className="text-sm text-white/70 mb-1">Continue assistindo</div>
+                  <div className="text-sm text-muted-foreground mb-1">Continue assistindo</div>
                   <h3 className="text-2xl font-semibold mb-2">{lastLesson.course_title}</h3>
-                  <p className="text-white/90 mb-4">{lastLesson.title}</p>
+                  <p className="text-foreground mb-4">{lastLesson.title}</p>
                   
                   {/* Barra de progresso */}
                   <div className="w-full bg-white/20 h-1 mb-4">

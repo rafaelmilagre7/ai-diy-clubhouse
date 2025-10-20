@@ -59,11 +59,11 @@ export const DeleteConfirmationDialog = ({
           <AlertDialogAction 
             onClick={onDelete} 
             disabled={isDeleting}
-            className="flex-1 bg-destructive hover:bg-destructive-dark text-white focus:ring-destructive"
+            className="flex-1 bg-destructive hover:bg-destructive-dark text-primary-foreground focus:ring-destructive"
           >
             {isDeleting ? (
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin"></div>
                 Excluindo...
               </div>
             ) : (

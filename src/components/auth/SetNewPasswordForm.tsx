@@ -187,7 +187,7 @@ export const SetNewPasswordForm = () => {
           <Loader2 className="h-8 w-8 text-aurora-primary animate-spin" />
         </div>
         
-        <h3 className="text-xl font-medium text-white">Verificando link de redefinição...</h3>
+        <h3 className="text-xl font-medium text-foreground">Verificando link de redefinição...</h3>
         
         <p className="text-muted-foreground">
           Aguarde enquanto validamos seu link de redefinição de senha.
@@ -204,7 +204,7 @@ export const SetNewPasswordForm = () => {
           <AlertCircle className="h-8 w-8 text-status-error" />
         </div>
         
-        <h3 className="text-xl font-medium text-white">Link inválido</h3>
+        <h3 className="text-xl font-medium text-foreground">Link inválido</h3>
         
         <p className="text-muted-foreground">
           {sessionError || "O link de redefinição é inválido ou expirou. Solicite um novo link."}
@@ -232,7 +232,7 @@ export const SetNewPasswordForm = () => {
           <Check className="h-8 w-8 text-status-success" />
         </div>
         
-        <h3 className="text-xl font-medium text-white">Senha atualizada!</h3>
+        <h3 className="text-xl font-medium text-foreground">Senha atualizada!</h3>
         
         <p className="text-muted-foreground">
           Sua senha foi alterada com sucesso. Você será redirecionado para a página de login.
@@ -255,7 +255,7 @@ export const SetNewPasswordForm = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-semibold text-white text-center">
+        <h1 className="text-xl font-semibold text-foreground text-center">
           Definir Nova Senha
         </h1>
         <p className="text-muted-foreground mt-2 text-center">
@@ -277,7 +277,7 @@ export const SetNewPasswordForm = () => {
               id="password"
               type={showPassword ? "text" : "password"}
               placeholder="Digite sua nova senha"
-              className={`pl-10 pr-12 w-full py-3 px-3 bg-surface-elevated border rounded-lg text-white focus:ring-2 focus:ring-aurora-primary focus:border-aurora-primary transition-colors ${
+              className={`pl-10 pr-12 w-full py-3 px-3 bg-surface-elevated border rounded-lg text-foreground focus:ring-2 focus:ring-aurora-primary focus:border-aurora-primary transition-colors ${
                 password && !passwordValidation.isValid ? 'border-status-error' : 
                 password && passwordValidation.isValid ? 'border-operational' : 'border-border'
               }`}
@@ -321,7 +321,7 @@ export const SetNewPasswordForm = () => {
               id="confirmPassword"
               type={showConfirmPassword ? "text" : "password"}
               placeholder="Digite novamente sua nova senha"
-              className={`pl-10 pr-12 w-full py-3 px-3 bg-surface-elevated border rounded-lg text-white focus:ring-2 focus:ring-aurora-primary focus:border-aurora-primary transition-colors ${
+              className={`pl-10 pr-12 w-full py-3 px-3 bg-surface-elevated border rounded-lg text-foreground focus:ring-2 focus:ring-aurora-primary focus:border-aurora-primary transition-colors ${
                 confirmPassword && !passwordsMatch ? 'border-status-error' : 
                 confirmPassword && passwordsMatch ? 'border-operational' : 'border-border'
               }`}
@@ -374,7 +374,7 @@ export const SetNewPasswordForm = () => {
             type="submit"
             className={`w-full py-3 font-medium transition-all ${
               passwordValidation.isValid && passwordsMatch 
-                ? 'bg-aurora-primary hover:bg-aurora-primary/90 text-white' 
+                ? 'bg-aurora-primary hover:bg-aurora-primary/90 text-primary-foreground' 
                 : 'bg-muted text-muted-foreground cursor-not-allowed hover:bg-muted'
             }`}
             disabled={isLoading || !passwordValidation.isValid || !passwordsMatch}

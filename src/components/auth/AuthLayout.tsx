@@ -86,8 +86,8 @@ const AuthLayout = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-operational/20 to-surface-base">
         <div className="flex flex-col items-center space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin text-white" />
-          <p className="text-white/80">Redirecionando...</p>
+          <Loader2 className="h-8 w-8 animate-spin text-foreground" />
+          <p className="text-muted-foreground">Redirecionando...</p>
         </div>
       </div>
     );
@@ -107,7 +107,7 @@ const AuthLayout = () => {
       <div className="relative z-10 w-full max-w-md space-y-8">
         <Tabs defaultValue="login" className="w-full">
           <TabsContent value="login">
-            <Card className="backdrop-blur-lg bg-black/30 border border-white/10 shadow-2xl animate-fade-in">
+            <Card className="backdrop-blur-lg bg-background/30 border border-border/30 shadow-2xl animate-fade-in">
               <CardHeader className="space-y-1 text-center pb-8">
                 <div className="flex justify-center mb-8">
                   <div className="relative">
@@ -181,7 +181,7 @@ const AuthLayout = () => {
                   <Button
                     type="button"
                     variant="ghost"
-                    className="text-white/70 hover:text-aurora-primary hover:bg-white/5 text-sm underline"
+                    className="text-muted-foreground hover:text-aurora-primary hover:bg-surface-elevated/30 text-sm underline"
                     onClick={() => navigate('/reset-password')}
                     disabled={isSigningIn}
                   >

@@ -127,7 +127,7 @@ const RegisterForm = ({ inviteToken, prefilledEmail }: RegisterFormProps = {}) =
     <div className="space-y-4">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="name" className="text-white">
+          <Label htmlFor="name" className="text-foreground">
             Nome completo
           </Label>
           <div className="relative">
@@ -140,13 +140,13 @@ const RegisterForm = ({ inviteToken, prefilledEmail }: RegisterFormProps = {}) =
               placeholder="Seu nome completo"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="pl-10 bg-surface-elevated border-border text-white"
+              className="pl-10 bg-surface-elevated border-border text-foreground"
             />
           </div>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="register-email" className="text-white">
+          <Label htmlFor="register-email" className="text-foreground">
             Email
           </Label>
           <div className="relative">
@@ -160,13 +160,13 @@ const RegisterForm = ({ inviteToken, prefilledEmail }: RegisterFormProps = {}) =
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={!!prefilledEmail} // Desabilitar edição se email vem do convite
-              className="pl-10 bg-surface-elevated border-border text-white disabled:opacity-50"
+              className="pl-10 bg-surface-elevated border-border text-foreground disabled:opacity-50"
             />
           </div>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="register-password" className="text-white">
+          <Label htmlFor="register-password" className="text-foreground">
             Senha
           </Label>
           <div className="relative">
@@ -179,7 +179,7 @@ const RegisterForm = ({ inviteToken, prefilledEmail }: RegisterFormProps = {}) =
               placeholder="Crie uma senha forte"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="pl-10 pr-10 bg-surface-elevated border-border text-white"
+              className="pl-10 pr-10 bg-surface-elevated border-border text-foreground"
             />
             <button
               type="button"

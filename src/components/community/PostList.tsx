@@ -92,7 +92,7 @@ export const PostList = ({ topicId }: PostListProps) => {
           <div className="flex items-start gap-4">
             <Avatar className="w-10 h-10">
               <AvatarImage src={post.profiles?.avatar_url} alt={post.profiles?.name || 'Usuário'} />
-              <AvatarFallback className="bg-aurora-primary text-white">
+              <AvatarFallback className="bg-aurora-primary text-primary-foreground">
                 {getInitials(post.profiles?.name || 'U')}
               </AvatarFallback>
             </Avatar>

@@ -47,18 +47,18 @@ export const CommentList: React.FC<CommentListProps> = ({
     return (
       <div className="space-y-4">
         {[1, 2, 3].map(i => (
-          <div key={i} className="backdrop-blur-sm bg-white/5 border-0 rounded-xl p-4 shadow-lg animate-pulse">
+          <div key={i} className="backdrop-blur-sm bg-surface-elevated/30 border-0 rounded-xl p-4 shadow-lg animate-pulse">
             <div className="flex gap-3">
-              <Skeleton className="h-8 w-8 rounded-full bg-white/10" />
+              <Skeleton className="h-8 w-8 rounded-full bg-surface-elevated/50" />
               <div className="space-y-2 flex-1">
                 <div className="flex gap-2">
-                  <Skeleton className="h-4 w-24 bg-white/10" />
-                  <Skeleton className="h-4 w-16 bg-white/10" />
+                  <Skeleton className="h-4 w-24 bg-surface-elevated/50" />
+                  <Skeleton className="h-4 w-16 bg-surface-elevated/50" />
                 </div>
-                <Skeleton className="h-16 w-full bg-white/10" />
+                <Skeleton className="h-16 w-full bg-surface-elevated/50" />
                 <div className="flex gap-2">
-                  <Skeleton className="h-8 w-16 bg-white/10" />
-                  <Skeleton className="h-8 w-24 bg-white/10" />
+                  <Skeleton className="h-8 w-16 bg-surface-elevated/50" />
+                  <Skeleton className="h-8 w-24 bg-surface-elevated/50" />
                 </div>
               </div>
             </div>
@@ -70,7 +70,7 @@ export const CommentList: React.FC<CommentListProps> = ({
   
   if (rootComments.length === 0) {
     return (
-      <div className="backdrop-blur-sm bg-white/5 border-0 rounded-xl p-8 text-center shadow-lg border border-white/10">
+      <div className="backdrop-blur-sm bg-surface-elevated/30 border-0 rounded-xl p-8 text-center shadow-lg border border-border/30">
         <MessageSquare className="h-12 w-12 mx-auto text-primary/60 mb-4" />
         <h3 className="text-lg font-medium text-foreground">Nenhum comentário ainda</h3>
         <p className="text-muted-foreground/80 mt-2">

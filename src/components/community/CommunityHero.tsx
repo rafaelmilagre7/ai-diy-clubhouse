@@ -60,7 +60,7 @@ export const CommunityHero = ({
                 />
                 <Button 
                   onClick={() => setCreateTopicOpen(true)}
-                  className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white px-6 py-2 rounded-xl transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl"
+                  className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground px-6 py-2 rounded-xl transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl"
                 >
                   <PlusCircle className="h-4 w-4 mr-2" />
                   Criar Tópico
@@ -82,7 +82,7 @@ export const CommunityHero = ({
                 variant={isActive ? "default" : "secondary"}
                 className={`px-4 py-2 cursor-pointer transition-all duration-300 hover:scale-105 ${
                   isActive 
-                    ? "bg-gradient-to-r from-primary to-accent text-white shadow-lg" 
+                    ? "bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-lg" 
                     : "bg-background/60 backdrop-blur-sm hover:bg-background/80"
                 }`}
                 onClick={() => onFilterChange(filter.key)}

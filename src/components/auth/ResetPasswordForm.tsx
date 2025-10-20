@@ -106,7 +106,7 @@ export const ResetPasswordForm = ({ onBackToLogin }: ResetPasswordFormProps) => 
         </div>
         
         <div className="space-y-2">
-          <h3 className="text-xl font-medium text-white">E-mail enviado!</h3>
+          <h3 className="text-xl font-medium text-foreground">E-mail enviado!</h3>
           <p className="text-muted-foreground text-sm">
             Se o e-mail estiver registrado em nossa plataforma, você receberá um link para redefinir sua senha em alguns minutos.
           </p>
@@ -151,7 +151,7 @@ export const ResetPasswordForm = ({ onBackToLogin }: ResetPasswordFormProps) => 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-semibold text-white text-center">
+        <h1 className="text-xl font-semibold text-foreground text-center">
           Recuperar Senha
         </h1>
         <p className="text-muted-foreground mt-2 text-center">
@@ -180,7 +180,7 @@ export const ResetPasswordForm = ({ onBackToLogin }: ResetPasswordFormProps) => 
               id="email"
               type="email"
               placeholder="Digite seu e-mail"
-              className={`pl-10 w-full py-3 px-3 bg-surface-elevated border rounded-lg text-white focus:ring-2 focus:ring-aurora-primary focus:border-aurora-primary transition-colors ${
+              className={`pl-10 w-full py-3 px-3 bg-surface-elevated border rounded-lg text-foreground focus:ring-2 focus:ring-aurora-primary focus:border-aurora-primary transition-colors ${
                 errors.email ? 'border-status-error' : 
                 email && isValid ? 'border-status-success' : 'border-border'
               }`}
@@ -229,7 +229,7 @@ export const ResetPasswordForm = ({ onBackToLogin }: ResetPasswordFormProps) => 
             type="button"
             variant="outline"
             onClick={onBackToLogin ? onBackToLogin : () => navigate("/login")}
-            className="w-full text-white bg-surface-elevated hover:bg-muted border-border"
+            className="w-full text-foreground bg-surface-elevated hover:bg-muted border-border"
             disabled={isLoading}
           >
             Voltar para login

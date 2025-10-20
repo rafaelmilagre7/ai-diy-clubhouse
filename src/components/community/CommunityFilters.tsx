@@ -58,7 +58,7 @@ export const CommunityFilters = ({
                 variant={isActive ? "default" : "secondary"}
                 className={`px-4 py-2 cursor-pointer transition-all duration-300 hover:scale-105 gap-2 ${
                   isActive 
-                    ? "bg-gradient-to-r from-primary to-accent text-white shadow-lg" 
+                    ? "bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-lg" 
                     : "bg-background/60 backdrop-blur-sm hover:bg-background/80"
                 }`}
                 onClick={() => onFilterChange(filter.key)}

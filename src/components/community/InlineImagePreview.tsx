@@ -36,7 +36,7 @@ export const InlineImagePreview: React.FC<InlineImagePreviewProps> = ({
               variant="secondary"
               size="sm"
               onClick={onEdit}
-              className="bg-white/90 hover:bg-white text-black"
+              className="bg-card/90 hover:bg-card text-foreground"
             >
               <Edit3 className="h-4 w-4 mr-1" />
               Editar
@@ -47,7 +47,7 @@ export const InlineImagePreview: React.FC<InlineImagePreviewProps> = ({
             variant="secondary"
             size="sm"
             onClick={() => window.open(src, '_blank')}
-            className="bg-white/90 hover:bg-white text-black"
+            className="bg-card/90 hover:bg-card text-foreground"
           >
             <Eye className="h-4 w-4 mr-1" />
             Ver

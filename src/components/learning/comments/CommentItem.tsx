@@ -142,7 +142,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="h-8 px-3 text-xs text-destructive bg-white/5 border-0 hover:bg-destructive/10 transition-all duration-200"
+                className="h-8 px-3 text-xs text-destructive bg-surface-elevated/30 border-0 hover:bg-destructive/10 transition-all duration-200"
                 onClick={() => onDelete(comment.id)}
               >
                 <Trash2 className="h-3.5 w-3.5 mr-1" />

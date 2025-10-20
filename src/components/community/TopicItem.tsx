@@ -52,7 +52,7 @@ export const TopicItem = ({ topic }: TopicItemProps) => {
         <div className="flex-shrink-0">
           <Avatar className="h-10 w-10">
             <AvatarImage src={topic.profiles?.avatar_url || ''} />
-            <AvatarFallback className="bg-aurora-primary text-white text-sm">
+            <AvatarFallback className="bg-aurora-primary text-primary-foreground text-sm">
               {getInitials(topic.profiles?.name || 'Usuário')}
             </AvatarFallback>
           </Avatar>

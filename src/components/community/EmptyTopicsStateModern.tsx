@@ -60,7 +60,7 @@ export const EmptyTopicsStateModern = ({ searchQuery }: EmptyTopicsStateModernPr
                 </Button>
                 <Button 
                   onClick={() => setCreateTopicOpen(true)}
-                  className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white"
+                  className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground"
                 >
                   <PlusCircle className="h-4 w-4 mr-2" />
                   Criar Discussão
@@ -97,7 +97,7 @@ export const EmptyTopicsStateModern = ({ searchQuery }: EmptyTopicsStateModernPr
                 <Button 
                   onClick={() => setCreateTopicOpen(true)}
                   size="lg"
-                  className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                  className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
                 >
                   <PlusCircle className="h-5 w-5 mr-2" />
                   Iniciar Primeira Discussão

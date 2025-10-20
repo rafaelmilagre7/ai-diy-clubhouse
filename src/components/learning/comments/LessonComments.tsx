@@ -52,7 +52,7 @@ export const LessonComments: React.FC<LessonCommentsProps> = ({ lessonId }) => {
         </p>
       </div>
       
-      <div className="backdrop-blur-sm bg-white/5 rounded-xl border border-white/10 p-4 shadow-lg">
+      <div className="backdrop-blur-sm bg-surface-elevated/30 rounded-xl border border-border/30 p-4 shadow-lg">
         <CommentForm
           lessonId={lessonId}
           onSubmit={handleSubmitComment}
