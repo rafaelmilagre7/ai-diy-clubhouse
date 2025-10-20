@@ -168,13 +168,7 @@ export const AuroraGlassSolutionCard = memo<AuroraGlassSolutionCardProps>(({ sol
       </div>
 
       {/* Glass panel with content */}
-      <motion.div
-        className="relative z-30 p-md space-y-sm"
-        animate={{
-          z: isHovered ? 5 : 2,
-        }}
-        transition={{ duration: 0.4 }}
-      >
+      <div className="relative z-30 p-md space-y-sm">
         {/* Category badge */}
         <div className="flex items-center gap-sm">
           <Badge 
@@ -195,7 +189,7 @@ export const AuroraGlassSolutionCard = memo<AuroraGlassSolutionCardProps>(({ sol
         <p className="text-sm text-muted-foreground line-clamp-2">
           {solution.description}
         </p>
-      </motion.div>
+      </div>
 
       {/* Corner accents */}
       <motion.div
