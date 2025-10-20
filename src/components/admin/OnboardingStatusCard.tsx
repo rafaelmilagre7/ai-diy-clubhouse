@@ -136,7 +136,7 @@ export const OnboardingStatusCard: React.FC = () => {
           </div>
 
           {/* Breakdown detalhado */}
-          <div className="space-y-2 text-sm">
+          <div className="space-y-sm text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Total de usuários:</span>
               <span className="font-medium">{stats.total_users}</span>
@@ -174,7 +174,7 @@ export const OnboardingStatusCard: React.FC = () => {
                 onClick={handleNotifyLegacyUsers}
                 className="w-full"
               >
-                <Users className="h-4 w-4 mr-2" />
+                <Users className="h-4 w-4 mr-sm" />
                 Notificar usuários legacy ({stats.legacy_users})
               </Button>
             </div>
@@ -186,7 +186,7 @@ export const OnboardingStatusCard: React.FC = () => {
               variant="ghost" 
               size="sm" 
               onClick={fetchOnboardingStats}
-              className="h-auto p-1"
+              className="h-auto p-xs"
             >
               <RefreshCw className="h-3 w-3" />
             </Button>

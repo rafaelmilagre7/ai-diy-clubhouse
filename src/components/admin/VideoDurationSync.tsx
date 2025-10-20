@@ -99,7 +99,7 @@ export const VideoDurationSync = () => {
           <Button 
             onClick={handleSync} 
             disabled={isLoading}
-            className="flex items-center gap-2"
+            className="flex items-center gap-sm"
           >
             <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
             {isLoading ? 'Sincronizando...' : 'Sincronizar Durações'}
@@ -108,7 +108,7 @@ export const VideoDurationSync = () => {
 
         {/* Progress Bar */}
         {isLoading && (
-          <div className="space-y-2">
+          <div className="space-y-sm">
             <div className="flex justify-between text-sm text-muted-foreground">
               <span>Progresso da sincronização</span>
               <span>{progress}%</span>
@@ -119,8 +119,8 @@ export const VideoDurationSync = () => {
 
         {/* Resultados */}
         {result && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="space-y-md">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-md">
               {/* Total Processado */}
               <Card>
                 <CardContent className="pt-6">

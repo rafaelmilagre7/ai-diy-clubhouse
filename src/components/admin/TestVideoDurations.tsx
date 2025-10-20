@@ -33,22 +33,22 @@ export const TestVideoDurations = () => {
   };
 
   return (
-    <div className="p-6 border rounded-lg bg-card shadow-sm">
-      <div className="flex items-center gap-3 mb-4">
-        <div className="p-2 rounded-lg bg-operational/10">
+    <div className="p-lg border rounded-lg bg-card shadow-sm">
+      <div className="flex items-center gap-sm mb-md">
+        <div className="p-sm rounded-lg bg-operational/10">
           <Video className="h-5 w-5 text-operational" />
         </div>
         <h3 className="text-lg font-semibold">Teste das Durações</h3>
       </div>
       
-      <div className="space-y-4">
+      <div className="space-y-md">
         <p className="text-sm text-muted-foreground">
           Testa a atualização das durações dos vídeos via API do Panda Video.
         </p>
 ...
         {isPending && (
-          <div className="p-3 bg-operational/10 rounded-lg">
-            <div className="flex items-center gap-2 text-operational">
+          <div className="p-sm bg-operational/10 rounded-lg">
+            <div className="flex items-center gap-sm text-operational">
               <RefreshCw className="h-4 w-4 animate-spin" />
               <span className="text-sm">Processando vídeos...</span>
             </div>

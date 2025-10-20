@@ -164,7 +164,7 @@ export const SystemHealthDashboard = () => {
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
-            <div className="space-y-1">
+            <div className="space-y-xs">
               {connectionAlerts.map((alert, index) => (
                 <div key={index}>🚨 {alert}</div>
               ))}
@@ -202,9 +202,9 @@ export const SystemHealthDashboard = () => {
                 </div>
                 <Progress 
                   value={metrics?.connectionMetrics?.pool_utilization_percent || 0} 
-                  className="mt-2"
+                  className="mt-sm"
                 />
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-xs text-muted-foreground mt-xs">
                   {metrics?.connectionMetrics?.pool_utilization_percent?.toFixed(1)}% utilização
                 </p>
               </CardContent>
@@ -257,7 +257,7 @@ export const SystemHealthDashboard = () => {
         </TabsContent>
 
         {/* Ações de Emergência */}
-        <TabsContent value="emergency" className="space-y-4">
+        <TabsContent value="emergency" className="space-y-md">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -268,14 +268,14 @@ export const SystemHealthDashboard = () => {
                 Use apenas em situações críticas de sobrecarga
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <CardContent className="space-y-md">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
                 <Button
                   variant="destructive"
                   onClick={() => handleEmergencyAction('flush_logs')}
                   className="w-full"
                 >
-                  <Server className="h-4 w-4 mr-2" />
+                  <Server className="h-4 w-4 mr-sm" />
                   Forçar Flush de Logs
                 </Button>
                 
@@ -284,7 +284,7 @@ export const SystemHealthDashboard = () => {
                   onClick={() => handleEmergencyAction('force_cleanup')}
                   className="w-full"
                 >
-                  <Database className="h-4 w-4 mr-2" />
+                  <Database className="h-4 w-4 mr-sm" />
                   Cleanup Conexões
                 </Button>
               </div>

@@ -74,7 +74,7 @@ export const SecurityMonitor = () => {
   if (!isAdmin) {
     return (
       <Card>
-        <CardContent className="p-6">
+        <CardContent className="p-lg">
           <div className="text-center text-muted-foreground">
             Acesso restrito a administradores
           </div>
@@ -95,7 +95,7 @@ export const SecurityMonitor = () => {
             size="sm"
             className="ml-auto"
           >
-            <Eye className="h-4 w-4 mr-2" />
+            <Eye className="h-4 w-4 mr-sm" />
             Atualizar
           </Button>
         </CardTitle>
@@ -132,7 +132,7 @@ export const SecurityMonitor = () => {
                   </span>
                 </div>
                 
-                <div className="text-sm space-y-1">
+                <div className="text-sm space-y-xs">
                   <div><strong>Tipo:</strong> {event.event_type}</div>
                   {event.user_id && (
                     <div><strong>Usuário:</strong> {event.user_id}</div>

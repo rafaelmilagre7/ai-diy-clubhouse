@@ -158,17 +158,17 @@ export const CredentialsValidator = () => {
                       )}
                     </div>
                   </div>
-                  <p className="text-xs mt-1 opacity-80">{credential.message}</p>
+                  <p className="text-xs mt-xs opacity-80">{credential.message}</p>
                 </div>
               ))}
             </div>
 
             {result.recommendations.length > 0 && (
-              <div className="space-y-2">
+              <div className="space-y-sm">
                 <h4 className="font-medium">Recomendações:</h4>
-                <ul className="space-y-1">
+                <ul className="space-y-xs">
                   {result.recommendations.map((rec, index) => (
-                    <li key={index} className="text-sm text-muted-foreground flex items-start gap-2">
+                    <li key={index} className="text-sm text-muted-foreground flex items-start gap-sm">
                       <span className="text-operational">•</span>
                       {rec}
                     </li>
@@ -184,8 +184,8 @@ export const CredentialsValidator = () => {
         ) : null}
 
         {!result && (
-          <div className="text-center py-8 text-muted-foreground">
-            <AlertCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
+          <div className="text-center py-xl text-muted-foreground">
+            <AlertCircle className="h-8 w-8 mx-auto mb-sm opacity-50" />
             <p>Clique em "Validar Credenciais" para verificar a configuração dos Edge Function Secrets</p>
           </div>
         )}

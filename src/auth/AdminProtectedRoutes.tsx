@@ -67,8 +67,8 @@ export const AdminProtectedRoutes = ({ children }: AdminProtectedRoutesProps) =>
   if (loadingTimeout && !profile) {
     console.error('❌ [ADMIN-CHECK] Timeout excedido sem carregar perfil');
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4">
-        <div className="max-w-md w-full bg-card p-6 rounded-lg shadow-lg space-y-4">
+      <div className="min-h-screen flex items-center justify-center bg-background p-md">
+        <div className="max-w-md w-full bg-card p-lg rounded-lg shadow-lg space-y-md">
           <h2 className="text-xl font-bold text-destructive">Erro de Carregamento</h2>
           <p className="text-sm text-muted-foreground">
             Não foi possível carregar suas permissões. Por favor, tente novamente.
@@ -79,7 +79,7 @@ export const AdminProtectedRoutes = ({ children }: AdminProtectedRoutesProps) =>
           </details>
           <button 
             onClick={() => window.location.reload()} 
-            className="w-full bg-primary text-primary-foreground py-2 rounded hover:bg-primary/90"
+            className="w-full bg-primary text-primary-foreground py-sm rounded hover:bg-primary/90"
           >
             Tentar Novamente
           </button>
