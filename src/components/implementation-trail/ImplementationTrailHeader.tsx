@@ -183,7 +183,7 @@ export const ImplementationTrailHeader = ({
               </div>
               
               <div className="h-1 bg-revenue/20 rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-revenue to-revenue/60 w-0 group-hover:w-[94%] transition-all duration-1000 ease-out animation-delay-1000" />
+                <div className="h-full bg-gradient-to-r from-revenue to-revenue/60 w-0 group-hover:w-trail-progress transition-all duration-slowest ease-out animation-delay-1000" />
               </div>
             </div>
           </div>

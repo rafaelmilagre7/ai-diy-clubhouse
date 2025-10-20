@@ -93,7 +93,7 @@ export const ChatModal = ({ isOpen, onClose, recipientId, recipientName, recipie
                   className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
-                    className={`max-w-[70%] rounded-lg p-3 ${
+                    className={`max-w-chat-bubble rounded-lg p-3 ${
                       isOwnMessage
                         ? 'bg-aurora-primary text-white'
                         : 'bg-background border border-border'

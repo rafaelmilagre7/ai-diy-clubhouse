@@ -106,7 +106,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
 
       {/* Conteúdo da mensagem */}
       <div className={cn(
-        "flex flex-col max-w-[70%]",
+        "flex flex-col max-w-chat-bubble",
         isOwnMessage ? "items-end" : "items-start"
       )}>
         {/* Reply reference */}

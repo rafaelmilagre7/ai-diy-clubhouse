@@ -255,7 +255,7 @@ export const PandaVideoSelector: React.FC<PandaVideoSelectorProps> = ({
                       {video.description}
                     </p>
                   )}
-                  <div className="text-[10px] text-muted-foreground mt-1">
+                  <div className="text-2xs text-muted-foreground mt-1">
                     {formatDate(video.created_at)}
                   </div>
                 </div>

@@ -32,6 +32,8 @@ const config: Config = {
       
       // === TYPOGRAPHY SCALE ===
       fontSize: {
+        '3xs': ['0.5625rem', { lineHeight: '0.7rem' }], // 9px - eventos mínimos
+        '2xs': ['0.625rem', { lineHeight: '0.75rem' }], // 10px - badges pequenos
         'xs': ['0.75rem', { lineHeight: '1rem' }],      // 12px
         'sm': ['0.875rem', { lineHeight: '1.25rem' }],  // 14px
         'base': ['1rem', { lineHeight: '1.5rem' }],     // 16px
@@ -40,6 +42,7 @@ const config: Config = {
         '2xl': ['1.5rem', { lineHeight: '2rem' }],      // 24px
         '3xl': ['1.875rem', { lineHeight: '2.25rem' }], // 30px
         '4xl': ['2.25rem', { lineHeight: '2.5rem' }],   // 36px
+        'calendar': ['0.9rem', { lineHeight: '1.2rem' }], // calendário
       },
       
       fontWeight: {
@@ -123,6 +126,7 @@ const config: Config = {
         'blob-lg': '500px',
         'drawer-handle': '100px',
         'separator': '1px',
+        'trail-progress': '94%', // progresso de trilhas
       },
       
       minHeight: {
