@@ -25,11 +25,11 @@ export const FormMessage: React.FC<FormMessageProps> = ({
   const getIcon = () => {
     switch (type) {
       case "error":
-        return <AlertCircle className="h-4 w-4 text-red-500" />;
+        return <AlertCircle className="h-4 w-4 text-status-error" />;
       case "success":
         return <CheckCircle className="h-4 w-4 text-viverblue" />;
       case "warning":
-        return <AlertCircle className="h-4 w-4 text-yellow-500" />;
+        return <AlertCircle className="h-4 w-4 text-status-warning" />;
       case "info":
       default:
         return null;
@@ -39,11 +39,11 @@ export const FormMessage: React.FC<FormMessageProps> = ({
   const getTextColor = () => {
     switch (type) {
       case "error":
-        return "text-red-500";
+        return "text-status-error";
       case "success":
         return "text-viverblue";
       case "warning":
-        return "text-yellow-500";
+        return "text-status-warning";
       case "info":
       default:
         return "text-textSecondary";

@@ -221,7 +221,7 @@ export const MasterMemberSyncPanel: React.FC = () => {
 
               {validationResult.isValid && (
                 <Alert>
-                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <CheckCircle className="h-4 w-4 text-status-success" />
                   <AlertDescription>
                     <div className="space-y-1 text-sm">
                       <div>✅ CSV válido e pronto para sincronização</div>

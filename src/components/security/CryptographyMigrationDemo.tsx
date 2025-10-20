@@ -132,7 +132,7 @@ const CryptographyMigrationDemo: React.FC = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5 text-green-500" />
+              <CheckCircle className="h-5 w-5 text-status-success" />
               ✅ Depois (Seguro)
             </CardTitle>
             <CardDescription>AES-256-GCM com Web Crypto API</CardDescription>
@@ -142,7 +142,7 @@ const CryptographyMigrationDemo: React.FC = () => {
               <Badge variant="default">AES-256-GCM</Badge>
               <div className="font-mono text-xs bg-muted p-2 rounded">
                 await realCryptography.encryptData()<br />
-                <span className="text-green-600">↓ Impossível quebrar:</span><br />
+                <span className="text-status-success">↓ Impossível quebrar:</span><br />
                 atob("dados_aes") ❌ Impossível quebrar!
               </div>
               <Alert>

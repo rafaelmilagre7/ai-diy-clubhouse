@@ -21,7 +21,7 @@ export const BenefitBadge = ({ type, className = '' }: BenefitBadgeProps) => {
     exclusive: {
       text: 'Exclusivo',
       icon: <Trophy className="h-3 w-3 mr-1" />,
-      baseClassName: 'bg-purple-900/40 text-purple-300 border-purple-700' // Contraste melhorado
+      baseClassName: 'bg-strategy/40 text-strategy-light border-strategy' // Contraste melhorado
     },
     free: {
       text: 'Gratuito',

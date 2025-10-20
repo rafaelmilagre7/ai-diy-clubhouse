@@ -94,15 +94,15 @@ export const TestVideoDurations = () => {
             ) : stats ? (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="p-4 border rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600">{stats.total}</div>
+                  <div className="text-2xl font-bold text-status-info">{stats.total}</div>
                   <div className="text-sm text-muted-foreground">Total de vídeos</div>
                 </div>
                 <div className="p-4 border rounded-lg">
-                  <div className="text-2xl font-bold text-green-600">{stats.withDuration}</div>
+                  <div className="text-2xl font-bold text-status-success">{stats.withDuration}</div>
                   <div className="text-sm text-muted-foreground">Com duração</div>
                 </div>
                 <div className="p-4 border rounded-lg">
-                  <div className="text-2xl font-bold text-red-600">{stats.withoutDuration}</div>
+                  <div className="text-2xl font-bold text-status-error">{stats.withoutDuration}</div>
                   <div className="text-sm text-muted-foreground">Sem duração</div>
                 </div>
               </div>
@@ -167,9 +167,9 @@ export const TestVideoDurations = () => {
             </div>
 
             {stats && stats.withoutDuration === 0 && (
-              <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                <div className="text-green-800 font-medium">✅ Todas as durações estão atualizadas!</div>
-                <div className="text-green-600 text-sm">
+              <div className="p-4 bg-status-success/10 border border-status-success/20 rounded-lg">
+                <div className="text-status-success-dark font-medium">✅ Todas as durações estão atualizadas!</div>
+                <div className="text-status-success text-sm">
                   Todos os {stats.total} vídeos já possuem durações calculadas.
                 </div>
               </div>

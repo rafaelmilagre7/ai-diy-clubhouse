@@ -16,7 +16,7 @@ export const FormFeedback = ({ error, success, className }: FormFeedbackProps) =
     <div
       className={cn(
         "flex items-center gap-2 text-sm mt-1",
-        error ? "text-red-500" : "text-green-500",
+        error ? "text-status-error" : "text-status-success",
         className
       )}
     >

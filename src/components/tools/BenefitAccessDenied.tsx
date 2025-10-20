@@ -22,8 +22,8 @@ export function BenefitAccessDenied({
   
   return (
     <div className="flex flex-col items-center justify-center p-6 text-center">
-      <div className="bg-red-100 dark:bg-red-900/20 p-4 rounded-full mb-4">
-        <Lock className="h-12 w-12 text-red-500 dark:text-red-400" />
+      <div className="bg-status-error/10 dark:bg-status-error/20 p-4 rounded-full mb-4">
+        <Lock className="h-12 w-12 text-status-error dark:text-status-error" />
       </div>
       
       <h2 className="text-xl font-bold mb-2">{title}</h2>

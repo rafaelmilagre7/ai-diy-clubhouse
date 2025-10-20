@@ -233,8 +233,8 @@ export const CryptographyTestComponent: React.FC = () => {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
             <div>
-              <h4 className="font-semibold text-red-600 mb-2">❌ Implementação Antiga (Insegura)</h4>
-              <ul className="space-y-1 text-red-700">
+              <h4 className="font-semibold text-status-error mb-2">❌ Implementação Antiga (Insegura)</h4>
+              <ul className="space-y-1 text-status-error-dark">
                 <li>• <strong>Algoritmo:</strong> Base64 encoding (não é criptografia)</li>
                 <li>• <strong>Segurança:</strong> Zero - facilmente reversível</li>
                 <li>• <strong>Chave:</strong> Predictable (btoa simples)</li>
@@ -245,8 +245,8 @@ export const CryptographyTestComponent: React.FC = () => {
             </div>
             
             <div>
-              <h4 className="font-semibold text-green-600 mb-2">✅ Implementação Nova (Segura)</h4>
-              <ul className="space-y-1 text-green-700">
+              <h4 className="font-semibold text-status-success mb-2">✅ Implementação Nova (Segura)</h4>
+              <ul className="space-y-1 text-status-success-dark">
                 <li>• <strong>Algoritmo:</strong> AES-256-GCM (padrão militar)</li>
                 <li>• <strong>Segurança:</strong> Máxima - criptografia real</li>
                 <li>• <strong>Chave:</strong> PBKDF2 + Salt (100k iterações)</li>

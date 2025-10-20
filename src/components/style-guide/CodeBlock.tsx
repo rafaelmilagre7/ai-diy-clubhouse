@@ -42,7 +42,7 @@ export function CodeBlock({ code, language = 'tsx', title, showLineNumbers = fal
           className="absolute top-2 right-2 z-10 h-8 w-8 p-0"
         >
           {copied ? (
-            <Check className="h-4 w-4 text-green-500" />
+            <Check className="h-4 w-4 text-status-success" />
           ) : (
             <Copy className="h-4 w-4" />
           )}

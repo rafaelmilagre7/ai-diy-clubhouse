@@ -124,7 +124,7 @@ export const TeamManagement: React.FC = () => {
               <p className="text-sm text-muted-foreground">Convites Pendentes</p>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">{teamStats.max_members}</div>
+              <div className="text-2xl font-bold text-status-success">{teamStats.max_members}</div>
               <p className="text-sm text-muted-foreground">Limite do Plano</p>
             </div>
           </div>
@@ -138,9 +138,9 @@ export const TeamManagement: React.FC = () => {
           </div>
 
           {usagePercentage >= 100 && (
-            <div className="flex items-center gap-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-              <AlertCircle className="h-4 w-4 text-yellow-600" />
-              <p className="text-sm text-yellow-700 dark:text-yellow-300">
+            <div className="flex items-center gap-2 p-3 bg-status-warning/10 dark:bg-status-warning/20 rounded-lg">
+              <AlertCircle className="h-4 w-4 text-status-warning" />
+              <p className="text-sm text-status-warning dark:text-status-warning-light">
                 Você atingiu o limite do seu plano. Para adicionar mais membros, faça upgrade.
               </p>
             </div>
