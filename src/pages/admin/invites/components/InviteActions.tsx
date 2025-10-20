@@ -93,7 +93,7 @@ const InviteActions = ({
                   size="sm"
                   onClick={() => onResendEmail(invite)}
                   disabled={isResendingEmail}
-                  className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700"
+                  className="h-8 w-8 p-0 text-status-info hover:text-status-info/80"
                 >
                   <Mail className="h-4 w-4" />
                 </Button>
@@ -109,7 +109,7 @@ const InviteActions = ({
                     size="sm"
                     onClick={() => onResendWhatsApp(invite)}
                     disabled={isResendingWhatsApp}
-                    className="h-8 w-8 p-0 text-green-600 hover:text-green-700"
+                    className="h-8 w-8 p-0 text-status-success hover:text-status-success/80"
                   >
                     <MessageSquare className="h-4 w-4" />
                   </Button>
@@ -128,7 +128,7 @@ const InviteActions = ({
                 size="sm"
                 onClick={handleReactivate}
                 disabled={isReactivating}
-                className="h-8 w-8 p-0 text-amber-600 hover:text-amber-700"
+                className="h-8 w-8 p-0 text-status-warning hover:text-status-warning/80"
               >
                 <RefreshCw className={`h-4 w-4 ${isReactivating ? 'animate-spin' : ''}`} />
               </Button>

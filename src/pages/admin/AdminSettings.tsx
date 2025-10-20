@@ -283,14 +283,14 @@ const AdminSettings = () => {
                 </div>
               </div>
               
-              <div className="rounded-lg border p-4 bg-amber-50 border-amber-200">
+              <div className="rounded-lg border p-4 bg-status-warning/10 border-status-warning/20">
                 <div className="flex items-start gap-4">
                   <div className="mt-0.5">
                     <AlertCircle className="h-5 w-5 text-warning" />
                   </div>
                   <div>
-                    <h4 className="text-sm font-medium text-amber-800">Aviso de Segurança</h4>
-                    <p className="text-sm text-amber-700 mt-1">
+                    <h4 className="text-sm font-medium text-status-warning">Aviso de Segurança</h4>
+                    <p className="text-sm text-status-warning/80 mt-1">
                       Alterações nessas configurações podem afetar o acesso dos usuários existentes.
                       Certifique-se de comunicar quaisquer mudanças com antecedência.
                     </p>

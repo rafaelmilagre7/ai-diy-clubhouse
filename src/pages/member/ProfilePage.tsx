@@ -73,10 +73,10 @@ const ProfilePage = () => {
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty.toLowerCase()) {
-      case 'iniciante': return 'text-green-400';
-      case 'intermediario': return 'text-yellow-400';
-      case 'avancado': return 'text-red-400';
-      default: return 'text-gray-400';
+      case 'iniciante': return 'text-status-success';
+      case 'intermediario': return 'text-status-warning';
+      case 'avancado': return 'text-status-error';
+      default: return 'text-muted-foreground';
     }
   };
 

@@ -114,44 +114,44 @@ const ImplementationConfirmation = () => {
           
           <Progress value={calculateProgress()} className="h-2" />
           
-          <div className="p-4 bg-green-50 border border-green-200 rounded-md">
-            <h3 className="font-medium flex items-center text-green-800">
-              <CheckCircle className="h-5 w-5 mr-2 text-green-600" />
+          <div className="p-4 bg-status-success/10 border border-status-success/20 rounded-md">
+            <h3 className="font-medium flex items-center text-status-success">
+              <CheckCircle className="h-5 w-5 mr-2 text-status-success" />
               Benefícios desta implementação
             </h3>
             <ul className="mt-2 space-y-2">
               <li className="flex items-start">
-                <Check className="h-4 w-4 mr-2 mt-1 text-green-600" />
-                <span className="text-sm text-green-800">Aumento de produtividade no seu negócio</span>
+                <Check className="h-4 w-4 mr-2 mt-1 text-status-success" />
+                <span className="text-sm text-status-success/80">Aumento de produtividade no seu negócio</span>
               </li>
               <li className="flex items-start">
-                <Check className="h-4 w-4 mr-2 mt-1 text-green-600" />
-                <span className="text-sm text-green-800">Redução de custos operacionais</span>
+                <Check className="h-4 w-4 mr-2 mt-1 text-status-success" />
+                <span className="text-sm text-status-success/80">Redução de custos operacionais</span>
               </li>
               <li className="flex items-start">
-                <Check className="h-4 w-4 mr-2 mt-1 text-green-600" />
-                <span className="text-sm text-green-800">Melhoria na experiência do cliente</span>
+                <Check className="h-4 w-4 mr-2 mt-1 text-status-success" />
+                <span className="text-sm text-status-success/80">Melhoria na experiência do cliente</span>
               </li>
             </ul>
           </div>
           
-          <div className="p-4 bg-blue-50 border border-blue-200 rounded-md">
-            <h3 className="font-medium flex items-center text-blue-800">
-              <Trophy className="h-5 w-5 mr-2 text-blue-600" />
+          <div className="p-4 bg-status-info/10 border border-status-info/20 rounded-md">
+            <h3 className="font-medium flex items-center text-status-info">
+              <Trophy className="h-5 w-5 mr-2 text-status-info" />
               Ao confirmar, você receberá:
             </h3>
             <ul className="mt-2 space-y-2">
               <li className="flex items-start">
-                <Check className="h-4 w-4 mr-2 mt-1 text-blue-600" />
-                <span className="text-sm text-blue-800">Certificado de implementação</span>
+                <Check className="h-4 w-4 mr-2 mt-1 text-status-info" />
+                <span className="text-sm text-status-info/80">Certificado de implementação</span>
               </li>
               <li className="flex items-start">
-                <Check className="h-4 w-4 mr-2 mt-1 text-blue-600" />
-                <span className="text-sm text-blue-800">Acesso a materiais exclusivos de otimização</span>
+                <Check className="h-4 w-4 mr-2 mt-1 text-status-info" />
+                <span className="text-sm text-status-info/80">Acesso a materiais exclusivos de otimização</span>
               </li>
               <li className="flex items-start">
-                <Check className="h-4 w-4 mr-2 mt-1 text-blue-600" />
-                <span className="text-sm text-blue-800">Reconhecimento na comunidade VIVER DE IA Club</span>
+                <Check className="h-4 w-4 mr-2 mt-1 text-status-info" />
+                <span className="text-sm text-status-info/80">Reconhecimento na comunidade VIVER DE IA Club</span>
               </li>
             </ul>
           </div>

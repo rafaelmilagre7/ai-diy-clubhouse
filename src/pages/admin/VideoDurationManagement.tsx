@@ -40,21 +40,21 @@ const VideoDurationManagement = () => {
               <CardContent className="space-y-4">
                 <div className="space-y-3">
                   <div className="flex gap-3">
-                    <Database className="w-4 h-4 mt-1 text-blue-500" />
+                    <Database className="w-4 h-4 mt-1 text-status-info" />
                     <div className="text-sm">
                       <strong>1. Identificação:</strong> O sistema busca vídeos sem duração_seconds no banco
                     </div>
                   </div>
                   
                   <div className="flex gap-3">
-                    <Clock className="w-4 h-4 mt-1 text-green-500" />
+                    <Clock className="w-4 h-4 mt-1 text-status-success" />
                     <div className="text-sm">
                       <strong>2. Sincronização:</strong> Consulta a API do Panda Video para obter durações reais
                     </div>
                   </div>
                   
                   <div className="flex gap-3">
-                    <TrendingUp className="w-4 h-4 mt-1 text-purple-500" />
+                    <TrendingUp className="w-4 h-4 mt-1 text-strategy" />
                     <div className="text-sm">
                       <strong>3. Atualização:</strong> Certificados passam a mostrar cargas horárias precisas
                     </div>
@@ -63,7 +63,7 @@ const VideoDurationManagement = () => {
 
                 <Separator />
                 
-                <div className="bg-blue-50 p-3 rounded-lg">
+                <div className="bg-status-info/10 p-3 rounded-lg">
                   <h5 className="font-medium mb-2">💡 Dicas Importantes:</h5>
                   <ul className="text-xs space-y-1 text-muted-foreground">
                     <li>• Execute a sincronização sempre que adicionar novos vídeos</li>

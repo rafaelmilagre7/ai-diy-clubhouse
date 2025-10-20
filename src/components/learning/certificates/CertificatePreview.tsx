@@ -60,21 +60,21 @@ export const CertificatePreview = ({ certificate, onDownload }: CertificatePrevi
           >
             {/* Decorative Elements */}
             <div className="absolute top-8 left-8">
-              <Star className="h-8 w-8 text-purple-400 opacity-60" />
+              <Star className="h-8 w-8 text-strategy opacity-60" />
             </div>
             <div className="absolute top-8 right-8">
-              <Star className="h-8 w-8 text-blue-400 opacity-60" />
+              <Star className="h-8 w-8 text-status-info opacity-60" />
             </div>
             <div className="absolute bottom-8 left-8">
-              <Star className="h-6 w-6 text-purple-300 opacity-40" />
+              <Star className="h-6 w-6 text-strategy/80 opacity-40" />
             </div>
             <div className="absolute bottom-8 right-8">
-              <Star className="h-6 w-6 text-blue-300 opacity-40" />
+              <Star className="h-6 w-6 text-status-info/80 opacity-40" />
             </div>
 
             {/* Border */}
-            <div className="absolute inset-4 border-4 border-gradient-to-r from-purple-400 via-blue-400 to-purple-400 rounded-lg opacity-20"></div>
-            <div className="absolute inset-6 border-2 border-gradient-to-r from-blue-300 via-purple-300 to-blue-300 rounded-lg opacity-30"></div>
+            <div className="absolute inset-4 border-4 border-gradient-to-r from-strategy via-status-info to-strategy rounded-lg opacity-20"></div>
+            <div className="absolute inset-6 border-2 border-gradient-to-r from-status-info/80 via-strategy/80 to-status-info/80 rounded-lg opacity-30"></div>
 
             {/* Header */}
             <div className="mb-8">

@@ -63,8 +63,8 @@ const Dashboard = () => {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-red-600 mb-4">Erro ao carregar dashboard</h2>
-          <p className="text-gray-600">{String(error || progressError)}</p>
+          <h2 className="text-2xl font-bold text-status-error mb-4">Erro ao carregar dashboard</h2>
+          <p className="text-muted-foreground">{String(error || progressError)}</p>
         </div>
       </div>
     );

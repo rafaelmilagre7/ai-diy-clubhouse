@@ -137,9 +137,9 @@ const SolutionCertificate = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-6 text-center">
-              <div className="p-6 rounded-lg bg-green-900/20 border border-green-700/30">
-                <h3 className="font-semibold text-green-400 mb-2">Parabéns! 🎉</h3>
-                <p className="text-gray-300 mb-4">
+              <div className="p-6 rounded-lg bg-status-success/20 border border-status-success/30">
+                <h3 className="font-semibold text-status-success mb-2">Parabéns! 🎉</h3>
+                <p className="text-muted-foreground mb-4">
                   Você completou com sucesso a implementação da solução <strong>{solution.title}</strong>.
                 </p>
                 <p className="text-gray-400 text-sm mb-4">

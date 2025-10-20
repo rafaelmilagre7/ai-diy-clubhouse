@@ -178,15 +178,15 @@ const ImplementationCompleted = () => {
             </div>
             <div className="p-4 space-y-3">
               <div className="flex items-center gap-3">
-                <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                <CheckCircle className="h-4 w-4 text-status-success flex-shrink-0" />
                 <span className="text-sm">Certificado de Implementação</span>
               </div>
               <div className="flex items-center gap-3">
-                <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                <CheckCircle className="h-4 w-4 text-status-success flex-shrink-0" />
                 <span className="text-sm">+50 pontos no seu perfil do VIVER DE IA</span>
               </div>
               <div className="flex items-center gap-3">
-                <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                <CheckCircle className="h-4 w-4 text-status-success flex-shrink-0" />
                 <span className="text-sm">Acesso a materiais exclusivos de otimização</span>
               </div>
             </div>

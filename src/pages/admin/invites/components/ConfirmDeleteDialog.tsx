@@ -49,14 +49,14 @@ const ConfirmDeleteDialog = ({
           </DialogDescription>
         </DialogHeader>
         <div className="py-4">
-          <div className="bg-blue-50 dark:bg-blue-950 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
-            <p className="text-sm text-blue-800 dark:text-blue-200">
+          <div className="bg-status-info/10 p-3 rounded-lg border border-status-info/20">
+            <p className="text-sm text-status-info">
               ⚡ <strong>Exclusão otimizada:</strong> O convite será removido instantaneamente da lista. 
               A limpeza física será feita automaticamente em 24h.
             </p>
           </div>
           {!invite.used_at && new Date(invite.expires_at) >= new Date() && (
-            <p className="text-sm text-amber-600 dark:text-amber-400 mt-3 p-2 bg-amber-50 dark:bg-amber-950 rounded">
+            <p className="text-sm text-status-warning mt-3 p-2 bg-status-warning/10 rounded">
               ⚠️ Este convite ainda está ativo e não foi utilizado.
             </p>
           )}

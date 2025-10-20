@@ -150,7 +150,7 @@ const NewSuggestionPage = () => {
                     <p className="text-sm text-destructive">{errors.category_id.message}</p>
                   )}
                   {!selectedCategory && (
-                    <p className="text-sm text-amber-600 dark:text-amber-400">
+                    <p className="text-sm text-status-warning">
                       Selecione uma categoria para sua sugestão
                     </p>
                   )}

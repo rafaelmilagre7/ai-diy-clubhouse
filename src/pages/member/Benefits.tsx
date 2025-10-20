@@ -322,7 +322,7 @@ const BenefitCard = ({ tool }: { tool: Tool }) => {
                     <BenefitBadge type={tool.benefit_type} />
                   )}
                   {isRestricted && !hasAccess && (
-                    <Badge variant="outline" className="text-xs border-amber-500/50 text-amber-400 bg-amber-500/10">
+                    <Badge variant="outline" className="text-xs border-status-warning/50 text-status-warning bg-status-warning/10">
                       Acesso Restrito
                     </Badge>
                   )}

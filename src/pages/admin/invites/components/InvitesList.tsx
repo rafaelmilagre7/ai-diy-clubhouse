@@ -52,7 +52,7 @@ const InvitesList = ({ invites, onResend, onDelete }: InvitesListProps) => {
   const getStatusBadge = (invite: Invite) => {
     if (invite.used_at) {
       return (
-        <Badge variant="secondary" className="flex items-center gap-1 bg-green-100 text-green-800">
+        <Badge variant="secondary" className="flex items-center gap-1 bg-status-success/20 text-status-success">
           <CheckCircle className="h-3 w-3" />
           Utilizado
         </Badge>
@@ -69,7 +69,7 @@ const InvitesList = ({ invites, onResend, onDelete }: InvitesListProps) => {
     }
     
     return (
-      <Badge variant="default" className="flex items-center gap-1 bg-blue-100 text-blue-800">
+      <Badge variant="default" className="flex items-center gap-1 bg-status-info/20 text-status-info">
         <CheckCircle className="h-3 w-3" />
         Ativo
       </Badge>
@@ -83,7 +83,7 @@ const InvitesList = ({ invites, onResend, onDelete }: InvitesListProps) => {
           <Tooltip>
             <TooltipTrigger asChild>
               <div className="flex items-center gap-1 cursor-help">
-                <Mail className="h-4 w-4 text-blue-500" />
+                <Mail className="h-4 w-4 text-status-info" />
                 <span className="text-sm font-medium">
                   {invite.send_attempts || 1}x
                 </span>
@@ -99,7 +99,7 @@ const InvitesList = ({ invites, onResend, onDelete }: InvitesListProps) => {
     }
     
     return (
-      <Badge variant="outline" className="text-orange-600 border-orange-300">
+      <Badge variant="outline" className="text-revenue border-revenue/30">
         Pendente
       </Badge>
     );

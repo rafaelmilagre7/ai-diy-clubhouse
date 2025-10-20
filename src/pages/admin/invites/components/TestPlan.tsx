@@ -274,11 +274,11 @@ export const TestPlan: React.FC = () => {
                     </ul>
                   </div>
 
-                  <div className="p-4 bg-green-50 dark:bg-green-950/20 rounded-lg">
-                    <h4 className="font-medium text-green-900 dark:text-green-100 mb-2">
+                  <div className="p-4 bg-status-success/10 rounded-lg">
+                    <h4 className="font-medium text-status-success mb-2">
                       ✅ Melhorias Implementadas:
                     </h4>
-                    <ul className="text-sm text-green-800 dark:text-green-200 space-y-1">
+                    <ul className="text-sm text-status-success/80 space-y-1">
                       <li>• Sistema Resend como prioridade</li>
                       <li>• Soft delete inteligente</li>
                       <li>• Logs detalhados e monitoramento</li>
@@ -308,9 +308,9 @@ export const TestPlan: React.FC = () => {
                   testResults.map((result, index) => (
                     <Card key={index} className="p-3">
                       <div className="flex items-start gap-3">
-                        {result.status === 'success' && <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />}
-                        {result.status === 'error' && <AlertCircle className="h-5 w-5 text-red-500 mt-0.5" />}
-                        {result.status === 'warning' && <AlertCircle className="h-5 w-5 text-yellow-500 mt-0.5" />}
+                        {result.status === 'success' && <CheckCircle className="h-5 w-5 text-status-success mt-0.5" />}
+                        {result.status === 'error' && <AlertCircle className="h-5 w-5 text-status-error mt-0.5" />}
+                        {result.status === 'warning' && <AlertCircle className="h-5 w-5 text-status-warning mt-0.5" />}
                         
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">

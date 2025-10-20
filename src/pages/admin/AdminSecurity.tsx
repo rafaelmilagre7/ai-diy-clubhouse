@@ -81,8 +81,8 @@ const AdminSecurity: React.FC = () => {
         </div>
         
         {/* Enhanced Security Dashboard */}
-        <div className="aurora-glass rounded-2xl border border-amber-500/20 backdrop-blur-md overflow-hidden animate-fade-in animation-delay-200">
-          <div className="bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-transparent p-8 border-b border-amber-500/20">
+        <div className="aurora-glass rounded-2xl border border-status-warning/20 backdrop-blur-md overflow-hidden animate-fade-in animation-delay-200">
+          <div className="bg-gradient-to-r from-status-warning/10 via-revenue/5 to-transparent p-8 border-b border-status-warning/20">
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-xl bg-gradient-to-br from-warning/20 to-warning-dark/10 aurora-glass">
                 <Shield className="h-6 w-6 text-warning" />

@@ -93,7 +93,7 @@ export const PageTransitionWithFallback: React.FC<PageTransitionWithFallbackProp
             
             {contentFailedToLoad && (
               <div className="mt-4">
-                <p className="text-sm text-red-500 mb-2">
+                <p className="text-sm text-status-error mb-2">
                   O conteúdo está demorando para carregar.
                 </p>
                 <button

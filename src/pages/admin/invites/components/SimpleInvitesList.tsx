@@ -64,7 +64,7 @@ const SimpleInvitesList = ({
     switch (channelPreference) {
       case 'whatsapp':
         return (
-          <Badge variant="outline" className="text-green-700 border-green-200 bg-green-50">
+          <Badge variant="outline" className="text-status-success border-status-success/20 bg-status-success/10">
             <MessageCircle className="h-3 w-3 mr-1" />
             WhatsApp
           </Badge>

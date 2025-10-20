@@ -33,10 +33,10 @@ const InviteStats = ({ invites }: InviteStatsProps) => {
       label: "Convites Utilizados",
       value: usedInvites,
       icon: CheckCircle,
-      gradient: "from-green-500/20 to-emerald-500/10",
-      iconColor: "text-green-500",
-      border: "border-green-500/30",
-      glow: "hover:shadow-green-500/20"
+      gradient: "from-status-success/20 to-operational/10",
+      iconColor: "text-status-success",
+      border: "border-status-success/30",
+      glow: "hover:shadow-status-success/20"
     },
     {
       label: "Convites Ativos",

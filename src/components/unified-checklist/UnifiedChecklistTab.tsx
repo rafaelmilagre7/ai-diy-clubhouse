@@ -210,7 +210,7 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
   if ((!template && !solutionChecklist) && alternativeChecklist) {
     return (
       <div className="text-center py-12">
-        <AlertCircle className="mx-auto h-12 w-12 text-yellow-500 mb-4" />
+        <AlertCircle className="mx-auto h-12 w-12 text-status-warning mb-4" />
         <h3 className="text-lg font-semibold mb-2">Checklist Disponível em Outro Formato</h3>
         <p className="text-muted-foreground mb-4">
           Esta solução possui um checklist do tipo <Badge variant="outline">{alternativeChecklist.checklist_type}</Badge>, 

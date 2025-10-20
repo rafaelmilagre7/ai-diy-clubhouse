@@ -122,21 +122,21 @@ const TopicView = () => {
                   <h1 className="text-2xl font-bold flex-1">{topic.title}</h1>
                   
                   {topic.is_pinned && (
-                    <Badge variant="secondary" className="gap-1 bg-blue-100 text-blue-700">
+                    <Badge variant="secondary" className="gap-1 bg-status-info/20 text-status-info">
                       <Pin className="h-3 w-3" />
                       Fixado
                     </Badge>
                   )}
                   
                   {topic.is_locked && (
-                    <Badge variant="secondary" className="gap-1 bg-red-100 text-red-700">
+                    <Badge variant="secondary" className="gap-1 bg-status-error/20 text-status-error">
                       <Lock className="h-3 w-3" />
-                      Travado
+                      Bloqueado
                     </Badge>
                   )}
                   
                   {topic.is_solved && (
-                    <Badge variant="secondary" className="gap-1 bg-green-100 text-green-700">
+                    <Badge variant="secondary" className="gap-1 bg-status-success/20 text-status-success">
                       <CheckCircle className="h-3 w-3" />
                       Resolvido
                     </Badge>
