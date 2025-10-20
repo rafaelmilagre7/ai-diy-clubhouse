@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useRealAdminDashboardData } from "@/hooks/useRealAdminDashboardData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AdminButton } from "@/components/admin/ui/AdminButton";
+import { AdminCard } from "@/components/admin/ui/AdminCard";
+import { AdminStatsCard } from "@/components/admin/ui/AdminStatsCard";
 import { DashboardHeader } from "@/components/admin/dashboard/DashboardHeader";
 import { OnboardingStatusCard } from "@/components/admin/OnboardingStatusCard";
 import { RecentActivitiesCard } from "@/components/admin/analytics/RecentActivitiesCard";
@@ -101,10 +103,13 @@ const AdminDashboard = () => {
                 <p className="text-body text-muted-foreground mb-4">
                   Não foi possível carregar os dados do dashboard. Verifique sua conexão e tente novamente.
                 </p>
-                <Button onClick={handleRefresh} variant="outline" className="gap-2 aurora-focus">
-                  <RefreshCw className="h-4 w-4" />
+                <AdminButton 
+                  onClick={handleRefresh} 
+                  variant="outline"
+                  icon={<RefreshCw />}
+                >
                   Tentar Novamente
-                </Button>
+                </AdminButton>
               </CardContent>
             </Card>
           </div>
@@ -118,8 +123,6 @@ const AdminDashboard = () => {
   return <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
       {/* Aurora Background Effects */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-aurora-primary/5 via-transparent to-transparent" />
-      <div className="absolute top-0 right-0 -z-10 h-96 w-96 rounded-full bg-gradient-to-br from-aurora-primary/10 to-operational/10 blur-3xl animate-blob" />
-      <div className="absolute bottom-0 left-0 -z-10 h-96 w-96 rounded-full bg-gradient-to-tr from-strategy/10 to-revenue/10 blur-3xl animate-blob animation-delay-2000" />
       
       <div className="relative p-6 md:p-8">
         <div className="max-w-7xl mx-auto space-y-8">
@@ -130,99 +133,52 @@ const AdminDashboard = () => {
             
             <div className="flex items-center gap-3">
               <DashboardHeader timeRange={timeRange} setTimeRange={handleTimeRangeChange} />
-              <Button onClick={handleRefresh} variant="outline" size="sm" className="gap-2 aurora-focus bg-aurora-primary/10 border-aurora-primary/20 hover:bg-aurora-primary/20">
-                <RefreshCw className="h-4 w-4" />
+              <AdminButton 
+                onClick={handleRefresh} 
+                variant="outline" 
+                size="sm"
+                icon={<RefreshCw />}
+              >
                 Atualizar
-              </Button>
+              </AdminButton>
             </div>
           </div>
 
           {/* Enhanced Metrics Cards */}
           <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-4" key={`stats-grid-${timeRange}-${lastRefresh.getTime()}`}>
-            
-            {/* Novos Usuários */}
-            <Card className="surface-elevated border-0 shadow-aurora hover:shadow-aurora-strong transition-smooth group">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-label text-muted-foreground">
-                  Novos Usuários
-                </CardTitle>
-                <div className="p-2 rounded-lg bg-aurora-primary/10 group-hover:bg-aurora-primary/20 transition-colors">
-                  <Users className="h-4 w-4 text-aurora-primary" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-heading-2 text-foreground mb-2">
-                  {(statsData?.newUsersInPeriod || 0).toLocaleString('pt-BR')}
-                </div>
-                {(statsData?.periodGrowthRate || 0) > 0 && <div className="flex items-center text-caption text-emerald-600">
-                    <TrendingUp className="h-3 w-3 mr-1" />
-                    +{statsData.periodGrowthRate}% crescimento
-                  </div>}
-                <p className="text-caption text-muted-foreground mt-1">
-                  em {periodLabel}
-                </p>
-              </CardContent>
-            </Card>
+            <AdminStatsCard
+              label="Novos Usuários"
+              value={(statsData?.newUsersInPeriod || 0).toLocaleString('pt-BR')}
+              icon={Users}
+              variant="primary"
+              trend={statsData?.periodGrowthRate ? `+${statsData.periodGrowthRate}%` : undefined}
+              trendDirection={statsData?.periodGrowthRate && statsData.periodGrowthRate > 0 ? 'up' : undefined}
+              description={`em ${periodLabel}`}
+            />
 
-            {/* Usuários Ativos */}
-            <Card className="surface-elevated border-0 shadow-aurora hover:shadow-aurora-strong transition-smooth group">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-label text-muted-foreground">
-                  Usuários Ativos
-                </CardTitle>
-                <div className="p-2 rounded-lg bg-operational/10 group-hover:bg-operational/20 transition-colors">
-                  <Activity className="h-4 w-4 text-operational" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-heading-2 text-foreground mb-2">
-                  {(statsData?.activeUsersInPeriod || 0).toLocaleString('pt-BR')}
-                </div>
-                <p className="text-caption text-muted-foreground">
-                  ativos em {periodLabel}
-                </p>
-              </CardContent>
-            </Card>
+            <AdminStatsCard
+              label="Usuários Ativos"
+              value={(statsData?.activeUsersInPeriod || 0).toLocaleString('pt-BR')}
+              icon={Activity}
+              variant="success"
+              description={`ativos em ${periodLabel}`}
+            />
 
-            {/* Implementações */}
-            <Card className="surface-elevated border-0 shadow-aurora hover:shadow-aurora-strong transition-smooth group">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-label text-muted-foreground">
-                  Implementações
-                </CardTitle>
-                <div className="p-2 rounded-lg bg-strategy/10 group-hover:bg-strategy/20 transition-colors">
-                  <BarChart3 className="h-4 w-4 text-strategy" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-heading-2 text-foreground mb-2">
-                  {(statsData?.implementationsInPeriod || 0).toLocaleString('pt-BR')}
-                </div>
-                <p className="text-caption text-muted-foreground">
-                  iniciadas em {periodLabel}
-                </p>
-              </CardContent>
-            </Card>
+            <AdminStatsCard
+              label="Implementações"
+              value={(statsData?.implementationsInPeriod || 0).toLocaleString('pt-BR')}
+              icon={BarChart3}
+              variant="info"
+              description={`iniciadas em ${periodLabel}`}
+            />
 
-            {/* Implementações Completas */}
-            <Card className="surface-elevated border-0 shadow-aurora hover:shadow-aurora-strong transition-smooth group">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-label text-muted-foreground">
-                  Implementações Completas
-                </CardTitle>
-                <div className="p-2 rounded-lg bg-revenue/10 group-hover:bg-revenue/20 transition-colors">
-                  <CheckCircle className="h-4 w-4 text-revenue" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-heading-2 text-foreground mb-2">
-                  {(statsData?.completedInPeriod || 0).toLocaleString('pt-BR')}
-                </div>
-                <p className="text-caption text-muted-foreground">
-                  finalizadas em {periodLabel}
-                </p>
-              </CardContent>
-            </Card>
+            <AdminStatsCard
+              label="Implementações Completas"
+              value={(statsData?.completedInPeriod || 0).toLocaleString('pt-BR')}
+              icon={CheckCircle}
+              variant="success"
+              description={`finalizadas em ${periodLabel}`}
+            />
           </div>
 
           {/* Enhanced Detail Cards */}
@@ -233,51 +189,49 @@ const AdminDashboard = () => {
             
             
             {/* Card de Dados Gerais */}
-            <Card className="surface-elevated border-0 shadow-aurora">
-              <CardHeader>
-                <CardTitle className="text-heading-3">Dados Gerais da Plataforma</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2 p-3 rounded-lg bg-aurora-primary/5">
-                    <p className="text-label text-muted-foreground">Total de Usuários</p>
-                    <p className="text-heading-2">{(statsData?.totalUsers || 0).toLocaleString('pt-BR')}</p>
-                  </div>
-                  <div className="space-y-2 p-3 rounded-lg bg-operational/5">
-                    <p className="text-label text-muted-foreground">Total de Soluções</p>
-                    <p className="text-heading-2">{(statsData?.totalSolutions || 0).toLocaleString('pt-BR')}</p>
-                  </div>
-                  <div className="space-y-2 p-3 rounded-lg bg-strategy/5">
-                    <p className="text-label text-muted-foreground">Total de Aulas</p>
-                    <p className="text-heading-2">{(statsData?.totalLearningLessons || 0).toLocaleString('pt-BR')}</p>
-                  </div>
-                  <div className="space-y-2 p-3 rounded-lg bg-revenue/5">
-                    <p className="text-label text-muted-foreground">Total Implementações</p>
-                    <p className="text-heading-2">{(statsData?.completedImplementations || 0).toLocaleString('pt-BR')}</p>
-                  </div>
+            <AdminCard
+              title="Dados Gerais da Plataforma"
+              variant="elevated"
+            >
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2 p-3 rounded-lg bg-aurora-primary/5">
+                  <p className="text-label text-muted-foreground">Total de Usuários</p>
+                  <p className="text-heading-2">{(statsData?.totalUsers || 0).toLocaleString('pt-BR')}</p>
                 </div>
-              </CardContent>
-            </Card>
+                <div className="space-y-2 p-3 rounded-lg bg-operational/5">
+                  <p className="text-label text-muted-foreground">Total de Soluções</p>
+                  <p className="text-heading-2">{(statsData?.totalSolutions || 0).toLocaleString('pt-BR')}</p>
+                </div>
+                <div className="space-y-2 p-3 rounded-lg bg-strategy/5">
+                  <p className="text-label text-muted-foreground">Total de Aulas</p>
+                  <p className="text-heading-2">{(statsData?.totalLearningLessons || 0).toLocaleString('pt-BR')}</p>
+                </div>
+                <div className="space-y-2 p-3 rounded-lg bg-revenue/5">
+                  <p className="text-label text-muted-foreground">Total Implementações</p>
+                  <p className="text-heading-2">{(statsData?.completedImplementations || 0).toLocaleString('pt-BR')}</p>
+                </div>
+              </div>
+            </AdminCard>
 
             {/* Card de Usuários por Role */}
-            <Card className="surface-elevated border-0 shadow-aurora">
-              <CardHeader>
-                <CardTitle className="text-heading-3">Usuários por Categoria</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {statsData?.usersByRole?.map((role, index) => <div key={index} className="flex items-center justify-between p-3 rounded-lg surface-elevated">
-                      <div className="flex items-center gap-3">
-                        <div className="w-3 h-3 rounded-full bg-gradient-to-r from-aurora-primary to-operational"></div>
-                        <span className="text-label text-foreground">{role.role}</span>
-                      </div>
-                      <span className="text-label text-foreground">
-                        {role.count} usuário{role.count !== 1 ? 's' : ''}
-                      </span>
-                    </div>)}
-                </div>
-              </CardContent>
-            </Card>
+            <AdminCard
+              title="Usuários por Categoria"
+              variant="elevated"
+            >
+              <div className="space-y-3">
+                {statsData?.usersByRole?.map((role, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 rounded-lg surface-elevated">
+                    <div className="flex items-center gap-3">
+                      <div className="w-3 h-3 rounded-full bg-gradient-to-r from-aurora-primary to-operational"></div>
+                      <span className="text-label text-foreground">{role.role}</span>
+                    </div>
+                    <span className="text-label text-foreground">
+                      {role.count} usuário{role.count !== 1 ? 's' : ''}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </AdminCard>
           </div>
 
           {/* Enhanced Activities with New Component */}
@@ -288,41 +242,37 @@ const AdminDashboard = () => {
             />
             
             {/* Card de Estatísticas Adicionais */}
-            <Card className="surface-elevated border-0 shadow-aurora">
-              <CardHeader>
-                <CardTitle className="text-heading-3">Estatísticas do Período</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 gap-3">
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-aurora-primary/5">
-                      <span className="text-label text-muted-foreground">Taxa de Crescimento</span>
-                      <span className="text-heading-3 text-aurora-primary">
-                        {statsData?.periodGrowthRate ? `+${statsData.periodGrowthRate}%` : 'N/A'}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-operational/5">
-                      <span className="text-label text-muted-foreground">Taxa de Conclusão</span>
-                      <span className="text-heading-3 text-operational">
-                        {statsData?.completedInPeriod && statsData?.implementationsInPeriod 
-                          ? `${Math.round((statsData.completedInPeriod / statsData.implementationsInPeriod) * 100)}%`
-                          : 'N/A'
-                        }
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-strategy/5">
-                      <span className="text-label text-muted-foreground">Usuários/Implementação</span>
-                      <span className="text-heading-3 text-strategy">
-                        {statsData?.activeUsersInPeriod && statsData?.implementationsInPeriod
-                          ? Math.round(statsData.activeUsersInPeriod / Math.max(statsData.implementationsInPeriod, 1))
-                          : 'N/A'
-                        }
-                      </span>
-                    </div>
-                  </div>
+            <AdminCard
+              title="Estatísticas do Período"
+              variant="elevated"
+            >
+              <div className="grid grid-cols-1 gap-3">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-aurora-primary/5">
+                  <span className="text-label text-muted-foreground">Taxa de Crescimento</span>
+                  <span className="text-heading-3 text-aurora-primary">
+                    {statsData?.periodGrowthRate ? `+${statsData.periodGrowthRate}%` : 'N/A'}
+                  </span>
                 </div>
-              </CardContent>
-            </Card>
+                <div className="flex items-center justify-between p-3 rounded-lg bg-operational/5">
+                  <span className="text-label text-muted-foreground">Taxa de Conclusão</span>
+                  <span className="text-heading-3 text-operational">
+                    {statsData?.completedInPeriod && statsData?.implementationsInPeriod 
+                      ? `${Math.round((statsData.completedInPeriod / statsData.implementationsInPeriod) * 100)}%`
+                      : 'N/A'
+                    }
+                  </span>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-lg bg-strategy/5">
+                  <span className="text-label text-muted-foreground">Usuários/Implementação</span>
+                  <span className="text-heading-3 text-strategy">
+                    {statsData?.activeUsersInPeriod && statsData?.implementationsInPeriod
+                      ? Math.round(statsData.activeUsersInPeriod / Math.max(statsData.implementationsInPeriod, 1))
+                      : 'N/A'
+                    }
+                  </span>
+                </div>
+              </div>
+            </AdminCard>
           </div>
 
           {/* Monitor de Notificações */}

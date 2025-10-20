@@ -7,6 +7,7 @@ interface AdminButtonProps extends ButtonProps {
   icon?: React.ReactNode;
   loading?: boolean;
   loadingText?: string;
+  size?: 'sm' | 'default' | 'lg';
 }
 
 /**
@@ -22,20 +23,29 @@ export const AdminButton = React.forwardRef<HTMLButtonElement, AdminButtonProps>
     loadingText = 'Carregando...', 
     disabled,
     variant = 'default',
+    size = 'default',
     ...props 
   }, ref) => {
+    const sizeClasses = {
+      sm: 'h-8 px-3 text-sm',
+      default: 'h-10 px-4',
+      lg: 'h-12 px-6 text-lg'
+    };
+
     return (
       <Button
         ref={ref}
         className={cn(
-          'h-10 px-4 transition-smooth',
-          'aurora-focus interactive-press',
-          variant === 'default' && 'bg-aurora hover:bg-aurora-dark text-primary-foreground shadow-aurora/20',
-          variant === 'outline' && 'border-aurora/30 text-aurora hover:bg-aurora/10',
-          variant === 'ghost' && 'text-aurora hover:bg-aurora/10',
+          sizeClasses[size],
+          'transition-smooth aurora-focus',
+          variant === 'default' && 'bg-aurora-primary hover:bg-aurora-primary-dark text-primary-foreground shadow-lg shadow-aurora-primary/20',
+          variant === 'outline' && 'border-aurora-primary/30 text-aurora-primary hover:bg-aurora-primary/10 hover:border-aurora-primary/50',
+          variant === 'ghost' && 'text-aurora-primary hover:bg-aurora-primary/10',
+          variant === 'destructive' && 'bg-destructive hover:bg-destructive/90',
           className
         )}
         disabled={disabled || loading}
+        variant={variant}
         {...props}
       >
         <div className="flex items-center gap-2">

@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Plus, Play, Pause, Edit, Trash2, Activity } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { AdminButton } from "@/components/admin/ui/AdminButton";
+import { AdminCard } from "@/components/admin/ui/AdminCard";
+import { AdminStatsCard } from "@/components/admin/ui/AdminStatsCard";
 import { useAutomationRules } from "@/hooks/useAutomationRules";
 import { AutomationCard } from "@/components/automations/AutomationCard";
 import { AdminTable } from "@/components/admin/ui/AdminTable";
@@ -119,27 +120,24 @@ const AdminAutomations = () => {
       label: 'Ações',
       render: (rule: AutomationRule) => (
         <div className="flex items-center gap-2">
-          <Button
+          <AdminButton
             size="sm"
             variant={rule.is_active ? "outline" : "default"}
             onClick={() => handleToggleRule(rule.id, rule.is_active)}
-          >
-            {rule.is_active ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-          </Button>
-          <Button
+            icon={rule.is_active ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+          />
+          <AdminButton
             size="sm"
             variant="outline"
             onClick={() => navigate(`/admin/automations/${rule.id}`)}
-          >
-            <Edit className="h-4 w-4" />
-          </Button>
-          <Button
+            icon={<Edit className="h-4 w-4" />}
+          />
+          <AdminButton
             size="sm"
             variant="outline"
             onClick={() => handleDeleteRule(rule.id)}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+            icon={<Trash2 className="h-4 w-4" />}
+          />
         </div>
       ),
     },
@@ -162,96 +160,90 @@ const AdminAutomations = () => {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Button
+          <AdminButton
             variant="outline"
             onClick={() => navigate('/admin/automations/logs')}
+            icon={<Activity />}
           >
-            <Activity className="mr-2 h-4 w-4" />
             Ver Logs
-          </Button>
-          <Button onClick={() => navigate('/admin/automations/new')}>
-            <Plus className="mr-2 h-4 w-4" />
+          </AdminButton>
+          <AdminButton 
+            onClick={() => navigate('/admin/automations/new')}
+            icon={<Plus />}
+          >
             Nova Regra
-          </Button>
+          </AdminButton>
         </div>
       </div>
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total de Regras</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Regras Ativas</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-success">{stats.active}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Regras Inativas</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-muted-foreground">{stats.inactive}</div>
-          </CardContent>
-        </Card>
+        <AdminStatsCard
+          label="Total de Regras"
+          value={stats.total}
+          icon={Activity}
+          variant="primary"
+        />
+        
+        <AdminStatsCard
+          label="Regras Ativas"
+          value={stats.active}
+          icon={Play}
+          variant="success"
+        />
+        
+        <AdminStatsCard
+          label="Regras Inativas"
+          value={stats.inactive}
+          icon={Pause}
+          variant="warning"
+        />
       </div>
 
       {/* Rules Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Regras de Automação da Hubla</CardTitle>
-          <CardDescription>
-            Configure automações para responder automaticamente a eventos da Hubla como novas vendas
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <AdminTable
-            data={rules || []}
-            columns={columns}
-            loading={isLoading}
-            emptyState={
-              <div className="text-center py-12 px-4">
-                <div className="mx-auto w-16 h-16 bg-hubla-primary/10 rounded-full flex items-center justify-center mb-4">
-                  <Activity className="h-8 w-8 text-hubla-primary" />
-                </div>
-                <h3 className="text-lg font-semibold mb-2">Comece criando sua primeira automação</h3>
-                <p className="text-muted-foreground mb-6 max-w-md">
-                  Configure regras que respondem automaticamente a eventos da Hubla, como enviar convites personalizados quando há uma nova venda.
-                </p>
-                <div className="space-y-3 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-2 justify-center">
-                    <div className="w-1.5 h-1.5 bg-hubla-primary rounded-full"></div>
-                    <span>Eventos da Hubla detectados automaticamente</span>
-                  </div>
-                  <div className="flex items-center gap-2 justify-center">
-                    <div className="w-1.5 h-1.5 bg-hubla-primary rounded-full"></div>
-                    <span>Convites enviados por email e WhatsApp</span>
-                  </div>
-                  <div className="flex items-center gap-2 justify-center">
-                    <div className="w-1.5 h-1.5 bg-hubla-primary rounded-full"></div>
-                    <span>Templates personalizáveis por produto</span>
-                  </div>
-                </div>
-                <Button 
-                  onClick={() => navigate('/admin/automations/new')} 
-                  className="mt-6"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Criar Nova Regra
-                </Button>
+      <AdminCard
+        title="Regras de Automação da Hubla"
+        subtitle="Configure automações para responder automaticamente a eventos da Hubla como novas vendas"
+        variant="elevated"
+      >
+        <AdminTable
+          data={rules || []}
+          columns={columns}
+          loading={isLoading}
+          emptyState={
+            <div className="text-center py-12 px-4">
+              <div className="mx-auto w-16 h-16 bg-aurora-primary/10 rounded-full flex items-center justify-center mb-4">
+                <Activity className="h-8 w-8 text-aurora-primary" />
               </div>
-            }
-          />
-        </CardContent>
-      </Card>
+              <h3 className="text-lg font-semibold mb-2">Comece criando sua primeira automação</h3>
+              <p className="text-muted-foreground mb-6 max-w-md">
+                Configure regras que respondem automaticamente a eventos da Hubla, como enviar convites personalizados quando há uma nova venda.
+              </p>
+              <div className="space-y-3 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2 justify-center">
+                  <div className="w-1.5 h-1.5 bg-aurora-primary rounded-full"></div>
+                  <span>Eventos da Hubla detectados automaticamente</span>
+                </div>
+                <div className="flex items-center gap-2 justify-center">
+                  <div className="w-1.5 h-1.5 bg-aurora-primary rounded-full"></div>
+                  <span>Convites enviados por email e WhatsApp</span>
+                </div>
+                <div className="flex items-center gap-2 justify-center">
+                  <div className="w-1.5 h-1.5 bg-aurora-primary rounded-full"></div>
+                  <span>Templates personalizáveis por produto</span>
+                </div>
+              </div>
+              <AdminButton 
+                onClick={() => navigate('/admin/automations/new')} 
+                className="mt-6"
+                icon={<Plus />}
+              >
+                Criar Nova Regra
+              </AdminButton>
+            </div>
+          }
+        />
+      </AdminCard>
     </div>
   );
 };

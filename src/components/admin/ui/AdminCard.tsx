@@ -34,9 +34,9 @@ export const AdminCard = ({
 }: AdminCardProps) => {
   const variants = {
     default: 'surface-elevated border border-border/50',
-    elevated: 'surface-overlay border border-border/50 shadow-lg',
-    outline: 'border-2 border-aurora/20 bg-aurora/5',
-    ghost: 'border border-transparent hover:border-border/50 hover:bg-surface-elevated'
+    elevated: 'surface-overlay border border-aurora-primary/20 shadow-lg shadow-aurora-primary/5',
+    outline: 'border-2 border-aurora-primary/30 bg-aurora-primary/5',
+    ghost: 'border border-transparent hover:border-aurora-primary/20 hover:bg-aurora-primary/5'
   };
 
   const sizes = {
@@ -82,7 +82,7 @@ export const AdminCard = ({
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-3">
               {icon && (
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-aurora/10 text-aurora">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-aurora-primary/10 text-aurora-primary">
                   {icon}
                 </div>
               )}

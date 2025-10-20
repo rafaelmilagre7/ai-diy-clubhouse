@@ -2,7 +2,8 @@
 import React, { useState } from "react";
 import { useTools } from "@/hooks/useTools";
 import { AdminToolList } from "@/components/admin/tools/AdminToolList";
-import { Button } from "@/components/ui/button";
+import { AdminButton } from "@/components/admin/ui/AdminButton";
+import { AdminStatsCard } from "@/components/admin/ui/AdminStatsCard";
 import { RefreshCcw, Wrench, TrendingUp, Package, Gift } from "lucide-react";
 
 const AdminTools = () => {
@@ -24,12 +25,7 @@ const AdminTools = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-aurora-primary/5 p-6 space-y-8 relative overflow-hidden">
-        {/* Aurora Background Elements */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-br from-aurora-primary/8 to-operational/4 rounded-full blur-3xl animate-blob"></div>
-          <div className="absolute top-60 right-20 w-96 h-96 bg-gradient-to-br from-purple-500/6 to-pink-500/3 rounded-full blur-3xl animate-blob animation-delay-2000"></div>
-          <div className="absolute bottom-20 left-1/3 w-80 h-80 bg-gradient-to-br from-indigo-500/4 to-aurora/3 rounded-full blur-3xl animate-blob animation-delay-4000"></div>
-        </div>
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-aurora-primary/5 via-transparent to-transparent" />
 
         {/* Loading Header */}
         <div className="aurora-glass rounded-2xl border border-aurora-primary/20 backdrop-blur-md animate-pulse">
@@ -99,13 +95,13 @@ const AdminTools = () => {
             </div>
           </div>
           <div className="p-8 text-center">
-            <Button 
+            <AdminButton 
               onClick={handleRefresh}
-              className="bg-gradient-to-r from-destructive to-destructive-dark hover:from-destructive-dark hover:to-destructive text-primary-foreground font-medium shadow-lg hover:shadow-xl transition-all duration-300"
+              variant="destructive"
+              icon={<RefreshCcw />}
             >
-              <RefreshCcw className="h-4 w-4 mr-2" />
               Tentar Novamente
-            </Button>
+            </AdminButton>
           </div>
         </div>
       </div>
@@ -113,13 +109,8 @@ const AdminTools = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-aurora-primary/5 p-6 space-y-8 relative overflow-hidden">
-      {/* Aurora Background Elements */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-br from-aurora-primary/8 to-operational/4 rounded-full blur-3xl animate-blob"></div>
-        <div className="absolute top-60 right-20 w-96 h-96 bg-gradient-to-br from-purple-500/6 to-pink-500/3 rounded-full blur-3xl animate-blob animation-delay-2000"></div>
-        <div className="absolute bottom-20 left-1/3 w-80 h-80 bg-gradient-to-br from-indigo-500/4 to-aurora/3 rounded-full blur-3xl animate-blob animation-delay-4000"></div>
-      </div>
+      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-aurora-primary/5 p-6 space-y-8 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-aurora-primary/5 via-transparent to-transparent" />
 
       {/* Enhanced Header with Aurora Style */}
       <div className="relative aurora-glass rounded-2xl p-8 border border-aurora-primary/20 backdrop-blur-md">
@@ -144,44 +135,17 @@ const AdminTools = () => {
           </div>
           
           <div className="flex items-center gap-3">
-            <Button
+            <AdminButton
               onClick={handleRefresh}
               variant="outline"
-              className="h-12 px-6 aurora-glass border-aurora-primary/30 hover:border-aurora-primary/50 hover:bg-aurora-primary/10 text-aurora-primary font-medium backdrop-blur-sm"
+              size="lg"
+              icon={<RefreshCcw />}
             >
-              <RefreshCcw className="h-4 w-4 mr-2" />
               Atualizar
-            </Button>
+            </AdminButton>
           </div>
         </div>
         
-        {/* Enhanced Quick Stats */}
-        <div className="flex gap-6 mt-6 flex-wrap">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-gradient-to-r from-operational to-operational-light rounded-full aurora-pulse"></div>
-            <span className="text-sm font-medium text-muted-foreground">
-              {totalTools} Ferramentas Total
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-gradient-to-r from-success to-success-light rounded-full aurora-pulse"></div>
-            <span className="text-sm font-medium text-muted-foreground">
-              {activeTools} Ativas
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-gradient-to-r from-purple-400 to-pink-500 rounded-full aurora-pulse"></div>
-            <span className="text-sm font-medium text-muted-foreground">
-              {toolsWithBenefits} Com Benefícios
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-gradient-to-r from-orange-400 to-amber-500 rounded-full aurora-pulse"></div>
-            <span className="text-sm font-medium text-muted-foreground">
-              Performance Ativa
-            </span>
-          </div>
-        </div>
       </div>
 
       {/* Enhanced Dashboard Stats */}

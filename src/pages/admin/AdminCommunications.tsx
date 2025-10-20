@@ -1,9 +1,10 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { AdminButton } from '@/components/admin/ui/AdminButton';
+import { AdminCard } from '@/components/admin/ui/AdminCard';
 import { Plus, Search, Send, Edit, Trash2, Eye, Clock, CheckCircle, AlertCircle, Users } from 'lucide-react';
 import { useCommunications, AdminCommunication } from '@/hooks/admin/useCommunications';
 import { CommunicationEditor } from '@/components/admin/communications/CommunicationEditor';
@@ -90,26 +91,26 @@ const AdminCommunications = () => {
             Gerencie e envie comunicados para usuários da plataforma
           </p>
         </div>
-        <Button onClick={handleNewCommunication} className="flex items-center gap-2">
-          <Plus className="w-4 h-4" />
+        <AdminButton 
+          onClick={handleNewCommunication}
+          icon={<Plus />}
+        >
           Novo Comunicado
-        </Button>
+        </AdminButton>
       </div>
 
       {/* Search */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar comunicados..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-        </CardContent>
-      </Card>
+      <AdminCard variant="elevated">
+        <div className="relative">
+          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar comunicados..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+      </AdminCard>
 
       {/* Communications List */}
       <div className="grid gap-4">
@@ -145,28 +146,28 @@ const AdminCommunications = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   {communication.status === 'sent' && (
-                    <Button
+                    <AdminButton
                       variant="ghost"
                       size="sm"
                       onClick={() => setShowStats(communication.id)}
-                    >
-                      <Eye className="w-4 h-4" />
-                    </Button>
+                      icon={<Eye className="w-4 h-4" />}
+                    />
                   )}
                   {communication.status !== 'sent' && (
                     <>
-                      <Button
+                      <AdminButton
                         variant="ghost"
                         size="sm"
                         onClick={() => handleEdit(communication)}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
+                        icon={<Edit className="w-4 h-4" />}
+                      />
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <Send className="w-4 h-4" />
-                          </Button>
+                          <AdminButton 
+                            variant="ghost" 
+                            size="sm"
+                            icon={<Send className="w-4 h-4" />}
+                          />
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
@@ -187,9 +188,11 @@ const AdminCommunications = () => {
                   )}
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button variant="ghost" size="sm">
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      <AdminButton 
+                        variant="ghost" 
+                        size="sm"
+                        icon={<Trash2 className="w-4 h-4" />}
+                      />
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
