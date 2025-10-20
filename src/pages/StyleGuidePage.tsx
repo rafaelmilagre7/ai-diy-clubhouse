@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Palette, Type, Sparkles, Layout, Zap, Shield, Search,
-  Box, Circle, Square, Layers, Eye, Moon, Sun, Check, BarChart3
+  Box, Circle, Square, Layers, Eye, Moon, Sun, Check, BarChart3,
+  AlertCircle, ArrowRight, Code, Lightbulb, CheckCircle2, XCircle, Play
 } from 'lucide-react';
 import { ColorPalette, ColorSwatch } from '@/components/style-guide/ColorPalette';
 import { ComponentShowcase } from '@/components/style-guide/ComponentShowcase';
@@ -24,12 +25,16 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 /**
- * Design System 2.0 - Documentação Visual Completa
- * Documentação interativa de todos os tokens, componentes e padrões da plataforma
+ * 🎨 DESIGN SYSTEM 2.0 - DOCUMENTAÇÃO VISUAL COMPLETA
+ * 
+ * Esta é a fonte única de verdade (Single Source of Truth) para o Design System.
+ * TODA mudança visual na plataforma DEVE seguir esta documentação.
+ * 
+ * ⚡ REGRA DE OURO: Sempre use tokens. Se não existe, crie primeiro.
  */
 export default function StyleGuidePage() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeSection, setActiveSection] = useState('foundation');
+  const [activeSection, setActiveSection] = useState('golden-rules');
 
   // Dados de cores - Brand Colors
   const brandColors = [
@@ -223,24 +228,380 @@ export default function StyleGuidePage() {
         <Tabs value={activeSection} onValueChange={setActiveSection} className="space-y-8">
           <ScrollArea className="w-full">
             <TabsList className="w-full justify-start">
-              <TabsTrigger value="foundation" className="gap-2">
+              <TabsTrigger value="golden-rules" className="gap-sm">
+                <Lightbulb className="w-4 h-4" />
+                Regras de Ouro
+              </TabsTrigger>
+              <TabsTrigger value="foundation" className="gap-sm">
                 <Layers className="w-4 h-4" />
                 Foundation
               </TabsTrigger>
-              <TabsTrigger value="components" className="gap-2">
+              <TabsTrigger value="components" className="gap-sm">
                 <Box className="w-4 h-4" />
                 Components
               </TabsTrigger>
-              <TabsTrigger value="patterns" className="gap-2">
+              <TabsTrigger value="patterns" className="gap-sm">
                 <Zap className="w-4 h-4" />
                 Patterns
               </TabsTrigger>
-              <TabsTrigger value="accessibility" className="gap-2">
-                <Shield className="w-4 h-4" />
-                Accessibility
+              <TabsTrigger value="workflow" className="gap-sm">
+                <Play className="w-4 h-4" />
+                Workflow
               </TabsTrigger>
             </TabsList>
           </ScrollArea>
+
+          {/* 🎯 GOLDEN RULES TAB */}
+          <TabsContent value="golden-rules" className="space-y-lg">
+            {/* Hero Section */}
+            <AuroraCard className="p-lg bg-gradient-aurora border-aurora-primary/20">
+              <div className="flex items-start gap-md">
+                <div className="p-md rounded-xl bg-white/20">
+                  <Lightbulb className="w-8 h-8 text-white" />
+                </div>
+                <div className="space-y-sm flex-1">
+                  <h2 className="text-heading-1 text-white">⚡ Regras de Ouro do Design System</h2>
+                  <p className="text-body text-white/90">
+                    Princípios fundamentais que garantem consistência, escalabilidade e manutenibilidade da plataforma.
+                  </p>
+                </div>
+              </div>
+            </AuroraCard>
+
+            {/* Regra #1: Sempre use tokens */}
+            <Card className="surface-elevated">
+              <CardHeader>
+                <div className="flex items-center gap-sm">
+                  <div className="w-10 h-10 rounded-lg bg-status-success/10 border border-status-success/20 flex items-center justify-center">
+                    <span className="text-heading-2 text-status-success">1</span>
+                  </div>
+                  <CardTitle>Sempre Use Tokens Semânticos</CardTitle>
+                </div>
+                <CardDescription>
+                  NUNCA use valores hardcoded. Se o token não existe, crie primeiro.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-md">
+                <div className="grid md:grid-cols-2 gap-md">
+                  {/* ❌ ERRADO */}
+                  <div className="p-md border-2 border-status-error/20 bg-status-error/5 rounded-lg space-y-sm">
+                    <div className="flex items-center gap-xs">
+                      <XCircle className="w-5 h-5 text-status-error" />
+                      <h3 className="text-heading-3 text-status-error">❌ ERRADO</h3>
+                    </div>
+                    <CodeBlock
+                      language="tsx"
+                      code={`// ❌ Valores hardcoded
+<div className="p-4 gap-2">
+  <h1 className="text-2xl">Título</h1>
+  <p className="text-gray-500">Texto</p>
+</div>`}
+                    />
+                    <p className="text-body-small text-muted-foreground">
+                      Valores mágicos que quebram consistência
+                    </p>
+                  </div>
+
+                  {/* ✅ CORRETO */}
+                  <div className="p-md border-2 border-status-success/20 bg-status-success/5 rounded-lg space-y-sm">
+                    <div className="flex items-center gap-xs">
+                      <CheckCircle2 className="w-5 h-5 text-status-success" />
+                      <h3 className="text-heading-3 text-status-success">✅ CORRETO</h3>
+                    </div>
+                    <CodeBlock
+                      language="tsx"
+                      code={`// ✅ Tokens semânticos
+<div className="p-md gap-sm">
+  <h1 className="text-heading-2">Título</h1>
+  <p className="text-muted-foreground">Texto</p>
+</div>`}
+                    />
+                    <p className="text-body-small text-muted-foreground">
+                      Tokens mantêm consistência e escalam
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-md bg-aurora-primary/5 border border-aurora-primary/20 rounded-lg">
+                  <div className="flex items-start gap-sm">
+                    <AlertCircle className="w-5 h-5 text-aurora-primary mt-0.5" />
+                    <div className="space-y-xs">
+                      <p className="text-sm font-medium">Se o token não existe...</p>
+                      <ol className="text-xs text-muted-foreground space-y-xs pl-md">
+                        <li>1. Avalie se um token existente serve</li>
+                        <li>2. Se não, adicione em <code>tailwind.config.ts</code></li>
+                        <li>3. Documente aqui nesta página</li>
+                        <li>4. Use o novo token</li>
+                      </ol>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Regra #2: Hierarquia Visual */}
+            <Card className="surface-elevated">
+              <CardHeader>
+                <div className="flex items-center gap-sm">
+                  <div className="w-10 h-10 rounded-lg bg-status-info/10 border border-status-info/20 flex items-center justify-center">
+                    <span className="text-heading-2 text-status-info">2</span>
+                  </div>
+                  <CardTitle>Mantenha Hierarquia Visual Clara</CardTitle>
+                </div>
+                <CardDescription>
+                  Use tokens de espaçamento e tipografia para criar hierarquia visual consistente.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-md">
+                <div className="grid md:grid-cols-2 gap-md">
+                  {/* Spacing */}
+                  <div className="space-y-sm">
+                    <h3 className="text-heading-3">📏 Espaçamento</h3>
+                    <div className="space-y-xs text-body-small">
+                      <div className="flex items-center gap-sm">
+                        <code className="text-xs bg-muted px-xs py-0.5 rounded">xs (4px)</code>
+                        <ArrowRight className="w-3 h-3" />
+                        <span className="text-muted-foreground">Badges, ícones pequenos</span>
+                      </div>
+                      <div className="flex items-center gap-sm">
+                        <code className="text-xs bg-muted px-xs py-0.5 rounded">sm (8px)</code>
+                        <ArrowRight className="w-3 h-3" />
+                        <span className="text-muted-foreground">Gaps entre elementos</span>
+                      </div>
+                      <div className="flex items-center gap-sm">
+                        <code className="text-xs bg-muted px-xs py-0.5 rounded">md (16px)</code>
+                        <ArrowRight className="w-3 h-3" />
+                        <span className="text-muted-foreground">Padding de cards</span>
+                      </div>
+                      <div className="flex items-center gap-sm">
+                        <code className="text-xs bg-muted px-xs py-0.5 rounded">lg (24px)</code>
+                        <ArrowRight className="w-3 h-3" />
+                        <span className="text-muted-foreground">Seções de conteúdo</span>
+                      </div>
+                      <div className="flex items-center gap-sm">
+                        <code className="text-xs bg-muted px-xs py-0.5 rounded">xl (32px)</code>
+                        <ArrowRight className="w-3 h-3" />
+                        <span className="text-muted-foreground">Margens de página</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Typography */}
+                  <div className="space-y-sm">
+                    <h3 className="text-heading-3">📝 Tipografia</h3>
+                    <div className="space-y-xs text-body-small">
+                      <div className="flex items-center gap-sm">
+                        <code className="text-xs bg-muted px-xs py-0.5 rounded">text-display</code>
+                        <ArrowRight className="w-3 h-3" />
+                        <span className="text-muted-foreground">Hero titles</span>
+                      </div>
+                      <div className="flex items-center gap-sm">
+                        <code className="text-xs bg-muted px-xs py-0.5 rounded">text-heading-1</code>
+                        <ArrowRight className="w-3 h-3" />
+                        <span className="text-muted-foreground">Títulos de página</span>
+                      </div>
+                      <div className="flex items-center gap-sm">
+                        <code className="text-xs bg-muted px-xs py-0.5 rounded">text-heading-2</code>
+                        <ArrowRight className="w-3 h-3" />
+                        <span className="text-muted-foreground">Subtítulos</span>
+                      </div>
+                      <div className="flex items-center gap-sm">
+                        <code className="text-xs bg-muted px-xs py-0.5 rounded">text-heading-3</code>
+                        <ArrowRight className="w-3 h-3" />
+                        <span className="text-muted-foreground">Títulos de cards</span>
+                      </div>
+                      <div className="flex items-center gap-sm">
+                        <code className="text-xs bg-muted px-xs py-0.5 rounded">text-body</code>
+                        <ArrowRight className="w-3 h-3" />
+                        <span className="text-muted-foreground">Texto padrão</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Regra #3: Cores Semânticas */}
+            <Card className="surface-elevated">
+              <CardHeader>
+                <div className="flex items-center gap-sm">
+                  <div className="w-10 h-10 rounded-lg bg-status-warning/10 border border-status-warning/20 flex items-center justify-center">
+                    <span className="text-heading-2 text-status-warning">3</span>
+                  </div>
+                  <CardTitle>Use Cores Semânticas por Contexto</CardTitle>
+                </div>
+                <CardDescription>
+                  NUNCA use cores diretas. Use tokens semânticos que expressam significado.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-md">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-md">
+                  <div className="space-y-sm">
+                    <div className="h-16 bg-status-success rounded-lg" />
+                    <div className="space-y-xs">
+                      <code className="text-xs">status-success</code>
+                      <p className="text-xs text-muted-foreground">Sucesso, confirmações</p>
+                    </div>
+                  </div>
+                  <div className="space-y-sm">
+                    <div className="h-16 bg-status-error rounded-lg" />
+                    <div className="space-y-xs">
+                      <code className="text-xs">status-error</code>
+                      <p className="text-xs text-muted-foreground">Erros, falhas</p>
+                    </div>
+                  </div>
+                  <div className="space-y-sm">
+                    <div className="h-16 bg-status-warning rounded-lg" />
+                    <div className="space-y-xs">
+                      <code className="text-xs">status-warning</code>
+                      <p className="text-xs text-muted-foreground">Avisos, atenção</p>
+                    </div>
+                  </div>
+                  <div className="space-y-sm">
+                    <div className="h-16 bg-status-info rounded-lg" />
+                    <div className="space-y-xs">
+                      <code className="text-xs">status-info</code>
+                      <p className="text-xs text-muted-foreground">Informações, dicas</p>
+                    </div>
+                  </div>
+                </div>
+
+                <CodeBlock
+                  language="tsx"
+                  code={`// ✅ Cores semânticas por contexto
+<StatusBadge status="success">Aprovado</StatusBadge>
+<StatusBadge status="error">Rejeitado</StatusBadge>
+<StatusBadge status="warning">Pendente</StatusBadge>
+<StatusBadge status="info">Em análise</StatusBadge>
+
+// ✅ Prioridades
+<Badge className="bg-priority-urgent/10 text-priority-urgent">
+  Urgente
+</Badge>
+
+// ✅ Tracking
+<Badge className="bg-tracking-delivered/10 text-tracking-delivered">
+  Entregue
+</Badge>`}
+                />
+              </CardContent>
+            </Card>
+
+            {/* Regra #4: Componentes Reutilizáveis */}
+            <Card className="surface-elevated">
+              <CardHeader>
+                <div className="flex items-center gap-sm">
+                  <div className="w-10 h-10 rounded-lg bg-aurora-primary/10 border border-aurora-primary/20 flex items-center justify-center">
+                    <span className="text-heading-2 text-aurora-primary">4</span>
+                  </div>
+                  <CardTitle>Maximize Reutilização de Componentes</CardTitle>
+                </div>
+                <CardDescription>
+                  Use componentes existentes com variants. Não crie componentes customizados sem necessidade.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-md">
+                <div className="p-md bg-aurora-primary/5 border border-aurora-primary/20 rounded-lg space-y-sm">
+                  <h3 className="text-heading-3">📦 Componentes Base Disponíveis</h3>
+                  <div className="grid md:grid-cols-3 gap-sm text-body-small">
+                    <div><Code className="w-3 h-3 inline mr-1" />AuroraCard</div>
+                    <div><Code className="w-3 h-3 inline mr-1" />AuroraButton</div>
+                    <div><Code className="w-3 h-3 inline mr-1" />LiquidGlassCard</div>
+                    <div><Code className="w-3 h-3 inline mr-1" />StatusBadge</div>
+                    <div><Code className="w-3 h-3 inline mr-1" />Badge</div>
+                    <div><Code className="w-3 h-3 inline mr-1" />Button</div>
+                    <div><Code className="w-3 h-3 inline mr-1" />Card</div>
+                    <div><Code className="w-3 h-3 inline mr-1" />Input</div>
+                    <div><Code className="w-3 h-3 inline mr-1" />Progress</div>
+                  </div>
+                </div>
+
+                <CodeBlock
+                  language="tsx"
+                  code={`// ✅ Reutilize com variants
+<AuroraCard variant="glass" className="p-lg">
+  <CardHeader className="space-y-sm">
+    <CardTitle className="text-heading-2">Título</CardTitle>
+    <CardDescription>Descrição do card</CardDescription>
+  </CardHeader>
+  <CardContent className="space-y-md">
+    {/* Conteúdo */}
+  </CardContent>
+</AuroraCard>
+
+// ✅ StatusBadge com contexto
+<StatusBadge status="success" size="lg">
+  Implementado
+</StatusBadge>`}
+                />
+              </CardContent>
+            </Card>
+
+            {/* Checklist de Validação */}
+            <Card className="surface-elevated border-2 border-aurora-primary/20">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-sm">
+                  <CheckCircle2 className="w-6 h-6 text-aurora-primary" />
+                  Checklist de Validação
+                </CardTitle>
+                <CardDescription>
+                  Use esta checklist antes de criar ou modificar qualquer componente
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-sm">
+                <div className="space-y-xs">
+                  <div className="flex items-start gap-sm p-sm hover:bg-muted/50 rounded-lg transition-colors">
+                    <Checkbox id="check1" />
+                    <label htmlFor="check1" className="text-sm cursor-pointer">
+                      ✅ Todos os espaçamentos usam tokens semânticos (xs, sm, md, lg, xl, 2xl, 3xl)?
+                    </label>
+                  </div>
+                  <div className="flex items-start gap-sm p-sm hover:bg-muted/50 rounded-lg transition-colors">
+                    <Checkbox id="check2" />
+                    <label htmlFor="check2" className="text-sm cursor-pointer">
+                      ✅ Todas as cores usam tokens semânticos (status-*, priority-*, etc)?
+                    </label>
+                  </div>
+                  <div className="flex items-start gap-sm p-sm hover:bg-muted/50 rounded-lg transition-colors">
+                    <Checkbox id="check3" />
+                    <label htmlFor="check3" className="text-sm cursor-pointer">
+                      ✅ Tipografia usa classes semânticas (text-heading-*, text-body-*, text-caption)?
+                    </label>
+                  </div>
+                  <div className="flex items-start gap-sm p-sm hover:bg-muted/50 rounded-lg transition-colors">
+                    <Checkbox id="check4" />
+                    <label htmlFor="check4" className="text-sm cursor-pointer">
+                      ✅ Componente reutiliza componentes existentes sempre que possível?
+                    </label>
+                  </div>
+                  <div className="flex items-start gap-sm p-sm hover:bg-muted/50 rounded-lg transition-colors">
+                    <Checkbox id="check5" />
+                    <label htmlFor="check5" className="text-sm cursor-pointer">
+                      ✅ Sombras usam tokens (shadow-sm, shadow-md, shadow-aurora, etc)?
+                    </label>
+                  </div>
+                  <div className="flex items-start gap-sm p-sm hover:bg-muted/50 rounded-lg transition-colors">
+                    <Checkbox id="check6" />
+                    <label htmlFor="check6" className="text-sm cursor-pointer">
+                      ✅ Gradientes usam classes semânticas (gradient-aurora, gradient-success, etc)?
+                    </label>
+                  </div>
+                  <div className="flex items-start gap-sm p-sm hover:bg-muted/50 rounded-lg transition-colors">
+                    <Checkbox id="check7" />
+                    <label htmlFor="check7" className="text-sm cursor-pointer">
+                      ✅ Transições usam tokens (transition-base, transition-smooth)?
+                    </label>
+                  </div>
+                  <div className="flex items-start gap-sm p-sm hover:bg-muted/50 rounded-lg transition-colors">
+                    <Checkbox id="check8" />
+                    <label htmlFor="check8" className="text-sm cursor-pointer">
+                      ✅ Responsividade usa breakpoints padronizados (sm, md, lg, xl)?
+                    </label>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           {/* FOUNDATION TAB */}
           <TabsContent value="foundation" className="space-y-12">
@@ -1045,6 +1406,415 @@ export default function StyleGuidePage() {
                 </CardContent>
               </Card>
             </section>
+          </TabsContent>
+
+          {/* WORKFLOW TAB */}
+          <TabsContent value="workflow" className="space-y-lg">
+            {/* Hero Section */}
+            <AuroraCard className="p-lg bg-gradient-operational border-status-info/20">
+              <div className="flex items-start gap-md">
+                <div className="p-md rounded-xl bg-white/20">
+                  <Play className="w-8 h-8 text-white" />
+                </div>
+                <div className="space-y-sm flex-1">
+                  <h2 className="text-heading-1 text-white">🔄 Como Evoluir o Design System</h2>
+                  <p className="text-body text-white/90">
+                    Guia passo-a-passo para adicionar novos tokens, modificar o design e manter a consistência da plataforma.
+                  </p>
+                </div>
+              </div>
+            </AuroraCard>
+
+            {/* Workflow 1: Criar Novo Componente */}
+            <Card className="surface-elevated">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-sm">
+                  <Box className="w-6 h-6 text-aurora-primary" />
+                  Workflow 1: Criar Novo Componente
+                </CardTitle>
+                <CardDescription>
+                  Processo para criar um novo componente mantendo os padrões do Design System
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-md">
+                <div className="space-y-md">
+                  {/* Passo 1 */}
+                  <div className="flex gap-md">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-aurora-primary/10 border border-aurora-primary/20 flex items-center justify-center text-sm font-bold text-aurora-primary">
+                      1
+                    </div>
+                    <div className="flex-1 space-y-sm">
+                      <h3 className="text-heading-3">Avalie Componentes Existentes</h3>
+                      <p className="text-body-small text-muted-foreground">
+                        Antes de criar, verifique se pode reutilizar: <code>AuroraCard</code>, <code>LiquidGlassCard</code>, <code>StatusBadge</code>, etc.
+                      </p>
+                      <CodeBlock
+                        language="tsx"
+                        code={`// ✅ Prefira reutilizar com variants
+<AuroraCard variant="glass" className="p-lg">
+  <CardHeader className="space-y-sm">
+    <CardTitle>Novo Card</CardTitle>
+  </CardHeader>
+</AuroraCard>`}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Passo 2 */}
+                  <div className="flex gap-md">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-aurora-primary/10 border border-aurora-primary/20 flex items-center justify-center text-sm font-bold text-aurora-primary">
+                      2
+                    </div>
+                    <div className="flex-1 space-y-sm">
+                      <h3 className="text-heading-3">Use Tokens Semânticos</h3>
+                      <p className="text-body-small text-muted-foreground">
+                        Sempre use tokens para spacing, cores, tipografia. Zero valores hardcoded.
+                      </p>
+                      <CodeBlock
+                        language="tsx"
+                        code={`// ✅ Tokens semânticos
+<div className="p-lg space-y-md">
+  <h2 className="text-heading-2">Título</h2>
+  <p className="text-body text-muted-foreground">Conteúdo</p>
+  <Badge className="bg-status-success/10 text-status-success">
+    Status
+  </Badge>
+</div>`}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Passo 3 */}
+                  <div className="flex gap-md">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-aurora-primary/10 border border-aurora-primary/20 flex items-center justify-center text-sm font-bold text-aurora-primary">
+                      3
+                    </div>
+                    <div className="flex-1 space-y-sm">
+                      <h3 className="text-heading-3">Valide Responsividade</h3>
+                      <p className="text-body-small text-muted-foreground">
+                        Teste em todos os breakpoints (mobile, tablet, desktop). Use classes responsivas.
+                      </p>
+                      <CodeBlock
+                        language="tsx"
+                        code={`// ✅ Design responsivo
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
+  <Card className="p-md md:p-lg">
+    {/* Conteúdo responsivo */}
+  </Card>
+</div>`}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Passo 4 */}
+                  <div className="flex gap-md">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-aurora-primary/10 border border-aurora-primary/20 flex items-center justify-center text-sm font-bold text-aurora-primary">
+                      4
+                    </div>
+                    <div className="flex-1 space-y-sm">
+                      <h3 className="text-heading-3">Documente Aqui</h3>
+                      <p className="text-body-small text-muted-foreground">
+                        Adicione o novo componente nesta página de documentação com exemplos.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Workflow 2: Adicionar Novo Token */}
+            <Card className="surface-elevated">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-sm">
+                  <Sparkles className="w-6 h-6 text-aurora-primary" />
+                  Workflow 2: Adicionar Novo Token
+                </CardTitle>
+                <CardDescription>
+                  Como adicionar um novo token de spacing, cor, tipografia, etc.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-md">
+                <div className="space-y-md">
+                  {/* Passo 1 */}
+                  <div className="flex gap-md">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-status-success/10 border border-status-success/20 flex items-center justify-center text-sm font-bold text-status-success">
+                      1
+                    </div>
+                    <div className="flex-1 space-y-sm">
+                      <h3 className="text-heading-3">Avalie Necessidade</h3>
+                      <p className="text-body-small text-muted-foreground">
+                        Confirme que nenhum token existente atende a necessidade. Exemplo: precisa de espaçamento entre <code>sm (8px)</code> e <code>md (16px)</code>?
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Passo 2 */}
+                  <div className="flex gap-md">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-status-success/10 border border-status-success/20 flex items-center justify-center text-sm font-bold text-status-success">
+                      2
+                    </div>
+                    <div className="flex-1 space-y-sm">
+                      <h3 className="text-heading-3">Adicione em tailwind.config.ts</h3>
+                      <p className="text-body-small text-muted-foreground">
+                        Exemplo para novo token de spacing:
+                      </p>
+                      <CodeBlock
+                        language="ts"
+                        code={`// tailwind.config.ts
+export default {
+  theme: {
+    extend: {
+      spacing: {
+        'xs': '0.25rem',   // 4px
+        'sm': '0.5rem',    // 8px
+        'smd': '0.75rem',  // 12px ← NOVO TOKEN
+        'md': '1rem',      // 16px
+        'lg': '1.5rem',    // 24px
+      }
+    }
+  }
+}`}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Passo 3 */}
+                  <div className="flex gap-md">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-status-success/10 border border-status-success/20 flex items-center justify-center text-sm font-bold text-status-success">
+                      3
+                    </div>
+                    <div className="flex-1 space-y-sm">
+                      <h3 className="text-heading-3">Para Cores: Adicione em src/index.css</h3>
+                      <p className="text-body-small text-muted-foreground">
+                        Exemplo para nova cor semântica:
+                      </p>
+                      <CodeBlock
+                        language="css"
+                        code={`/* src/index.css */
+:root {
+  /* Status Colors */
+  --status-success: 142 76% 36%;
+  --status-review: 43 96% 56%;  /* ← NOVO TOKEN */
+  
+  /* Background */
+  --background: 224 71% 4%;
+}`}
+                      />
+                      <CodeBlock
+                        language="ts"
+                        code={`// tailwind.config.ts - Registrar a nova cor
+colors: {
+  'status-success': 'hsl(var(--status-success))',
+  'status-review': 'hsl(var(--status-review))',  // ← Registrar
+}`}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Passo 4 */}
+                  <div className="flex gap-md">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-status-success/10 border border-status-success/20 flex items-center justify-center text-sm font-bold text-status-success">
+                      4
+                    </div>
+                    <div className="flex-1 space-y-sm">
+                      <h3 className="text-heading-3">Documente Aqui (StyleGuidePage.tsx)</h3>
+                      <p className="text-body-small text-muted-foreground">
+                        Adicione o novo token nas tabelas de documentação desta página com:
+                      </p>
+                      <ul className="text-xs text-muted-foreground space-y-xs pl-md list-disc">
+                        <li>Nome do token</li>
+                        <li>Valor (px, rem, HSL)</li>
+                        <li>Caso de uso/quando usar</li>
+                        <li>Exemplo visual</li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  {/* Passo 5 */}
+                  <div className="flex gap-md">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-status-success/10 border border-status-success/20 flex items-center justify-center text-sm font-bold text-status-success">
+                      5
+                    </div>
+                    <div className="flex-1 space-y-sm">
+                      <h3 className="text-heading-3">Use o Novo Token</h3>
+                      <CodeBlock
+                        language="tsx"
+                        code={`// Agora pode usar normalmente
+<div className="p-smd">  {/* Novo token de spacing */}
+  <Badge className="bg-status-review/10 text-status-review">
+    Em Revisão  {/* Nova cor semântica */}
+  </Badge>
+</div>`}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Workflow 3: Modificar Design Global */}
+            <Card className="surface-elevated">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-sm">
+                  <Palette className="w-6 h-6 text-aurora-primary" />
+                  Workflow 3: Modificar Design Global
+                </CardTitle>
+                <CardDescription>
+                  Como mudar cores, espaçamentos ou tipografia de forma global
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-md">
+                <div className="p-md bg-status-warning/10 border border-status-warning/20 rounded-lg">
+                  <div className="flex items-start gap-sm">
+                    <AlertCircle className="w-5 h-5 text-status-warning mt-0.5" />
+                    <div className="space-y-xs">
+                      <p className="text-sm font-medium text-status-warning">⚠️ Mudanças Globais</p>
+                      <p className="text-xs text-muted-foreground">
+                        Mudanças em tokens afetam TODA a plataforma. Teste extensivamente antes de aplicar.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-md">
+                  {/* Exemplo 1: Mudar Cor */}
+                  <div className="space-y-sm">
+                    <h3 className="text-heading-3">Exemplo: Mudar Cor Principal</h3>
+                    <CodeBlock
+                      language="css"
+                      code={`/* src/index.css */
+:root {
+  /* Antes */
+  --aurora-primary: 177 85% 39%;  /* #0ABAB5 - Teal */
+  
+  /* Depois - Nova cor de marca */
+  --aurora-primary: 217 91% 60%;  /* #3B82F6 - Blue */
+}
+
+/* Resultado: TODA a plataforma muda automaticamente 🎯 */`}
+                    />
+                  </div>
+
+                  {/* Exemplo 2: Ajustar Spacing */}
+                  <div className="space-y-sm">
+                    <h3 className="text-heading-3">Exemplo: Aumentar Espaçamento Médio</h3>
+                    <CodeBlock
+                      language="ts"
+                      code={`// tailwind.config.ts
+spacing: {
+  'xs': '0.25rem',   // 4px
+  'sm': '0.5rem',    // 8px
+  'md': '1rem',      // 16px → MUDAR PARA 1.25rem (20px)
+  'lg': '1.5rem',    // 24px
+}
+
+// Resultado: Todos os p-md, gap-md, space-y-md aumentam 🎯`}
+                    />
+                  </div>
+
+                  {/* Exemplo 3: Ajustar Tipografia */}
+                  <div className="space-y-sm">
+                    <h3 className="text-heading-3">Exemplo: Aumentar Tamanho de Heading</h3>
+                    <CodeBlock
+                      language="css"
+                      code={`/* src/index.css */
+.text-heading-1 {
+  /* Antes */
+  font-size: 2.5rem;    /* 40px */
+  
+  /* Depois */
+  font-size: 3rem;      /* 48px */
+}
+
+/* Resultado: Todos os text-heading-1 mudam 🎯 */`}
+                    />
+                  </div>
+                </div>
+
+                <div className="p-md bg-aurora-primary/5 border border-aurora-primary/20 rounded-lg">
+                  <div className="flex items-start gap-sm">
+                    <Zap className="w-5 h-5 text-aurora-primary mt-0.5" />
+                    <div className="space-y-xs">
+                      <p className="text-sm font-medium">✨ Poder do Design System</p>
+                      <p className="text-xs text-muted-foreground">
+                        Uma mudança em 1 linha → Atualiza 918 arquivos automaticamente. Sem refatoração manual necessária.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Template de Solicitação */}
+            <Card className="surface-elevated border-2 border-aurora-primary/20">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-sm">
+                  <Code className="w-6 h-6 text-aurora-primary" />
+                  📋 Template para Solicitar Mudanças
+                </CardTitle>
+                <CardDescription>
+                  Use este template para pedir mudanças de design de forma clara e completa
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-md">
+                <div className="space-y-sm">
+                  <h3 className="text-heading-3">❌ Ruim (vago e impreciso)</h3>
+                  <div className="p-md bg-status-error/5 border border-status-error/20 rounded-lg">
+                    <p className="text-sm text-muted-foreground italic">
+                      "Deixa o botão mais bonito e aumenta o espaço entre as coisas."
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-sm">
+                  <h3 className="text-heading-3">✅ Excelente (específico e semântico)</h3>
+                  <div className="p-md bg-status-success/5 border border-status-success/20 rounded-lg space-y-sm">
+                    <p className="text-sm font-medium">Contexto:</p>
+                    <p className="text-xs text-muted-foreground">
+                      "Na página de Dashboard, os cards de estatísticas estão muito próximos."
+                    </p>
+                    
+                    <p className="text-sm font-medium mt-md">Objetivo:</p>
+                    <p className="text-xs text-muted-foreground">
+                      "Quero melhorar a respiração visual entre os cards."
+                    </p>
+                    
+                    <p className="text-sm font-medium mt-md">Solicitação específica:</p>
+                    <p className="text-xs text-muted-foreground">
+                      "Mudar o gap entre cards de <code>gap-sm (8px)</code> para <code>gap-md (16px)</code>."
+                    </p>
+                    
+                    <p className="text-sm font-medium mt-md">Elementos a manter:</p>
+                    <p className="text-xs text-muted-foreground">
+                      "Manter padding interno dos cards em <code>p-lg</code>, só aumentar gap entre eles."
+                    </p>
+                  </div>
+                </div>
+
+                <CodeBlock
+                  language="markdown"
+                  code={`📋 TEMPLATE PARA COPIAR:
+
+**Contexto:** 
+[Onde está o problema? Qual página/componente?]
+
+**Objetivo:**
+[O que você quer alcançar visualmente?]
+
+**Solicitação Específica:**
+[Use tokens semânticos sempre que possível]
+- Mudar [elemento] de [token-atual] para [token-desejado]
+- Adicionar novo token [nome-semantico] com valor [X]
+- Aplicar gradiente [gradient-nome] em [elemento]
+
+**Elementos a Manter:**
+[O que NÃO deve mudar?]
+
+**Validação:**
+[Como você vai saber que ficou correto?]`}
+                />
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* ACCESSIBILITY TAB */}
