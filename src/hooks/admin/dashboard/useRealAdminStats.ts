@@ -152,12 +152,12 @@ export const useRealAdminStats = (timeRange: string) => {
         .select('*', { count: 'exact', head: true })
         .gte('created_at', startDate.toISOString());
 
-      // Implementações completadas no período (implementation_trails com status completed)
+      // Implementações completadas no período (usar updated_at para data de conclusão)
       const { count: completedInPeriod } = await supabase
         .from('implementation_trails')
         .select('*', { count: 'exact', head: true })
         .eq('status', 'completed')
-        .gte('created_at', startDate.toISOString());
+        .gte('updated_at', startDate.toISOString());
 
       // Usuários ativos no período = total de usuários (tabela analytics está vazia)
       // Vamos usar o total de usuários como proxy
