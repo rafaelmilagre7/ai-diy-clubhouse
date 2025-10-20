@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { DashboardHeader } from "@/components/admin/dashboard/DashboardHeader";
 import { OnboardingStatusCard } from "@/components/admin/OnboardingStatusCard";
 import { RecentActivitiesCard } from "@/components/admin/analytics/RecentActivitiesCard";
+import { NotificationHealthMonitor } from "@/components/admin/notifications/NotificationHealthMonitor";
 
 import { RefreshCw, Users, Activity, CheckCircle, TrendingUp, BarChart3, Zap, Star } from "lucide-react";
 import { VideoDurationSync } from "@/components/admin/VideoDurationSync";
@@ -322,6 +323,11 @@ const AdminDashboard = () => {
                 </div>
               </CardContent>
             </Card>
+          </div>
+
+          {/* Monitor de Notificações */}
+          <div className="grid gap-6 grid-cols-1">
+            <NotificationHealthMonitor />
           </div>
 
           {/* Sincronização de Durações dos Vídeos */}

@@ -35,6 +35,7 @@ import StyleGuidePage from '@/pages/StyleGuidePage';
 import NPSAnalytics from '@/pages/admin/NPSAnalytics';
 import CertificateTemplates from '@/pages/admin/CertificateTemplates';
 import CourseCertificateManager from '@/pages/admin/CourseCertificateManager';
+import NotificationsStats from '@/pages/admin/NotificationsStats';
 
 
 // Função helper para criar rotas protegidas com AdminLayout
@@ -76,6 +77,7 @@ export const adminRoutes: RouteObject[] = [
   createAdminRoute("/admin/nps", NPSAnalytics),
   createAdminRoute("/admin/certificate-templates", CertificateTemplates),
   createAdminRoute("/admin/course-certificates", CourseCertificateManager),
+  createAdminRoute("/admin/notifications/stats", NotificationsStats),
   
   createAdminRoute("/admin/data-audit", DataAuditPage),
   createAdminRoute("/admin/hubla-webhooks", HublaWebhooks),
