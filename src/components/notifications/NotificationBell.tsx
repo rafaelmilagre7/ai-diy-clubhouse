@@ -94,6 +94,18 @@ export const NotificationBell = () => {
       case 'connection_anniversary':
         return '🎉';
       
+      // IA Insights
+      case 'ai_recommendation':
+        return '🤖';
+      case 'ai_learning_path':
+        return '🎯';
+      case 'churn_prevention':
+        return '💙';
+      case 'completion_motivation':
+        return '🚀';
+      case 'weekly_summary':
+        return '📊';
+      
       // Admin
       case 'admin_communication':
         return '📢';

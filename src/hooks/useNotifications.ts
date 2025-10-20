@@ -186,7 +186,8 @@ export const useNotifications = () => {
           if (newNotification.priority === 'high' || 
               ['new_course', 'new_solution', 'suggestion_status_change', 'topic_solved', 
                'official_suggestion_comment', 'certificate_available', 'event_reminder_1h',
-               'suggestion_milestone', 'topic_milestone', 'connection_anniversary'].includes(newNotification.type)) {
+               'suggestion_milestone', 'topic_milestone', 'connection_anniversary',
+               'ai_recommendation', 'completion_motivation', 'weekly_summary'].includes(newNotification.type)) {
             toast.success(newNotification.title, {
               description: newNotification.message,
               action: newNotification.action_url ? {

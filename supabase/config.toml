@@ -213,3 +213,18 @@ verify_jwt = false
 
 [functions.process-connection-anniversaries]
 verify_jwt = false
+
+[functions.ai-recommendations]
+verify_jwt = false
+
+[functions.ai-learning-path]
+verify_jwt = false
+
+[functions.ai-churn-prediction]
+verify_jwt = false
+
+[functions.ai-completion-predictor]
+verify_jwt = false
+
+[functions.ai-weekly-summary]
+verify_jwt = false
