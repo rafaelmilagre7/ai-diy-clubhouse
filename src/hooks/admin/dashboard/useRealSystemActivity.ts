@@ -144,7 +144,7 @@ export const useRealSystemActivity = (timeRange: string) => {
         const userIds = auditLogs?.map(log => log.user_id).filter(Boolean) || [];
         const { data: profiles } = await supabase
           .from('profiles')
-          .select('id, full_name, email')
+          .select('id, name, email')
           .in('id', userIds);
 
         // Mapear profiles por ID para acesso rápido
@@ -157,7 +157,7 @@ export const useRealSystemActivity = (timeRange: string) => {
           event_type: log.event_type || log.action,
           solution: log.details?.solution_title || log.details?.title || log.resource_id || 'Sistema',
           created_at: log.timestamp,
-          user_name: profileMap.get(log.user_id)?.full_name || 'Usuário',
+          user_name: profileMap.get(log.user_id)?.name || 'Usuário',
           user_email: profileMap.get(log.user_id)?.email
         })) || [];
 
