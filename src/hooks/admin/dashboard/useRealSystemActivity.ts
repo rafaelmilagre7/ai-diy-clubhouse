@@ -2,17 +2,23 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 
+interface RecentActivity {
+  id: string;
+  user_id: string;
+  event_type: string;
+  solution: string;
+  created_at: string;
+  user_name?: string;
+  user_email?: string;
+}
+
 interface SystemActivity {
   totalLogins: number;
   newUsers: number;
   activeImplementations: number;
   completedSolutions: number;
   systemHealth: 'healthy' | 'warning' | 'critical';
-  recentActivities: Array<{
-    type: string;
-    count: number;
-    period: string;
-  }>;
+  recentActivities: RecentActivity[];
   forumActivity: number;
   timeRange: string;
   lastUpdated: string;
@@ -73,29 +79,42 @@ export const useRealSystemActivity = (timeRange: string) => {
           .select('*', { count: 'exact', head: true })
           .gte('created_at', startDate.toISOString());
 
-        // Atividades recentes do sistema
-        const recentActivities = [
-          {
-            type: 'Novos usuários',
-            count: recentSignups || 0,
-            period: `Últimos ${timeRange === '7d' ? '7 dias' : timeRange === '30d' ? '30 dias' : timeRange === '90d' ? '90 dias' : '1 ano'}`
-          },
-          {
-            type: 'Usuários ativos',
-            count: activeToday || 0,
-            period: `Últimos ${timeRange === '7d' ? '7 dias' : timeRange === '30d' ? '30 dias' : timeRange === '90d' ? '90 dias' : '1 ano'}`
-          },
-          {
-            type: 'Atividade da comunidade',
-            count: (topicsInPeriod || 0) + (postsInPeriod || 0),
-            period: `Últimos ${timeRange === '7d' ? '7 dias' : timeRange === '30d' ? '30 dias' : timeRange === '90d' ? '90 dias' : '1 ano'}`
-          },
-          {
-            type: 'Implementações iniciadas',
-            count: implementationsInPeriod || 0,
-            period: `Últimos ${timeRange === '7d' ? '7 dias' : timeRange === '30d' ? '30 dias' : timeRange === '90d' ? '90 dias' : '1 ano'}`
-          }
-        ];
+        // Buscar atividades recentes reais do audit_logs com informações do usuário
+        const { data: auditLogs, error: auditError } = await supabase
+          .from('audit_logs')
+          .select(`
+            id,
+            user_id,
+            event_type,
+            action,
+            details,
+            timestamp,
+            resource_id
+          `)
+          .gte('timestamp', startDate.toISOString())
+          .order('timestamp', { ascending: false })
+          .limit(20);
+
+        // Buscar informações dos usuários das atividades
+        const userIds = auditLogs?.map(log => log.user_id).filter(Boolean) || [];
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, full_name, email')
+          .in('id', userIds);
+
+        // Mapear profiles por ID para acesso rápido
+        const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+
+        // Transformar audit_logs em RecentActivity
+        const recentActivities: RecentActivity[] = auditLogs?.map(log => ({
+          id: log.id,
+          user_id: log.user_id || '',
+          event_type: log.event_type || log.action,
+          solution: log.details?.solution_title || log.details?.title || log.resource_id || 'Sistema',
+          created_at: log.timestamp,
+          user_name: profileMap.get(log.user_id)?.full_name || 'Usuário',
+          user_email: profileMap.get(log.user_id)?.email
+        })) || [];
 
         return {
           totalLogins: activeToday || 0,
@@ -119,7 +138,7 @@ export const useRealSystemActivity = (timeRange: string) => {
           activeImplementations: 0,
           completedSolutions: 0,
           systemHealth: 'warning' as const,
-          recentActivities: [],
+          recentActivities: [] as RecentActivity[],
           forumActivity: 0,
           timeRange,
           lastUpdated: new Date().toISOString()
