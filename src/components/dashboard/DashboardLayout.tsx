@@ -68,7 +68,7 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
   }
 
   return (
-    <div className="space-y-8 md:pt-2 animate-fade-in">
+    <div className="space-y-lg md:pt-2 animate-fade-in">
       {/* HEADER IMERSIVO */}
       <ModernDashboardHeader userName={userName} />
 

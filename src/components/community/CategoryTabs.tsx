@@ -26,7 +26,7 @@ export const CategoryTabs = ({ categories, isLoading }: CategoryTabsProps) => {
     <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5 h-auto p-1 bg-muted/50">
       <TabsTrigger 
         value="todos" 
-        className="min-w-max px-4 py-3 data-[state=active]:bg-primary/10 data-[state=active]:text-primary"
+        className="min-w-max px-md py-md data-[state=active]:bg-primary/10 data-[state=active]:text-primary"
       >
         <MessageSquare className="h-4 w-4 mr-2" />
         <span className="font-medium">Todos</span>
@@ -36,7 +36,7 @@ export const CategoryTabs = ({ categories, isLoading }: CategoryTabsProps) => {
         <TabsTrigger 
           key={category.id} 
           value={category.slug} 
-          className={`min-w-max px-4 py-3 transition-all duration-200 ${
+          className={`min-w-max px-md py-md transition-all duration-200 ${
             categoryColors[category.name as keyof typeof categoryColors] || 
             'data-[state=active]:bg-muted data-[state=active]:text-foreground'
           }`}

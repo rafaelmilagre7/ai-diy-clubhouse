@@ -10,8 +10,8 @@ export const ImplementationTrailCard: React.FC = () => {
     <Card className="bg-card/80 border-border hover:shadow-lg hover:border-aurora-primary/30 transition-all duration-300">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-aurora-primary/20 rounded-lg">
+          <div className="flex items-center gap-sm">
+            <div className="p-sm bg-aurora-primary/20 rounded-lg">
               <Rocket className="h-5 w-5 text-aurora-primary" />
             </div>
             <span>Trilha de Implementação</span>
@@ -19,7 +19,7 @@ export const ImplementationTrailCard: React.FC = () => {
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-0">
-        <div className="space-y-3">
+        <div className="space-y-md">
           <div>
             <h4 className="font-medium">Trilha de Implementação IA</h4>
             <p className="text-sm text-muted-foreground mt-1">

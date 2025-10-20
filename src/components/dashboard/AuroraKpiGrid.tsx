@@ -115,12 +115,12 @@ export const AuroraKpiGrid = memo(({
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-lg">
         {[1, 2, 3].map((i) => (
           <Card key={i} className="animate-pulse aurora-glass border-aurora/20">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-4">
+            <CardContent className="p-lg">
+              <div className="flex items-center justify-between mb-md">
+                <div className="flex items-center space-x-md">
                   <div className="w-12 h-12 bg-muted/50 rounded-xl"></div>
                   <div className="space-y-2">
                     <div className="h-4 bg-muted/50 rounded w-24"></div>
@@ -138,7 +138,7 @@ export const AuroraKpiGrid = memo(({
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-lg">
       {kpiItems.map((item) => {
         const IconComponent = item.icon;
         
@@ -157,15 +157,15 @@ export const AuroraKpiGrid = memo(({
               <div className="absolute top-1/2 right-1/4 w-0.5 h-0.5 bg-operational rounded-full animate-pulse opacity-50" style={{ animationDelay: '2s' }} />
             </div>
 
-            <CardContent className="relative p-6 z-10">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-4">
-                  <div className={`p-3 rounded-xl backdrop-blur-sm bg-surface-elevated/50 group-hover:scale-110 transition-all duration-300 border border-border/30`}>
+            <CardContent className="relative p-lg z-10">
+              <div className="flex items-center justify-between mb-md">
+                <div className="flex items-center space-x-md">
+                  <div className={`p-md rounded-xl backdrop-blur-sm bg-surface-elevated/50 group-hover:scale-110 transition-all duration-300 border border-border/30`}>
                     <IconComponent className={`h-6 w-6 ${item.iconColor} group-hover:drop-shadow-lg transition-all duration-300`} />
                   </div>
                   <div>
                     <p className="text-sm font-outfit font-medium text-muted-foreground/90 mb-1">{item.title}</p>
-                    <div className="flex items-baseline space-x-2">
+                    <div className="flex items-baseline space-x-sm">
                       <p className="text-2xl font-inter font-bold text-foreground">{item.value}</p>
                     </div>
                   </div>
@@ -180,7 +180,7 @@ export const AuroraKpiGrid = memo(({
                 
                 {/* Ícone especial para total */}
                 {item.id === 'total' && (
-                  <div className="flex-shrink-0 p-2 rounded-full bg-gradient-to-r from-strategy/20 to-strategy-light/20 backdrop-blur-sm">
+                  <div className="flex-shrink-0 p-sm rounded-full bg-gradient-to-r from-strategy/20 to-strategy-light/20 backdrop-blur-sm">
                     <TrendingUp className="h-6 w-6 text-strategy-light" />
                   </div>
                 )}

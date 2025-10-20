@@ -34,8 +34,8 @@ export const CategoryCard = ({ id, name, description, slug, icon }: CategoryCard
   return (
     <Link to={`/comunidade/categoria/${slug}`} className="block group">
       <Card className="bg-card/60 backdrop-blur-sm border-border/50 hover:bg-card/80 hover:border-border/80 transition-all duration-300 hover:shadow-lg group-hover:scale-[1.02]">
-        <CardContent className="p-6">
-          <div className="flex items-start gap-4">
+        <CardContent className="p-lg">
+          <div className="flex items-start gap-md">
             {/* Icon */}
             <div className="flex-shrink-0">
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center group-hover:from-primary/30 group-hover:to-accent/30 transition-all duration-300">
@@ -63,7 +63,7 @@ export const CategoryCard = ({ id, name, description, slug, icon }: CategoryCard
                 {description}
               </p>
 
-              <div className="flex items-center gap-4 text-xs text-muted-foreground">
+              <div className="flex items-center gap-md text-xs text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <MessageSquare className="w-3 h-3" />
                   {stats?.topicCount || 0} discussões

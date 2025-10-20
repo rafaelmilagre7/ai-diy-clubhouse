@@ -39,15 +39,15 @@ export const CommunityFilters = ({
   const activeFilterData = filters.find(f => f.key === activeFilter);
 
   return (
-    <div className="bg-background/60 backdrop-blur-xl border border-border/50 rounded-2xl p-6 space-y-4">
+    <div className="bg-background/60 backdrop-blur-xl border border-border/50 rounded-2xl p-lg space-y-md">
       {/* Filtros em Pills - Mais Elegante */}
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between gap-md flex-wrap">
+        <div className="flex items-center gap-sm">
           <Filter className="h-4 w-4 text-primary" />
           <span className="text-sm font-medium">Filtrar por:</span>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-sm flex-wrap">
           {filters.map((filter) => {
             const Icon = filter.icon;
             const isActive = activeFilter === filter.key;
@@ -56,7 +56,7 @@ export const CommunityFilters = ({
               <Badge
                 key={filter.key}
                 variant={isActive ? "default" : "secondary"}
-                className={`px-4 py-2 cursor-pointer transition-all duration-300 hover:scale-105 gap-2 ${
+                className={`px-md py-sm cursor-pointer transition-all duration-300 hover:scale-105 gap-sm ${
                   isActive 
                     ? "bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-lg" 
                     : "bg-background/60 backdrop-blur-sm hover:bg-background/80"
@@ -73,8 +73,8 @@ export const CommunityFilters = ({
 
       {/* Indicador de Busca */}
       {searchQuery && (
-        <div className="flex items-center gap-2 pt-2 border-t border-border/30">
-          <Badge variant="outline" className="gap-2">
+        <div className="flex items-center gap-sm pt-2 border-t border-border/30">
+          <Badge variant="outline" className="gap-sm">
             <Search className="h-3 w-3" />
             Buscando por: "{searchQuery}"
             <button

@@ -34,7 +34,7 @@ export const CommunityHero = ({
       <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 backdrop-blur-3xl"></div>
       
       {/* Content */}
-      <div className="relative px-6 py-12 text-center">
+      <div className="relative px-lg py-xl text-center">
         {/* Title with Gradient */}
         <div className="mb-6">
           <h1 className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent mb-3">
@@ -50,7 +50,7 @@ export const CommunityHero = ({
           <div className="relative group">
             <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-accent/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
             <div className="relative bg-background/80 backdrop-blur-xl border border-border/50 rounded-2xl p-1">
-              <div className="flex items-center gap-3 p-4">
+              <div className="flex items-center gap-md p-md">
                 <Search className="h-5 w-5 text-muted-foreground" />
                 <Input
                   placeholder="Buscar discussões, tópicos ou membros..."
@@ -60,7 +60,7 @@ export const CommunityHero = ({
                 />
                 <Button 
                   onClick={() => setCreateTopicOpen(true)}
-                  className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground px-6 py-2 rounded-xl transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl"
+                  className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground px-lg py-sm rounded-xl transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl"
                 >
                   <PlusCircle className="h-4 w-4 mr-2" />
                   Criar Tópico
@@ -71,7 +71,7 @@ export const CommunityHero = ({
         </div>
 
         {/* Quick Filter Tags */}
-        <div className="flex flex-wrap justify-center gap-3">
+        <div className="flex flex-wrap justify-center gap-md">
           {filterOptions.map((filter) => {
             const Icon = filter.icon;
             const isActive = selectedFilter === filter.key;
@@ -80,7 +80,7 @@ export const CommunityHero = ({
               <Badge
                 key={filter.key}
                 variant={isActive ? "default" : "secondary"}
-                className={`px-4 py-2 cursor-pointer transition-all duration-300 hover:scale-105 ${
+                className={`px-md py-sm cursor-pointer transition-all duration-300 hover:scale-105 ${
                   isActive 
                     ? "bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-lg" 
                     : "bg-background/60 backdrop-blur-sm hover:bg-background/80"

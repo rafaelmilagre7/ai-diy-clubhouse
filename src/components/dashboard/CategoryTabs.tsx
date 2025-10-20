@@ -10,7 +10,7 @@ export interface CategoryTabsProps {
 
 export const CategoryTabs = ({ activeCategory, setActiveCategory }: CategoryTabsProps) => {
   return (
-    <div className="flex space-x-2 overflow-x-auto pb-2 md:pb-0">
+    <div className="flex space-x-sm overflow-x-auto pb-2 md:pb-0">
       {ALL_CATEGORIES.map((category) => (
         <Button
           key={category.id}

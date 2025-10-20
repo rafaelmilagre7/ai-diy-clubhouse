@@ -50,9 +50,9 @@ export const SolutionCard = memo<SolutionCardProps>(({ solution, onClick }) => {
       )}
       onClick={onClick}
     >
-      <CardContent className="p-4 space-y-3">
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex items-center gap-2">
+      <CardContent className="p-md space-y-md">
+        <div className="flex items-start justify-between gap-sm">
+          <div className="flex items-center gap-sm">
             {categoryIcon}
             <Badge 
               variant="secondary" 
@@ -73,8 +73,8 @@ export const SolutionCard = memo<SolutionCardProps>(({ solution, onClick }) => {
         </div>
       </CardContent>
       
-      <CardFooter className="px-4 py-3 bg-muted/30 border-t border-border/50">
-        <div className="flex items-center space-x-2 w-full">
+      <CardFooter className="px-md py-md bg-muted/30 border-t border-border/50">
+        <div className="flex items-center space-x-sm w-full">
           <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
           <span className="text-xs text-muted-foreground font-medium">Disponível</span>
         </div>

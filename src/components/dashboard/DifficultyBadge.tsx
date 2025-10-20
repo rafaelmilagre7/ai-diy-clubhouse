@@ -39,7 +39,7 @@ export const DifficultyBadge = ({ difficulty }: DifficultyBadgeProps) => {
     <Badge 
       variant="outline" 
       className={cn(
-        "px-2 py-0.5 text-xs rounded-full",
+        "px-sm py-xs text-xs rounded-full",
         getStyleClass()
       )}
     >
