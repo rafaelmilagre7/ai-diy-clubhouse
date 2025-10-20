@@ -12,7 +12,7 @@ export const NoSolutionsPlaceholder: FC = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[50vh] text-center space-y-6">
+    <div className="flex flex-col items-center justify-center min-h-error-state text-center space-y-6">
       <div className="flex items-center justify-center w-20 h-20 bg-primary/10 rounded-full">
         <BookOpen className="h-10 w-10 text-primary" />
       </div>

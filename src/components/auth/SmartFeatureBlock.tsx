@@ -46,7 +46,7 @@ export const SmartFeatureBlock: React.FC<SmartFeatureBlockProps> = ({
   // Se a feature está desabilitada, mostrar uma mensagem simples
   if (blockReason === 'feature_disabled') {
     return (
-      <div className="flex items-center justify-center min-h-[400px] p-8">
+      <div className="flex items-center justify-center min-h-feature-block p-8">
         <div className="text-center space-y-4 max-w-md">
           <div className="w-16 h-16 mx-auto bg-muted rounded-full flex items-center justify-center">
             <Shield className="w-8 h-8 text-muted-foreground" />
@@ -63,7 +63,7 @@ export const SmartFeatureBlock: React.FC<SmartFeatureBlockProps> = ({
   const featureName = FEATURE_NAMES[feature as keyof typeof FEATURE_NAMES] || feature;
   
   return (
-    <div className="min-h-[400px] rounded-2xl bg-card/80 backdrop-blur-sm border border-border/50">
+    <div className="min-h-feature-block rounded-2xl bg-card/80 backdrop-blur-sm border border-border/50">
       <UnifiedContentBlock 
         sectionName={featureName}
         onClick={handleUpgrade}

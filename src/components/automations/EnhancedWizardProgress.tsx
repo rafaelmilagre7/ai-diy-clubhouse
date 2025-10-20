@@ -74,7 +74,7 @@ export const EnhancedWizardProgress = ({
                   </Button>
 
                   {/* Step Info */}
-                  <div className="mt-3 text-center max-w-[120px]">
+                  <div className="mt-3 text-center max-w-step-label">
                     <div className={cn(
                       "text-sm font-medium transition-colors",
                       isActive && "text-primary",

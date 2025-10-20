@@ -52,7 +52,7 @@ const DefaultErrorFallback: React.FC<{ error?: Error; retry?: () => void }> = ({
   error, 
   retry 
 }) => (
-  <div className="min-h-[200px] flex items-center justify-center">
+  <div className="min-h-content-min flex items-center justify-center">
     <div className="text-center space-y-4">
       <div className="text-status-error text-lg font-semibold">
         Algo deu errado

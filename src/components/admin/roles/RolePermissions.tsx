@@ -369,7 +369,7 @@ export function RolePermissions({ open, onOpenChange, role }: RolePermissionsPro
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl h-[85vh] flex flex-col bg-background border-border">
+      <DialogContent className="max-w-4xl h-viewport-85 flex flex-col bg-background border-border">
         <DialogHeader className="flex-shrink-0 pb-4 border-b border-border/50">
           <div className="flex items-start gap-4">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-aurora-primary/20 to-aurora-primary/10 flex items-center justify-center">

@@ -45,7 +45,7 @@ export const EventFormDialog = ({ event, onClose }: EventFormDialogProps) => {
             </DialogDescription>
           </div>
         </DialogHeader>
-        <div className="max-h-[calc(80vh-140px)] overflow-y-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
+        <div className="max-h-editor overflow-y-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
           <EventForm 
             event={event}
             onSuccess={onClose} 

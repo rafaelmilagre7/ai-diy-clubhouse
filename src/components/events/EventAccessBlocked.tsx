@@ -22,7 +22,7 @@ export const EventAccessBlocked: React.FC<EventAccessBlockedProps> = ({
   className = ''
 }) => {
   return (
-    <div className={`flex items-center justify-center min-h-[400px] p-4 ${className}`}>
+    <div className={`flex items-center justify-center min-h-feature-block p-4 ${className}`}>
       <Card className="max-w-md w-full bg-operational/5 border-operational/20 border-2">
         <CardHeader className="text-center">
           <div className="mx-auto p-3 rounded-full bg-operational/5 w-fit mb-4">

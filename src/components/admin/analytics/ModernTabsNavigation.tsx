@@ -103,7 +103,7 @@ export const ModernTabsNavigation = ({
                     <Badge 
                       variant="secondary" 
                       className={`
-                        ml-1 text-xs px-1.5 py-0.5 min-w-[20px] h-5 flex items-center justify-center
+                        ml-1 text-xs px-1.5 py-0.5 min-w-badge h-badge flex items-center justify-center
                         ${isActive ? 'bg-surface-elevated/50 text-foreground border-border/30' : 'bg-muted text-muted-foreground border-muted'}
                       `}
                     >

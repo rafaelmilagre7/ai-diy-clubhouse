@@ -260,7 +260,7 @@ const UnifiedImplementationChecklist: React.FC<UnifiedImplementationChecklistPro
         <Button
           onClick={saveCheckpoints}
           disabled={createTemplateMutation.isPending || saving}
-          className="min-w-[120px]"
+          className="min-w-button"
         >
           {createTemplateMutation.isPending ? (
             <div className="flex items-center gap-2">

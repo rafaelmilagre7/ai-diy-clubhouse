@@ -275,7 +275,7 @@ export const AdvancedLogsViewer: React.FC<AdvancedLogsViewerProps> = ({
                   className="flex items-start gap-3 p-3 rounded hover:bg-muted/50 transition-colors border border-border/50"
                 >
                   <div className="flex items-center gap-2 min-w-0 flex-1">
-                    <span className="text-xs text-muted-foreground font-mono min-w-[60px]">
+                    <span className="text-xs text-muted-foreground font-mono min-w-timestamp">
                       {log.timestamp}
                     </span>
                     

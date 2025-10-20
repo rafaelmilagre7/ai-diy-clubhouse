@@ -294,7 +294,7 @@ const ImplementationChecklist: React.FC<ImplementationChecklistProps> = ({
         <Button
           onClick={saveCheckpoints}
           disabled={savingChecklist || saving}
-          className="min-w-[120px]"
+          className="min-w-button"
         >
           {savingChecklist ? (
             <div className="flex items-center gap-2">

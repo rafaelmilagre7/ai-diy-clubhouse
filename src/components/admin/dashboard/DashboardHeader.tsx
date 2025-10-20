@@ -15,7 +15,7 @@ export const DashboardHeader = ({ timeRange, setTimeRange }: DashboardHeaderProp
           Plataforma VIVER DE IA
         </p>
       </div>
-      <Tabs value={timeRange} onValueChange={setTimeRange} className="w-[400px]">
+      <Tabs value={timeRange} onValueChange={setTimeRange} className="w-tabs">
         <TabsList className="grid grid-cols-4">
           <TabsTrigger value="7d">7 dias</TabsTrigger>
           <TabsTrigger value="30d">30 dias</TabsTrigger>

@@ -506,7 +506,7 @@ Você pode usar Markdown:
                 <Button
                   type="submit"
                   disabled={!isValid || createTopicMutation.isPending}
-                  className="min-w-[120px]"
+                  className="min-w-button"
                 >
                   {createTopicMutation.isPending ? (
                     <>

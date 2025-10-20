@@ -143,7 +143,7 @@ export const CertificatePreview = ({
             {/* Container real em tamanho 1:1, só com transform visual */}
             <div
               ref={previewRef}
-              className="w-[1200px] h-[900px] origin-top-left"
+              className="w-certificate h-certificate origin-top-left"
               style={{
                 transform: `scale(${scale})`,
                 willChange: 'transform'

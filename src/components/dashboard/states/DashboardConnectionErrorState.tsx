@@ -9,7 +9,7 @@ export const DashboardConnectionErrorState: FC = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[50vh] text-center space-y-6">
+    <div className="flex flex-col items-center justify-center min-h-error-state text-center space-y-6">
       <div className="flex items-center justify-center w-16 h-16 bg-status-error/10 rounded-full">
         <AlertTriangle className="h-8 w-8 text-status-error" />
       </div>

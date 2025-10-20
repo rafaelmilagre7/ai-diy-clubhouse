@@ -360,7 +360,7 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
             <Button 
               type="submit" 
               disabled={isSubmitting || isLoadingAccessControl || isSavingAccessControl}
-              className="bg-aurora-primary hover:bg-aurora-primary-dark text-primary-foreground shadow-aurora min-w-[120px]"
+              className="bg-aurora-primary hover:bg-aurora-primary-dark text-primary-foreground shadow-aurora min-w-button"
             >
               {(isSubmitting || isSavingAccessControl) ? "Salvando..." : (event ? "Salvar Alterações" : "Criar Evento")}
             </Button>

@@ -170,7 +170,7 @@ export const InviteTestPanel = () => {
             <Button 
               onClick={handleTestEmail} 
               disabled={isSending || !testEmail}
-              className="min-w-[120px]"
+              className="min-w-button"
             >
               {isSending ? (
                 <>
@@ -204,7 +204,7 @@ export const InviteTestPanel = () => {
             <Button 
               onClick={handleTestWhatsApp} 
               disabled={isSending || !testPhone}
-              className="min-w-[120px]"
+              className="min-w-button"
             >
               {isSending ? (
                 <>
@@ -238,7 +238,7 @@ export const InviteTestPanel = () => {
               onClick={handleProcessInvite} 
               disabled={isSending || !testInviteId}
               variant="outline"
-              className="min-w-[120px]"
+              className="min-w-button"
             >
               {isSending ? (
                 <>
@@ -256,7 +256,7 @@ export const InviteTestPanel = () => {
               onClick={handleResendInvite} 
               disabled={isSending || !testInviteId}
               variant="secondary"
-              className="min-w-[120px]"
+              className="min-w-button"
             >
               {isSending ? (
                 <>

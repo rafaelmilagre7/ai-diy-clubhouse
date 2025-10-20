@@ -77,6 +77,16 @@ const config: Config = {
         'scroll-lg': '420px',
         'scroll-xl': '520px',
         'scroll-full': 'calc(100vh - 12rem)',
+        // Component heights
+        'nps-chart': '250px',
+        'badge-h': '20px',
+        'skeleton-h': '80px',
+        'skeleton-h-lg': '160px',
+        'certificate': '900px',
+        // Viewport heights
+        'viewport-85': '85vh',
+        'viewport-full': '100vh',
+        'viewport-calc': 'calc(100vh - 120px)',
       },
       
       width: {
@@ -86,11 +96,17 @@ const config: Config = {
         'select-xl': '220px',
         'table-sm': '200px',
         'table-md': '300px',
+        'table-col-30': '30%',  // Coluna de tabela 30%
         'badge-sm': '20px',
         'skeleton-sm': '100px',
         'skeleton-md': '150px',
         'skeleton-lg': '200px',
         'skeleton-xl': '300px',
+        // Component widths
+        'button-min': '120px',
+        'tabs': '400px',
+        'dialog-form': '400px',
+        'certificate': '1200px',
       },
       
       minHeight: {
@@ -98,6 +114,10 @@ const config: Config = {
         'chart-md': '300px',
         'chart-lg': '400px',
         'chart-xl': '500px',
+        // Component min heights
+        'error-state': '50vh',
+        'feature-block': '400px',
+        'content-min': '200px',
       },
       
       maxHeight: {
@@ -110,6 +130,16 @@ const config: Config = {
         'modal-md': '80vh',
         'modal-lg': '90vh',
         'modal-xl': '95vh',
+        // Editor heights
+        'editor': 'calc(80vh - 140px)',
+        'editor-full': 'calc(100vh - 120px)',
+        'image-preview': '150px',
+      },
+      
+      minWidth: {
+        'button': '120px',
+        'badge': '20px',
+        'timestamp': '60px',
       },
       
       maxWidth: {
@@ -120,6 +150,7 @@ const config: Config = {
         'dialog-md': '32rem',    // 512px
         'dialog-lg': '40rem',    // 640px
         'dialog-xl': '48rem',    // 768px
+        'step-label': '120px',
       },
       
       // === BLUR & BACKDROP ===

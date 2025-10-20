@@ -35,7 +35,7 @@ const OptimizedLoadingScreen = memo<OptimizedLoadingScreenProps>(({
   // Memoizar classes do container
   const containerClasses = useMemo(() => cn(
     "flex flex-col items-center justify-center",
-    fullScreen ? "min-h-screen" : "min-h-[400px]",
+    fullScreen ? "min-h-screen" : "min-h-feature-block",
     "bg-background",
     className
   ), [fullScreen, className]);

@@ -161,7 +161,7 @@ export const LogsViewer: React.FC<LogsViewerProps> = ({ logs, onClear, className
                   key={log.id} 
                   className="flex items-start gap-3 p-2 rounded hover:bg-muted/50 transition-colors"
                 >
-                  <span className="text-xs text-muted-foreground font-mono min-w-[60px]">
+                  <span className="text-xs text-muted-foreground font-mono min-w-timestamp">
                     {log.timestamp}
                   </span>
                   <span className="text-sm">

@@ -13,7 +13,7 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error, resetErrorBoundary
   const isDevelopment = import.meta.env.DEV;
 
   return (
-    <div className="min-h-[400px] flex items-center justify-center p-6">
+    <div className="min-h-feature-block flex items-center justify-center p-6">
       <div className="max-w-md w-full space-y-4">
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />

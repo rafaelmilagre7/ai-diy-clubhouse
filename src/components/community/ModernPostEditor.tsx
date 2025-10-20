@@ -332,7 +332,7 @@ export const ModernPostEditor = ({
           <Button
             type="submit"
             disabled={isSubmitting || !content.trim()}
-            className="min-w-[120px]"
+            className="min-w-button"
           >
             {isSubmitting ? (
               <>

@@ -101,7 +101,7 @@ const StepsBlock: React.FC<StepsBlockProps> = ({ data, onChange }) => {
                   <img 
                     src={step.imageUrl} 
                     alt={`Imagem para ${step.title}`} 
-                    className="max-h-[150px] object-contain mx-auto"
+                    className="max-h-image-preview object-contain mx-auto"
                   />
                 </div>
               )}

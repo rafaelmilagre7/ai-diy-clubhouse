@@ -48,7 +48,7 @@ export const CoursePerformanceTable = ({ data, isLoading }: CoursePerformanceTab
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[30%]">Curso</TableHead>
+                <TableHead className="w-table-col-30">Curso</TableHead>
                 <TableHead className="text-center">Aulas</TableHead>
                 <TableHead className="text-center">Iniciaram</TableHead>
                 <TableHead className="text-center">Concluíram</TableHead>

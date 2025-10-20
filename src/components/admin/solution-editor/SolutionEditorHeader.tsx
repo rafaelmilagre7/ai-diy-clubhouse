@@ -60,7 +60,7 @@ const SolutionEditorHeader: React.FC<SolutionEditorHeaderProps> = ({
         </div>
       </div>
 
-      <Button onClick={onSave} disabled={saving} className="min-w-[120px]">
+      <Button onClick={onSave} disabled={saving} className="min-w-button">
         {saving ? (
           <div className="flex items-center">
             <span className="animate-spin mr-2">◌</span>

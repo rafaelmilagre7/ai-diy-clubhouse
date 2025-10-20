@@ -39,13 +39,13 @@ const SmartSkeleton = memo<SmartSkeletonProps>(({
       case "card":
         return (
           <div className={cn("border rounded-lg p-4 space-y-3", className, animationClass)}>
-            <Skeleton className="h-[160px] w-full" />
+            <Skeleton className="h-skeleton-h-lg w-full" />
             <Skeleton className="h-5 w-3/4" />
             <Skeleton className="h-4 w-full" />
             <Skeleton className="h-4 w-2/3" />
             <div className="flex justify-between pt-2">
-              <Skeleton className="h-3 w-[80px]" />
-              <Skeleton className="h-3 w-[60px]" />
+              <Skeleton className="h-3 w-skeleton-sm" />
+              <Skeleton className="h-3 w-timestamp" />
             </div>
           </div>
         );
