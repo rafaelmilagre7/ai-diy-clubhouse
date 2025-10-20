@@ -74,7 +74,7 @@ export const ProfileImageUpload = ({
   };
 
   return (
-    <div className="flex flex-col items-center space-y-4">
+    <div className="flex flex-col items-center space-y-md">
       <div className="relative">
         <Avatar className="w-32 h-32 border-4 border-background shadow-lg">
           <AvatarImage src={previewUrl || undefined} />

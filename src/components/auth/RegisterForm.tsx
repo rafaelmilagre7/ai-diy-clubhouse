@@ -124,9 +124,9 @@ const RegisterForm = ({ inviteToken, prefilledEmail }: RegisterFormProps = {}) =
   };
 
   return (
-    <div className="space-y-4">
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-2">
+    <div className="space-y-md">
+      <form onSubmit={handleSubmit} className="space-y-md">
+        <div className="space-y-sm">
           <Label htmlFor="name" className="text-foreground">
             Nome completo
           </Label>

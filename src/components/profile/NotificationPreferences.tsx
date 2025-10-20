@@ -94,7 +94,7 @@ export const NotificationPreferences = () => {
           Preferências de Notificação
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-lg">
         {/* Notificações Gerais */}
         <div className="space-y-4">
           <h4 className="font-medium text-sm text-muted-foreground">GERAL</h4>

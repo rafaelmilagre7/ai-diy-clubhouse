@@ -48,10 +48,10 @@ export const ProfileHeader = ({
             <AvatarFallback className="text-2xl bg-gradient-viver text-white">{avatarInitials}</AvatarFallback>
           </Avatar>
           
-          <h2 className="mt-4 text-xl font-semibold text-high-contrast">{profileName || "Usuário"}</h2>
-          <p className="text-sm text-medium-contrast mt-1">{profileEmail || ""}</p>
-          
-          <div className="w-full mt-6 space-y-3">
+          <h2 className="mt-md text-xl font-semibold text-high-contrast">{profileName || "Usuário"}</h2>
+          <p className="text-sm text-medium-contrast mt-xs">{profileEmail || ""}</p>
+
+          <div className="w-full mt-lg space-y-sm">
             <div className="flex justify-between items-center text-sm bg-accent/30 p-3 rounded-lg">
               <span className="flex items-center text-medium-contrast">
                 <Calendar className="h-4 w-4 mr-2 text-viverblue" />

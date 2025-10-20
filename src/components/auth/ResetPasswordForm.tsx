@@ -100,12 +100,12 @@ export const ResetPasswordForm = ({ onBackToLogin }: ResetPasswordFormProps) => 
 
   if (submitted) {
     return (
-      <div className="text-center space-y-6">
-        <div className="rounded-full bg-status-success/20 p-4 w-20 h-20 mx-auto flex items-center justify-center">
+      <div className="text-center space-y-lg">
+        <div className="rounded-full bg-status-success/20 p-md w-20 h-20 mx-auto flex items-center justify-center">
           <Check className="h-10 w-10 text-status-success" />
         </div>
         
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <h3 className="text-xl font-medium text-foreground">E-mail enviado!</h3>
           <p className="text-muted-foreground text-sm">
             Se o e-mail estiver registrado em nossa plataforma, você receberá um link para redefinir sua senha em alguns minutos.

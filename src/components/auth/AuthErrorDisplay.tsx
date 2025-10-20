@@ -22,11 +22,11 @@ const AuthErrorDisplay: React.FC<AuthErrorDisplayProps> = ({
   const errorMessage = error instanceof Error ? error.message : error;
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4">
-      <div className="bg-destructive/10 border border-destructive p-6 rounded-lg max-w-md">
-        <h2 className="text-xl font-bold text-destructive mb-2">Erro de Autenticação</h2>
-        <p className="mb-4">{errorMessage}</p>
-        <p className="mb-4">Houve um problema ao carregar seu perfil. Por favor, tente fazer login novamente.</p>
+    <div className="min-h-screen flex flex-col items-center justify-center p-md">
+      <div className="bg-destructive/10 border border-destructive p-lg rounded-lg max-w-md">
+        <h2 className="text-xl font-bold text-destructive mb-sm">Erro de Autenticação</h2>
+        <p className="mb-md">{errorMessage}</p>
+        <p className="mb-md">Houve um problema ao carregar seu perfil. Por favor, tente fazer login novamente.</p>
         <Button 
           variant="default"
           onClick={() => {

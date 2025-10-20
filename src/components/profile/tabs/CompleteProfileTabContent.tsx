@@ -8,8 +8,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export const CompleteProfileTabContent = () => {
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div className="space-y-lg animate-fade-in">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-md">
         <div>
           <h2 className="text-xl font-semibold text-high-contrast">Perfil Simplificado</h2>
           <p className="text-medium-contrast text-sm">

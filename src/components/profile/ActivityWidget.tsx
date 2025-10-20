@@ -109,7 +109,7 @@ export const ActivityWidget = ({ activities, isLoading = false }: ActivityWidget
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-3">
+        <div className="space-y-md">
           {activities.length > 0 ? (
             activities.slice(0, 5).map((activity) => (
               <div 
