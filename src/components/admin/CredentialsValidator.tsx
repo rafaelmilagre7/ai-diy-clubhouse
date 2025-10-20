@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { RefreshCw, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { RefreshCw, CheckCircle, XCircle, AlertCircle, Loader2 } from 'lucide-react';
 
 interface CredentialCheck {
   name: string;
@@ -125,24 +125,27 @@ export const CredentialsValidator = () => {
         </div>
       </CardHeader>
       
-      <CardContent className="space-y-4">
-        {result && (
+      <CardContent className="space-y-md">
+        {loading ? (
+          <div className="flex justify-center items-center py-lg">
+            <Loader2 className="h-8 w-8 animate-spin text-aurora" />
+          </div>
+        ) : result && result.credentials.length > 0 ? (
           <>
-            <div className="flex items-center gap-2">
-              <span className="font-medium">Status Geral:</span>
-              <Badge variant="outline" className={getOverallStatusColor(result.overall_status)}>
-                {result.overall_status === 'healthy' && '✅ Saudável'}
-                {result.overall_status === 'partial' && '⚠️ Parcial'}
-                {result.overall_status === 'critical' && '❌ Crítico'}
-              </Badge>
+            <div className="flex items-center gap-sm">
+              <CheckCircle className="h-5 w-5 text-operational" />
+              <p className="text-sm font-medium">
+                Todas as credenciais validadas com sucesso!
+              </p>
             </div>
-
-            <div className="space-y-2">
-              <h4 className="font-medium">Credenciais:</h4>
+            <div className="space-y-sm">
+              <h3 className="font-semibold text-sm text-muted-foreground">
+                Detalhes de validação:
+              </h3>
               {result.credentials.map((credential) => (
-                <div 
-                  key={credential.name} 
-                  className={`p-3 rounded-lg border ${getStatusColor(credential.status)}`}
+                <div
+                  key={credential.name}
+                  className={`p-sm rounded-lg border ${getStatusColor(credential.status)}`}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -178,7 +181,7 @@ export const CredentialsValidator = () => {
               Última verificação: {new Date(result.timestamp).toLocaleString('pt-BR')}
             </div>
           </>
-        )}
+        ) : null}
 
         {!result && (
           <div className="text-center py-8 text-muted-foreground">

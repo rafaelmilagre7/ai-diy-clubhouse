@@ -203,7 +203,7 @@ const OnboardingPage: React.FC = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background/50 to-primary/5 flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-primary" />
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-md text-primary" />
           <p className="text-muted-foreground">Carregando seu progresso...</p>
         </div>
       </div>

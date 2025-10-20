@@ -134,29 +134,29 @@ export const SystemHealthDashboard = () => {
                    metrics?.rateLimiterStatus?.isEmergencyMode;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold">Monitor do Sistema</h2>
-          <p className="text-muted-foreground">Proteção Anti-Colapso em Tempo Real</p>
-        </div>
+    <div className="space-y-lg">
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-2xl font-bold">Saúde do Sistema</CardTitle>
+          </div>
+        </CardHeader>
+      </Card>
+
+      <div className="flex flex-wrap gap-sm">
+        <Button
+          variant={autoRefresh ? "default" : "outline"}
+          size="sm"
+          onClick={() => setAutoRefresh(!autoRefresh)}
+        >
+          <Clock className="h-4 w-4 mr-sm" />
+          Auto-refresh {autoRefresh ? 'ON' : 'OFF'}
+        </Button>
         
-        <div className="flex gap-2">
-          <Button
-            variant={autoRefresh ? "default" : "outline"}
-            size="sm"
-            onClick={() => setAutoRefresh(!autoRefresh)}
-          >
-            <Clock className="h-4 w-4 mr-2" />
-            Auto-refresh {autoRefresh ? 'ON' : 'OFF'}
-          </Button>
-          
-          <Button size="sm" onClick={fetchMetrics}>
-            <Activity className="h-4 w-4 mr-2" />
-            Atualizar
-          </Button>
-        </div>
+        <Button size="sm" onClick={fetchMetrics}>
+          <Activity className="h-4 w-4 mr-sm" />
+          Atualizar
+        </Button>
       </div>
 
       {/* Alertas Críticos */}

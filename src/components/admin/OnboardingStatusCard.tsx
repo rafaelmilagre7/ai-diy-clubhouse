@@ -75,12 +75,12 @@ export const OnboardingStatusCard: React.FC = () => {
   if (loading) {
     return (
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardHeader className="flex flex-row items-center justify-between space-y-none pb-sm">
           <CardTitle className="text-sm font-medium">Status do Onboarding</CardTitle>
           <CheckCircle className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="animate-pulse space-y-3">
+          <div className="animate-pulse space-y-sm">
             <div className="h-8 bg-muted rounded"></div>
             <div className="h-4 bg-muted rounded w-3/4"></div>
             <div className="h-4 bg-muted rounded w-1/2"></div>

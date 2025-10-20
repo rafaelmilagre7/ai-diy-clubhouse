@@ -60,8 +60,8 @@ export const VideoMetadataUpdater: React.FC<VideoMetadataUpdaterProps> = ({
       </CardHeader>
       <CardContent>
         {error && (
-          <div className="bg-destructive/10 dark:bg-destructive/20 text-destructive p-4 rounded-md mb-4 flex items-start">
-            <AlertTriangle className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
+          <div className="bg-destructive/10 dark:bg-destructive/20 text-destructive p-md rounded-md mb-md flex items-start">
+            <AlertTriangle className="h-5 w-5 mr-sm flex-shrink-0 mt-0.5" />
             <div>
               <p className="font-medium">Erro ao atualizar metadados dos vídeos</p>
               <p className="text-sm mt-1">{error}</p>

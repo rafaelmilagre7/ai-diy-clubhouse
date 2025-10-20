@@ -1,6 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/auth';
 import { useInviteValidation } from '@/hooks/admin/invites/useInviteValidation';
 
@@ -9,6 +10,12 @@ import InviteErrorState from '@/components/invite/InviteErrorState';
 import InviteSuccessState from '@/components/invite/InviteSuccessState';
 import InviteWelcomeSection from '@/components/invite/InviteWelcomeSection';
 import ModernRegisterForm from '@/components/invite/ModernRegisterForm';
+
+const fadeIn = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.5 }
+};
 
 // Função para verificar se é um token do Supabase Auth (JWT)
 const isSupabaseAuthToken = (token: string): boolean => {
@@ -128,10 +135,10 @@ const InvitePage = () => {
 
   if (showRegisterForm && validationResult.invite) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center py-4">
-        <div className="container mx-auto px-4">
-          <div className="max-w-6xl mx-auto">
-            <div className="grid lg:grid-cols-2 gap-6 items-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center py-md">
+        <div className="container mx-auto px-md">
+          <motion.div {...fadeIn}>
+            <div className="grid lg:grid-cols-2 gap-lg items-center">
               {/* Welcome Section */}
               <div className="order-2 lg:order-1">
                 <InviteWelcomeSection inviteData={validationResult.invite} />
@@ -139,7 +146,7 @@ const InvitePage = () => {
               
               {/* Register Form */}
               <div className="order-1 lg:order-2 flex items-center justify-center">
-                <div className="w-full max-w-sm bg-card/40 backdrop-blur-lg border border-border/50 rounded-2xl p-6 shadow-2xl">
+                <div className="w-full max-w-sm bg-card/40 backdrop-blur-lg border border-border/50 rounded-2xl p-lg shadow-2xl">
                   <ModernRegisterForm
                     inviteToken={token}
                     prefilledEmail={validationResult.invite.email}
@@ -155,7 +162,7 @@ const InvitePage = () => {
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
     );

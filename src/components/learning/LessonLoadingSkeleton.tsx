@@ -5,14 +5,15 @@ export const LessonLoadingSkeleton = () => {
     <div className="min-h-screen bg-gradient-to-br from-background via-background/80 to-primary/5">
       <div className="absolute inset-0" style={{ backgroundImage: 'var(--gradient-radial-purple)' }} />
       <div className="relative">
-        <div className="container py-6 animate-fade-in">
-          {/* Header Skeleton */}
-          <div className="flex items-center mb-6">
-            <div className="w-32 h-10 bg-gradient-to-r from-muted/50 via-muted/30 to-muted/50 rounded-lg animate-pulse shimmer-gradient animate-shimmer"></div>
-          </div>
-          
+        <div className="container py-lg animate-fade-in">
           {/* Breadcrumb Skeleton */}
-          <div className="flex items-center space-x-2 mb-4">
+          <div className="flex items-center mb-lg">
+            <div className="w-24 h-4 bg-muted/50 rounded animate-pulse"></div>
+            <div className="w-2 h-4 mx-sm bg-muted/50 rounded animate-pulse"></div>
+            <div className="w-32 h-4 bg-muted/50 rounded animate-pulse"></div>
+          </div>
+
+          <div className="flex items-center space-x-sm mb-md">
             <div className="w-20 h-4 bg-muted/50 rounded animate-pulse"></div>
             <div className="w-1 h-1 bg-muted/30 rounded-full"></div>
             <div className="w-32 h-4 bg-muted/50 rounded animate-pulse"></div>

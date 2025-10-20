@@ -85,11 +85,11 @@ export default function PublicProfile() {
 
   if (!profile) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <LiquidGlassCard className="max-w-md w-full p-8 text-center">
-          <AlertCircle className="h-12 w-12 mx-auto text-destructive mb-4" />
-          <h2 className="text-2xl font-bold mb-2">Perfil não encontrado</h2>
-          <p className="text-muted-foreground mb-6">
+      <div className="min-h-screen bg-background flex items-center justify-center p-md">
+        <LiquidGlassCard className="max-w-md w-full p-xl text-center">
+          <AlertCircle className="h-12 w-12 mx-auto text-destructive mb-md" />
+          <h2 className="text-2xl font-bold mb-sm">Perfil não encontrado</h2>
+          <p className="text-muted-foreground mb-lg">
             O perfil que você está procurando não existe ou foi removido.
           </p>
           <Button onClick={() => navigate('/networking')} className="gap-2">

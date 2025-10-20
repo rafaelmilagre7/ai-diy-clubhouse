@@ -186,10 +186,10 @@ const AcceptInvite: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center p-md">
+        <Card className="max-w-md w-full">
+          <CardHeader>
+            <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-md" />
             <CardTitle>Convite Inválido</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
