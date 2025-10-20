@@ -104,7 +104,7 @@ export const MasterHierarchyCard = ({
           {/* Badge com contador de membros e botão de expansão - UI melhorada */}
           <div className="flex items-center gap-3 shrink-0">
             <div 
-              className="flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-border bg-surface-elevated hover:bg-aurora-primary/5 hover:border-aurora-primary/50 cursor-pointer transition-all duration-200 group"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-border bg-surface-elevated hover:bg-aurora-primary/5 hover:border-aurora-primary/50 cursor-pointer transition-all duration-base group"
               onClick={(e) => {
                 e.stopPropagation();
                 setIsExpanded(!isExpanded);
@@ -119,7 +119,7 @@ export const MasterHierarchyCard = ({
               </span>
               <ChevronDown 
                 className={cn(
-                  "h-5 w-5 text-aurora-primary transition-all duration-300 ml-1",
+                  "h-5 w-5 text-aurora-primary transition-all duration-slow ml-1",
                   isExpanded && "rotate-180",
                   "group-hover:scale-110"
                 )}

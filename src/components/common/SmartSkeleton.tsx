@@ -27,7 +27,7 @@ const SmartSkeleton = memo<SmartSkeletonProps>(({
       case "pulse":
         return "animate-pulse";
       case "wave":
-        return "animate-pulse duration-1000";
+        return "animate-pulse duration-slowest";
       default:
         return "animate-pulse";
     }

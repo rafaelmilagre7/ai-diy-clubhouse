@@ -31,7 +31,7 @@ export const EnhancedWizardProgress = ({
           {/* Progress Line */}
           <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-muted -translate-y-1/2 z-0">
             <div 
-              className="h-full bg-primary transition-all duration-500 ease-out"
+              className="h-full bg-primary transition-all duration-slower ease-out"
               style={{ 
                 width: `${((currentStep - 1) / (steps.length - 1)) * 100}%` 
               }}
@@ -58,7 +58,7 @@ export const EnhancedWizardProgress = ({
                     disabled={!canClick}
                     onClick={() => canClick && onStepClick(stepNumber)}
                     className={cn(
-                      "w-12 h-12 rounded-full p-0 transition-all duration-300",
+                      "w-12 h-12 rounded-full p-0 transition-all duration-slow",
                       "border-2 bg-background hover:bg-background",
                       isCompleted && "border-primary bg-primary text-primary-foreground hover:bg-primary/90",
                       isActive && !isCompleted && "border-primary bg-background text-primary shadow-lg ring-4 ring-primary/20",
@@ -104,7 +104,7 @@ export const EnhancedWizardProgress = ({
             </div>
             <div className="w-full bg-muted rounded-full h-2">
               <div 
-                className="bg-primary h-2 rounded-full transition-all duration-500"
+                className="bg-primary h-2 rounded-full transition-all duration-slower"
                 style={{ 
                   width: `${(currentStep / steps.length) * 100}%` 
                 }}

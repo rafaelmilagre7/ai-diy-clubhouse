@@ -208,14 +208,14 @@ export const SecurityViolationsMonitor: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div className="text-2xl">{stat.icon}</div>
                 <div className="text-right">
-                  <p className="text-3xl font-bold aurora-text-gradient group-hover:scale-110 transition-transform duration-300">
+                  <p className="text-3xl font-bold aurora-text-gradient group-hover:scale-110 transition-transform duration-slow">
                     {stat.value}
                   </p>
                 </div>
               </div>
             </div>
             <div className="p-4">
-              <p className="font-medium text-foreground group-hover:text-foreground transition-colors duration-300">
+              <p className="font-medium text-foreground group-hover:text-foreground transition-colors duration-slow">
                 {stat.label}
               </p>
             </div>
@@ -342,7 +342,7 @@ export const SecurityViolationsMonitor: React.FC = () => {
                         
                         {violation.details && Object.keys(violation.details).length > 0 && (
                           <details className="mt-4 group">
-                            <summary className="cursor-pointer p-3 aurora-glass rounded-lg hover:bg-muted/10 transition-colors duration-300">
+                            <summary className="cursor-pointer p-3 aurora-glass rounded-lg hover:bg-muted/10 transition-colors duration-slow">
                               <span className="font-medium text-primary group-open:text-primary-dark">
                                 🔍 Ver detalhes técnicos
                               </span>

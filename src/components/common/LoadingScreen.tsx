@@ -66,7 +66,7 @@ const LoadingScreen = ({
           <div className="w-full max-w-xs mx-auto">
             <div className="bg-secondary rounded-full h-2">
               <div 
-                className="bg-primary h-2 rounded-full transition-all duration-500 ease-out"
+                className="bg-primary h-2 rounded-full transition-all duration-slower ease-out"
                 style={{ width: `${progress}%` }}
               />
             </div>

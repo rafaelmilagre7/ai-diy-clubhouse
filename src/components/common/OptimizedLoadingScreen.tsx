@@ -58,7 +58,7 @@ const OptimizedLoadingScreen = memo<OptimizedLoadingScreenProps>(({
           <div className="mt-4 w-64">
             <div className="bg-muted rounded-full h-2 overflow-hidden">
               <div 
-                className="bg-aurora-primary h-full transition-all duration-300 ease-out"
+                className="bg-aurora-primary h-full transition-all duration-slow ease-out"
                 style={{ width: `${Math.min(100, Math.max(0, progressValue))}%` }}
               />
             </div>

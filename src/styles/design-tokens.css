@@ -114,3 +114,10 @@
 .border-aurora-primary\/20 { border-color: hsl(var(--aurora-primary) / 0.2); }
 .border-aurora-primary\/30 { border-color: hsl(var(--aurora-primary) / 0.3); }
 .border-aurora-primary\/50 { border-color: hsl(var(--aurora-primary) / 0.5); }
+
+/* === TRANSITION DURATION UTILITIES === */
+.duration-fast { transition-duration: var(--transition-fast); }
+.duration-base { transition-duration: var(--transition-base); }
+.duration-slow { transition-duration: var(--transition-slow); }
+.duration-slower { transition-duration: 500ms; }
+.duration-slowest { transition-duration: 1000ms; }

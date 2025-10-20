@@ -85,7 +85,7 @@ const InviteListItem = memo<{
   }, [invite.preferred_channel]);
 
   return (
-    <div className="flex items-center justify-between p-4 border-b border-muted/20 hover:bg-muted/30 transition-colors duration-200">
+    <div className="flex items-center justify-between p-4 border-b border-muted/20 hover:bg-muted/30 transition-colors duration-base">
       <div className="flex-1 min-w-0 space-y-2">
         {/* Linha principal - Email e Status */}
         <div className="flex items-center justify-between">

@@ -151,12 +151,12 @@ export const UsersTable: React.FC<UsersTableProps> = ({
                 ease: 'easeOut' 
               }}
             >
-              <Card className="surface-elevated border-0 shadow-aurora transition-all duration-300 hover:shadow-aurora-strong group">
+              <Card className="surface-elevated border-0 shadow-aurora transition-all duration-slow hover:shadow-aurora-strong group">
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center space-x-3 flex-1">
                       <div className="relative">
-                        <Avatar className="h-12 w-12 ring-2 ring-primary/10 transition-all duration-300 group-hover:ring-primary/20">
+                        <Avatar className="h-12 w-12 ring-2 ring-primary/10 transition-all duration-slow group-hover:ring-primary/20">
                           <AvatarImage src={user.avatar_url || undefined} />
                           <AvatarFallback className="bg-gradient-to-br from-aurora-primary/20 to-operational/20 text-aurora-primary font-semibold">
                             {user.name?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase()}
