@@ -1,0 +1,167 @@
+import { Bell } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { useNotifications } from '@/hooks/useNotifications';
+import { formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
+import { useNavigate } from 'react-router-dom';
+
+export const NotificationBell = () => {
+  const navigate = useNavigate();
+  const { 
+    notifications, 
+    unreadCount, 
+    markAsRead, 
+    markAllAsRead,
+    isLoading 
+  } = useNotifications();
+
+  const handleNotificationClick = async (notification: any) => {
+    // Marcar como lida
+    if (!notification.is_read) {
+      await markAsRead(notification.id);
+    }
+
+    // Navegar para a URL se houver
+    if (notification.action_url) {
+      navigate(notification.action_url);
+    }
+  };
+
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'comment_liked':
+        return '👍';
+      case 'comment_replied':
+        return '💬';
+      default:
+        return '🔔';
+    }
+  };
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className={cn(
+            "relative transition-all duration-fast hover:bg-surface-elevated/50",
+            unreadCount > 0 && "animate-pulse-subtle"
+          )}
+        >
+          <Bell className="h-5 w-5" />
+          {unreadCount > 0 && (
+            <span className={cn(
+              "absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center",
+              "rounded-full bg-status-error text-[10px] font-bold text-white",
+              "animate-scale-in shadow-glow-sm"
+            )}>
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent 
+        align="end" 
+        className={cn(
+          "w-80 p-0 bg-surface-elevated border-border shadow-elegant",
+          "animate-fade-in"
+        )}
+      >
+        <DropdownMenuLabel className="flex items-center justify-between p-4 border-b border-border">
+          <span className="font-semibold text-textPrimary">Notificações</span>
+          {unreadCount > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => markAllAsRead()}
+              className="h-7 px-2 text-xs text-aurora-primary hover:text-aurora-primary/80 hover:bg-aurora-primary/10"
+            >
+              Marcar todas como lidas
+            </Button>
+          )}
+        </DropdownMenuLabel>
+
+        <ScrollArea className="h-[400px]">
+          {isLoading ? (
+            <div className="flex items-center justify-center p-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-aurora-primary" />
+            </div>
+          ) : notifications.length === 0 ? (
+            <div className="flex flex-col items-center justify-center p-8 text-center">
+              <Bell className="h-12 w-12 text-textSecondary/30 mb-3" />
+              <p className="text-sm text-textSecondary">Nenhuma notificação</p>
+            </div>
+          ) : (
+            notifications.map((notification) => (
+              <DropdownMenuItem
+                key={notification.id}
+                onClick={() => handleNotificationClick(notification)}
+                className={cn(
+                  "flex items-start gap-3 p-4 cursor-pointer transition-all duration-fast",
+                  "border-b border-border/50 hover:bg-surface-elevated/70",
+                  !notification.is_read && "bg-aurora-primary/5"
+                )}
+              >
+                <span className="text-2xl mt-1 flex-shrink-0">
+                  {getNotificationIcon(notification.type)}
+                </span>
+                
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2 mb-1">
+                    <p className={cn(
+                      "text-sm font-medium leading-tight",
+                      !notification.is_read ? "text-textPrimary" : "text-textSecondary"
+                    )}>
+                      {notification.title}
+                    </p>
+                    {!notification.is_read && (
+                      <span className="w-2 h-2 bg-aurora-primary rounded-full flex-shrink-0 mt-1.5 animate-pulse" />
+                    )}
+                  </div>
+                  
+                  <p className="text-xs text-textSecondary line-clamp-2 mb-2">
+                    {notification.message}
+                  </p>
+                  
+                  <span className="text-xs text-textSecondary/60">
+                    {formatDistanceToNow(new Date(notification.created_at), {
+                      addSuffix: true,
+                      locale: ptBR
+                    })}
+                  </span>
+                </div>
+              </DropdownMenuItem>
+            ))
+          )}
+        </ScrollArea>
+
+        {notifications.length > 0 && (
+          <>
+            <DropdownMenuSeparator />
+            <div className="p-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/notifications')}
+                className="w-full text-xs text-aurora-primary hover:text-aurora-primary/80 hover:bg-aurora-primary/10"
+              >
+                Ver todas as notificações
+              </Button>
+            </div>
+          </>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};

@@ -22,18 +22,8 @@ export const CommentsSection = ({ toolId }: CommentsSectionProps) => {
     handleSubmitComment,
     startReply,
     cancelReply,
-    likeComment,
     deleteComment
   } = useToolComments(toolId);
-
-  // Adaptar as funções para corresponder aos tipos esperados
-  const handleLikeComment = (commentId: string) => {
-    const commentToLike = comments.find(c => c.id === commentId) || 
-                          comments.flatMap(c => c.replies || []).find(c => c.id === commentId);
-    if (commentToLike) {
-      likeComment(commentToLike);
-    }
-  };
 
   const handleDeleteComment = (commentId: string) => {
     const commentToDelete = comments.find(c => c.id === commentId) || 
@@ -64,8 +54,8 @@ export const CommentsSection = ({ toolId }: CommentsSectionProps) => {
       <CommentList
         comments={comments}
         isLoading={isLoading}
+        toolId={toolId}
         onReply={startReply}
-        onLike={handleLikeComment}
         onDelete={handleDeleteComment}
       />
     </div>

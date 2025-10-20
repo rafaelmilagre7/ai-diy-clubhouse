@@ -6,12 +6,13 @@ import { ThumbsUp, MessageSquare, Trash2, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useOptimisticLike } from '@/hooks/comments/useOptimisticLike';
 
 interface CommentItemProps {
   comment: Comment;
   currentUserId?: string;
+  toolId: string;
   onReply: () => void;
-  onLike: () => void;
   onDelete: () => void;
   isReply?: boolean;
 }
@@ -19,14 +20,25 @@ interface CommentItemProps {
 export const CommentItem = ({
   comment,
   currentUserId,
+  toolId,
   onReply,
-  onLike,
   onDelete,
   isReply = false
 }: CommentItemProps) => {
   const isAuthor = currentUserId === comment.user_id;
   const isAdmin = comment.profiles?.role === 'admin';
   const hasLiked = comment.user_has_liked;
+  
+  // Hook otimista para likes
+  const { likeComment, isProcessing } = useOptimisticLike({
+    commentTable: 'tool_comments',
+    likeTable: 'tool_comment_likes',
+    queryKey: ['tool-comments', toolId]
+  });
+
+  const handleLike = () => {
+    likeComment(comment.id, hasLiked, comment.likes_count);
+  };
   
   // Função para formatar a data de criação
   const getFormattedDate = (dateString: string) => {
@@ -94,14 +106,26 @@ export const CommentItem = ({
             <Button 
               variant="ghost" 
               size="sm" 
+              disabled={isProcessing(comment.id)}
               className={cn(
-                "text-xs flex items-center gap-1 h-7 px-2 text-textSecondary hover:text-textPrimary",
-                hasLiked && "text-aurora-primary hover:text-aurora-primary/80"
+                "text-xs flex items-center gap-1 h-7 px-2 transition-all",
+                "duration-fast ease-smooth",
+                hasLiked 
+                  ? "text-aurora-primary hover:text-aurora-primary/80 hover:bg-aurora-primary/10" 
+                  : "text-textSecondary hover:text-textPrimary hover:bg-surface-elevated/50",
+                isProcessing(comment.id) && "opacity-70 cursor-not-allowed"
               )}
-              onClick={onLike}
+              onClick={handleLike}
             >
-              <ThumbsUp className="h-3.5 w-3.5" />
-              <span>{comment.likes_count > 0 ? comment.likes_count : ''} Curtir</span>
+              <ThumbsUp 
+                className={cn(
+                  "h-3.5 w-3.5 transition-all duration-fast",
+                  hasLiked && "fill-current scale-110"
+                )} 
+              />
+              <span className="transition-all duration-fast">
+                {comment.likes_count > 0 ? comment.likes_count : ''} Curtir
+              </span>
             </Button>
             
             {!isReply && (

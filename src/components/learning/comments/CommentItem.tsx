@@ -9,6 +9,8 @@ import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Comment } from "@/types/learningTypes";
 import { CommentForm } from "./CommentForm";
+import { useOptimisticLike } from "@/hooks/comments/useOptimisticLike";
+import { cn } from "@/lib/utils";
 
 interface CommentItemProps {
   comment: Comment;
@@ -30,8 +32,16 @@ export const CommentItem: React.FC<CommentItemProps> = ({
   const [isReplying, setIsReplying] = useState(false);
   const { user } = useAuth();
   
-  // Debug do objeto comment para verificar sua estrutura
-  console.log("Dados do comentário:", comment);
+  // Hook otimista para likes
+  const { likeComment, isProcessing } = useOptimisticLike({
+    commentTable: 'learning_comments',
+    likeTable: 'learning_comment_likes',
+    queryKey: ['lesson-comments', lessonId]
+  });
+
+  const handleLike = () => {
+    likeComment(comment.id, comment.user_has_liked || false, comment.likes_count || 0);
+  };
   
   // Verifica se o usuário é dono do comentário ou é admin/formacao
   const canDelete = user?.id === comment.user_id || 
@@ -126,15 +136,23 @@ export const CommentItem: React.FC<CommentItemProps> = ({
             
             <Button 
               variant={comment.user_has_liked ? "secondary" : "ghost"}
-              size="sm" 
-              className={`h-8 px-3 text-xs border-0 transition-all duration-200 ${
+              size="sm"
+              disabled={isProcessing(comment.id)}
+              className={cn(
+                "h-8 px-3 text-xs border-0 transition-all duration-fast ease-smooth",
                 comment.user_has_liked 
                   ? 'bg-gradient-to-r from-primary/20 to-primary/10 text-primary hover:from-primary/30 hover:to-primary/20' 
-                  : 'bg-surface-elevated/30 hover:bg-surface-elevated/50'
-              }`}
-              onClick={() => onLike(comment.id)}
+                  : 'bg-surface-elevated/30 hover:bg-surface-elevated/50',
+                isProcessing(comment.id) && "opacity-70 cursor-not-allowed"
+              )}
+              onClick={handleLike}
             >
-              <ThumbsUp className={`h-3.5 w-3.5 mr-1 ${comment.user_has_liked ? 'fill-current' : ''}`} />
+              <ThumbsUp 
+                className={cn(
+                  "h-3.5 w-3.5 mr-1 transition-all duration-fast",
+                  comment.user_has_liked && 'fill-current scale-110'
+                )} 
+              />
               {comment.likes_count || 0}
             </Button>
             

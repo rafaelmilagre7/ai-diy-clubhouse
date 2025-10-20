@@ -3687,34 +3687,43 @@ export type Database = {
       }
       notifications: {
         Row: {
+          action_url: string | null
+          category: string | null
           created_at: string
           data: Json | null
           expires_at: string | null
           id: string
           is_read: boolean | null
           message: string
+          priority: number | null
           title: string
           type: string
           user_id: string
         }
         Insert: {
+          action_url?: string | null
+          category?: string | null
           created_at?: string
           data?: Json | null
           expires_at?: string | null
           id?: string
           is_read?: boolean | null
           message: string
+          priority?: number | null
           title: string
           type: string
           user_id: string
         }
         Update: {
+          action_url?: string | null
+          category?: string | null
           created_at?: string
           data?: Json | null
           expires_at?: string | null
           id?: string
           is_read?: boolean | null
           message?: string
+          priority?: number | null
           title?: string
           type?: string
           user_id?: string

@@ -9,16 +9,16 @@ import { Card } from '@/components/ui/card';
 interface CommentListProps {
   comments: Comment[];
   isLoading: boolean;
+  toolId: string;
   onReply: (comment: Comment) => void;
-  onLike: (commentId: string) => void;
   onDelete: (commentId: string) => void;
 }
 
 export const CommentList = ({
   comments,
   isLoading,
+  toolId,
   onReply,
-  onLike,
   onDelete
 }: CommentListProps) => {
   const { user } = useAuth();
@@ -64,8 +64,8 @@ export const CommentList = ({
           <CommentItem
             comment={comment}
             currentUserId={user?.id}
+            toolId={toolId}
             onReply={() => onReply(comment)}
-            onLike={() => onLike(comment.id)}
             onDelete={() => onDelete(comment.id)}
           />
           
@@ -77,8 +77,8 @@ export const CommentList = ({
                   key={reply.id}
                   comment={reply}
                   currentUserId={user?.id}
+                  toolId={toolId}
                   onReply={() => onReply(comment)}
-                  onLike={() => onLike(reply.id)}
                   onDelete={() => onDelete(reply.id)}
                   isReply
                 />
