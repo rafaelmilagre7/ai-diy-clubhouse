@@ -52,3 +52,65 @@
 .chart-container-sm { height: var(--chart-height-sm); }
 .chart-container-md { height: var(--chart-height-md); }
 .chart-container-lg { height: var(--chart-height-lg); }
+
+/* === STATUS COLOR UTILITIES === */
+.text-status-success { color: hsl(var(--status-success)); }
+.bg-status-success { background-color: hsl(var(--status-success)); }
+.bg-status-success\/5 { background-color: hsl(var(--status-success) / 0.05); }
+.bg-status-success\/10 { background-color: hsl(var(--status-success) / 0.1); }
+.bg-status-success\/20 { background-color: hsl(var(--status-success) / 0.2); }
+.border-status-success { border-color: hsl(var(--status-success)); }
+.border-status-success\/20 { border-color: hsl(var(--status-success) / 0.2); }
+.border-status-success\/30 { border-color: hsl(var(--status-success) / 0.3); }
+.border-status-success\/50 { border-color: hsl(var(--status-success) / 0.5); }
+
+.text-status-error { color: hsl(var(--status-error)); }
+.bg-status-error { background-color: hsl(var(--status-error)); }
+.bg-status-error\/5 { background-color: hsl(var(--status-error) / 0.05); }
+.bg-status-error\/10 { background-color: hsl(var(--status-error) / 0.1); }
+.bg-status-error\/20 { background-color: hsl(var(--status-error) / 0.2); }
+.border-status-error { border-color: hsl(var(--status-error)); }
+.border-status-error\/20 { border-color: hsl(var(--status-error) / 0.2); }
+.border-status-error\/30 { border-color: hsl(var(--status-error) / 0.3); }
+.border-status-error\/50 { border-color: hsl(var(--status-error) / 0.5); }
+
+.text-status-warning { color: hsl(var(--status-warning)); }
+.bg-status-warning { background-color: hsl(var(--status-warning)); }
+.bg-status-warning\/5 { background-color: hsl(var(--status-warning) / 0.05); }
+.bg-status-warning\/10 { background-color: hsl(var(--status-warning) / 0.1); }
+.bg-status-warning\/20 { background-color: hsl(var(--status-warning) / 0.2); }
+.border-status-warning { border-color: hsl(var(--status-warning)); }
+.border-status-warning\/20 { border-color: hsl(var(--status-warning) / 0.2); }
+.border-status-warning\/30 { border-color: hsl(var(--status-warning) / 0.3); }
+.border-status-warning\/50 { border-color: hsl(var(--status-warning) / 0.5); }
+
+.text-status-info { color: hsl(var(--status-info)); }
+.bg-status-info { background-color: hsl(var(--status-info)); }
+.bg-status-info\/5 { background-color: hsl(var(--status-info) / 0.05); }
+.bg-status-info\/10 { background-color: hsl(var(--status-info) / 0.1); }
+.bg-status-info\/20 { background-color: hsl(var(--status-info) / 0.2); }
+.border-status-info { border-color: hsl(var(--status-info)); }
+.border-status-info\/20 { border-color: hsl(var(--status-info) / 0.2); }
+.border-status-info\/30 { border-color: hsl(var(--status-info) / 0.3); }
+.border-status-info\/50 { border-color: hsl(var(--status-info) / 0.5); }
+
+.text-status-neutral { color: hsl(var(--status-neutral)); }
+.bg-status-neutral { background-color: hsl(var(--status-neutral)); }
+.bg-status-neutral\/5 { background-color: hsl(var(--status-neutral) / 0.05); }
+.bg-status-neutral\/10 { background-color: hsl(var(--status-neutral) / 0.1); }
+.bg-status-neutral\/20 { background-color: hsl(var(--status-neutral) / 0.2); }
+.border-status-neutral { border-color: hsl(var(--status-neutral)); }
+.border-status-neutral\/20 { border-color: hsl(var(--status-neutral) / 0.2); }
+.border-status-neutral\/30 { border-color: hsl(var(--status-neutral) / 0.3); }
+.border-status-neutral\/50 { border-color: hsl(var(--status-neutral) / 0.5); }
+
+/* === AURORA PRIMARY UTILITIES === */
+.text-aurora-primary { color: hsl(var(--aurora-primary)); }
+.bg-aurora-primary { background-color: hsl(var(--aurora-primary)); }
+.bg-aurora-primary\/5 { background-color: hsl(var(--aurora-primary) / 0.05); }
+.bg-aurora-primary\/10 { background-color: hsl(var(--aurora-primary) / 0.1); }
+.bg-aurora-primary\/20 { background-color: hsl(var(--aurora-primary) / 0.2); }
+.border-aurora-primary { border-color: hsl(var(--aurora-primary)); }
+.border-aurora-primary\/20 { border-color: hsl(var(--aurora-primary) / 0.2); }
+.border-aurora-primary\/30 { border-color: hsl(var(--aurora-primary) / 0.3); }
+.border-aurora-primary\/50 { border-color: hsl(var(--aurora-primary) / 0.5); }
