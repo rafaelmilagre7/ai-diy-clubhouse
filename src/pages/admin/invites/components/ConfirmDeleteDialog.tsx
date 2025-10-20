@@ -41,7 +41,7 @@ const ConfirmDeleteDialog = ({
   
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-dialog-form-sm">
         <DialogHeader>
           <DialogTitle>🗑️ Remover convite</DialogTitle>
           <DialogDescription>

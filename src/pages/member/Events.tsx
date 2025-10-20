@@ -41,7 +41,7 @@ const Events = () => {
               className="relative cursor-pointer rounded-2xl overflow-hidden"
               onClick={handleClick}
             >
-              <div className="h-[700px] bg-gradient-to-br from-card via-card to-muted/50 border border-border/50 rounded-2xl relative">
+              <div className="h-calendar bg-gradient-to-br from-card via-card to-muted/50 border border-border/50 rounded-2xl relative">
                 {/* Overlay Premium */}
                 <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-black/40 to-black/60 z-30 flex items-center justify-center backdrop-blur-sm rounded-2xl">
                   <div className="text-center space-y-3">
@@ -79,7 +79,7 @@ const Events = () => {
           ) : (
             <>
               {isLoading ? (
-                <div className="flex justify-center items-center h-[700px]">
+                <div className="flex justify-center items-center h-calendar">
                   <Loader2 className="h-8 w-8 animate-spin text-aurora-primary" />
                 </div>
               ) : (

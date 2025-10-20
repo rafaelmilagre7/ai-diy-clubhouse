@@ -29,7 +29,7 @@ export const CourseHeader: React.FC<CourseHeaderProps> = ({
   return (
     <div className="relative w-full overflow-hidden">
       {/* Hero Banner - Estilo Netflix */}
-      <div className="relative h-[70vh] min-h-[500px] w-full">
+      <div className="relative h-hero-viewport min-h-hero w-full">
         {coverImage ? (
           <img
             src={coverImage}

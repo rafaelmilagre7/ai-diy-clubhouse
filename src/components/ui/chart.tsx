@@ -43,7 +43,7 @@ interface PieChartProps extends BaseChartProps {
 
 // Componente de fallback para quando não há dados
 const ChartFallback = ({ message = "Sem dados disponíveis" }: { message?: string }) => (
-  <div className="flex items-center justify-center h-full w-full min-h-[200px] text-neutral-500 dark:text-neutral-400">
+  <div className="flex items-center justify-center h-full w-full min-h-content-min text-neutral-500 dark:text-neutral-400">
     <div className="text-center">
       <div className="text-lg mb-2">📊</div>
       <p>{message}</p>

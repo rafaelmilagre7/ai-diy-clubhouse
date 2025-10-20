@@ -58,7 +58,7 @@ const SuggestionsLayout = () => {
           />
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Card key={i} className="h-[280px] bg-card/50 backdrop-blur-sm border-border">
+              <Card key={i} className="h-benefit-card bg-card/50 backdrop-blur-sm border-border">
                 <div className="p-6 space-y-4">
                   <div className="flex justify-between items-start gap-4">
                     <div className="space-y-3 flex-1">

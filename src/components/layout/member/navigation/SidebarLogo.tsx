@@ -33,7 +33,7 @@ export const SidebarLogo = ({ sidebarOpen, setSidebarOpen }: SidebarLogoProps) =
           className={cn(
             "transition-all duration-300 object-contain",
             sidebarOpen 
-              ? "h-12 w-auto max-w-[200px]" // Logo maior quando aberto
+              ? "h-12 w-auto max-w-logo" // Logo maior quando aberto
               : "h-10 w-10 object-cover" // Logo compacto quando fechado
           )}
         />

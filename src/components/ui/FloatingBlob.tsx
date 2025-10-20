@@ -22,9 +22,9 @@ export const FloatingBlob: React.FC<FloatingBlobProps> = ({
   };
 
   const sizeClasses = {
-    small: 'w-[200px] h-[200px]',
-    medium: 'w-[350px] h-[350px]',
-    large: 'w-[500px] h-[500px]'
+    small: 'w-blob-sm h-blob-sm',
+    medium: 'w-blob-md h-blob-md',
+    large: 'w-blob-lg h-blob-lg'
   };
 
   return (

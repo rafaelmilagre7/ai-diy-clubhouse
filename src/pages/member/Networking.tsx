@@ -33,7 +33,7 @@ const Networking = () => {
           <meta name="description" content="Descubra conexões estratégicas com IA na comunidade Viver de IA" />
         </Helmet>
 
-        <div className="relative container py-12 flex items-center justify-center min-h-[70vh] overflow-hidden">
+        <div className="relative container py-12 flex items-center justify-center min-h-section overflow-hidden">
           {/* Aurora Background Blobs */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-aurora/10 rounded-full blur-3xl animate-blob" />

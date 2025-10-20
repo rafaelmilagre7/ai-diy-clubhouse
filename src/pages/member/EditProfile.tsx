@@ -127,7 +127,7 @@ const EditProfile = () => {
             <Button 
               onClick={handleUpdateProfile} 
               disabled={isLoading || !name.trim()}
-              className="min-w-[140px]"
+              className="min-w-profile-button"
             >
               {isLoading ? "Salvando..." : "Salvar Alterações"}
             </Button>

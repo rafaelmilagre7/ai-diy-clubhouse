@@ -62,7 +62,7 @@ export const SolutionsTabOptimized: React.FC<SolutionsTabOptimizedProps> = ({ tr
     if (!solutionData) {
       return (
         <Card className="group relative overflow-hidden border border-border/50 bg-gradient-to-br from-card/95 to-muted/30 backdrop-blur-sm">
-          <div className="flex h-[200px] relative z-10 items-center justify-center">
+          <div className="flex h-solution-card relative z-10 items-center justify-center">
             <div className="text-center">
               <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2 text-muted-foreground" />
               <p className="text-sm text-muted-foreground">Carregando solução...</p>
@@ -77,12 +77,12 @@ export const SolutionsTabOptimized: React.FC<SolutionsTabOptimizedProps> = ({ tr
         {/* Animated glow effect */}
         <div className="absolute inset-0 bg-gradient-to-r from-aurora-primary/5 via-transparent to-aurora-primary/3 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
         
-        <div className="flex h-[200px] relative z-10" onClick={() => {
+        <div className="flex h-solution-card relative z-10" onClick={() => {
           console.log('🔗 [SOLUTION-CARD-OPT] Navegando para solução:', item.solutionId);
           navigate(`/solution/${item.solutionId}`);
         }}>
           {/* Solution Cover */}
-          <div className="w-[280px] relative overflow-hidden bg-gradient-to-br from-aurora-primary/20 to-aurora-primary/10 rounded-l-xl">
+          <div className="w-card-sidebar relative overflow-hidden bg-gradient-to-br from-aurora-primary/20 to-aurora-primary/10 rounded-l-xl">
             {solutionData.thumbnail_url ? (
               <img 
                 src={solutionData.thumbnail_url} 

@@ -27,7 +27,7 @@ export const LessonLoadingSkeleton = () => {
           </div>
           
           {/* Video Player Skeleton with minimum height */}
-          <div className="backdrop-blur-sm bg-surface-elevated/30 rounded-2xl border border-border/30 p-6 shadow-2xl min-h-[400px]">
+          <div className="backdrop-blur-sm bg-surface-elevated/30 rounded-2xl border border-border/30 p-6 shadow-2xl min-h-feature-block">
             <div className="w-full aspect-video bg-gradient-to-br from-muted/50 via-muted/30 to-muted/50 rounded-xl animate-pulse flex items-center justify-center relative overflow-hidden">
               {/* Play button skeleton */}
               <div className="w-16 h-16 bg-muted/40 rounded-full animate-pulse flex items-center justify-center">

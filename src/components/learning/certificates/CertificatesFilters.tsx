@@ -24,7 +24,7 @@ export const CertificatesFilters = ({
   return (
     <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between bg-card border rounded-lg p-4">
       <div className="flex flex-col sm:flex-row gap-4 flex-1">
-        <div className="relative flex-1 min-w-[300px]">
+        <div className="relative flex-1 min-w-filter">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
             placeholder="Buscar certificados..."
@@ -35,7 +35,7 @@ export const CertificatesFilters = ({
         </div>
         
         <Select value={selectedCategory} onValueChange={onCategoryChange}>
-          <SelectTrigger className="w-full sm:w-[200px]">
+          <SelectTrigger className="w-full sm:w-select">
             <SelectValue placeholder="Categoria" />
           </SelectTrigger>
           <SelectContent>
@@ -46,7 +46,7 @@ export const CertificatesFilters = ({
         </Select>
         
         <Select value={sortBy} onValueChange={onSortChange}>
-          <SelectTrigger className="w-full sm:w-[200px]">
+          <SelectTrigger className="w-full sm:w-select">
             <SelectValue placeholder="Ordenar por" />
           </SelectTrigger>
           <SelectContent>

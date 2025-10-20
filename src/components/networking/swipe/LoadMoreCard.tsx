@@ -16,7 +16,7 @@ export const LoadMoreCard = ({ onGenerateMore, isGenerating }: LoadMoreCardProps
       transition={{ duration: 0.4 }}
     >
       <LiquidGlassCard 
-        className="w-full h-[700px] flex flex-col items-center justify-center p-8 text-center"
+        className="w-full h-calendar flex flex-col items-center justify-center p-8 text-center"
         variant="premium"
         hoverable={false}
       >

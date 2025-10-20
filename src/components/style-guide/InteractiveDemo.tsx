@@ -44,7 +44,7 @@ export function InteractiveDemo({ title, description, controls, render }: Intera
       <CardContent>
         <div className="grid lg:grid-cols-2 gap-6">
           {/* Preview */}
-          <div className="p-6 rounded-lg border border-border bg-card flex items-center justify-center min-h-[200px]">
+          <div className="p-6 rounded-lg border border-border bg-card flex items-center justify-center min-h-content-min">
             {render(props)}
           </div>
 

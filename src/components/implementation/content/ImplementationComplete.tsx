@@ -41,7 +41,7 @@ export const ImplementationComplete = ({ module, onComplete, onPrevious }: Imple
     }
   };
   return (
-    <div className="relative min-h-[400px] flex items-center justify-center">
+    <div className="relative min-h-feature-block flex items-center justify-center">
       {/* Background Aurora Effect */}
       <div className="absolute inset-0 overflow-hidden rounded-xl">
         <div className="absolute inset-0 bg-gradient-to-br from-aurora-primary/10 via-transparent to-aurora-primary-dark/15" />

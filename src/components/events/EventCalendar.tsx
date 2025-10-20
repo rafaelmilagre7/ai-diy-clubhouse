@@ -69,7 +69,7 @@ export const EventCalendar = () => {
           modifiersClassNames={{
             event: 'bg-aurora-primary/10 font-medium text-aurora-primary hover:bg-aurora-primary/20 transition-colors'
           }}
-          className="w-full min-h-[700px] p-6"
+          className="w-full min-h-calendar p-6"
           classNames={{
             months: "w-full grid grid-cols-1",
             month: "space-y-4 w-full",
@@ -78,7 +78,7 @@ export const EventCalendar = () => {
             table: "w-full border-collapse h-full",
             head_row: "grid grid-cols-7 gap-1",
             head_cell: "text-muted-foreground rounded-md font-normal text-[0.9rem] h-10 flex items-center justify-center",
-            row: "grid grid-cols-7 gap-1 h-[100px]",
+            row: "grid grid-cols-7 gap-1 h-event-row",
             cell: "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md",
             day: "h-full w-full p-2 font-normal hover:bg-accent/50 rounded-md transition-colors flex flex-col items-center justify-start",
             day_today: "bg-accent/30",

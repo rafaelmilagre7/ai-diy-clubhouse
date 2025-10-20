@@ -64,7 +64,7 @@ export const SuggestionCard: React.FC<SuggestionCardProps> = ({
           </div>
           
           {/* Score de votos moderno */}
-          <div className="flex flex-col items-center bg-muted/30 rounded-xl p-3 min-w-[72px] border border-border/50">
+          <div className="flex flex-col items-center bg-muted/30 rounded-xl p-3 min-w-stat border border-border/50">
             <div className={`text-xl font-semibold ${
               netVotes > 0 
                 ? 'text-emerald-600 dark:text-emerald-400' 

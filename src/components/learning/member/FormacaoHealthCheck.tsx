@@ -157,7 +157,7 @@ export const FormacaoHealthCheck = () => {
   }
 
   return (
-    <Card className="fixed bottom-4 right-4 z-50 p-4 min-w-[280px] bg-background/95 backdrop-blur-sm border shadow-lg">
+    <Card className="fixed bottom-4 right-4 z-50 p-4 min-w-card bg-background/95 backdrop-blur-sm border shadow-lg">
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">

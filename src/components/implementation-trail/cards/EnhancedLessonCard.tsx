@@ -193,7 +193,7 @@ export const EnhancedLessonCard = ({ lesson, index }: EnhancedLessonCardProps) =
           {lesson.course_title && (
             <div className="flex items-center gap-1">
               <Target className="w-3.5 h-3.5" />
-              <span className="truncate max-w-[120px]">{lesson.course_title}</span>
+              <span className="truncate max-w-step-label">{lesson.course_title}</span>
             </div>
           )}
         </div>

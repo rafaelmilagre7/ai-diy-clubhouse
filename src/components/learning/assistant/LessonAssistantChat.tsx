@@ -184,7 +184,7 @@ export const LessonAssistantChat: React.FC<LessonAssistantChatProps> = ({
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Digite sua mensagem aqui..."
-            className="resize-none min-h-[40px] max-h-[120px]"
+            className="resize-none min-h-[40px] max-h-textarea"
             disabled={isLoading}
           />
           <Button

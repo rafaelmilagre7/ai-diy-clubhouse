@@ -52,7 +52,7 @@ export const AddTeamMemberDialog: React.FC<AddTeamMemberDialogProps> = ({
           Convidar Membro
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-dialog-form-sm">
         <DialogHeader>
           <DialogTitle>Convidar Membro para Equipe</DialogTitle>
           <DialogDescription>

@@ -14,7 +14,7 @@ export const SolutionsAccessError: React.FC<SolutionsAccessErrorProps> = ({ erro
   }
 
   return (
-    <div className="flex items-center justify-center min-h-[400px] p-4">
+    <div className="flex items-center justify-center min-h-feature-block p-4">
       <div className="max-w-lg w-full space-y-6">
         <Alert className="border-destructive/40 bg-destructive/5">
           <ShieldCheck className="h-5 w-5 text-destructive" />

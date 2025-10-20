@@ -21,7 +21,7 @@ export const AdminSidebarLogo = ({ sidebarOpen, setSidebarOpen }: AdminSidebarLo
           className={cn(
             "transition-all duration-300 object-contain",
             sidebarOpen 
-              ? "h-8 w-auto max-w-[160px]" // Logo completo quando aberto
+              ? "h-8 w-auto max-w-logo-sm" // Logo completo quando aberto
               : "h-8 w-8" // Logo compacto quando fechado
           )}
         />

@@ -187,7 +187,7 @@ const FormacaoCertificados = () => {
       )}
 
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-dialog-form-lg">
           <DialogHeader>
             <DialogTitle>Configurar Certificado</DialogTitle>
           </DialogHeader>

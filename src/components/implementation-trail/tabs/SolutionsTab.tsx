@@ -227,8 +227,8 @@ export const SolutionsTab: React.FC<SolutionsTabProps> = ({ trail }) => {
     if (!solution) {
       return (
         <Card className="group relative overflow-hidden border border-border/50 bg-gradient-to-br from-card to-muted/30 backdrop-blur-sm animate-pulse">
-          <div className="flex h-[200px]">
-            <div className="w-[280px] bg-muted/50 rounded-l-xl"></div>
+          <div className="flex h-solution-card">
+            <div className="w-card-sidebar bg-muted/50 rounded-l-xl"></div>
             <div className="flex-1 p-4 space-y-3">
               <div className="h-4 bg-muted rounded w-3/4"></div>
               <div className="h-3 bg-muted rounded w-1/2"></div>
@@ -247,12 +247,12 @@ export const SolutionsTab: React.FC<SolutionsTabProps> = ({ trail }) => {
         {/* Shimmer effect */}
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-out" />
         
-        <div className="flex h-[200px] relative z-10" onClick={() => {
+        <div className="flex h-solution-card relative z-10" onClick={() => {
           console.log('🔗 [SOLUTION-CARD] Navegando para solução:', solution.id);
           navigate(`/solution/${solution.id}`);
         }}>
           {/* Solution Cover Image - Formato Horizontal Otimizado */}
-          <div className="w-[280px] relative overflow-hidden bg-gradient-to-br from-muted to-muted/50 rounded-l-xl">
+          <div className="w-card-sidebar relative overflow-hidden bg-gradient-to-br from-muted to-muted/50 rounded-l-xl">
             {solution.thumbnail_url ? (
               <div className="relative w-full h-full">
                 <img 

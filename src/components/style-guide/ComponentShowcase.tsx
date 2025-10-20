@@ -40,7 +40,7 @@ export function ComponentShowcase({
             </TabsList>
             {variants.map((variant) => (
               <TabsContent key={variant.name} value={variant.name} className="space-y-4">
-                <div className="p-6 rounded-lg border border-border bg-card flex items-center justify-center min-h-[120px]">
+                <div className="p-6 rounded-lg border border-border bg-card flex items-center justify-center min-h-showcase">
                   {variant.preview}
                 </div>
                 {variant.code && (
@@ -61,7 +61,7 @@ export function ComponentShowcase({
         {description && <CardDescription>{description}</CardDescription>}
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="p-6 rounded-lg border border-border bg-card flex items-center justify-center min-h-[120px]">
+        <div className="p-6 rounded-lg border border-border bg-card flex items-center justify-center min-h-showcase">
           {preview}
         </div>
         {code && (

@@ -68,7 +68,7 @@ const CreateDomainDialog = ({ roles, onDomainCreated }: CreateDomainDialogProps)
           Novo Domínio
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-dialog-form">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>Adicionar Domínio Confiável</DialogTitle>

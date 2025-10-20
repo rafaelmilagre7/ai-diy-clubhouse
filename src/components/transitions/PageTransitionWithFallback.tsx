@@ -61,7 +61,7 @@ export const PageTransitionWithFallback: React.FC<PageTransitionWithFallbackProp
   };
 
   return (
-    <div className="relative min-h-[200px] w-full">
+    <div className="relative min-h-content-min w-full">
       <AnimatePresence mode="wait">
         {isVisible && (
           <motion.div

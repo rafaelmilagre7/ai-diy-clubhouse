@@ -82,7 +82,7 @@ const CreateInviteDialog = ({ roles, onInviteCreated }: { roles: any[], onInvite
           Novo Convite
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-dialog-form">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>Criar Novo Convite</DialogTitle>
@@ -203,7 +203,7 @@ const CreateDomainDialog = ({ roles, onDomainCreated }: { roles: any[], onDomain
           Novo Domínio
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-dialog-form">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>Adicionar Domínio Confiável</DialogTitle>
@@ -280,7 +280,7 @@ const ConfirmResendDialog = ({
   
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-dialog-form-sm">
         <DialogHeader>
           <DialogTitle>Reenviar convite</DialogTitle>
           <DialogDescription>
@@ -331,7 +331,7 @@ const ConfirmDeleteDialog = ({
   
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-dialog-form-sm">
         <DialogHeader>
           <DialogTitle>Excluir convite</DialogTitle>
           <DialogDescription>

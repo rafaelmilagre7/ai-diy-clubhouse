@@ -84,7 +84,7 @@ export const SwipeCard = ({
         variant="premium"
         hoverable={false}
       >
-        <div className="min-h-[720px] flex flex-col p-5">
+        <div className="min-h-swipe flex flex-col p-5">
           {/* Header Compacto: Avatar + Info + Score */}
           <div className="flex items-start gap-3 mb-4 flex-shrink-0">
             <Avatar className="h-24 w-24 border-2 border-aurora/30 shadow-lg">

@@ -156,7 +156,7 @@ const AdminSuggestionDetails = () => {
             <img
               src={suggestion.image_url}
               alt="Imagem da sugestão"
-              className="max-w-full h-auto rounded-md max-h-[400px] object-contain bg-muted"
+              className="max-w-full h-auto rounded-md max-h-feature-block object-contain bg-muted"
             />
           </div>
         )}

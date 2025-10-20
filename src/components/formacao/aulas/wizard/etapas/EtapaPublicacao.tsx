@@ -222,7 +222,7 @@ const EtapaPublicacao: React.FC<EtapaPublicacaoProps> = ({
           type="button"
           onClick={handleSubmit}
           disabled={isSaving || saving || saveStatus === "success" || assistantIdError}
-          className="min-w-[120px]"
+          className="min-w-button"
         >
           {(isSaving || saving) ? (
             <>

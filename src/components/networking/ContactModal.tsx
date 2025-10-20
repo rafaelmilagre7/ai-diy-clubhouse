@@ -201,7 +201,7 @@ export const ContactModal = ({ isOpen, onClose, userId, userName, initialData }:
                 </motion.div>
               </div>
             ) : displayData ? (
-              <div className="overflow-y-auto max-h-[90vh]">
+              <div className="overflow-y-auto max-h-modal">
                 {/* Header com foto e informações principais */}
                 <div className="relative bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-8 pb-6">
                   <motion.div

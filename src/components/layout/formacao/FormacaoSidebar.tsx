@@ -14,7 +14,7 @@ export const FormacaoSidebar = ({
       className={cn(
         "fixed inset-y-0 left-0 z-50 flex h-full flex-col bg-background border-r border-border transition-all duration-300 ease-in-out",
         // Estados da sidebar
-        sidebarOpen ? "w-64" : "w-[70px]",
+        sidebarOpen ? "w-64" : "w-sidebar-collapsed",
         // Responsividade mobile
         "md:translate-x-0",
         sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"

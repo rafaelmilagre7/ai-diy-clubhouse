@@ -27,7 +27,7 @@ export const PieChart: React.FC<PieChartProps> = ({
   
   if (!validation.isValid) {
     return (
-      <div className="flex items-center justify-center h-[200px] text-muted-foreground">
+      <div className="flex items-center justify-center h-content-min text-muted-foreground">
         <p>Dados insuficientes para exibir o gráfico</p>
       </div>
     )

@@ -107,7 +107,7 @@ const Benefits = () => {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Card key={i} className="h-[280px] animate-pulse border-border bg-card/80">
+              <Card key={i} className="h-benefit-card animate-pulse border-border bg-card/80">
                 <CardContent className="p-6">
                   <div className="h-full bg-muted/70 rounded-lg"></div>
                 </CardContent>

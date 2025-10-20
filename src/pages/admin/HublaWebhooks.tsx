@@ -206,7 +206,7 @@ export default function HublaWebhooks() {
             <CardTitle>Webhooks Recebidos ({webhooks.length})</CardTitle>
           </CardHeader>
           <CardContent>
-            <ScrollArea className="h-[600px]">
+            <ScrollArea className="h-content">
               {webhooks.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <Webhook className="w-12 h-12 mx-auto mb-4 opacity-50" />
@@ -294,7 +294,7 @@ export default function HublaWebhooks() {
                         <Copy className="w-4 h-4" />
                       </Button>
                     </div>
-                    <ScrollArea className="h-[400px]">
+                    <ScrollArea className="h-feature-block">
                       <pre className="text-xs bg-muted p-3 rounded overflow-auto">
                         {JSON.stringify(selectedWebhook.headers, null, 2)}
                       </pre>

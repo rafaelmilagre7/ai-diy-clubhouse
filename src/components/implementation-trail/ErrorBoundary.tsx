@@ -37,7 +37,7 @@ export class TrailErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <div className="min-h-[400px] flex items-center justify-center p-6">
+        <div className="min-h-feature-block flex items-center justify-center p-6">
           <Card className="max-w-md w-full border-aurora-primary bg-aurora-primary/10">
             <CardContent className="p-6 text-center">
               <div className="flex justify-center mb-4">

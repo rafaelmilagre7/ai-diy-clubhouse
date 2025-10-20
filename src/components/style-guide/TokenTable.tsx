@@ -44,10 +44,10 @@ export function TokenTable({ title, description, tokens }: TokenTableProps) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[200px]">Token</TableHead>
+                <TableHead className="w-table-sm">Token</TableHead>
                 <TableHead className="w-[250px]">Valor</TableHead>
                 <TableHead>Uso</TableHead>
-                {tokens.some(t => t.type) && <TableHead className="w-[120px]">Tipo</TableHead>}
+                {tokens.some(t => t.type) && <TableHead className="w-button-min">Tipo</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>

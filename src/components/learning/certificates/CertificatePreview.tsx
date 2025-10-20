@@ -53,7 +53,7 @@ export const CertificatePreview = ({ certificate, onDownload }: CertificatePrevi
         <CardContent className="p-0">
           <div 
             ref={certificateRef}
-            className="relative bg-gradient-to-br from-white via-purple-50 to-blue-50 p-12 min-h-[600px] flex flex-col justify-center items-center text-center"
+            className="relative bg-gradient-to-br from-white via-purple-50 to-blue-50 p-12 min-h-content flex flex-col justify-center items-center text-center"
             style={{
               backgroundImage: 'var(--gradient-radial-cert)'
             }}

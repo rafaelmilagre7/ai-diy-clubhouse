@@ -45,7 +45,7 @@ export const ImplementationTabsNavigation = ({
             key={tab.id}
             value={tab.id}
             className={cn(
-              "relative flex flex-col items-center gap-2 py-4 px-3 transition-all duration-300 rounded-xl border-0 h-auto min-h-[70px]",
+              "relative flex flex-col items-center gap-2 py-4 px-3 transition-all duration-300 rounded-xl border-0 h-auto min-h-tab-button",
               "data-[state=active]:bg-gradient-to-br data-[state=active]:from-aurora-primary/20 data-[state=active]:to-aurora-primary-dark/25",
               "data-[state=active]:border data-[state=active]:border-aurora-primary/40",
               "data-[state=active]:text-white data-[state=active]:font-semibold",

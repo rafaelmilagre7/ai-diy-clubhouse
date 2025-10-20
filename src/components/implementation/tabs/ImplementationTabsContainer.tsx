@@ -73,7 +73,7 @@ const ImplementationTabsContainer: React.FC = () => {
   // CONDICIONAIS APENAS APÓS TODOS OS HOOKS
   if (isLoading || isLoadingProgress) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center min-h-feature-block">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
@@ -98,7 +98,7 @@ const ImplementationTabsContainer: React.FC = () => {
       />
 
       {/* Tab Content */}
-      <div className="relative bg-gradient-to-br from-card/40 via-card/20 to-transparent backdrop-blur-md rounded-3xl border-0 shadow-lg min-h-[600px]">
+      <div className="relative bg-gradient-to-br from-card/40 via-card/20 to-transparent backdrop-blur-md rounded-3xl border-0 shadow-lg min-h-content">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/2 to-transparent rounded-3xl"></div>
         <div className="relative p-6">
           {renderTabContent()}

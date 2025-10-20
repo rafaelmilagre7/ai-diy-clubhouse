@@ -39,7 +39,7 @@ export const PageTransition: React.FC<PageTransitionProps> = ({
   }, [isVisible, showLoader, loadingDelay]);
   
   return (
-    <div className="relative min-h-[100px]">
+    <div className="relative min-h-transition">
       <AnimatePresence mode="wait">
         {isVisible && (
           <motion.div

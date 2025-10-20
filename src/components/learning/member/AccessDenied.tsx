@@ -17,7 +17,7 @@ export function AccessDenied({
   const navigate = useNavigate();
   
   return (
-    <div className="flex flex-col items-center justify-center p-10 text-center min-h-[60vh]">
+    <div className="flex flex-col items-center justify-center p-10 text-center min-h-access-denied">
       <div className="bg-status-error/20 p-6 rounded-full mb-6">
         <Lock className="h-16 w-16 text-status-error" />
       </div>

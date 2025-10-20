@@ -174,7 +174,7 @@ export const ActiveChat = ({
           <div className="px-4 py-2 flex gap-2 flex-wrap">
             {attachments.map((att, i) => (
               <div key={i} className="flex items-center gap-2 bg-muted px-2 py-1 rounded text-sm">
-                <span className="truncate max-w-[150px]">{att.name}</span>
+                <span className="truncate max-w-tag">{att.name}</span>
                 <button
                   type="button"
                   onClick={() => setAttachments(attachments.filter((_, idx) => idx !== i))}
