@@ -1,8 +1,9 @@
 
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { AdminButton } from '@/components/admin/ui/AdminButton';
+import { AdminCard } from '@/components/admin/ui/AdminCard';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Plus, Pencil, Trash2, Shield, Users } from 'lucide-react';
 import { useRoles, Role } from '@/hooks/admin/useRoles';
 import { RoleForm } from '@/components/admin/roles/RoleForm';
@@ -64,10 +65,9 @@ export default function AdminRoles() {
           <h1 className="text-3xl font-bold">Gestão de Papéis</h1>
           <p className="text-muted-foreground">Gerencie os papéis e permissões dos usuários</p>
         </div>
-        <Button onClick={() => setShowCreateForm(true)}>
-          <Plus className="mr-2 h-4 w-4" />
+        <AdminButton onClick={() => setShowCreateForm(true)} icon={<Plus />}>
           Novo Papel
-        </Button>
+        </AdminButton>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -97,24 +97,24 @@ export default function AdminRoles() {
                 </div>
                 
                 <div className="flex gap-2">
-                  <Button
+                  <AdminButton
                     variant="outline"
                     size="sm"
                     onClick={() => handleEdit(role)}
+                    icon={<Pencil />}
                   >
-                    <Pencil className="mr-1 h-3 w-3" />
                     Editar
-                  </Button>
+                  </AdminButton>
                   {!role.is_system && (
-                    <Button
+                    <AdminButton
                       variant="outline"
                       size="sm"
                       onClick={() => handleDelete(role)}
                       disabled={isDeleting}
+                      icon={<Trash2 />}
                     >
-                      <Trash2 className="mr-1 h-3 w-3" />
                       Deletar
-                    </Button>
+                    </AdminButton>
                   )}
                 </div>
               </div>

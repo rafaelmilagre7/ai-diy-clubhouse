@@ -1,8 +1,11 @@
 
 import React, { useState, useMemo } from 'react';
-import { Button } from '@/components/ui/button';
+import { AdminButton } from '@/components/admin/ui/AdminButton';
+import { AdminCard } from '@/components/admin/ui/AdminCard';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { 
   AlertCircle,
   RefreshCw, 
@@ -31,7 +34,6 @@ import { MasterMemberSyncPanel } from '@/components/master/sync/MasterMemberSync
 import { ManageTeamDialog } from '@/components/admin/users/ManageTeamDialog';
 import { getUserRoleName } from '@/lib/supabase/types';
 import { toast } from 'sonner';
-import { Card, CardContent } from '@/components/ui/card';
 
 export default function AdminUsers() {
   const { 
@@ -213,22 +215,20 @@ export default function AdminUsers() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button
+          <AdminButton
             onClick={() => exportUsers(users, searchQuery)}
             disabled={isExporting || users.length === 0}
             size="sm"
             variant="outline"
-          >
-            <Download className={`h-4 w-4 ${isExporting ? 'animate-pulse' : ''}`} />
-          </Button>
-          <Button
+            icon={<Download className={isExporting ? 'animate-pulse' : ''} />}
+          />
+          <AdminButton
             onClick={fetchUsers}
             disabled={isRefreshing}
             size="sm"
             variant="outline"
-          >
-            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-          </Button>
+            icon={<RefreshCw className={isRefreshing ? 'animate-spin' : ''} />}
+          />
         </div>
       </div>
 
@@ -379,20 +379,20 @@ export default function AdminUsers() {
                 Clique nos números das estatísticas acima para filtrar e visualizar usuários
               </p>
               <div className="flex justify-center gap-2">
-                <Button 
+                <AdminButton 
                   variant="outline" 
                   size="sm"
                   onClick={() => handleFilterByType('all')}
                 >
                   Ver todos os usuários
-                </Button>
-                <Button 
+                </AdminButton>
+                <AdminButton 
                   variant="outline" 
                   size="sm"
                   onClick={() => handleFilterByType('masters')}
                 >
                   Ver masters e equipes
-                </Button>
+                </AdminButton>
               </div>
             </div>
           </CardContent>

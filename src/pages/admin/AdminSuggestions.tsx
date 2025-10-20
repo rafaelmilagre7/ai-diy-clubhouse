@@ -2,11 +2,14 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { AdminCard } from '@/components/admin/ui/AdminCard';
+import { AdminButton } from '@/components/admin/ui/AdminButton';
+import { AdminStatsCard } from '@/components/admin/ui/AdminStatsCard';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { 
   Search, 
@@ -169,10 +172,7 @@ const AdminSuggestions = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-      {/* Aurora Background Effects */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-aurora-primary/5 via-transparent to-transparent" />
-      <div className="absolute top-0 right-0 -z-10 h-96 w-96 rounded-full bg-gradient-to-br from-operational/10 to-strategy/10 blur-3xl animate-blob" />
-      <div className="absolute bottom-0 left-0 -z-10 h-96 w-96 rounded-full bg-gradient-to-tr from-revenue/10 to-aurora-primary/10 blur-3xl animate-blob animation-delay-2000" />
       
       <div className="relative p-6 md:p-8 space-y-8">
         {/* Modern Header */}
@@ -207,172 +207,71 @@ const AdminSuggestions = () => {
           </div>
           
           <div className="flex items-center gap-3">
-            <Button
+            <AdminButton
               variant="outline"
               onClick={() => refetch()}
               disabled={isLoading}
-              className="aurora-focus gap-2 bg-card/50 backdrop-blur-sm"
+              icon={<RefreshCw />}
             >
-              <RefreshCw className="h-4 w-4" />
               {isLoading ? "Atualizando..." : "Atualizar"}
-            </Button>
+            </AdminButton>
           </div>
         </div>
 
         {/* Enhanced Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
-          <Card className="surface-elevated border-0 shadow-aurora transition-smooth hover:shadow-aurora-strong group">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-label text-muted-foreground">Total</CardTitle>
-              <div className="p-2 rounded-lg bg-gradient-to-br from-aurora-primary/20 to-aurora-primary/10 transition-smooth group-hover:from-aurora-primary/30 group-hover:to-aurora-primary/20">
-                <MessageSquare className="h-4 w-4 text-aurora-primary" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-heading-2 text-foreground mb-2 bg-gradient-to-r from-aurora-primary to-aurora-primary/80 bg-clip-text text-transparent">
-                {stats.total}
-              </div>
-              <p className="text-caption text-muted-foreground">
-                Sugestões
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="surface-elevated border-0 shadow-aurora transition-smooth hover:shadow-aurora-strong group">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-label text-muted-foreground">Novas</CardTitle>
-              <div className="p-2 rounded-lg bg-gradient-to-br from-operational/20 to-operational/10 transition-smooth group-hover:from-operational/30 group-hover:to-operational/20">
-                <AlertCircle className="h-4 w-4 text-operational" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-heading-2 text-foreground mb-2 bg-gradient-to-r from-operational to-operational/80 bg-clip-text text-transparent">
-                {stats.new}
-              </div>
-              <p className="text-caption text-muted-foreground">
-                Aguardando análise
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="surface-elevated border-0 shadow-aurora transition-all duration-300 hover:shadow-aurora-strong group">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-label text-muted-foreground">Em Progresso</CardTitle>
-              <div className="p-2 rounded-lg bg-gradient-to-br from-strategy/20 to-strategy/10 transition-all duration-300 group-hover:from-strategy/30 group-hover:to-strategy/20">
-                <Clock className="h-4 w-4 text-strategy" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-heading-2 text-foreground mb-2 bg-gradient-to-r from-strategy to-strategy/80 bg-clip-text text-transparent">
-                {stats.inProgress}
-              </div>
-              <p className="text-caption text-muted-foreground">
-                Em desenvolvimento
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="surface-elevated border-0 shadow-aurora transition-all duration-300 hover:shadow-aurora-strong group">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-label text-muted-foreground">Implementadas</CardTitle>
-              <div className="p-2 rounded-lg bg-gradient-to-br from-revenue/20 to-revenue/10 transition-all duration-300 group-hover:from-revenue/30 group-hover:to-revenue/20">
-                <CheckCircle className="h-4 w-4 text-revenue" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-heading-2 text-foreground mb-2 bg-gradient-to-r from-revenue to-revenue/80 bg-clip-text text-transparent">
-                {stats.completed}
-              </div>
-              <p className="text-caption text-muted-foreground">
-                Concluídas
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="surface-elevated border-0 shadow-aurora transition-all duration-300 hover:shadow-aurora-strong group">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-label text-muted-foreground">Recusadas</CardTitle>
-              <div className="p-2 rounded-lg bg-gradient-to-br from-destructive/20 to-destructive/10 transition-all duration-300 group-hover:from-destructive/30 group-hover:to-destructive/20">
-                <XCircle className="h-4 w-4 text-destructive" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-heading-2 text-foreground mb-2 bg-gradient-to-r from-destructive to-destructive/80 bg-clip-text text-transparent">
-                {stats.declined}
-              </div>
-              <p className="text-caption text-muted-foreground">
-                Não aprovadas
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="surface-elevated border-0 shadow-aurora transition-all duration-300 hover:shadow-aurora-strong group">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-label text-muted-foreground">Engajamento</CardTitle>
-              <div className="p-2 rounded-lg bg-gradient-to-br from-surface-accent/20 to-surface-accent/10 transition-all duration-300 group-hover:from-surface-accent/30 group-hover:to-surface-accent/20">
-                <Users className="h-4 w-4 text-surface-accent" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-heading-2 text-foreground mb-2 bg-gradient-to-r from-surface-accent to-surface-accent/80 bg-clip-text text-transparent">
-                {stats.totalVotes}
-              </div>
-              <p className="text-caption text-muted-foreground">
-                Total de votos
-              </p>
-            </CardContent>
-          </Card>
+          <AdminStatsCard label="Total" value={stats.total} icon={MessageSquare} variant="primary" description="Sugestões" />
+          <AdminStatsCard label="Novas" value={stats.new} icon={AlertCircle} variant="success" description="Aguardando análise" />
+          <AdminStatsCard label="Em Progresso" value={stats.inProgress} icon={Clock} variant="info" description="Em desenvolvimento" />
+          <AdminStatsCard label="Implementadas" value={stats.completed} icon={CheckCircle} variant="success" description="Concluídas" />
+          <AdminStatsCard label="Recusadas" value={stats.declined} icon={XCircle} variant="warning" description="Não aprovadas" />
+          <AdminStatsCard label="Engajamento" value={stats.totalVotes} icon={Users} variant="info" description="Total de votos" />
         </div>
 
         {/* Enhanced Filters */}
-        <Card className="surface-elevated border-0 shadow-aurora">
-          <CardHeader>
-            <CardTitle className="text-heading-3 flex items-center gap-2">
-              <Filter className="h-5 w-5" />
-              Filtros e Busca
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar sugestões por título ou descrição..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="aurora-focus pl-10"
-                />
-              </div>
-              <div className="w-full sm:w-64">
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="aurora-focus">
-                    <SelectValue placeholder="Filtrar por status" />
-                  </SelectTrigger>
-                  <SelectContent className="surface-elevated border-0 shadow-aurora">
-                    <SelectItem value="all">Todos os Status</SelectItem>
-                    <SelectItem value="new">Nova</SelectItem>
-                    <SelectItem value="under_review">Em Análise</SelectItem>
-                    <SelectItem value="in_development">Em Desenvolvimento</SelectItem>
-                    <SelectItem value="completed">Implementada</SelectItem>
-                    <SelectItem value="implemented">Implementada</SelectItem>
-                    <SelectItem value="declined">Recusada</SelectItem>
-                    <SelectItem value="rejected">Recusada</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setSearchTerm('');
-                  setStatusFilter('all');
-                }}
-                className="aurora-focus"
-              >
-                Limpar
-              </Button>
+        <AdminCard
+          title="Filtros e Busca"
+          icon={<Filter />}
+          variant="elevated"
+        >
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar sugestões por título ou descrição..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="aurora-focus pl-10"
+              />
             </div>
-          </CardContent>
-        </Card>
+            <div className="w-full sm:w-64">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="aurora-focus">
+                  <SelectValue placeholder="Filtrar por status" />
+                </SelectTrigger>
+                <SelectContent className="surface-elevated border-0 shadow-aurora">
+                  <SelectItem value="all">Todos os Status</SelectItem>
+                  <SelectItem value="new">Nova</SelectItem>
+                  <SelectItem value="under_review">Em Análise</SelectItem>
+                  <SelectItem value="in_development">Em Desenvolvimento</SelectItem>
+                  <SelectItem value="completed">Implementada</SelectItem>
+                  <SelectItem value="implemented">Implementada</SelectItem>
+                  <SelectItem value="declined">Recusada</SelectItem>
+                  <SelectItem value="rejected">Recusada</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <AdminButton
+              variant="outline"
+              onClick={() => {
+                setSearchTerm('');
+                setStatusFilter('all');
+              }}
+            >
+              Limpar
+            </AdminButton>
+          </div>
+        </AdminCard>
 
         {/* Enhanced Suggestions Grid */}
         <Card className="surface-elevated border-0 shadow-aurora">

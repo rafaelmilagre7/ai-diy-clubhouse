@@ -8,12 +8,7 @@ import { Shield, Eye, AlertTriangle } from 'lucide-react';
 const AdminSecurity: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-destructive/5 p-6 space-y-8 relative overflow-hidden">
-      {/* Aurora Background Elements */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-20 right-10 w-72 h-72 bg-gradient-to-br from-destructive/8 to-destructive-dark/4 rounded-full blur-3xl animate-blob"></div>
-        <div className="absolute top-60 left-20 w-96 h-96 bg-gradient-to-br from-warning/6 to-warning-light/3 rounded-full blur-3xl animate-blob animation-delay-2000"></div>
-        <div className="absolute bottom-20 right-1/3 w-80 h-80 bg-gradient-to-br from-amber-500/4 to-aurora/3 rounded-full blur-3xl animate-blob animation-delay-4000"></div>
-      </div>
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-destructive/5 via-transparent to-transparent" />
 
       {/* Header with Aurora Style */}
       <div className="relative aurora-glass rounded-2xl p-8 border border-destructive/20 backdrop-blur-md">

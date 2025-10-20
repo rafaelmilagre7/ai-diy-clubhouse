@@ -1,9 +1,12 @@
 
 import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { AdminCard } from "@/components/admin/ui/AdminCard";
+import { AdminButton } from "@/components/admin/ui/AdminButton";
+import { AdminStatsCard } from "@/components/admin/ui/AdminStatsCard";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { 
   Calendar, 
@@ -62,10 +65,7 @@ const AdminEvents = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-      {/* Aurora Background Effects */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-aurora-primary/5 via-transparent to-transparent" />
-      <div className="absolute top-0 right-0 -z-10 h-96 w-96 rounded-full bg-gradient-to-br from-operational/10 to-strategy/10 blur-3xl animate-blob" />
-      <div className="absolute bottom-0 left-0 -z-10 h-96 w-96 rounded-full bg-gradient-to-tr from-revenue/10 to-aurora-primary/10 blur-3xl animate-blob animation-delay-2000" />
       
       <div className="relative p-6 md:p-8 space-y-8">
         {/* Modern Header */}
@@ -100,112 +100,31 @@ const AdminEvents = () => {
           </div>
           
           <div className="flex items-center gap-3">
-            <Button
+            <AdminButton
               variant="outline"
               onClick={() => refetch()}
               disabled={isLoading}
-              className="aurora-focus gap-2 bg-card/50 backdrop-blur-sm"
+              icon={<RefreshCw />}
             >
-              <RefreshCw className="h-4 w-4" />
               {isLoading ? "Atualizando..." : "Atualizar"}
-            </Button>
+            </AdminButton>
             
-            <Button
+            <AdminButton
               onClick={() => setShowCreateDialog(true)}
-              className="aurora-focus gap-2 bg-gradient-to-r from-aurora-primary to-operational hover:from-aurora-primary/90 hover:to-operational/90"
+              icon={<Plus />}
             >
-              <Plus className="h-4 w-4" />
               Novo Evento
-            </Button>
+            </AdminButton>
           </div>
         </div>
 
         {/* Enhanced Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-          <Card className="surface-elevated border-0 shadow-aurora transition-smooth hover:shadow-aurora-strong group">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-label text-muted-foreground">Total de Eventos</CardTitle>
-              <div className="p-2 rounded-lg bg-gradient-to-br from-aurora-primary/20 to-aurora-primary/10 transition-smooth group-hover:from-aurora-primary/30 group-hover:to-aurora-primary/20">
-                <Calendar className="h-4 w-4 text-aurora-primary" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-heading-2 text-foreground mb-2 bg-gradient-to-r from-aurora-primary to-aurora-primary/80 bg-clip-text text-transparent">
-                {totalEvents}
-              </div>
-              <p className="text-caption text-muted-foreground">
-                {recurringEvents} recorrentes
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="surface-elevated border-0 shadow-aurora transition-smooth hover:shadow-aurora-strong group">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-label text-muted-foreground">Próximos Eventos</CardTitle>
-              <div className="p-2 rounded-lg bg-gradient-to-br from-operational/20 to-operational/10 transition-smooth group-hover:from-operational/30 group-hover:to-operational/20">
-                <CalendarDays className="h-4 w-4 text-operational" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-heading-2 text-foreground mb-2 bg-gradient-to-r from-operational to-operational/80 bg-clip-text text-transparent">
-                {upcomingEvents}
-              </div>
-              <p className="text-caption text-muted-foreground">
-                Agendados
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="surface-elevated border-0 shadow-aurora transition-smooth hover:shadow-aurora-strong group">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-label text-muted-foreground">Eventos Hoje</CardTitle>
-              <div className="p-2 rounded-lg bg-gradient-to-br from-strategy/20 to-strategy/10 transition-smooth group-hover:from-strategy/30 group-hover:to-strategy/20">
-                <Clock className="h-4 w-4 text-strategy" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-heading-2 text-foreground mb-2 bg-gradient-to-r from-strategy to-strategy/80 bg-clip-text text-transparent">
-                {todayEvents}
-              </div>
-              <p className="text-caption text-muted-foreground">
-                Acontecendo
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="surface-elevated border-0 shadow-aurora transition-smooth hover:shadow-aurora-strong group">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-label text-muted-foreground">Recorrentes</CardTitle>
-              <div className="p-2 rounded-lg bg-gradient-to-br from-revenue/20 to-revenue/10 transition-smooth group-hover:from-revenue/30 group-hover:to-revenue/20">
-                <Repeat className="h-4 w-4 text-revenue" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-heading-2 text-foreground mb-2 bg-gradient-to-r from-revenue to-revenue/80 bg-clip-text text-transparent">
-                {recurringEvents}
-              </div>
-              <p className="text-caption text-muted-foreground">
-                Séries ativas
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="surface-elevated border-0 shadow-aurora transition-smooth hover:shadow-aurora-strong group">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-label text-muted-foreground">Únicos</CardTitle>
-              <div className="p-2 rounded-lg bg-gradient-to-br from-surface-accent/20 to-surface-accent/10 transition-smooth group-hover:from-surface-accent/30 group-hover:to-surface-accent/20">
-                <Users className="h-4 w-4 text-surface-accent" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-heading-2 text-foreground mb-2 bg-gradient-to-r from-surface-accent to-surface-accent/80 bg-clip-text text-transparent">
-                {singleEvents}
-              </div>
-              <p className="text-caption text-muted-foreground">
-                Eventos únicos
-              </p>
-            </CardContent>
-          </Card>
+          <AdminStatsCard label="Total de Eventos" value={totalEvents} icon={Calendar} variant="primary" description={`${recurringEvents} recorrentes`} />
+          <AdminStatsCard label="Próximos Eventos" value={upcomingEvents} icon={CalendarDays} variant="success" description="Agendados" />
+          <AdminStatsCard label="Eventos Hoje" value={todayEvents} icon={Clock} variant="info" description="Acontecendo" />
+          <AdminStatsCard label="Recorrentes" value={recurringEvents} icon={Repeat} variant="success" description="Séries ativas" />
+          <AdminStatsCard label="Únicos" value={singleEvents} icon={Users} variant="info" description="Eventos únicos" />
         </div>
 
         {/* Enhanced Filters */}
