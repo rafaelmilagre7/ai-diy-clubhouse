@@ -12,7 +12,7 @@ interface InviteWelcomeSectionProps {
 
 const InviteWelcomeSection: React.FC<InviteWelcomeSectionProps> = ({ inviteData }) => {
   return (
-    <div className="relative flex flex-col justify-center space-y-4 h-full">
+    <div className="relative flex flex-col justify-center space-y-md h-full">
       {/* Background Elements */}
       <div className="absolute inset-0 bg-gradient-to-br from-background via-surface-base to-background -z-10" />
       <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-operational/10 rounded-full blur-3xl -z-10 animate-pulse" />
@@ -30,8 +30,8 @@ const InviteWelcomeSection: React.FC<InviteWelcomeSectionProps> = ({ inviteData 
       </div>
 
       {/* Main Content */}
-      <div className="text-center space-y-4">
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-operational/20 to-operational/30 backdrop-blur-sm border border-operational/30 rounded-full text-xs font-semibold text-operational">
+      <div className="text-center space-y-md">
+        <div className="inline-flex items-center gap-sm px-md py-sm bg-gradient-to-r from-operational/20 to-operational/30 backdrop-blur-sm border border-operational/30 rounded-full text-xs font-semibold text-operational">
           <Star className="h-3 w-3" />
           Convite Exclusivo
         </div>

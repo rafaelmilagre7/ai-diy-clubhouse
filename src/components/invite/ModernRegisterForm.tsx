@@ -281,7 +281,7 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
 
   if (step === 'success') {
     return (
-      <div className="text-center space-y-8 py-12">
+      <div className="text-center space-y-xl py-3xl">
           <div className="relative">
             <div className="w-24 h-24 bg-operational rounded-full flex items-center justify-center mx-auto animate-bounce shadow-lg">
               <CheckCircle className="h-12 w-12 text-white" />

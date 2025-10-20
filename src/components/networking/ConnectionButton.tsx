@@ -152,7 +152,7 @@ export const ConnectionButton = ({ userId, userName, userAvatar, className }: Co
   // Se há uma solicitação pendente e o usuário atual foi quem recebeu
   if (connectionStatus.exists && connectionStatus.status === 'pending' && !connectionStatus.isRequester) {
     return (
-      <div className="flex gap-2">
+      <div className="flex gap-sm">
         <Button
           variant="default"
           size="sm"

@@ -70,7 +70,7 @@ export const ConnectionsGrid = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg">
         {acceptedConnections.map((connection, index) => (
           <motion.div
             key={connection.id}

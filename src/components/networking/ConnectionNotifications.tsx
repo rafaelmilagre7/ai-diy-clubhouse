@@ -75,7 +75,7 @@ export const ConnectionNotifications = () => {
           )}
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-md">
         {notifications.map((notification) => (
           <div
             key={notification.id}

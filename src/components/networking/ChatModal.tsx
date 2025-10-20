@@ -77,7 +77,7 @@ export const ChatModal = ({ isOpen, onClose, recipientId, recipientName, recipie
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-muted/10 rounded-lg">
+        <div className="flex-1 overflow-y-auto p-md space-y-md bg-muted/10 rounded-lg">
           {messages.length === 0 ? (
             <div className="text-center text-textSecondary py-8">
               <p>Nenhuma mensagem ainda.</p>
@@ -116,7 +116,7 @@ export const ChatModal = ({ isOpen, onClose, recipientId, recipientName, recipie
           <div ref={messagesEndRef} />
         </div>
 
-        <form onSubmit={handleSendMessage} className="flex gap-2 p-2 border-t">
+        <form onSubmit={handleSendMessage} className="flex gap-sm p-sm border-t">
           <Input
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
