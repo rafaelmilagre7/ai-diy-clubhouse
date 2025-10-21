@@ -1,10 +1,33 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { createHmac } from "https://deno.land/std@0.190.0/node/crypto.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, svix-id, svix-timestamp, svix-signature',
 };
+
+// Função para verificar assinatura do webhook Resend
+function verifyWebhookSignature(
+  payload: string,
+  signature: string,
+  secret: string
+): boolean {
+  try {
+    // Resend usa o padrão Svix que é compatível com HMAC SHA256
+    const expectedSignature = createHmac('sha256', secret)
+      .update(payload)
+      .digest('base64');
+    
+    // O header svix-signature pode ter múltiplas versões: v1,hash v2,hash
+    const signatures = signature.split(' ').map(s => s.split(',')[1]);
+    
+    return signatures.some(sig => sig === expectedSignature);
+  } catch (error) {
+    console.error('❌ [RESEND-WEBHOOK] Erro ao verificar assinatura:', error);
+    return false;
+  }
+}
 
 interface ResendWebhookEvent {
   type: string;
@@ -36,9 +59,30 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const webhookSecret = Deno.env.get('RESEND_WEBHOOK_SECRET');
+    
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const event: ResendWebhookEvent = await req.json();
+    // Ler o body uma única vez
+    const payload = await req.text();
+
+    // Verificar assinatura do webhook (segurança)
+    if (webhookSecret) {
+      const signature = req.headers.get('svix-signature');
+      
+      if (!signature || !verifyWebhookSignature(payload, signature, webhookSecret)) {
+        console.error('❌ [RESEND-WEBHOOK] Assinatura inválida - possível tentativa de ataque');
+        return new Response(
+          JSON.stringify({ error: 'Invalid signature' }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      console.log('✅ [RESEND-WEBHOOK] Assinatura válida');
+    }
+
+    // Parse do JSON a partir do payload já lido
+    const event: ResendWebhookEvent = JSON.parse(payload);
     console.log('📧 [RESEND-WEBHOOK] Evento recebido:', event.type);
 
     // Mapear tipos de eventos do Resend para nosso formato
