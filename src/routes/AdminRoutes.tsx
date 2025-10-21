@@ -38,6 +38,9 @@ import NPSAnalytics from '@/pages/admin/NPSAnalytics';
 import CertificateTemplates from '@/pages/admin/CertificateTemplates';
 import CourseCertificateManager from '@/pages/admin/CourseCertificateManager';
 import NotificationsStats from '@/pages/admin/NotificationsStats';
+import EmailDashboard from '@/pages/admin/communications/EmailDashboard';
+import EmailLogs from '@/pages/admin/communications/EmailLogs';
+import EmailSettings from '@/pages/admin/communications/EmailSettings';
 
 
 // Função helper para criar rotas protegidas com AdminLayout
@@ -71,6 +74,9 @@ export const adminRoutes: RouteObject[] = [
   createAdminRoute("/admin/invites", InvitesManagement),
   createAdminRoute("/admin/invite-debug", InviteDebug),
   createAdminRoute("/admin/communications", AdminCommunications),
+  createAdminRoute("/admin/communications/email-dashboard", EmailDashboard),
+  createAdminRoute("/admin/communications/email-logs", EmailLogs),
+  createAdminRoute("/admin/communications/email-settings", EmailSettings),
   createAdminRoute("/admin/security", AdminSecurity),
   createAdminRoute("/admin/whatsapp-debug", WhatsAppDebug),
   createAdminRoute("/admin/integrations-debug", IntegrationsDebugPage),

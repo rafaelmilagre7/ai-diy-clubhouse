@@ -103,6 +103,11 @@ const navigationItems = [
     title: "Comunicações",
     href: "/admin/communications",
     icon: Mail,
+    subItems: [
+      { title: "Dashboard Emails", href: "/admin/communications/email-dashboard" },
+      { title: "Logs de Email", href: "/admin/communications/email-logs" },
+      { title: "Configurações", href: "/admin/communications/email-settings" },
+    ],
   },
   {
     title: "Segurança",
