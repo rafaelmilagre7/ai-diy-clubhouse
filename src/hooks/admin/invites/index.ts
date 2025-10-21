@@ -18,3 +18,4 @@ export * from './useInviteCSVExport';
 export * from './useInviteCreateMonitoring';
 export * from './useWhatsAppTemplateCheck';
 export * from './useInviteDeliveryStatus';
+export * from './useBatchSendInvites';
