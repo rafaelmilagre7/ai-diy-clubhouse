@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Star, Share2, Download, Save } from 'lucide-react';
@@ -12,7 +13,7 @@ import { ArchitectureFlowchart } from './ArchitectureFlowchart';
 interface SolutionResultProps {
   solution: any;
   onNewIdea: () => void;
-  onSave: () => void;
+  onSave: (solution: any) => Promise<any>;
   onDiscard: () => void;
 }
 
@@ -22,9 +23,18 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({
   onSave, 
   onDiscard 
 }) => {
+  const navigate = useNavigate();
+  
   // Debug: verificar se architecture_flowchart está vindo
   console.log('🔍 DEBUG - architecture_flowchart:', solution.architecture_flowchart);
   console.log('🔍 DEBUG - required_tools:', solution.required_tools);
+
+  const handleSaveAndRedirect = async () => {
+    const savedSolution = await onSave(solution);
+    if (savedSolution?.id) {
+      navigate(`/ferramentas/miracleai/solution/${savedSolution.id}`);
+    }
+  };
   
   return (
     <motion.div
@@ -157,7 +167,7 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({
         </Button>
         
         <Button 
-          onClick={onSave} 
+          onClick={handleSaveAndRedirect} 
           size="lg"
           className="bg-gradient-to-r from-aurora-primary to-aurora-primary-light hover:opacity-90 transition-opacity min-w-[200px] flex items-center gap-2"
         >

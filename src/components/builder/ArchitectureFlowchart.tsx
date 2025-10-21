@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import mermaid from 'mermaid';
 import { Button } from '@/components/ui/button';
-import { Download } from 'lucide-react';
+import { Download, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ArchitectureFlowchartProps {
@@ -19,10 +19,18 @@ export const ArchitectureFlowchart: React.FC<ArchitectureFlowchartProps> = ({ fl
 
     const renderDiagram = async () => {
       try {
-        // Inicializar Mermaid com tema dark
+        // Limpar completamente qualquer renderização anterior
+        const container = mermaidRef.current;
+        if (!container) return;
+        
+        container.innerHTML = '';
+        container.removeAttribute('data-processed');
+        
+        // Re-inicializar Mermaid a cada render (mais seguro)
         mermaid.initialize({
           startOnLoad: false,
           theme: 'dark',
+          securityLevel: 'loose',
           themeVariables: {
             primaryColor: '#818cf8',
             primaryTextColor: '#fff',
@@ -35,41 +43,54 @@ export const ArchitectureFlowchart: React.FC<ArchitectureFlowchartProps> = ({ fl
             secondBkg: '#334155',
             border1: '#475569',
             border2: '#64748b',
+            fontFamily: 'Inter, system-ui, sans-serif',
           },
           flowchart: {
             useMaxWidth: true,
             htmlLabels: true,
             curve: 'basis',
+            padding: 20,
           },
         });
 
-        // Limpar conteúdo anterior
-        if (mermaidRef.current) {
-          mermaidRef.current.innerHTML = '';
+        // Validar código Mermaid antes de renderizar
+        const isValid = await mermaid.parse(flowchart.mermaid_code);
+        if (!isValid) {
+          throw new Error('Código Mermaid inválido');
         }
 
-        // Renderizar diagrama com ID único
-        const id = `mermaid-${Date.now()}`;
+        // Renderizar com ID único baseado em timestamp + random
+        const id = `mermaid-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
         const { svg } = await mermaid.render(id, flowchart.mermaid_code);
         
-        // Inserir SVG renderizado no DOM
-        if (mermaidRef.current) {
-          mermaidRef.current.innerHTML = svg;
-        }
+        // Inserir SVG
+        container.innerHTML = svg;
+        
+        console.log('✅ Mermaid renderizado com sucesso:', id);
       } catch (error) {
-        console.error('Erro ao renderizar Mermaid:', error);
+        console.error('❌ Erro ao renderizar Mermaid:', error);
+        
         if (mermaidRef.current) {
           mermaidRef.current.innerHTML = `
-            <div class="text-center py-8 text-muted-foreground">
-              <p>Erro ao renderizar fluxograma</p>
-              <p class="text-xs mt-2">Código Mermaid inválido ou formato não suportado</p>
+            <div class="text-center py-12 text-muted-foreground space-y-3">
+              <svg class="h-12 w-12 mx-auto text-status-error" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <p class="font-semibold">Erro ao renderizar fluxograma</p>
+              <p class="text-xs">Código Mermaid inválido ou formato não suportado</p>
+              <details class="text-left max-w-lg mx-auto mt-4 p-4 bg-muted/30 rounded-lg">
+                <summary class="cursor-pointer font-mono text-xs">Ver código Mermaid</summary>
+                <pre class="mt-2 text-xs overflow-auto">${flowchart.mermaid_code}</pre>
+              </details>
             </div>
           `;
         }
       }
     };
 
-    renderDiagram();
+    // Delay para garantir que o DOM está pronto
+    const timer = setTimeout(renderDiagram, 100);
+    return () => clearTimeout(timer);
   }, [flowchart]);
 
   const handleDownloadPNG = async () => {

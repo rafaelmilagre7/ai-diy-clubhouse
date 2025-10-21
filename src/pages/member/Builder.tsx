@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Layout, ArrowRight } from 'lucide-react';
+import { Layout, ArrowRight, MessageSquare, Calendar } from 'lucide-react';
 import { useAuth } from '@/contexts/auth';
 import { useMiracleAI } from '@/hooks/builder/useMiracleAI';
 import { QuestionWizard } from '@/components/builder/QuestionWizard';
@@ -15,12 +15,16 @@ const exampleIdeas = [
   {
     title: "Chatbot de Atendimento",
     description: "Chatbot no WhatsApp que usa IA para responder dúvidas sobre produtos",
-    icon: "💬"
+    icon: MessageSquare,
+    color: "from-blue-500/20 to-cyan-500/20",
+    borderColor: "border-blue-500/30"
   },
   {
     title: "Sistema de Agendamento",
     description: "Sistema automático que integra Google Calendar com notificações personalizadas",
-    icon: "📅"
+    icon: Calendar,
+    color: "from-purple-500/20 to-pink-500/20",
+    borderColor: "border-purple-500/30"
   }
 ];
 
@@ -76,10 +80,10 @@ export default function Builder() {
     setSolution(null);
   };
 
-  const handleSave = async () => {
-    if (solution) {
-      await saveSolution(solution);
-      navigate('/ferramentas/miracleai/historico');
+  const handleSave = async (solutionToSave: any) => {
+    if (solutionToSave) {
+      const savedSolution = await saveSolution(solutionToSave);
+      return savedSolution;
     }
   };
 
@@ -198,29 +202,38 @@ export default function Builder() {
                 Ou escolha um exemplo:
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {exampleIdeas.map((example, index) => (
-                  <motion.button
-                    key={index}
-                    onClick={() => handleExampleClick(example)}
-                    className="group relative p-4 rounded-2xl bg-surface-elevated/50 border border-border/50 hover:border-primary/30 transition-all duration-200 text-left overflow-hidden"
-                    whileHover={{ scale: 1.02, y: -2 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-                    <div className="relative">
-                      <div className="flex items-start justify-between mb-2">
-                        <span className="text-2xl">{example.icon}</span>
-                        <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors opacity-0 group-hover:opacity-100" />
+                {exampleIdeas.map((example, index) => {
+                  const IconComponent = example.icon;
+                  return (
+                    <motion.button
+                      key={index}
+                      onClick={() => handleExampleClick(example)}
+                      className={`
+                        group relative p-4 rounded-2xl border transition-all duration-200 text-left overflow-hidden
+                        bg-gradient-to-br ${example.color}
+                        ${example.borderColor} hover:border-primary/50
+                      `}
+                      whileHover={{ scale: 1.02, y: -2 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                      <div className="relative">
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="p-2 rounded-lg bg-background/50">
+                            <IconComponent className="h-5 w-5 text-primary" />
+                          </div>
+                          <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors opacity-0 group-hover:opacity-100" />
+                        </div>
+                        <h3 className="font-semibold text-foreground mb-1 group-hover:text-primary transition-colors">
+                          {example.title}
+                        </h3>
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {example.description}
+                        </p>
                       </div>
-                      <h3 className="font-semibold text-foreground mb-1 group-hover:text-primary transition-colors">
-                        {example.title}
-                      </h3>
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {example.description}
-                      </p>
-                    </div>
-                  </motion.button>
-                ))}
+                    </motion.button>
+                  );
+                })}
               </div>
             </motion.div>
 

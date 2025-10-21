@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Bot, Cog, Database, Monitor } from 'lucide-react';
+import { Sparkles, Settings, Database, Layout } from 'lucide-react';
 
 interface FrameworkQuadrantsProps {
   framework: {
@@ -17,7 +17,7 @@ export const FrameworkQuadrants: React.FC<FrameworkQuadrantsProps> = ({ framewor
       key: 'quadrant1_automation',
       data: framework?.quadrant1_automation,
       title: 'Automação',
-      icon: Cog,
+      icon: Settings,
       color: 'from-cyan-500/20 to-blue-500/20',
       borderColor: 'border-cyan-500/30',
       position: 'top-left'
@@ -26,7 +26,7 @@ export const FrameworkQuadrants: React.FC<FrameworkQuadrantsProps> = ({ framewor
       key: 'quadrant2_ai',
       data: framework?.quadrant2_ai,
       title: 'IA',
-      icon: Bot,
+      icon: Sparkles,
       color: 'from-blue-500/20 to-purple-500/20',
       borderColor: 'border-blue-500/30',
       position: 'top-right'
@@ -44,7 +44,7 @@ export const FrameworkQuadrants: React.FC<FrameworkQuadrantsProps> = ({ framewor
       key: 'quadrant4_interface',
       data: framework?.quadrant4_interface,
       title: 'Interface',
-      icon: Monitor,
+      icon: Layout,
       color: 'from-slate-500/20 to-gray-600/20',
       borderColor: 'border-slate-500/30',
       position: 'bottom-right'
@@ -52,7 +52,16 @@ export const FrameworkQuadrants: React.FC<FrameworkQuadrantsProps> = ({ framewor
   ];
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 relative">
+    <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Linha vertical central */}
+      <div className="absolute left-1/2 top-0 bottom-0 w-[2px] bg-gradient-to-b from-primary/50 via-primary to-primary/50 hidden lg:block -translate-x-1/2" />
+      
+      {/* Linha horizontal central */}
+      <div className="absolute top-1/2 left-0 right-0 h-[2px] bg-gradient-to-r from-primary/50 via-primary to-primary/50 hidden lg:block -translate-y-1/2" />
+      
+      {/* Círculo central onde as linhas se cruzam */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-primary border-4 border-background z-20 hidden lg:block" />
+      
       {quadrants.map((quadrant, index) => {
         const Icon = quadrant.icon;
         

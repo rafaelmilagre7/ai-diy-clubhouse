@@ -30,6 +30,11 @@ import TeamManagementPage from '@/pages/member/TeamManagementPage';
 import Builder from '@/pages/member/Builder';
 import MyAISolutions from '@/pages/member/MyAISolutions';
 import SolutionHistory from '@/pages/member/SolutionHistory';
+import MiracleSolutionCover from '@/pages/member/MiracleSolutionCover';
+import MiracleSolutionFramework from '@/pages/member/MiracleSolutionFramework';
+import MiracleSolutionArchitecture from '@/pages/member/MiracleSolutionArchitecture';
+import MiracleSolutionTools from '@/pages/member/MiracleSolutionTools';
+import MiracleSolutionChecklist from '@/pages/member/MiracleSolutionChecklist';
 
 // Member Learning pages
 import LearningPage from '@/pages/member/learning/LearningPage';
@@ -74,6 +79,11 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/tools/:id", ToolDetails),
   createProtectedRoute("/ferramentas/miracleai", Builder),
   createProtectedRoute("/ferramentas/miracleai/historico", SolutionHistory),
+  createProtectedRoute("/ferramentas/miracleai/solution/:id", MiracleSolutionCover),
+  createProtectedRoute("/ferramentas/miracleai/solution/:id/framework", MiracleSolutionFramework),
+  createProtectedRoute("/ferramentas/miracleai/solution/:id/arquitetura", MiracleSolutionArchitecture),
+  createProtectedRoute("/ferramentas/miracleai/solution/:id/ferramentas", MiracleSolutionTools),
+  createProtectedRoute("/ferramentas/miracleai/solution/:id/checklist", MiracleSolutionChecklist),
   
   // Redirect old builder routes
   {
