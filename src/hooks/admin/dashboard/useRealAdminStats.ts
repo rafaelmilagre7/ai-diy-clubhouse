@@ -63,16 +63,16 @@ export const useRealAdminStats = (timeRange: string) => {
       
       console.log(`🔄 [STATS] Carregando estatísticas para período: ${timeRange}`);
       
-      // === BUSCAR DATA MAIS RECENTE DAS IMPLEMENTATION_TRAILS ===
-      const { data: newestTrail } = await supabase
-        .from('implementation_trails')
+      // === BUSCAR DATA MAIS RECENTE DA TABELA PROGRESS ===
+      const { data: newestProgress } = await supabase
+        .from('progress')
         .select('created_at')
         .order('created_at', { ascending: false })
         .limit(1)
         .single();
 
-      // Usar a data mais recente REAL das implementation_trails como referência
-      const recentDate = newestTrail?.created_at ? new Date(newestTrail.created_at) : new Date();
+      // Usar a data mais recente REAL do progress como referência
+      const recentDate = newestProgress?.created_at ? new Date(newestProgress.created_at) : new Date();
       
       // Calcular período baseado nos dados reais
       const daysMap: { [key: string]: number } = {
@@ -146,18 +146,18 @@ export const useRealAdminStats = (timeRange: string) => {
         .select('*', { count: 'exact', head: true })
         .gte('created_at', startDate.toISOString());
 
-      // Implementações ativas no período (implementation_trails)
+      // Implementações iniciadas no período (progress - soluções implementadas)
       const { count: activeImplementationsInPeriod } = await supabase
-        .from('implementation_trails')
+        .from('progress')
         .select('*', { count: 'exact', head: true })
         .gte('created_at', startDate.toISOString());
 
-      // Implementações completadas no período (usar updated_at para data de conclusão)
+      // Implementações completadas no período (progress com is_completed=true)
       const { count: completedInPeriod } = await supabase
-        .from('implementation_trails')
+        .from('progress')
         .select('*', { count: 'exact', head: true })
-        .eq('status', 'completed')
-        .gte('updated_at', startDate.toISOString());
+        .eq('is_completed', true)
+        .gte('created_at', startDate.toISOString());
 
       // Usuários ativos no período = total de usuários (tabela analytics está vazia)
       // Vamos usar o total de usuários como proxy
