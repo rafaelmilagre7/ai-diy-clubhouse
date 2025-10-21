@@ -1,16 +1,35 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface GenerateRequest {
-  idea: string;
-  userId: string;
-  answers?: Array<{ question: string; answer: string }>;
-}
+// 🔒 Schema de validação Zod
+const GenerateRequestSchema = z.object({
+  idea: z.string()
+    .trim()
+    .min(30, "A ideia deve ter no mínimo 30 caracteres")
+    .max(2000, "A ideia deve ter no máximo 2000 caracteres")
+    .regex(
+      /^[\w\sÀ-ÿ.,!?@#$%&*()\-+=[\]{};:'"/\\|<>~`]+$/,
+      "Texto contém caracteres não permitidos"
+    )
+    .refine(
+      (val) => !/<script|javascript:|onerror=/i.test(val),
+      "Texto contém código não permitido"
+    ),
+  userId: z.string()
+    .uuid("ID de usuário inválido"),
+  answers: z.array(
+    z.object({
+      question: z.string().max(500, "Pergunta muito longa"),
+      answer: z.string().max(2000, "Resposta muito longa")
+    })
+  ).max(10, "Máximo de 10 perguntas permitidas").optional()
+});
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -20,19 +39,31 @@ serve(async (req) => {
   const startTime = Date.now();
 
   try {
-    const { idea, userId, answers = [] }: GenerateRequest = await req.json();
+    const body = await req.json();
 
-    console.log(`[MIRACLE] === GERAÇÃO MIRACLE AI INICIADA ===`);
-    console.log(`[MIRACLE] 👤 User ID: ${userId}`);
-    console.log(`[MIRACLE] 💡 Ideia: "${idea.substring(0, 100)}..."`);
-    console.log(`[MIRACLE] 📝 Contexto: ${answers.length} respostas coletadas`);
-
-    if (!idea || idea.length < 30) {
+    // 🔒 Validar entrada com Zod
+    const validationResult = GenerateRequestSchema.safeParse(body);
+    
+    if (!validationResult.success) {
+      const firstError = validationResult.error.errors[0];
+      console.warn(`[MIRACLE] ❌ Validação falhou: ${firstError.message}`);
+      
       return new Response(
-        JSON.stringify({ error: "Ideia deve ter pelo menos 30 caracteres" }),
+        JSON.stringify({ 
+          error: firstError.message,
+          code: "VALIDATION_ERROR"
+        }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    const { idea, userId, answers = [] } = validationResult.data;
+
+    console.log(`[MIRACLE] === GERAÇÃO MIRACLE AI INICIADA ===`);
+    console.log(`[MIRACLE] ✓ Validação OK`);
+    console.log(`[MIRACLE] 👤 User ID: ${userId.substring(0, 8)}***`);
+    console.log(`[MIRACLE] 💡 Ideia: "${idea.substring(0, 80)}..."`);
+    console.log(`[MIRACLE] 📝 Contexto: ${answers.length} respostas coletadas`);
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -483,9 +514,23 @@ Crie um plano completo seguindo o formato JSON especificado.`;
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
-    console.error("[MIRACLE] ❌ Erro:", error);
+    const errorTime = Date.now() - startTime;
+    
+    // Log detalhado apenas no servidor
+    console.error("[MIRACLE] ❌ Erro interno:", {
+      message: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString(),
+      executionTime: `${errorTime}ms`
+    });
+    
+    // Mensagem genérica e segura para o cliente
     return new Response(
-      JSON.stringify({ error: error.message || "Erro interno" }),
+      JSON.stringify({ 
+        error: "Erro ao processar sua solicitação. Nossa equipe foi notificada.",
+        code: "GENERATION_FAILED",
+        timestamp: new Date().toISOString()
+      }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

@@ -1,13 +1,26 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface AnalyzeRequest {
-  idea: string;
-}
+// 🔒 Schema de validação Zod
+const AnalyzeRequestSchema = z.object({
+  idea: z.string()
+    .trim()
+    .min(30, "A ideia deve ter no mínimo 30 caracteres para análise adequada")
+    .max(2000, "A ideia deve ter no máximo 2000 caracteres")
+    .regex(
+      /^[\w\sÀ-ÿ.,!?@#$%&*()\-+=[\]{};:'"/\\|<>~`]+$/,
+      "Texto contém caracteres não permitidos"
+    )
+    .refine(
+      (val) => !/<script|javascript:|onerror=/i.test(val),
+      "Texto contém código não permitido"
+    )
+});
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -15,16 +28,26 @@ serve(async (req) => {
   }
 
   try {
-    const { idea }: AnalyzeRequest = await req.json();
+    const body = await req.json();
 
-    if (!idea || idea.length < 20) {
+    // 🔒 Validar entrada com Zod
+    const validationResult = AnalyzeRequestSchema.safeParse(body);
+    
+    if (!validationResult.success) {
+      const firstError = validationResult.error.errors[0];
+      console.warn(`[ANALYZE] ❌ Validação falhou: ${firstError.message}`);
+      
       return new Response(
-        JSON.stringify({ error: "Ideia deve ter pelo menos 20 caracteres" }),
+        JSON.stringify({ 
+          error: firstError.message,
+          code: "VALIDATION_ERROR"
+        }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log(`[ANALYZE] Analisando ideia: "${idea.substring(0, 100)}..."`);
+    const { idea } = validationResult.data;
+    console.log(`[ANALYZE] ✓ Validação OK | Analisando ideia: "${idea.substring(0, 80)}..."`);
 
     const lovableAIUrl = "https://ai.gateway.lovable.dev/v1/chat/completions";
     const lovableAIKey = Deno.env.get("LOVABLE_API_KEY");
@@ -157,9 +180,20 @@ Gere perguntas inteligentes para eu entender PERFEITAMENTE o que essa pessoa que
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
-    console.error("[ANALYZE] Erro:", error);
+    // Log detalhado apenas no servidor
+    console.error("[ANALYZE] ❌ Erro interno:", {
+      message: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString()
+    });
+    
+    // Mensagem genérica e segura para o cliente
     return new Response(
-      JSON.stringify({ error: error.message || "Erro ao analisar ideia" }),
+      JSON.stringify({ 
+        error: "Erro ao analisar sua ideia. Por favor, tente novamente.",
+        code: "ANALYSIS_FAILED",
+        timestamp: new Date().toISOString()
+      }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

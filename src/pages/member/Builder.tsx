@@ -6,7 +6,7 @@ import { useMiracleAI } from '@/hooks/builder/useMiracleAI';
 import { QuestionWizard } from '@/components/builder/QuestionWizard';
 import { MiracleProcessingExperience } from '@/components/builder/MiracleProcessingExperience';
 import { SolutionResult } from '@/components/builder/SolutionResult';
-import { AIInputWithLoading } from '@/components/ui/AIInputWithLoading';
+import { AIInputWithValidation } from '@/components/ui/AIInputWithValidation';
 import { useAISolutionAccess } from '@/hooks/builder/useAISolutionAccess';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -193,12 +193,14 @@ export default function Builder() {
               transition={{ delay: 0.1 }}
               className="w-full max-w-2xl mb-12"
             >
-              <AIInputWithLoading
+              <AIInputWithValidation
                 placeholder="Ex: Quero automatizar atendimento no WhatsApp e integrar com meu CRM..."
                 onSubmit={handleGenerateSolution}
                 disabled={isGenerating || isAnalyzing}
                 minHeight={56}
                 maxHeight={200}
+                minChars={30}
+                maxChars={2000}
               />
             </motion.div>
 
