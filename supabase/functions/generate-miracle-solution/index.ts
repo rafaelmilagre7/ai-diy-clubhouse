@@ -51,14 +51,14 @@ serve(async (req) => {
       );
     }
 
-    // Buscar ferramentas
+    // Buscar ferramentas COM logos
     const { data: tools } = await supabase
       .from("tools")
-      .select("id, name, category, official_url")
+      .select("id, name, category, official_url, logo_url")
       .eq("status", true);
 
     const toolsContext = tools
-      ? tools.map((t) => `${t.name} (${t.category})`).join(", ")
+      ? tools.map((t) => `- ${t.name} (${t.category}) | Logo: ${t.logo_url || 'N/A'}`).join("\n")
       : "Nenhuma ferramenta disponível";
 
     // Construir contexto adicional das perguntas
@@ -96,8 +96,8 @@ ESTRUTURA DA RESPOSTA:
   "short_description": "3-5 frases TÉCNICAS e OBJETIVAS: 1) O QUE é a solução (arquitetura, componentes), 2) COMO funciona (fluxo técnico, integrações), 3) RESULTADO MENSURÁVEL (métricas, %, ROI). TOM: técnico, direto. EVITE: 'Vou te mostrar', 'Vamos criar'. USE: 'Sistema de X integrado com Y', 'Pipeline automatizado de Z', 'Reduz A em B%'",
   
   "architecture_flowchart": {
-    "mermaid_code": "Código Mermaid (formato 'graph TD') representando TODA a arquitetura de ponta a ponta. Inclua: entrada de dados, APIs, processamento, IA, banco de dados, saída, decisões ({}), subprocessos, DBs [()]. Use: Verde para sucesso, Vermelho para erro, Azul para processamento. EXEMPLO:\ngraph TD\n  A[Lead WhatsApp] -->|Mensagem| B(API Meta)\n  B -->|Webhook| C[Make]\n  C -->|Envia texto| D{GPT-4 Qualifica}\n  D -->|Qualificado| E[CRM Lead Qualificado]\n  D -->|Não qualifica| F[CRM Descarte]\n  E -->|Atualiza| G[Dashboard]\n  C -->|Salva| H[(Notion DB)]\n  style D fill:#3b82f6\n  style E fill:#10b981\n  style F fill:#ef4444",
-    "description": "1-2 frases técnicas explicando o fluxo representado de forma objetiva"
+    "mermaid_code": "Código Mermaid (formato 'graph TD' ou 'graph LR') representando TODO o fluxo técnico da solução. EXEMPLO para WhatsApp + IA:\n\ngraph TD\n  A[Lead envia WhatsApp] -->|Mensagem| B(API Meta)\n  B -->|Webhook| C{Make Automation}\n  C -->|Texto| D[GPT-4 Qualifica]\n  D -->|Lead Bom| E[(CRM - Hot Lead)]\n  D -->|Lead Frio| F[(CRM - Descarte)]\n  E --> G[Notifica Vendedor]\n  style D fill:#3b82f6\n  style E fill:#10b981\n  style F fill:#ef4444\n\nUSE setas, decisões (chaves {}), bancos (parênteses [()]), processos (retângulos). Seja TÉCNICO e COMPLETO.",
+    "description": "1-2 frases explicando o que o fluxo mostra de ponta a ponta"
   },
   
   "mind_map": {
@@ -156,24 +156,24 @@ ESTRUTURA DA RESPOSTA:
   "required_tools": {
     "essential": [
       {
-        "name": "Nome da Ferramenta",
+        "name": "Nome EXATO da ferramenta (copie da lista de ferramentas disponíveis acima)",
         "category": "Categoria",
         "reason": "Por que é essencial (4-6 frases): qual problema resolve, por que alternativas não funcionam tão bem, ROI esperado.",
         "setup_complexity": "easy/medium/hard",
         "setup_steps": "Passos específicos de configuração",
         "cost_estimate": "Estimativa mensal USD com breakdown",
-        "logo_url": "URL pública do logo da ferramenta (ex: https://logo.clearbit.com/make.com ou URL oficial conhecida)",
+        "logo_url": "URL da logo (COPIE EXATAMENTE da lista de ferramentas disponíveis acima. Se a ferramenta não tiver logo na lista, use https://logo.clearbit.com/[dominio].com)",
         "alternatives": ["Alt 1 (pros/cons)", "Alt 2 (pros/cons)"]
       }
     ],
     "optional": [
       {
-        "name": "Nome",
+        "name": "Nome EXATO (copie da lista de ferramentas)",
         "category": "Categoria",
         "reason": "Por que PODE ser útil (3-4 frases)",
         "when_to_use": "Cenário específico (ex: quando >1000 usuários)",
         "cost_estimate": "USD/mês",
-        "logo_url": "URL pública do logo da ferramenta"
+        "logo_url": "URL da logo (COPIE da lista de ferramentas disponíveis ou use https://logo.clearbit.com/[dominio].com)"
       }
     ]
   },
@@ -199,10 +199,13 @@ REGRAS RAFAEL MILAGRE:
 ✓ Cada step = mini-tutorial (5-8 frases)
 ✓ Métricas mensuráveis: não "melhora eficiência", mas "reduz de 2h para 15min (87.5%)"
 ✓ Ferramentas: 10-18 total (essential + optional)
-✓ Priorize ferramentas do banco: ${toolsContext}
+✓ Priorize ferramentas do banco e SEMPRE inclua os logo_url fornecidos:
+${toolsContext}
+✓ CRÍTICO: Para cada ferramenta em required_tools, COPIE o logo_url exato da lista acima
 ✓ Evite buzzwords: "revolucionário", "disruptivo" → fale RESULTADO REAL
 ✓ Sem promessas impossíveis: "automatize 100% do negócio" → seja realista
-✓ Passos genéricos → passos executáveis`;
+✓ Passos genéricos → passos executáveis
+✓ SEMPRE gere o architecture_flowchart com código Mermaid completo e funcional`;
 
     const userPrompt = `IDEIA INICIAL:
 "${idea}"
@@ -289,7 +292,7 @@ Crie um plano completo seguindo o formato JSON especificado.`;
               }
             }
           },
-          required: ["short_description", "mind_map", "framework_quadrants", "required_tools", "implementation_checklist"]
+          required: ["short_description", "mind_map", "framework_quadrants", "required_tools", "implementation_checklist", "architecture_flowchart"]
         }
       }
     };

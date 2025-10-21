@@ -154,7 +154,7 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({
           size="lg"
           className="min-w-[200px]"
         >
-          Não Salvar
+          Descartar e Voltar
         </Button>
         
         <Button 
@@ -162,12 +162,12 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({
           size="lg"
           className="bg-gradient-to-r from-aurora-primary to-aurora-primary-light hover:opacity-90 transition-opacity min-w-[200px]"
         >
-          Salvar Solução
+          💾 Salvar no Histórico
         </Button>
       </div>
 
       <p className="text-xs text-center text-muted-foreground/70 mt-3">
-        1 crédito foi consumido na geração desta solução
+        Esta solução consumiu 1 crédito Miracle AI
       </p>
       </motion.div>
     </motion.div>

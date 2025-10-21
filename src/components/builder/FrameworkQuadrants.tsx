@@ -52,7 +52,7 @@ export const FrameworkQuadrants: React.FC<FrameworkQuadrantsProps> = ({ framewor
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 relative">
       {/* Centro com círculos conectados */}
       <div className="hidden md:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
         <motion.div
@@ -80,7 +80,7 @@ export const FrameworkQuadrants: React.FC<FrameworkQuadrantsProps> = ({ framewor
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: index * 0.1 }}
             className={`
-              relative p-6 rounded-xl border-2 ${quadrant.borderColor}
+              relative p-8 rounded-xl border-2 ${quadrant.borderColor}
               bg-gradient-to-br ${quadrant.color}
               backdrop-blur-sm
               hover:scale-105 transition-transform
@@ -104,8 +104,8 @@ export const FrameworkQuadrants: React.FC<FrameworkQuadrantsProps> = ({ framewor
               <ul className="space-y-3 mb-4">
                 {quadrant.data.items.map((item: string, idx: number) => (
                   <li key={idx} className="text-base flex items-start gap-2 leading-relaxed">
-                    <span className="text-primary mt-1">•</span>
-                    <span className="text-foreground/80">{item}</span>
+                    <span className="text-primary mt-1 flex-shrink-0">•</span>
+                    <span className="text-foreground/80 break-words">{item}</span>
                   </li>
                 ))}
               </ul>

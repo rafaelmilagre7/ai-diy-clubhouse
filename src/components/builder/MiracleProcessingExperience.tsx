@@ -22,8 +22,10 @@ export const MiracleProcessingExperience = () => {
     // Progresso gradual
     const progressInterval = setInterval(() => {
       setProgress(prev => {
-        if (prev >= 95) return prev;
-        return prev + Math.random() * 4;
+        if (prev >= 100) return 100;
+        // Desacelera perto do final mas nunca para
+        const increment = prev > 90 ? Math.random() * 1.5 : Math.random() * 4;
+        return Math.min(prev + increment, 100);
       });
     }, 400);
 
@@ -59,7 +61,7 @@ export const MiracleProcessingExperience = () => {
           {/* Header minimalista */}
           <div className="text-center space-y-3">
             <h2 className="text-3xl font-bold text-foreground">
-              Processando Solução
+              Extraindo o Cérebro do Rafael
             </h2>
             <p className="text-muted-foreground text-sm">
               Miracle AI está criando seu plano personalizado
@@ -117,11 +119,6 @@ export const MiracleProcessingExperience = () => {
               />
             ))}
           </div>
-
-          {/* Nota final discreta */}
-          <p className="text-center text-xs text-muted-foreground/60">
-            Isso pode levar até 30 segundos
-          </p>
 
         </div>
       </div>
