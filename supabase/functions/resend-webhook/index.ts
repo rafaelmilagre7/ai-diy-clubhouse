@@ -1,23 +1,41 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
-import { createHmac } from "https://deno.land/std@0.190.0/node/crypto.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, svix-id, svix-timestamp, svix-signature',
 };
 
-// Função para verificar assinatura do webhook Resend
-function verifyWebhookSignature(
+// Função para verificar assinatura do webhook Resend usando Web Crypto API nativa
+async function verifyWebhookSignature(
   payload: string,
   signature: string,
   secret: string
-): boolean {
+): Promise<boolean> {
   try {
-    // Resend usa o padrão Svix que é compatível com HMAC SHA256
-    const expectedSignature = createHmac('sha256', secret)
-      .update(payload)
-      .digest('base64');
+    // Converter secret para Uint8Array
+    const encoder = new TextEncoder();
+    const keyData = encoder.encode(secret);
+    
+    // Importar a chave para usar com HMAC
+    const key = await crypto.subtle.importKey(
+      'raw',
+      keyData,
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign']
+    );
+    
+    // Assinar o payload
+    const signatureBuffer = await crypto.subtle.sign(
+      'HMAC',
+      key,
+      encoder.encode(payload)
+    );
+    
+    // Converter para base64
+    const signatureArray = Array.from(new Uint8Array(signatureBuffer));
+    const expectedSignature = btoa(String.fromCharCode(...signatureArray));
     
     // O header svix-signature pode ter múltiplas versões: v1,hash v2,hash
     const signatures = signature.split(' ').map(s => s.split(',')[1]);
@@ -70,7 +88,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (webhookSecret) {
       const signature = req.headers.get('svix-signature');
       
-      if (!signature || !verifyWebhookSignature(payload, signature, webhookSecret)) {
+      if (!signature || !(await verifyWebhookSignature(payload, signature, webhookSecret))) {
         console.error('❌ [RESEND-WEBHOOK] Assinatura inválida - possível tentativa de ataque');
         return new Response(
           JSON.stringify({ error: 'Invalid signature' }),
