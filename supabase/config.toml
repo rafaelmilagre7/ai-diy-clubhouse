@@ -229,6 +229,9 @@ verify_jwt = false
 [functions.ai-weekly-summary]
 verify_jwt = false
 
+[functions.send-reset-password-email]
+verify_jwt = false
+
 [functions.analyze-idea]
 verify_jwt = false
 
