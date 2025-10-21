@@ -15,37 +15,61 @@ export const ArchitectureFlowchart: React.FC<ArchitectureFlowchartProps> = ({ fl
   const mermaidRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!flowchart?.mermaid_code) return;
+    if (!flowchart?.mermaid_code || !mermaidRef.current) return;
 
-    mermaid.initialize({
-      startOnLoad: true,
-      theme: 'dark',
-      themeVariables: {
-        primaryColor: '#818cf8',
-        primaryTextColor: '#fff',
-        primaryBorderColor: '#6366f1',
-        lineColor: '#94a3b8',
-        secondaryColor: '#a78bfa',
-        tertiaryColor: '#c084fc',
-        background: '#1e293b',
-        mainBkg: '#1e293b',
-        secondBkg: '#334155',
-        border1: '#475569',
-        border2: '#64748b',
-      },
-      flowchart: {
-        useMaxWidth: true,
-        htmlLabels: true,
-        curve: 'basis',
-      },
-    });
+    const renderDiagram = async () => {
+      try {
+        // Inicializar Mermaid com tema dark
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: 'dark',
+          themeVariables: {
+            primaryColor: '#818cf8',
+            primaryTextColor: '#fff',
+            primaryBorderColor: '#6366f1',
+            lineColor: '#94a3b8',
+            secondaryColor: '#a78bfa',
+            tertiaryColor: '#c084fc',
+            background: '#1e293b',
+            mainBkg: '#1e293b',
+            secondBkg: '#334155',
+            border1: '#475569',
+            border2: '#64748b',
+          },
+          flowchart: {
+            useMaxWidth: true,
+            htmlLabels: true,
+            curve: 'basis',
+          },
+        });
 
-    if (mermaidRef.current) {
-      mermaidRef.current.innerHTML = flowchart.mermaid_code;
-      mermaid.run({
-        querySelector: '.mermaid',
-      });
-    }
+        // Limpar conteúdo anterior
+        if (mermaidRef.current) {
+          mermaidRef.current.innerHTML = '';
+        }
+
+        // Renderizar diagrama com ID único
+        const id = `mermaid-${Date.now()}`;
+        const { svg } = await mermaid.render(id, flowchart.mermaid_code);
+        
+        // Inserir SVG renderizado no DOM
+        if (mermaidRef.current) {
+          mermaidRef.current.innerHTML = svg;
+        }
+      } catch (error) {
+        console.error('Erro ao renderizar Mermaid:', error);
+        if (mermaidRef.current) {
+          mermaidRef.current.innerHTML = `
+            <div class="text-center py-8 text-muted-foreground">
+              <p>Erro ao renderizar fluxograma</p>
+              <p class="text-xs mt-2">Código Mermaid inválido ou formato não suportado</p>
+            </div>
+          `;
+        }
+      }
+    };
+
+    renderDiagram();
   }, [flowchart]);
 
   const handleDownloadPNG = async () => {

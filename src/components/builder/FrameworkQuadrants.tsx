@@ -63,46 +63,44 @@ export const FrameworkQuadrants: React.FC<FrameworkQuadrantsProps> = ({ framewor
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: index * 0.1 }}
             className={`
-              relative p-8 rounded-xl border-2 ${quadrant.borderColor}
+              relative p-6 rounded-xl border border-border/30
               bg-gradient-to-br ${quadrant.color}
               backdrop-blur-sm
-              hover:scale-105 transition-transform
+              hover:scale-[1.02] transition-all
             `}
           >
-            {/* Header */}
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-lg bg-background/50 flex items-center justify-center">
-                <Icon className="h-6 w-6 text-foreground" />
-              </div>
-              <div className="flex-1">
-                <h4 className="font-bold text-xl">{quadrant.data?.title || quadrant.title}</h4>
-                {quadrant.data?.description && (
-                  <p className="text-sm text-muted-foreground opacity-90">{quadrant.data.description}</p>
-                )}
-              </div>
-            </div>
+            {/* Título direto no topo */}
+            <h3 className="text-2xl font-bold mb-2">
+              {quadrant.data?.title || quadrant.title}
+            </h3>
 
-            {/* Items */}
+            {/* Descrição opcional */}
+            {quadrant.data?.description && (
+              <p className="text-sm text-muted-foreground mb-4">
+                {quadrant.data.description}
+              </p>
+            )}
+
+            {/* Items com bullets elegantes */}
             {quadrant.data?.items && quadrant.data.items.length > 0 && (
-              <ul className="space-y-3 mb-4">
+              <ul className="space-y-4 mb-6">
                 {quadrant.data.items.map((item: string, idx: number) => (
-                  <li key={idx} className="text-base flex items-start gap-2 leading-relaxed">
-                    <span className="text-primary mt-1 flex-shrink-0">•</span>
-                    <span className="text-foreground/80 break-words">{item}</span>
+                  <li key={idx} className="flex items-start gap-3 leading-relaxed">
+                    <span className="text-primary mt-0.5 flex-shrink-0">→</span>
+                    <span className="text-base text-foreground/80 break-words">{item}</span>
                   </li>
                 ))}
               </ul>
             )}
 
-            {/* Ferramentas */}
+            {/* Ferramentas na base */}
             {quadrant.data?.tool_names && quadrant.data.tool_names.length > 0 && (
-              <div className="pt-3 border-t border-border/30">
-                <p className="text-xs text-muted-foreground mb-2">Ferramentas:</p>
-                <div className="flex flex-wrap gap-1">
+              <div className="pt-4 border-t border-border/20">
+                <div className="flex flex-wrap gap-2">
                   {quadrant.data.tool_names.map((tool: string, idx: number) => (
                     <span 
                       key={idx}
-                      className="px-2 py-1 text-xs bg-background/70 rounded-md border border-border/30"
+                      className="px-3 py-1 text-xs bg-background/50 rounded-full border border-border/20"
                     >
                       {tool}
                     </span>

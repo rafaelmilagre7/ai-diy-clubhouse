@@ -24,7 +24,7 @@ export const ToolCard: React.FC<ToolCardProps> = ({ tool, isEssential }) => {
             <img 
               src={tool.logo_url} 
               alt={`Logo ${tool.name}`}
-              className="w-20 h-20 object-contain rounded-full bg-white/10 p-3 border border-white/20 shadow-sm"
+              className="w-24 h-24 object-contain p-2 shadow-md"
               onError={(e) => {
                 // Fallback se logo não carregar
                 (e.target as HTMLImageElement).style.display = 'none';
