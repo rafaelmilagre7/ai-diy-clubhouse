@@ -26,6 +26,10 @@ import NetworkingAnalytics from '@/pages/member/NetworkingAnalytics';
 
 import TeamManagementPage from '@/pages/member/TeamManagementPage';
 
+// Builder pages
+import Builder from '@/pages/member/Builder';
+import MyAISolutions from '@/pages/member/MyAISolutions';
+
 // Member Learning pages
 import LearningPage from '@/pages/member/learning/LearningPage';
 import CourseDetails from '@/pages/member/learning/CourseDetails';
@@ -67,6 +71,8 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/trilha-implementacao", ImplementationTrail),
   createProtectedRoute("/tools", Tools),
   createProtectedRoute("/tools/:id", ToolDetails),
+  createProtectedRoute("/ferramentas/builder", Builder),
+  createProtectedRoute("/minhas-solucoes", MyAISolutions),
   createProtectedRoute("/networking", Networking),
     createProtectedRoute("/networking/analytics", NetworkingAnalytics),
   createProtectedRoute("/profile", ProfilePage),

@@ -18,7 +18,8 @@ import {
   Lightbulb,
   Calendar,
   Trophy,
-  Bot
+  Bot,
+  Sparkles
 } from 'lucide-react';
 import { SidebarNavigationGroup } from './SidebarNavigationGroup';
 import { TooltipNavItem } from './TooltipNavItem';
@@ -105,6 +106,13 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
 
         {/* Grupo: Ferramentas */}
         <SidebarNavigationGroup title="Ferramentas" sidebarOpen={sidebarOpen}>
+          <TooltipNavItem
+            to="/ferramentas/builder"
+            label="Builder"
+            icon={Sparkles}
+            sidebarOpen={sidebarOpen}
+            isNew={true}
+          />
           {canViewTools && (
             <TooltipNavItem
               to="/tools"
