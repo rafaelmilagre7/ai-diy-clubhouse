@@ -243,3 +243,6 @@ verify_jwt = false
 
 [functions.batch-send-invites]
 verify_jwt = false
+
+[functions.test-resend-integration]
+verify_jwt = false
