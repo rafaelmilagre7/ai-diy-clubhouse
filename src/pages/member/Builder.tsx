@@ -145,8 +145,8 @@ export default function Builder() {
             exit={{ opacity: 0 }}
             className="flex flex-col items-center justify-center min-h-screen px-4 py-8"
           >
-            {/* Header com contador discreto */}
-            <div className="absolute top-4 right-4">
+            {/* Header com contador discreto - AJUSTADO para não sobrepor header */}
+            <div className="absolute top-24 right-4 z-10">
               <div className="text-xs text-muted-foreground bg-surface-elevated/50 backdrop-blur-sm px-3 py-1.5 rounded-full border border-border/50">
                 {generationsUsed} de {monthlyLimit === 999999 ? '∞' : monthlyLimit} gerações
               </div>
@@ -169,14 +169,6 @@ export default function Builder() {
               <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
                 Extraia o cérebro do Rafael Milagre e transforme suas ideias em soluções executáveis de IA
               </p>
-              
-              {/* Botão para acessar histórico */}
-              <button
-                onClick={() => navigate('/ferramentas/miracleai/historico')}
-                className="mt-4 text-sm text-muted-foreground hover:text-primary transition-colors underline decoration-dotted underline-offset-4"
-              >
-                Ver soluções salvas
-              </button>
             </motion.div>
 
             {/* Input centralizado */}
@@ -230,6 +222,21 @@ export default function Builder() {
                   </motion.button>
                 ))}
               </div>
+            </motion.div>
+
+            {/* Botão Ver Histórico - movido para o final */}
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="w-full max-w-2xl text-center mt-12"
+            >
+              <button
+                onClick={() => navigate('/ferramentas/miracleai/historico')}
+                className="text-sm text-muted-foreground hover:text-primary transition-colors underline decoration-dotted underline-offset-4"
+              >
+                Ver histórico
+              </button>
             </motion.div>
           </motion.div>
         )}
