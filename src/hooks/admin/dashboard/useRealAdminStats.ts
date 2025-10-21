@@ -63,18 +63,10 @@ export const useRealAdminStats = (timeRange: string) => {
       
       console.log(`🔄 [STATS] Carregando estatísticas para período: ${timeRange}`);
       
-      // === BUSCAR DATA MAIS RECENTE DA TABELA PROGRESS ===
-      const { data: newestProgress } = await supabase
-        .from('progress')
-        .select('created_at')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      // Usar a data mais recente REAL do progress como referência
-      const recentDate = newestProgress?.created_at ? new Date(newestProgress.created_at) : new Date();
+      // Usar a data ATUAL como referência (não a data dos dados)
+      const recentDate = new Date();
       
-      // Calcular período baseado nos dados reais
+      // Calcular período baseado na data atual
       const daysMap: { [key: string]: number } = {
         '7d': 7,
         '30d': 30,
