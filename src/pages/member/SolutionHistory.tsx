@@ -161,7 +161,7 @@ export default function SolutionHistory() {
                   <Button
                     variant="outline"
                     size="icon"
-                    onClick={() => navigate(`/ferramentas/builder?solution=${solution.id}`)}
+                    onClick={() => navigate(`/ferramentas/miracleai/solution/${solution.id}`)}
                     title="Ver detalhes"
                   >
                     <Eye className="h-4 w-4" />

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Layout, ArrowRight, MessageSquare, Calendar } from 'lucide-react';
 import { useAuth } from '@/contexts/auth';
@@ -8,7 +8,7 @@ import { MiracleProcessingExperience } from '@/components/builder/MiracleProcess
 import { SolutionResult } from '@/components/builder/SolutionResult';
 import { AIInputWithLoading } from '@/components/ui/AIInputWithLoading';
 import { useAISolutionAccess } from '@/hooks/builder/useAISolutionAccess';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 
 const exampleIdeas = [
@@ -41,6 +41,17 @@ export default function Builder() {
     isLoading: accessLoading 
   } = useAISolutionAccess();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Redireciona soluções antigas para a nova estrutura
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const solutionId = params.get('solution');
+    
+    if (solutionId) {
+      navigate(`/ferramentas/miracleai/solution/${solutionId}`, { replace: true });
+    }
+  }, [location.search, navigate]);
 
   const handleGenerateSolution = async (idea: string) => {
     if (!hasAccess) {
