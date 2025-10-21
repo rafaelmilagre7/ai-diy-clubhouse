@@ -69,7 +69,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // TESTE 4: Enviar email de teste
-    const testEmail = 'teste@example.com';
+    const testEmail = 'rafael@viverdeia.ai'; // Email verificado no Resend
     const testEmailId = `test-${Date.now()}`;
     
     console.log(`📧 [TEST] Enviando email de teste para ${testEmail}...`);
