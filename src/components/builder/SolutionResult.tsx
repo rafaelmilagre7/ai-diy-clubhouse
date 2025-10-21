@@ -2,7 +2,7 @@ import React from 'react';
 import { LiquidGlassCard } from '@/components/ui/LiquidGlassCard';
 import { Button } from '@/components/ui/button';
 import { 
-  Brain, 
+  Layout, 
   Download, 
   Share2, 
   Star,
@@ -52,10 +52,16 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({ solution, onNewI
           </div>
         </div>
 
-        {/* Ideia Original */}
-        <div className="pt-4 border-t border-border/30">
-          <p className="text-sm text-muted-foreground mb-1">Ideia original:</p>
-          <p className="text-sm text-foreground/70 italic">"{solution.original_idea}"</p>
+        {/* Ideia Original e Badge */}
+        <div className="pt-4 border-t border-border/30 flex items-start justify-between gap-4">
+          <div>
+            <p className="text-sm text-muted-foreground mb-1">Ideia original:</p>
+            <p className="text-sm text-foreground/70 italic">"{solution.original_idea}"</p>
+          </div>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
+            <Layout className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium text-primary">VIVER DE IA Intelligence</span>
+          </div>
         </div>
       </LiquidGlassCard>
 
@@ -138,7 +144,7 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({ solution, onNewI
         className="flex flex-col sm:flex-row gap-4 justify-center"
       >
         <Button onClick={onNewIdea} variant="outline" size="lg">
-          <Brain className="mr-2 h-4 w-4" />
+          <Layout className="mr-2 h-4 w-4" />
           Gerar Nova Solução
         </Button>
         <Button size="lg">

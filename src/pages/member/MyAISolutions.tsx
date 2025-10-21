@@ -9,7 +9,7 @@ import {
   Search, 
   ArrowLeft, 
   Calendar,
-  Brain,
+  Layout,
   Star,
   CheckCircle2,
   Circle,
@@ -47,15 +47,18 @@ const MyAISolutions = () => {
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <h1 className="text-3xl font-bold">Minhas Soluções</h1>
-            <p className="text-muted-foreground">
-              Histórico de soluções geradas com IA
-            </p>
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5">
+              <Layout className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold">Minhas Soluções</h1>
+              <p className="text-muted-foreground">Geradas pelo Builder</p>
+            </div>
           </div>
           <Button asChild>
             <Link to="/ferramentas/builder">
-              <Brain className="mr-2 h-4 w-4" />
+              <Layout className="mr-2 h-4 w-4" />
               Nova Solução
             </Link>
           </Button>
@@ -120,14 +123,14 @@ const MyAISolutions = () => {
         {/* Empty State */}
         {!isLoading && solutions.length === 0 && (
           <LiquidGlassCard className="p-12 text-center">
-            <Brain className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+            <Layout className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
             <h3 className="text-xl font-semibold mb-2">Nenhuma solução ainda</h3>
             <p className="text-muted-foreground mb-6">
               Comece criando sua primeira solução com IA
             </p>
             <Button asChild>
               <Link to="/ferramentas/builder">
-                <Brain className="mr-2 h-4 w-4" />
+                <Layout className="mr-2 h-4 w-4" />
                 Criar Primeira Solução
               </Link>
             </Button>
@@ -163,7 +166,7 @@ const MyAISolutions = () => {
                     <div className="flex items-start gap-4">
                       {/* Icon */}
                       <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
-                        <Brain className="h-6 w-6 text-primary" />
+                        <Layout className="h-6 w-6 text-primary" />
                       </div>
 
                       {/* Content */}

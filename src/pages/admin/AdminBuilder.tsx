@@ -8,7 +8,7 @@ import { BuilderGrowthChart } from '@/components/admin/builder/BuilderGrowthChar
 import { BuilderSolutionsTable } from '@/components/admin/builder/BuilderSolutionsTable';
 import { BuilderToolsRanking } from '@/components/admin/builder/BuilderToolsRanking';
 import { BuilderRoleLimits } from '@/components/admin/builder/BuilderRoleLimits';
-import { Brain, TrendingUp, List, Wrench, Settings } from 'lucide-react';
+import { Layout, TrendingUp, List, Wrench, Settings } from 'lucide-react';
 
 const AdminBuilder = () => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -74,14 +74,14 @@ const AdminBuilder = () => {
     <div className="space-y-6 p-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Brain className="h-8 w-8 text-primary" />
-            Builder - Admin
-          </h1>
-          <p className="text-muted-foreground">
-            Gestão e analytics do gerador de soluções com IA
-          </p>
+        <div className="flex items-center gap-3">
+          <div className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20">
+            <Layout className="h-6 w-6 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold">Builder Analytics</h1>
+            <p className="text-muted-foreground">Gestão e análise do gerador de soluções</p>
+          </div>
         </div>
       </div>
 

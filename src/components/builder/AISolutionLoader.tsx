@@ -101,7 +101,15 @@ export const AISolutionLoader = () => {
         </div>
 
         {/* Current Step Text */}
-        <div className="h-16 flex flex-col items-center justify-center gap-3">
+        <div className="h-20 flex flex-col items-center justify-center gap-3">
+          <p className="text-sm text-muted-foreground mb-1">
+            Analisando com
+          </p>
+          <div className="flex items-center gap-2">
+            <p className="text-lg font-semibold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+              VIVER DE IA Intelligence
+            </p>
+          </div>
           <AnimatePresence mode="wait">
             <motion.div
               key={currentStep}
@@ -109,12 +117,12 @@ export const AISolutionLoader = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.5 }}
-              className="flex items-center gap-3"
+              className="flex items-center gap-3 mt-2"
             >
               {React.createElement(loadingSteps[currentStep].icon, {
                 className: "h-5 w-5 text-primary"
               })}
-              <p className="text-lg font-medium text-foreground">
+              <p className="text-base font-medium text-foreground">
                 {loadingSteps[currentStep].text}
               </p>
             </motion.div>

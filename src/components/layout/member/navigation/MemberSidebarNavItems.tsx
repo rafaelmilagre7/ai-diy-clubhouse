@@ -19,7 +19,7 @@ import {
   Calendar,
   Trophy,
   Bot,
-  Brain
+  Layout
 } from 'lucide-react';
 import { SidebarNavigationGroup } from './SidebarNavigationGroup';
 import { TooltipNavItem } from './TooltipNavItem';
@@ -111,7 +111,7 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
             <TooltipNavItem
               to="/ferramentas/builder"
               label="Builder"
-              icon={Brain}
+              icon={Layout}
               sidebarOpen={sidebarOpen}
               isNew={true}
             />
