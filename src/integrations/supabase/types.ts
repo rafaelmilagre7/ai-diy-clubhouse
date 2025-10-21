@@ -2140,6 +2140,44 @@ export type Database = {
           },
         ]
       }
+      invite_delivery_events: {
+        Row: {
+          channel: string | null
+          created_at: string | null
+          email_id: string | null
+          event_data: Json | null
+          event_type: string
+          id: string
+          invite_id: string
+        }
+        Insert: {
+          channel?: string | null
+          created_at?: string | null
+          email_id?: string | null
+          event_data?: Json | null
+          event_type: string
+          id?: string
+          invite_id: string
+        }
+        Update: {
+          channel?: string | null
+          created_at?: string | null
+          email_id?: string | null
+          event_data?: Json | null
+          event_type?: string
+          id?: string
+          invite_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invite_delivery_events_invite_id_fkey"
+            columns: ["invite_id"]
+            isOneToOne: false
+            referencedRelation: "invites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invites: {
         Row: {
           created_at: string
@@ -8313,6 +8351,10 @@ export type Database = {
       }
       increment_benefit_clicks: {
         Args: { tool_id: string }
+        Returns: undefined
+      }
+      increment_invite_send_attempts: {
+        Args: { invite_id_param: string }
         Returns: undefined
       }
       increment_suggestion_downvote: {

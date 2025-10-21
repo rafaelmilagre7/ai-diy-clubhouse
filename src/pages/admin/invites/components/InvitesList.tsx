@@ -21,32 +21,22 @@ import { Invite } from "@/hooks/admin/invites/types";
 import { formatDate } from "../utils/formatters";
 import { useState } from "react";
 import { APP_CONFIG } from '@/config/app';
+import { useInviteDeliveryStatus } from "@/hooks/admin/invites";
+import { DeliveryStatusBadge } from "@/components/admin/invites/DeliveryStatusBadge";
 
-interface InvitesListProps {
-  invites: Invite[];
+interface InviteRowProps {
+  invite: Invite;
   onResend: (invite: Invite) => void;
   onDelete: (invite: Invite) => void;
+  isResending: boolean;
 }
 
-const InvitesList = ({ invites, onResend, onDelete }: InvitesListProps) => {
-  const [resendingInvites, setResendingInvites] = useState<Set<string>>(new Set());
+const InviteRow = ({ invite, onResend, onDelete, isResending }: InviteRowProps) => {
+  const { status } = useInviteDeliveryStatus(invite.id);
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast.success("Link copiado!");
-  };
-
-  const handleResend = async (invite: Invite) => {
-    setResendingInvites(prev => new Set(prev).add(invite.id));
-    try {
-      await onResend(invite);
-    } finally {
-      setResendingInvites(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(invite.id);
-        return newSet;
-      });
-    }
   };
 
   const getStatusBadge = (invite: Invite) => {
@@ -106,6 +96,111 @@ const InvitesList = ({ invites, onResend, onDelete }: InvitesListProps) => {
   };
 
   return (
+    <TableRow>
+      <TableCell className="font-medium">{invite.email}</TableCell>
+      <TableCell>
+        <Badge variant="outline">
+          {invite.role?.name || "Desconhecido"}
+        </Badge>
+      </TableCell>
+      <TableCell>
+        <div className="flex items-center">
+          <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
+          <span>{formatDate(invite.expires_at)}</span>
+        </div>
+      </TableCell>
+      <TableCell>{getStatusBadge(invite)}</TableCell>
+      <TableCell>{getEmailStatus(invite)}</TableCell>
+      <TableCell>
+        <DeliveryStatusBadge 
+          status={status.bestStatus} 
+          lastEventAt={status.lastEventAt}
+        />
+      </TableCell>
+      <TableCell className="text-right space-x-2">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  copyToClipboard(APP_CONFIG.getAppUrl(`/convite/${invite.token}`));
+                }}
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Copiar link</p>
+            </TooltipContent>
+          </Tooltip>
+        
+          {!invite.used_at && new Date(invite.expires_at) >= new Date() && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onResend(invite)}
+                  disabled={isResending}
+                >
+                  {isResending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Mail className="h-4 w-4" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Reenviar convite</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
+        
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onDelete(invite)}
+              >
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Excluir</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </TableCell>
+    </TableRow>
+  );
+};
+
+interface InvitesListProps {
+  invites: Invite[];
+  onResend: (invite: Invite) => void;
+  onDelete: (invite: Invite) => void;
+}
+
+const InvitesList = ({ invites, onResend, onDelete }: InvitesListProps) => {
+  const [resendingInvites, setResendingInvites] = useState<Set<string>>(new Set());
+
+  const handleResend = async (invite: Invite) => {
+    setResendingInvites(prev => new Set(prev).add(invite.id));
+    try {
+      await onResend(invite);
+    } finally {
+      setResendingInvites(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(invite.id);
+        return newSet;
+      });
+    }
+  };
+
+  return (
     <div className="border rounded-lg">
       <Table>
         <TableHeader>
@@ -115,89 +210,24 @@ const InvitesList = ({ invites, onResend, onDelete }: InvitesListProps) => {
             <TableHead>Expira em</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Envio</TableHead>
+            <TableHead>Entrega</TableHead>
             <TableHead className="text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {invites.length > 0 ? (
             invites.map((invite) => (
-              <TableRow key={invite.id}>
-                <TableCell className="font-medium">{invite.email}</TableCell>
-                <TableCell>
-                  <Badge variant="outline">
-                    {invite.role?.name || "Desconhecido"}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center">
-                    <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
-                    <span>{formatDate(invite.expires_at)}</span>
-                  </div>
-                </TableCell>
-                <TableCell>{getStatusBadge(invite)}</TableCell>
-                <TableCell>{getEmailStatus(invite)}</TableCell>
-                <TableCell className="text-right space-x-2">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            copyToClipboard(APP_CONFIG.getAppUrl(`/convite/${invite.token}`));
-                          }}
-                        >
-                          <Copy className="h-4 w-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Copiar link</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  
-                    {!invite.used_at && new Date(invite.expires_at) >= new Date() && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleResend(invite)}
-                            disabled={resendingInvites.has(invite.id)}
-                          >
-                            {resendingInvites.has(invite.id) ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <Mail className="h-4 w-4" />
-                            )}
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Reenviar convite</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    )}
-                  
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => onDelete(invite)}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Excluir</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </TableCell>
-              </TableRow>
+              <InviteRow
+                key={invite.id}
+                invite={invite}
+                onResend={handleResend}
+                onDelete={onDelete}
+                isResending={resendingInvites.has(invite.id)}
+              />
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
+              <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
                 Nenhum convite encontrado.
               </TableCell>
             </TableRow>

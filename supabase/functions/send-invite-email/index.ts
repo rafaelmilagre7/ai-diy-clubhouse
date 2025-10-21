@@ -185,32 +185,42 @@ async function updateInviteStatsInBackground(
   try {
     console.log('🔄 [BACKGROUND] Atualizando estatísticas...');
     
-    // Registrar delivery
-    await supabase
-      .from('invite_deliveries')
-      .insert({
-        invite_id: inviteId,
-        channel: 'email',
-        status: 'sent',
-        provider_id: messageId,
-        sent_at: new Date().toISOString(),
-        metadata: {
-          resend_id: messageId,
-          recipient: email,
-          template: 'invite-email',
-        }
-      });
+    // Registrar evento de envio
+    if (messageId) {
+      await supabase
+        .from('invite_delivery_events')
+        .insert({
+          invite_id: inviteId,
+          event_type: 'sent',
+          email_id: messageId,
+          channel: 'email',
+          event_data: {
+            recipient: email,
+            sent_at: new Date().toISOString()
+          }
+        });
+    }
 
-    // Atualizar estatísticas
+    // Atualizar convite com email_id e estatísticas
+    const updateData: any = {
+      last_sent_at: new Date().toISOString()
+    };
+    
+    if (messageId) {
+      updateData.email_id = messageId;
+    }
+
     await supabase
       .from('invites')
-      .update({
-        send_attempts: 1,
-        last_sent_at: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('id', inviteId);
 
-    console.log('✅ [BACKGROUND] Estatísticas atualizadas');
+    // Incrementar send_attempts usando RPC
+    await supabase.rpc('increment_invite_send_attempts', {
+      invite_id_param: inviteId
+    });
+
+    console.log('✅ [BACKGROUND] Estatísticas atualizadas com email_id:', messageId);
   } catch (bgError: any) {
     console.error('❌ [BACKGROUND] Erro ao atualizar:', bgError);
   }

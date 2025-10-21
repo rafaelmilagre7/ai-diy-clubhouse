@@ -1,210 +1,138 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, svix-id, svix-timestamp, svix-signature',
 };
 
 interface ResendWebhookEvent {
-  type: 'email.sent' | 'email.delivered' | 'email.delivery_delayed' | 'email.complained' | 'email.bounced' | 'email.opened' | 'email.clicked';
+  type: string;
   created_at: string;
   data: {
-    id: string;
-    from: string;
-    to: string[];
-    subject: string;
-    created_at: string;
     email_id?: string;
-    click?: {
-      url: string;
-      timestamp: string;
-    };
-    open?: {
-      timestamp: string;
-      user_agent?: string;
-      ip_address?: string;
-    };
-    bounce?: {
-      type: 'hard' | 'soft';
-      code: string;
-      message: string;
-    };
-    complaint?: {
-      type: string;
-      timestamp: string;
-    };
+    from?: string;
+    to?: string[];
+    subject?: string;
+    created_at?: string;
+    [key: string]: any;
   };
 }
 
-serve(async (req) => {
+const handler = async (req: Request): Promise<Response> => {
+  console.log('📬 [RESEND-WEBHOOK] Webhook recebido');
+
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  if (req.method !== 'POST') {
+    return new Response(
+      JSON.stringify({ error: 'Method not allowed' }),
+      { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   }
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const webhookSignature = req.headers.get('resend-webhook-signature');
-    const webhookSecret = Deno.env.get('RESEND_WEBHOOK_SECRET');
-    
-    // TODO: Verificar assinatura do webhook se necessário
-    // if (webhookSecret && !verifyWebhookSignature(body, webhookSignature, webhookSecret)) {
-    //   throw new Error('Invalid webhook signature');
-    // }
-
     const event: ResendWebhookEvent = await req.json();
+    console.log('📧 [RESEND-WEBHOOK] Evento recebido:', event.type);
+
+    // Mapear tipos de eventos do Resend para nosso formato
+    const eventTypeMap: { [key: string]: string } = {
+      'email.sent': 'sent',
+      'email.delivered': 'delivered',
+      'email.delivery_delayed': 'delivery_delayed',
+      'email.bounced': 'bounced',
+      'email.opened': 'opened',
+      'email.clicked': 'clicked',
+      'email.complained': 'complained',
+    };
+
+    const eventType = eventTypeMap[event.type];
     
-    console.log('📧 [RESEND-WEBHOOK] Evento recebido:', {
-      type: event.type,
-      email_id: event.data.id,
-      to: event.data.to,
-      timestamp: event.created_at
-    });
+    if (!eventType) {
+      console.log('⚠️ [RESEND-WEBHOOK] Tipo de evento ignorado:', event.type);
+      return new Response(
+        JSON.stringify({ success: true, message: 'Event type ignored' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
-    // Buscar o convite pelo provider_id (email ID do Resend)
-    const { data: delivery } = await supabase
-      .from('invite_deliveries')
-      .select('*')
-      .eq('provider_id', event.data.id)
-      .single();
+    const emailId = event.data.email_id;
+    
+    if (!emailId) {
+      console.warn('⚠️ [RESEND-WEBHOOK] Email ID não encontrado no evento');
+      return new Response(
+        JSON.stringify({ success: true, message: 'No email ID in event' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
-    if (!delivery) {
-      console.log('⚠️ [RESEND-WEBHOOK] Delivery não encontrado para email_id:', event.data.id);
-      return new Response(JSON.stringify({ success: true, message: 'Delivery not found, but ok' }), {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    // Buscar convite pelo email_id
+    const { data: invite, error: inviteError } = await supabase
+      .from('invites')
+      .select('id')
+      .eq('email_id', emailId)
+      .maybeSingle();
+
+    if (inviteError) {
+      console.error('❌ [RESEND-WEBHOOK] Erro ao buscar convite:', inviteError);
+      throw inviteError;
+    }
+
+    if (!invite) {
+      console.log('⚠️ [RESEND-WEBHOOK] Convite não encontrado para email_id:', emailId);
+      // Não é erro - pode ser um email que não é de convite
+      return new Response(
+        JSON.stringify({ success: true, message: 'Invite not found' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log('✅ [RESEND-WEBHOOK] Convite encontrado:', invite.id);
+
+    // Inserir evento de delivery
+    const { error: insertError } = await supabase
+      .from('invite_delivery_events')
+      .insert({
+        invite_id: invite.id,
+        event_type: eventType,
+        email_id: emailId,
+        channel: 'email',
+        event_data: event.data,
       });
+
+    if (insertError) {
+      console.error('❌ [RESEND-WEBHOOK] Erro ao inserir evento:', insertError);
+      throw insertError;
     }
 
-    // Mapear tipos de evento para status
-    let newStatus = delivery.status;
-    let metadata = delivery.metadata || {};
-    
-    switch (event.type) {
-      case 'email.sent':
-        newStatus = 'sent';
-        metadata = {
-          ...metadata,
-          sent_at: event.created_at,
-          resend_event: event.type
-        };
-        break;
-        
-      case 'email.delivered':
-        newStatus = 'delivered';
-        metadata = {
-          ...metadata,
-          delivered_at: event.created_at,
-          resend_event: event.type
-        };
-        break;
-        
-      case 'email.opened':
-        newStatus = 'opened';
-        metadata = {
-          ...metadata,
-          opened_at: event.created_at,
-          open_count: (metadata.open_count || 0) + 1,
-          last_open: {
-            timestamp: event.created_at,
-            user_agent: event.data.open?.user_agent,
-            ip_address: event.data.open?.ip_address
-          },
-          resend_event: event.type
-        };
-        break;
-        
-      case 'email.clicked':
-        newStatus = 'clicked';
-        metadata = {
-          ...metadata,
-          clicked_at: event.created_at,
-          click_count: (metadata.click_count || 0) + 1,
-          last_click: {
-            timestamp: event.created_at,
-            url: event.data.click?.url
-          },
-          resend_event: event.type
-        };
-        break;
-        
-      case 'email.bounced':
-        newStatus = 'bounced';
-        metadata = {
-          ...metadata,
-          bounced_at: event.created_at,
-          bounce_type: event.data.bounce?.type,
-          bounce_code: event.data.bounce?.code,
-          bounce_message: event.data.bounce?.message,
-          resend_event: event.type
-        };
-        break;
-        
-      case 'email.complained':
-        newStatus = 'complained';
-        metadata = {
-          ...metadata,
-          complained_at: event.created_at,
-          complaint_type: event.data.complaint?.type,
-          resend_event: event.type
-        };
-        break;
-        
-      case 'email.delivery_delayed':
-        // Não muda o status, só adiciona metadata
-        metadata = {
-          ...metadata,
-          delivery_delayed_at: event.created_at,
-          resend_event: event.type
-        };
-        break;
-    }
+    console.log('✅ [RESEND-WEBHOOK] Evento registrado com sucesso:', eventType);
 
-    // Atualizar o delivery na base de dados
-    const { error: updateError } = await supabase
-      .from('invite_deliveries')
-      .update({
-        status: newStatus,
-        metadata,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', delivery.id);
-
-    if (updateError) {
-      console.error('❌ [RESEND-WEBHOOK] Erro ao atualizar delivery:', updateError);
-      throw updateError;
-    }
-
-    console.log('✅ [RESEND-WEBHOOK] Delivery atualizado:', {
-      delivery_id: delivery.id,
-      old_status: delivery.status,
-      new_status: newStatus,
-      event_type: event.type
-    });
-
-    return new Response(JSON.stringify({ 
-      success: true,
-      message: 'Webhook processado com sucesso',
-      delivery_id: delivery.id,
-      new_status: newStatus
-    }), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        event_type: eventType,
+        invite_id: invite.id 
+      }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
 
   } catch (error: any) {
     console.error('❌ [RESEND-WEBHOOK] Erro:', error);
     
-    return new Response(JSON.stringify({ 
-      success: false, 
-      error: error.message 
-    }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
+    return new Response(
+      JSON.stringify({ 
+        error: error.message,
+        details: 'Failed to process webhook'
+      }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   }
-});
+};
+
+serve(handler);
