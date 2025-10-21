@@ -3,9 +3,6 @@ export * from './client';
 export * from './types';
 export * from './config';
 
-// Importar configuração de storage de certificados
-import './setupCertificatesStorage';
-
 // Importar utilitários admin (apenas em development)
 if (import.meta.env.DEV) {
   import('../../utils/adminConsole');
