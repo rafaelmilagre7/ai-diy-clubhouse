@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "npm:resend@2.0.0";
+import { Resend } from 'https://esm.sh/resend@4.0.0';
 import { corsHeaders } from '../_shared/cors.ts';
 import { getSupabaseServiceClient } from '../_shared/supabase-client.ts';
 
@@ -76,7 +76,7 @@ const handler = async (req: Request): Promise<Response> => {
     
     let emailId: string;
     try {
-      const emailResponse = await resend.emails.send({
+      const { data: emailResult, error: emailError } = await resend.emails.send({
         from: 'Teste Wagner <onboarding@resend.dev>',
         to: [testEmail],
         subject: `🧪 Teste de Integração - ${new Date().toLocaleString('pt-BR')}`,
@@ -103,11 +103,15 @@ const handler = async (req: Request): Promise<Response> => {
         ]
       });
 
-      if (!emailResponse.data?.id) {
-        throw new Error('Email enviado mas ID não retornado');
+      if (emailError) {
+        throw emailError;
       }
 
-      emailId = emailResponse.data.id;
+      if (!emailResult?.id) {
+        throw new Error('Email enviado mas ID não retornado na resposta');
+      }
+
+      emailId = emailResult.id;
       
       addTest('Envio de Email', 'passed', { 
         email_id: emailId,
