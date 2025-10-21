@@ -145,18 +145,26 @@ export const useRealAdminStats = (timeRange: string) => {
         .select('*', { count: 'exact', head: true })
         .gte('created_at', startDate.toISOString());
 
-      // Implementações iniciadas no período (progress - soluções implementadas)
-      const { count: activeImplementationsInPeriod } = await supabase
+      // Pessoas únicas que iniciaram implementações no período
+      const { data: usersStarted } = await supabase
         .from('progress')
-        .select('*', { count: 'exact', head: true })
+        .select('user_id')
         .gte('created_at', startDate.toISOString());
+      
+      const activeImplementationsInPeriod = usersStarted 
+        ? new Set(usersStarted.map(p => p.user_id)).size 
+        : 0;
 
-      // Implementações completadas no período (progress com is_completed=true)
-      const { count: completedInPeriod } = await supabase
+      // Pessoas únicas que completaram implementações no período
+      const { data: usersCompleted } = await supabase
         .from('progress')
-        .select('*', { count: 'exact', head: true })
+        .select('user_id')
         .eq('is_completed', true)
         .gte('created_at', startDate.toISOString());
+      
+      const completedInPeriod = usersCompleted
+        ? new Set(usersCompleted.map(p => p.user_id)).size
+        : 0;
 
       // Usuários ativos no período = total de usuários (tabela analytics está vazia)
       // Vamos usar o total de usuários como proxy
