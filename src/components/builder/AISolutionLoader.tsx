@@ -6,23 +6,23 @@ import { Progress } from '@/components/ui/progress';
 const loadingSteps = [
   {
     icon: Brain,
-    text: 'Analisando sua ideia com IA...',
-    duration: 8000
+    text: 'Analisando profundamente sua ideia (QI 160 mode)...',
+    duration: 18000
   },
   {
     icon: Wrench,
-    text: 'Mapeando ferramentas e tecnologias...',
-    duration: 8000
+    text: 'Mapeando ferramentas e criando arquitetura ultra-detalhada...',
+    duration: 18000
   },
   {
     icon: Lightbulb,
-    text: 'Estruturando framework de implementação...',
-    duration: 8000
+    text: 'Estruturando plano completo de implementação...',
+    duration: 18000
   },
   {
     icon: CheckCircle,
-    text: 'Criando checklist detalhado...',
-    duration: 8000
+    text: 'Criando checklist executável (12-25 steps)...',
+    duration: 18000
   }
 ];
 
@@ -39,10 +39,10 @@ export const AISolutionLoader = () => {
       });
     }, 400);
 
-    // Rotação de steps
+    // Rotação de steps (18s por step = 72s total)
     const stepInterval = setInterval(() => {
       setCurrentStep((prev) => (prev + 1) % loadingSteps.length);
-    }, 8000);
+    }, 18000);
 
     return () => {
       clearInterval(progressInterval);
@@ -138,7 +138,7 @@ export const AISolutionLoader = () => {
           />
           <div className="flex justify-between items-center text-xs text-muted-foreground">
             <span>{Math.round(progress)}% concluído</span>
-            <span>~30 segundos</span>
+            <span>~60-90 segundos</span>
           </div>
         </div>
 
@@ -169,7 +169,7 @@ export const AISolutionLoader = () => {
           className="text-center"
         >
           <p className="text-sm text-muted-foreground">
-            💡 Estamos criando um plano completo para você!
+            💡 Estamos criando um plano ULTRA-DETALHADO para você! (QUALIDADE MÁXIMA)
           </p>
         </motion.div>
       </div>
