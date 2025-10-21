@@ -11,7 +11,7 @@ export const useAISolutionHistory = () => {
       if (!user) throw new Error('Usuário não autenticado');
 
       const { data, error } = await supabase
-        .from('ai_generated_solutions')
+        .from('miracle_ai_solutions')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
