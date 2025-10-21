@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useVideoDurationUpdate } from '@/hooks/useVideoDurationUpdate';
 import { RefreshCw, Video, CheckCircle, AlertCircle } from 'lucide-react';
+import { devLog } from '@/utils/devLogger';
 
 interface TestResult {
   totalProcessed: number;
@@ -24,10 +25,10 @@ export const TestVideoDurations = () => {
     updateDurations(undefined, {
       onSuccess: (data) => {
         // Os dados já são tratados pelo hook
-        console.log('Teste concluído:', data);
+        devLog.success('Teste concluído:', data);
       },
       onError: (error) => {
-        console.error('Erro no teste:', error);
+        devLog.error('Erro no teste:', error);
       }
     });
   };

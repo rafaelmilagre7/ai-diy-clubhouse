@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, CheckCircle, XCircle, AlertCircle, Smartphone, Send, RefreshCw } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { devLog } from '@/utils/devLogger';
 
 interface DiagnosticsResult {
   timestamp: string;
@@ -64,19 +65,19 @@ export function WhatsAppDebugPanel() {
   const runDiagnostics = async () => {
     setLoading(true);
     try {
-      console.log('🔍 [WhatsApp Debug] Iniciando diagnósticos...');
+      devLog.debug('Iniciando diagnósticos...');
       
       const { data, error } = await supabase.functions.invoke('whatsapp-config-check', {
         body: { action: 'check' }
       });
 
       if (error) {
-        console.error('❌ [WhatsApp Debug] Erro:', error);
+        devLog.error('Erro:', error);
         toast.error('Erro ao executar diagnósticos');
         return;
       }
 
-      console.log('✅ [WhatsApp Debug] Resultado:', data);
+      devLog.success('Resultado:', data);
       setDiagnostics(data);
       
       if (data.overall_status === 'success') {
@@ -101,7 +102,7 @@ export function WhatsAppDebugPanel() {
 
     setTestingPhone(true);
     try {
-      console.log('🧪 [WhatsApp Debug] Testando envio para:', testPhone.substring(0, 5) + '***');
+      devLog.debug('Testando envio para:', testPhone.substring(0, 5) + '***');
       
       const { data, error } = await supabase.functions.invoke('whatsapp-config-check', {
         body: { 
