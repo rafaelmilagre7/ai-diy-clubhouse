@@ -110,6 +110,102 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_generated_solutions: {
+        Row: {
+          completion_percentage: number | null
+          completion_tokens: number | null
+          created_at: string | null
+          framework_mapping: Json | null
+          generation_model: string | null
+          generation_time_ms: number | null
+          id: string
+          implementation_checklist: Json | null
+          implementation_status: string | null
+          is_favorited: boolean | null
+          last_accessed_at: string | null
+          mind_map: Json | null
+          original_idea: string
+          prompt_tokens: number | null
+          required_tools: Json | null
+          short_description: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          completion_percentage?: number | null
+          completion_tokens?: number | null
+          created_at?: string | null
+          framework_mapping?: Json | null
+          generation_model?: string | null
+          generation_time_ms?: number | null
+          id?: string
+          implementation_checklist?: Json | null
+          implementation_status?: string | null
+          is_favorited?: boolean | null
+          last_accessed_at?: string | null
+          mind_map?: Json | null
+          original_idea: string
+          prompt_tokens?: number | null
+          required_tools?: Json | null
+          short_description?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          completion_percentage?: number | null
+          completion_tokens?: number | null
+          created_at?: string | null
+          framework_mapping?: Json | null
+          generation_model?: string | null
+          generation_time_ms?: number | null
+          id?: string
+          implementation_checklist?: Json | null
+          implementation_status?: string | null
+          is_favorited?: boolean | null
+          last_accessed_at?: string | null
+          mind_map?: Json | null
+          original_idea?: string
+          prompt_tokens?: number | null
+          required_tools?: Json | null
+          short_description?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ai_solution_usage: {
+        Row: {
+          created_at: string | null
+          generations_count: number | null
+          id: string
+          last_generation_at: string | null
+          month_year: string
+          monthly_limit: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          generations_count?: number | null
+          id?: string
+          last_generation_at?: string | null
+          month_year: string
+          monthly_limit?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          generations_count?: number | null
+          id?: string
+          last_generation_at?: string | null
+          month_year?: string
+          monthly_limit?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       analytics: {
         Row: {
           created_at: string
@@ -6436,6 +6532,16 @@ export type Database = {
       }
     }
     Views: {
+      builder_analytics: {
+        Row: {
+          avg_generation_time: number | null
+          completed_solutions: number | null
+          date: string | null
+          solutions_generated: number | null
+          unique_users: number | null
+        }
+        Relationships: []
+      }
       profiles_networking_safe: {
         Row: {
           avatar_url: string | null
@@ -6741,6 +6847,10 @@ export type Database = {
       check_admin_access_secure: {
         Args: Record<PropertyKey, never>
         Returns: boolean
+      }
+      check_ai_solution_limit: {
+        Args: { p_user_id: string }
+        Returns: Json
       }
       check_and_fix_onboarding_data: {
         Args: { user_id_param: string }
@@ -8192,6 +8302,10 @@ export type Database = {
       }
       increment: {
         Args: { column_name: string; row_id: string; table_name: string }
+        Returns: undefined
+      }
+      increment_ai_solution_usage: {
+        Args: { p_user_id: string }
         Returns: undefined
       }
       increment_benefit_clicks: {
