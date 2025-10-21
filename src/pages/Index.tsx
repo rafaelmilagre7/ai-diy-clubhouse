@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 import { useAuth } from "@/contexts/auth";
 import { PageTransitionWithFallback } from "@/components/transitions/PageTransitionWithFallback";
+import { devLog } from "@/utils/devLogger";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -21,7 +22,7 @@ const Index = () => {
     
     // Só iniciar redirecionamento quando o estado de auth não estiver carregando
     if (!isLoading) {
-      console.log("Index: Estado de auth carregado, iniciando redirecionamento");
+      devLog.debug("Estado de auth carregado, iniciando redirecionamento");
       setIsRedirecting(true);
       
       // Verificar se já há uma sessão para redirecionamento mais rápido
@@ -40,7 +41,7 @@ const Index = () => {
       // Configurar o redirecionamento
       redirectTimer = window.setTimeout(() => {
         const targetRoute = hasUser ? '/dashboard' : '/auth';
-        console.log("Index: Redirecionando para", targetRoute);
+        devLog.debug("Redirecionando para", targetRoute);
         navigate(targetRoute, { replace: true });
       }, redirectDelay);
     }

@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import { toast } from "sonner";
 import { getUserRoleName } from "@/lib/supabase/types";
+import { devLog } from "@/utils/devLogger";
 
 const Auth = () => {
   const { user, profile } = useAuth();
@@ -22,10 +23,10 @@ const Auth = () => {
       // CORREÇÃO: Role "formação" é para usuários que compraram formações, não para gestão LMS
       // Apenas admins vão para área de gestão /formacao
       if (roleName === 'admin') {
-        console.log("🎯 [AUTH] Admin detectado - redirecionando para /formacao");
+        devLog.auth("Admin detectado - redirecionando para /formacao");
         navigate('/formacao', { replace: true });
       } else {
-        console.log("🎯 [AUTH] Usuário regular - redirecionando para /dashboard");
+        devLog.auth("Usuário regular - redirecionando para /dashboard");
         navigate('/dashboard', { replace: true });
       }
     }

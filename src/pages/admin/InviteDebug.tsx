@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { APP_CONFIG } from '@/config/app';
+import { devLog } from '@/utils/devLogger';
 
 const InviteDebug = () => {
   const [token, setToken] = useState('');
@@ -23,12 +24,12 @@ const InviteDebug = () => {
 
     try {
       // Teste 1: Função SQL direta
-      console.log('🔍 Testando função SQL...');
+      devLog.debug('Testando função SQL...');
       const { data: sqlResult, error: sqlError } = await supabase
         .rpc('validate_invite_token_enhanced', { p_token: token });
 
       // Teste 2: Busca direta na tabela
-      console.log('🔍 Testando busca direta...');
+      devLog.debug('Testando busca direta...');
       const { data: directResult, error: directError } = await supabase
         .from('invites')
         .select('*')
@@ -36,7 +37,7 @@ const InviteDebug = () => {
         .limit(5);
 
       // Teste 3: Busca exata
-      console.log('🔍 Testando busca exata...');
+      devLog.debug('Testando busca exata...');
       const { data: exactResult, error: exactError } = await supabase
         .from('invites')
         .select('*')
@@ -65,7 +66,7 @@ const InviteDebug = () => {
       };
 
       setDebugInfo(info);
-      console.log('🔍 Debug completo:', info);
+      devLog.data('Debug completo:', info);
 
       if (sqlResult?.length > 0) {
         toast.success('Token encontrado via função SQL!');
@@ -107,14 +108,14 @@ const InviteDebug = () => {
 
       if (error) {
         toast.error(`Erro WhatsApp: ${error.message}`);
-        console.error('Erro WhatsApp:', error);
+        devLog.error('Erro WhatsApp:', error);
       } else {
         toast.success('Teste WhatsApp enviado!');
-        console.log('Resultado WhatsApp:', data);
+        devLog.success('Resultado WhatsApp:', data);
       }
     } catch (error) {
       toast.error('Erro ao testar WhatsApp');
-      console.error('Erro WhatsApp:', error);
+      devLog.error('Erro WhatsApp:', error);
     }
   };
 
@@ -128,7 +129,7 @@ const InviteDebug = () => {
     setTemplateTestResult(null);
 
     try {
-      console.log('🎯 [TESTE TEMPLATE] Iniciando teste completo de convite...');
+      devLog.debug('Iniciando teste completo de convite...');
       
       // Passo 1: Buscar role_id de 'membro_club' (ou usar um padrão)
       const { data: roles, error: rolesError } = await supabase
@@ -149,7 +150,7 @@ const InviteDebug = () => {
       }
 
       const roleId = roles[0].id;
-      console.log('🎯 [TESTE TEMPLATE] Role ID:', roleId);
+      devLog.data('Role ID:', roleId);
 
       // Passo 2: Criar convite híbrido usando a função SQL
       const { data: inviteResult, error: inviteError } = await supabase
@@ -162,7 +163,7 @@ const InviteDebug = () => {
           p_channel_preference: 'whatsapp'
         });
 
-      console.log('🎯 [TESTE TEMPLATE] Resultado do convite:', inviteResult);
+      devLog.data('Resultado do convite:', inviteResult);
 
       if (inviteError || inviteResult?.status !== 'success') {
         throw new Error(inviteResult?.message || inviteError?.message || 'Erro ao criar convite');
@@ -172,7 +173,7 @@ const InviteDebug = () => {
       const inviteId = inviteResult.invite_id;
       const inviteUrl = APP_CONFIG.getAppUrl(`/convite/${inviteToken}`);
 
-      console.log('🎯 [TESTE TEMPLATE] Convite criado:', {
+      devLog.success('Convite criado:', {
         id: inviteId,
         token: inviteToken,
         url: inviteUrl
@@ -191,7 +192,7 @@ const InviteDebug = () => {
         }
       });
 
-      console.log('🎯 [TESTE TEMPLATE] Resultado WhatsApp:', whatsappResult);
+      devLog.success('Resultado WhatsApp:', whatsappResult);
 
       const result = {
         success: !whatsappError && whatsappResult?.success,

@@ -9,6 +9,7 @@ import { DashboardHeader } from "@/components/admin/dashboard/DashboardHeader";
 import { OnboardingStatusCard } from "@/components/admin/OnboardingStatusCard";
 import { RecentActivitiesCard } from "@/components/admin/analytics/RecentActivitiesCard";
 import { NotificationHealthMonitor } from "@/components/admin/notifications/NotificationHealthMonitor";
+import { devLog } from "@/utils/devLogger";
 
 import { RefreshCw, Users, Activity, CheckCircle, TrendingUp, BarChart3, Zap, Star, Info } from "lucide-react";
 import { VideoDurationSync } from "@/components/admin/VideoDurationSync";
@@ -24,13 +25,13 @@ const AdminDashboard = () => {
 
   // Handler que força atualização quando timeRange muda
   const handleTimeRangeChange = (newTimeRange: string) => {
-    console.log(`🔄 [DASHBOARD] Alterando período de ${timeRange} para ${newTimeRange}`);
+    devLog.data(`Alterando período de ${timeRange} para ${newTimeRange}`);
     setTimeRange(newTimeRange);
     setLastRefresh(new Date()); // Força re-render
   };
 
   // Debug detalhado dos dados recebidos
-  console.log('📊 [DASHBOARD] Estado atual:', {
+  devLog.data('Estado atual:', {
     timeRange,
     statsData: statsData ? {
       newUsersInPeriod: statsData.newUsersInPeriod,

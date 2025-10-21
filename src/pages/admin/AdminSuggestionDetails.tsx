@@ -9,6 +9,7 @@ import { useAdminSuggestions } from '@/hooks/suggestions/useAdminSuggestions';
 import { getStatusLabel, getStatusColor } from '@/utils/suggestionUtils';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { devLog } from '@/utils/devLogger';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,10 +39,10 @@ const AdminSuggestionDetails = () => {
   } = useComments({ suggestionId: suggestion?.id || '' });
 
   useEffect(() => {
-    console.log('AdminSuggestionDetails montado');
-    console.log('Sugestão:', suggestion);
-    console.log('Estado de carregamento:', isLoading);
-    console.log('Erro:', error);
+    devLog.component('AdminSuggestionDetails montado');
+    devLog.data('Sugestão:', suggestion);
+    devLog.data('Estado de carregamento:', isLoading);
+    devLog.data('Erro:', error);
   }, [suggestion, isLoading, error]);
 
   const handleRemoveSuggestion = async () => {
