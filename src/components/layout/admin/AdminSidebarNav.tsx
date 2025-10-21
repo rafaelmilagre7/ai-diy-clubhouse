@@ -22,7 +22,8 @@ import {
   BookOpen,
   Webhook,
   Network,
-  Palette
+  Palette,
+  Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -77,6 +78,11 @@ const navigationItems = [
     title: "Networking",
     href: "/admin/networking",
     icon: Network,
+  },
+  {
+    title: "Builder",
+    href: "/admin/builder",
+    icon: Sparkles,
   },
   {
     title: "Eventos",

@@ -39,6 +39,7 @@ export const useNavPermissions = () => {
     canViewSuggestions: checkPermission('suggestions.access', 'suggestions'),
     canViewAITrail: checkPermission('ai_trail.access', 'ai_trail'),
     canViewCertificates: checkPermission('certificates.access', 'certificates'),
+    canViewBuilder: checkPermission('builder.access', 'builder'),
     
     // Meta informações
     loading: permissionsLoading || solutionsLoading

@@ -43,6 +43,7 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
     canViewSuggestions,
     canViewAITrail,
     canViewCertificates,
+    canViewBuilder,
     loading: permissionsLoading
   } = useNavPermissions();
 
@@ -106,13 +107,15 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
 
         {/* Grupo: Ferramentas */}
         <SidebarNavigationGroup title="Ferramentas" sidebarOpen={sidebarOpen}>
-          <TooltipNavItem
-            to="/ferramentas/builder"
-            label="Builder"
-            icon={Sparkles}
-            sidebarOpen={sidebarOpen}
-            isNew={true}
-          />
+          {canViewBuilder && (
+            <TooltipNavItem
+              to="/ferramentas/builder"
+              label="Builder"
+              icon={Sparkles}
+              sidebarOpen={sidebarOpen}
+              isNew={true}
+            />
+          )}
           {canViewTools && (
             <TooltipNavItem
               to="/tools"

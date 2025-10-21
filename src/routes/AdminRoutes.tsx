@@ -32,6 +32,7 @@ import AutomationLogs from '@/pages/admin/AutomationLogs';
 import SolutionAccessOverrides from '@/pages/admin/SolutionAccessOverrides';
 import StyleGuidePage from '@/pages/StyleGuidePage';
 import AdminNetworking from '@/pages/admin/AdminNetworking';
+import AdminBuilder from '@/pages/admin/AdminBuilder';
 
 import NPSAnalytics from '@/pages/admin/NPSAnalytics';
 import CertificateTemplates from '@/pages/admin/CertificateTemplates';
@@ -88,4 +89,5 @@ export const adminRoutes: RouteObject[] = [
   createAdminRoute("/admin/automations/:id", AutomationForm),
   createAdminRoute("/admin/style-guide", StyleGuidePage),
   createAdminRoute("/admin/networking", AdminNetworking),
+  createAdminRoute("/admin/builder", AdminBuilder),
 ];
