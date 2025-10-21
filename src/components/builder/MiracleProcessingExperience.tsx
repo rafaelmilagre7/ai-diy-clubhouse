@@ -2,15 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const processingSteps = [
-  "Mapeando contexto técnico",
-  "Analisando ferramentas necessárias",
-  "Estruturando arquitetura",
-  "Definindo stack tecnológico",
-  "Calculando custos e ROI",
-  "Gerando fluxograma visual",
-  "Montando checklist executável",
-  "Validando viabilidade",
-  "Compilando solução final"
+  "Extraindo o Cérebro do Rafael",
+  "Analisando sua ideia contra 2.847 soluções já criadas",
+  "Conectando com base de conhecimento Miracle",
+  "Mapeando ferramentas que você já conhece",
+  "Identificando gaps e oportunidades técnicas",
+  "Calculando viabilidade técnica e ROI",
+  "Estruturando arquitetura em tempo real",
+  "Definindo stack tecnológico otimizado",
+  "Gerando fluxograma de implementação",
+  "Montando checklist executável detalhado",
+  "Estimando custos de setup e operação",
+  "Validando integrações necessárias",
+  "Compilando framework estratégico",
+  "Organizando mapa mental da solução",
+  "Finalizando plano técnico completo"
 ];
 
 export const MiracleProcessingExperience = () => {
@@ -19,15 +25,15 @@ export const MiracleProcessingExperience = () => {
   const [elapsedTime, setElapsedTime] = useState(0);
 
   useEffect(() => {
-    // Progresso gradual
+    // Progresso gradual - LIMITA A 85% até solução estar pronta
     const progressInterval = setInterval(() => {
       setProgress(prev => {
-        if (prev >= 100) return 100;
-        // Desacelera perto do final mas nunca para
-        const increment = prev > 90 ? Math.random() * 1.5 : Math.random() * 4;
-        return Math.min(prev + increment, 100);
+        if (prev >= 85) return 85; // PARA EM 85% até resposta chegar
+        // Progresso mais devagar: 70% do tempo em 0-60%, 30% em 60-85%
+        const increment = prev < 60 ? Math.random() * 3 : Math.random() * 1.5;
+        return Math.min(prev + increment, 85);
       });
-    }, 400);
+    }, 500);
 
     // Trocar step
     const stepInterval = setInterval(() => {

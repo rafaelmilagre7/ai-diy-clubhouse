@@ -53,23 +53,6 @@ export const FrameworkQuadrants: React.FC<FrameworkQuadrantsProps> = ({ framewor
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 relative">
-      {/* Centro com círculos conectados */}
-      <div className="hidden md:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
-        <motion.div
-          animate={{
-            rotate: 360
-          }}
-          transition={{
-            duration: 20,
-            repeat: Infinity,
-            ease: "linear"
-          }}
-          className="w-16 h-16 rounded-full border-2 border-primary/30 flex items-center justify-center bg-background/95 backdrop-blur"
-        >
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary/60" />
-        </motion.div>
-      </div>
-
       {quadrants.map((quadrant, index) => {
         const Icon = quadrant.icon;
         

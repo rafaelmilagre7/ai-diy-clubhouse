@@ -273,6 +273,14 @@ Crie um plano completo seguindo o formato JSON especificado.`;
                 optional: { type: "array" }
               }
             },
+            architecture_flowchart: {
+              type: "object",
+              properties: {
+                mermaid_code: { type: "string", description: "Código Mermaid completo do fluxograma" },
+                description: { type: "string", description: "Descrição do fluxograma em 1-2 frases" }
+              },
+              required: ["mermaid_code", "description"]
+            },
             implementation_checklist: {
               type: "array",
               items: {
@@ -368,18 +376,26 @@ Crie um plano completo seguindo o formato JSON especificado.`;
         short_description: solutionData.short_description,
         mind_map: solutionData.mind_map,
         required_tools: solutionData.required_tools,
-        framework_mapping: solutionData.framework_quadrants,
-        implementation_checklist: solutionData.implementation_checklist,
-        architecture_flowchart: solutionData.architecture_flowchart,
-        generation_model: "google/gemini-2.5-flash",
-        generation_time_ms: generationTime,
-      })
-      .select()
-      .single();
+            framework_mapping: solutionData.framework_quadrants,
+            implementation_checklist: solutionData.implementation_checklist,
+            architecture_flowchart: solutionData.architecture_flowchart || null, // Validar
+            generation_model: "google/gemini-2.5-flash",
+            generation_time_ms: generationTime,
+          })
+          .select()
+          .single();
 
-    if (saveError) {
-      throw new Error("Erro ao salvar solução");
-    }
+      if (saveError) {
+        console.error("[MIRACLE] ❌ Erro ao salvar:", saveError);
+        throw new Error("Erro ao salvar solução");
+      }
+
+      // VALIDAR se architecture_flowchart foi gerado
+      if (!savedSolution.architecture_flowchart || !savedSolution.architecture_flowchart.mermaid_code) {
+        console.warn("[MIRACLE] ⚠️ WARNING: architecture_flowchart não foi gerado pela IA!");
+      } else {
+        console.log("[MIRACLE] ✅ architecture_flowchart gerado com sucesso");
+      }
 
     // Incrementar contador
     await supabase.rpc("increment_ai_solution_usage", { p_user_id: userId });

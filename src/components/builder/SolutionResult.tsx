@@ -1,14 +1,9 @@
 import React from 'react';
-import { LiquidGlassCard } from '@/components/ui/LiquidGlassCard';
-import { Button } from '@/components/ui/button';
-import { 
-  Layout, 
-  Download, 
-  Share2, 
-  Star,
-  ArrowRight
-} from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Star, Share2, Download, Save } from 'lucide-react';
+import { LiquidGlassCard } from '@/components/ui/LiquidGlassCard';
 import { FrameworkQuadrants } from './FrameworkQuadrants';
 import { RequiredToolsGrid } from './RequiredToolsGrid';
 import { ImplementationChecklist } from './ImplementationChecklist';
@@ -27,6 +22,10 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({
   onSave, 
   onDiscard 
 }) => {
+  // Debug: verificar se architecture_flowchart está vindo
+  console.log('🔍 DEBUG - architecture_flowchart:', solution.architecture_flowchart);
+  console.log('🔍 DEBUG - required_tools:', solution.required_tools);
+  
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -160,9 +159,10 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({
         <Button 
           onClick={onSave} 
           size="lg"
-          className="bg-gradient-to-r from-aurora-primary to-aurora-primary-light hover:opacity-90 transition-opacity min-w-[200px]"
+          className="bg-gradient-to-r from-aurora-primary to-aurora-primary-light hover:opacity-90 transition-opacity min-w-[200px] flex items-center gap-2"
         >
-          💾 Salvar no Histórico
+          <Save className="h-4 w-4" />
+          Salvar no Histórico
         </Button>
       </div>
 
