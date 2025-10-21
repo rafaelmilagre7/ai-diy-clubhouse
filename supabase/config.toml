@@ -249,3 +249,6 @@ verify_jwt = false
 
 [functions.quick-test-webhook]
 verify_jwt = false
+
+[functions.test-resend-direct]
+verify_jwt = false
