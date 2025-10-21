@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Layout, ArrowRight, Zap } from 'lucide-react';
+import { Layout, ArrowRight } from 'lucide-react';
 import { useAuth } from '@/contexts/auth';
 import { useMiracleAI } from '@/hooks/builder/useMiracleAI';
 import { QuestionWizard } from '@/components/builder/QuestionWizard';
-import { MiracleLoadingExperience } from '@/components/builder/MiracleLoadingExperience';
+import { MiracleProcessingExperience } from '@/components/builder/MiracleProcessingExperience';
 import { SolutionResult } from '@/components/builder/SolutionResult';
 import { AIInputWithLoading } from '@/components/ui/AIInputWithLoading';
 import { useAISolutionAccess } from '@/hooks/builder/useAISolutionAccess';
@@ -26,7 +26,7 @@ const exampleIdeas = [
 
 export default function Builder() {
   const { profile } = useAuth();
-  const { analyzeIdea, generateSolution, isAnalyzing, isGenerating, questions } = useMiracleAI();
+  const { analyzeIdea, generateSolution, saveSolution, discardSolution, isAnalyzing, isGenerating, questions } = useMiracleAI();
   const [solution, setSolution] = useState<any>(null);
   const [currentIdea, setCurrentIdea] = useState<string>('');
   const [showWizard, setShowWizard] = useState(false);
@@ -76,6 +76,18 @@ export default function Builder() {
     setSolution(null);
   };
 
+  const handleSave = async () => {
+    if (solution) {
+      await saveSolution(solution);
+      navigate('/ferramentas/builder/historico');
+    }
+  };
+
+  const handleDiscard = () => {
+    discardSolution();
+    setSolution(null);
+  };
+
   const handleExampleClick = (example: typeof exampleIdeas[0]) => {
     handleGenerateSolution(example.description);
   };
@@ -102,7 +114,7 @@ export default function Builder() {
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-surface-elevated/20">
       <AnimatePresence mode="wait">
         {isGenerating ? (
-          <MiracleLoadingExperience key="loader" />
+          <MiracleProcessingExperience key="loader" />
         ) : showWizard && questions ? (
           <QuestionWizard
             key="wizard"
@@ -118,7 +130,12 @@ export default function Builder() {
             exit={{ opacity: 0 }}
             className="container mx-auto px-4 py-8"
           >
-            <SolutionResult solution={solution} onNewIdea={handleNewIdea} />
+            <SolutionResult 
+              solution={solution} 
+              onNewIdea={handleNewIdea} 
+              onSave={handleSave}
+              onDiscard={handleDiscard}
+            />
           </motion.div>
         ) : (
           <motion.div
@@ -146,12 +163,9 @@ export default function Builder() {
                   <Layout className="h-8 w-8 text-aurora-primary" />
                 </div>
               </div>
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-                  Miracle AI
-                </h1>
-                <Zap className="h-6 w-6 text-aurora-primary animate-pulse" />
-              </div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                Miracle AI
+              </h1>
               <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
                 Pense como o Rafael Milagre e transforme suas ideias em soluções inteligentes
               </p>

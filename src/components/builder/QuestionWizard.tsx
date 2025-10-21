@@ -31,7 +31,7 @@ export const QuestionWizard: React.FC<QuestionWizardProps> = ({
   const currentQuestion = questions[currentStep];
   const progress = ((currentStep + 1) / questions.length) * 100;
   const isLastStep = currentStep === questions.length - 1;
-  const canProceed = answers[currentStep]?.trim().length >= 10;
+  const canProceed = answers[currentStep]?.trim().length > 0;
 
   const handleNext = () => {
     if (!canProceed) return;
@@ -79,18 +79,15 @@ export const QuestionWizard: React.FC<QuestionWizardProps> = ({
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-8 bg-gradient-to-br from-background via-background to-surface-elevated/20">
       <div className="w-full max-w-2xl">
-        {/* Header */}
+        {/* Header sem ícone */}
         <motion.div
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           className="text-center mb-8"
         >
-          <div className="flex items-center justify-center gap-2 mb-3">
-            <Zap className="h-6 w-6 text-aurora-primary" />
-            <h2 className="text-2xl font-bold">Miracle AI</h2>
-          </div>
+          <h2 className="text-2xl font-bold mb-3">Contexto Técnico</h2>
           <p className="text-muted-foreground">
-            Vamos entender melhor sua ideia para criar uma solução DEVASTADORA
+            Responda com detalhes técnicos para gerar uma solução precisa
           </p>
         </motion.div>
 
@@ -134,7 +131,7 @@ export const QuestionWizard: React.FC<QuestionWizardProps> = ({
                   {currentQuestion.category.replace('_', ' ').toUpperCase()}
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  {answers.filter(a => a.trim().length >= 10).length}/{questions.length} respondidas
+                  {answers.filter(a => a.trim().length > 0).length}/{questions.length} respondidas
                 </span>
               </div>
 
@@ -143,10 +140,10 @@ export const QuestionWizard: React.FC<QuestionWizardProps> = ({
                 {currentQuestion.question}
               </h3>
 
-              {/* Why Important */}
+              {/* Why Important - sem emoji */}
               <div className="mb-4 p-3 rounded-lg bg-muted/50 border border-border/50">
                 <p className="text-sm text-muted-foreground">
-                  💡 <span className="font-medium">Por que isso importa:</span> {currentQuestion.why_important}
+                  <span className="font-medium">Por que isso importa:</span> {currentQuestion.why_important}
                 </p>
               </div>
 
@@ -154,23 +151,10 @@ export const QuestionWizard: React.FC<QuestionWizardProps> = ({
               <Textarea
                 value={answers[currentStep]}
                 onChange={(e) => handleAnswerChange(e.target.value)}
-                placeholder="Digite sua resposta aqui... (mínimo 10 caracteres)"
+                placeholder="Digite sua resposta aqui com o máximo de detalhes possível..."
                 className="min-h-[120px] resize-none"
                 autoFocus
               />
-
-              {/* Character Counter */}
-              <div className="mt-2 flex justify-between items-center">
-                <p className={cn(
-                  "text-xs transition-colors",
-                  answers[currentStep]?.length >= 10 
-                    ? "text-status-success" 
-                    : "text-muted-foreground"
-                )}>
-                  {answers[currentStep]?.length || 0} caracteres
-                  {answers[currentStep]?.length >= 10 && " ✓"}
-                </p>
-              </div>
             </LiquidGlassCard>
           </motion.div>
         </AnimatePresence>

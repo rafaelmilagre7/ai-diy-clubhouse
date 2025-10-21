@@ -29,6 +29,7 @@ import TeamManagementPage from '@/pages/member/TeamManagementPage';
 // Builder pages
 import Builder from '@/pages/member/Builder';
 import MyAISolutions from '@/pages/member/MyAISolutions';
+import SolutionHistory from '@/pages/member/SolutionHistory';
 
 // Member Learning pages
 import LearningPage from '@/pages/member/learning/LearningPage';
@@ -72,6 +73,7 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/tools", Tools),
   createProtectedRoute("/tools/:id", ToolDetails),
   createProtectedRoute("/ferramentas/builder", Builder),
+  createProtectedRoute("/ferramentas/builder/historico", SolutionHistory),
   createProtectedRoute("/minhas-solucoes", MyAISolutions),
   createProtectedRoute("/networking", Networking),
     createProtectedRoute("/networking/analytics", NetworkingAnalytics),
