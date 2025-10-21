@@ -246,3 +246,6 @@ verify_jwt = false
 
 [functions.test-resend-integration]
 verify_jwt = false
+
+[functions.quick-test-webhook]
+verify_jwt = false
