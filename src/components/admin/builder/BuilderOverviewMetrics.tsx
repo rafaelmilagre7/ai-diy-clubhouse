@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Sparkles, Users, TrendingUp, CheckCircle2 } from 'lucide-react';
+import { Brain, Users, TrendingUp, CheckCircle2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface BuilderOverviewMetricsProps {
@@ -18,7 +18,7 @@ export const BuilderOverviewMetrics: React.FC<BuilderOverviewMetricsProps> = ({
     {
       title: 'Total de Soluções',
       value: solutions?.length || 0,
-      icon: Sparkles,
+      icon: Brain,
       color: 'text-primary',
       bgColor: 'bg-primary/10'
     },

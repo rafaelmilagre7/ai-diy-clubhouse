@@ -1,79 +1,66 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LiquidGlassCard } from '@/components/ui/LiquidGlassCard';
-import { Sparkles } from 'lucide-react';
+import { Brain, Wrench, Lightbulb, CheckCircle } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
 
-const loadingPhrases = [
-  'Analisando sua ideia...',
-  'Mapeando ferramentas ideais...',
-  'Estruturando framework de implementação...',
-  'Criando checklist personalizado...',
-  'Finalizando sua solução...'
+const loadingSteps = [
+  {
+    icon: Brain,
+    text: 'Analisando sua ideia com IA...',
+    duration: 8000
+  },
+  {
+    icon: Wrench,
+    text: 'Mapeando ferramentas e tecnologias...',
+    duration: 8000
+  },
+  {
+    icon: Lightbulb,
+    text: 'Estruturando framework de implementação...',
+    duration: 8000
+  },
+  {
+    icon: CheckCircle,
+    text: 'Criando checklist detalhado...',
+    duration: 8000
+  }
 ];
 
 export const AISolutionLoader = () => {
-  const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
+  const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    // Rotação de frases a cada 4 segundos
-    const phraseInterval = setInterval(() => {
-      setCurrentPhraseIndex((prev) => (prev + 1) % loadingPhrases.length);
-    }, 4000);
-
-    // Progresso simulado
+    // Progresso suave
     const progressInterval = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 95) return prev;
-        return prev + Math.random() * 5;
+        return prev + Math.random() * 3;
       });
-    }, 500);
+    }, 400);
+
+    // Rotação de steps
+    const stepInterval = setInterval(() => {
+      setCurrentStep((prev) => (prev + 1) % loadingSteps.length);
+    }, 8000);
 
     return () => {
-      clearInterval(phraseInterval);
       clearInterval(progressInterval);
+      clearInterval(stepInterval);
     };
   }, []);
 
   return (
-    <LiquidGlassCard className="p-12">
-      <div className="space-y-8 max-w-md mx-auto">
-        {/* Logo Animado */}
-        <div className="relative h-32 flex items-center justify-center">
-          {/* Círculos Animados */}
+    <div className="max-w-2xl mx-auto py-16 px-6">
+      <div className="space-y-8">
+        {/* Loading Animation */}
+        <div className="relative h-40 flex items-center justify-center">
+          {/* Pulse Background */}
           <motion.div
             className="absolute inset-0 flex items-center justify-center"
             animate={{
-              rotate: 360
-            }}
-            transition={{
-              duration: 3,
-              repeat: Infinity,
-              ease: "linear"
-            }}
-          >
-            <div className="w-24 h-24 rounded-full border-4 border-primary/20 border-t-primary" />
-          </motion.div>
-
-          <motion.div
-            className="absolute inset-0 flex items-center justify-center"
-            animate={{
-              rotate: -360
-            }}
-            transition={{
-              duration: 4,
-              repeat: Infinity,
-              ease: "linear"
-            }}
-          >
-            <div className="w-32 h-32 rounded-full border-4 border-primary/10 border-r-primary/50" />
-          </motion.div>
-
-          {/* Logo Central */}
-          <motion.div
-            className="relative z-10 flex flex-col items-center"
-            animate={{
-              scale: [1, 1.1, 1]
+              scale: [1, 1.2, 1],
+              opacity: [0.3, 0.1, 0.3]
             }}
             transition={{
               duration: 2,
@@ -81,71 +68,103 @@ export const AISolutionLoader = () => {
               ease: "easeInOut"
             }}
           >
-            <Sparkles className="h-12 w-12 text-primary" />
-            <div className="mt-4 text-2xl font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
-              VIVER DE IA
-            </div>
+            <div className="w-32 h-32 rounded-full bg-primary/20" />
+          </motion.div>
+
+          {/* Rotating Ring */}
+          <motion.div
+            className="absolute inset-0 flex items-center justify-center"
+            animate={{ rotate: 360 }}
+            transition={{
+              duration: 3,
+              repeat: Infinity,
+              ease: "linear"
+            }}
+          >
+            <div className="w-24 h-24 rounded-full border-4 border-transparent border-t-primary border-r-primary/50" />
+          </motion.div>
+
+          {/* Center Icon */}
+          <motion.div
+            className="relative z-10 w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-2xl"
+            animate={{
+              y: [0, -10, 0]
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          >
+            <Brain className="h-10 w-10 text-primary-foreground" />
           </motion.div>
         </div>
 
-        {/* Frases Animadas */}
-        <div className="h-12 flex items-center justify-center">
+        {/* Current Step Text */}
+        <div className="h-16 flex flex-col items-center justify-center gap-3">
           <AnimatePresence mode="wait">
-            <motion.p
-              key={currentPhraseIndex}
+            <motion.div
+              key={currentStep}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.5 }}
-              className="text-center text-lg font-medium text-foreground/90"
+              className="flex items-center gap-3"
             >
-              {loadingPhrases[currentPhraseIndex]}
-            </motion.p>
+              {React.createElement(loadingSteps[currentStep].icon, {
+                className: "h-5 w-5 text-primary"
+              })}
+              <p className="text-lg font-medium text-foreground">
+                {loadingSteps[currentStep].text}
+              </p>
+            </motion.div>
           </AnimatePresence>
         </div>
 
-        {/* Barra de Progresso */}
-        <div className="space-y-2">
-          <div className="h-2 bg-muted rounded-full overflow-hidden">
-            <motion.div
-              className="h-full bg-gradient-to-r from-primary via-primary/80 to-primary/60"
-              initial={{ width: 0 }}
-              animate={{ width: `${progress}%` }}
-              transition={{ duration: 0.3 }}
-            />
+        {/* Progress Bar */}
+        <div className="space-y-3">
+          <Progress 
+            value={progress} 
+            className="h-2"
+            indicatorClassName="bg-gradient-to-r from-primary via-primary/80 to-primary/60"
+          />
+          <div className="flex justify-between items-center text-xs text-muted-foreground">
+            <span>{Math.round(progress)}% concluído</span>
+            <span>~30 segundos</span>
           </div>
-          <p className="text-xs text-center text-muted-foreground">
-            {Math.round(progress)}%
-          </p>
         </div>
 
-        {/* Indicadores de Fase */}
+        {/* Step Indicators */}
         <div className="flex justify-center gap-2">
-          {loadingPhrases.map((_, index) => (
+          {loadingSteps.map((_, index) => (
             <motion.div
               key={index}
-              className={`h-2 rounded-full transition-all ${
-                index === currentPhraseIndex 
-                  ? 'w-8 bg-primary' 
-                  : 'w-2 bg-muted'
+              className={`h-1.5 rounded-full transition-all ${
+                index === currentStep 
+                  ? 'w-12 bg-primary' 
+                  : index < currentStep
+                  ? 'w-6 bg-primary/50'
+                  : 'w-6 bg-muted'
               }`}
               animate={{
-                scale: index === currentPhraseIndex ? 1.2 : 1
+                scale: index === currentStep ? 1.1 : 1
               }}
             />
           ))}
         </div>
 
-        {/* Dica */}
-        <motion.p
+        {/* Tip */}
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 1 }}
-          className="text-xs text-center text-muted-foreground"
+          transition={{ delay: 2 }}
+          className="text-center"
         >
-          Isso pode levar até 30 segundos. Estamos criando algo especial para você! ✨
-        </motion.p>
+          <p className="text-sm text-muted-foreground">
+            💡 Estamos criando um plano completo para você!
+          </p>
+        </motion.div>
       </div>
-    </LiquidGlassCard>
+    </div>
   );
 };

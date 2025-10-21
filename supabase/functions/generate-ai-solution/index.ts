@@ -203,8 +203,8 @@ Por favor, crie um plano completo de implementação seguindo o formato JSON esp
 
     // 6. Chamar Lovable AI (Gemini 2.5 Pro)
     console.log(`[BUILDER] Chamando Lovable AI com Gemini 2.5 Pro...`);
-    const lovableAIUrl = "https://lovable-ai-api.deno.dev/v1/chat/completions";
-    const lovableAIKey = Deno.env.get("LOVABLE_AI_API_KEY");
+    const lovableAIUrl = "https://ai.gateway.lovable.dev/v1/chat/completions";
+    const lovableAIKey = Deno.env.get("LOVABLE_API_KEY");
 
     const aiResponse = await fetch(lovableAIUrl, {
       method: "POST",

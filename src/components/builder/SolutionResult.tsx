@@ -2,7 +2,7 @@ import React from 'react';
 import { LiquidGlassCard } from '@/components/ui/LiquidGlassCard';
 import { Button } from '@/components/ui/button';
 import { 
-  Sparkles, 
+  Brain, 
   Download, 
   Share2, 
   Star,
@@ -138,7 +138,7 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({ solution, onNewI
         className="flex flex-col sm:flex-row gap-4 justify-center"
       >
         <Button onClick={onNewIdea} variant="outline" size="lg">
-          <Sparkles className="mr-2 h-4 w-4" />
+          <Brain className="mr-2 h-4 w-4" />
           Gerar Nova Solução
         </Button>
         <Button size="lg">

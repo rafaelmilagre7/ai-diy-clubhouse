@@ -8,7 +8,7 @@ import { BuilderGrowthChart } from '@/components/admin/builder/BuilderGrowthChar
 import { BuilderSolutionsTable } from '@/components/admin/builder/BuilderSolutionsTable';
 import { BuilderToolsRanking } from '@/components/admin/builder/BuilderToolsRanking';
 import { BuilderRoleLimits } from '@/components/admin/builder/BuilderRoleLimits';
-import { Sparkles, TrendingUp, List, Wrench, Settings } from 'lucide-react';
+import { Brain, TrendingUp, List, Wrench, Settings } from 'lucide-react';
 
 const AdminBuilder = () => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -76,7 +76,7 @@ const AdminBuilder = () => {
       <div className="flex items-center justify-between">
         <div className="space-y-1">
           <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Sparkles className="h-8 w-8 text-primary" />
+            <Brain className="h-8 w-8 text-primary" />
             Builder - Admin
           </h1>
           <p className="text-muted-foreground">

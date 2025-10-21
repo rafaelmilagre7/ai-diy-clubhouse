@@ -23,7 +23,7 @@ import {
   Webhook,
   Network,
   Palette,
-  Sparkles
+  Brain
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -82,7 +82,7 @@ const navigationItems = [
   {
     title: "Builder",
     href: "/admin/builder",
-    icon: Sparkles,
+    icon: Brain,
   },
   {
     title: "Eventos",

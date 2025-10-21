@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { useAISolutionAccess } from '@/hooks/builder/useAISolutionAccess';
 import { useAISolutionGenerator } from '@/hooks/builder/useAISolutionGenerator';
-import { LiquidGlassCard } from '@/components/ui/LiquidGlassCard';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Sparkles, ArrowRight, History } from 'lucide-react';
+import { Brain, Send, History, Zap, Lightbulb } from 'lucide-react';
 import { AISolutionLoader } from '@/components/builder/AISolutionLoader';
 import { SolutionResult } from '@/components/builder/SolutionResult';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
 const Builder = () => {
   const [idea, setIdea] = useState('');
@@ -48,7 +48,11 @@ const Builder = () => {
   if (accessLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-muted-foreground">Carregando...</p>
+        <div className="flex items-center gap-3">
+          <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+          <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+          <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+        </div>
       </div>
     );
   }
@@ -56,176 +60,213 @@ const Builder = () => {
   if (!hasAccess) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
-        <LiquidGlassCard className="max-w-md p-8 text-center">
-          <h2 className="text-2xl font-bold mb-4">Acesso Negado</h2>
+        <div className="max-w-md w-full bg-card border border-border rounded-2xl p-8 text-center shadow-lg">
+          <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-destructive/10 flex items-center justify-center">
+            <Brain className="h-8 w-8 text-destructive" />
+          </div>
+          <h2 className="text-2xl font-bold mb-3">Acesso Negado</h2>
           <p className="text-muted-foreground mb-6">
             Você não tem permissão para acessar o Builder.
           </p>
-          <Button asChild>
+          <Button asChild className="w-full">
             <Link to="/dashboard">Voltar ao Dashboard</Link>
           </Button>
-        </LiquidGlassCard>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background/95 to-background/90 p-4 md:p-8">
-      <div className="max-w-5xl mx-auto space-y-8">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center space-y-4"
-        >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
-            <Sparkles className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium text-primary">Powered by IA</span>
+    <div className="min-h-screen bg-background">
+      <div className="max-w-4xl mx-auto">
+        {/* Header Fixo */}
+        <header className="sticky top-0 z-10 backdrop-blur-xl bg-background/80 border-b border-border">
+          <div className="flex items-center justify-between px-6 py-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-lg">
+                <Brain className="h-6 w-6 text-primary-foreground" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold">Builder IA</h1>
+                <p className="text-xs text-muted-foreground">
+                  {generationsUsed} de {monthlyLimit} gerações • {remaining} restantes
+                </p>
+              </div>
+            </div>
+            
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/minhas-solucoes" className="flex items-center gap-2">
+                <History className="h-4 w-4" />
+                <span className="hidden sm:inline">Histórico</span>
+              </Link>
+            </Button>
           </div>
-          
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
-            Builder
-          </h1>
-          
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Transforme sua ideia em um plano completo de implementação com IA
-          </p>
+        </header>
 
-          {/* Usage Badge */}
-          <div className="flex items-center justify-center gap-2 text-sm">
-            <span className="text-muted-foreground">
-              {generationsUsed} de {monthlyLimit} usos este mês
-            </span>
-            {remaining > 0 ? (
-              <span className="px-2 py-1 rounded-full bg-success/10 text-success text-xs font-medium">
-                {remaining} restantes
-              </span>
-            ) : (
-              <span className="px-2 py-1 rounded-full bg-status-error/10 text-status-error text-xs font-medium">
-                Limite atingido
-              </span>
+        {/* Conteúdo Principal */}
+        <main className="p-6 pb-32">
+          <AnimatePresence mode="wait">
+            {/* Loading State */}
+            {isGenerating && (
+              <motion.div
+                key="loading"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <AISolutionLoader />
+              </motion.div>
             )}
-          </div>
-        </motion.div>
 
-        {/* Loading State */}
-        {isGenerating && <AISolutionLoader />}
+            {/* Result State */}
+            {!isGenerating && solution && (
+              <motion.div
+                key="result"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+              >
+                <SolutionResult 
+                  solution={solution} 
+                  onNewIdea={() => {
+                    setSolution(null);
+                    setIdea('');
+                  }} 
+                />
+              </motion.div>
+            )}
 
-        {/* Result State */}
-        {!isGenerating && solution && (
-          <SolutionResult solution={solution} onNewIdea={() => {
-            setSolution(null);
-            setIdea('');
-          }} />
-        )}
+            {/* Empty State - Sugestões */}
+            {!isGenerating && !solution && idea.length === 0 && (
+              <motion.div
+                key="empty"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="space-y-6"
+              >
+                {/* Hero Section */}
+                <div className="text-center py-12 space-y-4">
+                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-4">
+                    <Zap className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-medium">Powered by Gemini 2.5 Pro</span>
+                  </div>
+                  
+                  <h2 className="text-3xl md:text-4xl font-bold">
+                    Transforme ideias em{' '}
+                    <span className="bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
+                      planos executáveis
+                    </span>
+                  </h2>
+                  
+                  <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                    Descreva sua ideia e receba um framework completo com ferramentas, 
+                    roadmap e checklist de implementação
+                  </p>
+                </div>
 
-        {/* Input State */}
-        {!isGenerating && !solution && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-          >
-            <LiquidGlassCard className="p-6 md:p-8 space-y-6">
-              {/* Input Area */}
-              <div className="space-y-4">
-                <label className="text-sm font-medium text-foreground/90">
-                  Descreva sua ideia
-                </label>
+                {/* Exemplos */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Lightbulb className="h-4 w-4" />
+                    <span>Exemplos para você começar</span>
+                  </div>
+                  
+                  <div className="grid gap-3">
+                    {exampleIdeas.map((example, index) => (
+                      <button
+                        key={index}
+                        onClick={() => handleExampleClick(example)}
+                        className="group p-4 text-left rounded-xl border border-border bg-card hover:bg-accent hover:border-primary/30 transition-all"
+                      >
+                        <p className="text-sm text-foreground/90 group-hover:text-foreground">
+                          {example}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Showing Input - Com texto digitado */}
+            {!isGenerating && !solution && idea.length > 0 && (
+              <motion.div
+                key="input-preview"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="space-y-4"
+              >
+                <div className="p-6 rounded-2xl bg-accent/50 border border-border">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
+                      <span className="text-sm font-semibold text-primary-foreground">Você</span>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-foreground whitespace-pre-wrap">{idea}</p>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </main>
+
+        {/* Input Fixo no Bottom */}
+        <div className="fixed bottom-0 left-0 right-0 border-t border-border bg-background/95 backdrop-blur-xl">
+          <div className="max-w-4xl mx-auto p-4">
+            <div className="flex flex-col gap-3">
+              {/* Textarea */}
+              <div className={cn(
+                "relative rounded-2xl border transition-all",
+                idea.length > 0 ? "border-primary shadow-lg shadow-primary/5" : "border-border"
+              )}>
                 <Textarea
                   value={idea}
                   onChange={(e) => setIdea(e.target.value)}
-                  placeholder="Ex: Quero criar um chatbot para WhatsApp que responde perguntas dos meus clientes usando IA..."
-                  className="min-h-[150px] resize-none text-base"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey && idea.length >= 30) {
+                      e.preventDefault();
+                      handleGenerate();
+                    }
+                  }}
+                  placeholder="Descreva sua ideia de negócio ou projeto aqui... (mínimo 30 caracteres)"
+                  className="min-h-[80px] max-h-[200px] resize-none border-0 focus-visible:ring-0 bg-transparent px-4 py-3 text-base"
                   disabled={!canGenerate}
                 />
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>{idea.length}/1000 caracteres</span>
-                  <span>Mínimo: 30 caracteres</span>
+                
+                {/* Character Count */}
+                <div className="absolute bottom-2 left-4 text-xs text-muted-foreground">
+                  {idea.length}/1000
+                </div>
+
+                {/* Send Button */}
+                <div className="absolute bottom-2 right-2">
+                  <Button
+                    onClick={handleGenerate}
+                    disabled={idea.length < 30 || idea.length > 1000 || !canGenerate}
+                    size="sm"
+                    className={cn(
+                      "rounded-xl transition-all",
+                      idea.length >= 30 && idea.length <= 1000 && canGenerate
+                        ? "bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20"
+                        : "bg-muted"
+                    )}
+                  >
+                    <Send className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
 
-              {/* Generate Button */}
-              <Button
-                onClick={handleGenerate}
-                disabled={idea.length < 30 || idea.length > 1000 || !canGenerate}
-                className="w-full h-12 text-base font-medium group"
-                size="lg"
-              >
-                <Sparkles className="mr-2 h-5 w-5 group-hover:rotate-12 transition-transform" />
-                Gerar Solução
-                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-              </Button>
-
+              {/* Status Messages */}
               {!canGenerate && (
-                <p className="text-sm text-status-warning text-center">
-                  Você atingiu o limite mensal de gerações. Aguarde até o próximo mês.
+                <p className="text-xs text-center text-destructive">
+                  Limite mensal atingido. Aguarde até o próximo mês.
                 </p>
               )}
-            </LiquidGlassCard>
-
-            {/* Example Ideas */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
-              className="space-y-4"
-            >
-              <h3 className="text-sm font-medium text-muted-foreground text-center">
-                Exemplos de ideias
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {exampleIdeas.map((example, index) => (
-                  <motion.button
-                    key={index}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 + index * 0.1 }}
-                    onClick={() => handleExampleClick(example)}
-                    className="p-4 text-left rounded-lg border border-border/50 bg-muted/30 hover:bg-muted/50 hover:border-primary/30 transition-all group"
-                  >
-                    <p className="text-sm text-foreground/80 group-hover:text-foreground transition-colors">
-                      {example}
-                    </p>
-                  </motion.button>
-                ))}
-              </div>
-            </motion.div>
-
-            {/* History Link */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.4 }}
-              className="text-center"
-            >
-              <Button variant="ghost" asChild>
-                <Link to="/minhas-solucoes" className="inline-flex items-center gap-2">
-                  <History className="h-4 w-4" />
-                  Ver minhas soluções anteriores
-                </Link>
-              </Button>
-            </motion.div>
-
-            {/* Info Footer */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-              className="pt-6 border-t border-border/30"
-            >
-              <div className="flex items-center justify-center gap-6 text-xs text-muted-foreground">
-                <div className="flex items-center gap-1">
-                  <Sparkles className="h-3 w-3" />
-                  <span>Tempo médio: ~30 segundos</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <span>Powered by Gemini 2.5 Pro</span>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

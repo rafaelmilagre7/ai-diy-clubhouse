@@ -9,7 +9,7 @@ import {
   Search, 
   ArrowLeft, 
   Calendar,
-  Sparkles,
+  Brain,
   Star,
   CheckCircle2,
   Circle,
@@ -55,7 +55,7 @@ const MyAISolutions = () => {
           </div>
           <Button asChild>
             <Link to="/ferramentas/builder">
-              <Sparkles className="mr-2 h-4 w-4" />
+              <Brain className="mr-2 h-4 w-4" />
               Nova Solução
             </Link>
           </Button>
@@ -120,14 +120,14 @@ const MyAISolutions = () => {
         {/* Empty State */}
         {!isLoading && solutions.length === 0 && (
           <LiquidGlassCard className="p-12 text-center">
-            <Sparkles className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+            <Brain className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
             <h3 className="text-xl font-semibold mb-2">Nenhuma solução ainda</h3>
             <p className="text-muted-foreground mb-6">
               Comece criando sua primeira solução com IA
             </p>
             <Button asChild>
               <Link to="/ferramentas/builder">
-                <Sparkles className="mr-2 h-4 w-4" />
+                <Brain className="mr-2 h-4 w-4" />
                 Criar Primeira Solução
               </Link>
             </Button>
@@ -163,7 +163,7 @@ const MyAISolutions = () => {
                     <div className="flex items-start gap-4">
                       {/* Icon */}
                       <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
-                        <Sparkles className="h-6 w-6 text-primary" />
+                        <Brain className="h-6 w-6 text-primary" />
                       </div>
 
                       {/* Content */}
