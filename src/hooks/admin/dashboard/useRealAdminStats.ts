@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
+import { devLog } from "@/utils/devLogger";
 
 interface StatsData {
   // Dados cumulativos
@@ -61,7 +62,7 @@ export const useRealAdminStats = (timeRange: string) => {
     try {
       setLoading(true);
       
-      console.log(`🔄 [STATS] Carregando estatísticas para período: ${timeRange}`);
+      devLog.data(`Carregando estatísticas para período: ${timeRange}`);
       
       // Buscar data atual do banco usando uma query simples
       const { data: nowResult } = await supabase
@@ -85,9 +86,9 @@ export const useRealAdminStats = (timeRange: string) => {
       const startDate = new Date(bankNow);
       startDate.setDate(startDate.getDate() - daysBack);
       
-      console.log(`📅 [STATS] Período: ${daysBack} dias`);
-      console.log(`📅 [STATS] Data de referência: ${bankNow.toISOString()}`);
-      console.log(`📅 [STATS] Data de início: ${startDate.toISOString()}`);
+      devLog.timing(`Período: ${daysBack} dias`);
+      devLog.timing(`Data de referência: ${bankNow.toISOString()}`);
+      devLog.timing(`Data de início: ${startDate.toISOString()}`);
 
       // === DADOS CUMULATIVOS (não mudam com período) ===
       
@@ -227,7 +228,7 @@ export const useRealAdminStats = (timeRange: string) => {
 
       setStatsData(finalStats);
       
-      console.log('✅ [STATS] Estatísticas carregadas:', {
+      devLog.success('Estatísticas carregadas:', {
         periodo: `${daysBack} dias`,
         totalUsers: finalStats.totalUsers,
         totalSolutions: finalStats.totalSolutions,
@@ -257,7 +258,7 @@ export const useRealAdminStats = (timeRange: string) => {
 
   // Automaticamente atualiza quando timeRange muda
   useEffect(() => {
-    console.log(`🔄 [STATS] TimeRange mudou para: ${timeRange}`);
+    devLog.data(`TimeRange mudou para: ${timeRange}`);
     // Limpar dados antigos e carregar novos
     setStatsData(prev => ({
       ...prev,

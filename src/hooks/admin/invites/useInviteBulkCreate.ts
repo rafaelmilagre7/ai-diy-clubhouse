@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/auth';
 import { toast } from 'sonner';
 import { type CleanedContact } from '@/utils/contactDataCleaner';
 import { useRoleMapping } from './useRoleMapping';
+import { devLog } from '@/utils/devLogger';
 
 export interface BulkInviteItem {
   contact: CleanedContact;
@@ -45,14 +46,14 @@ export const useInviteBulkCreate = () => {
     }
 
     try {
-      console.log(`📦 [BULK-INVITE] Iniciando criação em lote de ${contacts.length} convites`);
+      devLog.api(`Iniciando criação em lote de ${contacts.length} convites`);
 
       // Verificar se contatos têm papéis individuais
       const hasIndividualRoles = contacts.some(contact => 
         contact.cleaned.role && contact.cleaned.role !== 'convidado'
       );
 
-      console.log(`🔍 [BULK-INVITE] Contatos com papéis individuais: ${hasIndividualRoles}`);
+      devLog.debug(`Contatos com papéis individuais: ${hasIndividualRoles}`);
 
       // Inicializar progresso
       const items: BulkInviteItem[] = contacts.map(contact => ({
@@ -73,11 +74,11 @@ export const useInviteBulkCreate = () => {
 
       if (hasIndividualRoles) {
         // Processar individualmente quando têm papéis diversos
-        console.log('🔄 [BULK-INVITE] Processando convites individualmente...');
+        devLog.data('Processando convites individualmente...');
         batchResult = await processIndividualInvites(contacts);
       } else {
         // Usar RPC batch quando todos têm o mesmo papel
-        console.log('📧 [BULK-INVITE] Criando convites via RPC batch...');
+        devLog.api('Criando convites via RPC batch...');
         
         // Determinar papel a usar
         const finalRoleId = roleId === 'default' ? getDefaultRoleId() : roleId;
@@ -106,7 +107,7 @@ export const useInviteBulkCreate = () => {
         batchResult = data;
       }
 
-      console.log('✅ [BULK-INVITE] Convites criados:', batchResult);
+      devLog.success('Convites criados:', batchResult);
 
       // Verificar se RPC retornou sucesso
       if (!batchResult || !batchResult.success) {
@@ -117,8 +118,8 @@ export const useInviteBulkCreate = () => {
       const createdInvites = batchResult.created || [];
       const failedInvites = batchResult.failed || [];
       
-      console.log('📝 [BULK-INVITE] Convites criados:', createdInvites);
-      console.log('❌ [BULK-INVITE] Convites falharam:', failedInvites);
+      devLog.data('Convites criados:', createdInvites);
+      devLog.error('Convites falharam:', failedInvites);
 
       const updatedItems = items.map(item => {
         // Buscar convite criado por email
@@ -162,7 +163,7 @@ export const useInviteBulkCreate = () => {
       }));
 
       // Enviar convites via Edge Function
-      console.log('📬 [BULK-INVITE] Iniciando envio em lote...');
+      devLog.api('Iniciando envio em lote...');
       
       const invitesData = updatedItems
         .filter(item => item.status === 'creating' && item.inviteId)
@@ -184,11 +185,11 @@ export const useInviteBulkCreate = () => {
       });
 
       if (sendError) {
-        console.error('❌ [BULK-INVITE] Erro no envio:', sendError);
+        devLog.error('Erro no envio:', sendError);
         throw sendError;
       }
 
-      console.log('✅ [BULK-INVITE] Resultado do envio:', sendResult);
+      devLog.success('Resultado do envio:', sendResult);
 
       // Atualizar status final
       const finalItems = updatedItems.map((item, index) => {
@@ -278,7 +279,7 @@ export const useInviteBulkCreate = () => {
           continue;
         }
 
-        console.log(`📧 [INDIVIDUAL-INVITE] Criando convite para ${contact.cleaned.email} com papel ${contactRole}`);
+        devLog.api(`Criando convite para ${contact.cleaned.email} com papel ${contactRole}`);
         
         const inviteData = [{
           email: contact.cleaned.email,
