@@ -61,10 +61,12 @@ export default function MiracleSolutionChecklist() {
               Voltar para visão geral
             </Button>
 
-            <div className="mb-6">
-              <h1 className="text-3xl font-bold mb-2">Plano de Ação</h1>
-              <p className="text-muted-foreground">
-                Passos práticos para transformar sua ideia em realidade
+            <div className="mb-8">
+              <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+                Plano de Ação
+              </h1>
+              <p className="text-muted-foreground text-lg leading-relaxed">
+                Checklist prático e passo a passo para transformar sua ideia em realidade
               </p>
             </div>
 

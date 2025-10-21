@@ -73,10 +73,12 @@ export default function MiracleSolutionTools() {
               Voltar para visão geral
             </Button>
 
-            <div className="mb-6">
-              <h1 className="text-3xl font-bold mb-2">Ferramentas Necessárias</h1>
-              <p className="text-muted-foreground mb-4">
-                Recursos essenciais e opcionais para implementação da sua solução
+            <div className="mb-8">
+              <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+                Ferramentas Necessárias
+              </h1>
+              <p className="text-muted-foreground text-lg leading-relaxed mb-6">
+                Stack completo com recursos essenciais e opcionais para implementação da sua solução
               </p>
 
               {/* Search Bar */}

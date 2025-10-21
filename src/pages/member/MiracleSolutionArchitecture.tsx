@@ -60,10 +60,12 @@ export default function MiracleSolutionArchitecture() {
               Voltar para visão geral
             </Button>
 
-            <div className="mb-6">
-              <h1 className="text-3xl font-bold mb-2">Arquitetura da Solução</h1>
-              <p className="text-muted-foreground">
-                Fluxograma técnico completo da solução de ponta a ponta
+            <div className="mb-8">
+              <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+                Arquitetura & Fluxos
+              </h1>
+              <p className="text-muted-foreground text-lg leading-relaxed">
+                Diagramas técnicos completos: visualize como cada componente se conecta para criar sua solução
               </p>
             </div>
 

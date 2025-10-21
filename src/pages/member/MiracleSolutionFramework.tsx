@@ -61,16 +61,16 @@ export default function MiracleSolutionFramework() {
               Voltar para visão geral
             </Button>
 
-            <div className="mb-6">
-              <h1 className="text-3xl font-bold mb-2">
+            <div className="mb-8">
+              <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
                 Framework de Implementação de IA
               </h1>
-              <div className="flex items-center gap-2 mb-4">
-                <Badge variant="secondary" className="text-sm">
+              <div className="flex items-center gap-3 mb-4">
+                <Badge variant="default" className="text-base px-4 py-1.5 bg-gradient-to-r from-primary to-primary/80">
                   by Rafael Milagre
                 </Badge>
               </div>
-              <p className="text-muted-foreground">
+              <p className="text-muted-foreground text-lg leading-relaxed">
                 Os 4 pilares essenciais da sua solução com Inteligência Artificial
               </p>
             </div>

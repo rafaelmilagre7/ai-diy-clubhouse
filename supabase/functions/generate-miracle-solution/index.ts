@@ -95,6 +95,38 @@ ESTRUTURA DA RESPOSTA:
 {
   "short_description": "3-5 frases TÉCNICAS e OBJETIVAS: 1) O QUE é a solução (arquitetura, componentes), 2) COMO funciona (fluxo técnico, integrações), 3) RESULTADO MENSURÁVEL (métricas, %, ROI). TOM: técnico, direto. EVITE: 'Vou te mostrar', 'Vamos criar'. USE: 'Sistema de X integrado com Y', 'Pipeline automatizado de Z', 'Reduz A em B%'",
   
+  "technical_overview": {
+    "complexity": "low/medium/high - Avaliação técnica da complexidade de implementação",
+    "estimated_time": "Tempo estimado (ex: '4-6 semanas')",
+    "main_stack": "Stack principal (ex: 'Cloud Native + APIs REST + IA Generativa')"
+  },
+  
+  "business_context": "2-4 parágrafos explicando: 1) Contexto do negócio e problema atual, 2) Objetivos estratégicos que a solução resolve, 3) Impacto esperado nos processos e resultados",
+  
+  "competitive_advantages": [
+    {
+      "title": "Diferencial 1",
+      "description": "Como essa solução se diferencia da concorrência ou do modo tradicional"
+    },
+    {
+      "title": "Diferencial 2",
+      "description": "Outro diferencial competitivo importante"
+    }
+  ],
+  
+  "expected_kpis": [
+    {
+      "metric": "Nome da métrica (ex: 'Taxa de Conversão')",
+      "target": "Meta esperada (ex: 'Aumentar de 15% para 40% em 3 meses')",
+      "description": "Como medir e por que é importante"
+    },
+    {
+      "metric": "Nome da métrica (ex: 'Tempo de Resposta')",
+      "target": "Meta esperada (ex: 'Reduzir de 2h para 15min')",
+      "description": "Como medir e por que é importante"
+    }
+  ],
+  
   "architecture_flowchart": {
     "mermaid_code": "Código Mermaid (formato 'graph TD' ou 'graph LR') representando TODO o fluxo técnico da solução. EXEMPLO para WhatsApp + IA:\n\ngraph TD\n  A[Lead envia WhatsApp] -->|Mensagem| B(API Meta)\n  B -->|Webhook| C{Make Automation}\n  C -->|Texto| D[GPT-4 Qualifica]\n  D -->|Lead Bom| E[(CRM - Hot Lead)]\n  D -->|Lead Frio| F[(CRM - Descarte)]\n  E --> G[Notifica Vendedor]\n  style D fill:#3b82f6\n  style E fill:#10b981\n  style F fill:#ef4444\n\nUSE setas, decisões (chaves {}), bancos (parênteses [()]), processos (retângulos). Seja TÉCNICO e COMPLETO.",
     "description": "1-2 frases explicando o que o fluxo mostra de ponta a ponta"
@@ -230,6 +262,39 @@ Crie um plano completo seguindo o formato JSON especificado.`;
           type: "object",
           properties: {
             short_description: { type: "string", description: "Descrição em 3-5 frases" },
+            technical_overview: {
+              type: "object",
+              properties: {
+                complexity: { type: "string", enum: ["low", "medium", "high"] },
+                estimated_time: { type: "string" },
+                main_stack: { type: "string" }
+              },
+              required: ["complexity", "estimated_time", "main_stack"]
+            },
+            business_context: { type: "string", description: "Contexto de negócio em 2-4 parágrafos" },
+            competitive_advantages: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  title: { type: "string" },
+                  description: { type: "string" }
+                },
+                required: ["title", "description"]
+              }
+            },
+            expected_kpis: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  metric: { type: "string" },
+                  target: { type: "string" },
+                  description: { type: "string" }
+                },
+                required: ["metric", "target", "description"]
+              }
+            },
             mind_map: {
               type: "object",
               properties: {
@@ -300,7 +365,7 @@ Crie um plano completo seguindo o formato JSON especificado.`;
               }
             }
           },
-          required: ["short_description", "mind_map", "framework_quadrants", "required_tools", "implementation_checklist", "architecture_flowchart"]
+          required: ["short_description", "technical_overview", "business_context", "competitive_advantages", "expected_kpis", "mind_map", "framework_quadrants", "required_tools", "implementation_checklist", "architecture_flowchart"]
         }
       }
     };
@@ -374,16 +439,20 @@ Crie um plano completo seguindo o formato JSON especificado.`;
         user_id: userId,
         original_idea: idea,
         short_description: solutionData.short_description,
+        technical_overview: solutionData.technical_overview || null,
+        business_context: solutionData.business_context || null,
+        competitive_advantages: solutionData.competitive_advantages || null,
+        expected_kpis: solutionData.expected_kpis || null,
         mind_map: solutionData.mind_map,
         required_tools: solutionData.required_tools,
-            framework_mapping: solutionData.framework_quadrants,
-            implementation_checklist: solutionData.implementation_checklist,
-            architecture_flowchart: solutionData.architecture_flowchart || null, // Validar
-            generation_model: "google/gemini-2.5-flash",
-            generation_time_ms: generationTime,
-          })
-          .select()
-          .single();
+        framework_mapping: solutionData.framework_quadrants,
+        implementation_checklist: solutionData.implementation_checklist,
+        architecture_flowchart: solutionData.architecture_flowchart || null,
+        generation_model: "google/gemini-2.5-flash",
+        generation_time_ms: generationTime,
+      })
+      .select()
+      .single();
 
       if (saveError) {
         console.error("[MIRACLE] ❌ Erro ao salvar:", saveError);
