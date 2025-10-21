@@ -22,7 +22,9 @@ const defaultPermissions = {
   tools: false,
   community: false,
   certificates: false,
-  lovable_course: false
+  lovable_course: false,
+  builder: false,
+  builder_limit: 3
 };
 
 export const RoleForm: React.FC<RoleFormProps> = ({ role, onSave, onCancel }) => {

@@ -57,6 +57,12 @@ export const APP_FEATURES: Record<string, FeatureConfig> = {
     adminOnly: false,
     description: "Acesso ao calendário de eventos",
     lastModified: "2025-01-24T15:00:00Z"
+  },
+  builder: {
+    enabled: true,
+    adminOnly: false,
+    description: "Builder - Gerador de Arquitetura de Soluções com IA",
+    lastModified: "2025-01-21T00:00:00Z"
   }
 };
 
