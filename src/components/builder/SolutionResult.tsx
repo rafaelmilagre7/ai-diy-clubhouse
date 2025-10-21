@@ -12,14 +12,21 @@ import { motion } from 'framer-motion';
 import { FrameworkQuadrants } from './FrameworkQuadrants';
 import { RequiredToolsGrid } from './RequiredToolsGrid';
 import { ImplementationChecklist } from './ImplementationChecklist';
-import { MindMapVisualization } from './MindMapVisualization';
+import { ArchitectureFlowchart } from './ArchitectureFlowchart';
 
 interface SolutionResultProps {
   solution: any;
   onNewIdea: () => void;
+  onSave: () => void;
+  onDiscard: () => void;
 }
 
-export const SolutionResult: React.FC<SolutionResultProps> = ({ solution, onNewIdea }) => {
+export const SolutionResult: React.FC<SolutionResultProps> = ({ 
+  solution, 
+  onNewIdea, 
+  onSave, 
+  onDiscard 
+}) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -52,16 +59,10 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({ solution, onNewI
           </div>
         </div>
 
-        {/* Ideia Original e Badge */}
-        <div className="pt-4 border-t border-border/30 flex items-start justify-between gap-4">
-          <div>
-            <p className="text-sm text-muted-foreground mb-1">Ideia original:</p>
-            <p className="text-sm text-foreground/70 italic">"{solution.original_idea}"</p>
-          </div>
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-aurora-primary/10 border border-aurora-primary/20">
-            <Layout className="h-4 w-4 text-aurora-primary" />
-            <span className="text-sm font-medium text-aurora-primary">MIRACLE AI</span>
-          </div>
+        {/* Ideia Original - sem badge */}
+        <div className="pt-4 border-t border-border/30">
+          <p className="text-sm text-muted-foreground mb-1">Ideia original:</p>
+          <p className="text-sm text-foreground/70 italic">"{solution.original_idea}"</p>
         </div>
       </LiquidGlassCard>
 
@@ -82,7 +83,26 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({ solution, onNewI
         </LiquidGlassCard>
       </motion.div>
 
-      {/* Ferramentas Necessárias */}
+      {/* Arquitetura Visual (Fluxograma) - 3º Bloco */}
+      {solution.architecture_flowchart && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <LiquidGlassCard className="p-6">
+            <div className="mb-4">
+              <h3 className="text-xl font-bold mb-2">Arquitetura da Solução</h3>
+              <p className="text-sm text-muted-foreground">
+                Fluxograma técnico completo da solução de ponta a ponta
+              </p>
+            </div>
+            <ArchitectureFlowchart flowchart={solution.architecture_flowchart} />
+          </LiquidGlassCard>
+        </motion.div>
+      )}
+
+      {/* Ferramentas Necessárias - 4º Bloco */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -96,23 +116,6 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({ solution, onNewI
             </p>
           </div>
           <RequiredToolsGrid tools={solution.required_tools} />
-        </LiquidGlassCard>
-      </motion.div>
-
-      {/* Mapa Mental - Colapsável */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-      >
-        <LiquidGlassCard className="p-6">
-          <div className="mb-4">
-            <h3 className="text-xl font-bold mb-2">Mapa Mental</h3>
-            <p className="text-sm text-muted-foreground">
-              Visualização hierárquica do processo de implementação
-            </p>
-          </div>
-          <MindMapVisualization mindMap={solution.mind_map} />
         </LiquidGlassCard>
       </motion.div>
 
@@ -136,21 +139,26 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({ solution, onNewI
         </LiquidGlassCard>
       </motion.div>
 
-      {/* Footer Actions */}
+      {/* Footer Actions com CTAs Save/Discard */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
-        className="flex flex-col sm:flex-row gap-4 justify-center"
+        className="space-y-4"
       >
-        <Button onClick={onNewIdea} variant="outline" size="lg">
-          <Layout className="mr-2 h-4 w-4" />
-          Gerar Nova Solução
-        </Button>
-        <Button size="lg">
-          Começar Implementação
-          <ArrowRight className="ml-2 h-4 w-4" />
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <Button onClick={onDiscard} variant="outline" size="lg">
+            Descartar Solução
+          </Button>
+          
+          <Button onClick={onSave} size="lg" className="bg-gradient-to-r from-aurora-primary to-aurora-primary-light">
+            Salvar no Histórico
+          </Button>
+        </div>
+
+        <p className="text-xs text-center text-muted-foreground">
+          Descartar consome 1 crédito mas não salva no histórico
+        </p>
       </motion.div>
     </motion.div>
   );

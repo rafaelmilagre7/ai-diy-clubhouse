@@ -112,6 +112,7 @@ export type Database = {
       }
       ai_generated_solutions: {
         Row: {
+          architecture_flowchart: Json | null
           completion_percentage: number | null
           completion_tokens: number | null
           created_at: string | null
@@ -132,6 +133,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          architecture_flowchart?: Json | null
           completion_percentage?: number | null
           completion_tokens?: number | null
           created_at?: string | null
@@ -152,6 +154,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          architecture_flowchart?: Json | null
           completion_percentage?: number | null
           completion_tokens?: number | null
           created_at?: string | null

@@ -94,9 +94,32 @@ export const useMiracleAI = () => {
     }
   };
 
+  const saveSolution = async (solution: any) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('Você precisa estar autenticado');
+        return;
+      }
+
+      // Solução já foi salva automaticamente no banco durante geração
+      // Apenas mostrar feedback positivo
+      toast.success('Solução salva no histórico com sucesso! 🎉');
+    } catch (error) {
+      console.error('[MIRACLE] Erro ao salvar solução:', error);
+      toast.error('Erro ao salvar solução');
+    }
+  };
+
+  const discardSolution = () => {
+    toast.info('Solução descartada (crédito já foi consumido)');
+  };
+
   return {
     analyzeIdea,
     generateSolution,
+    saveSolution,
+    discardSolution,
     isAnalyzing,
     isGenerating,
     questions,

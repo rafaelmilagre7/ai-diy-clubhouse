@@ -116,6 +116,12 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
               isNew={true}
             />
           )}
+          <TooltipNavItem
+            to="/ferramentas/builder/historico"
+            label="Histórico Miracle"
+            icon={Layout}
+            sidebarOpen={sidebarOpen}
+          />
           {canViewTools && (
             <TooltipNavItem
               to="/tools"

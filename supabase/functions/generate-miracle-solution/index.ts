@@ -93,7 +93,12 @@ Criar um plano ULTRA-ESPECÍFICO, EXECUTÁVEL e MENSURÁVEL.
 ESTRUTURA DA RESPOSTA:
 
 {
-  "short_description": "3-5 frases explicando PROBLEMA → SOLUÇÃO → RESULTADO. Seja específico e prático.",
+  "short_description": "3-5 frases TÉCNICAS e OBJETIVAS: 1) O QUE é a solução (arquitetura, componentes), 2) COMO funciona (fluxo técnico, integrações), 3) RESULTADO MENSURÁVEL (métricas, %, ROI). TOM: técnico, direto. EVITE: 'Vou te mostrar', 'Vamos criar'. USE: 'Sistema de X integrado com Y', 'Pipeline automatizado de Z', 'Reduz A em B%'",
+  
+  "architecture_flowchart": {
+    "mermaid_code": "Código Mermaid (formato 'graph TD') representando TODA a arquitetura de ponta a ponta. Inclua: entrada de dados, APIs, processamento, IA, banco de dados, saída, decisões ({}), subprocessos, DBs [()]. Use: Verde para sucesso, Vermelho para erro, Azul para processamento. EXEMPLO:\ngraph TD\n  A[Lead WhatsApp] -->|Mensagem| B(API Meta)\n  B -->|Webhook| C[Make]\n  C -->|Envia texto| D{GPT-4 Qualifica}\n  D -->|Qualificado| E[CRM Lead Qualificado]\n  D -->|Não qualifica| F[CRM Descarte]\n  E -->|Atualiza| G[Dashboard]\n  C -->|Salva| H[(Notion DB)]\n  style D fill:#3b82f6\n  style E fill:#10b981\n  style F fill:#ef4444",
+    "description": "1-2 frases técnicas explicando o fluxo representado de forma objetiva"
+  },
   
   "mind_map": {
     "central_idea": "Ideia principal em uma frase impactante",
@@ -157,6 +162,7 @@ ESTRUTURA DA RESPOSTA:
         "setup_complexity": "easy/medium/hard",
         "setup_steps": "Passos específicos de configuração",
         "cost_estimate": "Estimativa mensal USD com breakdown",
+        "logo_url": "URL pública do logo da ferramenta (ex: https://logo.clearbit.com/make.com ou URL oficial conhecida)",
         "alternatives": ["Alt 1 (pros/cons)", "Alt 2 (pros/cons)"]
       }
     ],
@@ -166,7 +172,8 @@ ESTRUTURA DA RESPOSTA:
         "category": "Categoria",
         "reason": "Por que PODE ser útil (3-4 frases)",
         "when_to_use": "Cenário específico (ex: quando >1000 usuários)",
-        "cost_estimate": "USD/mês"
+        "cost_estimate": "USD/mês",
+        "logo_url": "URL pública do logo da ferramenta"
       }
     ]
   },
@@ -360,6 +367,7 @@ Crie um plano completo seguindo o formato JSON especificado.`;
         required_tools: solutionData.required_tools,
         framework_mapping: solutionData.framework_quadrants,
         implementation_checklist: solutionData.implementation_checklist,
+        architecture_flowchart: solutionData.architecture_flowchart,
         generation_model: "google/gemini-2.5-flash",
         generation_time_ms: generationTime,
       })

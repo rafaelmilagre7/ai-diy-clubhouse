@@ -88,23 +88,23 @@ export const FrameworkQuadrants: React.FC<FrameworkQuadrantsProps> = ({ framewor
           >
             {/* Header */}
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-lg bg-background/50 flex items-center justify-center">
-                <Icon className="h-5 w-5 text-foreground" />
+              <div className="w-12 h-12 rounded-lg bg-background/50 flex items-center justify-center">
+                <Icon className="h-6 w-6 text-foreground" />
               </div>
-              <div>
-                <h4 className="font-bold text-lg">{quadrant.data?.title || quadrant.title}</h4>
+              <div className="flex-1">
+                <h4 className="font-bold text-xl">{quadrant.data?.title || quadrant.title}</h4>
                 {quadrant.data?.description && (
-                  <p className="text-xs text-muted-foreground">{quadrant.data.description}</p>
+                  <p className="text-sm text-muted-foreground opacity-90">{quadrant.data.description}</p>
                 )}
               </div>
             </div>
 
             {/* Items */}
             {quadrant.data?.items && quadrant.data.items.length > 0 && (
-              <ul className="space-y-2 mb-4">
+              <ul className="space-y-3 mb-4">
                 {quadrant.data.items.map((item: string, idx: number) => (
-                  <li key={idx} className="text-sm flex items-start gap-2">
-                    <span className="text-primary mt-0.5">•</span>
+                  <li key={idx} className="text-base flex items-start gap-2 leading-relaxed">
+                    <span className="text-primary mt-1">•</span>
                     <span className="text-foreground/80">{item}</span>
                   </li>
                 ))}

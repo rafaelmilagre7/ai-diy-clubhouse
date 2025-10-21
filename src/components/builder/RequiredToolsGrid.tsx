@@ -1,12 +1,15 @@
 import React from 'react';
-import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, Circle } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { CheckCircle2, Circle } from 'lucide-react';
+import { ToolCard } from './ToolCard';
 
 interface Tool {
   name: string;
+  logo_url?: string;
   category: string;
   reason: string;
+  setup_complexity?: string;
+  cost_estimate?: string;
 }
 
 interface RequiredToolsGridProps {
@@ -20,43 +23,13 @@ export const RequiredToolsGrid: React.FC<RequiredToolsGridProps> = ({ tools }) =
   const essentialTools = tools?.essential || [];
   const optionalTools = tools?.optional || [];
 
-  const ToolCard = ({ tool, isEssential }: { tool: Tool; isEssential: boolean }) => (
-    <div className="p-4 rounded-lg border border-border/50 bg-muted/30 hover:bg-muted/50 hover:border-primary/30 transition-all">
-      <div className="flex items-start gap-3">
-        <div className="flex-shrink-0 mt-0.5">
-          {isEssential ? (
-            <CheckCircle2 className="h-5 w-5 text-success" />
-          ) : (
-            <Circle className="h-5 w-5 text-muted-foreground" />
-          )}
-        </div>
-        <div className="flex-1 space-y-2">
-          <div className="flex items-start justify-between gap-2">
-            <h4 className="font-semibold text-sm">{tool.name}</h4>
-            <Badge variant="secondary" className="text-xs">
-              {tool.category}
-            </Badge>
-          </div>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            {tool.reason}
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-
   return (
     <div className="space-y-6">
       {/* Essenciais */}
       {essentialTools.length > 0 && (
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <h4 className="text-sm font-semibold">Essenciais</h4>
-            <Badge variant="default" className="text-xs">
-              {essentialTools.length}
-            </Badge>
-          </div>
-          <div className="grid gap-3">
+        <div className="space-y-4">
+          <h4 className="text-base font-semibold">Ferramentas Essenciais ({essentialTools.length})</h4>
+          <div className="grid gap-4">
             {essentialTools.map((tool, index) => (
               <motion.div
                 key={index}
@@ -73,14 +46,9 @@ export const RequiredToolsGrid: React.FC<RequiredToolsGridProps> = ({ tools }) =
 
       {/* Opcionais */}
       {optionalTools.length > 0 && (
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <h4 className="text-sm font-semibold">Opcionais</h4>
-            <Badge variant="secondary" className="text-xs">
-              {optionalTools.length}
-            </Badge>
-          </div>
-          <div className="grid gap-3">
+        <div className="space-y-4">
+          <h4 className="text-base font-semibold">Ferramentas Opcionais ({optionalTools.length})</h4>
+          <div className="grid gap-4">
             {optionalTools.map((tool, index) => (
               <motion.div
                 key={index}
