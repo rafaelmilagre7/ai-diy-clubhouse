@@ -26,16 +26,7 @@ export const ArchitectureFlowchart: React.FC<ArchitectureFlowchartProps> = ({ fl
         container.innerHTML = '';
         container.removeAttribute('data-processed');
         
-        // Sanitizar código Mermaid: remover parênteses isolados que causam erro
-        let sanitizedCode = flowchart.mermaid_code
-          .replace(/\(([^)]*)\)\s*$/gm, '[$1]') // Substituir () por [] no final de linhas
-          .replace(/\s+\(/g, ' [') // Substituir ( por [
-          .replace(/\)\s+/g, '] '); // Substituir ) por ]
-        
-        console.log('🔍 DEBUG - Código Mermaid original:', flowchart.mermaid_code);
-        console.log('🔍 DEBUG - Código Mermaid sanitizado:', sanitizedCode);
-        
-        // Re-inicializar Mermaid a cada render (mais seguro)
+        // Re-inicializar Mermaid com configuração dark
         mermaid.initialize({
           startOnLoad: false,
           theme: 'dark',
@@ -62,19 +53,9 @@ export const ArchitectureFlowchart: React.FC<ArchitectureFlowchartProps> = ({ fl
           },
         });
 
-        // Tentar validar código sanitizado
-        try {
-          const isValid = await mermaid.parse(sanitizedCode);
-          if (!isValid) {
-            throw new Error('Código Mermaid inválido');
-          }
-        } catch (parseError) {
-          console.warn('⚠️ Parse falhou, tentando renderizar mesmo assim:', parseError);
-        }
-
-        // Renderizar com ID único baseado em timestamp + random
+        // Renderizar diretamente sem sanitização (Mermaid valida internamente)
         const id = `mermaid-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        const { svg } = await mermaid.render(id, sanitizedCode);
+        const { svg } = await mermaid.render(id, flowchart.mermaid_code);
         
         // Inserir SVG
         container.innerHTML = svg;
