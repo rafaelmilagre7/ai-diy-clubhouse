@@ -2,19 +2,20 @@
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { BarChart } from '@/components/ui/chart';
+import { devLog } from '@/utils/devLogger';
 
 interface WeeklyActivityChartProps {
   data: any[];
 }
 
 export const WeeklyActivityChart: React.FC<WeeklyActivityChartProps> = ({ data }) => {
-  console.log('📊 [WEEKLY-ACTIVITY] Dados recebidos:', data);
+  devLog.data('Dados recebidos:', data);
 
   // Validação mais flexível dos dados
   const hasValidData = data && Array.isArray(data) && data.length > 0;
   
   if (!hasValidData) {
-    console.log('📊 [WEEKLY-ACTIVITY] Sem dados válidos, exibindo placeholder');
+    devLog.data('Sem dados válidos, exibindo placeholder');
     return (
       <Card className="bg-card border-border">
         <CardHeader className="pb-2">
@@ -39,7 +40,7 @@ export const WeeklyActivityChart: React.FC<WeeklyActivityChartProps> = ({ data }
     atividade: Number(item.atividade) || Number(item.activity) || Number(item.activity_count) || 0
   }));
 
-  console.log('📊 [WEEKLY-ACTIVITY] Dados formatados para gráfico:', chartData);
+  devLog.data('Dados formatados para gráfico:', chartData);
 
   return (
     <Card className="bg-card border-border">

@@ -2,19 +2,20 @@
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { BarChart } from '@/components/ui/chart';
+import { devLog } from '@/utils/devLogger';
 
 interface PopularSolutionsChartProps {
   data: any[];
 }
 
 export const PopularSolutionsChart = ({ data }: PopularSolutionsChartProps) => {
-  console.log('📊 [POPULAR-SOLUTIONS] Dados recebidos:', data);
+  devLog.data('Dados recebidos:', data);
 
   // Validação mais flexível dos dados
   const hasValidData = data && Array.isArray(data) && data.length > 0;
   
   if (!hasValidData) {
-    console.log('📊 [POPULAR-SOLUTIONS] Sem dados válidos, exibindo placeholder');
+    devLog.data('Sem dados válidos, exibindo placeholder');
     return (
       <Card className="bg-card border-border">
         <CardHeader className="pb-2">
@@ -42,7 +43,7 @@ export const PopularSolutionsChart = ({ data }: PopularSolutionsChartProps) => {
     }))
     .slice(0, 5);
 
-  console.log('📊 [POPULAR-SOLUTIONS] Dados formatados para gráfico:', chartData);
+  devLog.data('Dados formatados para gráfico:', chartData);
 
   if (chartData.length === 0) {
     return (

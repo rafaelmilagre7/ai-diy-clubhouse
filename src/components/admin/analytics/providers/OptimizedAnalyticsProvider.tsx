@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { useOptimizedAnalyticsCache } from '@/hooks/analytics/useOptimizedAnalyticsCache';
+import { devLog } from '@/utils/devLogger';
 
 interface OptimizedAnalyticsContextType {
   isOptimizationEnabled: boolean;
@@ -28,7 +29,7 @@ export const OptimizedAnalyticsProvider = ({ children }: OptimizedAnalyticsProvi
 
   const toggleOptimization = useCallback(() => {
     setIsOptimizationEnabled(prev => !prev);
-    console.log('🔧 [ANALYTICS] Otimização:', !isOptimizationEnabled ? 'ATIVADA' : 'DESATIVADA');
+    devLog.debug('Otimização:', !isOptimizationEnabled ? 'ATIVADA' : 'DESATIVADA');
   }, [isOptimizationEnabled]);
 
   const toggleCache = useCallback(() => {
@@ -36,12 +37,12 @@ export const OptimizedAnalyticsProvider = ({ children }: OptimizedAnalyticsProvi
     if (!cacheEnabled) {
       invalidateCache();
     }
-    console.log('🗄️ [ANALYTICS] Cache:', !cacheEnabled ? 'ATIVADO' : 'DESATIVADO');
+    devLog.debug('Cache:', !cacheEnabled ? 'ATIVADO' : 'DESATIVADO');
   }, [cacheEnabled, invalidateCache]);
 
   const invalidateAllCache = useCallback(() => {
     invalidateCache();
-    console.log('🗑️ [ANALYTICS] Cache invalidado globalmente');
+    devLog.debug('Cache invalidado globalmente');
   }, [invalidateCache]);
 
   const value: OptimizedAnalyticsContextType = {

@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useOptimizedAnalyticsCache } from '@/hooks/analytics/useOptimizedAnalyticsCache';
 import { Activity, Database, Zap, RefreshCw, TrendingUp } from 'lucide-react';
+import { devLog } from '@/utils/devLogger';
 
 export const PerformanceMonitor = () => {
   const { getPerformanceStats, invalidateCache } = useOptimizedAnalyticsCache();
@@ -141,8 +142,8 @@ export const PerformanceMonitor = () => {
             variant="outline"
             size="sm"
             onClick={() => {
-              console.log('📊 Performance Stats:', stats);
-              console.log('🔍 Cache Details:', stats.cacheStats);
+              devLog.data('Performance Stats:', stats);
+              devLog.data('Cache Details:', stats.cacheStats);
             }}
             className="flex-1 text-xs"
           >
