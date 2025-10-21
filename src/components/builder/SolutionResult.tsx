@@ -58,9 +58,9 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({ solution, onNewI
             <p className="text-sm text-muted-foreground mb-1">Ideia original:</p>
             <p className="text-sm text-foreground/70 italic">"{solution.original_idea}"</p>
           </div>
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
-            <Layout className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium text-primary">VIVER DE IA Intelligence</span>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-aurora-primary/10 border border-aurora-primary/20">
+            <Layout className="h-4 w-4 text-aurora-primary" />
+            <span className="text-sm font-medium text-aurora-primary">MIRACLE AI</span>
           </div>
         </div>
       </LiquidGlassCard>

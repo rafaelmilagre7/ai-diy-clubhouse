@@ -228,3 +228,12 @@ verify_jwt = false
 
 [functions.ai-weekly-summary]
 verify_jwt = false
+
+[functions.analyze-idea]
+verify_jwt = false
+
+[functions.generate-miracle-solution]
+verify_jwt = false
+
+[functions.generate-ai-solution]
+verify_jwt = false

@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Layout, ArrowRight } from 'lucide-react';
+import { Layout, ArrowRight, Sparkles } from 'lucide-react';
 import { useAuth } from '@/contexts/auth';
-import { useAISolutionGenerator } from '@/hooks/builder/useAISolutionGenerator';
-import { AISolutionLoader } from '@/components/builder/AISolutionLoader';
+import { useMiracleAI } from '@/hooks/builder/useMiracleAI';
+import { QuestionWizard } from '@/components/builder/QuestionWizard';
+import { MiracleLoadingExperience } from '@/components/builder/MiracleLoadingExperience';
 import { SolutionResult } from '@/components/builder/SolutionResult';
 import { AIInputWithLoading } from '@/components/ui/AIInputWithLoading';
 import { useAISolutionAccess } from '@/hooks/builder/useAISolutionAccess';
@@ -25,8 +26,10 @@ const exampleIdeas = [
 
 export default function Builder() {
   const { profile } = useAuth();
-  const { generateSolution, isGenerating } = useAISolutionGenerator();
+  const { analyzeIdea, generateSolution, isAnalyzing, isGenerating, questions } = useMiracleAI();
   const [solution, setSolution] = useState<any>(null);
+  const [currentIdea, setCurrentIdea] = useState<string>('');
+  const [showWizard, setShowWizard] = useState(false);
   const { 
     hasAccess, 
     generationsUsed, 
@@ -37,7 +40,7 @@ export default function Builder() {
 
   const handleGenerateSolution = async (idea: string) => {
     if (!hasAccess) {
-      toast.error('Você não tem acesso ao Builder');
+      toast.error('Você não tem acesso ao Miracle AI');
       navigate('/ferramentas');
       return;
     }
@@ -47,10 +50,26 @@ export default function Builder() {
       return;
     }
 
-    const result = await generateSolution(idea);
+    // Salvar ideia e iniciar análise
+    setCurrentIdea(idea);
+    const generatedQuestions = await analyzeIdea(idea);
+    
+    if (generatedQuestions && generatedQuestions.length > 0) {
+      setShowWizard(true);
+    }
+  };
+
+  const handleWizardComplete = async (answers: Array<{ question: string; answer: string }>) => {
+    setShowWizard(false);
+    const result = await generateSolution(currentIdea, answers);
     if (result) {
       setSolution(result);
     }
+  };
+
+  const handleWizardCancel = () => {
+    setShowWizard(false);
+    setCurrentIdea('');
   };
 
   const handleNewIdea = () => {
@@ -83,7 +102,14 @@ export default function Builder() {
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-surface-elevated/20">
       <AnimatePresence mode="wait">
         {isGenerating ? (
-          <AISolutionLoader key="loader" />
+          <MiracleLoadingExperience key="loader" />
+        ) : showWizard && questions ? (
+          <QuestionWizard
+            key="wizard"
+            questions={questions}
+            onComplete={handleWizardComplete}
+            onCancel={handleWizardCancel}
+          />
         ) : solution ? (
           <motion.div
             key="result"
@@ -116,15 +142,18 @@ export default function Builder() {
               className="text-center mb-12"
             >
               <div className="flex items-center justify-center gap-3 mb-4">
-                <div className="p-3 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20">
-                  <Layout className="h-8 w-8 text-primary" />
+                <div className="p-3 rounded-2xl bg-gradient-to-br from-aurora-primary/20 to-aurora-primary/5 border border-aurora-primary/20">
+                  <Layout className="h-8 w-8 text-aurora-primary" />
                 </div>
               </div>
-              <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-                VIVER DE IA Builder
-              </h1>
-              <p className="text-muted-foreground text-lg">
-                Transforme suas ideias em soluções inteligentes
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                  Miracle AI
+                </h1>
+                <Sparkles className="h-6 w-6 text-aurora-primary animate-pulse" />
+              </div>
+              <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+                Pense como o Rafael Milagre e transforme suas ideias em soluções inteligentes
               </p>
             </motion.div>
 
@@ -136,9 +165,9 @@ export default function Builder() {
               className="w-full max-w-2xl mb-12"
             >
               <AIInputWithLoading
-                placeholder="Descreva sua ideia de negócio ou projeto aqui..."
+                placeholder="Ex: Quero automatizar atendimento no WhatsApp e integrar com meu CRM..."
                 onSubmit={handleGenerateSolution}
-                disabled={isGenerating}
+                disabled={isGenerating || isAnalyzing}
                 minHeight={56}
                 maxHeight={200}
               />

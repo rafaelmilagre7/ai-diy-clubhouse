@@ -1,0 +1,390 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+interface GenerateRequest {
+  idea: string;
+  userId: string;
+  answers?: Array<{ question: string; answer: string }>;
+}
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  const startTime = Date.now();
+
+  try {
+    const { idea, userId, answers = [] }: GenerateRequest = await req.json();
+
+    console.log(`[MIRACLE] === GERAÇÃO MIRACLE AI INICIADA ===`);
+    console.log(`[MIRACLE] 👤 User ID: ${userId}`);
+    console.log(`[MIRACLE] 💡 Ideia: "${idea.substring(0, 100)}..."`);
+    console.log(`[MIRACLE] 📝 Contexto: ${answers.length} respostas coletadas`);
+
+    if (!idea || idea.length < 30) {
+      return new Response(
+        JSON.stringify({ error: "Ideia deve ter pelo menos 30 caracteres" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Verificar limite
+    const { data: limitCheck, error: limitError } = await supabase.rpc(
+      "check_ai_solution_limit",
+      { p_user_id: userId }
+    );
+
+    if (limitError || !limitCheck.can_generate) {
+      return new Response(
+        JSON.stringify({ error: "Limite mensal atingido" }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Buscar ferramentas
+    const { data: tools } = await supabase
+      .from("tools")
+      .select("id, name, category, official_url")
+      .eq("status", true);
+
+    const toolsContext = tools
+      ? tools.map((t) => `${t.name} (${t.category})`).join(", ")
+      : "Nenhuma ferramenta disponível";
+
+    // Construir contexto adicional das perguntas
+    let contextFromAnswers = "";
+    if (answers.length > 0) {
+      contextFromAnswers = "\n\nCONTEXTO ADICIONAL COLETADO:\n";
+      answers.forEach((qa, idx) => {
+        contextFromAnswers += `${idx + 1}. ${qa.question}\nR: ${qa.answer}\n\n`;
+      });
+    }
+
+    const systemPrompt = `Você é o Rafael Milagre - especialista em IA, automação e soluções práticas.
+
+DNA RAFAEL MILAGRE:
+- Inteligência Conectiva: Conecta técnica + negócio + lógica como sistema único
+- Didatismo Extremo: Traduz complexo → simples, sem jargões
+- 100% Aplicável: Não é teoria - é EXECUÇÃO pura
+- Anti-hype, anti-guru, anti-buzzword
+- Mostra COMO fazer, não só o QUE fazer
+
+SEU TOM:
+- "Vou te mostrar como fazer isso NA PRÁTICA, sem enrolação"
+- "Esqueça teoria, vamos direto ao que FUNCIONA"
+- "Aqui está o passo a passo REAL, não o ideal"
+
+FERRAMENTAS DISPONÍVEIS:
+${toolsContext}
+
+OBJETIVO:
+Criar um plano ULTRA-ESPECÍFICO, EXECUTÁVEL e MENSURÁVEL.
+
+ESTRUTURA DA RESPOSTA:
+
+{
+  "short_description": "3-5 frases explicando PROBLEMA → SOLUÇÃO → RESULTADO. Seja específico e prático.",
+  
+  "mind_map": {
+    "central_idea": "Ideia principal em uma frase impactante",
+    "branches": [
+      {
+        "name": "FASE 1: Preparação (Semana 1)",
+        "children": ["Item específico 1", "Item específico 2", ...]
+      },
+      {
+        "name": "FASE 2: Implementação (Semanas 2-3)",
+        "children": ["Item específico 1", "Item específico 2", ...]
+      },
+      {
+        "name": "FASE 3: Otimização (Semana 4)",
+        "children": ["Item específico 1", "Item específico 2", ...]
+      },
+      {
+        "name": "FASE 4: Escala (Semana 5+)",
+        "children": ["Item específico 1", "Item específico 2", ...]
+      }
+    ]
+  },
+  
+  "framework_quadrants": {
+    "quadrant1_automation": {
+      "title": "🤖 Automação",
+      "description": "Como automatizar processos específicos, com triggers, ações e resultados mensuráveis.",
+      "items": ["Automação 1: quando X acontece, sistema faz Y, economizando Z horas/semana", ...],
+      "tool_names": ["Make", "Zapier"],
+      "integration_details": "Como as ferramentas se conectam: APIs, autenticação, webhooks, frequência."
+    },
+    "quadrant2_ai": {
+      "title": "🧠 IA",
+      "description": "Como usar IA: modelo, prompt, custo estimado, caso de uso detalhado.",
+      "items": ["Modelo X para Y: prompt específico, temperatura Z, custo $W/1000 requisições", ...],
+      "tool_names": ["ChatGPT", "Gemini"],
+      "ai_strategy": "Qual modelo usar e por quê, como treinar, como validar, estratégia de fallback."
+    },
+    "quadrant3_data": {
+      "title": "📊 Dados",
+      "description": "Arquitetura de dados: schemas, relacionamentos, estratégias de backup e segurança.",
+      "items": ["Database X: tabelas [nomes], campos [tipos], índices, backup diário", ...],
+      "tool_names": ["Supabase", "Airtable"],
+      "data_architecture": "Fluxo completo de dados, schemas SQL, relacionamentos, volume estimado."
+    },
+    "quadrant4_interface": {
+      "title": "🎨 Interface",
+      "description": "Como usuário interage: jornada, pontos de contato, feedback visual.",
+      "items": ["Dashboard web: componentes X, Y, Z, visualizações em tempo real de [métricas]", ...],
+      "tool_names": ["Lovable", "WhatsApp API"],
+      "ux_considerations": "Jornada do usuário passo-a-passo, pontos de atenção, tratamento de erros."
+    }
+  },
+  
+  "required_tools": {
+    "essential": [
+      {
+        "name": "Nome da Ferramenta",
+        "category": "Categoria",
+        "reason": "Por que é essencial (4-6 frases): qual problema resolve, por que alternativas não funcionam tão bem, ROI esperado.",
+        "setup_complexity": "easy/medium/hard",
+        "setup_steps": "Passos específicos de configuração",
+        "cost_estimate": "Estimativa mensal USD com breakdown",
+        "alternatives": ["Alt 1 (pros/cons)", "Alt 2 (pros/cons)"]
+      }
+    ],
+    "optional": [
+      {
+        "name": "Nome",
+        "category": "Categoria",
+        "reason": "Por que PODE ser útil (3-4 frases)",
+        "when_to_use": "Cenário específico (ex: quando >1000 usuários)",
+        "cost_estimate": "USD/mês"
+      }
+    ]
+  },
+  
+  "implementation_checklist": [
+    {
+      "step_number": 1,
+      "title": "Título claro do passo",
+      "description": "Descrição ULTRA-DETALHADA (5-8 frases): o que fazer EXATAMENTE, onde acessar, comandos exatos, URLs.",
+      "estimated_time": "2 horas",
+      "difficulty": "easy/medium/hard",
+      "dependencies": [],
+      "validation_criteria": "Como saber se foi concluído (3-4 critérios testáveis)",
+      "common_pitfalls": "3-5 erros comuns e como evitar",
+      "resources": ["URL tutorial", "URL docs"]
+    }
+  ]
+}
+
+REGRAS RAFAEL MILAGRE:
+✓ Seja ULTRA-ESPECÍFICO (não "configurar API", mas "acesse console.x.com, clique em Settings...")
+✓ Checklist: MÍNIMO 12 steps, MÁXIMO 25
+✓ Cada step = mini-tutorial (5-8 frases)
+✓ Métricas mensuráveis: não "melhora eficiência", mas "reduz de 2h para 15min (87.5%)"
+✓ Ferramentas: 10-18 total (essential + optional)
+✓ Priorize ferramentas do banco: ${toolsContext}
+✓ Evite buzzwords: "revolucionário", "disruptivo" → fale RESULTADO REAL
+✓ Sem promessas impossíveis: "automatize 100% do negócio" → seja realista
+✓ Passos genéricos → passos executáveis`;
+
+    const userPrompt = `IDEIA INICIAL:
+"${idea}"
+${contextFromAnswers}
+
+Crie um plano completo seguindo o formato JSON especificado.`;
+
+    console.log(`[MIRACLE] 🚀 Chamando Lovable AI (Gemini 2.5 Pro)...`);
+
+    const lovableAIUrl = "https://ai.gateway.lovable.dev/v1/chat/completions";
+    const lovableAIKey = Deno.env.get("LOVABLE_API_KEY");
+
+    const aiCallStart = Date.now();
+
+    // TOOL CALLING para FORÇAR JSON válido e completo
+    const toolDefinition = {
+      type: "function",
+      function: {
+        name: "create_solution_plan",
+        description: "Criar plano detalhado de implementação de solução com IA",
+        parameters: {
+          type: "object",
+          properties: {
+            short_description: { type: "string", description: "Descrição em 3-5 frases" },
+            mind_map: {
+              type: "object",
+              properties: {
+                central_idea: { type: "string" },
+                branches: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      name: { type: "string" },
+                      children: { type: "array", items: { type: "string" } }
+                    },
+                    required: ["name", "children"]
+                  }
+                }
+              },
+              required: ["central_idea", "branches"]
+            },
+            framework_quadrants: {
+              type: "object",
+              properties: {
+                quadrant1_automation: {
+                  type: "object",
+                  properties: {
+                    title: { type: "string" },
+                    description: { type: "string" },
+                    items: { type: "array", items: { type: "string" } },
+                    tool_names: { type: "array", items: { type: "string" } },
+                    integration_details: { type: "string" }
+                  }
+                },
+                quadrant2_ai: { type: "object" },
+                quadrant3_data: { type: "object" },
+                quadrant4_interface: { type: "object" }
+              }
+            },
+            required_tools: {
+              type: "object",
+              properties: {
+                essential: { type: "array" },
+                optional: { type: "array" }
+              }
+            },
+            implementation_checklist: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  step_number: { type: "integer" },
+                  title: { type: "string" },
+                  description: { type: "string" },
+                  estimated_time: { type: "string" },
+                  difficulty: { type: "string", enum: ["easy", "medium", "hard"] },
+                  dependencies: { type: "array", items: { type: "integer" } },
+                  validation_criteria: { type: "string" },
+                  common_pitfalls: { type: "string" },
+                  resources: { type: "array", items: { type: "string" } }
+                },
+                required: ["step_number", "title", "description"]
+              }
+            }
+          },
+          required: ["short_description", "mind_map", "framework_quadrants", "required_tools", "implementation_checklist"]
+        }
+      }
+    };
+
+    const aiResponse = await fetch(lovableAIUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${lovableAIKey}`,
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-pro",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+        tools: [toolDefinition],
+        tool_choice: { type: "function", function: { name: "create_solution_plan" } },
+        temperature: 1.0,
+        max_tokens: 128000,
+      }),
+      signal: AbortSignal.timeout(180000),
+    });
+
+    if (!aiResponse.ok) {
+      if (aiResponse.status === 429) {
+        return new Response(
+          JSON.stringify({ error: "Limite de requisições atingido." }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      if (aiResponse.status === 402) {
+        return new Response(
+          JSON.stringify({ error: "Créditos insuficientes." }),
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      throw new Error(`Erro na API: ${aiResponse.status}`);
+    }
+
+    const aiData = await aiResponse.json();
+    const aiResponseTime = Date.now() - aiCallStart;
+
+    console.log(`[MIRACLE] ⚡ Tempo de resposta: ${(aiResponseTime / 1000).toFixed(1)}s`);
+    console.log(`[MIRACLE] 📊 Tokens: ${aiData.usage?.total_tokens || 'N/A'}`);
+
+    // Extrair dados do tool call
+    const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
+    if (!toolCall || !toolCall.function?.arguments) {
+      console.error("[MIRACLE] ❌ Tool call não retornou argumentos");
+      throw new Error("Resposta inválida da IA");
+    }
+
+    const solutionData = JSON.parse(toolCall.function.arguments);
+
+    console.log(`[MIRACLE] ✅ JSON válido extraído via tool calling`);
+    console.log(`[MIRACLE] ✓ Checklist: ${solutionData.implementation_checklist?.length || 0} steps`);
+
+    // Salvar no banco
+    const generationTime = Date.now() - startTime;
+
+    const { data: savedSolution, error: saveError } = await supabase
+      .from("ai_generated_solutions")
+      .insert({
+        user_id: userId,
+        original_idea: idea,
+        short_description: solutionData.short_description,
+        mind_map: solutionData.mind_map,
+        required_tools: solutionData.required_tools,
+        framework_mapping: solutionData.framework_quadrants,
+        implementation_checklist: solutionData.implementation_checklist,
+        generation_model: "google/gemini-2.5-pro",
+        generation_time_ms: generationTime,
+      })
+      .select()
+      .single();
+
+    if (saveError) {
+      throw new Error("Erro ao salvar solução");
+    }
+
+    // Incrementar contador
+    await supabase.rpc("increment_ai_solution_usage", { p_user_id: userId });
+
+    console.log(`[MIRACLE] ✅ === GERAÇÃO CONCLUÍDA ===`);
+    console.log(`[MIRACLE] ⏱️ Tempo total: ${(generationTime / 1000).toFixed(1)}s`);
+    console.log(`[MIRACLE] 💾 Solution ID: ${savedSolution.id}`);
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        solution: savedSolution,
+        generation_time_ms: generationTime,
+        tokens_used: aiData.usage?.total_tokens,
+      }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  } catch (error) {
+    console.error("[MIRACLE] ❌ Erro:", error);
+    return new Response(
+      JSON.stringify({ error: error.message || "Erro interno" }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+});

@@ -110,7 +110,7 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
           {canViewBuilder && (
             <TooltipNavItem
               to="/ferramentas/builder"
-              label="Builder"
+              label="Miracle AI"
               icon={Layout}
               sidebarOpen={sidebarOpen}
               isNew={true}
