@@ -110,8 +110,43 @@ const handler = async (req: Request): Promise<Response> => {
 
         // Tentar envio via Email se configurado  
         if (shouldSendEmail) {
-          console.log(`📧 [BULK-INVITE-SENDER] Enviando email básico para: ${inviteRequest.email}`);
-          emailSent = true; // Por enquanto, marcamos como enviado
+          try {
+            console.log(`📧 [BULK-INVITE-SENDER] Enviando email para: ${inviteRequest.email}`);
+            
+            // Invocar a função send-invite-email (mesma que o envio individual usa)
+            const { data: emailData, error: emailError } = await supabase.functions.invoke('send-invite-email', {
+              body: {
+                email: inviteRequest.email,
+                inviteUrl,
+                roleName: inviteData.user_roles?.name || 'membro',
+                expiresAt: inviteData.expires_at,
+                senderName: inviteRequest.email.split('@')[0],
+                notes: inviteRequest.notes,
+                inviteId: inviteRequest.inviteId
+              }
+            });
+
+            // Verificar se houve erro na chamada da função
+            if (emailError) {
+              console.error(`❌ [BULK-INVITE-SENDER] Erro ao invocar função para ${inviteRequest.email}:`, emailError);
+              lastError += `Email: ${emailError.message}; `;
+            } 
+            // Verificar se a resposta indica sucesso
+            else if (emailData?.success) {
+              emailSent = true;
+              console.log(`✅ [BULK-INVITE-SENDER] Email enviado com sucesso para ${inviteRequest.email} (ID: ${emailData.messageId})`);
+              
+              // NÃO registrar delivery aqui - send-invite-email já faz isso em background
+            } 
+            // Resposta sem sucesso
+            else {
+              console.error(`❌ [BULK-INVITE-SENDER] Falha no envio para ${inviteRequest.email}:`, emailData);
+              lastError += `Email: ${emailData?.error || 'Erro desconhecido'}; `;
+            }
+          } catch (emailException: any) {
+            console.error(`❌ [BULK-INVITE-SENDER] Exceção ao enviar email:`, emailException);
+            lastError += `Email: ${emailException.message || 'Exceção desconhecida'}; `;
+          }
         }
 
         // Tentar envio via WhatsApp se disponível
