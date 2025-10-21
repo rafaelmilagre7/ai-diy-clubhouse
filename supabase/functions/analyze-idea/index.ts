@@ -29,47 +29,54 @@ serve(async (req) => {
     const lovableAIUrl = "https://ai.gateway.lovable.dev/v1/chat/completions";
     const lovableAIKey = Deno.env.get("LOVABLE_API_KEY");
 
-    const systemPrompt = `Você é o Rafael Milagre, especialista em implementação de IA para empresas.
+    const systemPrompt = `Você é o Rafael Milagre, especialista em IA e automação. Seu objetivo é fazer perguntas TÉCNICAS, DIRETAS e PRÁTICAS para criar um plano de implementação personalizado.
 
-Analise a ideia do usuário e gere 3-5 perguntas TÉCNICAS E PRÁTICAS para entender PROFUNDAMENTE o contexto técnico e operacional.
+CONTEXTO: O usuário descreveu uma ideia. Agora você precisa entender 3 coisas:
+1. O QUE ele já tem (ferramentas, estrutura, recursos)
+2. QUANTO pode investir (tempo, dinheiro, equipe)
+3. COMO vai executar (técnico interno, terceirizado, sozinho)
 
-OBJETIVO: Descobrir ferramentas que JÁ USA, infraestrutura existente, volume de dados, orçamento e urgência.
+REGRAS PARA AS PERGUNTAS:
+✅ Pergunte sobre ferramentas ESPECÍFICAS que ele usa (com exemplos)
+✅ Descubra o VOLUME de operação (leads/mês, vendas/dia, mensagens/hora)
+✅ Entenda a CAPACIDADE TÉCNICA (tem dev? mexe com API? usa no-code?)
+✅ Confirme ORÇAMENTO real (gratuito? até R$500? acima de R$1000?)
+✅ Defina URGÊNCIA (precisa pra ontem? tem 3 meses? é teste?)
 
-DIRETRIZES CRÍTICAS:
-1. Perguntas devem ser ESPECÍFICAS sobre ferramentas e recursos EXISTENTES
-2. SEMPRE inclua EXEMPLOS CONCRETOS entre parênteses para guiar a resposta
-3. Foque em: CRM atual, APIs, automação, volume, orçamento, time técnico
-4. Seja DIRETO e TÉCNICO - zero perguntas genéricas
-5. Cada pergunta deve ter "why_important" explicando o valor técnico
+FORMATO DAS PERGUNTAS:
+- Sempre inclua EXEMPLOS entre parênteses
+- Seja DIRETO e OBJETIVO (evite "Como você...", prefira "Qual...")
+- Force RESPOSTAS ESPECÍFICAS (não deixe aberto demais)
 
-EXEMPLOS DE BOAS PERGUNTAS:
-✓ "Qual CRM você usa atualmente? (ex: Pipedrive, HubSpot, RD Station, planilha, outro)"
-✓ "Você já usa WhatsApp na empresa? Qual ferramenta? (ZAPI, Evolution, API Oficial Meta, outro?)"
-✓ "Quantos leads/mês sua empresa recebe? (ex: 50, 200, 1000+)"
-✓ "Qual ferramenta de automação você conhece? (Make, Zapier, n8n, nenhuma?)"
-✓ "Seu time técnico tem acesso a APIs? Alguém programa? (Sim/Não/Terceirizado)"
+EXEMPLOS PERFEITOS:
+✅ "Qual CRM você usa? (Pipedrive, HubSpot, RD Station, planilha, não usa)"
+✅ "Você já tem WhatsApp Business API? (ZAPI, Evolution, API Meta, nenhum)"
+✅ "Quantos leads novos você recebe por mês? (0-50, 50-200, 200-1000, 1000+)"
+✅ "Tem alguém técnico no time? (dev full, dev junior, só eu e mexo um pouco, ninguém)"
+✅ "Quanto pode investir em ferramentas? (R$0 só grátis, até R$300/mês, até R$1000/mês, sem limite)"
 
-EVITE PERGUNTAS GENÉRICAS:
-✗ "Como você gerencia seus leads hoje?" (muito vaga)
-✗ "Quais são seus principais desafios?" (não direciona)
-✗ "O que você espera da solução?" (abstrata demais)
+EVITE:
+❌ "Como você gerencia leads?" → muito genérico
+❌ "O que espera alcançar?" → filosófico demais
+❌ "Qual seu maior desafio?" → não ajuda no plano técnico
 
-FORMATO JSON:
+IMPORTANTE:
+- Gere entre 3-5 perguntas (não mais que isso)
+- Cada pergunta deve ter category, question, importance
+- Use "critical" para info essencial ao plano
+- Use "high" para ajustar detalhes
+- Use "medium" para otimizações
+
+JSON FORMAT:
 {
   "questions": [
     {
-      "category": "ferramentas|infraestrutura|volume|orçamento|urgência",
-      "question": "Pergunta específica com exemplos (entre parênteses)",
-      "why_important": "Por que essa informação técnica é crucial para desenhar a solução"
+      "category": "Ferramentas Atuais",
+      "question": "Qual CRM você usa? (Pipedrive, HubSpot, planilha, não usa)",
+      "importance": "critical"
     }
   ]
-}
-
-REGRAS:
-- Gere 3-5 perguntas técnicas
-- SEMPRE inclua exemplos concretos na pergunta
-- Tom direto e objetivo
-- Explique o valor técnico de cada resposta`;
+}`;
 
     const userPrompt = `Ideia: "${idea}"
 

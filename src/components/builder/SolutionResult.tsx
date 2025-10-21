@@ -146,19 +146,29 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({
         transition={{ delay: 0.5 }}
         className="space-y-4"
       >
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Button onClick={onDiscard} variant="outline" size="lg">
-            Descartar Solução
-          </Button>
-          
-          <Button onClick={onSave} size="lg" className="bg-gradient-to-r from-aurora-primary to-aurora-primary-light">
-            Salvar no Histórico
-          </Button>
-        </div>
+      {/* CTAs Footer */}
+      <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+        <Button 
+          onClick={onDiscard} 
+          variant="outline" 
+          size="lg"
+          className="min-w-[200px]"
+        >
+          Não Salvar
+        </Button>
+        
+        <Button 
+          onClick={onSave} 
+          size="lg"
+          className="bg-gradient-to-r from-aurora-primary to-aurora-primary-light hover:opacity-90 transition-opacity min-w-[200px]"
+        >
+          Salvar Solução
+        </Button>
+      </div>
 
-        <p className="text-xs text-center text-muted-foreground">
-          Descartar consome 1 crédito mas não salva no histórico
-        </p>
+      <p className="text-xs text-center text-muted-foreground/70 mt-3">
+        1 crédito foi consumido na geração desta solução
+      </p>
       </motion.div>
     </motion.div>
   );

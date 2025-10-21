@@ -54,11 +54,12 @@ export function AIInputWithLoading({
             id={id}
             placeholder={placeholder}
             className={cn(
-              "max-w-xl bg-surface-elevated/50 w-full rounded-3xl pl-6 pr-10 py-4",
-              "placeholder:text-muted-foreground",
-              "border border-border/50 ring-primary/30",
+              "max-w-xl bg-white/10 backdrop-blur-sm w-full rounded-3xl pl-6 pr-10 py-4",
+              "placeholder:text-muted-foreground/70",
+              "border border-white/20 ring-primary/30",
               "text-foreground resize-none text-wrap leading-[1.2]",
               "focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-0",
+              "hover:bg-white/15 hover:border-white/30",
               "transition-all duration-200",
               `min-h-[${minHeight}px]`
             )}

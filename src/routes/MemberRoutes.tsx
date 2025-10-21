@@ -72,8 +72,18 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/trilha-implementacao", ImplementationTrail),
   createProtectedRoute("/tools", Tools),
   createProtectedRoute("/tools/:id", ToolDetails),
-  createProtectedRoute("/ferramentas/builder", Builder),
-  createProtectedRoute("/ferramentas/builder/historico", SolutionHistory),
+  createProtectedRoute("/ferramentas/miracleai", Builder),
+  createProtectedRoute("/ferramentas/miracleai/historico", SolutionHistory),
+  
+  // Redirect old builder routes
+  {
+    path: "/ferramentas/builder",
+    element: <Navigate to="/ferramentas/miracleai" replace />
+  },
+  {
+    path: "/ferramentas/builder/historico",
+    element: <Navigate to="/ferramentas/miracleai/historico" replace />
+  },
   createProtectedRoute("/minhas-solucoes", MyAISolutions),
   createProtectedRoute("/networking", Networking),
     createProtectedRoute("/networking/analytics", NetworkingAnalytics),

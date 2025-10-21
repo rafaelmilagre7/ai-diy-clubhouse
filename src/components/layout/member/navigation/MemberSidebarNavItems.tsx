@@ -109,19 +109,13 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
         <SidebarNavigationGroup title="Ferramentas" sidebarOpen={sidebarOpen}>
           {canViewBuilder && (
             <TooltipNavItem
-              to="/ferramentas/builder"
+              to="/ferramentas/miracleai"
               label="Miracle AI"
               icon={Layout}
               sidebarOpen={sidebarOpen}
               isNew={true}
             />
           )}
-          <TooltipNavItem
-            to="/ferramentas/builder/historico"
-            label="Histórico Miracle"
-            icon={Layout}
-            sidebarOpen={sidebarOpen}
-          />
           {canViewTools && (
             <TooltipNavItem
               to="/tools"

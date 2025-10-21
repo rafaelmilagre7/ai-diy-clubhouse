@@ -79,7 +79,7 @@ export default function Builder() {
   const handleSave = async () => {
     if (solution) {
       await saveSolution(solution);
-      navigate('/ferramentas/builder/historico');
+      navigate('/ferramentas/miracleai/historico');
     }
   };
 
@@ -167,8 +167,16 @@ export default function Builder() {
                 Miracle AI
               </h1>
               <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-                Pense como o Rafael Milagre e transforme suas ideias em soluções inteligentes
+                Extraia o cérebro do Rafael Milagre e transforme suas ideias em soluções executáveis de IA
               </p>
+              
+              {/* Botão para acessar histórico */}
+              <button
+                onClick={() => navigate('/ferramentas/miracleai/historico')}
+                className="mt-4 text-sm text-muted-foreground hover:text-primary transition-colors underline decoration-dotted underline-offset-4"
+              >
+                Ver soluções salvas
+              </button>
             </motion.div>
 
             {/* Input centralizado */}
