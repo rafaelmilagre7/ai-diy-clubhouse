@@ -8,7 +8,7 @@ import {
   MessageSquare, 
   Mail, 
   Send, 
-  Sparkles,
+  Zap,
   CheckCircle2
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
@@ -129,7 +129,7 @@ export const ConnectMessageModal = ({
       <DialogContent className="sm:max-w-2xl bg-surface-modal border-aurora/20 max-h-modal-lg overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
-            <Sparkles className="w-5 h-5 text-aurora" />
+            <Zap className="w-5 h-5 text-aurora" />
             <span className="aurora-text-gradient">Conectar com {recipientName}</span>
           </DialogTitle>
         </DialogHeader>
@@ -167,7 +167,7 @@ export const ConnectMessageModal = ({
             <div className="flex items-center justify-between">
               <label className="text-sm font-semibold text-text-primary">Sua Mensagem</label>
               <Badge className="bg-aurora/20 text-aurora border-aurora/40">
-                <Sparkles className="w-3 h-3 mr-1" />
+                <Zap className="w-3 h-3 mr-1" />
                 Gerada por IA
               </Badge>
             </div>

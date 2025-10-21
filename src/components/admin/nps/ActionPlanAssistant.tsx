@@ -15,7 +15,7 @@ import {
   BarChart3,
   Calendar,
   RefreshCw,
-  Sparkles
+  Zap
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
@@ -238,7 +238,7 @@ export const ActionPlanAssistant: React.FC<ActionPlanAssistantProps> = ({
               </>
             ) : (
               <>
-                <Sparkles className="mr-2 h-4 w-4" />
+                <Zap className="mr-2 h-4 w-4" />
                 Gerar Plano de Ação com IA
               </>
             )}

@@ -1,30 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Brain, Cpu, Zap, CheckCircle2, Sparkles } from 'lucide-react';
+import { Brain, Cpu, Zap, CheckCircle2, Target, Lightbulb } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { LiquidGlassCard } from '@/components/ui/LiquidGlassCard';
+import { Badge } from '@/components/ui/badge';
 
 const miraclePhrases = [
-  { text: "Entrando na cabeça do Rafael Milagre... (cuidado, é caótico lá dentro)", icon: Brain },
-  { text: "Conectando 47 pontos que você não sabia que existiam...", icon: Cpu },
-  { text: "Rafael está pensando... (isso pode demorar, ele pensa MUITO)", icon: Brain },
-  { text: "Traduzindo tecniquês para português normal...", icon: Sparkles },
-  { text: "Removendo todo o hype e buzzwords inúteis...", icon: Zap },
-  { text: "Mapeando ferramentas reais com preços reais...", icon: Cpu },
-  { text: "Calculando ROI e métricas mensuráveis...", icon: Sparkles },
-  { text: "Estruturando passo-a-passo executável...", icon: CheckCircle2 },
-  { text: "Aplicando metodologia Viver de IA...", icon: Brain },
-  { text: "Cortando enrolação e teoria inútil...", icon: Zap },
-  { text: "Zerando promessas impossíveis...", icon: Cpu },
-  { text: "Eliminando ilusões e focando no real...", icon: Sparkles },
-  { text: "Calculando quanto você vai economizar/ganhar...", icon: Zap },
-  { text: "Estimando tempo de implementação REAL...", icon: CheckCircle2 },
-  { text: "Projetando crescimento sem aumentar custo...", icon: Cpu },
-  { text: "Conectando IA + automação + dados + interface...", icon: Brain },
-  { text: "Pensando como o Rafael pensaria...", icon: Sparkles },
-  { text: "Criando framework ultra-detalhado...", icon: Zap },
-  { text: "Montando checklist devastador...", icon: CheckCircle2 },
-  { text: "Finalizando solução MIRACLE AI...", icon: Sparkles },
+  { text: "Entrando na mente do Rafael Milagre...", icon: Brain },
+  { text: "Conectando pontos invisíveis...", icon: Cpu },
+  { text: "Traduzindo para prática real...", icon: Target },
+  { text: "Removendo hype e buzzwords...", icon: Zap },
+  { text: "Mapeando ferramentas reais...", icon: Brain },
+  { text: "Calculando ROI mensurável...", icon: Lightbulb },
+  { text: "Estruturando passo-a-passo...", icon: Cpu },
+  { text: "Aplicando metodologia Viver de IA...", icon: Target },
+  { text: "Cortando enrolação...", icon: Zap },
+  { text: "Focando no que funciona...", icon: Brain },
+  { text: "Calculando economia real...", icon: Lightbulb },
+  { text: "Estimando tempo real...", icon: Cpu },
+  { text: "Projetando crescimento...", icon: Target },
+  { text: "Pensando como Rafael...", icon: Brain },
+  { text: "Zerando promessas vazias...", icon: Zap },
+  { text: "Criando solução prática...", icon: Lightbulb },
+  { text: "Finalizando Miracle AI...", icon: CheckCircle2 },
 ];
 
 const subTasks = [
@@ -114,10 +112,10 @@ export const MiracleLoadingExperience = () => {
         <LiquidGlassCard className="p-8">
           {/* Badge */}
           <div className="flex justify-center mb-6">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-aurora-primary/10 border border-aurora-primary/20">
-              <Sparkles className="h-4 w-4 text-aurora-primary" />
-              <span className="text-sm font-semibold text-aurora-primary">MIRACLE AI</span>
-            </div>
+            <Badge className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-aurora-primary to-aurora-primary-light text-white border-0">
+              <Zap className="h-4 w-4" />
+              <span className="text-sm font-semibold">MIRACLE AI</span>
+            </Badge>
           </div>
 
           {/* Ícone Animado */}
@@ -153,7 +151,7 @@ export const MiracleLoadingExperience = () => {
 
             {/* Center Icon */}
             <motion.div
-              className="relative z-10 w-20 h-20 rounded-2xl bg-gradient-to-br from-aurora-primary to-aurora-primary/60 flex items-center justify-center shadow-2xl"
+              className="relative z-10 w-20 h-20 rounded-2xl bg-gradient-to-br from-aurora-primary via-aurora-primary-light to-aurora-primary/80 flex items-center justify-center shadow-aurora"
               animate={{
                 y: [0, -10, 0],
                 rotate: [0, 5, 0, -5, 0]
@@ -164,12 +162,12 @@ export const MiracleLoadingExperience = () => {
                 ease: "easeInOut"
               }}
             >
-              <CurrentIcon className="h-10 w-10 text-primary-foreground" />
+              <CurrentIcon className="h-10 w-10 text-white" />
             </motion.div>
           </div>
 
           {/* Frase Atual */}
-          <div className="h-16 flex items-center justify-center mb-6">
+          <div className="h-14 flex items-center justify-center mb-6">
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentPhrase}
@@ -179,7 +177,7 @@ export const MiracleLoadingExperience = () => {
                 transition={{ duration: 0.5 }}
                 className="text-center"
               >
-                <p className="text-lg font-medium text-foreground px-4">
+                <p className="text-base font-medium text-foreground px-4 max-w-md">
                   {miraclePhrases[currentPhrase].text}
                 </p>
               </motion.div>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Layout, ArrowRight, Sparkles } from 'lucide-react';
+import { Layout, ArrowRight, Zap } from 'lucide-react';
 import { useAuth } from '@/contexts/auth';
 import { useMiracleAI } from '@/hooks/builder/useMiracleAI';
 import { QuestionWizard } from '@/components/builder/QuestionWizard';
@@ -150,7 +150,7 @@ export default function Builder() {
                 <h1 className="text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
                   Miracle AI
                 </h1>
-                <Sparkles className="h-6 w-6 text-aurora-primary animate-pulse" />
+                <Zap className="h-6 w-6 text-aurora-primary animate-pulse" />
               </div>
               <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
                 Pense como o Rafael Milagre e transforme suas ideias em soluções inteligentes

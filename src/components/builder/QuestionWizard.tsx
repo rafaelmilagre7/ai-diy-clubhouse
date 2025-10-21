@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, ArrowLeft, Check, Sparkles } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Check, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
@@ -86,7 +86,7 @@ export const QuestionWizard: React.FC<QuestionWizardProps> = ({
           className="text-center mb-8"
         >
           <div className="flex items-center justify-center gap-2 mb-3">
-            <Sparkles className="h-6 w-6 text-aurora-primary" />
+            <Zap className="h-6 w-6 text-aurora-primary" />
             <h2 className="text-2xl font-bold">Miracle AI</h2>
           </div>
           <p className="text-muted-foreground">

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
-  Palette, Type, Sparkles, Layout, Zap, Shield, Search,
+  Palette, Type, Stars, Layout, Zap, Shield, Search,
   Box, Circle, Square, Layers, Eye, Moon, Sun, Check, BarChart3,
   AlertCircle, ArrowRight, Code, Lightbulb, CheckCircle2, XCircle, Play
 } from 'lucide-react';
@@ -198,7 +198,7 @@ export default function StyleGuidePage() {
         <div className="max-w-7xl mx-auto px-8 py-12">
           <div className="flex items-center gap-4 mb-4">
             <div className="p-3 rounded-2xl bg-aurora-primary/10 border border-aurora-primary/20">
-              <Sparkles className="w-8 h-8 text-aurora-primary" />
+              <Stars className="w-8 h-8 text-aurora-primary" />
             </div>
             <div>
               <h1 className="text-display">Design System 2.0</h1>
@@ -1016,7 +1016,7 @@ export default function StyleGuidePage() {
             {/* Gradients - BATCH 4 */}
             <section id="gradients" className="space-y-6">
               <div className="flex items-center gap-3">
-                <Sparkles className="w-6 h-6 text-aurora-primary" />
+                <Stars className="w-6 h-6 text-aurora-primary" />
                 <h2 className="text-heading-1">Gradient System</h2>
               </div>
 
@@ -1526,7 +1526,7 @@ export default function StyleGuidePage() {
             <Card className="surface-elevated">
               <CardHeader>
                 <CardTitle className="flex items-center gap-sm">
-                  <Sparkles className="w-6 h-6 text-aurora-primary" />
+                  <Stars className="w-6 h-6 text-aurora-primary" />
                   Workflow 2: Adicionar Novo Token
                 </CardTitle>
                 <CardDescription>

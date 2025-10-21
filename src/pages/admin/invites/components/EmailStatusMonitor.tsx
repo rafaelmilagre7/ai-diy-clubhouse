@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, Mail, AlertTriangle, RefreshCw, Sparkles, Zap, TestTube } from 'lucide-react';
+import { CheckCircle, Mail, AlertTriangle, RefreshCw, CheckCircle2, Zap, TestTube } from 'lucide-react';
 import { useInviteEmailService } from '@/hooks/admin/invites/useInviteEmailService';
 
 export const EmailStatusMonitor: React.FC = () => {
@@ -74,7 +74,7 @@ export const EmailStatusMonitor: React.FC = () => {
     <Card className="border-status-success/20 bg-status-success/5">
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-medium flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-status-success" />
+          <CheckCircle2 className="h-4 w-4 text-status-success" />
           Sistema Profissional Operacional
         </CardTitle>
       </CardHeader>

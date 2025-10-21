@@ -6,7 +6,7 @@ import {
   Crown, 
   Zap, 
   Star, 
-  Sparkles, 
+  Star as Stars,
   ExternalLink, 
   MessageCircle,
   Check,
@@ -61,7 +61,7 @@ const FEATURE_CONFIG = {
     glowColor: 'revenue'
   },
   benefits: {
-    icon: Sparkles,
+    icon: Stars,
     title: 'Benefícios Exclusivos VIP',
     subtitle: 'Descontos e parcerias especiais para membros premium',
     benefits: [
@@ -201,7 +201,7 @@ export const PremiumUpgradeModal: React.FC<PremiumUpgradeModalProps> = ({
           {/* Benefits List */}
           <div className="grid grid-cols-1 gap-4">
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-primary" />
+              <Stars className="h-5 w-5 text-primary" />
               O que você vai desbloquear:
             </h3>
             {config.benefits.map((benefit, index) => (

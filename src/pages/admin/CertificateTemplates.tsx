@@ -20,7 +20,7 @@ import {
   Palette,
   Code,
   Settings,
-  Sparkles
+  Award
 } from "lucide-react";
 import { useDynamicSEO } from "@/hooks/seo/useDynamicSEO";
 import { toast } from "sonner";
@@ -214,7 +214,7 @@ export default function CertificateTemplates() {
         <Card className="hover-scale">
           <CardContent className="p-6">
             <div className="flex items-center space-x-4">
-              <Sparkles className="h-8 w-8 text-status-success" />
+              <Award className="h-8 w-8 text-status-success" />
               <div>
                 <p className="text-2xl font-bold">{templates.filter(t => t.isActive).length}</p>
                 <p className="text-sm text-muted-foreground">Ativos</p>

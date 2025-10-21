@@ -203,7 +203,7 @@ ${contextFromAnswers}
 
 Crie um plano completo seguindo o formato JSON especificado.`;
 
-    console.log(`[MIRACLE] 🚀 Chamando Lovable AI (Gemini 2.5 Pro)...`);
+    console.log(`[MIRACLE] 🚀 Chamando Lovable AI (Gemini 2.5 Flash)...`);
 
     const lovableAIUrl = "https://ai.gateway.lovable.dev/v1/chat/completions";
     const lovableAIKey = Deno.env.get("LOVABLE_API_KEY");
@@ -287,6 +287,7 @@ Crie um plano completo seguindo o formato JSON especificado.`;
       }
     };
 
+    // Call Lovable AI (Gemini 2.5 Flash com JSON mode)
     const aiResponse = await fetch(lovableAIUrl, {
       method: "POST",
       headers: {
@@ -294,15 +295,14 @@ Crie um plano completo seguindo o formato JSON especificado.`;
         Authorization: `Bearer ${lovableAIKey}`,
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-pro",
+        model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: systemPrompt },
+          { role: "system", content: systemPrompt + '\n\nIMPORTANTE: Sua resposta DEVE ser um JSON válido e completo seguindo exatamente o schema fornecido. Não deixe campos vazios ou incompletos.' },
           { role: "user", content: userPrompt },
         ],
-        tools: [toolDefinition],
-        tool_choice: { type: "function", function: { name: "create_solution_plan" } },
-        temperature: 1.0,
+        temperature: 0.7,
         max_tokens: 128000,
+        response_format: { type: 'json_object' }
       }),
       signal: AbortSignal.timeout(180000),
     });
@@ -329,16 +329,22 @@ Crie um plano completo seguindo o formato JSON especificado.`;
     console.log(`[MIRACLE] ⚡ Tempo de resposta: ${(aiResponseTime / 1000).toFixed(1)}s`);
     console.log(`[MIRACLE] 📊 Tokens: ${aiData.usage?.total_tokens || 'N/A'}`);
 
-    // Extrair dados do tool call
-    const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
-    if (!toolCall || !toolCall.function?.arguments) {
-      console.error("[MIRACLE] ❌ Tool call não retornou argumentos");
+    // Extrair dados do message content
+    const message = aiData.choices?.[0]?.message;
+    if (!message || !message.content) {
+      console.error("[MIRACLE] ❌ Resposta não contém content");
       throw new Error("Resposta inválida da IA");
     }
 
-    const solutionData = JSON.parse(toolCall.function.arguments);
+    let solutionData;
+    try {
+      solutionData = JSON.parse(message.content);
+    } catch (parseError) {
+      console.error("[MIRACLE] ❌ Erro ao fazer parse do JSON:", parseError);
+      throw new Error("JSON inválido na resposta");
+    }
 
-    console.log(`[MIRACLE] ✅ JSON válido extraído via tool calling`);
+    console.log(`[MIRACLE] ✅ JSON válido extraído com JSON mode`);
     console.log(`[MIRACLE] ✓ Checklist: ${solutionData.implementation_checklist?.length || 0} steps`);
 
     // Salvar no banco
@@ -354,7 +360,7 @@ Crie um plano completo seguindo o formato JSON especificado.`;
         required_tools: solutionData.required_tools,
         framework_mapping: solutionData.framework_quadrants,
         implementation_checklist: solutionData.implementation_checklist,
-        generation_model: "google/gemini-2.5-pro",
+        generation_model: "google/gemini-2.5-flash",
         generation_time_ms: generationTime,
       })
       .select()
