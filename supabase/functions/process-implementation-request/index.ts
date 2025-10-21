@@ -234,7 +234,7 @@ serve(async (req) => {
         console.log('Token disponível:', !!pipedriveToken);
         console.log('Domain disponível:', pipedriveCompanyDomain);
         
-        // Buscar o pipeline "Team Vendas - Expansão" e stage "oportunidade"
+        // Buscar o pipeline "Team Vendas - Expansao" e stage "oportunidade"
         console.log('📋 Buscando pipelines...');
         const pipelinesResponse = await fetch(`https://${pipedriveCompanyDomain}.pipedrive.com/api/v1/pipelines?api_token=${pipedriveToken}`);
         const pipelinesData = await pipelinesResponse.json();
@@ -249,8 +249,8 @@ serve(async (req) => {
         if (pipelinesData.success && pipelinesData.data) {
           // Encontrar pipeline "Team Vendas - Expansão" (busca flexível)
           const targetPipeline = pipelinesData.data.find((p: any) => {
-            const name = p.name.toLowerCase();
-            return name.includes('team vendas') && name.includes('expansão');
+            const name = p.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+            return name.includes('team vendas') && name.includes('expansao');
           });
           
           console.log('Pipeline alvo encontrado:', targetPipeline);
@@ -286,7 +286,7 @@ serve(async (req) => {
               }
             }
           } else {
-            console.log('⚠️ Pipeline "Team Vendas - Expansão" não encontrado, listando pipelines disponíveis:');
+            console.log('⚠️ Pipeline "Team Vendas - Expansao" nao encontrado, listando pipelines disponiveis:');
             pipelinesData.data.forEach((p: any) => console.log(`- ${p.name} (ID: ${p.id})`));
           }
         } else {
