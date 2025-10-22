@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Star, Share2, Download, Save } from 'lucide-react';
+import { toast } from 'sonner';
 import { LiquidGlassCard } from '@/components/ui/LiquidGlassCard';
 import { FrameworkQuadrants } from './FrameworkQuadrants';
 import { RequiredToolsGrid } from './RequiredToolsGrid';
@@ -26,9 +27,21 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({
   const navigate = useNavigate();
   
   const handleSaveAndRedirect = async () => {
-    const savedSolution = await onSave(solution);
-    if (savedSolution?.id) {
-      navigate(`/ferramentas/builder/solution/${savedSolution.id}`);
+    try {
+      const savedSolution = await onSave(solution);
+      
+      // Se salvou com sucesso E tem ID, redirecionar
+      if (savedSolution?.id) {
+        navigate(`/ferramentas/builder/solution/${savedSolution.id}`);
+      } else if (solution?.id) {
+        // Fallback: se solution já tem id (veio da edge function), usar ele
+        navigate(`/ferramentas/builder/solution/${solution.id}`);
+      } else {
+        toast.error('Não foi possível redirecionar para a solução');
+      }
+    } catch (error) {
+      console.error('[BUILDER] Erro ao salvar e redirecionar:', error);
+      toast.error('Erro ao processar solução');
     }
   };
   

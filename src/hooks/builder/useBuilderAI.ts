@@ -83,6 +83,19 @@ export const useBuilderAI = () => {
         return null;
       }
 
+      // Verificar se solution tem pelo menos id
+      if (!data.solution.id) {
+        toast.error('Solução gerada mas não foi salva corretamente');
+        return null;
+      }
+
+      // Se title está undefined, avisar mas continuar
+      if (!data.solution.title || data.solution.title === 'undefined') {
+        toast.warning('Solução gerada com alguns campos incompletos', {
+          description: 'Você pode editar o título manualmente'
+        });
+      }
+
       toast.success('Solução Builder gerada com sucesso! 🎉');
       return data.solution;
     } catch (error) {

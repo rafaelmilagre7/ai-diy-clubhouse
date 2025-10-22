@@ -76,9 +76,21 @@ export default function Builder() {
 
   const handleWizardComplete = async (answers: Array<{ question: string; answer: string }>) => {
     setShowWizard(false);
+    console.log('[BUILDER-FRONTEND] Gerando solução com respostas:', answers.length);
+    
     const result = await generateSolution(currentIdea, answers);
+    
+    console.log('[BUILDER-FRONTEND] Resultado recebido:', {
+      hasResult: !!result,
+      hasId: !!result?.id,
+      title: result?.title,
+      resultKeys: result ? Object.keys(result) : []
+    });
+    
     if (result) {
       setSolution(result);
+    } else {
+      toast.error('Não foi possível gerar a solução. Tente novamente.');
     }
   };
 

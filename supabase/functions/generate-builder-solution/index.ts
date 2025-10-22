@@ -294,11 +294,23 @@ ${toolsContext}
 "${idea}"
 ${contextFromAnswers}
 
-INSTRUÇÕES PARA O TÍTULO:
-- Máximo 60 caracteres
-- Seja específico e técnico (ex: "Sistema de Agendamento com IA" em vez de "Solução de IA")
+⚠️ INSTRUÇÕES CRÍTICAS PARA O TÍTULO (OBRIGATÓRIO):
+- VOCÊ DEVE gerar um título claro e específico (máximo 60 caracteres)
+- Seja técnico e descritivo (ex: "Sistema de Agendamento com IA e WhatsApp")
 - Use a principal tecnologia ou benefício no título
 - Evite termos genéricos como "Solução Builder"
+
+EXEMPLOS DE TÍTULOS BONS:
+✅ "Plataforma de Resumos Bíblicos com IA"
+✅ "Chatbot WhatsApp + CRM Automático"
+✅ "Sistema de Qualificação de Leads com GPT-4"
+
+EXEMPLOS DE TÍTULOS RUINS:
+❌ "Solução de IA"
+❌ "Projeto Builder"
+❌ "" (vazio)
+
+🔴 O TÍTULO É OBRIGATÓRIO. Não deixe em branco ou undefined.
 
 Crie um plano completo seguindo o formato JSON especificado.`;
 
@@ -512,6 +524,24 @@ Crie um plano completo seguindo o formato JSON especificado.`;
     console.log(`[BUILDER] ✅ JSON válido extraído com JSON mode`);
     console.log(`[BUILDER] ✓ Checklist: ${solutionData.implementation_checklist?.length || 0} steps`);
     console.log(`[BUILDER] 📝 Título gerado: "${solutionData.title}"`);
+
+    // 🔧 VALIDAÇÃO E FALLBACK PARA TÍTULO
+    if (!solutionData.title || solutionData.title === 'undefined' || solutionData.title.trim() === '') {
+      console.warn("[BUILDER] ⚠️ Título não gerado pela IA, criando fallback...");
+      
+      // Criar título inteligente com base na ideia
+      const ideaWords = idea.split(' ').slice(0, 8).join(' ');
+      solutionData.title = `Solução: ${ideaWords}${idea.split(' ').length > 8 ? '...' : ''}`;
+      
+      console.log(`[BUILDER] 🔧 Título fallback: "${solutionData.title}"`);
+    }
+
+    // Garantir que título não exceda 60 caracteres
+    if (solutionData.title.length > 60) {
+      solutionData.title = solutionData.title.substring(0, 57) + '...';
+    }
+
+    console.log(`[BUILDER] ✅ Título final: "${solutionData.title}"`);
 
     // Salvar no banco (sem lovable_prompt ainda)
     const generationTime = Date.now() - startTime;
