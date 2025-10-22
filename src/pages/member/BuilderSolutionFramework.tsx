@@ -66,7 +66,7 @@ export default function BuilderSolutionFramework() {
                 Framework de Implementação de IA
               </h1>
               <div className="flex items-center gap-3 mb-4">
-                <Badge variant="default" className="text-base px-4 py-1.5 bg-gradient-to-r from-primary to-primary/80">
+                <Badge className="text-base px-4 py-1.5 bg-background/80 text-primary border-primary/30 border-2">
                   by Rafael Milagre
                 </Badge>
               </div>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Sparkles, Settings, Database, Layout } from 'lucide-react';
+import { Brain, Zap, Database, Palette } from 'lucide-react';
 
 interface FrameworkQuadrantsProps {
   framework: {
@@ -17,18 +17,18 @@ export const FrameworkQuadrants: React.FC<FrameworkQuadrantsProps> = ({ framewor
       key: 'quadrant1_automation',
       data: framework?.quadrant1_automation,
       title: 'Automação',
-      icon: Settings,
-      color: 'from-cyan-500/20 to-blue-500/20',
-      borderColor: 'border-cyan-500/30',
+      icon: Zap,
+      color: 'from-cyan-500/20 to-teal-400/10',
+      borderColor: 'border-cyan-400/30',
       position: 'top-left'
     },
     {
       key: 'quadrant2_ai',
       data: framework?.quadrant2_ai,
       title: 'IA',
-      icon: Sparkles,
-      color: 'from-blue-500/20 to-purple-500/20',
-      borderColor: 'border-blue-500/30',
+      icon: Brain,
+      color: 'from-teal-500/20 to-cyan-400/10',
+      borderColor: 'border-teal-400/30',
       position: 'top-right'
     },
     {
@@ -36,17 +36,17 @@ export const FrameworkQuadrants: React.FC<FrameworkQuadrantsProps> = ({ framewor
       data: framework?.quadrant3_data,
       title: 'Dados e Contexto',
       icon: Database,
-      color: 'from-indigo-500/20 to-blue-700/20',
-      borderColor: 'border-indigo-500/30',
+      color: 'from-emerald-500/20 to-teal-400/10',
+      borderColor: 'border-emerald-400/30',
       position: 'bottom-left'
     },
     {
       key: 'quadrant4_interface',
       data: framework?.quadrant4_interface,
       title: 'Interface',
-      icon: Layout,
-      color: 'from-slate-500/20 to-gray-600/20',
-      borderColor: 'border-slate-500/30',
+      icon: Palette,
+      color: 'from-teal-400/20 to-cyan-500/10',
+      borderColor: 'border-teal-300/30',
       position: 'bottom-right'
     }
   ];
@@ -78,10 +78,15 @@ export const FrameworkQuadrants: React.FC<FrameworkQuadrantsProps> = ({ framewor
               hover:scale-[1.02] transition-all
             `}
           >
-            {/* Título direto no topo */}
-            <h3 className="text-2xl font-bold mb-2">
-              {quadrant.data?.title || quadrant.title}
-            </h3>
+            {/* Ícone + Título */}
+            <div className="flex items-center gap-3 mb-4">
+              <div className={`p-2.5 rounded-lg bg-gradient-to-br ${quadrant.color} border ${quadrant.borderColor}`}>
+                <Icon className="w-6 h-6 text-cyan-400" />
+              </div>
+              <h3 className="text-2xl font-bold">
+                {quadrant.data?.title || quadrant.title}
+              </h3>
+            </div>
 
             {/* Descrição opcional */}
             {quadrant.data?.description && (

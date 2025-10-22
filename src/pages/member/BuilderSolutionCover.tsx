@@ -33,8 +33,8 @@ export default function BuilderSolutionCover() {
       subtitle: "Os 4 pilares da sua solução",
       icon: Compass,
       badge: "by Rafael Milagre",
-      color: "from-primary/20 to-accent/20",
-      borderColor: "border-primary/30",
+      color: "from-cyan-500/20 to-teal-400/20",
+      borderColor: "border-cyan-400/30",
       path: `/ferramentas/builder/solution/${id}/framework`,
     },
     {
@@ -42,8 +42,8 @@ export default function BuilderSolutionCover() {
       subtitle: "Diagramas técnicos completos",
       icon: Network,
       badge: "Fluxograma",
-      color: "from-accent/20 to-primary/20",
-      borderColor: "border-accent/30",
+      color: "from-teal-500/20 to-cyan-400/20",
+      borderColor: "border-teal-400/30",
       path: `/ferramentas/builder/solution/${id}/arquitetura`,
     },
     {
@@ -51,8 +51,8 @@ export default function BuilderSolutionCover() {
       subtitle: "Recursos essenciais e opcionais",
       icon: Wrench,
       badge: `${(solution?.required_tools?.essential?.length || 0) + (solution?.required_tools?.optional?.length || 0)} ferramentas`,
-      color: "from-primary/20 to-secondary/20",
-      borderColor: "border-primary/30",
+      color: "from-emerald-500/20 to-teal-400/20",
+      borderColor: "border-emerald-400/30",
       path: `/ferramentas/builder/solution/${id}/ferramentas`,
     },
     {
@@ -60,8 +60,8 @@ export default function BuilderSolutionCover() {
       subtitle: "Checklist de implementação",
       icon: ClipboardCheck,
       badge: `${solution?.implementation_checklist?.length || 0} passos`,
-      color: "from-secondary/20 to-accent/20",
-      borderColor: "border-secondary/30",
+      color: "from-cyan-400/20 to-teal-500/20",
+      borderColor: "border-cyan-300/30",
       path: `/ferramentas/builder/solution/${id}/checklist`,
     },
   ];
@@ -176,7 +176,7 @@ export default function BuilderSolutionCover() {
                   <div className="relative z-10">
                     {/* Ícone grande + Badge */}
                     <div className="flex items-start justify-between mb-4">
-                      <div className="p-4 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 text-primary group-hover:scale-110 transition-transform duration-300">
+                      <div className="p-4 rounded-xl bg-gradient-to-br from-cyan-500/20 to-teal-400/10 text-cyan-400 group-hover:scale-110 transition-transform duration-300">
                         <IconComponent className="h-8 w-8" />
                       </div>
                       <Badge variant="secondary" className="text-xs px-3">
