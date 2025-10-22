@@ -252,3 +252,6 @@ verify_jwt = false
 
 [functions.test-resend-direct]
 verify_jwt = false
+
+[functions.analyze-console-logs]
+verify_jwt = true
