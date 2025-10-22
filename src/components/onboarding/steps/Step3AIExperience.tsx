@@ -46,11 +46,8 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
     mode: 'onChange',
   });
 
-  console.log('[STEP3] 🚀 Renderizando com dados iniciais:', initialData);
-
   // Função para notificar mudanças
   const notifyDataChange = useCallback((newData: Partial<AIExperienceFormData>) => {
-    console.log('[STEP3] 📊 Notificando mudança:', newData);
     onDataChangeRef.current(newData);
   }, []);
 
@@ -70,7 +67,6 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
         implementation_timeline: data.implementation_timeline || '',
       };
       
-      console.log('[STEP3] 📝 Mudança no form detectada:', completeData);
       notifyDataChange(completeData);
     });
 
@@ -78,12 +74,10 @@ export const Step3AIExperience: React.FC<Step3AIExperienceProps> = ({
   }, [form, notifyDataChange]);
 
   const handleSelectChange = useCallback((field: keyof AIExperienceFormData, value: string) => {
-    console.log('[STEP3] 🔄 Campo alterado:', field, '=', value);
     form.setValue(field, value);
   }, [form]);
 
   const handleSubmit = useCallback((data: AIExperienceFormData) => {
-    console.log('[STEP3] ✅ Enviando dados:', data);
     
     if (!data.experience_level || !data.learning_goals?.length || !data.priority_areas?.length || !data.implementation_timeline) {
       console.error('[STEP3] ❌ Campos obrigatórios não preenchidos');

@@ -95,7 +95,6 @@ export const Step2BusinessInfo: React.FC<Step2BusinessInfoProps> = ({
           <Select 
             value={form.getValues('work_type')} 
             onValueChange={(value) => {
-              console.log('[STEP2] Tipo de trabalho selecionado:', value);
               form.setValue('work_type', value);
               form.trigger('work_type');
             }}
@@ -148,7 +147,6 @@ export const Step2BusinessInfo: React.FC<Step2BusinessInfoProps> = ({
             <Select 
               value={form.getValues('current_position')} 
               onValueChange={(value) => {
-                console.log('[STEP2] Cargo selecionado:', value);
                 form.setValue('current_position', value);
                 form.trigger('current_position');
               }}
@@ -194,7 +192,6 @@ export const Step2BusinessInfo: React.FC<Step2BusinessInfoProps> = ({
             <Select 
               value={form.getValues('company_size')} 
               onValueChange={(value) => {
-                console.log('[STEP2] Tamanho selecionado:', value);
                 form.setValue('company_size', value);
                 form.trigger('company_size');
               }}
@@ -235,7 +232,6 @@ export const Step2BusinessInfo: React.FC<Step2BusinessInfoProps> = ({
                 <Select 
                   value={form.getValues('annual_revenue')} 
                   onValueChange={(value) => {
-                    console.log('[STEP2] Faturamento selecionado:', value);
                     form.setValue('annual_revenue', value);
                     form.trigger('annual_revenue');
                   }}
@@ -273,7 +269,6 @@ export const Step2BusinessInfo: React.FC<Step2BusinessInfoProps> = ({
                 <Select 
                   value={form.getValues('experience_level')} 
                   onValueChange={(value) => {
-                    console.log('[STEP2] Experiência selecionada:', value);
                     form.setValue('experience_level', value);
                     form.trigger('experience_level');
                   }}
@@ -309,7 +304,6 @@ export const Step2BusinessInfo: React.FC<Step2BusinessInfoProps> = ({
           <Select 
             value={form.getValues('company_sector')} 
             onValueChange={(value) => {
-              console.log('[STEP2] Setor selecionado:', value);
               form.setValue('company_sector', value);
               form.trigger('company_sector');
             }}
@@ -364,7 +358,6 @@ export const Step2BusinessInfo: React.FC<Step2BusinessInfoProps> = ({
           <Select 
             value={form.getValues('main_challenge')} 
             onValueChange={(value) => {
-              console.log('[STEP2] Desafio selecionado:', value);
               form.setValue('main_challenge', value);
               form.trigger('main_challenge');
             }}

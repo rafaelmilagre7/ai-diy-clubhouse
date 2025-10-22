@@ -23,32 +23,23 @@ export const Step6Welcome: React.FC<Step6WelcomeProps> = ({
   const [showTeamInvites, setShowTeamInvites] = useState(false);
   
   const handleContinueToTeamInvites = () => {
-    console.log('[STEP6] 👥 Mostrando seção de convites de equipe');
     setShowTeamInvites(true);
   };
 
   const handleTeamInvitesComplete = async () => {
-    console.log('[STEP6] 🎉 Convites enviados, finalizando onboarding...');
     await handleFinish();
   };
 
   const handleSkipTeamInvites = async () => {
-    console.log('[STEP6] ⏭️ Pulando convites de equipe, finalizando onboarding...');
     await handleFinish();
   };
 
   const handleFinish = async () => {
-    console.log('[STEP6] 🎉 Iniciando finalização do onboarding...');
-    console.log('[STEP6] 🎉 Estado atual - isCompleted:', isCompleting, 'showSuccess:', showSuccess);
     setIsCompleting(true);
     
-    // Primeiro finalizar o onboarding no backend
-    console.log('[STEP6] 🎉 Chamando onFinish...');
     const success = await onFinish();
     
-    console.log('[STEP6] 🎉 Resultado onFinish:', success);
     if (success) {
-      console.log('[STEP6] 🎉 SUCESSO! Mostrando celebração com confetti...');
       setShowSuccess(true);
     } else {
       console.error('[STEP6] ❌ FALHA ao finalizar onboarding');
@@ -57,8 +48,6 @@ export const Step6Welcome: React.FC<Step6WelcomeProps> = ({
   };
 
   const handleSuccessComplete = () => {
-    console.log('[STEP6] Celebração concluída - redirecionando para dashboard');
-    // Redirecionar após celebração
     window.location.href = '/dashboard';
   };
   return (
