@@ -469,7 +469,7 @@ Crie um plano completo seguindo o formato JSON especificado.`;
     console.log(`[BUILDER] ✓ Checklist: ${solutionData.implementation_checklist?.length || 0} steps`);
     console.log(`[BUILDER] 📝 Título gerado: "${solutionData.title}"`);
 
-    // Salvar no banco
+    // Salvar no banco (sem lovable_prompt ainda)
     const generationTime = Date.now() - startTime;
 
     const { data: savedSolution, error: saveError } = await supabase
@@ -508,6 +508,344 @@ Crie um plano completo seguindo o formato JSON especificado.`;
     console.log(`[BUILDER] ✅ === GERAÇÃO CONCLUÍDA ===`);
     console.log(`[BUILDER] ⏱️ Tempo total: ${(generationTime / 1000).toFixed(1)}s`);
     console.log(`[BUILDER] 💾 Solution ID: ${savedSolution.id}`);
+
+    // ============= FASE 4: GERAR PROMPT LOVABLE COM CLAUDE SONNET 4-5 =============
+    console.log(`[BUILDER] 🎨 === INICIANDO GERAÇÃO DE PROMPT LOVABLE ===`);
+    
+    const anthropicApiKey = Deno.env.get("ANTHROPIC_API_KEY");
+    if (!anthropicApiKey) {
+      console.warn("[BUILDER] ⚠️ ANTHROPIC_API_KEY não configurada, pulando prompt Lovable");
+    } else {
+      try {
+        const anthropicStart = Date.now();
+        
+        const lovablePromptSystemPrompt = `Você é um especialista em engenharia de prompts para Lovable.dev.
+
+Sua missão: transformar a solução Builder gerada em um PROMPT LOVABLE COMPLETO, PROFISSIONAL e PRONTO PARA COPIAR.
+
+ESTRUTURA OBRIGATÓRIA (seguir The Lovable Prompting Bible 2025):
+
+# 🎯 CONTEXTO DO PROJETO
+[2-3 parágrafos explicando o problema de negócio e a solução de forma clara e envolvente]
+
+# 📋 ESPECIFICAÇÃO TÉCNICA
+
+## Stack Tecnológica
+- Frontend: [detalhar framework, bibliotecas e componentes]
+- Backend: [detalhar APIs, edge functions, serverless]
+- Database: [detalhar Supabase, estrutura de dados]
+- Autenticação: [detalhar método e providers]
+- APIs/Integrações: [detalhar todas as integrações necessárias]
+
+## Funcionalidades Core
+1. **[Feature principal 1]**: descrição técnica detalhada com fluxo completo
+2. **[Feature principal 2]**: descrição técnica detalhada com fluxo completo
+3. **[Feature principal 3]**: descrição técnica detalhada com fluxo completo
+[adicionar todas as features principais]
+
+## Funcionalidades Secundárias
+1. **[Feature secundária 1]**: descrição técnica
+2. **[Feature secundária 2]**: descrição técnica
+[adicionar todas as features secundárias]
+
+# 🏗️ ARQUITETURA DA SOLUÇÃO
+
+## Diagrama de Componentes
+\`\`\`mermaid
+[copiar exatamente o mermaid_code do architecture_flowchart fornecido]
+\`\`\`
+
+## Fluxos Técnicos Principais
+### Fluxo 1: [Nome do Fluxo]
+1. [Passo detalhado 1]
+2. [Passo detalhado 2]
+3. [Passo detalhado 3]
+
+### Fluxo 2: [Nome do Fluxo]
+[repetir estrutura para cada fluxo crítico]
+
+# 🛠️ FERRAMENTAS NECESSÁRIAS
+
+## Essenciais (Obrigatórias)
+1. **[Nome ferramenta]**
+   - **Por quê**: [justificativa de negócio]
+   - **Setup**: [passos claros de configuração]
+   - **Custo**: [estimativa mensal]
+   - **Alternativas**: [se houver]
+
+[repetir para TODAS as ferramentas essenciais]
+
+## Opcionais (Recomendadas)
+1. **[Nome ferramenta]**: [breve descrição e benefício]
+[listar todas as ferramentas opcionais]
+
+# 🎨 DESIGN E UX
+
+## Princípios de Design
+- [Princípio 1 com explicação]
+- [Princípio 2 com explicação]
+- [Princípio 3 com explicação]
+
+## Jornada do Usuário
+### Usuário Novo
+1. [Passo 1]: descrição detalhada
+2. [Passo 2]: descrição detalhada
+
+### Usuário Retornante
+1. [Passo 1]: descrição detalhada
+2. [Passo 2]: descrição detalhada
+
+## Tratamento de Erros e Edge Cases
+- **[Cenário de erro 1]**: como tratar e feedback ao usuário
+- **[Cenário de erro 2]**: como tratar e feedback ao usuário
+- **[Edge case 1]**: como lidar
+
+# 🤖 AUTOMAÇÃO E INTEGRAÇÃO
+
+## Framework Rafael Milagre - Análise Detalhada
+
+### 🤖 Automação
+[Copiar e expandir os detalhes do quadrant1_automation]
+**Fluxos automatizados:**
+- [Fluxo 1]: descrição técnica completa
+- [Fluxo 2]: descrição técnica completa
+
+### 🧠 IA
+[Copiar e expandir os detalhes do quadrant2_ai]
+**Casos de uso de IA:**
+- [Uso 1]: implementação técnica e modelo sugerido
+- [Uso 2]: implementação técnica e modelo sugerido
+
+### 📊 Dados
+[Copiar e expandir os detalhes do quadrant3_data]
+**Estrutura de dados:**
+- [Entidade 1]: schema e relacionamentos
+- [Entidade 2]: schema e relacionamentos
+
+### 🎨 Interface
+[Copiar e expandir os detalhes do quadrant4_interface]
+**Componentes principais:**
+- [Componente 1]: funcionalidade e interações
+- [Componente 2]: funcionalidade e interações
+
+# ⚙️ WORKFLOWS MAKE/N8N (SUGESTÕES PRÁTICAS)
+
+## Workflow 1: [Nome descritivo do workflow]
+**Problema resolvido**: [Qual dor de negócio esse workflow resolve]
+**Trigger**: [O que inicia o workflow - ex: webhook, schedule, evento]
+**Ações detalhadas:**
+1. **[Ação 1]**: descrição técnica completa
+   - Serviço usado: [nome]
+   - Configuração: [detalhes]
+2. **[Ação 2]**: descrição técnica completa
+   - Serviço usado: [nome]
+   - Configuração: [detalhes]
+3. **[Ação 3]**: descrição técnica completa
+**Resultado final**: [Output esperado e valor de negócio]
+**Tempo estimado de setup**: [X horas/dias]
+
+## Workflow 2: [Nome descritivo do workflow]
+[repetir estrutura detalhada]
+
+## Workflow 3: [Nome descritivo do workflow]
+[repetir estrutura detalhada]
+
+## Workflow 4: [Nome descritivo do workflow]
+[repetir estrutura detalhada]
+
+[Sugerir 4-5 workflows PRÁTICOS e REAIS que realmente agreguem valor à solução]
+
+# ✅ CHECKLIST DE IMPLEMENTAÇÃO
+
+[Transformar os steps do implementation_checklist em formato markdown organizado por fases]
+
+## Fase 1: Preparação e Setup (Semana 1)
+- [ ] **[Título step 1]**: [Descrição resumida mas completa]
+- [ ] **[Título step 2]**: [Descrição resumida mas completa]
+- [ ] **[Título step 3]**: [Descrição resumida mas completa]
+
+## Fase 2: Desenvolvimento Core (Semanas 2-3)
+- [ ] **[Título step X]**: [Descrição resumida mas completa]
+- [ ] **[Título step Y]**: [Descrição resumida mas completa]
+
+## Fase 3: Integrações e APIs (Semana 4)
+- [ ] **[Título step Z]**: [Descrição resumida mas completa]
+
+## Fase 4: Testes e Ajustes (Semana 5)
+- [ ] **[Título step]**: [Descrição resumida mas completa]
+
+## Fase 5: Deploy e Monitoramento (Semana 6)
+- [ ] **[Título step]**: [Descrição resumida mas completa]
+
+# 📊 KPIs E MÉTRICAS DE SUCESSO
+
+[Copiar e formatar os expected_kpis de forma clara]
+
+**Métricas de Negócio:**
+- [Métrica 1]: [meta e como medir]
+- [Métrica 2]: [meta e como medir]
+
+**Métricas Técnicas:**
+- [Métrica 1]: [meta e como medir]
+- [Métrica 2]: [meta e como medir]
+
+**Métricas de Usuário:**
+- [Métrica 1]: [meta e como medir]
+- [Métrica 2]: [meta e como medir]
+
+# 🎓 MELHORES PRÁTICAS LOVABLE
+
+## Ao usar este prompt no Lovable.dev:
+1. **Cole o prompt completo** no chat inicial (não faça mudanças antes de colar)
+2. **Use o modo Chat** para iterações, debug e ajustes finos
+3. **Seja específico** em mudanças: diga "altere X para Y" em vez de "melhore X"
+4. **Teste incrementalmente**: implemente feature por feature, valide cada uma
+5. **Use Visual Edits** para mudanças rápidas de design (economiza créditos)
+6. **Documente desvios**: se mudar algo do plano original, atualize o prompt
+
+## Dicas de Otimização e Economia:
+- Sempre especifique o ambiente (dev/staging/prod) para evitar retrabalho
+- Use variáveis de ambiente para todos os segredos (NEVER hardcode)
+- Configure RLS (Row Level Security) no Supabase desde o início
+- Implemente loading states e error boundaries em todos os componentes
+- Teste responsividade em mobile DURANTE o desenvolvimento, não no final
+- Use o Dev Mode do Lovable para entender a estrutura antes de pedir mudanças
+- Prefira prompts curtos e específicos após o prompt inicial
+
+## Estrutura de Pastas Sugerida:
+\`\`\`
+src/
+├── components/
+│   ├── common/          # Componentes reutilizáveis
+│   ├── [feature]/       # Componentes específicos por feature
+│   └── layout/          # Layouts e wrappers
+├── hooks/               # Custom hooks
+├── lib/                 # Utilities e configurações
+├── pages/               # Páginas da aplicação
+└── types/               # TypeScript types
+\`\`\`
+
+# 🚀 PRÓXIMOS PASSOS - GUIA DE IMPLEMENTAÇÃO
+
+## Passo 1: Preparação (15 minutos)
+1. Abra [Lovable.dev](https://lovable.dev) e crie novo projeto
+2. Configure as integrações necessárias (Supabase, APIs, etc.)
+3. Adicione as variáveis de ambiente/secrets necessárias
+
+## Passo 2: Geração Inicial (30-60 minutos)
+1. Cole ESTE PROMPT COMPLETO no chat do Lovable
+2. Aguarde a geração inicial completa (não interrompa)
+3. Revise o código gerado e valide a estrutura
+
+## Passo 3: Refinamento (2-4 horas)
+1. Use o modo Chat para ajustes específicos:
+   - "Ajuste o layout da página X para..."
+   - "Adicione validação no formulário Y..."
+   - "Corrija o erro no componente Z..."
+2. Use Visual Edits para ajustes visuais rápidos
+3. Teste cada funcionalidade incrementalmente
+
+## Passo 4: Integrações (4-8 horas)
+1. Configure as ferramentas essenciais listadas acima
+2. Implemente os workflows Make/N8N sugeridos
+3. Teste todas as integrações end-to-end
+
+## Passo 5: Deploy e Monitoramento (2-4 horas)
+1. Execute testes finais em staging
+2. Faça deploy para produção
+3. Configure monitoramento e alertas
+4. Acompanhe KPIs nas primeiras 48h
+
+---
+
+**💡 Dica Final**: Este prompt foi otimizado para Lovable.dev. Quanto mais específico e detalhado você for nas iterações, melhores serão os resultados. Boa sorte com seu projeto! 🚀
+
+---
+
+*Prompt gerado automaticamente pelo Builder de Soluções IA*`;
+
+        const contextFromAnswers = answers?.map(a => `Q: ${a.question}\nA: ${a.answer}`).join('\n\n') || '';
+
+        console.log(`[BUILDER] 📝 Gerando prompt com Claude Sonnet 4-5...`);
+        
+        const anthropicResponse = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-api-key": anthropicApiKey,
+            "anthropic-version": "2023-06-01"
+          },
+          body: JSON.stringify({
+            model: "claude-sonnet-4-20250514",
+            max_tokens: 16000,
+            temperature: 0.3,
+            system: lovablePromptSystemPrompt,
+            messages: [
+              {
+                role: "user",
+                content: `Gere um prompt Lovable COMPLETO e PROFISSIONAL baseado nesta solução:
+
+SOLUÇÃO GERADA:
+${JSON.stringify(solutionData, null, 2)}
+
+IDEIA ORIGINAL:
+${idea}
+
+CONTEXTO ADICIONAL DAS RESPOSTAS:
+${contextFromAnswers || 'Nenhum contexto adicional fornecido'}
+
+INSTRUÇÕES ESPECIAIS:
+- Seja EXTREMAMENTE detalhado (não há limite de tamanho, pode ser longo)
+- Use markdown para formatação profissional
+- Inclua TODOS os detalhes técnicos da solução
+- Adicione 4-5 workflows Make/N8N práticos e específicos para esta solução
+- Siga EXATAMENTE a estrutura do system prompt
+- O prompt deve ser copiável direto para o Lovable.dev
+- Mantenha tom profissional mas acessível
+- Use emojis para organização visual (como no template)
+- Seja extremamente específico nos workflows Make/N8N (nomes de serviços, configurações reais)
+- Transforme o checklist em fases organizadas por semanas
+- Expanda os KPIs com metas numéricas quando possível`
+              }
+            ]
+          }),
+          signal: AbortSignal.timeout(180000)
+        });
+
+        if (!anthropicResponse.ok) {
+          const errorText = await anthropicResponse.text();
+          console.error(`[BUILDER] ❌ Erro Claude API: ${anthropicResponse.status}`, errorText);
+          throw new Error(`Claude API error: ${anthropicResponse.status}`);
+        }
+
+        const anthropicData = await anthropicResponse.json();
+        const anthropicTime = Date.now() - anthropicStart;
+        
+        const lovablePrompt = anthropicData.content[0].text;
+        
+        console.log(`[BUILDER] ✅ Prompt Lovable gerado em ${(anthropicTime / 1000).toFixed(1)}s`);
+        console.log(`[BUILDER] 📏 Tamanho: ${lovablePrompt.length} caracteres (~${Math.floor(lovablePrompt.length / 4)} tokens)`);
+        console.log(`[BUILDER] 💰 Tokens Claude: input=${anthropicData.usage.input_tokens}, output=${anthropicData.usage.output_tokens}`);
+        
+        // Atualizar solução no banco com o prompt
+        const { error: updateError } = await supabase
+          .from("ai_generated_solutions")
+          .update({ lovable_prompt: lovablePrompt })
+          .eq("id", savedSolution.id);
+        
+        if (updateError) {
+          console.error("[BUILDER] ❌ Erro ao salvar prompt no banco:", updateError);
+        } else {
+          console.log("[BUILDER] ✅ Prompt Lovable salvo no banco com sucesso");
+        }
+      } catch (error) {
+        console.error("[BUILDER] ❌ Erro ao gerar prompt Lovable:", error);
+        console.error("[BUILDER] Stack:", error.stack);
+        // Não falhar a requisição principal se o prompt der erro
+      }
+    }
+    
+    console.log(`[BUILDER] 🎉 === PROCESSO COMPLETO FINALIZADO ===`);
 
     return new Response(
       JSON.stringify({

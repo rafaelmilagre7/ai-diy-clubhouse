@@ -36,6 +36,7 @@ import BuilderSolutionFramework from '@/pages/member/BuilderSolutionFramework';
 import BuilderSolutionArchitecture from '@/pages/member/BuilderSolutionArchitecture';
 import BuilderSolutionTools from '@/pages/member/BuilderSolutionTools';
 import BuilderSolutionChecklist from '@/pages/member/BuilderSolutionChecklist';
+import BuilderSolutionPrompt from '@/pages/member/BuilderSolutionPrompt';
 
 // Member Learning pages
 import LearningPage from '@/pages/member/learning/LearningPage';
@@ -86,6 +87,7 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/ferramentas/builder/solution/:id/arquitetura", BuilderSolutionArchitecture),
   createProtectedRoute("/ferramentas/builder/solution/:id/ferramentas", BuilderSolutionTools),
   createProtectedRoute("/ferramentas/builder/solution/:id/checklist", BuilderSolutionChecklist),
+  createProtectedRoute("/ferramentas/builder/solution/:id/prompt", BuilderSolutionPrompt),
   
   // Redirect old miracleai routes for backward compatibility
   {

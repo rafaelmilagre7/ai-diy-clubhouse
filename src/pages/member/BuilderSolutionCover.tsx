@@ -1,7 +1,7 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Compass, Network, Wrench, ClipboardCheck, ArrowRight } from 'lucide-react';
+import { ArrowLeft, Compass, Network, Wrench, ClipboardCheck, ArrowRight, FileCode } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { LiquidGlassCard } from '@/components/ui/LiquidGlassCard';
@@ -63,6 +63,15 @@ export default function BuilderSolutionCover() {
       color: "from-cyan-400/20 to-teal-500/20",
       borderColor: "border-cyan-300/30",
       path: `/ferramentas/builder/solution/${id}/checklist`,
+    },
+    {
+      title: "Prompt Lovable",
+      subtitle: "Cole e comece seu projeto agora",
+      icon: FileCode,
+      badge: "Copy & Paste",
+      color: "from-violet-500/20 to-purple-400/20",
+      borderColor: "border-violet-400/30",
+      path: `/ferramentas/builder/solution/${id}/prompt`,
     },
   ];
 
