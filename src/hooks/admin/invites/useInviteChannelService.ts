@@ -15,7 +15,6 @@ export function useInviteChannelService() {
     }
     const cleanToken = token.trim().replace(/\s+/g, '');
     const baseUrl = APP_CONFIG.getAppUrl(`/convite/${cleanToken}`);
-    console.log("URL do convite gerado:", baseUrl);
     
     return baseUrl;
   }, []);
@@ -40,8 +39,6 @@ export function useInviteChannelService() {
     forceResend?: boolean;
   }): Promise<SendInviteResponse> => {
     try {
-      console.log("📧 Enviando email para:", email);
-      
       const { data, error } = await supabase.functions.invoke('send-invite-email', {
         body: {
           email,
@@ -88,13 +85,6 @@ export function useInviteChannelService() {
     email
   }: WhatsAppInviteData): Promise<SendInviteResponse> => {
     try {
-      console.log("📱 [WHATSAPP-SEND] Iniciando envio:", { 
-        phone: phone?.substring(0, 5) + '***', 
-        hasUrl: !!inviteUrl, 
-        roleName, 
-        email: email?.substring(0, 5) + '***'
-      });
-      
       // Timeout para a chamada da edge function
       const timeoutPromise = new Promise((_, reject) => {
         setTimeout(() => reject(new Error('Timeout na chamada da edge function (45s)')), 45000)
@@ -115,13 +105,6 @@ export function useInviteChannelService() {
       
       const { data, error } = await Promise.race([invokePromise, timeoutPromise]) as any
       
-      console.log("📱 [WHATSAPP-SEND] Resposta recebida:", { 
-        hasData: !!data, 
-        hasError: !!error,
-        dataSuccess: data?.success,
-        errorMessage: error?.message 
-      });
-      
       if (error) {
         console.error('❌ [WHATSAPP-SEND] Erro da edge function:', error);
         throw new Error(`Erro da função: ${error.message}`)
@@ -131,11 +114,6 @@ export function useInviteChannelService() {
         console.error('❌ [WHATSAPP-SEND] Função reportou falha:', data);
         throw new Error(data?.message || data?.error || 'Resposta inválida da função')
       }
-      
-      console.log("✅ [WHATSAPP-SEND] Sucesso confirmado:", {
-        messageId: data.whatsappId,
-        phone: data.phone?.substring(0, 5) + '***'
-      });
       
       return {
         success: true,
@@ -201,8 +179,6 @@ export function useInviteChannelService() {
     setSendingChannels(prev => new Set(prev).add(channelKey));
 
     try {
-      console.log("🔄 Enviando convite híbrido - Canal:", channelPreference);
-
       let emailResult: SendInviteResponse | null = null;
       let whatsappResult: SendInviteResponse | null = null;
       let hasError = false;
@@ -211,15 +187,6 @@ export function useInviteChannelService() {
       // Determinar quais canais enviar
       const shouldSendEmail = channelPreference === 'email' || channelPreference === 'both';
       const shouldSendWhatsApp = (channelPreference === 'whatsapp' || channelPreference === 'both') && phone;
-      
-      console.log("🔍 [DEBUG] Análise de canais:", {
-        channelPreference,
-        phone,
-        shouldSendEmail,
-        shouldSendWhatsApp,
-        phoneExists: !!phone,
-        phoneLength: phone?.length
-      });
 
       // Enviar por email
       if (shouldSendEmail) {
@@ -242,8 +209,6 @@ export function useInviteChannelService() {
 
       // Enviar por WhatsApp
       if (shouldSendWhatsApp) {
-        console.log("🔄 [HYBRID] INICIANDO envio WhatsApp...", { phone, channelPreference });
-        
         whatsappResult = await sendWhatsAppInvite({
           phone: phone!,
           inviteUrl,
@@ -255,17 +220,11 @@ export function useInviteChannelService() {
           email
         });
 
-        console.log("🔄 [HYBRID] RESULTADO WhatsApp:", whatsappResult);
-
         if (!whatsappResult.success) {
           hasError = true;
           errors.push(`WhatsApp: ${whatsappResult.error}`);
           console.error("❌ [HYBRID] ERRO WhatsApp:", whatsappResult.error);
-        } else {
-          console.log("✅ [HYBRID] WhatsApp SUCESSO:", whatsappResult.message);
         }
-      } else {
-        console.log("⏭️ [HYBRID] WhatsApp PULADO - shouldSendWhatsApp:", shouldSendWhatsApp, "phone:", !!phone);
       }
 
       // Determinar resultado final

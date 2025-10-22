@@ -26,15 +26,7 @@ export const useInviteCreate = () => {
     try {
       setIsCreating(true);
       
-      console.log("🚀 [INVITE-CREATE-TIMED] Iniciando criação:", {
-        email,
-        roleId,
-        channelPreference,
-        hasPhone: !!phone,
-        startTime: new Date().toISOString()
-      });
-
-      // ETAPA 1: Criar convite na base de dados (TEMPORIZANDO)
+      // ETAPA 1: Criar convite na base de dados
       const dbStartTime = performance.now();
       const { data, error } = await supabase.rpc('create_invite_hybrid', {
         p_email: email,
@@ -46,11 +38,6 @@ export const useInviteCreate = () => {
       });
       const dbDuration = performance.now() - dbStartTime;
 
-      console.log("⏱️ [TIMING-DB] Criação no banco:", {
-        duration: `${Math.round(dbDuration)}ms`,
-        success: !error
-      });
-
       if (error) {
         console.error("❌ [INVITE-CREATE] Erro SQL:", error);
         throw error;
@@ -60,14 +47,6 @@ export const useInviteCreate = () => {
         console.error("❌ [INVITE-CREATE] Erro na função:", data.message);
         throw new Error(data.message);
       }
-
-      const totalCreationTime = performance.now() - processStartTime;
-      console.log("✅ [TIMING-TOTAL] Convite criado na DB:", {
-        totalDuration: `${Math.round(totalCreationTime)}ms`,
-        data: data
-      });
-
-      // FEEDBACK IMEDIATO ao usuário (removido daqui pois vem do modal)
 
       // ETAPA 2: Processar envio EM BACKGROUND (sem aguardar)
       processInviteDeliveryInBackground(data, email, roleId, phone, channelPreference, notes, processStartTime);
@@ -103,14 +82,9 @@ const processInviteDeliveryInBackground = async (
   setTimeout(async () => {
     const backgroundStartTime = performance.now();
     try {
-      console.log("🚀 [BACKGROUND-DELIVERY-TIMED] Iniciando envio assíncrono:", {
-        totalElapsed: processStartTime ? `${Math.round(performance.now() - processStartTime)}ms` : 'N/A',
-        startTime: new Date().toISOString()
-      });
-
       const inviteUrl = generateInviteUrl(inviteData.token);
 
-      // Buscar role name (TEMPORIZANDO)
+      // Buscar role name
       const roleStartTime = performance.now();
       const { data: roleData } = await supabase
         .from('user_roles')
@@ -118,11 +92,6 @@ const processInviteDeliveryInBackground = async (
         .eq('id', roleId)
         .single();
       const roleDuration = performance.now() - roleStartTime;
-
-      console.log("⏱️ [TIMING-ROLE] Busca de role:", {
-        duration: `${Math.round(roleDuration)}ms`,
-        roleName: roleData?.name
-      });
 
       // Usar sistema de envio otimizado
       const sendStartTime = performance.now();
@@ -138,12 +107,6 @@ const processInviteDeliveryInBackground = async (
         channelPreference
       });
       const sendDuration = performance.now() - sendStartTime;
-
-      console.log("⏱️ [TIMING-SEND] Envio completo:", {
-        duration: `${Math.round(sendDuration)}ms`,
-        success: sendResult.success,
-        method: sendResult.method
-      });
 
       // 🎯 TOAST OTIMIZADO - Apenas resultado final com mais informações
       if (sendResult.success) {
@@ -168,17 +131,10 @@ const processInviteDeliveryInBackground = async (
             label: "Ver Falhados",
             onClick: () => {
               // Trigger para abrir filtro de falhados (se disponível)
-              console.log("🚨 Usuário clicou para ver convites falhados");
             }
           }
         });
       }
-
-      const totalBackgroundTime = performance.now() - backgroundStartTime;
-      console.log("⏱️ [TIMING-BACKGROUND] Processamento completo:", {
-        totalDuration: `${Math.round(totalBackgroundTime)}ms`,
-        success: sendResult.success
-      });
 
     } catch (bgError: any) {
       console.error('❌ [BACKGROUND-DELIVERY] Erro:', bgError);
@@ -191,7 +147,7 @@ const processInviteDeliveryInBackground = async (
         duration: 6000,
         action: {
           label: "Ver Falhados", 
-          onClick: () => console.log("🚨 Abrir lista de falhados")
+          onClick: () => {}
         }
       });
     }
@@ -221,102 +177,85 @@ const sendInviteNotificationOptimized = async ({
   channelPreference: 'email' | 'whatsapp' | 'both';
 }): Promise<{ success: boolean; error?: string; method?: string }> => {
   try {
-    console.log("📬 [INVITE-SEND] Enviando convite:", {
-      email,
-      channelPreference,
-      hasPhone: !!phone,
-      inviteUrl: inviteUrl.substring(0, 50) + "..."
-    });
-
-    // Validar URL antes de enviar
-    if (!inviteUrl || !inviteUrl.includes('/convite/')) {
-      throw new Error('URL de convite inválida');
-    }
-
-    // Usar sistema híbrido baseado na preferência de canal
-    if (channelPreference === 'whatsapp' && phone) {
-      // Enviar apenas via WhatsApp
-      const { data, error } = await supabase.functions.invoke('send-whatsapp-invite', {
-        body: {
-          phone,
-          inviteUrl,
-          roleName,
-          expiresAt,
-          senderName,
-          notes,
-          inviteId,
-          email
-        }
-      });
-
-      if (error) {
-        console.error("❌ [INVITE-SEND] Erro na função WhatsApp:", error);
-        throw error;
+      // Validar URL antes de enviar
+      if (!inviteUrl || !inviteUrl.includes('/convite/')) {
+        throw new Error('URL de convite inválida');
       }
 
-      if (!data.success) {
-        throw new Error(data.error || data.message || 'Erro no envio via WhatsApp');
-      }
+      // Usar sistema híbrido baseado na preferência de canal
+      if (channelPreference === 'whatsapp' && phone) {
+        // Enviar apenas via WhatsApp
+        const { data, error } = await supabase.functions.invoke('send-whatsapp-invite', {
+          body: {
+            phone,
+            inviteUrl,
+            roleName,
+            expiresAt,
+            senderName,
+            notes,
+            inviteId,
+            email
+          }
+        });
 
-      return {
-        success: true,
-        method: 'whatsapp'
-      };
-    } else if (channelPreference === 'both' && phone) {
-      // Enviar via ambos os canais EM PARALELO com timeout individualizado
-      console.log("🚀 [INVITE-SEND] Iniciando envios paralelos (email + WhatsApp)");
-
-      const emailPromise = supabase.functions.invoke('send-invite-email', {
-        body: {
-          email,
-          inviteUrl,
-          roleName,
-          expiresAt,
-          senderName,
-          notes,
-          inviteId,
-          forceResend: true
+        if (error) {
+          console.error("❌ [INVITE-SEND] Erro na função WhatsApp:", error);
+          throw error;
         }
-      });
 
-      const whatsappPromise = supabase.functions.invoke('send-whatsapp-invite', {
-        body: {
-          phone,
-          inviteUrl,
-          roleName,
-          expiresAt,
-          senderName,
-          notes,
-          inviteId,
-          email
+        if (!data.success) {
+          throw new Error(data.error || data.message || 'Erro no envio via WhatsApp');
         }
-      });
 
-      // Timeouts OTIMIZADOS: Email 5s, WhatsApp 8s (para cold start)
-      const emailWithTimeout = Promise.race([
-        emailPromise,
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Timeout email (5s)')), 5000)
-        )
-      ]);
+        return {
+          success: true,
+          method: 'whatsapp'
+        };
+      } else if (channelPreference === 'both' && phone) {
+        // Enviar via ambos os canais EM PARALELO com timeout individualizado
+        const emailPromise = supabase.functions.invoke('send-invite-email', {
+          body: {
+            email,
+            inviteUrl,
+            roleName,
+            expiresAt,
+            senderName,
+            notes,
+            inviteId,
+            forceResend: true
+          }
+        });
 
-      const whatsappWithTimeout = Promise.race([
-        whatsappPromise,
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Timeout WhatsApp (8s)')), 8000)
-        )
-      ]);
+        const whatsappPromise = supabase.functions.invoke('send-whatsapp-invite', {
+          body: {
+            phone,
+            inviteUrl,
+            roleName,
+            expiresAt,
+            senderName,
+            notes,
+            inviteId,
+            email
+          }
+        });
 
-      // Executar ambos em paralelo COM TIMING
-      const parallelStartTime = performance.now();
-      const results = await Promise.allSettled([emailWithTimeout, whatsappWithTimeout]);
-      const parallelDuration = performance.now() - parallelStartTime;
-      
-      console.log("⏱️ [TIMING-PARALLEL] Execução paralela:", {
-        duration: `${Math.round(parallelDuration)}ms`,
-        emailStatus: results[0].status,
-        whatsappStatus: results[1].status
-      });
+        // Timeouts OTIMIZADOS: Email 5s, WhatsApp 8s (para cold start)
+        const emailWithTimeout = Promise.race([
+          emailPromise,
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Timeout email (5s)')), 5000)
+          )
+        ]);
+
+        const whatsappWithTimeout = Promise.race([
+          whatsappPromise,
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Timeout WhatsApp (8s)')), 8000)
+          )
+        ]);
+
+        // Executar ambos em paralelo
+        const results = await Promise.allSettled([emailWithTimeout, whatsappWithTimeout]);
       
       const [emailResult, whatsappResult] = results;
       let emailSuccess = false;
@@ -328,14 +267,11 @@ const sendInviteNotificationOptimized = async ({
         const { data: emailData, error: emailError } = emailResult.value as any;
         if (!emailError && emailData?.success) {
           emailSuccess = true;
-          console.log("✅ [PARALLEL] Email enviado com sucesso");
         } else {
           errors.push(`Email: ${emailData?.error || emailError?.message || 'Falha no envio'}`);
-          console.warn("⚠️ [PARALLEL] Falha no email:", emailData?.error || emailError?.message);
         }
       } else {
         errors.push(`Email: ${emailResult.reason?.message || 'Erro desconhecido'}`);
-        console.warn("⚠️ [PARALLEL] Email rejeitado:", emailResult.reason?.message);
       }
 
       // Verificar resultado do WhatsApp
@@ -343,14 +279,11 @@ const sendInviteNotificationOptimized = async ({
         const { data: whatsappData, error: whatsappError } = whatsappResult.value as any;
         if (!whatsappError && whatsappData?.success) {
           whatsappSuccess = true;
-          console.log("✅ [PARALLEL] WhatsApp enviado com sucesso");
         } else {
           errors.push(`WhatsApp: ${whatsappData?.error || whatsappError?.message || 'Falha no envio'}`);
-          console.warn("⚠️ [PARALLEL] Falha no WhatsApp:", whatsappData?.error || whatsappError?.message);
         }
       } else {
         errors.push(`WhatsApp: ${whatsappResult.reason?.message || 'Erro desconhecido'}`);
-        console.warn("⚠️ [PARALLEL] WhatsApp rejeitado:", whatsappResult.reason?.message);
       }
 
       // Se ambos falharam, retornar erro
@@ -361,8 +294,6 @@ const sendInviteNotificationOptimized = async ({
       // Determinar método usado
       const method = emailSuccess && whatsappSuccess ? 'email+whatsapp' : 
                     emailSuccess ? 'email (WhatsApp falhou)' : 'whatsapp (Email falhou)';
-
-      console.log(`✅ [PARALLEL] Envio concluído via: ${method}`);
 
       return {
         success: true,
@@ -410,10 +341,7 @@ const sendInviteNotificationOptimized = async ({
 
 const saveFailedInvite = async (email: string, errorMessage: string, inviteData?: any) => {
   try {
-    console.log("💾 [FAILED-INVITE] Salvando convite falhado:", { email, errorMessage });
-    
     if (!inviteData?.invite_id) {
-      console.warn("⚠️ [FAILED-INVITE] Sem ID do convite, pulando salvamento");
       return;
     }
     
@@ -439,8 +367,6 @@ const saveFailedInvite = async (email: string, errorMessage: string, inviteData?
     
     if (error) {
       console.error("❌ [FAILED-INVITE] Erro ao salvar:", error);
-    } else {
-      console.log("✅ [FAILED-INVITE] Status de falha salvo com sucesso");
     }
   } catch (err: any) {
     console.error("❌ [FAILED-INVITE] Erro crítico:", err);
