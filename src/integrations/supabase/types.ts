@@ -3767,33 +3767,153 @@ export type Database = {
       }
       notification_preferences: {
         Row: {
+          admin_broadcast: boolean | null
           admin_communications_email: boolean | null
           admin_communications_inapp: boolean | null
+          admin_direct_message: boolean | null
+          community_achievement: boolean | null
+          community_mention: boolean | null
+          community_moderated: boolean | null
+          community_new_topic: boolean | null
+          community_post_liked: boolean | null
+          community_post_reply: boolean | null
+          community_topic_pinned: boolean | null
+          community_topic_reply: boolean | null
+          community_topic_solved: boolean | null
+          community_weekly_digest: boolean | null
           created_at: string
+          digest_frequency: string | null
           email_enabled: boolean
+          events_cancelled: boolean | null
+          events_new_event: boolean | null
+          events_registration_confirmed: boolean | null
+          events_reminder: boolean | null
+          events_starting_soon: boolean | null
+          events_updated: boolean | null
           id: string
+          in_app_enabled: boolean | null
+          quiet_hours_enabled: boolean | null
+          quiet_hours_end: string | null
+          quiet_hours_start: string | null
+          solutions_access_granted: boolean | null
+          solutions_new_comment: boolean | null
+          solutions_new_solution: boolean | null
+          solutions_reply: boolean | null
+          solutions_updated: boolean | null
+          solutions_weekly_digest: boolean | null
+          suggestions_comment_reply: boolean | null
+          suggestions_milestone: boolean | null
+          suggestions_new_comment: boolean | null
+          suggestions_new_suggestion: boolean | null
+          suggestions_status_changed: boolean | null
+          suggestions_upvoted: boolean | null
+          system_maintenance: boolean | null
+          system_new_feature: boolean | null
+          system_security_alert: boolean | null
           updated_at: string
+          user_achievement: boolean | null
           user_id: string
+          user_role_changed: boolean | null
           whatsapp_enabled: boolean
         }
         Insert: {
+          admin_broadcast?: boolean | null
           admin_communications_email?: boolean | null
           admin_communications_inapp?: boolean | null
+          admin_direct_message?: boolean | null
+          community_achievement?: boolean | null
+          community_mention?: boolean | null
+          community_moderated?: boolean | null
+          community_new_topic?: boolean | null
+          community_post_liked?: boolean | null
+          community_post_reply?: boolean | null
+          community_topic_pinned?: boolean | null
+          community_topic_reply?: boolean | null
+          community_topic_solved?: boolean | null
+          community_weekly_digest?: boolean | null
           created_at?: string
+          digest_frequency?: string | null
           email_enabled?: boolean
+          events_cancelled?: boolean | null
+          events_new_event?: boolean | null
+          events_registration_confirmed?: boolean | null
+          events_reminder?: boolean | null
+          events_starting_soon?: boolean | null
+          events_updated?: boolean | null
           id?: string
+          in_app_enabled?: boolean | null
+          quiet_hours_enabled?: boolean | null
+          quiet_hours_end?: string | null
+          quiet_hours_start?: string | null
+          solutions_access_granted?: boolean | null
+          solutions_new_comment?: boolean | null
+          solutions_new_solution?: boolean | null
+          solutions_reply?: boolean | null
+          solutions_updated?: boolean | null
+          solutions_weekly_digest?: boolean | null
+          suggestions_comment_reply?: boolean | null
+          suggestions_milestone?: boolean | null
+          suggestions_new_comment?: boolean | null
+          suggestions_new_suggestion?: boolean | null
+          suggestions_status_changed?: boolean | null
+          suggestions_upvoted?: boolean | null
+          system_maintenance?: boolean | null
+          system_new_feature?: boolean | null
+          system_security_alert?: boolean | null
           updated_at?: string
+          user_achievement?: boolean | null
           user_id: string
+          user_role_changed?: boolean | null
           whatsapp_enabled?: boolean
         }
         Update: {
+          admin_broadcast?: boolean | null
           admin_communications_email?: boolean | null
           admin_communications_inapp?: boolean | null
+          admin_direct_message?: boolean | null
+          community_achievement?: boolean | null
+          community_mention?: boolean | null
+          community_moderated?: boolean | null
+          community_new_topic?: boolean | null
+          community_post_liked?: boolean | null
+          community_post_reply?: boolean | null
+          community_topic_pinned?: boolean | null
+          community_topic_reply?: boolean | null
+          community_topic_solved?: boolean | null
+          community_weekly_digest?: boolean | null
           created_at?: string
+          digest_frequency?: string | null
           email_enabled?: boolean
+          events_cancelled?: boolean | null
+          events_new_event?: boolean | null
+          events_registration_confirmed?: boolean | null
+          events_reminder?: boolean | null
+          events_starting_soon?: boolean | null
+          events_updated?: boolean | null
           id?: string
+          in_app_enabled?: boolean | null
+          quiet_hours_enabled?: boolean | null
+          quiet_hours_end?: string | null
+          quiet_hours_start?: string | null
+          solutions_access_granted?: boolean | null
+          solutions_new_comment?: boolean | null
+          solutions_new_solution?: boolean | null
+          solutions_reply?: boolean | null
+          solutions_updated?: boolean | null
+          solutions_weekly_digest?: boolean | null
+          suggestions_comment_reply?: boolean | null
+          suggestions_milestone?: boolean | null
+          suggestions_new_comment?: boolean | null
+          suggestions_new_suggestion?: boolean | null
+          suggestions_status_changed?: boolean | null
+          suggestions_upvoted?: boolean | null
+          system_maintenance?: boolean | null
+          system_new_feature?: boolean | null
+          system_security_alert?: boolean | null
           updated_at?: string
+          user_achievement?: boolean | null
           user_id?: string
+          user_role_changed?: boolean | null
           whatsapp_enabled?: boolean
         }
         Relationships: []
