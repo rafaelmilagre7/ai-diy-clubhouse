@@ -107,13 +107,73 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
     },
     enabled: !!solutionId && !template && !solutionChecklist && !isLoadingTemplate && !isLoadingSolutionChecklist
   });
+
+  // 🆕 FALLBACK FINAL: Buscar implementation_checklist diretamente da solução
+  const { data: solutionDirectChecklist, isLoading: isLoadingDirect } = useQuery({
+    queryKey: ['solution-direct-checklist', solutionId],
+    queryFn: async () => {
+      console.log('🔍 [FALLBACK] Buscando implementation_checklist diretamente de ai_generated_solutions:', solutionId);
+      
+      const { data, error } = await supabase
+        .from('ai_generated_solutions')
+        .select('implementation_checklist')
+        .eq('id', solutionId)
+        .maybeSingle();
+
+      if (error) {
+        console.error('❌ Erro ao buscar checklist direto:', error);
+        return null;
+      }
+
+      if (!data?.implementation_checklist || !Array.isArray(data.implementation_checklist)) {
+        console.log('⚠️ implementation_checklist não encontrado ou inválido');
+        return null;
+      }
+
+      console.log('✅ Checklist direto encontrado:', data.implementation_checklist.length, 'items');
+      
+      // Converter formato antigo para novo formato unified_checklists
+      return {
+        id: `direct-${solutionId}`,
+        solution_id: solutionId,
+        checklist_type: checklistType,
+        is_template: false,
+        checklist_data: {
+          items: data.implementation_checklist.map((step: any, index: number) => ({
+            id: `step-${index + 1}`,
+            title: step.title || `Etapa ${step.step_number || index + 1}`,
+            description: step.description || '',
+            completed: false,
+            notes: '',
+            metadata: {
+              step_number: step.step_number,
+              estimated_time: step.estimated_time,
+              difficulty: step.difficulty,
+              dependencies: step.dependencies,
+              validation_criteria: step.validation_criteria,
+              common_pitfalls: step.common_pitfalls,
+              resources: step.resources
+            }
+          })),
+          lastUpdated: new Date().toISOString()
+        }
+      };
+    },
+    enabled: !!solutionId && 
+             !template && 
+             !solutionChecklist && 
+             !alternativeChecklist && 
+             !isLoadingTemplate && 
+             !isLoadingSolutionChecklist && 
+             !isLoadingAlternative
+  });
   
   const updateMutation = useUpdateUnifiedChecklist();
 
   // Combinar template/checklist com progresso para obter lista de items
   const checklistItems: UnifiedChecklistItem[] = React.useMemo(() => {
-    // Priorizar template, depois checklist específico da solução
-    const sourceChecklist = template || solutionChecklist;
+    // Priorizar: template > checklist específico > checklist direto da solução
+    const sourceChecklist = template || solutionChecklist || solutionDirectChecklist;
     
     if (!sourceChecklist?.checklist_data?.items) return [];
     
@@ -129,10 +189,11 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
         description: sourceItem.description,
         completed: progressItem?.completed || false,
         notes: progressItem?.notes || '',
-        completedAt: progressItem?.completedAt
+        completedAt: progressItem?.completedAt,
+        metadata: sourceItem.metadata // 🆕 preservar metadados extras
       };
     });
-  }, [template, solutionChecklist, userProgress]);
+  }, [template, solutionChecklist, solutionDirectChecklist, userProgress]);
 
   // Função para atualizar item
   const handleItemUpdate = (itemId: string, isCompleted: boolean, notes?: string) => {
@@ -210,7 +271,7 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
     }
   }, [checklistItems]);
 
-  if (isLoadingTemplate || isLoadingProgress || isLoadingSolutionChecklist || isLoadingAlternative) {
+  if (isLoadingTemplate || isLoadingProgress || isLoadingSolutionChecklist || isLoadingAlternative || isLoadingDirect) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -240,7 +301,7 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
     );
   }
 
-  if ((!template && !solutionChecklist && !alternativeChecklist) || !checklistItems.length) {
+  if ((!template && !solutionChecklist && !alternativeChecklist && !solutionDirectChecklist) || !checklistItems.length) {
     return (
       <div className="text-center py-12">
         <AlertCircle className="mx-auto h-12 w-12 text-muted-foreground mb-4" />

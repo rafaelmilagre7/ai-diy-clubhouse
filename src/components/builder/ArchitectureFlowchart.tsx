@@ -15,7 +15,17 @@ export const ArchitectureFlowchart: React.FC<ArchitectureFlowchartProps> = ({ fl
   const mermaidRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!flowchart?.mermaid_code || !mermaidRef.current) return;
+    console.log('🔍 ArchitectureFlowchart: Recebeu props:', {
+      hasFlowchart: !!flowchart,
+      hasMermaidCode: !!flowchart?.mermaid_code,
+      mermaidCodeLength: flowchart?.mermaid_code?.length || 0,
+      description: flowchart?.description?.substring(0, 50) + '...'
+    });
+
+    if (!flowchart?.mermaid_code || !mermaidRef.current) {
+      console.warn('⚠️ ArchitectureFlowchart: Dados insuficientes para renderizar');
+      return;
+    }
 
     const renderDiagram = async () => {
       try {
@@ -135,8 +145,15 @@ export const ArchitectureFlowchart: React.FC<ArchitectureFlowchartProps> = ({ fl
 
   if (!flowchart?.mermaid_code) {
     return (
-      <div className="text-center py-8 text-muted-foreground">
-        <p>Fluxograma não disponível</p>
+      <div className="text-center py-12 bg-muted/20 rounded-lg border border-border/50">
+        <AlertCircle className="mx-auto h-12 w-12 text-amber-500 mb-4" />
+        <h3 className="text-lg font-semibold mb-2">Fluxograma Não Disponível</h3>
+        <p className="text-muted-foreground text-sm max-w-md mx-auto mb-2">
+          O fluxograma técnico não foi gerado para esta solução.
+        </p>
+        <p className="text-xs text-muted-foreground mt-3">
+          💡 Dica: Consulte a descrição técnica e o framework de implementação para entender a arquitetura.
+        </p>
       </div>
     );
   }
@@ -155,11 +172,26 @@ export const ArchitectureFlowchart: React.FC<ArchitectureFlowchartProps> = ({ fl
         </div>
       </div>
 
-      <div className="flex justify-end">
+      <div className="flex justify-between items-center">
         <Button onClick={handleDownloadPNG} variant="outline" size="sm">
           <Download className="h-4 w-4 mr-2" />
           Baixar Fluxograma (PNG)
         </Button>
+        
+        {/* Debug button - apenas em dev */}
+        {import.meta.env.DEV && (
+          <Button 
+            onClick={() => {
+              console.log('🔍 DEBUG Mermaid Code:', flowchart.mermaid_code);
+              navigator.clipboard.writeText(flowchart.mermaid_code);
+              toast.success('Código Mermaid copiado para clipboard');
+            }} 
+            variant="ghost" 
+            size="sm"
+          >
+            🐛 Debug Code
+          </Button>
+        )}
       </div>
 
       {/* Legenda */}

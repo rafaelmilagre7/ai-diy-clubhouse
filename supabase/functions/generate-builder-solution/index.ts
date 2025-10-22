@@ -334,6 +334,11 @@ ESTRUTURA DA RESPOSTA:
     ]
   },
   
+  ⚠️ IMPORTANTE SOBRE LOVABLE:
+  - Se a solução envolve criar uma aplicação web, dashboard, interface de usuário, sistema web, plataforma online, SEMPRE considere incluir Lovable.dev nas ferramentas essenciais ou opcionais
+  - Lovable é ideal para: frontend React, dashboards, CRMs, sistemas web, MVPs, protótipos
+  - Razão para incluir: "Plataforma de desenvolvimento rápido com IA para criar aplicações web completas (frontend + backend) sem código, ideal para MVPs e protótipos validados."
+  
   "implementation_checklist": [
     {
       "step_number": 1,
@@ -757,6 +762,57 @@ Crie um plano completo seguindo o formato JSON especificado.`;
     }
 
     console.log(`[BUILDER] ✅ Título final validado: "${solutionData.title}"`);
+
+    // ========== 🆕 INJETAR LOVABLE NAS FERRAMENTAS AUTOMATICAMENTE ==========
+    console.log('[BUILDER] 🚀 Verificando se Lovable está nas ferramentas...');
+
+    // Verificar se Lovable já está na lista
+    const lovableExists = solutionData.required_tools?.essential?.some(
+      (tool: any) => tool.name?.toLowerCase().includes('lovable')
+    ) || solutionData.required_tools?.optional?.some(
+      (tool: any) => tool.name?.toLowerCase().includes('lovable')
+    );
+
+    if (!lovableExists) {
+      console.log('[BUILDER] ➕ Lovable não encontrado, adicionando como ferramenta recomendada');
+      
+      // Buscar dados do Lovable no catálogo de tools
+      const { data: lovableTool } = await supabase
+        .from('tools')
+        .select('*')
+        .ilike('name', '%lovable%')
+        .eq('status', true)
+        .limit(1)
+        .maybeSingle();
+      
+      const lovableToolData = {
+        name: lovableTool?.name || 'Lovable',
+        logo_url: lovableTool?.logo_url || 'https://lovable.dev/logo.png',
+        category: lovableTool?.category || 'No-Code Development',
+        reason: 'Plataforma ideal para desenvolvimento rápido de aplicações web modernas com IA. Permite criar frontend + backend completo sem código, integrando facilmente com APIs externas e automações. Perfeita para MVPs e protótipos validados.',
+        setup_complexity: 'easy',
+        setup_steps: '1. Criar conta gratuita\n2. Descrever sua aplicação em linguagem natural\n3. A IA gera código React + Supabase automaticamente\n4. Deploy instantâneo',
+        cost_estimate: 'Gratuito (com limites) / A partir de $20/mês para projetos profissionais',
+        alternatives: ['Bubble.io (mais visual, menos flexível)', 'Webflow (foco em sites, não em apps)']
+      };
+      
+      // Adicionar como primeira ferramenta essencial ou opcional
+      if (!solutionData.required_tools) {
+        solutionData.required_tools = { essential: [], optional: [] };
+      }
+      if (!solutionData.required_tools.essential) {
+        solutionData.required_tools.essential = [];
+      }
+      if (!solutionData.required_tools.optional) {
+        solutionData.required_tools.optional = [];
+      }
+      
+      // Adicionar como opcional (recomendada) por padrão
+      solutionData.required_tools.optional.unshift(lovableToolData);
+      console.log('[BUILDER] ✅ Lovable adicionado como ferramenta recomendada');
+    } else {
+      console.log('[BUILDER] ✓ Lovable já está na lista de ferramentas');
+    }
 
     // Salvar no banco (sem lovable_prompt ainda)
     const generationTime = Date.now() - startTime;
