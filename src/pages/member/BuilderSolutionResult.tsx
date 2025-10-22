@@ -52,16 +52,6 @@ export default function BuilderSolutionResult() {
     navigate('/ferramentas/builder');
   };
 
-  const handleSave = async (sol: any) => {
-    // Solução já está salva, apenas retornar
-    toast.success('Solução já salva no histórico!');
-    return sol;
-  };
-
-  const handleDiscard = () => {
-    navigate('/ferramentas/builder/historico');
-  };
-
   if (isLoading) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
@@ -92,8 +82,6 @@ export default function BuilderSolutionResult() {
       <SolutionResult
         solution={solution}
         onNewIdea={handleNewIdea}
-        onSave={handleSave}
-        onDiscard={handleDiscard}
       />
     </div>
   );

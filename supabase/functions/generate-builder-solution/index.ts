@@ -373,8 +373,8 @@ ${toolsContext}
 ${contextFromAnswers}
 
 ⚠️ INSTRUÇÕES CRÍTICAS PARA O TÍTULO (OBRIGATÓRIO):
-- VOCÊ DEVE gerar um título claro e específico (máximo 60 caracteres)
-- Seja técnico e descritivo (ex: "Sistema de Agendamento com IA e WhatsApp")
+- VOCÊ DEVE gerar um título ULTRA compacto (máximo 40 caracteres)
+- Formato: [Verbo] + [Tech/Área]. Exemplos: "Chatbot WhatsApp IA", "CRM Automático Leads", "Dashboard Analytics"
 - Use a principal tecnologia ou benefício no título
 - Evite termos genéricos como "Solução Builder"
 
@@ -721,21 +721,38 @@ Crie um plano completo seguindo o formato JSON especificado.`;
     if (titleIsInvalid) {
       console.warn("[BUILDER] ⚠️ Título inválido detectado, criando fallback inteligente...");
       
-      // Criar título inteligente: pegar primeira sentença ou primeiras 8 palavras
-      const firstSentence = idea.split(/[.!?]/)[0].trim();
-      const intelligentTitle = firstSentence.length > 60 
-        ? firstSentence.substring(0, 57) + '...'
-        : firstSentence.length > 10 
-          ? firstSentence 
-          : `Solução: ${idea.split(' ').slice(0, 8).join(' ')}${idea.split(' ').length > 8 ? '...' : ''}`;
+      // Palavras técnicas relevantes para priorizar
+      const technicalWords = ['whatsapp', 'crm', 'chatbot', 'automação', 'dashboard', 'ia', 'api', 'integração', 
+                              'analytics', 'agendamento', 'notificação', 'email', 'sms', 'webhook'];
+      
+      // Extrair palavras da ideia
+      const words = idea.toLowerCase().split(/\s+/);
+      
+      // Priorizar palavras técnicas encontradas
+      const keyWords = words
+        .filter(w => w.length > 3) // filtrar artigos/preposições
+        .sort((a, b) => {
+          const aIsTech = technicalWords.some(t => a.includes(t));
+          const bIsTech = technicalWords.some(t => b.includes(t));
+          return (bIsTech ? 1 : 0) - (aIsTech ? 1 : 0);
+        })
+        .slice(0, 4) // pegar 4 palavras principais
+        .join(' ')
+        .split(' ')
+        .map(w => w.charAt(0).toUpperCase() + w.slice(1)) // Capitalizar
+        .join(' ');
+
+      const intelligentTitle = keyWords.length > 40 
+        ? keyWords.substring(0, 37) + '...'
+        : keyWords || `Solução ${Date.now().toString().slice(-4)}`;
       
       solutionData.title = intelligentTitle;
       console.log(`[BUILDER] 🔧 Título fallback aplicado: "${solutionData.title}"`);
     } else {
-      // Garantir que título não exceda 60 caracteres
-      if (solutionData.title.length > 60) {
-        solutionData.title = solutionData.title.substring(0, 57) + '...';
-        console.log(`[BUILDER] ✂️ Título truncado para 60 chars: "${solutionData.title}"`);
+      // Garantir que título não exceda 40 caracteres
+      if (solutionData.title.length > 40) {
+        solutionData.title = solutionData.title.substring(0, 37) + '...';
+        console.log(`[BUILDER] ✂️ Título truncado para 40 chars: "${solutionData.title}"`);
       }
     }
 

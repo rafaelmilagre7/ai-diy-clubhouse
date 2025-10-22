@@ -31,8 +31,7 @@ const exampleIdeas = [
 
 export default function Builder() {
   const { profile } = useAuth();
-  const { analyzeIdea, generateSolution, saveSolution, discardSolution, isAnalyzing, isGenerating, questions } = useBuilderAI();
-  const [solution, setSolution] = useState<any>(null);
+  const { analyzeIdea, generateSolution, isAnalyzing, isGenerating, questions } = useBuilderAI();
   const [currentIdea, setCurrentIdea] = useState<string>('');
   const [showWizard, setShowWizard] = useState(false);
   const { 
@@ -57,7 +56,7 @@ export default function Builder() {
   // 🔧 FASE 2: RECOVERY melhorado - detectar tentativas incompletas
   useEffect(() => {
     const checkForRecovery = async () => {
-      if (!profile?.id || solution || showWizard || isGenerating) return;
+      if (!profile?.id || showWizard || isGenerating) return;
       
       // Verificar tentativa incompleta no localStorage
       const lastAttemptStr = localStorage.getItem('builder_last_attempt');
@@ -120,7 +119,7 @@ export default function Builder() {
     // Delay de 2s para não competir com outras operações
     const timer = setTimeout(checkForRecovery, 2000);
     return () => clearTimeout(timer);
-  }, [profile?.id, solution, showWizard, isGenerating, navigate]);
+  }, [profile?.id, showWizard, isGenerating, navigate]);
 
   const handleGenerateSolution = async (idea: string) => {
     if (!hasAccess) {
@@ -145,9 +144,9 @@ export default function Builder() {
 
   const handleWizardComplete = async (answers: Array<{ question: string; answer: string }>) => {
     setShowWizard(false);
-    console.log('[BUILDER-FRONTEND] Gerando solução com respostas:', answers.length);
+    console.log('[BUILDER] 🚀 Gerando solução...');
     
-    // 🔧 FASE 2: Salvar tentativa no localStorage antes de chamar edge function
+    // Salvar tentativa no localStorage (recovery)
     localStorage.setItem('builder_last_attempt', JSON.stringify({
       idea: currentIdea,
       answers,
@@ -156,19 +155,13 @@ export default function Builder() {
     
     const result = await generateSolution(currentIdea, answers);
     
-    console.log('[BUILDER-FRONTEND] Resultado recebido:', {
-      hasResult: !!result,
-      hasId: !!result?.id,
-      title: result?.title,
-      resultKeys: result ? Object.keys(result) : []
-    });
-    
-    if (result) {
-      setSolution(result);
-      // Limpar backup de sucesso
+    if (result?.id) {
+      // ✅ REDIRECIONAMENTO AUTOMÁTICO PARA PÁGINA DE CARDS
+      console.log('[BUILDER] ✅ Solução gerada, redirecionando para:', result.id);
+      navigate(`/ferramentas/builder/solution/${result.id}`);
       localStorage.removeItem('builder_last_attempt');
     } else {
-      // 🔧 FASE 2: Oferecer retry em caso de erro
+      // ❌ Erro: oferecer retry
       toast.error('Erro ao gerar solução', {
         description: 'Deseja tentar novamente com as mesmas respostas?',
         action: {
@@ -183,22 +176,6 @@ export default function Builder() {
   const handleWizardCancel = () => {
     setShowWizard(false);
     setCurrentIdea('');
-  };
-
-  const handleNewIdea = () => {
-    setSolution(null);
-  };
-
-  const handleSave = async (solutionToSave: any) => {
-    if (solutionToSave) {
-      const savedSolution = await saveSolution(solutionToSave);
-      return savedSolution;
-    }
-  };
-
-  const handleDiscard = () => {
-    discardSolution();
-    setSolution(null);
   };
 
   const handleExampleClick = (example: typeof exampleIdeas[0]) => {
@@ -235,21 +212,6 @@ export default function Builder() {
             onComplete={handleWizardComplete}
             onCancel={handleWizardCancel}
           />
-        ) : solution ? (
-          <motion.div
-            key="result"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="container mx-auto px-4 py-8"
-          >
-            <SolutionResult 
-              solution={solution} 
-              onNewIdea={handleNewIdea} 
-              onSave={handleSave}
-              onDiscard={handleDiscard}
-            />
-          </motion.div>
         ) : (
           <motion.div
             key="input"
