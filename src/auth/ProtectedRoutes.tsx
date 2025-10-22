@@ -37,7 +37,7 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
 
   // Timeout atingido mas sem perfil (fallback gracioso)
   if (showTimeout && !profile) {
-    console.warn("[PROTECTED] Timeout atingido - permitindo acesso sem perfil completo");
+    // Permitindo acesso sem perfil completo após timeout
   }
 
   // Usuário autenticado - renderizar conteúdo

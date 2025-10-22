@@ -22,14 +22,12 @@ export const useAdminCheck = (): AdminCheckResult => {
 
   const checkAdminStatus = useCallback(async () => {
     if (!user?.id) {
-      console.log('🔒 [useAdminCheck] Sem usuário autenticado');
       setLocalIsAdmin(false);
       setIsLoading(false);
       return;
     }
 
     try {
-      console.log('🔍 [useAdminCheck] Verificando status de admin:', user.id.substring(0, 8));
       setIsLoading(true);
       setError(null);
 
@@ -48,7 +46,6 @@ export const useAdminCheck = (): AdminCheckResult => {
         .single();
 
       if (profileError) {
-        console.error('❌ [useAdminCheck] Erro ao buscar perfil:', profileError);
         setError(profileError.message);
         setLocalIsAdmin(false);
         return;
@@ -62,15 +59,6 @@ export const useAdminCheck = (): AdminCheckResult => {
       const roleName = userRoles?.name;
       const permissions = userRoles?.permissions || {};
       const isAdminResult = roleName === 'admin' || permissions.all === true;
-
-      console.log('✅ [useAdminCheck] Verificação completa:', {
-        userId: user.id.substring(0, 8),
-        roleName,
-        permissionsAll: permissions.all,
-        isAdmin: isAdminResult,
-        contextIsAdmin,
-        match: isAdminResult === contextIsAdmin
-      });
 
       setLocalIsAdmin(isAdminResult);
     } catch (err) {
@@ -96,7 +84,6 @@ export const useAdminCheck = (): AdminCheckResult => {
   }, [contextIsAdmin, contextIsLoading, profile]);
 
   const retry = useCallback(() => {
-    console.log('🔄 [useAdminCheck] Tentando novamente...');
     setRetryCount(prev => prev + 1);
   }, []);
 

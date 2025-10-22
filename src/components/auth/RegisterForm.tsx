@@ -74,7 +74,6 @@ const RegisterForm = ({ inviteToken, prefilledEmail }: RegisterFormProps = {}) =
           });
           
           if (inviteError) {
-            console.error('Erro ao aplicar convite:', inviteError);
             toast({
               title: "Aviso",
               description: "Conta criada, mas houve um problema ao aplicar o convite. Entre em contato com o suporte.",
@@ -92,7 +91,6 @@ const RegisterForm = ({ inviteToken, prefilledEmail }: RegisterFormProps = {}) =
             }, 2000);
           }
         } catch (inviteError) {
-          console.warn('Erro ao aplicar convite:', inviteError);
           toast({
             title: "Aviso",
             description: "Conta criada, mas houve um problema ao aplicar o convite.",

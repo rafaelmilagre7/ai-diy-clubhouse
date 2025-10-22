@@ -60,7 +60,6 @@ export const OnboardingBanner: React.FC = () => {
       }
 
     } catch (error) {
-      console.warn('🎯 [BANNER] Erro ao verificar onboarding_final:', error);
       // Em caso de erro, assumir que está incompleto para mostrar banner
     }
 

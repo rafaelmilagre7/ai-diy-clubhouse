@@ -46,8 +46,6 @@ export const RoleSyncPanel = () => {
           if (isHealthy) {
             // Diagnóstico executado
             await runFullDiagnostic();
-          } else {
-            console.warn('Sistema instável, pulando diagnóstico automático inicial');
           }
           
           setHasRunInitialCheck(true);
