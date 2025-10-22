@@ -42,9 +42,6 @@ export const useSolutionEditor = (id: string | undefined, user: User | null) => 
     "Publicar"
   ];
 
-  console.log("🚀 useSolutionEditor: Inicializando com ID:", id);
-  console.log("📍 useSolutionEditor: CurrentStep:", currentStep);
-  console.log("🔧 useSolutionEditor: StepSaveFunctions size:", stepSaveFunctions.current.size);
 
   // Buscar dados da solução
   const fetchSolution = useCallback(async () => {
@@ -55,7 +52,6 @@ export const useSolutionEditor = (id: string | undefined, user: User | null) => 
 
     try {
       setLoading(true);
-      console.log("📡 useSolutionEditor: Buscando solução com ID:", id);
       
       const { data, error } = await supabase
         .from("solutions")
@@ -69,7 +65,6 @@ export const useSolutionEditor = (id: string | undefined, user: User | null) => 
       }
 
       if (data) {
-        console.log("✅ useSolutionEditor: Solução carregada:", data);
         setSolution(data as Solution);
         
         // Atualizar currentValues com os dados da solução
@@ -84,11 +79,9 @@ export const useSolutionEditor = (id: string | undefined, user: User | null) => 
           tags: data.tags || []
         };
         
-        console.log("🔄 useSolutionEditor: Atualizando currentValues:", solutionValues);
         setCurrentValues(solutionValues);
         dataLoadedRef.current = true;
       } else {
-        console.log("⚠️ useSolutionEditor: Solução não encontrada");
         toast({
           title: "Solução não encontrada",
           description: "Não foi possível encontrar a solução solicitada.",
@@ -119,7 +112,6 @@ export const useSolutionEditor = (id: string | undefined, user: User | null) => 
 
     try {
       setSaving(true);
-      console.log("📝 useSolutionEditor: Salvando valores:", values);
 
       const { error } = await supabase
         .from("solutions")
@@ -147,8 +139,6 @@ export const useSolutionEditor = (id: string | undefined, user: User | null) => 
       // Recarregar dados da solução
       await fetchSolution();
       
-      console.log("✅ useSolutionEditor: Solução salva com sucesso");
-      
       toast({
         title: "Solução salva",
         description: "As informações foram salvas com sucesso.",
@@ -168,7 +158,6 @@ export const useSolutionEditor = (id: string | undefined, user: User | null) => 
 
   // Registrar função de salvamento para uma etapa
   const handleStepSaveRegistration = useCallback((stepSaveFunction: () => Promise<void>) => {
-    console.log("📝 useSolutionEditor: Registrando função de salvamento para etapa:", currentStep);
     stepSaveFunctions.current.set(currentStep, stepSaveFunction);
   }, [currentStep]);
 
@@ -176,24 +165,18 @@ export const useSolutionEditor = (id: string | undefined, user: User | null) => 
   const handleSaveCurrentStep = useCallback(async () => {
     const saveFunction = stepSaveFunctions.current.get(currentStep);
     if (saveFunction) {
-      console.log("💾 useSolutionEditor: Executando salvamento da etapa:", currentStep);
       await saveFunction();
-    } else {
-      console.log("⚠️ useSolutionEditor: Nenhuma função de salvamento registrada para etapa:", currentStep);
     }
   }, [currentStep]);
 
   // Avançar para próxima etapa
   const handleNextStep = useCallback(async () => {
-    console.log("▶️ useSolutionEditor: Avançando da etapa:", currentStep);
-    
     try {
       // Salvar dados da etapa atual antes de avançar
       await handleSaveCurrentStep();
       
       if (currentStep < totalSteps - 1) {
         setCurrentStep(currentStep + 1);
-        console.log("✅ useSolutionEditor: Avançou para etapa:", currentStep + 1);
       }
     } catch (error) {
       console.error("❌ useSolutionEditor: Erro ao avançar etapa:", error);

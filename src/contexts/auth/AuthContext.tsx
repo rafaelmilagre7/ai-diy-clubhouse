@@ -25,7 +25,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Estados derivados memoizados com logs robustos
   const isAdmin = useMemo(() => {
     if (!profile) {
-      console.log('⚠️ [AUTH] isAdmin: false (perfil não carregado ainda)');
       return false;
     }
     
@@ -33,29 +32,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const permissions = profile?.user_roles?.permissions || {};
     const result = roleName === 'admin' || permissions.all === true;
     
-    console.log('🔐 [AUTH] Verificação isAdmin:', {
-      userId: profile.id?.substring(0, 8) + '***',
-      email: profile.email?.substring(0, 3) + '***',
-      roleName,
-      hasUserRoles: !!profile.user_roles,
-      roleId: profile.role_id,
-      permissionsAll: permissions.all,
-      result,
-      timestamp: new Date().toISOString()
-    });
-    
     return result;
   }, [profile?.id, profile?.email, profile?.role_id, profile?.user_roles?.name, profile?.user_roles?.permissions]);
   
   const isFormacao = useMemo(() => {
     const roleName = profile?.user_roles?.name;
     const permissions = profile?.user_roles?.permissions || {};
-    
-    console.log('🔍 [AUTH] Verificando acesso formação:', {
-      roleName,
-      permissions,
-      isAdmin: roleName === 'admin' || permissions.all === true
-    });
     
     return roleName === 'formacao' || 
            roleName === 'admin' || 
@@ -69,8 +51,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Função para buscar perfil do usuário
   const fetchUserProfile = useCallback(async (userId: string) => {
     try {
-      console.log('🔍 [AUTH] Iniciando busca do perfil para:', userId.substring(0, 8) + '***');
-      
       const { data: profileData, error } = await supabase
         .from('profiles')
         .select(`
@@ -99,17 +79,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           role_id: profileData.role_id,
           legacy_role: profileData.role
         });
-      } else {
-        console.log('✅ [AUTH] profile.role_id carregado:', profileData.role_id);
       }
-
-      console.log('✅ [AUTH] Perfil carregado:', {
-        id: profileData.id.substring(0, 8) + '***',
-        email: profileData.email?.substring(0, 3) + '***@***.' + profileData.email?.split('.').pop(),
-        role_id: profileData.role_id,
-        role_name: profileData.user_roles?.name || profileData.role,
-        has_user_roles: !!profileData.user_roles
-      });
 
       setProfile(profileData);
     } catch (error) {
@@ -120,11 +90,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Setup inicial e listener de mudanças de autenticação
   useEffect(() => {
-    console.log('🔧 [AUTH] Configurando autenticação...');
-    
     // Função para processar mudanças de estado de auth
     const handleAuthStateChange = (event: string, session: Session | null) => {
-      console.log('🔔 [AUTH] Evento de auth:', event);
       
       // Sempre atualizar session e user
       setSession(session);
@@ -147,12 +114,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     // Verificar sessão atual uma única vez
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('🔍 [AUTH] Sessão inicial:', session ? 'encontrada' : 'não encontrada');
       handleAuthStateChange('INITIAL_SESSION', session);
     });
 
     return () => {
-      console.log('🧹 [AUTH] Limpando listener de auth');
       subscription.unsubscribe();
     };
   }, []); // Array vazio - executar apenas uma vez

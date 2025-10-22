@@ -22,25 +22,18 @@ const AuthLayout = () => {
   // Redirecionamento controlado após login bem-sucedido
   useEffect(() => {
     if (user && profile && !isLoading && !redirectHandled) {
-      console.log("✅ [AUTH-LAYOUT] Usuário logado, redirecionando...", {
-        user: user.email,
-        role: getUserRoleName(profile)
-      });
-      
       setRedirectHandled(true);
       
       // Pequeno delay para garantir estabilidade
       setTimeout(() => {
         // CRÍTICO: Verificar onboarding primeiro, independente da role
         if (profile.onboarding_completed !== true) {
-          console.log("📝 [AUTH-LAYOUT] Usuário precisa completar onboarding - redirecionando");
           navigate('/onboarding', { replace: true });
           return;
         }
 
         // Só redirecionar para role-specific pages se onboarding estiver completo
         const targetRoute = getUserRoleName(profile) === 'formacao' ? '/formacao' : '/dashboard';
-        console.log("🔄 [AUTH-LAYOUT] Onboarding completo - redirecionando para:", targetRoute);
         navigate(targetRoute, { replace: true });
       }, 100);
     }
@@ -56,7 +49,6 @@ const AuthLayout = () => {
 
     try {
       setIsSigningIn(true);
-      console.log('🔄 [AUTH-LAYOUT] Tentando fazer login:', email);
       
       const { error } = await signIn(email, password);
       
@@ -70,7 +62,6 @@ const AuthLayout = () => {
         return;
       }
 
-      console.log('✅ [AUTH-LAYOUT] Login realizado com sucesso');
       toast.success('Login realizado com sucesso!');
       
     } catch (err) {

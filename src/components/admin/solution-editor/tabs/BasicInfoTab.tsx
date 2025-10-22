@@ -47,7 +47,6 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
   // Registrar a função de salvamento
   useEffect(() => {
     if (onStepSave) {
-      console.log("✅ BasicInfoTab: Registrando função de salvamento");
       onStepSave(handleSave);
     }
   }, [onStepSave]);

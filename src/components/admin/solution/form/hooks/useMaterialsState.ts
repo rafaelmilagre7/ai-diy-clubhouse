@@ -32,9 +32,6 @@ export const useMaterialsState = (solutionId: string | null) => {
                   !(item.metadata?.provider === 'panda')
         );
         
-        console.log("DEBUG Admin Materials - Raw data:", data);
-        console.log("DEBUG Admin Materials - Filtered data:", filteredData);
-        
         const processedMaterials = filteredData.map(item => parseResourceMetadata(item));
         setMaterials(processedMaterials);
       }

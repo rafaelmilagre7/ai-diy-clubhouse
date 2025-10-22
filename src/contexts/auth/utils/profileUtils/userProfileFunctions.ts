@@ -7,12 +7,8 @@ import { getUserRoleName } from '@/lib/supabase/types';
  */
 export const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
   try {
-    console.log(`🔍 [PROFILE-FETCH] Iniciando busca robusta para usuário: ${userId}`);
-    
     // ESTRATÉGIA 1: Tentar busca com JOIN (método preferido)
     try {
-      console.log('📊 [PROFILE-FETCH] Tentativa 1: Busca com JOIN');
-      
       const { data: profileWithJoin, error: joinError } = await supabase
         .from('profiles')
         .select(`
@@ -36,7 +32,6 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
         .single();
 
       if (!joinError && profileWithJoin) {
-        console.log('✅ [PROFILE-FETCH] JOIN bem-sucedido');
         const profile: UserProfile = {
           id: profileWithJoin.id,
           email: profileWithJoin.email,
@@ -49,23 +44,13 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
           user_roles: profileWithJoin.user_roles as any
         };
         
-        console.log('🎯 [PROFILE-FETCH] Perfil completo carregado:', {
-          id: profile.id,
-          name: profile.name,
-          role: profile.user_roles?.name
-        });
-        
         return profile;
-      } else {
-        console.warn('⚠️ [PROFILE-FETCH] JOIN falhou:', joinError?.message);
       }
     } catch (joinError) {
-      console.warn('⚠️ [PROFILE-FETCH] Erro no JOIN:', joinError);
+      // Falha silenciosa - continuar para estratégia 2
     }
 
     // ESTRATÉGIA 2: Busca básica do perfil + role separadamente
-    console.log('📊 [PROFILE-FETCH] Tentativa 2: Busca separada');
-    
     const { data: basicProfile, error: profileError } = await supabase
       .from('profiles')
       .select('*')
@@ -78,11 +63,8 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
     }
     
     if (!basicProfile) {
-      console.warn('⚠️ [PROFILE-FETCH] Perfil não encontrado');
       return null;
     }
-
-    console.log('✅ [PROFILE-FETCH] Perfil básico encontrado:', basicProfile.name);
 
     // Buscar role separadamente se existe role_id
     let userRole = null;
@@ -96,12 +78,9 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
         
         if (!roleError && roleData) {
           userRole = roleData;
-          console.log('✅ [PROFILE-FETCH] Role encontrado:', roleData.name);
-        } else {
-          console.warn('⚠️ [PROFILE-FETCH] Role não encontrado:', roleError?.message);
         }
       } catch (roleError) {
-        console.warn('⚠️ [PROFILE-FETCH] Erro ao buscar role:', roleError);
+        // Falha silenciosa
       }
     }
 
@@ -117,13 +96,6 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
       created_at: basicProfile.created_at,
       user_roles: userRole
     };
-
-    console.log('🎯 [PROFILE-FETCH] Perfil montado com sucesso:', {
-      id: profile.id,
-      name: profile.name,
-      hasRole: !!userRole,
-      roleName: userRole?.name
-    });
 
     return profile;
 

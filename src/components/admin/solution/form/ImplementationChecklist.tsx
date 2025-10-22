@@ -34,8 +34,6 @@ const ImplementationChecklist: React.FC<ImplementationChecklistProps> = ({
   const { toast } = useToast();
   const { user } = useAuth();
 
-  console.log("🔧 ImplementationChecklist: Renderizando com solutionId:", solutionId);
-
   useEffect(() => {
     if (solutionId && user) {
       fetchCheckpoints();
@@ -49,7 +47,6 @@ const ImplementationChecklist: React.FC<ImplementationChecklistProps> = ({
 
     try {
       setLoading(true);
-      console.log("📋 Buscando checkpoints para solução:", solutionId);
 
       // Como admin, buscar template para esta solução
       const { data, error } = await supabase
@@ -71,7 +68,6 @@ const ImplementationChecklist: React.FC<ImplementationChecklistProps> = ({
         // Extrair items do campo JSONB checkpoint_data
         const items = data.checkpoint_data.items || [];
         setChecklistItems(items);
-        console.log("✅ Checkpoints carregados:", items.length);
       } else {
         setChecklistItems([]);
       }
@@ -92,7 +88,6 @@ const ImplementationChecklist: React.FC<ImplementationChecklistProps> = ({
 
     try {
       setSavingChecklist(true);
-      console.log("💾 Salvando checkpoints...");
 
       const checkpointData = {
         items: checklistItems,
@@ -146,7 +141,6 @@ const ImplementationChecklist: React.FC<ImplementationChecklistProps> = ({
         if (error) throw error;
       }
 
-      console.log("✅ Checkpoints salvos com sucesso");
       toast({
         title: "Checklist salvo",
         description: "Os itens do checklist foram salvos com sucesso.",

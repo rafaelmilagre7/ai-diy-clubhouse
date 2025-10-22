@@ -13,9 +13,6 @@ const ToolsTab: React.FC<ToolsTabProps> = ({
   onSave,
   saving,
 }) => {
-  console.log("🔧 ToolsTab: Renderizando com solutionId =", solutionId);
-  console.log("🔧 ToolsTab: onSave recebido =", !!onSave);
-  
   return (
     <ToolsChecklistForm 
       solutionId={solutionId} 
