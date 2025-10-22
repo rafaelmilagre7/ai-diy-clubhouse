@@ -1,7 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
-import { CheckCircle2, Circle } from 'lucide-react';
-import { ToolCard } from './ToolCard';
+import { ToolCardBuilder } from './ToolCardBuilder';
 
 interface Tool {
   name: string;
@@ -24,21 +22,24 @@ export const RequiredToolsGrid: React.FC<RequiredToolsGridProps> = ({ tools }) =
   const optionalTools = tools?.optional || [];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Essenciais */}
       {essentialTools.length > 0 && (
         <div className="space-y-4">
-          <h4 className="text-base font-semibold">Ferramentas Essenciais ({essentialTools.length})</h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <h4 className="text-xl font-bold text-foreground">
+            Ferramentas Essenciais 
+            <span className="ml-2 text-sm font-normal text-muted-foreground">
+              ({essentialTools.length})
+            </span>
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {essentialTools.map((tool, index) => (
-              <motion.div
+              <ToolCardBuilder 
                 key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-              >
-                <ToolCard tool={tool} isEssential={true} />
-              </motion.div>
+                tool={tool} 
+                isEssential={true}
+                index={index}
+              />
             ))}
           </div>
         </div>
@@ -47,26 +48,31 @@ export const RequiredToolsGrid: React.FC<RequiredToolsGridProps> = ({ tools }) =
       {/* Opcionais */}
       {optionalTools.length > 0 && (
         <div className="space-y-4">
-          <h4 className="text-base font-semibold">Ferramentas Opcionais ({optionalTools.length})</h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <h4 className="text-xl font-bold text-foreground">
+            Ferramentas Opcionais
+            <span className="ml-2 text-sm font-normal text-muted-foreground">
+              ({optionalTools.length})
+            </span>
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {optionalTools.map((tool, index) => (
-              <motion.div
+              <ToolCardBuilder 
                 key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: (essentialTools.length + index) * 0.05 }}
-              >
-                <ToolCard tool={tool} isEssential={false} />
-              </motion.div>
+                tool={tool} 
+                isEssential={false}
+                index={essentialTools.length + index}
+              />
             ))}
           </div>
         </div>
       )}
 
       {essentialTools.length === 0 && optionalTools.length === 0 && (
-        <p className="text-sm text-muted-foreground text-center py-8">
-          Nenhuma ferramenta especificada
-        </p>
+        <div className="text-center py-12">
+          <p className="text-muted-foreground">
+            Nenhuma ferramenta especificada
+          </p>
+        </div>
       )}
     </div>
   );

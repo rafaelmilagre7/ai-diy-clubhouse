@@ -31,7 +31,6 @@ import Builder from '@/pages/member/Builder';
 import MyAISolutions from '@/pages/member/MyAISolutions';
 import SolutionHistory from '@/pages/member/SolutionHistory';
 import BuilderSolutionCover from '@/pages/member/BuilderSolutionCover';
-import BuilderSolutionDetails from '@/pages/member/BuilderSolutionDetails';
 import BuilderSolutionFramework from '@/pages/member/BuilderSolutionFramework';
 import BuilderSolutionArchitecture from '@/pages/member/BuilderSolutionArchitecture';
 import BuilderSolutionTools from '@/pages/member/BuilderSolutionTools';
@@ -82,7 +81,6 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/ferramentas/builder", Builder),
   createProtectedRoute("/ferramentas/builder/historico", SolutionHistory),
   createProtectedRoute("/ferramentas/builder/solution/:id", BuilderSolutionCover),
-  createProtectedRoute("/ferramentas/builder/solution/:id/detalhes", BuilderSolutionDetails),
   createProtectedRoute("/ferramentas/builder/solution/:id/framework", BuilderSolutionFramework),
   createProtectedRoute("/ferramentas/builder/solution/:id/arquitetura", BuilderSolutionArchitecture),
   createProtectedRoute("/ferramentas/builder/solution/:id/ferramentas", BuilderSolutionTools),

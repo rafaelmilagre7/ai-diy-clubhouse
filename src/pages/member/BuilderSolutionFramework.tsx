@@ -50,27 +50,27 @@ export default function BuilderSolutionFramework() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <LiquidGlassCard className="p-6">
+          <LiquidGlassCard className="p-8">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => navigate(`/ferramentas/builder/solution/${id}`)}
-              className="mb-6"
+              className="mb-8"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Voltar para visão geral
             </Button>
 
             <div className="mb-8">
-              <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+              <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
                 Framework de Implementação de IA
               </h1>
               <div className="flex items-center gap-3 mb-4">
-                <Badge className="text-base px-4 py-1.5 bg-background/80 text-primary border-primary/30 border-2">
+                <Badge className="text-base px-4 py-1.5 bg-surface-elevated/90 text-foreground border-aurora/40 border-2 shadow-sm">
                   by Rafael Milagre
                 </Badge>
               </div>
-              <p className="text-muted-foreground text-lg leading-relaxed">
+              <p className="text-foreground/80 text-lg leading-relaxed">
                 Os 4 pilares essenciais da sua solução com Inteligência Artificial
               </p>
             </div>

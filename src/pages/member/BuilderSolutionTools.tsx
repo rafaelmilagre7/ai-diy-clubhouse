@@ -62,22 +62,22 @@ export default function BuilderSolutionTools() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <LiquidGlassCard className="p-6">
+          <LiquidGlassCard className="p-8">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => navigate(`/ferramentas/builder/solution/${id}`)}
-              className="mb-6"
+              className="mb-8"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Voltar para visão geral
             </Button>
 
             <div className="mb-8">
-              <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+              <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
                 Ferramentas Necessárias
               </h1>
-              <p className="text-muted-foreground text-lg leading-relaxed mb-6">
+              <p className="text-foreground/80 text-lg leading-relaxed mb-6">
                 Stack completo com recursos essenciais e opcionais para implementação da sua solução
               </p>
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Brain, Zap, Database, Palette } from 'lucide-react';
+import { Brain, Zap, Database, Monitor } from 'lucide-react';
 
 interface FrameworkQuadrantsProps {
   framework: {
@@ -44,7 +44,7 @@ export const FrameworkQuadrants: React.FC<FrameworkQuadrantsProps> = ({ framewor
       key: 'quadrant4_interface',
       data: framework?.quadrant4_interface,
       title: 'Interface',
-      icon: Palette,
+      icon: Monitor,
       color: 'from-teal-400/20 to-cyan-500/10',
       borderColor: 'border-teal-300/30',
       position: 'bottom-right'
@@ -52,15 +52,15 @@ export const FrameworkQuadrants: React.FC<FrameworkQuadrantsProps> = ({ framewor
   ];
 
   return (
-    <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-8">
       {/* Linha vertical central */}
-      <div className="absolute left-1/2 top-0 bottom-0 w-[2px] bg-gradient-to-b from-primary/50 via-primary to-primary/50 hidden lg:block -translate-x-1/2" />
+      <div className="absolute left-1/2 top-0 bottom-0 w-[2px] bg-gradient-to-b from-aurora/50 via-aurora to-aurora/50 hidden lg:block -translate-x-1/2" />
       
       {/* Linha horizontal central */}
-      <div className="absolute top-1/2 left-0 right-0 h-[2px] bg-gradient-to-r from-primary/50 via-primary to-primary/50 hidden lg:block -translate-y-1/2" />
+      <div className="absolute top-1/2 left-0 right-0 h-[2px] bg-gradient-to-r from-aurora/50 via-aurora to-aurora/50 hidden lg:block -translate-y-1/2" />
       
       {/* Círculo central onde as linhas se cruzam */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-primary border-4 border-background z-20 hidden lg:block" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-aurora border-4 border-background z-20 hidden lg:block shadow-lg shadow-aurora/50" />
       
       {quadrants.map((quadrant, index) => {
         const Icon = quadrant.icon;
@@ -72,18 +72,19 @@ export const FrameworkQuadrants: React.FC<FrameworkQuadrantsProps> = ({ framewor
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: index * 0.1 }}
             className={`
-              relative p-6 rounded-xl border border-border/30
+              group relative p-6 rounded-xl border border-border/30
               bg-gradient-to-br ${quadrant.color}
               backdrop-blur-sm
-              hover:scale-[1.02] transition-all
+              hover:scale-[1.02] hover:border-aurora/40 hover:shadow-aurora
+              transition-all duration-300
             `}
           >
             {/* Ícone + Título */}
             <div className="flex items-center gap-3 mb-4">
-              <div className={`p-2.5 rounded-lg bg-gradient-to-br ${quadrant.color} border ${quadrant.borderColor}`}>
-                <Icon className="w-6 h-6 text-cyan-400" />
+              <div className={`p-3 rounded-xl bg-gradient-to-br ${quadrant.color} border ${quadrant.borderColor} group-hover:scale-110 transition-transform duration-300`}>
+                <Icon className="w-7 h-7 text-aurora" />
               </div>
-              <h3 className="text-2xl font-bold">
+              <h3 className="text-2xl font-bold group-hover:text-aurora transition-colors duration-300">
                 {quadrant.data?.title || quadrant.title}
               </h3>
             </div>
@@ -97,11 +98,11 @@ export const FrameworkQuadrants: React.FC<FrameworkQuadrantsProps> = ({ framewor
 
             {/* Items com bullets elegantes */}
             {quadrant.data?.items && quadrant.data.items.length > 0 && (
-              <ul className="space-y-4 mb-6">
+              <ul className="space-y-3 mb-6">
                 {quadrant.data.items.map((item: string, idx: number) => (
-                  <li key={idx} className="flex items-start gap-3 leading-relaxed">
-                    <span className="text-primary mt-0.5 flex-shrink-0">→</span>
-                    <span className="text-base text-foreground/80 break-words">{item}</span>
+                  <li key={idx} className="flex items-start gap-3 leading-relaxed group/item">
+                    <span className="text-aurora mt-0.5 flex-shrink-0 group-hover/item:translate-x-1 transition-transform duration-200">→</span>
+                    <span className="text-base text-foreground/80 break-words group-hover/item:text-foreground transition-colors duration-200">{item}</span>
                   </li>
                 ))}
               </ul>
@@ -109,12 +110,12 @@ export const FrameworkQuadrants: React.FC<FrameworkQuadrantsProps> = ({ framewor
 
             {/* Ferramentas na base */}
             {quadrant.data?.tool_names && quadrant.data.tool_names.length > 0 && (
-              <div className="pt-4 border-t border-border/20">
+              <div className="pt-4 border-t border-border/30">
                 <div className="flex flex-wrap gap-2">
                   {quadrant.data.tool_names.map((tool: string, idx: number) => (
                     <span 
                       key={idx}
-                      className="px-3 py-1 text-xs bg-background/50 rounded-full border border-border/20"
+                      className="px-3 py-1.5 text-xs bg-background/60 rounded-full border border-border/30 hover:border-aurora/40 hover:bg-aurora/10 transition-all duration-200"
                     >
                       {tool}
                     </span>
