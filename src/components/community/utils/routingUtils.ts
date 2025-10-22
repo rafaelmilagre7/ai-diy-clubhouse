@@ -25,10 +25,7 @@ export const isActiveRoute = (currentPath: string, routeToCheck: string): boolea
   
   // Tratamento especial para comunidade
   if (routeToCheck === "/comunidade") {
-    const isCommunityRoute = currentPath === "/comunidade" || 
-                             currentPath.startsWith("/comunidade/");
-    console.log(`isActiveRoute: Verificando '${currentPath}' para comunidade, resultado: ${isCommunityRoute}`);
-    return isCommunityRoute;
+    return currentPath === "/comunidade" || currentPath.startsWith("/comunidade/");
   }
   
   // Verificação para evitar correspondências parciais (ex: /com não deve corresponder a /comunidade)
@@ -57,7 +54,6 @@ export const checkCommunityRedirect = (currentPath: string): {
     if (currentPath === oldPath || currentPath.startsWith(oldPath + '/')) {
       // Substitui apenas o prefixo, mantendo o resto da URL
       const redirectPath = currentPath.replace(oldPath, newPath);
-      console.log(`checkCommunityRedirect: Convertendo ${oldPath} para ${newPath} -> ${redirectPath}`);
       
       return {
         path: redirectPath,
@@ -68,7 +64,6 @@ export const checkCommunityRedirect = (currentPath: string): {
     }
   }
   
-  console.log(`checkCommunityRedirect: Nenhum redirecionamento necessário para ${currentPath}`);
   return null;
 };
 
