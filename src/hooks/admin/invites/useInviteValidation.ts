@@ -65,7 +65,6 @@ export const useInviteValidation = () => {
       }
 
       if (!validationResult?.valid) {
-        console.log('❌ [INVITE-VALIDATION] Token inválido:', validationResult);
         const result = {
           valid: false,
           reason: validationResult?.reason || 'invalid_token',

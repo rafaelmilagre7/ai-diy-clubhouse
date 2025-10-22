@@ -24,8 +24,6 @@ export function useWhatsAppDeliveryTest() {
     setTesting(true);
     
     try {
-      console.log('🧪 [DELIVERY-TEST] Testando entrega WhatsApp para:', testPhone.substring(0, 5) + '***');
-      
       const { data, error } = await supabase.functions.invoke('whatsapp-test-delivery', {
         body: { 
           testPhone: testPhone,
@@ -43,7 +41,6 @@ export function useWhatsAppDeliveryTest() {
         return false;
       }
 
-      console.log('✅ [DELIVERY-TEST] Resultado:', data);
       setLastTestResult(data);
 
       if (data.success) {
@@ -68,11 +65,7 @@ export function useWhatsAppDeliveryTest() {
   };
 
   const testRealNumbers = async () => {
-    console.log('🧪 [DELIVERY-TEST] Testando números reais dos convites...');
-    
-    // Testar número do Nicholas 
     const nicholasPhone = '+5548991657016';
-    console.log('📱 [DELIVERY-TEST] Testando Nicholas:', nicholasPhone);
     
     const result = await testDelivery(nicholasPhone);
     

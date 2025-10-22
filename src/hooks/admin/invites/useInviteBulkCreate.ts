@@ -46,14 +46,10 @@ export const useInviteBulkCreate = () => {
     }
 
     try {
-      devLog.api(`Iniciando criação em lote de ${contacts.length} convites`);
-
       // Verificar se contatos têm papéis individuais
       const hasIndividualRoles = contacts.some(contact => 
         contact.cleaned.role && contact.cleaned.role !== 'convidado'
       );
-
-      devLog.debug(`Contatos com papéis individuais: ${hasIndividualRoles}`);
 
       // Inicializar progresso
       const items: BulkInviteItem[] = contacts.map(contact => ({
@@ -74,11 +70,9 @@ export const useInviteBulkCreate = () => {
 
       if (hasIndividualRoles) {
         // Processar individualmente quando têm papéis diversos
-        devLog.data('Processando convites individualmente...');
         batchResult = await processIndividualInvites(contacts);
       } else {
         // Usar RPC batch quando todos têm o mesmo papel
-        devLog.api('Criando convites via RPC batch...');
         
         // Determinar papel a usar
         const finalRoleId = roleId === 'default' ? getDefaultRoleId() : roleId;
@@ -107,8 +101,6 @@ export const useInviteBulkCreate = () => {
         batchResult = data;
       }
 
-      devLog.success('Convites criados:', batchResult);
-
       // Verificar se RPC retornou sucesso
       if (!batchResult || !batchResult.success) {
         throw new Error(batchResult?.error || 'Erro na criação dos convites');
@@ -118,9 +110,6 @@ export const useInviteBulkCreate = () => {
       const createdInvites = batchResult.created || [];
       const failedInvites = batchResult.failed || [];
       
-      devLog.data('Convites criados:', createdInvites);
-      devLog.error('Convites falharam:', failedInvites);
-
       const updatedItems = items.map(item => {
         // Buscar convite criado por email
         const createdInvite = createdInvites.find((inv: any) => 
@@ -163,7 +152,6 @@ export const useInviteBulkCreate = () => {
       }));
 
       // Enviar convites via Edge Function
-      devLog.api('Iniciando envio em lote...');
       
       const invitesData = updatedItems
         .filter(item => item.status === 'creating' && item.inviteId)
@@ -185,11 +173,9 @@ export const useInviteBulkCreate = () => {
       });
 
       if (sendError) {
-        devLog.error('Erro no envio:', sendError);
+        console.error('Erro no envio:', sendError);
         throw sendError;
       }
-
-      devLog.success('Resultado do envio:', sendResult);
 
       // Atualizar status final
       const finalItems = updatedItems.map((item, index) => {
@@ -279,8 +265,6 @@ export const useInviteBulkCreate = () => {
           continue;
         }
 
-        devLog.api(`Criando convite para ${contact.cleaned.email} com papel ${contactRole}`);
-        
         const inviteData = [{
           email: contact.cleaned.email,
           role_id: contactRoleId,

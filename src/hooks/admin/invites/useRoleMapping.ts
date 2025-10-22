@@ -37,9 +37,8 @@ export const useRoleMapping = () => {
       data?.forEach(role => {
         mapping[role.name.toLowerCase()] = role.id;
       });
-      
+
       setRoleMapping(mapping);
-      console.log('✅ [ROLE-MAPPING] Papéis carregados:', mapping);
     } catch (error: any) {
       console.error('❌ [ROLE-MAPPING] Erro ao carregar papéis:', error);
       toast.error('Erro ao carregar papéis disponíveis');

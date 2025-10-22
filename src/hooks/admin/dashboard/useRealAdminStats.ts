@@ -2,7 +2,6 @@
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
-import { devLog } from "@/utils/devLogger";
 
 interface StatsData {
   // Dados cumulativos
@@ -62,8 +61,6 @@ export const useRealAdminStats = (timeRange: string) => {
     try {
       setLoading(true);
       
-      devLog.data(`Carregando estatísticas para período: ${timeRange}`);
-      
       // Buscar data atual do banco usando uma query simples
       const { data: nowResult } = await supabase
         .from('progress')
@@ -85,10 +82,6 @@ export const useRealAdminStats = (timeRange: string) => {
       const daysBack = daysMap[timeRange] || 30;
       const startDate = new Date(bankNow);
       startDate.setDate(startDate.getDate() - daysBack);
-      
-      devLog.timing(`Período: ${daysBack} dias`);
-      devLog.timing(`Data de referência: ${bankNow.toISOString()}`);
-      devLog.timing(`Data de início: ${startDate.toISOString()}`);
 
       // === DADOS CUMULATIVOS (não mudam com período) ===
       
@@ -227,22 +220,6 @@ export const useRealAdminStats = (timeRange: string) => {
       };
 
       setStatsData(finalStats);
-      
-      devLog.success('Estatísticas carregadas:', {
-        periodo: `${daysBack} dias`,
-        totalUsers: finalStats.totalUsers,
-        totalSolutions: finalStats.totalSolutions,
-        totalLearningLessons: finalStats.totalLearningLessons,
-        completedImplementations: finalStats.completedImplementations,
-        newUsersInPeriod: finalStats.newUsersInPeriod,
-        activeUsersInPeriod: finalStats.activeUsersInPeriod,
-        implementationsInPeriod: finalStats.implementationsInPeriod,
-        completedInPeriod: finalStats.completedInPeriod,
-        periodGrowthRate: finalStats.periodGrowthRate,
-        periodEngagementRate: finalStats.periodEngagementRate,
-        timeRange: finalStats.timeRange,
-        usersByRole: finalStats.usersByRole
-      });
 
     } catch (error: any) {
       console.error("❌ [STATS] Erro ao carregar estatísticas:", error);
@@ -258,7 +235,6 @@ export const useRealAdminStats = (timeRange: string) => {
 
   // Automaticamente atualiza quando timeRange muda
   useEffect(() => {
-    devLog.data(`TimeRange mudou para: ${timeRange}`);
     // Limpar dados antigos e carregar novos
     setStatsData(prev => ({
       ...prev,

@@ -18,8 +18,6 @@ export function useWhatsAppConfigCheck() {
     setChecking(true);
     
     try {
-      console.log('🔍 [CONFIG-CHECK] Verificando configuração do WhatsApp...');
-      
       const { data, error } = await supabase.functions.invoke('whatsapp-config-check', {
         body: { action: 'check' }
       });
@@ -29,8 +27,6 @@ export function useWhatsAppConfigCheck() {
         toast.error('Erro ao verificar configuração do WhatsApp');
         return false;
       }
-
-      console.log('✅ [CONFIG-CHECK] Resultado:', data);
       
       // Mapear corretamente os dados da edge function
       const hasCredentials = data.credentials?.success || false;
