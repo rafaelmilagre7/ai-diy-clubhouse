@@ -6,6 +6,7 @@ import { NotificationTrendsChart } from '@/components/admin/notifications/Notifi
 import { NotificationQueueTable } from '@/components/admin/notifications/NotificationQueueTable';
 import { NotificationDetailsModal } from '@/components/admin/notifications/NotificationDetailsModal';
 import { NotificationTestForm } from '@/components/admin/notifications/NotificationTestForm';
+import { EmailTemplatePreview } from '@/components/admin/notifications/EmailTemplatePreview';
 import {
   useNotificationQueue,
   NotificationQueueFilters,
@@ -91,10 +92,11 @@ const AdminNotifications = () => {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview">Visão Geral</TabsTrigger>
           <TabsTrigger value="queue">Fila de Notificações</TabsTrigger>
           <TabsTrigger value="stats">Estatísticas</TabsTrigger>
+          <TabsTrigger value="templates">📧 Templates</TabsTrigger>
           <TabsTrigger value="test">Testes</TabsTrigger>
         </TabsList>
 
@@ -310,6 +312,11 @@ const AdminNotifications = () => {
               </div>
             )}
           </AdminCard>
+        </TabsContent>
+
+        {/* Tab: Templates de Email */}
+        <TabsContent value="templates">
+          <EmailTemplatePreview />
         </TabsContent>
 
         {/* Tab: Testes */}
