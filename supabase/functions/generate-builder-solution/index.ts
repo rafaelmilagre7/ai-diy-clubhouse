@@ -290,44 +290,7 @@ ESTRUTURA DA RESPOSTA:
         "🔄 Estratégia de fallback: modelo principal + alternativa caso falhe (ex: Gemini Flash → GPT-5 Mini)"
       ],
       "tool_names": ["Lovable AI", "Claude Sonnet 4.5", "GPT-5", "Gemini 2.5 Pro"],
-      "ai_strategy": `🚀 PRIORIDADE 1: Lovable AI (gateway pré-configurado na plataforma)
-  - google/gemini-2.5-flash (PADRÃO - balanceado custo/performance/velocidade)
-  - google/gemini-2.5-pro (casos complexos - raciocínio avançado e contexto gigante)
-  - openai/gpt-5-mini (alternativa GPT - confiável e rápido)
-  - openai/gpt-5 (casos premium - máxima qualidade)
-  
-💡 PRIORIDADE 2: APIs Diretas (quando necessário controle total)
-  - Claude Sonnet 4.5 (reasoning superior, contexto 200K, melhor para análise complexa)
-  - GPT-5 (multimodal avançado, confiável, bom para produção)
-  - Gemini 2.5 Pro (contexto 2M tokens, multilingual, análise de documentos longos)
-  
-📋 Estratégia de implementação:
-  1. SEMPRE usar Lovable AI via edge function (NUNCA client-side por segurança)
-  2. System prompt no backend (não expor lógica de negócio)
-  3. Rate limiting + tratamento de erros 429 (rate limit) e 402 (sem créditos)
-  4. Cache de respostas quando possível (reduz custo 60-80% em queries repetidas)
-  5. Logging detalhado + analytics de tokens/custos
-  6. A/B testing entre modelos para otimizar custo vs qualidade
-  
-📊 Benchmarks 2025 (valores aproximados):
-  - Latência: Gemini Flash (~1.5s) < GPT-5 Mini (~2.5s) < Claude (~3.5s) < GPT-5 (~4s)
-  - Custo: Gemini Flash ($0.15/1M) < GPT-5 Mini ($0.30/1M) < Gemini Pro ($1.25/1M) < Claude ($3/1M) < GPT-5 ($5/1M)
-  - Qualidade raciocínio: Claude Sonnet 4.5 > GPT-5 > Gemini 2.5 Pro > GPT-5 Mini > Gemini Flash
-  - Contexto: Gemini Pro (2M) > Claude (200K) > GPT-5 (128K) > Gemini Flash (128K)
-  
-🎯 Recomendação por caso de uso:
-  - Chatbots simples: Gemini Flash via Lovable AI
-  - Análise complexa: Claude Sonnet 4.5 via API direta
-  - Multimodal (imagem+texto): GPT-5 ou Gemini Pro
-  - Documentos longos: Gemini 2.5 Pro (2M tokens)
-  - Prototipagem rápida: Lovable AI (zero setup)
-  
-⚡ Quick Start com Lovable AI:
-  - Criar edge function em supabase/functions/
-  - Usar endpoint https://ai.gateway.lovable.dev/v1/chat/completions
-  - LOVABLE_API_KEY já configurada automaticamente
-  - Escolher modelo: google/gemini-2.5-flash (padrão) ou google/gemini-2.5-pro
-  - Implementar streaming para UX responsiva`
+      "ai_strategy": "🚀 PRIORIDADE 1: Lovable AI (gateway pré-configurado)\n  - google/gemini-2.5-flash (padrão - balanceado)\n  - google/gemini-2.5-pro (casos complexos)\n  - openai/gpt-5-mini (alternativa GPT)\n  - openai/gpt-5 (casos premium)\n\n💡 PRIORIDADE 2: APIs Diretas\n  - Claude Sonnet 4.5 (reasoning superior, 200K)\n  - GPT-5 (multimodal, produção)\n  - Gemini 2.5 Pro (2M tokens, multilingual)\n\n📋 Estratégia:\n  1. Sempre usar Lovable AI via edge function\n  2. System prompt no backend\n  3. Rate limiting + erros 429/402\n  4. Cache de respostas (60-80% economia)\n  5. Logging + analytics\n  6. A/B testing modelos\n\n📊 Benchmarks:\n  - Latência: Flash(1.5s) < Mini(2.5s) < Claude(3.5s)\n  - Custo: Flash($0.15/1M) < Mini($0.30/1M) < Pro($1.25/1M)\n  - Qualidade: Claude > GPT-5 > Gemini Pro > Mini > Flash\n\n🎯 Casos de uso:\n  - Chatbots: Gemini Flash via Lovable AI\n  - Análise complexa: Claude Sonnet 4.5\n  - Multimodal: GPT-5 ou Gemini Pro\n  - Documentos longos: Gemini 2.5 Pro (2M)\n  - Prototipagem: Lovable AI (zero setup)\n\n⚡ Quick Start Lovable AI:\n  - Edge function em supabase/functions/\n  - Endpoint: https://ai.gateway.lovable.dev/v1/chat/completions\n  - LOVABLE_API_KEY auto-configurada\n  - Modelo padrão: google/gemini-2.5-flash\n  - Streaming para UX responsiva"
     },
     "quadrant3_data": {
       "title": "📊 Dados",
