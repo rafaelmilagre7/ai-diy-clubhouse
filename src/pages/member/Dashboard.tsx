@@ -34,7 +34,6 @@ const Dashboard = () => {
 
   // Otimização: Memoizar callbacks para evitar re-renderizações - ANTES dos early returns
   const handleSolutionClick = useCallback((solution: Solution) => {
-    console.log('🔗 [DASHBOARD] Navegando para solução:', solution.id);
     navigate(`/solution/${solution.id}`);
   }, [navigate]);
 

@@ -182,7 +182,6 @@ const FormacaoAulaNova = () => {
     const checkTableStructure = async () => {
       try {
         setTableChecked(false);
-        console.log("Verificando estrutura da tabela learning_lessons...");
         
         const { data, error } = await supabase
           .from('learning_lessons')
@@ -196,7 +195,6 @@ const FormacaoAulaNova = () => {
         }
         
         // Se chegamos aqui, a tabela existe
-        console.log("Tabela learning_lessons acessada com sucesso!");
         
         // Tentar determinar se o campo published existe
         const hasPublishedField = data && data.length > 0 ? 
@@ -228,8 +226,6 @@ const FormacaoAulaNova = () => {
           attemptedToCreate: false 
         });
         
-        console.log("Verificando se o bucket learning_videos existe...");
-        
         // Verifica se o bucket existe
         const { data: buckets } = await supabase.storage.listBuckets();
         
@@ -237,8 +233,7 @@ const FormacaoAulaNova = () => {
           const bucketExists = buckets.some(bucket => bucket.name === 'learning_videos');
           
           if (bucketExists) {
-            console.log("Bucket learning_videos já existe!");
-            setBucketStatus({ 
+            setBucketStatus({
               checked: true, 
               exists: true,
               attemptedToCreate: false 
@@ -246,8 +241,6 @@ const FormacaoAulaNova = () => {
             return;
           }
         }
-        
-        console.log("Bucket learning_videos não encontrado, tentando criar...");
         
         // Como o bucket não existe, tentar criar diretamente (sem função RPC)
         const { error: createError } = await supabase.storage.createBucket('learning_videos', {
@@ -268,8 +261,6 @@ const FormacaoAulaNova = () => {
           return;
         }
         
-        console.log("Bucket learning_videos criado com sucesso!");
-        
         // Aguardar um pouco para o bucket ser criado completamente
         setTimeout(async () => {
           try {
@@ -280,7 +271,7 @@ const FormacaoAulaNova = () => {
               .getPublicUrl('test.txt');
               
             if (publicPolicy) {
-              console.log("Políticas de acesso configuradas com sucesso!");
+              // Políticas configuradas
             }
             
             setBucketStatus({ 
@@ -454,7 +445,6 @@ const FormacaoAulaNova = () => {
       
       // Determinar se devemos tentar inserir o campo published
       const hasPublishedField = tableColumns?.some(col => col.column_name === 'published');
-      console.log("Tabela tem campo published:", hasPublishedField);
       
       // Criar a aula
       const lessonData = {
@@ -469,8 +459,6 @@ const FormacaoAulaNova = () => {
       // Adicionar campo published apenas se não determinamos explicitamente que não existe
       const lessonDataWithPublished = hasPublishedField !== false ? 
         { ...lessonData, published: false } : lessonData;
-      
-      console.log("Criando nova aula com dados:", lessonDataWithPublished);
 
       const { data, error } = await supabase
         .from("learning_lessons")
@@ -483,8 +471,6 @@ const FormacaoAulaNova = () => {
         // Se o erro for sobre coluna desconhecida e tentamos inserir com published
         if (error.message.includes("column") && error.message.includes("does not exist") && 
             hasPublishedField !== false) {
-          console.log("Tentando novamente sem o campo published...");
-          
           // Tentar criar sem o campo published
           const { data: retryData, error: retryError } = await supabase
             .from("learning_lessons")
@@ -498,8 +484,6 @@ const FormacaoAulaNova = () => {
           if (!retryData || retryData.length === 0) {
             throw new Error("Falha ao criar aula: nenhum dado retornado");
           }
-          
-          console.log("Aula criada com sucesso (segunda tentativa):", retryData);
           
           // Usar o ID da aula criada na segunda tentativa
           const lessonId = retryData[0].id;
@@ -519,7 +503,6 @@ const FormacaoAulaNova = () => {
         throw new Error("Falha ao criar aula: nenhum dado retornado");
       }
       
-      console.log("Aula criada com sucesso:", data);
       const lessonId = data[0].id;
       
       // Adicionar os vídeos à aula (apenas os com URL válida) - usando type assertion para garantir tipo correto
@@ -538,8 +521,6 @@ const FormacaoAulaNova = () => {
   // Função para inserir vídeos (garantindo que todos têm URL)
   const insertVideos = async (lessonId: string, videos: VideoItem[]) => {
     try {
-      console.log(`Inserindo ${videos.length} vídeos para a aula ${lessonId}`);
-      
       if (!videos || videos.length === 0) return;
       
       // Esta etapa de filtragem é agora redundante, pois já garantimos que os vídeos têm URL válida antes de chegar aqui
@@ -547,7 +528,6 @@ const FormacaoAulaNova = () => {
       const validVideos = videos.filter(video => video.url && video.url.trim() !== '');
       
       if (validVideos.length === 0) {
-        console.log("Nenhum vídeo válido para inserir");
         return;
       }
       
@@ -566,8 +546,6 @@ const FormacaoAulaNova = () => {
           duration_seconds: video.fileSize ? Math.floor(video.fileSize / 100000) : 300, // estimativa aproximada
         };
         
-        console.log("Inserindo vídeo:", videoData);
-        
         return supabase
           .from("learning_lesson_videos")
           .insert(videoData);
@@ -581,8 +559,6 @@ const FormacaoAulaNova = () => {
         console.error("Erros ao inserir vídeos:", errors);
         throw new Error(`${errors.length} vídeos não puderam ser adicionados`);
       }
-      
-      console.log(`${videos.length} vídeos adicionados com sucesso`);
     } catch (error) {
       console.error("Erro ao adicionar vídeos:", error);
       throw error;

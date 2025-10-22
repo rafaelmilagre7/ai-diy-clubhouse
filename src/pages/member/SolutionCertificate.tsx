@@ -30,14 +30,6 @@ const SolutionCertificate = () => {
 
   const loading = solutionLoading || certificateLoading;
 
-  console.log('Página do certificado - Estado atual:', {
-    certificate: !!certificate,
-    isEligible,
-    loading,
-    isGenerating,
-    hasCachedPDF: !!(certificate?.certificate_url)
-  });
-
   if (loading) {
     return <LoadingScreen message="Carregando certificado..." />;
   }
@@ -82,7 +74,7 @@ const SolutionCertificate = () => {
 
   // Função de compartilhamento simplificada (mantida para compatibilidade)
   const handleShare = () => {
-    console.log('Share function called (using new ShareCertificateDropdown component)');
+    // Usa o novo componente ShareCertificateDropdown
   };
 
   const handleGenerate = () => {

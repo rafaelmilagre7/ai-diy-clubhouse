@@ -58,9 +58,6 @@ export const FileUpload = ({
       const fileName = `${Date.now()}-${file.name}`;
       const filePath = folderPath ? `${folderPath}/${fileName}` : fileName;
       
-      console.log(`Iniciando upload para bucket: ${bucketName}, pasta: ${folderPath}`);
-      console.log(`Fazendo upload do arquivo: ${fileName} para ${filePath}`);
-      
       // Upload direto - funciona conforme teste das imagens
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from(bucketName)
@@ -74,14 +71,10 @@ export const FileUpload = ({
         throw new Error(uploadError.message);
       }
 
-      console.log("Upload concluído:", uploadData);
-
       // Obter URL pública
       const { data: urlData } = supabase.storage
         .from(bucketName)
         .getPublicUrl(filePath);
-
-      console.log("URL pública gerada:", urlData.publicUrl);
 
       if (!urlData.publicUrl) {
         throw new Error("URL pública não foi gerada");

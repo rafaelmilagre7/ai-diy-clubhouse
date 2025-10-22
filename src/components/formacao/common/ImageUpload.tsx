@@ -24,8 +24,6 @@ export const ImageUpload = ({ value, onChange, bucketName, folderPath }: ImageUp
     setProgress(0);
 
     try {
-      console.log(`Iniciando upload para bucket: ${bucketName}, pasta: ${folderPath}`);
-      
       const result = await uploadFileToStorage(
         file,
         bucketName,
@@ -35,7 +33,6 @@ export const ImageUpload = ({ value, onChange, bucketName, folderPath }: ImageUp
         }
       );
 
-      console.log("Upload bem-sucedido:", result);
       onChange(result.publicUrl);
       
       toast({

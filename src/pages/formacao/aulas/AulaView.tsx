@@ -15,9 +15,7 @@ import { VideoPlayer } from "@/components/formacao/aulas/VideoPlayer";
 import { VideoDisplay } from "@/components/formacao/aulas/VideoDisplay";
 
 const AulaView: React.FC = () => {
-  console.log("🔍 AulaView carregado");
   const { cursoId, aulaId } = useParams<{ cursoId: string; aulaId: string }>();
-  console.log("🔍 Parâmetros da URL:", { cursoId, aulaId });
   const navigate = useNavigate();
   const [videoProgresses, setVideoProgresses] = useState<Record<string, number>>({});
   const [selectedVideo, setSelectedVideo] = useState<any>(null);

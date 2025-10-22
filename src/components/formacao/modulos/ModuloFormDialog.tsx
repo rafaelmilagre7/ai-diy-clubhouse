@@ -72,7 +72,6 @@ export const ModuloFormDialog = ({
   // Efeito para resetar e inicializar o formulário quando modulo ou estado do modal mudar
   useEffect(() => {
     if (open && modulo) {
-      console.log("Inicializando formulário com módulo existente:", modulo);
       // Inicializa o formulário com os valores do módulo
       form.reset({
         title: modulo.title || "",
@@ -82,7 +81,6 @@ export const ModuloFormDialog = ({
         blocked: (modulo as any).blocked || false,
       });
     } else if (open) {
-      console.log("Inicializando formulário para novo módulo");
       // Se está abrindo para criar um novo módulo, resetamos o formulário
       form.reset({
         title: "",
@@ -96,7 +94,6 @@ export const ModuloFormDialog = ({
 
   const onSubmit = async (values: ModuloFormValues) => {
     setIsSubmitting(true);
-    console.log("Submetendo formulário com valores:", values);
     
     try {
       if (isEditing) {
@@ -115,7 +112,6 @@ export const ModuloFormDialog = ({
           
         if (error) throw error;
         
-        console.log("Módulo atualizado com sucesso!");
         toast.success("Módulo atualizado com sucesso!");
       } else {
         // Criando novo módulo
@@ -133,8 +129,6 @@ export const ModuloFormDialog = ({
           ? (maxOrderData[0].order_index + 1) 
           : 0;
         
-        console.log("Próxima ordem do módulo:", nextOrder);
-        
         const { error } = await supabase
           .from('learning_modules')
           .insert({
@@ -149,7 +143,6 @@ export const ModuloFormDialog = ({
           
         if (error) throw error;
         
-        console.log("Módulo criado com sucesso!");
         toast.success("Módulo criado com sucesso!");
       }
       

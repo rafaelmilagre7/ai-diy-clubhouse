@@ -35,9 +35,6 @@ const NewSuggestionPage = () => {
   });
 
   const selectedCategory = watch('category_id');
-  
-  console.log("Categorias disponíveis:", categoriesList);
-  console.log("Usuário logado:", user);
 
   const onSubmit = async (data: FormValues) => {
     try {
@@ -46,7 +43,6 @@ const NewSuggestionPage = () => {
         return;
       }
 
-      console.log("Enviando sugestão:", data);
       await submitSuggestion(data);
       toast.success("Sugestão criada com sucesso!");
       

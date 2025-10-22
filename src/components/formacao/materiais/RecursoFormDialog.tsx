@@ -75,8 +75,6 @@ export const RecursoFormDialog = ({
     setError(null);
     
     try {
-      console.log("Iniciando salvamento do recurso:", values);
-      
       if (isEditing) {
         // Atualizando recurso existente
         const { error } = await supabase
@@ -95,7 +93,6 @@ export const RecursoFormDialog = ({
           throw error;
         }
         
-        console.log("Recurso atualizado com sucesso");
         toast.success("Material atualizado com sucesso!");
       } else {
         // Primeiro, verificamos a ordem máxima atual
@@ -114,8 +111,6 @@ export const RecursoFormDialog = ({
         const nextOrder = maxOrderData && maxOrderData.length > 0 
           ? (maxOrderData[0].order_index + 1) 
           : 0;
-          
-        console.log("Próxima ordem:", nextOrder);
         
         // Criando novo recurso
         const { data, error } = await supabase
@@ -136,7 +131,6 @@ export const RecursoFormDialog = ({
           throw error;
         }
         
-        console.log("Recurso criado com sucesso:", data);
         toast.success("Material adicionado com sucesso!");
       }
       
@@ -228,7 +222,6 @@ export const RecursoFormDialog = ({
                     <FileUpload
                       value={field.value}
                       onChange={(url, fileType, fileSize) => {
-                        console.log("Arquivo enviado:", { url, fileType, fileSize });
                         field.onChange(url);
                         form.setValue("file_type", fileType || "");
                         form.setValue("file_size_bytes", fileSize || 0);

@@ -19,15 +19,6 @@ const SuggestionDetailsPage = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const isAdminView = location.pathname.includes('/admin/');
 
-  // Debug: Log para investigar problemas de admin
-  console.log('🔍 [SUGGESTION-DETAILS] Estado do usuário:', {
-    userId: user?.id,
-    isAdmin,
-    userEmail: user?.email,
-    currentPath: location.pathname,
-    isAdminView
-  });
-
   const {
     suggestion,
     isLoading,
