@@ -10,7 +10,18 @@ export interface UnifiedChecklistItem {
   completed: boolean;
   notes?: string;
   completedAt?: string;
+  column?: 'todo' | 'in_progress' | 'done';
+  order?: number;
 }
+
+// Helper para normalizar items (garantir coluna e ordem)
+export const normalizeChecklistItems = (items: UnifiedChecklistItem[]): UnifiedChecklistItem[] => {
+  return items.map((item, index) => ({
+    ...item,
+    column: item.column || (item.completed ? 'done' : 'todo'),
+    order: item.order !== undefined ? item.order : index
+  }));
+};
 
 export interface UnifiedChecklistData {
   id?: string;
