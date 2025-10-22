@@ -14,7 +14,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 const AdminCommunications = () => {
-  const { communications, isLoading, deleteCommunication, sendCommunication } = useCommunications();
+  const { communications, isLoading, deleteCommunication, sendCommunication, cancelCommunication } = useCommunications();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCommunication, setSelectedCommunication] = useState<AdminCommunication | null>(null);
   const [showEditor, setShowEditor] = useState(false);
@@ -24,6 +24,7 @@ const AdminCommunications = () => {
     switch (status) {
       case 'draft': return <Edit className="w-4 h-4" />;
       case 'scheduled': return <Clock className="w-4 h-4" />;
+      case 'sending': return <Send className="w-4 h-4 animate-pulse" />;
       case 'sent': return <CheckCircle className="w-4 h-4" />;
       case 'cancelled': return <AlertCircle className="w-4 h-4" />;
       default: return null;
@@ -34,6 +35,7 @@ const AdminCommunications = () => {
     switch (status) {
       case 'draft': return 'secondary';
       case 'scheduled': return 'default';
+      case 'sending': return 'default';
       case 'sent': return 'default';
       case 'cancelled': return 'destructive';
       default: return 'secondary';
@@ -67,6 +69,10 @@ const AdminCommunications = () => {
 
   const handleSend = async (id: string) => {
     await sendCommunication.mutateAsync(id);
+  };
+
+  const handleCancel = async (id: string) => {
+    await cancelCommunication.mutateAsync(id);
   };
 
   const handleDelete = async (id: string) => {
@@ -146,6 +152,7 @@ const AdminCommunications = () => {
                       {getStatusIcon(communication.status)}
                       {communication.status === 'draft' ? 'Rascunho' :
                        communication.status === 'scheduled' ? 'Agendado' :
+                       communication.status === 'sending' ? 'Enviando...' :
                        communication.status === 'sent' ? 'Enviado' : 'Cancelado'}
                     </Badge>
                     <Badge variant={getPriorityColor(communication.priority)}>
@@ -174,7 +181,41 @@ const AdminCommunications = () => {
                       icon={<Eye className="w-4 h-4" />}
                     />
                   )}
-                  {communication.status !== 'sent' && (
+                  {/* Botão de Cancelar Envio (quando está enviando ou agendado) */}
+                  {(communication.status === 'sending' || communication.status === 'scheduled') && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <AdminButton 
+                          variant="destructive" 
+                          size="sm"
+                          icon={<AlertCircle className="w-4 h-4" />}
+                        >
+                          Cancelar Envio
+                        </AdminButton>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Cancelar Envio?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Tem certeza que deseja cancelar o envio deste comunicado? 
+                            {communication.status === 'sending' && (
+                              <><br /><br /><strong>Atenção:</strong> O envio em andamento será interrompido e os destinatários restantes não receberão a comunicação.</>
+                            )}
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Voltar</AlertDialogCancel>
+                          <AlertDialogAction 
+                            onClick={() => handleCancel(communication.id)}
+                            className="bg-destructive hover:bg-destructive/90"
+                          >
+                            Cancelar Envio
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
+                  {communication.status !== 'sent' && communication.status !== 'sending' && communication.status !== 'scheduled' && (
                     <>
                       <AdminButton
                         variant="ghost"

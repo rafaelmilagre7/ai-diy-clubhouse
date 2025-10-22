@@ -227,10 +227,19 @@ export function useSecurityMonitoring() {
   }, [user, fetchSecurityMetrics]);
 
   // Função para bloquear IP suspeito
-  const blockSuspiciousIP = useCallback(async (ip: string) => {
-    if (!user) return;
+  const blockSuspiciousIP = useCallback(async (ip: string, reason?: string) => {
+    if (!user) return { success: false, error: 'Usuário não autenticado' };
 
     try {
+      // Bloquear IP no banco usando função RPC
+      const { data, error } = await supabase.rpc('auto_block_suspicious_ip', {
+        p_ip_address: ip,
+        p_reason: reason || 'Atividade suspeita detectada',
+        p_violation_count: 1
+      });
+
+      if (error) throw error;
+
       // Log da ação de bloqueio
       await supabase.from('audit_logs').insert({
         user_id: user.id,
@@ -241,19 +250,66 @@ export function useSecurityMonitoring() {
           ip_address: ip,
           blocked_by: user.id,
           timestamp: new Date().toISOString(),
-          reason: 'suspicious_activity'
+          reason: reason || 'suspicious_activity',
+          auto_blocked: true
         },
         severity: 'high'
       });
 
-      // TODO: Implementar bloqueio real do IP
-      console.log(`🚫 IP ${ip} marcado para bloqueio`);
+      console.log(`🚫 IP ${ip} bloqueado com sucesso`);
       
       // Atualizar métricas
       await fetchSecurityMetrics();
       
+      return { success: true, data };
+      
     } catch (error) {
       console.error('Erro ao bloquear IP:', error);
+      return { success: false, error: error.message };
+    }
+  }, [user, fetchSecurityMetrics]);
+
+  // Função para desbloquear IP
+  const unblockIP = useCallback(async (ip: string) => {
+    if (!user) return { success: false, error: 'Usuário não autenticado' };
+
+    try {
+      // Atualizar registro de IP bloqueado
+      const { error } = await supabase
+        .from('blocked_ips')
+        .update({
+          unblocked_at: new Date().toISOString(),
+          unblocked_by: user.id
+        })
+        .eq('ip_address', ip)
+        .is('unblocked_at', null);
+
+      if (error) throw error;
+
+      // Log da ação
+      await supabase.from('audit_logs').insert({
+        user_id: user.id,
+        event_type: 'security_action',
+        action: 'unblock_ip',
+        resource_id: ip,
+        details: {
+          ip_address: ip,
+          unblocked_by: user.id,
+          timestamp: new Date().toISOString()
+        },
+        severity: 'medium'
+      });
+
+      console.log(`✅ IP ${ip} desbloqueado`);
+      
+      // Atualizar métricas
+      await fetchSecurityMetrics();
+      
+      return { success: true };
+      
+    } catch (error) {
+      console.error('Erro ao desbloquear IP:', error);
+      return { success: false, error: error.message };
     }
   }, [user, fetchSecurityMetrics]);
 
@@ -264,6 +320,7 @@ export function useSecurityMonitoring() {
     dismissAlert,
     runSecurityScan,
     blockSuspiciousIP,
+    unblockIP,
     fetchSecurityMetrics
   };
 }

@@ -120,6 +120,12 @@ export const useCommunications = () => {
 
   const sendCommunication = useMutation({
     mutationFn: async (communicationId: string) => {
+      // Atualizar status para 'sending' antes de enviar
+      await supabase
+        .from('communications')
+        .update({ send_status: 'sending' })
+        .eq('id', communicationId);
+
       const { data, error } = await supabase.functions.invoke('send-communication', {
         body: { communicationId },
       });
@@ -133,6 +139,29 @@ export const useCommunications = () => {
     },
     onError: (error: any) => {
       toast.error('Erro ao enviar comunicado: ' + error.message);
+    },
+  });
+
+  const cancelCommunication = useMutation({
+    mutationFn: async (communicationId: string) => {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) throw new Error('Usuário não autenticado');
+
+      const { data, error } = await supabase.rpc('cancel_communication_sending', {
+        p_communication_id: communicationId,
+        p_user_id: user.user.id
+      });
+
+      if (error) throw error;
+      
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-communications'] });
+      toast.success('Envio cancelado com sucesso!');
+    },
+    onError: (error: any) => {
+      toast.error('Erro ao cancelar: ' + error.message);
     },
   });
 
@@ -173,6 +202,7 @@ export const useCommunications = () => {
     updateCommunication,
     deleteCommunication,
     sendCommunication,
+    cancelCommunication,
     getDeliveryStats,
   };
 };
