@@ -23,7 +23,8 @@ import {
   Webhook,
   Network,
   Palette,
-  Layout
+  Layout,
+  Bell
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -73,6 +74,11 @@ const navigationItems = [
     title: "Sugestões",
     href: "/admin/suggestions",
     icon: MessageSquare,
+  },
+  {
+    title: "Notificações",
+    href: "/admin/notifications",
+    icon: Bell,
   },
   {
     title: "Networking",

@@ -39,6 +39,7 @@ const NPSAnalytics = lazy(() => import('@/pages/admin/NPSAnalytics'));
 const CertificateTemplates = lazy(() => import('@/pages/admin/CertificateTemplates'));
 const CourseCertificateManager = lazy(() => import('@/pages/admin/CourseCertificateManager'));
 const NotificationsStats = lazy(() => import('@/pages/admin/NotificationsStats'));
+const AdminNotifications = lazy(() => import('@/pages/admin/AdminNotifications'));
 const EmailDashboard = lazy(() => import('@/pages/admin/communications/EmailDashboard'));
 const EmailLogs = lazy(() => import('@/pages/admin/communications/EmailLogs'));
 const EmailSettings = lazy(() => import('@/pages/admin/communications/EmailSettings'));
@@ -88,6 +89,7 @@ export const adminRoutes: RouteObject[] = [
   createAdminRoute("/admin/nps", NPSAnalytics),
   createAdminRoute("/admin/certificate-templates", CertificateTemplates),
   createAdminRoute("/admin/course-certificates", CourseCertificateManager),
+  createAdminRoute("/admin/notifications", AdminNotifications),
   createAdminRoute("/admin/notifications/stats", NotificationsStats),
   
   createAdminRoute("/admin/data-audit", DataAuditPage),
