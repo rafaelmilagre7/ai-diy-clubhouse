@@ -3854,8 +3854,11 @@ export type Database = {
           id: string
           is_read: boolean | null
           message: string
+          metadata: Json | null
           priority: number | null
           read_at: string | null
+          reference_id: string | null
+          reference_type: string | null
           title: string
           type: string
           user_id: string
@@ -3870,8 +3873,11 @@ export type Database = {
           id?: string
           is_read?: boolean | null
           message: string
+          metadata?: Json | null
           priority?: number | null
           read_at?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
           title: string
           type: string
           user_id: string
@@ -3886,8 +3892,11 @@ export type Database = {
           id?: string
           is_read?: boolean | null
           message?: string
+          metadata?: Json | null
           priority?: number | null
           read_at?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
           title?: string
           type?: string
           user_id?: string

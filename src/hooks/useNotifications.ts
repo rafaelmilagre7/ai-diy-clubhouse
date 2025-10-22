@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
 import { toast } from 'sonner';
 import { useNotificationSound } from './useNotificationSound';
+import type { NotificationCategory } from '@/types/notifications';
 
 export interface Notification {
   id: string;
@@ -22,6 +23,9 @@ export interface Notification {
   action_url?: string;
   grouped_with?: string;
   read_at?: string;
+  reference_id?: string;
+  reference_type?: string;
+  metadata?: Record<string, any>;
   grouped_count?: number;
   grouped_ids?: string[];
   actor?: {
@@ -91,18 +95,21 @@ const groupNotifications = (notifications: Notification[]): Notification[] => {
   );
 };
 
-export const useNotifications = () => {
+export const useNotifications = (filters: {
+  category?: NotificationCategory;
+  unreadOnly?: boolean;
+} = {}) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { playSound } = useNotificationSound();
 
   // Buscar notificações do usuário
-  const { data: rawNotifications = [], isLoading } = useQuery({
-    queryKey: ['notifications', user?.id],
+  const { data: rawNotifications = [], isLoading, refetch } = useQuery({
+    queryKey: ['notifications', user?.id, filters?.category, filters?.unreadOnly],
     queryFn: async () => {
       if (!user) return [];
 
-      const { data, error } = await supabase
+      let query = supabase
         .from('notifications')
         .select(`
           *,
@@ -113,7 +120,18 @@ export const useNotifications = () => {
         .eq('user_id', user.id)
         .or('expires_at.is.null,expires_at.gt.now()')
         .order('created_at', { ascending: false })
-        .limit(50);
+        .limit(100);
+
+      // Aplicar filtros opcionais
+      if (filters?.category) {
+        query = query.eq('category', filters.category);
+      }
+      
+      if (filters?.unreadOnly) {
+        query = query.eq('is_read', false);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       return data as Notification[];
@@ -290,15 +308,43 @@ export const useNotifications = () => {
     };
   }, [user, queryClient]);
 
+  // Estatísticas por categoria
+  const statsByCategory = React.useMemo(() => {
+    return rawNotifications.reduce((acc, notif) => {
+      const cat = notif.category || 'system';
+      if (!acc[cat]) acc[cat] = { total: 0, unread: 0 };
+      acc[cat].total++;
+      if (!notif.is_read) acc[cat].unread++;
+      return acc;
+    }, {} as Record<string, { total: number; unread: number }>);
+  }, [rawNotifications]);
+
   return {
     notifications,
+    rawNotifications,
     isLoading,
     unreadCount,
+    statsByCategory,
     markAsRead: markAsRead.mutateAsync,
     markAllAsRead: markAllAsRead.mutateAsync,
     deleteNotification: deleteNotification.mutateAsync,
     isMarkingAsRead: markAsRead.isPending,
     isMarkingAllAsRead: markAllAsRead.isPending,
     isDeletingNotification: deleteNotification.isPending,
+    refetch,
   };
+};
+
+/**
+ * 🔔 Hook para notificações de uma categoria específica
+ */
+export const useNotificationsByCategory = (category: NotificationCategory) => {
+  return useNotifications({ category });
+};
+
+/**
+ * 🔔 Hook para apenas notificações não lidas
+ */
+export const useUnreadNotifications = () => {
+  return useNotifications({ unreadOnly: true });
 };

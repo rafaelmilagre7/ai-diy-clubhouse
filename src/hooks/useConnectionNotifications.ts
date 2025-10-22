@@ -1,6 +1,23 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useEffect } from 'react';
+/**
+ * ⚠️ DEPRECATED - Use useNotifications() instead
+ * 
+ * Este hook foi substituído pelo sistema unificado de notificações.
+ * Mantido apenas para compatibilidade temporária.
+ * 
+ * Migração:
+ * ```
+ * // ANTES:
+ * import { useConnectionNotifications } from '@/hooks/useConnectionNotifications';
+ * const { notifications, markAsRead } = useConnectionNotifications();
+ * 
+ * // DEPOIS:
+ * import { useNotificationsByCategory } from '@/hooks/useNotifications';
+ * const { notifications, markAsRead } = useNotificationsByCategory('social');
+ * ```
+ */
+
+import { useNotificationsByCategory } from './useNotifications';
+import { useMemo } from 'react';
 
 export interface ConnectionNotification {
   id: string;
@@ -19,96 +36,72 @@ export interface ConnectionNotification {
   };
 }
 
+/**
+ * @deprecated Use useNotifications({ category: 'social' }) instead
+ */
 export const useConnectionNotifications = () => {
-  const queryClient = useQueryClient();
+  console.warn(
+    '⚠️ useConnectionNotifications is deprecated. Use useNotifications({ category: "social" }) instead.'
+  );
 
-  // Buscar notificações do usuário
-  const { data: notifications, isLoading } = useQuery({
-    queryKey: ['connection-notifications'],
-    queryFn: async () => {
-      const { data: user } = await supabase.auth.getUser();
-      if (!user.user) return [];
+  const {
+    notifications: allNotifications,
+    isLoading,
+    markAsRead: markAsReadUnified,
+    markAllAsRead: markAllAsReadUnified,
+  } = useNotificationsByCategory('social');
 
-      const { data, error } = await supabase
-        .from('connection_notifications')
-        .select(`
-          *,
-          sender:profiles!connection_notifications_sender_id_fkey(
-            id, name, email, company_name, current_position, avatar_url
-          )
-        `)
-        .eq('user_id', user.user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data as ConnectionNotification[];
-    },
-  });
-
-  // Configurar Realtime para atualizações instantâneas
-  useEffect(() => {
-    const channel = supabase
-      .channel('connection-notifications-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'connection_notifications'
+  // Adaptar formato para compatibilidade
+  const notifications = useMemo(() => {
+    return allNotifications
+      .filter(n => n.type === 'connection_request' || n.type === 'connection_accepted')
+      .map(n => ({
+        id: n.id,
+        user_id: n.user_id,
+        sender_id: n.actor_id || '',
+        type: n.type as 'connection_request' | 'connection_accepted',
+        is_read: n.is_read,
+        created_at: n.created_at,
+        sender: n.actor ? {
+          id: n.actor.id,
+          name: n.actor.name,
+          email: '', // não disponível no novo sistema
+          company_name: n.actor.company_name,
+          current_position: n.actor.current_position,
+          avatar_url: n.actor.avatar_url,
+        } : {
+          id: '',
+          name: 'Desconhecido',
+          email: '',
         },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ['connection-notifications'] });
-        }
-      )
-      .subscribe();
+      } as ConnectionNotification));
+  }, [allNotifications]);
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [queryClient]);
-
-
-  // Marcar notificação como lida
-  const markAsRead = useMutation({
-    mutationFn: async (notificationId: string) => {
-      const { error } = await supabase
-        .from('connection_notifications')
-        .update({ is_read: true })
-        .eq('id', notificationId);
-
-      if (error) throw error;
+  const markAsRead = {
+    mutate: async (notificationId: string) => {
+      await markAsReadUnified([notificationId]);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['connection-notifications'] });
-    }
-  });
-
-  // Marcar todas como lidas
-  const markAllAsRead = useMutation({
-    mutationFn: async () => {
-      const { data: user } = await supabase.auth.getUser();
-      if (!user.user) return;
-
-      const { error } = await supabase
-        .from('connection_notifications')
-        .update({ is_read: true })
-        .eq('user_id', user.user.id)
-        .eq('is_read', false);
-
-      if (error) throw error;
+    mutateAsync: async (notificationId: string) => {
+      await markAsReadUnified([notificationId]);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['connection-notifications'] });
-    }
-  });
+  };
 
-  const unreadCount = notifications?.filter(n => !n.is_read).length || 0;
+  const markAllAsRead = {
+    mutate: async () => {
+      await markAllAsReadUnified();
+    },
+    mutateAsync: async () => {
+      await markAllAsReadUnified();
+    },
+  };
+
+  const unreadCount = notifications.filter(n => !n.is_read).length;
 
   return {
-    notifications: notifications || [],
+    notifications,
     unreadCount,
     isLoading,
     markAsRead,
-    markAllAsRead
+    markAllAsRead,
   };
 };
