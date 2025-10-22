@@ -252,3 +252,84 @@ verify_jwt = false
 
 [functions.test-resend-direct]
 verify_jwt = false
+
+[functions.dashboard-engagement]
+verify_jwt = false
+
+[functions.dashboard-business]
+verify_jwt = false
+
+[functions.dashboard-community]
+verify_jwt = false
+
+[functions.dashboard-learning]
+verify_jwt = false
+
+[functions.dashboard-users]
+verify_jwt = false
+
+[functions.admin-delete-invite]
+verify_jwt = false
+
+[functions.bulk-invite-sender]
+verify_jwt = false
+
+[functions.cleanup-deleted-invites]
+verify_jwt = false
+
+[functions.debug-pipedrive-mapping]
+verify_jwt = false
+
+[functions.generate-onboarding-message]
+verify_jwt = false
+
+[functions.image-upload]
+verify_jwt = false
+
+[functions.run-integration-test]
+verify_jwt = false
+
+[functions.sales-notification]
+verify_jwt = false
+
+[functions.security-headers]
+verify_jwt = false
+
+[functions.send-assistant-message]
+verify_jwt = false
+
+[functions.send-communication-email]
+verify_jwt = false
+
+[functions.send-invite-whatsapp]
+verify_jwt = false
+
+[functions.setup-storage]
+verify_jwt = false
+
+[functions.setup-storage-buckets]
+verify_jwt = false
+
+[functions.storage-proxy]
+verify_jwt = false
+
+[functions.upload-panda-video]
+verify_jwt = false
+
+[functions.validate-coupon]
+verify_jwt = false
+
+[functions.validate-credentials]
+verify_jwt = false
+
+[functions.whatsapp-config-check]
+verify_jwt = false
+
+[functions.whatsapp-status-check]
+verify_jwt = false
+
+[functions.whatsapp-template-check]
+verify_jwt = false
+
+[functions.whatsapp-webhook]
+verify_jwt = false
