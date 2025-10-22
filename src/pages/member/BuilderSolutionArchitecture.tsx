@@ -1,7 +1,7 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Network, GitBranch, UserCircle, Layers } from 'lucide-react';
+import { ArrowLeft, Network, GitBranch, UserCircle, Layers, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LiquidGlassCard } from '@/components/ui/LiquidGlassCard';
 import { DiagramRenderer } from '@/components/builder/DiagramRenderer';
@@ -71,24 +71,32 @@ export default function BuilderSolutionArchitecture() {
             </div>
 
             <Tabs defaultValue="architecture" className="w-full">
-              <TabsList className="grid grid-cols-2 lg:grid-cols-4 w-full mb-6">
-                <TabsTrigger value="architecture" className="flex items-center gap-2">
-                  <Network className="h-4 w-4" />
-                  <span className="hidden sm:inline">Arquitetura</span>
-                </TabsTrigger>
-                <TabsTrigger value="dataflow" className="flex items-center gap-2">
-                  <GitBranch className="h-4 w-4" />
-                  <span className="hidden sm:inline">Fluxo de Dados</span>
-                </TabsTrigger>
-                <TabsTrigger value="journey" className="flex items-center gap-2">
-                  <UserCircle className="h-4 w-4" />
-                  <span className="hidden sm:inline">Jornada</span>
-                </TabsTrigger>
-                <TabsTrigger value="stack" className="flex items-center gap-2">
-                  <Layers className="h-4 w-4" />
-                  <span className="hidden sm:inline">Stack Técnica</span>
-                </TabsTrigger>
-              </TabsList>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                <TabsList className="grid grid-cols-2 lg:grid-cols-4 w-full sm:w-auto">
+                  <TabsTrigger value="architecture" className="flex items-center gap-2">
+                    <Network className="h-4 w-4" />
+                    <span className="hidden sm:inline">Arquitetura</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="dataflow" className="flex items-center gap-2">
+                    <GitBranch className="h-4 w-4" />
+                    <span className="hidden sm:inline">Fluxo de Dados</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="journey" className="flex items-center gap-2">
+                    <UserCircle className="h-4 w-4" />
+                    <span className="hidden sm:inline">Jornada</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="stack" className="flex items-center gap-2">
+                    <Layers className="h-4 w-4" />
+                    <span className="hidden sm:inline">Stack Técnica</span>
+                  </TabsTrigger>
+                </TabsList>
+
+                <div className="flex items-center gap-2 text-xs text-muted-foreground bg-primary/5 px-3 py-2 rounded-lg border border-primary/20">
+                  <Info className="h-4 w-4 text-primary" />
+                  <span className="hidden sm:inline">Use Ctrl+Scroll para zoom • Arraste para navegar</span>
+                  <span className="sm:hidden">Ctrl+Scroll = zoom</span>
+                </div>
+              </div>
 
               <TabsContent value="architecture">
                 <DiagramRenderer 

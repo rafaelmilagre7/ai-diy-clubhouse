@@ -1,9 +1,18 @@
 import React, { useEffect, useRef, useState } from 'react';
 import mermaid from 'mermaid';
 import { Button } from '@/components/ui/button';
-import { Download, Maximize2, Copy, ZoomIn, ZoomOut } from 'lucide-react';
+import { 
+  Download, Maximize2, Minimize2, Copy, 
+  ZoomIn, ZoomOut, RotateCcw, AlertTriangle, Info, Move
+} from 'lucide-react';
 import { toast } from 'sonner';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface DiagramRendererProps {
   diagram: {
@@ -19,11 +28,18 @@ export const DiagramRenderer: React.FC<DiagramRendererProps> = ({
   diagramName,
   diagramTitle 
 }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
   const mermaidRef = useRef<HTMLDivElement>(null);
+  
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [zoom, setZoom] = useState(100);
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [isLoading, setIsLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showDetails, setShowDetails] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     if (!diagram?.mermaid_code || !mermaidRef.current) {
@@ -33,7 +49,7 @@ export const DiagramRenderer: React.FC<DiagramRendererProps> = ({
 
     const renderDiagram = async () => {
       setIsLoading(true);
-      setHasError(false);
+      setError(null);
       
       try {
         const container = mermaidRef.current;
@@ -80,28 +96,58 @@ export const DiagramRenderer: React.FC<DiagramRendererProps> = ({
         
         container.innerHTML = svg;
         setIsLoading(false);
-      } catch (error) {
-        console.error(`❌ Erro ao renderizar ${diagramName}:`, error);
-        setHasError(true);
+        console.log(`✅ Diagrama ${diagramName} renderizado com sucesso`);
+      } catch (err: any) {
+        console.error(`❌ Erro ao renderizar ${diagramName}:`, err);
+        setError(err.message || 'Erro desconhecido ao renderizar diagrama');
         setIsLoading(false);
-        
-        if (mermaidRef.current) {
-          mermaidRef.current.innerHTML = `
-            <div class="text-center py-12 text-muted-foreground space-y-3">
-              <svg class="h-12 w-12 mx-auto text-status-error" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-              <p class="font-semibold">Erro ao renderizar diagrama</p>
-              <p class="text-xs">Código Mermaid inválido ou formato não suportado</p>
-            </div>
-          `;
-        }
       }
     };
 
     const timer = setTimeout(renderDiagram, 100);
     return () => clearTimeout(timer);
-  }, [diagram, diagramName]);
+  }, [diagram, diagramName, retryCount]);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (e.button === 0 && !error) {
+      setIsDragging(true);
+      setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (isDragging) {
+      setPan({
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y
+      });
+    }
+  };
+
+  const handleMouseUp = () => setIsDragging(false);
+
+  const handleWheel = (e: React.WheelEvent) => {
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? 0.9 : 1.1;
+      setZoom(prev => Math.max(0.5, Math.min(3, prev * delta)));
+    }
+  };
+
+  const resetView = () => {
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
+    toast.success('Visão resetada');
+  };
+
+  const handleRetry = () => {
+    if (retryCount < 3) {
+      setRetryCount(prev => prev + 1);
+      toast.info(`Tentando novamente... (${retryCount + 1}/3)`);
+    } else {
+      toast.error('Máximo de tentativas atingido');
+    }
+  };
 
   const handleDownloadPNG = async () => {
     try {
@@ -129,7 +175,7 @@ export const DiagramRenderer: React.FC<DiagramRendererProps> = ({
             link.href = URL.createObjectURL(blob);
             link.download = `${diagramName}.png`;
             link.click();
-            toast.success('Diagrama baixado!');
+            toast.success('PNG baixado!');
           }
         });
         URL.revokeObjectURL(url);
@@ -138,7 +184,7 @@ export const DiagramRenderer: React.FC<DiagramRendererProps> = ({
       img.src = url;
     } catch (error) {
       console.error('Erro ao baixar:', error);
-      toast.error('Erro ao baixar diagrama');
+      toast.error('Erro ao baixar PNG');
     }
   };
 
@@ -172,85 +218,308 @@ export const DiagramRenderer: React.FC<DiagramRendererProps> = ({
     }
   };
 
-  const handleZoomIn = () => setZoom(prev => Math.min(prev + 10, 200));
-  const handleZoomOut = () => setZoom(prev => Math.max(prev - 10, 50));
-  const handleResetZoom = () => setZoom(100);
+  const toggleFullscreen = () => {
+    setIsFullscreen(prev => !prev);
+    if (!isFullscreen) {
+      resetView();
+    }
+  };
 
   if (!diagram?.mermaid_code) {
     return (
-      <div className="text-center py-12 text-muted-foreground">
-        <p>Diagrama não disponível para esta solução</p>
+      <div className="text-center py-12 text-muted-foreground space-y-3">
+        <Info className="h-12 w-12 mx-auto opacity-50" />
+        <p className="font-medium">Diagrama não disponível</p>
+        <p className="text-xs">Este diagrama não foi gerado para esta solução</p>
       </div>
     );
   }
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="space-y-4"
-    >
-      {/* Descrição */}
-      {diagram.description && (
-        <p className="text-sm text-foreground/80 leading-relaxed">
-          {diagram.description}
-        </p>
-      )}
-
-      {/* Controles */}
-      <div className="flex flex-wrap gap-2 items-center justify-between">
-        <div className="flex gap-2">
-          <Button onClick={handleZoomOut} variant="outline" size="sm" disabled={zoom <= 50}>
-            <ZoomOut className="h-4 w-4" />
-          </Button>
-          <Button onClick={handleResetZoom} variant="outline" size="sm">
-            {zoom}%
-          </Button>
-          <Button onClick={handleZoomIn} variant="outline" size="sm" disabled={zoom >= 200}>
-            <ZoomIn className="h-4 w-4" />
-          </Button>
-        </div>
-
-        <div className="flex gap-2">
-          <Button onClick={handleCopyMermaid} variant="outline" size="sm">
-            <Copy className="h-4 w-4 mr-2" />
-            Copiar Código
-          </Button>
-          <Button onClick={handleDownloadSVG} variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-2" />
-            SVG
-          </Button>
-          <Button onClick={handleDownloadPNG} variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-2" />
-            PNG
-          </Button>
-        </div>
-      </div>
-
-      {/* Container do diagrama */}
-      <div 
-        className={`
-          relative bg-muted/30 rounded-lg p-6 border border-border/50 
-          overflow-auto transition-all
-          ${isFullscreen ? 'fixed inset-0 z-50 rounded-none' : ''}
-        `}
+    <TooltipProvider>
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className={`space-y-4 ${isFullscreen ? 'fixed inset-0 z-50 bg-background p-6' : ''}`}
       >
-        {isLoading && (
-          <div className="flex items-center justify-center min-h-[300px]">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        {/* Header com descrição */}
+        <AnimatePresence>
+          {diagram.description && !isFullscreen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="p-4 bg-primary/5 border border-primary/20 rounded-lg"
+            >
+              <p className="text-sm text-foreground/90 leading-relaxed">
+                {diagram.description}
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Toolbar de controles */}
+        <div className="flex flex-wrap gap-2 items-center justify-between bg-surface-elevated/50 p-3 rounded-lg border border-border/50">
+          {/* Controles de zoom/pan */}
+          <div className="flex gap-1">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  onClick={() => setZoom(prev => Math.max(0.5, prev - 0.1))} 
+                  variant="outline" 
+                  size="sm"
+                  disabled={zoom <= 0.5 || isLoading || !!error}
+                >
+                  <ZoomOut className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Diminuir zoom</TooltipContent>
+            </Tooltip>
+
+            <Button 
+              onClick={resetView} 
+              variant="outline" 
+              size="sm"
+              disabled={isLoading || !!error}
+              className="min-w-[60px]"
+            >
+              {Math.round(zoom * 100)}%
+            </Button>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  onClick={() => setZoom(prev => Math.min(3, prev + 0.1))} 
+                  variant="outline" 
+                  size="sm"
+                  disabled={zoom >= 3 || isLoading || !!error}
+                >
+                  <ZoomIn className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Aumentar zoom</TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  onClick={resetView} 
+                  variant="outline" 
+                  size="sm"
+                  disabled={isLoading || !!error}
+                >
+                  <RotateCcw className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Resetar visão</TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  disabled={isLoading || !!error}
+                  className="cursor-move"
+                >
+                  <Move className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Arraste para mover</TooltipContent>
+            </Tooltip>
+          </div>
+
+          {/* Ações */}
+          <div className="flex gap-1">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  onClick={handleCopyMermaid} 
+                  variant="outline" 
+                  size="sm"
+                  disabled={isLoading}
+                >
+                  <Copy className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Código</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Copiar código Mermaid</TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  onClick={handleDownloadSVG} 
+                  variant="outline" 
+                  size="sm"
+                  disabled={isLoading || !!error}
+                >
+                  <Download className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">SVG</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Baixar como SVG</TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  onClick={handleDownloadPNG} 
+                  variant="outline" 
+                  size="sm"
+                  disabled={isLoading || !!error}
+                >
+                  <Download className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">PNG</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Baixar como PNG (alta qualidade)</TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  onClick={toggleFullscreen} 
+                  variant="outline" 
+                  size="sm"
+                  disabled={isLoading || !!error}
+                >
+                  {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {isFullscreen ? 'Sair da tela cheia' : 'Tela cheia'}
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        </div>
+
+        {/* Container do diagrama com pan/zoom */}
+        <div 
+          ref={containerRef}
+          className={`
+            relative bg-gradient-to-br from-muted/20 to-muted/40 rounded-xl 
+            border border-border/50 overflow-hidden
+            ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}
+            ${isFullscreen ? 'h-[calc(100vh-180px)]' : 'min-h-[400px] max-h-[600px]'}
+          `}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+          onWheel={handleWheel}
+        >
+          {/* Loading state */}
+          {isLoading && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm z-10">
+              <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mb-4"></div>
+              <p className="text-sm text-muted-foreground">Renderizando diagrama...</p>
+            </div>
+          )}
+
+          {/* Error state */}
+          {error && (
+            <div className="absolute inset-0 flex items-center justify-center p-8">
+              <motion.div 
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="max-w-lg w-full space-y-4 text-center"
+              >
+                <AlertTriangle className="h-16 w-16 mx-auto text-destructive" />
+                <div className="space-y-2">
+                  <h3 className="font-semibold text-lg">Erro ao renderizar diagrama</h3>
+                  <p className="text-sm text-muted-foreground">
+                    O código Mermaid gerado pela IA contém erros de sintaxe.
+                  </p>
+                  {retryCount < 3 && (
+                    <p className="text-xs text-muted-foreground">
+                      Tentativa {retryCount}/3
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex gap-2 justify-center">
+                  {retryCount < 3 && (
+                    <Button onClick={handleRetry} size="sm" variant="default">
+                      <RotateCcw className="h-4 w-4 mr-2" />
+                      Tentar Novamente
+                    </Button>
+                  )}
+                  <Button 
+                    onClick={() => setShowDetails(!showDetails)} 
+                    size="sm" 
+                    variant="outline"
+                  >
+                    <Info className="h-4 w-4 mr-2" />
+                    {showDetails ? 'Ocultar' : 'Ver'} Detalhes
+                  </Button>
+                </div>
+
+                <AnimatePresence>
+                  {showDetails && (
+                    <motion.details 
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="text-left"
+                      open
+                    >
+                      <summary className="text-sm font-medium mb-2 cursor-pointer">
+                        Erro técnico:
+                      </summary>
+                      <pre className="text-xs p-4 bg-destructive/10 border border-destructive/30 rounded-lg overflow-auto max-h-48 text-destructive">
+                        {error}
+                      </pre>
+                      
+                      <div className="mt-3 p-3 bg-muted/50 rounded-lg text-xs space-y-1">
+                        <p className="font-medium">Código Mermaid gerado:</p>
+                        <pre className="p-2 bg-background/50 rounded overflow-auto max-h-32">
+                          {diagram.mermaid_code}
+                        </pre>
+                      </div>
+                    </motion.details>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            </div>
+          )}
+
+          {/* Diagrama renderizado */}
+          {!error && !isLoading && (
+            <div 
+              className="w-full h-full flex items-center justify-center p-8"
+              style={{ 
+                transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+                transformOrigin: 'center center',
+                transition: isDragging ? 'none' : 'transform 0.2s ease-out'
+              }}
+            >
+              <div 
+                ref={mermaidRef} 
+                className="mermaid"
+              />
+            </div>
+          )}
+
+          {/* Hint de controles (apenas quando não há erro) */}
+          {!error && !isLoading && (
+            <div className="absolute bottom-4 left-4 text-xs text-muted-foreground bg-background/80 backdrop-blur-sm px-3 py-2 rounded-lg border border-border/50">
+              <p className="flex items-center gap-2">
+                <Info className="h-3 w-3" />
+                <span className="hidden sm:inline">Use Ctrl+Scroll para zoom • Arraste para mover</span>
+                <span className="sm:hidden">Ctrl+Scroll = zoom</span>
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Footer com estatísticas (apenas fullscreen) */}
+        {isFullscreen && !error && (
+          <div className="text-xs text-muted-foreground text-center">
+            {diagramTitle} • Zoom: {Math.round(zoom * 100)}% • Pan: X:{Math.round(pan.x)} Y:{Math.round(pan.y)}
           </div>
         )}
-        
-        <div 
-          ref={mermaidRef} 
-          className="mermaid flex items-center justify-center min-h-[300px]"
-          style={{ 
-            transform: `scale(${zoom / 100})`,
-            transformOrigin: 'top center',
-            transition: 'transform 0.2s'
-          }}
-        />
-      </div>
-    </motion.div>
+      </motion.div>
+    </TooltipProvider>
   );
 };

@@ -128,6 +128,71 @@ ${toolsContext}
 OBJETIVO:
 Criar um plano ULTRA-ESPECÍFICO, EXECUTÁVEL e MENSURÁVEL.
 
+⚠️ INSTRUÇÕES CRÍTICAS PARA DIAGRAMAS MERMAID (OBRIGATÓRIO):
+
+🔴 ARCHITECTURE_FLOWCHART (graph TD/LR):
+- Use APENAS "graph TD" ou "graph LR" (NUNCA "flowchart")
+- Nós: [ ] para retângulos, ( ) para arredondados, (( )) para círculos
+- NUNCA use chaves { } em graphs (causa syntax error fatal)
+- Conexões: -->|texto| ou apenas -->
+- Subgraphs: "subgraph Nome" e "end" (sem chaves)
+- Estilos: style NODEID fill:#cor,stroke:#cor,color:#fff
+- Máximo 15 nós (clareza visual)
+EXEMPLO VÁLIDO:
+graph TD
+  A[Usuário] -->|mensagem| B(WhatsApp API)
+  B --> C{Make}
+  C -->|qualifica| D[GPT-4]
+  D --> E[(CRM)]
+  style D fill:#3b82f6
+
+🔴 DATA_FLOW_DIAGRAM (flowchart LR):
+- Use "flowchart LR" (Left to Right)
+- Subgraphs para agrupar componentes
+- NUNCA use chaves { } isoladas
+- Conexões com dados: A -->|nome_dado| B
+- Máximo 12 nós
+EXEMPLO VÁLIDO:
+flowchart LR
+  subgraph Frontend
+    A[React]
+  end
+  subgraph Backend
+    B[API]
+  end
+  A -->|request| B
+
+🔴 USER_JOURNEY_MAP (journey):
+- Formato exato: "journey" na linha 1
+- "title Texto do Titulo" (sem dois pontos)
+- Seções: "section Nome da Secao"
+- Tarefas: "Nome Tarefa: SCORE: Ator1, Ator2"
+- SCORE é UM NÚMERO de 1-5 (sem dois pontos depois do número)
+- Máximo 4 seções, 5 tarefas/seção
+EXEMPLO VÁLIDO:
+journey
+  title Jornada do Usuario
+  section Inicio
+    Acessa sistema: 5: Usuario
+    Faz login: 4: Usuario
+  section Uso
+    Usa funcao: 5: Usuario, Sistema
+
+🔴 TECHNICAL_STACK_DIAGRAM (graph TB):
+- Use "graph TB" (Top to Bottom)
+- Subgraphs para camadas (Frontend, Backend, etc)
+- NUNCA use chaves { }
+- Máximo 10 componentes
+EXEMPLO VÁLIDO:
+graph TB
+  subgraph Frontend
+    A[React]
+  end
+  subgraph Backend
+    B[Node]
+  end
+  A --> B
+
 ESTRUTURA DA RESPOSTA:
 
 {
@@ -532,6 +597,92 @@ Crie um plano completo seguindo o formato JSON especificado.`;
     console.log(`[BUILDER] 📊 JSON recebido (primeiros 500 chars):`, JSON.stringify(solutionData).substring(0, 500));
     console.log(`[BUILDER] ✓ Checklist: ${solutionData.implementation_checklist?.length || 0} steps`);
     console.log(`[BUILDER] 📝 Título recebido da IA: "${solutionData.title}"`);
+
+    // 🔍 VALIDAÇÃO DE SINTAXE MERMAID
+    const validateMermaidSyntax = (code: string, type: string): { valid: boolean; errors: string[] } => {
+      const errors: string[] = [];
+      
+      if (!code || code.trim() === '') {
+        errors.push('Código Mermaid vazio');
+        return { valid: false, errors };
+      }
+      
+      const lines = code.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+      
+      // Validar tipo de diagrama
+      if (type === 'architecture' || type === 'stack') {
+        if (!lines[0].match(/^graph\s+(TD|LR|TB|RL)/i)) {
+          errors.push(`Primeira linha deve ser "graph TD/LR/TB/RL", encontrado: "${lines[0]}"`);
+        }
+        // Detectar uso incorreto de chaves
+        if (code.includes('{') && !code.match(/\{\s*\}/)) {
+          errors.push('Uso inválido de chaves {} em graph (use apenas para decisões vazias ou remova)');
+        }
+      }
+      
+      if (type === 'dataflow') {
+        if (!lines[0].match(/^flowchart\s+(LR|TD|TB|RL)/i) && !lines[0].match(/^sequenceDiagram/i)) {
+          errors.push(`Primeira linha deve ser "flowchart LR/TD" ou "sequenceDiagram", encontrado: "${lines[0]}"`);
+        }
+      }
+      
+      if (type === 'journey') {
+        if (lines[0].toLowerCase() !== 'journey') {
+          errors.push(`Primeira linha deve ser "journey", encontrado: "${lines[0]}"`);
+        }
+        
+        // Validar formato de tarefas: "Task: SCORE: Actor"
+        const taskLines = lines.filter(l => !l.startsWith('title') && !l.startsWith('section') && l.includes(':'));
+        for (const taskLine of taskLines) {
+          const parts = taskLine.split(':');
+          if (parts.length >= 2) {
+            const scorePart = parts[1].trim();
+            if (!/^\d+$/.test(scorePart)) {
+              errors.push(`Journey: score deve ser número de 1-5, encontrado "${scorePart}" em: "${taskLine}"`);
+            }
+          }
+        }
+      }
+      
+      return { valid: errors.length === 0, errors };
+    };
+
+    // Validar cada diagrama
+    if (solutionData.architecture_flowchart?.mermaid_code) {
+      const validation = validateMermaidSyntax(solutionData.architecture_flowchart.mermaid_code, 'architecture');
+      if (!validation.valid) {
+        console.warn('[BUILDER] ⚠️ Erros em architecture_flowchart:', validation.errors);
+      } else {
+        console.log('[BUILDER] ✅ architecture_flowchart: sintaxe válida');
+      }
+    }
+
+    if (solutionData.data_flow_diagram?.mermaid_code) {
+      const validation = validateMermaidSyntax(solutionData.data_flow_diagram.mermaid_code, 'dataflow');
+      if (!validation.valid) {
+        console.warn('[BUILDER] ⚠️ Erros em data_flow_diagram:', validation.errors);
+      } else {
+        console.log('[BUILDER] ✅ data_flow_diagram: sintaxe válida');
+      }
+    }
+
+    if (solutionData.user_journey_map?.mermaid_code) {
+      const validation = validateMermaidSyntax(solutionData.user_journey_map.mermaid_code, 'journey');
+      if (!validation.valid) {
+        console.warn('[BUILDER] ⚠️ Erros em user_journey_map:', validation.errors);
+      } else {
+        console.log('[BUILDER] ✅ user_journey_map: sintaxe válida');
+      }
+    }
+
+    if (solutionData.technical_stack_diagram?.mermaid_code) {
+      const validation = validateMermaidSyntax(solutionData.technical_stack_diagram.mermaid_code, 'stack');
+      if (!validation.valid) {
+        console.warn('[BUILDER] ⚠️ Erros em technical_stack_diagram:', validation.errors);
+      } else {
+        console.log('[BUILDER] ✅ technical_stack_diagram: sintaxe válida');
+      }
+    }
 
     // 🔧 VALIDAÇÃO ROBUSTA E FALLBACK CRÍTICO PARA TÍTULO
     const invalidTitles = [undefined, null, 'undefined', 'null', ''];
