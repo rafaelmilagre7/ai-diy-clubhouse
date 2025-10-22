@@ -116,6 +116,7 @@ export type Database = {
           completion_percentage: number | null
           completion_tokens: number | null
           created_at: string | null
+          data_flow_diagram: Json | null
           framework_mapping: Json | null
           generation_model: string | null
           generation_time_ms: number | null
@@ -130,15 +131,18 @@ export type Database = {
           prompt_tokens: number | null
           required_tools: Json | null
           short_description: string | null
+          technical_stack_diagram: Json | null
           title: string | null
           updated_at: string | null
           user_id: string
+          user_journey_map: Json | null
         }
         Insert: {
           architecture_flowchart?: Json | null
           completion_percentage?: number | null
           completion_tokens?: number | null
           created_at?: string | null
+          data_flow_diagram?: Json | null
           framework_mapping?: Json | null
           generation_model?: string | null
           generation_time_ms?: number | null
@@ -153,15 +157,18 @@ export type Database = {
           prompt_tokens?: number | null
           required_tools?: Json | null
           short_description?: string | null
+          technical_stack_diagram?: Json | null
           title?: string | null
           updated_at?: string | null
           user_id: string
+          user_journey_map?: Json | null
         }
         Update: {
           architecture_flowchart?: Json | null
           completion_percentage?: number | null
           completion_tokens?: number | null
           created_at?: string | null
+          data_flow_diagram?: Json | null
           framework_mapping?: Json | null
           generation_model?: string | null
           generation_time_ms?: number | null
@@ -176,9 +183,11 @@ export type Database = {
           prompt_tokens?: number | null
           required_tools?: Json | null
           short_description?: string | null
+          technical_stack_diagram?: Json | null
           title?: string | null
           updated_at?: string | null
           user_id?: string
+          user_journey_map?: Json | null
         }
         Relationships: []
       }

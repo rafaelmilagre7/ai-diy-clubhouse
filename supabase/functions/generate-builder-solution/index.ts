@@ -163,6 +163,21 @@ ESTRUTURA DA RESPOSTA:
     "description": "1-2 frases explicando o que o fluxo mostra de ponta a ponta"
   },
   
+  "data_flow_diagram": {
+    "mermaid_code": "Código Mermaid (formato 'flowchart LR' ou 'sequenceDiagram') mostrando COMO OS DADOS FLUEM entre componentes. EXEMPLO:\n\nflowchart LR\n  A[Usuário] -->|Input| B[Frontend]\n  B -->|HTTP POST| C[API Gateway]\n  C -->|Valida| D{Supabase Auth}\n  D -->|Token| E[Edge Function]\n  E -->|Query| F[(Database)]\n  F -->|Resultado| E\n  E -->|JSON| C\n  C -->|Resposta| B\n  style D fill:#22d3ee\n  style F fill:#0891b2\n\nMostre ORIGEM → TRANSFORMAÇÃO → DESTINO dos dados. Use cores para destacar componentes críticos.",
+    "description": "Descreva o caminho completo que os dados percorrem no sistema"
+  },
+  
+  "user_journey_map": {
+    "mermaid_code": "Código Mermaid (formato 'journey') representando a JORNADA COMPLETA do usuário. EXEMPLO:\n\njourney\n  title Jornada do Lead até Cliente\n  section Descoberta\n    Vê anúncio: 3: Lead\n    Clica no link: 4: Lead\n    Preenche formulário: 5: Lead\n  section Qualificação\n    Recebe WhatsApp: 5: Lead\n    Conversa com IA: 4: Lead, Bot\n    Agenda reunião: 5: Lead, Vendedor\n  section Conversão\n    Reunião comercial: 5: Lead, Vendedor\n    Recebe proposta: 4: Lead\n    Fecha contrato: 5: Cliente\n\nMostre TODOS os pontos de contato, emoções (1-5), e atores envolvidos.",
+    "description": "Explique a experiência completa do usuário do início ao fim"
+  },
+  
+  "technical_stack_diagram": {
+    "mermaid_code": "Código Mermaid (formato 'graph TB') mostrando TODA A STACK TECNOLÓGICA organizada por camadas. EXEMPLO:\n\ngraph TB\n  subgraph Frontend\n    A[React + Vite]\n    B[Tailwind CSS]\n  end\n  \n  subgraph Backend\n    C[Supabase Edge Functions]\n    D[Supabase Database]\n    E[Supabase Auth]\n  end\n  \n  subgraph Integrações\n    F[OpenAI GPT-4]\n    G[WhatsApp API]\n    H[Make.com]\n  end\n  \n  subgraph Infraestrutura\n    I[Vercel Hosting]\n    J[Cloudflare CDN]\n  end\n  \n  A --> C\n  C --> D\n  C --> F\n  H --> G\n  H --> C\n  style C fill:#22d3ee\n  style D fill:#0891b2\n  style F fill:#10b981\n\nOrganize por CAMADAS (Frontend, Backend, APIs, Infra). Mostre TODAS as ferramentas principais.",
+    "description": "Descreva a arquitetura tecnológica completa por camadas"
+  },
+  
   "mind_map": {
     "central_idea": "Ideia principal em uma frase impactante",
     "branches": [
@@ -268,7 +283,12 @@ ${toolsContext}
 ✓ Evite buzzwords: "revolucionário", "disruptivo" → fale RESULTADO REAL
 ✓ Sem promessas impossíveis: "automatize 100% do negócio" → seja realista
 ✓ Passos genéricos → passos executáveis
-✓ SEMPRE gere o architecture_flowchart com código Mermaid completo e funcional`;
+✓ SEMPRE gere os 4 diagramas Mermaid completos e funcionais:
+  1. architecture_flowchart (fluxo principal)
+  2. data_flow_diagram (fluxo de dados)
+  3. user_journey_map (jornada do usuário)
+  4. technical_stack_diagram (stack visual)
+✓ Cada diagrama deve ter código Mermaid válido e description explicativa`;
 
     const userPrompt = `IDEIA INICIAL:
 "${idea}"
@@ -379,8 +399,32 @@ Crie um plano completo seguindo o formato JSON especificado.`;
             architecture_flowchart: {
               type: "object",
               properties: {
-                mermaid_code: { type: "string", description: "Código Mermaid completo do fluxograma" },
+                mermaid_code: { type: "string", description: "Código Mermaid completo do fluxograma de arquitetura (graph TD ou graph LR)" },
                 description: { type: "string", description: "Descrição do fluxograma em 1-2 frases" }
+              },
+              required: ["mermaid_code", "description"]
+            },
+            data_flow_diagram: {
+              type: "object",
+              properties: {
+                mermaid_code: { type: "string", description: "Código Mermaid do fluxo de dados (flowchart LR ou sequenceDiagram)" },
+                description: { type: "string", description: "Descrição do fluxo de dados em 1-2 frases" }
+              },
+              required: ["mermaid_code", "description"]
+            },
+            user_journey_map: {
+              type: "object",
+              properties: {
+                mermaid_code: { type: "string", description: "Código Mermaid da jornada do usuário (journey)" },
+                description: { type: "string", description: "Descrição da jornada em 1-2 frases" }
+              },
+              required: ["mermaid_code", "description"]
+            },
+            technical_stack_diagram: {
+              type: "object",
+              properties: {
+                mermaid_code: { type: "string", description: "Código Mermaid da stack tecnológica (graph TB)" },
+                description: { type: "string", description: "Descrição da stack em 1-2 frases" }
               },
               required: ["mermaid_code", "description"]
             },
@@ -403,7 +447,7 @@ Crie um plano completo seguindo o formato JSON especificado.`;
               }
             }
           },
-          required: ["title", "short_description", "technical_overview", "business_context", "competitive_advantages", "expected_kpis", "mind_map", "framework_quadrants", "required_tools", "implementation_checklist", "architecture_flowchart"]
+          required: ["title", "short_description", "technical_overview", "business_context", "competitive_advantages", "expected_kpis", "mind_map", "framework_quadrants", "required_tools", "implementation_checklist", "architecture_flowchart", "data_flow_diagram", "user_journey_map", "technical_stack_diagram"]
         }
       }
     };
@@ -484,6 +528,9 @@ Crie um plano completo seguindo o formato JSON especificado.`;
         framework_mapping: solutionData.framework_quadrants,
         implementation_checklist: solutionData.implementation_checklist,
         architecture_flowchart: solutionData.architecture_flowchart || null,
+        data_flow_diagram: solutionData.data_flow_diagram || null,
+        user_journey_map: solutionData.user_journey_map || null,
+        technical_stack_diagram: solutionData.technical_stack_diagram || null,
         generation_model: "google/gemini-2.5-flash",
         generation_time_ms: generationTime,
       })

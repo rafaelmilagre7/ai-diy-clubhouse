@@ -1,10 +1,11 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Network, GitBranch, UserCircle, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LiquidGlassCard } from '@/components/ui/LiquidGlassCard';
-import { ArchitectureFlowchart } from '@/components/builder/ArchitectureFlowchart';
+import { DiagramRenderer } from '@/components/builder/DiagramRenderer';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 
@@ -69,13 +70,58 @@ export default function BuilderSolutionArchitecture() {
               </p>
             </div>
 
-            {solution.architecture_flowchart ? (
-              <ArchitectureFlowchart flowchart={solution.architecture_flowchart} />
-            ) : (
-              <div className="text-center py-12 text-muted-foreground">
-                <p>Arquitetura não disponível para esta solução</p>
-              </div>
-            )}
+            <Tabs defaultValue="architecture" className="w-full">
+              <TabsList className="grid grid-cols-2 lg:grid-cols-4 w-full mb-6">
+                <TabsTrigger value="architecture" className="flex items-center gap-2">
+                  <Network className="h-4 w-4" />
+                  <span className="hidden sm:inline">Arquitetura</span>
+                </TabsTrigger>
+                <TabsTrigger value="dataflow" className="flex items-center gap-2">
+                  <GitBranch className="h-4 w-4" />
+                  <span className="hidden sm:inline">Fluxo de Dados</span>
+                </TabsTrigger>
+                <TabsTrigger value="journey" className="flex items-center gap-2">
+                  <UserCircle className="h-4 w-4" />
+                  <span className="hidden sm:inline">Jornada</span>
+                </TabsTrigger>
+                <TabsTrigger value="stack" className="flex items-center gap-2">
+                  <Layers className="h-4 w-4" />
+                  <span className="hidden sm:inline">Stack Técnica</span>
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="architecture">
+                <DiagramRenderer 
+                  diagram={solution.architecture_flowchart}
+                  diagramName="arquitetura-solucao"
+                  diagramTitle="Arquitetura da Solução"
+                />
+              </TabsContent>
+
+              <TabsContent value="dataflow">
+                <DiagramRenderer 
+                  diagram={solution.data_flow_diagram}
+                  diagramName="fluxo-dados"
+                  diagramTitle="Fluxo de Dados"
+                />
+              </TabsContent>
+
+              <TabsContent value="journey">
+                <DiagramRenderer 
+                  diagram={solution.user_journey_map}
+                  diagramName="jornada-usuario"
+                  diagramTitle="Jornada do Usuário"
+                />
+              </TabsContent>
+
+              <TabsContent value="stack">
+                <DiagramRenderer 
+                  diagram={solution.technical_stack_diagram}
+                  diagramName="stack-tecnologica"
+                  diagramTitle="Stack Tecnológica"
+                />
+              </TabsContent>
+            </Tabs>
           </LiquidGlassCard>
         </motion.div>
       </div>
