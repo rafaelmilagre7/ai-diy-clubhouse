@@ -57,46 +57,12 @@ export const DiagramRenderer: React.FC<DiagramRendererProps> = ({
         
         container.innerHTML = '';
         container.removeAttribute('data-processed');
-        
-        // Configuração Mermaid otimizada
-        mermaid.initialize({
-          startOnLoad: false,
-          theme: 'dark',
-          securityLevel: 'loose',
-          themeVariables: {
-            primaryColor: '#22d3ee',
-            primaryTextColor: '#fff',
-            primaryBorderColor: '#06b6d4',
-            lineColor: '#94a3b8',
-            secondaryColor: '#0891b2',
-            tertiaryColor: '#0e7490',
-            background: '#0f172a',
-            mainBkg: '#0f172a',
-            secondBkg: '#1e293b',
-            border1: '#334155',
-            border2: '#475569',
-            fontFamily: 'Inter, system-ui, sans-serif',
-          },
-          flowchart: {
-            useMaxWidth: true,
-            htmlLabels: true,
-            curve: 'basis',
-            padding: 20,
-          },
-          journey: {
-            useMaxWidth: true,
-          },
-          sequence: {
-            useMaxWidth: true,
-          }
-        });
 
         const id = `mermaid-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
         const { svg } = await mermaid.render(id, diagram.mermaid_code);
         
         container.innerHTML = svg;
         setIsLoading(false);
-        console.log(`✅ Diagrama ${diagramName} renderizado com sucesso`);
       } catch (err: any) {
         console.error(`❌ Erro ao renderizar ${diagramName}:`, err);
         setError(err.message || 'Erro desconhecido ao renderizar diagrama');
