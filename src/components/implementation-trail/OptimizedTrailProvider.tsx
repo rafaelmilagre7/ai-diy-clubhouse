@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useCallback, useMemo } from 'react';
 import { SolutionDataProvider } from './contexts/SolutionDataContext';
 import { LessonImagesProvider } from './contexts/LessonImagesContext';
-import { memoizeWithTTL } from '@/utils/performance';
 
 interface OptimizedTrailContextType {
   preloadData: (solutionIds: string[], lessonIds: string[]) => Promise<void>;
@@ -9,17 +8,18 @@ interface OptimizedTrailContextType {
 
 const OptimizedTrailContext = createContext<OptimizedTrailContextType | undefined>(undefined);
 
-// Memoizar operações custosas
-const memoizedPreload = memoizeWithTTL(async (ids: string[]) => {
+// Placeholder for future preloading implementation
+// Currently just validates the structure without actual preloading
+const simplePreload = async (ids: string[]) => {
   return Promise.resolve(ids);
-}, 300000); // 5 minutos
+};
 
 export const OptimizedTrailProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const preloadData = useCallback(async (solutionIds: string[], lessonIds: string[]) => {
-    // Preload otimizado com cache
+    // Structure ready for future preloading implementation
     await Promise.all([
-      memoizedPreload(solutionIds),
-      memoizedPreload(lessonIds)
+      simplePreload(solutionIds),
+      simplePreload(lessonIds)
     ]);
   }, []);
 

@@ -27,46 +27,7 @@ export const usePreloadCriticalAssets = () => {
       document.head.appendChild(link);
     };
 
-    // Route-specific preloading otimizado
-
-    // Route-specific preloading - apenas para dashboard e home
-    switch (location.pathname) {
-      case '/':
-      case '/dashboard':
-        // Verificar se recursos existem antes de preload com timeout curto
-        const checkAndPreload = async (url: string, priority: 'high' | 'low' = 'high') => {
-          try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 1000); // 1s timeout
-            
-            const response = await fetch(url, { 
-              method: 'HEAD',
-              signal: controller.signal
-            });
-            
-            clearTimeout(timeoutId);
-            
-            if (response.ok) {
-              preloadImage(url, priority);
-            }
-          } catch (error) {
-            // Silenciar erros de preload para não poluir console
-          }
-        };
-
-        // Fazer verificações em paralelo sem await para não bloquear
-        checkAndPreload('/lovable-uploads/6bdb44c0-b115-45bc-977d-4284836453c2.png', 'high');
-        checkAndPreload('/lovable-uploads/d847c892-aafa-4cc1-92c6-110aff1d9755.png', 'low');
-        break;
-      
-      case '/tools':
-        // Preload common tool icons or placeholder images
-        break;
-      
-      case '/learning':
-        // Preload learning-related assets
-        break;
-    }
+    // Route-specific preloading can be added here in the future if needed
 
     // Preload next likely navigation targets based on current route
     const preloadNextRoute = (href: string) => {

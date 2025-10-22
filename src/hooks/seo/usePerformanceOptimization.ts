@@ -46,34 +46,7 @@ export const usePerformanceOptimization = () => {
       document.head.appendChild(manifestLink);
     }
 
-    // Optimize images loading
-    const optimizeImageLoading = () => {
-      const images = document.querySelectorAll('img[data-src]');
-      
-      if ('IntersectionObserver' in window) {
-        const imageObserver = new IntersectionObserver((entries) => {
-          entries.forEach(entry => {
-            if (entry.isIntersecting) {
-              const img = entry.target as HTMLImageElement;
-              img.src = img.dataset.src || '';
-              img.classList.remove('lazy');
-              imageObserver.unobserve(img);
-            }
-          });
-        });
-
-        images.forEach(img => imageObserver.observe(img));
-      } else {
-        // Fallback for browsers without IntersectionObserver
-        images.forEach(img => {
-          const imageEl = img as HTMLImageElement;
-          imageEl.src = imageEl.dataset.src || '';
-        });
-      }
-    };
-
-    // Run image optimization after a short delay
-    setTimeout(optimizeImageLoading, 100);
+    // Image lazy-loading is handled by React and browser native lazy loading
 
     // Critical resource loading optimization
     const optimizeCriticalResources = () => {
