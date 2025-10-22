@@ -62,14 +62,13 @@ export async function saveLesson(
         const bucketExists = buckets?.some(bucket => bucket.name === 'learning_videos');
         
         if (!bucketExists) {
-          console.log("Bucket de vídeos não existe, tentando criar...");
           await supabase.storage.createBucket('learning_videos', {
             public: true,
             fileSizeLimit: 104857600, // 100MB
           });
         }
       } catch (err) {
-        console.log("Erro ao verificar/criar bucket:", err);
+        // Silent fail
       }
       
       const { data, error } = await supabase
@@ -87,21 +86,15 @@ export async function saveLesson(
     
     // Salvar vídeos da aula
     setCurrentSaveStep?.("Salvando vídeos da aula...");
-    console.log("🎬 LessonService - Vídeos a serem salvos:", values.videos);
     const videosResult = await saveVideosForLesson(resultId, values.videos);
-    console.log("🎬 LessonService - Resultado do salvamento de vídeos:", videosResult);
     
     // Salvar materiais da aula
     setCurrentSaveStep?.("Salvando materiais de apoio...");
-    console.log("📁 LessonService - Materiais a serem salvos:", values.resources);
     const resourcesResult = await saveResourcesForLesson(resultId, values.resources);
-    console.log("📁 LessonService - Resultado do salvamento de materiais:", resourcesResult);
     
     // Salvar tags da aula
     setCurrentSaveStep?.("Salvando tags da aula...");
-    console.log("🏷️ LessonService - Tags a serem salvas:", values.tags);
     const tagsResult = await saveTagsForLesson(resultId, values.tags || []);
-    console.log("🏷️ LessonService - Resultado do salvamento de tags:", tagsResult);
     
     // Determinar mensagem de retorno com base nos resultados
     let message: string;

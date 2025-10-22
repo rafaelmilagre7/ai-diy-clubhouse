@@ -38,17 +38,10 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
   const [savingMaterial, setSavingMaterial] = React.useState<number | null>(null);
 
   const handleContinue = async () => {
-    const currentResources = form.getValues().resources || [];
-    console.log("📁 EtapaMateriais - Recursos antes da validação:", currentResources);
-    
     const result = await form.trigger(['resources']);
     if (result) {
-      console.log("📁 EtapaMateriais - Validação bem-sucedida");
       onNext();
     } else {
-      console.error("📁 EtapaMateriais - Falha na validação dos materiais");
-      const errors = form.formState.errors.resources;
-      console.error("📁 EtapaMateriais - Erros:", errors);
       toast.error("Há problemas com os materiais. Verifique os campos obrigatórios.");
     }
   };
@@ -88,8 +81,6 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
 
       // Se estamos editando uma aula, salvar diretamente no banco
       if (aulaId) {
-        console.log("Salvando material para a aula:", aulaId);
-        
         const { data, error } = await supabase
           .from("learning_resources")
           .insert({
@@ -109,7 +100,6 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
           throw error;
         }
 
-        console.log("Material salvo com sucesso:", data);
         toast.success("Material adicionado com sucesso.");
       }
       

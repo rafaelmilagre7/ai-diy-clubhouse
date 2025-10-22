@@ -28,8 +28,6 @@ export const MigrateImagesButton = () => {
     setResult(null);
 
     try {
-      console.log("🚀 Iniciando migração de imagens...");
-      
       // Simular progresso
       const progressInterval = setInterval(() => {
         setProgress(prev => Math.min(prev + 5, 90));

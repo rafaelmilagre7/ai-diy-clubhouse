@@ -22,7 +22,6 @@ export async function saveTagsForLesson(
 
     // Se não há tags para adicionar, retornar sucesso
     if (!tagIds || tagIds.length === 0) {
-      console.log("Nenhuma tag para adicionar");
       return true;
     }
 
@@ -41,7 +40,6 @@ export async function saveTagsForLesson(
       return false;
     }
 
-    console.log(`✅ Tags salvas com sucesso para a aula ${lessonId}:`, tagIds);
     return true;
   } catch (error) {
     console.error("Erro ao salvar tags:", error);

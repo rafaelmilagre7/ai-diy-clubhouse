@@ -24,14 +24,6 @@ export const AulasList = ({ aulas, loading, onEdit, onDelete, isAdmin, onRefresh
   const [aulaParaExcluir, setAulaParaExcluir] = useState<LearningLessonWithRelations | null>(null);
   const [publishingStates, setPublishingStates] = useState<Record<string, boolean>>({});
 
-  // Log de debug para verificar se os dados estão chegando
-  console.log("AulasList: Recebendo props:", { 
-    aulasCount: aulas?.length || 0, 
-    loading, 
-    isAdmin, 
-    aulas: aulas?.slice(0, 2) // Primeiras 2 aulas para debug
-  });
-
   // Abrir diálogo de confirmação para excluir
   const handleOpenDelete = (aula: LearningLessonWithRelations) => {
     setAulaParaExcluir(aula);

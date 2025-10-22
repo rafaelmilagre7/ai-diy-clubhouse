@@ -55,26 +55,19 @@ export const PublishLessonButton = ({
         if (error) throw error;
         
         if (data && data.module) {
-          // Verificação detalhada da estrutura de dados retornada
           const moduleData = data.module;
-          console.log("Estrutura do módulo retornada:", moduleData);
-          
           let extractedCourseId: string | null = null;
           
           // Verifica se é um array e extrai o course_id de forma segura
           if (Array.isArray(moduleData)) {
-            // Para arrays, verificamos se o primeiro item tem a propriedade course_id
             if (moduleData.length > 0 && 'course_id' in moduleData[0]) {
               extractedCourseId = moduleData[0].course_id;
-              console.log("Course ID extraído do array:", extractedCourseId);
             }
           } 
           // Verifica se é um objeto e extrai o course_id de forma segura
           else if (moduleData && typeof moduleData === 'object') {
-            // Para objetos, verificamos diretamente se tem a propriedade course_id
             if ('course_id' in moduleData) {
               extractedCourseId = (moduleData as {course_id: string}).course_id;
-              console.log("Course ID extraído do objeto:", extractedCourseId);
             }
           }
           

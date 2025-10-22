@@ -40,11 +40,7 @@ export async function fetchLessonVideos(lessonId: string): Promise<VideoFormValu
 
 export async function saveVideosForLesson(lessonId: string, videos: VideoFormValues[]): Promise<boolean> {
   try {
-    console.log("🎥 VideoService - Salvando vídeos para a aula:", lessonId);
-    console.log("🎥 VideoService - Vídeos recebidos:", videos);
-    
     if (!videos || videos.length === 0) {
-      console.log("🎥 VideoService - Nenhum vídeo para salvar.");
       return true;
     }
     
@@ -65,23 +61,19 @@ export async function saveVideosForLesson(lessonId: string, videos: VideoFormVal
       
       // Validações obrigatórias para salvamento
       if (!video.url) {
-        console.log("🎥 VideoService - Vídeo sem URL encontrado, pulando:", video);
         continue;
       }
       
       if (!video.title || video.title.trim() === "") {
-        console.log("🎥 VideoService - Vídeo sem título encontrado, pulando:", video);
         continue;
       }
       
-      // CORREÇÃO: Validação mais flexível para Panda Video
-      // Se é tipo panda, precisa ter video_id OU poder extrair do URL
+      // Validação mais flexível para Panda Video
       if (video.type === "panda") {
         const hasVideoId = video.video_id && video.video_id.trim() !== "";
         const hasValidUrl = video.url && (video.url.includes('pandavideo') || video.url.includes('player-vz'));
         
         if (!hasVideoId && !hasValidUrl) {
-          console.log("🎥 VideoService - Vídeo Panda sem identificação válida, pulando:", video);
           continue;
         }
         
@@ -93,12 +85,9 @@ export async function saveVideosForLesson(lessonId: string, videos: VideoFormVal
           
           if (extractedId && extractedId[1]) {
             video.video_id = extractedId[1];
-            console.log("🎥 VideoService - Video ID extraído da URL:", video.video_id);
           }
         }
       }
-      
-      console.log(`🎥 VideoService - Processando vídeo ${i + 1}:`, video);
       
       const videoData = {
         lesson_id: lessonId,
@@ -126,7 +115,6 @@ export async function saveVideosForLesson(lessonId: string, videos: VideoFormVal
       }
     }
     
-    console.log("Todos os vídeos foram salvos com sucesso.");
     return true;
   } catch (error) {
     console.error("Erro ao salvar vídeos:", error);

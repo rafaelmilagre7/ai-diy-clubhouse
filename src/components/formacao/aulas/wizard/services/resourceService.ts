@@ -44,11 +44,7 @@ export async function fetchLessonResources(lessonId: string): Promise<ResourceFo
 
 export async function saveResourcesForLesson(lessonId: string, resources: ResourceFormValues[]): Promise<boolean> {
   try {
-    console.log("📁 ResourceService - Salvando materiais para a aula:", lessonId);
-    console.log("📁 ResourceService - Materiais recebidos:", resources);
-    
     if (!resources || resources.length === 0) {
-      console.log("📁 ResourceService - Nenhum material para salvar.");
       return true;
     }
     
@@ -69,7 +65,6 @@ export async function saveResourcesForLesson(lessonId: string, resources: Resour
       
       // Se o material não tiver URL, pular
       if (!resource.url) {
-        console.log("Material sem URL encontrado, pulando...");
         continue;
       }
       
@@ -94,7 +89,6 @@ export async function saveResourcesForLesson(lessonId: string, resources: Resour
       }
     }
     
-    console.log("Todos os materiais foram salvos com sucesso.");
     return true;
   } catch (error) {
     console.error("Erro ao salvar materiais:", error);

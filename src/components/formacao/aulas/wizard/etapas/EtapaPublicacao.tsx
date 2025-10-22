@@ -35,12 +35,10 @@ const EtapaPublicacao: React.FC<EtapaPublicacaoProps> = ({
   
   // Funções para manipular o estado dos switches
   const handleAiAssistantToggle = (checked: boolean) => {
-    console.log("Toggle IA assistente:", checked);
     setValue("aiAssistantEnabled", checked);
   };
   
   const handlePublishedToggle = (checked: boolean) => {
-    console.log("Toggle publicação:", checked);
     setValue("published", checked);
   };
   
@@ -49,12 +47,6 @@ const EtapaPublicacao: React.FC<EtapaPublicacaoProps> = ({
       setSaving(true);
       setSaveStatus("saving");
       setErrorMessage(null);
-      
-      console.log("Valores antes de salvar:", {
-        aiAssistantEnabled: form.getValues("aiAssistantEnabled"),
-        published: form.getValues("published"),
-        aiAssistantId: form.getValues("aiAssistantId"),
-      });
       
       await onSubmit();
       

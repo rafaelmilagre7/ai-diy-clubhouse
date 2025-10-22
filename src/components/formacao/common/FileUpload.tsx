@@ -35,10 +35,6 @@ export const FileUpload = ({
       try {
         const isReady = await ensureBucketExists(bucketName);
         setBucketReady(isReady);
-        
-        if (!isReady) {
-          console.warn(`Bucket ${bucketName} não está pronto. Algumas funcionalidades podem não estar disponíveis.`);
-        }
       } catch (error) {
         console.error("Erro ao verificar bucket:", error);
       }
@@ -74,10 +70,7 @@ export const FileUpload = ({
       const fileName = `${Date.now()}-${file.name}`;
       const filePath = folderPath ? `${folderPath}/${fileName}` : fileName;
       
-      console.log(`Iniciando upload para bucket: ${bucketName}`);
-      console.log(`Fazendo upload do arquivo: ${fileName} para ${filePath}`);
-      
-      // Upload direto - funciona conforme correção dos outros uploads
+      // Upload direto
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from(bucketName)
         .upload(filePath, file, { 
@@ -90,14 +83,10 @@ export const FileUpload = ({
         throw new Error(uploadError.message);
       }
 
-      console.log("Upload concluído:", uploadData);
-
       // Obter URL pública
       const { data: urlData } = supabase.storage
         .from(bucketName)
         .getPublicUrl(filePath);
-
-      console.log("URL pública gerada:", urlData.publicUrl);
 
       if (!urlData.publicUrl) {
         throw new Error("URL pública não foi gerada");

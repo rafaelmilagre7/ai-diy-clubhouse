@@ -19,17 +19,13 @@ export const useAulaStorage = () => {
     const checkStorageConfig = async () => {
       try {
         setStorageChecking(true);
-        console.log("Verificando configuração de buckets de armazenamento...");
         const result = await setupLearningStorageBuckets();
-        console.log("Resultado da configuração de buckets:", result);
         setStorageReady(result.success);
         
         if (!result.success) {
-          console.warn("Configuração de armazenamento incompleta:", result.error);
           setStorageError(result.error);
           toast.warning("Configuração de armazenamento incompleta. Alguns recursos podem não funcionar corretamente.");
         } else {
-          console.log("Buckets configurados com sucesso:", result);
           setStorageError(null);
         }
       } catch (error) {

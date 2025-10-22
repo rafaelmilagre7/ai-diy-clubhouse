@@ -45,10 +45,8 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
     
     const result = await form.trigger(['videos']);
     if (result) {
-      console.log("🎬 EtapaVideos - Validação bem-sucedida, vídeos:", currentVideos);
       onNext();
     } else {
-      console.error("🎬 EtapaVideos - Falha na validação dos vídeos");
       const errors = form.formState.errors.videos;
       if (errors) {
         setValidationError("Há problemas com os vídeos. Verifique os campos obrigatórios.");

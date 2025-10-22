@@ -41,13 +41,6 @@ export const AllLessonsList = ({
   const [selectedCourse, setSelectedCourse] = useState<string>("all");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
 
-  console.log("AllLessonsList: Recebendo props:", { 
-    lessonsCount: lessons?.length || 0, 
-    loading, 
-    isAdmin,
-    sampleLessons: lessons?.slice(0, 2)
-  });
-
   // Filtrar e agrupar aulas
   const { filteredLessons, groupedLessons, courses } = useMemo(() => {
     let filtered = lessons.filter(lesson => {
