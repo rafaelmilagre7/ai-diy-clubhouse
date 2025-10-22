@@ -55,7 +55,7 @@ export default function Builder() {
 
   const handleGenerateSolution = async (idea: string) => {
     if (!hasAccess) {
-      toast.error('Você não tem acesso ao Builder AI');
+      toast.error('Você não tem acesso ao Builder');
       navigate('/ferramentas');
       return;
     }
@@ -179,7 +179,7 @@ export default function Builder() {
                 </div>
               </div>
               <h1 className="text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-                Builder AI
+                Builder
               </h1>
               <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
                 Extraia o cérebro do Rafael Milagre e transforme suas ideias em soluções executáveis de IA

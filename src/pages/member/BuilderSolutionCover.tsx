@@ -124,7 +124,7 @@ export default function BuilderSolutionCover() {
                   <div className="flex-1 space-y-4">
                     <div>
                       <h1 className="text-5xl font-bold mb-3 bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
-                        {solution.title || 'Solução Builder AI'}
+                        {solution.title || 'Solução Builder'}
                       </h1>
                       {solution.short_description && (
                         <p className="text-foreground/90 leading-relaxed text-xl max-w-3xl">

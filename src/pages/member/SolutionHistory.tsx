@@ -97,7 +97,7 @@ export default function SolutionHistory() {
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
           <Layout className="h-8 w-8 text-primary" />
-          <h1 className="text-3xl font-bold">Histórico de Soluções Builder AI</h1>
+          <h1 className="text-3xl font-bold">Histórico de Soluções Builder</h1>
         </div>
         <p className="text-muted-foreground">
           Todas as suas soluções geradas pela inteligência artificial
@@ -110,7 +110,7 @@ export default function SolutionHistory() {
           <AlertCircle className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-xl font-semibold mb-2">Nenhuma solução encontrada</h3>
           <p className="text-muted-foreground mb-6">
-            Você ainda não gerou nenhuma solução com o Builder AI
+            Você ainda não gerou nenhuma solução com o Builder
           </p>
           <Button onClick={() => navigate('/ferramentas/builder')}>
             <Layout className="h-4 w-4 mr-2" />

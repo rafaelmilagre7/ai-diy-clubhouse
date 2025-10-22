@@ -83,7 +83,7 @@ export const useBuilderAI = () => {
         return null;
       }
 
-      toast.success('Solução Builder AI gerada com sucesso! 🎉');
+      toast.success('Solução Builder gerada com sucesso! 🎉');
       return data.solution;
     } catch (error) {
       console.error('[BUILDER] Erro ao gerar:', error);

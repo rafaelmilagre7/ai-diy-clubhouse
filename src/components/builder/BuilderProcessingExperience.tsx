@@ -70,7 +70,7 @@ export const BuilderProcessingExperience = () => {
               Extraindo o Cérebro do Rafael
             </h2>
             <p className="text-muted-foreground text-sm">
-              Builder AI está criando seu plano personalizado
+              Builder está criando seu plano personalizado
             </p>
           </div>
 

@@ -173,7 +173,7 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({
       </div>
 
       <p className="text-xs text-center text-muted-foreground/70 mt-3">
-        Esta solução consumiu 1 crédito Builder AI
+        Esta solução consumiu 1 crédito Builder e foi salva no seu histórico.
       </p>
       </motion.div>
     </motion.div>

@@ -59,7 +59,7 @@ serve(async (req) => {
 
     const { idea, userId, answers = [] } = validationResult.data;
 
-    console.log(`[BUILDER] === GERAÇÃO BUILDER AI INICIADA ===`);
+    console.log(`[BUILDER] === GERAÇÃO BUILDER INICIADA ===`);
     console.log(`[BUILDER] ✓ Validação OK`);
     console.log(`[BUILDER] 👤 User ID: ${userId.substring(0, 8)}***`);
     console.log(`[BUILDER] 💡 Ideia: "${idea.substring(0, 80)}..."`);
