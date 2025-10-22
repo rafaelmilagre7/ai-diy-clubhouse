@@ -235,7 +235,7 @@ verify_jwt = false
 [functions.analyze-idea]
 verify_jwt = false
 
-[functions.generate-miracle-solution]
+[functions.generate-builder-solution]
 verify_jwt = false
 
 [functions.generate-ai-solution]
