@@ -10,13 +10,13 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 
-export default function MiracleSolutionTools() {
+export default function BuilderSolutionTools() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
 
   const { data: solution, isLoading } = useQuery({
-    queryKey: ['miracle-solution', id],
+    queryKey: ['builder-solution', id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('ai_generated_solutions')
@@ -66,7 +66,7 @@ export default function MiracleSolutionTools() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate(`/ferramentas/miracleai/solution/${id}`)}
+              onClick={() => navigate(`/ferramentas/builder/solution/${id}`)}
               className="mb-6"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />

@@ -28,7 +28,7 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({
   const handleSaveAndRedirect = async () => {
     const savedSolution = await onSave(solution);
     if (savedSolution?.id) {
-      navigate(`/ferramentas/miracleai/solution/${savedSolution.id}`);
+      navigate(`/ferramentas/builder/solution/${savedSolution.id}`);
     }
   };
   
@@ -173,7 +173,7 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({
       </div>
 
       <p className="text-xs text-center text-muted-foreground/70 mt-3">
-        Esta solução consumiu 1 crédito Miracle AI
+        Esta solução consumiu 1 crédito Builder AI
       </p>
       </motion.div>
     </motion.div>

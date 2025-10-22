@@ -30,12 +30,12 @@ import TeamManagementPage from '@/pages/member/TeamManagementPage';
 import Builder from '@/pages/member/Builder';
 import MyAISolutions from '@/pages/member/MyAISolutions';
 import SolutionHistory from '@/pages/member/SolutionHistory';
-import MiracleSolutionCover from '@/pages/member/MiracleSolutionCover';
-import MiracleSolutionDetails from '@/pages/member/MiracleSolutionDetails';
-import MiracleSolutionFramework from '@/pages/member/MiracleSolutionFramework';
-import MiracleSolutionArchitecture from '@/pages/member/MiracleSolutionArchitecture';
-import MiracleSolutionTools from '@/pages/member/MiracleSolutionTools';
-import MiracleSolutionChecklist from '@/pages/member/MiracleSolutionChecklist';
+import BuilderSolutionCover from '@/pages/member/BuilderSolutionCover';
+import BuilderSolutionDetails from '@/pages/member/BuilderSolutionDetails';
+import BuilderSolutionFramework from '@/pages/member/BuilderSolutionFramework';
+import BuilderSolutionArchitecture from '@/pages/member/BuilderSolutionArchitecture';
+import BuilderSolutionTools from '@/pages/member/BuilderSolutionTools';
+import BuilderSolutionChecklist from '@/pages/member/BuilderSolutionChecklist';
 
 // Member Learning pages
 import LearningPage from '@/pages/member/learning/LearningPage';
@@ -78,23 +78,27 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/trilha-implementacao", ImplementationTrail),
   createProtectedRoute("/tools", Tools),
   createProtectedRoute("/tools/:id", ToolDetails),
-  createProtectedRoute("/ferramentas/miracleai", Builder),
-  createProtectedRoute("/ferramentas/miracleai/historico", SolutionHistory),
-  createProtectedRoute("/ferramentas/miracleai/solution/:id", MiracleSolutionCover),
-  createProtectedRoute("/ferramentas/miracleai/solution/:id/detalhes", MiracleSolutionDetails),
-  createProtectedRoute("/ferramentas/miracleai/solution/:id/framework", MiracleSolutionFramework),
-  createProtectedRoute("/ferramentas/miracleai/solution/:id/arquitetura", MiracleSolutionArchitecture),
-  createProtectedRoute("/ferramentas/miracleai/solution/:id/ferramentas", MiracleSolutionTools),
-  createProtectedRoute("/ferramentas/miracleai/solution/:id/checklist", MiracleSolutionChecklist),
+  createProtectedRoute("/ferramentas/builder", Builder),
+  createProtectedRoute("/ferramentas/builder/historico", SolutionHistory),
+  createProtectedRoute("/ferramentas/builder/solution/:id", BuilderSolutionCover),
+  createProtectedRoute("/ferramentas/builder/solution/:id/detalhes", BuilderSolutionDetails),
+  createProtectedRoute("/ferramentas/builder/solution/:id/framework", BuilderSolutionFramework),
+  createProtectedRoute("/ferramentas/builder/solution/:id/arquitetura", BuilderSolutionArchitecture),
+  createProtectedRoute("/ferramentas/builder/solution/:id/ferramentas", BuilderSolutionTools),
+  createProtectedRoute("/ferramentas/builder/solution/:id/checklist", BuilderSolutionChecklist),
   
-  // Redirect old builder routes
+  // Redirect old miracleai routes for backward compatibility
   {
-    path: "/ferramentas/builder",
-    element: <Navigate to="/ferramentas/miracleai" replace />
+    path: "/ferramentas/miracleai",
+    element: <Navigate to="/ferramentas/builder" replace />
   },
   {
-    path: "/ferramentas/builder/historico",
-    element: <Navigate to="/ferramentas/miracleai/historico" replace />
+    path: "/ferramentas/miracleai/historico",
+    element: <Navigate to="/ferramentas/builder/historico" replace />
+  },
+  {
+    path: "/ferramentas/miracleai/solution/:id",
+    element: <Navigate to="/ferramentas/builder/solution/:id" replace />
   },
   createProtectedRoute("/minhas-solucoes", MyAISolutions),
   createProtectedRoute("/networking", Networking),

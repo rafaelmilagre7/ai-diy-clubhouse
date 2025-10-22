@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 const processingSteps = [
   "Extraindo o Cérebro do Rafael",
   "Analisando sua ideia contra 2.847 soluções já criadas",
-  "Conectando com base de conhecimento Miracle",
+  "Conectando com base de conhecimento Builder",
   "Mapeando ferramentas que você já conhece",
   "Identificando gaps e oportunidades técnicas",
   "Calculando viabilidade técnica e ROI",
@@ -19,7 +19,7 @@ const processingSteps = [
   "Finalizando plano técnico completo"
 ];
 
-export const MiracleProcessingExperience = () => {
+export const BuilderProcessingExperience = () => {
   const [progress, setProgress] = useState(0);
   const [currentStep, setCurrentStep] = useState(0);
   const [elapsedTime, setElapsedTime] = useState(0);
@@ -70,7 +70,7 @@ export const MiracleProcessingExperience = () => {
               Extraindo o Cérebro do Rafael
             </h2>
             <p className="text-muted-foreground text-sm">
-              Miracle AI está criando seu plano personalizado
+              Builder AI está criando seu plano personalizado
             </p>
           </div>
 

@@ -8,12 +8,12 @@ import { LiquidGlassCard } from '@/components/ui/LiquidGlassCard';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 
-export default function MiracleSolutionDetails() {
+export default function BuilderSolutionDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
 
   const { data: solution, isLoading } = useQuery({
-    queryKey: ['miracle-solution', id],
+    queryKey: ['builder-solution', id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('ai_generated_solutions')
@@ -58,7 +58,7 @@ export default function MiracleSolutionDetails() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate(`/ferramentas/miracleai/solution/${id}`)}
+              onClick={() => navigate(`/ferramentas/builder/solution/${id}`)}
               className="mb-6"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />

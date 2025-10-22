@@ -8,7 +8,7 @@ interface Question {
   why_important: string;
 }
 
-export const useMiracleAI = () => {
+export const useBuilderAI = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [questions, setQuestions] = useState<Question[] | null>(null);
@@ -39,7 +39,7 @@ export const useMiracleAI = () => {
       setQuestions(data.questions);
       return data.questions;
     } catch (error) {
-      console.error('[MIRACLE] Erro ao analisar:', error);
+      console.error('[BUILDER] Erro ao analisar:', error);
       toast.error('Erro ao analisar ideia');
       return null;
     } finally {
@@ -59,7 +59,7 @@ export const useMiracleAI = () => {
         return null;
       }
 
-      const { data, error } = await supabase.functions.invoke('generate-miracle-solution', {
+      const { data, error } = await supabase.functions.invoke('generate-builder-solution', {
         body: {
           idea,
           userId: user.id,
@@ -83,10 +83,10 @@ export const useMiracleAI = () => {
         return null;
       }
 
-      toast.success('Solução Miracle AI gerada com sucesso! 🎉');
+      toast.success('Solução Builder AI gerada com sucesso! 🎉');
       return data.solution;
     } catch (error) {
-      console.error('[MIRACLE] Erro ao gerar:', error);
+      console.error('[BUILDER] Erro ao gerar:', error);
       toast.error('Erro ao gerar solução');
       return null;
     } finally {
@@ -106,7 +106,7 @@ export const useMiracleAI = () => {
       // Apenas mostrar feedback positivo
       toast.success('Solução salva no histórico com sucesso! 🎉');
     } catch (error) {
-      console.error('[MIRACLE] Erro ao salvar solução:', error);
+      console.error('[BUILDER] Erro ao salvar solução:', error);
       toast.error('Erro ao salvar solução');
     }
   };

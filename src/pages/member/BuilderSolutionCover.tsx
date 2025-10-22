@@ -9,12 +9,12 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
-export default function MiracleSolutionCover() {
+export default function BuilderSolutionCover() {
   const { id } = useParams();
   const navigate = useNavigate();
 
   const { data: solution, isLoading } = useQuery({
-    queryKey: ['miracle-solution', id],
+    queryKey: ['builder-solution', id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('ai_generated_solutions')
@@ -35,7 +35,7 @@ export default function MiracleSolutionCover() {
       badge: "Overview",
       color: "from-amber-500/20 to-orange-500/20",
       borderColor: "border-amber-500/30",
-      path: `/ferramentas/miracleai/solution/${id}/detalhes`,
+      path: `/ferramentas/builder/solution/${id}/detalhes`,
     },
     {
       title: "Framework de Implementação",
@@ -44,7 +44,7 @@ export default function MiracleSolutionCover() {
       badge: "by Rafael Milagre",
       color: "from-blue-500/20 to-cyan-500/20",
       borderColor: "border-blue-500/30",
-      path: `/ferramentas/miracleai/solution/${id}/framework`,
+      path: `/ferramentas/builder/solution/${id}/framework`,
     },
     {
       title: "Arquitetura e Fluxos",
@@ -53,7 +53,7 @@ export default function MiracleSolutionCover() {
       badge: "Fluxograma",
       color: "from-purple-500/20 to-pink-500/20",
       borderColor: "border-purple-500/30",
-      path: `/ferramentas/miracleai/solution/${id}/arquitetura`,
+      path: `/ferramentas/builder/solution/${id}/arquitetura`,
     },
     {
       title: "Ferramentas Necessárias",
@@ -62,7 +62,7 @@ export default function MiracleSolutionCover() {
       badge: `${(solution?.required_tools?.essential?.length || 0) + (solution?.required_tools?.optional?.length || 0)} ferramentas`,
       color: "from-orange-500/20 to-yellow-500/20",
       borderColor: "border-orange-500/30",
-      path: `/ferramentas/miracleai/solution/${id}/ferramentas`,
+      path: `/ferramentas/builder/solution/${id}/ferramentas`,
     },
     {
       title: "Plano de Ação",
@@ -71,7 +71,7 @@ export default function MiracleSolutionCover() {
       badge: `${solution?.implementation_checklist?.length || 0} passos`,
       color: "from-green-500/20 to-emerald-500/20",
       borderColor: "border-green-500/30",
-      path: `/ferramentas/miracleai/solution/${id}/checklist`,
+      path: `/ferramentas/builder/solution/${id}/checklist`,
     },
   ];
 
@@ -113,7 +113,7 @@ export default function MiracleSolutionCover() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => navigate('/ferramentas/miracleai/historico')}
+                  onClick={() => navigate('/ferramentas/builder/historico')}
                   className="mb-6"
                 >
                   <ArrowLeft className="h-4 w-4 mr-2" />
@@ -124,7 +124,7 @@ export default function MiracleSolutionCover() {
                   <div className="flex-1 space-y-4">
                     <div>
                       <h1 className="text-5xl font-bold mb-3 bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
-                        {solution.title || 'Solução Miracle AI'}
+                        {solution.title || 'Solução Builder AI'}
                       </h1>
                       {solution.short_description && (
                         <p className="text-foreground/90 leading-relaxed text-xl max-w-3xl">

@@ -13,6 +13,16 @@ export const useURLRedirects = () => {
 
   useEffect(() => {
     const redirectRules: RedirectRule[] = [
+      // Redirect old miracleai URLs to new builder URLs (must come before /ferramentas rule)
+      {
+        from: /^\/ferramentas\/miracleai(.*)$/,
+        to: (match) => {
+          const rest = match.split('/miracleai')[1] || '';
+          return `/ferramentas/builder${rest}`;
+        },
+        permanent: true
+      },
+      
       // Old forum URLs to new community URLs
       {
         from: /^\/forum\/(.+)$/,
@@ -27,10 +37,13 @@ export const useURLRedirects = () => {
         permanent: true
       },
       
-      // Old tools URLs
+      // Old tools URLs (not including builder/miracleai which are handled above)
       {
-        from: /^\/ferramentas\/(.+)$/,
-        to: (match) => `/tools/${match.split('/')[1]}`,
+        from: /^\/ferramentas\/(?!builder|miracleai)(.+)$/,
+        to: (match) => {
+          const toolPath = match.split('/ferramentas/')[1];
+          return `/tools/${toolPath}`;
+        },
         permanent: true
       },
       

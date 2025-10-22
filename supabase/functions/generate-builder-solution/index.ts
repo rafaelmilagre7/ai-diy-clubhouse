@@ -46,7 +46,7 @@ serve(async (req) => {
     
     if (!validationResult.success) {
       const firstError = validationResult.error.errors[0];
-      console.warn(`[MIRACLE] ❌ Validação falhou: ${firstError.message}`);
+      console.warn(`[BUILDER] ❌ Validação falhou: ${firstError.message}`);
       
       return new Response(
         JSON.stringify({ 
@@ -59,11 +59,11 @@ serve(async (req) => {
 
     const { idea, userId, answers = [] } = validationResult.data;
 
-    console.log(`[MIRACLE] === GERAÇÃO MIRACLE AI INICIADA ===`);
-    console.log(`[MIRACLE] ✓ Validação OK`);
-    console.log(`[MIRACLE] 👤 User ID: ${userId.substring(0, 8)}***`);
-    console.log(`[MIRACLE] 💡 Ideia: "${idea.substring(0, 80)}..."`);
-    console.log(`[MIRACLE] 📝 Contexto: ${answers.length} respostas coletadas`);
+    console.log(`[BUILDER] === GERAÇÃO BUILDER AI INICIADA ===`);
+    console.log(`[BUILDER] ✓ Validação OK`);
+    console.log(`[BUILDER] 👤 User ID: ${userId.substring(0, 8)}***`);
+    console.log(`[BUILDER] 💡 Ideia: "${idea.substring(0, 80)}..."`);
+    console.log(`[BUILDER] 📝 Contexto: ${answers.length} respostas coletadas`);
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -276,7 +276,7 @@ ${contextFromAnswers}
 
 Crie um plano completo seguindo o formato JSON especificado.`;
 
-    console.log(`[MIRACLE] 🚀 Chamando Lovable AI (Gemini 2.5 Flash)...`);
+    console.log(`[BUILDER] 🚀 Chamando Lovable AI (Gemini 2.5 Flash)...`);
 
     const lovableAIUrl = "https://ai.gateway.lovable.dev/v1/chat/completions";
     const lovableAIKey = Deno.env.get("LOVABLE_API_KEY");
@@ -440,13 +440,13 @@ Crie um plano completo seguindo o formato JSON especificado.`;
     const aiData = await aiResponse.json();
     const aiResponseTime = Date.now() - aiCallStart;
 
-    console.log(`[MIRACLE] ⚡ Tempo de resposta: ${(aiResponseTime / 1000).toFixed(1)}s`);
-    console.log(`[MIRACLE] 📊 Tokens: ${aiData.usage?.total_tokens || 'N/A'}`);
+    console.log(`[BUILDER] ⚡ Tempo de resposta: ${(aiResponseTime / 1000).toFixed(1)}s`);
+    console.log(`[BUILDER] 📊 Tokens: ${aiData.usage?.total_tokens || 'N/A'}`);
 
     // Extrair dados do message content
     const message = aiData.choices?.[0]?.message;
     if (!message || !message.content) {
-      console.error("[MIRACLE] ❌ Resposta não contém content");
+      console.error("[BUILDER] ❌ Resposta não contém content");
       throw new Error("Resposta inválida da IA");
     }
 
@@ -454,12 +454,12 @@ Crie um plano completo seguindo o formato JSON especificado.`;
     try {
       solutionData = JSON.parse(message.content);
     } catch (parseError) {
-      console.error("[MIRACLE] ❌ Erro ao fazer parse do JSON:", parseError);
+      console.error("[BUILDER] ❌ Erro ao fazer parse do JSON:", parseError);
       throw new Error("JSON inválido na resposta");
     }
 
-    console.log(`[MIRACLE] ✅ JSON válido extraído com JSON mode`);
-    console.log(`[MIRACLE] ✓ Checklist: ${solutionData.implementation_checklist?.length || 0} steps`);
+    console.log(`[BUILDER] ✅ JSON válido extraído com JSON mode`);
+    console.log(`[BUILDER] ✓ Checklist: ${solutionData.implementation_checklist?.length || 0} steps`);
 
     // Salvar no banco
     const generationTime = Date.now() - startTime;
@@ -482,23 +482,23 @@ Crie um plano completo seguindo o formato JSON especificado.`;
       .single();
 
       if (saveError) {
-        console.error("[MIRACLE] ❌ Erro ao salvar:", saveError);
+        console.error("[BUILDER] ❌ Erro ao salvar:", saveError);
         throw new Error("Erro ao salvar solução");
       }
 
       // VALIDAR se architecture_flowchart foi gerado
       if (!savedSolution.architecture_flowchart || !savedSolution.architecture_flowchart.mermaid_code) {
-        console.warn("[MIRACLE] ⚠️ WARNING: architecture_flowchart não foi gerado pela IA!");
+        console.warn("[BUILDER] ⚠️ WARNING: architecture_flowchart não foi gerado pela IA!");
       } else {
-        console.log("[MIRACLE] ✅ architecture_flowchart gerado com sucesso");
+        console.log("[BUILDER] ✅ architecture_flowchart gerado com sucesso");
       }
 
     // Incrementar contador
     await supabase.rpc("increment_ai_solution_usage", { p_user_id: userId });
 
-    console.log(`[MIRACLE] ✅ === GERAÇÃO CONCLUÍDA ===`);
-    console.log(`[MIRACLE] ⏱️ Tempo total: ${(generationTime / 1000).toFixed(1)}s`);
-    console.log(`[MIRACLE] 💾 Solution ID: ${savedSolution.id}`);
+    console.log(`[BUILDER] ✅ === GERAÇÃO CONCLUÍDA ===`);
+    console.log(`[BUILDER] ⏱️ Tempo total: ${(generationTime / 1000).toFixed(1)}s`);
+    console.log(`[BUILDER] 💾 Solution ID: ${savedSolution.id}`);
 
     return new Response(
       JSON.stringify({
@@ -513,7 +513,7 @@ Crie um plano completo seguindo o formato JSON especificado.`;
     const errorTime = Date.now() - startTime;
     
     // Log detalhado apenas no servidor
-    console.error("[MIRACLE] ❌ Erro interno:", {
+    console.error("[BUILDER] ❌ Erro interno:", {
       message: error.message,
       stack: error.stack,
       timestamp: new Date().toISOString(),

@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Layout, ArrowRight, MessageSquare, Calendar } from 'lucide-react';
 import { useAuth } from '@/contexts/auth';
-import { useMiracleAI } from '@/hooks/builder/useMiracleAI';
+import { useBuilderAI } from '@/hooks/builder/useBuilderAI';
 import { QuestionWizard } from '@/components/builder/QuestionWizard';
-import { MiracleProcessingExperience } from '@/components/builder/MiracleProcessingExperience';
+import { BuilderProcessingExperience } from '@/components/builder/BuilderProcessingExperience';
 import { SolutionResult } from '@/components/builder/SolutionResult';
 import { AIInputWithValidation } from '@/components/ui/AIInputWithValidation';
 import { useAISolutionAccess } from '@/hooks/builder/useAISolutionAccess';
@@ -30,7 +30,7 @@ const exampleIdeas = [
 
 export default function Builder() {
   const { profile } = useAuth();
-  const { analyzeIdea, generateSolution, saveSolution, discardSolution, isAnalyzing, isGenerating, questions } = useMiracleAI();
+  const { analyzeIdea, generateSolution, saveSolution, discardSolution, isAnalyzing, isGenerating, questions } = useBuilderAI();
   const [solution, setSolution] = useState<any>(null);
   const [currentIdea, setCurrentIdea] = useState<string>('');
   const [showWizard, setShowWizard] = useState(false);
@@ -49,13 +49,13 @@ export default function Builder() {
     const solutionId = params.get('solution');
     
     if (solutionId) {
-      navigate(`/ferramentas/miracleai/solution/${solutionId}`, { replace: true });
+      navigate(`/ferramentas/builder/solution/${solutionId}`, { replace: true });
     }
   }, [location.search, navigate]);
 
   const handleGenerateSolution = async (idea: string) => {
     if (!hasAccess) {
-      toast.error('Você não tem acesso ao Miracle AI');
+      toast.error('Você não tem acesso ao Builder AI');
       navigate('/ferramentas');
       return;
     }
@@ -129,7 +129,7 @@ export default function Builder() {
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-surface-elevated/20">
       <AnimatePresence mode="wait">
         {isGenerating ? (
-          <MiracleProcessingExperience key="loader" />
+          <BuilderProcessingExperience key="loader" />
         ) : showWizard && questions ? (
           <QuestionWizard
             key="wizard"
@@ -179,7 +179,7 @@ export default function Builder() {
                 </div>
               </div>
               <h1 className="text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-                Miracle AI
+                Builder AI
               </h1>
               <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
                 Extraia o cérebro do Rafael Milagre e transforme suas ideias em soluções executáveis de IA
@@ -258,7 +258,7 @@ export default function Builder() {
               className="w-full max-w-2xl text-center mt-12"
             >
               <button
-                onClick={() => navigate('/ferramentas/miracleai/historico')}
+                onClick={() => navigate('/ferramentas/builder/historico')}
                 className="text-sm text-muted-foreground hover:text-primary transition-colors underline decoration-dotted underline-offset-4"
               >
                 Ver histórico

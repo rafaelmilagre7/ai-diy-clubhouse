@@ -109,7 +109,7 @@ export const ArchitectureFlowchart: React.FC<ArchitectureFlowchartProps> = ({ fl
           if (blob) {
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = 'arquitetura-miracle-ai.png';
+            link.download = 'arquitetura-builder-ai.png';
             link.click();
             toast.success('Fluxograma baixado com sucesso!');
           }

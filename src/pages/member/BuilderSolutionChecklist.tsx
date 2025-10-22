@@ -1,19 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LiquidGlassCard } from '@/components/ui/LiquidGlassCard';
-import { ArchitectureFlowchart } from '@/components/builder/ArchitectureFlowchart';
+import { ImplementationChecklist } from '@/components/builder/ImplementationChecklist';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 
-export default function MiracleSolutionArchitecture() {
+export default function BuilderSolutionChecklist() {
   const { id } = useParams();
   const navigate = useNavigate();
 
   const { data: solution, isLoading } = useQuery({
-    queryKey: ['miracle-solution', id],
+    queryKey: ['builder-solution', id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('ai_generated_solutions')
@@ -53,7 +54,7 @@ export default function MiracleSolutionArchitecture() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate(`/ferramentas/miracleai/solution/${id}`)}
+              onClick={() => navigate(`/ferramentas/builder/solution/${id}`)}
               className="mb-6"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
@@ -62,20 +63,17 @@ export default function MiracleSolutionArchitecture() {
 
             <div className="mb-8">
               <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                Arquitetura & Fluxos
+                Plano de Ação
               </h1>
               <p className="text-muted-foreground text-lg leading-relaxed">
-                Diagramas técnicos completos: visualize como cada componente se conecta para criar sua solução
+                Checklist prático e passo a passo para transformar sua ideia em realidade
               </p>
             </div>
 
-            {solution.architecture_flowchart ? (
-              <ArchitectureFlowchart flowchart={solution.architecture_flowchart} />
-            ) : (
-              <div className="text-center py-12 text-muted-foreground">
-                <p>Arquitetura não disponível para esta solução</p>
-              </div>
-            )}
+            <ImplementationChecklist
+              checklist={solution.implementation_checklist || []}
+              solutionId={id || ''}
+            />
           </LiquidGlassCard>
         </motion.div>
       </div>

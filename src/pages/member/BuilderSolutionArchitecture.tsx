@@ -3,18 +3,17 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { LiquidGlassCard } from '@/components/ui/LiquidGlassCard';
-import { FrameworkQuadrants } from '@/components/builder/FrameworkQuadrants';
+import { ArchitectureFlowchart } from '@/components/builder/ArchitectureFlowchart';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 
-export default function MiracleSolutionFramework() {
+export default function BuilderSolutionArchitecture() {
   const { id } = useParams();
   const navigate = useNavigate();
 
   const { data: solution, isLoading } = useQuery({
-    queryKey: ['miracle-solution', id],
+    queryKey: ['builder-solution', id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('ai_generated_solutions')
@@ -54,7 +53,7 @@ export default function MiracleSolutionFramework() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate(`/ferramentas/miracleai/solution/${id}`)}
+              onClick={() => navigate(`/ferramentas/builder/solution/${id}`)}
               className="mb-6"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
@@ -63,19 +62,20 @@ export default function MiracleSolutionFramework() {
 
             <div className="mb-8">
               <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                Framework de Implementação de IA
+                Arquitetura & Fluxos
               </h1>
-              <div className="flex items-center gap-3 mb-4">
-                <Badge variant="default" className="text-base px-4 py-1.5 bg-gradient-to-r from-primary to-primary/80">
-                  by Rafael Milagre
-                </Badge>
-              </div>
               <p className="text-muted-foreground text-lg leading-relaxed">
-                Os 4 pilares essenciais da sua solução com Inteligência Artificial
+                Diagramas técnicos completos: visualize como cada componente se conecta para criar sua solução
               </p>
             </div>
 
-            <FrameworkQuadrants framework={solution.framework_mapping} />
+            {solution.architecture_flowchart ? (
+              <ArchitectureFlowchart flowchart={solution.architecture_flowchart} />
+            ) : (
+              <div className="text-center py-12 text-muted-foreground">
+                <p>Arquitetura não disponível para esta solução</p>
+              </div>
+            )}
           </LiquidGlassCard>
         </motion.div>
       </div>
