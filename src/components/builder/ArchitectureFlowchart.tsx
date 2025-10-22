@@ -63,17 +63,26 @@ export const ArchitectureFlowchart: React.FC<ArchitectureFlowchartProps> = ({ fl
         console.error('❌ Erro ao renderizar Mermaid:', error);
         
         if (mermaidRef.current) {
+          // Fallback visual melhorado com versão text-based estruturada
+          const codeLines = flowchart.mermaid_code
+            .split('\n')
+            .filter(line => line.trim().length > 0)
+            .map(line => `<div class="pl-4 py-1 border-l-2 border-muted">${line.trim()}</div>`)
+            .join('');
+          
           mermaidRef.current.innerHTML = `
-            <div class="text-center py-12 text-muted-foreground space-y-3">
-              <svg class="h-12 w-12 mx-auto text-status-error" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-              <p class="font-semibold">Erro ao renderizar fluxograma</p>
-              <p class="text-xs">Código Mermaid inválido ou formato não suportado</p>
-              <details class="text-left max-w-lg mx-auto mt-4 p-4 bg-muted/30 rounded-lg">
-                <summary class="cursor-pointer font-mono text-xs">Ver código Mermaid</summary>
-                <pre class="mt-2 text-xs overflow-auto">${flowchart.mermaid_code}</pre>
-              </details>
+            <div class="space-y-4">
+              <div class="text-center py-8 text-muted-foreground space-y-3">
+                <svg class="h-12 w-12 mx-auto text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <p class="font-semibold">Diagrama com erro de formatação</p>
+                <p class="text-xs">Exibindo versão simplificada abaixo</p>
+              </div>
+              
+              <div class="bg-muted/30 p-6 rounded-lg space-y-2 text-sm font-mono">
+                ${codeLines}
+              </div>
             </div>
           `;
         }

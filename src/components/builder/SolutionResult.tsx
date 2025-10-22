@@ -60,7 +60,7 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({
       
       if (redirectId) {
         console.log('[SOLUTION-RESULT] 🚀 Redirecionando para:', redirectId);
-        navigate(`/ferramentas/builder/solution/${redirectId}`);
+        navigate(`/ferramentas/builder/resultado/${redirectId}`);
       } else {
         toast.error('Não foi possível encontrar a solução. Verifique seu histórico.');
         navigate('/ferramentas/builder/historico');

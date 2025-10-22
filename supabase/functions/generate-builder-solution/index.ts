@@ -690,6 +690,29 @@ Crie um plano completo seguindo o formato JSON especificado.`;
       }
     }
 
+    // 🔧 FUNÇÃO DE SANITIZAÇÃO MERMAID
+    const sanitizeMermaidCode = (code: string): string => {
+      // Remover quebras de linha no meio de definições de conexões
+      return code
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0)
+        .join('\n')
+        // Corrigir conexões com label quebradas: -->|label|\n  B[Node]
+        .replace(/-->\|([^|]+)\|\s*\n\s*([A-Z]\[)/g, '-->|$1| $2')
+        // Corrigir setas simples quebradas: -->\n  B[Node]
+        .replace(/-->\s*\n\s*([A-Z][\[\(])/g, '--> $1')
+        // Corrigir setas com estilo quebradas: -.->|\n  B[Node]
+        .replace(/\.->\|([^|]*)\|\s*\n\s*([A-Z][\[\(])/g, '.->|$1| $2');
+    };
+
+    // Aplicar sanitização em architecture_flowchart antes de salvar
+    if (solutionData.architecture_flowchart?.mermaid_code) {
+      const originalCode = solutionData.architecture_flowchart.mermaid_code;
+      solutionData.architecture_flowchart.mermaid_code = sanitizeMermaidCode(originalCode);
+      console.log('[BUILDER] 🔧 Mermaid sanitizado com sucesso');
+    }
+
     // 🔧 VALIDAÇÃO ROBUSTA E FALLBACK CRÍTICO PARA TÍTULO
     const invalidTitles = [undefined, null, 'undefined', 'null', ''];
     const titleIsInvalid = invalidTitles.includes(solutionData.title) || 
@@ -786,6 +809,12 @@ Estrutura OBRIGATÓRIA:
 }
 
 NÃO adicione explicações, comentários ou markdown. APENAS o JSON puro.
+
+IMPORTANTE PARA DIAGRAMAS MERMAID: 
+Se você incluir código Mermaid no prompt, cada conexão (-->) DEVE estar COMPLETA na mesma linha.
+❌ ERRADO: A[Node] -->|label|
+            B[Node]
+✅ CORRETO: A[Node] -->|label| B[Node]
 
 Sua missão: transformar a solução Builder gerada em um PROMPT LOVABLE COMPLETO, PROFISSIONAL e PRONTO PARA COPIAR dentro do campo "prompt" do JSON.
 
