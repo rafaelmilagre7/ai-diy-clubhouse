@@ -294,7 +294,7 @@ export const ModernTopicEditor: React.FC<ModernTopicEditorProps> = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Auto-save status */}
       {autoSaveStatus && (
         <div className="flex items-center justify-end gap-2 text-sm">
@@ -319,10 +319,10 @@ export const ModernTopicEditor: React.FC<ModernTopicEditorProps> = ({
         </div>
       )}
       
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-4">
         {/* Título */}
         <div className="space-y-2">
-          <Label htmlFor="title" className="text-base font-semibold">
+          <Label htmlFor="title" className="text-sm font-semibold">
             Título do Tópico *
             <span className="text-sm text-muted-foreground font-normal ml-2">
               ({title.length}/100)
@@ -347,7 +347,7 @@ export const ModernTopicEditor: React.FC<ModernTopicEditorProps> = ({
 
         {/* Categoria */}
         <div className="space-y-2">
-          <Label className="text-base font-semibold">Categoria *</Label>
+          <Label className="text-sm font-semibold">Categoria *</Label>
           <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
             <SelectTrigger className="h-12 text-base bg-background/50">
               <SelectValue placeholder="Selecione uma categoria" />
@@ -367,8 +367,8 @@ export const ModernTopicEditor: React.FC<ModernTopicEditorProps> = ({
         </div>
 
         {/* Editor com Tabs */}
-        <div className="space-y-4">
-          <Label className="text-base font-semibold">
+        <div className="space-y-3">
+          <Label className="text-sm font-semibold">
             Conteúdo *
             <span className="text-sm text-muted-foreground font-normal ml-2">
               ({content.length} caracteres)
@@ -428,13 +428,13 @@ Você pode usar Markdown:
 - [links](https://exemplo.com)
 - Listas com - ou 1.
 - Arraste imagens aqui ou use o botão acima"
-                className="min-h-[400px] resize-none text-base bg-background/50"
+                className="min-h-[200px] resize-none text-base bg-background/50"
                 required
               />
               
               {/* Preview inline das imagens */}
               {imageMatches.length > 0 && (
-                <div className="space-y-3 p-4 rounded-lg bg-muted/30 border border-border/50">
+                <div className="space-y-2 p-3 rounded-lg bg-muted/30 border border-border/50 max-h-[150px] overflow-y-auto">
                   <div className="flex items-center gap-2">
                     <ImageIcon className="h-4 w-4 text-primary" />
                     <span className="text-sm font-medium">Imagens no tópico</span>
@@ -443,7 +443,7 @@ Você pode usar Markdown:
                     </Badge>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {imageMatches.map((imageMatch, index) => (
                       <InlineImagePreview
                         key={`${imageMatch.url}-${index}`}
@@ -459,7 +459,7 @@ Você pode usar Markdown:
             </TabsContent>
 
             <TabsContent value="preview" className="mt-0">
-              <div className="min-h-[400px] p-6 rounded-lg bg-background/50 border border-border/50">
+              <div className="min-h-[200px] max-h-[300px] overflow-y-auto p-4 rounded-lg bg-background/50 border border-border/50">
                 {content.trim() ? (
                   <MarkdownRenderer content={content} />
                 ) : (

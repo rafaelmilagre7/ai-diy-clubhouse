@@ -68,7 +68,7 @@ export const DragDropImageZone: React.FC<DragDropImageZoneProps> = ({
   return (
     <div
       className={`
-        relative border-2 border-dashed rounded-lg p-6 text-center transition-all duration-200
+        relative border-2 border-dashed rounded-lg p-4 text-center transition-all duration-200
         ${isDragOver ? 'border-primary bg-primary/5' : 'border-border'}
         ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-primary/50'}
         ${isUploading ? 'border-operational bg-operational/5' : ''}
@@ -86,7 +86,7 @@ export const DragDropImageZone: React.FC<DragDropImageZoneProps> = ({
         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
       />
       
-      <div className="flex flex-col items-center gap-3">
+      <div className="flex flex-col items-center gap-2">
         {isUploading ? (
           <>
             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
@@ -104,15 +104,15 @@ export const DragDropImageZone: React.FC<DragDropImageZoneProps> = ({
           </>
         ) : (
           <>
-            <div className="flex items-center justify-center w-12 h-12 bg-primary/10 rounded-lg">
+            <div className="flex items-center justify-center w-10 h-10 bg-primary/10 rounded-lg">
               {isDragOver ? (
                 <Upload className="h-6 w-6 text-primary animate-bounce" />
               ) : (
-                <Image className="h-6 w-6 text-primary" />
+                <Image className="h-5 w-5 text-primary" />
               )}
             </div>
             
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               <div className="text-sm font-medium">
                 {isDragOver ? 'Solte a imagem aqui' : 'Adicionar imagem'}
               </div>
