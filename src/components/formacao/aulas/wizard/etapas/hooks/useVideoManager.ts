@@ -12,7 +12,6 @@ export interface VideoManagerHookReturnType {
   handleEmbedChange: (index: number, embedCode: string, videoId: string, url: string, thumbnailUrl: string) => void;
   handleAddVideo: () => void;
   handleRemoveVideo: (index: number) => void;
-  onDragEnd: (result: any) => void;
   setValidationError: (error: string | null) => void;
 }
 
@@ -85,16 +84,6 @@ export function useVideoManager(form: UseFormReturn<AulaFormValues>): VideoManag
     setValidationError(null);
   };
 
-  const onDragEnd = (result: any) => {
-    if (!result.destination) return;
-
-    const items = Array.from(form.getValues().videos);
-    const [reorderedItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderedItem);
-
-    form.setValue("videos", items, { shouldValidate: true });
-  };
-
   return {
     videos,
     maxVideos,
@@ -103,7 +92,6 @@ export function useVideoManager(form: UseFormReturn<AulaFormValues>): VideoManag
     handleEmbedChange,
     handleAddVideo,
     handleRemoveVideo,
-    onDragEnd,
     setValidationError
   };
 }

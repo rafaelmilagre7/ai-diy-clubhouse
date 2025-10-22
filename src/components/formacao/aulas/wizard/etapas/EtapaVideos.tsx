@@ -29,7 +29,6 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
     handleEmbedChange,
     handleAddVideo,
     handleRemoveVideo,
-    onDragEnd,
     setValidationError
   } = useVideoManager(form);
   
@@ -67,7 +66,6 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
           
           <VideosList
             videos={videos}
-            onDragEnd={onDragEnd}
             onVideoChange={handleVideoChange}
             onEmbedChange={handleEmbedChange}
             onRemoveVideo={handleRemoveVideo}

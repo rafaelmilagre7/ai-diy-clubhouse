@@ -1,12 +1,10 @@
 
 import React from "react";
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { VideoItem } from "./VideoItem";
 import { VideoFormValues } from "../types/VideoTypes";
 
 interface VideosListProps {
   videos: VideoFormValues[];
-  onDragEnd: (result: any) => void;
   onVideoChange: (index: number, field: string, value: any) => void;
   onEmbedChange: (index: number, embedCode: string, videoId: string, url: string, thumbnailUrl: string) => void;
   onRemoveVideo: (index: number) => void;
@@ -14,7 +12,6 @@ interface VideosListProps {
 
 export const VideosList: React.FC<VideosListProps> = ({
   videos,
-  onDragEnd,
   onVideoChange,
   onEmbedChange,
   onRemoveVideo
@@ -29,7 +26,6 @@ export const VideosList: React.FC<VideosListProps> = ({
     );
   }
 
-  // Temporariamente desabilitar DragDropContext para prevenir loops
   return (
     <div className="space-y-4">
       {videos.map((video: VideoFormValues, index) => (
