@@ -9,7 +9,7 @@ import { supabase } from '@/lib/supabase';
 import { LiquidGlassCard } from '@/components/ui/LiquidGlassCard';
 import { FrameworkQuadrants } from './FrameworkQuadrants';
 import { RequiredToolsGrid } from './RequiredToolsGrid';
-import { ImplementationChecklist } from './ImplementationChecklist';
+import UnifiedChecklistTab from '@/components/unified-checklist/UnifiedChecklistTab';
 import { ArchitectureFlowchart } from './ArchitectureFlowchart';
 
 interface SolutionResultProps {
@@ -176,8 +176,7 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({
               Passos práticos para transformar sua ideia em realidade
             </p>
           </div>
-          <ImplementationChecklist 
-            checklist={solution.implementation_checklist}
+          <UnifiedChecklistTab 
             solutionId={solution.id}
           />
         </LiquidGlassCard>

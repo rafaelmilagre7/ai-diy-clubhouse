@@ -41,6 +41,7 @@ serve(async (req) => {
   }
 
   const startTime = Date.now();
+  const requestId = crypto.randomUUID();
 
   try {
     const body = await req.json();
@@ -66,11 +67,11 @@ serve(async (req) => {
     // Variable to hold saved solution for timeout handler
     let savedSolution: any = null;
 
-    console.log(`[BUILDER] === GERAÇÃO BUILDER INICIADA ===`);
-    console.log(`[BUILDER] ✓ Validação OK`);
-    console.log(`[BUILDER] 👤 User ID: ${userId.substring(0, 8)}***`);
-    console.log(`[BUILDER] 💡 Ideia: "${idea.substring(0, 80)}..."`);
-    console.log(`[BUILDER] 📝 Contexto: ${answers.length} respostas coletadas`);
+    console.log(`[BUILDER][${requestId}] === GERAÇÃO BUILDER INICIADA ===`);
+    console.log(`[BUILDER][${requestId}] ✓ Validação OK`);
+    console.log(`[BUILDER][${requestId}] 👤 User ID: ${userId.substring(0, 8)}***`);
+    console.log(`[BUILDER][${requestId}] 💡 Ideia: "${idea.substring(0, 80)}..."`);
+    console.log(`[BUILDER][${requestId}] 📝 Contexto: ${answers.length} respostas coletadas`);
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -763,15 +764,15 @@ Crie um plano completo seguindo o formato JSON especificado.`;
     console.log(`[BUILDER] ⏱️ Tempo total: ${(generationTime / 1000).toFixed(1)}s`);
     console.log(`[BUILDER] 💾 Solution ID: ${savedSolution.id}`);
 
-    // ============= FASE 4: GERAR PROMPT LOVABLE COM CLAUDE SONNET 4.5 =============
-    console.log(`[BUILDER] 🎨 === INICIANDO GERAÇÃO DE PROMPT LOVABLE ===`);
+    // ============= FASE 4: GERAR PROMPT LOVABLE COM LOVABLE AI (GEMINI 2.5 PRO) =============
+    console.log(`[BUILDER][${requestId}] 🎨 === INICIANDO GERAÇÃO DE PROMPT LOVABLE ===`);
     
-    const anthropicApiKey = Deno.env.get("ANTHROPIC_API_KEY");
-    if (!anthropicApiKey) {
-      console.warn("[BUILDER] ⚠️ ANTHROPIC_API_KEY não configurada, pulando prompt Lovable");
+    const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
+    if (!lovableApiKey) {
+      console.warn(`[BUILDER][${requestId}] ⚠️ LOVABLE_API_KEY não configurada, pulando prompt Lovable`);
     } else if (savedSolution?.id) {
       try {
-        const anthropicStart = Date.now();
+        const lovablePromptStart = Date.now();
         
         const lovablePromptSystemPrompt = `Você é um especialista em engenharia de prompts para Lovable.dev.
 
@@ -797,244 +798,118 @@ ESTRUTURA OBRIGATÓRIA (seguir The Lovable Prompting Bible 2025):
 3. **[Feature principal 3]**: descrição técnica detalhada com fluxo completo
 [adicionar todas as features principais]
 
-## Funcionalidades Secundárias
-1. **[Feature secundária 1]**: descrição técnica
-2. **[Feature secundária 2]**: descrição técnica
-[adicionar todas as features secundárias]
+# 🔄 WORKFLOWS DE AUTOMAÇÃO
 
-# 🏗️ ARQUITETURA DA SOLUÇÃO
-
-## Diagrama de Componentes
-\`\`\`mermaid
-[copiar exatamente o mermaid_code do architecture_flowchart fornecido]
+## Workflow 1: [Nome específico - ex: Qualificação de Leads]
+\`\`\`
+TRIGGER: [evento específico - ex: Novo lead via WhatsApp]
+↓
+AÇÃO 1: [webhook, API call, transformação]
+  └─ Configuração: [detalhes exatos]
+↓
+AÇÃO 2: [ação da IA ou processamento]
+  └─ Modelo: [modelo específico, parâmetros]
+↓
+AÇÃO 3: [salvamento ou notificação]
+  └─ Destino: [CRM, email, webhook]
+↓
+RESULTADO: [métrica observável]
 \`\`\`
 
-## Fluxos Técnicos Principais
-### Fluxo 1: [Nome do Fluxo]
-1. [Passo detalhado 1]
-2. [Passo detalhado 2]
-3. [Passo detalhado 3]
+[repetir para 3-5 workflows principais]
 
-### Fluxo 2: [Nome do Fluxo]
-[repetir estrutura para cada fluxo crítico]
+# 🎨 DESIGN SYSTEM & UI/UX
 
-# 🛠️ FERRAMENTAS NECESSÁRIAS
+## Paleta de Cores
+- Primary: [cor + uso]
+- Secondary: [cor + uso]
+- Accent: [cor + uso]
 
-## Essenciais (Obrigatórias)
-1. **[Nome ferramenta]**
-   - **Por quê**: [justificativa de negócio]
-   - **Setup**: [passos claros de configuração]
-   - **Custo**: [estimativa mensal]
-   - **Alternativas**: [se houver]
-
-[repetir para TODAS as ferramentas essenciais]
-
-## Opcionais (Recomendadas)
-1. **[Nome ferramenta]**: [breve descrição e benefício]
-[listar todas as ferramentas opcionais]
-
-# 🎨 DESIGN E UX
-
-## Princípios de Design
-- [Princípio 1 com explicação]
-- [Princípio 2 com explicação]
-- [Princípio 3 com explicação]
+## Componentes Principais
+- [Componente 1]: [descrição e variantes]
+- [Componente 2]: [descrição e variantes]
 
 ## Jornada do Usuário
-### Usuário Novo
-1. [Passo 1]: descrição detalhada
-2. [Passo 2]: descrição detalhada
+1. [Passo 1]: [tela, ação esperada, feedback]
+2. [Passo 2]: [tela, ação esperada, feedback]
+[continuar fluxo completo]
 
-### Usuário Retornante
-1. [Passo 1]: descrição detalhada
-2. [Passo 2]: descrição detalhada
+# 🏗️ ARQUITETURA & DADOS
 
-## Tratamento de Erros e Edge Cases
-- **[Cenário de erro 1]**: como tratar e feedback ao usuário
-- **[Cenário de erro 2]**: como tratar e feedback ao usuário
-- **[Edge case 1]**: como lidar
+## Estrutura Supabase
+\`\`\`sql
+-- Tabela 1
+CREATE TABLE [nome] (
+  [campos com tipos, constraints, indexes]
+);
 
-# 🤖 AUTOMAÇÃO E INTEGRAÇÃO
-
-## Framework Rafael Milagre - Análise Detalhada
-
-### 🤖 Automação
-[Copiar e expandir os detalhes do quadrant1_automation]
-**Fluxos automatizados:**
-- [Fluxo 1]: descrição técnica completa
-- [Fluxo 2]: descrição técnica completa
-
-### 🧠 IA
-[Copiar e expandir os detalhes do quadrant2_ai]
-**Casos de uso de IA:**
-- [Uso 1]: implementação técnica e modelo sugerido
-- [Uso 2]: implementação técnica e modelo sugerido
-
-### 📊 Dados
-[Copiar e expandir os detalhes do quadrant3_data]
-**Estrutura de dados:**
-- [Entidade 1]: schema e relacionamentos
-- [Entidade 2]: schema e relacionamentos
-
-### 🎨 Interface
-[Copiar e expandir os detalhes do quadrant4_interface]
-**Componentes principais:**
-- [Componente 1]: funcionalidade e interações
-- [Componente 2]: funcionalidade e interações
-
-# ⚙️ WORKFLOWS MAKE/N8N (SUGESTÕES PRÁTICAS)
-
-## Workflow 1: [Nome descritivo do workflow]
-**Problema resolvido**: [Qual dor de negócio esse workflow resolve]
-**Trigger**: [O que inicia o workflow - ex: webhook, schedule, evento]
-**Ações detalhadas:**
-1. **[Ação 1]**: descrição técnica completa
-   - Serviço usado: [nome]
-   - Configuração: [detalhes]
-2. **[Ação 2]**: descrição técnica completa
-   - Serviço usado: [nome]
-   - Configuração: [detalhes]
-3. **[Ação 3]**: descrição técnica completa
-**Resultado final**: [Output esperado e valor de negócio]
-**Tempo estimado de setup**: [X horas/dias]
-
-## Workflow 2: [Nome descritivo do workflow]
-[repetir estrutura detalhada]
-
-## Workflow 3: [Nome descritivo do workflow]
-[repetir estrutura detalhada]
-
-## Workflow 4: [Nome descritivo do workflow]
-[repetir estrutura detalhada]
-
-[Sugerir 4-5 workflows PRÁTICOS e REAIS que realmente agreguem valor à solução]
-
-# ✅ CHECKLIST DE IMPLEMENTAÇÃO
-
-[Transformar os steps do implementation_checklist em formato markdown organizado por fases]
-
-## Fase 1: Preparação e Setup (Semana 1)
-- [ ] **[Título step 1]**: [Descrição resumida mas completa]
-- [ ] **[Título step 2]**: [Descrição resumida mas completa]
-- [ ] **[Título step 3]**: [Descrição resumida mas completa]
-
-## Fase 2: Desenvolvimento Core (Semanas 2-3)
-- [ ] **[Título step X]**: [Descrição resumida mas completa]
-- [ ] **[Título step Y]**: [Descrição resumida mas completa]
-
-## Fase 3: Integrações e APIs (Semana 4)
-- [ ] **[Título step Z]**: [Descrição resumida mas completa]
-
-## Fase 4: Testes e Ajustes (Semana 5)
-- [ ] **[Título step]**: [Descrição resumida mas completa]
-
-## Fase 5: Deploy e Monitoramento (Semana 6)
-- [ ] **[Título step]**: [Descrição resumida mas completa]
-
-# 📊 KPIs E MÉTRICAS DE SUCESSO
-
-[Copiar e formatar os expected_kpis de forma clara]
-
-**Métricas de Negócio:**
-- [Métrica 1]: [meta e como medir]
-- [Métrica 2]: [meta e como medir]
-
-**Métricas Técnicas:**
-- [Métrica 1]: [meta e como medir]
-- [Métrica 2]: [meta e como medir]
-
-**Métricas de Usuário:**
-- [Métrica 1]: [meta e como medir]
-- [Métrica 2]: [meta e como medir]
-
-# 🎓 MELHORES PRÁTICAS LOVABLE
-
-## Ao usar este prompt no Lovable.dev:
-1. **Cole o prompt completo** no chat inicial (não faça mudanças antes de colar)
-2. **Use o modo Chat** para iterações, debug e ajustes finos
-3. **Seja específico** em mudanças: diga "altere X para Y" em vez de "melhore X"
-4. **Teste incrementalmente**: implemente feature por feature, valide cada uma
-5. **Use Visual Edits** para mudanças rápidas de design (economiza créditos)
-6. **Documente desvios**: se mudar algo do plano original, atualize o prompt
-
-## Dicas de Otimização e Economia:
-- Sempre especifique o ambiente (dev/staging/prod) para evitar retrabalho
-- Use variáveis de ambiente para todos os segredos (NEVER hardcode)
-- Configure RLS (Row Level Security) no Supabase desde o início
-- Implemente loading states e error boundaries em todos os componentes
-- Teste responsividade em mobile DURANTE o desenvolvimento, não no final
-- Use o Dev Mode do Lovable para entender a estrutura antes de pedir mudanças
-- Prefira prompts curtos e específicos após o prompt inicial
-
-## Estrutura de Pastas Sugerida:
-\`\`\`
-src/
-├── components/
-│   ├── common/          # Componentes reutilizáveis
-│   ├── [feature]/       # Componentes específicos por feature
-│   └── layout/          # Layouts e wrappers
-├── hooks/               # Custom hooks
-├── lib/                 # Utilities e configurações
-├── pages/               # Páginas da aplicação
-└── types/               # TypeScript types
+-- RLS Policies
+[políticas de segurança detalhadas]
 \`\`\`
 
-# 🚀 PRÓXIMOS PASSOS - GUIA DE IMPLEMENTAÇÃO
+## Edge Functions
+- **[nome-funcao-1]**: [propósito, inputs, outputs, erros]
+- **[nome-funcao-2]**: [propósito, inputs, outputs, erros]
 
-## Passo 1: Preparação (15 minutos)
-1. Abra [Lovable.dev](https://lovable.dev) e crie novo projeto
-2. Configure as integrações necessárias (Supabase, APIs, etc.)
-3. Adicione as variáveis de ambiente/secrets necessárias
+# 📊 KPIs & MÉTRICAS
 
-## Passo 2: Geração Inicial (30-60 minutos)
-1. Cole ESTE PROMPT COMPLETO no chat do Lovable
-2. Aguarde a geração inicial completa (não interrompa)
-3. Revise o código gerado e valide a estrutura
+## Objetivos Mensuráveis
+- [Métrica 1]: baseline → meta (prazo)
+- [Métrica 2]: baseline → meta (prazo)
+- [Métrica 3]: baseline → meta (prazo)
 
-## Passo 3: Refinamento (2-4 horas)
-1. Use o modo Chat para ajustes específicos:
-   - "Ajuste o layout da página X para..."
-   - "Adicione validação no formulário Y..."
-   - "Corrija o erro no componente Z..."
-2. Use Visual Edits para ajustes visuais rápidos
-3. Teste cada funcionalidade incrementalmente
+# 🗓️ ROADMAP DE IMPLEMENTAÇÃO
 
-## Passo 4: Integrações (4-8 horas)
-1. Configure as ferramentas essenciais listadas acima
-2. Implemente os workflows Make/N8N sugeridos
-3. Teste todas as integrações end-to-end
+## Semana 1: Fundação
+- [ ] Setup Lovable project + Supabase
+- [ ] Database schema + RLS policies
+- [ ] Autenticação configurada
+- [ ] [tarefas específicas]
 
-## Passo 5: Deploy e Monitoramento (2-4 horas)
-1. Execute testes finais em staging
-2. Faça deploy para produção
-3. Configure monitoramento e alertas
-4. Acompanhe KPIs nas primeiras 48h
+## Semana 2: Features Core
+- [ ] [Feature 1]: [subtarefas]
+- [ ] [Feature 2]: [subtarefas]
+- [ ] [testes]
+
+## Semana 3: Integrações
+- [ ] [Integração 1]: [passos específicos]
+- [ ] [Integração 2]: [passos específicos]
+- [ ] [workflows Make/N8N]
+
+## Semana 4: Polimento & Deploy
+- [ ] UI refinements
+- [ ] Testes end-to-end
+- [ ] Deploy produção
+- [ ] Monitoramento + alertas
 
 ---
 
-**💡 Dica Final**: Este prompt foi otimizado para Lovable.dev. Quanto mais específico e detalhado você for nas iterações, melhores serão os resultados. Boa sorte com seu projeto! 🚀
-
----
-
-*Prompt gerado automaticamente pelo Builder de Soluções IA*`;
+**REGRAS CRÍTICAS:**
+- Seja ULTRA-ESPECÍFICO (URLs, comandos exatos, configurações reais)
+- Inclua snippets SQL, código real, configurações exatas
+- Workflows Make/N8N com módulos reais e configurações
+- Roadmap em semanas com checkboxes e tarefas acionáveis
+- KPIs com números reais e prazos realistas
+- SEMPRE mencione segurança (RLS, validação, sanitização)
+- Tom: técnico, direto, sem filler words`;
 
         const contextFromAnswers = answers?.map(a => `Q: ${a.question}\nA: ${a.answer}`).join('\n\n') || '';
 
-        console.log(`[BUILDER] 📝 Gerando prompt com Claude Sonnet 4-5...`);
+        console.log(`[BUILDER][${requestId}] 📝 Gerando prompt com Lovable AI (Gemini 2.5 Pro)...`);
         
-        const anthropicResponse = await fetch("https://api.anthropic.com/v1/messages", {
+        const lovableAIResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "x-api-key": anthropicApiKey,
-            "anthropic-version": "2023-06-01"
+            "Authorization": `Bearer ${lovableApiKey}`
           },
           body: JSON.stringify({
-            model: "claude-sonnet-4-20250514",
-            max_tokens: 16000,
-            temperature: 0.3,
-            system: lovablePromptSystemPrompt,
+            model: "google/gemini-2.5-pro",
             messages: [
+              {
+                role: "system",
+                content: lovablePromptSystemPrompt
+              },
               {
                 role: "user",
                 content: `Gere um prompt Lovable COMPLETO e PROFISSIONAL baseado nesta solução:
@@ -1061,25 +936,34 @@ INSTRUÇÕES ESPECIAIS:
 - Transforme o checklist em fases organizadas por semanas
 - Expanda os KPIs com metas numéricas quando possível`
               }
-            ]
+            ],
+            temperature: 0.7,
+            max_completion_tokens: 16000
           }),
-          signal: AbortSignal.timeout(240000) // 4 minutos para prompts complexos
+          signal: AbortSignal.timeout(180000) // 3 minutos (Gemini Pro é rápido)
         });
 
-        if (!anthropicResponse.ok) {
-          const errorText = await anthropicResponse.text();
-          console.error(`[BUILDER] ❌ Erro Claude API: ${anthropicResponse.status}`, errorText);
-          throw new Error(`Claude API error: ${anthropicResponse.status}`);
+        if (!lovableAIResponse.ok) {
+          const errorText = await lovableAIResponse.text();
+          console.error(`[BUILDER][${requestId}] ❌ Erro Lovable AI: ${lovableAIResponse.status}`, errorText);
+          
+          if (lovableAIResponse.status === 429) {
+            throw new Error(`Rate limit Lovable AI atingido`);
+          } else if (lovableAIResponse.status === 402) {
+            throw new Error(`Créditos insuficientes no Lovable AI`);
+          }
+          
+          throw new Error(`Lovable AI error: ${lovableAIResponse.status}`);
         }
 
-        const anthropicData = await anthropicResponse.json();
-        const anthropicTime = Date.now() - anthropicStart;
+        const lovableAIData = await lovableAIResponse.json();
+        const lovablePromptTime = Date.now() - lovablePromptStart;
         
-        const lovablePrompt = anthropicData.content[0].text;
+        const lovablePrompt = lovableAIData.choices[0].message.content;
         
-        console.log(`[BUILDER] ✅ Prompt Lovable gerado em ${(anthropicTime / 1000).toFixed(1)}s`);
-        console.log(`[BUILDER] 📏 Tamanho: ${lovablePrompt.length} caracteres (~${Math.floor(lovablePrompt.length / 4)} tokens)`);
-        console.log(`[BUILDER] 💰 Tokens Claude: input=${anthropicData.usage.input_tokens}, output=${anthropicData.usage.output_tokens}`);
+        console.log(`[BUILDER][${requestId}] ✅ Prompt Lovable gerado em ${(lovablePromptTime / 1000).toFixed(1)}s`);
+        console.log(`[BUILDER][${requestId}] 📏 Tamanho: ${lovablePrompt.length} caracteres (~${Math.floor(lovablePrompt.length / 4)} tokens)`);
+        console.log(`[BUILDER][${requestId}] 💰 Tokens Gemini Pro: ${lovableAIData.usage?.total_tokens || 'N/A'}`);
         
         // Atualizar solução no banco com o prompt
         const { error: updateError } = await supabase
@@ -1088,27 +972,32 @@ INSTRUÇÕES ESPECIAIS:
           .eq("id", savedSolution.id);
         
         if (updateError) {
-          console.error("[BUILDER] ❌ Erro ao salvar prompt no banco:", updateError);
+          console.error(`[BUILDER][${requestId}] ❌ Erro ao salvar prompt no banco:`, updateError);
         } else {
-          console.log("[BUILDER] ✅ Prompt Lovable salvo no banco com sucesso");
+          console.log(`[BUILDER][${requestId}] ✅ Prompt Lovable salvo no banco com sucesso`);
         }
       } catch (lovableError) {
-        console.error("[BUILDER] ❌ ERRO ao gerar prompt Lovable:");
-        console.error("[BUILDER]   - Mensagem:", lovableError?.message || 'Erro desconhecido');
-        console.error("[BUILDER]   - Tipo:", lovableError?.name || 'Unknown');
-        console.error("[BUILDER]   - Stack:", lovableError?.stack);
+        console.error(`[BUILDER][${requestId}] ❌ ERRO ao gerar prompt Lovable:`, {
+          message: lovableError?.message || 'Erro desconhecido',
+          name: lovableError?.name || 'Unknown',
+          stack: lovableError?.stack,
+          lovableApiKeyExists: !!Deno.env.get("LOVABLE_API_KEY"),
+          solutionId: savedSolution?.id
+        });
         
         if (lovableError?.message?.includes('timeout')) {
-          console.error("[BUILDER]   - Causa provável: Timeout ao chamar API do Claude (limite 180s excedido)");
+          console.error(`[BUILDER][${requestId}]   → Timeout (>180s ao chamar Lovable AI Gemini Pro)`);
         } else if (lovableError?.message?.includes('401')) {
-          console.error("[BUILDER]   - Causa provável: ANTHROPIC_API_KEY não configurada ou inválida");
+          console.error(`[BUILDER][${requestId}]   → LOVABLE_API_KEY não configurada ou inválida`);
         } else if (lovableError?.message?.includes('429')) {
-          console.error("[BUILDER]   - Causa provável: Rate limit da API do Claude atingido");
+          console.error(`[BUILDER][${requestId}]   → Rate limit Lovable AI atingido`);
+        } else if (lovableError?.message?.includes('402')) {
+          console.error(`[BUILDER][${requestId}]   → Créditos insuficientes no Lovable AI`);
         } else if (lovableError?.message?.includes('fetch')) {
-          console.error("[BUILDER]   - Causa provável: Erro de rede ao conectar com api.anthropic.com");
+          console.error(`[BUILDER][${requestId}]   → Erro de rede ao conectar com ai.gateway.lovable.dev`);
         }
         
-        console.warn("[BUILDER] ⚠️ Continuando sem Lovable Prompt - solução será retornada com outros dados");
+        console.warn(`[BUILDER][${requestId}] ⚠️ Continuando sem Lovable Prompt - solução será retornada com outros dados`);
       }
     }
     
@@ -1136,9 +1025,12 @@ INSTRUÇÕES ESPECIAIS:
     const errorTime = Date.now() - startTime;
     
     // Log detalhado apenas no servidor
-    console.error("[BUILDER] ❌ Erro interno:", {
+    console.error(`[BUILDER][${requestId}] ❌ Erro interno:`, {
+      requestId,
       message: error.message,
+      name: error.name,
       stack: error.stack,
+      cause: error.cause,
       timestamp: new Date().toISOString(),
       executionTime: `${errorTime}ms`
     });
@@ -1148,6 +1040,7 @@ INSTRUÇÕES ESPECIAIS:
       JSON.stringify({ 
         error: "Erro ao processar sua solicitação. Nossa equipe foi notificada.",
         code: "GENERATION_FAILED",
+        requestId,
         timestamp: new Date().toISOString()
       }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
