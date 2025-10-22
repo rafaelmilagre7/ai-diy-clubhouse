@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2 } from 'lucide-react';
 
 const LOADING_MESSAGES = [
   "Extraindo conhecimento do cérebro do Rafael...",
@@ -43,7 +42,7 @@ export const BuilderProcessingExperience = () => {
     <div className="min-h-screen flex flex-col items-center justify-center px-4 bg-gradient-to-br from-background via-background to-surface-elevated/10">
       
       {/* Animação central - Roda tecnológica tripla */}
-      <motion.div className="relative w-32 h-32 mb-12">
+      <motion.div className="relative w-48 h-48 mb-16">
         {/* Círculo externo */}
         <motion.div
           animate={{ rotate: 360 }}
@@ -55,19 +54,23 @@ export const BuilderProcessingExperience = () => {
         <motion.div
           animate={{ rotate: -360 }}
           transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-          className="absolute inset-2 rounded-full border-4 border-aurora-primary/20 border-r-aurora-primary/70"
+          className="absolute inset-3 rounded-full border-4 border-aurora-primary/20 border-r-aurora-primary/70"
         />
         
         {/* Círculo interno */}
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-          className="absolute inset-4 rounded-full border-4 border-aurora-primary/10 border-b-aurora-primary/50"
+          className="absolute inset-6 rounded-full border-4 border-aurora-primary/10 border-b-aurora-primary/50"
         />
         
-        {/* Ícone central fixo */}
+        {/* Logo central fixo */}
         <div className="absolute inset-0 flex items-center justify-center">
-          <Loader2 className="h-12 w-12 text-aurora-primary" />
+          <img 
+            src="/lovable-uploads/fe3733f5-092e-4a4e-bdd7-650b71aaa801.png" 
+            alt="Viver de IA" 
+            className="h-20 w-20 object-contain"
+          />
         </div>
       </motion.div>
 

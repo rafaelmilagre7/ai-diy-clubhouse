@@ -58,6 +58,12 @@ export default function Builder() {
     const checkForRecovery = async () => {
       if (!profile?.id || showWizard || isGenerating) return;
       
+      // NÃO executar recovery se está gerando
+      if (localStorage.getItem('builder_generating')) {
+        console.log('[BUILDER-RECOVERY] ⏸️ Geração em andamento, pulando recovery');
+        return;
+      }
+      
       // Verificar tentativa incompleta no localStorage
       const lastAttemptStr = localStorage.getItem('builder_last_attempt');
       if (lastAttemptStr) {
@@ -144,7 +150,15 @@ export default function Builder() {
 
   const handleWizardComplete = async (answers: Array<{ question: string; answer: string }>) => {
     setShowWizard(false);
-    console.log('[BUILDER] 🚀 Gerando solução...');
+    console.log('[BUILDER] 🚀 Iniciando geração...', {
+      idea: currentIdea.substring(0, 50) + '...',
+      answersCount: answers.length,
+      timestamp: new Date().toISOString()
+    });
+    
+    // Desabilitar recovery durante geração
+    const recoveryFlag = 'builder_generating';
+    localStorage.setItem(recoveryFlag, 'true');
     
     // Salvar tentativa no localStorage (recovery)
     localStorage.setItem('builder_last_attempt', JSON.stringify({
@@ -153,23 +167,46 @@ export default function Builder() {
       timestamp: Date.now()
     }));
     
-    const result = await generateSolution(currentIdea, answers);
-    
-    if (result?.id) {
-      // ✅ REDIRECIONAMENTO AUTOMÁTICO PARA PÁGINA DE CARDS
-      console.log('[BUILDER] ✅ Solução gerada, redirecionando para:', result.id);
-      navigate(`/ferramentas/builder/solution/${result.id}`);
-      localStorage.removeItem('builder_last_attempt');
-    } else {
-      // ❌ Erro: oferecer retry
+    try {
+      const result = await generateSolution(currentIdea, answers);
+      
+      console.log('[BUILDER] 📦 Resultado recebido:', {
+        hasResult: !!result,
+        hasId: !!result?.id,
+        id: result?.id,
+        title: result?.title,
+        allKeys: result ? Object.keys(result) : []
+      });
+      
+      if (result?.id) {
+        const targetUrl = `/ferramentas/builder/solution/${result.id}`;
+        console.log('[BUILDER] ✅ ID válido! Redirecionando para:', targetUrl);
+        
+        // Limpar flags antes de redirecionar
+        localStorage.removeItem('builder_last_attempt');
+        localStorage.removeItem(recoveryFlag);
+        
+        // Redirecionar
+        navigate(targetUrl);
+      } else {
+        console.error('[BUILDER] ❌ Resultado sem ID:', result);
+        throw new Error('ID da solução não foi retornado pela API');
+      }
+    } catch (error) {
+      console.error('[BUILDER] ❌ Erro capturado no handleWizardComplete:', error);
+      localStorage.removeItem(recoveryFlag);
+      
+      // Toast SEMPRE visível
       toast.error('Erro ao gerar solução', {
-        description: 'Deseja tentar novamente com as mesmas respostas?',
+        description: 'Não foi possível criar sua solução. Verifique os logs do console e tente novamente.',
         action: {
           label: 'Tentar novamente',
           onClick: () => handleWizardComplete(answers)
         },
-        duration: 10000
+        duration: 15000
       });
+      
+      // Não fazer nada - fica na tela de loading para o usuário ver o erro
     }
   };
 
