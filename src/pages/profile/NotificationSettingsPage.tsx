@@ -238,38 +238,38 @@ const NotificationSettingsPage = () => {
 
       <div className="container mx-auto px-4 py-8 max-w-5xl">
         {/* Header */}
-        <div className="mb-lg">
-          <div className="flex items-center gap-sm mb-sm">
-            <div className="p-sm bg-gradient-to-br from-primary/20 to-accent/20 rounded-xl">
-              <Bell className="h-6 w-6 text-primary" />
+        <div className="mb-xl">
+          <div className="flex items-center gap-md mb-sm">
+            <div className="p-md bg-surface-elevated rounded-2xl border border-border/50">
+              <Bell className="h-7 w-7 text-foreground" />
             </div>
-            <h1 className="text-4xl font-bold">Notificações</h1>
+            <h1 className="text-4xl font-bold text-foreground">Preferências de Notificações</h1>
           </div>
-          <p className="text-muted-foreground text-lg">
-            Configure como e quando deseja receber notificações da plataforma
+          <p className="text-muted-foreground text-base">
+            Personalize sua experiência escolhendo quais notificações deseja receber
           </p>
         </div>
 
         <div className="space-y-lg">
           {/* Canais de Entrega */}
-          <Card className="p-lg border-border/50 hover:border-primary/30 transition-colors">
-            <div className="flex items-start gap-md mb-md">
-              <div className="p-sm bg-primary/10 rounded-lg">
-                <Mail className="h-5 w-5 text-primary" />
+          <Card className="p-lg border-border/30 shadow-sm hover:shadow-md transition-all duration-300">
+            <div className="flex items-start gap-md mb-lg">
+              <div className="p-md bg-surface-elevated rounded-xl">
+                <Mail className="h-6 w-6 text-foreground" />
               </div>
               <div className="flex-1">
-                <h2 className="text-xl font-semibold mb-xs">Canais de Entrega</h2>
+                <h2 className="text-2xl font-bold mb-xs text-foreground">Canais de Entrega</h2>
                 <p className="text-sm text-muted-foreground">
                   Escolha onde deseja receber suas notificações
                 </p>
               </div>
             </div>
 
-            <div className="space-y-md">
-              <div className="flex items-center justify-between p-md bg-surface-elevated rounded-lg">
+            <div className="space-y-sm">
+              <div className="flex items-center justify-between p-lg bg-background rounded-xl border border-border/50 hover:border-border transition-colors">
                 <div>
-                  <Label className="text-base font-medium">Notificações no App</Label>
-                  <p className="text-sm text-muted-foreground mt-xs">
+                  <Label className="text-base font-semibold">Notificações no App</Label>
+                  <p className="text-sm text-muted-foreground mt-1">
                     Receba alertas enquanto navega na plataforma
                   </p>
                 </div>
@@ -280,10 +280,10 @@ const NotificationSettingsPage = () => {
                 />
               </div>
 
-              <div className="flex items-center justify-between p-md bg-surface-elevated rounded-lg">
+              <div className="flex items-center justify-between p-lg bg-background rounded-xl border border-border/50 hover:border-border transition-colors">
                 <div>
-                  <Label className="text-base font-medium">Notificações por Email</Label>
-                  <p className="text-sm text-muted-foreground mt-xs">
+                  <Label className="text-base font-semibold">Notificações por Email</Label>
+                  <p className="text-sm text-muted-foreground mt-1">
                     Receba resumos e alertas importantes no seu email
                   </p>
                 </div>
@@ -294,10 +294,10 @@ const NotificationSettingsPage = () => {
                 />
               </div>
 
-              <div className="flex items-center justify-between p-md bg-surface-elevated rounded-lg">
+              <div className="flex items-center justify-between p-lg bg-background rounded-xl border border-border/50 opacity-60">
                 <div>
-                  <Label className="text-base font-medium">Notificações por WhatsApp</Label>
-                  <p className="text-sm text-muted-foreground mt-xs">
+                  <Label className="text-base font-semibold">Notificações por WhatsApp</Label>
+                  <p className="text-sm text-muted-foreground mt-1">
                     Alertas urgentes via WhatsApp (em breve)
                   </p>
                 </div>
@@ -311,20 +311,20 @@ const NotificationSettingsPage = () => {
           </Card>
 
           {/* Sugestões */}
-          <Card className="p-lg border-border/50 hover:border-primary/30 transition-colors">
-            <div className="flex items-start gap-md mb-md">
-              <div className="p-sm bg-accent/10 rounded-lg">
-                <Lightbulb className="h-5 w-5 text-accent" />
+          <Card className="p-lg border-border/30 shadow-sm hover:shadow-md transition-all duration-300">
+            <div className="flex items-start gap-md mb-lg">
+              <div className="p-md bg-surface-elevated rounded-xl">
+                <Lightbulb className="h-6 w-6 text-foreground" />
               </div>
               <div className="flex-1">
-                <h2 className="text-xl font-semibold mb-xs">Sugestões</h2>
+                <h2 className="text-2xl font-bold mb-xs text-foreground">Sugestões</h2>
                 <p className="text-sm text-muted-foreground">
                   Acompanhe novidades e interações em sugestões da comunidade
                 </p>
               </div>
             </div>
 
-            <div className="grid gap-sm">
+            <div className="grid gap-xs">
               {[
                 { key: 'suggestions_new_suggestion', label: 'Novas sugestões', desc: 'Quando alguém criar uma nova sugestão' },
                 { key: 'suggestions_status_changed', label: 'Mudança de status', desc: 'Quando o status de uma sugestão mudar' },
@@ -333,10 +333,10 @@ const NotificationSettingsPage = () => {
                 { key: 'suggestions_upvoted', label: 'Votos nas suas sugestões', desc: 'Quando suas sugestões receberem votos' },
                 { key: 'suggestions_milestone', label: 'Marcos importantes', desc: 'Quando suas sugestões atingirem marcos (10, 50, 100 votos)' },
               ].map((item) => (
-                <div key={item.key} className="flex items-center justify-between p-sm hover:bg-surface-elevated rounded-lg transition-colors">
+                <div key={item.key} className="flex items-center justify-between p-md hover:bg-surface-elevated/50 rounded-lg transition-colors border border-transparent hover:border-border/50">
                   <div className="flex-1 min-w-0">
-                    <Label className="text-sm font-medium">{item.label}</Label>
-                    <p className="text-xs text-muted-foreground">{item.desc}</p>
+                    <Label className="text-sm font-medium cursor-pointer">{item.label}</Label>
+                    <p className="text-xs text-muted-foreground mt-0.5">{item.desc}</p>
                   </div>
                   <Switch
                     checked={preferences[item.key as keyof NotificationPreferences] as boolean}
@@ -349,20 +349,20 @@ const NotificationSettingsPage = () => {
           </Card>
 
           {/* Soluções */}
-          <Card className="p-lg border-border/50 hover:border-primary/30 transition-colors">
-            <div className="flex items-start gap-md mb-md">
-              <div className="p-sm bg-viverblue/10 rounded-lg">
-                <Briefcase className="h-5 w-5 text-viverblue" />
+          <Card className="p-lg border-border/30 shadow-sm hover:shadow-md transition-all duration-300">
+            <div className="flex items-start gap-md mb-lg">
+              <div className="p-md bg-surface-elevated rounded-xl">
+                <Briefcase className="h-6 w-6 text-foreground" />
               </div>
               <div className="flex-1">
-                <h2 className="text-xl font-semibold mb-xs">Soluções</h2>
+                <h2 className="text-2xl font-bold mb-xs text-foreground">Soluções</h2>
                 <p className="text-sm text-muted-foreground">
                   Novidades sobre soluções e conteúdos disponíveis
                 </p>
               </div>
             </div>
 
-            <div className="grid gap-sm">
+            <div className="grid gap-xs">
               {[
                 { key: 'solutions_new_solution', label: 'Novas soluções', desc: 'Quando uma nova solução for publicada' },
                 { key: 'solutions_updated', label: 'Atualizações', desc: 'Quando soluções que você acompanha forem atualizadas' },
@@ -371,10 +371,10 @@ const NotificationSettingsPage = () => {
                 { key: 'solutions_access_granted', label: 'Acesso liberado', desc: 'Quando você ganhar acesso a uma nova solução' },
                 { key: 'solutions_weekly_digest', label: 'Resumo semanal', desc: 'Principais novidades de soluções da semana' },
               ].map((item) => (
-                <div key={item.key} className="flex items-center justify-between p-sm hover:bg-surface-elevated rounded-lg transition-colors">
+                <div key={item.key} className="flex items-center justify-between p-md hover:bg-surface-elevated/50 rounded-lg transition-colors border border-transparent hover:border-border/50">
                   <div className="flex-1 min-w-0">
-                    <Label className="text-sm font-medium">{item.label}</Label>
-                    <p className="text-xs text-muted-foreground">{item.desc}</p>
+                    <Label className="text-sm font-medium cursor-pointer">{item.label}</Label>
+                    <p className="text-xs text-muted-foreground mt-0.5">{item.desc}</p>
                   </div>
                   <Switch
                     checked={preferences[item.key as keyof NotificationPreferences] as boolean}
@@ -387,20 +387,20 @@ const NotificationSettingsPage = () => {
           </Card>
 
           {/* Eventos */}
-          <Card className="p-lg border-border/50 hover:border-primary/30 transition-colors">
-            <div className="flex items-start gap-md mb-md">
-              <div className="p-sm bg-status-success/10 rounded-lg">
-                <Calendar className="h-5 w-5 text-status-success" />
+          <Card className="p-lg border-border/30 shadow-sm hover:shadow-md transition-all duration-300">
+            <div className="flex items-start gap-md mb-lg">
+              <div className="p-md bg-surface-elevated rounded-xl">
+                <Calendar className="h-6 w-6 text-foreground" />
               </div>
               <div className="flex-1">
-                <h2 className="text-xl font-semibold mb-xs">Eventos</h2>
+                <h2 className="text-2xl font-bold mb-xs text-foreground">Eventos</h2>
                 <p className="text-sm text-muted-foreground">
                   Fique atualizado sobre eventos, inscrições e lembretes
                 </p>
               </div>
             </div>
 
-            <div className="grid gap-sm">
+            <div className="grid gap-xs">
               {[
                 { key: 'events_new_event', label: 'Novos eventos', desc: 'Quando um novo evento for criado' },
                 { key: 'events_reminder', label: 'Lembretes', desc: 'Lembretes de eventos que você se inscreveu' },
@@ -409,10 +409,10 @@ const NotificationSettingsPage = () => {
                 { key: 'events_cancelled', label: 'Cancelamentos', desc: 'Quando um evento for cancelado' },
                 { key: 'events_starting_soon', label: 'Começando em breve', desc: 'Alertas 1h antes dos eventos' },
               ].map((item) => (
-                <div key={item.key} className="flex items-center justify-between p-sm hover:bg-surface-elevated rounded-lg transition-colors">
+                <div key={item.key} className="flex items-center justify-between p-md hover:bg-surface-elevated/50 rounded-lg transition-colors border border-transparent hover:border-border/50">
                   <div className="flex-1 min-w-0">
-                    <Label className="text-sm font-medium">{item.label}</Label>
-                    <p className="text-xs text-muted-foreground">{item.desc}</p>
+                    <Label className="text-sm font-medium cursor-pointer">{item.label}</Label>
+                    <p className="text-xs text-muted-foreground mt-0.5">{item.desc}</p>
                   </div>
                   <Switch
                     checked={preferences[item.key as keyof NotificationPreferences] as boolean}
@@ -425,20 +425,20 @@ const NotificationSettingsPage = () => {
           </Card>
 
           {/* Comunidade */}
-          <Card className="p-lg border-border/50 hover:border-primary/30 transition-colors">
-            <div className="flex items-start gap-md mb-md">
-              <div className="p-sm bg-status-warning/10 rounded-lg">
-                <MessageSquare className="h-5 w-5 text-status-warning" />
+          <Card className="p-lg border-border/30 shadow-sm hover:shadow-md transition-all duration-300">
+            <div className="flex items-start gap-md mb-lg">
+              <div className="p-md bg-surface-elevated rounded-xl">
+                <MessageSquare className="h-6 w-6 text-foreground" />
               </div>
               <div className="flex-1">
-                <h2 className="text-xl font-semibold mb-xs">Comunidade</h2>
+                <h2 className="text-2xl font-bold mb-xs text-foreground">Comunidade</h2>
                 <p className="text-sm text-muted-foreground">
                   Interações, menções e atividades na comunidade
                 </p>
               </div>
             </div>
 
-            <div className="grid gap-sm">
+            <div className="grid gap-xs">
               {[
                 { key: 'community_new_topic', label: 'Novos tópicos', desc: 'Quando novos tópicos forem criados' },
                 { key: 'community_topic_reply', label: 'Respostas em tópicos', desc: 'Respostas em tópicos que você criou ou participa' },
@@ -451,10 +451,10 @@ const NotificationSettingsPage = () => {
                 { key: 'community_weekly_digest', label: 'Resumo semanal', desc: 'Top 5 tópicos mais ativos da semana' },
                 { key: 'community_achievement', label: 'Conquistas', desc: 'Quando desbloquear conquistas na comunidade' },
               ].map((item) => (
-                <div key={item.key} className="flex items-center justify-between p-sm hover:bg-surface-elevated rounded-lg transition-colors">
+                <div key={item.key} className="flex items-center justify-between p-md hover:bg-surface-elevated/50 rounded-lg transition-colors border border-transparent hover:border-border/50">
                   <div className="flex-1 min-w-0">
-                    <Label className="text-sm font-medium">{item.label}</Label>
-                    <p className="text-xs text-muted-foreground">{item.desc}</p>
+                    <Label className="text-sm font-medium cursor-pointer">{item.label}</Label>
+                    <p className="text-xs text-muted-foreground mt-0.5">{item.desc}</p>
                   </div>
                   <Switch
                     checked={preferences[item.key as keyof NotificationPreferences] as boolean}
@@ -467,20 +467,20 @@ const NotificationSettingsPage = () => {
           </Card>
 
           {/* Sistema & Admin */}
-          <Card className="p-lg border-border/50 hover:border-primary/30 transition-colors">
-            <div className="flex items-start gap-md mb-md">
-              <div className="p-sm bg-status-info/10 rounded-lg">
-                <Shield className="h-5 w-5 text-status-info" />
+          <Card className="p-lg border-border/30 shadow-sm hover:shadow-md transition-all duration-300">
+            <div className="flex items-start gap-md mb-lg">
+              <div className="p-md bg-surface-elevated rounded-xl">
+                <Shield className="h-6 w-6 text-foreground" />
               </div>
               <div className="flex-1">
-                <h2 className="text-xl font-semibold mb-xs">Sistema & Administração</h2>
+                <h2 className="text-2xl font-bold mb-xs text-foreground">Sistema & Administração</h2>
                 <p className="text-sm text-muted-foreground">
                   Comunicações importantes da plataforma e equipe
                 </p>
               </div>
             </div>
 
-            <div className="grid gap-sm">
+            <div className="grid gap-xs">
               {[
                 { key: 'system_maintenance', label: 'Manutenção programada', desc: 'Avisos sobre manutenções e downtime' },
                 { key: 'system_new_feature', label: 'Novos recursos', desc: 'Quando novos recursos forem lançados' },
@@ -490,10 +490,10 @@ const NotificationSettingsPage = () => {
                 { key: 'user_role_changed', label: 'Mudança de perfil', desc: 'Quando seu papel na plataforma mudar' },
                 { key: 'user_achievement', label: 'Conquistas da plataforma', desc: 'Quando desbloquear conquistas gerais' },
               ].map((item) => (
-                <div key={item.key} className="flex items-center justify-between p-sm hover:bg-surface-elevated rounded-lg transition-colors">
+                <div key={item.key} className="flex items-center justify-between p-md hover:bg-surface-elevated/50 rounded-lg transition-colors border border-transparent hover:border-border/50">
                   <div className="flex-1 min-w-0">
-                    <Label className="text-sm font-medium">{item.label}</Label>
-                    <p className="text-xs text-muted-foreground">{item.desc}</p>
+                    <Label className="text-sm font-medium cursor-pointer">{item.label}</Label>
+                    <p className="text-xs text-muted-foreground mt-0.5">{item.desc}</p>
                   </div>
                   <Switch
                     checked={preferences[item.key as keyof NotificationPreferences] as boolean}
@@ -506,22 +506,22 @@ const NotificationSettingsPage = () => {
           </Card>
 
           {/* Configurações Avançadas */}
-          <Card className="p-lg border-border/50 hover:border-primary/30 transition-colors">
-            <div className="flex items-start gap-md mb-md">
-              <div className="p-sm bg-muted rounded-lg">
-                <Clock className="h-5 w-5 text-foreground" />
+          <Card className="p-lg border-border/30 shadow-sm hover:shadow-md transition-all duration-300">
+            <div className="flex items-start gap-md mb-lg">
+              <div className="p-md bg-surface-elevated rounded-xl">
+                <Clock className="h-6 w-6 text-foreground" />
               </div>
               <div className="flex-1">
-                <h2 className="text-xl font-semibold mb-xs">Configurações Avançadas</h2>
+                <h2 className="text-2xl font-bold mb-xs text-foreground">Configurações Avançadas</h2>
                 <p className="text-sm text-muted-foreground">
                   Personalize quando e com que frequência receber notificações
                 </p>
               </div>
             </div>
 
-            <div className="space-y-md">
-              <div className="p-md bg-surface-elevated rounded-lg">
-                <Label className="text-base font-medium mb-sm block">Frequência de Notificações</Label>
+            <div className="space-y-lg">
+              <div className="p-lg bg-background rounded-xl border border-border/50">
+                <Label className="text-base font-semibold mb-sm block">Frequência de Notificações</Label>
                 <Select
                   value={preferences.digest_frequency}
                   onValueChange={(value) => updatePreference('digest_frequency', value)}
@@ -561,11 +561,11 @@ const NotificationSettingsPage = () => {
 
               <Separator />
 
-              <div className="p-md bg-surface-elevated rounded-lg">
-                <div className="flex items-center justify-between mb-sm">
+              <div className="p-lg bg-background rounded-xl border border-border/50">
+                <div className="flex items-center justify-between mb-md">
                   <div>
-                    <Label className="text-base font-medium">Horário de Silêncio</Label>
-                    <p className="text-xs text-muted-foreground mt-xs">
+                    <Label className="text-base font-semibold">Horário de Silêncio</Label>
+                    <p className="text-xs text-muted-foreground mt-1">
                       Não receber notificações durante determinado período
                     </p>
                   </div>
@@ -577,23 +577,25 @@ const NotificationSettingsPage = () => {
                 </div>
 
                 {preferences.quiet_hours_enabled && (
-                  <div className="grid grid-cols-2 gap-md mt-md">
+                  <div className="grid grid-cols-2 gap-md mt-md pt-md border-t border-border/50">
                     <div>
-                      <Label className="text-sm mb-sm block">Início</Label>
+                      <Label className="text-sm mb-sm block font-medium">Início</Label>
                       <Input
                         type="time"
                         value={preferences.quiet_hours_start}
                         onChange={(e) => updatePreference('quiet_hours_start', e.target.value)}
                         disabled={saving}
+                        className="bg-surface-elevated"
                       />
                     </div>
                     <div>
-                      <Label className="text-sm mb-sm block">Fim</Label>
+                      <Label className="text-sm mb-sm block font-medium">Fim</Label>
                       <Input
                         type="time"
                         value={preferences.quiet_hours_end}
                         onChange={(e) => updatePreference('quiet_hours_end', e.target.value)}
                         disabled={saving}
+                        className="bg-surface-elevated"
                       />
                     </div>
                   </div>
@@ -604,13 +606,15 @@ const NotificationSettingsPage = () => {
         </div>
 
         {/* Footer Info */}
-        <div className="mt-lg p-md bg-surface-elevated border border-border rounded-lg">
-          <div className="flex items-start gap-sm">
-            <Sparkles className="h-5 w-5 text-primary flex-shrink-0 mt-xs" />
+        <div className="mt-xl p-lg bg-surface-elevated border border-border/30 rounded-xl shadow-sm">
+          <div className="flex items-start gap-md">
+            <div className="p-md bg-background rounded-xl">
+              <Sparkles className="h-6 w-6 text-foreground flex-shrink-0" />
+            </div>
             <div>
-              <p className="text-sm font-medium mb-xs">Sistema de Notificações Inteligente</p>
-              <p className="text-xs text-muted-foreground">
-                Todas as notificações são otimizadas para não sobrecarregar você. 
+              <p className="text-base font-semibold mb-sm text-foreground">Sistema Inteligente de Notificações</p>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Suas notificações são otimizadas para não sobrecarregar você. 
                 Agrupamos notificações similares e respeitamos seus horários de silêncio. 
                 Você sempre terá controle total sobre o que recebe.
               </p>
