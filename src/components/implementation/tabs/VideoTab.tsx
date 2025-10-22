@@ -24,6 +24,23 @@ interface VideoLesson {
 const VideoTab: React.FC<VideoTabProps> = ({ solutionId, onComplete }) => {
   const [isWatched, setIsWatched] = useState(false);
 
+  const extractPandaVideoId = (url: string): string | null => {
+    try {
+      const patterns = [
+        /pandavideo\.com\.br\/embed\/\?v=([^&]+)/,
+        /player-vz-[^.]+\.tv\.pandavideo\.com\.br\/embed\/\?v=([^&]+)/,
+      ];
+      
+      for (const pattern of patterns) {
+        const match = url.match(pattern);
+        if (match && match[1]) return match[1];
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  };
+
   const { data: videoLessons, isLoading } = useQuery({
     queryKey: ['solution-video-resources', solutionId],
     queryFn: async () => {
@@ -31,7 +48,8 @@ const VideoTab: React.FC<VideoTabProps> = ({ solutionId, onComplete }) => {
         .from('solution_resources')
         .select('*')
         .eq('solution_id', solutionId)
-        .eq('resource_type', 'video_resource');
+        .eq('type', 'video')
+        .is('module_id', null);
 
       if (error) {
         console.error('VideoTab: Erro ao buscar vídeos:', error);
@@ -44,7 +62,7 @@ const VideoTab: React.FC<VideoTabProps> = ({ solutionId, onComplete }) => {
         title: resource.name,
         description: resource.description || resource.format,
         url: resource.url,
-        video_id: resource.metadata?.videoId || resource.id,
+        video_id: resource.metadata?.videoId || extractPandaVideoId(resource.url),
         order_index: resource.order_index || 0
       })) || [];
       
