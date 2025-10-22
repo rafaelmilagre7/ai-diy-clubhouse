@@ -190,8 +190,6 @@ const WhatsAppDebug: React.FC = () => {
   const runDiagnostics = async () => {
     setLoading(true);
     try {
-      console.log('🔍 Executando diagnósticos completos...');
-      
       const { data, error } = await supabase.functions.invoke('whatsapp-config-check', {
         body: { action: 'check' }
       });
@@ -206,7 +204,6 @@ const WhatsAppDebug: React.FC = () => {
         return;
       }
 
-      console.log('✅ Diagnósticos concluídos:', data);
       setDiagnostics(data);
 
       // Toast de resumo
@@ -426,8 +423,6 @@ const WhatsAppDebug: React.FC = () => {
     setTemplateTestResult(null);
 
     try {
-      console.log('🎯 [TESTE TEMPLATE] Iniciando teste completo de convite...');
-      
       // Passo 1: Buscar role_id de 'membro_club' (ou usar um padrão)
       const { data: roles, error: rolesError } = await supabase
         .from('user_roles')
@@ -447,7 +442,6 @@ const WhatsAppDebug: React.FC = () => {
       }
 
       const roleId = roles[0].id;
-      console.log('🎯 [TESTE TEMPLATE] Role ID:', roleId);
 
       // Passo 2: Criar convite híbrido usando a função SQL
       const { data: inviteResult, error: inviteError } = await supabase
@@ -460,8 +454,6 @@ const WhatsAppDebug: React.FC = () => {
           p_channel_preference: 'whatsapp'
         });
 
-      console.log('🎯 [TESTE TEMPLATE] Resultado do convite:', inviteResult);
-
       if (inviteError || inviteResult?.status !== 'success') {
         throw new Error(inviteResult?.message || inviteError?.message || 'Erro ao criar convite');
       }
@@ -469,12 +461,6 @@ const WhatsAppDebug: React.FC = () => {
       const inviteToken = inviteResult.token;
       const inviteId = inviteResult.invite_id;
       const inviteUrl = APP_CONFIG.getAppUrl(`/convite/${inviteToken}`);
-
-      console.log('🎯 [TESTE TEMPLATE] Convite criado:', {
-        id: inviteId,
-        token: inviteToken,
-        url: inviteUrl
-      });
 
       // Passo 3: Enviar via WhatsApp usando o template "convitevia"
       const { data: whatsappResult, error: whatsappError } = await supabase.functions.invoke('send-whatsapp-invite', {
@@ -488,8 +474,6 @@ const WhatsAppDebug: React.FC = () => {
           inviteId: inviteId
         }
       });
-
-      console.log('🎯 [TESTE TEMPLATE] Resultado WhatsApp:', whatsappResult);
 
       const result = {
         success: !whatsappError && whatsappResult?.success,

@@ -25,24 +25,20 @@ const isSupabaseAuthToken = (token: string): boolean => {
   
   // Se contém pontos, provavelmente é JWT
   if (token.includes('.')) {
-    console.log('🔍 [INVITE] Token contém pontos - provável JWT');
     return true;
   }
   
   // Se é muito longo (JWT são bem longos), também é provável que seja JWT
   if (token.length > 50) {
-    console.log('🔍 [INVITE] Token muito longo - provável JWT');
     return true;
   }
   
   // Tokens de convite são alfanuméricos simples
   const inviteTokenPattern = /^[A-Za-z0-9]{6,40}$/;
   if (!inviteTokenPattern.test(token)) {
-    console.log('🔍 [INVITE] Token não match padrão de convite - provável JWT');
     return true;
   }
   
-  console.log('🔍 [INVITE] Token parece ser de convite válido');
   return false;
 };
 
@@ -60,12 +56,10 @@ const InvitePage = () => {
     if (token) {
       // Verificar se é um token de auth do Supabase (JWT) ou token de convite
       if (isSupabaseAuthToken(token)) {
-        console.log('🔄 [INVITE] Token de auth detectado, redirecionando para reset de senha');
         navigate(`/set-new-password#access_token=${token}&type=recovery`, { replace: true });
         return;
       }
       
-      console.log('📨 [INVITE] Token de convite detectado, validando...');
       handleValidateToken();
     }
   }, [token, navigate]);
@@ -152,7 +146,6 @@ const InvitePage = () => {
                     prefilledEmail={validationResult.invite.email}
                     prefilledName={validationResult.invite.profile_data?.name}
                     onSuccess={() => {
-                      console.log('🎯 [INVITE] Registro concluído via InvitePage - redirecionando para onboarding');
                       // Redirecionar automaticamente para o onboarding
                       setTimeout(() => {
                         navigate('/onboarding');

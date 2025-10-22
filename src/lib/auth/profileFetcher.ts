@@ -16,13 +16,11 @@ class ProfileFetcher {
     // 1. Verificar cache primeiro (0ms)
     const cached = authCache.get(userId);
     if (cached) {
-      console.log('✅ [PROFILE-FETCH] Cache hit');
       return cached;
     }
 
     // 2. Verificar se já existe request ativo (evitar duplicatas)
     if (this.activeRequests.has(userId)) {
-      console.log('⏳ [PROFILE-FETCH] Aguardando request ativo');
       return this.activeRequests.get(userId)!;
     }
 
@@ -60,15 +58,12 @@ class ProfileFetcher {
 
     for (const strategy of strategies) {
       try {
-        console.log(`🔄 [PROFILE-FETCH] Tentando estratégia: ${strategy.name}`);
-        
         const result = await this.withTimeout(
           strategy.execute(userId),
           strategy.timeout
         );
         
         if (result) {
-          console.log(`✅ [PROFILE-FETCH] Sucesso com: ${strategy.name}`);
           return result;
         }
         

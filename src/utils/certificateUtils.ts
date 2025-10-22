@@ -3,8 +3,6 @@ import { supabase } from '@/lib/supabase';
 
 // Utilitário para converter imagem para base64
 export const convertImageToBase64 = async (imageUrl: string): Promise<string> => {
-  console.log('Iniciando conversão de imagem para base64:', imageUrl);
-  
   try {
     const response = await fetch(imageUrl);
     
@@ -18,15 +16,10 @@ export const convertImageToBase64 = async (imageUrl: string): Promise<string> =>
     }
     
     const blob = await response.blob();
-    console.log('Blob criado com sucesso:', {
-      size: blob.size,
-      type: blob.type
-    });
     
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => {
-        console.log('Conversão para base64 concluída com sucesso');
         resolve(reader.result as string);
       };
       reader.onerror = (error) => {
@@ -66,8 +59,6 @@ export const uploadCertificateToStorage = async (
   fileName: string,
   certificateId: string
 ): Promise<string> => {
-  console.log('Iniciando upload do certificado para storage:', fileName);
-  
   try {
     const filePath = `${certificateId}/${fileName}`;
     
@@ -87,7 +78,6 @@ export const uploadCertificateToStorage = async (
       .from('certificates')
       .getPublicUrl(filePath);
 
-    console.log('Upload do certificado concluído:', publicUrlData.publicUrl);
     return publicUrlData.publicUrl;
   } catch (error) {
     console.error('Erro no upload do certificado:', error);
@@ -101,8 +91,6 @@ export const updateCertificateRecord = async (
   certificateUrl: string,
   certificateFilename: string
 ): Promise<void> => {
-  console.log('Atualizando registro do certificado:', certificateId);
-  
   try {
     const { error } = await supabase
       .from('solution_certificates')
@@ -117,7 +105,6 @@ export const updateCertificateRecord = async (
       throw error;
     }
 
-    console.log('Registro do certificado atualizado com sucesso');
   } catch (error) {
     console.error('Erro ao atualizar registro do certificado:', error);
     throw error;
@@ -131,13 +118,6 @@ export const generateCertificateHTML = (
   formattedDate: string,
   logoBase64: string
 ) => {
-  console.log('Gerando HTML do certificado com dados:', {
-    certificateId: certificate.id,
-    userName: userProfile.name,
-    solutionTitle: certificate.solutions.title,
-    logoBase64Length: logoBase64.length
-  });
-
   return `
     <html>
       <head>

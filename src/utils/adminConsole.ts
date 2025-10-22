@@ -21,15 +21,8 @@ import { adminQuickReset } from './adminUserReset';
   checkEmail: async (email: string) => {
     const { verifyEmailStatus } = await import('./adminTechnicalCleanup');
     const status = await verifyEmailStatus(email);
-    console.log(`📊 Status do email ${email}:`, status);
     return status;
   }
 };
-
-console.log('🔧 Admin Utils carregados! Use: window.adminUtils');
-console.log('📋 Funções disponíveis:');
-console.log('  - adminUtils.cleanupWagner() // Limpeza completa do Wagner');
-console.log('  - adminUtils.cleanupUser(email) // Limpeza de qualquer usuário');
-console.log('  - adminUtils.checkEmail(email) // Verificar status de email');
 
 export {};

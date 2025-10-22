@@ -37,11 +37,6 @@ const AdminSolutionEdit = () => {
   
   useEffect(() => {
     // Logging para depuração
-    console.log("🚀 AdminSolutionEdit: Solution Editor carregado com ID:", id);
-    console.log("📊 AdminSolutionEdit: Dados da solução:", solution);
-    console.log("📍 AdminSolutionEdit: Etapa atual:", currentStep);
-    console.log("🔖 AdminSolutionEdit: Aba ativa:", activeTab);
-    console.log("📋 AdminSolutionEdit: Valores atuais:", currentValues);
   }, [id, solution, currentStep, activeTab, currentValues]);
   
   if (loading) {
@@ -86,7 +81,6 @@ const AdminSolutionEdit = () => {
   };
 
   const handleNextStepWithFunction = async () => {
-    console.log("🚀 AdminSolutionEdit: Chamando handleNextStep");
     await handleNextStep();
   };
 

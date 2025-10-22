@@ -35,7 +35,6 @@ const OnboardingPage: React.FC = () => {
 
   // Memoizar todas as funções onDataChange ANTES das condicionais
   const handleStep1DataChange = useCallback((personalData: any) => {
-    console.log('[STEP1] Dados alterados:', personalData);
     setState(prev => ({
       ...prev,
       data: {
@@ -46,7 +45,6 @@ const OnboardingPage: React.FC = () => {
   }, []); // REMOVIDO setState da dependência
 
   const handleStep2DataChange = useCallback((businessData: any) => {
-    console.log('Step2 Data Change:', businessData);
     setState(prev => ({
       ...prev,
       data: {
@@ -57,7 +55,6 @@ const OnboardingPage: React.FC = () => {
   }, []); // REMOVIDO setState da dependência
 
   const handleStep3DataChange = useCallback((aiData: any) => {
-    console.log('Step3 Data Change (só ao sair):', aiData);
     // Só atualiza o estado quando receber dados válidos
     if (aiData && Object.keys(aiData).length > 0) {
       setState(prev => ({
@@ -71,7 +68,6 @@ const OnboardingPage: React.FC = () => {
   }, []); // REMOVIDO setState da dependência para evitar loop
 
   const handleStep4DataChange = useCallback((goalsData: any) => {
-    console.log('Step4 Data Change:', goalsData);
     setState(prev => ({
       ...prev,
       data: {
@@ -82,7 +78,6 @@ const OnboardingPage: React.FC = () => {
   }, []); // REMOVIDO setState da dependência
 
   const handleStep5DataChange = useCallback((personalizationData: any) => {
-    console.log('Step5 Data Change:', personalizationData);
     setState(prev => ({
       ...prev,
       data: {
@@ -93,11 +88,8 @@ const OnboardingPage: React.FC = () => {
   }, []); // REMOVIDO setState da dependência
 
   const handleNext = useCallback(async () => {
-    console.log('[ONBOARDING_PAGE] HandleNext chamado, step atual:', current_step);
-    
     // Se estivermos no step 0, não há dados para salvar, apenas avançar
     if (current_step === 0) {
-      console.log('[ONBOARDING_PAGE] Step 0 → Step 1: sem dados para salvar');
       return;
     }
     
@@ -112,7 +104,6 @@ const OnboardingPage: React.FC = () => {
     
     if (current_step <= 5) {
       stepData = stepMapping[current_step as keyof typeof stepMapping];
-      console.log('[ONBOARDING_PAGE] Salvando dados do step:', current_step, stepData);
       
       const success = await saveStepData(current_step, stepData);
       if (!success) {
@@ -121,7 +112,6 @@ const OnboardingPage: React.FC = () => {
       }
       
       if (current_step === 5) {
-        console.log('[ONBOARDING_PAGE] Step 5 → Step 6: ir para tela de boas-vindas...');
         // Não finalizar ainda, apenas ir para step 6
       }
     }
@@ -137,15 +127,6 @@ const OnboardingPage: React.FC = () => {
         // Step 0: sempre pode prosseguir (escolha será feita no componente)
         return true;
       case 1:
-        console.log('🔍 [ONBOARDING] Verificando se pode avançar step 1:', {
-          data: data.personal_info,
-          hasName: !!data.personal_info?.name,
-          hasPhone: !!data.personal_info?.phone,
-          hasState: !!data.personal_info?.state,
-          hasCity: !!data.personal_info?.city,
-          hasPhoto: !!data.personal_info?.profile_picture
-        });
-        
         const phoneValid = data.personal_info?.phone && 
           data.personal_info.phone.includes('|') && 
           data.personal_info.phone.startsWith('+') &&
@@ -161,12 +142,6 @@ const OnboardingPage: React.FC = () => {
           // data.personal_info.profile_picture.trim().length > 0;
         
         const canAdvance = !!(hasRequiredFields && phoneValid && hasProfilePicture);
-        console.log('🔍 [ONBOARDING] Resultado validação step 1:', {
-          hasRequiredFields,
-          phoneValid,
-          hasProfilePicture,
-          canAdvance
-        });
         
         return canAdvance;
       case 2:
@@ -194,7 +169,6 @@ const OnboardingPage: React.FC = () => {
 
   // Redirect se onboarding já foi completado E não está na celebração
   if (user && profile && profile.onboarding_completed === true && current_step !== 6) {
-    console.log("✅ [ONBOARDING] Onboarding já completado - redirecionando para dashboard");
     return <Navigate to="/dashboard" replace />;
   }
 
@@ -263,11 +237,8 @@ const OnboardingPage: React.FC = () => {
         return (
           <Step0UserType
             onUserTypeSelect={async (selectedUserType) => {
-              console.log('[ONBOARDING_PAGE] User type selecionado:', selectedUserType);
               const success = await saveUserType(selectedUserType);
-              if (success) {
-                console.log('[ONBOARDING_PAGE] User type salvo, avançando para step 1');
-              } else {
+              if (!success) {
                 console.error('[ONBOARDING_PAGE] Falha ao salvar user type');
               }
             }}
@@ -324,18 +295,13 @@ const OnboardingPage: React.FC = () => {
             ninaMessage={nina_message}
             userName={data.personal_info?.name || profile?.name || "Usuário"}
             onFinish={async () => {
-              console.log('[ONBOARDING_PAGE] Step6Welcome onFinish chamado');
-              
               // Se já está completo, apenas mostrar celebração e redirecionar
               if (is_completed) {
-                console.log('[ONBOARDING_PAGE] Onboarding já completo - indo direto para celebração');
                 return true; 
               }
               
               // Se não está completo, finalizar o processo
-              console.log('[ONBOARDING_PAGE] Finalizando onboarding...');
               const success = await completeOnboarding(data.personalization);
-              console.log('[ONBOARDING_PAGE] Resultado do completeOnboarding:', success);
               return success;
             }}
             userType={userType || 'entrepreneur'}

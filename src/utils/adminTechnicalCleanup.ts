@@ -9,26 +9,18 @@ export interface TechnicalCleanupResult extends ManualCleanupResult {
 }
 
 export const executeTechnicalCleanup = async (userEmail: string): Promise<TechnicalCleanupResult> => {
-  console.log(`🔧 [TECHNICAL CLEANUP] Iniciando limpeza técnica completa para: ${userEmail}`);
-  
   try {
     // Fase 1: Limpeza completa usando a função existente
-    console.log('📋 Fase 1: Executando limpeza manual completa...');
     const cleanupResult = await manualCompleteUserCleanup(userEmail);
     
     if (!cleanupResult.success) {
       throw new Error(`Falha na limpeza: ${cleanupResult.message}`);
     }
     
-    console.log('✅ Limpeza concluída, email liberado');
-    
     // Fase 2: Aguardar propagação (pequena pausa para garantir consistência)
-    console.log('⏳ Aguardando propagação das mudanças...');
     await new Promise(resolve => setTimeout(resolve, 2000));
     
     // Fase 3: Criar novo convite limpo
-    console.log('📧 Fase 3: Criando novo convite limpo...');
-    
     // Buscar role membro_club
     const { data: roleData, error: roleError } = await supabase
       .from('user_roles')
@@ -58,8 +50,6 @@ export const executeTechnicalCleanup = async (userEmail: string): Promise<Techni
       throw new Error('Falha ao criar novo convite');
     }
     
-    console.log('✅ Novo convite criado:', inviteResult);
-    
     // Gerar link do convite
     const inviteLink = `${window.location.origin}/convite/${inviteResult.token}`;
     
@@ -71,7 +61,6 @@ export const executeTechnicalCleanup = async (userEmail: string): Promise<Techni
       message: `✅ Limpeza técnica completa realizada com sucesso! Novo convite criado.`
     };
     
-    console.log('🎉 Limpeza técnica completa finalizada:', result);
     return result;
     
   } catch (error: any) {
@@ -90,8 +79,6 @@ export const executeTechnicalCleanup = async (userEmail: string): Promise<Techni
 
 // Função para uso direto via console do admin
 export const adminTechnicalCleanup = async (userEmail: string) => {
-  console.log(`🚀 [ADMIN] Executando limpeza técnica completa para: ${userEmail}`);
-  
   const result = await executeTechnicalCleanup(userEmail);
   
   if (result.success) {
@@ -99,13 +86,6 @@ export const adminTechnicalCleanup = async (userEmail: string) => {
       description: result.message,
       duration: 8000
     });
-    
-    if (result.inviteLink) {
-      console.log(`🔗 Link do novo convite: ${result.inviteLink}`);
-      console.log(`📧 Token: ${result.newInviteToken}`);
-    }
-    
-    console.log('✅ Resultado completo:', result);
   } else {
     toast.error('❌ Erro na limpeza técnica', {
       description: result.message,
@@ -119,8 +99,6 @@ export const adminTechnicalCleanup = async (userEmail: string) => {
 
 // Função para verificar se email está limpo
 export const verifyEmailStatus = async (userEmail: string) => {
-  console.log(`🔍 Verificando status do email: ${userEmail}`);
-  
   try {
     const [profileCheck, inviteCheck] = await Promise.all([
       supabase.from('profiles').select('id, name').eq('email', userEmail).maybeSingle(),
@@ -137,7 +115,6 @@ export const verifyEmailStatus = async (userEmail: string) => {
       timestamp: new Date().toISOString()
     };
     
-    console.log('📊 Status do email:', status);
     return status;
   } catch (error) {
     console.error('❌ Erro ao verificar status:', error);

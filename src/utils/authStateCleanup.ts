@@ -6,8 +6,6 @@ import { supabase } from '@/lib/supabase';
  * e executa logout global no Supabase
  */
 export const performCompleteAuthCleanup = async (reason?: string): Promise<void> => {
-  console.log(`🧹 [AUTH-CLEANUP] Iniciando limpeza completa${reason ? ` - Motivo: ${reason}` : ''}`);
-  
   try {
     // 1. Limpar chaves específicas do Supabase
     const keysToRemove = [
@@ -19,7 +17,6 @@ export const performCompleteAuthCleanup = async (reason?: string): Promise<void>
     keysToRemove.forEach(key => {
       try {
         localStorage.removeItem(key);
-        console.log(`✅ [AUTH-CLEANUP] Removido: ${key}`);
       } catch (e) {
         console.warn(`⚠️ [AUTH-CLEANUP] Erro ao remover ${key}:`, e);
       }
@@ -31,12 +28,9 @@ export const performCompleteAuthCleanup = async (reason?: string): Promise<void>
       key.startsWith('supabase.auth.') || key.includes('sb-')
     );
     
-    console.log(`🔍 [AUTH-CLEANUP] Encontradas ${authKeys.length} chaves de auth para limpeza:`, authKeys);
-    
     authKeys.forEach(key => {
       try {
         localStorage.removeItem(key);
-        console.log(`✅ [AUTH-CLEANUP] Removido: ${key}`);
       } catch (e) {
         console.warn(`⚠️ [AUTH-CLEANUP] Erro ao remover ${key}:`, e);
       }
@@ -45,7 +39,6 @@ export const performCompleteAuthCleanup = async (reason?: string): Promise<void>
     // 3. Tentar logout global no Supabase
     try {
       await supabase.auth.signOut({ scope: 'global' });
-      console.log('✅ [AUTH-CLEANUP] Logout global realizado com sucesso');
     } catch (signOutError) {
       console.warn('⚠️ [AUTH-CLEANUP] Aviso - Não foi possível fazer logout global:', signOutError);
       // Continuar mesmo se o logout global falhar
@@ -53,8 +46,6 @@ export const performCompleteAuthCleanup = async (reason?: string): Promise<void>
     
     // 4. Aguardar um pouco para garantir que a limpeza seja processada
     await new Promise(resolve => setTimeout(resolve, 100));
-    
-    console.log('🎉 [AUTH-CLEANUP] Limpeza completa de autenticação finalizada com sucesso');
     
   } catch (error) {
     console.error('❌ [AUTH-CLEANUP] Erro durante limpeza de autenticação:', error);
@@ -84,7 +75,5 @@ export const checkAuthTokensInStorage = (): { hasTokens: boolean; tokens: string
  */
 export const performCleanupAndRedirect = async (redirectUrl: string, reason?: string): Promise<void> => {
   await performCompleteAuthCleanup(reason);
-  
-  console.log(`🚀 [AUTH-CLEANUP] Redirecionando para: ${redirectUrl}`);
   window.location.href = redirectUrl;
 };

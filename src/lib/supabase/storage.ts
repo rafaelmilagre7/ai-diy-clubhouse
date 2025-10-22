@@ -34,16 +34,12 @@ export const formatVideoDuration = (seconds: number): string => {
  */
 export const setupLearningStorageBuckets = async () => {
   try {
-    console.log('Configurando buckets de armazenamento para o LMS...');
-    
     const { data, error } = await supabase.rpc('setup_learning_storage_buckets');
     
     if (error) {
       console.error('Erro ao configurar buckets:', error);
       return { success: false, error: error.message };
     }
-    
-    console.log('Buckets configurados com sucesso:', data);
     
     return { success: true, data };
   } catch (error) {
@@ -71,8 +67,6 @@ export const extractPandaVideoInfo = (data: any): { videoId: string; url: string
   // Se recebermos uma string (código iframe), extrair informações do código HTML
   if (typeof data === 'string') {
     try {
-      console.log('Processando iframe do Panda Video:', data);
-      
       // Extrair src do iframe
       const srcMatch = data.match(/src=["'](https:\/\/[^"']+)["']/i);
       if (!srcMatch || !srcMatch[1]) {
@@ -84,8 +78,6 @@ export const extractPandaVideoInfo = (data: any): { videoId: string; url: string
       let videoId = '';
       let thumbnailUrl = '';
       
-      console.log('URL extraída do iframe:', iframeSrc);
-      
       // Extrair videoId do URL - Múltiplos formatos possíveis
       let videoIdExtracted = false;
       
@@ -94,7 +86,6 @@ export const extractPandaVideoInfo = (data: any): { videoId: string; url: string
       if (formatoV && formatoV[1]) {
         videoId = formatoV[1];
         videoIdExtracted = true;
-        console.log('Video ID extraído (formato ?v=):', videoId);
       }
       
       // Formato 2: https://player.pandavideo.com.br/embed/VIDEO_ID  
@@ -103,7 +94,6 @@ export const extractPandaVideoInfo = (data: any): { videoId: string; url: string
         if (formatoEmbed && formatoEmbed[1]) {
           videoId = formatoEmbed[1];
           videoIdExtracted = true;
-          console.log('Video ID extraído (formato /embed/):', videoId);
         }
       }
       
@@ -113,7 +103,6 @@ export const extractPandaVideoInfo = (data: any): { videoId: string; url: string
         if (uuidMatch && uuidMatch[1]) {
           videoId = uuidMatch[1];
           videoIdExtracted = true;
-          console.log('Video ID extraído (formato UUID):', videoId);
         }
       }
       
@@ -125,7 +114,6 @@ export const extractPandaVideoInfo = (data: any): { videoId: string; url: string
       if (videoId) {
         // URL corrigida para o domínio correto do Panda Video
         thumbnailUrl = `https://b.pandavideo.com.br/${videoId}/thumb.jpg`;
-        console.log('Thumbnail URL gerada:', thumbnailUrl);
       }
       
       const result = {
@@ -134,7 +122,6 @@ export const extractPandaVideoInfo = (data: any): { videoId: string; url: string
         thumbnailUrl
       };
       
-      console.log('Resultado final da extração:', result);
       return result;
     } catch (error) {
       console.error('Erro ao extrair informações do iframe do Panda Video:', error);
@@ -234,8 +221,6 @@ export const uploadFileWithFallback = async (
 
     // Fallback para o bucket geral
     if (fallbackBucket) {
-      console.log(`Usando bucket de fallback ${fallbackBucket} para o upload`);
-      
       if (onProgress) {
         onProgress(40);
       }

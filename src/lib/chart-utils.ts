@@ -54,14 +54,7 @@ export const formatChartData = (data: any[]): any[] => {
 };
 
 export const validateChartData = (data: any[], requiredFields: string[]): boolean => {
-  console.log('🔍 [CHART-VALIDATION] Validando dados:', { 
-    dataLength: data?.length, 
-    requiredFields,
-    sampleData: data?.[0]
-  });
-  
   if (!Array.isArray(data) || data.length === 0) {
-    console.log('❌ [CHART-VALIDATION] Dados inválidos: não é array ou está vazio');
     return false;
   }
   
@@ -76,7 +69,6 @@ export const validateChartData = (data: any[], requiredFields: string[]): boolea
     });
   });
   
-  console.log('✅ [CHART-VALIDATION] Resultado:', hasValidItems);
   return hasValidItems;
 };
 
