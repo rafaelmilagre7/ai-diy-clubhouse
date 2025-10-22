@@ -90,7 +90,6 @@ export const useAdminDashboardData = (timeRange: string) => {
   useEffect(() => {
     const globalTimeout = setTimeout(() => {
       if (statsLoading || engagementLoading || completionLoading || loading) {
-        console.warn('Timeout global detectado no dashboard admin');
         toast({
           title: "Carregamento demorado",
           description: "Dados reais estão sendo carregados. Isso pode demorar alguns momentos.",

@@ -7,15 +7,10 @@ export const useRealAdminDashboardData = (timeRange: string) => {
   const { data: activityData, isLoading: activityLoading, refetch: refetchActivity } = useRealSystemActivity(timeRange);
 
   const refetch = async () => {
-    console.log(`🔄 Atualizando dashboard administrativo para período: ${timeRange}...`);
-    
     try {
       // Forçar atualização sequencial para garantir sincronização
-      console.log('📊 [DASHBOARD] Iniciando refetch dos dados...');
       await refetchStats?.();
       await refetchActivity?.();
-      
-      console.log('✅ Dashboard atualizado com sucesso');
     } catch (error) {
       console.error('❌ Erro ao atualizar dashboard:', error);
     }

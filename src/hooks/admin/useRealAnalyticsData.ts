@@ -52,8 +52,6 @@ export const useRealAnalyticsData = (timeRange: string = '30_days') => {
         setLoading(true);
         setError(null);
 
-        console.log(`[RealAnalytics] Buscando dados reais para período: ${timeRange}`);
-
         // Buscar métricas de engajamento
         const { data: engagementData, error: engagementError } = await supabase
           .rpc('get_user_engagement_metrics', { time_range: timeRange });
@@ -102,12 +100,6 @@ export const useRealAnalyticsData = (timeRange: string = '30_days') => {
         };
 
         setData(analyticsData);
-        
-        console.log(`[RealAnalytics] Dados carregados com sucesso:`, {
-          engagement_active_users: analyticsData.engagement_metrics.weekly_active_users,
-          growth_data_points: analyticsData.user_growth.growth_data.length,
-          funnel_total_users: analyticsData.user_journey.funnel_data.total_users,
-        });
 
       } catch (err: any) {
         console.error(`[RealAnalytics] Erro ao carregar dados:`, err);

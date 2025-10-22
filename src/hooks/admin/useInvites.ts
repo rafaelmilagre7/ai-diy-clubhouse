@@ -114,11 +114,8 @@ export function useInvites() {
         throw new Error(data.message);
       }
       
-      console.log("Convite criado:", data);
-      
       // Enviar email de convite
       const inviteUrl = getInviteLink(data.token);
-      console.log("Link de convite gerado:", inviteUrl);
       
       const { data: roleData } = await supabase
         .from('user_roles')
@@ -135,8 +132,6 @@ export function useInvites() {
         notes,
         inviteId: data.invite_id
       });
-      
-      console.log("Resultado do envio:", sendResult);
       
       if (!sendResult.success) {
         toast.warning('Convite criado, mas houve um erro ao enviar o e-mail', {
@@ -206,16 +201,6 @@ export function useInvites() {
   }): Promise<SendInviteResponse> => {
     try {
       setIsSending(true);
-      
-      console.log("Enviando e-mail com os dados:", {
-        email,
-        inviteUrl,
-        roleName,
-        expiresAt,
-        senderName,
-        notes: notes ? "Presente" : "Ausente",
-        inviteId
-      });
       
       // Verificar se o URL está correto antes de enviar
       const urlPattern = new RegExp('^https?://[a-z0-9-]+(\\.[a-z0-9-]+)+([/?].*)?$', 'i');
@@ -328,18 +313,11 @@ export function useInvites() {
       return "";
     }
     
-    console.log("Gerando link de convite para token:", token, "comprimento:", token.length);
-    
     // Limpar o token de possíveis caracteres problemáticos
     const cleanToken = token.trim().replace(/\s+/g, '');
     
-    if (cleanToken !== token) {
-      console.warn("Token foi limpo antes de gerar o link. Original:", token, "Limpo:", cleanToken);
-    }
-    
     // Construir URL absoluta com domínio configurado
     const baseUrl = APP_CONFIG.getAppUrl(`/convite/${cleanToken}`);
-    console.log("URL do convite gerado:", baseUrl);
     
     return baseUrl;
   }, []);

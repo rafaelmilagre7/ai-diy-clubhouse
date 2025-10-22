@@ -19,23 +19,7 @@ export const useInviteCreateMonitoring = () => {
       parallelTime?: number;
     };
   }) => {
-    // Análise de gargalos específicos
-    if (data.phases) {
-      if (data.phases.dbTime && data.phases.dbTime > 2000) {
-        console.warn('🐌 [GARGALO] Banco de dados lento:', `${data.phases.dbTime}ms`);
-      }
-      if (data.phases.emailTime && data.phases.emailTime > 5000) {
-        console.warn('🐌 [GARGALO] Email lento:', `${data.phases.emailTime}ms`);
-      }
-      if (data.phases.whatsappTime && data.phases.whatsappTime > 8000) {
-        console.warn('🐌 [GARGALO] WhatsApp lento:', `${data.phases.whatsappTime}ms`);
-      }
-    }
-
     // Alertas para performance ESCALONADOS
-    if (data.creationTime > 5000 && data.creationTime <= 10000) {
-      console.warn('⚠️ [PERFORMANCE] Sistema levemente lento:', `${Math.round(data.creationTime / 1000)}s`);
-    }
     
     if (data.creationTime > 10000 && data.creationTime <= 20000) {
       toast.warning('⚠️ Sistema lento detectado', {
@@ -59,20 +43,6 @@ export const useInviteCreateMonitoring = () => {
     statusCode?: number;
   }) => {
     // Alertas específicos para Edge Functions
-    if (data.functionName === 'send-whatsapp-invite') {
-      if (data.duration > 10000) {
-        console.warn(`📱 [WHATSAPP-SLOW] Função WhatsApp lenta: ${data.duration}ms`);
-      }
-      if (data.attempts && data.attempts > 1) {
-        console.warn(`🔄 [WHATSAPP-RETRY] WhatsApp precisou de retry: ${data.attempts} tentativas`);
-      }
-    }
-
-    if (data.functionName === 'send-invite-email') {
-      if (data.duration > 8000) {
-        console.warn(`📧 [EMAIL-SLOW] Função Email lenta: ${data.duration}ms`);
-      }
-    }
 
     // Alert geral para funções muito lentas
     if (data.duration > 15000) {

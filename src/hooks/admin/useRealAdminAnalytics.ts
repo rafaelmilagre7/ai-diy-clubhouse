@@ -52,8 +52,6 @@ export const useRealAdminAnalytics = (timeRange: string = '30d') => {
         setLoading(true);
         setError(null);
 
-        console.log('🔄 [ANALYTICS] Iniciando busca de dados...');
-
         // Buscar dados em paralelo de todas as views otimizadas
         const [
           overviewResult,
@@ -69,28 +67,12 @@ export const useRealAdminAnalytics = (timeRange: string = '30d') => {
           supabase.rpc('get_weekly_activity_patterns')
         ]);
 
-        // Log dos resultados brutos
-        console.log('📊 [ANALYTICS] Resultados das consultas:', {
-          overview: overviewResult.status === 'fulfilled' ? overviewResult.value : overviewResult.reason,
-          userGrowth: userGrowthResult.status === 'fulfilled' ? userGrowthResult.value.data?.length : userGrowthResult.reason,
-          solutionPerformance: solutionPerformanceResult.status === 'fulfilled' ? solutionPerformanceResult.value.data?.length : solutionPerformanceResult.reason,
-          userSegmentation: userSegmentationResult.status === 'fulfilled' ? userSegmentationResult.value.data?.length : userSegmentationResult.reason,
-          weeklyActivity: weeklyActivityResult.status === 'fulfilled' ? weeklyActivityResult.value.data?.length : weeklyActivityResult.reason
-        });
-
         // Processar resultados
         const overviewData = overviewResult.status === 'fulfilled' ? overviewResult.value.data?.[0] : null;
         const userGrowthData = userGrowthResult.status === 'fulfilled' ? userGrowthResult.value.data || [] : [];
         const solutionPerformanceData = solutionPerformanceResult.status === 'fulfilled' ? solutionPerformanceResult.value.data || [] : [];
         const userSegmentationData = userSegmentationResult.status === 'fulfilled' ? userSegmentationResult.value.data || [] : [];
         const weeklyActivityData = weeklyActivityResult.status === 'fulfilled' ? weeklyActivityResult.value.data || [] : [];
-
-        console.log('📊 [ANALYTICS] Dados processados:', {
-          userGrowthCount: userGrowthData.length,
-          solutionPerformanceCount: solutionPerformanceData.length,
-          userSegmentationCount: userSegmentationData.length,
-          weeklyActivityCount: weeklyActivityData.length
-        });
 
         // Processar crescimento de usuários com dados mais detalhados
         const processedUserGrowth = userGrowthData.map((item, index) => ({
@@ -100,15 +82,11 @@ export const useRealAdminAnalytics = (timeRange: string = '30d') => {
           total: userGrowthData.slice(0, index + 1).reduce((sum, curr) => sum + (curr.users || curr.novos || 0), 0)
         }));
 
-        console.log('📊 [ANALYTICS] Crescimento de usuários processado:', processedUserGrowth.slice(0, 3));
-
         // Processar soluções mais populares
         const solutionPopularity = solutionPerformanceData.slice(0, 5).map(item => ({
           name: item.title && item.title.length > 25 ? item.title.substring(0, 25) + '...' : item.title || 'Solução',
           value: item.total_implementations || 0
         })).filter(item => item.value > 0);
-
-        console.log('📊 [ANALYTICS] Soluções populares processadas:', solutionPopularity);
 
         // Processar implementações por categoria
         const categoryMap = new Map();
@@ -122,8 +100,6 @@ export const useRealAdminAnalytics = (timeRange: string = '30d') => {
           value: value as number
         })).filter(item => item.value > 0);
 
-        console.log('📊 [ANALYTICS] Implementações por categoria processadas:', implementationsByCategory);
-
         // Processar distribuição de usuários por role
         const userRoleDistribution = userSegmentationData.map(item => ({
           name: item.role_name === 'member' ? 'Membros' : 
@@ -132,8 +108,6 @@ export const useRealAdminAnalytics = (timeRange: string = '30d') => {
           value: item.user_count || 0,
           percentage: item.percentage || 0
         })).filter(item => item.value > 0);
-
-        console.log('📊 [ANALYTICS] Distribuição de roles processada:', userRoleDistribution);
 
         // Processar atividade semanal
         const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
@@ -144,8 +118,6 @@ export const useRealAdminAnalytics = (timeRange: string = '30d') => {
             atividade: activityItem?.atividade || activityItem?.activity_count || 0
           };
         });
-
-        console.log('📊 [ANALYTICS] Atividade semanal processada:', processedWeeklyActivity);
 
         const analyticsData: RealAdminAnalyticsData = {
           overview: {
@@ -165,15 +137,6 @@ export const useRealAdminAnalytics = (timeRange: string = '30d') => {
           userRoleDistribution,
           weeklyActivity: processedWeeklyActivity
         };
-
-        console.log('📊 [ANALYTICS] Dados finais preparados:', {
-          totalUsers: analyticsData.overview.totalUsers,
-          activeUsers: analyticsData.overview.activeUsers,
-          userGrowthItems: analyticsData.userGrowth.length,
-          solutionPopularityItems: analyticsData.solutionPopularity.length,
-          implementationsByCategoryItems: analyticsData.implementationsByCategory.length,
-          weeklyActivityItems: analyticsData.weeklyActivity.length
-        });
 
         setData(analyticsData);
 

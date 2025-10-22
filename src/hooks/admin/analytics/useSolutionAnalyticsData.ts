@@ -56,9 +56,7 @@ export const useSolutionAnalyticsData = (timeRange: string) => {
           .from("solution_metrics")
           .select("*");
         
-        if (metricsError && !metricsError.message.includes('does not exist')) {
-          console.warn("Erro ao buscar métricas:", metricsError);
-        }
+        // Erro silencioso se a tabela não existir
         
         // Buscar progresso dos usuários
         const { data: progress, error: progressError } = await supabase

@@ -28,14 +28,6 @@ export const useDeleteUser = () => {
       setError(null);
       setDeleteResult(null);
 
-      console.log("🔥 Iniciando exclusão COMPLETA do usuário:", { 
-        userId, 
-        userEmail, 
-        softDelete, 
-        isCompleteDelete,
-        timestamp: new Date().toISOString()
-      });
-
       // Buscar token de autenticação para a requisição segura
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) {
@@ -66,7 +58,6 @@ export const useDeleteUser = () => {
         throw new Error(data?.error || 'Falha na exclusão do usuário');
       }
 
-      console.log("✅ Usuário processado com sucesso:", data);
       setDeleteResult(data as DeleteResult);
 
       // Toast detalhado baseado no resultado
@@ -99,7 +90,6 @@ export const useDeleteUser = () => {
           description: `${data.details.errors.length} avisos durante a exclusão. Verifique os logs para detalhes.`,
           duration: 5000
         });
-        console.warn("Erros durante exclusão:", data.details.errors);
       }
 
       return true;
@@ -132,7 +122,6 @@ export const useDeleteUser = () => {
           .maybeSingle();
 
         if (existingInvite) {
-          console.log("❌ Convite pendente encontrado:", existingInvite);
           resolve(false);
           return;
         }
@@ -145,12 +134,10 @@ export const useDeleteUser = () => {
           .maybeSingle();
 
         if (existingProfile) {
-          console.log("❌ Usuário ainda existe no sistema:", existingProfile);
           resolve(false);
           return;
         }
 
-        console.log("✅ Email limpo, pode receber novo convite");
         resolve(true);
       } catch (error) {
         console.error("Erro ao verificar email:", error);
