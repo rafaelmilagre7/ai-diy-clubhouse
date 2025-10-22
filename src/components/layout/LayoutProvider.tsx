@@ -25,43 +25,23 @@ const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
   const timeoutRef = useRef<number | null>(null);
 
 
-  // Memoizar as verificações de rota para evitar recálculos desnecessários
-  const routeChecks = useMemo(() => ({
-    isLearningRoute: location.pathname.startsWith('/learning'),
-    isPathAdmin: location.pathname.startsWith('/admin'),
-    isPathFormacao: location.pathname.startsWith('/formacao'),
-    isFormacaoRoute: location.pathname.startsWith('/formacao')
-  }), [location.pathname]);
+  // Verificações de rota simplificadas (não precisam de memo para operações tão simples)
+  const isFormacaoRoute = location.pathname.startsWith('/formacao');
+  const isLearningRoute = location.pathname.startsWith('/learning');
 
-  // Memoizar a mensagem de loading baseada no estado
-  const loadingMessage = useMemo(() => {
-    if (isLoading) return "Preparando seu dashboard...";
-    if (!user) return "Verificando autenticação...";
-    return "Carregando layout...";
-  }, [isLoading, user]);
-
-  // OTIMIZAÇÃO: Simplificação para evitar conflitos com RootRedirect
+  // Lógica de autenticação otimizada - sem timeouts desnecessários
   useEffect(() => {
-    // Limpar timeout existente
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
     
-    // Simplificar verificação
     if (!isLoading) {
       if (!user) {
-        // Apenas navegar para login se não tiver usuário
         navigate('/login', { replace: true });
         return;
       }
-      
-      // Marcar layout como pronto imediatamente
+      // Layout pronto imediatamente quando usuário está autenticado
       setLayoutReady(true);
-    } else {
-      // Timeout sincronizado com outros componentes
-      timeoutRef.current = window.setTimeout(() => {
-        setLayoutReady(true);
-      }, 1500); // Sincronizado com AdminLayout e RootRedirect
     }
     
     return () => {
@@ -71,17 +51,17 @@ const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
     };
   }, [user, isLoading, navigate]);
 
-  // Renderizar com base na rota e permissões
+  // Renderização condicional otimizada
   if (layoutReady && user) {
-    const { isFormacaoRoute, isLearningRoute } = routeChecks;
-    
     if (isFormacaoRoute && (isFormacao || isAdmin)) {
       return (
         <PageTransitionWithFallback isVisible={true}>
           <FormacaoLayout>{children}</FormacaoLayout>
         </PageTransitionWithFallback>
       );
-    } else if (isLearningRoute || !isFormacao || isAdmin) {
+    }
+    
+    if (isLearningRoute || !isFormacao || isAdmin) {
       return (
         <PageTransitionWithFallback isVisible={true}>
           <MemberLayout>{children}</MemberLayout>
@@ -90,7 +70,12 @@ const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
     }
   }
 
-  // Mostrar loading enquanto o layout não está pronto
+  // Loading state com mensagem apropriada
+  const loadingMessage = isLoading 
+    ? "Preparando seu dashboard..." 
+    : !user 
+    ? "Verificando autenticação..." 
+    : "Carregando layout...";
   
   return (
     <PageTransitionWithFallback isVisible={true}>

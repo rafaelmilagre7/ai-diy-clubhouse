@@ -22,31 +22,33 @@ export const PageTransitionWithFallback: React.FC<PageTransitionWithFallbackProp
   fallbackMessage = "Carregando conteúdo...",
   onRetry
 }) => {
-  const [showFallback, setShowFallback] = useState(false);
-  const [contentFailedToLoad, setContentFailedToLoad] = useState(false);
+  const [loadingState, setLoadingState] = useState<'hidden' | 'loading' | 'delayed'>('hidden');
   const navigate = useNavigate();
   
   useEffect(() => {
-    // Se o conteúdo deve estar visível, mas não apareceu após o timeout, mostrar fallback
     let fallbackTimer: number | null = null;
+    let delayedTimer: number | null = null;
     
     if (isVisible) {
+      // Resetar estado
+      setLoadingState('hidden');
+      
+      // Mostrar fallback após timeout inicial
       fallbackTimer = window.setTimeout(() => {
-        setShowFallback(true);
+        setLoadingState('loading');
       }, fallbackTimeout);
       
-      // Timeout mais longo para considerar falha no carregamento
-      const failureTimer = window.setTimeout(() => {
-        setContentFailedToLoad(true);
-      }, fallbackTimeout * 6); // 3 segundos
+      // Apenas após 5 segundos considerar "demorado demais"
+      delayedTimer = window.setTimeout(() => {
+        setLoadingState('delayed');
+      }, 5000);
       
       return () => {
         if (fallbackTimer) clearTimeout(fallbackTimer);
-        clearTimeout(failureTimer);
+        if (delayedTimer) clearTimeout(delayedTimer);
       };
     } else {
-      setShowFallback(false);
-      setContentFailedToLoad(false);
+      setLoadingState('hidden');
     }
   }, [isVisible, fallbackTimeout]);
   
@@ -79,7 +81,7 @@ export const PageTransitionWithFallback: React.FC<PageTransitionWithFallbackProp
       
       {/* Fallback quando o conteúdo demora para aparecer */}
       <AnimatePresence>
-        {!isVisible && showFallback && (
+        {!isVisible && loadingState !== 'hidden' && (
           <motion.div
             key="fallback"
             initial={{ opacity: 0 }}
@@ -91,14 +93,14 @@ export const PageTransitionWithFallback: React.FC<PageTransitionWithFallbackProp
             <Loader2 className="h-8 w-8 text-viverblue animate-spin mb-4" />
             <p className="text-center text-muted-foreground">{fallbackMessage}</p>
             
-            {contentFailedToLoad && (
-              <div className="mt-4">
-                <p className="text-sm text-status-error mb-2">
-                  O conteúdo está demorando para carregar.
+            {loadingState === 'delayed' && (
+              <div className="mt-6 text-center">
+                <p className="text-sm text-muted-foreground mb-3">
+                  Está demorando mais que o esperado...
                 </p>
                 <button
                   onClick={handleReload}
-                  className="px-4 py-2 text-sm bg-viverblue text-white rounded-md hover:bg-viverblue/90"
+                  className="px-4 py-2 text-sm bg-viverblue text-white rounded-md hover:bg-viverblue/90 transition-colors"
                 >
                   Ir para Dashboard
                 </button>

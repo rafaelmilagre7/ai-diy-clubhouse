@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 
 interface LoadingScreenProps {
@@ -7,7 +7,7 @@ interface LoadingScreenProps {
   showProgress?: boolean;
 }
 
-const LoadingScreen = ({ 
+const LoadingScreen = React.memo(({ 
   message = "Carregando...",
   showProgress = false 
 }: LoadingScreenProps) => {
@@ -83,6 +83,8 @@ const LoadingScreen = ({
       </div>
     </div>
   );
-};
+});
+
+LoadingScreen.displayName = 'LoadingScreen';
 
 export default LoadingScreen;

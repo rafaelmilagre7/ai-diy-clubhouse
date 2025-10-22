@@ -135,8 +135,14 @@ export const SecurityProvider: React.FC<SecurityProviderProps> = ({ children }) 
     return () => clearInterval(interval);
   }, []);
 
+  // Memoizar o valor do context para evitar re-renders desnecessários
+  const contextValue = React.useMemo(() => secureSession, [
+    secureSession.lastActivity,
+    secureSession.isInactive
+  ]);
+
   return (
-    <SecurityContext.Provider value={secureSession}>
+    <SecurityContext.Provider value={contextValue}>
       {children}
     </SecurityContext.Provider>
   );

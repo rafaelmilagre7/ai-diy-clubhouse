@@ -12,7 +12,7 @@ interface LoadingStateProps {
   fullScreen?: boolean;
 }
 
-export const LoadingState: React.FC<LoadingStateProps> = ({
+export const LoadingState: React.FC<LoadingStateProps> = React.memo(({
   variant = "spinner",
   size = "md",
   message,
@@ -76,4 +76,6 @@ export const LoadingState: React.FC<LoadingStateProps> = ({
       )}
     </div>
   );
-};
+});
+
+LoadingState.displayName = 'LoadingState';
