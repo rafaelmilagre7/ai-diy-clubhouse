@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { HublaEventSelector } from "./hubla/HublaEventSelector";
 import { ConditionBuilder } from "./ConditionBuilder";
 import { HublaInviteAction } from "./hubla/HublaInviteAction";
+import { TestAutomationDialog } from "./TestAutomationDialog";
 import { HUBLA_FIELDS } from "@/hooks/useHublaEvents";
 
 interface AutomationFormData {
@@ -161,17 +162,30 @@ export const UnifiedAutomationForm = () => {
   return (
     <div className="container mx-auto py-8 space-y-8 max-w-4xl">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button
-          variant="outline"
-          onClick={() => navigate('/admin/automations')}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Voltar
-        </Button>
-        <h1 className="text-2xl font-bold">
-          {isEditing ? 'Editar Automação' : 'Nova Automação'}
-        </h1>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            onClick={() => navigate('/admin/automations')}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Voltar
+          </Button>
+          <h1 className="text-2xl font-bold">
+            {isEditing ? 'Editar Automação' : 'Nova Automação'}
+          </h1>
+        </div>
+        
+        {/* Test Button */}
+        {(watchedValues.actions.length > 0) && (
+          <TestAutomationDialog
+            ruleData={{
+              name: watchedValues.name || 'Teste',
+              conditions: watchedValues.conditions,
+              actions: watchedValues.actions
+            }}
+          />
+        )}
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">

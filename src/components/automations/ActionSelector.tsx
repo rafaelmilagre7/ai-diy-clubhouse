@@ -201,11 +201,22 @@ export const ActionSelector = ({ actions, onChange }: ActionSelectorProps) => {
         return (
           <div className="space-y-3">
             <div>
-              <Label>Template</Label>
+              <Label>Email do Destinatário</Label>
               <Input
-                value={action.parameters.template || ''}
-                onChange={(e) => updateActionParameter(index, 'template', e.target.value)}
-                placeholder="Nome do template"
+                value={action.parameters.recipient_email || 'payload.customer.email'}
+                onChange={(e) => updateActionParameter(index, 'recipient_email', e.target.value)}
+                placeholder="payload.customer.email"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Use payload.campo para valores dinâmicos ou email@fixo.com
+              </p>
+            </div>
+            <div>
+              <Label>Nome do Destinatário (opcional)</Label>
+              <Input
+                value={action.parameters.recipient_name || 'payload.customer.name'}
+                onChange={(e) => updateActionParameter(index, 'recipient_name', e.target.value)}
+                placeholder="payload.customer.name"
               />
             </div>
             <div>
@@ -213,7 +224,72 @@ export const ActionSelector = ({ actions, onChange }: ActionSelectorProps) => {
               <Input
                 value={action.parameters.subject || ''}
                 onChange={(e) => updateActionParameter(index, 'subject', e.target.value)}
-                placeholder="Assunto do email"
+                placeholder="Bem-vindo! Use {{payload.customer.name}} para variáveis"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Suporta variáveis: {`{{payload.customer.name}}`}
+              </p>
+            </div>
+            <div>
+              <Label>Corpo do Email</Label>
+              <Textarea
+                value={action.parameters.body || ''}
+                onChange={(e) => updateActionParameter(index, 'body', e.target.value)}
+                placeholder="Olá {{payload.customer.name}}, seja bem-vindo!"
+                rows={4}
+              />
+            </div>
+            <div>
+              <Label>Template (opcional)</Label>
+              <Select
+                value={action.parameters.template || 'default'}
+                onValueChange={(value) => updateActionParameter(index, 'template', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="default">Padrão</SelectItem>
+                  <SelectItem value="welcome">Boas-vindas</SelectItem>
+                  <SelectItem value="notification">Notificação</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        );
+
+      case 'send_whatsapp':
+        return (
+          <div className="space-y-3">
+            <div>
+              <Label>Número do WhatsApp</Label>
+              <Input
+                value={action.parameters.phone_number || 'payload.customer.phone'}
+                onChange={(e) => updateActionParameter(index, 'phone_number', e.target.value)}
+                placeholder="payload.customer.phone ou +5511999999999"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Use payload.campo para valores dinâmicos ou número fixo
+              </p>
+            </div>
+            <div>
+              <Label>Mensagem</Label>
+              <Textarea
+                value={action.parameters.message || ''}
+                onChange={(e) => updateActionParameter(index, 'message', e.target.value)}
+                placeholder="Olá {{payload.customer.name}}! Seja bem-vindo."
+                rows={4}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Suporta variáveis: {`{{payload.customer.name}}`}
+              </p>
+            </div>
+            <div>
+              <Label>Template (opcional)</Label>
+              <Input
+                value={action.parameters.template || ''}
+                onChange={(e) => updateActionParameter(index, 'template', e.target.value)}
+                placeholder="Nome do template"
               />
             </div>
           </div>
@@ -223,15 +299,15 @@ export const ActionSelector = ({ actions, onChange }: ActionSelectorProps) => {
         return (
           <div className="space-y-3">
             <div>
-              <Label>URL</Label>
+              <Label>URL do Webhook</Label>
               <Input
                 value={action.parameters.url || ''}
                 onChange={(e) => updateActionParameter(index, 'url', e.target.value)}
-                placeholder="https://example.com/webhook"
+                placeholder="https://api.exemplo.com/webhook"
               />
             </div>
             <div>
-              <Label>Método</Label>
+              <Label>Método HTTP</Label>
               <Select
                 value={action.parameters.method || 'POST'}
                 onValueChange={(value) => updateActionParameter(index, 'method', value)}
@@ -244,11 +320,30 @@ export const ActionSelector = ({ actions, onChange }: ActionSelectorProps) => {
                   <SelectItem value="POST">POST</SelectItem>
                   <SelectItem value="PUT">PUT</SelectItem>
                   <SelectItem value="PATCH">PATCH</SelectItem>
+                  <SelectItem value="DELETE">DELETE</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label>Headers (JSON)</Label>
+              <Label>Timeout (segundos)</Label>
+              <Input
+                type="number"
+                value={action.parameters.timeout || 30}
+                onChange={(e) => updateActionParameter(index, 'timeout', parseInt(e.target.value))}
+                placeholder="30"
+                min="5"
+                max="300"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={action.parameters.include_payload !== false}
+                onCheckedChange={(checked) => updateActionParameter(index, 'include_payload', checked)}
+              />
+              <Label>Incluir payload do webhook no corpo da requisição</Label>
+            </div>
+            <div>
+              <Label>Headers Customizados (JSON)</Label>
               <Textarea
                 value={JSON.stringify(action.parameters.headers || {}, null, 2)}
                 onChange={(e) => {
@@ -259,8 +354,65 @@ export const ActionSelector = ({ actions, onChange }: ActionSelectorProps) => {
                     // Ignore invalid JSON
                   }
                 }}
-                placeholder='{"Authorization": "Bearer token"}'
+                placeholder='{"Authorization": "Bearer seu-token"}'
+                rows={3}
               />
+            </div>
+            <div>
+              <Label>Dados Customizados (JSON opcional)</Label>
+              <Textarea
+                value={JSON.stringify(action.parameters.custom_data || {}, null, 2)}
+                onChange={(e) => {
+                  try {
+                    const data = JSON.parse(e.target.value);
+                    updateActionParameter(index, 'custom_data', data);
+                  } catch {
+                    // Ignore invalid JSON
+                  }
+                }}
+                placeholder='{"chave": "valor"}'
+                rows={3}
+              />
+            </div>
+          </div>
+        );
+
+      case 'update_profile':
+        return (
+          <div className="space-y-3">
+            <div>
+              <Label>Identificação do Usuário</Label>
+              <Input
+                value={action.parameters.user_email || 'payload.customer.email'}
+                onChange={(e) => updateActionParameter(index, 'user_email', e.target.value)}
+                placeholder="payload.customer.email"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Campo do payload com email ou ID do usuário
+              </p>
+            </div>
+            <div>
+              <Label>Campos para Atualizar (JSON)</Label>
+              <Textarea
+                value={JSON.stringify(action.parameters.fields || {}, null, 2)}
+                onChange={(e) => {
+                  try {
+                    const fields = JSON.parse(e.target.value);
+                    updateActionParameter(index, 'fields', fields);
+                  } catch {
+                    // Ignore invalid JSON
+                  }
+                }}
+                placeholder={`{
+  "full_name": {"value": "Nome Fixo"},
+  "phone": {"source": "payload.customer.phone"},
+  "company": {"source": "payload.custom.company"}
+}`}
+                rows={6}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Use "value" para fixo ou "source" para dinâmico
+              </p>
             </div>
           </div>
         );
