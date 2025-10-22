@@ -32,16 +32,12 @@ export const MasterTemplate = ({
       <Container style={container}>
         {/* Header com Logo */}
         <Section style={header}>
-          <Img
-            src="https://viverdeia.ai/logo.png"
-            width="180"
-            height="48"
-            alt="Viver de IA"
-            style={logo}
-          />
+          <div style={logoContainer}>
+            <Text style={logoText}>VIVER DE IA</Text>
+          </div>
         </Section>
 
-        {/* Banner Aurora */}
+        {/* Banner Aurora com Gradiente da Marca */}
         <Section style={bannerSection}>
           <div style={auroraGradient}>
             <Heading style={h1}>{heading}</Heading>
@@ -102,14 +98,26 @@ const container = {
 }
 
 const header = {
-  backgroundColor: '#ffffff',
+  backgroundColor: '#0a1f1f',
   padding: '24px 32px',
   textAlign: 'center' as const,
-  borderBottom: '1px solid #e5e7eb',
+  borderBottom: '2px solid #0ABAB5',
 }
 
-const logo = {
-  margin: '0 auto',
+const logoContainer = {
+  padding: '12px 24px',
+  background: 'linear-gradient(135deg, #0ABAB5 0%, #0BC8D5 100%)',
+  borderRadius: '8px',
+  display: 'inline-block',
+}
+
+const logoText = {
+  color: '#ffffff',
+  fontSize: '24px',
+  fontWeight: 'bold',
+  margin: '0',
+  letterSpacing: '2px',
+  textShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
 }
 
 const bannerSection = {
@@ -117,9 +125,10 @@ const bannerSection = {
 }
 
 const auroraGradient = {
-  background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #d946ef 100%)',
+  background: 'linear-gradient(135deg, #0ABAB5 0%, #0BC8D5 50%, #00FFFF 100%)',
   padding: '48px 32px',
   textAlign: 'center' as const,
+  boxShadow: '0 4px 20px rgba(10, 186, 181, 0.3)',
 }
 
 const h1 = {
@@ -150,7 +159,7 @@ const footerText = {
 }
 
 const unsubscribeLink = {
-  color: '#6366f1',
+  color: '#0ABAB5',
   fontSize: '12px',
   textDecoration: 'underline',
   display: 'block',
@@ -163,7 +172,7 @@ const socialLinks = {
 }
 
 const socialLink = {
-  color: '#6366f1',
+  color: '#0ABAB5',
   textDecoration: 'none',
 }
 

@@ -30,6 +30,20 @@ const EMAIL_TEMPLATES: TemplateOption[] = [
     description: 'Notificação de nova sugestão publicada',
   },
   {
+    id: 'suggestion-comment',
+    name: 'Novo Comentário',
+    category: 'Sugestões',
+    icon: '💬',
+    description: 'Comentário recebido em sugestão',
+  },
+  {
+    id: 'suggestion-approved',
+    name: 'Sugestão Aprovada',
+    category: 'Sugestões',
+    icon: '✅',
+    description: 'Sugestão foi aprovada',
+  },
+  {
     id: 'networking-connection',
     name: 'Nova Conexão',
     category: 'Networking',
@@ -42,6 +56,20 @@ const EMAIL_TEMPLATES: TemplateOption[] = [
     category: 'Gamification',
     icon: '🏆',
     description: 'Conquista desbloqueada',
+  },
+  {
+    id: 'learning-lesson',
+    name: 'Nova Lição',
+    category: 'Aprendizado',
+    icon: '📚',
+    description: 'Nova lição disponível',
+  },
+  {
+    id: 'system-welcome',
+    name: 'Boas-vindas',
+    category: 'Sistema',
+    icon: '🚀',
+    description: 'Email de boas-vindas',
   },
   {
     id: 'weekly-digest',
@@ -83,6 +111,23 @@ export const EmailTemplatePreview = () => {
           suggestionUrl: 'https://viverdeia.ai/suggestions/123',
           categoryName: 'Estratégia',
         };
+      case 'suggestion-comment':
+        return {
+          ...baseData,
+          suggestionTitle: 'Implementar Dashboard de IA',
+          commenterName: 'Pedro Alves',
+          commentText: 'Excelente ideia! Podemos integrar isso com o sistema de automação existente.',
+          suggestionUrl: 'https://viverdeia.ai/suggestions/123',
+        };
+      case 'suggestion-approved':
+        return {
+          ...baseData,
+          suggestionTitle: 'Implementar Dashboard de IA',
+          approverName: 'Admin Master',
+          approvalMessage: 'Sugestão alinhada com nossa estratégia de inovação. Vamos implementar no Q2!',
+          suggestionUrl: 'https://viverdeia.ai/suggestions/123',
+          votesCount: 47,
+        };
       case 'networking-connection':
         return {
           ...baseData,
@@ -99,6 +144,24 @@ export const EmailTemplatePreview = () => {
           badgeDescription: 'Completou 10 sugestões implementadas com IA',
           badgeUrl: 'https://viverdeia.ai/profile/badges',
           totalBadges: 15,
+        };
+      case 'learning-lesson':
+        return {
+          ...baseData,
+          courseName: 'IA para Negócios',
+          lessonTitle: 'Como usar GPT-5 na sua empresa',
+          lessonDescription: 'Aprenda a integrar modelos de linguagem avançados nos seus processos.',
+          lessonDuration: '25 min',
+          lessonUrl: 'https://viverdeia.ai/learning/lessons/456',
+          difficulty: 'intermediate',
+        };
+      case 'system-welcome':
+        return {
+          ...baseData,
+          userEmail: 'joao.silva@empresa.com',
+          dashboardUrl: 'https://viverdeia.ai/dashboard',
+          profileUrl: 'https://viverdeia.ai/profile',
+          supportEmail: 'suporte@viverdeia.ai',
         };
       case 'weekly-digest':
         return {
@@ -277,22 +340,37 @@ const generateEmailHTML = (templateId: string, data: any, theme: string) => {
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     }
     .header {
-      background-color: ${cardBg};
+      background-color: ${isDark ? '#0a1f1f' : '#0a1f1f'};
       padding: 24px 32px;
       text-align: center;
-      border-bottom: 1px solid ${isDark ? '#374151' : '#e5e7eb'};
+      border-bottom: 2px solid #0ABAB5;
+    }
+    .logo-container {
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #0ABAB5 0%, #0BC8D5 100%);
+      border-radius: 8px;
+      display: inline-block;
+    }
+    .logo-text {
+      color: #ffffff;
+      font-size: 24px;
+      font-weight: bold;
+      margin: 0;
+      letter-spacing: 2px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     }
     .banner {
-      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #d946ef 100%);
+      background: linear-gradient(135deg, #0ABAB5 0%, #0BC8D5 50%, #00FFFF 100%);
       padding: 48px 32px;
       text-align: center;
+      box-shadow: 0 4px 20px rgba(10, 186, 181, 0.3);
     }
     .banner h1 {
       color: #ffffff;
       font-size: 32px;
       margin: 0;
       font-weight: bold;
-      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     }
     .content {
       padding: 40px 32px;
@@ -322,7 +400,9 @@ const generateEmailHTML = (templateId: string, data: any, theme: string) => {
       <body>
         <div class="container">
           <div class="header">
-            <img src="https://viverdeia.ai/logo.png" width="180" height="48" alt="Viver de IA" />
+            <div class="logo-container">
+              <div class="logo-text">VIVER DE IA</div>
+            </div>
           </div>
           <div class="banner">
             <h1>${getTemplateHeading(templateId)}</h1>
@@ -343,8 +423,12 @@ const generateEmailHTML = (templateId: string, data: any, theme: string) => {
 const getTemplateHeading = (templateId: string): string => {
   const headings: Record<string, string> = {
     'suggestion-new': '💡 Nova Sugestão',
+    'suggestion-comment': '💬 Novo Comentário',
+    'suggestion-approved': '✅ Sugestão Aprovada!',
     'networking-connection': '🤝 Nova Conexão',
     'gamification-badge': '🏆 Conquista Desbloqueada!',
+    'learning-lesson': '📚 Nova Lição Disponível',
+    'system-welcome': '🚀 Bem-vindo à Viver de IA!',
     'weekly-digest': '📊 Resumo Semanal',
   };
   return headings[templateId] || 'Notificação';
@@ -362,7 +446,7 @@ const getTemplateContent = (templateId: string, data: any, isDark: boolean): str
         <p style="color: ${textColor}; font-weight: 600; margin: 0 0 16px;">Olá, ${data.userName}!</p>
         <p style="color: ${mutedColor}; margin: 16px 0;">Uma nova sugestão foi publicada e pode ser do seu interesse:</p>
         <div style="background: ${cardBg}; border: 2px solid ${borderColor}; border-radius: 12px; padding: 24px; margin: 24px 0;">
-          <div style="background: #dbeafe; color: #1e40af; padding: 6px 12px; border-radius: 6px; display: inline-block; font-size: 13px; margin-bottom: 12px;">
+          <div style="background: #d1fae5; color: #065f46; padding: 6px 12px; border-radius: 6px; display: inline-block; font-size: 13px; margin-bottom: 12px;">
             📂 ${data.categoryName}
           </div>
           <h3 style="color: ${textColor}; font-size: 20px; margin: 12px 0;">${data.suggestionTitle}</h3>
@@ -370,7 +454,7 @@ const getTemplateContent = (templateId: string, data: any, isDark: boolean): str
           <p style="color: ${mutedColor}; font-size: 13px; margin: 12px 0 0;"><strong>Por:</strong> ${data.suggestionAuthor}</p>
         </div>
         <div style="text-align: center; margin: 32px 0;">
-          <a href="${data.suggestionUrl}" style="background: #6366f1; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; display: inline-block; font-weight: bold;">
+          <a href="${data.suggestionUrl}" style="background: #0ABAB5; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; display: inline-block; font-weight: bold; box-shadow: 0 4px 6px -1px rgba(10, 186, 181, 0.4);">
             🚀 Ver Sugestão Completa
           </a>
         </div>
@@ -380,9 +464,9 @@ const getTemplateContent = (templateId: string, data: any, isDark: boolean): str
         <p style="color: ${textColor}; font-weight: 600; margin: 0 0 16px;">Olá, ${data.userName}!</p>
         <p style="color: ${mutedColor}; margin: 16px 0;">Você tem uma nova solicitação de conexão:</p>
         <div style="background: ${cardBg}; border: 2px solid ${borderColor}; border-radius: 12px; padding: 32px; margin: 24px 0; text-align: center;">
-          ${
+            ${
             data.senderAvatar
-              ? `<img src="${data.senderAvatar}" width="80" height="80" alt="${data.senderName}" style="border-radius: 50%; border: 3px solid #6366f1; margin-bottom: 16px;" />`
+              ? `<img src="${data.senderAvatar}" width="80" height="80" alt="${data.senderName}" style="border-radius: 50%; border: 3px solid #0ABAB5; margin-bottom: 16px;" />`
               : ''
           }
           <h3 style="color: ${textColor}; font-size: 22px; margin: 12px 0;">${data.senderName}</h3>
@@ -390,10 +474,10 @@ const getTemplateContent = (templateId: string, data: any, isDark: boolean): str
           <p style="color: ${mutedColor}; font-size: 14px; margin: 6px 0;">🏢 ${data.senderCompany}</p>
         </div>
         <div style="text-align: center; margin: 32px 0;">
-          <a href="${data.connectionUrl}" style="background: #6366f1; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; display: inline-block; font-weight: bold; margin: 0 8px 8px;">
+          <a href="${data.connectionUrl}" style="background: #0ABAB5; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; display: inline-block; font-weight: bold; margin: 0 8px 8px; box-shadow: 0 4px 6px -1px rgba(10, 186, 181, 0.4);">
             ✅ Aceitar Conexão
           </a>
-          <a href="${data.connectionUrl}" style="background: white; color: #6366f1; padding: 14px 28px; border-radius: 8px; text-decoration: none; display: inline-block; font-weight: bold; margin: 0 8px 8px; border: 2px solid #6366f1;">
+          <a href="${data.connectionUrl}" style="background: white; color: #0ABAB5; padding: 14px 28px; border-radius: 8px; text-decoration: none; display: inline-block; font-weight: bold; margin: 0 8px 8px; border: 2px solid #0ABAB5;">
             👤 Ver Perfil
           </a>
         </div>
@@ -412,7 +496,7 @@ const getTemplateContent = (templateId: string, data: any, isDark: boolean): str
           </div>
         </div>
         <div style="text-align: center; margin: 32px 0;">
-          <a href="${data.badgeUrl}" style="background: #f59e0b; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; display: inline-block; font-weight: bold;">
+          <a href="${data.badgeUrl}" style="background: #f59e0b; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; display: inline-block; font-weight: bold; box-shadow: 0 4px 6px -1px rgba(245, 158, 11, 0.4);">
             🎖️ Ver Minha Coleção
           </a>
         </div>
@@ -421,38 +505,142 @@ const getTemplateContent = (templateId: string, data: any, isDark: boolean): str
       return `
         <p style="color: ${textColor}; font-weight: bold; font-size: 18px; margin: 0 0 16px;">Olá, ${data.userName}! 👋</p>
         <p style="color: ${mutedColor}; margin: 16px 0;">Aqui está o resumo da sua semana na plataforma <strong>Viver de IA</strong>:</p>
-        <div style="background: #dbeafe; color: #1e40af; padding: 12px 20px; border-radius: 8px; text-align: center; margin: 24px 0; font-weight: 600;">
+        <div style="background: #d1fae5; color: #065f46; padding: 12px 20px; border-radius: 8px; text-align: center; margin: 24px 0; font-weight: 600;">
           📅 ${data.weekStart} - ${data.weekEnd}
         </div>
         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin: 32px 0;">
           <div style="background: ${cardBg}; border: 2px solid ${borderColor}; border-radius: 12px; padding: 24px; text-align: center;">
             <div style="font-size: 32px; margin-bottom: 8px;">💡</div>
-            <div style="color: #6366f1; font-size: 36px; font-weight: bold; margin: 8px 0 4px;">${data.newSuggestions}</div>
+            <div style="color: #0ABAB5; font-size: 36px; font-weight: bold; margin: 8px 0 4px;">${data.newSuggestions}</div>
             <div style="color: ${mutedColor}; font-size: 13px; font-weight: 500; text-transform: uppercase;">Novas Sugestões</div>
           </div>
           <div style="background: ${cardBg}; border: 2px solid ${borderColor}; border-radius: 12px; padding: 24px; text-align: center;">
             <div style="font-size: 32px; margin-bottom: 8px;">🤝</div>
-            <div style="color: #6366f1; font-size: 36px; font-weight: bold; margin: 8px 0 4px;">${data.newConnections}</div>
+            <div style="color: #0ABAB5; font-size: 36px; font-weight: bold; margin: 8px 0 4px;">${data.newConnections}</div>
             <div style="color: ${mutedColor}; font-size: 13px; font-weight: 500; text-transform: uppercase;">Novas Conexões</div>
           </div>
           <div style="background: ${cardBg}; border: 2px solid ${borderColor}; border-radius: 12px; padding: 24px; text-align: center;">
             <div style="font-size: 32px; margin-bottom: 8px;">🏆</div>
-            <div style="color: #6366f1; font-size: 36px; font-weight: bold; margin: 8px 0 4px;">${data.badgesEarned}</div>
+            <div style="color: #0ABAB5; font-size: 36px; font-weight: bold; margin: 8px 0 4px;">${data.badgesEarned}</div>
             <div style="color: ${mutedColor}; font-size: 13px; font-weight: 500; text-transform: uppercase;">Badges Ganhos</div>
           </div>
           <div style="background: ${cardBg}; border: 2px solid ${borderColor}; border-radius: 12px; padding: 24px; text-align: center;">
             <div style="font-size: 32px; margin-bottom: 8px;">❤️</div>
-            <div style="color: #6366f1; font-size: 36px; font-weight: bold; margin: 8px 0 4px;">${data.totalLikes}</div>
+            <div style="color: #0ABAB5; font-size: 36px; font-weight: bold; margin: 8px 0 4px;">${data.totalLikes}</div>
             <div style="color: ${mutedColor}; font-size: 13px; font-weight: 500; text-transform: uppercase;">Curtidas Recebidas</div>
           </div>
         </div>
         <div style="text-align: center; margin: 32px 0;">
-          <a href="${data.dashboardUrl}" style="background: #6366f1; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; display: inline-block; font-weight: bold;">
+          <a href="${data.dashboardUrl}" style="background: #0ABAB5; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; display: inline-block; font-weight: bold; box-shadow: 0 4px 6px -1px rgba(10, 186, 181, 0.4);">
             📈 Ver Dashboard Completo
           </a>
         </div>
         <div style="color: #059669; background: #d1fae5; padding: 16px; border-radius: 8px; text-align: center; margin: 24px 0; font-weight: 500;">
           🚀 Continue assim! Sua participação está fazendo a diferença na comunidade.
+        </div>
+      `;
+    case 'suggestion-comment':
+      return `
+        <p style="color: ${textColor}; font-weight: 600; margin: 0 0 16px;">Olá, ${data.userName}!</p>
+        <p style="color: ${mutedColor}; margin: 16px 0;"><strong>${data.commenterName}</strong> comentou na sua sugestão:</p>
+        <div style="background: ${cardBg}; border-left: 4px solid #0ABAB5; border-radius: 8px; padding: 16px 20px; margin: 20px 0;">
+          <div style="font-size: 24px; display: inline-block; margin-right: 12px;">💡</div>
+          <span style="color: ${textColor}; font-size: 16px; font-weight: 600;">${data.suggestionTitle}</span>
+        </div>
+        <div style="background: #dbeafe; border: 2px solid #60a5fa; border-radius: 12px; padding: 20px; margin: 24px 0;">
+          <div style="color: #1e40af; font-size: 14px; font-weight: 600; margin-bottom: 12px;"><strong>${data.commenterName}</strong> disse:</div>
+          <p style="color: #1e3a8a; font-size: 15px; margin: 0; font-style: italic;">"${data.commentText}"</p>
+        </div>
+        <div style="text-align: center; margin: 32px 0;">
+          <a href="${data.suggestionUrl}" style="background: #0ABAB5; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; display: inline-block; font-weight: bold; box-shadow: 0 4px 6px -1px rgba(10, 186, 181, 0.4);">
+            💬 Responder Comentário
+          </a>
+        </div>
+      `;
+    case 'suggestion-approved':
+      return `
+        <p style="color: ${textColor}; font-weight: bold; font-size: 18px; text-align: center; margin: 0 0 16px;">Parabéns, ${data.userName}! 🎉</p>
+        <p style="color: ${mutedColor}; text-align: center; margin: 16px 0;">Sua sugestão foi <strong>aprovada</strong> e agora está ativa na plataforma!</p>
+        <div style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border: 3px solid #10b981; border-radius: 16px; padding: 40px 32px; margin: 32px 0; text-align: center;">
+          <div style="font-size: 64px; margin-bottom: 16px;">✅</div>
+          <h3 style="color: #065f46; font-size: 24px; margin: 12px 0;">${data.suggestionTitle}</h3>
+          ${data.approvalMessage ? `
+            <div style="background: rgba(255, 255, 255, 0.8); border-radius: 10px; padding: 16px; margin: 20px 0; text-align: left;">
+              <div style="color: #047857; font-size: 13px; font-weight: 600; margin-bottom: 8px;">💬 Mensagem do aprovador:</div>
+              <p style="color: #065f46; font-size: 14px; margin: 0; font-style: italic;">"${data.approvalMessage}"</p>
+            </div>
+          ` : ''}
+          <div style="background: rgba(255, 255, 255, 0.9); border-radius: 12px; padding: 20px; margin-top: 24px;">
+            <div style="color: #047857; font-size: 36px; font-weight: bold; margin: 0 0 6px;">${data.votesCount}</div>
+            <div style="color: #065f46; font-size: 14px; font-weight: 500;">👍 Votos recebidos</div>
+          </div>
+        </div>
+        <div style="text-align: center; margin: 32px 0;">
+          <a href="${data.suggestionUrl}" style="background: #10b981; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; display: inline-block; font-weight: bold; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.4);">
+            🚀 Ver Sugestão Aprovada
+          </a>
+        </div>
+      `;
+    case 'learning-lesson':
+      return `
+        <p style="color: ${textColor}; font-weight: 600; margin: 0 0 16px;">Olá, ${data.userName}! 📖</p>
+        <p style="color: ${mutedColor}; margin: 16px 0;">Uma nova lição foi adicionada ao curso <strong>${data.courseName}</strong>:</p>
+        <div style="background: ${cardBg}; border: 2px solid ${borderColor}; border-radius: 12px; padding: 24px; margin: 24px 0;">
+          <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+            <span style="background: ${data.difficulty === 'beginner' ? '#d1fae5' : data.difficulty === 'advanced' ? '#fef3c7' : '#dbeafe'}; color: ${data.difficulty === 'beginner' ? '#065f46' : data.difficulty === 'advanced' ? '#78350f' : '#1e40af'}; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 600;">
+              ${data.difficulty === 'beginner' ? '🌱 Iniciante' : data.difficulty === 'advanced' ? '🏆 Avançado' : '🚀 Intermediário'}
+            </span>
+            <span style="background: #f3f4f6; color: #4b5563; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500;">⏱️ ${data.lessonDuration}</span>
+          </div>
+          <h3 style="color: ${textColor}; font-size: 20px; margin: 12px 0;">${data.lessonTitle}</h3>
+          <p style="color: ${mutedColor}; font-size: 14px; margin: 12px 0;">${data.lessonDescription}</p>
+        </div>
+        <div style="text-align: center; margin: 32px 0;">
+          <a href="${data.lessonUrl}" style="background: #0ABAB5; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; display: inline-block; font-weight: bold; box-shadow: 0 4px 6px -1px rgba(10, 186, 181, 0.4);">
+            🎓 Iniciar Lição
+          </a>
+        </div>
+      `;
+    case 'system-welcome':
+      return `
+        <p style="color: ${textColor}; font-weight: bold; font-size: 18px; margin: 0 0 16px;">Olá, ${data.userName}! 👋</p>
+        <p style="color: ${mutedColor}; margin: 16px 0;">É um prazer tê-lo(a) conosco na <strong>Viver de IA</strong>, a plataforma que está transformando negócios através da Inteligência Artificial.</p>
+        <div style="background: linear-gradient(135deg, #e0e7ff 0%, #ddd6fe 100%); border: 2px solid #a5b4fc; border-radius: 16px; padding: 40px 32px; margin: 32px 0; text-align: center;">
+          <div style="font-size: 64px; margin-bottom: 16px;">🎉</div>
+          <h3 style="color: #3730a3; font-size: 24px; margin: 12px 0 16px;">Sua jornada começa agora!</h3>
+          <p style="color: #4c1d95; font-size: 15px; margin: 0;">Você faz parte de uma comunidade inovadora que usa IA para criar soluções reais e impactar negócios.</p>
+        </div>
+        <h3 style="color: ${textColor}; font-size: 20px; margin: 24px 0 20px;">🎯 Primeiros Passos</h3>
+        <div style="margin: 20px 0;">
+          <div style="display: flex; gap: 16px; margin-bottom: 20px; align-items: flex-start;">
+            <div style="background: #0ABAB5; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">1</div>
+            <div>
+              <div style="color: ${textColor}; font-size: 16px; font-weight: 600; margin: 0 0 6px;">Complete seu perfil</div>
+              <div style="color: ${mutedColor}; font-size: 14px;">Adicione informações sobre você e sua empresa.</div>
+            </div>
+          </div>
+          <div style="display: flex; gap: 16px; margin-bottom: 20px; align-items: flex-start;">
+            <div style="background: #0ABAB5; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">2</div>
+            <div>
+              <div style="color: ${textColor}; font-size: 16px; font-weight: 600; margin: 0 0 6px;">Explore sugestões</div>
+              <div style="color: ${mutedColor}; font-size: 14px;">Descubra ideias inovadoras da comunidade.</div>
+            </div>
+          </div>
+          <div style="display: flex; gap: 16px; margin-bottom: 20px; align-items: flex-start;">
+            <div style="background: #0ABAB5; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">3</div>
+            <div>
+              <div style="color: ${textColor}; font-size: 16px; font-weight: 600; margin: 0 0 6px;">Conecte-se</div>
+              <div style="color: ${mutedColor}; font-size: 14px;">Faça networking com outros profissionais.</div>
+            </div>
+          </div>
+        </div>
+        <div style="text-align: center; margin: 32px 0;">
+          <a href="${data.dashboardUrl}" style="background: #0ABAB5; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; display: inline-block; font-weight: bold; margin: 0 8px 8px; box-shadow: 0 4px 6px -1px rgba(10, 186, 181, 0.4);">
+            🎯 Acessar Dashboard
+          </a>
+          <a href="${data.profileUrl}" style="background: white; color: #0ABAB5; padding: 14px 28px; border-radius: 8px; text-decoration: none; display: inline-block; font-weight: bold; margin: 0 8px 8px; border: 2px solid #0ABAB5;">
+            👤 Completar Perfil
+          </a>
         </div>
       `;
     default:

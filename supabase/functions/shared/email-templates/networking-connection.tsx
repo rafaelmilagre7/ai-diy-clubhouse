@@ -103,7 +103,7 @@ const profileCard = {
 const avatar = {
   borderRadius: '50%',
   margin: '0 auto 16px',
-  border: '3px solid #6366f1',
+  border: '3px solid #0ABAB5',
 }
 
 const profileName = {
@@ -125,7 +125,7 @@ const buttonSection = {
 }
 
 const buttonPrimary = {
-  backgroundColor: '#6366f1',
+  backgroundColor: '#0ABAB5',
   borderRadius: '8px',
   color: '#ffffff',
   fontSize: '15px',
@@ -135,13 +135,13 @@ const buttonPrimary = {
   display: 'inline-block',
   padding: '14px 28px',
   margin: '0 8px 8px',
-  boxShadow: '0 4px 6px -1px rgba(99, 102, 241, 0.3)',
+  boxShadow: '0 4px 6px -1px rgba(10, 186, 181, 0.4)',
 }
 
 const buttonSecondary = {
   backgroundColor: '#ffffff',
   borderRadius: '8px',
-  color: '#6366f1',
+  color: '#0ABAB5',
   fontSize: '15px',
   fontWeight: 'bold',
   textDecoration: 'none',
@@ -149,7 +149,7 @@ const buttonSecondary = {
   display: 'inline-block',
   padding: '14px 28px',
   margin: '0 8px 8px',
-  border: '2px solid #6366f1',
+  border: '2px solid #0ABAB5',
 }
 
 const helpText = {

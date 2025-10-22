@@ -125,8 +125,8 @@ const text = {
 }
 
 const periodBadge = {
-  backgroundColor: '#dbeafe',
-  color: '#1e40af',
+  backgroundColor: '#d1fae5',
+  color: '#065f46',
   padding: '12px 20px',
   borderRadius: '8px',
   fontSize: '14px',
@@ -156,7 +156,7 @@ const statIcon = {
 }
 
 const statNumber = {
-  color: '#6366f1',
+  color: '#0ABAB5',
   fontSize: '36px',
   fontWeight: 'bold',
   margin: '8px 0 4px',
@@ -222,7 +222,7 @@ const buttonSection = {
 }
 
 const button = {
-  backgroundColor: '#6366f1',
+  backgroundColor: '#0ABAB5',
   borderRadius: '8px',
   color: '#ffffff',
   fontSize: '15px',
@@ -231,7 +231,7 @@ const button = {
   textAlign: 'center' as const,
   display: 'inline-block',
   padding: '14px 32px',
-  boxShadow: '0 4px 6px -1px rgba(99, 102, 241, 0.3)',
+  boxShadow: '0 4px 6px -1px rgba(10, 186, 181, 0.4)',
 }
 
 const motivationalText = {

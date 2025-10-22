@@ -74,7 +74,7 @@ const text = {
 
 const suggestionBox = {
   backgroundColor: '#f3f4f6',
-  borderLeft: '4px solid #6366f1',
+  borderLeft: '4px solid #0ABAB5',
   borderRadius: '8px',
   padding: '16px 20px',
   margin: '20px 0',
@@ -123,7 +123,7 @@ const buttonSection = {
 }
 
 const button = {
-  backgroundColor: '#6366f1',
+  backgroundColor: '#0ABAB5',
   borderRadius: '8px',
   color: '#ffffff',
   fontSize: '15px',
@@ -132,7 +132,7 @@ const button = {
   textAlign: 'center' as const,
   display: 'inline-block',
   padding: '14px 32px',
-  boxShadow: '0 4px 6px -1px rgba(99, 102, 241, 0.3)',
+  boxShadow: '0 4px 6px -1px rgba(10, 186, 181, 0.4)',
 }
 
 const helpText = {
