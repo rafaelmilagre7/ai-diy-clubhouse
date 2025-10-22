@@ -744,6 +744,7 @@ export type Database = {
           id: string
           is_hidden: boolean | null
           is_solution: boolean | null
+          likes_count: number | null
           parent_id: string | null
           topic_id: string
           updated_at: string | null
@@ -755,6 +756,7 @@ export type Database = {
           id?: string
           is_hidden?: boolean | null
           is_solution?: boolean | null
+          likes_count?: number | null
           parent_id?: string | null
           topic_id: string
           updated_at?: string | null
@@ -766,6 +768,7 @@ export type Database = {
           id?: string
           is_hidden?: boolean | null
           is_solution?: boolean | null
+          likes_count?: number | null
           parent_id?: string | null
           topic_id?: string
           updated_at?: string | null

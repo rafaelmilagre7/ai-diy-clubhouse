@@ -8,3 +8,4 @@ export { createCommunityCacheUtils, useCommunityCacheUtils } from './utils/cache
 export { usePostItem } from './usePostItem';
 export { useDeleteConfirmation } from './useDeleteConfirmation';
 export { useTopicSolution } from './useTopicSolution';
+export { useCommunityPostLike } from './useCommunityPostLike';

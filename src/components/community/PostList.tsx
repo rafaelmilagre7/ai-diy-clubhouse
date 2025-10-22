@@ -2,10 +2,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { formatDate } from "@/utils/dateUtils";
-import { MessageSquare, ThumbsUp, User } from "lucide-react";
+import { MessageSquare, ThumbsUp } from "lucide-react";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Link } from "react-router-dom";
+import { useCommunityPostLike } from "@/hooks/community/useCommunityPostLike";
+import { useAuth } from "@/contexts/auth";
+import { cn } from "@/lib/utils";
 
 interface CommunityPost {
   id: string;
@@ -14,6 +17,7 @@ interface CommunityPost {
   user_id: string;
   topic_id: string;
   likes_count: number;
+  user_has_liked?: boolean;
   profiles?: {
     id: string;
     name: string;
@@ -30,8 +34,11 @@ const getInitials = (name: string) => {
 };
 
 export const PostList = ({ topicId }: PostListProps) => {
+  const { user } = useAuth();
+  const { likePost, isProcessing } = useCommunityPostLike(topicId);
+
   const { data: posts, isLoading } = useQuery({
-    queryKey: ['community-posts', topicId],
+    queryKey: ['community-posts', topicId, user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('community_posts')
@@ -43,7 +50,26 @@ export const PostList = ({ topicId }: PostListProps) => {
         .order('created_at', { ascending: true });
       
       if (error) throw error;
-      return data as CommunityPost[];
+
+      // Buscar likes do usuário atual
+      if (user) {
+        const postIds = data.map(p => p.id);
+        const { data: userLikes } = await supabase
+          .from('community_reactions')
+          .select('post_id')
+          .in('post_id', postIds)
+          .eq('user_id', user.id)
+          .eq('reaction_type', 'like');
+        
+        const likedPostIds = new Set(userLikes?.map(l => l.post_id) || []);
+        
+        return data.map(post => ({
+          ...post,
+          user_has_liked: likedPostIds.has(post.id)
+        })) as CommunityPost[];
+      }
+      
+      return data.map(post => ({ ...post, user_has_liked: false })) as CommunityPost[];
     },
     enabled: !!topicId
   });
@@ -88,7 +114,11 @@ export const PostList = ({ topicId }: PostListProps) => {
       </h2>
       
       {posts.map((post) => (
-        <div key={post.id} className="bg-card shadow-sm border-none p-6 rounded-lg">
+        <div 
+          key={post.id} 
+          id={`post-${post.id}`}
+          className="bg-card shadow-sm border-none p-6 rounded-lg scroll-mt-24"
+        >
           <div className="flex items-start gap-4">
             <Avatar className="w-10 h-10">
               <AvatarImage src={post.profiles?.avatar_url} alt={post.profiles?.name || 'Usuário'} />
@@ -115,8 +145,26 @@ export const PostList = ({ topicId }: PostListProps) => {
               </div>
               
               <div className="flex items-center gap-4">
-                <button className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors">
-                  <ThumbsUp className="h-4 w-4" />
+                <button 
+                  onClick={() => likePost(
+                    post.id, 
+                    post.user_id, 
+                    post.user_has_liked || false, 
+                    post.likes_count || 0
+                  )}
+                  disabled={!user || isProcessing(post.id)}
+                  className={cn(
+                    "flex items-center gap-1 text-sm transition-all duration-fast",
+                    post.user_has_liked 
+                      ? "text-aurora-primary font-medium" 
+                      : "text-muted-foreground hover:text-primary",
+                    isProcessing(post.id) && "opacity-50 cursor-not-allowed"
+                  )}
+                >
+                  <ThumbsUp className={cn(
+                    "h-4 w-4 transition-all",
+                    post.user_has_liked && "fill-current scale-110"
+                  )} />
                   <span>{post.likes_count || 0}</span>
                 </button>
               </div>

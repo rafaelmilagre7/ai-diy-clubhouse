@@ -197,14 +197,15 @@ export const useNotifications = () => {
             });
           }
           // Notificações de comunidade
-          else if (['community_reply', 'community_mention'].includes(newNotification.type)) {
+          else if (['community_reply', 'community_mention', 'community_post_liked'].includes(newNotification.type)) {
             toast.info(newNotification.title, {
               description: newNotification.message,
               action: {
                 label: 'Ver',
                 onClick: () => {
-                  const topicId = newNotification.data?.topic_id;
-                  if (topicId) window.location.href = `/community/topic/${topicId}`;
+                  if (newNotification.action_url) {
+                    window.location.href = newNotification.action_url;
+                  }
                 }
               }
             });

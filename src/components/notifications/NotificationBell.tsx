@@ -32,9 +32,20 @@ export const NotificationBell = () => {
       await markAsRead(idsToMark);
     }
 
-    // Navegar para a URL se houver
+    // Navegar e fazer scroll para o elemento se houver
     if (notification.action_url) {
-      navigate(notification.action_url);
+      const url = new URL(notification.action_url, window.location.origin);
+      const hash = url.hash;
+      
+      navigate(url.pathname);
+      
+      // Aguardar navegação e fazer scroll
+      if (hash) {
+        setTimeout(() => {
+          const element = document.querySelector(hash);
+          element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 300);
+      }
     }
   };
 
@@ -71,6 +82,8 @@ export const NotificationBell = () => {
         return '💬';
       case 'community_mention':
         return '👤';
+      case 'community_post_liked':
+        return '👍';
       
       // Eventos
       case 'event_reminder_24h':
