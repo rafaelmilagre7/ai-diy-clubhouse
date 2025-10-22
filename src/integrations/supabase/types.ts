@@ -1753,94 +1753,6 @@ export type Database = {
         }
         Relationships: []
       }
-      implementation_checkpoints: {
-        Row: {
-          checkpoint_data: Json
-          completed_steps: string[] | null
-          created_at: string
-          id: string
-          is_template: boolean | null
-          last_completed_step: string | null
-          progress_percentage: number | null
-          solution_id: string
-          template_id: string | null
-          total_steps: number | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          checkpoint_data?: Json
-          completed_steps?: string[] | null
-          created_at?: string
-          id?: string
-          is_template?: boolean | null
-          last_completed_step?: string | null
-          progress_percentage?: number | null
-          solution_id: string
-          template_id?: string | null
-          total_steps?: number | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          checkpoint_data?: Json
-          completed_steps?: string[] | null
-          created_at?: string
-          id?: string
-          is_template?: boolean | null
-          last_completed_step?: string | null
-          progress_percentage?: number | null
-          solution_id?: string
-          template_id?: string | null
-          total_steps?: number | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "implementation_checkpoints_template_id_fkey"
-            columns: ["template_id"]
-            isOneToOne: false
-            referencedRelation: "implementation_checkpoints"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      implementation_progress: {
-        Row: {
-          completed_steps: number[]
-          created_at: string
-          id: string
-          solution_id: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          completed_steps?: number[]
-          created_at?: string
-          id?: string
-          solution_id: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          completed_steps?: number[]
-          created_at?: string
-          id?: string
-          solution_id?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "implementation_progress_solution_id_fkey"
-            columns: ["solution_id"]
-            isOneToOne: false
-            referencedRelation: "solutions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       implementation_requests: {
         Row: {
           created_at: string
@@ -4905,7 +4817,7 @@ export type Database = {
           action_type: string
           created_at: string | null
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           new_values: Json | null
           old_values: Json | null
           resource_id: string | null
@@ -4917,7 +4829,7 @@ export type Database = {
           action_type: string
           created_at?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           new_values?: Json | null
           old_values?: Json | null
           resource_id?: string | null
@@ -4929,7 +4841,7 @@ export type Database = {
           action_type?: string
           created_at?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           new_values?: Json | null
           old_values?: Json | null
           resource_id?: string | null
@@ -4945,7 +4857,7 @@ export type Database = {
           event_data: Json | null
           event_type: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           resolved_at: string | null
           resolved_by: string | null
           severity: string | null
@@ -4957,7 +4869,7 @@ export type Database = {
           event_data?: Json | null
           event_type: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           resolved_at?: string | null
           resolved_by?: string | null
           severity?: string | null
@@ -4969,7 +4881,7 @@ export type Database = {
           event_data?: Json | null
           event_type?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           resolved_at?: string | null
           resolved_by?: string | null
           severity?: string | null
@@ -6735,10 +6647,7 @@ export type Database = {
       }
     }
     Functions: {
-      accept_invite: {
-        Args: { token: string }
-        Returns: Json
-      }
+      accept_invite: { Args: { token: string }; Returns: Json }
       activate_invited_user: {
         Args: {
           p_email: string
@@ -6756,10 +6665,9 @@ export type Database = {
         }
         Returns: Json
       }
-      admin_complete_user_cleanup: {
-        Args: { target_user_id: string } | { user_email: string }
-        Returns: Json
-      }
+      admin_complete_user_cleanup:
+        | { Args: { user_email: string }; Returns: Json }
+        | { Args: { target_user_id: string }; Returns: Json }
       admin_correct_auth_email: {
         Args: {
           admin_notes?: string
@@ -6768,16 +6676,13 @@ export type Database = {
         }
         Returns: Json
       }
-      admin_decrypt_email: {
-        Args: { email_id: string }
-        Returns: Json
-      }
+      admin_decrypt_email: { Args: { email_id: string }; Returns: Json }
       admin_force_delete_auth_user: {
         Args: { target_user_id: string }
         Returns: Json
       }
       admin_get_all_profiles: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           annual_revenue: string | null
           available_for_networking: boolean | null
@@ -6813,25 +6718,25 @@ export type Database = {
           updated_at: string | null
           whatsapp_number: string | null
         }[]
+        SetofOptions: {
+          from: "*"
+          to: "profiles"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       admin_remove_team_member: {
         Args: { p_member_id: string; p_organization_id: string }
         Returns: Json
       }
-      admin_reset_user: {
-        Args: { target_user_id: string }
-        Returns: Json
-      }
-      admin_reset_user_secure: {
-        Args: { user_email: string }
-        Returns: Json
-      }
+      admin_reset_user: { Args: { target_user_id: string }; Returns: Json }
+      admin_reset_user_secure: { Args: { user_email: string }; Returns: Json }
       admin_secure_delete_user_v2: {
         Args: { target_email: string }
         Returns: Json
       }
       analyze_rls_security_issues: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           issue_description: string
           policy_definition: string
@@ -6842,10 +6747,7 @@ export type Database = {
           table_name: string
         }[]
       }
-      audit_legacy_references: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      audit_legacy_references: { Args: never; Returns: Json }
       auto_generate_course_certificate: {
         Args: { p_course_id: string; p_user_id: string }
         Returns: Json
@@ -6854,25 +6756,17 @@ export type Database = {
         Args: { p_solution_id: string; p_user_id: string }
         Returns: Json
       }
-      automated_security_monitor: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      backup_all_onboarding_data: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      automated_security_monitor: { Args: never; Returns: Json }
+      backup_all_onboarding_data: { Args: never; Returns: Json }
       backup_table_data: {
         Args: { p_reason?: string; p_table_name: string }
         Returns: Json
       }
-      calculate_average_score: {
-        Args: { scores: number[] }
-        Returns: number
-      }
-      calculate_business_compatibility: {
-        Args:
-          | {
+      calculate_average_score: { Args: { scores: number[] }; Returns: number }
+      calculate_business_compatibility:
+        | { Args: { user1_id: string; user2_id: string }; Returns: number }
+        | {
+            Args: {
               user1_ai_level: string
               user1_company_size: string
               user1_objectives: string[]
@@ -6882,9 +6776,8 @@ export type Database = {
               user2_objectives: string[]
               user2_segment: string
             }
-          | { user1_id: string; user2_id: string }
-        Returns: number
-      }
+            Returns: number
+          }
       can_access_benefit: {
         Args: { p_tool_id: string; p_user_id: string }
         Returns: boolean
@@ -6913,12 +6806,9 @@ export type Database = {
         Args: { target_role_name: string; user_id: string }
         Returns: boolean
       }
-      can_use_invite: {
-        Args:
-          | { invite_token: string; user_email: string }
-          | { p_token: string; p_user_id: string }
-        Returns: boolean
-      }
+      can_use_invite:
+        | { Args: { p_token: string; p_user_id: string }; Returns: boolean }
+        | { Args: { invite_token: string; user_email: string }; Returns: Json }
       can_view_connection_secure: {
         Args: { target_connection_id: string }
         Returns: boolean
@@ -6931,18 +6821,9 @@ export type Database = {
         Args: { new_role_id: string; target_user_id: string }
         Returns: Json
       }
-      check_admin_access: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      check_admin_access_secure: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      check_ai_solution_limit: {
-        Args: { p_user_id: string }
-        Returns: Json
-      }
+      check_admin_access: { Args: never; Returns: boolean }
+      check_admin_access_secure: { Args: never; Returns: boolean }
+      check_ai_solution_limit: { Args: { p_user_id: string }; Returns: Json }
       check_and_fix_onboarding_data: {
         Args: { user_id_param: string }
         Returns: Json
@@ -6960,7 +6841,7 @@ export type Database = {
         Returns: boolean
       }
       check_function_security_status: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           function_name: string
           recommendation: string
@@ -6985,32 +6866,38 @@ export type Database = {
         Args: { p_lesson_id: string; p_user_id: string }
         Returns: boolean
       }
-      check_onboarding_integrity: {
-        Args: { p_user_id: string }
-        Returns: Json
-      }
-      check_rate_limit: {
-        Args:
-          | {
-              action_type: string
-              max_attempts: number
-              time_window: unknown
-              user_id: string
-            }
-          | {
-              action_type: string
-              max_attempts?: number
-              window_minutes?: number
-            }
-          | { p_action: string; p_limit_per_hour?: number }
-          | {
+      check_onboarding_integrity: { Args: { p_user_id: string }; Returns: Json }
+      check_rate_limit:
+        | {
+            Args: {
               p_action_type: string
               p_identifier: string
               p_max_attempts?: number
               p_window_minutes?: number
             }
-        Returns: boolean
-      }
+            Returns: boolean
+          }
+        | {
+            Args: { p_action: string; p_limit_per_hour?: number }
+            Returns: boolean
+          }
+        | {
+            Args: {
+              action_type: string
+              max_attempts: number
+              time_window: unknown
+              user_id: string
+            }
+            Returns: boolean
+          }
+        | {
+            Args: {
+              action_type: string
+              max_attempts?: number
+              window_minutes?: number
+            }
+            Returns: boolean
+          }
       check_rate_limit_advanced: {
         Args: {
           p_action: string
@@ -7029,12 +6916,9 @@ export type Database = {
         }
         Returns: Json
       }
-      check_referral: {
-        Args: { p_token: string }
-        Returns: Json
-      }
+      check_referral: { Args: { p_token: string }; Returns: Json }
       check_rls_status: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           has_policies: boolean
           policy_count: number
@@ -7043,10 +6927,7 @@ export type Database = {
           table_name: string
         }[]
       }
-      check_role_system_integrity: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      check_role_system_integrity: { Args: never; Returns: Json }
       check_solution_certificate_eligibility: {
         Args: { p_solution_id: string; p_user_id: string }
         Returns: boolean
@@ -7055,12 +6936,9 @@ export type Database = {
         Args: { p_solution_id: string; p_user_id: string }
         Returns: boolean
       }
-      check_system_health: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      check_system_health: { Args: never; Returns: Json }
       check_tables_without_rls: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           recommendation: string
           risk_level: string
@@ -7068,96 +6946,41 @@ export type Database = {
           table_name: string
         }[]
       }
-      check_whatsapp_config: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      clean_html_tags: {
-        Args: { input_text: string }
-        Returns: string
-      }
+      check_whatsapp_config: { Args: never; Returns: Json }
+      clean_html_tags: { Args: { input_text: string }; Returns: string }
       clean_old_data: {
         Args: { p_retention_period?: unknown; p_table_name: string }
         Returns: Json
       }
-      clean_user_onboarding_data: {
-        Args: { p_user_id: string }
-        Returns: Json
-      }
-      cleanup_expired_cache: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      cleanup_expired_invites: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      cleanup_expired_invites_enhanced: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      cleanup_expired_rate_limits: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      cleanup_expired_sessions: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      cleanup_expired_sessions_enhanced: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      cleanup_old_analytics: {
-        Args: { p_days_old?: number }
-        Returns: Json
-      }
+      clean_user_onboarding_data: { Args: { p_user_id: string }; Returns: Json }
+      cleanup_expired_cache: { Args: never; Returns: number }
+      cleanup_expired_invites: { Args: never; Returns: Json }
+      cleanup_expired_invites_enhanced: { Args: never; Returns: Json }
+      cleanup_expired_rate_limits: { Args: never; Returns: number }
+      cleanup_expired_sessions: { Args: never; Returns: undefined }
+      cleanup_expired_sessions_enhanced: { Args: never; Returns: number }
+      cleanup_old_analytics: { Args: { p_days_old?: number }; Returns: Json }
       cleanup_old_audit_logs: {
         Args: { retention_period?: unknown }
         Returns: number
       }
-      cleanup_old_emails: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      cleanup_old_logs_lgpd: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      cleanup_old_rate_limits: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      cleanup_onboarding_orphans: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      cleanup_orphaned_data: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      cleanup_orphaned_sessions: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      cleanup_stale_sessions: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      cleanup_old_emails: { Args: never; Returns: undefined }
+      cleanup_old_logs_lgpd: { Args: never; Returns: Json }
+      cleanup_old_rate_limits: { Args: never; Returns: number }
+      cleanup_onboarding_orphans: { Args: never; Returns: Json }
+      cleanup_orphaned_data: { Args: never; Returns: Json }
+      cleanup_orphaned_sessions: { Args: never; Returns: number }
+      cleanup_stale_sessions: { Args: never; Returns: Json }
       cleanup_user_auth_state: {
         Args: { target_user_id?: string }
         Returns: boolean
       }
-      clear_all_networking_data: {
-        Args: Record<PropertyKey, never> | { p_user_id: string }
-        Returns: Json
-      }
-      complete_invite_registration: {
-        Args:
-          | { p_invite_token: string; p_user_id: string }
-          | { p_token: string; p_user_id: string }
-        Returns: Json
-      }
+      clear_all_networking_data:
+        | { Args: { p_user_id: string }; Returns: Json }
+        | { Args: never; Returns: Json }
+      complete_invite_registration:
+        | { Args: { p_token: string; p_user_id: string }; Returns: Json }
+        | { Args: { p_invite_token: string; p_user_id: string }; Returns: Json }
       complete_onboarding_and_unlock_features: {
         Args: { p_user_id: string }
         Returns: Json
@@ -7166,25 +6989,19 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: Json
       }
-      complete_onboarding_flow: {
-        Args: { p_user_id: string }
-        Returns: Json
-      }
-      complete_onboarding_secure: {
-        Args:
-          | {
+      complete_onboarding_flow: { Args: { p_user_id: string }; Returns: Json }
+      complete_onboarding_secure:
+        | { Args: { p_user_id: string }; Returns: Json }
+        | {
+            Args: {
               p_ip_address?: string
               p_onboarding_data: Json
               p_user_agent?: string
               p_user_id: string
             }
-          | { p_user_id: string }
-        Returns: Json
-      }
-      configure_auth_security_settings: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+            Returns: Json
+          }
+      configure_auth_security_settings: { Args: never; Returns: Json }
       create_community_notification: {
         Args: {
           p_data?: Json
@@ -7204,12 +7021,16 @@ export type Database = {
         }
         Returns: Json
       }
-      create_invite_batch: {
-        Args:
-          | { p_emails: string[]; p_expires_in?: unknown; p_role_id: string }
-          | { p_invites: Json }
-        Returns: Json
-      }
+      create_invite_batch:
+        | { Args: { p_invites: Json }; Returns: Json }
+        | {
+            Args: {
+              p_emails: string[]
+              p_expires_in?: unknown
+              p_role_id: string
+            }
+            Returns: Json
+          }
       create_invite_hybrid: {
         Args: {
           p_channel_preference?: string
@@ -7225,10 +7046,7 @@ export type Database = {
         Args: { p_course_id: string; p_user_id: string }
         Returns: string
       }
-      create_metadata_snapshot: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      create_metadata_snapshot: { Args: never; Returns: Json }
       create_missing_profile_safe: {
         Args: { target_user_id: string }
         Returns: Json
@@ -7237,9 +7055,19 @@ export type Database = {
         Args: { p_message?: string; p_recipient_id: string }
         Returns: Json
       }
-      create_notification: {
-        Args:
-          | {
+      create_notification:
+        | {
+            Args: {
+              p_message: string
+              p_metadata?: Json
+              p_title: string
+              p_type?: string
+              p_user_id: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
               p_action_url?: string
               p_category?: string
               p_data?: Json
@@ -7249,15 +7077,8 @@ export type Database = {
               p_type: string
               p_user_id: string
             }
-          | {
-              p_message: string
-              p_metadata?: Json
-              p_title: string
-              p_type?: string
-              p_user_id: string
-            }
-        Returns: Json
-      }
+            Returns: string
+          }
       create_onboarding_backup: {
         Args: { p_backup_type?: string; p_user_id: string }
         Returns: string
@@ -7291,18 +7112,9 @@ export type Database = {
         Args: { badge_id: string; user_id: string }
         Returns: string
       }
-      createstoragepublicpolicy: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      current_user_is_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      debug_tool_permissions: {
-        Args: { user_id?: string }
-        Returns: Json
-      }
+      createstoragepublicpolicy: { Args: never; Returns: Json }
+      current_user_is_admin: { Args: never; Returns: boolean }
+      debug_tool_permissions: { Args: { user_id?: string }; Returns: Json }
       decrement: {
         Args: { column_name: string; row_id: string; table_name: string }
         Returns: undefined
@@ -7315,42 +7127,15 @@ export type Database = {
         Args: { suggestion_id: string }
         Returns: undefined
       }
-      decrypt_email_content: {
-        Args: { encrypted: string }
-        Returns: string
-      }
-      delete_community_post: {
-        Args: { post_id: string }
-        Returns: Json
-      }
-      delete_community_topic: {
-        Args: { p_topic_id: string }
-        Returns: Json
-      }
-      delete_forum_post: {
-        Args: { p_post_id: string }
-        Returns: Json
-      }
-      delete_forum_topic: {
-        Args: { p_topic_id: string }
-        Returns: Json
-      }
-      delete_user_complete: {
-        Args: { target_user_id: string }
-        Returns: Json
-      }
-      deleteforumpost: {
-        Args: { post_id: string }
-        Returns: Json
-      }
-      deleteforumtopic: {
-        Args: { topic_id: string }
-        Returns: Json
-      }
-      detect_at_risk_users: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      decrypt_email_content: { Args: { encrypted: string }; Returns: string }
+      delete_community_post: { Args: { post_id: string }; Returns: Json }
+      delete_community_topic: { Args: { p_topic_id: string }; Returns: Json }
+      delete_forum_post: { Args: { p_post_id: string }; Returns: Json }
+      delete_forum_topic: { Args: { p_topic_id: string }; Returns: Json }
+      delete_user_complete: { Args: { target_user_id: string }; Returns: Json }
+      deleteforumpost: { Args: { post_id: string }; Returns: Json }
+      deleteforumtopic: { Args: { topic_id: string }; Returns: Json }
+      detect_at_risk_users: { Args: never; Returns: undefined }
       detect_login_anomaly: {
         Args: { p_ip_address: string; p_user_id: string }
         Returns: boolean
@@ -7359,20 +7144,11 @@ export type Database = {
         Args: { p_path: string; p_session_id?: string; p_user_id: string }
         Returns: Json
       }
-      detect_security_changes: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      diagnose_auth_state: {
-        Args: { target_user_id?: string }
-        Returns: Json
-      }
-      diagnose_onboarding_system: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      detect_security_changes: { Args: never; Returns: Json }
+      diagnose_auth_state: { Args: { target_user_id?: string }; Returns: Json }
+      diagnose_onboarding_system: { Args: never; Returns: Json }
       diagnose_stuck_users: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           completed_steps: number[]
           current_step: number
@@ -7382,10 +7158,7 @@ export type Database = {
           user_id: string
         }[]
       }
-      encrypt_email_content: {
-        Args: { content: string }
-        Returns: string
-      }
+      encrypt_email_content: { Args: { content: string }; Returns: string }
       enhanced_rate_limit_check: {
         Args: {
           p_action_type: string
@@ -7395,10 +7168,7 @@ export type Database = {
         }
         Returns: boolean
       }
-      enhanced_security_audit: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      enhanced_security_audit: { Args: never; Returns: Json }
       ensure_audit_log: {
         Args: {
           p_action: string
@@ -7409,54 +7179,18 @@ export type Database = {
         }
         Returns: boolean
       }
-      ensure_bucket_exists: {
-        Args: { p_bucket_name: string }
-        Returns: Json
-      }
-      fix_audit_logs_rls_violations: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      fix_existing_onboarding_data: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      fix_existing_users_onboarding: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      fix_incomplete_onboarding_states: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      fix_orphaned_invites: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      fix_stuck_onboarding_users: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      force_cleanup_connections: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      format_currency: {
-        Args: { amount: number }
-        Returns: string
-      }
-      format_phone: {
-        Args: { phone: string }
-        Returns: string
-      }
-      format_relative_time: {
-        Args: { target_date: string }
-        Returns: string
-      }
-      generate_certificate_validation_code: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      ensure_bucket_exists: { Args: { p_bucket_name: string }; Returns: Json }
+      fix_audit_logs_rls_violations: { Args: never; Returns: Json }
+      fix_existing_onboarding_data: { Args: never; Returns: Json }
+      fix_existing_users_onboarding: { Args: never; Returns: Json }
+      fix_incomplete_onboarding_states: { Args: never; Returns: Json }
+      fix_orphaned_invites: { Args: never; Returns: Json }
+      fix_stuck_onboarding_users: { Args: never; Returns: Json }
+      force_cleanup_connections: { Args: never; Returns: Json }
+      format_currency: { Args: { amount: number }; Returns: string }
+      format_phone: { Args: { phone: string }; Returns: string }
+      format_relative_time: { Args: { target_date: string }; Returns: string }
+      generate_certificate_validation_code: { Args: never; Returns: string }
       generate_compatibility_score: {
         Args: { user1_id: string; user2_id: string }
         Returns: number
@@ -7470,7 +7204,7 @@ export type Database = {
         Returns: Json
       }
       generate_final_security_report: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           details: string
           recommendations: string
@@ -7478,18 +7212,12 @@ export type Database = {
           status: string
         }[]
       }
-      generate_invite_token: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      generate_invite_token: { Args: never; Returns: string }
       generate_networking_matches_for_user: {
         Args: { target_user_id: string }
         Returns: Json
       }
-      generate_nps_response_code: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      generate_nps_response_code: { Args: never; Returns: string }
       generate_pending_certificates: {
         Args: { p_user_id?: string }
         Returns: Json
@@ -7498,42 +7226,27 @@ export type Database = {
         Args: { onboarding_data: Json }
         Returns: Json
       }
-      generate_recurring_event_instances: {
-        Args:
-          | { p_event_id: string; p_max_instances?: number }
-          | { parent_event_id: string }
-        Returns: Json
-      }
-      generate_referral_token: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      generate_retroactive_certificates: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      generate_recurring_event_instances:
+        | { Args: { parent_event_id: string }; Returns: Json }
+        | {
+            Args: { p_event_id: string; p_max_instances?: number }
+            Returns: Json
+          }
+      generate_referral_token: { Args: never; Returns: string }
+      generate_retroactive_certificates: { Args: never; Returns: Json }
       generate_secure_token: {
         Args: { token_length?: number }
         Returns: string
       }
-      generate_security_completion_report: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      generate_security_metrics: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      generate_slug: {
-        Args: { input_text: string }
-        Returns: string
-      }
+      generate_security_completion_report: { Args: never; Returns: Json }
+      generate_security_metrics: { Args: never; Returns: undefined }
+      generate_slug: { Args: { input_text: string }; Returns: string }
       generate_smart_networking_matches: {
         Args: { max_matches?: number; target_user_id: string }
         Returns: Json
       }
       get_admin_analytics_overview: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           active_learners: number
           active_users_7d: number
@@ -7549,7 +7262,7 @@ export type Database = {
         }[]
       }
       get_admin_analytics_overview_secure: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           active_users_24h: number
           avg_implementation_time_hours: number
@@ -7561,7 +7274,7 @@ export type Database = {
         }[]
       }
       get_admin_analytics_temp: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           active_implementations: number
           active_users_7d: number
@@ -7573,10 +7286,7 @@ export type Database = {
           total_users: number
         }[]
       }
-      get_admin_comment_stats: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      get_admin_comment_stats: { Args: never; Returns: Json }
       get_admin_learning_comments: {
         Args: {
           p_course_id?: string
@@ -7602,28 +7312,13 @@ export type Database = {
           user_name: string
         }[]
       }
-      get_admin_stats: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      get_admin_user_stats: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      get_admin_user_stats_public: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      get_age_from_date: {
-        Args: { birth_date: string }
-        Returns: number
-      }
-      get_analytics_overview: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      get_admin_stats: { Args: never; Returns: Json }
+      get_admin_user_stats: { Args: never; Returns: Json }
+      get_admin_user_stats_public: { Args: never; Returns: Json }
+      get_age_from_date: { Args: { birth_date: string }; Returns: number }
+      get_analytics_overview: { Args: never; Returns: Json }
       get_audit_logs_secure: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           action: string
           details: Json
@@ -7634,12 +7329,9 @@ export type Database = {
           user_id: string
         }[]
       }
-      get_average_implementation_time: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
+      get_average_implementation_time: { Args: never; Returns: number }
       get_benefits_safe: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           benefit_description: string
           benefit_link: string
@@ -7653,10 +7345,7 @@ export type Database = {
           status: boolean
         }[]
       }
-      get_cached_profile: {
-        Args: { target_user_id: string }
-        Returns: Json
-      }
+      get_cached_profile: { Args: { target_user_id: string }; Returns: Json }
       get_completion_rate_by_solution: {
         Args: { time_range?: string }
         Returns: {
@@ -7665,7 +7354,7 @@ export type Database = {
         }[]
       }
       get_connection_stats: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           application_name: string
           backend_start: string
@@ -7677,7 +7366,7 @@ export type Database = {
         }[]
       }
       get_courses_with_stats: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           cover_image_url: string
           created_at: string
@@ -7694,14 +7383,8 @@ export type Database = {
           updated_at: string
         }[]
       }
-      get_current_user_role: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      get_current_user_role_safe: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      get_current_user_role: { Args: never; Returns: string }
+      get_current_user_role_safe: { Args: never; Returns: string }
       get_engagement_metrics_by_period: {
         Args: { time_range?: string }
         Returns: {
@@ -7709,20 +7392,11 @@ export type Database = {
           value: number
         }[]
       }
-      get_engagement_metrics_secure: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      get_enhanced_user_stats_public: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      get_implementation_stats_secure: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      get_engagement_metrics_secure: { Args: never; Returns: Json }
+      get_enhanced_user_stats_public: { Args: never; Returns: Json }
+      get_implementation_stats_secure: { Args: never; Returns: Json }
       get_invite_dashboard_stats: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           active_invites: number
           conversion_rate: number
@@ -7733,7 +7407,7 @@ export type Database = {
         }[]
       }
       get_learning_courses_with_stats: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           cover_image_url: string
           created_at: string
@@ -7754,10 +7428,7 @@ export type Database = {
         Args: { p_course_id?: string }
         Returns: Json
       }
-      get_master_members_count: {
-        Args: { master_id: string }
-        Returns: number
-      }
+      get_master_members_count: { Args: { master_id: string }; Returns: number }
       get_master_team_members: {
         Args: { p_master_user_id: string; p_organization_id: string }
         Returns: {
@@ -7773,29 +7444,35 @@ export type Database = {
           user_roles: Json
         }[]
       }
-      get_networking_analytics: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      get_networking_contacts: {
-        Args: { p_user_id: string } | { p_user_ids: string[] }
-        Returns: {
-          avatar_url: string
-          company_name: string
-          compatibility_score: number
-          current_position: string
-          email: string
-          id: string
-          match_type: string
-          name: string
-        }[]
-      }
-      get_networking_stats_secure: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      get_networking_analytics: { Args: never; Returns: Json }
+      get_networking_contacts:
+        | {
+            Args: { p_user_id: string }
+            Returns: {
+              avatar_url: string
+              company_name: string
+              compatibility_score: number
+              current_position: string
+              email: string
+              id: string
+              match_type: string
+              name: string
+            }[]
+          }
+        | {
+            Args: { p_user_ids: string[] }
+            Returns: {
+              company_name: string
+              current_position: string
+              linkedin_url: string
+              phone: string
+              profile_picture: string
+              user_id: string
+            }[]
+          }
+      get_networking_stats_secure: { Args: never; Returns: Json }
       get_nps_analytics: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           average_score: number
           detractors_count: number
@@ -7823,28 +7500,16 @@ export type Database = {
           user_name: string
         }[]
       }
-      get_nps_analytics_secure: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      get_nps_analytics_secure: { Args: never; Returns: Json }
       get_nps_evolution_data: {
         Args: { p_end_date?: string; p_start_date?: string }
         Returns: Json
       }
-      get_onboarding_analytics: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      get_onboarding_progress: {
-        Args: { p_user_id: string }
-        Returns: Json
-      }
-      get_onboarding_stats_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      get_onboarding_analytics: { Args: never; Returns: Json }
+      get_onboarding_progress: { Args: { p_user_id: string }; Returns: Json }
+      get_onboarding_stats_admin: { Args: never; Returns: Json }
       get_privilege_escalation_attempts: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           attempt_date: string
           attempted_role: string
@@ -7889,11 +7554,14 @@ export type Database = {
           updated_at: string | null
           whatsapp_number: string | null
         }[]
+        SetofOptions: {
+          from: "*"
+          to: "profiles"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
-      get_progress_analytics: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      get_progress_analytics: { Args: never; Returns: Json }
       get_recent_system_activities: {
         Args: { limit_count?: number }
         Returns: {
@@ -7906,24 +7574,15 @@ export type Database = {
           user_name: string
         }[]
       }
-      get_safe_profile: {
-        Args: { target_user_id: string }
-        Returns: Json
-      }
-      get_security_configuration_reminders: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      get_safe_profile: { Args: { target_user_id: string }; Returns: Json }
+      get_security_configuration_reminders: { Args: never; Returns: Json }
       get_security_metrics: {
         Args: { p_days?: number; p_user_id?: string }
         Returns: Json
       }
-      get_simplified_user_stats_public: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      get_simplified_user_stats_public: { Args: never; Returns: Json }
       get_solution_performance_metrics: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           avg_rating: number
           category: string
@@ -7935,7 +7594,7 @@ export type Database = {
         }[]
       }
       get_standardized_buckets: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           bucket_id: string
           bucket_name: string
@@ -7944,22 +7603,10 @@ export type Database = {
           updated_at: string
         }[]
       }
-      get_stats_overview: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      get_system_health_check: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      get_system_setting: {
-        Args: { setting_key: string }
-        Returns: string
-      }
-      get_total_referrals: {
-        Args: { p_user_id: string }
-        Returns: number
-      }
+      get_stats_overview: { Args: never; Returns: Json }
+      get_system_health_check: { Args: never; Returns: Json }
+      get_system_setting: { Args: { setting_key: string }; Returns: string }
+      get_total_referrals: { Args: { p_user_id: string }; Returns: number }
       get_unified_analytics_data: {
         Args: { time_range?: string }
         Returns: Json
@@ -8003,16 +7650,13 @@ export type Database = {
           name: string
         }[]
       }
-      get_user_complete_data: {
-        Args: { p_user_id: string }
-        Returns: Json
-      }
+      get_user_complete_data: { Args: { p_user_id: string }; Returns: Json }
       get_user_engagement_metrics: {
         Args: { time_range?: string }
         Returns: Json
       }
       get_user_growth_by_date: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           date: string
           name: string
@@ -8021,17 +7665,14 @@ export type Database = {
         }[]
       }
       get_user_growth_secure: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           cumulative_users: number
           date_period: string
           new_users: number
         }[]
       }
-      get_user_growth_trends: {
-        Args: { time_range?: string }
-        Returns: Json
-      }
+      get_user_growth_trends: { Args: { time_range?: string }; Returns: Json }
       get_user_journey_analytics: {
         Args: { time_range?: string }
         Returns: Json
@@ -8040,14 +7681,8 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: Json
       }
-      get_user_organization: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      get_user_permissions: {
-        Args: { p_user_id: string }
-        Returns: string[]
-      }
+      get_user_organization: { Args: never; Returns: string }
+      get_user_permissions: { Args: { p_user_id: string }; Returns: string[] }
       get_user_profile_optimized: {
         Args: { target_user_id: string }
         Returns: Json
@@ -8071,46 +7706,30 @@ export type Database = {
           user_roles: Json
         }[]
       }
-      get_user_role: {
-        Args: Record<PropertyKey, never> | { user_id: string }
-        Returns: string
-      }
-      get_user_role_safe: {
-        Args: { user_id?: string }
-        Returns: string
-      }
+      get_user_role:
+        | { Args: { user_id: string }; Returns: string }
+        | { Args: never; Returns: string }
+      get_user_role_safe: { Args: { user_id?: string }; Returns: string }
       get_user_role_secure: {
         Args: { target_user_id?: string }
         Returns: string
       }
-      get_user_role_via_table: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      get_user_role_via_table: { Args: never; Returns: string }
       get_user_security_permissions: {
         Args: { user_id: string }
         Returns: string[]
       }
       get_user_segmentation_analytics: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           percentage: number
           role_name: string
           user_count: number
         }[]
       }
-      get_user_segmentation_secure: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      get_user_share_stats: {
-        Args: { user_uuid: string }
-        Returns: Json
-      }
-      get_user_stats_corrected: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      get_user_segmentation_secure: { Args: never; Returns: Json }
+      get_user_share_stats: { Args: { user_uuid: string }; Returns: Json }
+      get_user_stats_corrected: { Args: never; Returns: Json }
       get_users_paginated: {
         Args: {
           p_limit?: number
@@ -8191,9 +7810,9 @@ export type Database = {
           user_roles: Json
         }[]
       }
-      get_users_with_filters_corrected: {
-        Args:
-          | {
+      get_users_with_filters_corrected:
+        | {
+            Args: {
               p_date_range?: string
               p_limit?: number
               p_offset?: number
@@ -8202,37 +7821,71 @@ export type Database = {
               p_status?: string
               p_user_type?: string
             }
-          | {
-              p_filter_type?: string
-              p_limit?: number
-              p_offset?: number
-              p_search_query?: string
-            }
-          | {
+            Returns: {
+              avatar_url: string
+              company_name: string
+              created_at: string
+              email: string
+              id: string
+              industry: string
+              is_master_user: boolean
+              master_email: string
+              name: string
+              onboarding_completed: boolean
+              role: string
+              role_id: string
+              status: string
+              total_count: number
+              updated_at: string
+              user_roles: Json
+            }[]
+          }
+        | {
+            Args: {
               p_limit?: number
               p_offset?: number
               p_search?: string
               p_user_type?: string
             }
-        Returns: {
-          avatar_url: string
-          company_name: string
-          created_at: string
-          email: string
-          id: string
-          industry: string
-          is_master_user: boolean
-          master_email: string
-          name: string
-          onboarding_completed: boolean
-          role: string
-          role_id: string
-          status: string
-          total_count: number
-          updated_at: string
-          user_roles: Json
-        }[]
-      }
+            Returns: {
+              avatar_url: string
+              company_name: string
+              created_at: string
+              email: string
+              id: string
+              industry: string
+              is_master_user: boolean
+              name: string
+              onboarding_completed: boolean
+              organization: Json
+              organization_id: string
+              role_id: string
+              total_count: number
+              user_roles: Json
+            }[]
+          }
+        | {
+            Args: {
+              p_filter_type?: string
+              p_limit?: number
+              p_offset?: number
+              p_search_query?: string
+            }
+            Returns: {
+              avatar_url: string
+              company_name: string
+              created_at: string
+              email: string
+              id: string
+              industry: string
+              master_email: string
+              member_count: number
+              name: string
+              onboarding_completed: boolean
+              role: string
+              role_id: string
+            }[]
+          }
       get_users_with_filters_public: {
         Args: {
           p_limit?: number
@@ -8352,7 +8005,7 @@ export type Database = {
         }[]
       }
       get_weekly_activity_patterns: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           atividade: number
           day: string
@@ -8360,7 +8013,7 @@ export type Database = {
         }[]
       }
       get_weekly_activity_secure: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           active_users: number
           total_events: number
@@ -8371,26 +8024,17 @@ export type Database = {
         Args: { error_message: string }
         Returns: Json
       }
-      has_role: {
-        Args: { role_name: string }
-        Returns: boolean
-      }
+      has_role: { Args: { role_name: string }; Returns: boolean }
       has_role_name: {
         Args: { check_user_id?: string; role_name: string }
         Returns: boolean
       }
-      hash_sensitive_data: {
-        Args: { input_data: string }
-        Returns: string
-      }
+      hash_sensitive_data: { Args: { input_data: string }; Returns: string }
       hash_sensitive_data_secure: {
         Args: { input_text: string }
         Returns: string
       }
-      identify_insecure_functions: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      identify_insecure_functions: { Args: never; Returns: Json }
       increment: {
         Args: { column_name: string; row_id: string; table_name: string }
         Returns: undefined
@@ -8419,22 +8063,13 @@ export type Database = {
         Args: { topic_id: string }
         Returns: undefined
       }
-      increment_topic_views: {
-        Args: { topic_id: string }
-        Returns: undefined
-      }
+      increment_topic_views: { Args: { topic_id: string }; Returns: undefined }
       initialize_networking_preferences_for_user: {
         Args: { target_user_id: string }
         Returns: Json
       }
-      initialize_onboarding_for_all_users: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      initialize_onboarding_for_all_users_secure: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      initialize_onboarding_for_all_users: { Args: never; Returns: Json }
+      initialize_onboarding_for_all_users_secure: { Args: never; Returns: Json }
       initialize_onboarding_for_user: {
         Args: { p_invite_token?: string; p_user_id: string }
         Returns: Json
@@ -8447,70 +8082,27 @@ export type Database = {
         Args: { user_id?: string }
         Returns: undefined
       }
-      is_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_admin_safe: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_admin_secure: {
-        Args: { target_user_id?: string }
-        Returns: boolean
-      }
-      is_admin_user: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_admin_via_role_table: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_legacy_user: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
-      is_new_user: {
-        Args: { check_user_id?: string }
-        Returns: boolean
-      }
-      is_organization_master: {
-        Args: { org_id: string }
-        Returns: boolean
-      }
-      is_owner: {
-        Args: { resource_user_id: string }
-        Returns: boolean
-      }
-      is_user_admin: {
-        Args: Record<PropertyKey, never> | { user_id?: string }
-        Returns: boolean
-      }
-      is_user_admin_enhanced: {
-        Args: { user_id?: string }
-        Returns: boolean
-      }
-      is_user_admin_fast: {
-        Args: { target_user_id: string }
-        Returns: boolean
-      }
-      is_user_admin_safe: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
+      is_admin: { Args: never; Returns: boolean }
+      is_admin_safe: { Args: never; Returns: boolean }
+      is_admin_secure: { Args: { target_user_id?: string }; Returns: boolean }
+      is_admin_user: { Args: never; Returns: boolean }
+      is_admin_via_role_table: { Args: never; Returns: boolean }
+      is_legacy_user: { Args: { user_id: string }; Returns: boolean }
+      is_new_user: { Args: { check_user_id?: string }; Returns: boolean }
+      is_organization_master: { Args: { org_id: string }; Returns: boolean }
+      is_owner: { Args: { resource_user_id: string }; Returns: boolean }
+      is_user_admin:
+        | { Args: never; Returns: boolean }
+        | { Args: { user_id?: string }; Returns: boolean }
+      is_user_admin_enhanced: { Args: { user_id?: string }; Returns: boolean }
+      is_user_admin_fast: { Args: { target_user_id: string }; Returns: boolean }
+      is_user_admin_safe: { Args: { user_id: string }; Returns: boolean }
       is_user_admin_secure: {
         Args: { target_user_id?: string }
         Returns: boolean
       }
-      is_user_admin_via_jwt: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_valid_url: {
-        Args: { url: string }
-        Returns: boolean
-      }
+      is_user_admin_via_jwt: { Args: never; Returns: boolean }
+      is_valid_url: { Args: { url: string }; Returns: boolean }
       issue_solution_certificate: {
         Args: {
           p_implementation_data?: Json
@@ -8596,24 +8188,27 @@ export type Database = {
         }
         Returns: undefined
       }
-      log_security_event: {
-        Args:
-          | {
+      log_security_event:
+        | {
+            Args: {
               p_action_type: string
               p_new_values?: Json
               p_old_values?: Json
               p_resource_id?: string
               p_resource_type: string
             }
-          | {
-              p_action_type: string
-              p_new_values?: string
-              p_old_values?: string
-              p_resource_id?: string
-              p_resource_type: string
+            Returns: string
+          }
+        | {
+            Args: {
+              p_details?: Json
+              p_event_type: string
+              p_severity?: string
             }
-          | { p_details?: Json; p_event_type: string; p_severity?: string }
-          | {
+            Returns: Json
+          }
+        | {
+            Args: {
               p_event_data?: Json
               p_event_type: string
               p_ip_address?: unknown
@@ -8621,17 +8216,21 @@ export type Database = {
               p_user_agent?: string
               p_user_id?: string
             }
-        Returns: string
-      }
-      log_security_violation: {
-        Args:
-          | {
-              attempted_action: string
-              resource_table: string
-              user_context?: Json
-              violation_type: string
+            Returns: string
+          }
+        | {
+            Args: {
+              p_action_type: string
+              p_new_values?: string
+              p_old_values?: string
+              p_resource_id?: string
+              p_resource_type: string
             }
-          | {
+            Returns: undefined
+          }
+      log_security_violation:
+        | {
+            Args: {
               p_additional_data?: Json
               p_auto_block?: boolean
               p_description?: string
@@ -8642,8 +8241,17 @@ export type Database = {
               p_user_id?: string
               p_violation_type?: string
             }
-        Returns: string
-      }
+            Returns: string
+          }
+        | {
+            Args: {
+              attempted_action: string
+              resource_table: string
+              user_context?: Json
+              violation_type: string
+            }
+            Returns: undefined
+          }
       log_unauthorized_access: {
         Args: { attempted_action: string; resource_details?: Json }
         Returns: undefined
@@ -8672,46 +8280,19 @@ export type Database = {
         }
         Returns: string
       }
-      mark_comment_as_replied: {
-        Args: { p_comment_id: string }
-        Returns: Json
-      }
+      mark_comment_as_replied: { Args: { p_comment_id: string }; Returns: Json }
       mark_notifications_read: {
         Args: { p_notification_ids?: string[]; p_user_id: string }
         Returns: Json
       }
-      mask_email: {
-        Args: { email_input: string }
-        Returns: string
-      }
-      mask_email_secure: {
-        Args: { email_input: string }
-        Returns: string
-      }
-      mask_ip_address: {
-        Args: { ip_input: string }
-        Returns: string
-      }
-      mask_personal_name: {
-        Args: { name_input: string }
-        Returns: string
-      }
-      mask_phone_secure: {
-        Args: { phone_input: string }
-        Returns: string
-      }
-      merge_json_data: {
-        Args: { source: Json; target: Json }
-        Returns: Json
-      }
-      migrate_existing_onboarding_data: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      migrate_onboarding_data_to_quick: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      mask_email: { Args: { email_input: string }; Returns: string }
+      mask_email_secure: { Args: { email_input: string }; Returns: string }
+      mask_ip_address: { Args: { ip_input: string }; Returns: string }
+      mask_personal_name: { Args: { name_input: string }; Returns: string }
+      mask_phone_secure: { Args: { phone_input: string }; Returns: string }
+      merge_json_data: { Args: { source: Json; target: Json }; Returns: Json }
+      migrate_existing_onboarding_data: { Args: never; Returns: undefined }
+      migrate_onboarding_data_to_quick: { Args: never; Returns: Json }
       moderate_content: {
         Args: {
           p_action: string
@@ -8722,22 +8303,10 @@ export type Database = {
         }
         Returns: Json
       }
-      monitor_onboarding_flow: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      normalize_bucket_name: {
-        Args: { bucket_name: string }
-        Returns: string
-      }
-      process_event_reminders: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      process_excel_data_and_create_masters: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      monitor_onboarding_flow: { Args: never; Returns: Json }
+      normalize_bucket_name: { Args: { bucket_name: string }; Returns: string }
+      process_event_reminders: { Args: never; Returns: Json }
+      process_excel_data_and_create_masters: { Args: never; Returns: Json }
       process_referral: {
         Args: { p_token: string; p_user_id: string }
         Returns: Json
@@ -8754,10 +8323,7 @@ export type Database = {
         Args: { p_days_extension?: number; p_invite_id: string }
         Returns: Json
       }
-      regenerate_recurring_event_dates: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      regenerate_recurring_event_dates: { Args: never; Returns: Json }
       register_with_invite: {
         Args: { p_name: string; p_password: string; p_token: string }
         Returns: Json
@@ -8766,30 +8332,15 @@ export type Database = {
         Args: { requester_message?: string; target_user_id: string }
         Returns: Json
       }
-      resend_invite_manual: {
-        Args: { p_invite_id: string }
-        Returns: Json
-      }
-      reset_all_onboarding_data: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      reset_analytics_data_enhanced: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      resend_invite_manual: { Args: { p_invite_id: string }; Returns: Json }
+      reset_all_onboarding_data: { Args: never; Returns: Json }
+      reset_analytics_data_enhanced: { Args: never; Returns: Json }
       reset_onboarding_step: {
         Args: { p_step: number; p_user_id: string }
         Returns: Json
       }
-      reset_user_complete: {
-        Args: { target_user_id: string }
-        Returns: Json
-      }
-      reset_user_onboarding: {
-        Args: { target_user_id: string }
-        Returns: Json
-      }
+      reset_user_complete: { Args: { target_user_id: string }; Returns: Json }
+      reset_user_onboarding: { Args: { target_user_id: string }; Returns: Json }
       search_users: {
         Args: {
           limit_count?: number
@@ -8839,7 +8390,7 @@ export type Database = {
         Returns: Json
       }
       security_health_check: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           check_name: string
           critical_issues: number
@@ -8848,66 +8399,26 @@ export type Database = {
           warning_issues: number
         }[]
       }
-      security_improvement_report: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      security_improvement_report: { Args: never; Returns: Json }
       send_direct_message: {
         Args: { p_content: string; p_metadata?: Json; p_recipient_id: string }
         Returns: Json
       }
-      send_invite_email: {
-        Args: { p_invite_id: string }
-        Returns: Json
-      }
-      send_invite_whatsapp: {
-        Args: { p_invite_id: string }
-        Returns: Json
-      }
-      setup_learning_storage_buckets: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      simple_health_check: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      soft_delete_invite_fast: {
-        Args: { p_invite_id: string }
-        Returns: Json
-      }
-      sync_profile_roles: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      sync_role_fields: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      sync_role_permissions_to_jsonb: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      test_learning_access_debug: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      test_profile_upload_access: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      test_reset_onboarding: {
-        Args: { target_email: string }
-        Returns: Json
-      }
-      test_whatsapp_delivery: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      toggle_topic_solved: {
-        Args: { p_topic_id: string; p_user_id?: string } | { topic_id: string }
-        Returns: Json
-      }
+      send_invite_email: { Args: { p_invite_id: string }; Returns: Json }
+      send_invite_whatsapp: { Args: { p_invite_id: string }; Returns: Json }
+      setup_learning_storage_buckets: { Args: never; Returns: Json }
+      simple_health_check: { Args: never; Returns: boolean }
+      soft_delete_invite_fast: { Args: { p_invite_id: string }; Returns: Json }
+      sync_profile_roles: { Args: never; Returns: Json }
+      sync_role_fields: { Args: never; Returns: Json }
+      sync_role_permissions_to_jsonb: { Args: never; Returns: Json }
+      test_learning_access_debug: { Args: never; Returns: Json }
+      test_profile_upload_access: { Args: never; Returns: Json }
+      test_reset_onboarding: { Args: { target_email: string }; Returns: Json }
+      test_whatsapp_delivery: { Args: never; Returns: Json }
+      toggle_topic_solved:
+        | { Args: { p_topic_id: string; p_user_id?: string }; Returns: Json }
+        | { Args: { topic_id: string }; Returns: Json }
       track_onboarding_step: {
         Args: { p_step_data?: Json; p_step_name: string; p_user_id: string }
         Returns: Json
@@ -8968,26 +8479,11 @@ export type Database = {
         Args: { check_user_id?: string }
         Returns: boolean
       }
-      validate_admin_access: {
-        Args: { user_id: string }
-        Returns: Json
-      }
-      validate_all_functions_security: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      validate_auth_integrity: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      validate_auth_security_status: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      validate_bucket_name: {
-        Args: { bucket_name: string }
-        Returns: boolean
-      }
+      validate_admin_access: { Args: { user_id: string }; Returns: Json }
+      validate_all_functions_security: { Args: never; Returns: Json }
+      validate_auth_integrity: { Args: never; Returns: Json }
+      validate_auth_security_status: { Args: never; Returns: Json }
+      validate_bucket_name: { Args: { bucket_name: string }; Returns: boolean }
       validate_certificate: {
         Args: { p_validation_code: string }
         Returns: Json
@@ -8996,12 +8492,9 @@ export type Database = {
         Args: { p_validation_code: string }
         Returns: Json
       }
-      validate_cnpj: {
-        Args: { cnpj: string }
-        Returns: boolean
-      }
+      validate_cnpj: { Args: { cnpj: string }; Returns: boolean }
       validate_complete_rls_security: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           policy_count: number
           risk_level: string
@@ -9010,14 +8503,8 @@ export type Database = {
           table_name: string
         }[]
       }
-      validate_cpf: {
-        Args: { cpf: string }
-        Returns: boolean
-      }
-      validate_email: {
-        Args: { email: string }
-        Returns: boolean
-      }
+      validate_cpf: { Args: { cpf: string }; Returns: boolean }
+      validate_email: { Args: { email: string }; Returns: boolean }
       validate_file_upload: {
         Args: {
           bucket_name: string
@@ -9048,10 +8535,7 @@ export type Database = {
         Args: { p_token: string }
         Returns: Json
       }
-      validate_invite_token_safe: {
-        Args: { p_token: string }
-        Returns: Json
-      }
+      validate_invite_token_safe: { Args: { p_token: string }; Returns: Json }
       validate_invite_token_secure: {
         Args: { p_token: string }
         Returns: {
@@ -9062,10 +8546,7 @@ export type Database = {
           role_id: string
         }[]
       }
-      validate_onboarding_state: {
-        Args: { p_user_id?: string }
-        Returns: Json
-      }
+      validate_onboarding_state: { Args: { p_user_id?: string }; Returns: Json }
       validate_password_strength: {
         Args: { password: string }
         Returns: boolean
@@ -9078,12 +8559,9 @@ export type Database = {
         Args: { password: string }
         Returns: Json
       }
-      validate_policy_consolidation: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      validate_policy_consolidation: { Args: never; Returns: Json }
       validate_profile_roles: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           email: string
           expected_role_id: string
@@ -9094,24 +8572,21 @@ export type Database = {
           user_role_id: string
         }[]
       }
-      validate_role_change: {
-        Args:
-          | {
+      validate_role_change:
+        | {
+            Args: {
               current_user_id?: string
               new_role_id: string
               target_user_id: string
             }
-          | { new_role_id: string; target_user_id: string }
-        Returns: boolean
-      }
-      validate_role_consistency: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      validate_security_fixes: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+            Returns: boolean
+          }
+        | {
+            Args: { new_role_id: string; target_user_id: string }
+            Returns: boolean
+          }
+      validate_role_consistency: { Args: never; Returns: Json }
+      validate_security_fixes: { Args: never; Returns: Json }
       validate_solution_certificate: {
         Args: { p_validation_code: string }
         Returns: Json
@@ -9120,16 +8595,10 @@ export type Database = {
         Args: { p_token: string; p_user_id?: string }
         Returns: Json
       }
-      validate_user_password: {
-        Args: { password: string }
-        Returns: Json
-      }
-      validate_user_role: {
-        Args: { p_user_id: string }
-        Returns: Json
-      }
+      validate_user_password: { Args: { password: string }; Returns: Json }
+      validate_user_role: { Args: { p_user_id: string }; Returns: Json }
       verify_permissions_integrity: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           affected_resource: string
           description: string
