@@ -2,20 +2,16 @@
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { AreaChart } from '@/components/ui/chart';
-import { devLog } from '@/utils/devLogger';
 
 interface UserGrowthChartProps {
   data: any[];
 }
 
 export const UserGrowthChart = ({ data }: UserGrowthChartProps) => {
-  devLog.data('Dados recebidos:', data);
-
   // Validação mais flexível dos dados
   const hasValidData = data && Array.isArray(data) && data.length > 0;
   
   if (!hasValidData) {
-    devLog.data('Sem dados válidos, exibindo placeholder');
     return (
       <Card className="bg-card border-border">
         <CardHeader className="pb-2">
@@ -40,8 +36,6 @@ export const UserGrowthChart = ({ data }: UserGrowthChartProps) => {
     novos: Number(item.novos) || Number(item.users) || 0,
     total: Number(item.total) || 0
   }));
-
-  devLog.data('Dados formatados para gráfico:', chartData.slice(0, 3));
 
   return (
     <Card className="bg-card border-border">

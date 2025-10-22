@@ -28,8 +28,6 @@ export function useWhatsAppStatusCheck() {
     try {
       setIsChecking(true);
       
-      console.log('🔍 Iniciando verificação de status do WhatsApp...');
-      
       const { data, error } = await supabase.functions.invoke('whatsapp-status-check', {
         body: {}
       });
@@ -49,12 +47,6 @@ export function useWhatsAppStatusCheck() {
         } else {
           toast.info(`ℹ️ ${result.message}`);
         }
-        
-        console.log('✅ Verificação de status concluída:', {
-          checked: result.checked,
-          updated: result.updated,
-          results: result.results
-        });
       } else {
         toast.warning('⚠️ Verificação de status concluída com avisos');
       }

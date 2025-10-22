@@ -24,8 +24,6 @@ export function useWhatsAppTemplateCheck() {
     try {
       setIsChecking(true);
       
-      console.log('🔍 Verificando status do template WhatsApp...');
-      
       const { data, error } = await supabase.functions.invoke('whatsapp-template-check', {
         body: {}
       });
@@ -49,7 +47,6 @@ export function useWhatsAppTemplateCheck() {
         toast.warning('⚠️ Template "convitevia" não encontrado');
       }
 
-      console.log('✅ Verificação de template concluída:', result);
       return result;
 
     } catch (error: any) {

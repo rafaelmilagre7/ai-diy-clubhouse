@@ -2,20 +2,16 @@
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { PieChart } from '@/components/ui/chart';
-import { devLog } from '@/utils/devLogger';
 
 interface ImplementationsByCategoryChartProps {
   data: any[];
 }
 
 export const ImplementationsByCategoryChart = ({ data }: ImplementationsByCategoryChartProps) => {
-  devLog.data('Dados recebidos:', data);
-
   // Validação mais flexível dos dados
   const hasValidData = data && Array.isArray(data) && data.length > 0;
   
   if (!hasValidData) {
-    devLog.data('Sem dados válidos, exibindo placeholder');
     return (
       <Card className="bg-card border-border">
         <CardHeader className="pb-2">
@@ -41,8 +37,6 @@ export const ImplementationsByCategoryChart = ({ data }: ImplementationsByCatego
       name: item.name || item.category || 'Categoria',
       value: Number(item.value) || Number(item.count) || 0
     }));
-
-  devLog.data('Dados formatados para gráfico:', chartData);
 
   if (chartData.length === 0) {
     return (

@@ -45,7 +45,6 @@ export const useInviteValidation = () => {
 
     setIsValidating(true);
     setValidationState({ isValidating: true, error: null, result: null });
-    console.log('🔍 [INVITE-VALIDATION] Validando token:', token.substring(0, 6) + '***');
 
     try {
       // 🎯 NOVO: Buscar dados do convite + perfil pré-existente
@@ -92,7 +91,6 @@ export const useInviteValidation = () => {
         message: 'Convite válido'
       };
 
-      console.log('✅ [INVITE-VALIDATION] Validação concluída:', result);
       setValidationState({ isValidating: false, error: null, result });
       return result;
 
