@@ -41,12 +41,14 @@ export const ModernPostEditor = ({
 
   const createPostMutation = useMutation({
     mutationFn: async (content: string) => {
+      const userId = (await supabase.auth.getUser()).data.user?.id;
+      
       const { data, error } = await supabase
         .from('community_posts')
         .insert([{
           content: content.trim(),
           topic_id: topicId,
-          user_id: (await supabase.auth.getUser()).data.user?.id
+          user_id: userId
         }])
         .select()
         .single();
@@ -55,6 +57,38 @@ export const ModernPostEditor = ({
       
       // Incrementar contador de respostas
       await supabase.rpc('increment_topic_replies', { topic_id: topicId });
+
+      // 📢 Criar notificação para o autor do tópico (se não for o próprio usuário)
+      if (data && userId) {
+        const { data: topicData } = await supabase
+          .from("community_topics")
+          .select("user_id, title")
+          .eq("id", topicId)
+          .single();
+
+        if (topicData && topicData.user_id !== userId) {
+          // Buscar nome do usuário que respondeu
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("name")
+            .eq("id", userId)
+            .single();
+
+          const contentPreview = content.trim().substring(0, 100);
+          
+          await supabase
+            .from("notifications")
+            .insert({
+              user_id: topicData.user_id,
+              type: "community_reply",
+              title: `${profile?.name || "Alguém"} respondeu seu tópico`,
+              message: `"${contentPreview}${content.trim().length > 100 ? "..." : ""}"`,
+              action_url: `/comunidade/topico/${topicId}#post-${data.id}`,
+              category: "community",
+              priority: 2
+            });
+        }
+      }
       
       return data;
     },

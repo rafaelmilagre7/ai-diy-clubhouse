@@ -203,6 +203,38 @@ export const useLessonComments = (lessonId: string) => {
           comment_id: data?.[0]?.id
         }
       });
+
+      // 📢 Criar notificação para o autor do comentário pai (se for resposta)
+      if (parentId && data?.[0]) {
+        const { data: parentComment } = await supabase
+          .from('learning_comments')
+          .select('user_id, content')
+          .eq('id', parentId)
+          .single();
+
+        if (parentComment && parentComment.user_id !== user.id) {
+          // Buscar informações do usuário que respondeu
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('name')
+            .eq('id', user.id)
+            .single();
+
+          const contentPreview = content.trim().substring(0, 100);
+          
+          await supabase
+            .from('notifications')
+            .insert({
+              user_id: parentComment.user_id,
+              type: 'comment_replied',
+              title: `${profile?.name || 'Alguém'} respondeu seu comentário`,
+              message: `"${contentPreview}${content.trim().length > 100 ? '...' : ''}"`,
+              action_url: `/formacao/aulas/${lessonId}#comment-${data[0].id}`,
+              category: 'engagement',
+              priority: 2
+            });
+        }
+      }
       
       toast.success(parentId ? "Resposta adicionada!" : "Comentário adicionado!");
       log('Comentário adicionado com sucesso', { commentId: data?.[0]?.id });
@@ -289,6 +321,36 @@ export const useLessonComments = (lessonId: string) => {
           });
           
         if (error) throw error;
+
+        // 📢 Criar notificação para o autor do comentário (se não for o próprio usuário)
+        const { data: commentData } = await supabase
+          .from('learning_comments')
+          .select('user_id, content, lesson_id')
+          .eq('id', commentId)
+          .single();
+
+        if (commentData && commentData.user_id !== user.id) {
+          // Buscar informações do usuário que curtiu
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('name')
+            .eq('id', user.id)
+            .single();
+
+          const contentPreview = commentData.content.substring(0, 100);
+          
+          await supabase
+            .from('notifications')
+            .insert({
+              user_id: commentData.user_id,
+              type: 'comment_liked',
+              title: `${profile?.name || 'Alguém'} curtiu seu comentário`,
+              message: `"${contentPreview}${commentData.content.length > 100 ? '...' : ''}"`,
+              action_url: `/formacao/aulas/${commentData.lesson_id}#comment-${commentId}`,
+              category: 'engagement',
+              priority: 1
+            });
+        }
       }
       
       queryClient.invalidateQueries({ queryKey: ['learning-comments', lessonId] });

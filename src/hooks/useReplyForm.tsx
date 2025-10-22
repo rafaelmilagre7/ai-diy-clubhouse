@@ -74,6 +74,38 @@ export const useReplyForm = ({
       }
       
       console.log("Resposta enviada com sucesso:", data);
+
+      // 📢 Criar notificação para o autor do tópico (se não for o próprio usuário)
+      if (data?.[0]) {
+        const { data: topicData } = await supabase
+          .from("community_topics")
+          .select("user_id, title")
+          .eq("id", topicId)
+          .single();
+
+        if (topicData && topicData.user_id !== user.id) {
+          // Buscar nome do usuário que respondeu
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("name")
+            .eq("id", user.id)
+            .single();
+
+          const contentPreview = content.trim().substring(0, 100);
+          
+          await supabase
+            .from("notifications")
+            .insert({
+              user_id: topicData.user_id,
+              type: "community_reply",
+              title: `${profile?.name || "Alguém"} respondeu seu tópico`,
+              message: `"${contentPreview}${content.trim().length > 100 ? "..." : ""}"`,
+              action_url: `/comunidade/topico/${topicId}#post-${data[0].id}`,
+              category: "community",
+              priority: 2
+            });
+        }
+      }
       
       // Incrementar contador e atualizar data de última atividade usando a função RPC
       await incrementTopicReplies(topicId);

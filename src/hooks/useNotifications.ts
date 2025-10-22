@@ -196,20 +196,35 @@ export const useNotifications = () => {
               } : undefined
             });
           }
-          // Notificações de comunidade
-          else if (['community_reply', 'community_mention', 'community_post_liked'].includes(newNotification.type)) {
-            toast.info(newNotification.title, {
-              description: newNotification.message,
-              action: {
-                label: 'Ver',
-                onClick: () => {
-                  if (newNotification.action_url) {
-                    window.location.href = newNotification.action_url;
-                  }
-                }
+      // Notificações de comunidade
+      else if (['community_reply', 'community_mention', 'community_post_liked'].includes(newNotification.type)) {
+        toast.info(newNotification.title, {
+          description: newNotification.message,
+          action: {
+            label: 'Ver',
+            onClick: () => {
+              if (newNotification.action_url) {
+                window.location.href = newNotification.action_url;
               }
-            });
+            }
           }
+        });
+      }
+      
+      // Notificações de curtidas e respostas em comentários
+      else if (['comment_liked', 'comment_replied'].includes(newNotification.type)) {
+        toast.info(newNotification.title, {
+          description: newNotification.message,
+          action: {
+            label: 'Ver',
+            onClick: () => {
+              if (newNotification.action_url) {
+                window.location.href = newNotification.action_url;
+              }
+            }
+          }
+        });
+      }
           // Notificações de comentários
           else if (newNotification.type === 'comment_liked' || newNotification.type === 'comment_replied') {
             toast.info(newNotification.title, {

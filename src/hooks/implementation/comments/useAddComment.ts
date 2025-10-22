@@ -60,6 +60,38 @@ export const useAddComment = (solutionId: string, moduleId: string) => {
       
       log('Comentário adicionado com sucesso', { commentId: data?.[0]?.id });
       toast.success(parentId ? 'Resposta enviada com sucesso!' : 'Comentário enviado com sucesso!');
+
+      // 📢 Criar notificação para o autor do comentário pai (se for resposta)
+      if (parentId && data?.[0]) {
+        const { data: parentComment } = await supabase
+          .from(tableName)
+          .select('user_id, content')
+          .eq('id', parentId)
+          .single();
+
+        if (parentComment && parentComment.user_id !== authData.user.id) {
+          // Buscar informações do usuário que respondeu
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('name')
+            .eq('id', authData.user.id)
+            .single();
+
+          const contentPreview = content.trim().substring(0, 100);
+          
+          await supabase
+            .from('notifications')
+            .insert({
+              user_id: parentComment.user_id,
+              type: 'comment_replied',
+              title: `${profile?.name || 'Alguém'} respondeu seu comentário`,
+              message: `"${contentPreview}${content.trim().length > 100 ? '...' : ''}"`,
+              action_url: `/solucoes/${solutionId}/modulos/${moduleId}#comment-${data[0].id}`,
+              category: 'engagement',
+              priority: 2
+            });
+        }
+      }
       
       // Invalidar queries para atualizar a lista
       queryClient.invalidateQueries({ queryKey: ['solution-comments', solutionId, moduleId] });
