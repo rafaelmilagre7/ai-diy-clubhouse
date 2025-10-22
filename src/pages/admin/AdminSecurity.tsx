@@ -3,9 +3,7 @@ import React from 'react';
 import { SecurityViolationsMonitor } from '@/components/admin/security/SecurityViolationsMonitor';
 import { SecurityDashboard } from '@/components/security/SecurityDashboard';
 import { SecurityAlertsWidget } from '@/components/security/SecurityAlertsWidget';
-import { BlockedIPsManager } from '@/components/security/BlockedIPsManager';
-import { Shield, Eye, AlertTriangle, Ban, Search } from 'lucide-react';
-import { ConsoleLogAnalyzer } from './components/ConsoleLogAnalyzer';
+import { Shield, Eye, AlertTriangle } from 'lucide-react';
 
 const AdminSecurity: React.FC = () => {
   return (
@@ -114,46 +112,6 @@ const AdminSecurity: React.FC = () => {
           </div>
           <div className="p-8">
             <SecurityViolationsMonitor />
-          </div>
-        </div>
-
-        {/* Blocked IPs Manager */}
-        <div className="aurora-glass rounded-2xl border border-red-500/20 backdrop-blur-md overflow-hidden animate-fade-in animation-delay-700">
-          <div className="bg-gradient-to-r from-red-500/10 via-orange-500/5 to-transparent p-8 border-b border-red-500/20">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-red-500/20 to-orange-500/10 aurora-glass">
-                <Ban className="h-6 w-6 text-red-500" />
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold aurora-text-gradient">IPs Bloqueados</h2>
-                <p className="text-muted-foreground font-medium">
-                  Gerenciamento de IPs suspeitos bloqueados automaticamente
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="p-8">
-            <BlockedIPsManager />
-          </div>
-        </div>
-
-        {/* Console Log Analyzer */}
-        <div className="aurora-glass rounded-2xl border border-blue-500/20 backdrop-blur-md overflow-hidden animate-fade-in animation-delay-900">
-          <div className="bg-gradient-to-r from-blue-500/10 via-indigo-500/5 to-transparent p-8 border-b border-blue-500/20">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/20 to-indigo-500/10 aurora-glass">
-                <Search className="h-6 w-6 text-blue-500" />
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold aurora-text-gradient">Análise de Console.log</h2>
-                <p className="text-muted-foreground font-medium">
-                  Análise automática e limpeza inteligente de logs no projeto
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="p-8">
-            <ConsoleLogAnalyzer />
           </div>
         </div>
       </div>
