@@ -124,6 +124,7 @@ export type Database = {
           implementation_status: string | null
           is_favorited: boolean | null
           last_accessed_at: string | null
+          lovable_prompt: string | null
           mind_map: Json | null
           original_idea: string
           prompt_tokens: number | null
@@ -146,6 +147,7 @@ export type Database = {
           implementation_status?: string | null
           is_favorited?: boolean | null
           last_accessed_at?: string | null
+          lovable_prompt?: string | null
           mind_map?: Json | null
           original_idea: string
           prompt_tokens?: number | null
@@ -168,6 +170,7 @@ export type Database = {
           implementation_status?: string | null
           is_favorited?: boolean | null
           last_accessed_at?: string | null
+          lovable_prompt?: string | null
           mind_map?: Json | null
           original_idea?: string
           prompt_tokens?: number | null
