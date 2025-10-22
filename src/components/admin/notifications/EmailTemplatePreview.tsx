@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Smartphone, Monitor, Mail, Eye } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { SendTestEmailButton } from './SendTestEmailButton';
 
 interface TemplateOption {
   id: string;
@@ -87,11 +88,17 @@ export const EmailTemplatePreview = () => {
 
   const currentTemplate = EMAIL_TEMPLATES.find((t) => t.id === selectedTemplate);
 
-  const handleSendTestEmail = async () => {
-    toast({
-      title: 'Email de teste enviado',
-      description: 'Verifique sua caixa de entrada',
-    });
+  const getTemplateMetadata = () => {
+    const previewData = getPreviewData(selectedTemplate);
+    const [category, type] = selectedTemplate.split('-');
+    
+    return {
+      category: category || 'system',
+      type: type || 'test',
+      title: currentTemplate?.name || 'Email de Teste',
+      message: currentTemplate?.description || 'Este é um email de teste',
+      ...previewData,
+    };
   };
 
   const getPreviewData = (templateId: string) => {
@@ -203,10 +210,10 @@ export const EmailTemplatePreview = () => {
             Visualize e teste os templates profissionais de notificação por email
           </p>
         </div>
-        <Button onClick={handleSendTestEmail} className="gap-sm">
-          <Mail className="w-4 h-4" />
-          Enviar Teste
-        </Button>
+        <SendTestEmailButton 
+          templateType={selectedTemplate}
+          templateData={getTemplateMetadata()}
+        />
       </div>
 
       {/* Controls */}

@@ -32,9 +32,13 @@ export const MasterTemplate = ({
       <Container style={container}>
         {/* Header com Logo */}
         <Section style={header}>
-          <div style={logoContainer}>
-            <Text style={logoText}>VIVER DE IA</Text>
-          </div>
+          <Img
+            src="https://zotzvtepvpnkcoobdubt.supabase.co/storage/v1/object/public/certificates/logo/viver-de-ia-logo.png"
+            alt="Viver de IA"
+            width="200"
+            height="auto"
+            style={logo}
+          />
         </Section>
 
         {/* Banner Aurora com Gradiente da Marca */}
@@ -99,25 +103,14 @@ const container = {
 
 const header = {
   backgroundColor: '#0a1f1f',
-  padding: '24px 32px',
+  padding: '32px 32px',
   textAlign: 'center' as const,
   borderBottom: '2px solid #0ABAB5',
 }
 
-const logoContainer = {
-  padding: '12px 24px',
-  background: 'linear-gradient(135deg, #0ABAB5 0%, #0BC8D5 100%)',
-  borderRadius: '8px',
-  display: 'inline-block',
-}
-
-const logoText = {
-  color: '#ffffff',
-  fontSize: '24px',
-  fontWeight: 'bold',
-  margin: '0',
-  letterSpacing: '2px',
-  textShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+const logo = {
+  margin: '0 auto',
+  display: 'block',
 }
 
 const bannerSection = {

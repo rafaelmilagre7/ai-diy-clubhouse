@@ -3,8 +3,8 @@ import { supabase } from './client';
 
 export const uploadCertificateLogo = async () => {
   try {
-    // Fazer download da imagem do Lovable
-    const response = await fetch('/lovable-uploads/a408c993-07fa-49f2-bee6-c66d0614298b.png');
+    // Fazer download da imagem local
+    const response = await fetch('/images/viver-de-ia-logo.png');
     const blob = await response.blob();
     
     // Converter para File
@@ -35,5 +35,8 @@ export const uploadCertificateLogo = async () => {
   }
 };
 
-// URL da logo local para usar nos componentes - mudando para logo local
-export const CERTIFICATE_LOGO_URL = '/lovable-uploads/a408c993-07fa-49f2-bee6-c66d0614298b.png';
+// URL da logo local para usar nos componentes e emails
+export const CERTIFICATE_LOGO_URL = '/images/viver-de-ia-logo.png';
+
+// URL pública da logo para emails (precisa ser acessível externamente)
+export const EMAIL_LOGO_URL = 'https://zotzvtepvpnkcoobdubt.supabase.co/storage/v1/object/public/certificates/logo/viver-de-ia-logo.png';
