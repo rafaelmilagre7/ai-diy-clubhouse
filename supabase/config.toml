@@ -214,6 +214,15 @@ verify_jwt = true
 [functions.process-course-reminders]
 verify_jwt = false
 
+[functions.check-course-milestones]
+verify_jwt = false
+
+[functions.recommend-courses]
+verify_jwt = false
+
+[functions.process-tool-recommendations]
+verify_jwt = false
+
 [functions.process-solution-reminders]
 verify_jwt = false
 

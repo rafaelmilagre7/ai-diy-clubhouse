@@ -8351,6 +8351,13 @@ export type Database = {
         Args: { p_token: string; p_user_id: string }
         Returns: Json
       }
+      process_tool_recommendations: {
+        Args: never
+        Returns: {
+          recommendations_count: number
+          user_id: string
+        }[]
+      }
       quick_check_permission: {
         Args: { permission_code: string; user_id: string }
         Returns: boolean
@@ -8362,6 +8369,15 @@ export type Database = {
       reactivate_invite_secure: {
         Args: { p_days_extension?: number; p_invite_id: string }
         Returns: Json
+      }
+      recommend_tools_for_user: {
+        Args: { p_user_id: string }
+        Returns: {
+          category: string
+          relevance_score: number
+          tool_id: string
+          tool_name: string
+        }[]
       }
       regenerate_recurring_event_dates: { Args: never; Returns: Json }
       register_with_invite: {
