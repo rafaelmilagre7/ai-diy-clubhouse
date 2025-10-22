@@ -11,24 +11,38 @@ Deno.serve(async (req) => {
   }
 
   try {
-    console.log('🔄 Processando lembretes de cursos inacabados...');
+    console.log('🔄 [COURSE-REMINDERS] Iniciando processamento...');
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // Chamar função RPC que identifica cursos inacabados e cria notificações
     const { data, error } = await supabase.rpc('process_course_reminders');
 
     if (error) {
-      console.error('❌ Erro ao processar lembretes de cursos:', error);
+      console.error('❌ [COURSE-REMINDERS] Erro ao processar:', error);
       throw error;
     }
 
-    console.log('✅ Lembretes de cursos processados:', data);
+    const remindersCount = Array.isArray(data) ? data.length : 0;
+    console.log(`✅ [COURSE-REMINDERS] ${remindersCount} lembretes criados`);
+    
+    if (remindersCount > 0) {
+      console.log('📊 [COURSE-REMINDERS] Detalhes:', {
+        usuarios_notificados: remindersCount,
+        sample: data.slice(0, 3).map((d: any) => ({
+          user: d.user_id,
+          course: d.course_title,
+          progress: `${d.progress_percentage?.toFixed(1)}%`
+        }))
+      });
+    }
 
     return new Response(
       JSON.stringify({
         success: true,
+        reminders_sent: remindersCount,
         data,
         timestamp: new Date().toISOString()
       }),
@@ -38,7 +52,7 @@ Deno.serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error('❌ Erro fatal:', error);
+    console.error('❌ [COURSE-REMINDERS] Erro fatal:', error);
     return new Response(
       JSON.stringify({
         success: false,
