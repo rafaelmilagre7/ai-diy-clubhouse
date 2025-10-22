@@ -776,7 +776,18 @@ Crie um plano completo seguindo o formato JSON especificado.`;
         
         const lovablePromptSystemPrompt = `Você é um especialista em engenharia de prompts para Lovable.dev.
 
-Sua missão: transformar a solução Builder gerada em um PROMPT LOVABLE COMPLETO, PROFISSIONAL e PRONTO PARA COPIAR.
+IMPORTANTE: Retorne APENAS um objeto JSON válido, sem texto adicional antes ou depois.
+
+Estrutura OBRIGATÓRIA:
+{
+  "prompt": "string com o prompt Lovable completo e profissional",
+  "complexity": "low|medium|high",
+  "estimated_time": "tempo estimado de implementação"
+}
+
+NÃO adicione explicações, comentários ou markdown. APENAS o JSON puro.
+
+Sua missão: transformar a solução Builder gerada em um PROMPT LOVABLE COMPLETO, PROFISSIONAL e PRONTO PARA COPIAR dentro do campo "prompt" do JSON.
 
 ESTRUTURA OBRIGATÓRIA (seguir The Lovable Prompting Bible 2025):
 
@@ -940,7 +951,7 @@ INSTRUÇÕES ESPECIAIS:
             temperature: 0.7,
             max_completion_tokens: 16000
           }),
-          signal: AbortSignal.timeout(180000) // 3 minutos (Gemini Pro é rápido)
+          signal: AbortSignal.timeout(240000) // 4 minutos (Gemini Pro pode ser mais lento)
         });
 
         if (!lovableAIResponse.ok) {
@@ -959,7 +970,47 @@ INSTRUÇÕES ESPECIAIS:
         const lovableAIData = await lovableAIResponse.json();
         const lovablePromptTime = Date.now() - lovablePromptStart;
         
-        const lovablePrompt = lovableAIData.choices[0].message.content;
+        const rawContent = lovableAIData.choices[0].message.content;
+        
+        // 🔧 FASE 1: Extração robusta de JSON
+        const cleanJsonResponse = (text: string): string => {
+          // Remover markdown code blocks
+          let cleaned = text.replace(/```json\n?/g, '').replace(/```\n?/g, '');
+          
+          // Procurar pelo primeiro { até o último }
+          const firstBrace = cleaned.indexOf('{');
+          const lastBrace = cleaned.lastIndexOf('}');
+          
+          if (firstBrace === -1 || lastBrace === -1) {
+            throw new Error('JSON não encontrado na resposta');
+          }
+          
+          return cleaned.substring(firstBrace, lastBrace + 1);
+        };
+        
+        let lovablePrompt: string;
+        
+        try {
+          const cleanedJson = cleanJsonResponse(rawContent);
+          const parsed = JSON.parse(cleanedJson);
+          
+          // Extrair o campo "prompt" do JSON
+          if (parsed.prompt && typeof parsed.prompt === 'string') {
+            lovablePrompt = parsed.prompt;
+            console.log(`[BUILDER][${requestId}] ✅ JSON parseado com sucesso`);
+            console.log(`[BUILDER][${requestId}] 📊 Complexidade: ${parsed.complexity || 'N/A'}`);
+            console.log(`[BUILDER][${requestId}] ⏱️  Tempo estimado: ${parsed.estimated_time || 'N/A'}`);
+          } else {
+            throw new Error('Campo "prompt" não encontrado no JSON');
+          }
+        } catch (parseError) {
+          console.error(`[BUILDER][${requestId}] ❌ Erro ao parsear JSON do Lovable AI:`, parseError);
+          console.error(`[BUILDER][${requestId}] 📄 Resposta raw (primeiros 500 chars):`, rawContent.substring(0, 500));
+          
+          // Fallback: usar resposta raw como prompt (melhor que nada)
+          lovablePrompt = rawContent;
+          console.warn(`[BUILDER][${requestId}] ⚠️  Usando resposta raw como fallback`);
+        }
         
         console.log(`[BUILDER][${requestId}] ✅ Prompt Lovable gerado em ${(lovablePromptTime / 1000).toFixed(1)}s`);
         console.log(`[BUILDER][${requestId}] 📏 Tamanho: ${lovablePrompt.length} caracteres (~${Math.floor(lovablePrompt.length / 4)} tokens)`);
@@ -1024,7 +1075,7 @@ INSTRUÇÕES ESPECIAIS:
   } catch (error) {
     const errorTime = Date.now() - startTime;
     
-    // Log detalhado apenas no servidor
+    // 🔧 FASE 3: Log detalhado e mensagens descritivas
     console.error(`[BUILDER][${requestId}] ❌ Erro interno:`, {
       requestId,
       message: error.message,
@@ -1035,10 +1086,29 @@ INSTRUÇÕES ESPECIAIS:
       executionTime: `${errorTime}ms`
     });
     
-    // Mensagem genérica e segura para o cliente
+    // Determinar mensagem apropriada baseada no erro
+    let userMessage = "Ops! Algo deu errado ao gerar a solução.";
+    let errorDetails = error.message;
+    
+    if (error.message?.includes('JSON inválido') || error.message?.includes('JSON não encontrado')) {
+      userMessage = "A IA teve dificuldade em formatar a resposta. Por favor, tente novamente.";
+      errorDetails = "Erro ao processar resposta da IA";
+    } else if (error.message?.includes('timeout') || error.message?.includes('AbortError')) {
+      userMessage = "A geração demorou muito. Por favor, tente novamente com uma descrição mais simples.";
+      errorDetails = "Timeout na geração";
+    } else if (error.message?.includes('429')) {
+      userMessage = "Limite de requisições atingido. Aguarde alguns minutos.";
+      errorDetails = "Rate limit atingido";
+    } else if (error.message?.includes('402')) {
+      userMessage = "Créditos insuficientes. Entre em contato com o suporte.";
+      errorDetails = "Créditos insuficientes";
+    }
+    
+    // Mensagem descritiva para o cliente
     return new Response(
       JSON.stringify({ 
-        error: "Erro ao processar sua solicitação. Nossa equipe foi notificada.",
+        error: errorDetails,
+        userMessage: userMessage,
         code: "GENERATION_FAILED",
         requestId,
         timestamp: new Date().toISOString()

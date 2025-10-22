@@ -78,6 +78,9 @@ export const useBuilderAI = () => {
       if (error) {
         console.error('[BUILDER-HOOK] ❌ Erro completo:', error);
         
+        // 🔧 FASE 3: Mostrar mensagem descritiva do backend se disponível
+        const errorMessage = error.message || 'Erro desconhecido';
+        
         if (error.message?.includes('429')) {
           toast.error('Limite mensal atingido');
         } else if (error.message?.includes('402')) {
@@ -85,7 +88,7 @@ export const useBuilderAI = () => {
         } else if (error.message?.includes('TIMEOUT') || error.message?.includes('408')) {
           toast.error('Geração demorou muito. Verifique seu histórico ou tente novamente.');
         } else {
-          toast.error(`Erro ao gerar solução: ${error.message || 'Desconhecido'}`);
+          toast.error(`Erro ao gerar solução: ${errorMessage}`);
         }
         return null;
       }

@@ -54,11 +54,47 @@ export default function Builder() {
     }
   }, [location.search, navigate]);
 
-  // RECOVERY: verificar se há solução recente sem visualização
+  // 🔧 FASE 2: RECOVERY melhorado - detectar tentativas incompletas
   useEffect(() => {
-    const checkForUnviewedSolution = async () => {
+    const checkForRecovery = async () => {
       if (!profile?.id || solution || showWizard || isGenerating) return;
       
+      // Verificar tentativa incompleta no localStorage
+      const lastAttemptStr = localStorage.getItem('builder_last_attempt');
+      if (lastAttemptStr) {
+        try {
+          const attempt = JSON.parse(lastAttemptStr);
+          const ageMinutes = (Date.now() - attempt.timestamp) / 60000;
+          
+          // Se tentativa tem menos de 10 minutos, oferecer continuar
+          if (ageMinutes < 10) {
+            toast.info('Detectamos uma geração incompleta', {
+              description: 'Deseja tentar novamente?',
+              action: {
+                label: 'Sim, continuar',
+                onClick: () => {
+                  setCurrentIdea(attempt.idea);
+                  handleWizardComplete(attempt.answers);
+                }
+              },
+              cancel: {
+                label: 'Não, descartar',
+                onClick: () => localStorage.removeItem('builder_last_attempt')
+              },
+              duration: 15000
+            });
+            return; // Não verificar soluções recentes se há tentativa incompleta
+          } else {
+            // Limpar tentativas antigas
+            localStorage.removeItem('builder_last_attempt');
+          }
+        } catch (e) {
+          console.error('[BUILDER-RECOVERY] Erro ao parsear tentativa:', e);
+          localStorage.removeItem('builder_last_attempt');
+        }
+      }
+      
+      // Verificar se há solução recente sem visualização
       const { data: recentSolution, error: queryError } = await supabase
         .from('ai_generated_solutions')
         .select('id, created_at')
@@ -82,7 +118,7 @@ export default function Builder() {
     };
     
     // Delay de 2s para não competir com outras operações
-    const timer = setTimeout(checkForUnviewedSolution, 2000);
+    const timer = setTimeout(checkForRecovery, 2000);
     return () => clearTimeout(timer);
   }, [profile?.id, solution, showWizard, isGenerating, navigate]);
 
@@ -111,6 +147,13 @@ export default function Builder() {
     setShowWizard(false);
     console.log('[BUILDER-FRONTEND] Gerando solução com respostas:', answers.length);
     
+    // 🔧 FASE 2: Salvar tentativa no localStorage antes de chamar edge function
+    localStorage.setItem('builder_last_attempt', JSON.stringify({
+      idea: currentIdea,
+      answers,
+      timestamp: Date.now()
+    }));
+    
     const result = await generateSolution(currentIdea, answers);
     
     console.log('[BUILDER-FRONTEND] Resultado recebido:', {
@@ -122,8 +165,18 @@ export default function Builder() {
     
     if (result) {
       setSolution(result);
+      // Limpar backup de sucesso
+      localStorage.removeItem('builder_last_attempt');
     } else {
-      toast.error('Não foi possível gerar a solução. Tente novamente.');
+      // 🔧 FASE 2: Oferecer retry em caso de erro
+      toast.error('Erro ao gerar solução', {
+        description: 'Deseja tentar novamente com as mesmas respostas?',
+        action: {
+          label: 'Tentar novamente',
+          onClick: () => handleWizardComplete(answers)
+        },
+        duration: 10000
+      });
     }
   };
 
