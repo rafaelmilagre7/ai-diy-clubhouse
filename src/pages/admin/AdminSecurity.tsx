@@ -4,8 +4,8 @@ import { SecurityViolationsMonitor } from '@/components/admin/security/SecurityV
 import { SecurityDashboard } from '@/components/security/SecurityDashboard';
 import { SecurityAlertsWidget } from '@/components/security/SecurityAlertsWidget';
 import { BlockedIPsManager } from '@/components/security/BlockedIPsManager';
-import { ConsoleLogAnalyzer } from '@/components/admin/logs/ConsoleLogAnalyzer';
 import { Shield, Eye, AlertTriangle, Ban, Search } from 'lucide-react';
+import { ConsoleLogAnalyzer } from './components/ConsoleLogAnalyzer';
 
 const AdminSecurity: React.FC = () => {
   return (
