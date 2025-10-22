@@ -241,7 +241,7 @@ export const useImplementationData = () => {
     };
     
     fetchData();
-  }, [id, user, toast, navigate, isAdmin, profile?.role, log, logError]);
+  }, [id, user?.id, isAdmin]);
   
   return {
     solution,

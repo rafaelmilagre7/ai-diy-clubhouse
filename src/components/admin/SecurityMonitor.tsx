@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo, useCallback, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, Shield, Lock, Eye } from 'lucide-react';
+import { AlertTriangle, Shield, Lock, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/auth';
 
@@ -16,17 +16,14 @@ interface SecurityEvent {
   user_id?: string;
 }
 
-export const SecurityMonitor = () => {
+export const SecurityMonitor = memo(() => {
   const [securityEvents, setSecurityEvents] = useState<SecurityEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
   const { isAdmin } = useAuth();
+  const itemsPerPage = 10;
 
-  useEffect(() => {
-    if (!isAdmin) return;
-    fetchSecurityEvents();
-  }, [isAdmin]);
-
-  const fetchSecurityEvents = async () => {
+  const fetchSecurityEvents = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('audit_logs')
@@ -47,9 +44,23 @@ export const SecurityMonitor = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const getSeverityColor = (severity: string) => {
+  useEffect(() => {
+    let cancelled = false;
+    
+    if (!isAdmin) return;
+    
+    const loadEvents = async () => {
+      await fetchSecurityEvents();
+    };
+    
+    loadEvents();
+    
+    return () => { cancelled = true; };
+  }, [isAdmin, fetchSecurityEvents]);
+
+  const getSeverityColor = useCallback((severity: string) => {
     switch (severity) {
       case 'critical': return 'destructive';
       case 'high': return 'destructive';
@@ -57,9 +68,9 @@ export const SecurityMonitor = () => {
       case 'low': return 'outline';
       default: return 'outline';
     }
-  };
+  }, []);
 
-  const getSeverityIcon = (severity: string) => {
+  const getSeverityIcon = useCallback((severity: string) => {
     switch (severity) {
       case 'critical':
       case 'high':
@@ -69,7 +80,19 @@ export const SecurityMonitor = () => {
       default:
         return <Lock className="h-4 w-4" />;
     }
-  };
+  }, []);
+
+  // Paginação
+  const paginatedEvents = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return securityEvents.slice(startIndex, endIndex);
+  }, [securityEvents, currentPage, itemsPerPage]);
+
+  const totalPages = useMemo(() => 
+    Math.ceil(securityEvents.length / itemsPerPage), 
+    [securityEvents.length, itemsPerPage]
+  );
 
   if (!isAdmin) {
     return (
@@ -110,8 +133,9 @@ export const SecurityMonitor = () => {
             Nenhum evento de segurança registrado
           </div>
         ) : (
-          <div className="space-y-4">
-            {securityEvents.map((event) => (
+          <>
+            <div className="space-y-4">
+              {paginatedEvents.map((event) => (
               <div
                 key={event.id}
                 className="border rounded-lg p-4 space-y-3"
@@ -150,10 +174,37 @@ export const SecurityMonitor = () => {
                   )}
                 </div>
               </div>
-            ))}
-          </div>
+              ))}
+            </div>
+            
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between mt-6 pt-4 border-t">
+                <div className="text-sm text-muted-foreground">
+                  Página {currentPage} de {totalPages} ({securityEvents.length} eventos)
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </CardContent>
     </Card>
   );
-};
+});

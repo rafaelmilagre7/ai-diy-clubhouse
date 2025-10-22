@@ -1,55 +1,58 @@
 
 import { RouteObject } from "react-router-dom";
+import { lazy, Suspense } from 'react';
 import { AdminProtectedRoutes } from '@/auth/AdminProtectedRoutes';
 import AdminLayout from '@/components/layout/admin/AdminLayout';
+import OptimizedLoadingScreen from '@/components/common/OptimizedLoadingScreen';
 
-// Admin pages
-import AdminDashboard from '@/pages/admin/AdminDashboard';
-import AdminUsers from '@/pages/admin/AdminUsers';
-import AdminTools from '@/pages/admin/AdminTools';
-import AdminToolEdit from '@/pages/admin/AdminToolEdit';
-import AdminSolutions from '@/pages/admin/AdminSolutions';
-import AdminSolutionCreate from '@/pages/admin/AdminSolutionCreate';
-import SolutionEditor from '@/pages/admin/SolutionEditor';
-import AdminAnalytics from '@/pages/admin/AdminAnalytics';
-import AdminSuggestions from '@/pages/admin/AdminSuggestions';
-import AdminEvents from '@/pages/admin/AdminEvents';
-import EventsDebugPage from '@/pages/admin/EventsDebugPage';
-import AdminRoles from '@/pages/admin/AdminRoles';
-import InvitesManagement from '@/pages/admin/invites/InvitesManagement';
-import InviteDebug from '@/pages/admin/InviteDebug';
-import BenefitStats from '@/pages/admin/BenefitStats';
-import WhatsAppDebug from '@/pages/admin/WhatsAppDebug';
-import AdminCommunications from '@/pages/admin/AdminCommunications';
-import SupabaseDiagnostics from '@/pages/admin/SupabaseDiagnostics';
-import AdminSecurity from '@/pages/admin/AdminSecurity';
-import IntegrationsDebugPage from '@/pages/admin/IntegrationsDebugPage';
-import DataAuditPage from '@/pages/admin/DataAudit';
-import HublaWebhooks from '@/pages/admin/HublaWebhooks';
-import AdminAutomations from '@/pages/admin/AdminAutomations';
-import AutomationForm from '@/pages/admin/AutomationForm';
-import AutomationLogs from '@/pages/admin/AutomationLogs';
-import SolutionAccessOverrides from '@/pages/admin/SolutionAccessOverrides';
-import StyleGuidePage from '@/pages/StyleGuidePage';
-import AdminNetworking from '@/pages/admin/AdminNetworking';
-import AdminBuilder from '@/pages/admin/AdminBuilder';
+// Lazy loading de páginas administrativas para melhor performance
+const AdminDashboard = lazy(() => import('@/pages/admin/AdminDashboard'));
+const AdminUsers = lazy(() => import('@/pages/admin/AdminUsers'));
+const AdminTools = lazy(() => import('@/pages/admin/AdminTools'));
+const AdminToolEdit = lazy(() => import('@/pages/admin/AdminToolEdit'));
+const AdminSolutions = lazy(() => import('@/pages/admin/AdminSolutions'));
+const AdminSolutionCreate = lazy(() => import('@/pages/admin/AdminSolutionCreate'));
+const SolutionEditor = lazy(() => import('@/pages/admin/SolutionEditor'));
+const AdminAnalytics = lazy(() => import('@/pages/admin/AdminAnalytics'));
+const AdminSuggestions = lazy(() => import('@/pages/admin/AdminSuggestions'));
+const AdminEvents = lazy(() => import('@/pages/admin/AdminEvents'));
+const EventsDebugPage = lazy(() => import('@/pages/admin/EventsDebugPage'));
+const AdminRoles = lazy(() => import('@/pages/admin/AdminRoles'));
+const InvitesManagement = lazy(() => import('@/pages/admin/invites/InvitesManagement'));
+const InviteDebug = lazy(() => import('@/pages/admin/InviteDebug'));
+const BenefitStats = lazy(() => import('@/pages/admin/BenefitStats'));
+const WhatsAppDebug = lazy(() => import('@/pages/admin/WhatsAppDebug'));
+const AdminCommunications = lazy(() => import('@/pages/admin/AdminCommunications'));
+const SupabaseDiagnostics = lazy(() => import('@/pages/admin/SupabaseDiagnostics'));
+const AdminSecurity = lazy(() => import('@/pages/admin/AdminSecurity'));
+const IntegrationsDebugPage = lazy(() => import('@/pages/admin/IntegrationsDebugPage'));
+const DataAuditPage = lazy(() => import('@/pages/admin/DataAudit'));
+const HublaWebhooks = lazy(() => import('@/pages/admin/HublaWebhooks'));
+const AdminAutomations = lazy(() => import('@/pages/admin/AdminAutomations'));
+const AutomationForm = lazy(() => import('@/pages/admin/AutomationForm'));
+const AutomationLogs = lazy(() => import('@/pages/admin/AutomationLogs'));
+const SolutionAccessOverrides = lazy(() => import('@/pages/admin/SolutionAccessOverrides'));
+const StyleGuidePage = lazy(() => import('@/pages/StyleGuidePage'));
+const AdminNetworking = lazy(() => import('@/pages/admin/AdminNetworking'));
+const AdminBuilder = lazy(() => import('@/pages/admin/AdminBuilder'));
+const NPSAnalytics = lazy(() => import('@/pages/admin/NPSAnalytics'));
+const CertificateTemplates = lazy(() => import('@/pages/admin/CertificateTemplates'));
+const CourseCertificateManager = lazy(() => import('@/pages/admin/CourseCertificateManager'));
+const NotificationsStats = lazy(() => import('@/pages/admin/NotificationsStats'));
+const EmailDashboard = lazy(() => import('@/pages/admin/communications/EmailDashboard'));
+const EmailLogs = lazy(() => import('@/pages/admin/communications/EmailLogs'));
+const EmailSettings = lazy(() => import('@/pages/admin/communications/EmailSettings'));
 
-import NPSAnalytics from '@/pages/admin/NPSAnalytics';
-import CertificateTemplates from '@/pages/admin/CertificateTemplates';
-import CourseCertificateManager from '@/pages/admin/CourseCertificateManager';
-import NotificationsStats from '@/pages/admin/NotificationsStats';
-import EmailDashboard from '@/pages/admin/communications/EmailDashboard';
-import EmailLogs from '@/pages/admin/communications/EmailLogs';
-import EmailSettings from '@/pages/admin/communications/EmailSettings';
 
-
-// Função helper para criar rotas protegidas com AdminLayout
-const createAdminRoute = (path: string, Component: React.ComponentType<any>) => ({
+// Função helper para criar rotas protegidas com AdminLayout e lazy loading
+const createAdminRoute = (path: string, Component: React.LazyExoticComponent<React.ComponentType<any>>) => ({
   path,
   element: (
     <AdminProtectedRoutes>
       <AdminLayout>
-        <Component />
+        <Suspense fallback={<OptimizedLoadingScreen />}>
+          <Component />
+        </Suspense>
       </AdminLayout>
     </AdminProtectedRoutes>
   )

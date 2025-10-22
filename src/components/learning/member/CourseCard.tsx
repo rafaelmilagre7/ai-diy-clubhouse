@@ -1,4 +1,5 @@
 
+import React, { memo, useMemo } from 'react';
 import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -20,7 +21,7 @@ interface CourseCardProps {
   lessonCount?: number;
 }
 
-export const CourseCard: React.FC<CourseCardProps> = ({
+export const CourseCard = memo<CourseCardProps>(({
   id,
   title,
   description,
@@ -29,7 +30,7 @@ export const CourseCard: React.FC<CourseCardProps> = ({
   moduleCount,
   lessonCount
 }) => {
-  const isCompleted = progress >= 100;
+  const isCompleted = useMemo(() => progress >= 100, [progress]);
   const { hasAccess, loading } = useCourseIndividualAccess(id);
   const { showUpgradeModal } = usePremiumUpgradeModal();
   
@@ -132,4 +133,14 @@ export const CourseCard: React.FC<CourseCardProps> = ({
       </Card>
     </Link>
   );
-};
+}, (prevProps, nextProps) => {
+  // Comparação customizada: só re-renderizar se dados importantes mudaram
+  return (
+    prevProps.id === nextProps.id &&
+    prevProps.progress === nextProps.progress &&
+    prevProps.title === nextProps.title &&
+    prevProps.imageUrl === nextProps.imageUrl &&
+    prevProps.moduleCount === nextProps.moduleCount &&
+    prevProps.lessonCount === nextProps.lessonCount
+  );
+});
