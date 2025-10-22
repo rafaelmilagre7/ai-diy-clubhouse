@@ -26,8 +26,6 @@ export const useInviteSender = () => {
     setIsSending(true);
     
     try {
-      console.log('📧 [HOOK] Enviando convite por email:', inviteData.email);
-      
       const { data, error } = await supabase.functions.invoke('send-invite-email', {
         body: inviteData
       });
@@ -42,7 +40,6 @@ export const useInviteSender = () => {
         return { success: false, error: error.message };
       }
 
-      console.log('✅ [HOOK] Email enviado com sucesso:', data);
       toast({
         title: "Email enviado!",
         description: `Convite enviado para ${inviteData.email}`,
@@ -80,8 +77,6 @@ export const useInviteSender = () => {
     setIsSending(true);
     
     try {
-      console.log('📱 [HOOK] Enviando convite por WhatsApp:', inviteData.phone);
-      
       const { data, error } = await supabase.functions.invoke('send-invite-whatsapp', {
         body: inviteData
       });
@@ -95,8 +90,6 @@ export const useInviteSender = () => {
         });
         return { success: false, error: error.message };
       }
-
-      console.log('✅ [HOOK] WhatsApp enviado:', data);
       
       if (data.simulated) {
         toast({
@@ -135,8 +128,6 @@ export const useInviteSender = () => {
     setIsSending(true);
     
     try {
-      console.log('⚡ [HOOK] Processando convite automaticamente:', inviteId);
-      
       const { data, error } = await supabase.functions.invoke('process-invite', {
         body: { inviteId }
       });
@@ -150,8 +141,6 @@ export const useInviteSender = () => {
         });
         return { success: false, error: error.message };
       }
-
-      console.log('✅ [HOOK] Convite processado:', data);
       
       const emailStatus = data.email_sent ? "✅" : "❌";
       const whatsappStatus = data.whatsapp_sent ? "✅" : "⚠️";
@@ -184,8 +173,6 @@ export const useInviteSender = () => {
     setIsSending(true);
     
     try {
-      console.log('🔄 [HOOK] Reenviando convite:', inviteId);
-      
       const { data, error } = await supabase.rpc('resend_invite_manual', {
         p_invite_id: inviteId
       });
@@ -200,7 +187,6 @@ export const useInviteSender = () => {
         return { success: false, error: data.error || error?.message };
       }
 
-      console.log('✅ [HOOK] Convite reenviado:', data);
       toast({
         title: "Convite reenviado!",
         description: `Convite para ${data.email} foi reenviado com sucesso.`,

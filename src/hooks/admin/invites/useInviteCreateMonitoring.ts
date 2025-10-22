@@ -19,15 +19,6 @@ export const useInviteCreateMonitoring = () => {
       parallelTime?: number;
     };
   }) => {
-    const logData = {
-      event: 'invite_creation_performance',
-      timestamp: new Date().toISOString(),
-      ...data
-    };
-
-    // Log estruturado DETALHADO para monitoramento
-    console.log('📊 [INVITE-METRICS-DETAILED]', JSON.stringify(logData));
-
     // Análise de gargalos específicos
     if (data.phases) {
       if (data.phases.dbTime && data.phases.dbTime > 2000) {
@@ -67,14 +58,6 @@ export const useInviteCreateMonitoring = () => {
     attempts?: number;
     statusCode?: number;
   }) => {
-    const logData = {
-      event: 'edge_function_performance',
-      timestamp: new Date().toISOString(),
-      ...data
-    };
-
-    console.log('🔍 [EDGE-FUNCTION-METRICS-DETAILED]', JSON.stringify(logData));
-
     // Alertas específicos para Edge Functions
     if (data.functionName === 'send-whatsapp-invite') {
       if (data.duration > 10000) {
@@ -106,19 +89,7 @@ export const useInviteCreateMonitoring = () => {
     error?: string;
     metadata?: Record<string, any>;
   }) => {
-    const logData = {
-      event: 'channel_specific_performance',
-      timestamp: new Date().toISOString(),
-      ...data
-    };
-
-    const channelEmoji = data.channel === 'email' ? '📧' : '📱';
-    const eventSymbol = data.event === 'success' ? '✅' : 
-                       data.event === 'error' ? '❌' : 
-                       data.event === 'timeout' ? '⏰' :
-                       data.event === 'retry' ? '🔄' : '🚀';
-
-    console.log(`${channelEmoji}${eventSymbol} [CHANNEL-${data.channel.toUpperCase()}-${data.event.toUpperCase()}]`, JSON.stringify(logData));
+    // Silenciado para produção
   }, []);
 
   return {

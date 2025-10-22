@@ -12,54 +12,21 @@ export const useTimedLogger = () => {
     return {
       end: (metadata?: Record<string, any>) => {
         const duration = performance.now() - startTime;
-        const logData = {
-          name,
-          startTime: startTimestamp,
-          endTime: new Date().toISOString(),
-          duration: Math.round(duration),
-          durationMs: duration,
-          ...metadata
-        };
-        
-        console.log(`⏱️ [TIMER-${name.toUpperCase()}]`, JSON.stringify(logData));
         return duration;
       },
       checkpoint: (checkpointName: string, metadata?: Record<string, any>) => {
         const duration = performance.now() - startTime;
-        const logData = {
-          name,
-          checkpoint: checkpointName,
-          elapsedTime: Math.round(duration),
-          timestamp: new Date().toISOString(),
-          ...metadata
-        };
-        
-        console.log(`🔍 [CHECKPOINT-${name.toUpperCase()}]`, JSON.stringify(logData));
         return duration;
       }
     };
   }, []);
 
   const logProcessPhase = useCallback((phaseName: string, data?: Record<string, any>) => {
-    const logData = {
-      phase: phaseName,
-      timestamp: new Date().toISOString(),
-      ...data
-    };
-    
-    console.log(`🔄 [PHASE-${phaseName.toUpperCase()}]`, JSON.stringify(logData));
+    // Silenciado para produção
   }, []);
 
   const logPerformanceAlert = useCallback((type: 'warning' | 'error', message: string, data?: Record<string, any>) => {
-    const alertSymbol = type === 'error' ? '🚨' : '⚠️';
-    const logData = {
-      alertType: type,
-      message,
-      timestamp: new Date().toISOString(),
-      ...data
-    };
-    
-    console.log(`${alertSymbol} [PERFORMANCE-${type.toUpperCase()}]`, JSON.stringify(logData));
+    // Silenciado para produção
   }, []);
 
   const measureAsync = useCallback(async <T>(

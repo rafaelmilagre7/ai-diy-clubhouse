@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
-import { devLog } from '@/utils/devLogger';
 
 export interface BatchProgress {
   type: 'init' | 'batch_start' | 'batch_complete' | 'invite_processing' | 'invite_success' | 'invite_retry' | 'invite_failed' | 'complete' | 'error';
@@ -27,8 +26,6 @@ export function useBatchSendInvites() {
       setIsProcessing(true);
       setProgress([]);
       setSummary(null);
-
-      devLog.api(`Iniciando envio em lote de ${inviteIds.length} convites`);
 
       const { data, error } = await supabase.functions.invoke('batch-send-invites', {
         body: {
@@ -64,38 +61,30 @@ export function useBatchSendInvites() {
             // Log detalhado de cada evento
             switch (data.type) {
               case 'init':
-                devLog.data(`Iniciando processamento de ${data.total} convites`);
                 toast.info(`Iniciando envio de ${data.total} convites...`);
                 break;
               
               case 'batch_start':
-                devLog.data(`Lote ${data.batch}/${data.totalBatches} (${data.size} convites)`);
                 break;
               
               case 'invite_processing':
-                devLog.timing(`Processando: ${data.email} (tentativa ${data.attempt}/${data.maxRetries})`);
                 break;
               
               case 'invite_success':
-                devLog.success(`Sucesso: ${data.email}`);
                 break;
               
               case 'invite_retry':
-                devLog.warn(`Retry: ${data.email} - ${data.error}`);
                 toast.warning(`Reenvio: ${data.email} (tentativa ${data.attempt + 1})`);
                 break;
               
               case 'invite_failed':
-                devLog.error(`Falhou: ${data.email} - ${data.error}`);
                 toast.error(`Falha: ${data.email}`);
                 break;
               
               case 'batch_complete':
-                devLog.success(`Lote ${data.batch} concluído (${data.processed}/${data.total})`);
                 break;
               
               case 'complete':
-                devLog.success('Processamento completo:', data);
                 setSummary(data);
                 toast.success(
                   `Concluído! ${data.successful} enviados, ${data.failed} falhas`,
@@ -104,7 +93,7 @@ export function useBatchSendInvites() {
                 break;
               
               case 'error':
-                devLog.error('Erro:', data.error);
+                console.error('Erro:', data.error);
                 toast.error(`Erro no processamento: ${data.error}`);
                 break;
             }
@@ -113,7 +102,7 @@ export function useBatchSendInvites() {
       }
 
     } catch (err: any) {
-      devLog.error('Erro geral:', err);
+      console.error('Erro geral:', err);
       toast.error(`Erro ao enviar convites: ${err.message}`);
     } finally {
       setIsProcessing(false);
