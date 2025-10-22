@@ -223,6 +223,9 @@ verify_jwt = false
 [functions.process-tool-recommendations]
 verify_jwt = false
 
+[functions.process-community-digest]
+verify_jwt = false
+
 [functions.process-solution-reminders]
 verify_jwt = false
 
