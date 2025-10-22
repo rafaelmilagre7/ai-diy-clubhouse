@@ -205,6 +205,12 @@ verify_jwt = false
 [functions.process-event-reminders]
 verify_jwt = false
 
+[functions.process-event-completion]
+verify_jwt = false
+
+[functions.event-register]
+verify_jwt = true
+
 [functions.process-course-reminders]
 verify_jwt = false
 
