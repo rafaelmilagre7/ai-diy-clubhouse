@@ -37,7 +37,6 @@ const ResourceMaterialsTab: React.FC<ResourceMaterialsTabProps> = ({
         const { success, error } = await createStoragePublicPolicy('solution_files');
         
         if (success) {
-          console.log('Bucket solution_files verificado/criado com sucesso');
           setBucketReady(true);
         } else {
           console.error('Erro ao verificar/criar bucket solution_files:', error);

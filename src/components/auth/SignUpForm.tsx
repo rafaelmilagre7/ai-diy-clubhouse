@@ -107,8 +107,6 @@ const SignUpForm = ({ onBackToLogin }: SignUpFormProps) => {
     
     try {
       setIsLoading(true);
-      console.log("[SIGNUP] Iniciando processo de registro");
-      
       const redirectUrl = `${window.location.origin}/`;
       
       const { data, error } = await supabase.auth.signUp({
@@ -139,8 +137,6 @@ const SignUpForm = ({ onBackToLogin }: SignUpFormProps) => {
       }
       
       if (data.user) {
-        console.log("[SIGNUP] Registro bem-sucedido:", data.user.email);
-        
         // Se tem token de convite, aplicar agora
         if (inviteToken) {
           try {
@@ -156,8 +152,6 @@ const SignUpForm = ({ onBackToLogin }: SignUpFormProps) => {
                 description: "Porém houve um problema com o convite. Entre em contato conosco.",
                 variant: "destructive",
               });
-            } else {
-              console.log("[SIGNUP] Convite aplicado com sucesso");
             }
           } catch (err) {
             console.error("[SIGNUP] Erro ao aplicar convite:", err);

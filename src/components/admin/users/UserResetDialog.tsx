@@ -29,7 +29,6 @@ export const UserResetDialog: React.FC<UserResetDialogProps> = ({
 
   const handleConfirm = () => {
     // Aqui seria implementada a lógica de reset do usuário
-    console.log('Reset completo do usuário:', user?.id);
     onSuccess();
     onOpenChange(false);
   };

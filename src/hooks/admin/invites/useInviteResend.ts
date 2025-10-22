@@ -18,8 +18,6 @@ export function useInviteResend() {
       setIsSending(true);
       setResendError(null);
 
-      console.log("🔄 Reenviando convite híbrido:", invite.email);
-
       // Verificar apenas se não expirou (permitir reenvio mesmo se usado)
       if (new Date(invite.expires_at) < new Date()) {
         toast.error("Convite expirado - crie um novo convite");
@@ -39,9 +37,6 @@ export function useInviteResend() {
         throw new Error("Erro ao gerar link do convite");
       }
 
-      console.log("📨 Reenviando via sistema híbrido...");
-      console.log("Canal de preferência:", invite.preferred_channel);
-
       // Reenviar usando o sistema híbrido
       const sendResult = await sendHybridInvite({
         email: invite.email,
@@ -53,8 +48,6 @@ export function useInviteResend() {
         inviteId: invite.id,
         channelPreference: invite.preferred_channel || 'email'
       });
-
-      console.log("📨 Resultado do reenvio híbrido:", sendResult);
 
       if (sendResult.success) {
         const channelText = invite.preferred_channel === 'both' ? 'email e WhatsApp' : 

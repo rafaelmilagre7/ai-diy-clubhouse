@@ -16,8 +16,6 @@ export const OnboardingSuccess: React.FC<OnboardingSuccessProps> = ({
 }) => {
 
   useEffect(() => {
-    console.log('[CONFETTI] Iniciando celebração de confetti...');
-    
     // Extrai cores do design system
     const getDesignColors = () => {
       const style = getComputedStyle(document.documentElement);
@@ -39,7 +37,6 @@ export const OnboardingSuccess: React.FC<OnboardingSuccessProps> = ({
     
     // Sequência de confetes mais elaborada e vistosa
     const celebrateCompletion = () => {
-      console.log('[CONFETTI] Primeira explosão central');
       // Primeira explosão central - maior e mais impactante
       confetti({
         particleCount: 150,
@@ -50,7 +47,6 @@ export const OnboardingSuccess: React.FC<OnboardingSuccessProps> = ({
 
       // Segunda explosão lateral esquerda
       setTimeout(() => {
-        console.log('[CONFETTI] Segunda explosão - lateral esquerda');
         confetti({
           particleCount: 80,
           angle: 60,
@@ -62,7 +58,6 @@ export const OnboardingSuccess: React.FC<OnboardingSuccessProps> = ({
 
       // Terceira explosão lateral direita  
       setTimeout(() => {
-        console.log('[CONFETTI] Terceira explosão - lateral direita');
         confetti({
           particleCount: 80,
           angle: 120,
@@ -74,7 +69,6 @@ export const OnboardingSuccess: React.FC<OnboardingSuccessProps> = ({
 
       // Chuva de confetes final - mais intensa
       setTimeout(() => {
-        console.log('[CONFETTI] Chuva final de confetti');
         confetti({
           particleCount: 200,
           startVelocity: 35,
@@ -90,7 +84,6 @@ export const OnboardingSuccess: React.FC<OnboardingSuccessProps> = ({
 
       // Explosão final do topo
       setTimeout(() => {
-        console.log('[CONFETTI] Explosão final do topo');
         confetti({
           particleCount: 100,
           spread: 120,
@@ -105,7 +98,6 @@ export const OnboardingSuccess: React.FC<OnboardingSuccessProps> = ({
     
     // Auto complete após todas as animações terminarem
     const timer = setTimeout(() => {
-      console.log('[CONFETTI] Finalizando celebração e chamando onComplete');
       onComplete();
     }, 2800);
     

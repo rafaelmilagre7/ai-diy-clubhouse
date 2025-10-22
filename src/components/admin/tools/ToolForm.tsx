@@ -57,8 +57,6 @@ export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps)
 
   const handleFormSubmit = async (data: ToolFormValues) => {
     try {
-      console.log("Formulário enviado:", data);
-      
       const success = await onSubmit(data);
       
       if (success) {

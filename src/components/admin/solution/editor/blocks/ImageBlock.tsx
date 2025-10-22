@@ -24,7 +24,6 @@ const ImageBlock: React.FC<ImageBlockProps> = ({ data, onChange }) => {
     bucketName: STORAGE_BUCKETS.SOLUTION_FILES,
     folder: "content_images",
     onUploadComplete: (url, fileName) => {
-      console.log('[IMAGE_BLOCK] Upload concluído:', url);
       onChange({ 
         ...data, 
         url: url,
@@ -60,7 +59,6 @@ const ImageBlock: React.FC<ImageBlockProps> = ({ data, onChange }) => {
       return;
     }
     
-    console.log('[IMAGE_BLOCK] Iniciando upload:', file.name);
     await uploadFile(file);
   };
 

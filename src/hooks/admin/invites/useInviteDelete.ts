@@ -32,9 +32,6 @@ export function useInviteDelete() {
         duration: 4000
       });
       
-      // 📊 LOG PERFORMANCE para monitoramento
-      console.log(`✅ Soft Delete Performance: ${totalTime}ms para convite ${inviteId}`);
-      
       return true;
     } catch (err: any) {
       const totalTime = Math.round(performance.now() - startTime);
@@ -45,9 +42,7 @@ export function useInviteDelete() {
         duration: 6000,
         action: {
           label: "Tentar Novamente",
-          onClick: () => {
-            console.log("🔄 Usuário solicitou nova tentativa de exclusão");
-          }
+          onClick: () => {}
         }
       });
       return false;
@@ -59,15 +54,12 @@ export function useInviteDelete() {
   // 🧹 LIMPEZA EM BACKGROUND - Executar limpeza física via Edge Function (opcional)
   const cleanupDeletedInvites = useCallback(async () => {
     try {
-      console.log('🧹 Iniciando limpeza em background...');
-      
       const { data, error } = await supabase.functions.invoke('cleanup-deleted-invites', {
         body: { force: false }
       });
       
       if (error) throw error;
       
-      console.log('✅ Limpeza concluída:', data);
       toast.success('🧹 Limpeza automática concluída', {
         description: `${data.cleaned_count || 0} convites removidos fisicamente`,
         duration: 3000
@@ -84,15 +76,12 @@ export function useInviteDelete() {
   // 🗑️ DELETAR FISICAMENTE CONVITE POR EMAIL - Para casos específicos
   const forceDeleteInviteByEmail = useCallback(async (email: string) => {
     try {
-      console.log(`🗑️ Deletando fisicamente convites para: ${email}`);
-      
       const { data, error } = await supabase.functions.invoke('admin-delete-invite', {
         body: { email }
       });
       
       if (error) throw error;
       
-      console.log('✅ Deleção física concluída:', data);
       toast.success('🗑️ Convite deletado fisicamente', {
         description: `${data.message}`,
         duration: 4000

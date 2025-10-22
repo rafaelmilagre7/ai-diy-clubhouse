@@ -57,7 +57,6 @@ export function useInvitesList() {
         creator_email: creatorsMap[invite.created_by]?.email
       }));
       
-      console.log(`✅ Convites ativos carregados: ${enrichedInvites.length} (filtrados por soft delete)`);
       setInvites(enrichedInvites);
     } catch (err: any) {
       console.error('❌ Erro ao buscar convites:', err);

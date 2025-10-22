@@ -11,8 +11,6 @@ export interface ResetUserResult {
 
 export const resetUserByEmail = async (userEmail: string): Promise<ResetUserResult> => {
   try {
-    console.log(`🔄 Iniciando reset do usuário: ${userEmail}`);
-    
     const { data, error } = await supabase.rpc('admin_reset_user', {
       user_email: userEmail
     });
@@ -25,8 +23,6 @@ export const resetUserByEmail = async (userEmail: string): Promise<ResetUserResu
     if (!data) {
       throw new Error('Nenhum resultado retornado da função de reset');
     }
-    
-    console.log('📊 Resultado do reset:', data);
     
     return data as ResetUserResult;
   } catch (error: any) {
@@ -64,7 +60,6 @@ export const adminQuickReset = async (userEmail: string) => {
     toast.success(`✅ Reset realizado com sucesso!`, {
       description: `${result.backup_records} registros salvos em backup.`
     });
-    console.log('✅ Reset bem-sucedido:', result);
   } else {
     toast.error(`❌ Erro no reset: ${result.message}`);
     console.error('❌ Falha no reset:', result);

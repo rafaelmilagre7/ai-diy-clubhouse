@@ -46,12 +46,8 @@ export const ResetPasswordForm = ({ onBackToLogin }: ResetPasswordFormProps) => 
       setIsLoading(true);
       setError(null);
       
-      console.log("Iniciando reset de senha para:", data.email);
-      
       // Usar sempre o domínio personalizado para reset de senha
       const redirectUrl = APP_CONFIG.getAppUrl('/set-new-password');
-      
-      console.log("URL de redirecionamento:", redirectUrl);
       
       // Usar nossa edge function em vez do método nativo do Supabase
       const { error } = await supabase.functions.invoke('send-reset-password-email', {
@@ -60,8 +56,6 @@ export const ResetPasswordForm = ({ onBackToLogin }: ResetPasswordFormProps) => 
           resetUrl: redirectUrl
         }
       });
-
-      console.log("Resposta da edge function:", { error });
 
       if (error) {
         console.error("Erro detalhado no reset de senha:", error);

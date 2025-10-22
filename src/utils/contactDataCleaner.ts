@@ -116,12 +116,6 @@ class ContactDataCleaner {
     const defaultValidRoles = ['admin', 'convidado', 'hands_on', 'lovable_course'];
     const rolesToCheck = validRoles && validRoles.length > 0 ? validRoles : defaultValidRoles;
     
-    console.log('🔍 [CONTACT-CLEANER] Validando papel:', {
-      role: role.toLowerCase(),
-      rolesToCheck,
-      isValid: rolesToCheck.includes(role.toLowerCase())
-    });
-    
     return rolesToCheck.includes(role.toLowerCase());
   }
   
@@ -241,11 +235,6 @@ class ContactDataCleaner {
    * Processa lista de contatos e retorna resultado da limpeza
    */
   public processContacts(contacts: ContactData[], validRoles?: string[]): DataCleaningResult {
-    console.log(`🧹 Iniciando limpeza de ${contacts.length} contatos...`);
-    if (validRoles) {
-      console.log(`📋 Papéis válidos: ${validRoles.join(', ')}`);
-    }
-    
     // Limpa cada contato
     const cleanedContacts = contacts.map(contact => this.cleanContact(contact, validRoles));
     
@@ -264,8 +253,6 @@ class ContactDataCleaner {
       invalidCount: invalid.length,
       duplicateCount: duplicates.reduce((acc, group) => acc + group.length, 0)
     };
-    
-    console.log('📊 Resumo da limpeza:', summary);
     
     return {
       valid,

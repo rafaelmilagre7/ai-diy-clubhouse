@@ -36,8 +36,6 @@ export function useInviteEmailService() {
       setIsSending(true);
       setSendError(null);
 
-      console.log("🚀 Enviando convite via sistema profissional:", { email, roleName, forceResend });
-
       // Validações básicas
       if (!email?.includes('@')) {
         throw new Error('Email inválido');
@@ -46,9 +44,6 @@ export function useInviteEmailService() {
       if (!inviteUrl) {
         throw new Error('URL do convite não fornecida');
       }
-
-      console.log("📧 Chamando sistema híbrido com template profissional...");
-      console.log("🔥 Status do sistema:", { isReady, warmupStatus: metrics.warmupStatus, avgTime: metrics.averageInviteTime });
 
       // Usar medição de performance para monitorar a operação
       const { data, error } = await measureInvitePerformance(async () => {
@@ -75,13 +70,6 @@ export function useInviteEmailService() {
         console.error("❌ Sistema reportou falha:", data);
         throw new Error(data?.error || data?.message || 'Falha no envio');
       }
-
-      console.log("✅ Email processado com sucesso:", {
-        strategy: data.strategy,
-        method: data.method,
-        email: data.email,
-        emailId: data.emailId
-      });
 
       // Feedback específico baseado na estratégia usada
       let successMessage = 'Convite enviado com sucesso!';
@@ -146,7 +134,6 @@ export function useInviteEmailService() {
           label: 'Tentar Novamente',
           onClick: () => {
             // Re-trigger do envio seria implementado aqui
-            console.log('Retentativa solicitada pelo usuário');
           },
         },
       });
@@ -173,7 +160,6 @@ export function useInviteEmailService() {
     // 🎯 CORREÇÃO: Usar o domínio configurado em vez do window.location.origin
     const baseUrl = APP_CONFIG.getAppUrl(`/convite/${encodeURIComponent(cleanToken)}`);
     
-    console.log("🔗 Link gerado com domínio correto:", baseUrl);
     return baseUrl;
   }, []);
 

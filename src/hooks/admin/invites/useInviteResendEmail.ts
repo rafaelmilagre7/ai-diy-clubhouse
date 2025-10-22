@@ -14,8 +14,6 @@ export function useInviteResendEmail() {
       setIsSending(true);
       setSendError(null);
 
-      console.log("📧 Reenviando email para:", invite.email);
-
       // Verificar se não expirou
       if (new Date(invite.expires_at) < new Date()) {
         toast.error("Convite expirado - crie um novo convite");

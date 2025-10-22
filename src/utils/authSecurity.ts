@@ -36,7 +36,6 @@ export const cleanupAuthState = (): void => {
       }
     });
     
-    console.log('✅ Estado de autenticação limpo com sucesso');
   } catch (error) {
     console.error('❌ Erro ao limpar estado de autenticação:', error);
   }

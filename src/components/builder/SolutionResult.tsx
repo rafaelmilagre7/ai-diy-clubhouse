@@ -25,10 +25,6 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({
 }) => {
   const navigate = useNavigate();
   
-  // Debug: verificar se architecture_flowchart está vindo
-  console.log('🔍 DEBUG - architecture_flowchart:', solution.architecture_flowchart);
-  console.log('🔍 DEBUG - required_tools:', solution.required_tools);
-
   const handleSaveAndRedirect = async () => {
     const savedSolution = await onSave(solution);
     if (savedSolution?.id) {

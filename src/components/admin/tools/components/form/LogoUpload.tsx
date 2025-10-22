@@ -21,7 +21,6 @@ export const LogoUpload = ({ form }: LogoUploadProps) => {
     bucketName: STORAGE_BUCKETS.TOOL_LOGOS,
     folder: 'logos',
     onUploadComplete: (url) => {
-      console.log('[LOGO_UPLOAD] Upload concluído:', url);
       setLogoUrl(url);
       form.setValue('logo_url', url, { shouldDirty: true });
     },
@@ -34,7 +33,6 @@ export const LogoUpload = ({ form }: LogoUploadProps) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    console.log('[LOGO_UPLOAD] Arquivo selecionado:', file.name);
     await uploadFile(file);
   };
 
