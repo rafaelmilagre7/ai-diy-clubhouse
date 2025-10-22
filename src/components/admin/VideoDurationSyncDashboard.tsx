@@ -68,7 +68,7 @@ export const VideoDurationSyncDashboard = () => {
   const handleSyncAll = async () => {
     setIsRunning(true);
     try {
-      console.log('🚀 [DASHBOARD] Iniciando sincronização completa...');
+      // Sincronização iniciada
       toast.info('Iniciando sincronização de todas as durações...');
 
       const { data, error } = await supabase.functions.invoke('update-video-durations', {
@@ -81,7 +81,7 @@ export const VideoDurationSyncDashboard = () => {
         return;
       }
 
-      console.log('📊 [DASHBOARD] Resultado da sincronização:', data);
+      // Resultado obtido
       
       if (data.success > 0) {
         toast.success(`${data.success} vídeos sincronizados com sucesso!`);

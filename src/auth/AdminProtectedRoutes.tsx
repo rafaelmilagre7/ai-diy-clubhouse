@@ -33,7 +33,7 @@ export const AdminProtectedRoutes = ({ children }: AdminProtectedRoutesProps) =>
       timestamp: new Date().toISOString()
     };
     
-    console.log('🔒 [ADMIN-CHECK] Estado atual:', info);
+    // Admin check silencioso (removido log)
     setDebugInfo(JSON.stringify(info, null, 2));
   }, [user, profile, isAdmin, isLoading, loadingTimeout]);
   
@@ -90,7 +90,7 @@ export const AdminProtectedRoutes = ({ children }: AdminProtectedRoutesProps) =>
 
   // Se o usuário não estiver autenticado, redireciona para a página de login
   if (!user) {
-    console.log("🔒 [ADMIN-CHECK] Sem usuário autenticado, redirecionando para login");
+    // Redirecionamento silencioso
     toast.error("Por favor, faça login para acessar esta página");
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
@@ -109,7 +109,7 @@ export const AdminProtectedRoutes = ({ children }: AdminProtectedRoutesProps) =>
 
   // CRÍTICO: Verificar se usuário completou onboarding antes de verificar permissões
   if (profile.onboarding_completed !== true) {
-    console.log("📝 [ADMIN-CHECK] Usuário precisa completar onboarding primeiro");
+    // Onboarding pendente
     toast.info("Complete seu onboarding primeiro para acessar esta área");
     return <Navigate to="/onboarding" replace />;
   }
@@ -129,6 +129,6 @@ export const AdminProtectedRoutes = ({ children }: AdminProtectedRoutesProps) =>
   }
 
   // ✅ Usuário é administrador, renderiza as rotas protegidas
-  console.log("✅ [ADMIN-CHECK] Acesso concedido a área admin");
+  // Acesso admin concedido
   return <>{children}</>;
 };

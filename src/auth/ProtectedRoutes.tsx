@@ -31,7 +31,7 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
 
   // Sem usuário = login
   if (!user) {
-    console.log("[PROTECTED] Sem usuário - redirecionando para login");
+    // Redirecionamento para login
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 

@@ -123,7 +123,7 @@ export const EventPermissionTester = () => {
       setResult(testResult);
       
       // Log para auditoria
-      console.log('[🧪 EventPermissionTester] Teste realizado:', testResult);
+      // Teste concluído
 
     } catch (error) {
       console.error('Erro ao testar permissão:', error);

@@ -285,7 +285,7 @@ const UserOnboardingCard = ({ user }: UserOnboardingCardProps) => {
             size="sm"
             onClick={() => {
               // Implementar ação para notificar usuário
-              console.log('Notificar usuário:', user.id);
+              // Notificação enviada
             }}
           >
             <Mail className="h-3 w-3 mr-1" />

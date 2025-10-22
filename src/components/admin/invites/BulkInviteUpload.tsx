@@ -201,7 +201,7 @@ export function BulkInviteUpload({ roles, rolesLoading = false, onProceedWithCon
       ? 'individual' // Flag para indicar processamento individual
       : selectedRoleId || 'default';
 
-    console.log(`🎯 [UPLOAD] Procedendo com ${contacts.length} contatos, papel: ${finalRoleId}`);
+    // Upload iniciado
     
     clearResults();
     onProceedWithContacts(contacts, finalRoleId);

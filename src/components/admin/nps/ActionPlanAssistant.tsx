@@ -70,7 +70,7 @@ export const ActionPlanAssistant: React.FC<ActionPlanAssistantProps> = ({
     setError(null);
 
     try {
-      console.log('🚀 Iniciando análise de plano de ação...');
+      // Análise iniciada
 
       const { data, error } = await supabase.functions.invoke('generate-nps-action-plan', {
         body: {

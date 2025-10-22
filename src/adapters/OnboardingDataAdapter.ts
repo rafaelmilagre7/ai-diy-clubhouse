@@ -7,7 +7,7 @@ export class OnboardingDataAdapter {
    * Validates if onboarding data is complete
    */
   static isOnboardingComplete(data: any): boolean {
-    console.log('[OnboardingDataAdapter] Validando completude dos dados:', data);
+    // Validação de dados silenciosa
     
     const hasPersonalInfo = !!(
       data.personal_info?.name &&
@@ -50,16 +50,6 @@ export class OnboardingDataAdapter {
 
     const isComplete = hasPersonalInfo && hasBusinessInfo && hasAIExperience && hasGoals && hasPersonalization && hasUserType;
     
-    console.log('[OnboardingDataAdapter] Resultado da validação:', {
-      hasPersonalInfo,
-      hasBusinessInfo, 
-      hasAIExperience,
-      hasGoals,
-      hasPersonalization,
-      hasUserType,
-      isComplete
-    });
-
     return isComplete;
   }
 

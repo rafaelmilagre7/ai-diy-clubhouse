@@ -36,7 +36,7 @@ export const VideoDurationSync = () => {
       setProgress(10);
       setResult(null);
 
-      console.log('🚀 Iniciando sincronização de durações dos vídeos...');
+      // Sincronização iniciada
       toast.info('Iniciando sincronização com a API do Panda Video...');
 
       setProgress(30);
@@ -71,7 +71,7 @@ export const VideoDurationSync = () => {
         toast.error('❌ Nenhum vídeo foi sincronizado com sucesso');
       }
 
-      console.log('✅ Sincronização concluída:', data);
+      // Sincronização concluída
 
     } catch (error: any) {
       console.error('💥 Erro na sincronização:', error);

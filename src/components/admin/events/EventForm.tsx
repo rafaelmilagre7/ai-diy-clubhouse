@@ -122,7 +122,7 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
         recurrence_end_date: data.recurrence_end_date || null,
       };
 
-      console.log('Dados do evento sendo salvos:', eventData);
+      // Salvando evento
 
       let result;
       if (event) {
@@ -156,7 +156,7 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
 
         // Evento recorrente criado - gerar instâncias automaticamente
         if (data.is_recurring && result.data) {
-          console.log('Evento recorrente criado:', result.data.id);
+          // Evento recorrente criado
           await generateRecurringEvents(result.data);
         }
       }
@@ -166,13 +166,13 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
         throw result.error;
       }
 
-      console.log('Evento salvo com sucesso:', result.data);
+      // Evento salvo
 
       // Salvar controle de acesso após salvar o evento
       if (result.data && result.data.id) {
         try {
           await saveAccessControl(result.data.id);
-          console.log('Controle de acesso salvo com sucesso');
+          // Acesso configurado
         } catch (accessError) {
           console.error('Erro ao salvar controle de acesso:', accessError);
           toast.error("Evento salvo, mas houve erro no controle de acesso.");
