@@ -35,11 +35,7 @@ export const TopicItem = ({ topic }: TopicItemProps) => {
     queryClient.invalidateQueries({ queryKey: ['community-topics'] });
     queryClient.invalidateQueries({ queryKey: ['community-categories'] });
     queryClient.invalidateQueries({ queryKey: ['community-stats'] });
-    
-    console.log('Queries invalidadas após ação de moderação');
   };
-
-  console.log("TopicItem: Gerando link para tópico:", topic.id, "URL será:", `/comunidade/topico/${topic.id}`);
 
   return (
     <div className="flex flex-col sm:flex-row gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors relative">

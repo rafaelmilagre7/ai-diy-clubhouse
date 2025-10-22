@@ -9,8 +9,6 @@ const ChecklistMigrationStatus: React.FC = () => {
   const { data: migrationStatus, isLoading } = useQuery({
     queryKey: ['checklist-migration-status'],
     queryFn: async () => {
-      console.log('🔍 Verificando status da migração...');
-
       // Verificar dados nas tabelas antigas
       const { data: oldImplementation } = await supabase
         .from('implementation_checkpoints')

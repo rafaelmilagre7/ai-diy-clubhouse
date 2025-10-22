@@ -18,8 +18,6 @@ export const StaticCertificateTemplate = ({
     const container = containerRef.current;
     if (!container) return;
 
-    console.log('🎨 [STATIC-CERT] Iniciando renderização...');
-
     try {
       // Usar o template engine unificado para manter o design aprovado
       const template = templateEngine.generateDefaultTemplate();
@@ -28,8 +26,6 @@ export const StaticCertificateTemplate = ({
 
       // Inserir conteúdo processado
       container.innerHTML = `<style>${css}</style><div class="certificate-container">${html}</div>`;
-
-      console.log('🔄 [STATIC-CERT] HTML inserido, aguardando renderização...');
 
       // Aguardar renderização com verificações robustas
       let attempts = 0;
@@ -40,14 +36,11 @@ export const StaticCertificateTemplate = ({
         attempts++;
         const certificateElement = container.querySelector('.certificate-container, .pixel-perfect-certificate') as HTMLElement;
         
-        console.log(`🔍 [STATIC-CERT] Tentativa ${attempts}/${maxAttempts} - Elemento encontrado:`, !!certificateElement);
-        
         if (certificateElement) {
           // Verificar se o elemento tem conteúdo visível
           const hasContent = certificateElement.children.length > 0 || certificateElement.textContent?.trim();
           
           if (hasContent && onReady) {
-            console.log('✅ [STATIC-CERT] Certificado pronto com conteúdo!');
             onReady(certificateElement);
             return;
           }

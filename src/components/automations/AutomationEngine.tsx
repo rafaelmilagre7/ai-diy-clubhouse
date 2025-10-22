@@ -25,8 +25,6 @@ export class AutomationEngine {
    * Processa todas as regras ativas para um determinado evento
    */
   static async processWebhookEvent(eventType: string, payload: any) {
-    console.log('[AutomationEngine] Processing webhook event:', eventType);
-    
     try {
       // Buscar regras ativas que correspondem ao evento
       const { data: rules, error } = await supabase
@@ -42,7 +40,6 @@ export class AutomationEngine {
       }
 
       if (!rules || rules.length === 0) {
-        console.log('[AutomationEngine] No active rules found');
         return { success: true, message: 'No active rules to process' };
       }
 
@@ -58,15 +55,12 @@ export class AutomationEngine {
       // Processar cada regra
       for (const rule of rules) {
         try {
-          console.log(`[AutomationEngine] Processing rule: ${rule.name} (${rule.id})`);
-          
           const startTime = Date.now();
           
           // Avaliar condições da regra
           const conditionsMet = await this.evaluateConditions(rule.conditions, context);
           
           if (conditionsMet) {
-            console.log(`[AutomationEngine] Conditions met for rule: ${rule.name}`);
             
             // Executar ações da regra
             const actionResults = await this.executeActions(rule.actions, context, rule);
@@ -85,8 +79,6 @@ export class AutomationEngine {
             });
             
             processedRules++;
-          } else {
-            console.log(`[AutomationEngine] Conditions not met for rule: ${rule.name}`);
           }
           
         } catch (ruleError) {
@@ -107,8 +99,6 @@ export class AutomationEngine {
           });
         }
       }
-
-      console.log(`[AutomationEngine] Processed ${processedRules} rules successfully`);
       
       return {
         success: true,
@@ -248,8 +238,6 @@ export class AutomationEngine {
       }
 
       try {
-        console.log(`[AutomationEngine] Executing action: ${action.type}`);
-        
         const actionResult = await this.executeAction(action, context, rule);
         results.push({
           type: action.type,

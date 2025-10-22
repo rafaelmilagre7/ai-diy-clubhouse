@@ -59,8 +59,6 @@ export const ArchitectureFlowchart: React.FC<ArchitectureFlowchartProps> = ({ fl
         
         // Inserir SVG
         container.innerHTML = svg;
-        
-        console.log('✅ Mermaid renderizado com sucesso:', id);
       } catch (error) {
         console.error('❌ Erro ao renderizar Mermaid:', error);
         

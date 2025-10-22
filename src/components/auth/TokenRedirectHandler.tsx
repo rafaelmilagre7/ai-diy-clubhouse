@@ -19,22 +19,16 @@ export const TokenRedirectHandler = () => {
       const type = hashParams.get('type') || searchParams.get('type');
       
       if (accessToken && type === 'recovery') {
-        console.log('🔄 [TOKEN-REDIRECT] Tokens de reset detectados');
-        console.log('🌐 [TOKEN-REDIRECT] Domínio atual:', window.location.hostname);
-        
         const targetDomain = 'app.viverdeia.ai';
         const currentDomain = window.location.hostname;
         
         // Se não estamos no domínio correto, redirecionar
         if (currentDomain !== targetDomain) {
-          console.log('🚀 [TOKEN-REDIRECT] Redirecionando para domínio correto:', targetDomain);
           setIsRedirecting(true);
           
           // Construir URL completa com tokens para o domínio correto
           const tokenParams = hash || location.search.substring(1);
           const fullRedirectUrl = `https://${targetDomain}/set-new-password${hash ? '#' + hash : '?' + tokenParams}`;
-          
-          console.log('🔗 [TOKEN-REDIRECT] URL de destino:', fullRedirectUrl);
           
           // Pequeno delay para mostrar mensagem de carregamento
           setTimeout(() => {
@@ -45,7 +39,6 @@ export const TokenRedirectHandler = () => {
         }
         
         // Se já estamos no domínio correto, apenas navegar localmente
-        console.log('✅ [TOKEN-REDIRECT] Já no domínio correto, navegando localmente');
         const tokenParams = hash || location.search.substring(1);
         const redirectUrl = `/set-new-password${hash ? '#' + hash : '?' + tokenParams}`;
         

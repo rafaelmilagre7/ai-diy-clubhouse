@@ -50,8 +50,6 @@ export const ImageUpload = ({
     setProgress(0);
 
     try {
-      console.log(`Iniciando upload para bucket: ${bucketName}, pasta: ${folderPath}`);
-      
       const result = await uploadFileToStorage(
         file,
         bucketName,
@@ -61,8 +59,6 @@ export const ImageUpload = ({
         }
       );
 
-      console.log("Upload bem-sucedido:", result);
-      
       // Chamar onChange com a URL original (não otimizada ainda)
       onChange(result.publicUrl);
       

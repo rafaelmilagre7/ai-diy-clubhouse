@@ -8,16 +8,7 @@ export const useToolSelector = (value: SelectedTool[], onChange: (tools: Selecte
   const [searchQuery, setSearchQuery] = useState("");
   const { tools: availableTools, isLoading } = useTools();
 
-  useEffect(() => {
-    if (availableTools && availableTools.length > 0) {
-      const toolsWithLogos = availableTools.filter(tool => tool.logo_url);
-      console.log('Ferramentas disponíveis para seleção', {
-        total: availableTools.length,
-        comLogos: toolsWithLogos.length,
-        semLogos: availableTools.length - toolsWithLogos.length
-      });
-    }
-  }, [availableTools]);
+  // Tools são carregados automaticamente via useTools hook
 
   const filteredTools = (availableTools || []).filter((tool) =>
     tool.name.toLowerCase().includes(searchQuery.toLowerCase())

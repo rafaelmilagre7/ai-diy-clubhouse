@@ -32,7 +32,6 @@ export const CertificatePreview = ({
   const previewRef = useRef<HTMLDivElement>(null);
 
   const handleReady = (element: HTMLElement) => {
-    console.log('🎨 [CERTIFICATE-PREVIEW] Elemento pronto para captura');
     setCertificateElement(element);
   };
   const handleDownload = async () => {
@@ -49,7 +48,6 @@ export const CertificatePreview = ({
 
     setIsGenerating(true);
     try {
-      console.log('📥 [DOWNLOAD] Usando elemento já renderizado para PDF');
       const blob = await pdfGenerator.generateFromElement(certificateElement, data);
       const filename = `certificado-${data.solutionTitle?.replace(/[^a-zA-Z0-9]/g, '-') || 'documento'}.pdf`;
       
@@ -78,7 +76,6 @@ export const CertificatePreview = ({
 
     setIsGenerating(true);
     try {
-      console.log('🔗 [OPEN-TAB] Usando elemento já renderizado para PDF');
       const blob = await pdfGenerator.generateFromElement(certificateElement, data);
       await pdfGenerator.openPDFInNewTab(blob);
       

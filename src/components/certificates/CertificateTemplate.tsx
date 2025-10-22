@@ -21,8 +21,6 @@ export const CertificateTemplate = ({
 
   useEffect(() => {
     const processTemplate = async () => {
-      console.log('🎨 Processando template de certificado...');
-      
       try {
         // Usar template padrão se não fornecido
         const activeTemplate = template || templateEngine.generateDefaultTemplate();
@@ -33,8 +31,6 @@ export const CertificateTemplate = ({
         
         setProcessedHtml(html);
         setOptimizedCSS(css);
-        
-        console.log('✅ Template processado com sucesso');
         
         // Aguardar renderização
         setTimeout(() => {

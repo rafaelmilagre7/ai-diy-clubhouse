@@ -34,7 +34,6 @@ export const UserStatsDebugger = () => {
 
   const runDebugTests = async () => {
     setLoading(true);
-    console.log('🔍 Iniciando testes de debug...');
     
     try {
       // 1. Buscar estatísticas da função SQL
@@ -88,8 +87,6 @@ export const UserStatsDebugger = () => {
 
       setDebugData(debugResults);
       setLastUpdate(new Date());
-      
-      console.log('✅ Testes de debug concluídos:', debugResults);
       toast.success('Testes de debug executados com sucesso!');
       
     } catch (error: any) {

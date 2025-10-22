@@ -12,7 +12,6 @@ interface CertificateErrorFallbackProps {
 
 const CertificateErrorFallback = ({ error, resetErrorBoundary }: CertificateErrorFallbackProps) => {
   const handleRetry = () => {
-    console.log('🔄 Tentando recarregar certificado...');
     resetErrorBoundary();
     toast.info('Recarregando certificado...');
   };
@@ -77,7 +76,6 @@ export const CertificateErrorBoundary = ({
       onError={handleError}
       onReset={() => {
         // Limpar cache relacionado a certificados
-        console.log('🧹 Limpando cache de certificados...');
       }}
     >
       {children}

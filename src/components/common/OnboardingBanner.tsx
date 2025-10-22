@@ -20,20 +20,13 @@ export const OnboardingBanner: React.FC = () => {
 
   const checkIfShouldShowBanner = async () => {
     if (!user || !profile) {
-      console.log('🎯 [BANNER] Sem user ou profile:', { hasUser: !!user, hasProfile: !!profile });
       setShowBanner(false);
       return;
     }
 
-    console.log('🎯 [BANNER] Verificando status do onboarding:', {
-      userId: user.id.substring(0, 8) + '***',
-      profileOnboardingCompleted: profile.onboarding_completed
-    });
-
     // Verificar se banner foi dismissado
     const dismissed = localStorage.getItem(`onboarding-banner-dismissed-${user.id}`);
     if (dismissed) {
-      console.log('🎯 [BANNER] Banner foi dismissado anteriormente');
       setIsDismissed(true);
       setShowBanner(false);
       return;
@@ -41,7 +34,6 @@ export const OnboardingBanner: React.FC = () => {
 
     // LÓGICA ROBUSTA: Verificar onboarding completo no PERFIL primeiro
     if (profile.onboarding_completed === true) {
-      console.log('🎯 [BANNER] Onboarding concluído no perfil - não mostrando banner');
       setShowBanner(false);
       return;
     }
@@ -54,8 +46,6 @@ export const OnboardingBanner: React.FC = () => {
         .eq('user_id', user.id)
         .maybeSingle();
 
-      console.log('🎯 [BANNER] Dados onboarding_final:', onboardingData);
-
       // MÚLTIPLAS CONDIÇÕES para considerar onboarding completo:
       const isOnboardingComplete = (
         // Condição 1: Marcado como completo no banco
@@ -65,7 +55,6 @@ export const OnboardingBanner: React.FC = () => {
       );
 
       if (isOnboardingComplete) {
-        console.log('🎯 [BANNER] Onboarding completo no banco - não mostrando banner');
         setShowBanner(false);
         return;
       }
@@ -76,13 +65,11 @@ export const OnboardingBanner: React.FC = () => {
     }
 
     // Mostrar banner apenas se onboarding NÃO estiver completo
-    console.log('🎯 [BANNER] Onboarding incompleto - mostrando banner');
     setIsLegacyUser(true);
     setShowBanner(true);
   };
 
   const handleStartOnboarding = async () => {
-    console.log('🎯 [BANNER] Botão clicado - iniciando onboarding');
     navigate('/onboarding');
   };
 

@@ -16,7 +16,6 @@ export const VideoTutorialsList = ({ tutorials, onDelete }: VideoTutorialsListPr
           tutorial={tutorial}
           onUpdate={(field, value) => {
             // No-op para agora - implementação futura se necessário
-            console.log(`Update tutorial ${index}, field ${field} to ${value}`);
           }}
           onRemove={() => onDelete(index)}
         />

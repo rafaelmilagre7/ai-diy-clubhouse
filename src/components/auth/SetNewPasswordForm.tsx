@@ -91,12 +91,6 @@ export const SetNewPasswordForm = () => {
           type = hashTokens.type;
         }
 
-        console.log('🔍 [RESET-PASSWORD] Verificando tokens na URL:', { 
-          hasAccessToken: !!accessToken, 
-          hasRefreshToken: !!refreshToken, 
-          type 
-        });
-
         if (!accessToken || !refreshToken || type !== 'recovery') {
           // Sem tokens válidos - verificar se já existe uma sessão ativa
           const { data: { session } } = await supabase.auth.getSession();
@@ -107,7 +101,6 @@ export const SetNewPasswordForm = () => {
           }
           
           // Sessão já existe, pode proceder
-          console.log('✅ [RESET-PASSWORD] Sessão ativa encontrada');
           setIsValidSession(true);
           return;
         }
@@ -131,7 +124,6 @@ export const SetNewPasswordForm = () => {
           return;
         }
 
-        console.log('✅ [RESET-PASSWORD] Sessão de reset estabelecida com sucesso');
         setIsValidSession(true);
 
       } catch (error: any) {
