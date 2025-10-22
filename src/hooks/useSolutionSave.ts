@@ -21,10 +21,6 @@ export const useSolutionSave = (
       // Gerar um slug único a partir do título com timestamp
       const slug = values.slug || slugify(values.title, true);
       
-      // Log dos valores recebidos para depuração
-      console.log("Valores recebidos para salvar:", values);
-      console.log("Dificuldade:", values.difficulty);
-      
       // Validar o valor da dificuldade antes de salvar
       if (values.difficulty !== "easy" && values.difficulty !== "medium" && values.difficulty !== "advanced") {
         console.error(`Valor inválido para dificuldade: "${values.difficulty}". Deve ser "easy", "medium" ou "advanced"`);
@@ -48,9 +44,6 @@ export const useSolutionSave = (
         published: values.published || false,
         updated_at: new Date().toISOString(),
       };
-      
-      // Log dos dados preparados para salvar
-      console.log("Dados preparados para salvar:", solutionData);
       
       // Tentar salvar com retry para contornar possíveis erros de RLS
       let retryCount = 0;

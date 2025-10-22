@@ -35,17 +35,6 @@ export const useSolutionsData = () => {
     return `solutions_${user?.id}_${isAdmin ? 'admin' : 'user'}`;
   }, [user?.id, profile?.role]);
 
-  // Log apenas quando o hash muda (evita spam)
-  useEffect(() => {
-    if (import.meta.env.DEV) {
-      executionCountRef.current++;
-      console.log('[useSolutionsData] Hook executado:', {
-        execCount: executionCountRef.current,
-        userId: user?.id?.substring(0, 8) + '***' || 'N/A',
-        hasValidUser: !!user
-      });
-    }
-  }, [user?.id]);
   
   // Função para buscar o progresso - memoizada com dependências estáveis
   const fetchSolutions = useCallback(async () => {
@@ -76,14 +65,6 @@ export const useSolutionsData = () => {
       setSolutions(cached.data);
       setLoading(false);
       setError(null);
-      
-      if (import.meta.env.DEV) {
-        console.log('[SOLUTIONS] Dados carregados do cache:', {
-          execCount: executionCountRef.current,
-          count: cached.data.length,
-          cacheAge: Math.round((now - cached.timestamp) / 1000) + 's'
-        });
-      }
       
       // Se o cache estiver vazio, forçar uma atualização silenciosa do backend
       if (cached.data.length > 0) {
@@ -136,16 +117,6 @@ export const useSolutionsData = () => {
       });
 
       setSolutions(validSolutions);
-      
-      if (import.meta.env.DEV) {
-        console.log('[SOLUTIONS] Soluções carregadas das tabelas restauradas:', {
-          execCount: executionCountRef.current,
-          count: validSolutions.length,
-          published: validSolutions.filter(s => s.published).length,
-          isAdmin: profile?.role === 'admin',
-          userId: user.id.substring(0, 8) + '***'
-        });
-      }
 
     } catch (error: any) {
       logger.error('[SOLUTIONS] Erro ao carregar soluções:', error);

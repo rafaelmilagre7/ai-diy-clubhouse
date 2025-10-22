@@ -21,14 +21,9 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
     
     try {
       setInitializing(true);
-      console.log("🚀 INÍCIO DA IMPLEMENTAÇÃO:");
-      console.log("- Solution ID:", solutionId);
-      console.log("- User ID:", user.id);
-      console.log("- Progress atual:", progress);
       
       // If there's no progress record yet, create one
       if (!progress) {
-        console.log("📝 Criando novo registro de progresso");
         const { data, error } = await supabase
           .from("progress")
           .insert({
@@ -46,13 +41,10 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
           console.error("❌ Erro ao criar progresso:", error);
           throw error;
         }
-        
-        console.log("✅ Progresso criado com sucesso:", data);
       }
       
       // Navigate to the implementation page starting at module 0
       const implementationUrl = `/implement/${solutionId}/0`;
-      console.log("🧭 Navegando para:", implementationUrl);
       
       toast.success("Redirecionando para a implementação...");
       navigate(implementationUrl);
@@ -78,15 +70,10 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
     
     try {
       setInitializing(true);
-      console.log("▶️ CONTINUANDO IMPLEMENTAÇÃO:");
-      console.log("- Solution ID:", solutionId);
-      console.log("- Progress:", progress);
-      console.log("- Current Module:", progress.current_module);
       
       // Navigate to the correct module where user left off
       const currentModule = progress.current_module || 0;
       const implementationUrl = `/implement/${solutionId}/${currentModule}`;
-      console.log("🧭 Navegando para:", implementationUrl);
       
       toast.success("Redirecionando para onde você parou...");
       navigate(implementationUrl);
