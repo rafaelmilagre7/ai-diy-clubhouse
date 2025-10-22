@@ -2,6 +2,10 @@ import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
+// TIMEOUT CONFIGURATION
+const GENERATION_TIMEOUT = 240000; // 4 minutos (suficiente para Claude)
+const GRACEFUL_SHUTDOWN_TIME = 10000; // 10s de margem
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -58,6 +62,9 @@ serve(async (req) => {
     }
 
     const { idea, userId, answers = [] } = validationResult.data;
+    
+    // Variable to hold saved solution for timeout handler
+    let savedSolution: any = null;
 
     console.log(`[BUILDER] === GERAÇÃO BUILDER INICIADA ===`);
     console.log(`[BUILDER] ✓ Validação OK`);
@@ -557,7 +564,7 @@ Crie um plano completo seguindo o formato JSON especificado.`;
     // Salvar no banco (sem lovable_prompt ainda)
     const generationTime = Date.now() - startTime;
 
-    const { data: savedSolution, error: saveError } = await supabase
+    const { data: insertedSolution, error: saveError } = await supabase
       .from("ai_generated_solutions")
       .insert({
         user_id: userId,
@@ -575,13 +582,16 @@ Crie um plano completo seguindo o formato JSON especificado.`;
         generation_model: "google/gemini-2.5-flash",
         generation_time_ms: generationTime,
       })
-      .select()
-      .single();
+    .select()
+    .single();
 
-      if (saveError) {
-        console.error("[BUILDER] ❌ Erro ao salvar:", saveError);
-        throw new Error("Erro ao salvar solução");
-      }
+    // Assign to outer scope for timeout handler
+    savedSolution = insertedSolution;
+
+    if (saveError) {
+    console.error("[BUILDER] ❌ Erro ao salvar:", saveError);
+    throw new Error("Erro ao salvar solução");
+  }
 
       // VALIDAR se architecture_flowchart foi gerado
       if (!savedSolution.architecture_flowchart || !savedSolution.architecture_flowchart.mermaid_code) {
@@ -597,13 +607,13 @@ Crie um plano completo seguindo o formato JSON especificado.`;
     console.log(`[BUILDER] ⏱️ Tempo total: ${(generationTime / 1000).toFixed(1)}s`);
     console.log(`[BUILDER] 💾 Solution ID: ${savedSolution.id}`);
 
-    // ============= FASE 4: GERAR PROMPT LOVABLE COM CLAUDE SONNET 4-5 =============
+    // ============= FASE 4: GERAR PROMPT LOVABLE COM CLAUDE SONNET 4.5 =============
     console.log(`[BUILDER] 🎨 === INICIANDO GERAÇÃO DE PROMPT LOVABLE ===`);
     
     const anthropicApiKey = Deno.env.get("ANTHROPIC_API_KEY");
     if (!anthropicApiKey) {
       console.warn("[BUILDER] ⚠️ ANTHROPIC_API_KEY não configurada, pulando prompt Lovable");
-    } else {
+    } else if (savedSolution?.id) {
       try {
         const anthropicStart = Date.now();
         
@@ -926,14 +936,23 @@ INSTRUÇÕES ESPECIAIS:
         } else {
           console.log("[BUILDER] ✅ Prompt Lovable salvo no banco com sucesso");
         }
-      } catch (error) {
-        console.error("[BUILDER] ❌ Erro ao gerar prompt Lovable:", error);
-        console.error("[BUILDER] Stack:", error.stack);
-        // Não falhar a requisição principal se o prompt der erro
+      } catch (lovableError) {
+        console.error("[BUILDER] ❌ Erro ao gerar prompt Lovable:", lovableError);
+        console.error("[BUILDER] Stack:", lovableError.stack);
+        console.warn("[BUILDER] ⚠️ Continuando sem Lovable Prompt - solução será retornada mesmo assim");
       }
     }
     
+    // ==========================================
+    // FINAL CHECK: GARANTIR QUE SOLUTION EXISTE
+    // ==========================================
+    if (!savedSolution || !savedSolution.id) {
+      throw new Error("Solução não foi salva corretamente no banco");
+    }
+    
     console.log(`[BUILDER] 🎉 === PROCESSO COMPLETO FINALIZADO ===`);
+    console.log(`[BUILDER] 💾 Retornando solution.id: ${savedSolution.id}`);
+    console.log(`[BUILDER] ⏱️  Tempo total: ${generationTime}ms`);
 
     return new Response(
       JSON.stringify({

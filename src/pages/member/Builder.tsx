@@ -10,6 +10,7 @@ import { AIInputWithValidation } from '@/components/ui/AIInputWithValidation';
 import { useAISolutionAccess } from '@/hooks/builder/useAISolutionAccess';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
+import { supabase } from '@/lib/supabase';
 
 const exampleIdeas = [
   {
@@ -52,6 +53,38 @@ export default function Builder() {
       navigate(`/ferramentas/builder/solution/${solutionId}`, { replace: true });
     }
   }, [location.search, navigate]);
+
+  // RECOVERY: verificar se há solução recente sem visualização
+  useEffect(() => {
+    const checkForUnviewedSolution = async () => {
+      if (!profile?.id || solution || showWizard || isGenerating) return;
+      
+      const { data: recentSolution, error: queryError } = await supabase
+        .from('ai_generated_solutions')
+        .select('id, created_at')
+        .eq('user_id', profile.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+      
+      if (queryError || !recentSolution) return;
+      
+      // Se foi criada nos últimos 5 minutos, redirecionar
+      const createdAt = new Date(recentSolution.created_at);
+      const now = new Date();
+      const diffMinutes = (now.getTime() - createdAt.getTime()) / 60000;
+      
+      if (diffMinutes < 5) {
+        console.log('[BUILDER-RECOVERY] 🔄 Solução recente encontrada, redirecionando...');
+        toast.info('Redirecionando para sua solução recente...');
+        navigate(`/ferramentas/builder/solution/${recentSolution.id}`);
+      }
+    };
+    
+    // Delay de 2s para não competir com outras operações
+    const timer = setTimeout(checkForUnviewedSolution, 2000);
+    return () => clearTimeout(timer);
+  }, [profile?.id, solution, showWizard, isGenerating, navigate]);
 
   const handleGenerateSolution = async (idea: string) => {
     if (!hasAccess) {

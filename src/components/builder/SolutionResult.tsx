@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Star, Share2, Download, Save } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/lib/supabase';
 import { LiquidGlassCard } from '@/components/ui/LiquidGlassCard';
 import { FrameworkQuadrants } from './FrameworkQuadrants';
 import { RequiredToolsGrid } from './RequiredToolsGrid';
@@ -28,19 +29,44 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({
   
   const handleSaveAndRedirect = async () => {
     try {
+      console.log('[SOLUTION-RESULT] 💾 Salvando solução...', solution?.id);
+      
       const savedSolution = await onSave(solution);
       
-      // Se salvou com sucesso E tem ID, redirecionar
-      if (savedSolution?.id) {
-        navigate(`/ferramentas/builder/solution/${savedSolution.id}`);
-      } else if (solution?.id) {
-        // Fallback: se solution já tem id (veio da edge function), usar ele
-        navigate(`/ferramentas/builder/solution/${solution.id}`);
+      // Tentar usar ID retornado
+      let redirectId = savedSolution?.id || solution?.id;
+      
+      // FALLBACK: se nenhum ID, buscar última solução do usuário no banco
+      if (!redirectId) {
+        console.warn('[SOLUTION-RESULT] ⚠️ Nenhum ID disponível, buscando última solução no banco...');
+        
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+          const { data: latestSolution, error: queryError } = await supabase
+            .from('ai_generated_solutions')
+            .select('id')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+          
+          if (!queryError && latestSolution) {
+            console.log('[SOLUTION-RESULT] ✅ Última solução encontrada:', latestSolution.id);
+            redirectId = latestSolution.id;
+          }
+        }
+      }
+      
+      if (redirectId) {
+        console.log('[SOLUTION-RESULT] 🚀 Redirecionando para:', redirectId);
+        navigate(`/ferramentas/builder/solution/${redirectId}`);
       } else {
-        toast.error('Não foi possível redirecionar para a solução');
+        toast.error('Não foi possível encontrar a solução. Verifique seu histórico.');
+        navigate('/ferramentas/builder/historico');
       }
     } catch (error) {
-      console.error('[BUILDER] Erro ao salvar e redirecionar:', error);
+      console.error('[SOLUTION-RESULT] ❌ Erro ao salvar e redirecionar:', error);
       toast.error('Erro ao processar solução');
     }
   };

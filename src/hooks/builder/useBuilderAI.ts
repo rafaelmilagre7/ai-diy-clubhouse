@@ -67,16 +67,37 @@ export const useBuilderAI = () => {
         }
       });
 
+      console.log('[BUILDER-HOOK] 📦 Resposta raw da edge function:', {
+        hasData: !!data,
+        hasError: !!error,
+        dataKeys: data ? Object.keys(data) : [],
+        errorMessage: error?.message,
+        errorDetails: error
+      });
+
       if (error) {
+        console.error('[BUILDER-HOOK] ❌ Erro completo:', error);
+        
         if (error.message?.includes('429')) {
           toast.error('Limite mensal atingido');
         } else if (error.message?.includes('402')) {
           toast.error('Créditos insuficientes');
+        } else if (error.message?.includes('TIMEOUT') || error.message?.includes('408')) {
+          toast.error('Geração demorou muito. Verifique seu histórico ou tente novamente.');
         } else {
-          toast.error('Erro ao gerar solução');
+          toast.error(`Erro ao gerar solução: ${error.message || 'Desconhecido'}`);
         }
         return null;
       }
+
+      // Log detalhado do que chegou
+      console.log('[BUILDER-HOOK] ✅ Data recebida:', {
+        success: data?.success,
+        hasSolution: !!data?.solution,
+        solutionId: data?.solution?.id,
+        solutionTitle: data?.solution?.title,
+        warning: data?.warning
+      });
 
       if (!data?.solution) {
         toast.error('Solução não gerada corretamente');
@@ -96,7 +117,15 @@ export const useBuilderAI = () => {
         });
       }
 
-      toast.success('Solução Builder gerada com sucesso! 🎉');
+      // Avisar se foi salvo parcialmente por timeout
+      if (data.warning === 'TIMEOUT_PARTIAL_SAVE') {
+        toast.warning('Solução salva parcialmente devido a timeout', {
+          description: 'Alguns detalhes podem estar incompletos'
+        });
+      } else {
+        toast.success('Solução Builder gerada com sucesso! 🎉');
+      }
+      
       return data.solution;
     } catch (error) {
       console.error('[BUILDER] Erro ao gerar:', error);
