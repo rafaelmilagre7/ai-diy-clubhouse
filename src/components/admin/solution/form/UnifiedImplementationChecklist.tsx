@@ -33,33 +33,18 @@ const UnifiedImplementationChecklist: React.FC<UnifiedImplementationChecklistPro
     'implementation'
   );
   
-  // Mutation para salvar template
   const createTemplateMutation = useCreateUnifiedChecklistTemplate();
 
-  console.log("🔧 UnifiedImplementationChecklist: Renderizando com solutionId:", solutionId);
-  console.log("🔍 UnifiedImplementationChecklist: Template:", template);
-  console.log("⏳ UnifiedImplementationChecklist: isLoading:", isLoading);
-  console.log("❌ UnifiedImplementationChecklist: error:", error);
-  console.log("📝 UnifiedImplementationChecklist: checklistItems length:", checklistItems.length);
-
-  // Carregar dados do template quando disponível
   useEffect(() => {
-    console.log("🔄 useEffect triggered - template:", template, "isLoading:", isLoading);
-    
     if (template?.checklist_data?.items) {
-      console.log("✅ Template encontrado com itens:", template.checklist_data.items.length);
       setChecklistItems(template.checklist_data.items);
     } else if (!isLoading && !template) {
-      // Se não há template, inicializar com array vazio para permitir criação
-      console.log("⚠️ Nenhum template encontrado, inicializando vazio");
       setChecklistItems([]);
     }
   }, [template, isLoading]);
 
   const saveCheckpoints = async () => {
     if (!solutionId || !user) return;
-
-    console.log("💾 Salvando template unificado...");
     
     createTemplateMutation.mutate(
       {

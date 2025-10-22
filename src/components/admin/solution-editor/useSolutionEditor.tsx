@@ -83,7 +83,6 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
   const onSubmit = async (values: SolutionFormValues) => {
     try {
       setSaving(true);
-      console.log("💾 Salvando informações básicas...");
 
       if (id === "new" || !solution) {
         const { data, error } = await supabase
@@ -112,7 +111,6 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
         setCurrentValues(values);
       }
 
-      console.log("✅ Informações básicas salvas com sucesso");
       toast({
         title: "Solução salva",
         description: "As informações foram salvas com sucesso."
@@ -140,33 +138,25 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
 
     try {
       setStepSaving(true);
-      console.log(`💾 Salvando etapa ${currentStep}...`);
 
       return new Promise<void>((resolve, reject) => {
         const timeout = setTimeout(() => {
-          console.log("⏰ Timeout na etapa", currentStep);
           reject(new Error("Timeout ao salvar etapa"));
-        }, 5000); // Reduzido de 10s para 5s
+        }, 5000);
 
         const handleStepSaved = (event: CustomEvent) => {
           clearTimeout(timeout);
-          console.log("📨 Evento recebido:", event.detail);
           
           if (event.detail.success) {
-            console.log("✅ Etapa salva com sucesso");
             resolve();
           } else {
-            console.log("❌ Erro ao salvar etapa:", event.detail.error);
             reject(new Error(event.detail.error || "Erro ao salvar etapa"));
           }
         };
 
-        // Registrar listener
         window.addEventListener('tools-saved', handleStepSaved as EventListener, { once: true });
 
-        // Disparar evento de salvamento baseado na etapa
         if (currentStep === 1) {
-          console.log("🚀 Disparando save-tools-step");
           window.dispatchEvent(new CustomEvent('save-tools-step'));
         }
       });
@@ -184,15 +174,11 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
     if (currentStep >= totalSteps - 1) return;
 
     try {
-      console.log(`➡️ Avançando da etapa ${currentStep} para ${currentStep + 1}`);
-      
-      // Salvar etapa atual antes de avançar
       if (currentStep > 0) {
         await handleSaveCurrentStep();
       }
       
       setCurrentStep(currentStep + 1);
-      console.log(`✅ Avançou para etapa ${currentStep + 1}`);
       
     } catch (error) {
       console.error("❌ Erro ao avançar etapa:", error);

@@ -30,17 +30,8 @@ const BasicInfoForm = ({
 
   const title = form.watch("title");
   const difficulty = form.watch("difficulty");
-  
-  console.log("🔧 BasicInfoForm: Renderizando com valores:", { 
-    defaultValues, 
-    formValues: form.getValues(),
-    title, 
-    difficulty 
-  });
 
-  // Atualizar formulário quando defaultValues mudarem
   useEffect(() => {
-    console.log("🔄 BasicInfoForm: Resetando formulário com novos defaultValues:", defaultValues);
     form.reset(defaultValues);
   }, [defaultValues, form]);
 
@@ -70,10 +61,8 @@ const BasicInfoForm = ({
   }, [title, form]);
 
   const handleFormSubmit = async (values: SolutionFormValues) => {
-    console.log("📝 BasicInfoForm: Submetendo formulário com valores:", values);
     try {
       await onSubmit(values);
-      console.log("✅ BasicInfoForm: Formulário submetido com sucesso");
     } catch (error) {
       console.error("❌ BasicInfoForm: Erro ao submeter formulário:", error);
       throw error;

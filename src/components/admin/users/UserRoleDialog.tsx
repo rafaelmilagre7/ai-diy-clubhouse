@@ -60,27 +60,18 @@ export const UserRoleDialog = ({
     }
   };
 
-  // CORREÇÃO BUG MÉDIO 3: Handler melhorado com callback de sincronização
   const handleUpdateRole = async () => {
-    console.log('🔄 [USER-ROLE-DIALOG] Iniciando atualização de role');
-    
     try {
       await onUpdateRole();
-      console.log('✅ [USER-ROLE-DIALOG] Role atualizado com sucesso');
       
-      // Executar callback de sucesso para sincronização imediata
       if (onRoleUpdateSuccess) {
-        console.log('🔄 [USER-ROLE-DIALOG] Executando callback de sincronização');
         onRoleUpdateSuccess();
       }
       
-      // Fechar dialog automaticamente após sucesso
-      console.log('🚪 [USER-ROLE-DIALOG] Fechando dialog após sucesso');
       onOpenChange(false);
       
     } catch (error) {
       console.error('❌ [USER-ROLE-DIALOG] Erro na atualização:', error);
-      // Em caso de erro, não fechar o dialog para o usuário poder tentar novamente
     }
   };
 
