@@ -1,17 +1,18 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Filter } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LiquidGlassCard } from '@/components/ui/LiquidGlassCard';
-import { ImplementationChecklist } from '@/components/builder/ImplementationChecklist';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { useQuery } from '@tanstack/react-query';
+import UnifiedChecklistTab from '@/components/unified-checklist/UnifiedChecklistTab';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
 
 export default function BuilderSolutionChecklist() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const { data: solution, isLoading } = useQuery({
     queryKey: ['builder-solution', id],
@@ -26,6 +27,80 @@ export default function BuilderSolutionChecklist() {
       return data;
     },
   });
+
+  // Verificar se já existe checklist unificado
+  const { data: existingChecklist } = useQuery({
+    queryKey: ['unified-checklist-exists', id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('unified_checklists')
+        .select('id')
+        .eq('solution_id', id)
+        .eq('checklist_type', 'implementation')
+        .eq('is_template', false)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id,
+  });
+
+  // Mutation para migrar dados do formato antigo para o novo
+  const migrateMutation = useMutation({
+    mutationFn: async () => {
+      if (!solution?.implementation_checklist || !id) return;
+
+      // Transformar itens do formato antigo para o novo
+      const migratedItems = solution.implementation_checklist.map((item: any, idx: number) => ({
+        id: `step-${item.step_number || idx + 1}`,
+        title: item.title,
+        description: item.description,
+        completed: false,
+        column: 'todo',
+        order: idx,
+        notes: '',
+        metadata: {
+          estimated_time: item.estimated_time,
+          difficulty: item.difficulty,
+          resources: item.resources,
+          common_pitfalls: item.common_pitfalls
+        }
+      }));
+
+      const { data, error } = await supabase
+        .from('unified_checklists')
+        .insert({
+          solution_id: id,
+          checklist_type: 'implementation',
+          is_template: false,
+          checklist_data: {
+            items: migratedItems,
+            lastUpdated: new Date().toISOString()
+          }
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['unified-checklist-exists', id] });
+      toast.success('Checklist migrado com sucesso!');
+    },
+    onError: (error) => {
+      console.error('Erro ao migrar checklist:', error);
+      toast.error('Erro ao migrar checklist');
+    },
+  });
+
+  // Migrar automaticamente se necessário
+  React.useEffect(() => {
+    if (solution?.implementation_checklist && !existingChecklist && !migrateMutation.isPending) {
+      migrateMutation.mutate();
+    }
+  }, [solution, existingChecklist]);
 
   if (isLoading) {
     return (
@@ -70,9 +145,12 @@ export default function BuilderSolutionChecklist() {
               </p>
             </div>
 
-            <ImplementationChecklist
-              checklist={solution.implementation_checklist || []}
+            <UnifiedChecklistTab
               solutionId={id || ''}
+              checklistType="implementation"
+              onComplete={() => {
+                toast.success('Parabéns! Você completou todos os passos!');
+              }}
             />
           </LiquidGlassCard>
         </motion.div>
