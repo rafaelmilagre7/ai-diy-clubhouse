@@ -18,8 +18,10 @@ export const FrameworkQuadrants: React.FC<FrameworkQuadrantsProps> = ({ framewor
       data: framework?.quadrant1_automation,
       title: 'Automação',
       icon: Zap,
-      color: 'from-cyan-500/20 to-teal-400/10',
-      borderColor: 'border-cyan-400/30',
+      color: 'from-amber-500/20 to-orange-400/10',      // ⚡ Laranja (energia/automação)
+      borderColor: 'border-amber-400/30',
+      iconBg: 'bg-amber-500/10',
+      iconColor: 'text-amber-500',
       position: 'top-left'
     },
     {
@@ -27,8 +29,10 @@ export const FrameworkQuadrants: React.FC<FrameworkQuadrantsProps> = ({ framewor
       data: framework?.quadrant2_ai,
       title: 'IA',
       icon: Brain,
-      color: 'from-teal-500/20 to-cyan-400/10',
-      borderColor: 'border-teal-400/30',
+      color: 'from-purple-500/20 to-violet-400/10',     // 🧠 Roxo (cérebro/IA)
+      borderColor: 'border-purple-400/30',
+      iconBg: 'bg-purple-500/10',
+      iconColor: 'text-purple-500',
       position: 'top-right'
     },
     {
@@ -36,8 +40,10 @@ export const FrameworkQuadrants: React.FC<FrameworkQuadrantsProps> = ({ framewor
       data: framework?.quadrant3_data,
       title: 'Dados e Contexto',
       icon: Database,
-      color: 'from-emerald-500/20 to-teal-400/10',
-      borderColor: 'border-emerald-400/30',
+      color: 'from-blue-500/20 to-cyan-400/10',         // 📊 Azul (dados/informação)
+      borderColor: 'border-blue-400/30',
+      iconBg: 'bg-blue-500/10',
+      iconColor: 'text-blue-500',
       position: 'bottom-left'
     },
     {
@@ -45,8 +51,10 @@ export const FrameworkQuadrants: React.FC<FrameworkQuadrantsProps> = ({ framewor
       data: framework?.quadrant4_interface,
       title: 'Interface',
       icon: Monitor,
-      color: 'from-teal-400/20 to-cyan-500/10',
-      borderColor: 'border-teal-300/30',
+      color: 'from-teal-500/20 to-emerald-400/10',      // 🎨 Verde (interface/experiência)
+      borderColor: 'border-teal-400/30',
+      iconBg: 'bg-teal-500/10',
+      iconColor: 'text-teal-500',
       position: 'bottom-right'
     }
   ];
@@ -81,8 +89,8 @@ export const FrameworkQuadrants: React.FC<FrameworkQuadrantsProps> = ({ framewor
           >
             {/* Ícone + Título */}
             <div className="flex items-center gap-3 mb-4">
-              <div className={`p-3 rounded-xl bg-gradient-to-br ${quadrant.color} border ${quadrant.borderColor} group-hover:scale-110 transition-transform duration-300`}>
-                <Icon className="w-7 h-7 text-aurora" />
+              <div className={`p-3 rounded-xl ${quadrant.iconBg} border ${quadrant.borderColor} group-hover:scale-110 transition-transform duration-300`}>
+                <Icon className={`w-7 h-7 ${quadrant.iconColor}`} />
               </div>
               <h3 className="text-2xl font-bold group-hover:text-aurora transition-colors duration-300">
                 {quadrant.data?.title || quadrant.title}

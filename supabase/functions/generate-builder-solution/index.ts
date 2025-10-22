@@ -282,10 +282,52 @@ ESTRUTURA DA RESPOSTA:
     },
     "quadrant2_ai": {
       "title": "🧠 IA",
-      "description": "Como usar IA: modelo, prompt, custo estimado, caso de uso detalhado.",
-      "items": ["Modelo X para Y: prompt específico, temperatura Z, custo $W/1000 requisições", ...],
-      "tool_names": ["ChatGPT", "Gemini"],
-      "ai_strategy": "Qual modelo usar e por quê, como treinar, como validar, estratégia de fallback."
+      "description": "Estratégia de IA 2025: modelos state-of-the-art, prompts otimizados, custos reais e casos de uso práticos.",
+      "items": [
+        "🎯 PRIORIDADE: Lovable AI (Google Gemini 2.5 Flash) - gateway pré-configurado, sem setup de API key, ideal para MVPs",
+        "🧠 Modelo específico para caso de uso: [Nome do modelo] - prompt otimizado, temperatura X, custo estimado por 1M tokens",
+        "📊 Pipeline completo: input → pré-processamento → modelo → pós-processamento → output com validação",
+        "🔄 Estratégia de fallback: modelo principal + alternativa caso falhe (ex: Gemini Flash → GPT-5 Mini)"
+      ],
+      "tool_names": ["Lovable AI", "Claude Sonnet 4.5", "GPT-5", "Gemini 2.5 Pro"],
+      "ai_strategy": `🚀 PRIORIDADE 1: Lovable AI (gateway pré-configurado na plataforma)
+  - google/gemini-2.5-flash (PADRÃO - balanceado custo/performance/velocidade)
+  - google/gemini-2.5-pro (casos complexos - raciocínio avançado e contexto gigante)
+  - openai/gpt-5-mini (alternativa GPT - confiável e rápido)
+  - openai/gpt-5 (casos premium - máxima qualidade)
+  
+💡 PRIORIDADE 2: APIs Diretas (quando necessário controle total)
+  - Claude Sonnet 4.5 (reasoning superior, contexto 200K, melhor para análise complexa)
+  - GPT-5 (multimodal avançado, confiável, bom para produção)
+  - Gemini 2.5 Pro (contexto 2M tokens, multilingual, análise de documentos longos)
+  
+📋 Estratégia de implementação:
+  1. SEMPRE usar Lovable AI via edge function (NUNCA client-side por segurança)
+  2. System prompt no backend (não expor lógica de negócio)
+  3. Rate limiting + tratamento de erros 429 (rate limit) e 402 (sem créditos)
+  4. Cache de respostas quando possível (reduz custo 60-80% em queries repetidas)
+  5. Logging detalhado + analytics de tokens/custos
+  6. A/B testing entre modelos para otimizar custo vs qualidade
+  
+📊 Benchmarks 2025 (valores aproximados):
+  - Latência: Gemini Flash (~1.5s) < GPT-5 Mini (~2.5s) < Claude (~3.5s) < GPT-5 (~4s)
+  - Custo: Gemini Flash ($0.15/1M) < GPT-5 Mini ($0.30/1M) < Gemini Pro ($1.25/1M) < Claude ($3/1M) < GPT-5 ($5/1M)
+  - Qualidade raciocínio: Claude Sonnet 4.5 > GPT-5 > Gemini 2.5 Pro > GPT-5 Mini > Gemini Flash
+  - Contexto: Gemini Pro (2M) > Claude (200K) > GPT-5 (128K) > Gemini Flash (128K)
+  
+🎯 Recomendação por caso de uso:
+  - Chatbots simples: Gemini Flash via Lovable AI
+  - Análise complexa: Claude Sonnet 4.5 via API direta
+  - Multimodal (imagem+texto): GPT-5 ou Gemini Pro
+  - Documentos longos: Gemini 2.5 Pro (2M tokens)
+  - Prototipagem rápida: Lovable AI (zero setup)
+  
+⚡ Quick Start com Lovable AI:
+  - Criar edge function em supabase/functions/
+  - Usar endpoint https://ai.gateway.lovable.dev/v1/chat/completions
+  - LOVABLE_API_KEY já configurada automaticamente
+  - Escolher modelo: google/gemini-2.5-flash (padrão) ou google/gemini-2.5-pro
+  - Implementar streaming para UX responsiva`
     },
     "quadrant3_data": {
       "title": "📊 Dados",
@@ -1058,7 +1100,7 @@ INSTRUÇÕES ESPECIAIS:
               }
             ]
           }),
-          signal: AbortSignal.timeout(180000)
+          signal: AbortSignal.timeout(240000) // 4 minutos para prompts complexos
         });
 
         if (!anthropicResponse.ok) {
@@ -1088,9 +1130,22 @@ INSTRUÇÕES ESPECIAIS:
           console.log("[BUILDER] ✅ Prompt Lovable salvo no banco com sucesso");
         }
       } catch (lovableError) {
-        console.error("[BUILDER] ❌ Erro ao gerar prompt Lovable:", lovableError);
-        console.error("[BUILDER] Stack:", lovableError.stack);
-        console.warn("[BUILDER] ⚠️ Continuando sem Lovable Prompt - solução será retornada mesmo assim");
+        console.error("[BUILDER] ❌ ERRO ao gerar prompt Lovable:");
+        console.error("[BUILDER]   - Mensagem:", lovableError?.message || 'Erro desconhecido');
+        console.error("[BUILDER]   - Tipo:", lovableError?.name || 'Unknown');
+        console.error("[BUILDER]   - Stack:", lovableError?.stack);
+        
+        if (lovableError?.message?.includes('timeout')) {
+          console.error("[BUILDER]   - Causa provável: Timeout ao chamar API do Claude (limite 180s excedido)");
+        } else if (lovableError?.message?.includes('401')) {
+          console.error("[BUILDER]   - Causa provável: ANTHROPIC_API_KEY não configurada ou inválida");
+        } else if (lovableError?.message?.includes('429')) {
+          console.error("[BUILDER]   - Causa provável: Rate limit da API do Claude atingido");
+        } else if (lovableError?.message?.includes('fetch')) {
+          console.error("[BUILDER]   - Causa provável: Erro de rede ao conectar com api.anthropic.com");
+        }
+        
+        console.warn("[BUILDER] ⚠️ Continuando sem Lovable Prompt - solução será retornada com outros dados");
       }
     }
     
