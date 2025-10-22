@@ -1,7 +1,7 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Compass, Network, Wrench, ClipboardCheck, ArrowRight, Star, Share2, Download } from 'lucide-react';
+import { ArrowLeft, Compass, Network, Wrench, ClipboardCheck, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { LiquidGlassCard } from '@/components/ui/LiquidGlassCard';
@@ -29,21 +29,12 @@ export default function BuilderSolutionCover() {
 
   const cards = [
     {
-      title: "Detalhes Técnicos",
-      subtitle: "Contexto e especificações completas",
-      icon: Star,
-      badge: "Overview",
-      color: "from-amber-500/20 to-orange-500/20",
-      borderColor: "border-amber-500/30",
-      path: `/ferramentas/builder/solution/${id}/detalhes`,
-    },
-    {
       title: "Framework de Implementação",
       subtitle: "Os 4 pilares da sua solução",
       icon: Compass,
       badge: "by Rafael Milagre",
-      color: "from-blue-500/20 to-cyan-500/20",
-      borderColor: "border-blue-500/30",
+      color: "from-primary/20 to-accent/20",
+      borderColor: "border-primary/30",
       path: `/ferramentas/builder/solution/${id}/framework`,
     },
     {
@@ -51,8 +42,8 @@ export default function BuilderSolutionCover() {
       subtitle: "Diagramas técnicos completos",
       icon: Network,
       badge: "Fluxograma",
-      color: "from-purple-500/20 to-pink-500/20",
-      borderColor: "border-purple-500/30",
+      color: "from-accent/20 to-primary/20",
+      borderColor: "border-accent/30",
       path: `/ferramentas/builder/solution/${id}/arquitetura`,
     },
     {
@@ -60,8 +51,8 @@ export default function BuilderSolutionCover() {
       subtitle: "Recursos essenciais e opcionais",
       icon: Wrench,
       badge: `${(solution?.required_tools?.essential?.length || 0) + (solution?.required_tools?.optional?.length || 0)} ferramentas`,
-      color: "from-orange-500/20 to-yellow-500/20",
-      borderColor: "border-orange-500/30",
+      color: "from-primary/20 to-secondary/20",
+      borderColor: "border-primary/30",
       path: `/ferramentas/builder/solution/${id}/ferramentas`,
     },
     {
@@ -69,8 +60,8 @@ export default function BuilderSolutionCover() {
       subtitle: "Checklist de implementação",
       icon: ClipboardCheck,
       badge: `${solution?.implementation_checklist?.length || 0} passos`,
-      color: "from-green-500/20 to-emerald-500/20",
-      borderColor: "border-green-500/30",
+      color: "from-secondary/20 to-accent/20",
+      borderColor: "border-secondary/30",
       path: `/ferramentas/builder/solution/${id}/checklist`,
     },
   ];
@@ -120,44 +111,29 @@ export default function BuilderSolutionCover() {
                   Voltar ao histórico
                 </Button>
                 
-                <div className="flex items-start justify-between gap-6 mb-6">
-                  <div className="flex-1 space-y-4">
-                    <div>
-                      <h1 className="text-5xl font-bold mb-3 bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
-                        {solution.title || 'Solução Builder'}
-                      </h1>
-                      {solution.short_description && (
-                        <p className="text-foreground/90 leading-relaxed text-xl max-w-3xl">
-                          {solution.short_description}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Badges de contexto */}
-                    <div className="flex flex-wrap gap-2">
-                      <Badge variant="secondary" className="text-sm px-4 py-1">
-                        IA Generativa
-                      </Badge>
-                      <Badge variant="secondary" className="text-sm px-4 py-1">
-                        Automação
-                      </Badge>
-                      <Badge variant="secondary" className="text-sm px-4 py-1">
-                        Cloud Native
-                      </Badge>
-                    </div>
+                <div className="space-y-4">
+                  <div>
+                    <h1 className="text-5xl font-bold mb-3 bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
+                      {solution.title || 'Solução Builder'}
+                    </h1>
+                    {solution.short_description && (
+                      <p className="text-foreground/90 leading-relaxed text-xl max-w-3xl">
+                        {solution.short_description}
+                      </p>
+                    )}
                   </div>
 
-                  {/* Action Buttons */}
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="icon" className="h-10 w-10">
-                      <Star className="h-5 w-5" />
-                    </Button>
-                    <Button variant="outline" size="icon" className="h-10 w-10">
-                      <Share2 className="h-5 w-5" />
-                    </Button>
-                    <Button variant="outline" size="icon" className="h-10 w-10">
-                      <Download className="h-5 w-5" />
-                    </Button>
+                  {/* Badges de contexto */}
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant="secondary" className="text-sm px-4 py-1">
+                      IA Generativa
+                    </Badge>
+                    <Badge variant="secondary" className="text-sm px-4 py-1">
+                      Automação
+                    </Badge>
+                    <Badge variant="secondary" className="text-sm px-4 py-1">
+                      Cloud Native
+                    </Badge>
                   </div>
                 </div>
 
@@ -173,7 +149,7 @@ export default function BuilderSolutionCover() {
           </motion.div>
 
           {/* Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {cards.map((card, index) => {
               const IconComponent = card.icon;
               return (

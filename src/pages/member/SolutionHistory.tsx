@@ -129,9 +129,9 @@ export default function SolutionHistory() {
             <LiquidGlassCard key={solution.id} className="p-6 hover:border-primary/30 transition-all">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
-                  {/* Ideia Original */}
+                  {/* Título da Solução */}
                   <h3 className="text-lg font-bold mb-2 line-clamp-2">
-                    {solution.original_idea}
+                    {solution.title || solution.original_idea}
                   </h3>
 
                   {/* Short Description */}

@@ -274,6 +274,12 @@ ${toolsContext}
 "${idea}"
 ${contextFromAnswers}
 
+INSTRUÇÕES PARA O TÍTULO:
+- Máximo 60 caracteres
+- Seja específico e técnico (ex: "Sistema de Agendamento com IA" em vez de "Solução de IA")
+- Use a principal tecnologia ou benefício no título
+- Evite termos genéricos como "Solução Builder"
+
 Crie um plano completo seguindo o formato JSON especificado.`;
 
     console.log(`[BUILDER] 🚀 Chamando Lovable AI (Gemini 2.5 Flash)...`);
@@ -292,6 +298,7 @@ Crie um plano completo seguindo o formato JSON especificado.`;
         parameters: {
           type: "object",
           properties: {
+            title: { type: "string", description: "Título criativo e técnico da solução (máx 60 caracteres, específico e claro)" },
             short_description: { type: "string", description: "Descrição em 3-5 frases" },
             technical_overview: {
               type: "object",
@@ -396,7 +403,7 @@ Crie um plano completo seguindo o formato JSON especificado.`;
               }
             }
           },
-          required: ["short_description", "technical_overview", "business_context", "competitive_advantages", "expected_kpis", "mind_map", "framework_quadrants", "required_tools", "implementation_checklist", "architecture_flowchart"]
+          required: ["title", "short_description", "technical_overview", "business_context", "competitive_advantages", "expected_kpis", "mind_map", "framework_quadrants", "required_tools", "implementation_checklist", "architecture_flowchart"]
         }
       }
     };
@@ -460,6 +467,7 @@ Crie um plano completo seguindo o formato JSON especificado.`;
 
     console.log(`[BUILDER] ✅ JSON válido extraído com JSON mode`);
     console.log(`[BUILDER] ✓ Checklist: ${solutionData.implementation_checklist?.length || 0} steps`);
+    console.log(`[BUILDER] 📝 Título gerado: "${solutionData.title}"`);
 
     // Salvar no banco
     const generationTime = Date.now() - startTime;
@@ -469,6 +477,7 @@ Crie um plano completo seguindo o formato JSON especificado.`;
       .insert({
         user_id: userId,
         original_idea: idea,
+        title: solutionData.title,
         short_description: solutionData.short_description,
         mind_map: solutionData.mind_map,
         required_tools: solutionData.required_tools,
