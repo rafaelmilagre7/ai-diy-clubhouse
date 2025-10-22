@@ -24,10 +24,9 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   
   const handleNext = async () => {
     try {
-      console.log("🔄 NavigationButtons: Botão Próximo clicado na etapa:", currentStep);
-      console.log("🚀 NavigationButtons: Chamando onNext");
+      // Próximo clicado
       await onNext();
-      console.log("✅ NavigationButtons: onNext executado com sucesso");
+      // onNext executado
     } catch (error) {
       console.error("❌ NavigationButtons: Erro no botão Próximo:", error);
     }
@@ -35,7 +34,7 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
 
   const handleSave = async () => {
     try {
-      console.log("💾 NavigationButtons: Botão Salvar clicado");
+      // Salvando
       await onSave();
     } catch (error) {
       console.error("❌ NavigationButtons: Erro no botão Salvar:", error);

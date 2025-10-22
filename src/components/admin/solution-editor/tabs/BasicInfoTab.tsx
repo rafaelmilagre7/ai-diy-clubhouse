@@ -20,15 +20,11 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
 }) => {
   const formRef = useRef<HTMLDivElement>(null);
   
-  console.log("🔧 BasicInfoTab: Renderizando com:", {
-    currentValues,
-    onStepSave: !!onStepSave,
-    onValuesChange: !!onValuesChange
-  });
+  // BasicInfoTab renderizado
 
   // Função para salvar os dados da primeira etapa
   const handleSave = async () => {
-    console.log("💾 BasicInfoTab: Executando handleSave");
+    // Salvando BasicInfo
     
     // Tentar submeter o formulário programaticamente
     if (formRef.current) {

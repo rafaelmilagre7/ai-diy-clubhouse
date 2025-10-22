@@ -90,12 +90,12 @@ export const RealTimeSecurityDashboard = () => {
 
   // Funções de manipulação de alertas
   const handleAcknowledgeAlert = (alertId: string) => {
-    console.log('Reconhecendo alerta:', alertId);
+    // Alerta reconhecido
     // Implementar lógica de reconhecimento
   };
 
   const handleDismissAlert = (alertId: string) => {
-    console.log('Descartando alerta:', alertId);
+    // Alerta descartado
     // Implementar lógica de descarte
   };
 

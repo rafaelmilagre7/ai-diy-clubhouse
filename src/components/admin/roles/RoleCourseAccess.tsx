@@ -42,7 +42,7 @@ export function RoleCourseAccess({
     if (!open || !role?.id) return;
     
     setIsLoading(true);
-    console.log('🔄 Carregando dados iniciais para role:', role.name);
+    // Carregando dados iniciais
     
     try {
       // Carregar cursos e cursos do papel em paralelo
@@ -62,11 +62,6 @@ export function RoleCourseAccess({
       const allCourses = allCoursesResult.data || [];
       const roleCourses = roleCoursesResult;
       const roleCoursesIds = roleCourses.map(course => course.id);
-
-      console.log('✅ Dados carregados:', {
-        totalCourses: allCourses.length,
-        roleCoursesCount: roleCoursesIds.length
-      });
 
       setCourses(allCourses);
       setSelectedCourses(roleCoursesIds);
@@ -96,7 +91,7 @@ export function RoleCourseAccess({
   const toggleCourseSelection = useCallback((courseId: string) => {
     // Evitar múltiplos cliques no mesmo curso
     if (pendingToggles.has(courseId)) {
-      console.log('⚠️ Toggle já está pendente para curso:', courseId);
+      // Toggle já pendente
       return;
     }
 
@@ -107,7 +102,7 @@ export function RoleCourseAccess({
         ? prev.filter(id => id !== courseId)
         : [...prev, courseId];
       
-      console.log('🔄 Toggle curso:', courseId, 'novo estado:', !prev.includes(courseId));
+      // Toggle executado
       return newSelected;
     });
 
@@ -126,7 +121,7 @@ export function RoleCourseAccess({
     if (!role) return;
     
     setIsSaving(true);
-    console.log('💾 Iniciando salvamento para role:', role.name);
+    // Iniciando salvamento
     
     try {
       // Buscar cursos atuais do papel
@@ -136,11 +131,6 @@ export function RoleCourseAccess({
       // Calcular mudanças necessárias
       const toAdd = selectedCourses.filter(id => !currentIds.includes(id));
       const toRemove = currentIds.filter(id => !selectedCourses.includes(id));
-      
-      console.log('📋 Mudanças necessárias:', {
-        toAdd: toAdd.length,
-        toRemove: toRemove.length
-      });
 
       // Aplicar mudanças
       const promises = [
@@ -150,7 +140,7 @@ export function RoleCourseAccess({
 
       await Promise.all(promises);
       
-      console.log('✅ Salvamento concluído com sucesso');
+      // Salvamento concluído
       toast.success(`Configurações de acesso salvas para o papel ${role.name}`);
       onOpenChange(false);
     } catch (error) {

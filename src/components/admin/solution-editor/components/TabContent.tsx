@@ -33,11 +33,7 @@ const TabContent: React.FC<TabContentProps> = ({
 }) => {
   const isValid = solution && solution.id;
 
-  console.log("🔧 TabContent: Renderizando");
-  console.log("📍 TabContent: currentStep =", currentStep);
-  console.log("🔧 TabContent: onStepSave disponível =", !!onStepSave);
-  console.log("🔧 TabContent: solutionId =", solution?.id);
-  console.log("📋 TabContent: currentValues =", currentValues);
+  // TabContent renderizando
 
   // Verificar se a solução existe para exibir as abas que exigem ID
   if (!isValid && currentStep > 0) {
@@ -70,7 +66,7 @@ const TabContent: React.FC<TabContentProps> = ({
         break;
       case "tools":
         if (isValid) {
-          console.log("🔧 TabContent: Renderizando ToolsTab (activeTab mode)");
+          // Renderizando ToolsTab
           return <ToolsTab solutionId={solution?.id || null} onSave={onStepSave} saving={saving} />;
         }
         break;
@@ -94,8 +90,7 @@ const TabContent: React.FC<TabContentProps> = ({
     // For steps > 0, show content based on step
     switch (currentStep) {
       case 1:
-        console.log("🔧 TabContent: Renderizando ToolsTab para currentStep 1");
-        console.log("🔧 TabContent: Passando onStepSave =", !!onStepSave);
+        // Renderizando ToolsTab para step 1
         return <ToolsTab solutionId={solution?.id || null} onSave={onStepSave} saving={saving} />;
       case 2:
         return <ResourcesTab solutionId={solution?.id || null} onSave={() => onSubmit(currentValues)} saving={saving} />;

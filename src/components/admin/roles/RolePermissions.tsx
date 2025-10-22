@@ -232,13 +232,13 @@ export function RolePermissions({ open, onOpenChange, role }: RolePermissionsPro
 
       // 2. 🔄 SINCRONIZAR CAMPO JSONB na tabela user_roles
       try {
-        console.log('🔄 [PERMISSION_SYNC] Sincronizando permissões para o campo JSONB...');
+        // Sincronizando permissões
         const { data: syncResult, error: syncError } = await supabase.rpc('sync_role_permissions_to_jsonb');
         
         if (syncError) {
           console.error('❌ [PERMISSION_SYNC] Erro na sincronização JSONB:', syncError);
         } else {
-          console.log('✅ [PERMISSION_SYNC] Sincronização JSONB concluída:', syncResult);
+          // Sincronização JSONB concluída
         }
       } catch (syncErr) {
         console.error('❌ [PERMISSION_SYNC] Falha na sincronização:', syncErr);
@@ -257,7 +257,7 @@ export function RolePermissions({ open, onOpenChange, role }: RolePermissionsPro
       // Força atualização do hook usePermissions para todos os usuários
       await fetchUserPermissions();
       
-      console.log('🔄 [ADMIN] Cache de permissões invalidado após mudança no role:', role.name);
+      // Cache invalidado
       toast.success('⚡ Alterações aplicadas e sincronizadas!', {
         description: 'Permissões ativas em tempo real para todos os usuários'
       });
